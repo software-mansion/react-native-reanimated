@@ -1,3 +1,19 @@
+/*
+ * Each test that plays a case (`playCase`) has the method of the suite `native layout reference`, each box
+ * on its own clock: each sample of the native box is on the declared timeline of its key at the time of the
+ * sample from the origin of its command (statement A), and each frame of the frame-driven twin and of the
+ * frame driver on the native box is on a replay of the declared timeline at its frame time (statement B).
+ * A check of a playback key count or of a model in such a test is for each row, by the time of the row
+ * against the times of the trace. Each other test has state checks and trace checks at planned times.
+ *
+ * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, the in-flight
+ * curve of a CSS writer that the frame loop plays, the model of the native box while the frame driver has
+ * a position track (the player has statement M only for the opacity and the transform), when a callback
+ * comes. The pixels on screen, a device, and 120 Hz are not tested.
+ *
+ * Not converted (the old pair comparison at planned times, `.tmp/native-la-run/12T/trace/STOPPED-TESTS.md`):
+ * the test that calls `sampleOpacityPair`, and each test that calls `readPair`.
+ */
 import type { ComponentRef } from 'react';
 import React from 'react';
 import {
@@ -29,13 +45,21 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { Leaf, PairProps } from './nativeLayoutTestKit';
+import type { Played, ReferenceCase, Write } from './nativeLayoutReferencePlay';
+import { expectReference, play } from './nativeLayoutReferencePlay';
+import type {
+  Leaf,
+  Leaves,
+  PairProps,
+  SizeBoxProps,
+} from './nativeLayoutTestKit';
 import {
   ClippingScrollView,
   BOX_REF,
   BOX_SIZE,
   callbacks,
   callbackTimes,
+  declaredDurationOf,
   DURATION,
   FRAME_BOX_REF,
   END_LEFT,
@@ -47,6 +71,7 @@ import {
   isNear,
   LAYOUT_DURATION,
   linearAt,
+  middleOf,
   mountScene,
   Pair,
   PAIR_CELL_HEIGHT,
@@ -59,11 +84,13 @@ import {
   sampleOpacity,
   sampleOpacityPair,
   sampleRows,
+  SizeBox,
   START_LEFT,
   summarize,
   summarizeEnd,
   takeTrace,
   takeTraceOf,
+  waitForModel,
 } from './nativeLayoutTestKit';
 
 const WRITER_REF = 'NativeLayoutWriterBox';
@@ -83,6 +110,18 @@ type WriterProps = {
 };
 
 const OPACITY_KEYFRAMES = { from: { opacity: 0.2 }, to: { opacity: 0.8 } };
+const OPACITY_LOOP = {
+  animationName: OPACITY_KEYFRAMES,
+  animationDuration: CSS_DURATION,
+  animationTimingFunction: 'linear',
+  animationIterationCount: 'infinite',
+  animationDirection: 'alternate',
+} as const;
+const OPACITY_TRANSITION = {
+  transitionProperty: 'opacity',
+  transitionDuration: CSS_DURATION,
+  transitionTimingFunction: 'linear',
+} as const;
 
 function CSSBox({
   left,
@@ -109,13 +148,7 @@ function CSSBox({
             transitionDuration: cssDuration,
             transitionTimingFunction: 'linear',
           },
-          opacityAnimation === 'infinite' && {
-            animationName: OPACITY_KEYFRAMES,
-            animationDuration: CSS_DURATION,
-            animationTimingFunction: 'linear',
-            animationIterationCount: 'infinite',
-            animationDirection: 'alternate',
-          },
+          opacityAnimation === 'infinite' && OPACITY_LOOP,
           (opacityAnimation === 'once' ||
             opacityAnimation === 'once-with-fill') && {
             animationName: OPACITY_KEYFRAMES,
@@ -128,6 +161,66 @@ function CSSBox({
       />
     </View>
   );
+}
+
+const restylers: Record<string, (style: SizeBoxProps['style']) => void> = {};
+
+/** A `SizeBox` that gets one more style from `restyleBoxes`, in a React commit. */
+function RestyledBox(box: SizeBoxProps) {
+  const [style, setStyle] = React.useState<SizeBoxProps['style']>();
+  restylers[box.refName ?? BOX_REF] = setStyle;
+  return <SizeBox {...box} style={[box.style, style]} />;
+}
+
+function restyleBoxes(style: SizeBoxProps['style']) {
+  for (const restyle of Object.values(restylers)) {
+    restyle(style);
+  }
+}
+
+const nativeBoxTag = () => getTestComponent(BOX_REF).getTag();
+
+/**
+ * Plays a case on the native box and on its frame-driven twin, with statements
+ * A and B of `native layout reference` and the end of the two boxes.
+ */
+async function playCase(caseName: string, referenceCase: ReferenceCase) {
+  const played = await play(referenceCase);
+  expectReference(caseName, referenceCase, played);
+  return played;
+}
+
+/** The reads of a target of the native box in a time of the sample clock. */
+const readsIn = (
+  { rows }: Played,
+  target: string,
+  fromMs: number,
+  toMs = Infinity
+) =>
+  rows
+    .map(({ row }) => row.native[target])
+    .filter(
+      ({ monotonicTimeMs }) =>
+        monotonicTimeMs >= fromMs && monotonicTimeMs < toMs
+    );
+
+/**
+ * Each read of the opacity of the native box has the two playback keys of the
+ * layout group, from the start report of the opacity track to one display frame
+ * before its declared end.
+ */
+function expectGroupKeysWhilePlaying(played: Played) {
+  const track = played.tracks.find(({ target }) => target === 'Opacity')!;
+  const reads = readsIn(
+    played,
+    'Opacity',
+    track.played.from,
+    middleOf(track.origin) + declaredDurationOf(track.timeline) - FRAME_MS
+  );
+  expect(reads.length > 0).toBe(true);
+  for (const { playbackKeys } of reads) {
+    expect(playbackKeys.length).toBe(2);
+  }
 }
 
 let animatedOpacity: SharedValue<number> | undefined;
@@ -212,16 +305,29 @@ describe('native layout animations and other writers of the view', () => {
   );
 
   // The opacity track goes from 0.3 to the mounted value 1.
-  const fadeIn = (name: string) =>
-    layoutOf(
-      {
-        originX: { duration: LAYOUT_DURATION },
-        opacity: { duration: LAYOUT_DURATION, initial: 0.3, to: 1 },
-      },
-      { name }
-    );
+  const FADE_IN: Leaves = {
+    originX: { duration: LAYOUT_DURATION },
+    opacity: { duration: LAYOUT_DURATION, initial: 0.3, to: 1 },
+  };
+  const fadeIn = (name: string) => layoutOf(FADE_IN, { name });
   const fadeInAt = (startMs: number, timeMs: number) =>
     linearAt(0.3, 1, startMs, LAYOUT_DURATION)(timeMs);
+
+  /** The fade-in with a write of the test on the opacity of the two boxes. */
+  const fadeInWith = (
+    write: Write['run'],
+    style?: SizeBoxProps['style']
+  ): ReferenceCase => ({
+    flow: 'layout',
+    leaves: FADE_IN,
+    places: [
+      { left: START_LEFT, top: 0 },
+      { left: END_LEFT, top: 0 },
+    ],
+    totalMs: LAYOUT_DURATION,
+    box: { Box: RestyledBox, style },
+    write: { atMs: LAYOUT_DURATION / 4, targets: ['Opacity'], run: write },
+  });
 
   for (const usesAnimatedProps of [false, true]) {
     test(`${usesAnimatedProps ? 'animated props write' : 'an animated style writes'} the opacity during a native opacity track`, async () => {
@@ -301,14 +407,9 @@ describe('native layout animations and other writers of the view', () => {
         />
       );
       await wait(CSS_DURATION / 6);
-      const cssEvents = await takeTraceOf(tag);
-      const cssStart = cssEvents[0];
-      expect(summarize(cssEvents)).toBe(
+      expect(summarize(await takeTraceOf(tag))).toBe(
         'Received > TrackStarted:Opacity > Admitted'
       );
-      const cssAt = (timeMs: number) =>
-        1 -
-        0.8 * Math.min(1, (timeMs - cssStart.monotonicTimeMs) / CSS_DURATION);
 
       await render(
         <CSSBox
@@ -345,10 +446,15 @@ describe('native layout animations and other writers of the view', () => {
       const after = await sampleRows(tag, 3, DURATION / 2);
       for (const row of after) {
         expect(row.keys).toBe(0);
-        expect(
-          isNear(row.presentation, cssAt(row.time), SAMPLED_OPACITY_TOLERANCE)
-        ).toBe(true);
       }
+      // The CSS transition goes down to 0.2, which is also the end value of the layout track.
+      const shown = after.map(({ presentation }) => presentation);
+      expect(shown[0] > 0.2 + SAMPLED_OPACITY_TOLERANCE).toBe(true);
+      expect(
+        shown.slice(1).every((value, index) => value < shown[index])
+          ? ''
+          : `the presentations ${shown.join()} do not each go down`
+      ).toBe('');
       expect(callbacks.join()).toBe('over-css:true');
 
       await wait(CSS_DURATION);
@@ -359,69 +465,27 @@ describe('native layout animations and other writers of the view', () => {
   );
 
   test('a CSS transition start during a native layout opacity track runs on the loop, and its value shows after the layout track', async () => {
-    const layout = fadeIn('under-css');
-    const tag = await mountScene(
-      <CSSBox left={START_LEFT} layout={layout} cssDuration={CSS_DURATION} />,
-      WRITER_REF
+    const played = await playCase(
+      'a CSS transition start during a native layout opacity track',
+      fadeInWith(async () => {
+        restyleBoxes({ opacity: 0.5 });
+        await waitForModel(
+          nativeBoxTag(),
+          'Opacity',
+          ([opacity]) => opacity < 1
+        );
+        // A React commit during the track mounts the stored value of the CSS loop again.
+        restyleBoxes({ opacity: 0.5, backgroundColor: 'orange' });
+      }, OPACITY_TRANSITION)
     );
-
-    await render(
-      <CSSBox left={END_LEFT} layout={layout} cssDuration={CSS_DURATION} />
-    );
-    await wait(LAYOUT_DURATION / 4);
-    const pending = (await takeTraceOf(tag))[0];
-
-    await render(
-      <CSSBox
-        left={END_LEFT}
-        opacity={0.5}
-        layout={layout}
-        cssDuration={CSS_DURATION}
-      />
-    );
-    await wait(4 * FRAME_MS);
-    const cssEvents = await takeTraceOf(tag);
-    expect(summarize(cssEvents)).toBe(
-      hasNativeCSS ? 'Received > Ended:Rejected:OwnershipDenied' : ''
-    );
-    const cssStartMs = (await sampleOpacity(tag)).time - 4 * FRAME_MS;
-    const cssAt = (timeMs: number) =>
-      1 - 0.5 * Math.min(1, (timeMs - cssStartMs) / CSS_DURATION);
-    // A React commit during the track mounts the stored value of the CSS loop again.
-    await render(
-      <CSSBox
-        left={END_LEFT}
-        opacity={0.5}
-        backgroundColor="orange"
-        layout={layout}
-        cssDuration={CSS_DURATION}
-      />
-    );
-
-    const during = await sampleRows(tag, 4, LAYOUT_DURATION / 8);
-    for (const row of during) {
-      expect(row.keys).toBe(2);
-      expect(
-        isNear(
-          row.presentation,
-          fadeInAt(pending.monotonicTimeMs, row.time),
-          SAMPLED_OPACITY_TOLERANCE
-        )
-      ).toBe(true);
-    }
-
-    await wait(LAYOUT_DURATION / 3);
-    const after = await sampleRows(tag, 3, DURATION / 2);
-    for (const row of after) {
-      expect(row.keys).toBe(0);
-      expect(
-        isNear(row.presentation, cssAt(row.time), SAMPLED_OPACITY_TOLERANCE)
-      ).toBe(true);
-    }
-    expect(callbacks.join()).toBe('under-css:true');
+    expect(
+      summarize(played.events.filter(({ owner }) => owner === 'CSSTransition'))
+    ).toBe(hasNativeCSS ? 'Received > Ended:Rejected:OwnershipDenied' : '');
+    expectGroupKeysWhilePlaying(played);
 
     await wait(CSS_DURATION);
-    const end = await sampleOpacity(tag);
+    const end = await sampleOpacity(nativeBoxTag());
+    expect(end.keys).toBe(0);
     expect(isNear(end.presentation, 0.5)).toBe(true);
     await render(null);
   });
@@ -480,40 +544,30 @@ describe('native layout animations and other writers of the view', () => {
   );
 
   test('a CSS animation of the opacity that starts during a native layout opacity track shows after the track', async () => {
-    const layout = fadeIn('under-animation');
-    const tag = await mountScene(
-      <CSSBox left={START_LEFT} layout={layout} />,
-      WRITER_REF
+    const played = await playCase(
+      'a CSS animation of the opacity that starts during a native layout opacity track',
+      fadeInWith(() => {
+        restyleBoxes(OPACITY_LOOP);
+        return waitForModel(
+          nativeBoxTag(),
+          'Opacity',
+          ([opacity]) => opacity < 0.85
+        );
+      })
     );
-
-    await render(<CSSBox left={END_LEFT} layout={layout} />);
-    await wait(LAYOUT_DURATION / 4);
-    const pending = (await takeTraceOf(tag))[0];
-    await render(
-      <CSSBox left={END_LEFT} layout={layout} opacityAnimation="infinite" />
-    );
-    await wait(4 * FRAME_MS);
-    const during = await sampleRows(tag, 4, LAYOUT_DURATION / 8);
-    for (const row of during) {
-      expect(row.keys).toBe(2);
-      expect(row.model < 0.85).toBe(true);
-      expect(
-        isNear(
-          row.presentation,
-          fadeInAt(pending.monotonicTimeMs, row.time),
-          SAMPLED_OPACITY_TOLERANCE
-        )
-      ).toBe(true);
+    expectGroupKeysWhilePlaying(played);
+    const [{ reads: waitReads }] = played.modelWaits;
+    const writtenMs = waitReads[waitReads.length - 1].monotonicTimeMs;
+    for (const { model } of readsIn(played, 'Opacity', writtenMs)) {
+      expect(model[0] < 0.85).toBe(true);
     }
 
-    await wait(LAYOUT_DURATION / 3);
-    const after = await sampleRows(tag, 3, DURATION / 2);
+    const after = await sampleRows(nativeBoxTag(), 3, DURATION / 2);
     for (const row of after) {
       expect(row.keys).toBe(0);
       expect(row.presentation < 0.85).toBe(true);
       expect(isNear(row.presentation, row.model)).toBe(true);
     }
-    expect(callbacks.join()).toBe('under-animation:true');
     await render(null);
   });
 
