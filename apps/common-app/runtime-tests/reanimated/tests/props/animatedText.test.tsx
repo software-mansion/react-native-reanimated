@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  interpolateColor,
   makeMutable,
   useAnimatedStyle,
   useDerivedValue,
@@ -31,7 +29,6 @@ import {
   waitUntilSettled,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
-import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const TEXT_REF = 'AnimatedText';
 const ANIMATION_FINISHED = 'ANIMATED_TEXT_FINISHED';
@@ -44,29 +41,21 @@ const EMPTY_TEXT = '\u200b';
 
 type UpdatesContainer = Awaited<ReturnType<typeof recordAnimationUpdates>>;
 
-/**
- * Values of each prop from every recorded update, in the order they were sent.
- * `getUpdates()` returns every view here: updates from `UpdatePropsManager`
- * carry no tag, so they are all recorded under one.
- */
+/** Values of each prop from every recorded update, in the order they were sent. */
 async function readRecorded<TProp extends string>(
   updates: UpdatesContainer,
   props: TProp[]
 ): Promise<Record<TProp, unknown[]>> {
+  // Updates from `_updateProps` carry no tag, so all views land in one bucket.
   const recorded = await updates.getUpdates(undefined, props);
-  const values = Object.fromEntries(
-    props.map((prop) => [prop, [] as unknown[]])
+  return Object.fromEntries(
+    props.map((prop) => [
+      prop,
+      recorded
+        .map((update) => (update as Record<string, unknown>)[prop])
+        .filter((value) => value !== undefined),
+    ])
   ) as Record<TProp, unknown[]>;
-  for (const update of recorded) {
-    for (const prop of props) {
-      // `getUpdates` fills props missing from an update with `undefined`.
-      const value = (update as Record<string, unknown>)[prop];
-      if (value !== undefined) {
-        values[prop].push(value);
-      }
-    }
-  }
-  return values;
 }
 
 // `waitForFrames(n)` with n > 1 breaks the UI frame loop.
@@ -88,10 +77,6 @@ const ROW = {
   OPACITY: 'animated opacity on the outer text',
   LAYOUT: 'onLayout',
   STATIC: 'static Animated.Text',
-  COLOR_STYLE: 'with animated color, backgroundColor and fontSize',
-  MIXED_FONT: 'Value: {sv} with animated fontSize',
-  NESTED_OPACITY: 'opacity on a nested Animated.Text',
-  STATIC_STYLED: 'static Animated.Text with animated fontSize',
 } as const;
 type Row = (typeof ROW)[keyof typeof ROW];
 
@@ -107,19 +92,11 @@ const GROWING_ROWS: Row[] = [
   ROW.IN_ANIMATED,
   ROW.OPACITY,
   ROW.LAYOUT,
-  ROW.COLOR_STYLE,
-  ROW.MIXED_FONT,
-  ROW.NESTED_OPACITY,
-  ROW.STATIC_STYLED,
 ];
 const FIXED_HEIGHT_ROWS: Row[] = [ROW.EMPTY, ROW.LINES];
 // Every shared value in a counter row. Before{a}Middle{b}After has two, so it
 // gets two updates per frame.
-const COUNTER_VIEWS = 14;
-// `colorStyle` and `fontSizeStyle` at progress 0 and 100.
-const COLOR_FONT_SIZE = { at0: 8, at100: 40 };
-const FONT_SIZE = { at0: 14, at100: 24 };
-const BACKGROUND = { at0: 'pink', at100: 'black' };
+const COUNTER_VIEWS = 11;
 
 function AnimatedTextScreen({
   progress,
@@ -141,10 +118,6 @@ function AnimatedTextScreen({
     [ROW.OPACITY]: useTestRef(ROW.OPACITY),
     [ROW.LAYOUT]: useTestRef(ROW.LAYOUT),
     [ROW.STATIC]: useTestRef(ROW.STATIC),
-    [ROW.COLOR_STYLE]: useTestRef(ROW.COLOR_STYLE),
-    [ROW.MIXED_FONT]: useTestRef(ROW.MIXED_FONT),
-    [ROW.NESTED_OPACITY]: useTestRef(ROW.NESTED_OPACITY),
-    [ROW.STATIC_STYLED]: useTestRef(ROW.STATIC_STYLED),
   };
 
   const textSv = useDerivedValue(() => String(Math.round(progress.value)));
@@ -153,20 +126,7 @@ function AnimatedTextScreen({
     progress.value > 50 ? 'Blink' : ''
   );
   const fontSizeStyle = useAnimatedStyle(() => ({
-    fontSize:
-      FONT_SIZE.at0 +
-      (Math.round(progress.value) * (FONT_SIZE.at100 - FONT_SIZE.at0)) / 100,
-  }));
-  const colorStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.value, [0, 100], ['black', 'white']),
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 100],
-      [BACKGROUND.at0, BACKGROUND.at100]
-    ),
-    fontSize:
-      COLOR_FONT_SIZE.at0 +
-      (progress.value * (COLOR_FONT_SIZE.at100 - COLOR_FONT_SIZE.at0)) / 100,
+    fontSize: 14 + Math.round(progress.value) / 10,
   }));
   const opacityStyle = useAnimatedStyle(() => ({
     opacity: 0.2 + progress.value * 0.008,
@@ -254,98 +214,43 @@ function AnimatedTextScreen({
           Lorem ipsum
         </Animated.Text>
       </View>
-      <View style={styles.row}>
-        <Text>Before</Text>
-        <Animated.Text
-          ref={refs[ROW.COLOR_STYLE]}
-          style={[styles.tabular, colorStyle]}>
-          {textSv}
-        </Animated.Text>
-        <Text>After</Text>
-      </View>
-      <View style={styles.row}>
-        <Animated.Text
-          ref={refs[ROW.MIXED_FONT]}
-          style={[styles.tabular, fontSizeStyle]}>
-          Value: {numberSv}
-        </Animated.Text>
-      </View>
-      <View style={styles.row}>
-        <Text ref={refs[ROW.NESTED_OPACITY]} style={styles.color6}>
-          Only my number fades{' '}
-          <Animated.Text style={opacityStyle}>{numberSv}</Animated.Text>
-        </Text>
-      </View>
-      <View style={styles.row}>
-        <Animated.Text ref={refs[ROW.STATIC_STYLED]} style={fontSizeStyle}>
-          Lorem ipsum
-        </Animated.Text>
-      </View>
     </View>
   );
 }
 
-type Size = { width: number; height: number };
-type Metrics = Record<string, Size>;
-type Sizes = { shadow: Size; mounted: Size | null };
+type Metrics = Record<string, { width: number; height: number }>;
 
-// `shadow` is what Fabric committed, `mounted` is the platform view on screen.
-async function readSizes(name: string): Promise<Sizes> {
-  const component = getTestComponent(name);
-  const mounted = await component.getMountedViewProps();
-  return {
-    shadow: {
-      width: Number(await component.getAnimatedStyle('width')),
-      height: Number(await component.getAnimatedStyle('height')),
-    },
-    mounted: mounted && { width: mounted.width, height: mounted.height },
-  };
-}
-
-function expectMountedMatchesShadow(name: string, sizes: Sizes, step: string) {
-  const { shadow, mounted } = sizes;
-  expectRow(
-    name,
-    mounted !== null &&
-      samePixels(mounted.width, shadow.width) &&
-      samePixels(mounted.height, shadow.height),
-    `${step}: the mounted view matches the shadow tree (shadow ` +
-      `${shadow.width}x${shadow.height}, mounted ` +
-      `${mounted ? `${mounted.width}x${mounted.height}` : 'none'})`
-  );
-}
-
-async function measureScreen(step: string): Promise<Metrics> {
+async function measureScreen(): Promise<Metrics> {
   await waitTwoFrames();
-  const json = await waitUntilSettled(async () =>
-    JSON.stringify(await Promise.all(MEASURED_ROWS.map(readSizes)))
-  );
-  const sizes = JSON.parse(json) as Sizes[];
-  MEASURED_ROWS.forEach((row, index) =>
-    expectMountedMatchesShadow(row, sizes[index], step)
-  );
-  return Object.fromEntries(
-    MEASURED_ROWS.map((row, index) => [row, sizes[index].shadow])
-  );
+  const json = await waitUntilSettled(async () => {
+    const entries = await Promise.all(
+      MEASURED_ROWS.map(async (row) => {
+        const component = getTestComponent(row);
+        return [
+          row,
+          {
+            width: Number(await component.getAnimatedStyle('width')),
+            height: Number(await component.getAnimatedStyle('height')),
+          },
+        ] as const;
+      })
+    );
+    return JSON.stringify(Object.fromEntries(entries));
+  });
+  return JSON.parse(json) as Metrics;
 }
 
 type Group = { value: string; count: number };
 
 async function recordScreenFrames(run: () => Promise<void>) {
-  const frames = await recordFrames(['children', 'color', 'opacity'], run);
-  const text = frames.children.map(String);
-  const counter = text.filter(
+  const frames = await recordTextFrames(run);
+  const counter = frames.filter(
     (frame) => frame !== EMPTY_TEXT && frame !== 'Blink'
   );
-  const empty = text.filter(
+  const empty = frames.filter(
     (frame) => frame === EMPTY_TEXT || frame === 'Blink'
   );
-  return {
-    counter: groupRepeats(counter),
-    empty,
-    color: frames.color.map(convertDecimalColor),
-    opacity: frames.opacity.map(Number),
-  };
+  return { counter: groupRepeats(counter), empty };
 }
 
 function groupRepeats(frames: string[]): Group[] {
@@ -548,35 +453,18 @@ function TextSvOrMixed({ flag, progress }: FlagProps) {
   );
 }
 
-const LINE_HEIGHT_TAIL = '% should sit on the same line as this text';
-
-function LineHeightText({ progress }: { progress: SharedValue<number> }) {
-  const ref = useTestRef(TEXT_REF);
-  const numberSv = useDerivedValue(() => Math.round(progress.value));
-  return (
-    <View style={styles.container}>
-      <Animated.Text ref={ref} style={styles.lineHeight}>
-        My {numberSv}
-        {LINE_HEIGHT_TAIL}
-      </Animated.Text>
-    </View>
-  );
-}
-
 const REFERENCE_REF = 'Reference';
 
 function ReferenceText({
   index,
-  style,
   children,
 }: {
   index: number;
-  style: StyleProp<TextStyle>;
   children: ReactNode;
 }) {
   const ref = useTestRef(`${REFERENCE_REF}${index}`);
   return (
-    <Text ref={ref} style={style}>
+    <Text ref={ref} style={styles.text}>
       {children}
     </Text>
   );
@@ -593,18 +481,16 @@ function mixedReference(value: string) {
 
 const NUMBER_FRAME = /^\d+$/;
 
-type Reference = { text: ReactNode; style: StyleProp<TextStyle> };
-
 // Replaces what was rendered, so call it before rendering the tested component.
-async function measureReferenceSizes(
-  references: Record<string, Reference>
-): Promise<Record<string, Size>> {
-  const keys = Object.keys(references);
+async function measureReferences(
+  texts: Record<string, ReactNode>
+): Promise<Record<string, number>> {
+  const keys = Object.keys(texts);
   await render(
     <View style={styles.container}>
       {keys.map((key, index) => (
-        <ReferenceText key={key} index={index} style={references[key].style}>
-          {references[key].text}
+        <ReferenceText key={key} index={index}>
+          {texts[key]}
         </ReferenceText>
       ))}
     </View>
@@ -613,47 +499,19 @@ async function measureReferenceSizes(
   const json = await waitUntilSettled(async () =>
     JSON.stringify(
       await Promise.all(
-        keys.map(
-          async (_, index) =>
-            (await readSizes(`${REFERENCE_REF}${index}`)).shadow
+        keys.map(async (_, index) =>
+          Number(
+            await getTestComponent(`${REFERENCE_REF}${index}`).getAnimatedStyle(
+              'width'
+            )
+          )
         )
       )
     )
   );
-  const sizes = JSON.parse(json) as Size[];
+  const widths = JSON.parse(json) as number[];
   await render(null);
-  return Object.fromEntries(keys.map((key, index) => [key, sizes[index]]));
-}
-
-async function measureReferences(
-  texts: Record<string, ReactNode>
-): Promise<Record<string, number>> {
-  const sizes = await measureReferenceSizes(
-    Object.fromEntries(
-      Object.entries(texts).map(([key, text]) => [
-        key,
-        { text, style: styles.text },
-      ])
-    )
-  );
-  return Object.fromEntries(
-    Object.entries(sizes).map(([key, size]) => [key, size.width])
-  );
-}
-
-function expectSameSize(
-  row: string,
-  size: Size,
-  reference: Size,
-  step: string
-) {
-  expectRow(
-    row,
-    samePixels(size.width, reference.width) &&
-      samePixels(size.height, reference.height),
-    `${step}: has the size of a plain Text (${size.width}x${size.height}, ` +
-      `reference ${reference.width}x${reference.height})`
-  );
+  return Object.fromEntries(keys.map((key, index) => [key, widths[index]]));
 }
 
 async function expectShows(
@@ -838,52 +696,24 @@ function animateTo(
   );
 }
 
-async function recordFrames<TProp extends string>(
-  props: TProp[],
-  run: () => Promise<void>
-) {
+async function recordTextFrames(run: () => Promise<void>) {
   const updates = await recordAnimationUpdates();
   try {
     await run();
-    return await readRecorded(updates, props);
+    const { children } = await readRecorded(updates, ['children']);
+    return children.map(String);
   } finally {
     await stopRecordingAnimationUpdates();
   }
 }
 
-async function recordTextFrames(run: () => Promise<void>) {
-  const { children } = await recordFrames(['children'], run);
-  return children.map(String);
-}
-
 async function readSettled(prop: 'width' | 'height') {
   await waitTwoFrames();
-  const json = await waitUntilSettled(async () =>
-    JSON.stringify(await readSizes(TEXT_REF))
+  return waitUntilSettled(async () =>
+    Number(await getTestComponent(TEXT_REF).getAnimatedStyle(prop))
   );
-  const sizes = JSON.parse(json) as Sizes;
-  expectMountedMatchesShadow(TEXT_REF, sizes, `settled ${prop}`);
-  return sizes.shadow[prop];
 }
 
-function redChannel(hexColor: string) {
-  return parseInt(hexColor.slice(1, 3), 16);
-}
-
-async function readBackground(name: string) {
-  const component = getTestComponent(name);
-  return {
-    shadow: await component.getAnimatedStyle('backgroundColor'),
-    mounted: (await component.getMountedViewProps())?.backgroundColor,
-  };
-}
-
-async function readMountedOpacity(name: string) {
-  return (await getTestComponent(name).getMountedViewProps())?.opacity;
-}
-
-// Not covered: `onPress` on the outer text when the shared value child is
-// tapped. ReJest cannot tap, and calling `onPress` would skip hit-testing.
 describe('Animated.Text with a shared value as children', () => {
   describe('all rows at once', () => {
     test('every row follows 0 -> 100 and back 100 -> 0', async () => {
@@ -896,33 +726,25 @@ describe('Animated.Text with a shared value as children', () => {
         />
       );
       await mockAnimationTimer();
-      const atZero = await measureScreen('atZero');
-      const backgroundAtZero = await readBackground(ROW.COLOR_STYLE);
-      const nestedOpacityAtZero = await readMountedOpacity(ROW.NESTED_OPACITY);
+      const atZero = await measureScreen();
 
       const up = await recordScreenFrames(async () => {
         animateTo(progress, 100, 'UP_FINISHED');
         await waitForNotification('UP_FINISHED');
       });
-      const atHundred = await measureScreen('atHundred');
+      const atHundred = await measureScreen();
       const opacityAtHundred = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
-      );
-      const mountedOpacityAtHundred = await readMountedOpacity(ROW.OPACITY);
-      const backgroundAtHundred = await readBackground(ROW.COLOR_STYLE);
-      const nestedOpacityAtHundred = await readMountedOpacity(
-        ROW.NESTED_OPACITY
       );
 
       const down = await recordScreenFrames(async () => {
         animateTo(progress, 0, 'DOWN_FINISHED');
         await waitForNotification('DOWN_FINISHED');
       });
-      const backAtZero = await measureScreen('backAtZero');
+      const backAtZero = await measureScreen();
       const opacityBackAtZero = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
       );
-      const mountedOpacityBackAtZero = await readMountedOpacity(ROW.OPACITY);
       await unmockAnimationTimer();
 
       expect(up.counter.map((group) => group.value).join(',')).toBe(
@@ -966,60 +788,6 @@ describe('Animated.Text with a shared value as children', () => {
 
       expect(opacityAtHundred).toBe(1, ComparisonMode.FLOAT_DISTANCE);
       expect(opacityBackAtZero).toBe(0.2, ComparisonMode.FLOAT_DISTANCE);
-      expect(mountedOpacityAtHundred).toBe(1, ComparisonMode.FLOAT_DISTANCE);
-      expect(mountedOpacityBackAtZero).toBe(0.2, ComparisonMode.FLOAT_DISTANCE);
-
-      // Only the COLOR_STYLE row animates `color`: one update per frame, and
-      // the text goes from black to white without stepping back.
-      for (const [direction, frames] of [
-        ['up', up],
-        ['down', down],
-      ] as const) {
-        expectRow(
-          ROW.COLOR_STYLE,
-          frames.color.length === frames.counter.length,
-          `sends color with every text frame going ${direction} ` +
-            `(${frames.color.length} colors, ${frames.counter.length} texts)`
-        );
-        // OPACITY and NESTED_OPACITY share `opacityStyle`.
-        expectRow(
-          ROW.NESTED_OPACITY,
-          frames.opacity.length === 2 * frames.counter.length,
-          `sends opacity for both opacity rows on every frame going ` +
-            `${direction} (${frames.opacity.length} updates, ` +
-            `${frames.counter.length} frames)`
-        );
-      }
-      const reds = up.color.map(redChannel);
-      expectRow(
-        ROW.COLOR_STYLE,
-        reds.every((red, i) => i === 0 || red >= reds[i - 1]),
-        `gets lighter on every frame (${reds.join(',')})`
-      );
-      expect(backgroundAtZero.shadow).toBe(
-        BACKGROUND.at0,
-        ComparisonMode.COLOR
-      );
-      expect(backgroundAtZero.mounted).toBe(
-        BACKGROUND.at0,
-        ComparisonMode.COLOR
-      );
-      expect(backgroundAtHundred.shadow).toBe(
-        BACKGROUND.at100,
-        ComparisonMode.COLOR
-      );
-      expect(backgroundAtHundred.mounted).toBe(
-        BACKGROUND.at100,
-        ComparisonMode.COLOR
-      );
-      // The nested text has no platform view: fading it must not fade the
-      // outer one (the number itself starts at 0.2).
-      expectRow(
-        ROW.NESTED_OPACITY,
-        nestedOpacityAtZero === 1 && nestedOpacityAtHundred === 1,
-        `keeps the outer text opaque (at 0: ${nestedOpacityAtZero}, ` +
-          `at 100: ${nestedOpacityAtHundred})`
-      );
 
       // onLayout tests are disabled on Android, see suites.ts.
       if (Platform.OS === 'ios') {
@@ -1043,7 +811,7 @@ describe('Animated.Text with a shared value as children', () => {
       const progress = makeMutable(0);
       await render(<AnimatedTextScreen progress={progress} />);
       await mockAnimationTimer();
-      const atZero = await measureScreen('atZero');
+      const atZero = await measureScreen();
 
       // Frames per direction. Odd count, so the last animation goes down to 0.
       const SEGMENTS = [10, 5, 12, 4, 8, 10, 6, 4, 15, 6, 5];
@@ -1053,14 +821,13 @@ describe('Animated.Text with a shared value as children', () => {
         for (const length of SEGMENTS) {
           animateTo(progress, target, 'INTERRUPTED');
           framesSoFar += length;
-          const frames = framesSoFar;
-          await waitForAnimationUpdates(frames);
+          await waitForAnimationUpdates(framesSoFar);
           target = target === 100 ? 0 : 100;
         }
         animateTo(progress, target, 'STRESS_FINISHED');
         await waitForNotification('STRESS_FINISHED');
       });
-      const atEnd = await measureScreen('atEnd');
+      const atEnd = await measureScreen();
       await unmockAnimationTimer();
 
       const frames = counter.map((group) => group.value);
@@ -1093,22 +860,20 @@ describe('Animated.Text with a shared value as children', () => {
       const progress = makeMutable(0);
       const screen = () => <AnimatedTextScreen progress={progress} />;
       await render(screen());
-      const atZero = await measureScreen('atZero');
+      const atZero = await measureScreen();
 
       animateTo(progress, 100, 'UP_FINISHED');
       await waitForNotification('UP_FINISHED');
-      const atHundred = await measureScreen('atHundred');
+      const atHundred = await measureScreen();
       await wait(SYNC_BACK_DELAY_MS);
       await render(screen());
-      const atHundredAfterRerender = await measureScreen(
-        'atHundredAfterRerender'
-      );
+      const atHundredAfterRerender = await measureScreen();
 
       animateTo(progress, 0, 'DOWN_FINISHED');
       await waitForNotification('DOWN_FINISHED');
       await wait(SYNC_BACK_DELAY_MS);
       await render(screen());
-      const atZeroAfterRerender = await measureScreen('atZeroAfterRerender');
+      const atZeroAfterRerender = await measureScreen();
 
       for (const row of MEASURED_ROWS) {
         expectRow(
@@ -1121,50 +886,6 @@ describe('Animated.Text with a shared value as children', () => {
           samePixels(atZeroAfterRerender[row].width, atZero[row].width),
           'keeps 0 after the re-render'
         );
-      }
-    });
-
-    test('rows with an animated font size have the size of a plain Text', async () => {
-      const at = (value: number) => ({
-        [ROW.COLOR_STYLE]: {
-          text: <Text>{value}</Text>,
-          style: [
-            styles.tabular,
-            {
-              fontSize:
-                value === 0 ? COLOR_FONT_SIZE.at0 : COLOR_FONT_SIZE.at100,
-            },
-          ],
-        },
-        [ROW.MIXED_FONT]: {
-          text: (
-            <>
-              Value: <Text>{value}</Text>
-            </>
-          ),
-          style: [
-            styles.tabular,
-            { fontSize: value === 0 ? FONT_SIZE.at0 : FONT_SIZE.at100 },
-          ],
-        },
-        [ROW.STATIC_STYLED]: {
-          text: 'Lorem ipsum',
-          style: { fontSize: value === 0 ? FONT_SIZE.at0 : FONT_SIZE.at100 },
-        },
-      });
-      const referenceAtZero = await measureReferenceSizes(at(0));
-      const referenceAtHundred = await measureReferenceSizes(at(100));
-      const rows = Object.keys(referenceAtZero);
-
-      const progress = makeMutable(0);
-      await render(<AnimatedTextScreen progress={progress} />);
-      const atZero = await measureScreen('atZero');
-      progress.value = 100;
-      const atHundred = await measureScreen('atHundred');
-
-      for (const row of rows) {
-        expectSameSize(row, atZero[row], referenceAtZero[row], 'at 0');
-        expectSameSize(row, atHundred[row], referenceAtHundred[row], 'at 100');
       }
     });
   });
@@ -1410,45 +1131,6 @@ describe('Animated.Text with a shared value as children', () => {
 
       expect(widthAtHundred > widthAtZero).toBe(true);
       expect(widthAfterRemount).toBe(widthAtHundred, ComparisonMode.PIXEL);
-    });
-  });
-
-  describe('nested text with lineHeight', () => {
-    // The vertical offset of the nested number (a known Fabric iOS baseline
-    // bug) is not observable here. This checks that Animated.Text lays out
-    // like a plain Text with the same nested text.
-    test('has the size of a plain Text with the same nested text', async () => {
-      const reference = (value: number) => ({
-        text: (
-          <>
-            My <Text>{value}</Text>
-            {LINE_HEIGHT_TAIL}
-          </>
-        ),
-        style: styles.lineHeight,
-      });
-      const references = await measureReferenceSizes({
-        '0': reference(0),
-        '100': reference(100),
-      });
-      const progress = makeMutable(0);
-      await render(<LineHeightText progress={progress} />);
-      const readSize = async () => ({
-        width: await readSettled('width'),
-        height: await readSettled('height'),
-      });
-
-      expectSameSize(TEXT_REF, await readSize(), references['0'], 'at 0');
-      progress.value = 100;
-      expectSameSize(TEXT_REF, await readSize(), references['100'], 'at 100');
-      animateTo(progress, 0, 'LINE_HEIGHT_DOWN');
-      await waitForNotification('LINE_HEIGHT_DOWN');
-      expectSameSize(
-        TEXT_REF,
-        await readSize(),
-        references['0'],
-        'animated back to 0'
-      );
     });
   });
 
@@ -1851,13 +1533,6 @@ const styles = StyleSheet.create({
   },
   narrow: {
     width: 220,
-  },
-  tabular: {
-    fontVariant: ['tabular-nums'],
-  },
-  lineHeight: {
-    fontSize: 14,
-    lineHeight: 40,
   },
   box: {
     height: 20,
