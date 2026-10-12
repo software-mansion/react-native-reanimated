@@ -18,6 +18,8 @@
 #import <React/RCTMountingManager.h>
 #import <React/RCTViewComponentView.h>
 
+#import <algorithm>
+#import <cmath>
 #import <memory>
 #import <variant>
 
@@ -226,9 +228,26 @@ ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *n
   return readMountedViewProps;
 }
 
+#if !TARGET_OS_OSX
+static int argbFromCGColor(CGColorRef color)
+{
+  CGFloat red = 0;
+  CGFloat green = 0;
+  CGFloat blue = 0;
+  CGFloat alpha = 0;
+  if (color != nil) {
+    [[UIColor colorWithCGColor:color] getRed:&red green:&green blue:&blue alpha:&alpha];
+  }
+  const auto channel = [](CGFloat value) {
+    return static_cast<uint32_t>(std::lround(std::clamp(value, 0.0, 1.0) * 255));
+  };
+  return static_cast<int>(channel(alpha) << 24 | channel(red) << 16 | channel(green) << 8 | channel(blue));
+}
+#endif
+
 ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManager *nodesManager)
 {
-  return [=](Tag tag) -> std::optional<MountedViewProps> {
+  return [=](Tag tag, bool presented) -> std::optional<MountedViewProps> {
 #if TARGET_OS_OSX
     return std::nullopt;
 #else
@@ -238,14 +257,21 @@ ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManage
     if (view == nil || view.window == nil) {
       return std::nullopt;
     }
-    const CGSize size = view.bounds.size;
-    const CGPoint anchor = view.layer.anchorPoint;
+    // A layer has no presentation layer until Core Animation renders it.
+    CALayer *layer = presented ? (view.layer.presentationLayer ?: view.layer) : view.layer;
+    const CGSize size = layer.bounds.size;
+    const CGPoint anchor = layer.anchorPoint;
     return MountedViewProps{
-        .x = view.center.x - size.width * anchor.x,
-        .y = view.center.y - size.height * anchor.y,
+        .x = layer.position.x - size.width * anchor.x,
+        .y = layer.position.y - size.height * anchor.y,
         .width = size.width,
         .height = size.height,
-        .opacity = view.alpha,
+        .opacity = layer.opacity,
+        // React Native paints the background on an unanimated sublayer for non-circular corners and for
+        // visible borders without clipping, and keeps its color in `backgroundColor`.
+        .backgroundColor = argbFromCGColor(
+            layer.backgroundColor
+                ?: [view.backgroundColor resolvedColorWithTraitCollection:view.traitCollection].CGColor),
     };
 #endif
   };
