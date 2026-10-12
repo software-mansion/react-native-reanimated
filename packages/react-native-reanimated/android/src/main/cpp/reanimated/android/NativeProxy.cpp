@@ -138,6 +138,14 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+bool NativeProxy::hasSynchronousWritesTracker() {
+  return reanimatedModuleProxy_->hasSynchronousWritesTracker();
+}
+
+void NativeProxy::rewriteSynchronousProps() {
+  reanimatedModuleProxy_->rewriteSynchronousProps();
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -151,9 +159,11 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
@@ -194,6 +204,24 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
 
   auto region = jArrayInt->getRegion(0, tags.size());
   return region;
+}
+
+// Android animators write the view on every frame, so the view's props are the presented ones.
+std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
+  static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
+  auto values = method(javaPart_.get(), tag);
+  if (!values) {
+    return std::nullopt;
+  }
+  const auto region = values->getRegion(0, 6);
+  return MountedViewProps{
+      .x = region[0],
+      .y = region[1],
+      .width = region[2],
+      .height = region[3],
+      .opacity = region[4],
+      .backgroundColor = static_cast<int>(region[5]),
+  };
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
@@ -247,6 +275,54 @@ void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::fu
       static_cast<int>(tag),
       static_cast<int>(selector),
       PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+}
+
+bool NativeProxy::cssAnimateTransition(
+    const int viewTag,
+    const int propertyId,
+    const double fromValue,
+    const double toValue,
+    const double durationMs,
+    const double startTimestampMs,
+    const int easingId,
+    const bool persistent) {
+  static const auto method =
+      getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
+  return method(
+             javaPart_.get(),
+             viewTag,
+             propertyId,
+             fromValue,
+             toValue,
+             durationMs,
+             startTimestampMs,
+             easingId,
+             static_cast<jboolean>(persistent)) != JNI_FALSE;
+}
+
+void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
+  static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
+  method(javaPart_.get(), viewTag, propertyId);
+}
+
+void NativeProxy::cssDefineEasing(
+    const int easingId,
+    const int type,
+    const std::vector<float> &pointsX,
+    const std::vector<float> &pointsY) {
+  static const auto method =
+      getJniMethod<void(int, int, jni::alias_ref<jni::JArrayFloat>, jni::alias_ref<jni::JArrayFloat>)>(
+          "cssDefineEasing");
+  auto jPointsX = jni::JArrayFloat::newArray(pointsX.size());
+  jPointsX->setRegion(0, pointsX.size(), pointsX.data());
+  auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
+  jPointsY->setRegion(0, pointsY.size(), pointsY.data());
+  method(javaPart_.get(), easingId, type, jPointsX, jPointsY);
+}
+
+void NativeProxy::cssUndefineEasing(const int easingId) {
+  static const auto method = getJniMethod<void(int)>("cssUndefineEasing");
+  method(javaPart_.get(), easingId);
 }
 
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
@@ -331,6 +407,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
+  auto obtainMountedViewPropsFunction = bindThis(&NativeProxy::obtainMountedViewProps);
+
+  auto platformTransitionBackend = makePlatformTransitionBackend();
+
   return {
       requestRender,
       preserveMountedTags,
@@ -344,7 +424,21 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
+      platformTransitionBackend,
   };
+}
+
+std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTransitionBackend() {
+  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    return nullptr;
+  }
+  // Not a NativeProxy member: this runs from the ctor's member-initializer list,
+  // where a member would still be raw memory.
+  auto easings = std::make_shared<CSSPlatformEasings>(
+      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
+  return std::make_shared<CSSPlatformTransitions>(
+      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition), std::move(easings));
 }
 
 void NativeProxy::invalidateCpp() {

@@ -1,7 +1,11 @@
 import type { NodePath } from '@babel/core';
 import type { Binding } from '@babel/traverse';
-import type { Identifier, ImportDeclaration } from '@babel/types';
-import { cloneNode } from '@babel/types';
+import type {
+  Identifier,
+  ImportDeclaration,
+  JSXIdentifier,
+} from '@babel/types';
+import { cloneNode, identifier, isJSXIdentifier } from '@babel/types';
 
 import { globals } from './globals';
 import {
@@ -11,6 +15,10 @@ import {
   isImportRelative,
 } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
+
+function toClosureIdentifier(node: Identifier | JSXIdentifier): Identifier {
+  return isJSXIdentifier(node) ? identifier(node.name) : cloneNode(node, true);
+}
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
@@ -65,7 +73,7 @@ export function getClosure(
             return;
           }
           capturedNames.add(name);
-          closureVariables.push(cloneNode(idPath.node as Identifier, true));
+          closureVariables.push(toClosureIdentifier(idPath.node));
           return;
         }
 
@@ -112,7 +120,7 @@ export function getClosure(
         }
 
         capturedNames.add(name);
-        closureVariables.push(cloneNode(idPath.node as Identifier, true));
+        closureVariables.push(toClosureIdentifier(idPath.node));
       },
     },
     state

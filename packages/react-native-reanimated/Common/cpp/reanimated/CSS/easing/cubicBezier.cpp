@@ -1,57 +1,94 @@
 #include <reanimated/CSS/easing/cubicBezier.h>
 
+#include <cmath>
+#include <cstdint>
+
 namespace reanimated::css {
 
-double sampleCurveX(const double t, const double x1, const double x2) {
-  return 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t;
-}
+namespace {
 
-double sampleCurveY(const double t, const double y1, const double y2) {
-  return 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
-}
+constexpr double kEpsilon = 1e-6;
+constexpr std::uint8_t kMaxNewtonIterations = 8;
+/// Enough halvings of [0, 1] to reach double precision.
+constexpr std::uint8_t kMaxBisectionIterations = 60;
 
-double sampleCurveDerivativeX(const double t, const double x1, const double x2) {
-  return -6 * (1 - t) * t * x1 + 3 * (1 - t) * (1 - t) * x1 + 6 * (1 - t) * t * x2 - 6 * t * t * x2 + 3 * t * t;
-}
+/// One axis of a unit cubic Bezier in Horner form, as in WebKit's UnitBezier.
+/// The derivative shares these coefficients so the two cannot disagree.
+/// https://www.w3.org/TR/css-easing-1/#cubic-bezier-easing-functions
+/// https://github.com/WebKit/WebKit/blob/main/Source/WebCore/platform/graphics/UnitBezier.h
+struct CurveCoefficients {
+  // Declared in initialisation order: b needs c, a needs both.
+  double c, b, a;
 
-double solveCurveX(const double x, const double x1, const double x2, const double epsilon) {
-  double t0 = 0.0, t1 = 1.0, t2 = x, xValue, dX;
-  int iterations = 0;
+  constexpr CurveCoefficients(const double p1, const double p2) : c(3.0 * p1), b(3.0 * (p2 - p1) - c), a(1.0 - c - b) {}
 
-  while (iterations < 8) {
-    xValue = sampleCurveX(t2, x1, x2) - x;
-    if (std::abs(xValue) < epsilon) {
-      return t2;
-    }
-    dX = sampleCurveDerivativeX(t2, x1, x2);
-    if (std::abs(dX) < epsilon) {
+  constexpr double sample(const double t) const {
+    return ((a * t + b) * t + c) * t;
+  }
+
+  constexpr double sampleDerivative(const double t) const {
+    return (3.0 * a * t + 2.0 * b) * t + c;
+  }
+};
+
+/// Inverts x over [0, 1], where CSS control points keep the curve monotonic and
+/// the root unique.
+double solveCurve(const double x, const CurveCoefficients &curve) {
+  double t = x;
+
+  for (std::uint8_t iteration = 0; iteration < kMaxNewtonIterations; ++iteration) {
+    const double distance = curve.sample(t) - x;
+    if (distance == 0.0) {
+      // A cubic also crosses x outside [0, 1]; that root is not a solution.
+      if (t >= 0.0 && t <= 1.0) {
+        return t;
+      }
       break;
     }
-    t2 = t2 - xValue / dX;
-    iterations++;
+    const double slope = curve.sampleDerivative(t);
+    if (std::abs(slope) < kEpsilon) {
+      break;
+    }
+    const double step = distance / slope;
+    t -= step;
+    if (std::abs(distance) < kEpsilon && std::abs(step) < kEpsilon) {
+      if (t >= 0.0 && t <= 1.0) {
+        return t;
+      }
+      break;
+    }
   }
 
-  // Fallback: Use binary search
-  while (t0 < t1) {
-    t2 = (t0 + t1) / 2.0;
-    xValue = sampleCurveX(t2, x1, x2);
-    if (std::abs(xValue - x) < epsilon) {
-      return t2;
-    }
-    if (x > xValue) {
-      t0 = t2;
+  // Bisection converges on the unique root, and on the nearest endpoint when x
+  // falls outside [0, 1]. Running it to full precision rather than stopping at
+  // the first sample within kEpsilon keeps the fallback accurate on curves with
+  // a near-flat region, where a small error in x is a large one in t.
+  // For x outside [0, 1], css-easing-1 prescribes extension along the endpoint
+  // tangents instead of this nearest-endpoint clamp; callers clamp progress to
+  // [0, 1] today, so the difference is unobservable. Implement the tangent
+  // extension if that clamp ever goes away.
+  double low = 0.0, high = 1.0;
+  for (std::uint8_t iteration = 0; iteration < kMaxBisectionIterations; ++iteration) {
+    const double middle = (low + high) / 2.0;
+    if (curve.sample(middle) < x) {
+      low = middle;
     } else {
-      t1 = t2;
+      high = middle;
     }
   }
 
-  return t2;
+  return (low + high) / 2.0;
 }
 
+} // namespace
+
 EasingFunction cubicBezier(const double x1, const double y1, const double x2, const double y2) {
-  return [=](double x) {
-    double t = solveCurveX(x, x1, x2);
-    return sampleCurveY(t, y1, y2);
+  // Fixed for the lifetime of the easing, so not recomputed per sample.
+  const CurveCoefficients xCurve(x1, x2);
+  const CurveCoefficients yCurve(y1, y2);
+
+  return [xCurve, yCurve](const double x) {
+    return yCurve.sample(solveCurve(x, xCurve));
   };
 }
 

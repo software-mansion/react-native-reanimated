@@ -1,5 +1,5 @@
 #include <jsi/jsi.h>
-#include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 

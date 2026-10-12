@@ -1,5 +1,5 @@
 name: Install Pods
-description: Install CocoaPods dependencies with caching
+description: Restore the Pods cache and install CocoaPods dependencies
 
 inputs:
   working-directory:
@@ -9,11 +9,27 @@ inputs:
     description: The pod directory relative to working-directory (e.g., ios, macos)
     required: true
 
+outputs:
+  cache-hit:
+    description: Whether the restore was an exact primary-key hit
+    value: ${{ steps.pods-cache.outputs.cache-hit }}
+  cache-primary-key:
+    description: >-
+      The primary key computed at restore time, before `pod update` rewrites
+      Podfile.lock. Pass it to save-pods so the entry is saved under the key
+      later runs will actually look up.
+    value: ${{ steps.pods-cache.outputs.cache-primary-key }}
+
 runs:
   using: 'composite'
   steps:
+    # The key covers only what drives dependency resolution; `pod update`
+    # reconciles native sources from any restored tree. yarn.lock stays out:
+    # `yarn toggle-bundle-mode` rewrites it on the Legacy Eval legs, which
+    # would give them a key no saver ever writes.
     - name: Restore Pods cache
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      id: pods-cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: |
           ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
@@ -21,20 +37,12 @@ runs:
         key:
           pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ hashFiles(
           format('{0}/{1}/Podfile.lock', inputs['working-directory'], inputs['pod-directory']),
-          'packages/react-native-reanimated/apple/**/*.h',
-          'packages/react-native-reanimated/apple/**/*.m',
-          'packages/react-native-reanimated/apple/**/*.mm',
-          'packages/react-native-reanimated/apple/**/*.cpp',
-          'packages/react-native-reanimated/apple/**/*.swift',
-          'packages/react-native-reanimated/Common/**/*.h',
-          'packages/react-native-reanimated/Common/**/*.cpp',
-          'packages/react-native-worklets/apple/**/*.h',
-          'packages/react-native-worklets/apple/**/*.m',
-          'packages/react-native-worklets/apple/**/*.mm',
-          'packages/react-native-worklets/apple/**/*.cpp',
-          'packages/react-native-worklets/apple/**/*.swift',
-          'packages/react-native-worklets/Common/**/*.h',
-          'packages/react-native-worklets/Common/**/*.cpp'
+          format('{0}/{1}/Podfile', inputs['working-directory'], inputs['pod-directory']),
+          'packages/react-native-reanimated/RNReanimated.podspec',
+          'packages/react-native-reanimated/scripts/reanimated_utils.rb',
+          'packages/react-native-worklets/RNWorklets.podspec',
+          'packages/react-native-worklets/scripts/worklets_utils.rb',
+          'scripts/llvm-tools/add-xcode-step.rb'
           ) }}
         restore-keys: |
           pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-

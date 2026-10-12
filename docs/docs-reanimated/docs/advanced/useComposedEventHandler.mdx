@@ -66,6 +66,13 @@ An array of event handlers created using [useEvent](/docs/advanced/useEvent) hoo
 The hook returns a handler object that can be hooked into any [`Animated component`](/docs/fundamentals/glossary#animated-component).
 The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). If your composed handler aggregates multiple events that have little in common, put it into a new property, e.g. "composedHandler". It will still work, but the best practice here would be to use several composed handlers for code clarity.
 
+## Example
+
+import ComposedEventHandler from '@site/src/examples/ComposedEventHandler';
+import ComposedEventHandlerSrc from '!!raw-loader!@site/src/examples/ComposedEventHandler';
+
+<InteractiveExample src={ComposedEventHandlerSrc} component={ComposedEventHandler}/>
+
 ## Remarks
 
 - The hook returns a handler that combines functionalities of all the handlers given as an argument. This way, you can have more than one handler responding to a given event, as well as handle many different type events using just one object.

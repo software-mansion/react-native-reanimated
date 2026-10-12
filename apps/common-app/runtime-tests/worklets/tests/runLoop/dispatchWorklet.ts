@@ -4,9 +4,9 @@ import {
   UIRuntimeId,
 } from 'react-native-worklets';
 
-import { getWorkletRuntimeFromPool } from '../../../ReJest/RuntimeTestsApi';
+import { getWorkletRuntimesFromPool } from '../../../ReJest/RuntimeTestsApi';
 
-const workletRuntime = getWorkletRuntimeFromPool('test');
+const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
 export function dispatchWorklet(worklet: () => void, runtimeKind: RuntimeKind) {
   const runtimeId =

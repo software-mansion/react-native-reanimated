@@ -8,6 +8,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/android/CSS/CSSPlatformTransitions.h>
 
 #include <memory>
 #include <string>
@@ -47,6 +48,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
+  std::optional<MountedViewProps> obtainMountedViewProps(Tag tag, bool presented);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
@@ -54,6 +56,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
   void performNonLayoutOperations();
+  bool hasSynchronousWritesTracker();
+  void rewriteSynchronousProps();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
@@ -73,6 +77,20 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jboolean isInDrawPass);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
+  bool cssAnimateTransition(
+      int viewTag,
+      int propertyId,
+      double fromValue,
+      double toValue,
+      double durationMs,
+      double startTimestampMs,
+      int easingId,
+      bool persistent);
+  void cssRemoveTransition(int viewTag, int propertyId);
+  void cssDefineEasing(int easingId, int type, const std::vector<float> &pointsX, const std::vector<float> &pointsY);
+  void cssUndefineEasing(int easingId);
+  /// The one place that decides whether CSS transitions run on the platform.
+  std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend();
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

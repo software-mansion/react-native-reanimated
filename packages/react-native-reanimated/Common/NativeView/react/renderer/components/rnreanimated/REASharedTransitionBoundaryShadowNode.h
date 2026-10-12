@@ -34,6 +34,8 @@ class REASharedTransitionBoundaryShadowNode final : public ConcreteViewShadowNod
     initialize();
   }
 
+  void layout(LayoutContext layoutContext) override;
+
  private:
   void initialize();
 };

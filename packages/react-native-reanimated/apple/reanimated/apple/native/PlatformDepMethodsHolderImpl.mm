@@ -1,4 +1,5 @@
 #import <reanimated/CSS/utils/platform.h>
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
@@ -11,9 +12,16 @@
 #import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
+#import <React/RCTAssert.h>
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTViewComponentView.h>
+
+#import <algorithm>
+#import <cmath>
+#import <memory>
+#import <variant>
 
 @protocol RNScreenViewOptionalProtocol <NSObject>
 @required
@@ -127,48 +135,146 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-css::CSSCanRoutePropertyFunction makeCSSCanRouteProperty()
+namespace {
+
+/// Drives CSS transitions through Core Animation on the view's layer.
+class REACSSPlatformTransitionBackend : public css::CSSPlatformTransitionBackend {
+ public:
+  explicit REACSSPlatformTransitionBackend(REACSSPlatformTransitions *platformTransitions)
+      : platformTransitions_(platformTransitions)
+  {
+  }
+
+  bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override
+  {
+    // TODO: border props snap when RN rasterizes the border (the view fails
+    // useCoreAnimationBorderRendering); route them only when the layer draws them.
+    // CAMediaTimingFunction carries only linear and cubic-bezier curves.
+    return css::hasPlatformValueTraits(propertyName) &&
+        (std::holds_alternative<css::LinearEasing>(easing) || std::holds_alternative<css::CubicBezierEasing>(easing));
+  }
+
+  bool startTransition(
+      Tag viewTag,
+      const std::string &propertyName,
+      const css::PlatformValue &fromValue,
+      const css::PlatformValue &toValue,
+      double durationMs,
+      double startTimestampMs,
+      const css::EasingConfig &easing,
+      bool persistent) override
+  {
+    return [platformTransitions_ startTransitionForTag:viewTag
+                                          propertyName:propertyName
+                                             fromValue:fromValue
+                                               toValue:toValue
+                                            durationMs:durationMs
+                                      startTimestampMs:startTimestampMs
+                                                easing:easing
+                                            persistent:persistent];
+  }
+
+  void stopTransition(Tag viewTag, const std::string &propertyName) override
+  {
+    [platformTransitions_ stopTransitionForTag:viewTag propertyName:propertyName];
+  }
+
+ private:
+  REACSSPlatformTransitions *platformTransitions_;
+};
+
+/// The one place that decides whether CSS transitions run on Core Animation.
+std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend(REANodesManager *nodesManager)
 {
-  return &css::canRouteCSSProperty;
+  if constexpr (!StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
+    return nullptr;
+  }
+  REACSSPlatformTransitions *platformTransitions =
+      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  return std::make_shared<REACSSPlatformTransitionBackend>(platformTransitions);
 }
 
-css::CSSApplyTransitionFunction makeCSSApplyTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](
-             Tag viewTag,
-             const std::string &propertyName,
-             const css::PlatformValue &fromValue,
-             const css::PlatformValue &toValue,
-             const css::CSSTransitionPropertySettings *settings,
-             double timestamp) {
-    return [platformTransitions applyTransitionForTag:viewTag
-                                         propertyName:propertyName
-                                            fromValue:fromValue
-                                              toValue:toValue
-                                             settings:settings
-                                            timestamp:timestamp];
-  };
-}
-
-css::CSSRemoveTransitionFunction makeCSSRemoveTransition(REACSSPlatformTransitions *platformTransitions)
-{
-  return [platformTransitions](Tag viewTag, const std::string &propertyName) {
-    [platformTransitions removeTransitionForTag:viewTag propertyName:propertyName];
-  };
-}
+} // namespace
 
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
-  auto forceScreenSnapshot = [=](Tag tag) {
+  auto forceScreenSnapshot = [=](Tag tag) -> bool {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
       [static_cast<id<RNScreenViewOptionalProtocol>>(maybeRNSScreenView) setSnapshotAfterUpdates:YES];
+      return true;
     }
+    return false;
   };
   return forceScreenSnapshot;
+}
+
+ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  auto readMountedViewProps = [=](Tag tag) -> Props::Shared {
+    RCTAssertMainQueue();
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
+    // The default `props` getter of `UIView` asserts.
+    if (![componentView isKindOfClass:[RCTViewComponentView class]]) {
+      return nullptr;
+    }
+    return [componentView props];
+  };
+  return readMountedViewProps;
+}
+
+#if !TARGET_OS_OSX
+static int argbFromCGColor(CGColorRef color)
+{
+  CGFloat red = 0;
+  CGFloat green = 0;
+  CGFloat blue = 0;
+  CGFloat alpha = 0;
+  if (color != nil) {
+    [[UIColor colorWithCGColor:color] getRed:&red green:&green blue:&blue alpha:&alpha];
+  }
+  const auto channel = [](CGFloat value) {
+    return static_cast<uint32_t>(std::lround(std::clamp(value, 0.0, 1.0) * 255));
+  };
+  return static_cast<int>(channel(alpha) << 24 | channel(red) << 16 | channel(green) << 8 | channel(blue));
+}
+#endif
+
+ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  return [=](Tag tag, bool presented) -> std::optional<MountedViewProps> {
+#if TARGET_OS_OSX
+    return std::nullopt;
+#else
+    RCTComponentViewRegistry *componentViewRegistry =
+        nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+    if (view == nil || view.window == nil) {
+      return std::nullopt;
+    }
+    // A layer has no presentation layer until Core Animation renders it.
+    CALayer *layer = presented ? (view.layer.presentationLayer ?: view.layer) : view.layer;
+    const CGSize size = layer.bounds.size;
+    const CGPoint anchor = layer.anchorPoint;
+    return MountedViewProps{
+        .x = layer.position.x - size.width * anchor.x,
+        .y = layer.position.y - size.height * anchor.y,
+        .width = size.width,
+        .height = size.height,
+        .opacity = layer.opacity,
+        // React Native paints the background on an unanimated sublayer for non-circular corners and for
+        // visible borders without clipping, and keeps its color in `backgroundColor`.
+        .backgroundColor = argbFromCGColor(
+            layer.backgroundColor
+                ?: [view.backgroundColor resolvedColorWithTraitCollection:view.traitCollection].CGColor),
+    };
+#endif
+  };
 }
 
 PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
@@ -192,6 +298,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto requestRender = makeRequestRender(nodesManager);
 
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
+
+  auto readMountedViewPropsFunction = makeReadMountedViewPropsFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -218,15 +326,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
-  REACSSPlatformTransitions *platformTransitions =
-      [[REACSSPlatformTransitions alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
-  auto cssCanRouteProperty = makeCSSCanRouteProperty();
-  auto cssApplyTransition = makeCSSApplyTransition(platformTransitions);
-  auto cssRemoveTransition = makeCSSRemoveTransition(platformTransitions);
+  auto obtainMountedViewPropsFunction = makeObtainMountedViewPropsFunction(nodesManager);
+
+  auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      readMountedViewPropsFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
@@ -237,9 +344,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
-      cssCanRouteProperty,
-      cssApplyTransition,
-      cssRemoveTransition,
+      obtainMountedViewPropsFunction,
+      platformTransitionBackend,
   };
   return platformDepMethodsHolder;
 }

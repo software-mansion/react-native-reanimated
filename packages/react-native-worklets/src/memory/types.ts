@@ -36,6 +36,15 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
     unlock(): void;
   };
 
+export type FixedSynchronizable<TValue extends number | boolean> =
+  Synchronizable<TValue> & {
+    setDirty(value: TValue): void;
+  };
+
+export type SynchronizableConfig = {
+  fixedType?: boolean;
+};
+
 /**
  * Registration data for
  * [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable)

@@ -125,8 +125,8 @@ async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
   let componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
 
   const noDelaySnapshots = {
-    active: updatesContainerNoDelay.getUpdates(componentActive),
-    passive: updatesContainerNoDelay.getUpdates(componentPassive),
+    active: await updatesContainerNoDelay.getUpdates(componentActive),
+    passive: await updatesContainerNoDelay.getUpdates(componentPassive),
     activeNative:
       await updatesContainerNoDelay.getNativeSnapshots(componentActive),
     passiveNative:
@@ -149,8 +149,8 @@ async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
   componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
 
   const delaySnapshots = {
-    active: updatesContainerWithDelay.getUpdates(componentActive),
-    passive: updatesContainerWithDelay.getUpdates(componentPassive),
+    active: await updatesContainerWithDelay.getUpdates(componentActive),
+    passive: await updatesContainerWithDelay.getUpdates(componentPassive),
     activeNative:
       await updatesContainerWithDelay.getNativeSnapshots(componentActive),
     passiveNative:

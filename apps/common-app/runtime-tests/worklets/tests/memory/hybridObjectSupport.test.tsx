@@ -1,49 +1,39 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
+import type { BoxedHybridObject } from 'react-native-nitro-modules';
 import {
-  describe,
-  expect,
-  getWorkletRuntimeFromPool,
-  notify,
-  test,
-  waitForNotification,
-} from '../../../ReJest/RuntimeTestsApi';
-import {
-  createSerializable,
   createSynchronizable,
   registerCustomSerializable,
   runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
-  serializableMappingCache,
 } from 'react-native-worklets';
 
-import { createMMKV, type MMKV } from 'react-native-mmkv';
-import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
-import type { BoxedHybridObject } from 'react-native-nitro-modules';
+import {
+  describe,
+  expect,
+  getWorkletRuntimesFromPool,
+  notify,
+  test,
+  waitForNotification,
+} from '../../../ReJest/RuntimeTestsApi';
 
 // @ts-ignore NitroModules types on web differ from native.
 const boxedNitroModules = NitroModules.box(NitroModules);
 
-const NitroModulesHandle = {
-  __init() {
-    'worklet';
-    return boxedNitroModules.unbox();
-  },
-};
-
-const serializedNitroModulesHandle = createSerializable(NitroModulesHandle);
-serializableMappingCache.set(NitroModules, serializedNitroModulesHandle);
-
 const determine = (value: object): value is HybridObject<never> => {
   'worklet';
+  const NitroModules = boxedNitroModules.unbox();
   // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.isHybridObject(value);
 };
 
 const pack = (value: HybridObject<never>) => {
   'worklet';
+  const NitroModules = boxedNitroModules.unbox();
   // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.box(value);
 };
@@ -74,7 +64,7 @@ const getTestData = () => {
 };
 
 describe('Test HybridObject Support', () => {
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   test('passes HybridObjects from RN runtime to UI runtime', () => {
     // Arrange

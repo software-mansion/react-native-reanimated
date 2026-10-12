@@ -2,7 +2,9 @@
 #include <reanimated/Compat/WorkletsApi.h>
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -11,19 +13,28 @@ PropertyInterpolator::PropertyInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(std::move(propertyPath)), viewStylesRepository_(viewStylesRepository) {}
 
+folly::dynamic PropertyInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
+}
+
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;
 }
 
 std::string PropertyInterpolator::getPropertyPathString() const {
-  if (propertyPath_.empty()) {
-    return "";
+  std::string result;
+
+  for (const auto &segment : propertyPath_) {
+    if (const auto *arrayIndex = std::get_if<size_t>(&segment)) {
+      result += "[" + std::to_string(*arrayIndex) + "]";
+    } else {
+      if (!result.empty()) {
+        result += ".";
+      }
+      result += std::get<std::string>(segment);
+    }
   }
 
-  std::string result = propertyPath_[0];
-  for (size_t i = 1; i < propertyPath_.size(); ++i) {
-    result += "." + propertyPath_[i];
-  }
   return result;
 }
 

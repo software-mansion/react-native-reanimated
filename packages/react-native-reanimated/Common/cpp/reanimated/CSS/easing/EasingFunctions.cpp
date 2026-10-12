@@ -11,7 +11,7 @@ inline const std::unordered_map<std::string, EasingFunction> PREDEFINED_EASING_M
      [](double x) {
        return x;
      }},
-    {"ease", cubicBezier(0.25, 0.1, 0.25, 0.1)},
+    {"ease", cubicBezier(0.25, 0.1, 0.25, 1.0)},
     {"ease-in", cubicBezier(0.42, 0.0, 1.0, 1.0)},
     {"ease-out", cubicBezier(0.0, 0.0, 0.58, 1.0)},
     {"ease-in-out", cubicBezier(0.42, 0.0, 0.58, 1.0)},

@@ -1,0 +1,21 @@
+name: Save Ccache
+description: Report ccache statistics and persist the cache from the default branch
+
+inputs:
+  key-prefix:
+    description: Cache key prefix, must match the one passed to setup-ccache
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Report ccache statistics
+      shell: bash
+      run: ccache --show-stats -v
+
+    - name: Save ccache
+      if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ~/Library/Caches/ccache
+        key: ccache-${{ inputs.key-prefix }}-${{ github.sha }}

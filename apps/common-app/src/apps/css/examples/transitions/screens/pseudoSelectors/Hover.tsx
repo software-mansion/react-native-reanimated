@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
@@ -14,9 +13,7 @@ import {
 } from '@/apps/css/components';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const AnimatedCircle = Animated.createAnimatedComponent(
-  Circle
-) as ComponentType<Record<string, unknown>>;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function Hover() {
   return (
@@ -286,20 +283,18 @@ shadowOpacity: {
   {/* Back circle - drawn first, so it sits underneath */}
   <AnimatedCircle
     cx={95} cy={90} r={65} fill="#fca5a5"
-    style={{
+    animatedProps={{
       fill: { default: '#fca5a5', ':hover': '#dc2626' },
       transitionDuration: '150ms',
     }}
-    onStartShouldSetResponder={() => true}
   />
   {/* Front circle - drawn last, so it sits on top */}
   <AnimatedCircle
     cx={145} cy={90} r={65} fill="#93c5fd"
-    style={{
+    animatedProps={{
       fill: { default: '#93c5fd', ':hover': '#2563eb' },
       transitionDuration: '150ms',
     }}
-    onStartShouldSetResponder={() => true}
   />
 </Svg>`}
             collapsedCode={`fill: {
@@ -313,28 +308,26 @@ shadowOpacity: {
                   cy={90}
                   fill="#fca5a5"
                   r={65}
-                  style={{
+                  animatedProps={{
                     fill: {
                       ':hover': '#dc2626',
                       default: '#fca5a5',
                     },
                     transitionDuration: '150ms',
                   }}
-                  onStartShouldSetResponder={() => true}
                 />
                 <AnimatedCircle
                   cx={145}
                   cy={90}
                   fill="#93c5fd"
                   r={65}
-                  style={{
+                  animatedProps={{
                     fill: {
                       ':hover': '#2563eb',
                       default: '#93c5fd',
                     },
                     transitionDuration: '150ms',
                   }}
-                  onStartShouldSetResponder={() => true}
                 />
               </Svg>
             </View>

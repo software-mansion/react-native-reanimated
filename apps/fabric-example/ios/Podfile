@@ -45,8 +45,25 @@ target 'FabricExample' do
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
     )
+
+    if ENV['USE_CCACHE_LAUNCHER'] == '1'
+      ccache_path = `command -v ccache`.strip
+      if ccache_path.empty?
+        Pod::UI.warn('[Ccache] USE_CCACHE_LAUNCHER=1 but ccache was not found on PATH')
+      else
+        Pod::UI.puts("[Ccache] Using #{ccache_path} as C_COMPILER_LAUNCHER")
+        projects = [installer.pods_project]
+        projects += installer.aggregate_targets.map(&:user_project).compact
+        projects.uniq { |project| project.path }.each do |project|
+          project.build_configurations.each do |config|
+            config.build_settings['C_COMPILER_LAUNCHER'] = ccache_path
+            config.build_settings['CLANG_ENABLE_EXPLICIT_MODULES_WITH_COMPILER_LAUNCHER'] = 'YES'
+          end
+          project.save
+        end
+      end
+    end
   end
 
   add_compile_metadata_step()

@@ -4,6 +4,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/RunLifecycle.h>
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 
 #include <memory>
@@ -28,16 +29,33 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
       EasingFunction easingFunction,
       const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs);
 
+  double getDuration() const {
+    return duration_;
+  }
+  double getDelay() const {
+    return delay_;
+  }
+  double getIterationCount() const {
+    return iterationCount_;
+  }
+  unsigned getCurrentIteration() const {
+    return currentIteration_;
+  }
+  AnimationDirection getDirection() const;
+  AnimationProgressState getState() const;
+  double getStartTimestamp(double timestamp) const;
+  double getGlobalProgress() const override;
+  double getKeyframeProgress(double fromOffset, double toOffset) const override;
+
   void setIterationCount(double iterationCount);
   void setDirection(AnimationDirection direction);
   void setEasingFunction(const EasingFunction &easingFunction);
 
-  AnimationDirection getDirection() const;
-  double getGlobalProgress() const override;
-  double getKeyframeProgress(double fromOffset, double toOffset) const override;
+  /// Time the animation has run by the given milestone, in milliseconds.
+  double elapsedTimeAt(MilestoneTime time) const;
 
-  AnimationProgressState getState() const;
-  double getStartTimestamp(double timestamp) const;
+  void setMilestoneReporter(RunLifecycle::Reporter reporter);
+  void abort(double timestamp);
 
   void pause(double timestamp);
   void play(double timestamp);
@@ -53,15 +71,26 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   EasingFunction easingFunction_;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs_;
 
-  AnimationProgressState state_ = AnimationProgressState::Pending;
+  // Survives resetProgress, because updateSettings re-times the run rather than
+  // starting a new one.
+  RunLifecycle lifecycle_;
+
   unsigned currentIteration_ = 1;
   double previousIterationsDuration_ = 0;
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
+  // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
+  double cancelTimestamp_ = 0;
 
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
-  AnimationProgressState computeState(double timestamp) const;
+  RunPhase computePhase(double timestamp) const;
+
+  double intervalStart() const;
+  double iterationStart() const;
+  double iterationEnd() const;
+  double intervalEnd() const;
+  double activeTimeAtCancel() const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;

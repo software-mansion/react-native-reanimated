@@ -1,4 +1,3 @@
-import { balloonsImage } from '@/apps/css/assets';
 import React, { useCallback } from 'react';
 import { Button, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -8,6 +7,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+
+import { balloonsImage } from '@/apps/css/assets';
 
 const instructions = [
   '1. Press "Toggle shared value" button',

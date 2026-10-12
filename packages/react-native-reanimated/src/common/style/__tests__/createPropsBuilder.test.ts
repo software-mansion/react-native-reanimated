@@ -62,6 +62,36 @@ const createBuilder = (configOverrides: Partial<TestConfig>) => {
 };
 
 describe(createPropsBuilder, () => {
+  test('omits a property whose value the processor rejects', () => {
+    const builder = createBuilder({
+      width: true,
+      padding: {
+        process: () => {
+          throw new Error('[Reanimated] Invalid padding');
+        },
+      },
+    });
+
+    expect(builder.build({ width: 120, padding: 5 })).toEqual({ width: 120 });
+  });
+
+  test('passes null through without processing it', () => {
+    const process = jest.fn();
+    const builder = createBuilder({ padding: { process } });
+
+    expect(builder.build({ padding: null as never })).toEqual({
+      padding: null,
+    });
+    expect(process).not.toHaveBeenCalled();
+  });
+
+  test('keeps a property whose processor returns undefined', () => {
+    // e.g. `boxShadow: 'none'`, which is sent as null to clear the shadow
+    const builder = createBuilder({ padding: { process: () => undefined } });
+
+    expect(builder.build({ padding: 5 })).toEqual({ padding: undefined });
+  });
+
   test('ignores properties not present in config', () => {
     const builder = createBuilder({ width: true });
 
@@ -175,5 +205,37 @@ describe(createPropsBuilder, () => {
         '[Reanimated] Max process depth for props builder reached for property width'
       )
     );
+  });
+
+  describe('trimming string values', () => {
+    test('trims a string before handing it to the processor', () => {
+      const processor = jest.fn().mockReturnValue(0);
+      const builder = createBuilder({ margin: { process: processor } });
+
+      builder.build({ margin: '  10px\n' });
+
+      expect(processor).toHaveBeenCalledWith('10px', {
+        target: ValueProcessorTarget.Default,
+      });
+    });
+
+    test('leaves non-string values untouched', () => {
+      const processor = jest.fn().mockReturnValue(0);
+      const builder = createBuilder({ margin: { process: processor } });
+
+      builder.build({ margin: 10 });
+
+      expect(processor).toHaveBeenCalledWith(10, {
+        target: ValueProcessorTarget.Default,
+      });
+    });
+
+    test('does not trim properties that have no processor', () => {
+      const builder = createBuilder({ margin: true });
+
+      expect(builder.build({ margin: '  10px  ' })).toEqual({
+        margin: '  10px  ',
+      });
+    });
   });
 });

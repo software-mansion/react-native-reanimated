@@ -8,7 +8,7 @@
 namespace reanimated::css {
 
 template <typename Derived>
-struct CSSLengthVector : public CSSResolvableValue<Derived> {
+struct CSSLengthVector : public CSSResolvableValue<Derived, RelativeValueInterpolationContext> {
   std::vector<CSSLength> values;
 
   CSSLengthVector() = default;

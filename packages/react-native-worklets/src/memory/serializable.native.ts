@@ -181,16 +181,6 @@ export function createSerializable<TValue>(
   if (isHostObject(value)) {
     return cloneHostObject(value);
   }
-  if (isPlainJSObject(value) && value.__init) {
-    return cloneInitializer(
-      value,
-      shouldPersistRemote,
-      depth
-    ) as SerializableRef<TValue>;
-  }
-  if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
-    return cloneContextObject(value);
-  }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
   }
@@ -246,6 +236,231 @@ if (isBundleModeEnabled()) {
     imported: 'createSerializable',
     source: require.resolveWeak('react-native-worklets'),
   };
+}
+
+export function createSerializableArray<TValue extends unknown[]>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (__DEV__ && !Array.isArray(value)) {
+    throw new Error('[Worklets] `createSerializableArray` expects an array.');
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneArray(value, false, 0)
+  );
+}
+
+export function createSerializableObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (
+    __DEV__ &&
+    (typeof value !== 'object' ||
+      value === null ||
+      !isPlainJSObject(value) ||
+      isSynchronizable(value) ||
+      isWorkletFunction(value))
+  ) {
+    throw new Error(
+      '[Worklets] `createSerializableObject` expects a plain object.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    clonePlainJSObject(value, false, 0)
+  );
+}
+
+export function createSerializableMap<TKey, TValue>(
+  value: Map<TKey, TValue>
+): SerializableRef<Map<TKey, TValue>> {
+  if (__DEV__ && !(value instanceof Map)) {
+    throw new Error('[Worklets] `createSerializableMap` expects a Map.');
+  }
+  return ((getFromCache(value) as SerializableRef<Map<unknown, unknown>>) ??
+    cloneMap(value)) as SerializableRef<Map<TKey, TValue>>;
+}
+
+export function createSerializableSet<TValue>(
+  value: Set<TValue>
+): SerializableRef<Set<TValue>> {
+  if (__DEV__ && !(value instanceof Set)) {
+    throw new Error('[Worklets] `createSerializableSet` expects a Set.');
+  }
+  return ((getFromCache(value) as SerializableRef<Set<unknown>>) ??
+    cloneSet(value)) as SerializableRef<Set<TValue>>;
+}
+
+export function createSerializableError<TValue extends Error>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (__DEV__ && !(value instanceof Error)) {
+    throw new Error('[Worklets] `createSerializableError` expects an Error.');
+  }
+  return ((getFromCache(value) as SerializableRef<Error>) ??
+    cloneError(value)) as SerializableRef<TValue>;
+}
+
+export function createSerializableRegExp(
+  value: RegExp
+): SerializableRef<RegExp> {
+  if (__DEV__ && !(value instanceof RegExp)) {
+    throw new Error('[Worklets] `createSerializableRegExp` expects a RegExp.');
+  }
+  return (
+    (getFromCache(value) as SerializableRef<RegExp> | undefined) ??
+    cloneRegExp(value)
+  );
+}
+
+export function createSerializableArrayBuffer(
+  value: ArrayBuffer
+): SerializableRef<ArrayBuffer> {
+  if (__DEV__ && !(value instanceof ArrayBuffer)) {
+    throw new Error(
+      '[Worklets] `createSerializableArrayBuffer` expects an ArrayBuffer.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<ArrayBuffer> | undefined) ??
+    cloneArrayBuffer(value)
+  );
+}
+
+export function createSerializableArrayBufferView<
+  TValue extends ArrayBufferView,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && !ArrayBuffer.isView(value)) {
+    throw new Error(
+      '[Worklets] `createSerializableArrayBufferView` expects a typed array or a DataView.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneArrayBufferView(value)
+  );
+}
+
+export function createSerializableHostObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
+  if (
+    __DEV__ &&
+    (typeof value !== 'object' || value === null || !isHostObject(value))
+  ) {
+    throw new Error(
+      '[Worklets] `createSerializableHostObject` expects a host object.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    cloneHostObject(value)
+  );
+}
+
+export function createSerializableString(
+  value: string
+): SerializableRef<string> {
+  if (__DEV__ && typeof value !== 'string') {
+    throw new Error('[Worklets] `createSerializableString` expects a string.');
+  }
+  const clone = cloneString(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableNumber(
+  value: number
+): SerializableRef<number> {
+  if (__DEV__ && typeof value !== 'number') {
+    throw new Error('[Worklets] `createSerializableNumber` expects a number.');
+  }
+  const clone = cloneNumber(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableBoolean(
+  value: boolean
+): SerializableRef<boolean> {
+  if (__DEV__ && typeof value !== 'boolean') {
+    throw new Error(
+      '[Worklets] `createSerializableBoolean` expects a boolean.'
+    );
+  }
+  const clone = cloneBoolean(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableBigInt(
+  value: bigint
+): SerializableRef<bigint> {
+  if (__DEV__ && typeof value !== 'bigint') {
+    throw new Error('[Worklets] `createSerializableBigInt` expects a bigint.');
+  }
+  const clone = cloneBigInt(value);
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableNull(value: null): SerializableRef<null> {
+  if (__DEV__ && value !== null) {
+    throw new Error('[Worklets] `createSerializableNull` expects null.');
+  }
+  const clone = cloneNull();
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableUndefined(
+  value: undefined
+): SerializableRef<undefined> {
+  if (__DEV__ && value !== undefined) {
+    throw new Error(
+      '[Worklets] `createSerializableUndefined` expects undefined.'
+    );
+  }
+  const clone = cloneUndefined();
+  serializableMappingCache.set(clone);
+  return clone;
+}
+
+export function createSerializableWorklet<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && !isWorkletFunction(value)) {
+    throw new Error(
+      '[Worklets] `createSerializableWorklet` expects a worklet.'
+    );
+  }
+  return (
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
+    (cloneWorklet(
+      value as unknown as WorkletFunction,
+      false,
+      0
+    ) as unknown as SerializableRef<TValue>)
+  );
+}
+
+export function createSerializableRemoteFunction<
+  TValue extends (...args: never[]) => unknown,
+>(value: TValue): SerializableRef<TValue> {
+  if (__DEV__ && (typeof value !== 'function' || isWorkletFunction(value))) {
+    throw new Error(
+      '[Worklets] `createSerializableRemoteFunction` expects a function that is not a worklet.'
+    );
+  }
+  const cached = getFromCache(value);
+  const serializable =
+    globalThis.WeakRef && cached instanceof WeakRef ? cached.deref() : cached;
+  return (
+    (serializable as SerializableRef<TValue> | undefined) ??
+    (cloneNonWorkletFunction(
+      value as unknown as () => unknown
+    ) as unknown as SerializableRef<TValue>)
+  );
 }
 
 if (!globalThis.__customSerializationRegistry) {
@@ -374,7 +589,7 @@ function cloneObjectProperties<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): Record<string, unknown> {
-  const clonedProps: Record<string, unknown> = {};
+  const clonedProps: Record<string, unknown> = Object.create(null);
   for (const [key, element] of Object.entries(value)) {
     // We don't need to clone __initData field as it contains long strings
     // representing the worklet code, source map, and location, and we will
@@ -395,19 +610,6 @@ function cloneObjectProperties<T extends object>(
     }
   }
   return clonedProps;
-}
-
-function cloneInitializer(
-  value: object,
-  shouldPersistRemote = false,
-  depth = 0
-): SerializableRef<object> {
-  const clonedProps: Record<string, unknown> = cloneObjectProperties(
-    value,
-    shouldPersistRemote,
-    depth
-  );
-  return WorkletsModule.createSerializableInitializer(clonedProps);
 }
 
 function cloneArray<T extends unknown[]>(
@@ -541,21 +743,6 @@ function cloneTurboModuleLike<TValue extends object>(
   return clone;
 }
 
-function cloneContextObject<TValue extends object>(
-  value: TValue
-): SerializableRef<TValue> {
-  const workletContextObjectFactory = (value as Record<string, unknown>)
-    .__workletContextObjectFactory as () => TValue;
-  const handle = cloneInitializer({
-    __init: () => {
-      'worklet';
-      return workletContextObjectFactory();
-    },
-  });
-  serializableMappingCache.set(value, handle);
-  return handle as SerializableRef<TValue>;
-}
-
 function clonePlainJSObject<TValue extends object>(
   value: TValue,
   shouldPersistRemote: boolean,
@@ -637,6 +824,7 @@ function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
     value.flags
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -644,6 +832,7 @@ function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
   const clone = WorkletsModule.createSerializableError(name, message, stack);
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -675,6 +864,7 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     length
   );
   serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
   return clone;
 }
 
@@ -878,7 +1068,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           '[Worklets] Promises cannot be converted to serializable.'
         );
       }
-      const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
+      const toAdapt: Record<
+        string,
+        FlatSerializableRef<TValue>
+      > = Object.create(null);
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
@@ -945,12 +1138,7 @@ export function makeShareable<TValue extends object>(value: TValue): TValue {
   if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = createSerializable({
-    __init: () => {
-      'worklet';
-      return value;
-    },
-  });
+  const handle = createSerializable(value, true);
   serializableMappingCache.set(value, handle);
   return value;
 }

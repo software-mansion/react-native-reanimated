@@ -1,10 +1,5 @@
 'use strict';
-import type {
-  IWorkletsModule,
-  SerializableRef,
-  WorkletFunction,
-} from 'react-native-worklets';
-import { WorkletsModule } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import { IS_JEST, IS_WEB, IS_WINDOW_AVAILABLE, logger } from '../../common';
 import type {
@@ -18,11 +13,11 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
 } from '../../css/native';
 import { DefaultStaticFeatureFlags } from '../../featureFlags/staticFeatureFlags';
-import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -31,21 +26,9 @@ export function createJSReanimatedModule(): IReanimatedModule {
 }
 
 class JSReanimated implements IReanimatedModule {
-  /**
-   * We keep the instance of `WorkletsModule` here to keep correct coupling of
-   * the modules and initialization order.
-   */
-  // eslint-disable-next-line no-unused-private-class-members
-  #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
-
-  constructor() {
-    if (__DEV__) {
-      assertWorkletsVersion();
-    }
-  }
 
   registerEventHandler<T>(
     _eventHandler: SerializableRef<T>,
@@ -281,6 +264,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  setCSSEventHandler(_handler: CSSEventHandler): void {
+    throw new Error(
+      '[Reanimated] `setCSSEventHandler` is not available in JSReanimated.'
+    );
+  }
+
   markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
     throw new Error(
       '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'
@@ -330,7 +319,8 @@ class JSReanimated implements IReanimatedModule {
 
   runCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: CSSTransitionConfig
+    _transitionConfig: CSSTransitionConfig,
+    _eventMask: number
   ): void {
     throw new Error(
       '[Reanimated] `runCSSTransition` is not available in JSReanimated.'
@@ -370,11 +360,4 @@ export enum Platform {
   WEB_ANDROID = 'web Android',
   WEB = 'web',
   UNKNOWN = 'unknown',
-}
-
-declare global {
-  interface Navigator {
-    userAgent: string;
-    vendor: string;
-  }
 }

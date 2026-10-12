@@ -15,6 +15,20 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
 import { isAnimated, shallowEqual } from './utils';
 
+export function createAnimatedStyleHandle<THandle extends object>(
+  handle: THandle,
+  styleUpdaterContainer: StyleUpdaterContainer
+): THandle & { styleUpdaterContainer: StyleUpdaterContainer } {
+  Object.defineProperty(handle, 'styleUpdaterContainer', {
+    enumerable: false,
+    value: styleUpdaterContainer,
+  });
+
+  return handle as THandle & {
+    styleUpdaterContainer: StyleUpdaterContainer;
+  };
+}
+
 export interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;

@@ -1,22 +1,19 @@
-import { makeMutable } from 'react-native-reanimated';
-
 import type { Operation } from '../types';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
+import { sleep, waitFor } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
 const MAX_WAIT_TIME_MS = 10000;
 
 export class AnimationUpdatesRecorder {
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
-
   public async recordAnimationUpdates() {
     const updatesContainer = createUpdatesContainer();
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
 
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       global.animationUpdatesRecordingStarted = false;
 
@@ -54,7 +51,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
         global._updateProps = global.originalUpdateProps;
@@ -69,17 +66,28 @@ export class AnimationUpdatesRecorder {
   }
 
   public async mockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
+      global.framesCount = 0;
+
+      if (global.originalGetAnimationTimestamp !== undefined) {
+        return;
+      }
+
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
+
+      Object.defineProperty(global, '__frameTimestamp', {
+        configurable: true,
+        get: () => global.mockedAnimationTimestamp,
+        set: () => {},
+      });
       global._getAnimationTimestamp = () => {
         if (global.mockedAnimationTimestamp === undefined) {
           throw new Error("Animation timestamp wasn't initialized");
         }
         return global.mockedAnimationTimestamp;
       };
-      global.framesCount = 0;
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
@@ -109,7 +117,7 @@ export class AnimationUpdatesRecorder {
   }
 
   public async unmockAnimationTimer(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
         global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
@@ -127,52 +135,61 @@ export class AnimationUpdatesRecorder {
       }
       global.mockedAnimationTimestamp = undefined;
       global.framesCount = undefined;
+      Object.defineProperty(global, '__frameTimestamp', {
+        configurable: true,
+        writable: true,
+        value: undefined,
+      });
     }, maxWaitTime);
   }
 
   public wait(delay: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, delay);
-    });
+    return sleep(delay);
   }
 
   public async waitForAnimationUpdates(
     updatesCount: number,
     maxWaitTime = MAX_WAIT_TIME_MS
-  ): Promise<boolean> {
+  ) {
     const CHECK_INTERVAL = 20;
-    const flag = makeMutable(false);
-    const framesSeen = makeMutable(0);
-    const startTime = performance.now();
+    let framesSeen = 0;
     let isFirstPoll = true;
 
-    for (;;) {
-      const remainingWaitTime = maxWaitTime - (performance.now() - startTime);
-      if (remainingWaitTime <= 0) {
-        throw new Error(
-          `Timed out after ${maxWaitTime}ms while waiting for ${updatesCount} animation updates, got ${framesSeen.value}.`
-        );
-      }
-
+    const readFramesCount = async () => {
       const shouldAssertMock = isFirstPoll;
       isFirstPoll = false;
 
-      await new SyncUIRunner().runOnUIBlocking(() => {
-        'worklet';
-        if (shouldAssertMock) {
-          assertMockedAnimationTimestamp(global.framesCount);
-        } else if (global.framesCount === undefined) {
-          return;
+      return runOnUIBlocking(
+        () => {
+          'worklet';
+          if (shouldAssertMock) {
+            assertMockedAnimationTimestamp(global.framesCount);
+          }
+          if (global.animationUpdatesRecordingStarted !== true) {
+            return undefined;
+          }
+          return global.framesCount;
+        },
+        maxWaitTime,
+        'the UI runtime to report the recorded frame count'
+      );
+    };
+
+    await waitFor(
+      async () => {
+        const framesCount = await readFramesCount();
+        if (framesCount === undefined) {
+          return false;
         }
-        framesSeen.value = global.framesCount;
-        flag.value = global.framesCount >= updatesCount - 1;
-      }, remainingWaitTime);
-
-      if (flag.value) {
-        return true;
+        framesSeen = framesCount;
+        return framesCount >= updatesCount - 1;
+      },
+      {
+        description: `${updatesCount} animation updates`,
+        timeout: maxWaitTime,
+        interval: CHECK_INTERVAL,
+        describeState: () => `${framesSeen} updates`,
       }
-
-      await this.wait(CHECK_INTERVAL);
-    }
+    );
   }
 }

@@ -45,6 +45,38 @@ describe('CSSAnimationsManager (web)', () => {
     manager = new CSSAnimationsManager(element);
   });
 
+  describe('reuse before stylesheet cleanup', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    test.each([false, true])(
+      'does not remove active rules after reuse (replacement: %s)',
+      (replace) => {
+        manager.update(animation());
+        manager.unmountCleanup();
+        manager.update(
+          replace
+            ? animation({
+                animationName: { from: { opacity: 0.2 }, to: { opacity: 0.8 } },
+              })
+            : animation()
+        );
+        jest.mocked(removeCSSAnimation).mockClear();
+        jest.runOnlyPendingTimers();
+        expect(removeCSSAnimation).not.toHaveBeenCalled();
+        const activeName = element.style.animationName;
+        manager.unmountCleanup();
+        manager.unmountCleanup();
+        jest.runOnlyPendingTimers();
+        expect(removeCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(removeCSSAnimation).toHaveBeenCalledWith(activeName);
+      }
+    );
+  });
+
   describe('update', () => {
     test('hands the processed keyframes to domUtils and writes the animation longhands to the element', () => {
       manager.update(
@@ -67,6 +99,31 @@ describe('CSSAnimationsManager (web)', () => {
       expect(element.style.animationTimingFunction).toBe('ease-in-out');
       expect(element.style.animationIterationCount).toBe('2');
       expect(element.style.animationDirection).toBe('reverse');
+    });
+
+    test('repeats a delay list that is shorter than the animation list', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: '1s',
+        })
+      );
+
+      // A list shorter than `animation-name` repeats to match it, the way the
+      // browser does for the sibling longhands this manager passes through
+      // untouched.
+      expect(element.style.animationDelay).toBe('1s,1s');
+    });
+
+    test('leaves a delay list that already matches the animation list alone', () => {
+      manager.update(
+        animation({
+          animationName: [keyframes, keyframes],
+          animationDelay: ['1s', '2s'],
+        })
+      );
+
+      expect(element.style.animationDelay).toBe('1s,2s');
     });
 
     test('inserts every one of multiple comma-separated animations', () => {
@@ -183,7 +240,7 @@ describe('CSSAnimationsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
       const removeSpy = jest.spyOn(element, 'removeEventListener');
 
-      manager.update(animation(), { onAnimationEnd: jest.fn() });
+      manager.update(animation(), { onCSSAnimationEnd: jest.fn() });
       expect(addSpy).toHaveBeenCalledWith('animationend', expect.any(Function));
 
       // Removing the callback on the next update must detach the exact same
@@ -196,10 +253,10 @@ describe('CSSAnimationsManager (web)', () => {
       const addSpy = jest.spyOn(element, 'addEventListener');
 
       manager.update(animation(), {
-        onAnimationStart: jest.fn(),
-        onAnimationEnd: jest.fn(),
-        onAnimationIteration: jest.fn(),
-        onAnimationCancel: jest.fn(),
+        onCSSAnimationStart: jest.fn(),
+        onCSSAnimationEnd: jest.fn(),
+        onCSSAnimationIteration: jest.fn(),
+        onCSSAnimationCancel: jest.fn(),
       });
 
       for (const eventName of [
@@ -213,14 +270,14 @@ describe('CSSAnimationsManager (web)', () => {
     });
 
     test('forwards the animationName and elapsedTime when the event fires', () => {
-      const onAnimationEnd = jest.fn();
-      manager.update(animation(), { onAnimationEnd });
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
 
       element.dispatchEvent(
         animationEvent('animationend', 'my-animation', 0.3)
       );
 
-      expect(onAnimationEnd).toHaveBeenCalledWith({
+      expect(onCSSAnimationEnd).toHaveBeenCalledWith({
         animationName: 'my-animation',
         elapsedTime: 0.3,
       });
@@ -229,13 +286,13 @@ describe('CSSAnimationsManager (web)', () => {
     test('ignores events that bubble up from descendant nodes', () => {
       const child = document.createElement('div');
       element.appendChild(child);
-      const onAnimationEnd = jest.fn();
-      manager.update(animation(), { onAnimationEnd });
+      const onCSSAnimationEnd = jest.fn();
+      manager.update(animation(), { onCSSAnimationEnd });
 
       // The event bubbles from the child to the element's listener.
       child.dispatchEvent(animationEvent('animationend', 'my-animation', 0.1));
 
-      expect(onAnimationEnd).not.toHaveBeenCalled();
+      expect(onCSSAnimationEnd).not.toHaveBeenCalled();
     });
 
     test('uses the latest callback without re-subscribing on re-render', () => {
@@ -243,8 +300,8 @@ describe('CSSAnimationsManager (web)', () => {
       const first = jest.fn();
       const second = jest.fn();
 
-      manager.update(animation(), { onAnimationEnd: first });
-      manager.update(animation(), { onAnimationEnd: second });
+      manager.update(animation(), { onCSSAnimationEnd: first });
+      manager.update(animation(), { onCSSAnimationEnd: second });
 
       const endSubscriptions = addSpy.mock.calls.filter(
         ([eventName]) => eventName === 'animationend'
@@ -258,18 +315,17 @@ describe('CSSAnimationsManager (web)', () => {
       expect(second).toHaveBeenCalledTimes(1);
     });
 
-    test('detaches the same listeners it attached on unmount cleanup', () => {
-      const addSpy = jest.spyOn(element, 'addEventListener');
-      const removeSpy = jest.spyOn(element, 'removeEventListener');
-
-      manager.update(animation(), {
-        onAnimationStart: jest.fn(),
-        onAnimationEnd: jest.fn(),
-      });
+    test('forwards cancellation events after unmount cleanup', () => {
+      jest.spyOn(global, 'requestAnimationFrame').mockReturnValue(1);
+      const onCSSAnimationCancel = jest.fn();
+      manager.update(animation(), { onCSSAnimationCancel });
       manager.unmountCleanup();
 
-      // Every listener that was attached is detached with the same reference.
-      expect(removeSpy.mock.calls).toEqual(addSpy.mock.calls);
+      element.dispatchEvent(animationEvent('animationcancel', 'fade', 0.1));
+      expect(onCSSAnimationCancel).toHaveBeenCalledWith({
+        animationName: 'fade',
+        elapsedTime: 0.1,
+      });
     });
   });
 });

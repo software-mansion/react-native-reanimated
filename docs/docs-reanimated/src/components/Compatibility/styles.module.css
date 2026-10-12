@@ -20,6 +20,12 @@
   padding: 12px;
 }
 
+.since {
+  margin-left: 6px;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
 .spacer {
   padding-top: 10px;
 }

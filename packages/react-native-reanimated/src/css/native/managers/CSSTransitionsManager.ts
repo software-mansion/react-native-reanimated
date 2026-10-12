@@ -24,6 +24,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private propsWithTransitions = new Set<string>();
   // Indicates whether a CSS transition is currently attached to the view
   private hasTransition = false;
+  private appliedEventMask = 0;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -36,14 +37,19 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
    */
   update(
     transitionProperties: CSSTransitionProperties | null,
-    nextProps: UnknownRecord = {}
+    nextStyle?: UnknownRecord,
+    eventMask = 0
   ): boolean {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
 
+    const nextProps = nextStyle ?? {};
     const prevProps = this.prevProps;
-    this.prevProps = nextProps;
+    // Only a real style snapshot can serve as a baseline. Keeping the empty
+    // stand-in the caller passes when it builds none would make a later attach
+    // diff every property against undefined, animating it from its default.
+    this.prevProps = nextStyle ?? null;
 
     // If there were no previous props, the view is just mounted so we
     // don't trigger any transitions yet. Also, when there is no transition
@@ -64,8 +70,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     );
 
     if (Object.keys(config).length) {
-      runCSSTransition(this.shadowNodeWrapper, config);
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, config, eventMask);
       this.hasTransition = true;
+    } else if (this.hasTransition && eventMask !== this.appliedEventMask) {
+      // Only the mask changed, but the native side still has to learn about it.
+      this.appliedEventMask = eventMask;
+      runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
     }
 
     return false;
@@ -79,6 +90,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     unregisterCSSTransition(this.viewTag);
     this.propsWithTransitions.clear();
     this.hasTransition = false;
+    this.appliedEventMask = 0;
   }
 
   private processTransitionConfig(
@@ -112,19 +124,20 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       }
     }
 
-    // Handle old props; for no longer allowed ones, cancel the transition
-    // immediately; for ones that are allowed but were removed, trigger a transition
-    // to undefined (to the default value for the property).
-    for (const key in oldProps) {
+    // Cancel transitions of properties that are no longer allowed. A property
+    // transitioning to or from `undefined` is a key of neither style snapshot,
+    // so the running transitions are checked instead of the old props.
+    for (const key of this.propsWithTransitions) {
       if (!isAllowedProperty(key)) {
-        if (this.propsWithTransitions.has(key)) {
-          // If a property was transitioned before but is no longer allowed,
-          // we need to clear it up immediately
-          result[key] = null;
-          this.propsWithTransitions.delete(key);
-        }
-      } else if (!(key in newProps)) {
-        // Property was removed from props but is still allowed
+        result[key] = null;
+        this.propsWithTransitions.delete(key);
+      }
+    }
+
+    // Allowed properties removed from props transition to undefined
+    // (the default value for the property).
+    for (const key in oldProps) {
+      if (isAllowedProperty(key) && !(key in newProps)) {
         triggerTransition(key);
       }
     }

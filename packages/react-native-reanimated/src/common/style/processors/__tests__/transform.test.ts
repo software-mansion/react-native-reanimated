@@ -9,6 +9,10 @@ describe(processTransform, () => {
     ]);
   });
 
+  test('returns an empty list for none', () => {
+    expect(processTransform('none')).toEqual([]);
+  });
+
   describe('converts transform string to transform objects', () => {
     const cases: {
       name: string;
@@ -34,12 +38,13 @@ describe(processTransform, () => {
             output: [{ translateX: '25%' }, { translateY: 25 }],
           },
           {
+            // A single argument leaves the Y axis at zero, it is not repeated.
             input: 'translate(25)',
-            output: [{ translateX: 25 }, { translateY: 25 }],
+            output: [{ translateX: 25 }, { translateY: 0 }],
           },
           {
             input: 'translate(25%)',
-            output: [{ translateX: '25%' }, { translateY: '25%' }],
+            output: [{ translateX: '25%' }, { translateY: 0 }],
           },
         ],
       },
@@ -172,8 +177,9 @@ describe(processTransform, () => {
         name: 'skew',
         cases: [
           {
+            // A single argument leaves the Y axis at zero, it is not repeated.
             input: 'skew(45deg)',
-            output: [{ skewX: '45deg' }, { skewY: '45deg' }],
+            output: [{ skewX: '45deg' }, { skewY: '0deg' }],
           },
           {
             input: 'skew(0)',

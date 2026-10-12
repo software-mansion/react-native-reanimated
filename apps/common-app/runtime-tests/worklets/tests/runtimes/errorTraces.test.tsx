@@ -1,4 +1,14 @@
 import {
+  runOnRNSync,
+  isBundleModeEnabled,
+  runOnUISync,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  runOnRuntimeSync,
+  scheduleOnRN,
+} from 'react-native-worklets';
+
+import {
   describe,
   test,
   beforeEach,
@@ -6,15 +16,8 @@ import {
   expect,
   notify,
   waitForNotification,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  runOnUISync,
-  scheduleOnUI,
-  scheduleOnRuntime,
-  runOnRuntimeSync,
-  scheduleOnRN,
-} from 'react-native-worklets';
 
 declare global {
   var __reportFatalRemoteError:
@@ -27,7 +30,7 @@ const originalReportFatalRemoteError = globalThis.__reportFatalRemoteError;
 describe('Error traces from UI', () => {
   let errorData: Error | null = null;
 
-  const testRuntime = getWorkletRuntimeFromPool('test');
+  const [testRuntime] = getWorkletRuntimesFromPool(1);
 
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -81,8 +84,10 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [test]:');
-    expect(errorData?.stack).toInclude('at [test]: functionNameB');
+    expect(errorData?.stack).toInclude(`at [${testRuntime.name}]:`);
+    expect(errorData?.stack).toInclude(
+      `at [${testRuntime.name}]: functionNameB`
+    );
   });
 
   test('runOnUISync has good stack trace added', async () => {
@@ -113,8 +118,10 @@ describe('Error traces from UI', () => {
     });
 
     await waitForNotification('errorReported');
-    expect(errorData?.stack).toInclude('at [test]:');
-    expect(errorData?.stack).toInclude('at [test]: functionNameD');
+    expect(errorData?.stack).toInclude(`at [${testRuntime.name}]:`);
+    expect(errorData?.stack).toInclude(
+      `at [${testRuntime.name}]: functionNameD`
+    );
   });
 
   test('batched scheduleOnUI: throw in middle job does not break siblings, each job has its own stack', async () => {
@@ -144,4 +151,84 @@ describe('Error traces from UI', () => {
     expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob1');
     expect(errorData?.stack).not.toInclude('at [UI]: functionNameJob3');
   });
+});
+
+describe('Error traces from RN', () => {
+  let errorData: Error | null = null;
+  let caughtStack = '';
+
+  const [testRuntime] = getWorkletRuntimesFromPool(1);
+
+  beforeEach(() => {
+    caughtStack = '';
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    globalThis.__reportFatalRemoteError = (a: Error, _: boolean) => {
+      errorData = a;
+      notify('errorReported');
+    };
+  });
+
+  afterEach(() => {
+    globalThis.__reportFatalRemoteError = originalReportFatalRemoteError;
+  });
+
+  function functionNameRN() {
+    throw new Error();
+  }
+
+  const reportCaughtStack = (stack: string) => {
+    caughtStack = stack;
+    notify('stackCaught');
+  };
+
+  test('scheduleOnRN from UI has good stack trace added', async () => {
+    scheduleOnUI(function functionNameUICaller() {
+      'worklet';
+      scheduleOnRN(functionNameRN);
+    });
+
+    await waitForNotification('errorReported');
+    expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
+    expect(errorData?.stack).toInclude('functionNameUICaller');
+  });
+
+  test('scheduleOnRN from a Worker Runtime has good stack trace added', async () => {
+    scheduleOnRuntime(testRuntime, function functionNameWorkerCaller() {
+      'worklet';
+      scheduleOnRN(functionNameRN);
+    });
+
+    await waitForNotification('errorReported');
+    expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
+    expect(errorData?.stack).toInclude('functionNameWorkerCaller');
+  });
+
+  if (isBundleModeEnabled()) {
+    test('runOnRNSync rethrows with the RN stack and the caller stack', async () => {
+      scheduleOnUI(function functionNameSyncCaller() {
+        'worklet';
+        try {
+          runOnRNSync(functionNameRN);
+        } catch (error) {
+          scheduleOnRN(reportCaughtStack, (error as Error).stack ?? '');
+        }
+      });
+
+      await waitForNotification('stackCaught');
+      expect(caughtStack).toInclude('at [RN]: functionNameRN');
+      expect(caughtStack).toInclude('functionNameSyncCaller');
+    });
+
+    test('uncaught runOnRNSync error keeps RN frames and labels UI frames', async () => {
+      scheduleOnUI(function functionNameUncaughtCaller() {
+        'worklet';
+        runOnRNSync(functionNameRN);
+      });
+
+      await waitForNotification('errorReported');
+      expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
+      expect(errorData?.stack).toInclude('at [UI]: functionNameUncaughtCaller');
+      expect(errorData?.stack).not.toInclude('[UI]: [RN]');
+    });
+  }
 });

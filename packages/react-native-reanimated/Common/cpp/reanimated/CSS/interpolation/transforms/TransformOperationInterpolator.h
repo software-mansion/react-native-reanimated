@@ -79,8 +79,7 @@ class TransformOperationInterpolator<TOperation> : public StyleOperationInterpol
  protected:
   const ResolvableValueInterpolatorConfig config_;
 
-  ResolvableValueInterpolationContext getResolvableValueContext(
-      const StyleOperationsInterpolationContext &context) const;
+  RelativeValueInterpolationContext getRelativeValueContext(const StyleOperationsInterpolationContext &context) const;
 };
 
 } // namespace reanimated::css

@@ -7,6 +7,7 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
+  arrayPattern,
   assertBlockStatement,
   callExpression,
   functionExpression,
@@ -20,8 +21,6 @@ import {
   isObjectMethod,
   isProgram,
   memberExpression,
-  objectPattern,
-  objectProperty,
   thisExpression,
   variableDeclaration,
   variableDeclarator,
@@ -240,15 +239,8 @@ function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
 function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
   const closureDeclaration = variableDeclaration('const', [
     variableDeclarator(
-      objectPattern(
-        closureVariables.map((variable) =>
-          objectProperty(
-            identifier(variable.name),
-            identifier(variable.name),
-            false,
-            true
-          )
-        )
+      arrayPattern(
+        closureVariables.map((variable) => identifier(variable.name))
       ),
       memberExpression(thisExpression(), identifier('__closure'))
     ),

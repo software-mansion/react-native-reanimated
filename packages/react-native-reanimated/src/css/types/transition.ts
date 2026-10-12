@@ -33,15 +33,22 @@ export type CSSTransitionEvent = {
 
 export type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
 
+/**
+ * Lifecycle callbacks of a **CSS transition**, fired once per transitioning
+ * property. `withTiming`, `withSpring` and layout animations never fire them.
+ */
 export type CSSTransitionCallbacks = {
-  /** Fired when the transition is triggered, before any `transitionDelay`. */
-  onTransitionRun?: CSSTransitionCallback;
+  /** Fired when the CSS transition is triggered, before any `transitionDelay`. */
+  onCSSTransitionRun?: CSSTransitionCallback;
   /** Fired after `transitionDelay`, when the property starts animating. */
-  onTransitionStart?: CSSTransitionCallback;
-  /** Fired when the transition completes. */
-  onTransitionEnd?: CSSTransitionCallback;
-  /** Fired when the transition is interrupted before completing. */
-  onTransitionCancel?: CSSTransitionCallback;
+  onCSSTransitionStart?: CSSTransitionCallback;
+  /** Fired when the CSS transition completes. */
+  onCSSTransitionEnd?: CSSTransitionCallback;
+  /**
+   * Fired when the CSS transition is interrupted before completing, including
+   * when the property is retargeted mid-flight.
+   */
+  onCSSTransitionCancel?: CSSTransitionCallback;
 };
 
 export type CSSTransitionCallbackProp = keyof CSSTransitionCallbacks;

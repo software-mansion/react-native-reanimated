@@ -97,8 +97,7 @@ transform: {
                         },
                         transitionDuration: '120ms',
                       },
-                    ]}
-                    onStartShouldSetResponder={() => true}>
+                    ]}>
                     <Text style={{ color: colors.white }} variant="label3">
                       Press me
                     </Text>
@@ -172,8 +171,7 @@ transform: {
                         },
                         transitionDuration: '120ms',
                       },
-                    ]}
-                    onStartShouldSetResponder={() => true}>
+                    ]}>
                     <Text style={{ color: colors.white }} variant="label3">
                       Press me
                     </Text>
@@ -267,8 +265,7 @@ transform: {
                           },
                           transitionDuration: '120ms',
                         },
-                      ]}
-                      onStartShouldSetResponder={() => true}>
+                      ]}>
                       <Text style={{ color: colors.white }} variant="label3">
                         Layer 4 (:active-deepest)
                       </Text>

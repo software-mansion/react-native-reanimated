@@ -1,6 +1,7 @@
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -9,7 +10,7 @@ CSSLoopAnimation::CSSLoopAnimation(
     const std::shared_ptr<AnimationStyleInterpolator> &interpolator,
     const std::shared_ptr<CSSAnimationSettings> &settings,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-    CSSAnimation::Observer &observer,
+    CSSAnimationObserver &observer,
     const double timestamp)
     : viewTag_(viewTag),
       settings_(settings),
@@ -26,6 +27,22 @@ CSSLoopAnimation::CSSLoopAnimation(
   if (settings->playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
+}
+
+void CSSLoopAnimation::setMilestoneReporter(MilestoneReporter reporter) {
+  if (!reporter) {
+    progressProvider_->setMilestoneReporter(nullptr);
+    return;
+  }
+  // The provider is a member, so capturing `this` cannot outlive it.
+  progressProvider_->setMilestoneReporter(
+      [this, reporter = std::move(reporter)](const RunMilestone milestone, const MilestoneTime time) {
+        reporter(milestone, progressProvider_->elapsedTimeAt(time));
+      });
+}
+
+void CSSLoopAnimation::abort(const double timestamp) {
+  progressProvider_->abort(timestamp);
 }
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(
@@ -45,10 +62,16 @@ bool CSSLoopAnimation::update(const double timestamp, OperationsLoop & /*loop*/)
 }
 
 void CSSLoopAnimation::schedule(OperationsLoop &loop) {
-  if (progressProvider_->getState() != AnimationProgressState::Paused) {
-    const auto timestamp = loop.resolveTimestamp();
-    loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
+  const auto timestamp = loop.resolveTimestamp();
+
+  // A paused run is never ticked, but the web still reports one whose delay has
+  // already elapsed as started, so position its lifecycle once instead.
+  if (progressProvider_->getState() == AnimationProgressState::Paused) {
+    progressProvider_->update(timestamp);
+    return;
   }
+
+  loop.schedule(shared_from_this(), progressProvider_->getStartTimestamp(timestamp));
 }
 
 void CSSLoopAnimation::unschedule(OperationsLoop &loop) {

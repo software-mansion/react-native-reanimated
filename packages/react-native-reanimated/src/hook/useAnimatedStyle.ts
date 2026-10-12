@@ -32,6 +32,7 @@ import type {
 import {
   buildWorkletsHash,
   checkSharedValueUsage,
+  createAnimatedStyleHandle,
   prepareAnimation,
   runAnimations,
   styleUpdater,
@@ -189,9 +190,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
-  updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+  updater: WorkletFunction<[], Style>,
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
@@ -199,7 +198,7 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   | AnimatedStyleHandle<Style | AnimatedProps>
   | JestAnimatedStyleHandle<Style | AnimatedProps> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
+  let inputs = updater.__closure ?? [];
   if (!inputs.length && dependencies?.length) {
     // let web work without a Babel plugin
     inputs = dependencies;
@@ -332,19 +331,20 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   if (!animatedStyleHandle.current) {
     const styleUpdaterContainer =
       animatedUpdaterData.current.styleUpdaterContainer;
-    animatedStyleHandle.current = IS_JEST
-      ? {
-          viewDescriptors,
-          initial,
-          jestAnimatedValues,
-          toJSON: animatedStyleHandleToJSON,
-          styleUpdaterContainer,
-        }
-      : {
-          viewDescriptors,
-          initial,
-          styleUpdaterContainer,
-        };
+    animatedStyleHandle.current = createAnimatedStyleHandle(
+      IS_JEST
+        ? {
+            viewDescriptors,
+            initial,
+            jestAnimatedValues,
+            toJSON: animatedStyleHandleToJSON,
+          }
+        : {
+            viewDescriptors,
+            initial,
+          },
+      styleUpdaterContainer
+    );
   }
 
   return animatedStyleHandle.current;

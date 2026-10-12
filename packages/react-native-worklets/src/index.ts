@@ -30,6 +30,23 @@ export { isShareable } from './memory/isShareable';
 export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
+  createSerializableArray,
+  createSerializableArrayBuffer,
+  createSerializableArrayBufferView,
+  createSerializableBigInt,
+  createSerializableBoolean,
+  createSerializableError,
+  createSerializableHostObject,
+  createSerializableMap,
+  createSerializableNull,
+  createSerializableNumber,
+  createSerializableObject,
+  createSerializableRegExp,
+  createSerializableRemoteFunction,
+  createSerializableSet,
+  createSerializableString,
+  createSerializableUndefined,
+  createSerializableWorklet,
   isSerializableRef,
   registerCustomSerializable,
 } from './memory/serializable';
@@ -37,6 +54,7 @@ export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
+  FixedSynchronizable,
   RegistrationData,
   SerializableRef,
   Shareable,
@@ -50,6 +68,7 @@ export type {
   ShareableHostMeta,
   ShareableHostProps,
   Synchronizable,
+  SynchronizableConfig,
   SynchronizableRef,
 } from './memory/types';
 export {
@@ -75,7 +94,9 @@ export {
 } from './runtimes';
 export {
   executeOnUIRuntimeSync,
+  getCurrentThreadId,
   runOnJS,
+  runOnRNSync,
   runOnUI,
   runOnUIAsync,
   runOnUISync,

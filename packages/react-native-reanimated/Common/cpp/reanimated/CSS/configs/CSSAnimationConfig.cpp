@@ -176,6 +176,10 @@ CSSAnimationUpdates parseCSSAnimationUpdates(jsi::Runtime &rt, const jsi::Value 
     result.settingsUpdates = parseSettingsUpdates(rt, configObj.getProperty(rt, "settingsUpdates"));
   }
 
+  if (configObj.hasProperty(rt, "eventMask")) {
+    result.eventMask = static_cast<CSSEventMask>(configObj.getProperty(rt, "eventMask").asNumber());
+  }
+
   return result;
 }
 

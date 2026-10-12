@@ -1,11 +1,11 @@
 'use strict';
 
 import { logger } from '../common';
-import type { AnimatedRefOnJS, AnimatedRefOnUI } from '../hook/commonTypes';
+import type { AnimatedRefOnRN, AnimatedRefOnUI } from '../hook/commonTypes';
 import type { DispatchCommand } from './types';
 
 function dispatchCommandWeb(
-  _animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+  _animatedRef: AnimatedRefOnRN | AnimatedRefOnUI,
   _commandName: string,
   _args: Array<unknown> = []
 ) {

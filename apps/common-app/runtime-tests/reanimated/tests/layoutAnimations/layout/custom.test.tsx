@@ -164,7 +164,7 @@ async function getSnapshotUpdates(
   }
   await waitForAnimationUpdates(snapshot.length);
   const component = getTestComponent(TRANSITION_REF);
-  const updates = updatesContainer.getUpdates(component);
+  const updates = await updatesContainer.getUpdates(component);
 
   await unmockAnimationTimer();
   await unmockWindowDimensions();

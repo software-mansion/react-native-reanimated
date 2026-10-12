@@ -2,7 +2,10 @@
 import {
   getCompoundComponentName,
   getPropsBuilder,
+  logger,
+  WARN_MESSAGES,
 } from '../../../../../common';
+import { ERROR_MESSAGES as COLOR_ERROR_MESSAGES } from '../../../../../common/style/processors/colors';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -104,7 +107,48 @@ const createMockPropsBuilder = () => {
   };
 };
 
+const warn = jest.fn();
+logger.warn = warn;
+
 describe(processKeyframes, () => {
+  afterEach(() => {
+    warn.mockClear();
+  });
+
+  test('ignores a property with an invalid value and warns', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+    const keyframes = {
+      from: { opacity: 0, backgroundColor: 'notacolor' },
+      to: { opacity: 1, backgroundColor: 'red' },
+    };
+
+    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      { offset: 0, props: { opacity: 0 } },
+      { offset: 1, props: { opacity: 1, backgroundColor: 0xffff0000 } },
+    ]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue(
+        COLOR_ERROR_MESSAGES.invalidColor('notacolor')
+      ),
+      { strict: true }
+    );
+  });
+
+  test('omits undefined, so the style value is used, and keeps null', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+    const keyframes = {
+      from: { opacity: 0, filter: undefined },
+      to: { opacity: 1, filter: null },
+    };
+
+    expect(processKeyframes(keyframes as never, propsBuilder)).toEqual([
+      { offset: 0, props: { opacity: 0 } },
+      { offset: 1, props: { opacity: 1, filter: null } },
+    ]);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
       const { builder } = createMockPropsBuilder();
@@ -140,6 +184,57 @@ describe(processKeyframes, () => {
 
   describe('complex properties', () => {
     const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+
+    test('backgroundImage preserves nested object structure', () => {
+      const keyframes = {
+        from: { backgroundImage: 'linear-gradient(0deg, red, blue)' },
+        to: {
+          backgroundImage: [
+            {
+              type: 'linear-gradient' as const,
+              direction: '90deg',
+              colorStops: [
+                { color: 'blue', positions: ['25%'] },
+                { color: 'red' },
+              ],
+            },
+          ],
+        },
+      };
+
+      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+        {
+          offset: 0,
+          props: {
+            backgroundImage: [
+              {
+                type: 'linear-gradient',
+                direction: { type: 'angle', value: 0 },
+                colorStops: [
+                  { color: 0xffff0000, position: null },
+                  { color: 0xff0000ff, position: null },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          offset: 1,
+          props: {
+            backgroundImage: [
+              {
+                type: 'linear-gradient',
+                direction: { type: 'angle', value: 90 },
+                colorStops: [
+                  { color: 0xff0000ff, position: '25%' },
+                  { color: 0xffff0000, position: null },
+                ],
+              },
+            ],
+          },
+        },
+      ]);
+    });
 
     test('transform preserves array of operations', () => {
       const keyframes = {

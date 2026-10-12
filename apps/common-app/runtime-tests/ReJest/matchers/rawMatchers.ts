@@ -1,13 +1,14 @@
-import type { TestValue, TrackerCallCount } from '../types';
-import { ComparisonMode } from '../types';
-import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
-import { SyncUIRunner } from '../utils/SyncUIRunner';
-import { getComparator } from './Comparators';
 import {
   createSynchronizable,
   getRuntimeKind,
   RuntimeKind,
 } from 'react-native-worklets';
+
+import type { TestValue, TrackerCallCount } from '../types';
+import { ComparisonMode } from '../types';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
+import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
+import { getComparator } from './Comparators';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];
@@ -275,7 +276,6 @@ async function mockConsole(): Promise<
     () => { consoleErrorCount: number; consoleErrorMessage: string },
   ]
 > {
-  const syncUIRunner = new SyncUIRunner();
   let counterJS = 0;
 
   const counterUI = createSynchronizable(0);
@@ -306,7 +306,7 @@ async function mockConsole(): Promise<
   };
   console.error = mockedConsoleFunction;
   console.warn = mockedConsoleFunction;
-  await syncUIRunner.runOnUIBlocking(() => {
+  await runOnUIBlocking(() => {
     'worklet';
     (globalThis as Record<string, unknown>).__originalConsoleError =
       console.error;
@@ -319,7 +319,7 @@ async function mockConsole(): Promise<
   const restoreConsole = async () => {
     console.error = originalError;
     console.warn = originalWarning;
-    await syncUIRunner.runOnUIBlocking(() => {
+    await runOnUIBlocking(() => {
       'worklet';
       console.error = (globalThis as Record<string, unknown>)
         .__originalConsoleError as typeof console.error;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
 
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
@@ -19,6 +18,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSEventHandler,
   CSSPseudoStyleConfig,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
@@ -63,16 +63,10 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
 
-    if (ReanimatedTurboModule) {
-      const status = installTurboModule();
-      if (!status) {
-        // This path means that React Native has failed on reload.
-        // We don't want to throw any errors to not mislead the users
-        // that the problem is related to Reanimated.
-        // We install a DummyReanimatedModuleProxy instead.
-        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
-        return;
-      }
+    if (ReanimatedTurboModule && !installTurboModule()) {
+      throw new Error(
+        '[Reanimated] Failed to install the native module because React Native has no active surface on its discarded instance. This happens when the app is reloaded while a previous reload is still in progress, for example during an OTA update immediately upon launch. No action is required; the app will continue to function as usual.'
+      );
     }
 
     if (global.__reanimatedModuleProxy === undefined) {
@@ -183,6 +177,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
+  setCSSEventHandler(handler: CSSEventHandler) {
+    this.#reanimatedModuleProxy.setCSSEventHandler(handler);
+  }
+
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
     this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
   }
@@ -228,11 +226,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: CSSTransitionConfig
+    transitionConfig: CSSTransitionConfig,
+    eventMask: number
   ): void {
     this.#reanimatedModuleProxy.runCSSTransition(
       shadowNodeWrapper,
-      transitionConfig
+      transitionConfig,
+      eventMask
     );
   }
 
@@ -254,51 +254,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   unregisterPseudoStyles(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterPseudoStyles(viewTag);
   }
-}
-
-class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
-  configureLayoutAnimationBatch(): void {}
-  setShouldAnimateExitingForTag(): void {}
-  getStaticFeatureFlag(): boolean {
-    return false;
-  }
-  setDynamicFeatureFlag(): void {}
-  subscribeForKeyboardEvents(): number {
-    return -1;
-  }
-
-  unsubscribeFromKeyboardEvents(): void {}
-  setViewStyle(): void {}
-  markNodeAsRemovable(): void {}
-  unmarkNodeAsRemovable(): void {}
-  registerCSSKeyframes(): void {}
-  unregisterCSSKeyframes(): void {}
-  applyCSSAnimations(): void {}
-  registerCSSAnimations(): void {}
-  updateCSSAnimations(): void {}
-  unregisterCSSAnimations(): void {}
-  runCSSTransition(): void {}
-  unregisterCSSTransition(): void {}
-  registerSensor(): number {
-    return -1;
-  }
-
-  unregisterSensor(): void {}
-  registerEventHandler(): number {
-    return -1;
-  }
-
-  unregisterEventHandler(): void {}
-  getViewProp() {
-    return null!;
-  }
-
-  getSettledUpdates(): SettledUpdate[] {
-    return [];
-  }
-
-  registerPseudoStyles(): void {}
-  unregisterPseudoStyles(): void {}
 }
 
 function installTurboModule() {

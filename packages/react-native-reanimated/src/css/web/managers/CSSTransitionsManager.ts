@@ -13,10 +13,10 @@ import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 import { CSSCallbackListeners } from './CSSCallbackListeners';
 
 const TRANSITION_EVENT_NAME: Record<CSSTransitionCallbackProp, string> = {
-  onTransitionRun: 'transitionrun',
-  onTransitionStart: 'transitionstart',
-  onTransitionEnd: 'transitionend',
-  onTransitionCancel: 'transitioncancel',
+  onCSSTransitionRun: 'transitionrun',
+  onCSSTransitionStart: 'transitionstart',
+  onCSSTransitionEnd: 'transitionend',
+  onCSSTransitionCancel: 'transitioncancel',
 };
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
@@ -60,7 +60,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   unmountCleanup() {
-    this.callbackListeners.detach();
+    // Browsers dispatch `transitioncancel` after the element leaves the DOM.
+    this.callbackListeners.scheduleDetach();
   }
 
   private detach() {

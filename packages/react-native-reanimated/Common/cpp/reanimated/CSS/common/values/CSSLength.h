@@ -6,7 +6,7 @@
 
 namespace reanimated::css {
 
-struct CSSLength : public CSSResolvableValue<CSSLength, double> {
+struct CSSLength : public CSSResolvableValue<CSSLength, RelativeValueInterpolationContext> {
   double value;
   bool isRelative;
 
@@ -24,9 +24,9 @@ struct CSSLength : public CSSResolvableValue<CSSLength, double> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSLength interpolate(double progress, const CSSLength &to, const ResolvableValueInterpolationContext &context)
+  CSSLength interpolate(double progress, const CSSLength &to, const RelativeValueInterpolationContext &context)
       const override;
-  std::optional<double> resolve(const ResolvableValueInterpolationContext &context) const override;
+  std::optional<double> resolve(const RelativeValueInterpolationContext &context) const;
 
   bool operator==(const CSSLength &other) const;
 

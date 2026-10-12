@@ -69,40 +69,56 @@ describe('CSSTransitionsManager', () => {
         manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
         manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: {
-            ...DEFAULT_SETTINGS,
-            value: [0, 1],
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            opacity: {
+              ...DEFAULT_SETTINGS,
+              value: [0, 1],
+            },
           },
-        });
+          0
+        );
       });
 
       test('all changed properties when transitionProperty is "all"', () => {
         manager.update(ALL_CONFIG, { opacity: 0, width: 100, height: 100 });
         manager.update(ALL_CONFIG, { opacity: 1, width: 200, height: 100 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
-          width: { ...DEFAULT_SETTINGS, value: [100, 200] },
-        });
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
+            width: { ...DEFAULT_SETTINGS, value: [100, 200] },
+          },
+          0
+        );
       });
 
       test('newly added property when transitionProperty is "all"', () => {
         manager.update(ALL_CONFIG, { opacity: 0 });
         manager.update(ALL_CONFIG, { opacity: 0, width: 100 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
-        });
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
+          },
+          0
+        );
       });
 
       test('removed property when transitionProperty is "all"', () => {
         manager.update(ALL_CONFIG, { opacity: 0, width: 100 });
         manager.update(ALL_CONFIG, { opacity: 0 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          width: { ...DEFAULT_SETTINGS, value: [100, undefined] },
-        });
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            width: { ...DEFAULT_SETTINGS, value: [100, undefined] },
+          },
+          0
+        );
       });
 
       test('for newly added property when transitionProperty changes at the same time', () => {
@@ -118,9 +134,13 @@ describe('CSSTransitionsManager', () => {
         manager.update(config1, { opacity: 0 }); // width undefined
         manager.update(config2, { opacity: 0, width: 100 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
-        });
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            width: { ...DEFAULT_SETTINGS, value: [undefined, 100] },
+          },
+          0
+        );
       });
 
       describe('cleanup when property is removed from config', () => {
@@ -148,11 +168,38 @@ describe('CSSTransitionsManager', () => {
               nextProps
             );
 
-            expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-              opacity: null,
-            });
+            expect(runCSSTransition).toHaveBeenCalledWith(
+              shadowNodeWrapper,
+              {
+                opacity: null,
+              },
+              0
+            );
           });
         });
+      });
+
+      test('emits cleanup for a property transitioning to undefined when it is no longer allowed', () => {
+        const config: CSSTransitionProperties = {
+          transitionProperty: ['opacity', 'width'],
+          transitionDuration: '300ms',
+        };
+        manager.update(config, { opacity: 0, width: 100 });
+        // width leaves the style, so it transitions to undefined
+        manager.update(config, { opacity: 0 });
+        jest.clearAllMocks();
+
+        // width is a key of neither the old nor the new props here
+        manager.update(
+          { transitionProperty: 'opacity', transitionDuration: '300ms' },
+          { opacity: 0 }
+        );
+
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { width: null },
+          0
+        );
       });
 
       test('updates transition settings when config changes', () => {
@@ -167,13 +214,17 @@ describe('CSSTransitionsManager', () => {
           { opacity: 1 }
         );
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: {
-            ...DEFAULT_SETTINGS,
-            duration: 500,
-            value: [0, 1],
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            opacity: {
+              ...DEFAULT_SETTINGS,
+              duration: 500,
+              value: [0, 1],
+            },
           },
-        });
+          0
+        );
       });
 
       test('handles partial updates with multiple properties', () => {
@@ -186,9 +237,13 @@ describe('CSSTransitionsManager', () => {
         // Only opacity changes
         manager.update(config, { opacity: 1, width: 100 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
-        });
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            opacity: { ...DEFAULT_SETTINGS, value: [0, 1] },
+          },
+          0
+        );
       });
 
       test('does not trigger transition when a disallowed prop is removed from props', () => {
@@ -231,8 +286,51 @@ describe('CSSTransitionsManager', () => {
         // opacity is now effectively removed by normalization pruning
         manager.update(afterConfig, { opacity: 1, width: 100 });
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: null,
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          {
+            opacity: null,
+          },
+          0
+        );
+      });
+
+      describe('event mask', () => {
+        test('sends the requested mask alongside the transition', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b1110000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b1110000);
+
+          expect(runCSSTransition).toHaveBeenLastCalledWith(
+            shadowNodeWrapper,
+            { opacity: { ...DEFAULT_SETTINGS, value: [0, 1] } },
+            0b1110000
+          );
+        });
+
+        test('sends the new mask when only the mask changes', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b1000000);
+
+          expect(runCSSTransition).toHaveBeenLastCalledWith(
+            shadowNodeWrapper,
+            {},
+            0b1000000
+          );
+        });
+
+        test('does not call the native side again for an unchanged mask', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 }, 0b0010000);
+
+          expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        });
+
+        test('does not send a mask-only update before any transition ran', () => {
+          manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 }, 0b0010000);
+
+          expect(runCSSTransition).not.toHaveBeenCalled();
         });
       });
 

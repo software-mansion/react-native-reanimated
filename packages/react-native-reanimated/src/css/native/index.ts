@@ -1,4 +1,5 @@
 'use strict';
+export * from './events';
 export * from './keyframes';
 export * from './managers';
 export * from './normalization';

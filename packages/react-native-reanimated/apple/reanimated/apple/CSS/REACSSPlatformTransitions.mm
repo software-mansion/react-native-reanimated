@@ -1,8 +1,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 
-#import <reanimated/CSS/utils/platform.h>
-#import <reanimated/CSS/utils/reversingShortening.h>
 #import <reanimated/apple/CSS/REACSSPlatformProps.h>
+#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -14,33 +13,13 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import <string>
-#import <unordered_map>
-#import <utility>
 
 using namespace facebook;
 using namespace facebook::react;
 using namespace reanimated::css;
 
-namespace {
-
-// Per-property state for an in-flight native transition. adjustedStart/adjustedEnd
-// and the reversing snapshot handle interruptions; settings are reused by the
-// toggle path.
-struct ActiveTransition {
-  // Unset after a mid-flight interruption - the live start value can't match any target.
-  std::optional<PlatformValue> adjustedStart;
-  PlatformValue adjustedEnd;
-  ReversingState reversing;
-  CSSTransitionPropertySettings settings;
-};
-
-} // namespace
-
 @implementation REACSSPlatformTransitions {
   __weak RCTSurfacePresenter *_surfacePresenter;
-  // viewTag -> propertyName -> active transition. Accessed only on the thread
-  // that drives routing; the CALayer work below hops to the main queue.
-  std::unordered_map<Tag, std::unordered_map<std::string, ActiveTransition>> _active;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -58,81 +37,21 @@ struct ActiveTransition {
   return view.layer;
 }
 
-- (const ActiveTransition *)activeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
-{
-  const auto propertiesIt = _active.find(viewTag);
-  if (propertiesIt == _active.end()) {
-    return nullptr;
-  }
-  const auto activeIt = propertiesIt->second.find(propertyName);
-  return activeIt != propertiesIt->second.end() ? &activeIt->second : nullptr;
-}
-
-- (BOOL)applyTransitionForTag:(Tag)viewTag
+- (BOOL)startTransitionForTag:(Tag)viewTag
                  propertyName:(const std::string &)propertyName
                     fromValue:(const PlatformValue &)fromValue
                       toValue:(const PlatformValue &)toValue
-                     settings:(const CSSTransitionPropertySettings *)settings
-                    timestamp:(double)timestamp
-{
-  const ActiveTransition *active = [self activeTransitionForTag:viewTag propertyName:propertyName];
-
-  // The toggle path has no settings of its own and holds its value indefinitely.
-  const BOOL persistent = settings == nullptr;
-  if (persistent && active == nullptr) {
-    return NO;
-  }
-  // Copy: the active entry is re-assigned below.
-  const CSSTransitionPropertySettings resolvedSettings = persistent ? active->settings : *settings;
-
-  // Targeting the in-flight transition's start value means this is a reversal.
-  const bool isReversal = active != nullptr && active->adjustedStart && toValue == *active->adjustedStart;
-  ReversingState reversing = isReversal
-      ? reverseShorten(
-            active->reversing,
-            timestamp,
-            resolvedSettings.duration,
-            resolvedSettings.delay,
-            resolvedSettings.easingConfig)
-      : makeReversingState(timestamp, resolvedSettings.duration, resolvedSettings.delay, resolvedSettings.easingConfig);
-
-  // https://drafts.csswg.org/css-transitions/#reversing
-  std::optional<PlatformValue> adjustedStart;
-  if (isReversal) {
-    adjustedStart = active->adjustedEnd;
-  } else if (active == nullptr) {
-    adjustedStart = fromValue;
-  } else if (timestamp >= active->reversing.startTimestamp + active->reversing.duration) {
-    adjustedStart = active->adjustedEnd;
-  }
-
-  [self animateTag:viewTag
-      propertyName:propertyName
-         fromValue:fromValue
-           toValue:toValue
-        durationMs:reversing.duration
-       startTimeMs:reversing.startTimestamp
-            easing:resolvedSettings.easingConfig
-        persistent:persistent];
-  _active[viewTag][propertyName] = ActiveTransition{adjustedStart, toValue, std::move(reversing), resolvedSettings};
-  return YES;
-}
-
-- (void)animateTag:(Tag)viewTag
-      propertyName:(const std::string &)propertyName
-         fromValue:(const PlatformValue &)fromValue
-           toValue:(const PlatformValue &)toValue
-        durationMs:(double)durationMs
-       startTimeMs:(double)startTimeMs
-            easing:(const EasingConfig &)easing
-        persistent:(BOOL)persistent
+                   durationMs:(double)durationMs
+             startTimestampMs:(double)startTimestampMs
+                       easing:(const EasingConfig &)easing
+                   persistent:(BOOL)persistent
 {
   // Capture everything up front; CALayer access must happen on the main thread.
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   id fromId = idFromPlatformValue(fromValue);
   id toId = idFromPlatformValue(toValue);
-  double durationSec = durationMs / 1000.0;
-  CFTimeInterval beginTime = startTimeMs / 1000.0;
+  double durationSec = reanimated::calculateMediaDurationFromSlowAnimationsDuration(durationMs / 1000.0);
+  CFTimeInterval beginTime = reanimated::calculateMediaTimeFromSlowAnimationsTimestamp(startTimestampMs / 1000.0);
   CAMediaTimingFunction *timing = makeCSSTimingFunction(easing);
 
   __weak __typeof__(self) weakSelf = self;
@@ -174,18 +93,12 @@ struct ActiveTransition {
     [layer addAnimation:anim forKey:keyPath];
     [CATransaction commit];
   });
+
+  return YES;
 }
 
-- (void)removeTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
+- (void)stopTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
 {
-  const auto propertiesIt = _active.find(viewTag);
-  if (propertiesIt != _active.end()) {
-    propertiesIt->second.erase(propertyName);
-    if (propertiesIt->second.empty()) {
-      _active.erase(propertiesIt);
-    }
-  }
-
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{

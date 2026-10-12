@@ -11,12 +11,11 @@ import Animated, {
 import { getComparisonModeForProp } from '../../../../ReJest/matchers/Comparators';
 import {
   describe,
-  expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
-  wait,
 } from '../../../../ReJest/RuntimeTestsApi';
 import type { ValidPropNames } from '../../../../ReJest/types';
 
@@ -84,9 +83,10 @@ describe('withTiming animation of WIDTH', () => {
         <AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />
       );
       const component = getTestComponent(COMPONENT_REF);
-      await wait(1000);
       for (const key of Object.keys(finalStyle)) {
-        expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
+        await expectEventually(() =>
+          component.getAnimatedStyle(key as ValidPropNames)
+        ).toBe(
           finalStyle[key],
           getComparisonModeForProp(key as ValidPropNames)
         );

@@ -85,7 +85,7 @@ async function getSnapshotUpdates(
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
   await wait(1200);
-  const activeUpdates = updatesContainerActive.getUpdates();
+  const activeUpdates = await updatesContainerActive.getUpdates();
   const activeNaiveUpdates = await updatesContainerActive.getNativeSnapshots();
 
   await unmockAnimationTimer();
@@ -102,7 +102,7 @@ async function getSnapshotUpdates(
 
   const passiveUpdates = [
     { width: 0 },
-    ...updatesContainerPassive.getUpdates(),
+    ...(await updatesContainerPassive.getUpdates()),
   ];
 
   return [activeUpdates, activeNaiveUpdates, passiveUpdates];

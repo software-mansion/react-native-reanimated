@@ -105,8 +105,6 @@ NSData *downloadScript(NSURL *url)
   return data;
 }
 
-} // namespace
-
 NSData *loadRemoteScript(NSURL *url, NSURL *downloadedBundleFileURL)
 {
   if (downloadedBundleFileURL != nil &&
@@ -115,6 +113,8 @@ NSData *loadRemoteScript(NSURL *url, NSURL *downloadedBundleFileURL)
   }
   return downloadScript(url);
 }
+
+} // namespace
 
 std::shared_ptr<const ScriptBuffer> getScript(NSURL *url, NSURL *downloadedBundleFileURL)
 {

@@ -33,7 +33,7 @@ This repository contains two main packages:
 
 ## Installation
 
-Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/) their dedicated documentation pages.
+Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started/#installation) on their dedicated documentation pages.
 
 ## Compatibility
 
@@ -56,13 +56,6 @@ If you want to play with the API but don't feel like trying it on a real app, yo
 ## License
 
 Reanimated and Worklets libraries are licensed under [The MIT License](LICENSE).
-
-## Credits
-
-This project has been built and is maintained thanks to the support from [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
-
-[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3\&s=100 'Expo.io')](https://expo.io)
-[![swm](https://logo.swmansion.com/logo?color=white\&variant=desktop\&width=150\&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
 
 ## Community Discord
 

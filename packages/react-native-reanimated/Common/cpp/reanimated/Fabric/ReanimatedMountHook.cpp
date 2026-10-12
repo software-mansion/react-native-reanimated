@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
@@ -10,10 +11,14 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       viewStylesRepository_(viewStylesRepository),
+      layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      synchronousWritesTracker_(synchronousWritesTracker),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
@@ -27,17 +32,18 @@ void ReanimatedMountHook::shadowTreeDidMount(
     HighResTimeStamp mountTime) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
-  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
-
-  // We mark reanimated commits with ReanimatedMountTrait. We don't want other
-  // shadow nodes to use this trait, but since this rootShadowNode is Shared,
-  // we don't have that guarantee. That's why we also unset this trait in the
-  // commit hook. We remove it here mainly for the sake of cleanliness.
-  const bool isReanimatedMount = reaShadowNode->hasReanimatedMountTrait();
-  if (isReanimatedMount) {
-    reaShadowNode->unsetReanimatedMountTrait();
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // With the animation backend this hook only tracks surface unmounts.
+    return;
   }
+
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onMountReport(rootShadowNode);
+  }
+
+  auto reaShadowNode = std::reinterpret_pointer_cast<const ReanimatedCommitShadowNode>(rootShadowNode);
+
+  const bool isReanimatedMount = reaShadowNode->hasReanimatedMountTrait();
 
   {
     auto lock = updatesRegistryManager_->lock();
@@ -59,6 +65,18 @@ void ReanimatedMountHook::shadowTreeDidMount(
       }
     }
   }
+}
+
+void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp /*unmountTime*/) noexcept {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->remove(surfaceId);
+  }
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onSurfaceStop(surfaceId);
+  }
+
+  auto lock = updatesRegistryManager_->lock();
+  viewStylesRepository_->removeSurface(surfaceId);
 }
 
 } // namespace reanimated

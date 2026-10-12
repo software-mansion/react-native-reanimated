@@ -3,11 +3,12 @@ import {
   scheduleOnRN,
   scheduleOnUI,
 } from 'react-native-worklets';
+
 import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -19,7 +20,7 @@ describe('scheduleOnUI', () => {
   let value = 0;
   let reason = '';
 
-  const workletRuntime = getWorkletRuntimeFromPool('test');
+  const [workletRuntime] = getWorkletRuntimesFromPool(1);
 
   const callbackPass = (num: number) => {
     value = num;

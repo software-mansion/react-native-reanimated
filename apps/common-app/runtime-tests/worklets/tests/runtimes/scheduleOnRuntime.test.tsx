@@ -4,11 +4,12 @@ import {
   scheduleOnUI,
   runOnRuntimeSync,
 } from 'react-native-worklets';
+
 import {
   beforeEach,
   describe,
   expect,
-  getWorkletRuntimeFromPool,
+  getWorkletRuntimesFromPool,
   notify,
   test,
   waitForNotification,
@@ -18,8 +19,7 @@ describe('scheduleOnRuntime', () => {
   const PASS_NOTIFICATION = 'PASS';
   let value = 0;
 
-  const workletRuntime1 = getWorkletRuntimeFromPool('test');
-  const workletRuntime2 = getWorkletRuntimeFromPool('test2');
+  const [workletRuntime1, workletRuntime2] = getWorkletRuntimesFromPool(2);
 
   const callbackPass = (num: number) => {
     value = num;

@@ -2,9 +2,8 @@
 
 import { IS_JEST } from './common';
 import type { Mutable } from './commonTypes';
-import type { Listener, PartialMutable } from './mutablesCommon';
+import type { Listener } from './mutablesCommon';
 import {
-  addCompilerSafeGetAndSet,
   checkInvalidReadDuringRender,
   checkInvalidWriteDuringRender,
 } from './mutablesCommon';
@@ -22,14 +21,28 @@ export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
   let value: TValue = initial;
   const listeners = new Map<number, Listener<TValue>>();
 
-  const mutable: PartialMutable<TValue> = {
+  const mutable: Mutable<TValue> = {
     get value(): TValue {
       checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      valueSetter(mutable as Mutable<TValue>, newValue);
+      valueSetter(mutable, newValue);
+    },
+
+    get() {
+      return mutable.value;
+    },
+    set(newValue) {
+      if (
+        typeof newValue === 'function' &&
+        !(newValue as Record<string, unknown>).__isAnimationDefinition
+      ) {
+        mutable.value = (newValue as (value: TValue) => TValue)(mutable.value);
+      } else {
+        mutable.value = newValue as TValue;
+      }
     },
 
     get _value(): TValue {
@@ -44,7 +57,7 @@ export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
 
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable as Mutable<TValue>,
+        mutable,
         modifier !== undefined ? modifier(mutable.value) : mutable.value,
         forceUpdate
       );
@@ -56,20 +69,32 @@ export function makeMutable<TValue>(initial: TValue): Mutable<TValue> {
       listeners.delete(id);
     },
 
+    setDirtyFlag: () => undefined,
+
     _isReanimatedSharedValue: true,
   };
 
   // Hide `_value` from accidental enumeration.
-  Object.defineProperty(mutable, '_value', {
-    configurable: false,
-    enumerable: false,
+  Object.defineProperties(mutable, {
+    _value: {
+      configurable: false,
+      enumerable: false,
+    },
+    get: {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    },
+    set: {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    },
   });
-
-  addCompilerSafeGetAndSet(mutable);
 
   if (IS_JEST) {
     (mutable as JestMutable<TValue>).toJSON = () => mutableToJSON(value);
   }
 
-  return mutable as Mutable<TValue>;
+  return mutable;
 }
