@@ -4,7 +4,8 @@ import { createRef, useEffect } from 'react';
 import type { ScrollView } from 'react-native';
 
 import type { AnimatedScrollViewProps } from '../src';
-import Animated, { useAnimatedRef, useSharedValue } from '../src';
+import Animated, { makeMutable, useAnimatedRef, useSharedValue } from '../src';
+import type { ReanimatedScrollEvent } from '../src/hook/commonTypes';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
 const SCROLL_VIEW_TAG = 1234;
@@ -51,9 +52,18 @@ describe('Animated.ScrollView scrollViewOffset', () => {
   });
 
   test('tracks the offset without a ref', () => {
-    render(<ScrollViewWithOffset />);
+    const offset = makeMutable(0);
 
+    render(<Animated.ScrollView scrollViewOffset={offset} />);
+
+    expect(registerForEvents).toHaveBeenCalledTimes(1);
     expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    const [handler] = registerForEvents.mock
+      .instances as WorkletEventHandler<ReanimatedScrollEvent>[];
+    handler.worklet({
+      contentOffset: { x: 0, y: 42 },
+    } as ReanimatedScrollEvent);
+    expect(offset.value).toBe(42);
   });
 
   test('tracks the offset with an animated ref, which still receives the scroll view', () => {
