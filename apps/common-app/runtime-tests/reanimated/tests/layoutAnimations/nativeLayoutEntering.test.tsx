@@ -1,11 +1,32 @@
-import type { ComponentRef } from 'react';
+/*
+ * Method: a test that plays a case (`playCase`) has statements A and B of `native layout reference`: each
+ * sample of the native box is on the declared timeline of its key at its own sample time from the origin of
+ * its command, and each frame of the frame driver is on a replay of the declared timeline. A test with its
+ * own scene has statement A for its planned reads (`expectNativeOnTimeline`: a read with no check is a
+ * `READ-UNCHECKED` row, and each target has a `TIMELINE` row) and statement B for its frame records
+ * (`expectFramesOnTimeline`). An end report and a callback have a lower bound: one display frame before
+ * the declared end. A test of the first frames (`isOnTimeline`) has a value check of one read with its own
+ * band of two display frames. Each other statement is a state check or a trace check at a planned time.
+ *
+ * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, one common start
+ * of the two boxes, how late an end report or a callback comes, the gap of two callbacks, a native value
+ * in the first 18 ms of a track that starts at a value that the view did not show, the count of checked
+ * planned reads. Within the read band, the platform edge hold and a native segment that keeps its start
+ * value or shows its end value early are not distinguished. Pixels, a device, and 120 Hz are not tested.
+ *
+ * A test of `native layout entering and a clip of its view` plays a case with a clip: statement A to the
+ * scroll call, statement B for the two boxes, and statement M after the frame driver took the native box
+ * (its model is on its own recorded frames). Its value checks at the planned parts use the first row at or
+ * after the part, with the declared value of the time of that row. Two claims of that block stay on the
+ * wall clock: the gap of the two callbacks, and the time from the removal report to the first frame of the
+ * frame driver. The shared transition test waits for its callback and has the lower bound only.
+ */
 import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Dimensions, Modal, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   ComplexAnimationBuilder,
   EasingFunction,
-  EasingFunctionFactory,
   EntryAnimationsValues,
 } from 'react-native-reanimated';
 import Animated, {
@@ -14,7 +35,6 @@ import Animated, {
   FadeOut,
   getStaticFeatureFlag,
   LinearTransition,
-  makeMutable,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
@@ -23,7 +43,6 @@ import Animated, {
   withTiming,
   ZoomIn,
 } from 'react-native-reanimated';
-import { runOnUISync } from 'react-native-worklets';
 
 import {
   describe,
@@ -39,46 +58,94 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import type { TraceEvent, Track, TrackReading } from './nativeLayoutTestKit';
+import type {
+  BuiltKey,
+  ModelTarget,
+  Place,
+  Played,
+  PlannedRead,
+  ReferenceCase,
+} from './nativeLayoutReferencePlay';
+import {
+  buildsOf,
+  expectTimelineRows,
+  expectFrameRecords,
+  expectModelOnFrames,
+  expectNoKeyAfterTransfer,
+  expectReference,
+  frameChecksOf,
+  MATRIX_TOLERANCE,
+  play,
+  sampleTargets,
+} from './nativeLayoutReferencePlay';
+import type {
+  AnimationSource,
+  Band,
+  DeclaredKey,
+  Leaf,
+  PlayedTrack,
+  ScalarKey,
+  TargetSample,
+  TraceEvent,
+  Track,
+  TrackReading,
+} from './nativeLayoutTestKit';
 import {
   BOX_REF,
+  BOX_SIZE,
   callbackOf,
   callbacks,
+  callbackTimeOf,
   callbackTimes,
+  capturesOf,
   centerOf,
   ClippingScrollView,
   countedOf,
   CURVED_EASINGS,
-  curveOf,
+  declaredBandOf,
+  describeLeaf,
+  expectCapturedStart,
+  expectNativeReads,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
   hasNativeLayoutStarts,
   hasTargetSamples,
   isHostEvent,
+  middleOf,
+  narrowClockOffset,
   namedBuilderCalls,
+  nativeOriginOf,
+  playedTracksOf,
+  POSITION_TOLERANCE,
+  readFrameRecords,
   readTrack,
-  sample,
+  resetCallbacks,
+  resetFrameRecords,
   frameDrivenOf,
-  recordedCurveOf,
-  recordedLinearOf,
+  frameRecordedOf,
   DEFAULT_EASING,
-  sampleClockOffset,
   styles,
   summarize,
   summarizeEnd,
   takeTrace,
-  twinStartTime,
+  waitForCallbacks,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
 type BoxAnimations = Pick<AnimatedViewProps, 'entering' | 'layout' | 'exiting'>;
 type Timing = { durationMs?: number; delayMs?: number };
 type Pair = { native: BoxAnimations; frame: BoxAnimations };
+type Declared = Pick<ReferenceCase, 'leaves' | 'operations'>;
 
 type EnteringCase = {
   pairOf: (timing?: Timing) => Pair;
   tracks: Track[];
+  /** The preset of the two boxes. A case with none has a custom function. */
+  create?: () => ComplexAnimationBuilder;
+  /** What the animation declares for a timing. */
+  declaredOf: (leaf: Leaf) => Declared;
+  easing?: Leaf['easing'];
 };
 
 const CLOCK_REF = 'NativeLayoutEnteringClock';
@@ -124,7 +191,6 @@ const timed = (
 const presetPairOf =
   (create: () => ComplexAnimationBuilder, hasDefaultEasing = false) =>
   (timing: Timing = {}): Pair => {
-    const durationMs = timing.durationMs ?? ENTER_DURATION;
     const native = timed(create(), timing).withCallback(callbackOf('native'));
     const frame = timed(create(), timing).withCallback(callbackOf('frame'));
     return {
@@ -133,11 +199,7 @@ const presetPairOf =
       },
       frame: {
         entering: frameDrivenOf(
-          frame.easing(
-            hasDefaultEasing
-              ? recordedCurveOf(DEFAULT_EASING.curve, durationMs)
-              : recordedLinearOf(durationMs)
-          )
+          hasDefaultEasing ? frame : frame.easing(Easing.linear)
         ),
       },
     };
@@ -173,37 +235,11 @@ const customEnteringOf = (
 const customPairOf = (timing: Timing = {}): Pair => ({
   native: { entering: customEnteringOf('native', Easing.linear, timing) },
   frame: {
-    entering: frameDrivenOf(
-      customEnteringOf(
-        'frame',
-        recordedLinearOf(timing.durationMs ?? ENTER_DURATION),
-        timing
-      )
-    ),
+    entering: frameDrivenOf(customEnteringOf('frame', Easing.linear, timing)),
   },
 });
 
 const fadePairOf = presetPairOf(() => new FadeIn());
-
-/** A FadeIn with `easing`, and its frame-driven twin on the same curve. */
-const easedFadePairOf = (
-  easing: EasingFunction | EasingFunctionFactory
-): Pair => ({
-  native: {
-    entering: new FadeIn()
-      .duration(ENTER_DURATION)
-      .easing(easing)
-      .withCallback(callbackOf('native')),
-  },
-  frame: {
-    entering: frameDrivenOf(
-      new FadeIn()
-        .duration(ENTER_DURATION)
-        .easing(recordedCurveOf(easing, ENTER_DURATION))
-        .withCallback(callbackOf('frame'))
-    ),
-  },
-});
 
 const HOLD = { from: 0.25, to: 0.75, value: 0.5 };
 
@@ -216,45 +252,120 @@ function easingWithHold(time: number) {
   return time < HOLD.to ? HOLD.value : 2 * time - 1;
 }
 
-/** The number of segments of the native track of a target. */
-async function segmentCountOf(tag: number, target: string) {
-  const { members } = await sample(tag, target);
-  return members[0].values.length - 1;
-}
+const FADE: EnteringCase = {
+  pairOf: fadePairOf,
+  tracks: [OPACITY],
+  create: () => new FadeIn(),
+  declaredOf: (leaf) => ({
+    leaves: { opacity: { ...leaf, initial: 0, to: 1 } },
+  }),
+};
+const SLIDE_IN_LEFT: EnteringCase = {
+  pairOf: presetPairOf(() => new SlideInLeft()),
+  tracks: [SLIDE],
+  create: () => new SlideInLeft(),
+  declaredOf: (leaf) => ({
+    leaves: { originX: { ...leaf, initial: -WINDOW_WIDTH } },
+  }),
+};
+const ZOOM: EnteringCase = {
+  pairOf: presetPairOf(() => new ZoomIn()),
+  tracks: [SCALE],
+  create: () => new ZoomIn(),
+  declaredOf: (leaf) => ({ leaves: {}, operations: [['scale', 0, 1, leaf]] }),
+};
 
 const CASES: Record<string, EnteringCase> = {
-  FadeIn: { pairOf: fadePairOf, tracks: [OPACITY] },
-  SlideInLeft: {
-    pairOf: presetPairOf(() => new SlideInLeft()),
-    tracks: [SLIDE],
-  },
-  ZoomIn: { pairOf: presetPairOf(() => new ZoomIn()), tracks: [SCALE] },
+  FadeIn: FADE,
+  SlideInLeft: SLIDE_IN_LEFT,
+  ZoomIn: ZOOM,
   'a custom function': {
     pairOf: customPairOf,
     tracks: [
       { ...OPACITY, from: CUSTOM_OPACITY },
       { ...SLIDE, from: centerOf(BOX_LEFT) + CUSTOM_OFFSET },
     ],
+    declaredOf: (leaf) => ({
+      leaves: {
+        opacity: { ...leaf, initial: CUSTOM_OPACITY, to: 1 },
+        originX: { ...leaf, initial: CUSTOM_OFFSET },
+      },
+    }),
   },
 };
 
 /** The cases whose native box has the tracks of the default easing. */
 const DEFAULT_EASING_CASES: Record<string, EnteringCase> = {
   'FadeIn with the default easing': {
+    ...FADE,
     pairOf: presetPairOf(() => new FadeIn(), true),
     tracks: [{ ...OPACITY, easing: DEFAULT_EASING }],
+    easing: 'default',
   },
   'SlideInLeft with the default easing': {
+    ...SLIDE_IN_LEFT,
     pairOf: presetPairOf(() => new SlideInLeft(), true),
     tracks: [{ ...SLIDE, easing: DEFAULT_EASING }],
+    easing: 'default',
   },
   'ZoomIn with the default easing': {
+    ...ZOOM,
     pairOf: presetPairOf(() => new ZoomIn(), true),
     tracks: [{ ...SCALE, easing: DEFAULT_EASING }],
+    easing: 'default',
   },
 };
 
 const TIMELINE_CASES = { ...CASES, ...DEFAULT_EASING_CASES };
+
+const PLACE: Place = { left: BOX_LEFT, top: 0 };
+
+const FADE_KEY: ScalarKey = {
+  key: 'opacity',
+  target: 'Opacity',
+  tolerance: VALUE_TOLERANCE,
+  leaf: { duration: ENTER_DURATION },
+  from: 0,
+  to: 1,
+  startsOnScreen: false,
+};
+const SLIDE_KEY: ScalarKey = {
+  key: 'originX',
+  target: 'PositionX',
+  tolerance: POSITION_TOLERANCE,
+  leaf: { duration: ENTER_DURATION },
+  from: BOX_LEFT - WINDOW_WIDTH,
+  to: BOX_LEFT,
+  base: BOX_LEFT,
+  startsOnScreen: false,
+  size: { key: 'width', rest: BOX_SIZE },
+};
+
+/** The case of `native layout reference` of an entering case with a timing. */
+function referenceOf(
+  { create, declaredOf, easing: easingOfCase }: EnteringCase,
+  timing: Timing & Pick<Leaf, 'easing'> = {}
+): ReferenceCase {
+  const {
+    durationMs = ENTER_DURATION,
+    delayMs,
+    easing = easingOfCase,
+  } = timing;
+  return {
+    flow: 'entering',
+    ...declaredOf({ duration: durationMs, delay: delayMs, easing }),
+    places: [undefined, PLACE],
+    totalMs: Math.max(0, delayMs ?? 0) + durationMs,
+    builder:
+      create &&
+      (() => {
+        const builder = timed(create(), timing);
+        return easing === 'default'
+          ? builder
+          : builder.easing(easing ?? Easing.linear);
+      }),
+  };
+}
 
 type BoxProps = BoxAnimations & {
   refName: string;
@@ -390,29 +501,6 @@ function PairInClippedView(pair: PairProps) {
   );
 }
 
-const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
-const CLIPPED_OFFSET = 1500;
-const scrollTo = (y: number) =>
-  scrollRef.current?.scrollTo({ y, animated: false });
-
-/**
- * The boxes mount in a view in a window. A scroll to `CLIPPED_OFFSET` takes
- * that view out of the window.
- */
-function PairInViewToClip(pair: PairProps) {
-  return (
-    <View>
-      <Clock />
-      <ClippingScrollView scrollRef={scrollRef} style={localStyles.scroll}>
-        <View collapsable={false}>
-          <PairCells {...pair} />
-        </View>
-        <View style={localStyles.scrollFiller} />
-      </ClippingScrollView>
-    </View>
-  );
-}
-
 type ClippingViewForm = {
   /** The view mounts in the commit that mounts the two boxes. */
   isNew: boolean;
@@ -454,30 +542,151 @@ const countedPairOf = ({ native, frame }: Pair): Pair => ({
 type Entered = {
   nativeTag: number;
   frameTag: number;
-  /** The time of the sample clock minus the time of the animation clock. */
-  clockOffset: number;
+  clock: Band;
   startMs: number;
 };
+
+const recordedOf = (
+  box: string,
+  { entering, ...animations }: BoxAnimations
+) => ({
+  ...animations,
+  entering: frameRecordedOf(box, entering as AnimationSource),
+});
 
 /** Mounts the scene with no box, then the two boxes in one commit. */
 async function enter(
   pair: PairProps,
   Scene: React.ComponentType<PairProps> = EnteringPair
 ): Promise<Entered> {
-  await render(<Scene {...pair} />);
+  const recorded = {
+    ...pair,
+    native: recordedOf('native', pair.native),
+    frame: recordedOf('frame', pair.frame),
+  };
+  resetFrameRecords();
+  await render(<Scene {...recorded} />);
   await wait(300);
-  const clock = await sampleClockOffset(getTestComponent(CLOCK_REF).getTag());
+  const clock = await narrowClockOffset(getTestComponent(CLOCK_REF).getTag());
   await takeTrace();
-  callbacks.length = 0;
+  resetCallbacks();
   namedBuilderCalls.length = 0;
   const startMs = performance.now();
-  await render(<Scene {...pair} isMounted />);
+  await render(<Scene {...recorded} isMounted />);
   return {
     nativeTag: getTestComponent(BOX_REF).getTag(),
     frameTag: getTestComponent(FRAME_BOX_REF).getTag(),
-    clockOffset: clock.offset,
+    clock,
     startMs,
   };
+}
+
+/** The samples of the native box for `keys` at each time from the mount. */
+async function sampleAt(
+  entered: Pick<Entered, 'nativeTag' | 'startMs'>,
+  keys: ScalarKey[],
+  timesMs: number[]
+) {
+  const reads: PlannedRead[] = [];
+  for (const plannedMs of timesMs) {
+    await waitUntil(entered, plannedMs);
+    reads.push({
+      samples: await sampleTargets(
+        entered.nativeTag,
+        keys.map(({ target }) => target)
+      ),
+      opensCycle: true,
+    });
+  }
+  return reads;
+}
+
+/**
+ * Statement A of `native layout reference` for reads of the native box at
+ * planned times, from the origin of the first native command of `events`: each
+ * read in the checked time of a track of `keys` is on the declared timeline at
+ * its own sample time, and one read or more of each target has the check.
+ */
+function expectNativeOnTimeline(
+  name: string,
+  events: TraceEvent[],
+  { clock }: Pick<Entered, 'clock'>,
+  keys: ScalarKey[],
+  reads: PlannedRead[],
+  replaced: PlayedTrack[] = []
+) {
+  const tracks = playedTracksOf(
+    events,
+    pendingStartOf(events),
+    clock,
+    keys,
+    replaced
+  );
+  const checked = reads.flatMap(({ samples }, index) =>
+    expectNativeReads(
+      samples,
+      tracks,
+      MATRIX_TOLERANCE,
+      reads[index - 1]?.samples
+    )
+  );
+  expectTimelineRows(name, tracks, reads, checked);
+  return tracks;
+}
+
+const builtOf = (keys: DeclaredKey[]): BuiltKey[] =>
+  keys.map((declared) => ({
+    declared,
+    twinEnds: declared,
+    continuesTrack: false,
+  }));
+
+const builtKeysOf = (enteringCase: EnteringCase, timing: Timing = {}) =>
+  buildsOf(referenceOf(enteringCase, timing)).flat();
+
+/**
+ * Statement B of `native layout reference` for the frame driver on `boxes`:
+ * build n of a leaf of a box is declaration n of the leaf in `builtKeys`, and
+ * each declaration has a record with frames. It gives the residual of each
+ * record.
+ */
+function expectFramesOnTimeline(
+  boxes: string[],
+  builtKeys: BuiltKey[],
+  tracks: PlayedTrack[] = []
+) {
+  const records = readFrameRecords().filter(({ box }) => boxes.includes(box));
+  const declaredLeaves = boxes.flatMap((box) =>
+    builtKeys.map(({ declared }) => `${box} ${describeLeaf(declared)}`)
+  );
+  const recordedLeaves = records
+    .filter(({ frames }) => frames.length > 0)
+    .map((record) => `${record.box} ${describeLeaf(record)}`)
+    .filter((leaf) => declaredLeaves.includes(leaf));
+  const describeLeaves = (leaves: string[]) => leaves.sort().join();
+  expect(describeLeaves(recordedLeaves)).toBe(describeLeaves(declaredLeaves));
+  const frameChecks = frameChecksOf(builtKeys, records);
+  expect(
+    describeLeaves(
+      frameChecks.map(
+        ({ record, declared }) => `${record.box} ${describeLeaf(declared)}`
+      )
+    )
+  ).toBe(describeLeaves(declaredLeaves));
+  return expectFrameRecords({ frameChecks, tracks });
+}
+
+/** The computed start of the frame driver on a box, on the animation clock. */
+function frameStartOf(
+  residuals: ReturnType<typeof expectFrameRecords>,
+  box: string
+) {
+  for (const [{ record }, { startMs }] of residuals) {
+    if (record.box === box) {
+      return startMs;
+    }
+  }
+  throw new Error(`The frame driver has no record of the box ${box}.`);
 }
 
 const waitUntil = ({ startMs }: Pick<Entered, 'startMs'>, elapsedMs: number) =>
@@ -515,6 +724,14 @@ const endOf = (tracks: Track[], finished = true) =>
   [
     ...tracks.map(({ traceTarget }) => `TrackEnded:${traceTarget}:${finished}`),
     finished ? 'Ended:Finished:None' : 'Ended:Cancelled:None',
+  ].join(' > ');
+
+/** `summarizeEnd` of a native command that played each track to its end. */
+const startAndEndOf = (tracks: Track[]) =>
+  [
+    ...tracks.map(({ traceTarget }) => `TrackEnded:${traceTarget}:true`),
+    startOf(tracks),
+    'Ended:Finished:None',
   ].join(' > ');
 
 const pendingStartOf = (events: TraceEvent[]) =>
@@ -560,6 +777,88 @@ const isOnTimeline = (
 
 const sortedCallbacks = () => callbacks.slice().sort().join();
 
+/**
+ * Plays a case on the native box and on its frame-driven twin, with statements
+ * A and B of `native layout reference`. At the end the native box shows its
+ * model, and the twin has the model of the native box.
+ */
+async function playCase(caseName: string, referenceCase: ReferenceCase) {
+  const played = await play(referenceCase);
+  const reads = expectReference(caseName, referenceCase, played);
+  for (const [target, { presentation, model }] of Object.entries(
+    played.end!.native
+  )) {
+    model.forEach((value, index) => {
+      expect(isNear(presentation[index], value)).toBe(true);
+      expect(isNear(played.end!.frame[target].model[index], value)).toBe(true);
+    });
+  }
+  return { ...played, reads };
+}
+
+/**
+ * The native command of the tracks starts and plays each track to its end. The
+ * end report of each track comes no more than one display frame before the
+ * declared end, from the origin of the command, and so does each callback.
+ */
+function expectPlayedToEnd(played: Played, tracks: Track[], totalMs: number) {
+  const { events, tracks: playedTracks } = played;
+  expect(summarizeEnd(events)).toBe(startAndEndOf(tracks));
+  const originMs = middleOf(playedTracks[0].origin);
+  for (const track of playedTracks) {
+    expect(track.played.to - originMs > totalMs - FRAME_MS).toBe(true);
+  }
+  expectNoEarlyCallback(played, totalMs);
+}
+
+/**
+ * The callback of the native box comes no more than one display frame before
+ * the declared end, from the origin of its command. The callback of the twin
+ * has that bound from the computed start of its frame record.
+ */
+function expectNoEarlyCallback(played: Played, totalMs: number) {
+  const { tracks, clockOffset } = played;
+  const earliestMs = totalMs - FRAME_MS;
+  const nativeMs =
+    callbackTimeOf('native').emittedMs +
+    middleOf(clockOffset) -
+    middleOf(tracks[0].origin);
+  expect(
+    nativeMs > earliestMs
+      ? ''
+      : `no early callback: the callback of the native box was emitted ${nativeMs.toFixed(3)} ms after the origin of its command, not after ${earliestMs.toFixed(3)} ms`
+  ).toBe('');
+  const frameMs =
+    callbackTimeOf('frame').emittedMs -
+    frameStartOf(expectFrameRecords(played), 'frame');
+  expect(
+    frameMs > earliestMs
+      ? ''
+      : `no early callback: the callback of the twin was emitted ${frameMs.toFixed(3)} ms after the computed start of its frame record, not after ${earliestMs.toFixed(3)} ms`
+  ).toBe('');
+}
+
+/** The React Native runtime got no callback before a time from the first commit. */
+function expectNoCallbackBefore({ startMs }: Played, plannedMs: number) {
+  for (const box of ['native', 'frame']) {
+    const receivedMs = callbackTimeOf(box).receivedMs - startMs;
+    expect(
+      receivedMs > plannedMs
+        ? ''
+        : `no callback before ${plannedMs.toFixed(3)} ms: the React Native runtime got the callback of the ${box} box ${receivedMs.toFixed(3)} ms after the first commit`
+    ).toBe('');
+  }
+}
+
+/** The case with a checkpoint at which the React Native runtime has no callback. */
+const withNoCallbackAt = (
+  referenceCase: ReferenceCase,
+  atMs: number
+): ReferenceCase => ({
+  ...referenceCase,
+  checkpoint: { atMs, run: () => expect(callbacks.length).toBe(0) },
+});
+
 const START_REFUSED = 'LayoutStartRefused:Rejected:TargetUnavailable';
 
 const localStyles = StyleSheet.create({
@@ -595,7 +894,8 @@ describe('native layout entering', () => {
     return;
   }
 
-  for (const [caseName, { pairOf, tracks }] of Object.entries(TIMELINE_CASES)) {
+  for (const [caseName, enteringCase] of Object.entries(TIMELINE_CASES)) {
+    const { pairOf, tracks } = enteringCase;
     test(`${caseName} starts natively on the mounted final state, and a sample after its first display frames is on the timeline from the initial value`, async () => {
       const entered = await enter(pairOf());
       await wait(FIRST_FRAMES_MS);
@@ -629,81 +929,44 @@ describe('native layout entering', () => {
     });
 
     test(`${caseName} agrees with the frame driver, ends at the model, and gives its callback true one time`, async () => {
-      const entered = await enter(pairOf());
-      for (const fraction of [0.25, 0.5, 0.75]) {
-        await waitUntil(entered, fraction * ENTER_DURATION);
-        for (const track of tracks) {
-          const { native, frame } = await readPair(entered, track);
-          const twinProgress =
-            (native.timeMs - entered.clockOffset - twinStartTime.value) /
-            ENTER_DURATION;
-          expect(
-            Math.abs(progressOf(track, native.shown) - twinProgress) *
-              ENTER_DURATION <
-              FRAME_MS
-          ).toBe(true);
-          expect(isNear(native.shown, frame.model, twoFramesOf(track))).toBe(
-            true
-          );
-          expect(native.keys >= tracks.length).toBe(true);
-        }
-      }
-      expect(callbacks.length).toBe(0);
-      await takeTrace();
-
-      await waitUntil(entered, ENTER_DURATION + 300);
-      for (const track of tracks) {
-        const { native, frame } = await readPair(entered, track);
-        expect(isNear(native.shown, track.to)).toBe(true);
-        expect(isNear(native.model, track.to)).toBe(true);
-        expect(isNear(frame.model, track.to)).toBe(true);
-        expect(native.keys).toBe(0);
-      }
-      const events = await takeTraceOfPair(entered);
-      expect(summarizeEnd(events.native)).toBe(endOf(tracks));
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      const played = await playCase(
+        caseName,
+        withNoCallbackAt(referenceOf(enteringCase), 0.75 * ENTER_DURATION)
+      );
+      expect(
+        played.reads
+          .filter(
+            ({ sampled, timeMs, tracks: [{ origin }] }) =>
+              sampled.playbackKeys.length < tracks.length &&
+              timeMs < middleOf(origin) + ENTER_DURATION - FRAME_MS
+          )
+          .map(
+            ({ target, sampled, timeMs, tracks: [{ origin }] }) =>
+              `${sampled.playbackKeys.length} keys of ${target} at ${timeMs - middleOf(origin)} ms`
+          )
+          .join()
+      ).toBe('');
+      expectNoCallbackBefore(played, 0.75 * ENTER_DURATION);
+      expectPlayedToEnd(played, tracks, ENTER_DURATION);
       await render(null);
     });
 
     test(`${caseName} holds its initial value through a delay of 1000 ms, then plays`, async () => {
       const timing = { durationMs: 600, delayMs: 1000 };
-      const entered = await enter(pairOf(timing));
-      for (const elapsedMs of [250, 500, 750]) {
-        await waitUntil(entered, elapsedMs);
-        for (const track of tracks) {
-          const { native, frame } = await readPair(entered, track);
-          expect(isNear(native.shown, track.from)).toBe(true);
-          expect(isNear(frame.model, track.from)).toBe(true);
-          expect(isNear(native.model, track.to)).toBe(true);
+      const played = await playCase(
+        `${caseName} after a delay`,
+        withNoCallbackAt(
+          referenceOf(enteringCase, timing),
+          timing.delayMs + timing.durationMs / 2
+        )
+      );
+      for (const { row } of played.rows) {
+        for (const [target, { model }] of Object.entries(row.native)) {
+          expect(model.join()).toBe(played.end!.native[target].model.join());
         }
       }
-      const { native: startEvents } = await takeTraceOfPair(entered);
-      const playStartMs =
-        pendingStartOf(startEvents).monotonicTimeMs + timing.delayMs;
-
-      await waitUntil(entered, timing.delayMs + timing.durationMs / 2);
-      for (const track of tracks) {
-        const { native, frame } = await readPair(entered, track);
-        expect(
-          isOnTimeline(track, native, playStartMs, timing.durationMs)
-        ).toBe(true);
-        expect(
-          isNear(
-            native.shown,
-            frame.model,
-            twoFramesOf(track, timing.durationMs)
-          )
-        ).toBe(true);
-      }
-      expect(callbacks.length).toBe(0);
-
-      await waitUntil(entered, timing.delayMs + timing.durationMs + 300);
-      for (const track of tracks) {
-        const { native } = await readPair(entered, track);
-        expect(isNear(native.shown, track.to)).toBe(true);
-        expect(native.keys).toBe(0);
-      }
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expectNoCallbackBefore(played, timing.delayMs + timing.durationMs / 2);
+      expectPlayedToEnd(played, tracks, timing.delayMs + timing.durationMs);
       await render(null);
     });
   }
@@ -730,6 +993,12 @@ describe('native layout entering', () => {
 
   test('an exit at 30 % ends the native entering group with false and starts natively at its own initial value', async () => {
     const exitDurationMs = 1000;
+    const exitKey = {
+      ...FADE_KEY,
+      leaf: { duration: exitDurationMs },
+      from: 1,
+      to: 0,
+    };
     const exitingOf = (name: string) =>
       new FadeOut()
         .duration(exitDurationMs)
@@ -738,35 +1007,49 @@ describe('native layout entering', () => {
     const { native, frame } = fadePairOf();
     const pair = {
       native: { ...native, exiting: exitingOf('nativeExit') },
-      frame: { ...frame, exiting: exitingOf('frameExit') },
+      frame: {
+        ...frame,
+        exiting: frameRecordedOf('frame', exitingOf('frameExit')),
+      },
     };
     const entered = await enter(pair);
     await waitUntil(entered, 0.3 * ENTER_DURATION);
-    const beforeExit = await readPair(entered, OPACITY);
-    expect(beforeExit.native.shown < 0.4).toBe(true);
-    await takeTrace();
+    const beforeExit = await sampleTargets(entered.nativeTag, ['Opacity']);
+    const enterEvents = await takeTraceOfPair(entered);
+    expectNativeOnTimeline(
+      'an exit at 30 %, the entering track',
+      enterEvents.native,
+      entered,
+      [FADE_KEY],
+      [{ samples: beforeExit, opensCycle: true }]
+    );
 
     const exitStartMs = performance.now();
     await render(<EnteringPair {...pair} />);
     await wait(Math.max(0, exitStartMs + 200 - performance.now()));
-    const exiting = await readPair(entered, OPACITY);
-    for (const shown of [exiting.native.shown, exiting.frame.model]) {
-      expect(shown > 0.6 && shown < 0.95).toBe(true);
-    }
-    expect(exiting.native.keys).toBe(1);
-    expect(exiting.frame.keys).toBe(0);
-    expect(isNear(exiting.native.shown, exiting.frame.model, 0.05)).toBe(true);
+    const exiting = await sampleTargets(entered.nativeTag, ['Opacity']);
+    const twin = await readTrack(entered.frameTag, OPACITY);
+    expect(exiting.Opacity.playbackKeys.length).toBe(1);
+    expect(twin.keys).toBe(0);
     const events = await takeTraceOfPair(entered);
     expect(summarize(events.native.filter(isHostEvent))).toBe(
       'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Opacity:false > Ended:Interrupted:None > TrackStarted:Opacity > Admitted'
     );
     expect(pendingStartOf(events.native).layoutAnimationType).toBe('Exiting');
+    expectNativeOnTimeline(
+      'an exit at 30 %, the exiting track',
+      events.native,
+      entered,
+      [exitKey],
+      [{ samples: exiting, opensCycle: true }]
+    );
     expect(sortedCallbacks()).toBe('frame:false,native:false');
 
     await wait(exitDurationMs + 200);
     expect(sortedCallbacks()).toBe(
       'frame:false,frameExit:true,native:false,nativeExit:true'
     );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY, exitKey]));
     let hasView = true;
     await readTrack(entered.nativeTag, OPACITY).catch(() => {
       hasView = false;
@@ -777,19 +1060,21 @@ describe('native layout entering', () => {
 
   const mismatches = {
     'FadeIn on a view with the style opacity 0.5': {
-      pairOf: fadePairOf,
-      track: OPACITY,
+      enteringCase: FADE,
       style: { opacity: 0.5 },
     },
     'ZoomIn on a view with a style transform': {
-      pairOf: CASES.ZoomIn.pairOf,
-      track: SCALE,
+      enteringCase: ZOOM,
       style: { transform: [{ scale: 0.8 }] },
     },
   };
-  for (const [caseName, { pairOf, track, style }] of Object.entries(
+  for (const [caseName, { enteringCase, style }] of Object.entries(
     mismatches
   )) {
+    const {
+      pairOf,
+      tracks: [track],
+    } = enteringCase;
     test(`${caseName} stays frame-driven and ends at the end value of its leaf: EndpointMismatch`, async () => {
       const entered = await enter({ ...pairOf(), style });
       await waitUntil(entered, 0.5 * ENTER_DURATION);
@@ -798,107 +1083,64 @@ describe('native layout entering', () => {
         'LayoutBuildFailed:EndpointMismatch'
       );
       expect(events.native[0].layoutAnimationType).toBe('Entering');
-      const middle = await readPair(entered, track);
-      expect(middle.native.keys).toBe(0);
-      expect(
-        isNear(middle.native.model, middle.frame.model, twoFramesOf(track))
-      ).toBe(true);
-      expect(isNear(middle.native.model, 0.5, 0.1)).toBe(true);
+      expect((await readTrack(entered.nativeTag, track)).keys).toBe(0);
 
       await waitUntil(entered, ENTER_DURATION + 300);
       const end = await readPair(entered, track);
       expect(isNear(end.native.model, track.to)).toBe(true);
       expect(isNear(end.frame.model, track.to)).toBe(true);
       expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expectFramesOnTimeline(['native', 'frame'], builtKeysOf(enteringCase));
       await render(null);
     });
   }
 
   for (const [easingName, easing] of Object.entries(CURVED_EASINGS)) {
     test(`FadeIn with ${easingName} plays natively on the curve of the frame driver`, async () => {
-      const curve = curveOf(easing);
-      const entered = await enter(easedFadePairOf(easing));
-      await waitUntil(entered, 100);
-      const events = await takeTraceOfPair(entered);
-      expect(summarize(events.native.filter(isHostEvent))).toBe(
-        startOf([OPACITY])
+      const played = await playCase(
+        `FadeIn with ${easingName}`,
+        referenceOf(FADE, { easing })
       );
-      expect(summarize(events.frame)).toBe(
-        'LayoutBuildFailed:UnsupportedTiming'
-      );
-
-      for (const fraction of [0.25, 0.5, 0.75]) {
-        await waitUntil(entered, fraction * ENTER_DURATION);
-        const { native, frame } = await readPair(entered, OPACITY);
-        const twinTime =
-          (native.timeMs - entered.clockOffset - twinStartTime.value) /
-          ENTER_DURATION;
-        expect(isNear(native.shown, curve(twinTime), 0.02)).toBe(true);
-        expect(
-          isNear(native.shown, frame.model, 2 * twoFramesOf(OPACITY))
-        ).toBe(true);
-        expect(isNear(native.shown, fraction, 0.02)).toBe(
-          isNear(curve(fraction), fraction, 0.001)
-        );
-      }
-
-      await waitUntil(entered, ENTER_DURATION + 300);
-      const end = await readTrack(entered.nativeTag, OPACITY);
-      expect(isNear(end.shown, 1)).toBe(true);
-      expect(end.keys).toBe(0);
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expectPlayedToEnd(played, [OPACITY], ENTER_DURATION);
       await render(null);
     });
   }
 
   test('FadeIn with an easing that has no change from 25 % to 75 % of its time plays natively and holds the value of that part with no step', async () => {
-    const entered = await enter(easedFadePairOf(easingWithHold));
-    await waitUntil(entered, 100);
-    const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
+    const played = await playCase(
+      'FadeIn with a hold',
+      referenceOf(FADE, { easing: easingWithHold })
     );
-    expect(summarize(events.frame)).toBe('LayoutBuildFailed:UnsupportedTiming');
-    const { members } = await sample(entered.nativeTag, 'Opacity');
+    expectPlayedToEnd(played, [OPACITY], ENTER_DURATION);
+    const checked = played.reads.filter(({ isChecked }) => isChecked);
+    const { members } = checked[Math.floor(checked.length / 2)].sampled;
     expect(members[0].values.map(([value]) => value).join()).toBe(
       '0,0.5,0.5,0.5,1'
     );
-
-    const twinTimeOf = ({ timeMs }: TrackReading) =>
-      (timeMs - entered.clockOffset - twinStartTime.value) / ENTER_DURATION;
-    const twoFrames = (2 * FRAME_MS) / ENTER_DURATION;
-    const rows: string[] = [];
-    let isOnCurve = true;
-    let heldRows = 0;
-    for (let percent = 10; percent <= 90; percent += 2) {
-      await waitUntil(entered, (percent / 100) * ENTER_DURATION);
-      const { native, frame } = await readPair(entered, OPACITY);
-      const twinTime = twinTimeOf(native);
-      const isHeld =
-        twinTime > HOLD.from + twoFrames && twinTime < HOLD.to - twoFrames;
-      const checks = isHeld
-        ? [native.shown === HOLD.value, frame.model === HOLD.value]
-        : [
-            isNear(native.shown, easingWithHold(twinTime), 0.02),
-            isNear(native.shown, frame.model, 2 * twoFramesOf(OPACITY)),
-          ];
-      isOnCurve &&= !checks.includes(false);
-      heldRows += isHeld ? 1 : 0;
-      rows.push(
-        `${twinTime.toFixed(4)} native ${native.shown} frame driver ${frame.model} checks ${checks.join()}`
+    const held = checked.filter(({ tracks: [track], timeMs }) => {
+      const { from, to } = declaredBandOf(track, timeMs);
+      return from === HOLD.value && to === HOLD.value;
+    });
+    for (const { values } of held) {
+      expect(values[0]).toBe(HOLD.value);
+    }
+    expect(held.length >= 20).toBe(true);
+    const twin = played.frameChecks.find(
+      ({ record }) => record.box === 'frame'
+    )!;
+    const twinStartMs = frameStartOf(expectFrameRecords(played), 'frame');
+    const twoFramesMs = 2 * FRAME_MS;
+    const heldFrames = twin.record.frames.filter(({ timeMs }) => {
+      const elapsedMs = timeMs - twinStartMs;
+      return (
+        elapsedMs >= HOLD.from * ENTER_DURATION + twoFramesMs &&
+        elapsedMs <= HOLD.to * ENTER_DURATION - twoFramesMs
       );
+    });
+    for (const { value } of heldFrames) {
+      expect(value === HOLD.value).toBe(true);
     }
-    if (!isOnCurve || heldRows < 20) {
-      console.log(`HOLD-ROWS | ${rows.join(' | ')}`);
-    }
-    expect(isOnCurve).toBe(true);
-    expect(heldRows >= 20).toBe(true);
-
-    await waitUntil(entered, ENTER_DURATION + 300);
-    const end = await readTrack(entered.nativeTag, OPACITY);
-    expect(isNear(end.shown, 1)).toBe(true);
-    expect(end.keys).toBe(0);
-    expect(sortedCallbacks()).toBe('frame:true,native:true');
+    expect(heldFrames.length >= 20).toBe(true);
     await render(null);
   });
 
@@ -951,44 +1193,33 @@ describe('native layout entering', () => {
   });
 
   test('a negative delay starts the track at once', async () => {
-    const entered = await enter(fadePairOf({ delayMs: -500 }));
-    await wait(FIRST_FRAMES_MS);
-    const first = await readTrack(entered.nativeTag, OPACITY);
-    await wait(100);
-    const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
+    const played = await playCase(
+      'FadeIn with a negative delay',
+      referenceOf(FADE, { delayMs: -500 })
     );
-    expect(
-      isOnTimeline(
-        OPACITY,
-        first,
-        pendingStartOf(events.native).monotonicTimeMs
-      )
-    ).toBe(true);
-
-    await waitUntil(entered, 0.5 * ENTER_DURATION);
-    const { native, frame } = await readPair(entered, OPACITY);
-    expect(isNear(native.shown, frame.model, twoFramesOf(OPACITY))).toBe(true);
-    expect(isNear(native.shown, 0.5, 0.1)).toBe(true);
+    expectPlayedToEnd(played, [OPACITY], ENTER_DURATION);
     await render(null);
   });
 
   test('a view in views that React flattens starts natively on its own tag', async () => {
     const { pairOf, tracks } = CASES.SlideInLeft;
     const entered = await enter({ ...pairOf(), isInFlattenedViews: true });
-    await wait(FIRST_FRAMES_MS);
-    const first = await readTrack(entered.nativeTag, SLIDE);
-    await wait(100);
+    const reads = await sampleAt(
+      entered,
+      [SLIDE_KEY],
+      [FIRST_FRAMES_MS, 0.5 * ENTER_DURATION]
+    );
+    await waitUntil(entered, ENTER_DURATION + 300);
     const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(startOf(tracks));
-    expect(
-      isOnTimeline(SLIDE, first, pendingStartOf(events.native).monotonicTimeMs)
-    ).toBe(true);
-
-    await waitUntil(entered, 0.5 * ENTER_DURATION);
-    const { native, frame } = await readPair(entered, SLIDE);
-    expect(isNear(native.shown, frame.model, twoFramesOf(SLIDE))).toBe(true);
+    expect(summarizeEnd(events.native)).toBe(startAndEndOf(tracks));
+    expectNativeOnTimeline(
+      'a view in views that React flattens',
+      events.native,
+      entered,
+      [SLIDE_KEY],
+      reads
+    );
+    expectFramesOnTimeline(['frame'], builtOf([SLIDE_KEY]));
     await render(null);
   });
 
@@ -1018,16 +1249,18 @@ describe('native layout entering', () => {
 
   test('a view that enters in a Modal on screen starts natively and agrees with the frame driver', async () => {
     const entered = await enter(fadePairOf(), ModalPair);
-    await waitUntil(entered, 0.5 * ENTER_DURATION);
-    const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
-    );
-    const { native, frame } = await readPair(entered, OPACITY);
-    expect(isNear(native.shown, frame.model, twoFramesOf(OPACITY))).toBe(true);
-    expect(isNear(native.shown, 0.5, 0.1)).toBe(true);
-
+    const reads = await sampleAt(entered, [FADE_KEY], [0.5 * ENTER_DURATION]);
     await waitUntil(entered, ENTER_DURATION + 300);
+    const events = await takeTraceOfPair(entered);
+    expect(summarizeEnd(events.native)).toBe(startAndEndOf([OPACITY]));
+    expectNativeOnTimeline(
+      'a view that enters in a Modal on screen',
+      events.native,
+      entered,
+      [FADE_KEY],
+      reads
+    );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY]));
     expect(isNear((await readTrack(entered.nativeTag, OPACITY)).shown, 1)).toBe(
       true
     );
@@ -1044,12 +1277,19 @@ describe('native layout entering in new ancestors', () => {
 
   const DURATION = 1000;
 
-  /** Both boxes are frame-driven, and the native route made no build. */
+  /**
+   * Both boxes are frame-driven, and the native route made no build: each frame
+   * of the two boxes is on the declared timeline, and each callback comes no
+   * more than one display frame before the declared end, from the computed
+   * start of its box.
+   */
   async function expectFrameDrivenPair(
     entered: Entered,
-    tracks: Track[],
-    { durationMs = DURATION, delayMs = 0 }: Timing = {}
+    enteringCase: EnteringCase,
+    timing: Timing = {}
   ) {
+    const { tracks } = enteringCase;
+    const { durationMs = DURATION, delayMs = 0 } = timing;
     if (delayMs > 0) {
       await waitUntil(entered, delayMs / 2);
       for (const track of tracks) {
@@ -1058,21 +1298,12 @@ describe('native layout entering in new ancestors', () => {
         expect(isNear(frame.model, track.from)).toBe(true);
       }
     }
-    for (const fraction of [0.25, 0.5, 0.75]) {
-      await waitUntil(entered, delayMs + fraction * durationMs);
-      for (const track of tracks) {
-        const { native, frame } = await readPair(entered, track);
-        expect(native.keys).toBe(0);
-        expect(
-          isNear(native.model, frame.model, twoFramesOf(track, durationMs))
-        ).toBe(true);
-        const progress = progressOf(track, native.model);
-        expect(progress > 0 && progress < 1).toBe(true);
-      }
-      expect(callbacks.length).toBe(0);
+    await waitUntil(entered, delayMs + durationMs / 2);
+    for (const track of tracks) {
+      expect((await readTrack(entered.nativeTag, track)).keys).toBe(0);
     }
 
-    await waitUntil(entered, delayMs + durationMs + 300);
+    expect(await waitForCallbacks(['frame:true', 'native:true'])).toBe('');
     for (const track of tracks) {
       const { native, frame } = await readPair(entered, track);
       expect(isNear(native.model, track.to)).toBe(true);
@@ -1084,9 +1315,20 @@ describe('native layout entering in new ancestors', () => {
     expect(events.native[0].layoutAnimationType).toBe('Entering');
     expect(summarize(events.frame)).toBe(START_REFUSED);
     expect(sortedCallbacks()).toBe('frame:true,native:true');
+    const boxes = ['native', 'frame'];
+    const residuals = expectFramesOnTimeline(
+      boxes,
+      builtKeysOf(enteringCase, { durationMs, delayMs })
+    );
+    for (const box of boxes) {
+      expect(
+        callbackTimeOf(box).emittedMs - frameStartOf(residuals, box) >
+          delayMs + durationMs - FRAME_MS
+      ).toBe(true);
+    }
   }
 
-  for (const [caseName, { pairOf, tracks }] of Object.entries(CASES)) {
+  for (const [caseName, enteringCase] of Object.entries(CASES)) {
     for (const timing of [
       { durationMs: DURATION },
       { durationMs: 600, delayMs: 500 },
@@ -1097,10 +1339,10 @@ describe('native layout entering in new ancestors', () => {
           : `a delay of ${timing.delayMs} ms`;
       test(`${caseName} with ${delay} in a Modal that mounts in the same commit is frame-driven: TargetUnavailable`, async () => {
         const entered = await enter(
-          countedPairOf(pairOf(timing)),
+          countedPairOf(enteringCase.pairOf(timing)),
           PairInNewModal
         );
-        await expectFrameDrivenPair(entered, tracks, timing);
+        await expectFrameDrivenPair(entered, enteringCase, timing);
         expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
         await render(null);
         await wait(300);
@@ -1110,25 +1352,22 @@ describe('native layout entering in new ancestors', () => {
 
   test('a view under two new views starts natively and agrees with the frame driver', async () => {
     const entered = await enter(fadePairOf(), PairInNewViews);
-    await wait(FIRST_FRAMES_MS);
-    const first = await readTrack(entered.nativeTag, OPACITY);
-    await waitUntil(entered, 0.5 * ENTER_DURATION);
-    const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
+    const reads = await sampleAt(
+      entered,
+      [FADE_KEY],
+      [FIRST_FRAMES_MS, 0.5 * ENTER_DURATION]
     );
-    expect(
-      isOnTimeline(
-        OPACITY,
-        first,
-        pendingStartOf(events.native).monotonicTimeMs
-      )
-    ).toBe(true);
-    const { native, frame } = await readPair(entered, OPACITY);
-    expect(isNear(native.shown, frame.model, twoFramesOf(OPACITY))).toBe(true);
-    expect(isNear(native.shown, 0.5, 0.1)).toBe(true);
-
     await waitUntil(entered, ENTER_DURATION + 300);
+    const events = await takeTraceOfPair(entered);
+    expect(summarizeEnd(events.native)).toBe(startAndEndOf([OPACITY]));
+    expectNativeOnTimeline(
+      'a view under two new views',
+      events.native,
+      entered,
+      [FADE_KEY],
+      reads
+    );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY]));
     const end = await readTrack(entered.nativeTag, OPACITY);
     expect(isNear(end.shown, 1)).toBe(true);
     expect(end.keys).toBe(0);
@@ -1139,14 +1378,14 @@ describe('native layout entering in new ancestors', () => {
   test('a view in a new ScrollView is frame-driven: TargetUnavailable', async () => {
     const timing = { durationMs: DURATION };
     const entered = await enter(fadePairOf(timing), PairInNewScrollView);
-    await expectFrameDrivenPair(entered, [OPACITY], timing);
+    await expectFrameDrivenPair(entered, FADE, timing);
     await render(null);
   });
 
   test('a view that enters in a mounted view with no window is frame-driven: TargetUnavailable', async () => {
     const timing = { durationMs: DURATION };
     const entered = await enter(fadePairOf(timing), PairInClippedView);
-    await expectFrameDrivenPair(entered, [OPACITY], timing);
+    await expectFrameDrivenPair(entered, FADE, timing);
     await render(null);
   });
 
@@ -1160,7 +1399,7 @@ describe('native layout entering in new ancestors', () => {
           fadePairOf(timing),
           pairInClippingViewOf({ isNew, areBoxesClipped })
         );
-        await expectFrameDrivenPair(entered, [OPACITY], timing);
+        await expectFrameDrivenPair(entered, FADE, timing);
         await render(null);
       });
     }
@@ -1192,48 +1431,77 @@ describe('native layout entering and a later change of the view', () => {
   const LAYOUT_START =
     'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:PositionX > TrackStarted:PositionY > TrackStarted:Width > TrackStarted:Height > Admitted';
 
-  async function moveAt30Percent(pair: Pair) {
+  const MOVE_KEY: ScalarKey = {
+    ...SLIDE_KEY,
+    leaf: { duration: LAYOUT_DURATION },
+    from: BOX_LEFT,
+    to: MOVED_LEFT,
+    base: MOVED_LEFT,
+    startsOnScreen: true,
+  };
+
+  /** The planned reads of the native box of `keys` in the layout animation. */
+  async function moveAt30Percent(
+    { native, frame }: Pair,
+    keys: ScalarKey[] = [],
+    fractions: number[] = []
+  ) {
+    const pair = {
+      native,
+      frame: {
+        ...frame,
+        layout:
+          frame.layout &&
+          frameRecordedOf('frame', frame.layout as AnimationSource),
+      },
+    };
     const entered = await enter(pair);
     await waitUntil(entered, CHANGE_AT);
-    await takeTrace();
+    const enterEvents = (await takeTraceOfPair(entered)).native;
     const moveStartMs = performance.now();
     await render(<EnteringPair {...pair} isMounted left={MOVED_LEFT} />);
-    return { entered, moved: { ...entered, startMs: moveStartMs } };
+    const moved = { ...entered, startMs: moveStartMs };
+    const reads = await sampleAt(
+      moved,
+      keys,
+      fractions.map((fraction) => fraction * LAYOUT_DURATION)
+    );
+    return { entered, moved, enterEvents, reads };
   }
 
   test('a layout change at 30 % of FadeIn replaces the entering group, and the opacity track continues on its timeline', async () => {
-    const { entered, moved } = await moveAt30Percent(withLayout(fadePairOf()));
-    await waitUntil(moved, 100);
-    const events = await takeTraceOfPair(entered);
-    expect(summarize(events.native.filter(isHostEvent))).toBe(LAYOUT_START);
-    expect(pendingStartOf(events.native).layoutAnimationType).toBe('Layout');
+    const { entered, enterEvents, reads } = await moveAt30Percent(
+      withLayout(fadePairOf()),
+      [FADE_KEY, MOVE_KEY],
+      [0.1, 0.25, 0.5, 0.75]
+    );
     expect(sortedCallbacks()).toBe('frame:false,native:false');
 
-    for (const fraction of [0.25, 0.5, 0.75]) {
-      await waitUntil(moved, fraction * LAYOUT_DURATION);
-      const opacity = await readPair(entered, OPACITY);
-      expect(
-        isNear(opacity.native.shown, opacity.frame.model, twoFramesOf(OPACITY))
-      ).toBe(true);
-      expect(
-        isNear(
-          opacity.native.shown,
-          (CHANGE_AT + fraction * LAYOUT_DURATION) / ENTER_DURATION,
-          0.06
-        )
-      ).toBe(true);
-      const position = await readPair(entered, MOVE);
-      expect(
-        isNear(
-          position.native.shown,
-          position.frame.model,
-          twoFramesOf(MOVE, LAYOUT_DURATION)
-        )
-      ).toBe(true);
-    }
-    expect(callbacks.length).toBe(2);
-
     await waitUntil(entered, ENTER_DURATION + 300);
+    const events = (await takeTraceOfPair(entered)).native;
+    expect(
+      summarize(
+        events
+          .filter(isHostEvent)
+          .filter(({ event }) => event !== 'TrackEnded' && event !== 'Ended')
+      )
+    ).toBe(LAYOUT_START);
+    expect(pendingStartOf(events).layoutAnimationType).toBe('Layout');
+    expectNativeOnTimeline(
+      'a layout change at 30 % of FadeIn',
+      [...enterEvents, ...events],
+      entered,
+      [FADE_KEY],
+      reads
+    );
+    expectNativeOnTimeline(
+      'a layout change at 30 % of FadeIn',
+      events,
+      entered,
+      [MOVE_KEY],
+      reads
+    );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY, MOVE_KEY]));
     const opacity = await readPair(entered, OPACITY);
     expect(isNear(opacity.native.shown, 1)).toBe(true);
     expect(isNear(opacity.frame.model, 1)).toBe(true);
@@ -1247,28 +1515,41 @@ describe('native layout entering and a later change of the view', () => {
   });
 
   test('a layout change at 30 % of SlideInLeft continues the left edge from the value on screen', async () => {
-    const { entered, moved } = await moveAt30Percent(
-      withLayout(CASES.SlideInLeft.pairOf())
+    const { entered, moved, enterEvents, reads } = await moveAt30Percent(
+      withLayout(CASES.SlideInLeft.pairOf()),
+      [MOVE_KEY],
+      [0.1, 0.25, 0.5, 0.75]
     );
-    const travel: Track = { ...MOVE, from: SLIDE.from };
-    for (const fraction of [0.1, 0.25, 0.5, 0.75]) {
-      await waitUntil(moved, fraction * LAYOUT_DURATION);
-      const { native, frame } = await readPair(entered, MOVE);
-      expect(isNear(native.shown, frame.model, twoFramesOf(travel, 1000))).toBe(
-        true
-      );
-      expect(native.shown < MOVE.to).toBe(true);
-    }
-    const events = await takeTraceOfPair(entered);
+    await waitUntil(moved, LAYOUT_DURATION + 300);
+    const events = (await takeTraceOfPair(entered)).native;
     expect(
       summarize(
-        events.native
+        events
           .filter(isHostEvent)
           .filter(({ event }) => event !== 'TrackEnded' && event !== 'Ended')
       )
     ).toBe(LAYOUT_START);
+    const slide = playedTracksOf(
+      [...enterEvents, ...events],
+      pendingStartOf(enterEvents),
+      entered.clock,
+      [SLIDE_KEY]
+    );
+    expectNativeOnTimeline(
+      'a layout change at 30 % of SlideInLeft',
+      events,
+      entered,
+      [MOVE_KEY],
+      reads,
+      slide
+    );
+    const captures = capturesOf(events, slide, entered.clock, () => {
+      throw new Error('The build of the layout change started no command.');
+    });
+    expect(captures.length).toBe(1);
+    captures.forEach(expectCapturedStart);
+    expectFramesOnTimeline(['frame'], builtOf([SLIDE_KEY, MOVE_KEY]));
 
-    await waitUntil(moved, LAYOUT_DURATION + 300);
     const end = await readPair(entered, MOVE);
     expect(isNear(end.native.shown, MOVE.to)).toBe(true);
     expect(isNear(end.frame.model, MOVE.to)).toBe(true);
@@ -1280,19 +1561,25 @@ describe('native layout entering and a later change of the view', () => {
   });
 
   test('a frame change at 30 % of FadeIn on a view with no layout animation shows at once and keeps the entering track', async () => {
-    const { entered, moved } = await moveAt30Percent(fadePairOf());
+    const { entered, moved, enterEvents } = await moveAt30Percent(fadePairOf());
     await waitUntil(moved, 150);
     const position = await readPair(entered, MOVE);
     expect(isNear(position.native.shown, MOVE.to)).toBe(true);
     expect(isNear(position.frame.model, MOVE.to)).toBe(true);
-    const opacity = await readPair(entered, OPACITY);
-    expect(
-      isNear(opacity.native.shown, opacity.frame.model, twoFramesOf(OPACITY))
-    ).toBe(true);
+    const opacity = await sampleTargets(entered.nativeTag, ['Opacity']);
     expect((await takeTraceOfPair(entered)).native.length).toBe(0);
     expect(callbacks.length).toBe(0);
 
     await waitUntil(entered, ENTER_DURATION + 300);
+    const events = (await takeTraceOfPair(entered)).native;
+    expectNativeOnTimeline(
+      'a frame change at 30 % of FadeIn',
+      [...enterEvents, ...events],
+      entered,
+      [FADE_KEY],
+      [{ samples: opacity, opensCycle: true }]
+    );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY]));
     expect(isNear((await readTrack(entered.nativeTag, OPACITY)).shown, 1)).toBe(
       true
     );
@@ -1335,50 +1622,162 @@ describe('native layout entering and a clip of its view', () => {
     return;
   }
 
-  const PLATFORM_REMOVED =
-    'TrackEnded:Opacity:false > Ended:Interrupted:PlatformRemoved';
+  /** The times of a clip test, from the first commit. */
+  type ClipTimes = { clipMs: number; hiddenMs: number; shownMs: number };
 
-  async function takeTransferTrace(tag: number) {
-    const events = (await takeTrace()).filter((event) => event.tag === tag);
-    const isFrameUpdate = ({ event }: TraceEvent) =>
-      event === 'FrameUpdateMounted';
-    return {
-      host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
-      hasFrameUpdate: events.some(isFrameUpdate),
-    };
+  /**
+   * Plays a case whose boxes a scroll clips at `clipMs` and brings back at
+   * `hiddenMs`. The React Native runtime has no callback at `shownMs`.
+   */
+  async function playClip(
+    caseName: string,
+    referenceCase: ReferenceCase,
+    { clipMs, hiddenMs, shownMs }: ClipTimes
+  ) {
+    const played = await playCase(
+      caseName,
+      withNoCallbackAt(
+        { ...referenceCase, clip: { atMs: clipMs, backAtMs: hiddenMs } },
+        shownMs
+      )
+    );
+    expectNoCallbackBefore(played, shownMs);
+    return played;
+  }
+
+  /** The row of a value that is not near its expected value. */
+  const farRow = (
+    statement: string,
+    value: number,
+    expected: number,
+    tolerance = VALUE_TOLERANCE
+  ) =>
+    `${statement}: ${value} is ${Math.abs(value - expected)} from ${expected}, tolerance ${tolerance}`;
+
+  /** The computed start of each record of the frame driver on the native box. */
+  const nativeStartsOf = (played: Played) =>
+    [...expectFrameRecords(played)].flatMap(([{ record }, { startMs }]) =>
+      record.box === 'native' ? [startMs] : []
+    );
+
+  /**
+   * The platform removed the track of the native box, and the frame driver
+   * plays the box to the declared end: the box has no playback key, its model
+   * is on the frames of the frame driver (statement M), and those frames are on
+   * the timeline that starts less than one display frame from the origin of the
+   * native command. Each builder ran one time.
+   */
+  function expectHandOver(
+    caseName: string,
+    played: Played,
+    track: Track,
+    target: ModelTarget,
+    totalMs: number
+  ) {
+    const { events, tracks, clockOffset, frameRecords, endKeys } = played;
+    expect(
+      summarize(
+        events.filter(
+          (event) => event.event !== 'FrameUpdateMounted' && isHostEvent(event)
+        )
+      )
+    ).toBe(
+      `${startOf([track])} > TrackEnded:${target}:false > Ended:Interrupted:PlatformRemoved`
+    );
+    expectNoKeyAfterTransfer(played, target);
+    expectModelOnFrames(caseName, played, target);
+    const originMs = middleOf(tracks[0].origin) - middleOf(clockOffset);
+    const starts = nativeStartsOf(played);
+    expect(
+      starts.length > 0
+        ? ''
+        : `frame records of the native box: ${starts.length}, not more than 0`
+    ).toBe('');
+    for (const startMs of starts) {
+      expect(
+        Math.abs(startMs - originMs) < FRAME_MS
+          ? ''
+          : `start of a frame record of the native box: the computed start ${startMs.toFixed(3)} ms is ${(startMs - originMs).toFixed(3)} ms after the origin ${originMs.toFixed(3)} ms of the native command, bound ${FRAME_MS.toFixed(3)} ms`
+      ).toBe('');
+    }
+    expectNoEarlyCallback(played, totalMs);
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+        ? ''
+        : `callback gap: the React Native runtime got the callback of the native box at ${callbackTimes.native.toFixed(3)} ms and the callback of the twin at ${callbackTimes.frame.toFixed(3)} ms, ${(callbackTimes.native - callbackTimes.frame).toFixed(3)} ms later, bound ${(4 * FRAME_MS).toFixed(3)} ms`
+    ).toBe('');
+    for (const box of ['native', 'frame']) {
+      expect(frameRecords.filter((record) => record.box === box).length).toBe(
+        endKeys.length
+      );
+    }
   }
 
   /**
-   * The frame driver has the entering animation of the native box, as it has
-   * the one of the twin.
+   * The first sample of a target of the native box at or after a time from the
+   * origin of its command, with its own time from that origin.
    */
-  async function readOnFrameDriver(entered: Entered, durationMs: number) {
-    const { native, frame } = await readPair(entered, OPACITY);
-    expect(native.keys).toBe(0);
-    expect(
-      isNear(native.model, frame.model, twoFramesOf(OPACITY, durationMs))
-    ).toBe(true);
-    return native;
+  function sampleFrom(
+    { rows, tracks: [{ origin }] }: Played,
+    target: ModelTarget,
+    fromMs: number
+  ) {
+    const elapsedOf = ({ monotonicTimeMs }: TargetSample) =>
+      monotonicTimeMs - middleOf(origin);
+    const taken = rows
+      .map(({ row }) => row.native[target])
+      .find((each) => elapsedOf(each) >= fromMs);
+    if (!taken) {
+      throw new Error(
+        `The case has no row from ${fromMs} ms after its origin.`
+      );
+    }
+    return { ...taken, elapsedMs: elapsedOf(taken) };
   }
 
-  async function expectTrueAtNaturalEnd(entered: Entered, endMs: number) {
-    await waitUntil(entered, endMs + 400);
-    expect(sortedCallbacks()).toBe('frame:true,native:true');
+  /** The trace of the native box has only frame updates after a sample. */
+  function expectOnlyFrameUpdatesAfter(
+    { events }: Played,
+    { monotonicTimeMs }: TargetSample
+  ) {
     expect(
-      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
-    ).toBe(true);
-    expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
-    const end = await readTrack(entered.nativeTag, OPACITY);
-    expect(isNear(end.shown, 1)).toBe(true);
-    expect(end.keys).toBe(0);
-    expect((await takeTraceOfPair(entered)).native.length).toBe(0);
-    await render(null);
+      summarize(
+        events.filter(
+          (event) =>
+            event.event !== 'FrameUpdateMounted' &&
+            event.monotonicTimeMs > monotonicTimeMs
+        )
+      )
+    ).toBe('');
+  }
+
+  /**
+   * After the transfer, a sample of the native box shows its model: each cell
+   * of the presentation is near that cell of the model of the same sample.
+   */
+  function expectShowsModel(
+    { presentation, model, elapsedMs }: ReturnType<typeof sampleFrom>,
+    fromMs: number,
+    tolerance: number,
+    cells = [0]
+  ) {
+    for (const cell of cells) {
+      expect(
+        isNear(presentation[cell], model[cell], tolerance)
+          ? ''
+          : farRow(
+              `presentation cell ${cell} against the model of the same sample ${elapsedMs.toFixed(3)} ms after the origin (first row from ${fromMs} ms)`,
+              presentation[cell],
+              model[cell],
+              tolerance
+            )
+      ).toBe('');
+    }
   }
 
   type ClippedTrack = {
     trackName: string;
-    pairOf: () => Pair;
-    curve: EasingFunction;
+    referenceCase: ReferenceCase;
     segments: number;
     /** The parts of the duration at which the clip and the two readings are. */
     clipAt: number;
@@ -1388,8 +1787,7 @@ describe('native layout entering and a clip of its view', () => {
   const clippedTracks: ClippedTrack[] = [
     {
       trackName: 'one segment',
-      pairOf: fadePairOf,
-      curve: Easing.linear,
+      referenceCase: referenceOf(FADE),
       segments: 1,
       clipAt: 0.15,
       hiddenAt: 0.3,
@@ -1397,8 +1795,9 @@ describe('native layout entering and a clip of its view', () => {
     },
     {
       trackName: 'the two segments of the default easing',
-      pairOf: DEFAULT_EASING_CASES['FadeIn with the default easing'].pairOf,
-      curve: DEFAULT_EASING.curve,
+      referenceCase: referenceOf(
+        DEFAULT_EASING_CASES['FadeIn with the default easing']
+      ),
       segments: 2,
       clipAt: 0.15,
       hiddenAt: 0.3,
@@ -1407,8 +1806,7 @@ describe('native layout entering and a clip of its view', () => {
     // Easing.bounce moves slower than its mean speed at the times of the two readings.
     {
       trackName: 'the 22 segments of Easing.bounce',
-      pairOf: () => easedFadePairOf(Easing.bounce),
-      curve: Easing.bounce,
+      referenceCase: referenceOf(FADE, { easing: Easing.bounce }),
       segments: 22,
       clipAt: 0.4,
       hiddenAt: 0.55,
@@ -1416,93 +1814,65 @@ describe('native layout entering and a clip of its view', () => {
     },
   ];
   for (const track of clippedTracks) {
-    const { trackName, pairOf, curve, segments } = track;
-    test(`a clip of the view gives its native entering group of ${trackName} to the frame driver: the view shows the value of the frame driver after a scroll back, and the callback gets true one time at the natural end`, async () => {
-      const entered = await enter(countedPairOf(pairOf()), PairInViewToClip);
-      await waitUntil(entered, track.clipAt * ENTER_DURATION);
-      const start = await takeTraceOfPair(entered);
-      expect(summarize(start.native.filter(isHostEvent))).toBe(
-        startOf([OPACITY])
+    const { trackName, referenceCase, segments } = track;
+    const testName = `a clip of the view gives its native entering group of ${trackName} to the frame driver: the view shows the value of the frame driver after a scroll back, and the callback gets true one time at the natural end`;
+    test(testName, async () => {
+      const [clipMs, hiddenMs, shownMs] = [
+        track.clipAt,
+        track.hiddenAt,
+        track.shownAt,
+      ].map((part) => part * ENTER_DURATION);
+      const played = await playClip(testName, referenceCase, {
+        clipMs,
+        hiddenMs,
+        shownMs,
+      });
+      expectHandOver(testName, played, OPACITY, 'Opacity', ENTER_DURATION);
+      const animated = played.rows
+        .map(({ row }) => row.native.Opacity.members)
+        .filter((members) => members.length > 0);
+      expect(
+        animated.length > 0
+          ? ''
+          : `rows in which the native opacity has an animation: ${animated.length}, not more than 0`
+      ).toBe('');
+      for (const [{ values }] of animated) {
+        expect(values.length - 1).toBe(segments);
+      }
+      const hidden = sampleFrom(played, 'Opacity', hiddenMs);
+      expectOnlyFrameUpdatesAfter(played, hidden);
+      expectShowsModel(hidden, hiddenMs, twoFramesOf(OPACITY));
+      expectShowsModel(
+        sampleFrom(played, 'Opacity', shownMs),
+        shownMs,
+        twoFramesOf(OPACITY)
       );
-      expect(await segmentCountOf(entered.nativeTag, 'Opacity')).toBe(segments);
-      scrollTo(CLIPPED_OFFSET);
-      await waitUntil(entered, track.hiddenAt * ENTER_DURATION);
-      const transfer = await takeTransferTrace(entered.nativeTag);
-      expect(transfer.host).toBe(PLATFORM_REMOVED);
-      expect(transfer.hasFrameUpdate).toBe(true);
-      expect(callbacks.length).toBe(0);
-      const hidden = await readOnFrameDriver(entered, ENTER_DURATION);
-      expect(isNear(hidden.model, curve(track.hiddenAt), 0.08)).toBe(true);
-
-      scrollTo(0);
-      await waitUntil(entered, track.shownAt * ENTER_DURATION);
-      const shown = await readOnFrameDriver(entered, ENTER_DURATION);
-      expect(isNear(shown.shown, shown.model, twoFramesOf(OPACITY))).toBe(true);
-      expect(isNear(shown.shown, curve(track.shownAt), 0.08)).toBe(true);
-      expect(callbacks.length).toBe(0);
-      await expectTrueAtNaturalEnd(entered, ENTER_DURATION);
+      await render(null);
     });
   }
 
   const SHORT_PART = 0.3;
   const SMALL = 0.4;
-  type Easings = { scaleX: EasingFunction; scaleY: EasingFunction };
   /** The two scales commute, so the value on screen is valid for the two. */
-  const twoScalesOf = (
-    name: string,
-    easings: Easings = { scaleX: Easing.linear, scaleY: Easing.linear }
-  ) => {
-    const callback = callbackOf(name);
-    return () => {
-      'worklet';
-      const timing = (durationMs: number, easing: EasingFunction) =>
-        withTiming(1, { duration: durationMs, easing });
-      return {
-        initialValues: { transform: [{ scaleX: SMALL }, { scaleY: SMALL }] },
-        animations: {
-          transform: [
-            { scaleX: timing(SHORT_PART * ENTER_DURATION, easings.scaleX) },
-            { scaleY: timing(ENTER_DURATION, easings.scaleY) },
-          ],
-        },
-        callback,
-      };
-    };
+  const TWO_SCALES: ReferenceCase = {
+    flow: 'entering',
+    leaves: {},
+    operations: [
+      ['scaleX', SMALL, 1, { duration: SHORT_PART * ENTER_DURATION }],
+      ['scaleY', SMALL, 1, { duration: ENTER_DURATION }],
+    ],
+    places: [undefined, PLACE],
+    totalMs: ENTER_DURATION,
   };
   /**
-   * The time and the progress of each frame that the frame driver gave to an
-   * operation of the native box.
+   * The frames that the frame driver gave to an operation of the native box
+   * between its start value and its end value.
    */
-  const handedFrames = {
-    scaleX: makeMutable<number[][]>([]),
-    scaleY: makeMutable<number[][]>([]),
-  };
-  /** A linear easing that records each call in a frame of the frame driver. */
-  const recordingFramesOf =
-    (frames: { value: number[][] }) => (progress: number) => {
-      'worklet';
-      const frameTime = global.__frameTimestamp;
-      if (frameTime !== undefined && progress > 0) {
-        frames.value.push([frameTime, progress]);
-      }
-      return progress;
-    };
-  const takeHandedFrames = () =>
-    runOnUISync(() => {
-      'worklet';
-      const frames = {
-        scaleX: [...handedFrames.scaleX.value],
-        scaleY: [...handedFrames.scaleY.value],
-      };
-      handedFrames.scaleX.value = [];
-      handedFrames.scaleY.value = [];
-      return frames;
-    });
-  const scaleAt = (part: number) => SMALL + (1 - SMALL) * Math.min(1, part);
-  const twoScalesAt = (part: number) => [
-    scaleAt(part / SHORT_PART),
-    scaleAt(part),
-  ];
+  const movingFramesOf = ({ frameRecords }: Played, kind: string) =>
+    frameRecords
+      .filter(({ box, key }) => box === 'native' && key === kind)
+      .flatMap(({ frames }) => frames)
+      .filter(({ value }) => value !== SMALL && value !== 1);
   const TWO_FRAMES_OF_SCALE =
     0.01 + (2 * FRAME_MS * (1 - SMALL)) / (SHORT_PART * ENTER_DURATION);
   // The frame driver gives its first frame in a display frame after the platform reports the removal.
@@ -1515,178 +1885,122 @@ describe('native layout entering and a clip of its view', () => {
     ['after the end of the shorter operation', 0.45],
   ];
   for (const [caseName, clipAt] of clipsOfTwoTimelines) {
-    test(`a clip ${caseName} of a transform with two operation timelines gives the track to the frame driver: from the first frame of the frame driver, each operation continues on its own timeline, and the callback gets true one time at the natural end`, async () => {
-      takeHandedFrames();
-      const entered = await enter(
-        countedPairOf({
-          native: {
-            entering: twoScalesOf('native', {
-              scaleX: recordingFramesOf(handedFrames.scaleX),
-              scaleY: recordingFramesOf(handedFrames.scaleY),
-            }),
-          },
-          frame: {
-            entering: frameDrivenOf(
-              twoScalesOf('frame', {
-                scaleX: Easing.linear,
-                scaleY: recordedLinearOf(ENTER_DURATION),
-              })
-            ),
-          },
-        }),
-        PairInViewToClip
-      );
-      await waitUntil(entered, clipAt * ENTER_DURATION);
-      const start = await takeTraceOfPair(entered);
-      expect(summarize(start.native.filter(isHostEvent))).toBe(
-        'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Transform > Admitted'
-      );
-      expect(takeHandedFrames().scaleY.length).toBe(0);
-      scrollTo(CLIPPED_OFFSET);
-      const readScales = async (part: number) => {
-        await waitUntil(entered, part * ENTER_DURATION);
-        const [native, frame] = await Promise.all([
-          sample(entered.nativeTag, 'Transform'),
-          sample(entered.frameTag, 'Transform'),
-        ]);
-        expect(native.playbackKeys.length).toBe(0);
-        const declared = twoScalesAt(part);
-        [0, 5].forEach((cell, index) => {
-          expect(
-            isNear(native.model[cell], frame.model[cell], TWO_FRAMES_OF_SCALE)
-          ).toBe(true);
-          expect(isNear(native.model[cell], declared[index], 0.08)).toBe(true);
-        });
-        return native;
-      };
-      const hiddenAt = clipAt + 0.12;
-      await waitUntil(entered, hiddenAt * ENTER_DURATION);
-      const transfer = (await takeTrace()).filter(
-        ({ tag, event }) =>
-          tag === entered.nativeTag && event !== 'FrameUpdateMounted'
-      );
-      expect(summarizeEnd(transfer)).toBe(
-        'TrackEnded:Transform:false > Ended:Interrupted:PlatformRemoved'
-      );
-      expect(callbacks.length).toBe(0);
+    const testName = `a clip ${caseName} of a transform with two operation timelines gives the track to the frame driver: from the first frame of the frame driver, each operation continues on its own timeline, and the callback gets true one time at the natural end`;
+    test(testName, async () => {
+      const hiddenMs = (clipAt + 0.12) * ENTER_DURATION;
+      const shownMs = (clipAt + 0.3) * ENTER_DURATION;
+      const played = await playClip(testName, TWO_SCALES, {
+        clipMs: clipAt * ENTER_DURATION,
+        hiddenMs,
+        shownMs,
+      });
+      expectHandOver(testName, played, SCALE, 'Transform', ENTER_DURATION);
 
-      const frames = takeHandedFrames();
-      const [firstTime] = frames.scaleY[0];
-      const removedAt = transfer[0].monotonicTimeMs - entered.clockOffset;
-      expect(firstTime > removedAt - FRAME_MS).toBe(true);
-      expect(firstTime < removedAt + HAND_OVER_FRAMES * FRAME_MS).toBe(true);
-      const startOf = ([time, progress]: number[], durationMs: number) =>
-        time - progress * durationMs;
-      const startTime = startOf(frames.scaleY[0], ENTER_DURATION);
-      expect(Math.abs(startTime - twinStartTime.value) < FRAME_MS).toBe(true);
+      const { events, clockOffset } = played;
+      const removedAt =
+        events.find(({ event }) => event === 'TrackEnded')!.monotonicTimeMs -
+        middleOf(clockOffset);
+      const moving = movingFramesOf(played, 'scaleY');
       expect(
-        frames.scaleY.every((frame) =>
-          isNear(startOf(frame, ENTER_DURATION), startTime, SAME_START_MS)
-        )
-      ).toBe(true);
-      expect(frames.scaleX.length > 0).toBe(clipAt < SHORT_PART);
+        moving.length > 0
+          ? ''
+          : `frames of the frame driver for scaleY of the native box between ${SMALL} and 1: ${moving.length}, not more than 0`
+      ).toBe('');
+      const firstTime = moving[0].timeMs;
+      const firstFrameRow = `first-frame window: the first frame of the frame driver for scaleY is at ${firstTime.toFixed(3)} ms, ${(firstTime - removedAt).toFixed(3)} ms after the removal report at ${removedAt.toFixed(3)} ms, window from ${(-FRAME_MS).toFixed(3)} ms to ${(HAND_OVER_FRAMES * FRAME_MS).toFixed(3)} ms`;
+      expect(firstTime > removedAt - FRAME_MS ? '' : firstFrameRow).toBe('');
       expect(
-        frames.scaleX.every((frame) =>
-          isNear(
-            startOf(frame, SHORT_PART * ENTER_DURATION),
-            startTime,
-            SAME_START_MS
-          )
-        )
-      ).toBe(true);
-      await readScales(hiddenAt);
+        firstTime < removedAt + HAND_OVER_FRAMES * FRAME_MS ? '' : firstFrameRow
+      ).toBe('');
+      const starts = nativeStartsOf(played);
+      expect(
+        Math.max(...starts) - Math.min(...starts) < SAME_START_MS
+          ? ''
+          : `one start of the two operations: the computed starts of the frame records of the native box are from ${Math.min(...starts)} ms to ${Math.max(...starts)} ms, ${Math.max(...starts) - Math.min(...starts)} ms apart, bound ${SAME_START_MS} ms`
+      ).toBe('');
+      const movingX = movingFramesOf(played, 'scaleX').length;
+      expect(
+        movingX > 0 === clipAt < SHORT_PART
+          ? ''
+          : `frames of the frame driver for scaleX of the native box between ${SMALL} and 1: ${movingX}; the clip is at the part ${clipAt}, the operation ends at the part ${SHORT_PART}`
+      ).toBe('');
 
-      scrollTo(0);
-      const shown = await readScales(clipAt + 0.3);
-      expect(
-        isNear(shown.presentation[0], shown.model[0], TWO_FRAMES_OF_SCALE)
-      ).toBe(true);
-      expect(
-        isNear(shown.presentation[5], shown.model[5], TWO_FRAMES_OF_SCALE)
-      ).toBe(true);
-      expect(callbacks.length).toBe(0);
-
-      await waitUntil(entered, ENTER_DURATION + 400);
-      expect(sortedCallbacks()).toBe('frame:true,native:true');
-      expect(
-        Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
-      ).toBe(true);
-      expect(namedBuilderCalls.slice().sort().join()).toBe('frame,native');
-      const end = await sample(entered.nativeTag, 'Transform');
-      expect(end.playbackKeys.length).toBe(0);
+      expectOnlyFrameUpdatesAfter(
+        played,
+        sampleFrom(played, 'Transform', hiddenMs)
+      );
+      for (const fromMs of [hiddenMs, shownMs]) {
+        expectShowsModel(
+          sampleFrom(played, 'Transform', fromMs),
+          fromMs,
+          TWO_FRAMES_OF_SCALE,
+          [0, 5]
+        );
+      }
+      const end = played.end!.native.Transform;
       expect(end.model[0]).toBe(1);
       expect(end.model[5]).toBe(1);
       await render(null);
     });
   }
 
-  test('a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline', async () => {
+  const afterDelayName =
+    'a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline';
+  test(afterDelayName, async () => {
     const timing = { durationMs: 1000, delayMs: 500 };
-    const entered = await enter(
-      countedPairOf(fadePairOf(timing)),
-      PairInViewToClip
-    );
-    await waitUntil(entered, 800);
-    const start = await takeTraceOfPair(entered);
-    expect(summarize(start.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
-    );
-    scrollTo(CLIPPED_OFFSET);
-    await waitUntil(entered, 1000);
-    const transfer = await takeTransferTrace(entered.nativeTag);
-    expect(transfer.host).toBe(PLATFORM_REMOVED);
-    expect(callbacks.length).toBe(0);
-    const hidden = await readOnFrameDriver(entered, timing.durationMs);
-    expect(isNear(hidden.model, 0.5, 0.1)).toBe(true);
-
-    scrollTo(0);
-    await waitUntil(entered, 1250);
-    const shown = await readOnFrameDriver(entered, timing.durationMs);
-    expect(isNear(shown.shown, 0.75, 0.1)).toBe(true);
-    expect(callbacks.length).toBe(0);
-    await expectTrueAtNaturalEnd(entered, 1500);
+    const played = await playClip(afterDelayName, referenceOf(FADE, timing), {
+      clipMs: 800,
+      hiddenMs: 1000,
+      shownMs: 1250,
+    });
+    expectHandOver(afterDelayName, played, OPACITY, 'Opacity', 1500);
+    const hidden = sampleFrom(played, 'Opacity', 1000);
+    expectOnlyFrameUpdatesAfter(played, hidden);
+    for (const [sample, fromMs] of [
+      [hidden, 1000],
+      [sampleFrom(played, 'Opacity', 1250), 1250],
+    ] as const) {
+      expectShowsModel(sample, fromMs, twoFramesOf(OPACITY, timing.durationMs));
+    }
+    await render(null);
   });
 
-  test('a clip of the view in the delay of its native entering group: the view shows the initial value after a scroll back until the delay ends, then the frame driver plays the animation', async () => {
+  const inDelayName =
+    'a clip of the view in the delay of its native entering group: the view shows the initial value after a scroll back until the delay ends, then the frame driver plays the animation';
+  test(inDelayName, async () => {
     const timing = { durationMs: 1000, delayMs: 1000 };
-    const entered = await enter(
-      countedPairOf(fadePairOf(timing)),
-      PairInViewToClip
-    );
-    await waitUntil(entered, 200);
-    const start = await takeTraceOfPair(entered);
-    expect(summarize(start.native.filter(isHostEvent))).toBe(
-      startOf([OPACITY])
-    );
-    scrollTo(CLIPPED_OFFSET);
-    await waitUntil(entered, 400);
-    const transfer = await takeTransferTrace(entered.nativeTag);
-    expect(transfer.host).toBe(PLATFORM_REMOVED);
-    expect(callbacks.length).toBe(0);
-
-    scrollTo(0);
-    await wait(4 * FRAME_MS);
+    const played = await playClip(inDelayName, referenceOf(FADE, timing), {
+      clipMs: 200,
+      hiddenMs: 400,
+      shownMs: 1500,
+    });
+    expectHandOver(inDelayName, played, OPACITY, 'Opacity', 2000);
+    expectOnlyFrameUpdatesAfter(played, sampleFrom(played, 'Opacity', 400));
     for (const elapsedMs of [500, 700, 900]) {
-      await waitUntil(entered, elapsedMs);
-      const delayed = await readOnFrameDriver(entered, timing.durationMs);
-      expect(isNear(delayed.shown, 0)).toBe(true);
+      const delayed = sampleFrom(played, 'Opacity', elapsedMs);
+      expect(
+        isNear(delayed.presentation[0], 0)
+          ? ''
+          : farRow(
+              `presentation in the delay ${delayed.elapsedMs.toFixed(3)} ms after the origin (first row from ${elapsedMs} ms)`,
+              delayed.presentation[0],
+              0
+            )
+      ).toBe('');
     }
-    await waitUntil(entered, 1500);
-    const playing = await readOnFrameDriver(entered, timing.durationMs);
-    expect(
-      isNear(
-        playing.shown,
-        playing.model,
-        twoFramesOf(OPACITY, timing.durationMs)
-      )
-    ).toBe(true);
-    expect(isNear(playing.shown, 0.5, 0.1)).toBe(true);
-    expect(callbacks.length).toBe(0);
-    await expectTrueAtNaturalEnd(entered, 2000);
+    expectShowsModel(
+      sampleFrom(played, 'Opacity', 1500),
+      1500,
+      twoFramesOf(OPACITY, timing.durationMs)
+    );
+    await render(null);
   });
 });
 
-const FIRST_COMMIT_PAIR = fadePairOf();
+const FIRST_COMMIT_PAIR = {
+  native: recordedOf('native', fadePairOf().native),
+  frame: recordedOf('frame', fadePairOf().frame),
+};
 
 /** The two boxes are in the first render of their surface. */
 function FirstCommitPair() {
@@ -1700,23 +2014,24 @@ describe('native layout entering in the first commit of a surface', () => {
 
   test('a view in the first commit of a surface whose root view is in a window starts natively and agrees with the frame driver', async () => {
     await takeTrace();
-    callbacks.length = 0;
+    resetCallbacks();
+    resetFrameRecords();
     const startMs = performance.now();
     const surfaceId = await startSecondSurface(FirstCommitPair);
+    const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
     const entered = {
       nativeTag: getTestComponent(BOX_REF).getTag(),
-      frameTag: getTestComponent(FRAME_BOX_REF).getTag(),
+      frameTag,
       startMs,
+      clock: await narrowClockOffset(frameTag),
     };
-
-    for (const fraction of [0.25, 0.5, 0.75]) {
-      await waitUntil(entered, fraction * ENTER_DURATION);
-      const { native, frame } = await readPair(entered, OPACITY);
-      expect(native.keys).toBe(1);
-      expect(isNear(native.shown, frame.model, twoFramesOf(OPACITY))).toBe(
-        true
-      );
-      expect(isNear(native.shown, fraction, 0.1)).toBe(true);
+    const reads = await sampleAt(
+      entered,
+      [FADE_KEY],
+      [0.25, 0.5, 0.75].map((fraction) => fraction * ENTER_DURATION)
+    );
+    for (const { samples } of reads) {
+      expect(samples.Opacity.playbackKeys.length).toBe(1);
     }
     expect(callbacks.length).toBe(0);
 
@@ -1732,6 +2047,14 @@ describe('native layout entering in the first commit of a surface', () => {
     expect(pendingStartOf(events.native).transactionNumber).toBe(1);
     // The twin has no refusal: its start also passed the window rule.
     expect(summarize(events.frame)).toBe('LayoutBuildFailed:UnsupportedTiming');
+    expectNativeOnTimeline(
+      'a view in the first commit of a surface',
+      events.native,
+      entered,
+      [FADE_KEY],
+      reads
+    );
+    expectFramesOnTimeline(['frame'], builtOf([FADE_KEY]));
     expect(sortedCallbacks()).toBe('frame:true,native:true');
     await stopSecondSurface(surfaceId);
     await wait(300);
@@ -1765,6 +2088,7 @@ function SharedScreens({
 }) {
   return (
     <View style={localStyles.sharedScreens}>
+      <Clock />
       <SharedTransitionBoundary isActive={!showsTarget}>
         {hasSource && <SharedSource entering={entering} />}
       </SharedTransitionBoundary>
@@ -1790,8 +2114,8 @@ describe('native layout entering of a view that a shared transition hides', () =
   }
 
   test('a shared transition that hides a view at 30 % of FadeIn ends the native track, the view shows no opacity, and the callback comes at the end of the entering animation', async () => {
-    const pair = fadePairOf();
-    const callbackMs = { native: 0, frame: 0 };
+    const { native, frame } = fadePairOf();
+    const pair = { native, frame: recordedOf('frame', frame) };
     for (const route of ['native', 'frame'] as const) {
       const { entering } = pair[route];
       const screens = (hasSource: boolean, showsTarget: boolean) => (
@@ -1801,9 +2125,14 @@ describe('native layout entering of a view that a shared transition hides', () =
           showsTarget={showsTarget}
         />
       );
+      resetFrameRecords();
       await render(screens(false, false));
       await wait(300);
-      callbacks.length = 0;
+      const clock = await narrowClockOffset(
+        getTestComponent(CLOCK_REF).getTag()
+      );
+      await takeTrace();
+      resetCallbacks();
       const startMs = performance.now();
       await render(screens(true, false));
       const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
@@ -1811,7 +2140,9 @@ describe('native layout entering of a view that a shared transition hides', () =
       const before = await readTrack(tag, OPACITY);
       expect(before.keys).toBe(route === 'native' ? 1 : 0);
       expect(isNear(before.shown, 0.3, 0.1)).toBe(true);
-      await takeTrace();
+      const startEvents = (await takeTrace()).filter(
+        (event) => event.tag === tag
+      );
       await render(screens(true, true));
 
       for (const fraction of [0.4, 0.5, 0.7, 0.9]) {
@@ -1829,22 +2160,27 @@ describe('native layout entering of a view that a shared transition hides', () =
         route === 'native' ? endOf([OPACITY], false) : ''
       );
 
-      await waitUntil({ startMs }, ENTER_DURATION + 150);
+      expect(await waitForCallbacks([`${route}:true`])).toBe('');
       expect(callbacks.join()).toBe(`${route}:true`);
       const end = await readTrack(tag, OPACITY);
       expect(end.shown).toBe(0);
       expect(end.keys).toBe(0);
-      callbackMs[route] = callbackTimes[route] - startMs;
+      const animationStartMs =
+        route === 'native'
+          ? middleOf(
+              nativeOriginOf(startEvents, pendingStartOf(startEvents), clock)
+            ) - middleOf(clock)
+          : frameStartOf(
+              expectFramesOnTimeline(['frame'], builtKeysOf(FADE)),
+              'frame'
+            );
+      expect(
+        callbackTimeOf(route).emittedMs - animationStartMs >
+          ENTER_DURATION - FRAME_MS
+      ).toBe(true);
       await render(null);
       await wait(100);
     }
-    expect(
-      callbackMs.native > ENTER_DURATION &&
-        callbackMs.native < ENTER_DURATION + 6 * FRAME_MS
-    ).toBe(true);
-    expect(Math.abs(callbackMs.native - callbackMs.frame) < 4 * FRAME_MS).toBe(
-      true
-    );
   });
 });
 
@@ -1863,10 +2199,12 @@ describe('entering of a parent and its child in one commit', () => {
     const enteringOf = (name: string) => {
       const entering = new FadeIn()
         .duration(DURATION)
+        .easing(Easing.linear)
         .withCallback(callbackOf(name));
-      return isNative
-        ? entering.easing(Easing.linear)
-        : frameDrivenOf(entering.easing(recordedLinearOf(DURATION)));
+      return frameRecordedOf(
+        name,
+        isNative ? entering : frameDrivenOf(entering)
+      );
     };
     return {
       parent: { entering: enteringOf('parent') },
@@ -1895,42 +2233,60 @@ describe('entering of a parent and its child in one commit', () => {
     );
   }
 
+  const FAMILY_KEY = { ...FADE_KEY, leaf: { duration: DURATION } };
+  const BOXES = { parent: PARENT_REF, child: CHILD_REF };
   const families = {
-    'with a linear easing': familyOf(true),
-    'with no native description': familyOf(false),
+    'with a linear easing': true,
+    'with no native description': false,
   };
-  for (const [caseName, family] of Object.entries(families)) {
+  for (const [caseName, isNative] of Object.entries(families)) {
     test(`a parent and its child that enter in one commit ${caseName} both show their initial value first and end at the model`, async () => {
+      const family = familyOf(isNative);
+      resetFrameRecords();
       await render(<FamilyScene {...family} />);
       await wait(300);
-      callbacks.length = 0;
+      await takeTrace();
+      resetCallbacks();
       const startMs = performance.now();
       await render(<FamilyScene {...family} isMounted />);
-      const tags = [PARENT_REF, CHILD_REF].map((refName) =>
+      const tags = Object.values(BOXES).map((refName) =>
         getTestComponent(refName).getTag()
       );
-      const readFamily = () =>
-        Promise.all(tags.map((tag) => readTrack(tag, OPACITY)));
-      const waitUntilElapsed = (elapsedMs: number) =>
-        wait(Math.max(0, startMs + elapsedMs - performance.now()));
-
-      await wait(FIRST_FRAMES_MS);
-      for (const { shown } of await readFamily()) {
-        expect(shown < 0.15).toBe(true);
-      }
-      await waitUntilElapsed(0.5 * DURATION);
-      for (const { shown } of await readFamily()) {
-        expect(isNear(shown, 0.5, 0.1)).toBe(true);
+      const reads: PlannedRead[][] = tags.map(() => []);
+      for (const elapsedMs of [FIRST_FRAMES_MS, 0.5 * DURATION]) {
+        await waitUntil({ startMs }, elapsedMs);
+        for (const [index, tag] of tags.entries()) {
+          reads[index].push({
+            samples: await sampleTargets(tag, ['Opacity']),
+            opensCycle: true,
+          });
+        }
       }
       expect(callbacks.length).toBe(0);
 
-      await waitUntilElapsed(DURATION + 300);
-      for (const { shown, model, keys } of await readFamily()) {
+      await waitUntil({ startMs }, DURATION + 300);
+      for (const tag of tags) {
+        const { shown, model, keys } = await readTrack(tag, OPACITY);
         expect(isNear(shown, 1)).toBe(true);
         expect(isNear(model, 1)).toBe(true);
         expect(keys).toBe(0);
       }
       expect(sortedCallbacks()).toBe('child:true,parent:true');
+      if (isNative && hasNativeLayoutStarts) {
+        const clock = await narrowClockOffset(tags[0]);
+        const events = await takeTrace();
+        tags.forEach((tag, index) => {
+          expectNativeOnTimeline(
+            `a parent and its child, the ${Object.keys(BOXES)[index]}`,
+            events.filter((event) => event.tag === tag),
+            { clock },
+            [FAMILY_KEY],
+            reads[index]
+          );
+        });
+      } else {
+        expectFramesOnTimeline(Object.keys(BOXES), builtOf([FAMILY_KEY]));
+      }
       await render(null);
     });
   }
