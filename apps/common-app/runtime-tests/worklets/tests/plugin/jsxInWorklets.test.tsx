@@ -1,4 +1,9 @@
 import React from 'react';
+import {
+  isUIRuntime as ImportedComponent,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
 
 import {
   beforeEach,
@@ -8,11 +13,6 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  isUIRuntime as ImportedComponent,
-  scheduleOnRN,
-  scheduleOnUI,
-} from 'react-native-worklets';
 
 describe('Test JSX in worklets', () => {
   const PASS_NOTIFICATION = 'PASS';

@@ -24,4 +24,5 @@ Module._resolveFilename = function resolveReactNativePolyfills(
 
 const defaultConfig = getDefaultConfig(__dirname);
 
+/** @type {import('@react-native/metro-config').MetroConfig} */
 module.exports = wrapWithReanimatedMetroConfig(defaultConfig);

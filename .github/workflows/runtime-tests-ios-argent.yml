@@ -95,7 +95,9 @@ jobs:
             '!apps/fabric-example/scripts/**',
             'apps/common-app/**',
             'packages/react-native-reanimated/**',
-            'packages/react-native-worklets/**'
+            'packages/react-native-worklets/**',
+            'scripts/patches/**',
+            'scripts/toggle-bundle-mode.sh'
             ) }}
 
       - name: Use Ruby version from `.ruby-version` file
@@ -215,7 +217,7 @@ jobs:
         if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
         run: yarn toggle-bundle-mode
 
-      - name: Install sim-remote CLI + daemon
+      - name: Install sim-remote CLI
         uses: ./.github/actions/install-sim-remote
 
       - name: Log in and acquire a cloud machine

@@ -2,20 +2,24 @@
 
 #include <jsi/jsi.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
+#include <react/renderer/graphics/Point.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -26,6 +30,8 @@ struct LayoutAnimation {
   Tag parentTag;
   std::optional<double> opacity;
   LayoutAnimationType type;
+  std::shared_ptr<Serializable> config;
+  react::Point frameOffset;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
@@ -57,6 +63,10 @@ struct LayoutAnimationCancellation {
 using LayoutAnimationOperation =
     std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
 
+#ifdef ANDROID
+using SynchronousPropsReader = std::function<folly::dynamic(Tag tag)>;
+#endif
+
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
@@ -68,9 +78,11 @@ struct LayoutAnimationsProxyDependencies {
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
+  SynchronousPropsReader readSynchronousProps;
 #endif
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;
+  ReadMountedViewPropsFunction readMountedViewProps;
 #endif
 };
 
@@ -89,7 +101,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
-        jsInvoker_(dependencies.jsInvoker)
+        jsInvoker_(dependencies.jsInvoker),
+        readSynchronousProps_(dependencies.readSynchronousProps)
+#endif
+#ifdef __APPLE__
+        ,
+        readMountedViewProps_(dependencies.readMountedViewProps)
 #endif
   {
   }
@@ -103,11 +120,17 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
+  virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
 
  protected:
+  Props::Shared propsOfMountedView(const ShadowView &view) const;
+  Props::Shared mergeSynchronousProps(const ShadowView &view, const folly::dynamic &props) const;
+  bool hasLayoutAnimationRecords() const;
+  void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
+  virtual void clearSurfaceState() const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
@@ -119,13 +142,19 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const ShadowView &finalView,
       const std::shared_ptr<Serializable> &config = nullptr) const;
+  std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
+  bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
+  std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
   std::optional<ShadowView> reparentLayoutAnimation(Tag tag, Tag parentTag) const;
+  std::optional<ShadowView>
+  reparentPendingLayoutAnimations(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
   void schedulePullOnNextFrame() const;
   void maybeUpdateWindowDimensions(const ShadowViewMutation &mutation) const;
   void cleanupCompletedAnimations(
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
-      bool preserveRemovals = false) const;
+      bool preserveRemovals = false,
+      const std::unordered_set<Tag> &preservedTags = {}) const;
   ShadowView cloneViewWithOpacity(
       const ShadowView &shadowView,
       double opacity,
@@ -152,6 +181,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
+  SynchronousPropsReader readSynchronousProps_;
+#endif
+#ifdef __APPLE__
+  ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
 
  private:
@@ -182,7 +215,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &after,
       Tag parentTag,
       std::optional<double> opacity,
-      LayoutAnimationType type) const;
+      LayoutAnimationType type,
+      const std::shared_ptr<Serializable> &config) const;
 #ifdef ANDROID
   void restoreOpacityInShadowTree(std::vector<OpacityRestoration> restorations) const;
 #endif

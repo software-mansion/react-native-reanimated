@@ -27,7 +27,8 @@ export interface WorkletsModuleProxy {
     shareableGuestUnpackerSourceMap: string,
     remoteFunctionUnpackerCode: string,
     remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
+    remoteFunctionUnpackerSourceMap: string,
+    isDev: boolean
   ): void;
 
   loadUnpackersWithBytecode(
@@ -140,8 +141,15 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: RemoteFunction | ((...args: TArgs) => unknown),
-    args: SerializableRef<TArgs> | undefined
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
   ): void;
+
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
+  ): TReturn;
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
@@ -160,7 +168,8 @@ export interface WorkletsModuleProxy {
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(

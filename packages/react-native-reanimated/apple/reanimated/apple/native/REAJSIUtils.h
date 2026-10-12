@@ -1,5 +1,6 @@
 #pragma once
 
+#import <Foundation/Foundation.h>
 #import <jsi/jsi.h>
 
 using namespace facebook;

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cxxreact/ReactNativeVersion.h>
-
-#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <optional>
@@ -126,5 +123,3 @@ inline std::optional<facebook::react::PropName> propNameFromString(const std::st
 }
 
 } // namespace reanimated
-
-#endif

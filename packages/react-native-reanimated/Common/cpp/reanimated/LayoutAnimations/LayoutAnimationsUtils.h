@@ -1,7 +1,9 @@
 #pragma once
 
+#include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
+#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -10,6 +12,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -42,6 +45,7 @@ struct Frame {
 struct UpdateValues {
   Props::Shared newProps;
   Frame frame;
+  bool animatesOpacity = false;
 };
 
 struct Snapshot {
@@ -58,21 +62,27 @@ struct Snapshot {
 };
 
 typedef enum class ExitingState : std::uint8_t {
-  UNDEFINED = 1,
-  WAITING = 2,
-  ANIMATING = 3,
-  DEAD = 4,
-  DELETED = 5,
+  // React still renders the view
+  LIVE = 1,
+  // React deletes the view in the current transaction and the proxy has not decided how it exits yet
+  DECISION_PENDING = 2,
+  // withheld until its exiting descendants finish
+  WAITING = 3,
+  // withheld while its own exiting animation runs
+  ANIMATING = 4,
+  // its exiting animation finished, it is torn down at the next flush
+  COMPLETED = 5,
+  // the proxy has emitted its Remove and Delete
+  TORN_DOWN = 6,
 } ExitingState;
 
 struct MutationNode;
 
 enum class TransitionState : std::uint8_t {
-  NONE = 0,
-  START = 1,
-  ACTIVE = 2,
-  END = 3,
-  CANCELLED = 4,
+  START,
+  ACTIVE,
+  END,
+  CANCELLED,
 };
 
 enum class Intent : std::uint8_t {
@@ -96,17 +106,24 @@ struct IndexCursors {
 struct LightNode {
   ShadowView previous;
   ShadowView current;
-  ExitingState state = ExitingState::UNDEFINED;
+#ifdef ANDROID
+  // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
+  // The full set accumulates here and becomes a `Props` only when a consumer reads the node.
+  folly::dynamic accumulatedRawProps = nullptr;
+  bool propsNeedResolve = false;
+#endif
+  ExitingState state = ExitingState::LIVE;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
 
   bool isExiting() const {
-    return state != ExitingState::UNDEFINED;
+    return state != ExitingState::LIVE;
   }
 
   void setExitingState(ExitingState newState) {
-    const bool startsExiting = !isExiting() && newState != ExitingState::UNDEFINED;
+    react_native_assert(newState != ExitingState::LIVE && "A light node never becomes live again");
+    const bool startsExiting = !isExiting();
     state = newState;
     if (!startsExiting) {
       return;
@@ -211,7 +228,8 @@ struct LightNode {
   }
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
+static inline void
+updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
@@ -220,10 +238,10 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame
     layoutMetrics.frame.size.height = *frame.height;
   }
   if (frame.x) {
-    layoutMetrics.frame.origin.x = *frame.x;
+    layoutMetrics.frame.origin.x = *frame.x + offset.x;
   }
   if (frame.y) {
-    layoutMetrics.frame.origin.y = *frame.y;
+    layoutMetrics.frame.origin.y = *frame.y + offset.y;
   }
 }
 
@@ -246,6 +264,15 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
     current = current->parent.lock();
   }
   return current;
+}
+
+static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
+  for (; node; node = node->parent.lock()) {
+    if (node == root) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
@@ -274,6 +301,29 @@ static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
   return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
+}
+
+static inline bool isViewKind(const ShadowView &view) {
+  return view.traits.check(ShadowNodeTraits::Trait::ViewKind);
+}
+
+static inline const ViewProps &getViewProps(const ShadowView &view) {
+  react_native_assert(isViewKind(view) && "Only ViewKind views have ViewProps");
+  return static_cast<const ViewProps &>(*view.props);
+}
+
+// Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and
+// creates one tag loses the created view.
+static inline bool deletesCreatedTag(const ShadowViewMutationList &mutations) {
+  std::unordered_set<Tag> created;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Create) {
+      created.insert(mutation.newChildShadowView.tag);
+    }
+  }
+  return std::ranges::any_of(mutations, [&created](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Delete && created.contains(mutation.oldChildShadowView.tag);
+  });
 }
 
 } // namespace reanimated

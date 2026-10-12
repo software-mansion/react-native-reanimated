@@ -44,20 +44,16 @@ std::string CSSNumberBase<TDerived, TValue>::toString() const {
 
 template <typename TDerived, typename TValue>
 TDerived CSSNumberBase<TDerived, TValue>::interpolate(double progress, const TDerived &other) const {
-  const auto interpolated = value + progress * (other.value - value);
-
-  if constexpr (requires { TDerived::epsilon; }) {
-    if (std::abs(other.value - interpolated) < TDerived::epsilon) {
-      return other;
-    }
-  }
-
-  return TDerived(interpolated);
+  return TDerived(value + progress * (other.value - value));
 }
 
 template <typename TDerived, typename TValue>
 bool CSSNumberBase<TDerived, TValue>::operator==(const CSSNumberBase<TDerived, TValue> &other) const {
   return value == other.value;
+}
+
+CSSTextDouble CSSTextDouble::interpolate(double progress, const CSSTextDouble &other) const {
+  return CSSTextDouble(roundTextMetric(value + progress * (other.value - value)));
 }
 
 CSSInteger CSSInteger::interpolate(double progress, const CSSInteger &other) const {

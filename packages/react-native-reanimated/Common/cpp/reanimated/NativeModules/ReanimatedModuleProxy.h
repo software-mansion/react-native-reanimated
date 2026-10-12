@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ReactCommon/CallInvoker.h>
-#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -22,6 +21,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
+#include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
@@ -30,10 +30,8 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
-#endif
 
 #include <atomic>
 #include <cstdint>
@@ -111,6 +109,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void performOperations();
   void performNonLayoutOperations();
+  bool hasSynchronousWritesTracker() const;
+  void rewriteSynchronousProps();
   void flushLayoutAnimationOperations();
   void executeLayoutAnimationsRequests();
 
@@ -206,10 +206,14 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates);
+  void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
+  void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
+#ifdef ANDROID
+  SynchronousPropsReader makeSynchronousPropsReader();
+  folly::dynamic readSynchronousProps(Tag tag);
+#endif
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
   void executeOperationsLoop(AnimationTimestamp timestamp);
@@ -218,7 +222,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   AnimationMutations collectEventUpdates();
   AnimationMutations collectNonLayoutAnimationUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
-#endif
 
   const bool isReducedMotion_;
   std::atomic<bool> shouldFlushRegistry_{false};
@@ -230,9 +233,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   RequestRenderFunction requestRender_;
   bool isAnimationRunning_{false};
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
   CallbackId animationBackendCallbackId_{0};
-#endif
 
   // Callbacks queued by OperationsLoop via the requestRender_ override when
   // USE_ANIMATION_BACKEND is on. They are drained at the start of each
@@ -246,6 +247,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
+  ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
@@ -260,9 +262,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+  const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 
 #ifdef ANDROID
-  // Reused across `applySynchronousUpdates` calls to avoid per-frame heap
+  // Reused across `writeSynchronousPropsToViews` calls to avoid per-frame heap
   // allocations. Access only on the UI thread.
   std::vector<int> synchronousPropsIntBuffer_;
   std::vector<double> synchronousPropsDoubleBuffer_;

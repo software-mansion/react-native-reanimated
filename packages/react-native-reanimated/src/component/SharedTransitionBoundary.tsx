@@ -13,7 +13,10 @@ export function SharedTransitionBoundary({
   children,
 }: SharedTransitionBoundaryProps) {
   return (
-    <REASharedTransitionBoundary style={styles.contents} isActive={isActive}>
+    <REASharedTransitionBoundary
+      style={styles.contents}
+      isActive={isActive}
+      pointerEvents="box-none">
       {children}
     </REASharedTransitionBoundary>
   );

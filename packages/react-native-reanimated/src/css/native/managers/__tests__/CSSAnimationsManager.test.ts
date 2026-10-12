@@ -229,13 +229,37 @@ describe('CSSAnimationsManager', () => {
         } satisfies CSSAnimationProperties;
 
         manager.update(animationProperties);
+        expect(manager.hasAttachedAnimations()).toBe(true);
         expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
 
         manager.update(null);
+        expect(manager.hasAttachedAnimations()).toBe(false);
         expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimations).toHaveBeenCalledWith(viewTag);
         expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+      });
+
+      test('detaches an existing animation when animationName is empty', () => {
+        expect(manager.hasAttachedAnimations()).toBe(false);
+
+        manager.update({
+          animationName: { from: { opacity: 0 } },
+          animationDuration: '2s',
+        });
+        expect(manager.hasAttachedAnimations()).toBe(true);
+
+        manager.update({ animationName: [] });
+        expect(manager.hasAttachedAnimations()).toBe(false);
+
+        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).toHaveBeenCalledWith(viewTag);
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1);
+
+        manager.update({ animationName: [] });
+        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1);
       });
 
       describe('multiple animations', () => {

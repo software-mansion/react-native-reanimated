@@ -71,6 +71,15 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
+export type MountedViewProps = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  backgroundColor: string;
+};
+
 export type ValidPropNames =
   | 'zIndex'
   | 'opacity'
@@ -79,7 +88,8 @@ export type ValidPropNames =
   | 'top'
   | 'left'
   | 'backgroundColor'
-  | 'boxShadow';
+  | 'boxShadow'
+  | 'backgroundImage';
 
 export function isValidPropName(propName: string): propName is ValidPropNames {
   'worklet';
@@ -92,6 +102,7 @@ export function isValidPropName(propName: string): propName is ValidPropNames {
     'left',
     'backgroundColor',
     'boxShadow',
+    'backgroundImage',
   ].includes(propName);
 }
 
@@ -186,6 +197,10 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _obtainMountedViewProps: (
+    tag: number,
+    presented: boolean
+  ) => MountedViewProps | null;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
