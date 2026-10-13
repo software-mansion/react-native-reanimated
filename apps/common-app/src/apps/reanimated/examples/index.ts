@@ -51,6 +51,10 @@ const ChangeThemeSharedExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ChangeTheme').default
   );
+const CustomTransitionExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CustomTransition').default as React.FC
+  );
 const ChatHeadsExample: React.FC = () =>
   React.createElement(require('./ChatHeadsExample').default as React.FC);
 const ChessExample: React.FC = () =>
@@ -888,6 +892,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
     },
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom Transition',
+    screen: CustomTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',

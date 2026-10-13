@@ -31,9 +31,9 @@ class SharedTransitionValuesFactory {
   void writeOpacity(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
   void writeBackgroundColor(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
 
-  void writeTransform(jsi::Object &values, const ViewProps &sourceViewProps, const ViewProps &targetViewProps);
-  jsi::Array buildMatrixArray(const ViewProps &props);
-  jsi::Object buildTransformObject(const ViewProps &props);
+  void writeTransform(jsi::Object &values, const ShadowView &sourceView, const ShadowView &targetView);
+  jsi::Array buildMatrixArray(const ShadowView &view);
+  jsi::Object buildTransformObject(const ShadowView &view);
 
   void writeTransformOrigin(
       jsi::Object &values,
