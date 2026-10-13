@@ -1,8 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
+  SharedTransitionType,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -92,6 +95,35 @@ function NestedTextScreens({ targetActive }: { targetActive: boolean }) {
   );
 }
 
+function IdenticalScreens({
+  targetActive,
+  transition,
+}: {
+  targetActive: boolean;
+  transition: SharedTransition;
+}) {
+  const targetRef = useTestRef('identical-target');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!targetActive}>
+        <Animated.View
+          sharedTransitionTag="identical"
+          sharedTransitionStyle={transition}
+          style={styles.identical}
+        />
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={targetActive}>
+        <Animated.View
+          ref={targetRef}
+          sharedTransitionTag="identical"
+          sharedTransitionStyle={transition}
+          style={styles.identical}
+        />
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 async function expectMountedAtLayout(name: string, opacity: number) {
   const component = getTestComponent(name);
   await expectEventually(
@@ -105,6 +137,57 @@ async function expectMountedAtLayout(name: string, opacity: number) {
   expect(mounted?.y).toBe(await layout('top'), ComparisonMode.PIXEL);
   expect(mounted?.width).toBe(await layout('width'), ComparisonMode.PIXEL);
   expect(mounted?.height).toBe(await layout('height'), ComparisonMode.PIXEL);
+}
+
+type RecordedValues = Pick<
+  SharedTransitionAnimationsValues,
+  | 'currentWidth'
+  | 'targetWidth'
+  | 'targetOriginX'
+  | 'targetGlobalOriginX'
+  | 'currentBackgroundColor'
+  | 'windowWidth'
+> & { hasBorderTopLeftRadius: boolean };
+
+function createRecordingTransition(recorded: RecordedValues[]) {
+  const record = (values: RecordedValues) => recorded.push(values);
+  const finish = () => notify('shared-transition-finished');
+  return SharedTransition.custom((values) => {
+    'worklet';
+    scheduleOnRN(record, {
+      currentWidth: values.currentWidth,
+      targetWidth: values.targetWidth,
+      targetOriginX: values.targetOriginX,
+      targetGlobalOriginX: values.targetGlobalOriginX,
+      currentBackgroundColor: values.currentBackgroundColor,
+      windowWidth: values.windowWidth,
+      hasBorderTopLeftRadius: 'currentBorderTopLeftRadius' in values,
+    });
+    return { width: withTiming(values.targetWidth, { duration: 100 }) };
+  }).withCallback(() => {
+    'worklet';
+    scheduleOnRN(finish);
+  });
+}
+
+function createProgressTransition(progresses: number[]) {
+  const record = (progress: number) => progresses.push(progress);
+  const finish = () => notify('shared-transition-finished');
+  return SharedTransition.progressAnimation((values, progress) => {
+    'worklet';
+    scheduleOnRN(record, progress);
+    return {
+      width:
+        values.currentWidth +
+        progress * (values.targetWidth - values.currentWidth),
+    };
+  })
+    .duration(300)
+    .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
+    .withCallback(() => {
+      'worklet';
+      scheduleOnRN(finish);
+    });
 }
 
 describe('Shared element transition between boundaries', () => {
@@ -170,10 +253,76 @@ describe('Shared element transition between boundaries', () => {
     expect(finished).toBe([true]);
     await expectMountedAtLayout('target', 1);
   });
+
+  test('runs a transition between views that do not differ', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(finished);
+    await render(
+      <IdenticalScreens targetActive={false} transition={transition} />
+    );
+    await waitForFrames();
+
+    await render(<IdenticalScreens targetActive transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('identical-target', 1);
+  });
+
+  test('passes the source and target snapshots to a custom animation', async () => {
+    const recorded: RecordedValues[] = [];
+    const transition = createRecordingTransition(recorded);
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+
+    expect(recorded.length).toBe(1);
+    const [values] = recorded;
+    expect(values.currentWidth).toBe(60, ComparisonMode.PIXEL);
+    expect(values.targetWidth).toBe(150, ComparisonMode.PIXEL);
+    expect(values.targetGlobalOriginX).toBe(
+      values.targetOriginX,
+      ComparisonMode.PIXEL
+    );
+    expect(values.currentBackgroundColor).toBe('rgba(221, 85, 34, 1)');
+    expect(values.windowWidth > 0).toBe(true);
+    expect(values.hasBorderTopLeftRadius).toBe(false);
+  });
+
+  test('drives a PROGRESS_ANIMATION transition from 0 to 1', async () => {
+    const progresses: number[] = [];
+    const transition = createProgressTransition(progresses);
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(progresses[0]).toBe(0);
+    expect(progresses[progresses.length - 1]).toBe(1);
+    expect(
+      progresses.every(
+        (progress, index) => index === 0 || progress >= progresses[index - 1]
+      )
+    ).toBe(true);
+    await expectMountedAtLayout('target', 1);
+  });
 });
 
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
+  identical: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    width: 80,
+    height: 80,
+    backgroundColor: '#22aa55',
+  },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: {
     marginTop: 200,
