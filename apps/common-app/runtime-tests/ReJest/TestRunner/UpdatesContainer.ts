@@ -183,6 +183,9 @@ export function createUpdatesContainer() {
       if (viewTags.length === 1) {
         return sortedUpdates[Number(viewTags[0])];
       }
+      if (viewTags.length === 0) {
+        throw new Error('No updates were recorded');
+      }
       throw new Error(
         'Recorded snapshots of many views, specify component you want to get snapshot of'
       );
@@ -199,9 +202,12 @@ export function createUpdatesContainer() {
     return runOnUIBlocking(
       () => {
         'worklet';
+        // Return copies: the recorder mutates these arrays in place, and
+        // serialization caches objects by identity, so returning the arrays
+        // themselves makes every later read return the content of the first.
         return {
-          jsUpdates: jsUpdates.value,
-          nativeSnapshots: nativeSnapshots.value,
+          jsUpdates: [...jsUpdates.value],
+          nativeSnapshots: [...nativeSnapshots.value],
         };
       },
       undefined,
