@@ -31,7 +31,6 @@ struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-  Tag nextContainerTag_{10000002};
 };
 
 struct LayoutAnimationConfig {
