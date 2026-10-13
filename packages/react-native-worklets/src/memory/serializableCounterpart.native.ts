@@ -18,7 +18,11 @@ export function setSerializableCounterpart(
 }
 
 export function hasSerializableCounterpart(value: object): boolean {
-  return serializableMappingCache.get(value) !== undefined;
+  const cached = serializableMappingCache.get(value);
+  if (globalThis.WeakRef && cached instanceof WeakRef) {
+    return cached.deref() !== undefined;
+  }
+  return cached !== undefined;
 }
 
 export function removeSerializableCounterpart(value: object): void {
