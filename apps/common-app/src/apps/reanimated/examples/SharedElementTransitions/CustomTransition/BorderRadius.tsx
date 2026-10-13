@@ -26,7 +26,11 @@ const BORDER_RADIUS_TRANSITION = SharedTransition.custom((values) => {
 
 type Navigate = (route: string) => void;
 
-export function BorderRadiusSourceSection({ navigate }: { navigate: Navigate }) {
+export function BorderRadiusSourceSection({
+  navigate,
+}: {
+  navigate: Navigate;
+}) {
   return (
     <View style={styles.section}>
       <Text style={styles.heading}>borderRadius</Text>
@@ -36,8 +40,8 @@ export function BorderRadiusSourceSection({ navigate }: { navigate: Navigate }) 
       </Text>
       <Text style={styles.body}>
         Expected: source is a circle (radius 50, matching its 100×100 size);
-        target is a near-square with radius 16. Watch the corners round
-        smoothly during the transition.
+        target is a near-square with radius 16. Watch the corners round smoothly
+        during the transition.
       </Text>
       <Animated.View
         style={[styles.greenBoxSource, sourceStyle]}
@@ -45,7 +49,7 @@ export function BorderRadiusSourceSection({ navigate }: { navigate: Navigate }) 
         sharedTransitionStyle={BORDER_RADIUS_TRANSITION}
       />
       <Button
-        title='Open border-radius target screen'
+        title="Open border-radius target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -67,7 +71,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={BORDER_RADIUS_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }

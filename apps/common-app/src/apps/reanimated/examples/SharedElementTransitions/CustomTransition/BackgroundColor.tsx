@@ -35,9 +35,9 @@ export function BackgroundColorSourceSection({
     <View style={styles.section}>
       <Text style={styles.heading}>backgroundColor</Text>
       <Text style={styles.body}>
-        Interpolates values.currentBackgroundColor → values.targetBackgroundColor.
-        Expected: source is green, target is dodgerblue; color blends through
-        the transition.
+        Interpolates values.currentBackgroundColor →
+        values.targetBackgroundColor. Expected: source is green, target is
+        dodgerblue; color blends through the transition.
       </Text>
       <Animated.View
         style={[styles.greenBoxSource, sourceColor]}
@@ -45,7 +45,7 @@ export function BackgroundColorSourceSection({
         sharedTransitionStyle={BACKGROUND_COLOR_TRANSITION}
       />
       <Button
-        title='Open background-color target screen'
+        title="Open background-color target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -66,7 +66,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={BACKGROUND_COLOR_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
