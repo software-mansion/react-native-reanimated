@@ -19,70 +19,61 @@ import {
   render,
   test,
   useTestRef,
+  waitUntilSettled,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { TestValue } from '../../../ReJest/types';
 import { ComparisonMode, isValidPropName } from '../../../ReJest/types';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
-// Covers InlineStylesAndPropsExample.tsx: a shared value passed inline, as a
-// style value or as a top-level prop, must reach native like the same value
-// passed through useAnimatedStyle or useAnimatedProps (#10147, fixed in
-// #10151). Each case renders one component and toggles a boolean shared value
-// with `sv.set`, as the example's Toggle button does, so no React render is
-// involved in the update.
+// Replaces the InlineStylesAndPropsExample screen (#10147, fixed in #10151).
+// The screen showed View, Circle, Switch and TextInput twice: once animated
+// with useAnimatedStyle/useAnimatedProps, once with a shared value passed
+// inline (`style={{ backgroundColor: sv }}`, `value={sv}`). Pressing Toggle
+// had to change both copies. Here `toggle()` plays the Toggle button.
 //
-// Update path: with the runtime-tests flags (`*_SYNCHRONOUSLY_UPDATE_UI_PROPS`
-// off), every case goes through `_updateProps` and the ShadowTree commit.
+// - "one path": one component. It must start with the initial value and
+//   follow each toggle.
+// - "hook and inline together": both copies share one shared value, as on the
+//   screen. One toggle must update both.
+// - "inline style and prop on one component": not on the screen. A Switch gets
+//   `value={sv}` and `style={{ opacity: sv }}`, so #10151's split into style
+//   and top-level props runs both halves in one update. Both must apply.
 //
-// What each case reads:
-//
-// | Case                 | Initial (React props) | Updates (`_updateProps`) | Shadow tree      | Mounted view        |
-// | -------------------- | --------------------- | ------------------------ | ---------------- | ------------------- |
-// | View backgroundColor | spy                   | recorder                 | getAnimatedStyle | -                   |
-// | View opacity         | spy                   | recorder                 | getAnimatedStyle | getMountedViewProps |
-// | Circle fill          | spy                   | recorder                 | -                | -                   |
-// | Switch value         | spy                   | recorder                 | -                | -                   |
-// | TextInput text       | spy                   | recorder                 | -                | -                   |
-//
-// The opacity cases are not on the example screen. Opacity takes the same
-// path as backgroundColor (a non-layout style prop through the commit), and
-// `getMountedViewProps` (#10739) can read it from the platform view (`alpha`),
-// so these cases check the inline style path up to what the platform shows.
-// It returns only frame and opacity, so for backgroundColor, fill, value and
-// text the test stops at the shadow tree or at what JS sent to native, which
-// is where #10147 broke. SVG opacity is drawn by the parent Svg, not set on a
-// platform view, so it cannot replace fill.
-// TODO: check backgroundColor, Switch state and text on the mounted view once
-// `_obtainMountedViewProps` returns them.
+// The test checks what JS sends to native for every component. For View it
+// also checks the shadow tree and the color on screen. Circle fill, Switch
+// value and TextInput text can't be read back from native yet.
 
 const BOX_REF = 'INLINE_STYLES_AND_PROPS_BOX';
+const HOOK_REF = 'INLINE_STYLES_AND_PROPS_HOOK';
+const INLINE_REF = 'INLINE_STYLES_AND_PROPS_INLINE';
+const MIXED_REF = 'INLINE_STYLES_AND_PROPS_MIXED';
 
 const OFF_COLOR = 'red';
 const ON_COLOR = 'lime';
-// Not 0: a fully transparent view would hide a wrong mount.
-const OFF_OPACITY = 0.5;
-const ON_OPACITY = 1;
 const OFF_TEXT = 'false';
 const ON_TEXT = 'true';
+// Not 0: a fully transparent switch would hide a wrong mount.
+const OFF_OPACITY = 0.5;
+const ON_OPACITY = 1;
+
+const PATHS = ['hook', 'inline'] as const;
 
 type Kind = 'view' | 'circle' | 'switch' | 'textInput';
-type Path = 'hook' | 'inline';
+type Path = (typeof PATHS)[number];
 type ReceivedProps = Record<string, unknown>;
 
-// Each kind animates its own prop, so a row cannot pair a kind with a prop it
-// does not render.
+// Each kind animates its own prop.
 type KindAndProp =
-  | { kind: 'view'; prop: 'backgroundColor' | 'opacity' }
+  | { kind: 'view'; prop: 'backgroundColor' }
   | { kind: 'circle'; prop: 'fill' }
   | { kind: 'switch'; prop: 'value' }
   | { kind: 'textInput'; prop: 'text' };
-type Prop = KindAndProp['prop'];
 
-// `shadowTree` and `mountedView` say which native layers the row reads, as in
-// the table above. Every row reads the spy and the recorder.
-type Case = KindAndProp & {
+// `shadowTree` and `mountedView`: also check the shadow tree / screen.
+type KindCase = KindAndProp & {
   description: string;
-  path: Path;
+  hookName: string;
+  inlineName: string;
   off: TestValue;
   on: TestValue;
   mode: ComparisonMode;
@@ -90,12 +81,72 @@ type Case = KindAndProp & {
   mountedView: boolean;
 };
 
+const KIND_CASES = [
+  {
+    description: 'View backgroundColor',
+    hookName: 'useAnimatedStyle',
+    inlineName: 'inline style',
+    kind: 'view',
+    prop: 'backgroundColor',
+    off: OFF_COLOR,
+    on: ON_COLOR,
+    shadowTree: true,
+    mountedView: true,
+    mode: ComparisonMode.COLOR,
+  },
+  {
+    description: 'Circle fill',
+    hookName: 'useAnimatedProps',
+    inlineName: 'inline prop',
+    kind: 'circle',
+    prop: 'fill',
+    off: OFF_COLOR,
+    on: ON_COLOR,
+    shadowTree: false,
+    mountedView: false,
+    mode: ComparisonMode.COLOR,
+  },
+  {
+    description: 'Switch value',
+    hookName: 'useAnimatedProps',
+    inlineName: 'inline prop',
+    kind: 'switch',
+    prop: 'value',
+    off: false,
+    on: true,
+    shadowTree: false,
+    mountedView: false,
+    mode: ComparisonMode.AUTO,
+  },
+  {
+    description: 'TextInput text',
+    hookName: 'useAnimatedProps',
+    inlineName: 'inline prop',
+    kind: 'textInput',
+    prop: 'text',
+    off: OFF_TEXT,
+    on: ON_TEXT,
+    shadowTree: false,
+    mountedView: false,
+    mode: ComparisonMode.STRING,
+  },
+] satisfies Array<KindCase>;
+
+const PATH_CASES = KIND_CASES.flatMap((kindCase) =>
+  PATHS.map((path) => ({
+    ...kindCase,
+    path,
+    description: `${kindCase.description}, ${
+      path === 'hook' ? kindCase.hookName : kindCase.inlineName
+    }`,
+  }))
+);
+
 // Set by the rendered component, called by the test.
 let toggle: (() => void) | null = null;
 
-// Spies record the props React gives the host component. On the first render
-// they hold the initial value of each path: `initial` of the hook, or
-// `sv.value` for an inline shared value (PropsFilter).
+// Spies record the props React passes to the real component, so the test can
+// check the initial value.
 type SpyProps = { onProps: (props: ReceivedProps) => void };
 
 const SpyView = forwardRef<ComponentRef<typeof View>, ViewProps & SpyProps>(
@@ -121,8 +172,7 @@ const SpySwitch = forwardRef<
   return <Switch ref={ref} {...props} />;
 });
 
-// `text` is the native prop backing TextInput's value. It is declared here
-// because the wrapper forwards it, so it types like any other prop.
+// `text` is the native prop behind TextInput's value.
 const SpyTextInput = forwardRef<
   ComponentRef<typeof TextInput>,
   TextInputProps & SpyProps & { text?: string }
@@ -135,14 +185,9 @@ const AnimatedSpyView = Animated.createAnimatedComponent(SpyView);
 const AnimatedSpyCircle = Animated.createAnimatedComponent(SpyCircle);
 const AnimatedSpySwitch = Animated.createAnimatedComponent(SpySwitch);
 const AnimatedSpyTextInput = Animated.createAnimatedComponent(SpyTextInput);
+const AnimatedSwitch = Animated.createAnimatedComponent(Switch);
 
-type ScenarioProps = {
-  path: Path;
-  prop: Prop;
-  onProps: (props: ReceivedProps) => void;
-};
-
-// The example's Toggle button: flips the shared value without a React render.
+// Flips the shared value without a React render.
 function useToggledValues() {
   const value = useSharedValue(false);
 
@@ -158,133 +203,199 @@ function useToggledValues() {
   }, [handleToggle]);
 
   const colorSv = useDerivedValue(() => (value.value ? ON_COLOR : OFF_COLOR));
-  const opacitySv = useDerivedValue(() =>
-    value.value ? ON_OPACITY : OFF_OPACITY
-  );
   const textSv = useDerivedValue(() => (value.value ? ON_TEXT : OFF_TEXT));
 
-  return { value, colorSv, opacitySv, textSv };
+  return { value, colorSv, textSv };
 }
 
-// Only this scenario registers the test ref: `render` waits for every
-// registered ref to mount, and the other scenarios do not read it. One box
-// animates one style prop, backgroundColor or opacity.
-function ViewScenario({ path, prop, onProps }: ScenarioProps) {
-  const ref = useTestRef(BOX_REF);
-  const { colorSv, opacitySv } = useToggledValues();
-  const isOpacity = prop === 'opacity';
+type ToggledValues = ReturnType<typeof useToggledValues>;
 
-  const animatedStyle = useAnimatedStyle(() =>
-    isOpacity
-      ? { opacity: opacitySv.value }
-      : { backgroundColor: colorSv.value }
-  );
-  const inlineStyle = isOpacity
-    ? { opacity: opacitySv }
-    : { backgroundColor: colorSv };
+// One component, animated with the hook or inline. The shared values come
+// from the scenario, so two variants can share them.
+type VariantProps = {
+  path: Path;
+  values: ToggledValues;
+  refName: string;
+  onProps: (props: ReceivedProps) => void;
+};
+
+function ViewVariant({ path, values, refName, onProps }: VariantProps) {
+  const ref = useTestRef(refName);
+  const { colorSv } = values;
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: colorSv.value,
+  }));
 
   return (
-    <View style={styles.container}>
-      <AnimatedSpyView
-        ref={ref}
-        collapsable={false}
-        onProps={onProps}
-        style={
-          path === 'hook'
-            ? [styles.box, animatedStyle]
-            : [styles.box, inlineStyle]
-        }
-      />
-    </View>
+    <AnimatedSpyView
+      ref={ref}
+      collapsable={false}
+      onProps={onProps}
+      style={
+        path === 'hook'
+          ? [styles.box, animatedStyle]
+          : [styles.box, { backgroundColor: colorSv }]
+      }
+    />
   );
 }
 
-function CircleScenario({ path, onProps }: ScenarioProps) {
-  const { colorSv } = useToggledValues();
+function CircleVariant({ path, values, refName, onProps }: VariantProps) {
+  const ref = useTestRef(refName);
+  const { colorSv } = values;
 
   const animatedProps = useAnimatedProps(() => ({ fill: colorSv.value }));
 
   return (
-    <View style={styles.container}>
-      <Svg width={60} height={60}>
-        {path === 'hook' ? (
-          <AnimatedSpyCircle
-            cx={30}
-            cy={30}
-            r={25}
-            onProps={onProps}
-            animatedProps={animatedProps}
-          />
-        ) : (
-          <AnimatedSpyCircle
-            cx={30}
-            cy={30}
-            r={25}
-            onProps={onProps}
-            fill={colorSv}
-          />
-        )}
-      </Svg>
-    </View>
+    <Svg width={60} height={60}>
+      {path === 'hook' ? (
+        <AnimatedSpyCircle
+          ref={ref}
+          cx={30}
+          cy={30}
+          r={25}
+          onProps={onProps}
+          animatedProps={animatedProps}
+        />
+      ) : (
+        <AnimatedSpyCircle
+          ref={ref}
+          cx={30}
+          cy={30}
+          r={25}
+          onProps={onProps}
+          fill={colorSv}
+        />
+      )}
+    </Svg>
   );
 }
 
-// The example passes the boolean shared value itself, not a derived value.
-function SwitchScenario({ path, onProps }: ScenarioProps) {
-  const { value } = useToggledValues();
+// Passes the boolean shared value itself, not a derived value.
+function SwitchVariant({ path, values, refName, onProps }: VariantProps) {
+  const ref = useTestRef(refName);
+  const { value } = values;
 
   const animatedProps = useAnimatedProps(() => ({ value: value.value }));
 
-  return (
-    <View style={styles.container}>
-      {path === 'hook' ? (
-        <AnimatedSpySwitch onProps={onProps} animatedProps={animatedProps} />
-      ) : (
-        <AnimatedSpySwitch onProps={onProps} value={value} />
-      )}
-    </View>
+  return path === 'hook' ? (
+    <AnimatedSpySwitch
+      ref={ref}
+      onProps={onProps}
+      animatedProps={animatedProps}
+    />
+  ) : (
+    <AnimatedSpySwitch ref={ref} onProps={onProps} value={value} />
   );
 }
 
-function TextInputScenario({ path, onProps }: ScenarioProps) {
-  const { textSv } = useToggledValues();
+function TextInputVariant({ path, values, refName, onProps }: VariantProps) {
+  const ref = useTestRef(refName);
+  const { textSv } = values;
 
   const animatedProps = useAnimatedProps(() => ({
     text: textSv.value,
     defaultValue: textSv.value,
   }));
 
+  return path === 'hook' ? (
+    <AnimatedSpyTextInput
+      ref={ref}
+      editable={false}
+      style={styles.input}
+      onProps={onProps}
+      animatedProps={animatedProps}
+    />
+  ) : (
+    <AnimatedSpyTextInput
+      ref={ref}
+      editable={false}
+      style={styles.input}
+      onProps={onProps}
+      defaultValue={OFF_TEXT}
+      text={textSv}
+    />
+  );
+}
+
+const VARIANTS = {
+  view: ViewVariant,
+  circle: CircleVariant,
+  switch: SwitchVariant,
+  textInput: TextInputVariant,
+} satisfies Record<Kind, (props: VariantProps) => ReactElement>;
+
+// One component, on one path, with its own shared value.
+function SinglePathScenario({
+  kind,
+  path,
+  onProps,
+}: {
+  kind: Kind;
+  path: Path;
+  onProps: (props: ReceivedProps) => void;
+}) {
+  const values = useToggledValues();
+  const Variant = VARIANTS[kind];
+
   return (
     <View style={styles.container}>
-      {path === 'hook' ? (
-        <AnimatedSpyTextInput
-          editable={false}
-          style={styles.input}
-          onProps={onProps}
-          animatedProps={animatedProps}
-        />
-      ) : (
-        <AnimatedSpyTextInput
-          editable={false}
-          style={styles.input}
-          onProps={onProps}
-          defaultValue={OFF_TEXT}
-          text={textSv}
-        />
-      )}
+      <Variant
+        path={path}
+        values={values}
+        refName={BOX_REF}
+        onProps={onProps}
+      />
     </View>
   );
 }
 
-const SCENARIOS = {
-  view: ViewScenario,
-  circle: CircleScenario,
-  switch: SwitchScenario,
-  textInput: TextInputScenario,
-} satisfies Record<Kind, (props: ScenarioProps) => ReactElement>;
+// The hook and the inline component side by side, driven by one shared value.
+function BothPathsScenario({
+  kind,
+  onProps,
+}: {
+  kind: Kind;
+  onProps: (path: Path, props: ReceivedProps) => void;
+}) {
+  const values = useToggledValues();
+  const Variant = VARIANTS[kind];
 
-// Colors arrive at native as numbers. Other values are compared as they are,
-// and anything unexpected becomes a string so the failed matcher shows it.
+  return (
+    <View style={styles.container}>
+      <Variant
+        path="hook"
+        values={values}
+        refName={HOOK_REF}
+        onProps={(props) => onProps('hook', props)}
+      />
+      <Variant
+        path="inline"
+        values={values}
+        refName={INLINE_REF}
+        onProps={(props) => onProps('inline', props)}
+      />
+    </View>
+  );
+}
+
+// A Switch with an inline top-level prop and an inline style.
+function MixedInlineScenario() {
+  const ref = useTestRef(MIXED_REF);
+  const { value } = useToggledValues();
+  const opacitySv = useDerivedValue(() =>
+    value.value ? ON_OPACITY : OFF_OPACITY
+  );
+
+  return (
+    <View style={styles.container}>
+      <AnimatedSwitch ref={ref} value={value} style={{ opacity: opacitySv }} />
+    </View>
+  );
+}
+
+// Colors arrive at native as numbers; convert them back for comparison.
 function toComparable(value: unknown, mode: ComparisonMode): TestValue {
   if (typeof value === 'number' && mode === ComparisonMode.COLOR) {
     return convertDecimalColor(value);
@@ -299,200 +410,230 @@ function toComparable(value: unknown, mode: ComparisonMode): TestValue {
   return String(value);
 }
 
-describe('inline styles and props', () => {
-  test.each([
-    {
-      description: 'View backgroundColor, useAnimatedStyle',
-      kind: 'view',
-      path: 'hook',
-      prop: 'backgroundColor',
-      off: OFF_COLOR,
-      on: ON_COLOR,
-      shadowTree: true,
-      mountedView: false,
-      mode: ComparisonMode.COLOR,
+// View props are styles; the other kinds take the prop at the top level.
+function initialValue(
+  kind: Kind,
+  prop: string,
+  first: ReceivedProps | undefined
+): unknown {
+  return kind === 'view'
+    ? (first?.style as ReceivedProps | undefined)?.[prop]
+    : first?.[prop];
+}
+
+type Updates = Awaited<ReturnType<typeof recordAnimationUpdates>>;
+
+// Ways to read the value back from native.
+function createReaders(updates: Updates, prop: string, mode: ComparisonMode) {
+  // Every value of `prop` sent to native, in order, from all views (the
+  // recorder can't tell views apart).
+  const sentValues = async (): Promise<TestValue[]> => {
+    try {
+      return (await updates.getUpdates())
+        .filter((update) => prop in update)
+        .map((update) => toComparable((update as ReceivedProps)[prop], mode));
+    } catch {
+      // `getUpdates` throws when nothing was recorded yet.
+      return [];
+    }
+  };
+
+  return {
+    sentValues,
+    // The last value sent. Use only when one component is rendered.
+    lastSent: async () => {
+      const sent = await sentValues();
+      return sent[sent.length - 1] ?? 'nothing sent';
     },
-    {
-      description: 'View backgroundColor, inline style',
-      kind: 'view',
-      path: 'inline',
-      prop: 'backgroundColor',
-      off: OFF_COLOR,
-      on: ON_COLOR,
-      shadowTree: true,
-      mountedView: false,
-      mode: ComparisonMode.COLOR,
-    },
-    {
-      description: 'View opacity, useAnimatedStyle',
-      kind: 'view',
-      path: 'hook',
-      prop: 'opacity',
-      off: OFF_OPACITY,
-      on: ON_OPACITY,
-      shadowTree: true,
-      mountedView: true,
-      mode: ComparisonMode.FLOAT_DISTANCE,
-    },
-    {
-      description: 'View opacity, inline style',
-      kind: 'view',
-      path: 'inline',
-      prop: 'opacity',
-      off: OFF_OPACITY,
-      on: ON_OPACITY,
-      shadowTree: true,
-      mountedView: true,
-      mode: ComparisonMode.FLOAT_DISTANCE,
-    },
-    {
-      description: 'Circle fill, useAnimatedProps',
-      kind: 'circle',
-      path: 'hook',
-      prop: 'fill',
-      off: OFF_COLOR,
-      on: ON_COLOR,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.COLOR,
-    },
-    {
-      description: 'Circle fill, inline prop',
-      kind: 'circle',
-      path: 'inline',
-      prop: 'fill',
-      off: OFF_COLOR,
-      on: ON_COLOR,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.COLOR,
-    },
-    {
-      description: 'Switch value, useAnimatedProps',
-      kind: 'switch',
-      path: 'hook',
-      prop: 'value',
-      off: false,
-      on: true,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.AUTO,
-    },
-    {
-      description: 'Switch value, inline prop',
-      kind: 'switch',
-      path: 'inline',
-      prop: 'value',
-      off: false,
-      on: true,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.AUTO,
-    },
-    {
-      description: 'TextInput text, useAnimatedProps',
-      kind: 'textInput',
-      path: 'hook',
-      prop: 'text',
-      off: OFF_TEXT,
-      on: ON_TEXT,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.STRING,
-    },
-    {
-      description: 'TextInput text, inline prop',
-      kind: 'textInput',
-      path: 'inline',
-      prop: 'text',
-      off: OFF_TEXT,
-      on: ON_TEXT,
-      shadowTree: false,
-      mountedView: false,
-      mode: ComparisonMode.STRING,
-    },
-  ] satisfies Array<Case>)(
+    // The shadow tree. Only View styles can be read there.
+    committed: async (refName: string) =>
+      isValidPropName(prop)
+        ? getTestComponent(refName).getAnimatedStyle(prop)
+        : `${prop} is not readable from the shadow tree`,
+    // The color on screen. View only.
+    mounted: async (refName: string) =>
+      (await getTestComponent(refName).getMountedViewProps())
+        ?.backgroundColor ?? 'not mounted',
+  };
+}
+
+describe('inline styles and props, one path', () => {
+  test.each(PATH_CASES)(
     '${description} follows the shared value before and after toggles',
     async ({ kind, path, prop, off, on, mode, shadowTree, mountedView }) => {
       const received: ReceivedProps[] = [];
       const updates = await recordAnimationUpdates();
-
-      const Scenario = SCENARIOS[kind];
+      const { lastSent, committed, mounted } = createReaders(
+        updates,
+        prop,
+        mode
+      );
 
       await render(
-        <Scenario
+        <SinglePathScenario
+          kind={kind}
           path={path}
-          prop={prop}
           onProps={(props) => received.push(props)}
         />
       );
 
-      // The last value sent to native through the updateProps global, which
-      // both paths use after mount. Only this component updates, so the
-      // recorder holds one view. On a problem, return the message so the
-      // failed matcher shows it.
-      const lastSent = async () => {
-        try {
-          const sent = (await updates.getUpdates()).filter(
-            (update) => prop in update
-          );
-          const last = sent[sent.length - 1] as ReceivedProps | undefined;
-          return toComparable(last?.[prop], mode);
-        } catch (error) {
-          return `nothing sent: ${String(error)}`;
-        }
-      };
-      // Committed shadow tree. Only View styles are readable there, so fill,
-      // value and text are checked at the value sent to native instead.
-      const committed = async () =>
-        isValidPropName(prop)
-          ? getTestComponent(BOX_REF).getAnimatedStyle(prop)
-          : `${prop} is not readable from the shadow tree`;
-      // The platform view: `alpha` on iOS and Android.
-      const mounted = async () =>
-        (await getTestComponent(BOX_REF).getMountedViewProps())?.opacity ??
-        'not mounted';
-
       // Before any toggle: what React mounted the component with.
-      const first = received[0];
-      // View props are styles; the other kinds take the prop at the top level.
-      const initial =
-        kind === 'view'
-          ? (first?.style as ReceivedProps | undefined)?.[prop]
-          : first?.[prop];
-      expect(toComparable(initial, mode)).toBe(off, mode);
+      expect(toComparable(initialValue(kind, prop, received[0]), mode)).toBe(
+        off,
+        mode
+      );
       if (shadowTree) {
-        expect(await committed()).toBe(off, mode);
+        expect(await committed(BOX_REF)).toBe(off, mode);
       }
       if (mountedView) {
-        // `render` resolves after the React commit; on Android the platform
-        // view can attach a few frames later, so wait for it.
-        await expectEventually(mounted).toBe(off, mode);
+        // The platform view can attach a few frames after render.
+        await expectEventually(() => mounted(BOX_REF)).toBe(off, mode);
       }
 
       expect(typeof toggle).toBe('function');
       if (!toggle) {
-        // Matchers do not throw: without this, every wait below times out.
+        // Matchers don't throw, so stop here instead of timing out below.
         return;
       }
       for (const expected of [on, off]) {
         toggle();
         await expectEventually(lastSent).toBe(expected, mode);
         if (shadowTree) {
-          await expectEventually(committed).toBe(expected, mode);
+          await expectEventually(() => committed(BOX_REF)).toBe(expected, mode);
         }
         if (mountedView) {
-          await expectEventually(mounted).toBe(expected, mode);
+          await expectEventually(() => mounted(BOX_REF)).toBe(expected, mode);
         }
       }
     }
   );
 });
 
+describe('inline styles and props, hook and inline together', () => {
+  test.each(KIND_CASES)(
+    '${description}: one toggle changes the hook and the inline component together',
+    async ({ kind, prop, off, on, mode, shadowTree, mountedView }) => {
+      const received: Record<Path, ReceivedProps[]> = { hook: [], inline: [] };
+      const updates = await recordAnimationUpdates();
+      const { sentValues, committed, mounted } = createReaders(
+        updates,
+        prop,
+        mode
+      );
+
+      await render(
+        <BothPathsScenario
+          kind={kind}
+          onProps={(path, props) => received[path].push(props)}
+        />
+      );
+
+      for (const path of PATHS) {
+        expect(
+          toComparable(initialValue(kind, prop, received[path][0]), mode)
+        ).toBe(off, mode);
+      }
+      if (mountedView) {
+        await expectEventually(() => mounted(HOOK_REF)).toBe(off, mode);
+        expect(await mounted(INLINE_REF)).toBe(off, mode);
+      }
+
+      expect(typeof toggle).toBe('function');
+      if (!toggle) {
+        // Matchers don't throw, so stop here instead of timing out below.
+        return;
+      }
+      // A component can send its initial value a few frames after mount.
+      // Let that land first, so it isn't counted as a toggle update.
+      await waitUntilSettled(async () => (await sentValues()).length, {
+        stableFrames: 5,
+      });
+      for (const expected of [on, off]) {
+        const sentBefore = (await sentValues()).length;
+        toggle();
+        // Expect one update from each component. If the inline path is
+        // broken, only the hook's update arrives.
+        await expectEventually(
+          async () => (await sentValues()).length - sentBefore
+        ).toBe(2, ComparisonMode.NUMBER);
+        for (const sent of (await sentValues()).slice(sentBefore)) {
+          expect(sent).toBe(expected, mode);
+        }
+        if (shadowTree) {
+          await expectEventually(() => committed(HOOK_REF)).toBe(
+            expected,
+            mode
+          );
+          expect(await committed(INLINE_REF)).toBe(expected, mode);
+        }
+        if (mountedView) {
+          await expectEventually(() => mounted(HOOK_REF)).toBe(expected, mode);
+          expect(await mounted(INLINE_REF)).toBe(expected, mode);
+        }
+      }
+    }
+  );
+});
+
+describe('inline styles and props, inline style and prop on one component', () => {
+  test('Switch with inline value and inline opacity updates both', async () => {
+    const updates = await recordAnimationUpdates();
+    const value = createReaders(updates, 'value', ComparisonMode.AUTO);
+    const opacity = createReaders(
+      updates,
+      'opacity',
+      ComparisonMode.FLOAT_DISTANCE
+    );
+    const mountedOpacity = async () =>
+      (await getTestComponent(MIXED_REF).getMountedViewProps())?.opacity ??
+      'not mounted';
+
+    await render(<MixedInlineScenario />);
+
+    expect(await opacity.committed(MIXED_REF)).toBe(
+      OFF_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+    await expectEventually(mountedOpacity).toBe(
+      OFF_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+
+    expect(typeof toggle).toBe('function');
+    if (!toggle) {
+      // Matchers don't throw, so stop here instead of timing out below.
+      return;
+    }
+    for (const [expectedValue, expectedOpacity] of [
+      [true, ON_OPACITY],
+      [false, OFF_OPACITY],
+    ] as const) {
+      toggle();
+      await expectEventually(value.lastSent).toBe(
+        expectedValue,
+        ComparisonMode.AUTO
+      );
+      await expectEventually(opacity.lastSent).toBe(
+        expectedOpacity,
+        ComparisonMode.FLOAT_DISTANCE
+      );
+      await expectEventually(() => opacity.committed(MIXED_REF)).toBe(
+        expectedOpacity,
+        ComparisonMode.FLOAT_DISTANCE
+      );
+      await expectEventually(mountedOpacity).toBe(
+        expectedOpacity,
+        ComparisonMode.FLOAT_DISTANCE
+      );
+    }
+  });
+});
+
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flex: 1,
+    gap: 8,
     justifyContent: 'center',
   },
   box: {
