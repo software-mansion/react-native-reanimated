@@ -66,7 +66,7 @@ If it finds two matching components, it hides both of them by changing their opa
 
 After the animation is complete, the third view is removed, and the opacity of both original views is restored.
 
-Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
+By default, every property that differs between the two views (for example `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor`, `opacity` or the border radius) is animated with a duration of 500 ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
 
 ## Usage
 
@@ -113,7 +113,39 @@ function SharedView() {
 }
 ```
 
-On iOS, when the animation is triggered by a swipe gesture or the OS back button we instead run a progress-based transition. This way the animation responds to the user swiping their finger accordingly, and allows for transition cancellation. This behavior will be possible to customize in the future.
+To define the animation yourself, use `SharedTransition.custom`. The worklet receives the values of the source view (`current*`), the values of the target view (`target*`) and the window size (`windowWidth`, `windowHeight`), and returns the animations for each property.
+
+```tsx
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    width: withSpring(values.targetWidth),
+    height: withSpring(values.targetHeight),
+    originX: withSpring(values.targetOriginX),
+    originY: withSpring(values.targetOriginY),
+  };
+});
+```
+
+The values include `OriginX`, `OriginY`, `Width`, `Height`, `Opacity`, `BackgroundColor`, `Transform` (`{ matrix }`), `TransformOrigin`, `BorderRadius`, `BorderWidth`, `BorderColor` and the shadow properties, each with the `current` and the `target` prefix. Per-corner and per-side border values are included when one of the views sets them. `GlobalOriginX`, `GlobalOriginY` and `TransformMatrix` are kept for compatibility with Reanimated 3, and a returned `transformMatrix` is applied as the `transform`. Every animated property starts from its value in the source view, so animate the transform as a whole, with `transform: [{ matrix }]` or `transformMatrix`.
+
+### Progress-based animation
+
+On iOS, back navigation (a swipe gesture or the back button) runs a progress-based transition: the shared view follows the progress of the screen transition, and a cancelled swipe returns it to its place. By default every property is interpolated linearly. Use `progressAnimation` to compute the style for a given progress (0-1) yourself:
+
+```tsx
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return { width: withSpring(values.targetWidth) };
+}).progressAnimation((values, progress) => {
+  'worklet';
+  return {
+    width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
+  };
+});
+```
+
+Call `.defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` to use the progress-based animation for every transition. Transitions that don't follow a screen transition progress drive the progress with the builder's animation (for example `.duration()` or `.springify()`).
 
 ## Example
 
@@ -134,8 +166,6 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
 - Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
-- You can't define custom animation functions.
-- Some properties (e.g. `backgroundColor`) are not supported in progress-based transitions.
 - On iOS you can encounter some issues with the vertical positioning of transitioning views. This is due to issues with header height information propagation.
 - There are some performance bottlenecks, that stem from transforms being recalculated too eagerly.
 - We have to use a workaround for react-native-screens to not keep a snapshot of the transitioning view on the popped screen. Currently the fix is available in 3.19+ versions.
