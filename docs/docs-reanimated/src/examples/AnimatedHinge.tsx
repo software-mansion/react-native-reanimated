@@ -1,19 +1,18 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
-  useDerivedValue,
-  SensorType,
   HingeStatus,
+  useAnimatedHinge,
+  useAnimatedStyle,
+  useDerivedValue,
 } from 'react-native-reanimated';
 
 export default function App() {
   // highlight-next-line
-  const hinge = useAnimatedSensor(SensorType.HINGE);
+  const { hinge } = useAnimatedHinge();
 
   const foldAngle = useDerivedValue(() => {
-    const { angle, status } = hinge.sensor.value;
+    const { angle, status } = hinge.value;
     // highlight-next-line
     return status === HingeStatus.UNKNOWN ? 0 : (Math.PI - angle) / 2;
   });
