@@ -84,6 +84,8 @@ struct LayoutAnimationsProxyDependencies {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;
   ReadMountedViewPropsFunction readMountedViewProps;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
+  NativeViewPlacementFunction nativeViewPlacement;
 #endif
 };
 
