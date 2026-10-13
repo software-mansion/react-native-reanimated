@@ -265,6 +265,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
+        const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+            before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
         auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
         restartContentFade(run);
@@ -273,7 +275,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
             run.carrier->current.tag,
             run.carrierStartView,
             asCarrierView(after, run.carrier, propsParserContext),
-            ownCarrierView(after, run.carrier, propsParserContext).props);
+            ownCarrierView(after, run.carrier, propsParserContext).props,
+            config);
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
@@ -297,6 +300,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
         const auto &[from, to] = contentFade->range;
         const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
         layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
+      }
+      if (layoutAnimation.config) {
+        continue;
       }
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
@@ -355,6 +361,32 @@ void LayoutAnimationsProxy::handleProgressTransition(
       }
     }
     transition_.reset();
+  }
+}
+
+// Called from onTransitionProgress on the UI thread. pullTransaction can run off the UI thread, so it must not call
+// worklets.
+void LayoutAnimationsProxy::applyProgressAnimations() {
+  for (const auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->gestureDriven) {
+      continue;
+    }
+    const auto tag = element.run->container->current.tag;
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.config) {
+      continue;
+    }
+    const auto &layoutAnimation = layoutAnimationIt->second;
+    auto values =
+        SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
+    values.setProperty(uiRuntime_, "windowWidth", window_.width);
+    values.setProperty(uiRuntime_, "windowHeight", window_.height);
+    const auto progressAnimation =
+        layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_).asFunction(uiRuntime_);
+    const auto style = progressAnimation.call(uiRuntime_, values, transition_->progress);
+    if (style.isObject()) {
+      progressLayoutAnimation(tag, style.asObject(uiRuntime_));
+    }
   }
 }
 
@@ -1100,6 +1132,9 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     transition_->state = TransitionState::END;
   }
   transition_->updated = true;
+  if (transition_->state == TransitionState::ACTIVE) {
+    applyProgressAnimations();
+  }
   return surfaceId_;
 }
 

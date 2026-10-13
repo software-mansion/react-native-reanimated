@@ -409,6 +409,15 @@ export default class AnimatedComponent
           undefined,
           undefined
         );
+        updateLayoutAnimations(
+          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+          useNativeId
+            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+          undefined,
+          undefined,
+          undefined
+        );
         this._sharedTransitionTag = undefined;
       }
       return;
@@ -433,6 +442,15 @@ export default class AnimatedComponent
       undefined,
       this.props.sharedTransitionTag,
       sharedTransition.buildContentFade?.()
+    );
+    updateLayoutAnimations(
+      useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+      useNativeId
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+      sharedTransition.getProgressAnimation(),
+      undefined,
+      undefined
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;

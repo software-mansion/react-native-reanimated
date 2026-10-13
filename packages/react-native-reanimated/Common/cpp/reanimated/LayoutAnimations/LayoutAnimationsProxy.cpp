@@ -6,7 +6,6 @@
 #include <react/utils/LowPriorityExecutor.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
@@ -1606,13 +1605,15 @@ void LayoutAnimationsProxy::startProgressTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
-    const Props::Shared &frameProps) const {
+    const Props::Shared &frameProps,
+    const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
       .frameProps = frameProps,
       .parentTag = surfaceId_,
+      .config = config,
   });
 }
 
