@@ -783,10 +783,12 @@ function cloneWorklet<TValue extends WorkletFunction>(
     Offending code was: \`${getWorkletCode(value)}\``
       );
     }
-    registerWorkletStackDetails(
-      value.__workletHash,
-      (value as WorkletFunction).__stackDetails!
-    );
+    // `__stackDetails` is deleted below, so a worklet cloned again after its
+    // cached clone was released has none. Keep what the first clone registered.
+    const stackDetails = (value as WorkletFunction).__stackDetails;
+    if (stackDetails) {
+      registerWorkletStackDetails(value.__workletHash, stackDetails);
+    }
   }
   if ((value as WorkletFunction).__stackDetails) {
     // `Error` type of value cannot be copied to the UI thread, so we
