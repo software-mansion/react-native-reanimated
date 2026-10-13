@@ -15,15 +15,15 @@ void SharedTransitionValuesFactory::setProperty(jsi::Object &values, const char 
 }
 
 jsi::Object SharedTransitionValuesFactory::create(const ShadowView &sourceView, const ShadowView &targetView) {
-  const auto &sourceViewProps = static_cast<const ViewProps &>(*sourceView.props);
-  const auto &targetViewProps = static_cast<const ViewProps &>(*targetView.props);
+  const auto &sourceViewProps = getViewProps(sourceView);
+  const auto &targetViewProps = getViewProps(targetView);
 
   jsi::Object values(rt_);
 
   writeFrame(values, sourceView, targetView);
   writeOpacity(values, sourceViewProps, targetViewProps);
   writeBackgroundColor(values, sourceViewProps, targetViewProps);
-  writeTransform(values, sourceViewProps, targetViewProps);
+  writeTransform(values, sourceView, targetView);
   writeTransformOrigin(values, sourceView, targetView, sourceViewProps, targetViewProps);
   writeShadow(values, sourceViewProps, targetViewProps);
   writeBorder(values, sourceViewProps, targetViewProps);
@@ -78,34 +78,41 @@ void SharedTransitionValuesFactory::writeBackgroundColor(
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
   setProperty(
-      values, "currentBackgroundColor", jsi::String::createFromUtf8(rt_, react::toString(sourceViewProps.backgroundColor)));
+      values,
+      "currentBackgroundColor",
+      jsi::String::createFromUtf8(rt_, react::toString(sourceViewProps.backgroundColor)));
   setProperty(
-      values, "targetBackgroundColor", jsi::String::createFromUtf8(rt_, react::toString(targetViewProps.backgroundColor)));
+      values,
+      "targetBackgroundColor",
+      jsi::String::createFromUtf8(rt_, react::toString(targetViewProps.backgroundColor)));
 }
 
 void SharedTransitionValuesFactory::writeTransform(
     jsi::Object &values,
-    const ViewProps &sourceViewProps,
-    const ViewProps &targetViewProps) {
-  setProperty(values, "currentTransform", buildTransformObject(sourceViewProps));
-  setProperty(values, "targetTransform", buildTransformObject(targetViewProps));
+    const ShadowView &sourceView,
+    const ShadowView &targetView) {
+  setProperty(values, "currentTransform", buildTransformObject(sourceView));
+  setProperty(values, "targetTransform", buildTransformObject(targetView));
 
   // Deprecated v3-style flat matrix arrays. Kept for backward compatibility
-  setProperty(values, "currentTransformMatrix", buildMatrixArray(sourceViewProps));
-  setProperty(values, "targetTransformMatrix", buildMatrixArray(targetViewProps));
+  setProperty(values, "currentTransformMatrix", buildMatrixArray(sourceView));
+  setProperty(values, "targetTransformMatrix", buildMatrixArray(targetView));
 }
 
-jsi::Array SharedTransitionValuesFactory::buildMatrixArray(const ViewProps &props) {
+jsi::Array SharedTransitionValuesFactory::buildMatrixArray(const ShadowView &view) {
+  // Resolving the operations against the frame turns percent translates into points.
+  const auto transform =
+      BaseViewProps::resolveTransform(view.layoutMetrics.frame.size, getViewProps(view).transform, TransformOrigin{});
   jsi::Array matrixArray(rt_, 16);
   for (int i = 0; i < 16; i++) {
-    matrixArray.setValueAtIndex(rt_, i, props.transform.matrix[i]);
+    matrixArray.setValueAtIndex(rt_, i, transform.matrix[i]);
   }
   return matrixArray;
 }
 
-jsi::Object SharedTransitionValuesFactory::buildTransformObject(const ViewProps &props) {
+jsi::Object SharedTransitionValuesFactory::buildTransformObject(const ShadowView &view) {
   jsi::Object entry(rt_);
-  entry.setProperty(rt_, "matrix", buildMatrixArray(props));
+  entry.setProperty(rt_, "matrix", buildMatrixArray(view));
   return entry;
 }
 
@@ -231,7 +238,13 @@ void SharedTransitionValuesFactory::writeBorder(
   const auto &sourceBorderRadii = sourceViewProps.borderRadii;
   const auto &targetBorderRadii = targetViewProps.borderRadii;
   writeBorderRadius(
-      values, sourceBorderRadii.all, targetBorderRadii.all, "currentBorderRadius", "targetBorderRadius", sourceViewProps, targetViewProps);
+      values,
+      sourceBorderRadii.all,
+      targetBorderRadii.all,
+      "currentBorderRadius",
+      "targetBorderRadius",
+      sourceViewProps,
+      targetViewProps);
   writeBorderRadius(
       values,
       sourceBorderRadii.topLeft,
