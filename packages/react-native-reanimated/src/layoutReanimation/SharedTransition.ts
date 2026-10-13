@@ -85,7 +85,7 @@ function mapCurrentValuesToInitialStyle(
   values: SharedTransitionAnimationsValues
 ): StyleProps {
   'worklet';
-  const initialValues: StyleProps = {};
+  const initialValues: Record<string, unknown> = {};
   const valuesRecord = values as unknown as Record<string, unknown>;
   for (const key in valuesRecord) {
     if (!key.startsWith('current')) {
@@ -130,19 +130,6 @@ export class SharedTransition
   /**
    * Creates a shared transition with a custom animation worklet.
    *
-   * @example
-   *   ```tsx
-   *   const transition = SharedTransition.custom((values) => {
-   *     'worklet';
-   *     return {
-   *       width: withSpring(values.targetWidth),
-   *       height: withSpring(values.targetHeight),
-   *       originX: withSpring(values.targetOriginX),
-   *       originY: withSpring(values.targetOriginY),
-   *     };
-   *   });
-   *   ```;
-   *
    * @param customAnimationFactory - A worklet function that receives the source
    *   and target values and returns an object containing animations for each
    *   property.
@@ -159,23 +146,6 @@ export class SharedTransition
    * Defines a progress-based animation for the shared transition. This
    * animation is used during swipe back gestures (iOS only) when
    * `defaultTransitionType` is set to `SharedTransitionType.ANIMATION`.
-   *
-   * @example
-   *   ```tsx
-   *   const transition = SharedTransition.custom((values) => {
-   *     'worklet';
-   *     return {
-   *       width: withSpring(values.targetWidth),
-   *       height: withSpring(values.targetHeight),
-   *     };
-   *   }).progressAnimation((values, progress) => {
-   *     'worklet';
-   *     return {
-   *       width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
-   *       height: values.currentHeight + progress * (values.targetHeight - values.currentHeight),
-   *     };
-   *   });
-   *   ```;
    *
    * @param progressAnimationFactory - A worklet function that receives the
    *   source and target values along with the progress (0-1) and returns the
@@ -241,8 +211,8 @@ export class SharedTransition
       const animationFactory = (value: number | string) => {
         return delayFunction(delay, animation(value, config));
       };
-      const initialValues: StyleProps = {};
-      const animations: StyleProps = {};
+      const initialValues: Record<string, unknown> = {};
+      const animations: Record<string, unknown> = {};
 
       for (const sourceKey in valuesRecord) {
         if (!sourceKey.startsWith('current')) {
@@ -258,25 +228,21 @@ export class SharedTransition
           if (prop === 'transform') {
             // TODO (future): do proper transform interpolation
             const transforms = target as Array<Record<string, number | string>>;
-            (animations as Record<string, unknown>)[prop] = transforms.map(
-              (item) => {
-                const transformKey = Object.keys(item)[0];
-                return {
-                  [transformKey]: animationFactory(item[transformKey]),
-                };
-              }
-            );
+            animations[prop] = transforms.map((item) => {
+              const transformKey = Object.keys(item)[0];
+              return {
+                [transformKey]: animationFactory(item[transformKey]),
+              };
+            });
           } else if (prop === 'boxShadow') {
             const shadows = target as Array<Record<string, number | string>>;
-            (animations as Record<string, unknown>)[prop] = shadows.map(
-              (item) => {
-                const boxShadow: Record<string, unknown> = {};
-                for (const shadowKey of Object.keys(item)) {
-                  boxShadow[shadowKey] = animationFactory(item[shadowKey]);
-                }
-                return boxShadow;
+            animations[prop] = shadows.map((item) => {
+              const boxShadow: Record<string, unknown> = {};
+              for (const shadowKey of Object.keys(item)) {
+                boxShadow[shadowKey] = animationFactory(item[shadowKey]);
               }
-            );
+              return boxShadow;
+            });
           } else if (prop === 'transformOrigin') {
             const origin = target as Array<number | string>;
             animations[prop] = origin.map(animationFactory);
