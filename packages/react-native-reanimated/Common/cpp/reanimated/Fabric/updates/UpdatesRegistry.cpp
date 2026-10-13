@@ -205,11 +205,11 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
     const auto it = propsMap.find(shadowNodeFamily);
 
     if (it == propsMap.cend()) {
-      auto propsVector = std::vector<RawProps>{};
-      propsVector.emplace_back(RawProps(props));
+      auto propsVector = std::vector<folly::dynamic>{};
+      propsVector.emplace_back(props);
       propsMap.emplace(shadowNodeFamily, propsVector);
     } else {
-      it->second.push_back(RawProps(props));
+      it->second.push_back(props);
     }
   }
 }

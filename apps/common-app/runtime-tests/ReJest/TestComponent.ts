@@ -22,7 +22,19 @@ export class TestComponent {
     const tag = this.getTag();
     return runOnUIBlocking(() => {
       'worklet';
-      return global._obtainMountedViewProps(tag);
+      return global._obtainMountedViewProps(tag, false);
+    });
+  }
+
+  /**
+   * Reads the props on screen. On iOS, `getMountedViewProps` returns an
+   * animation's target as soon as Core Animation starts the animation.
+   */
+  public async getPresentedViewProps(): Promise<MountedViewProps | null> {
+    const tag = this.getTag();
+    return runOnUIBlocking(() => {
+      'worklet';
+      return global._obtainMountedViewProps(tag, true);
     });
   }
 
