@@ -394,6 +394,18 @@ class SharedTransitionMock extends BaseAnimationMock {
   fadeContent() {
     return this;
   }
+
+  custom() {
+    return this;
+  }
+
+  progressAnimation() {
+    return this;
+  }
+
+  defaultTransitionType() {
+    return this;
+  }
 }
 
 class NativeEventsManagerMock {
