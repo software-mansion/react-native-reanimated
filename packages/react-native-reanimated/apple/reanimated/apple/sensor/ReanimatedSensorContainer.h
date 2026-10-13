@@ -5,8 +5,9 @@ typedef void (^ReanimatedSensorAvailabilityListener)(ReanimatedSensorType sensor
 @interface ReanimatedSensorContainer : NSObject {
   NSNumber *_nextSensorId;
   NSMutableDictionary *_sensors;
-  ReanimatedSensorAvailabilityListener _availabilityListener;
 }
+
+@property (atomic, copy) ReanimatedSensorAvailabilityListener availabilityListener;
 
 - (instancetype)init;
 - (bool)isSensorAvailable:(ReanimatedSensorType)sensorType;

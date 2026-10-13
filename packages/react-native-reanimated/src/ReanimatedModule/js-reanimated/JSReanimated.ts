@@ -78,11 +78,11 @@ class JSReanimated implements IReanimatedModule {
       return true;
     }
 
-    this.warnAboutUnavailableSensor();
+    this.#warnAboutUnavailableSensor();
     return false;
   }
 
-  warnAboutUnavailableSensor() {
+  #warnAboutUnavailableSensor() {
     if (this.platform === undefined) {
       this.detectPlatform();
     }
