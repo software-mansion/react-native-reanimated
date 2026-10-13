@@ -281,57 +281,6 @@ void LayoutAnimationsProxy::handleProgressTransition(
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
     }
-  } else if (transition_->state == TransitionState::ACTIVE) {
-    for (const auto &[_, element] : sharedElements_) {
-      if (!element.run || !element.run->gestureDriven) {
-        continue;
-      }
-      const auto tag = element.run->carrier->current.tag;
-      if (hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      const auto layoutAnimationIt = layoutAnimations_.find(tag);
-      if (layoutAnimationIt == layoutAnimations_.end()) {
-        react_native_assert(false && "Shared transition animation not found");
-        continue;
-      }
-      auto &layoutAnimation = layoutAnimationIt->second;
-      if (const auto &contentFade = element.run->contentFade) {
-        const auto &[from, to] = contentFade->range;
-        const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
-        layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
-      }
-      if (layoutAnimation.config) {
-        continue;
-      }
-      auto before = layoutAnimation.startView.layoutMetrics.frame;
-      auto after = layoutAnimation.finalView.layoutMetrics.frame;
-      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
-      auto y = before.origin.y + transition_->progress * (after.origin.y - before.origin.y);
-      auto width = before.size.width + transition_->progress * (after.size.width - before.size.width);
-      auto height = before.size.height + transition_->progress * (after.size.height - before.size.height);
-
-      auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
-      auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
-      auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-      auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-
-      // TODO (future): Support more props in progress transitions.
-      auto borderRadiusDynamic =
-          folly::dynamic::object("borderRadius", beforeRadius + transition_->progress * (afterRadius - beforeRadius));
-
-#ifdef RN_SERIALIZABLE_STATE
-      // TODO (future): Support borderRadius on Android.
-      const Props::Shared newProps = nullptr;
-#else
-      auto rawProps = RawProps(std::move(borderRadiusDynamic));
-
-      auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), std::move(rawProps));
-#endif
-
-      updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
-    }
   }
 
   if (transition_->state == TransitionState::START) {
@@ -371,12 +320,25 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
     if (!element.run || !element.run->gestureDriven) {
       continue;
     }
-    const auto tag = element.run->container->current.tag;
-    const auto layoutAnimationIt = layoutAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.config) {
+    const auto tag = element.run->carrier->current.tag;
+    if (hasPendingLayoutAnimation(tag)) {
       continue;
     }
-    const auto &layoutAnimation = layoutAnimationIt->second;
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto &layoutAnimation = layoutAnimationIt->second;
+    if (const auto &contentFade = element.run->contentFade) {
+      const auto &[from, to] = contentFade->range;
+      const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
+      layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
+    }
+    react_native_assert(layoutAnimation.config && "Progress shared transition without a progress animation");
+    if (!layoutAnimation.config) {
+      continue;
+    }
     auto values =
         SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
     values.setProperty(uiRuntime_, "windowWidth", window_.width);
