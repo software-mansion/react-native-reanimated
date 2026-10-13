@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import { setSerializableReplacement } from 'react-native-worklets';
+import { setSerializableCounterpart } from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
 import {
@@ -44,7 +44,7 @@ import {
  */
 export const IN_STYLE_UPDATER = { current: false };
 // is-tree-shakable-suppress
-setSerializableReplacement(IN_STYLE_UPDATER, { current: false });
+setSerializableCounterpart(IN_STYLE_UPDATER, { current: false });
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,

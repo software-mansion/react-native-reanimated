@@ -1,0 +1,47 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # removeSerializableCounterpart
+</Badges>
+
+Makes Worklets forget the serialized counterpart of an object, whether it came from [setSerializableCounterpart](/docs/memory/setSerializableCounterpart) or from an earlier [serialization](/docs/memory/serializable). The next time the object is serialized, Worklets serializes the object itself and remembers the new counterpart.
+
+## Reference
+
+```typescript
+import {
+  removeSerializableCounterpart,
+  scheduleOnUI,
+  setSerializableCounterpart,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+setSerializableCounterpart(flag, { current: true });
+removeSerializableCounterpart(flag);
+
+scheduleOnUI(() => {
+  console.log(flag.current); // logs `false`
+});
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function removeSerializableCounterpart(value: object): void;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object whose counterpart to remove. It's compared by reference.
+
+## Remarks
+
+- If `value` has no counterpart, `removeSerializableCounterpart` does nothing.
+- Passing a [SerializableRef](/docs/memory/isSerializableRef) does nothing.
+- On the Web `removeSerializableCounterpart` does nothing.

@@ -6,22 +6,22 @@ import {
   serializableMappingFlag,
 } from './serializableMappingCache';
 
-export function setSerializableReplacement(
+export function setSerializableCounterpart(
   value: object,
-  replacement: unknown
+  counterpart: unknown
 ): void {
-  const serializableRef = isSerializableRef(replacement)
-    ? replacement
-    : createSerializable(replacement);
+  const serializableRef = isSerializableRef(counterpart)
+    ? counterpart
+    : createSerializable(counterpart);
   serializableMappingCache.set(value, serializableRef);
   serializableMappingCache.set(serializableRef);
 }
 
-export function hasSerializableReplacement(value: object): boolean {
+export function hasSerializableCounterpart(value: object): boolean {
   return serializableMappingCache.get(value) !== undefined;
 }
 
-export function removeSerializableReplacement(value: object): void {
+export function removeSerializableCounterpart(value: object): void {
   if (serializableMappingCache.get(value) !== serializableMappingFlag) {
     serializableMappingCache.delete(value);
   }

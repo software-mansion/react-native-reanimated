@@ -35,10 +35,10 @@ export {
   registerCustomSerializable,
 } from './memory/serializable';
 export {
-  hasSerializableReplacement,
-  removeSerializableReplacement,
-  setSerializableReplacement,
-} from './memory/serializableReplacement';
+  hasSerializableCounterpart,
+  removeSerializableCounterpart,
+  setSerializableCounterpart,
+} from './memory/serializableCounterpart';
 export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {

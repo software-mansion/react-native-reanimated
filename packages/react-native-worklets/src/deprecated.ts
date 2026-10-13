@@ -29,13 +29,13 @@ export const makeShareableCloneRecursive: MakeShareableClone =
 export const isShareableRef = isSerializableRef;
 
 /**
- * @deprecated Use `setSerializableReplacement` and `hasSerializableReplacement`
+ * @deprecated Use `setSerializableCounterpart` and `hasSerializableCounterpart`
  *   instead.
  */
 export const serializableMappingCache = mappingCache;
 
 /**
- * @deprecated Use `setSerializableReplacement` and `hasSerializableReplacement`
+ * @deprecated Use `setSerializableCounterpart` and `hasSerializableCounterpart`
  *   instead.
  */
 export const shareableMappingCache = mappingCache;
