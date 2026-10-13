@@ -664,9 +664,21 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  // Read before taking the registry lock, as the commit hook takes it while a
+  // commit holds the shadow tree.
+  std::unordered_map<SurfaceId, RootShadowNode::Shared> rootShadowNodes;
+  uiManager_->getShadowTreeRegistry().enumerate([&rootShadowNodes](const ShadowTree &shadowTree, bool &) {
+    rootShadowNodes.emplace(shadowTree.getSurfaceId(), shadowTree.getCurrentRevision().rootShadowNode);
+  });
+  const auto isMounted = [&rootShadowNodes](const ShadowNodeFamily &shadowNodeFamily) {
+    const auto it = rootShadowNodes.find(shadowNodeFamily.getSurfaceId());
+    return it != rootShadowNodes.end() && !shadowNodeFamily.getAncestors(*it->second).empty();
+  };
+
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, isMounted);
 }
 
 void ReanimatedModuleProxy::markSettledUpdateCommitted(

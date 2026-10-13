@@ -65,7 +65,10 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
+    jsi::Runtime &rt,
+    const double settledTimestamp,
+    const std::function<bool(const ShadowNodeFamily &)> &isMounted) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   struct CollectedUpdate {
@@ -74,6 +77,7 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
     uint64_t revision;
   };
   std::vector<CollectedUpdate> updates;
+  std::vector<Tag> unmountedTags;
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
@@ -95,6 +99,13 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
       continue;
     }
     const bool isSettled = timestampIt->second < settledTimestamp;
+    const auto &shadowNodeFamily = it->second.first;
+    if (isSettled && (!shadowNodeFamily || !isMounted(*shadowNodeFamily))) {
+      // The view can't confirm a commit anymore.
+      unmountedTags.push_back(viewTag);
+      ++it;
+      continue;
+    }
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
     const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
     if (isSettled || isInvalidated) {
@@ -123,6 +134,10 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps.get()));
     item.setProperty(rt, "revision", static_cast<double>(revision));
     array.setValueAtIndex(rt, i++, item);
+  }
+
+  for (const auto tag : unmountedTags) {
+    removeTag(tag);
   }
 
   return jsi::Value(rt, array);

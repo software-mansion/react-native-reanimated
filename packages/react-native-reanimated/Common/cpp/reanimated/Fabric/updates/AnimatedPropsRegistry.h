@@ -5,6 +5,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <cstdint>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -17,8 +18,12 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
   /// Settled updates are returned until `markSettledUpdateCommitted` confirms
-  /// them. Also evicts entries whose settled values React has committed.
-  jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
+  /// them. Also evicts entries whose settled values React has committed and
+  /// settled entries of views that are no longer mounted.
+  jsi::Value collectSettledUpdates(
+      jsi::Runtime &rt,
+      double settledTimestamp,
+      const std::function<bool(const ShadowNodeFamily &)> &isMounted);
 
   void markSettledUpdateCommitted(Tag tag, uint64_t revision);
 
