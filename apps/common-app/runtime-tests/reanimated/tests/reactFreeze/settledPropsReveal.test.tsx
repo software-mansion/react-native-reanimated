@@ -21,6 +21,7 @@ import {
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { leakingRegistries, NO_LEAKS } from './fixture';
 
 const BOX_REF = 'settledRevealBox';
 const STALE_OPACITY = 1;
@@ -165,13 +166,56 @@ describe('settled props across a Suspense reveal', () => {
     await wait(FROZEN_MS);
     await render(<Fixture frozen={false} />);
 
-    await wait(FROZEN_MS);
+    // The registry no longer backs the value, so the next commit takes it from
+    // React alone.
+    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
     await render(<Fixture frozen={false} label="re-rendered box" />);
     await waitForFrames(2);
     expect(await readShadowTreeOpacity()).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
     );
+  });
+
+  test('a mounted view drops its settled value once React commits it', async () => {
+    if (!getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')) {
+      return;
+    }
+
+    await render(<Fixture frozen={false} />);
+    await waitForFrames(2);
+
+    probe.opacity!.set(CURRENT_OPACITY);
+    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
+
+    await render(<Fixture frozen={false} label="re-rendered box" />);
+    await waitForFrames(2);
+    expect(await readShadowTreeOpacity()).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+  });
+
+  test('a view unmounted while frozen leaves no settled value behind', async () => {
+    if (!getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')) {
+      return;
+    }
+
+    await render(<Fixture frozen={false} />);
+    await waitForFrames(2);
+
+    probe.opacity!.set(CURRENT_OPACITY);
+    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+
+    // Long enough for the settled value to be offered and left unconfirmed.
+    await render(<Fixture frozen />);
+    await wait(FROZEN_MS);
+    await render(null);
+
+    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
   });
 });
 
