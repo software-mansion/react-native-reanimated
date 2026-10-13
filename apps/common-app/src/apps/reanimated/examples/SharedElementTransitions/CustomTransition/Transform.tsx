@@ -29,15 +29,14 @@ type Navigate = (route: string) => void;
 export function TransformSourceSection({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>transform (operation list)</Text>
+      <Text style={styles.heading}>transform</Text>
       <Text style={styles.body}>
-        Iterates values.targetTransform — each entry is one operation ({'{'}
-        rotate{'}'}, {'{'}scale{'}'}, ...). Source has no transform, target has
-        rotate 45° + scale 1.2.
+        Springs values.targetTransform.matrix. Source has no transform, target
+        has rotate 45° + scale 1.2. The matrix is decomposed, so rotation and
+        scale animate separately.
       </Text>
       <Text style={styles.body}>
-        Expected: spring-rotates and scales smoothly with no mid-animation
-        wobble (unlike the deprecated transformMatrix path).
+        Expected: the box rotates and scales smoothly without skewing.
       </Text>
       <Animated.View
         style={styles.greenBoxSource}
@@ -45,7 +44,7 @@ export function TransformSourceSection({ navigate }: { navigate: Navigate }) {
         sharedTransitionStyle={TRANSFORM_TRANSITION}
       />
       <Button
-        title='Open transform target screen'
+        title="Open transform target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -67,7 +66,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={TRANSFORM_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
