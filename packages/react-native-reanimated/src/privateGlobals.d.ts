@@ -12,6 +12,7 @@ import type {
 } from './commonTypes';
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import type { HingeSensor } from './HingeSensor';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
@@ -60,6 +61,7 @@ declare global {
   var __reanimatedLoggerConfig: LoggerConfigInternal | undefined;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
+  var __hingeSensor: HingeSensor;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;

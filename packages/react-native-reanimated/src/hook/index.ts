@@ -4,6 +4,7 @@ export type {
   ReanimatedEvent,
   ReanimatedScrollEvent as ScrollEvent,
 } from './commonTypes';
+export { useAnimatedHinge } from './useAnimatedHinge';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
 export { useAnimatedProps } from './useAnimatedProps';
 export { useAnimatedReaction } from './useAnimatedReaction';

@@ -16,6 +16,7 @@ import type {
   SensorValueMap,
   SharedValue,
 } from './commonTypes';
+import { HingeSensor } from './HingeSensor';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
@@ -72,6 +73,13 @@ export function getViewProp<T>(
       }
     );
   });
+}
+
+export function getHingeSensor(): HingeSensor {
+  if (!globalThis.__hingeSensor) {
+    globalThis.__hingeSensor = new HingeSensor();
+  }
+  return globalThis.__hingeSensor;
 }
 
 function getSensorContainer(): SensorContainer {
@@ -160,13 +168,6 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function isSensorAvailable(sensorType: SensorType): boolean {
   const sensorContainer = getSensorContainer();
   return sensorContainer.isSensorAvailable(sensorType);
-}
-
-export function subscribeToSensorAvailability(
-  listener: () => void
-): () => void {
-  const sensorContainer = getSensorContainer();
-  return sensorContainer.subscribeToSensorAvailability(listener);
 }
 
 export function registerSensor<T extends SensorType>(

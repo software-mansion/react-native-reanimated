@@ -24,7 +24,6 @@ import {
   initializeSensor,
   isSensorAvailable,
   registerSensor,
-  subscribeToSensorAvailability,
   unregisterSensor,
 } from '../core';
 
@@ -101,14 +100,14 @@ function adjustDataToInterfaceOrientation(
       return adjustVectorToInterfaceOrientation(data as Value3D);
     case SensorType.ROTATION:
       return adjustRotationToInterfaceOrientation(data as ValueRotation);
-    case SensorType.HINGE:
-      return data;
   }
 }
 
 const NOOP = () => {
   // NOOP
 };
+
+const subscribeToSensorAvailability = () => NOOP;
 
 const getServerSensorAvailability = () => false;
 
@@ -117,8 +116,7 @@ const getServerSensorAvailability = () => false;
  *
  * @param sensorType - Type of the sensor to use. Configured with
  *   {@link SensorType} enum.
- * @param config - The sensor configuration - {@link SensorConfig}. Not accepted
- *   for {@link SensorType.HINGE}, which has no configurable option.
+ * @param config - The sensor configuration - {@link SensorConfig}.
  * @returns An object containing the sensor measurements [shared
  *   value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value)
  *   and a function to unregister the sensor
@@ -126,7 +124,7 @@ const getServerSensorAvailability = () => false;
  */
 export function useAnimatedSensor<T extends SensorType>(
   sensorType: T,
-  userConfig?: T extends SensorType.HINGE ? never : Partial<SensorConfig>
+  userConfig?: Partial<SensorConfig>
 ): AnimatedSensor<SensorValueMap[T]> {
   const {
     interval = 'auto',
@@ -155,35 +153,9 @@ export function useAnimatedSensor<T extends SensorType>(
     [sensorType, config]
   );
 
-  const registrationRef = useRef({
-    sensorType,
-    config,
-    unregister: NOOP,
-    isUnregisteredByUser: false,
-  });
+  const registrationRef = useRef({ sensorType, config, unregister: NOOP });
 
   useEffect(() => {
-    const previousRegistration = registrationRef.current;
-    if (
-      previousRegistration.isUnregisteredByUser &&
-      previousRegistration.sensorType === sensorType &&
-      previousRegistration.config === config
-    ) {
-      return;
-    }
-
-    const registration = {
-      sensorType,
-      config,
-      unregister: NOOP,
-      isUnregisteredByUser: false,
-    };
-    registrationRef.current = registration;
-
-    if (!isAvailable) {
-      return;
-    }
-
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
       sensor.value = adjustToInterfaceOrientation
@@ -195,15 +167,16 @@ export function useAnimatedSensor<T extends SensorType>(
     });
 
     let isRegistered = id !== -1;
-    registration.unregister = () => {
+    const unregister = () => {
       if (isRegistered) {
         isRegistered = false;
         unregisterSensor(id);
       }
     };
+    registrationRef.current = { sensorType, config, unregister };
 
-    return registration.unregister;
-  }, [sensorType, config, sensor, adjustToInterfaceOrientation, isAvailable]);
+    return unregister;
+  }, [sensorType, config, sensor, adjustToInterfaceOrientation]);
 
   return useMemo(
     () => ({
@@ -216,7 +189,6 @@ export function useAnimatedSensor<T extends SensorType>(
           registration.sensorType === sensorType &&
           registration.config === config
         ) {
-          registration.isUnregisteredByUser = true;
           registration.unregister();
         }
       },

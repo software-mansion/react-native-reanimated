@@ -3,9 +3,8 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
   HingeStatus,
   interpolateColor,
-  SensorType,
+  useAnimatedHinge,
   useAnimatedProps,
-  useAnimatedSensor,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
@@ -21,25 +20,25 @@ const STATUS_NAMES = {
 };
 
 export default function AnimatedHingeExample() {
-  const hinge = useAnimatedSensor(SensorType.HINGE);
+  const { hinge, isAvailable } = useAnimatedHinge();
 
   const leftStyle = useAnimatedStyle(() => ({
     transform: [
       { perspective: 600 },
-      { rotateY: `${(Math.PI - hinge.sensor.value.angle) / 2}rad` },
+      { rotateY: `${(Math.PI - hinge.value.angle) / 2}rad` },
     ],
   }));
 
   const rightStyle = useAnimatedStyle(() => ({
     transform: [
       { perspective: 600 },
-      { rotateY: `${-(Math.PI - hinge.sensor.value.angle) / 2}rad` },
+      { rotateY: `${-(Math.PI - hinge.value.angle) / 2}rad` },
     ],
   }));
 
   const containerStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
-      hinge.sensor.value.angle,
+      hinge.value.angle,
       [0, Math.PI],
       ['#1b1b3a', '#fdf6e3'],
       'LAB'
@@ -47,17 +46,17 @@ export default function AnimatedHingeExample() {
   }));
 
   const radiansProps = useAnimatedProps(() => {
-    const text = `${hinge.sensor.value.angle.toFixed(4)} rad`;
+    const text = `${hinge.value.angle.toFixed(4)} rad`;
     return { text, defaultValue: text };
   });
 
   const degreesProps = useAnimatedProps(() => {
-    const text = `${((hinge.sensor.value.angle * 180) / Math.PI).toFixed(1)}°`;
+    const text = `${((hinge.value.angle * 180) / Math.PI).toFixed(1)}°`;
     return { text, defaultValue: text };
   });
 
   const statusProps = useAnimatedProps(() => {
-    const text = STATUS_NAMES[hinge.sensor.value.status];
+    const text = STATUS_NAMES[hinge.value.status];
     return { text, defaultValue: text };
   });
 
@@ -74,7 +73,7 @@ export default function AnimatedHingeExample() {
         <Animated.View style={[styles.page, styles.right, rightStyle]} />
       </View>
       <Text style={styles.label}>isAvailable</Text>
-      <Text style={styles.value}>{String(hinge.isAvailable)}</Text>
+      <Text style={styles.value}>{String(isAvailable)}</Text>
       <Text style={styles.label}>angle</Text>
       <AnimatedTextInput
         editable={false}

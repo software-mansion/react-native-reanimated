@@ -515,12 +515,12 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
   AnimatedHingeExample: {
     icon: '📖',
-    title: 'useAnimatedSensor (hinge)',
+    title: 'useAnimatedHinge',
     screen: AnimatedHingeExample,
   },
   AnimatedHingeHorseExample: {
     icon: '🐎',
-    title: 'useAnimatedSensor (hinge horse)',
+    title: 'useAnimatedHinge (horse)',
     screen: AnimatedHingeHorseExample,
   },
   FrameCallbackExample: {

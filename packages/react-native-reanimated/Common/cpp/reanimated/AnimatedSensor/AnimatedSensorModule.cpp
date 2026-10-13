@@ -45,9 +45,6 @@ jsi::Value AnimatedSensorModule::registerSensor(
         }
 
         jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
-        // TODO: timestamp should be provided by the platform implementation
-        // such that the native side has a chance of providing a true event
-        // timestamp
         jsi::Object value(uiRuntime);
         switch (sensorType) {
           case SensorType::ACCELEROMETER:
@@ -60,6 +57,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
             value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
             break;
           case SensorType::ROTATION_VECTOR:
+            // TODO: timestamp should be provided by the platform implementation
+            // such that the native side has a chance of providing a true event
+            // timestamp
             value.setProperty(uiRuntime, "qx", newValues[0]);
             value.setProperty(uiRuntime, "qy", newValues[1]);
             value.setProperty(uiRuntime, "qz", newValues[2]);
@@ -99,6 +99,11 @@ void AnimatedSensorModule::unregisterAllSensors() {
 void AnimatedSensorModule::setAvailabilityHandler(jsi::Runtime &rnRuntime, const jsi::Value &handler) {
   std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
   availabilityHandler_ = std::make_shared<jsi::Function>(handler.asObject(rnRuntime).asFunction(rnRuntime));
+}
+
+void AnimatedSensorModule::removeAvailabilityHandler() {
+  std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+  availabilityHandler_.reset();
 }
 
 void AnimatedSensorModule::notifyAvailabilityChanged(int sensorType, bool isAvailable) {

@@ -7,6 +7,9 @@
 
 #import <reanimated/apple/sensor/ReanimatedSensorType.h>
 
+/// Posted on the main thread when the first hinge reading arrives.
+extern NSNotificationName const ReanimatedHingeDidBecomeAvailableNotification;
+
 @interface ReanimatedSensor : NSObject {
   ReanimatedSensorType _sensorType;
   double _interval;
@@ -14,8 +17,6 @@
   int _referenceFrame;
 #if !TARGET_OS_TV && !TARGET_OS_OSX
   CMMotionManager *_motionManager;
-  id<UIInteraction> _hingeInteraction;
-  bool _hingeCancelled;
 #endif
   void (^_setter)(double[], int);
 }

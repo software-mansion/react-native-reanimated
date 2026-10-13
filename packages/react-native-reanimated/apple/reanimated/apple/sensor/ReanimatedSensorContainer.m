@@ -1,5 +1,4 @@
 #import <Foundation/Foundation.h>
-#import <reanimated/apple/sensor/ReanimatedHingeProbe.h>
 #import <reanimated/apple/sensor/ReanimatedSensor.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
@@ -13,8 +12,8 @@ static NSNumber *_nextSensorId = nil;
   _sensors = [[NSMutableDictionary alloc] init];
   _nextSensorId = @0;
   [NSNotificationCenter.defaultCenter addObserver:self
-                                         selector:@selector(hingeProbeDidFindHinge)
-                                             name:ReanimatedHingeProbeDidFindHingeNotification
+                                         selector:@selector(hingeDidBecomeAvailable)
+                                             name:ReanimatedHingeDidBecomeAvailableNotification
                                            object:nil];
   return self;
 }
@@ -58,7 +57,7 @@ static NSNumber *_nextSensorId = nil;
   self.availabilityListener = listener;
 }
 
-- (void)hingeProbeDidFindHinge
+- (void)hingeDidBecomeAvailable
 {
   ReanimatedSensorAvailabilityListener listener = self.availabilityListener;
   if (listener != nil) {

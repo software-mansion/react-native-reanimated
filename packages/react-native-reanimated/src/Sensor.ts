@@ -7,7 +7,7 @@ import type {
   SensorValueMap,
   SharedValue,
 } from './commonTypes';
-import { HingeStatus, SensorType } from './commonTypes';
+import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -29,8 +29,6 @@ function createInitialSensorValue(sensorType: SensorType): SensorValue {
         roll: 0,
         interfaceOrientation: 0,
       };
-    case SensorType.HINGE:
-      return { angle: 0, status: HingeStatus.UNKNOWN };
   }
 }
 
@@ -51,21 +49,22 @@ export default class Sensor<T extends SensorType = SensorType> {
 
   register(eventHandler: SerializableRef<(data: SensorValue) => void>) {
     const config = this.config;
-    const sensorId = ReanimatedModule.registerSensor(
-      this.sensorType,
+    const sensorType = this.sensorType;
+    this.sensorId = ReanimatedModule.registerSensor(
+      sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
       eventHandler as SerializableRef<WorkletFunction>
     );
-    if (sensorId === -1) {
-      return false;
-    }
-    this.sensorId = sensorId;
-    return true;
+    return this.sensorId !== -1;
   }
 
   isRunning() {
-    return this.sensorId !== null;
+    return this.sensorId !== -1 && this.sensorId !== null;
+  }
+
+  isAvailable() {
+    return this.sensorId !== -1;
   }
 
   getSharedValue() {
@@ -73,9 +72,9 @@ export default class Sensor<T extends SensorType = SensorType> {
   }
 
   unregister() {
-    if (this.sensorId !== null) {
+    if (this.sensorId !== null && this.sensorId !== -1) {
       ReanimatedModule.unregisterSensor(this.sensorId);
-      this.sensorId = null;
     }
+    this.sensorId = null;
   }
 }

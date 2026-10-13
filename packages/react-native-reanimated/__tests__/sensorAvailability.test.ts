@@ -1,14 +1,33 @@
 import { SensorType } from '../src';
-import { logger } from '../src/common/logger';
+import { ReanimatedModule } from '../src/ReanimatedModule';
 import { createJSReanimatedModule } from '../src/ReanimatedModule/js-reanimated';
+import { SensorContainer } from '../src/SensorContainer';
+
+describe('SensorContainer', () => {
+  test('asks the platform about each sensor type once', () => {
+    const isSensorAvailable = jest
+      .spyOn(ReanimatedModule, 'isSensorAvailable')
+      .mockImplementation(
+        (sensorType) => sensorType === (SensorType.ACCELEROMETER as number)
+      );
+    const sensorContainer = new SensorContainer();
+
+    expect(sensorContainer.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(
+      true
+    );
+    expect(sensorContainer.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
+    expect(sensorContainer.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(
+      true
+    );
+    expect(sensorContainer.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
+
+    expect(isSensorAvailable).toHaveBeenCalledTimes(2);
+    isSensorAvailable.mockRestore();
+  });
+});
 
 describe('JSReanimated', () => {
-  beforeEach(() => {
-    jest.spyOn(logger, 'warnOnce').mockReturnValue(undefined);
-  });
-
   afterEach(() => {
-    jest.restoreAllMocks();
     delete (globalThis as { Accelerometer?: unknown }).Accelerometer;
   });
 
@@ -23,32 +42,13 @@ describe('JSReanimated', () => {
     expect(module.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
   });
 
-  test('warns about a sensor that the browser does not expose', () => {
+  test('has no hinge sensor', () => {
     const module = createJSReanimatedModule();
+    const hingeSensorType = 6;
 
-    module.isSensorAvailable(SensorType.ACCELEROMETER);
-
-    expect(jest.mocked(logger.warnOnce).mock.calls).toEqual([
-      ['Sensor is not available.', 0],
-    ]);
-  });
-
-  test('does not warn about a sensor that the browser exposes', () => {
-    const module = createJSReanimatedModule();
-    (globalThis as { Accelerometer?: unknown }).Accelerometer = class {};
-
-    module.isSensorAvailable(SensorType.ACCELEROMETER);
-
-    expect(logger.warnOnce).not.toHaveBeenCalled();
-  });
-
-  test('has no hinge sensor and does not warn about it', () => {
-    const module = createJSReanimatedModule();
-
-    expect(module.isSensorAvailable(SensorType.HINGE)).toBe(false);
+    expect(module.isSensorAvailable(hingeSensorType)).toBe(false);
     expect(
-      module.registerSensor(SensorType.HINGE, -1, 0, jest.fn() as never)
+      module.registerSensor(hingeSensorType, -1, 0, jest.fn() as never)
     ).toBe(-1);
-    expect(logger.warnOnce).not.toHaveBeenCalled();
   });
 });

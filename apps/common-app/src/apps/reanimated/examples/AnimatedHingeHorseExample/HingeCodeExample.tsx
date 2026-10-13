@@ -9,13 +9,10 @@ import Animated, {
 import { BRAND_NAVY } from './colors';
 import { highlightCode } from './highlightCode';
 
-const CODE = `const hinge = useAnimatedSensor(
-  SensorType.HINGE
-);
+const CODE = `const { hinge } = useAnimatedHinge();
 
 const style = useAnimatedStyle(() => {
-  const { angle, status } =
-    hinge.sensor.value;
+  const { angle, status } = hinge.value;
 
   // use hinge values as shared values
 });`;

@@ -49,6 +49,7 @@ class AnimatedSensorModule {
   void unregisterSensor(const jsi::Value &sensorId);
   void unregisterAllSensors();
   void setAvailabilityHandler(jsi::Runtime &rnRuntime, const jsi::Value &handler);
+  void removeAvailabilityHandler();
   void notifyAvailabilityChanged(int sensorType, bool isAvailable);
 };
 

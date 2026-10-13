@@ -328,7 +328,6 @@ export enum SensorType {
   GRAVITY = 3,
   MAGNETIC_FIELD = 4,
   ROTATION = 5,
-  HINGE = 6,
 }
 
 /**
@@ -361,6 +360,16 @@ export type AnimatedSensor<T extends SensorValue> = {
   unregister: () => void;
   isAvailable: boolean;
   config: SensorConfig;
+};
+
+export type AnimatedHinge = {
+  hinge: SharedValue<ValueHinge>;
+  unregister: () => void;
+  /**
+   * On iOS it is `false` until the first hinge reading arrives, because the
+   * system has no other way to tell that the device has a hinge.
+   */
+  isAvailable: boolean;
 };
 
 /**
@@ -405,7 +414,6 @@ export type SensorValueMap = {
   [SensorType.GRAVITY]: Value3D;
   [SensorType.MAGNETIC_FIELD]: Value3D;
   [SensorType.ROTATION]: ValueRotation;
-  [SensorType.HINGE]: ValueHinge;
 };
 
 export type SensorValue = SensorValueMap[SensorType];

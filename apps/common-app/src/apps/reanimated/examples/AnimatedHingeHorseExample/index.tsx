@@ -4,10 +4,9 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
-  SensorType,
+  useAnimatedHinge,
   useAnimatedProps,
   useAnimatedReaction,
-  useAnimatedSensor,
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -26,7 +25,7 @@ const CODE_EXAMPLE_MAX_ANGLE = Math.PI / 4;
 
 export default function AnimatedHingeHorseExample() {
   const navigation = useNavigation();
-  const hinge = useAnimatedSensor(SensorType.HINGE);
+  const { hinge } = useAnimatedHinge();
   const hingeTravel = useSharedValue(0);
   const [runsOnlyForward, setRunsOnlyForward] = useState(true);
 
@@ -35,7 +34,7 @@ export default function AnimatedHingeHorseExample() {
   }, [navigation]);
 
   useAnimatedReaction(
-    () => hinge.sensor.value.angle,
+    () => hinge.value.angle,
     (angle, previousAngle) => {
       if (previousAngle !== null) {
         hingeTravel.value += Math.abs(angle - previousAngle);
@@ -47,7 +46,7 @@ export default function AnimatedHingeHorseExample() {
     const hingeDistance = runsOnlyForward
       ? hingeTravel.value
       : interpolate(
-          hinge.sensor.value.angle,
+          hinge.value.angle,
           [GALLOP_START_ANGLE, GALLOP_END_ANGLE],
           [0, GALLOP_END_ANGLE - GALLOP_START_ANGLE],
           Extrapolation.CLAMP
@@ -58,11 +57,11 @@ export default function AnimatedHingeHorseExample() {
   });
 
   const isCodeExampleVisible = useDerivedValue(
-    () => hinge.sensor.value.angle < CODE_EXAMPLE_MAX_ANGLE
+    () => hinge.value.angle < CODE_EXAMPLE_MAX_ANGLE
   );
 
   const angleProps = useAnimatedProps(() => {
-    const text = `${((hinge.sensor.value.angle * 180) / Math.PI).toFixed(1)}°`;
+    const text = `${((hinge.value.angle * 180) / Math.PI).toFixed(1)}°`;
     return { text, defaultValue: text };
   });
 

@@ -556,6 +556,7 @@ void ReanimatedModuleProxy::setSensorAvailabilityHandler(jsi::Runtime &rt, const
 
 void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
+  animatedSensorModule_.removeAvailabilityHandler();
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {

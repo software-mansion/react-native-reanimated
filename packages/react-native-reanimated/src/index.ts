@@ -55,6 +55,7 @@ export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
+  AnimatedHinge,
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
   AnimatedSensor,
@@ -136,6 +137,7 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
+  useAnimatedHinge,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,
