@@ -6,7 +6,7 @@ sidebar_position: 42 # Use alphabetical order
   # setSerializableCounterpart
 </Badges>
 
-When Worklets [serializes](/docs/memory/serializable) an object, for example when a [worklet](/docs/fundamentals/glossary#worklet) captures it in its closure, it sends a serialized counterpart of that object to the other Runtime. Worklets remembers the counterpart for each object. `setSerializableCounterpart` sets that counterpart yourself, so the other Runtime receives your value instead of a copy of the object.
+When Worklets [serializes](/docs/memory/serializable) an object, for example when a [worklet](/docs/fundamentals/glossary#worklet) captures it in its closure, it sends a serialized counterpart of that object to the other Runtime. Worklets remembers the counterpart for each object. `setSerializableCounterpart` lets you set it manually.
 
 ## Reference
 
