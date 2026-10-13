@@ -394,6 +394,7 @@ export type ShadowNodeWrapper = {
 export type SettledUpdate = {
   viewTag: number;
   styleProps: StyleProps | null;
+  revision: number;
 };
 
 export enum KeyboardState {

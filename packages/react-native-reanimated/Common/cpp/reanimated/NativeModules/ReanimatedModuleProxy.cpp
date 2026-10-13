@@ -669,6 +669,19 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
 }
 
+void ReanimatedModuleProxy::markSettledUpdateCommitted(
+    jsi::Runtime &,
+    const jsi::Value &viewTag,
+    const jsi::Value &revision) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "markSettledUpdateCommitted requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  auto lock = updatesRegistryManager_->lock();
+  animatedPropsRegistry_->markSettledUpdateCommitted(
+      static_cast<Tag>(viewTag.asNumber()), static_cast<uint64_t>(revision.asNumber()));
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -1684,6 +1697,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     }
     return strongThis->getSettledUpdates(rt);
   });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "markSettledUpdateCommitted",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->markSettledUpdateCommitted(rt, at<0>(args), at<1>(args));
+      });
 
   addMethod<2>(
       rt,

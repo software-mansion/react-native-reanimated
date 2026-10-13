@@ -244,6 +244,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#reanimatedModuleProxy.getSettledUpdates();
   }
 
+  markSettledUpdateCommitted(viewTag: number, revision: number) {
+    this.#reanimatedModuleProxy.markSettledUpdateCommitted(viewTag, revision);
+  }
+
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig

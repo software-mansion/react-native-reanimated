@@ -4,6 +4,7 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -15,14 +16,20 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
-  /// Also evicts entries that have already been synced to React — by the time
-  /// of the next call, the corresponding `settledProps` state is guaranteed to
-  /// be committed, so the registry entries are redundant.
+  /// Settled updates are returned until `markSettledUpdateCommitted` confirms
+  /// them. Also evicts entries whose settled values React has committed.
   jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
+
+  void markSettledUpdateCommitted(Tag tag, uint64_t revision);
 
  private:
   std::unordered_map<Tag, double> timestampMap_;
-  // Tags whose latest values have already been pushed to React `settledProps`.
+  std::unordered_map<Tag, uint64_t> revisionMap_;
+  uint64_t lastRevision_ = 0;
+  // React may defer the commit indefinitely (e.g. in a suspended subtree), so
+  // these entries must stay in the registry until the commit is confirmed.
+  std::unordered_map<Tag, uint64_t> awaitingCommitRevisions_;
+  // Tags whose latest values have been committed to React `settledProps`.
   // Intentionally retained after eviction to detect re-animation staleness.
   std::unordered_set<Tag> syncedTags_;
   // Tags that were synced to React but received a fresh worklet update since;

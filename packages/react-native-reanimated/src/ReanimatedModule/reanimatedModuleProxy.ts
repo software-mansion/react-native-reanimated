@@ -99,6 +99,8 @@ export interface ReanimatedModuleProxy {
 
   getSettledUpdates(): SettledUpdate[];
 
+  markSettledUpdateCommitted(viewTag: number, revision: number): void;
+
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig

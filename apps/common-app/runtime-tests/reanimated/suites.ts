@@ -95,6 +95,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/reactFreeze/propDriven.test');
       require('./tests/reactFreeze/nativeStack.test');
+      require('./tests/reactFreeze/settledPropsReveal.test');
     },
   },
   {

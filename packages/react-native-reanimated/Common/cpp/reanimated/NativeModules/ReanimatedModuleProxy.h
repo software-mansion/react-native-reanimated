@@ -156,6 +156,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
+  void markSettledUpdateCommitted(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &revision);
 
   void dispatchCommand(
       jsi::Runtime &rt,
