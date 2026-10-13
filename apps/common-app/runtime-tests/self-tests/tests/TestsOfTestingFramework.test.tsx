@@ -331,14 +331,17 @@ describe('Tests of Test Framework', () => {
     expect(await component.getAnimatedStyle('opacity')).toBe(1);
   });
 
-  test('getUpdates - a second read sees updates recorded after the first - ✅', async () => {
+  test('getUpdates and getNativeSnapshots - a second read sees updates recorded after the first - ✅', async () => {
     const updates = await recordAnimationUpdates();
     await render(<SingleAnimatedView />);
     await wait(RECORDED_ANIMATION_MS / 5);
     const firstCount = (await updates.getUpdates()).length;
+    const firstNativeCount = (await updates.getNativeSnapshots()).length;
     await wait(RECORDED_ANIMATION_MS);
     const secondCount = (await updates.getUpdates()).length;
+    const secondNativeCount = (await updates.getNativeSnapshots()).length;
     expect(secondCount > firstCount).toBe(true);
+    expect(secondNativeCount > firstNativeCount).toBe(true);
   });
 
   test('getUpdates - reports that nothing was recorded - ✅', async () => {
