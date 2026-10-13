@@ -28,8 +28,7 @@ function formatHingeCode(degrees: number) {
   return `
   {
     "angle": ${angle.toFixed(4)}, // ${degrees}°
-    "status": ${HINGE_STATUS[status]}, // HingeStatus.${status}
-    "interfaceOrientation": 0
+    "status": ${HINGE_STATUS[status]} // HingeStatus.${status}
   }
   `;
 }
