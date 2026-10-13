@@ -70,8 +70,8 @@ function getTheme(theme: boolean, disabled: boolean) {
         ),
         borderRadius: getValue(
           progress,
-          values.targetBorderRadius,
-          values.currentBorderRadius
+          values.targetBorderRadius as number,
+          values.currentBorderRadius as number
         ),
       };
     })

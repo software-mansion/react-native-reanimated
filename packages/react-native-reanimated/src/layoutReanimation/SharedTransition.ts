@@ -1,10 +1,20 @@
 'use strict';
-import { logger } from '../common';
+import { defineAnimation } from '../animation';
+import type { AffineMatrixFlat } from '../animation/transformationMatrix/matrixUtils';
+import {
+  decomposeMatrixIntoMatricesAndAngles,
+  interpolateMatrix,
+} from '../animation/transformationMatrix/matrixUtils';
+import { processColor, processColorsInProps } from '../common';
 import type {
+  Animation,
+  AnimationObject,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   StyleProps,
+  Timestamp,
 } from '../commonTypes';
+import { interpolateColor } from '../interpolateColor';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
 
@@ -15,49 +25,87 @@ import { ComplexAnimationBuilder } from './animationBuilder';
  */
 export enum SharedTransitionType {
   /**
-   * Use the regular animation for all transitions (screen transitions and swipe
-   * back gesture).
+   * Use the regular animation for screen transitions and the progress-based
+   * animation for transitions that follow the screen transition progress (iOS
+   * back navigation).
    */
   ANIMATION = 'animation',
   /**
-   * Use the progress-based animation for all transitions (screen transitions
-   * and swipe back gesture).
+   * Use the progress-based animation for all transitions. Screen transitions
+   * drive the progress with the builder's animation.
    */
   PROGRESS_ANIMATION = 'progressAnimation',
 }
 
-/** Values passed to shared transition animation worklets. */
+type BoxShadowValue = {
+  offsetX: number;
+  offsetY: number;
+  blurRadius: number;
+  spreadDistance: number;
+  color: string;
+};
+
+type SharedTransitionSnapshotValues = {
+  OriginX: number;
+  OriginY: number;
+  /** The same as `OriginX`; the transition runs in window coordinates. */
+  GlobalOriginX: number;
+  /** The same as `OriginY`; the transition runs in window coordinates. */
+  GlobalOriginY: number;
+  Width: number;
+  Height: number;
+  Opacity: number;
+  BackgroundColor: string;
+  Transform: { matrix: number[] };
+  /**
+   * @deprecated Reanimated 3 compatibility. A flat 16-element column-major 4×4
+   *   matrix. Read `Transform.matrix` instead.
+   */
+  TransformMatrix: number[];
+  TransformOrigin: [number, number, number];
+  BorderRadius: number | string;
+  BorderTopLeftRadius?: number | string;
+  BorderTopRightRadius?: number | string;
+  BorderBottomLeftRadius?: number | string;
+  BorderBottomRightRadius?: number | string;
+  BorderTopStartRadius?: number | string;
+  BorderTopEndRadius?: number | string;
+  BorderBottomStartRadius?: number | string;
+  BorderBottomEndRadius?: number | string;
+  BorderStartStartRadius?: number | string;
+  BorderStartEndRadius?: number | string;
+  BorderEndStartRadius?: number | string;
+  BorderEndEndRadius?: number | string;
+  BorderWidth: number;
+  BorderLeftWidth?: number;
+  BorderRightWidth?: number;
+  BorderTopWidth?: number;
+  BorderBottomWidth?: number;
+  BorderColor: string;
+  BorderLeftColor?: string;
+  BorderRightColor?: string;
+  BorderTopColor?: string;
+  BorderBottomColor?: string;
+  BoxShadow: BoxShadowValue[];
+  ShadowColor: string;
+  ShadowOffset: { width: number; height: number };
+  ShadowOpacity: number;
+  ShadowRadius: number;
+  /** Android only. */
+  Elevation?: number;
+};
+
+/**
+ * Values passed to shared transition animation worklets: the snapshot of the
+ * source view (`current*`), the snapshot of the target view (`target*`) and the
+ * window size. Per-side and per-corner border values are present only when one
+ * of the views sets them.
+ */
 export type SharedTransitionAnimationsValues = {
-  targetOriginX: number;
-  targetOriginY: number;
-  targetGlobalOriginX: number;
-  targetGlobalOriginY: number;
-  targetWidth: number;
-  targetHeight: number;
-  targetBorderRadius: number;
-  targetOpacity: number;
-  targetBackgroundColor: string;
-  targetTransform: { matrix: number[] };
-  /**
-   * @deprecated Reanimated v3 compatibility. A flat 16-element column-major
-   *   4×4 matrix. New code should read `targetTransform.matrix` instead
-   */
-  targetTransformMatrix: number[];
-  currentOriginX: number;
-  currentOriginY: number;
-  currentGlobalOriginX: number;
-  currentGlobalOriginY: number;
-  currentWidth: number;
-  currentHeight: number;
-  currentBorderRadius: number;
-  currentOpacity: number;
-  currentBackgroundColor: string;
-  currentTransform: { matrix: number[] };
-  /**
-   * @deprecated Reanimated v3 compatibility. Use `currentTransform.matrix`
-   *   instead.
-   */
-  currentTransformMatrix: number[];
+  [K in keyof SharedTransitionSnapshotValues as `current${K}`]: SharedTransitionSnapshotValues[K];
+} & {
+  [K in keyof SharedTransitionSnapshotValues as `target${K}`]: SharedTransitionSnapshotValues[K];
+} & {
   windowWidth: number;
   windowHeight: number;
 };
@@ -81,34 +129,242 @@ export type ProgressSharedTransitionAnimation = (
   progress: number
 ) => StyleProps;
 
-function mapCurrentValuesToInitialStyle(
+type ChangedStyle = { key: string; current: unknown; target: unknown };
+
+// `globalOrigin*` and `transformMatrix` repeat `origin*` and `transform`.
+const ALIAS_NAMES = ['GlobalOriginX', 'GlobalOriginY', 'TransformMatrix'];
+
+function isEqual(a: unknown, b: unknown): boolean {
+  'worklet';
+  if (a === b) {
+    return true;
+  }
+  if (
+    typeof a !== 'object' ||
+    typeof b !== 'object' ||
+    a === null ||
+    b === null
+  ) {
+    return false;
+  }
+  const aRecord = a as Record<string, unknown>;
+  const bRecord = b as Record<string, unknown>;
+  const keys = Object.keys(aRecord);
+  return (
+    keys.length === Object.keys(bRecord).length &&
+    keys.every((key) => isEqual(aRecord[key], bRecord[key]))
+  );
+}
+
+function getChangedStyles(
   values: SharedTransitionAnimationsValues
+): ChangedStyle[] {
+  'worklet';
+  const record = values as unknown as Record<string, unknown>;
+  const changed: ChangedStyle[] = [];
+  for (const currentKey in record) {
+    if (!currentKey.startsWith('current')) {
+      continue;
+    }
+    const name = currentKey.slice('current'.length);
+    const current = record[currentKey];
+    const target = record['target' + name];
+    if (ALIAS_NAMES.includes(name) || isEqual(current, target)) {
+      continue;
+    }
+    changed.push({
+      key: name[0].toLowerCase() + name.slice(1),
+      current,
+      target,
+    });
+  }
+  return changed;
+}
+
+function interpolateValue(
+  progress: number,
+  current: unknown,
+  target: unknown
+): unknown {
+  'worklet';
+  if (typeof current === 'number' && typeof target === 'number') {
+    return current + progress * (target - current);
+  }
+  if (typeof current === 'string' && typeof target === 'string') {
+    if (current.endsWith('%') && target.endsWith('%')) {
+      const from = parseFloat(current);
+      return `${from + progress * (parseFloat(target) - from)}%`;
+    }
+    return interpolateColor(progress, [0, 1], [current, target]);
+  }
+  if (Array.isArray(current) && Array.isArray(target)) {
+    return current.map((item, index) =>
+      interpolateValue(progress, item, target[index])
+    );
+  }
+  if (
+    typeof current === 'object' &&
+    typeof target === 'object' &&
+    current !== null &&
+    target !== null
+  ) {
+    const currentRecord = current as Record<string, unknown>;
+    const targetRecord = target as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key in currentRecord) {
+      result[key] = interpolateValue(
+        progress,
+        currentRecord[key],
+        targetRecord[key]
+      );
+    }
+    return result;
+  }
+  return progress < 1 ? current : target;
+}
+
+function defaultProgressAnimation(
+  values: SharedTransitionAnimationsValues,
+  progress: number
+): StyleProps {
+  'worklet';
+  const style: Record<string, unknown> = {};
+  for (const { key, current, target } of getChangedStyles(values)) {
+    if (key === 'transform') {
+      const matrix = interpolateMatrix(
+        progress,
+        decomposeMatrixIntoMatricesAndAngles(
+          (current as { matrix: AffineMatrixFlat }).matrix
+        ),
+        decomposeMatrixIntoMatricesAndAngles(
+          (target as { matrix: AffineMatrixFlat }).matrix
+        )
+      );
+      style.transform = [{ matrix }];
+    } else {
+      style[key] = interpolateValue(progress, current, target);
+    }
+  }
+  return style;
+}
+
+// Reanimated 3 animated `transformMatrix`, which Fabric does not read.
+function withTransformMatrixAsTransform(style: StyleProps): StyleProps {
+  'worklet';
+  if (style.transformMatrix === undefined) {
+    return style;
+  }
+  const { transformMatrix, ...rest } = style;
+  return { ...rest, transform: [{ matrix: transformMatrix }] };
+}
+
+function withProcessedBoxShadowColors(style: StyleProps): StyleProps {
+  'worklet';
+  if (!Array.isArray(style.boxShadow)) {
+    return style;
+  }
+  return {
+    ...style,
+    boxShadow: style.boxShadow.map((shadow: BoxShadowValue) => ({
+      ...shadow,
+      color: processColor(shadow.color),
+    })),
+  };
+}
+
+function getInitialStyle(
+  styles: Pick<ChangedStyle, 'key' | 'current'>[]
 ): StyleProps {
   'worklet';
   const initialValues: Record<string, unknown> = {};
-  const valuesRecord = values as unknown as Record<string, unknown>;
-  for (const key in valuesRecord) {
-    if (!key.startsWith('current')) {
-      continue;
-    }
-    switch (key) {
-      case 'currentTransform':
-        // `{matrix: number[]}` payload → `[{matrix: ...}]` style shape.
-        initialValues.transform = [{ matrix: values.currentTransform.matrix }];
-        break;
-      case 'currentTransformMatrix':
-        // Deprecated v3-compat field; the same matrix is already mapped to
-        // initialValues.transform via the `currentTransform` case. Skip.
-        break;
-      default: {
-        // Default passthrough: currentFoo → foo.
-        const styleKey = key[7].toLowerCase() + key.slice(8);
-        initialValues[styleKey] = valuesRecord[key];
-        break;
-      }
-    }
+  for (const { key, current } of styles) {
+    initialValues[key] = key === 'transform' ? [current] : current;
   }
   return initialValues;
+}
+
+function getCustomInitialStyle(
+  values: SharedTransitionAnimationsValues,
+  animations: StyleProps
+): StyleProps {
+  'worklet';
+  const record = values as unknown as Record<string, unknown>;
+  const styles: Pick<ChangedStyle, 'key' | 'current'>[] =
+    getChangedStyles(values);
+  for (const key in animations) {
+    const current = record['current' + key[0].toUpperCase() + key.slice(1)];
+    if (current !== undefined && !styles.some((style) => style.key === key)) {
+      styles.push({ key, current });
+    }
+  }
+  return getInitialStyle(styles);
+}
+
+function mapAnimations(
+  value: unknown,
+  mapAnimation: (animation: AnimationObject) => AnimationObject
+): unknown {
+  'worklet';
+  if (Array.isArray(value)) {
+    return value.map((item) => mapAnimations(item, mapAnimation));
+  }
+  if (typeof value !== 'object' || value === null) {
+    return value;
+  }
+  if ('onFrame' in value) {
+    return mapAnimation(value as AnimationObject);
+  }
+  const record = value as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const key in record) {
+    result[key] = mapAnimations(record[key], mapAnimation);
+  }
+  return result;
+}
+
+function progressDrivenAnimations(
+  values: SharedTransitionAnimationsValues,
+  initialStyle: StyleProps,
+  progressAnimation: ProgressSharedTransitionAnimation,
+  createDriver: () => AnimationObject
+): StyleProps {
+  'worklet';
+  const frame = { timestamp: -1, style: initialStyle };
+  const styleAt = (timestamp: Timestamp, progress: number) => {
+    if (frame.timestamp !== timestamp) {
+      frame.timestamp = timestamp;
+      frame.style = progressAnimation(values, progress);
+    }
+    return frame.style;
+  };
+  const animations: Record<string, unknown> = {};
+  for (const key in initialStyle) {
+    animations[key] = defineAnimation(0, () => {
+      'worklet';
+      const driver = createDriver() as Animation<AnimationObject>;
+      return {
+        isHigherOrder: true,
+        onStart: (
+          animation: Animation<AnimationObject>,
+          _value: unknown,
+          timestamp: Timestamp
+        ) => {
+          driver.onStart(driver, 0, timestamp, undefined!);
+          animation.current = initialStyle[key];
+        },
+        onFrame: (
+          animation: Animation<AnimationObject>,
+          timestamp: Timestamp
+        ) => {
+          const finished = driver.onFrame(driver, timestamp);
+          animation.current = styleAt(timestamp, driver.current as number)[key];
+          return finished;
+        },
+        current: initialStyle[key],
+      } as unknown as AnimationObject;
+    });
+  }
+  return animations;
 }
 
 export class SharedTransition
@@ -128,11 +384,9 @@ export class SharedTransition
   }
 
   /**
-   * Creates a shared transition with a custom animation worklet.
-   *
-   * @param customAnimationFactory - A worklet function that receives the source
-   *   and target values and returns an object containing animations for each
-   *   property.
+   * Creates a shared transition with a custom animation worklet. The worklet
+   * receives the source and target values and returns the animations for each
+   * property.
    */
   static custom(
     customAnimationFactory: CustomSharedTransitionAnimation
@@ -143,13 +397,30 @@ export class SharedTransition
   }
 
   /**
-   * Defines a progress-based animation for the shared transition. This
-   * animation is used during swipe back gestures (iOS only) when
-   * `defaultTransitionType` is set to `SharedTransitionType.ANIMATION`.
-   *
-   * @param progressAnimationFactory - A worklet function that receives the
-   *   source and target values along with the progress (0-1) and returns the
-   *   interpolated style values.
+   * Creates a shared transition with a progress-based animation worklet. See
+   * {@link SharedTransition#progressAnimation}.
+   */
+  static progressAnimation(
+    progressAnimationFactory: ProgressSharedTransitionAnimation
+  ): SharedTransition {
+    return new SharedTransition().progressAnimation(progressAnimationFactory);
+  }
+
+  /**
+   * Creates a shared transition with the given default transition type. See
+   * {@link SharedTransition#defaultTransitionType}.
+   */
+  static defaultTransitionType(
+    transitionType: SharedTransitionType
+  ): SharedTransition {
+    return new SharedTransition().defaultTransitionType(transitionType);
+  }
+
+  /**
+   * Defines a progress-based animation for the shared transition. The worklet
+   * receives the source and target values along with the progress (0-1) and
+   * returns the interpolated style values. Without it, every property is
+   * interpolated linearly.
    */
   progressAnimation(
     progressAnimationFactory: ProgressSharedTransitionAnimation
@@ -161,10 +432,11 @@ export class SharedTransition
   /**
    * Sets the default transition type for the shared transition.
    *
-   * - `SharedTransitionType.ANIMATION` - Uses the custom animation for screen
-   *   transitions and the progress animation for swipe back gestures.
+   * - `SharedTransitionType.ANIMATION` - Uses the regular (or custom) animation
+   *   for screen transitions and the progress animation for transitions that
+   *   follow the screen transition progress (iOS back navigation).
    * - `SharedTransitionType.PROGRESS_ANIMATION` - Uses the progress animation for
-   *   both screen transitions and swipe back gestures.
+   *   all transitions.
    *
    * @param transitionType - The transition type to use.
    */
@@ -174,27 +446,6 @@ export class SharedTransition
   }
 
   build = (): LayoutAnimationFunction => {
-    const customAnimationFactory = this.customAnimationFactory;
-
-    // If we have a custom animation factory, use it
-    if (customAnimationFactory) {
-      const callback = this.callbackV;
-
-      return (layoutAnimationValues) => {
-        'worklet';
-        const values =
-          layoutAnimationValues as SharedTransitionAnimationsValues;
-        const animations = customAnimationFactory(values);
-        const initialValues = mapCurrentValuesToInitialStyle(values);
-        return {
-          initialValues,
-          animations,
-          callback,
-        };
-      };
-    }
-
-    // Default behavior - use the inherited ComplexAnimationBuilder logic
     const delayFunction = this.getDelayFunction();
     if (!this.durationV) {
       this.durationV = 500;
@@ -202,79 +453,113 @@ export class SharedTransition
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
+    const customAnimationFactory = this.customAnimationFactory;
+    const progressAnimation = this.getStyleProgressAnimation();
 
-    return (valuesUntyped) => {
+    if (this.transitionType === SharedTransitionType.PROGRESS_ANIMATION) {
+      return (layoutAnimationValues) => {
+        'worklet';
+        const values =
+          layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
+        const initialValues = progressAnimation(values, 0);
+        return {
+          initialValues,
+          animations: progressDrivenAnimations(
+            values,
+            initialValues,
+            progressAnimation,
+            () => delayFunction(delay, animation(1, config))
+          ),
+          callback,
+        };
+      };
+    }
+
+    if (customAnimationFactory) {
+      return (layoutAnimationValues) => {
+        'worklet';
+        const values =
+          layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
+        const animations = withTransformMatrixAsTransform(
+          customAnimationFactory(values)
+        );
+        return {
+          initialValues: getCustomInitialStyle(values, animations),
+          animations: mapAnimations(animations, (customAnimation) =>
+            delayFunction(delay, customAnimation)
+          ) as StyleProps,
+          callback,
+        };
+      };
+    }
+
+    return (layoutAnimationValues) => {
       'worklet';
       const values =
-        valuesUntyped as unknown as SharedTransitionAnimationsValues;
-      const valuesRecord = values as unknown as Record<string, unknown>;
-      const animationFactory = (value: number | string) => {
-        return delayFunction(delay, animation(value, config));
-      };
-      const initialValues: Record<string, unknown> = {};
-      const animations: Record<string, unknown> = {};
-
-      for (const sourceKey in valuesRecord) {
-        if (!sourceKey.startsWith('current')) {
-          continue;
-        }
-        const prop = sourceKey[7].toLowerCase() + sourceKey.slice(8);
-        const targetKey =
-          'target' + sourceKey[7].toUpperCase() + sourceKey.slice(8);
-        initialValues[prop] = valuesRecord[sourceKey] as number | string;
-
-        const target = valuesRecord[targetKey];
+        layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
+      const animateValue = (target: unknown): unknown => {
         if (Array.isArray(target)) {
-          if (prop === 'transform') {
-            // TODO (future): do proper transform interpolation
-            const transforms = target as Array<Record<string, number | string>>;
-            animations[prop] = transforms.map((item) => {
-              const transformKey = Object.keys(item)[0];
-              return {
-                [transformKey]: animationFactory(item[transformKey]),
-              };
-            });
-          } else if (prop === 'boxShadow') {
-            const shadows = target as Array<Record<string, number | string>>;
-            animations[prop] = shadows.map((item) => {
-              const boxShadow: Record<string, unknown> = {};
-              for (const shadowKey of Object.keys(item)) {
-                boxShadow[shadowKey] = animationFactory(item[shadowKey]);
-              }
-              return boxShadow;
-            });
-          } else if (prop === 'transformOrigin') {
-            const origin = target as Array<number | string>;
-            animations[prop] = origin.map(animationFactory);
-          } else {
-            logger.error(`Unexpected array in SharedTransition: ${prop}`);
-          }
-        } else {
-          animations[prop] = animationFactory(target as number | string);
+          return target.map(animateValue);
         }
+        if (typeof target === 'object' && target !== null) {
+          const targetRecord = target as Record<string, unknown>;
+          const result: Record<string, unknown> = {};
+          for (const key in targetRecord) {
+            result[key] = animateValue(targetRecord[key]);
+          }
+          return result;
+        }
+        return delayFunction(delay, animation(target, config));
+      };
+      const changed = getChangedStyles(values);
+      const animations: Record<string, unknown> = {};
+      for (const { key, target } of changed) {
+        animations[key] =
+          key === 'transform'
+            ? [
+                {
+                  matrix: delayFunction(
+                    delay,
+                    animation((target as { matrix: number[] }).matrix, config)
+                  ),
+                },
+              ]
+            : animateValue(target);
       }
 
       return {
-        initialValues,
+        initialValues: getInitialStyle(changed),
         animations,
         callback,
       };
     };
   };
 
-  /**
-   * Gets the progress animation factory if one was defined. This is used
-   * internally by the layout animations system.
-   */
-  getProgressAnimation(): ProgressSharedTransitionAnimation | undefined {
-    return this.progressAnimationFactory;
+  private getStyleProgressAnimation(): ProgressSharedTransitionAnimation {
+    const progressAnimation =
+      this.progressAnimationFactory ?? defaultProgressAnimation;
+    return (values, progress) => {
+      'worklet';
+      // Animated styles process only the colors of individually animated shadows.
+      return withProcessedBoxShadowColors(
+        withTransformMatrixAsTransform(progressAnimation(values, progress))
+      );
+    };
   }
 
   /**
-   * Gets the transition type configured for this shared transition. This is
-   * used internally by the layout animations system.
+   * Gets the progress animation used for transitions that follow the screen
+   * transition progress. This is used internally by the layout animations
+   * system.
    */
-  getTransitionType(): SharedTransitionType {
-    return this.transitionType;
+  getProgressAnimation(): ProgressSharedTransitionAnimation {
+    const styleProgressAnimation = this.getStyleProgressAnimation();
+    return (values, progress) => {
+      'worklet';
+      // Native progress transitions apply the style without the color processing of animated styles.
+      const style = styleProgressAnimation(values, progress);
+      processColorsInProps(style);
+      return style;
+    };
   }
 }

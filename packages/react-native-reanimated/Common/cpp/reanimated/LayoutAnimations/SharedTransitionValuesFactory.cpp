@@ -45,15 +45,11 @@ void SharedTransitionValuesFactory::writeFrame(
   setProperty(values, "currentOriginY", jsi::Value(sourceOrigin.y));
   setProperty(values, "targetOriginY", jsi::Value(targetOrigin.y));
 
-  // globalOriginX/Y is intentionally zero. It exists on the worklet values
-  // object for backward-compat with v3's type, but its value was always 0 on
-  // Android (the v3 SET snapshot constructor never assigned it) and only
-  // happened to mirror originX on iOS. v4 normalises both platforms to 0 to
-  // discourage use. Reach for originX/Y instead.
-  setProperty(values, "currentGlobalOriginX", jsi::Value(0));
-  setProperty(values, "targetGlobalOriginX", jsi::Value(0));
-  setProperty(values, "currentGlobalOriginY", jsi::Value(0));
-  setProperty(values, "targetGlobalOriginY", jsi::Value(0));
+  // The snapshots are in window coordinates, so the global origin is the origin.
+  setProperty(values, "currentGlobalOriginX", jsi::Value(sourceOrigin.x));
+  setProperty(values, "targetGlobalOriginX", jsi::Value(targetOrigin.x));
+  setProperty(values, "currentGlobalOriginY", jsi::Value(sourceOrigin.y));
+  setProperty(values, "targetGlobalOriginY", jsi::Value(targetOrigin.y));
 
   const auto &sourceSize = sourceFrame.size;
   const auto &targetSize = targetFrame.size;
@@ -237,10 +233,11 @@ void SharedTransitionValuesFactory::writeBorder(
     const ViewProps &targetViewProps) {
   const auto &sourceBorderRadii = sourceViewProps.borderRadii;
   const auto &targetBorderRadii = targetViewProps.borderRadii;
+  const ValueUnit noRadius(0, UnitType::Point);
   writeBorderRadius(
       values,
-      sourceBorderRadii.all,
-      targetBorderRadii.all,
+      sourceBorderRadii.all.value_or(noRadius),
+      targetBorderRadii.all.value_or(noRadius),
       "currentBorderRadius",
       "targetBorderRadius",
       sourceViewProps,
@@ -348,8 +345,8 @@ void SharedTransitionValuesFactory::writeBorder(
   const auto defaultTargetWidth = targetBorderWidths.all.value_or(0);
   writeBorderWidth(
       values,
-      sourceBorderWidths.all,
-      targetBorderWidths.all,
+      defaultSourceWidth,
+      defaultTargetWidth,
       "currentBorderWidth",
       "targetBorderWidth",
       defaultSourceWidth,
@@ -391,8 +388,8 @@ void SharedTransitionValuesFactory::writeBorder(
   const auto &targetBorderColors = targetViewProps.borderColors;
   writeBorderColors(
       values,
-      sourceBorderColors.all,
-      targetBorderColors.all,
+      sourceBorderColors.all.value_or(SharedColor()),
+      targetBorderColors.all.value_or(SharedColor()),
       "currentBorderColor",
       "targetBorderColor",
       sourceViewProps,
@@ -439,6 +436,9 @@ void SharedTransitionValuesFactory::writeBorderRadius(
     const char *targetName,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
+  if (!sourceValue.has_value() && !targetValue.has_value()) {
+    return;
+  }
   ValueUnit defaultValue;
   const auto &source = sourceValue.value_or(defaultValue).value;
   const auto &target = targetValue.value_or(defaultValue).value;
@@ -482,6 +482,9 @@ void SharedTransitionValuesFactory::writeBorderWidth(
     const char *targetName,
     float defaultSourceWidth,
     float defaultTargetWidth) {
+  if (!sourceValue.has_value() && !targetValue.has_value()) {
+    return;
+  }
   if (sourceValue.has_value()) {
     setProperty(values, sourceName, jsi::Value(sourceValue.value()));
   } else {
@@ -503,6 +506,9 @@ void SharedTransitionValuesFactory::writeBorderColors(
     const char *targetName,
     const ViewProps &sourceViewProps,
     const ViewProps &targetViewProps) {
+  if (!sourceValue.has_value() && !targetValue.has_value()) {
+    return;
+  }
   SharedColor defaultValue;
   if (sourceValue.has_value()) {
     setProperty(values, sourceName, jsi::String::createFromUtf8(rt_, toString(sourceValue.value())));
