@@ -14,6 +14,7 @@
 #endif // ANDROID
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -108,6 +109,8 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
+  nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 }
 
@@ -200,7 +203,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     transaction.surfaceDropped = std::exchange(surfaceToRemove_, false);
   }
   auto &filteredMutations = transaction.filteredMutations;
-  auto rootChildCount = static_cast<int>(lightNodes_[surfaceId_]->children.size());
+  const auto containerIndex = containerParentChildCount();
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
   reconcileContradictedRemovals(mutations, transaction, propsParserContext);
@@ -284,7 +287,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 #endif
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    insertContainers(transaction, rootChildCount);
+    insertContainers(transaction, containerIndex);
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -1087,6 +1090,13 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedElements_.clear();
+#ifdef __APPLE__
+    overlayContainersToRemove_.clear();
+    if (containerOverlay_) {
+      containerOverlay_.reset();
+      setSharedTransitionOverlay_(surfaceId_, std::nullopt);
+    }
+#endif
     snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
@@ -1150,6 +1160,10 @@ void LayoutAnimationsProxy::cleanupAnimations(
   }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+#ifdef __APPLE__
+    std::ranges::move(overlayContainersToRemove_, std::back_inserter(transaction.containersToRemove));
+    overlayContainersToRemove_.clear();
+#endif
     for (auto &[sharedTag, element] : sharedElements_) {
       if (!element.run) {
         continue;
@@ -1168,6 +1182,18 @@ void LayoutAnimationsProxy::cleanupAnimations(
         schedulePullOnNextFrame();
         continue;
       }
+#ifdef __APPLE__
+      // The overlay is in another window, whose updates can reach the screen a frame before the restored target,
+      // so the container stays over the target for one more frame.
+      if (element.run->container->parent.lock() == containerOverlay_) {
+        transaction.restoreRequests.push_back({sharedTag, element.run->target});
+        overlayContainersToRemove_.push_back(element.run->container);
+        element.run.reset();
+        preservedTags.insert(tag);
+        schedulePullOnNextFrame();
+        continue;
+      }
+#endif
       finishSharedTransition(sharedTag, element, transaction);
     }
 
@@ -1313,7 +1339,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
-      .parentTag = surfaceId_,
+      .parentTag = lightNodes_.at(tag)->parent.lock()->current.tag,
       .config = config,
   });
 }
@@ -1327,7 +1353,7 @@ void LayoutAnimationsProxy::startProgressTransition(
       .tag = tag,
       .before = before,
       .after = after,
-      .parentTag = surfaceId_,
+      .parentTag = lightNodes_.at(tag)->parent.lock()->current.tag,
       .config = config,
   });
 }
