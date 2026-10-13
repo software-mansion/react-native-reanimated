@@ -40,14 +40,13 @@ export function GlobalOriginSourceSection({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>
-        globalOrigin is deprecated — use originX/Y
+      <Text style={styles.heading}>originX/Y and globalOriginX/Y</Text>
+      <Text style={styles.body}>
+        The transition runs in window coordinates, so
+        values.targetGlobalOriginX/Y equals values.targetOriginX/Y.
       </Text>
       <Text style={styles.body}>
-        values.targetGlobalOriginX/Y is always 0 in shared transitions. Use
-        targetOriginX/Y instead. In v3 globalOrigin is 0 on Android, on iOS it
-        was equal to regular origin. In v3 on iOS, origin is equal to
-        globalOrigin.
+        Expected: both boxes spring to the same target position.
       </Text>
 
       <View style={offsetContainer}>
@@ -58,7 +57,7 @@ export function GlobalOriginSourceSection({
         />
       </View>
       <Button
-        title='Open with originX/Y (works)'
+        title="Open with originX/Y"
         onPress={() => navigate(ORIGIN_TARGET_ROUTE)}
       />
 
@@ -70,7 +69,7 @@ export function GlobalOriginSourceSection({
         />
       </View>
       <Button
-        title='Open with globalOriginX/Y (broken — animates to 0,0)'
+        title="Open with globalOriginX/Y"
         onPress={() => navigate(GLOBAL_TARGET_ROUTE)}
       />
     </View>
@@ -95,7 +94,7 @@ function OriginTargetContent({
           sharedTransitionStyle={ORIGIN_TRANSITION}
         />
       </View>
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
@@ -106,9 +105,9 @@ function GlobalOriginTargetContent({
   return (
     <View style={styles.flexOne}>
       <View style={styles.instructions}>
-        <Text style={styles.heading}>globalOriginX/Y — target (broken)</Text>
+        <Text style={styles.heading}>globalOriginX/Y — target</Text>
         <Text style={styles.body}>
-          Expected: red box springs to (0, 0) because globalOrigin is always 0.
+          Expected: spring lands at the target position.
         </Text>
       </View>
       <View style={targetParent}>
@@ -118,7 +117,7 @@ function GlobalOriginTargetContent({
           sharedTransitionStyle={GLOBAL_ORIGIN_TRANSITION}
         />
       </View>
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
@@ -127,7 +126,7 @@ export const OriginTargetScreen =
   withSharedTransitionBoundary(OriginTargetContent);
 export const OriginTargetRoute = ORIGIN_TARGET_ROUTE;
 export const GlobalOriginTargetScreen = withSharedTransitionBoundary(
-  GlobalOriginTargetContent,
+  GlobalOriginTargetContent
 );
 export const GlobalOriginTargetRoute = GLOBAL_TARGET_ROUTE;
 

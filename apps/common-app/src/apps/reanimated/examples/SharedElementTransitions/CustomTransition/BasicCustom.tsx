@@ -31,7 +31,8 @@ export function BasicSourceSection({ navigate }: { navigate: Navigate }) {
       <Text style={styles.heading}>Basic .custom()</Text>
       <Text style={styles.body}>
         Spring-interpolates width/height/origin via withSpring. No
-        progressAnimation — iOS swipe-back falls back to the system default.
+        progressAnimation — iOS swipe-back interpolates every changed property
+        linearly.
       </Text>
       <Text style={styles.body}>Expected: springy overshoot-and-settle.</Text>
       <Animated.View
@@ -54,8 +55,8 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         <Text style={styles.heading}>Basic .custom() — target</Text>
         <Text style={styles.body}>
           The green box should now sit at 200×300, lower and further right than
-          on the menu. Tap back to spring-return. iOS swipe-back uses the system
-          default (no progressAnimation registered here).
+          on the menu. Tap back to spring-return. iOS swipe-back interpolates
+          every changed property linearly (the default progress animation).
         </Text>
       </View>
       <Animated.View
