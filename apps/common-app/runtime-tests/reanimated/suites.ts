@@ -57,6 +57,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useSharedValue/objects.test');
       require('./tests/core/useSharedValue/assigningObjects.test');
       require('./tests/core/useSharedValue/convergence.test');
+      // The warnings it checks are logged only in __DEV__.
+      __DEV__ && require('./tests/core/useSharedValue/accessDuringRender.test');
       require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
