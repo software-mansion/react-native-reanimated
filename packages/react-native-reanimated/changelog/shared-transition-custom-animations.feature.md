@@ -1,1 +1,1 @@
-Support custom shared element transition animations again with `SharedTransition.custom()` and progress-driven back gestures with `.progressAnimation()`.
+Restore custom shared element transitions with `SharedTransition.custom()`, `.progressAnimation()` and `.defaultTransitionType()`, including the Reanimated 3 values and the `transformMatrix` output.
