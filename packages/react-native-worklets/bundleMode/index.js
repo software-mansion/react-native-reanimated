@@ -2,27 +2,11 @@ const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
 const reactNativeShimPath = path.join(__dirname, 'shims', 'reactNativeShim.js');
-const turboModuleRegistryShimPath = path.join(
+const prepareBundleModePolyfillPath = path.join(
   __dirname,
-  'shims',
-  'turboModuleRegistryShim.js'
+  'polyfills',
+  'prepareBundleMode.js'
 );
-const turboModuleRegistryModuleName =
-  'react-native/Libraries/TurboModule/TurboModuleRegistry';
-const turboModuleRegistryFileSuffix = path.join(
-  'react-native',
-  'Libraries',
-  'TurboModule',
-  'TurboModuleRegistry.js'
-);
-
-function isResolvedTurboModuleRegistry(/** @type {any} */ result) {
-  return (
-    result?.type === 'sourceFile' &&
-    typeof result.filePath === 'string' &&
-    result.filePath.endsWith(turboModuleRegistryFileSuffix)
-  );
-}
 
 const workletsPackageName = 'react-native-worklets';
 const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
@@ -54,30 +38,18 @@ function bundleModeResolveRequest(
   ) {
     return { type: 'sourceFile', filePath: reactNativeShimPath };
   }
-  if (
-    moduleName === turboModuleRegistryModuleName &&
-    context.originModulePath !== turboModuleRegistryShimPath
-  ) {
-    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
-  }
-  const resolved = (userConfigResolveRequest || context.resolveRequest)(
+  return (userConfigResolveRequest || context.resolveRequest)(
     context,
     moduleName,
     platform
   );
-  if (
-    context.originModulePath !== turboModuleRegistryShimPath &&
-    isResolvedTurboModuleRegistry(resolved)
-  ) {
-    return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
-  }
-  return resolved;
 }
 
 /** Use in React Native Community projects. */
 const bundleModeMetroConfig = {
   serializer: {
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
+    polyfillModuleNames: [prepareBundleModePolyfillPath],
   },
   resolver: {
     resolveRequest: (
@@ -95,20 +67,7 @@ const bundleModeMetroConfig = {
       ) {
         return { type: 'sourceFile', filePath: reactNativeShimPath };
       }
-      if (
-        moduleName === turboModuleRegistryModuleName &&
-        context.originModulePath !== turboModuleRegistryShimPath
-      ) {
-        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
-      }
-      const resolved = context.resolveRequest(context, moduleName, platform);
-      if (
-        context.originModulePath !== turboModuleRegistryShimPath &&
-        isResolvedTurboModuleRegistry(resolved)
-      ) {
-        return { type: 'sourceFile', filePath: turboModuleRegistryShimPath };
-      }
-      return resolved;
+      return context.resolveRequest(context, moduleName, platform);
     },
   },
 };
@@ -117,6 +76,10 @@ const bundleModeMetroConfig = {
 /** Use in Expo projects. */
 function getBundleModeMetroConfig(/** @type {any} */ config) {
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
+  config.serializer.polyfillModuleNames = [
+    ...(config.serializer.polyfillModuleNames ?? []),
+    prepareBundleModePolyfillPath,
+  ];
 
   const currentResolveRequest = config?.resolver?.resolveRequest;
   config.resolver.resolveRequest = (

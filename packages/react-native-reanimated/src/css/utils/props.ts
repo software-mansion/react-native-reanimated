@@ -98,13 +98,17 @@ export function filterCSSAndStyleProperties<S extends object>(
   // Return animationProperties only if at least one animationName contains
   // valid keyframes
   const animationName = animationProperties.animationName;
+  const animationNames = animationName
+    ? Array.isArray(animationName)
+      ? animationName
+      : [animationName]
+    : [];
   const hasAnimationName =
-    !!animationName &&
-    (Array.isArray(animationName) ? animationName : [animationName]).every(
-      (keyframes) =>
-        keyframes === 'none'
-          ? false
-          : isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
+    animationNames.length > 0 &&
+    animationNames.every((keyframes) =>
+      keyframes === 'none'
+        ? false
+        : isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
     );
   const finalAnimationConfig = hasAnimationName
     ? ({

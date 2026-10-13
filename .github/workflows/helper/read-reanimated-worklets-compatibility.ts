@@ -43,6 +43,7 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
 
   const workletsRanges = details['react-native-worklets'];
   const reactNativeVersions = details['react-native'] || [];
+  const reanimatedSpm = details['spm'] || [];
 
   if (!Array.isArray(workletsRanges) || workletsRanges.length === 0) {
     continue;
@@ -65,6 +66,7 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
   for (const workletsRange of workletsRanges) {
     const workletsDetails = workletsCompatibilityData[workletsRange];
     const workletsReactNativeVersions = workletsDetails?.['react-native'] || [];
+    const workletsSpm = workletsDetails?.['spm'] || [];
 
     if (workletsReactNativeVersions.length === 0) {
       continue;
@@ -99,10 +101,14 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
         continue;
       }
 
+      const spm =
+        reanimatedSpm.includes(rnMinor) && workletsSpm.includes(rnMinor);
+
       matrixEntries.push({
         reactNativeVersion: resolvedReactNativeVersion,
         reanimatedVersion: resolvedReanimatedVersion,
         workletsVersion: resolvedWorkletsVersion,
+        spm,
       });
     }
   }
@@ -124,6 +130,7 @@ fs.writeFileSync(
 type CompatibilityDetails = {
   'react-native'?: string[];
   'react-native-worklets'?: string[];
+  spm?: string[];
 };
 
 type CompatibilityData = {
@@ -132,11 +139,12 @@ type CompatibilityData = {
 
 type WorkletsCompatibilityData = Record<
   string,
-  { 'react-native'?: string[] } | undefined
+  { 'react-native'?: string[]; spm?: string[] } | undefined
 >;
 
 type MatrixEntry = {
   reactNativeVersion: string;
   reanimatedVersion: string;
   workletsVersion: string;
+  spm: boolean;
 };

@@ -1,0 +1,50 @@
+name: Save Pods
+description: Persist the Pods cache from the default branch after a successful build
+
+inputs:
+  working-directory:
+    description: The app directory, must match the one passed to install-pods
+    required: true
+  pod-directory:
+    description: The pod directory relative to working-directory
+    required: true
+  cache-hit:
+    description: The cache-hit output of the matching install-pods step
+    required: true
+  cache-primary-key:
+    description: The cache-primary-key output of the matching install-pods step
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Only main saves: PR-scoped entries (~0.5 GB each) would eat the 10 GB
+    # cache budget. A PR that changes Podfile.lock re-reconciles Pods on each
+    # push until it merges. Entries are immutable: to replace one,
+    # `gh cache delete <key>` and re-seed from main (runtime-tests-nightly.yml
+    # for the fabric-example entries).
+    #
+    # Pods/.project_cache is CocoaPods' incremental-install skip state; a
+    # restored copy would suppress reinstalls. It is removed from disk because
+    # a negative `path:` pattern under a bare directory subtracts nothing.
+    - name: Drop CocoaPods incremental-install state
+      if: >-
+        inputs.cache-hit != 'true' &&
+        inputs.cache-primary-key != '' &&
+        (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main'
+      shell: bash
+      run: rm -rf "${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods/.project_cache"
+
+    - name: Save Pods cache
+      if: >-
+        inputs.cache-hit != 'true' &&
+        inputs.cache-primary-key != '' &&
+        (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: |
+          ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
+          ~/Library/Caches/CocoaPods
+        key: ${{ inputs.cache-primary-key }}

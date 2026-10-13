@@ -70,8 +70,10 @@ void PropsDiffer::diffBackgroundColor(jsi::Runtime &rt) {
 }
 
 void PropsDiffer::diffTransform(jsi::Runtime &rt) {
-  const auto &sourceJsiOperations = getTransformOperationsFromProps(rt, sourceViewProps_);
-  const auto &targetJsiOperations = getTransformOperationsFromProps(rt, targetViewProps_);
+  const auto &sourceJsiOperations =
+      getTransformOperationsFromProps(rt, sourceViewProps_, sourceView_.layoutMetrics.frame.size);
+  const auto &targetJsiOperations =
+      getTransformOperationsFromProps(rt, targetViewProps_, targetView_.layoutMetrics.frame.size);
 
   if (sourceJsiOperations.size() == 1 && targetJsiOperations.size() == 1 &&
       sourceJsiOperations[0].currentValue.hasProperty(rt, "matrix") &&
@@ -99,9 +101,8 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
   targetValues_.setProperty(rt, "transform", targetTransforms);
 }
 
-std::vector<TransformOperationWithDefault> PropsDiffer::getTransformOperationsFromProps(
-    jsi::Runtime &rt,
-    const ViewProps &props) {
+std::vector<TransformOperationWithDefault>
+PropsDiffer::getTransformOperationsFromProps(jsi::Runtime &rt, const ViewProps &props, const react::Size &viewSize) {
   std::vector<TransformOperationWithDefault> jsiOperations;
   const auto &operations = props.transform.operations;
 
@@ -131,8 +132,8 @@ std::vector<TransformOperationWithDefault> PropsDiffer::getTransformOperationsFr
       } break;
 
       case react::TransformOperationType::Translate: {
-        maybeAddOperationToDiff(rt, "translateX", operation.x.value, 0, jsiOperations);
-        maybeAddOperationToDiff(rt, "translateY", operation.y.value, 0, jsiOperations);
+        maybeAddOperationToDiff(rt, "translateX", operation.x.resolve(viewSize.width), 0, jsiOperations);
+        maybeAddOperationToDiff(rt, "translateY", operation.y.resolve(viewSize.height), 0, jsiOperations);
         maybeAddOperationToDiff(rt, "translateZ", operation.z.value, 0, jsiOperations);
       } break;
 

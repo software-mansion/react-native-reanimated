@@ -4,7 +4,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import {
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   Presets,
   registerValue,
   render,
@@ -58,10 +58,10 @@ describe('Test setting different values as sharedValue', () => {
           />
         );
 
-        const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-
-        expect(sharedValue.onJS).toBe(preset, comparisonMode);
-        expect(sharedValue.onUI).toBe(preset, comparisonMode);
+        await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+          preset,
+          comparisonMode
+        );
         /*
           This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output
           to ensure that a new component will be fully mounted, not just rerendered.

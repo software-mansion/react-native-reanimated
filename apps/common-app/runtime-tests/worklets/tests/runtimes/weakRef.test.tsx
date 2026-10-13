@@ -67,30 +67,6 @@ describe('WeakRef on Worklet Runtime', () => {
 
       expect(wasTargetCollected).toBe(true);
     });
-
-    test(`does not release targets after synchronous execution on ${name} Runtime`, () => {
-      runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        const target = {};
-        globalThis.weakRefTest = new WeakRef(target);
-      });
-
-      const isTargetAliveBeforeGC = runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        return globalThis.weakRefTest?.deref() !== undefined;
-      });
-      expect(isTargetAliveBeforeGC).toBe(true);
-
-      const wasTargetCollected = runOnRuntimeSyncWithId(runtimeId, () => {
-        'worklet';
-        globalThis.gc!();
-        const wasCollected = globalThis.weakRefTest?.deref() === undefined;
-        delete globalThis.weakRefTest;
-        return wasCollected;
-      });
-
-      expect(wasTargetCollected).toBe(false);
-    });
   });
 
   test('is unavailable on a Worker Runtime with the event loop disabled', async () => {

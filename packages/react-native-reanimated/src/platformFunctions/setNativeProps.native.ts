@@ -9,7 +9,7 @@ import type {
 } from '../commonTypes';
 import type {
   AnimatedRef,
-  AnimatedRefOnJS,
+  AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
@@ -34,7 +34,7 @@ type SetNativeProps = <TRef extends InstanceOrElement>(
 export let setNativeProps: SetNativeProps;
 
 function setNativePropsNative(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+  animatedRef: AnimatedRefOnRN | AnimatedRefOnUI,
   updates: StyleProps
 ) {
   'worklet';
@@ -42,7 +42,8 @@ function setNativePropsNative(
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+  const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI)
+    .value as ShadowNodeWrapper;
   processColorsInProps(updates);
   global._updateProps!([{ shadowNodeWrapper, updates }]);
 }

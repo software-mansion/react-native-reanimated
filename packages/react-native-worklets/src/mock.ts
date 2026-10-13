@@ -27,6 +27,23 @@ globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 const WorkletAPI = {
   callMicrotasks: NOOP,
   createSerializable: ID,
+  createSerializableArray: ID,
+  createSerializableArrayBuffer: ID,
+  createSerializableArrayBufferView: ID,
+  createSerializableBigInt: ID,
+  createSerializableBoolean: ID,
+  createSerializableError: ID,
+  createSerializableHostObject: ID,
+  createSerializableMap: ID,
+  createSerializableNull: ID,
+  createSerializableNumber: ID,
+  createSerializableObject: ID,
+  createSerializableRegExp: ID,
+  createSerializableRemoteFunction: ID,
+  createSerializableSet: ID,
+  createSerializableString: ID,
+  createSerializableUndefined: ID,
+  createSerializableWorklet: ID,
   createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
     let value = initial;
     const set = (next: TValue | ((prev: TValue) => TValue)) => {
@@ -44,9 +61,36 @@ const WorkletAPI = {
       setSync: set,
     };
   },
-  createSynchronizable: ID,
+  createSynchronizable: <TValue>(
+    initialValue: TValue,
+    config?: { fixedType?: boolean }
+  ) => {
+    let value = initialValue;
+    const synchronizable = {
+      __synchronizableRef: true,
+      getDirty: () => value,
+      getBlocking: () => value,
+      setBlocking: (newValue: TValue | ((prev: TValue) => TValue)) => {
+        value =
+          typeof newValue === 'function'
+            ? (newValue as (prev: TValue) => TValue)(value)
+            : newValue;
+      },
+      lock: NOOP,
+      unlock: NOOP,
+    };
+    if (config?.fixedType) {
+      Object.assign(synchronizable, {
+        setDirty: (newValue: TValue) => {
+          value = newValue;
+        },
+      });
+    }
+    return synchronizable;
+  },
   createWorkletRuntime: NOOP_FACTORY,
   executeOnUIRuntimeSync: ID,
+  getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
   getStaticFeatureFlag: () => false,
@@ -79,6 +123,7 @@ const WorkletAPI = {
           : (fun as () => ReturnValue)
       );
   },
+  runOnRNSync: IMMEDIATE_CALLBACK_INVOCATION,
   runOnRuntime: ID,
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,

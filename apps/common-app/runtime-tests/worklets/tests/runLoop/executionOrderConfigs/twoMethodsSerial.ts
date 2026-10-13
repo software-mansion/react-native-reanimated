@@ -1,5 +1,6 @@
-import { incorrect, TwoMethodsConfig } from './utils';
 import { RuntimeKind } from 'react-native-worklets';
+
+import { incorrect, TwoMethodsConfig } from './utils';
 
 export const CONFIG: TwoMethodsConfig[] = [
   ['setTimeout', 1, 'setTimeout', 2, RuntimeKind.UI],

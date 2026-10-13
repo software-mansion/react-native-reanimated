@@ -14,7 +14,6 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.ReactCompoundView
-import com.swmansion.reanimated.BuildConfig
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
@@ -37,6 +36,17 @@ class PseudoSelectorManager(
 
     private val hover = TouchHoverCoordinator(::onWindowPressTouch)
     private var extraWindowBridge: ExtraWindowObserverBridge? = null
+
+    init {
+        // Dialog windows announce their creation only to listeners that already exist, so the
+        // bridge must be listening before the first Modal can open. Installing it on the first
+        // pseudo registration is too late for a registration that happens inside that Modal.
+        UiThreadUtil.runOnUiThread {
+            reactContext.get()?.let { context ->
+                extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
+            }
+        }
+    }
 
     private val pendingAttaches = LinkedHashMap<String, PendingAttach>()
     private var mountListenerRegistered = false
@@ -154,20 +164,11 @@ class PseudoSelectorManager(
         val host = findTouchHost(view)
         acquireTouchListener(host)
         hover.register(view, host, callback)
-        ensureExtraWindowBridge()
         detachActions[key] =
             Runnable {
                 hover.unregister(view, host)
                 releaseTouchListener(host)
             }
-    }
-
-    private fun ensureExtraWindowBridge() {
-        if (!BuildConfig.IS_REACT_NATIVE_86_OR_NEWER || extraWindowBridge != null) {
-            return
-        }
-        val context = reactContext.get() ?: return
-        extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
     }
 
     private fun attachPressSelector(
@@ -180,7 +181,6 @@ class PseudoSelectorManager(
         callbacks[view] = callback
         acquireTouchListener(host)
         hover.retainWindowObserver(view)
-        ensureExtraWindowBridge()
         detachActions[key] =
             Runnable {
                 callbacks.remove(view)

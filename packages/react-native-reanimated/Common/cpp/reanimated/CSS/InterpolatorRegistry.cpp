@@ -1,4 +1,5 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
@@ -13,6 +14,7 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/common/values/complex/CSSGradient.h>
 
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
@@ -171,6 +173,10 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // View
     {"backfaceVisibility", value<CSSKeyword>("visible")},
     {"backgroundColor", value<CSSColor, CSSPlatformColor>(TRANSPARENT)},
+#if REACT_NATIVE_VERSION_MINOR >= 87
+    {"backgroundImage", array({value<CSSGradient>(CSSGradient())})},
+#endif
+    {"experimental_backgroundImage", array({value<CSSGradient>(CSSGradient())})},
     {"borderBlockColor", value<CSSColor, CSSPlatformColor>(BLACK)},
     {"borderBlockEndColor", value<CSSColor, CSSPlatformColor>(BLACK)},
     {"borderBlockStartColor", value<CSSColor, CSSPlatformColor>(BLACK)},
@@ -211,11 +217,11 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
     // Text
     {"color", value<CSSColor, CSSPlatformColor>(BLACK)},
     {"fontFamily", value<CSSKeyword>("inherit")},
-    {"fontSize", value<CSSDouble>(14)},
+    {"fontSize", value<CSSTextDouble>(14)},
     {"fontStyle", value<CSSKeyword>("normal")},
     {"fontWeight", value<CSSKeyword>("normal")},
-    {"letterSpacing", value<CSSDouble>(0)},
-    {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
+    {"letterSpacing", value<CSSTextDouble>(0)},
+    {"lineHeight", value<CSSTextDouble>(14)}, // TODO - should inherit from fontSize
     {"textAlign", value<CSSKeyword>("auto")},
     {"textDecorationLine", value<CSSKeyword>("none")},
     {"textShadowColor", value<CSSColor, CSSPlatformColor>(BLACK)},

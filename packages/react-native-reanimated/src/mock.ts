@@ -21,6 +21,7 @@ import type {
 import {
   advanceAnimationByFrame,
   advanceAnimationByTime,
+  contrastColor,
   convertToRGBA,
   css as cssStyleSheet,
   cubicBezier,
@@ -248,6 +249,7 @@ const platformFunctions = {
 };
 
 const Colors = {
+  contrastColor,
   convertToRGBA,
   DynamicColorIOS,
   isColor,

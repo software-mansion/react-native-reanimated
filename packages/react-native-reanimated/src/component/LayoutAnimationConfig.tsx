@@ -92,21 +92,14 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
 
     if (
       this.props.skipExiting === undefined ||
-      Children.count(children) !== 1
+      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children) ||
+      children.type === Fragment
     ) {
       return children;
     }
 
-    const child = Children.only(children);
-    if (
-      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(child) ||
-      child.type === Fragment
-    ) {
-      return children;
-    }
-
-    return cloneElement(child, {
-      ref: this._getMergedRef(child.props.ref),
+    return cloneElement(children, {
+      ref: this._getMergedRef(children.props.ref),
     });
   }
 

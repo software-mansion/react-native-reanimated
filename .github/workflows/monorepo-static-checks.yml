@@ -3,20 +3,18 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths-ignore:
-      - packages/
-      - apps/
   merge_group:
     branches:
       - main
   push:
     branches:
       - main
-    paths-ignore:
-      - packages/
-      - apps/
   workflow_call:
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -53,3 +51,5 @@ jobs:
       - name: Show markdown diff
         if: failure() && steps.md-format.outcome == 'failure'
         run: git diff
+      - name: Check documentation page titles
+        run: yarn lint:md

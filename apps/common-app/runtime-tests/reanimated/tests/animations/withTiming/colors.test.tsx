@@ -10,11 +10,12 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
-  wait,
+  waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
@@ -100,11 +101,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#6495ed',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      '#ff7f50',
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe('#ff7f50', ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       '#ff7f50',
       ComparisonMode.COLOR
@@ -124,11 +123,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#ff7f50',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe('#6495ed', ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       '#6495ed',
       ComparisonMode.COLOR
@@ -148,15 +145,15 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#ff7f50',
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).not.toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
+    const settledActive = await waitUntilSettled(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
     );
-    expect(await componentPassive.getAnimatedStyle('backgroundColor')).not.toBe(
-      '#6495ed',
-      ComparisonMode.COLOR
+    const settledPassive = await waitUntilSettled(() =>
+      componentPassive.getAnimatedStyle('backgroundColor')
     );
+
+    expect(settledActive).not.toBe('#6495ed', ComparisonMode.COLOR);
+    expect(settledPassive).not.toBe('#6495ed', ComparisonMode.COLOR);
   });
 
   test.each([
@@ -180,11 +177,9 @@ describe('withTiming animation of COLOR 🎨', () => {
       from,
       ComparisonMode.COLOR
     );
-    await wait(1000);
-    expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
-      to,
-      ComparisonMode.COLOR
-    );
+    await expectEventually(() =>
+      componentActive.getAnimatedStyle('backgroundColor')
+    ).toBe(to, ComparisonMode.COLOR);
     expect(await componentPassive.getAnimatedStyle('backgroundColor')).toBe(
       to,
       ComparisonMode.COLOR

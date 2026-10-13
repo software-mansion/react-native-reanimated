@@ -183,7 +183,7 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
       await render(<AnimatedComponent enteringAnimation={keyframeAnimation} />);
 
       await waitForAnimationUpdates(Snapshots[snapshotName].length);
-      const updates = updatesContainer.getUpdates();
+      const updates = await updatesContainer.getUpdates();
       expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
 
       await unmockAnimationTimer();

@@ -109,12 +109,12 @@ fun getReanimatedStaticFeatureFlags(): String {
 }
 
 fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
-    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
+    val legacyLayoutAnimationsProxy = featureFlags["USE_LEGACY_LAYOUT_ANIMATIONS_PROXY"] == "true"
     val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
 
-    if (androidSyncUiProps && sharedElementTransitions) {
+    if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json."
         )
     }
 
@@ -135,12 +135,6 @@ if (project != rootProject) {
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
-val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
-    val parts = REACT_NATIVE_VERSION.split(".")
-    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
-    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
-    major > 0 || minor >= 86
-}
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
@@ -207,8 +201,6 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
-
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
@@ -373,7 +365,7 @@ tasks.named("preBuild") { dependsOn("prepareReanimatedHeadersForPrefabs") }
 
 // Workaround for AGP 9 + Kotlin 2.x lint K2 UAST crash on .gradle.kts build scripts.
 // See: https://issuetracker.google.com/issues/432144179
-tasks.configureEach { if (name.startsWith("lintVital")) enabled = false }
+tasks.configureEach { if (name.startsWith("lint")) enabled = false }
 
 if (project != rootProject) {
     evaluationDependsOn(":react-native-worklets")

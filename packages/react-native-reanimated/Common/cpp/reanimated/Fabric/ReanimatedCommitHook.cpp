@@ -15,32 +15,29 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy,
-    const std::shared_ptr<ReanimatedSurfaceTracker> &surfaceTracker)
+    const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxy_(layoutAnimationsProxy),
-      surfaceTracker_(surfaceTracker) {
+      viewStylesRepository_(viewStylesRepository),
+      layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      synchronousWritesTracker_(synchronousWritesTracker) {
   uiManager_->registerCommitHook(*this);
-  // Pick up surfaces that existed before Reanimated initialized. We're not
-  // on a commit stack here, so reading the registry is safe.
   uiManager_->getShadowTreeRegistry().enumerate(
-      [this](const ShadowTree &shadowTree, bool & /*stop*/) { maybeInitializeLayoutAnimations(shadowTree); });
+      [this](const ShadowTree &shadowTree, bool & /*stop*/) { registerLayoutAnimations(shadowTree); });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-void ReanimatedCommitHook::maybeInitializeLayoutAnimations(const ShadowTree &shadowTree) {
-  if (!surfaceTracker_->add(shadowTree.getSurfaceId())) {
-    return;
+std::shared_ptr<LayoutAnimationsProxyCommon> ReanimatedCommitHook::registerLayoutAnimations(
+    const ShadowTree &shadowTree) {
+  if (!layoutAnimationsProxyRegistry_) {
+    return nullptr;
   }
-  // TODO: We should consider registering a new instance of proxy for each surface.
-  // The current approach will encounter problems on platforms where it is more common to have multiple
-  // surfaces.
-  layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
-  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(layoutAnimationsProxy_);
+  return layoutAnimationsProxyRegistry_->registerSurface(shadowTree);
 }
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
@@ -50,10 +47,21 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     const ShadowTreeCommitOptions &commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
-  maybeInitializeLayoutAnimations(shadowTree);
+  if (const auto proxy = registerLayoutAnimations(shadowTree)) {
+    proxy->shadowTreeWillCommit(newRootShadowNode->getChildren().empty());
+  }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return newRootShadowNode;
+  }
+
+  if (newRootShadowNode->getChildren().empty()) {
+    // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
+    auto lock = updatesRegistryManager_->lock();
+    viewStylesRepository_->removeSurface(shadowTree.getSurfaceId());
+    if (synchronousWritesTracker_) {
+      synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
+    }
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
@@ -63,6 +71,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // the updates registry manager
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
+    trackCommit(newRootShadowNode, false);
     return newRootShadowNode;
   }
 
@@ -70,7 +79,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.
-    if (commitOptions.source != ShadowTreeCommitSource::React) {
+    // ReactRevisionMerge commits are based on the promoted React revision,
+    // so they need the same treatment as React commits when Fabric commit
+    // branching is enabled.
+    if (commitOptions.source != ShadowTreeCommitSource::React &&
+        commitOptions.source != ShadowTreeCommitSource::ReactRevisionMerge) {
+      trackCommit(newRootShadowNode, false);
       return newRootShadowNode;
     }
   }
@@ -87,6 +101,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
+    trackCommit(rootNode, true);
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
@@ -99,6 +115,29 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
   return rootNode;
+}
+
+#if REACT_NATIVE_VERSION_MINOR >= 88
+void ReanimatedCommitHook::shadowTreeDidCommit(
+    const ShadowTree &,
+    const RootShadowNode::Shared &rootShadowNode,
+    const std::vector<const LayoutableShadowNode *> &) noexcept {
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onDidCommit(rootShadowNode);
+  }
+}
+#endif
+
+void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowNode, const bool carriesRegistryValues)
+    const {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
+  synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
+#if REACT_NATIVE_VERSION_MINOR < 88
+  // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
+  synchronousWritesTracker_->onDidCommit(rootShadowNode);
+#endif
 }
 
 } // namespace reanimated

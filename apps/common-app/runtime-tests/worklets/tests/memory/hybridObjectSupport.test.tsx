@@ -1,6 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
+import type { BoxedHybridObject } from 'react-native-nitro-modules';
+import {
+  createSynchronizable,
+  registerCustomSerializable,
+  runOnUISync,
+  scheduleOnRN,
+  scheduleOnRuntime,
+} from 'react-native-worklets';
+
 import {
   describe,
   expect,
@@ -9,41 +20,20 @@ import {
   test,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import {
-  createSerializable,
-  createSynchronizable,
-  registerCustomSerializable,
-  runOnUISync,
-  scheduleOnRN,
-  scheduleOnRuntime,
-  serializableMappingCache,
-} from 'react-native-worklets';
-
-import { createMMKV, type MMKV } from 'react-native-mmkv';
-import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
-import type { BoxedHybridObject } from 'react-native-nitro-modules';
 
 // @ts-ignore NitroModules types on web differ from native.
 const boxedNitroModules = NitroModules.box(NitroModules);
 
-const NitroModulesHandle = {
-  __init() {
-    'worklet';
-    return boxedNitroModules.unbox();
-  },
-};
-
-const serializedNitroModulesHandle = createSerializable(NitroModulesHandle);
-serializableMappingCache.set(NitroModules, serializedNitroModulesHandle);
-
 const determine = (value: object): value is HybridObject<never> => {
   'worklet';
+  const NitroModules = boxedNitroModules.unbox();
   // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.isHybridObject(value);
 };
 
 const pack = (value: HybridObject<never>) => {
   'worklet';
+  const NitroModules = boxedNitroModules.unbox();
   // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.box(value);
 };

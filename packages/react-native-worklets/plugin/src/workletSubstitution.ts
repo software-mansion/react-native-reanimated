@@ -1,5 +1,10 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression, Directive, ObjectMethod } from '@babel/types';
+import type {
+  CallExpression,
+  Directive,
+  MemberExpression,
+  ObjectMethod,
+} from '@babel/types';
 import {
   isBlockStatement,
   isDirectiveLiteral,
@@ -74,7 +79,7 @@ function hasWorkletDirective(directives: Directive[]): boolean {
 
 function substituteWorkletWithWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
-  workletFactoryCall: CallExpression
+  workletFactoryCall: CallExpression | MemberExpression
 ): void {
   if (path.isObjectMethod()) {
     substituteObjectMethodWithObjectProperty(path, workletFactoryCall);
@@ -86,7 +91,7 @@ function substituteWorkletWithWorkletFactoryCall(
 
 export function substituteObjectMethodWithObjectProperty(
   path: NodePath<ObjectMethod>,
-  workletFactoryCall: CallExpression
+  workletFactoryCall: CallExpression | MemberExpression
 ): void {
   const replacement = objectProperty(path.node.key, workletFactoryCall);
   path.replaceWith(replacement);

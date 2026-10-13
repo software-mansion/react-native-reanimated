@@ -31,10 +31,12 @@ function polarToCartesian(angle: number, radius: number, center: Point) {
 
 function cartesianToPolar(point: Point, center: Point) {
   'worklet';
-  return (
-    Math.atan((point.y - center.y) / (point.x - center.x)) / (Math.PI / 180) +
-    (point.x > center.x ? 90 : 270)
-  );
+  // Angle measured clockwise from 12 o'clock, in [0, 360).
+  // atan2 handles points straight above or below the center, where
+  // atan(dy / dx) divides by zero and returns the opposite side of the circle.
+  const angle =
+    (Math.atan2(point.x - center.x, center.y - point.y) * 180) / Math.PI;
+  return (angle + 360) % 360;
 }
 
 function valueToAngle(value: number, min: number, max: number) {
@@ -122,6 +124,10 @@ function CircularSlider(props: CircularSliderProps) {
       }
     },
     onUpdate: ({ x, y }) => {
+      // The angle is undefined at the center, so keep the previous value
+      if (x === center.x && y === center.y) {
+        return;
+      }
       currentAngle.value = cartesianToPolar({ x, y }, center);
     },
   });

@@ -64,6 +64,10 @@ const routes = {
         name: 'Reversing Shortening',
         Component: miscellaneous.ReversingShortening,
       },
+      TransitionCallbacks: {
+        name: 'Transition Callbacks',
+        Component: miscellaneous.TransitionCallbacks,
+      },
     },
   },
   RealWorldExamples: {

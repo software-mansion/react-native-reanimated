@@ -6,7 +6,6 @@ import type {
   Directive,
   ExpressionStatement,
   JSXAttribute,
-  ObjectExpression,
   Program,
 } from '@babel/types';
 
@@ -17,7 +16,6 @@ import {
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
 import { processIfWorkletMethod } from './classMethod';
-import { processIfWorkletContextObject } from './contextObject';
 import { handleWorkletDirective } from './directives';
 import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
@@ -74,13 +72,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         ) {
           runWithTaggedExceptions(state, () => {
             processIfWithWorkletDirective(path, state);
-          });
-        },
-      },
-      ObjectExpression: {
-        enter(path: NodePath<ObjectExpression>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            processIfWorkletContextObject(path, state);
           });
         },
       },

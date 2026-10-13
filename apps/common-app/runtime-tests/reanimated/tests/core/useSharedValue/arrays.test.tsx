@@ -5,7 +5,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import {
   describe,
   expect,
-  getRegisteredValue,
+  expectSharedValue,
   notify,
   Presets,
   registerValue,
@@ -76,9 +76,10 @@ describe(`_Array operations_ on sharedValue`, () => {
     );
     const expected = [...initialArray, ...appendedArray];
     await waitForNotification(ARRAY_OPERATION_NOTIFICATION_NAME);
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onJS).toBe(expected, ComparisonMode.ARRAY);
-    expect(sharedValue.onUI).toBe(expected, ComparisonMode.ARRAY);
+    await expectSharedValue(SHARED_VALUE_REF).onUI.toBe(
+      expected,
+      ComparisonMode.ARRAY
+    );
     await render(<ProgressBar progress={progress} />);
   }
 

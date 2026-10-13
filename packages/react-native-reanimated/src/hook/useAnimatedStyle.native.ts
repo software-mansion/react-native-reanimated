@@ -18,6 +18,7 @@ import type { AnimatedUpdaterData } from './useAnimatedStyleCommon';
 import {
   buildWorkletsHash,
   checkSharedValueUsage,
+  createAnimatedStyleHandle,
   styleUpdater,
 } from './useAnimatedStyleCommon';
 import { useSharedValue } from './useSharedValue';
@@ -41,19 +42,20 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
 ): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
-  updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+  updater: WorkletFunction<[], Style>,
   _dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style | AnimatedProps> {
   if (__DEV__ && _dependencies !== undefined && _dependencies !== null) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.warnOnce(
+      'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+      isAnimatedProps ? 2 : 1
+    );
   }
 
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
-  const inputs = Object.values(updater.__closure ?? {});
+  const inputs = updater.__closure ?? [];
   const adaptersArray = adapters
     ? Array.isArray(adapters)
       ? adapters
@@ -146,11 +148,13 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   if (!animatedStyleHandle.current) {
     const styleUpdaterContainer =
       animatedUpdaterData.current.styleUpdaterContainer;
-    animatedStyleHandle.current = {
-      viewDescriptors,
-      initial,
-      styleUpdaterContainer,
-    };
+    animatedStyleHandle.current = createAnimatedStyleHandle(
+      {
+        viewDescriptors,
+        initial,
+      },
+      styleUpdaterContainer
+    );
   }
 
   return animatedStyleHandle.current;

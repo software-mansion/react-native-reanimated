@@ -27,7 +27,6 @@ export type TrackerCallCount = {
 };
 
 export type SharedValueSnapshot<TValue extends TestValue> = {
-  name: string;
   onJS: TValue;
   onUI: TValue;
 };
@@ -72,6 +71,15 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
+export type MountedViewProps = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  backgroundColor: string;
+};
+
 export type ValidPropNames =
   | 'zIndex'
   | 'opacity'
@@ -80,7 +88,8 @@ export type ValidPropNames =
   | 'top'
   | 'left'
   | 'backgroundColor'
-  | 'boxShadow';
+  | 'boxShadow'
+  | 'backgroundImage';
 
 export function isValidPropName(propName: string): propName is ValidPropNames {
   'worklet';
@@ -93,6 +102,7 @@ export function isValidPropName(propName: string): propName is ValidPropNames {
     'left',
     'backgroundColor',
     'boxShadow',
+    'backgroundImage',
   ].includes(propName);
 }
 
@@ -107,8 +117,6 @@ export enum ComparisonMode {
   OBJECT = 'OBJECT',
   AUTO = 'AUTO',
 }
-
-export type LockObject = { lock: boolean };
 
 type Writable<T> = {
   -readonly [P in keyof T]: T[P];
@@ -149,6 +157,7 @@ export type TestProgress = {
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
+  onSuiteFinished?: (suiteName: string) => void;
 };
 
 export type Mismatch = {
@@ -171,8 +180,6 @@ declare global {
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)
     | undefined;
-  var originalCallMicrotasks: (() => void) | undefined;
-  var __callMicrotasks: () => void;
   var scheduleOnRN: typeof import('react-native-worklets').scheduleOnRN;
   var originalNativeRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)
@@ -190,6 +197,10 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _obtainMountedViewProps: (
+    tag: number,
+    presented: boolean
+  ) => MountedViewProps | null;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
