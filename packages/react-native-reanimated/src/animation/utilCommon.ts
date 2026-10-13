@@ -20,19 +20,11 @@ import type {
 import { ReduceMotion } from '../commonTypes';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
-import type {
-  AffineMatrix,
-  AffineMatrixFlat,
-} from './transformationMatrix/matrixUtils';
+import type { AffineMatrixFlat } from './transformationMatrix/matrixUtils';
 import {
-  addMatrices,
   decomposeMatrixIntoMatricesAndAngles,
-  flatten,
-  getRotationMatrix,
+  interpolateMatrix,
   isAffineMatrixFlat,
-  multiplyMatrices,
-  scaleMatrix,
-  subtractMatrices,
 } from './transformationMatrix/matrixUtils';
 
 /**
@@ -130,20 +122,6 @@ export function getReduceMotionForAnimation(config?: ReduceMotion) {
   }
 
   return getReduceMotionFromConfig(config);
-}
-
-function applyProgressToMatrix(
-  progress: number,
-  a: AffineMatrix,
-  b: AffineMatrix
-) {
-  'worklet';
-  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
-}
-
-function applyProgressToNumber(progress: number, a: number, b: number) {
-  'worklet';
-  return a + progress * (b - a);
 }
 
 export function decorateAnimation<
@@ -333,51 +311,11 @@ export function decorateAnimation<
 
     const progress = animation[0].current / 100;
 
-    const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
-    const mappedTransforms: Array<AffineMatrix> = [];
-
-    transforms.forEach((key, _) =>
-      mappedTransforms.push(
-        applyProgressToMatrix(
-          progress,
-          animation.startMatrices[key],
-          animation.stopMatrices[key]
-        )
-      )
+    animation.current = interpolateMatrix(
+      progress,
+      animation.startMatrices,
+      animation.stopMatrices
     );
-
-    const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
-
-    const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
-    const mappedRotations: Array<AffineMatrix> = [];
-
-    rotations.forEach((key, _) => {
-      const angle = applyProgressToNumber(
-        progress,
-        animation.startMatrices['r' + key],
-        animation.stopMatrices['r' + key]
-      );
-      mappedRotations.push(getRotationMatrix(angle, key));
-    });
-
-    const [rotationMatrixX, rotationMatrixY, rotationMatrixZ] = mappedRotations;
-
-    const rotationMatrix = multiplyMatrices(
-      rotationMatrixX,
-      multiplyMatrices(rotationMatrixY, rotationMatrixZ)
-    );
-
-    const updated = flatten(
-      multiplyMatrices(
-        multiplyMatrices(
-          currentScale,
-          multiplyMatrices(skewMatrix, rotationMatrix)
-        ),
-        currentTranslation
-      )
-    );
-
-    animation.current = updated;
 
     return finished;
   };

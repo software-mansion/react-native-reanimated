@@ -417,3 +417,56 @@ export function decomposeMatrixIntoMatricesAndAngles(
     rz: rz || 0,
   };
 }
+
+function applyProgressToMatrix(
+  progress: number,
+  a: AffineMatrix,
+  b: AffineMatrix
+) {
+  'worklet';
+  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+}
+
+function applyProgressToNumber(progress: number, a: number, b: number) {
+  'worklet';
+  return a + progress * (b - a);
+}
+
+export function interpolateMatrix(
+  progress: number,
+  start: TransformMatrixDecompositionWithAngles,
+  stop: TransformMatrixDecompositionWithAngles
+): AffineMatrixFlat {
+  'worklet';
+  const translation = applyProgressToMatrix(
+    progress,
+    start.translationMatrix,
+    stop.translationMatrix
+  );
+  const scale = applyProgressToMatrix(
+    progress,
+    start.scaleMatrix,
+    stop.scaleMatrix
+  );
+  const skew = applyProgressToMatrix(
+    progress,
+    start.skewMatrix,
+    stop.skewMatrix
+  );
+  const rotation = multiplyMatrices(
+    getRotationMatrix(applyProgressToNumber(progress, start.rx, stop.rx), 'x'),
+    multiplyMatrices(
+      getRotationMatrix(
+        applyProgressToNumber(progress, start.ry, stop.ry),
+        'y'
+      ),
+      getRotationMatrix(applyProgressToNumber(progress, start.rz, stop.rz), 'z')
+    )
+  );
+  return flatten(
+    multiplyMatrices(
+      multiplyMatrices(scale, multiplyMatrices(skew, rotation)),
+      translation
+    )
+  );
+}
