@@ -54,7 +54,6 @@ describe('Sensor registration', () => {
     const data = {
       angle: Math.PI / 2,
       status: HingeStatus.PARTIALLY_OPEN,
-      interfaceOrientation: 0,
     };
     act(() => nativeHandler!({ ...data }));
 
@@ -283,7 +282,6 @@ describe('Sensor availability', () => {
     const data = {
       angle: Math.PI / 2,
       status: HingeStatus.PARTIALLY_OPEN,
-      interfaceOrientation: 0,
     };
     act(() => nativeHandler!({ ...data }));
 

@@ -57,6 +57,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
             value.setProperty(uiRuntime, "x", newValues[0]);
             value.setProperty(uiRuntime, "y", newValues[1]);
             value.setProperty(uiRuntime, "z", newValues[2]);
+            value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
             break;
           case SensorType::ROTATION_VECTOR:
             value.setProperty(uiRuntime, "qx", newValues[0]);
@@ -66,13 +67,13 @@ jsi::Value AnimatedSensorModule::registerSensor(
             value.setProperty(uiRuntime, "yaw", newValues[4]);
             value.setProperty(uiRuntime, "pitch", newValues[5]);
             value.setProperty(uiRuntime, "roll", newValues[6]);
+            value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
             break;
           case SensorType::HINGE:
             value.setProperty(uiRuntime, "angle", newValues[0]);
             value.setProperty(uiRuntime, "status", newValues[1]);
             break;
         }
-        value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
         runSyncOnRuntime(uiWorkletRuntime, serializableHandler, jsi::Value(uiRuntime, value));
       });

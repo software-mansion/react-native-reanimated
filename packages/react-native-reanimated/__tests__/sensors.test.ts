@@ -153,7 +153,6 @@ describe('Sensors', () => {
     expect(result.current.sensor.value).toStrictEqual({
       angle: 0,
       status: HingeStatus.UNKNOWN,
-      interfaceOrientation: 0,
     });
   });
 
@@ -499,18 +498,12 @@ describe('Sensors', () => {
     expect(jest.mocked(unregisterSensor).mock.calls).toEqual([[1]]);
   });
 
-  test('leaves the hinge value as it is in every interface orientation', () => {
+  test('passes the hinge value on with no change', () => {
     const { result } = renderHook(() => useAnimatedSensor(SensorType.HINGE));
 
-    for (const interfaceOrientation of [0, 90, 180, 270]) {
-      const data = {
-        angle: Math.PI / 2,
-        status: HingeStatus.PARTIALLY_OPEN,
-        interfaceOrientation,
-      };
-      act(() => eventHandler({ ...data }));
+    const data = { angle: Math.PI / 2, status: HingeStatus.PARTIALLY_OPEN };
+    act(() => eventHandler({ ...data }));
 
-      expect(result.current.sensor.value).toStrictEqual(data);
-    }
+    expect(result.current.sensor.value).toStrictEqual(data);
   });
 });

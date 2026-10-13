@@ -30,7 +30,7 @@ function createInitialSensorValue(sensorType: SensorType): SensorValue {
         interfaceOrientation: 0,
       };
     case SensorType.HINGE:
-      return { angle: 0, status: HingeStatus.UNKNOWN, interfaceOrientation: 0 };
+      return { angle: 0, status: HingeStatus.UNKNOWN };
   }
 }
 
