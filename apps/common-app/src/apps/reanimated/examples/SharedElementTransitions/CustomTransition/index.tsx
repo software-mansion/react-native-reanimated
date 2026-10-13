@@ -33,6 +33,15 @@ import {
   OpacityTargetScreen,
 } from './Opacity';
 import {
+  ProgressSourceSection,
+  ProgressTargetRoute,
+  ProgressTargetScreen,
+  ProgressTypeSourceSection,
+  ProgressTypeTargetRoute,
+  ProgressTypeTargetScreen,
+} from './ProgressAnimation';
+import { styles } from './styles';
+import {
   TransformSourceSection,
   TransformTargetRoute,
   TransformTargetScreen,
@@ -47,12 +56,6 @@ import {
   WindowTargetRoute,
   WindowTargetScreen,
 } from './Window';
-import {
-  ProgressSourceSection,
-  ProgressTargetRoute,
-  ProgressTargetScreen,
-} from './ProgressAnimation';
-import { styles } from './styles';
 
 function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const navigate = (route: string) => navigation.navigate(route);
@@ -60,6 +63,7 @@ function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
     <Animated.ScrollView style={styles.flexOne}>
       <BasicSourceSection navigate={navigate} />
       <ProgressSourceSection navigate={navigate} />
+      <ProgressTypeSourceSection navigate={navigate} />
       <BorderRadiusSourceSection navigate={navigate} />
       <GlobalOriginSourceSection navigate={navigate} />
       <BackgroundColorSourceSection navigate={navigate} />
@@ -78,7 +82,7 @@ export default function CustomTransitionExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name='Menu'
+        name="Menu"
         component={Menu}
         options={{ headerShown: false }}
       />
@@ -90,6 +94,11 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name={ProgressTargetRoute}
         component={ProgressTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ProgressTypeTargetRoute}
+        component={ProgressTypeTargetScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
