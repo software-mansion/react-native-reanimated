@@ -1,6 +1,7 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
+import android.graphics.Color
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -15,7 +16,9 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
+import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
@@ -270,6 +273,30 @@ open class NativeProxy {
     }
 
     @DoNotStrip
+    fun obtainMountedViewProps(tag: Int): DoubleArray? {
+        if (!UiThreadUtil.isOnUiThread()) {
+            return null
+        }
+        val view =
+            try {
+                mFabricUIManager.resolveView(tag)
+            } catch (e: IllegalViewOperationException) {
+                null
+            } ?: return null
+        if (!view.isAttachedToWindow) {
+            return null
+        }
+        return doubleArrayOf(
+            PixelUtil.toDIPFromPixel(view.left.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.top.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.height.toFloat()).toDouble(),
+            view.alpha.toDouble(),
+            (BackgroundStyleApplicator.getBackgroundColor(view) ?: Color.TRANSPARENT).toDouble(),
+        )
+    }
+
+    @DoNotStrip
     fun preserveMountedTags(tags: IntArray): Boolean {
         if (!UiThreadUtil.isOnUiThread()) {
             return false
@@ -445,12 +472,12 @@ open class NativeProxy {
     @DoNotStrip
     fun getIsReducedMotion(): Boolean {
         val mContentResolver: ContentResolver = mContext.get()!!.contentResolver
-        val rawValue =
-            Settings.Global.getString(
+        val parsedValue =
+            Settings.Global.getFloat(
                 mContentResolver,
                 Settings.Global.TRANSITION_ANIMATION_SCALE,
+                1f,
             )
-        val parsedValue = if (rawValue != null) rawValue.toFloat() else 1f
         return parsedValue == 0f
     }
 
