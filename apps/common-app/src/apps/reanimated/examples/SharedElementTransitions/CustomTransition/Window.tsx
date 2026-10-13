@@ -26,11 +26,11 @@ const WINDOW_TRANSITION = SharedTransition.custom((values) => {
   return {
     originX: withSequence(
       withTiming(cornerX, { duration: LEG_MS }),
-      withTiming(values.targetOriginX, { duration: LEG_MS }),
+      withTiming(values.targetOriginX, { duration: LEG_MS })
     ),
     originY: withSequence(
       withTiming(cornerY, { duration: LEG_MS }),
-      withTiming(values.targetOriginY, { duration: LEG_MS }),
+      withTiming(values.targetOriginY, { duration: LEG_MS })
     ),
   };
 });
@@ -43,12 +43,12 @@ export function WindowSourceSection({ navigate }: { navigate: Navigate }) {
       <Text style={styles.heading}>windowWidth / windowHeight</Text>
       <Text style={styles.body}>
         Uses `values.windowWidth` and `values.windowHeight` to compute a
-        bottom-right waypoint. The worklet sequences two timing legs:
-        source → bottom-right corner → final target.
+        bottom-right waypoint. The worklet sequences two timing legs: source →
+        bottom-right corner → final target.
       </Text>
       <Text style={styles.body}>
-        Expected: the box travels to the bottom-right corner at the midpoint
-        of the transition, then continues to the target position.
+        Expected: the box travels to the bottom-right corner at the midpoint of
+        the transition, then continues to the target position.
       </Text>
       <Animated.View
         style={styles.greenBoxSource}
@@ -56,7 +56,7 @@ export function WindowSourceSection({ navigate }: { navigate: Navigate }) {
         sharedTransitionStyle={WINDOW_TRANSITION}
       />
       <Button
-        title='Open window-derived target screen'
+        title="Open window-derived target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -69,9 +69,9 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <View style={styles.instructions}>
         <Text style={styles.heading}>windowWidth / windowHeight — target</Text>
         <Text style={styles.body}>
-          The transition routes the box through the bottom-right corner of
-          the viewport (windowWidth - width, windowHeight - height) before
-          landing here.
+          The transition routes the box through the bottom-right corner of the
+          viewport (windowWidth - width, windowHeight - height) before landing
+          here.
         </Text>
       </View>
       <Animated.View
@@ -79,7 +79,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={WINDOW_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }

@@ -40,7 +40,7 @@ export function OpacitySourceSection({ navigate }: { navigate: Navigate }) {
         sharedTransitionStyle={OPACITY_TRANSITION}
       />
       <Button
-        title='Open opacity target screen'
+        title="Open opacity target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -61,7 +61,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={OPACITY_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
