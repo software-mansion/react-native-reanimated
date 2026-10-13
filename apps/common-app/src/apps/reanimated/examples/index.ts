@@ -127,10 +127,6 @@ const SuspenseLayoutAnimationCrashExample: React.FC = () =>
   React.createElement(
     require('./SuspenseLayoutAnimationCrashExample').default as React.FC
   );
-const SuspenseSettledPropsExample: React.FC = () =>
-  React.createElement(
-    require('./SuspenseSettledPropsExample').default as React.FC
-  );
 const NestedExitingCleanupExample: React.FC = () =>
   React.createElement(
     require('./NestedExitingCleanupExample').default as React.FC
@@ -337,13 +333,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Suspense + Layout Animation Crash',
     section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
-    disabledPlatforms: [REAPlatform.WEB],
-  },
-  SuspenseSettledPropsExample: {
-    icon: '🧊',
-    title: 'Suspense reveal + settled props',
-    section: REGRESSIONS,
-    screen: SuspenseSettledPropsExample,
     disabledPlatforms: [REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
