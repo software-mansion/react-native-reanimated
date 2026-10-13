@@ -208,6 +208,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
         if (!beforeNode || !afterNode) {
           continue;
         }
+        if (isDetached(beforeNode)) {
+          transaction.restoreRequests.push_back({sharedTag, beforeNode});
+          transaction.restoreRequests.push_back({sharedTag, afterNode});
+          continue;
+        }
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
@@ -343,13 +348,8 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
 }
 
 std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const ShadowView &before) const {
-  Tag containerTag = -1;
-  {
-    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-    containerTag = sharedTransitionManager_->nextContainerTag_;
-    sharedTransitionManager_->nextContainerTag_ += 2;
-  }
-  const auto root = lightNodes_.at(surfaceId_);
+  const auto containerTag = allocateContainerTag();
+  const auto parent = getOrCreateContainerParent();
   auto containerView = before;
   containerView.tag = containerTag;
   auto node = std::make_shared<LightNode>();
@@ -358,8 +358,8 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const Sh
   react_native_assert(node->current.props && "Shared container has no props");
   node->accumulatedRawProps = node->current.props->rawProps;
 #endif
-  node->parent = root;
-  root->children.push_back(node);
+  node->parent = parent;
+  parent->children.push_back(node);
   [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
   return node;
@@ -386,7 +386,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-      if (!config) {
+      if (!config || isDetached(collectedTransition.nodes[BEFORE])) {
         for (const auto &node : collectedTransition.nodes) {
           if (node) {
             transaction.restoreRequests.push_back({sharedTag, node});
@@ -631,17 +631,90 @@ std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() con
   return surfaceId_;
 }
 
-void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
+// A source that left the screen before its transition starts, e.g. a sheet dismissed by a swipe, has nothing to fly
+// from.
+bool LayoutAnimationsProxy::isDetached(const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  const auto parent = node ? node->parent.lock() : nullptr;
+  return parent && nativeViewPlacement_ &&
+      nativeViewPlacement_(surfaceId_, node->current.tag, parent->current.tag, false).kind ==
+      NativeViewPlacement::Kind::Detached;
+#else
+  return false;
+#endif
+}
+
+Tag LayoutAnimationsProxy::allocateContainerTag() const {
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  const auto tag = sharedTransitionManager_->nextContainerTag_;
+  sharedTransitionManager_->nextContainerTag_ += 2;
+  return tag;
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy::getOrCreateContainerParent() const {
+#ifdef __APPLE__
+  if (setSharedTransitionOverlay_) {
+    if (!containerOverlay_) {
+      const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+      const auto &descriptor = componentDescriptorRegistry_->at("View");
+      ShadowView overlay;
+      overlay.componentName = descriptor.getComponentName();
+      overlay.componentHandle = descriptor.getComponentHandle();
+      overlay.surfaceId = surfaceId_;
+      overlay.tag = allocateContainerTag();
+      overlay.props =
+          descriptor.cloneProps(propsParserContext, nullptr, RawProps(folly::dynamic::object("pointerEvents", "none")));
+      overlay.layoutMetrics = lightNodes_.at(surfaceId_)->current.layoutMetrics;
+      containerOverlay_ = std::make_shared<LightNode>();
+      containerOverlay_->current = std::move(overlay);
+    }
+    return containerOverlay_;
+  }
+#endif
+  return lightNodes_.at(surfaceId_);
+}
+
+int LayoutAnimationsProxy::containerParentChildCount() const {
+#ifdef __APPLE__
+  if (setSharedTransitionOverlay_) {
+    return containerOverlay_ ? static_cast<int>(containerOverlay_->children.size()) : 0;
+  }
+#endif
+  return static_cast<int>(lightNodes_.at(surfaceId_)->children.size());
+}
+
+// The container mutations go before the other mutations of the transaction, so they index the children that the
+// container parent had at the start of the pull.
+void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int containerIndex) const {
+  if (transaction.containersToInsert.empty()) {
+    return;
+  }
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
-  filteredMutations.reserve(transaction.containersToInsert.size() * 2);
+  filteredMutations.reserve(transaction.containersToInsert.size() * 2 + 2);
+  const auto parent = getOrCreateContainerParent();
+#ifdef __APPLE__
+  // The overlay exists only while it has containers.
+  const bool createsOverlay = parent == containerOverlay_ && containerIndex == 0;
+  if (createsOverlay) {
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(parent->current));
+    // The overlay is never inserted, and a recycled view keeps the props of its previous use until an update.
+    const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+    auto recycledView = parent->current;
+    recycledView.props =
+        componentDescriptorRegistry_->at(parent->current.componentHandle).cloneProps(propsParserContext, nullptr, {});
+    recycledView.layoutMetrics = EmptyLayoutMetrics;
+    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(recycledView, parent->current, Tag{0}));
+    setSharedTransitionOverlay_(surfaceId_, parent->current.tag);
+  }
+#endif
   for (const auto &sharedTag : transaction.containersToInsert) {
     auto &run = *sharedElements_.at(sharedTag).run;
     run.inserted = true;
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(run.container->current));
     filteredMutations.push_back(
-        ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
+        ShadowViewMutation::InsertMutation(parent->current.tag, run.container->current, containerIndex++));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
@@ -767,19 +840,26 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   }
 
   ReanimatedSystraceSection s2("remove shared containers");
-  const auto root = lightNodes_.at(surfaceId_);
   for (const auto &node : transaction.containersToRemove) {
-    const auto childIt = std::ranges::find(root->children, node);
-    react_native_assert(childIt != root->children.end() && "Shared container is not mounted");
-    if (childIt != root->children.end()) {
-      const auto index = static_cast<int>(std::distance(root->children.begin(), childIt));
-      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, node->current, index));
+    const auto parent = node->parent.lock();
+    const auto childIt = std::ranges::find(parent->children, node);
+    react_native_assert(childIt != parent->children.end() && "Shared container is not mounted");
+    if (childIt != parent->children.end()) {
+      const auto index = static_cast<int>(std::distance(parent->children.begin(), childIt));
+      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-      root->children.erase(childIt);
+      parent->children.erase(childIt);
     }
 
     unmapLightNode(node);
   }
+#ifdef __APPLE__
+  if (containerOverlay_ && containerOverlay_->children.empty()) {
+    setSharedTransitionOverlay_(surfaceId_, std::nullopt);
+    filteredMutations.push_back(ShadowViewMutation::DeleteMutation(containerOverlay_->current));
+    containerOverlay_.reset();
+  }
+#endif
 
   std::erase_if(sharedElements_, [](const auto &entry) {
     const auto &element = entry.second;
@@ -818,6 +898,16 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     }
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto parent = currentNode->parent.lock();
+#ifdef __APPLE__
+    if (parent && nativeViewPlacement_) {
+      const auto placement =
+          nativeViewPlacement_(surfaceId_, currentNode->current.tag, parent->current.tag, !useViewsOnScreen);
+      if (placement.kind == NativeViewPlacement::Kind::Reparented) {
+        viewsAbsolutePositions.emplace_back(viewPosition + placement.origin);
+        break;
+      }
+    }
+#endif
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
       const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
@@ -840,7 +930,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   std::vector<AncestorTransform> transforms;
   const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
-  while (currentNode) {
+  while (currentNode && transforms.size() < absolutePositions.size()) {
     resolveLightNodeProps(currentNode);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto &props = getViewProps(view);

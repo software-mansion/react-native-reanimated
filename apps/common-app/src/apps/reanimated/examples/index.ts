@@ -55,6 +55,10 @@ const CustomTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CustomTransition').default as React.FC
   );
+const ModalPresentationsExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalPresentations').default as React.FC
+  );
 const ChatHeadsExample: React.FC = () =>
   React.createElement(require('./ChatHeadsExample').default as React.FC);
 const ChessExample: React.FC = () =>
@@ -896,6 +900,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
   CustomTransitionExample: {
     title: '[SET] Custom Transition',
     screen: CustomTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  ModalPresentationsExample: {
+    title: '[SET] Modal presentations',
+    screen: ModalPresentationsExample,
     disabledPlatforms: [REAPlatform.WEB],
   },
   NestedRotationSharedExample: {

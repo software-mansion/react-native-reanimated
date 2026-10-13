@@ -8,6 +8,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/core/Props.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <react/renderer/graphics/Point.h>
 
 #include <memory>
 #include <optional>
@@ -52,6 +53,18 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
+// Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
+using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
+// A reparented view is kept by the platform outside the view of its parent (e.g. in a presented view controller), so
+// its origin relative to the root view of the surface comes from the platform, at the end of the presentation if
+// settled.
+struct NativeViewPlacement {
+  enum class Kind { InsideParent, Detached, Reparented };
+  Kind kind;
+  react::Point origin;
+};
+using NativeViewPlacementFunction =
+    std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
 // transforms. The background color is ARGB.
@@ -77,6 +90,8 @@ struct PlatformDepMethodsHolder {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
   ReadMountedViewPropsFunction readMountedViewPropsFunction;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  NativeViewPlacementFunction nativeViewPlacementFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
