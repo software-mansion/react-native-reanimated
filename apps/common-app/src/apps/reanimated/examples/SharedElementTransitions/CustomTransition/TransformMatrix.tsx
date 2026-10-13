@@ -15,13 +15,12 @@ const TARGET_ROUTE = 'TransformMatrixScreen2';
 
 const TRANSFORM_MATRIX_TRANSITION = SharedTransition.custom((values) => {
   'worklet';
-  const targetMatrix = values.targetTransformMatrix;
   return {
     width: withSpring(values.targetWidth),
     height: withSpring(values.targetHeight),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
-    transform: [{ matrix: withSpring(targetMatrix) }],
+    transformMatrix: withSpring(values.targetTransformMatrix),
   };
 });
 
@@ -34,20 +33,14 @@ export function TransformMatrixSourceSection({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.heading}>
-        transformMatrix (deprecated — use transform.matrix)
+      <Text style={styles.heading}>transformMatrix (Reanimated 3)</Text>
+      <Text style={styles.body}>
+        Reads values.targetTransformMatrix and animates the transformMatrix
+        style, as Reanimated 3 transitions did. The output is mapped to
+        transform: [{'{'} matrix {'}'}].
       </Text>
       <Text style={styles.body}>
-        Verifies that the v3-style `values.targetTransformMatrix` (flat
-        16-element 4×4) still works. Same matrix as
-        `values.targetTransform.matrix`; the deprecated alias is kept for
-        backward compatibility.
-      </Text>
-      <Text style={styles.body}>
-        Expected: matrix-interpolation from identity to rotate-30° + scale-1.2.
-        The intermediate frames are slightly degenerate (the box may wobble
-        mid-animation) — a documented limitation of the matrix-interpolation
-        path and the reason `transformMatrix` is deprecated.
+        Expected: the box rotates by 30° and scales by 1.2.
       </Text>
       <Animated.View
         style={[styles.greenBoxSource, redBox]}
@@ -55,7 +48,7 @@ export function TransformMatrixSourceSection({
         sharedTransitionStyle={TRANSFORM_MATRIX_TRANSITION}
       />
       <Button
-        title='Open transformMatrix target screen'
+        title="Open transformMatrix target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -68,9 +61,8 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
       <View style={styles.instructions}>
         <Text style={styles.heading}>transformMatrix — target</Text>
         <Text style={styles.body}>
-          Check the console: both currentTransformMatrix and
-          targetTransformMatrix log as undefined. The width/height/origin spring
-          still works because it does not depend on the matrix fields.
+          Target has rotate 30° + scale 1.2. Tap back to spring it back to no
+          transform.
         </Text>
       </View>
       <Animated.View
@@ -78,7 +70,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={TRANSFORM_MATRIX_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
