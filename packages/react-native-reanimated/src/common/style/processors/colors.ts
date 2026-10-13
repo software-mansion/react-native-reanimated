@@ -30,6 +30,9 @@ type PlatformColorObject = MutuallyExclusiveUnion<
   [{ semantic: Array<string> }, { resource_paths?: Array<string> }]
 >;
 
+// TODO: Support react-native-macos colors (`DynamicColorMacOS`,
+// `ColorWithSystemEffectMacOS`) once react-native-macos >= 0.86 is released.
+
 function isPlatformColorObject(value: unknown): value is PlatformColorObject {
   'worklet';
   return (
