@@ -9,6 +9,7 @@ import type {
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type { ProgressSharedTransitionAnimation } from './layoutReanimation/SharedTransition';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -58,7 +59,10 @@ const updateLayoutAnimationsManager = createUpdateManager();
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: ReanimatedKeyframe | LayoutAnimationFunction,
+  config?:
+    | ReanimatedKeyframe
+    | LayoutAnimationFunction
+    | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
   sharedTransitionTag?: string
 ) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>

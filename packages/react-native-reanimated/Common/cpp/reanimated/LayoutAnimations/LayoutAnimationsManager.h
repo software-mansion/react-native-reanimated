@@ -63,9 +63,6 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
-  bool hasProgressConfig(const int tag);
-  std::optional<jsi::Value>
-  callProgressWorklet(jsi::Runtime &rt, const int tag, const jsi::Value &propsDiff, double progress);
 
  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
@@ -83,8 +80,9 @@ class LayoutAnimationsManager {
   std::mutex pendingConfigUpdatesMutex_;
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
-  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
-  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `progressSharedTransitions_`,
+  // `progressSharedTransitionsForNativeID_`, `enteringAnimations_`, `exitingAnimations_`, `layoutAnimations_` and
+  // `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated

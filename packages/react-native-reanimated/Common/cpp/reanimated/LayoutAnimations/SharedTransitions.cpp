@@ -4,6 +4,7 @@
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
@@ -210,12 +211,14 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
+        const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+            before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
         const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, true, transaction);
         const auto containerTag = run.container->current.tag;
         before.tag = containerTag;
         after.tag = containerTag;
 
-        startProgressTransition(containerTag, before, after);
+        startProgressTransition(containerTag, before, after, config);
       }
     }
   } else if (transition_->state == TransitionState::ACTIVE) {
@@ -233,6 +236,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
         continue;
       }
       const auto &layoutAnimation = layoutAnimationIt->second;
+      if (layoutAnimation.config) {
+        continue;
+      }
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
       auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
@@ -291,6 +297,32 @@ void LayoutAnimationsProxy::handleProgressTransition(
       }
     }
     transition_.reset();
+  }
+}
+
+// Called from onTransitionProgress on the UI thread. pullTransaction can run off the UI thread, so it must not call
+// worklets.
+void LayoutAnimationsProxy::applyProgressAnimations() {
+  for (const auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->gestureDriven) {
+      continue;
+    }
+    const auto tag = element.run->container->current.tag;
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() || !layoutAnimationIt->second.config) {
+      continue;
+    }
+    const auto &layoutAnimation = layoutAnimationIt->second;
+    auto values =
+        SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
+    values.setProperty(uiRuntime_, "windowWidth", window_.width);
+    values.setProperty(uiRuntime_, "windowHeight", window_.height);
+    const auto progressAnimation =
+        layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_).asFunction(uiRuntime_);
+    const auto style = progressAnimation.call(uiRuntime_, values, transition_->progress);
+    if (style.isObject()) {
+      progressLayoutAnimation(tag, style.asObject(uiRuntime_));
+    }
   }
 }
 
@@ -546,6 +578,9 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     transition_->state = TransitionState::END;
   }
   transition_->updated = true;
+  if (transition_->state == TransitionState::ACTIVE) {
+    applyProgressAnimations();
+  }
   return surfaceId_;
 }
 

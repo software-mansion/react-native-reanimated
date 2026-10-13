@@ -32,7 +32,6 @@ struct LayoutAnimation {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
-  std::shared_ptr<jsi::Value> propsDiff;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
@@ -54,6 +53,7 @@ struct ProgressLayoutAnimationStart {
   Tag tag;
   ShadowView before, after;
   Tag parentTag;
+  std::shared_ptr<Serializable> config;
 };
 
 struct LayoutAnimationCancellation {

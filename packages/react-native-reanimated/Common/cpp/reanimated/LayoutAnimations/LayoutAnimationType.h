@@ -8,11 +8,11 @@ typedef enum class LayoutAnimationType : std::uint8_t {
   LAYOUT = 3,
   SHARED_ELEMENT_TRANSITION = 4,
   SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
-  PROGRESS = 6,
-  SHARED_ELEMENT_TRANSITION_PROGRESS = 7,
-  SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 8,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 } LayoutAnimationType;
 
 inline bool needsFinalFrameReconciliation(const LayoutAnimationType type) {
-  return type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION && type != LayoutAnimationType::PROGRESS;
+  return type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION &&
+      type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
 }
