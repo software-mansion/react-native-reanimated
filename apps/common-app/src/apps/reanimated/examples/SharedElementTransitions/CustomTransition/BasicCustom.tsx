@@ -40,7 +40,7 @@ export function BasicSourceSection({ navigate }: { navigate: Navigate }) {
         sharedTransitionStyle={BASIC_TRANSITION}
       />
       <Button
-        title='Open basic target screen'
+        title="Open basic target screen"
         onPress={() => navigate(TARGET_ROUTE)}
       />
     </View>
@@ -54,8 +54,8 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         <Text style={styles.heading}>Basic .custom() — target</Text>
         <Text style={styles.body}>
           The green box should now sit at 200×300, lower and further right than
-          on the menu. Tap back to spring-return. iOS swipe-back uses the
-          system default (no progressAnimation registered here).
+          on the menu. Tap back to spring-return. iOS swipe-back uses the system
+          default (no progressAnimation registered here).
         </Text>
       </View>
       <Animated.View
@@ -63,7 +63,7 @@ function TargetContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag={TAG}
         sharedTransitionStyle={BASIC_TRANSITION}
       />
-      <Button title='go back' onPress={() => navigation.goBack()} />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }
