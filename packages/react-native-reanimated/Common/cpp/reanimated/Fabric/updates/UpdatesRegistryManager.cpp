@@ -142,7 +142,7 @@ void UpdatesRegistryManager::addToPropsMap(
   auto it = propsMap.find(shadowNodeFamily);
 
   if (it == propsMap.cend()) {
-    auto propsVector = std::vector<RawProps>{};
+    auto propsVector = std::vector<folly::dynamic>{};
     propsVector.emplace_back(props);
     propsMap.emplace(shadowNodeFamily, propsVector);
   } else {

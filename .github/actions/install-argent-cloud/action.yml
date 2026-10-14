@@ -1,5 +1,5 @@
 name: Install argent-cloud
-description: Install the argent-cloud CLI (argent cloud issue reproduction client) and add it to PATH
+description: Install the argent-cloud CLI (client that runs an agent against an app on the Argent Cloud backend) and add it to PATH
 
 inputs:
   release-tag:
