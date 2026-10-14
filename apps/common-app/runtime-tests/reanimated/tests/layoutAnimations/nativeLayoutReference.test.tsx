@@ -42,7 +42,11 @@
  * A track that replaces a track: before the `TrackStarted` time of the new track its key has the declared
  * value of the replaced track, as if it played on; from that time it has the new track, on the clock of the
  * origin of its command. The check takes the track of the key at each time of the 18 ms before the
- * sample, with no other allowance: a read on neither track fails. Each read whose 18 ms have that
+ * sample, with one allowance: a read in the first 18 ms of the new track, before a read of its target
+ * showed the new track, can show the replaced track up to the read (measured: in the display frame of
+ * the start the platform shows the replaced animation until its next display tick,
+ * `.tmp/native-la-run/12C/trace/HUNT-RESULTS.md`); such a read is a `REPLACED-SHOWN` row. A read on
+ * neither track fails. Each read whose 18 ms have that
  * `TrackStarted` time is a `GATE` row with the time and the track that the check found. A track that
  * replaces a track on screen starts at the value that the route captured from the replaced track for its
  * build. The time of a captured value is the origin of its build on the sample clock, where the product
@@ -116,7 +120,7 @@ import {
   play,
   REFERENCE_CASES,
 } from './nativeLayoutReferencePlay';
-import type { SizeBoxProps } from './nativeLayoutTestKit';
+import type { NativeTrack, SizeBoxProps } from './nativeLayoutTestKit';
 import {
   BOX_REF,
   builderCalls,
@@ -124,10 +128,13 @@ import {
   END_LEFT,
   FRAME_BOX_REF,
   hasNativeLayoutRoute,
+  isInReplacementWindow,
   isNear,
   layoutOf,
   opacities,
   PAIR_TOP,
+  PRESENTATION_STAY_MS,
+  readResidualOf,
   renderBox,
   Scene,
   START_LEFT,
@@ -258,3 +265,53 @@ const isAdmittedOf =
   (viewTag: number) =>
   ({ event, tag }: { event: string; tag: number }) =>
     event === 'Admitted' && tag === viewTag;
+
+describe('native layout reference: the replacement window of the player', () => {
+  // A track from 0 to 80 over 2400 ms, and from 960 ms a track from 50 to 20 over 2400 ms that replaced it.
+  const START_MS = 960;
+  const replaced: NativeTrack = {
+    declared: (timeMs) => (80 * timeMs) / 2400,
+    edgesMs: [],
+    origin: { from: 0, to: 0 },
+    played: { from: 0, to: START_MS },
+    tolerance: 0.005,
+  };
+  const replacing: NativeTrack = {
+    declared: (timeMs) => 50 - (30 * timeMs) / 2400,
+    edgesMs: [],
+    origin: { from: START_MS, to: START_MS },
+    played: { from: START_MS, to: START_MS + 2400 },
+    replaced,
+    tolerance: 0.005,
+  };
+  const residualOf = (value: number, readMs: number, hasShownTrack: boolean) =>
+    readResidualOf(
+      [value],
+      readMs,
+      [replacing],
+      isInReplacementWindow(readMs, START_MS, hasShownTrack)
+    );
+  // The replaced track 0.25 ms after the start: 0.0083 from its value at the start, over the tolerance.
+  const STALE = replaced.declared(START_MS + 0.25);
+
+  test('a first read in the window can show the replaced track after the start', () => {
+    const residual = residualOf(STALE, START_MS + 0.3, false);
+    expect(residual.isOnTimeline).toBe(true);
+    expect(residual.showsReplaced).toBe(true);
+    expect(residual.crossesReplacement).toBe(true);
+  });
+
+  test('a read after a read that showed the new track cannot show the replaced track after the start', () => {
+    expect(residualOf(STALE, START_MS + 0.3, true).isOnTimeline).toBe(false);
+  });
+
+  test('a read at the end of the window cannot show the replaced track after the start', () => {
+    const readMs = START_MS + PRESENTATION_STAY_MS;
+    const value = replaced.declared(readMs - 0.05);
+    expect(residualOf(value, readMs, false).isOnTimeline).toBe(false);
+  });
+
+  test('a read in the window far from both tracks is off the timeline', () => {
+    expect(residualOf(0, START_MS + 0.3, false).isOnTimeline).toBe(false);
+  });
+});

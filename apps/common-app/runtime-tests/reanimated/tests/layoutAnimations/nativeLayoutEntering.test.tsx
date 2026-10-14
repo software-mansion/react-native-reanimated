@@ -105,7 +105,7 @@ import {
   declaredBandOf,
   describeLeaf,
   expectCapturedStart,
-  expectNativeReads,
+  expectNativeReadRows,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
@@ -622,14 +622,11 @@ function expectNativeOnTimeline(
     keys,
     replaced
   );
-  const checked = reads.flatMap(({ samples }, index) =>
-    expectNativeReads(
-      samples,
-      tracks,
-      MATRIX_TOLERANCE,
-      reads[index - 1]?.samples
-    )
-  );
+  const checked = expectNativeReadRows(
+    reads.map(({ samples }) => samples),
+    tracks,
+    MATRIX_TOLERANCE
+  ).flat();
   expectTimelineRows(name, tracks, reads, checked);
   return tracks;
 }

@@ -77,7 +77,7 @@ import {
   entryExitOf,
   expectCapturedStart,
   expectFrameTimeline,
-  expectNativeReads,
+  expectNativeReadRows,
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
@@ -957,6 +957,9 @@ export function expectReference(
   for (const read of describeEdgeHoldReads(reads)) {
     console.log(['EDGE-HOLD', caseName, read].join(' | '));
   }
+  for (const read of describeReplacedShownReads(reads)) {
+    console.log(['REPLACED-SHOWN', caseName, read].join(' | '));
+  }
   return reads;
 }
 
@@ -1300,23 +1303,24 @@ export type RowRead = NativeRead & {
 };
 
 /** Statement A for each row of the native box, with the samples of each read. */
-export const expectNativeRows = (
+export function expectNativeRows(
   { rows, tracks }: Pick<Played, 'rows' | 'tracks'>,
   matrixTolerance: MatrixTolerance
-): RowRead[] =>
-  rows.flatMap(({ row, spacingMs }, index) =>
-    expectNativeReads(
-      row.native,
-      tracks,
-      matrixTolerance,
-      rows[index - 1]?.row.native
-    ).map((read) => ({
+): RowRead[] {
+  const readRows = expectNativeReadRows(
+    rows.map(({ row }) => row.native),
+    tracks,
+    matrixTolerance
+  );
+  return rows.flatMap(({ row, spacingMs }, index) =>
+    readRows[index].map((read) => ({
       ...read,
       spacingMs,
       sampled: row.native[read.target],
       sampledBefore: rows[index - 1]?.row.native[read.target],
     }))
   );
+}
 
 const isOffBand = ({ isChecked, residual }: RowRead) =>
   isChecked && !residual.isOnTimeline;
@@ -1363,6 +1367,26 @@ const describeRemovalWindowReads = (reads: RowRead[]) =>
         ]
       : [];
   });
+
+/** Each checked read that is on the timeline only by its replaced tracks. */
+const describeReplacedShownReads = (reads: RowRead[]) =>
+  reads
+    .filter(({ isChecked, residual }) => isChecked && residual.showsReplaced)
+    .map((read) => {
+      const {
+        tracks: [track],
+        timeMs,
+        values,
+        residual,
+      } = read;
+      return [
+        describeRead(read),
+        `the replaced command ${track.replaced?.generation}`,
+        `${(timeMs - track.played.from).toFixed(2)} ms after the start of its track`,
+        `values ${values.join()}`,
+        `on the timeline of the replaced command ${(timeMs - residual.ageMs - track.played.from).toFixed(3)} ms after that start`,
+      ].join(', ');
+    });
 
 /**
  * Each checked read that is on the timeline only by `KEYFRAME_EDGE_HOLD`, with
@@ -1575,7 +1599,10 @@ const describeReplacementReads = (reads: RowRead[]) =>
     .filter(({ residual }) => residual.crossesReplacement)
     .map(({ target, tracks: [track], timeMs, values, residual }) => {
       const foundMs = timeMs - residual.ageMs;
-      const owner = ownerAt(track, foundMs);
+      const owner =
+        residual.showsReplaced && track.replaced
+          ? track.replaced
+          : ownerAt(track, foundMs);
       return [
         `${target} of the command ${track.generation} that replaced the command ${track.replaced?.generation}: read ${(timeMs - track.played.from).toFixed(2)} ms after the start of its track and ${(timeMs - middleOf(track.origin)).toFixed(2)} ms after its origin`,
         `values ${values.map((value) => value.toFixed(4)).join()}`,

@@ -95,7 +95,7 @@ import {
   ClippingScrollView,
   CURVED_EASINGS,
   describeLeaf,
-  expectNativeReads,
+  expectNativeReadRows,
   FRAME_BOX_REF,
   FRAME_MS,
   hasNativeLayoutRoute,
@@ -645,14 +645,11 @@ function expectOnTimeline(
   tracks: PlayedTrack[],
   reads: PlannedRead[]
 ) {
-  const checked = reads.flatMap(({ samples }, index) =>
-    expectNativeReads(
-      samples,
-      tracks,
-      MATRIX_TOLERANCE,
-      reads[index - 1]?.samples
-    )
-  );
+  const checked = expectNativeReadRows(
+    reads.map(({ samples }) => samples),
+    tracks,
+    MATRIX_TOLERANCE
+  ).flat();
   expectTimelineRows(name, tracks, reads, checked);
 }
 

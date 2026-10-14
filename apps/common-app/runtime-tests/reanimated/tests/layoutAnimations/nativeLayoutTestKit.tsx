@@ -548,6 +548,8 @@ export type NativeResidual = {
    * sample clock at which it is.
    */
   edgeHoldMs?: number;
+  /** The read is on the timeline only by `asReplacedTrack` of its tracks. */
+  showsReplaced?: boolean;
 };
 
 /** A read `READ_GAP_MS` or more after the read before of its target. */
@@ -587,9 +589,9 @@ export function expectNativeTimeline(
   values: number[],
   readTimeMs: number,
   tracks: NativeTrack[],
-  afterGap?: ReadAfterGap
+  afterGap?: ReadAfterGap,
+  residual = nativeResidualOf(values, readTimeMs, tracks)
 ) {
-  const residual = nativeResidualOf(values, readTimeMs, tracks);
   const row = values
     .map((value, track) => {
       const { origin } = tracks[track];
@@ -627,6 +629,54 @@ export function nativeResidualOf(
         removalEndMs,
       }
     : inBand;
+}
+
+/**
+ * A track that replaced a track, read in its first `PRESENTATION_STAY_MS` and
+ * before a read of its target showed it: in the display frame of the start the
+ * platform shows the replaced animation until its next display tick
+ * (`.tmp/native-la-run/12C/trace/HUNT-RESULTS.md`: 13 of 13 stale first reads
+ * with no display tick after the start, 7 of 7 fresh reads after one).
+ */
+export const isInReplacementWindow = (
+  readTimeMs: number,
+  startMs: number,
+  hasShownTrack: boolean
+) =>
+  !hasShownTrack &&
+  readTimeMs >= startMs &&
+  readTimeMs - startMs < PRESENTATION_STAY_MS;
+
+/** The replaced track of a track, with the tolerance of the track. */
+const asReplacedTrack = (track: NativeTrack): NativeTrack =>
+  track.replaced ? { ...track.replaced, tolerance: track.tolerance } : track;
+
+/**
+ * `nativeResidualOf` a read, and of a read in `isInReplacementWindow` also of
+ * the replaced tracks up to the time of the read.
+ */
+export function readResidualOf(
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[],
+  isInWindow: boolean
+): NativeResidual {
+  const own = nativeResidualOf(values, readTimeMs, tracks);
+  if (own.isOnTimeline || !isInWindow) {
+    return own;
+  }
+  const replaced = nativeResidualOf(
+    values,
+    readTimeMs,
+    tracks.map(asReplacedTrack)
+  );
+  return replaced.isOnTimeline
+    ? {
+        ...replaced,
+        crossesReplacement: own.crossesReplacement,
+        showsReplaced: true,
+      }
+    : own;
 }
 
 /** The residual of values of a time against the `bandMs` before it. */
@@ -1299,15 +1349,41 @@ export type NativeRead = {
 };
 
 /**
+ * `expectNativeReads` of each sample row of one view, in order: each row gets
+ * the rows before it, for the tracks that replaced a track and that an earlier
+ * read showed.
+ */
+export function expectNativeReadRows(
+  rows: Samples[],
+  tracks: PlayedTrack[],
+  matrixTolerance: MatrixTolerance
+): NativeRead[][] {
+  const shown = new Set<PlayedTrack>();
+  return rows.map((samples, index) => {
+    const reads = expectNativeReads(
+      samples,
+      tracks,
+      matrixTolerance,
+      rows[index - 1],
+      shown
+    );
+    reads.flatMap(shownReplacingTracksOf).forEach((track) => shown.add(track));
+    return reads;
+  });
+}
+
+/**
  * Each sample of one view is on the keys of the tracks that play at its time. A
  * sample of the `Transform` target is checked as the cells of its matrix.
- * `before` has the samples of the view directly before these.
+ * `before` has the samples of the view directly before these, and `shown` the
+ * tracks that replaced a track and that an earlier read showed.
  */
-export function expectNativeReads(
+function expectNativeReads(
   samples: Samples,
   tracks: PlayedTrack[],
   matrixTolerance: MatrixTolerance,
-  before?: Samples
+  before: Samples | undefined,
+  shown: ReadonlySet<PlayedTrack>
 ): NativeRead[] {
   return Object.entries(samples).flatMap(([target, targetSample]) => {
     const { presentation, monotonicTimeMs: timeMs } = targetSample;
@@ -1328,9 +1404,15 @@ export function expectNativeReads(
     const isChecked =
       checkedTracksOf(tracks, target, timeMs).length === playing.length;
     const afterGap = readAfterGapOf(targetSample, before?.[target]);
-    const residual = isChecked
-      ? expectNativeTimeline(values, timeMs, checked, afterGap)
-      : nativeResidualOf(values, timeMs, checked);
+    const isInWindow = playing.some(
+      (track) =>
+        track.replaced !== undefined &&
+        isInReplacementWindow(timeMs, track.played.from, shown.has(track))
+    );
+    const residual = readResidualOf(values, timeMs, checked, isInWindow);
+    if (isChecked) {
+      expectNativeTimeline(values, timeMs, checked, afterGap, residual);
+    }
     return [
       {
         target,
@@ -1349,6 +1431,15 @@ export function expectNativeReads(
     ];
   });
 }
+
+/** The tracks that replaced a track and that a read shows. */
+const shownReplacingTracksOf = ({ tracks, timeMs, residual }: NativeRead) =>
+  residual.isOnTimeline && !residual.showsReplaced
+    ? tracks.filter(
+        ({ replaced, played }) =>
+          replaced !== undefined && timeMs - residual.ageMs >= played.from
+      )
+    : [];
 
 const playingTracksOf = (
   tracks: PlayedTrack[],
