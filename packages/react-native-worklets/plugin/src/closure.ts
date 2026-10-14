@@ -161,8 +161,7 @@ export function getClosure(
 
 /**
  * Captured variables are packed as `const [x] = this.__closure`, so assigning
- * to one inside the worklet is a parse error on Hermes, reported only when the
- * worklet is first unpacked at runtime. Fail the build instead.
+ * to one inside the worklet is a parse error on Hermes.
  */
 function assertNoCapturedAssignment(
   funPath: NodePath<WorkletizableFunction>,
