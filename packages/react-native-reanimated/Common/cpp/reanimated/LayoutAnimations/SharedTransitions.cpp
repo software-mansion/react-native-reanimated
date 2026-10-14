@@ -358,9 +358,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    // The carrier shows its own props from the start. The animation starts from the props of the
-    // source, so its first frame can write again props that the carrier already shows.
-    detachCarrier(*run, ownCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
+    detachCarrier(*run, asCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
