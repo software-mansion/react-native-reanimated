@@ -1,6 +1,9 @@
 import {
+  createSerializable,
+  isSerializableRef,
   runOnRuntimeAsyncWithId,
   scheduleOnRN,
+  serializableMappingCache,
   UIRuntimeId,
 } from 'react-native-worklets';
 
@@ -104,6 +107,26 @@ describe('Worklet and callback cycle across runtimes', () => {
     await waitForNotification('crossRuntimeCycle:rerun2');
 
     expect(calls).toBe(2);
+  });
+});
+
+describe('Weak serializable cache marker', () => {
+  test('is rejected when passed to native as a serializable', async () => {
+    const value = { callback: () => 1 };
+    const clone = createSerializable(value);
+    // The clone holds a JS function, so the cache stores a non-owning marker.
+    const marker = serializableMappingCache.get(value);
+    expect(typeof marker).toBe('object');
+    expect(marker === clone).toBe(false);
+    expect(isSerializableRef(marker)).toBe(false);
+
+    const makeWeakSerializableRef = globalThis.__workletsModuleProxy
+      .makeWeakSerializableRef as (serializable: unknown) => object;
+    await expect(() => makeWeakSerializableRef(marker)).toThrow(
+      '[Worklets] makeWeakSerializableRef expects a serializable.'
+    );
+    // Keeps the clone, and so the marker's target, alive until here.
+    expect(isSerializableRef(clone)).toBe(true);
   });
 });
 

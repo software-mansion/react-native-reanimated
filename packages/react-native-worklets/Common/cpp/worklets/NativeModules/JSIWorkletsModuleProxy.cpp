@@ -485,7 +485,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             extractSerializableOrThrow(rt, at<0>(args), "[Worklets] makeWeakSerializableRef expects a serializable.");
         auto marker = jsi::Object(rt);
         marker.setNativeState(rt, std::make_shared<WeakSerializableJSRef>(serializable));
-        // Deliberately no `__serializableRef`, so a marker is never mistaken for a serializable.
+        // Deliberately no `__serializableRef`, so JS never takes a marker for a serializable. A marker that
+        // reaches C++ as a value is rejected, because its native state is not a SerializableJSRef.
         return marker;
       });
 
