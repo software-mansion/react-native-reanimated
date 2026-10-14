@@ -66,6 +66,12 @@ export default class AnimatedComponent<
       return this._viewInfo;
     }
 
+    this._viewInfo = this._resolveViewInfo();
+
+    return this._viewInfo;
+  }
+
+  _resolveViewInfo(): ViewInfo {
     const shadowNodeWrapper: ShadowNodeWrapper | null = null;
     const reactViewName: string | undefined = undefined;
 
@@ -75,12 +81,12 @@ export default class AnimatedComponent<
     const viewTag = this._componentRef;
     const DOMElement = this._componentDOMRef;
 
-    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
+    const viewInfo: ViewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
-      this._viewInfo.DOMElement = DOMElement;
+      viewInfo.DOMElement = DOMElement;
     }
 
-    return this._viewInfo;
+    return viewInfo;
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
@@ -104,8 +110,7 @@ export default class AnimatedComponent<
     if (ref !== this._rawComponentRef) {
       this._rawComponentRef = ref;
       const resolved = this._resolveComponentRef(ref);
-      // A new raw ref (e.g. a fresh imperative handle) may still resolve to
-      // the same host, which then keeps its bindings.
+
       if (resolved !== this._componentRef) {
         this._updateComponentRef(resolved);
       }
@@ -132,18 +137,28 @@ export default class AnimatedComponent<
 
   _updateComponentRef(componentRef: AnimatedComponentRef | HTMLElement | null) {
     const previousViewInfo = this._viewInfo;
+    this._componentRef = componentRef;
 
-    // Bindings made for the previous host would keep targeting it, so release
-    // them first; the next update re-creates them for the new host.
-    if (previousViewInfo !== undefined) {
-      this._detachHostBindings(previousViewInfo);
-      this._hostReplaced = true;
+    if (previousViewInfo === undefined) {
+      return;
     }
 
-    this._componentRef = componentRef;
-    this._viewInfo = undefined;
+    // A new ref (e.g. a fresh imperative handle) may still resolve to the same host.
+    const viewInfo = this._resolveViewInfo();
 
-    if (previousViewInfo !== undefined && this._CSSManager) {
+    if (viewInfo.viewTag === previousViewInfo.viewTag) {
+      this._viewInfo = viewInfo;
+      return;
+    }
+
+    // Release the previous host's bindings while its view info is still cached;
+    // the next update re-creates them for the new host.
+    this._detachHostBindings(previousViewInfo);
+    this._hostReplaced = true;
+
+    this._viewInfo = viewInfo;
+
+    if (this._CSSManager) {
       this._CSSManager.unmountCleanup();
       this._CSSManager = this._createCSSManager();
       this._CSSManager.update(this._cssStyle, this.props);

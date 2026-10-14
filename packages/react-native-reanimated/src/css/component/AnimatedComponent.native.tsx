@@ -69,6 +69,12 @@ export default class AnimatedComponent<
       return this._viewInfo;
     }
 
+    this._viewInfo = this._resolveViewInfo();
+
+    return this._viewInfo;
+  }
+
+  _resolveViewInfo(): ViewInfo {
     const hostInstance = findHostInstance(this);
     if (!hostInstance) {
       /*
@@ -89,9 +95,7 @@ export default class AnimatedComponent<
       hostInstance
     );
 
-    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
-
-    return this._viewInfo;
+    return { viewTag, shadowNodeWrapper, reactViewName };
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
@@ -143,26 +147,36 @@ export default class AnimatedComponent<
 
   _updateComponentRef(componentRef: AnimatedComponentRef | HTMLElement | null) {
     const previousViewInfo = this._viewInfo;
+    this._componentRef = componentRef;
 
-    // Bindings made for the previous host would keep targeting it, so release
-    // them first; the next update re-creates them for the new host.
-    if (previousViewInfo !== undefined) {
-      this._detachHostBindings(previousViewInfo);
-      this._hostReplaced = true;
-
-      // Let the native registries drop the previous host once it has left
-      // the shadow tree, as `componentWillUnmount` does.
-      const wrapper = previousViewInfo.shadowNodeWrapper;
-
-      if (wrapper) {
-        markNodeAsRemovable(wrapper);
-      }
+    if (previousViewInfo === undefined) {
+      return;
     }
 
-    this._componentRef = componentRef;
-    this._viewInfo = undefined;
+    // A new ref (e.g. a fresh imperative handle) may still resolve to the same host.
+    const viewInfo = this._resolveViewInfo();
 
-    if (previousViewInfo !== undefined && this._CSSManager) {
+    if (viewInfo.viewTag === previousViewInfo.viewTag) {
+      this._viewInfo = viewInfo;
+      return;
+    }
+
+    // Release the previous host's bindings while its view info is still cached;
+    // the next update re-creates them for the new host.
+    this._detachHostBindings(previousViewInfo);
+    this._hostReplaced = true;
+
+    // Let the native registries drop the previous host once it has left
+    // the shadow tree, as `componentWillUnmount` does.
+    const wrapper = previousViewInfo.shadowNodeWrapper;
+
+    if (wrapper) {
+      markNodeAsRemovable(wrapper);
+    }
+
+    this._viewInfo = viewInfo;
+
+    if (this._CSSManager) {
       this._CSSManager.unmountCleanup();
       this._CSSManager = this._createCSSManager();
       this._CSSManager.update(this._cssStyle, this.props);
