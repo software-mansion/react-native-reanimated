@@ -398,7 +398,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
   let rz;
   if (sinRy === 1 || sinRy === -1) {
     rz = 0;
-    rx = Math.atan2(sinRy * rotationMatrix[0][1], sinRy * rotationMatrix[0][2]);
+    rx = Math.atan2(-rotationMatrix[2][1], rotationMatrix[1][1]);
   } else {
     rz = Math.atan2(rotationMatrix[0][1], rotationMatrix[0][0]);
     rx = Math.atan2(rotationMatrix[1][2], rotationMatrix[2][2]);
