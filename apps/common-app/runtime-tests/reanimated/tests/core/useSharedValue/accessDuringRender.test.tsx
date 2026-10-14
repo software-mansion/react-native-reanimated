@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   configureReanimatedLogger,
   useAnimatedStyle,
@@ -21,9 +22,9 @@ import {
 import { ComparisonMode } from '../../../../ReJest/types';
 
 // Covers InvalidValueAccessExample.tsx ("Invalid read/write during render"):
-// reading or writing `sv.value` while React re-renders a component logs a
-// strict-mode warning, the first render and useEffect do not, and
-// `strict: false` silences it. The warnings are captured with the public
+// reading or writing `sv.value` (or calling `sv.get()` / `sv.set()`) while
+// React re-renders a component logs a strict-mode warning, the first render
+// and useEffect do not, and `strict: false` silences it. The warnings are captured with the public
 // `onLog` callback of configureReanimatedLogger, not by patching console.
 //
 // The example's bar animates `transform: scaleX` with withTiming, which the
@@ -42,6 +43,23 @@ const READ_WARNING = 'Reading from `value` during component render';
 const MAX_COUNTER = 10;
 
 type AccessIn = 'render' | 'effect';
+// `get` and `set` go through the `value` accessors, so they warn the same way.
+type AccessWith = 'value' | 'getSet';
+
+function accessSharedValue(
+  sv: SharedValue<number>,
+  counter: number,
+  accessWith: AccessWith
+) {
+  if (accessWith === 'value') {
+    sv.value = counter;
+    // oxlint-disable-next-line no-unused-expressions
+    sv.value;
+  } else {
+    sv.set(counter);
+    sv.get();
+  }
+}
 
 const capturedLogs: string[] = [];
 
@@ -59,28 +77,26 @@ function countLogs(text: string) {
 function Scenario({
   counter,
   accessIn,
+  accessWith,
 }: {
   counter: number;
   accessIn: AccessIn;
+  accessWith: AccessWith;
 }) {
   const ref = useTestRef(BOX_REF);
   const sv = useSharedValue(0);
 
   if (accessIn === 'render') {
-    sv.value = counter;
-    // oxlint-disable-next-line no-unused-expressions
-    sv.value;
+    accessSharedValue(sv, counter, accessWith);
   }
 
   useEffect(() => {
     if (accessIn === 'effect') {
-      sv.value = counter;
-      // oxlint-disable-next-line no-unused-expressions
-      sv.value;
+      accessSharedValue(sv, counter, accessWith);
     }
     // Runs after any access in this commit, so the test can wait for it.
     notify(effectDone(counter));
-  }, [sv, counter, accessIn]);
+  }, [sv, counter, accessIn, accessWith]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: sv.value / MAX_COUNTER,
@@ -97,8 +113,14 @@ function Scenario({
   );
 }
 
-async function renderAndWaitForEffect(counter: number, accessIn: AccessIn) {
-  await render(<Scenario counter={counter} accessIn={accessIn} />);
+async function renderAndWaitForEffect(
+  counter: number,
+  accessIn: AccessIn,
+  accessWith: AccessWith = 'value'
+) {
+  await render(
+    <Scenario counter={counter} accessIn={accessIn} accessWith={accessWith} />
+  );
   await waitForNotification(effectDone(counter));
 }
 
@@ -121,37 +143,57 @@ describe('shared value access during render', () => {
     {
       description: 'a write and a read during a re-render warn once each',
       accessIn: 'render' as const,
+      accessWith: 'value' as const,
+      strict: true,
+      expectedWarnings: 1,
+    },
+    {
+      description: 'set() and get() during a re-render warn once each',
+      accessIn: 'render' as const,
+      accessWith: 'getSet' as const,
       strict: true,
       expectedWarnings: 1,
     },
     {
       description: 'a write and a read in useEffect do not warn',
       accessIn: 'effect' as const,
+      accessWith: 'value' as const,
+      strict: true,
+      expectedWarnings: 0,
+    },
+    {
+      description: 'set() and get() in useEffect do not warn',
+      accessIn: 'effect' as const,
+      accessWith: 'getSet' as const,
       strict: true,
       expectedWarnings: 0,
     },
     {
       description: 'strict: false silences the warnings',
       accessIn: 'render' as const,
+      accessWith: 'value' as const,
       strict: false,
       expectedWarnings: 0,
     },
-  ])('${description}', async ({ accessIn, strict, expectedWarnings }) => {
-    await renderAndWaitForEffect(0, accessIn);
-    // Capture only the re-render, like the example's "Re-render" button.
-    captureLogs({ strict });
+  ])(
+    '${description}',
+    async ({ accessIn, accessWith, strict, expectedWarnings }) => {
+      await renderAndWaitForEffect(0, accessIn, accessWith);
+      // Capture only the re-render, like the example's "Re-render" button.
+      captureLogs({ strict });
 
-    await renderAndWaitForEffect(1, accessIn);
+      await renderAndWaitForEffect(1, accessIn, accessWith);
 
-    expect(countLogs(WRITE_WARNING)).toBe(
-      expectedWarnings,
-      ComparisonMode.NUMBER
-    );
-    expect(countLogs(READ_WARNING)).toBe(
-      expectedWarnings,
-      ComparisonMode.NUMBER
-    );
-  });
+      expect(countLogs(WRITE_WARNING)).toBe(
+        expectedWarnings,
+        ComparisonMode.NUMBER
+      );
+      expect(countLogs(READ_WARNING)).toBe(
+        expectedWarnings,
+        ComparisonMode.NUMBER
+      );
+    }
+  );
 
   test.each([
     { description: 'during render', accessIn: 'render' as const },
