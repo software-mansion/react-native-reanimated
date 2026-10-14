@@ -123,7 +123,7 @@ import {
   callbacks,
   END_LEFT,
   FRAME_BOX_REF,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isNear,
   layoutOf,
   opacities,
@@ -200,7 +200,7 @@ const HAND_OVER_CASES: Record<string, ReferenceCase> = {
 };
 
 describe('native layout reference', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 

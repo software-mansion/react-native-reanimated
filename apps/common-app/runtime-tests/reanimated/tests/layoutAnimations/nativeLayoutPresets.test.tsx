@@ -148,7 +148,7 @@ import {
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   isNoView,
   middleOf,
@@ -1087,7 +1087,7 @@ function expectEndAsTwin(
     expect(twin).toBeUndefined();
     return;
   }
-  expect(box!.Opacity.playbackKeys.length).toBe(0);
+  expect(box!.Opacity.playbacks.length).toBe(0);
   expect(isAtRest(box!)).toBe(true);
   expect(isSameModel(box!, twin!)).toBe(true);
 }
@@ -1129,7 +1129,7 @@ async function expectAsTwin({
   expect(played.route).toBe(route);
   expect(played.twinRoute).toBe(TWIN_ROUTE);
   const comparisons = played.rows.map(({ native, frame }) => {
-    expect(native.Opacity.playbackKeys.length).toBe(0);
+    expect(native.Opacity.playbacks.length).toBe(0);
     return compare(native, frame);
   });
   console.log(
@@ -1202,7 +1202,7 @@ const SEQUENCE_VARIANTS: TimedPreset[] = [
 ];
 
 describe('native layout presets with their default easing', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1269,7 +1269,7 @@ describe('native layout presets with their default easing', () => {
 });
 
 describe('native layout presets with no method call', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1299,7 +1299,7 @@ describe('native layout presets with no method call', () => {
 });
 
 describe('native layout transitions and a width change near 250 pt', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1346,7 +1346,7 @@ describe('native layout transitions and a width change near 250 pt', () => {
 });
 
 describe('native layout keyframes', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1450,7 +1450,7 @@ describe('native layout keyframes', () => {
 });
 
 describe('native layout animations with a plain number', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1596,7 +1596,7 @@ describe('native layout animations with a plain number', () => {
       }
       if (played.end) {
         const { native, frame } = played.end;
-        expect(native.PositionX.playbackKeys.length).toBe(0);
+        expect(native.PositionX.playbacks.length).toBe(0);
         expect(
           Math.abs(
             native.PositionX.presentation[0] - frame.PositionX.model[0]

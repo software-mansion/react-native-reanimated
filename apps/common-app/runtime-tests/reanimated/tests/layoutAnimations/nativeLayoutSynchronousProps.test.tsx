@@ -88,7 +88,7 @@ import {
   FRAME_BOX_REF,
   FRAME_MS,
   frameRecordedOf,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   isNear,
   LAYOUT_DURATION,
@@ -447,7 +447,7 @@ function writeAfterBlock<TValue>(
 
 describe('native layout animations and the synchronous props path', () => {
   if (
-    !hasNativeLayoutStarts ||
+    !hasNativeLayoutRoute ||
     !getStaticFeatureFlag('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
   ) {
     return;
@@ -612,7 +612,7 @@ describe('native layout animations and the synchronous props path', () => {
             hasOpacityLeaf ? GROUP_START : X_START
           );
           for (const { native, frame } of playingRowsOf(rows, events)) {
-            expect(native.playbackKeys.length).toBe(hasOpacityLeaf ? 2 : 1);
+            expect(native.playbacks.length).toBe(hasOpacityLeaf ? 2 : 1);
             expect(isNear(native.model[0], 0.6)).toBe(true);
             if (!hasOpacityLeaf) {
               expect(isNear(native.presentation[0], 0.6)).toBe(true);
@@ -638,35 +638,38 @@ describe('native layout animations and the synchronous props path', () => {
     }
   }
 
-  for (const tracks of [false, true]) {
-    test(`an opacity write after a UI block in the JS turn of a commit gives ${tracks ? 'no stale props warning' : 'one stale props warning for each view'} (tracking: ${tracks})`, async () => {
-      await withTracking(tracks, async () => {
-        const pair = pairOf((hasCallback) => ({
-          originX: { duration: DURATION, hasCallback },
-        }));
-        const box = { left: 0, initialOpacity: 0.2 };
-        recordUIWarnings();
-        const tag = await mountScene(pair(box));
-        const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
-        staleWarnings.length = 0;
-        writeAfterBlock([opacities[BOX_REF], opacities[FRAME_BOX_REF]], 0.6);
-        await render(pair(box, END_LEFT));
-        await wait(DURATION + 300);
-        const warningsOf = (viewTag: number) =>
-          staleWarnings.filter((warning) =>
-            warning.includes(`View ${viewTag} `)
-          ).length;
-        expect(staleWarnings.length).toBe(tracks ? 0 : 2);
-        expect(warningsOf(tag)).toBe(tracks ? 0 : 1);
-        expect(warningsOf(frameTag)).toBe(tracks ? 0 : 1);
-        const end = await sampleOpacityPair(tag, frameTag);
-        expect(isNear(end.native.model, 0.6)).toBe(true);
-        if (tracks) {
-          expect(isNear(end.frame.model, 0.6)).toBe(true);
-        }
-        await render(null);
+  // The stale props warning exists only in development builds of the native code.
+  if (__DEV__) {
+    for (const tracks of [false, true]) {
+      test(`an opacity write after a UI block in the JS turn of a commit gives ${tracks ? 'no stale props warning' : 'one stale props warning for each view'} (tracking: ${tracks})`, async () => {
+        await withTracking(tracks, async () => {
+          const pair = pairOf((hasCallback) => ({
+            originX: { duration: DURATION, hasCallback },
+          }));
+          const box = { left: 0, initialOpacity: 0.2 };
+          recordUIWarnings();
+          const tag = await mountScene(pair(box));
+          const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+          staleWarnings.length = 0;
+          writeAfterBlock([opacities[BOX_REF], opacities[FRAME_BOX_REF]], 0.6);
+          await render(pair(box, END_LEFT));
+          await wait(DURATION + 300);
+          const warningsOf = (viewTag: number) =>
+            staleWarnings.filter((warning) =>
+              warning.includes(`View ${viewTag} `)
+            ).length;
+          expect(staleWarnings.length).toBe(tracks ? 0 : 2);
+          expect(warningsOf(tag)).toBe(tracks ? 0 : 1);
+          expect(warningsOf(frameTag)).toBe(tracks ? 0 : 1);
+          const end = await sampleOpacityPair(tag, frameTag);
+          expect(isNear(end.native.model, 0.6)).toBe(true);
+          if (tracks) {
+            expect(isNear(end.frame.model, 0.6)).toBe(true);
+          }
+          await render(null);
+        });
       });
-    });
+    }
   }
 
   const writeBeforeMount =
@@ -691,7 +694,7 @@ describe('native layout animations and the synchronous props path', () => {
       const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
       expect(summarize(startEvents)).toBe(GROUP_START);
       for (const { native } of playingRowsOf(rows, startEvents)) {
-        expect(native.playbackKeys.length).toBe(2);
+        expect(native.playbacks.length).toBe(2);
         expect(isNear(native.model[0], 0.8)).toBe(true);
       }
       expectOpacityReads(
@@ -882,8 +885,8 @@ describe('native layout animations and the synchronous props path', () => {
               monotonicTimeMs < timeOf('LayoutBuildFailed')
           )
           .sort((one, other) => one.monotonicTimeMs - other.monotonicTimeMs);
-        for (const { playbackKeys } of beforeTakeover) {
-          expect(playbackKeys.length).toBe(2);
+        for (const { playbacks } of beforeTakeover) {
+          expect(playbacks.length).toBe(2);
         }
         expect(
           modelOrderFaultsOf(
@@ -896,7 +899,7 @@ describe('native layout animations and the synchronous props path', () => {
         console.log(
           `WRITTEN-END | ${handed} | native model ${native.Opacity.model[0]}, native presentation ${native.Opacity.presentation[0]}, twin model ${frame.Opacity.model[0]}, twin presentation ${frame.Opacity.presentation[0]}`
         );
-        expect(native.Opacity.playbackKeys.length).toBe(0);
+        expect(native.Opacity.playbacks.length).toBe(0);
         expect(
           isNear(native.Opacity.presentation[0], native.Opacity.model[0])
         ).toBe(true);
@@ -957,7 +960,7 @@ describe('native layout animations and the synchronous props path', () => {
       LAYOUT_DURATION
     );
     const width = await sample(tag, 'Width');
-    expect(width.playbackKeys.length).toBe(1);
+    expect(width.playbacks.length).toBe(1);
     expect(width.model[0]).toBe(WIDE);
     expect(
       isNear(

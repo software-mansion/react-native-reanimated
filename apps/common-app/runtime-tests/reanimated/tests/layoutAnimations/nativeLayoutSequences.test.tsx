@@ -72,7 +72,7 @@ import {
   frameDrivenOf,
   frameDriverFrameTime,
   frameTimedOf,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   isNoView,
   layoutBuilderCalls,
@@ -755,7 +755,7 @@ function playingOf(played: Played, rows: Row[]) {
     const timeMs = trackTimeOf(played, row);
     return (
       row.takenAtMs > played.startMs + FIRST_FRAMES_MS &&
-      row.position.playbackKeys.length > 0 &&
+      row.position.playbacks.length > 0 &&
       timeMs > 0 &&
       timeMs < totalMs
     );
@@ -905,7 +905,7 @@ async function readAtRest(tag: number, form: Form = 'scalars') {
     opacity,
     yLevel,
     x: position.presentation[0] - position.model[0],
-    keys: position.playbackKeys.length + value.playbackKeys.length,
+    keys: position.playbacks.length + value.playbacks.length,
   };
 }
 
@@ -1039,7 +1039,7 @@ const EXIT: Sequence = {
 };
 
 describe('native layout sequences', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1198,8 +1198,8 @@ describe('native layout sequences', () => {
       expect(missingCallbacks).toBe('');
       expect([...callbacks].sort().join()).toBe('frame:true,native:true');
       const { native, frame } = end!;
-      for (const { playbackKeys } of Object.values(native)) {
-        expect(playbackKeys.length).toBe(0);
+      for (const { playbacks } of Object.values(native)) {
+        expect(playbacks.length).toBe(0);
       }
       const distanceOf = (target: string) =>
         Math.abs(
@@ -1213,7 +1213,7 @@ describe('native layout sequences', () => {
 });
 
 describe('native layout sequences and a clip of their view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1292,9 +1292,7 @@ describe('native layout sequences and a clip of their view', () => {
 
       // The view stays out of the window until the frame driver gave it a frame.
       const isFrameDriven = ({ isTorn, records, position }: Row) =>
-        !isTorn &&
-        position.playbackKeys.length === 0 &&
-        records.nativeFrames > 0;
+        !isTorn && position.playbacks.length === 0 && records.nativeFrames > 0;
       scrollTo(CLIPPED_OFFSET);
       const clipped = await takeRows(
         played,
@@ -1359,7 +1357,7 @@ describe('native layout sequences and a clip of their view', () => {
       });
       if (frameDriven.length === 0) {
         console.log(
-          `SEQUENCE-HAND-OVER | ${caseName} | no frame-driven row: rows ${rows.length}, with a frame during the samples ${rows.filter(({ isTorn }) => isTorn).length}, with playback keys ${rows.filter(({ position }) => position.playbackKeys.length > 0).length}`
+          `SEQUENCE-HAND-OVER | ${caseName} | no frame-driven row: rows ${rows.length}, with a frame during the samples ${rows.filter(({ isTorn }) => isTorn).length}, with playback keys ${rows.filter(({ position }) => position.playbacks.length > 0).length}`
         );
         expect(frameDriven.length).not.toBe(0);
         await render(null);
@@ -1529,7 +1527,7 @@ describe('native layout sequences and a clip of their view', () => {
 });
 
 describe('native layout sequences and a new layout of their view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1665,11 +1663,11 @@ describe('native layout sequences and a new layout of their view', () => {
       const x = native.model[0] - frame.model[0];
       const y = native.model[1] - frame.model[1];
       isNearTwin &&=
-        native.playbackKeys.length === 0 &&
+        native.playbacks.length === 0 &&
         Math.abs(x) < xBound &&
         Math.abs(y) < yBound;
       rows.push(
-        `keys ${native.playbackKeys.length} x from the twin ${x.toFixed(2)} y ${y.toFixed(2)}`
+        `keys ${native.playbacks.length} x from the twin ${x.toFixed(2)} y ${y.toFixed(2)}`
       );
       await wait(150);
     }
@@ -1702,7 +1700,7 @@ describe('native layout sequences and a new layout of their view', () => {
     expect(twinLagMs > -0.5).toBe(true);
     expect(Math.abs(captured.y - declaredY) < 0.05).toBe(true);
     expect(isNearTwin).toBe(true);
-    expect(nativeEnd.playbackKeys.length).toBe(0);
+    expect(nativeEnd.playbacks.length).toBe(0);
     for (const end of [nativeEnd, twinEnd]) {
       expect(
         Math.abs(end.presentation[0] - nativeEnd.model[0]) < TOLERANCE.points

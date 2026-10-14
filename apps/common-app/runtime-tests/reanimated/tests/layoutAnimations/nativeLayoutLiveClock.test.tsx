@@ -154,7 +154,7 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isSameLeaf,
   isScalarTrack,
   LAYOUT_DURATION,
@@ -168,6 +168,7 @@ import {
   opacities,
   operationPairChangesAt,
   phaseStartsLateOf,
+  playbackIdsOf,
   SAMPLED_OPACITY_TOLERANCE,
   sampleOpacity,
   sampleRows,
@@ -263,7 +264,7 @@ const LINE_WRITERS: {
 ];
 
 describe('native layout live clock', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -629,7 +630,7 @@ function handOverRowsOf(handOver: HandOver, played: Played) {
           `hand-over row of ${key} of the command ${generation}`,
           `native sample ${(timeMs - originMs).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - originMs).toFixed(2)} ms after the origin ${originMs.toFixed(2)} ms`,
           `${(timeMs - startCallMs).toFixed(2)} ms after the start call of the frame driver and ${(timeMs - track.played.to).toFixed(2)} ms after the end report of the track`,
-          `playback keys ${native.playbackKeys.join()}`,
+          `playbacks ${playbackIdsOf(native).join(', ')}`,
           `native presentation ${value.toFixed(4)}`,
           `native model ${native.model[0].toFixed(4)}`,
           `twin model ${twin.model[0].toFixed(4)}`,
@@ -724,7 +725,7 @@ const describePairStep = (
   twin: TargetSample,
   margin: number
 ) =>
-  `pair row of ${name} of the command ${generation}${margin < 0 ? ' over its bound' : ''} | native sample ${(native.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms after the origin ${middleOf(origin).toFixed(2)} ms | playback keys ${native.playbackKeys.join()}`;
+  `pair row of ${name} of the command ${generation}${margin < 0 ? ' over its bound' : ''} | native sample ${(native.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms and twin sample ${(twin.monotonicTimeMs - middleOf(origin)).toFixed(2)} ms after the origin ${middleOf(origin).toFixed(2)} ms | playbacks ${playbackIdsOf(native).join(', ')}`;
 
 /**
  * Of a track that starts at a captured value: the start value of each box, and

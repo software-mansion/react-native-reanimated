@@ -109,8 +109,8 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
-  hasNativeLayoutStarts,
-  hasTargetSamples,
+  hasNativeLayoutRoute,
+  hasNativeAnimationHost,
   isHostEvent,
   middleOf,
   narrowClockOffset,
@@ -890,7 +890,7 @@ const localStyles = StyleSheet.create({
 });
 
 describe('native layout entering', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -937,12 +937,12 @@ describe('native layout entering', () => {
         played.reads
           .filter(
             ({ sampled, timeMs, tracks: [{ origin }] }) =>
-              sampled.playbackKeys.length < tracks.length &&
+              sampled.playbacks.length < tracks.length &&
               timeMs < middleOf(origin) + ENTER_DURATION - FRAME_MS
           )
           .map(
             ({ target, sampled, timeMs, tracks: [{ origin }] }) =>
-              `${sampled.playbackKeys.length} keys of ${target} at ${timeMs - middleOf(origin)} ms`
+              `${sampled.playbacks.length} keys of ${target} at ${timeMs - middleOf(origin)} ms`
           )
           .join()
       ).toBe('');
@@ -1029,7 +1029,7 @@ describe('native layout entering', () => {
     await wait(Math.max(0, exitStartMs + 200 - performance.now()));
     const exiting = await sampleTargets(entered.nativeTag, ['Opacity']);
     const twin = await readTrack(entered.frameTag, OPACITY);
-    expect(exiting.Opacity.playbackKeys.length).toBe(1);
+    expect(exiting.Opacity.playbacks.length).toBe(1);
     expect(twin.keys).toBe(0);
     const events = await takeTraceOfPair(entered);
     expect(summarize(events.native.filter(isHostEvent))).toBe(
@@ -1271,7 +1271,7 @@ describe('native layout entering', () => {
 });
 
 describe('native layout entering in new ancestors', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1407,7 +1407,7 @@ describe('native layout entering in new ancestors', () => {
 });
 
 describe('native layout entering and a later change of the view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1618,7 +1618,7 @@ describe('native layout entering and a later change of the view', () => {
 });
 
 describe('native layout entering and a clip of its view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -2008,7 +2008,7 @@ function FirstCommitPair() {
 }
 
 describe('native layout entering in the first commit of a surface', () => {
-  if (!hasNativeLayoutStarts || !isSecondSurfaceAvailable()) {
+  if (!hasNativeLayoutRoute || !isSecondSurfaceAvailable()) {
     return;
   }
 
@@ -2031,7 +2031,7 @@ describe('native layout entering in the first commit of a surface', () => {
       [0.25, 0.5, 0.75].map((fraction) => fraction * ENTER_DURATION)
     );
     for (const { samples } of reads) {
-      expect(samples.Opacity.playbackKeys.length).toBe(1);
+      expect(samples.Opacity.playbacks.length).toBe(1);
     }
     expect(callbacks.length).toBe(0);
 
@@ -2107,7 +2107,7 @@ function SharedScreens({
 
 describe('native layout entering of a view that a shared transition hides', () => {
   if (
-    !hasNativeLayoutStarts ||
+    !hasNativeLayoutRoute ||
     !getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')
   ) {
     return;
@@ -2185,7 +2185,7 @@ describe('native layout entering of a view that a shared transition hides', () =
 });
 
 describe('entering of a parent and its child in one commit', () => {
-  if (!hasTargetSamples) {
+  if (!hasNativeAnimationHost) {
     return;
   }
 
@@ -2272,7 +2272,7 @@ describe('entering of a parent and its child in one commit', () => {
         expect(keys).toBe(0);
       }
       expect(sortedCallbacks()).toBe('child:true,parent:true');
-      if (isNative && hasNativeLayoutStarts) {
+      if (isNative && hasNativeLayoutRoute) {
         const clock = await narrowClockOffset(tags[0]);
         const events = await takeTrace();
         tags.forEach((tag, index) => {

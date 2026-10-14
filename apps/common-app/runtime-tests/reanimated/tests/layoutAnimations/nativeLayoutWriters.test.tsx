@@ -64,7 +64,7 @@ import {
   FRAME_BOX_REF,
   END_LEFT,
   FRAME_MS,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   layoutOf,
   sample,
@@ -218,8 +218,8 @@ function expectGroupKeysWhilePlaying(played: Played) {
     middleOf(track.origin) + declaredDurationOf(track.timeline) - FRAME_MS
   );
   expect(reads.length > 0).toBe(true);
-  for (const { playbackKeys } of reads) {
-    expect(playbackKeys.length).toBe(2);
+  for (const { playbacks } of reads) {
+    expect(playbacks.length).toBe(2);
   }
 }
 
@@ -295,7 +295,7 @@ const scrollTo = (y: number) =>
   scrollRef.current?.scrollTo({ y, animated: false });
 
 describe('native layout animations and other writers of the view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
   const hasNativeCSS = getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION');
@@ -528,8 +528,8 @@ describe('native layout animations and other writers of the view', () => {
       expect(summarize(events)).toBe(
         'Received > TrackStarted:BackgroundColor > Admitted > LayoutStartPending > LayoutStartMounted > Received > TrackStarted:PositionX > Admitted'
       );
-      const { playbackKeys } = await sample(tag, 'PositionX');
-      expect(playbackKeys.length).toBe(2);
+      const { playbacks } = await sample(tag, 'PositionX');
+      expect(playbacks.length).toBe(2);
 
       await wait(LAYOUT_DURATION);
       const ends = (await takeTraceOf(tag)).filter(isHostEvent);
@@ -795,7 +795,7 @@ describe('native layout animations and other writers of the view', () => {
 });
 
 describe('a native layout group whose tracks the platform removes', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -828,7 +828,7 @@ describe('a native layout group whose tracks the platform removes', () => {
       shownX: position.presentation[0],
       shownY: position.presentation[1],
       shownOpacity: opacity.presentation[0],
-      keys: position.playbackKeys.length,
+      keys: position.playbacks.length,
     };
   }
 

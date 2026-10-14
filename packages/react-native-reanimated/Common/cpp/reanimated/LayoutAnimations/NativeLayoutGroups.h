@@ -130,7 +130,7 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   NativeLayoutBuildEnd stop(NativeLayoutGroupCancel removed) const;
   /// The host has one track less of the build. True when it has none left. The lock is held.
   bool releaseTrack(uint64_t buildId);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// The trace objective of a command of this client. `hasResult`: the report is the result of the command.
   uint8_t traceObjective(const native_animation::AnimationHandle &handle, bool hasResult);
 #endif
@@ -141,7 +141,7 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   GroupMap groups_;
   /// For each build with such tracks, the number of its tracks that the host plays or holds.
   std::unordered_map<uint64_t, size_t> liveTrackCounts_;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// The type of the animation of each command with no result yet.
   std::unordered_map<uint64_t, LayoutAnimationType> commandTypes_;
 #endif

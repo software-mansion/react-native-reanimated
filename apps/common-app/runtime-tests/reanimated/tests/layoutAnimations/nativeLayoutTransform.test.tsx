@@ -116,7 +116,7 @@ import {
   endCellsOf,
   endTransformOf,
   FRAME_BOX_REF,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   isSameLeaf,
   layoutOf,
@@ -160,8 +160,8 @@ async function playCase(caseName: string, referenceCase: ReferenceCase) {
  * has the model of the native box.
  */
 function expectAtRest({ end }: Played) {
-  const { presentation, model, playbackKeys } = end!.native.Transform;
-  expect(playbackKeys.length).toBe(0);
+  const { presentation, model, playbacks } = end!.native.Transform;
+  expect(playbacks.length).toBe(0);
   expectCells(presentation, model);
   expectCells(end!.frame.Transform.model, model);
 }
@@ -240,7 +240,7 @@ const pieceCountOf = ({ members }: TargetSample) =>
   members[1].values.length - 1;
 
 describe('native layout transform', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -429,7 +429,7 @@ describe('native layout transform', () => {
       `${TRANSFORM_START} > ${TRANSFORM_END}`
     );
     const [native, frame] = await samplePair();
-    expect(native.playbackKeys.length).toBe(0);
+    expect(native.playbacks.length).toBe(0);
     expectCells(native.presentation, frame.model);
     expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
     await render(null);
@@ -437,7 +437,7 @@ describe('native layout transform', () => {
 });
 
 describe('native layout transform continuity', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -600,7 +600,7 @@ describe('native layout transform continuity', () => {
       expectOneKeyWhilePlaying(reads);
 
       const { native, frame } = played.end!;
-      expect(native.Transform.playbackKeys.length).toBe(0);
+      expect(native.Transform.playbacks.length).toBe(0);
       const shown = native.Transform.presentation[cell];
       expect(Math.abs(shown - endCellsOf(committed)[cell]) < 0.001).toBe(true);
       const leafEnd = endCellsOf(referenceCase.operations!)[cell];
@@ -735,7 +735,7 @@ function lateWriteFaultsOf(reads: RowRead[], byMs: number) {
 
 describe('native layout transform and the synchronous props path', () => {
   if (
-    !hasNativeLayoutStarts ||
+    !hasNativeLayoutRoute ||
     !getStaticFeatureFlag('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
   ) {
     return;
@@ -754,8 +754,8 @@ describe('native layout transform and the synchronous props path', () => {
     expect(summarize(played.events.filter(isHostEvent))).toBe(
       `${TRANSFORM_START} > ${TRANSFORM_END}`
     );
-    const { playbackKeys, presentation } = played.end!.native.Transform;
-    expect(playbackKeys.length).toBe(0);
+    const { playbacks, presentation } = played.end!.native.Transform;
+    expect(playbacks.length).toBe(0);
     expect(Math.abs(presentation[12] - WRITTEN_VALUE) < 0.01).toBe(true);
     expect(callbacks.filter((each) => each.startsWith('native')).join()).toBe(
       'native:true'
@@ -893,7 +893,7 @@ const hasTransformTrack = (events: TraceEvent[]) =>
   );
 
 describe('native layout transform and the edge antialiasing of the view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 

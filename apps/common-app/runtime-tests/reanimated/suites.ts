@@ -163,6 +163,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     skipByDefault: true,
   },
   {
+    testSuiteName: 'native layout route',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutRoute.test');
+    },
+  },
+  {
     testSuiteName: 'native layout starts',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutStarts.test');

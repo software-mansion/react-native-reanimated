@@ -81,8 +81,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
-  devTools,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   BOX_REF,
   BOX_SIZE,
   START_LEFT,
@@ -174,7 +173,7 @@ function expectAtRest({ end }: Played) {
 }
 
 describe('native layout starts after the mount of the final state', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -191,7 +190,7 @@ describe('native layout starts after the mount of the final state', () => {
 
     const playing = await sample(tag, 'PositionX');
     const { model, presentation, monotonicTimeMs } = playing;
-    expect(playing.playbackKeys.length).toBe(2);
+    expect(playing.playbacks.length).toBe(2);
     expect(playbackCountOf(playing, events[0].generation)).toBe(2);
     expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
@@ -204,7 +203,7 @@ describe('native layout starts after the mount of the final state', () => {
     await wait(DURATION);
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     const end = await sample(tag, 'PositionX');
-    expect(end.playbackKeys.length).toBe(0);
+    expect(end.playbacks.length).toBe(0);
     expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
@@ -818,7 +817,7 @@ describe('native layout starts after the mount of the final state', () => {
           monotonicTimeMs < middleOf(firstY.origin) + DURATION - FRAME_MS
       );
     for (const read of beforeTheEndOfY) {
-      expect(read.playbackKeys.length).toBe(2);
+      expect(read.playbacks.length).toBe(2);
       expect(playbackCountOf(read, secondX.generation)).toBe(1);
       expect(playbackCountOf(read, firstY.generation)).toBe(1);
     }
@@ -848,7 +847,7 @@ describe('native layout starts after the mount of the final state', () => {
     expect(events[7].generation > firstGeneration).toBe(true);
     expect(callbacks.join()).toBe('group:false');
     const x = await sample(tag, 'PositionX');
-    expect(x.playbackKeys.length).toBe(1);
+    expect(x.playbacks.length).toBe(1);
     expect(playbackCountOf(x, firstGeneration)).toBe(1);
     expect(x.presentation[0] < centerOf(END_LEFT)).toBe(true);
 
@@ -994,12 +993,12 @@ describe('native layout starts after the mount of the final state', () => {
     expect(captures.length).toBe(1);
 
     for (const { row } of rows) {
-      const { model, playbackKeys, monotonicTimeMs } = row.native.PositionX;
+      const { model, playbacks, monotonicTimeMs } = row.native.PositionX;
       if (monotonicTimeMs < captured.monotonicTimeMs) {
         expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
       }
       if (monotonicTimeMs >= trackEnd.monotonicTimeMs + FRAME_MS) {
-        expect(playbackKeys.length).toBe(0);
+        expect(playbacks.length).toBe(0);
       }
     }
     await render(null);
@@ -1179,7 +1178,7 @@ describe('native layout starts after the mount of the final state', () => {
 });
 
 describe('native layout starts with no duration', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1216,7 +1215,7 @@ describe('native layout starts with no duration', () => {
     );
     expect(Math.abs(holdEnd - endTimeOf('PositionY')) < FRAME_MS).toBe(true);
     const end = await sample(tag, 'PositionX');
-    expect(end.playbackKeys.length).toBe(0);
+    expect(end.playbacks.length).toBe(0);
     expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
@@ -1251,11 +1250,8 @@ describe('native layout starts with no duration', () => {
     expect(summarize(events.filter(isClientReport))).toBe(
       'ClientAdmitted > ClientEnded:Finished:None'
     );
-    const { model, presentation, playbackKeys } = await sample(
-      tag,
-      'PositionX'
-    );
-    expect(playbackKeys.length).toBe(0);
+    const { model, presentation, playbacks } = await sample(tag, 'PositionX');
+    expect(playbacks.length).toBe(0);
     expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     expect(callbacks.join()).toBe('now:true');
@@ -1276,7 +1272,7 @@ describe('native layout starts with no duration', () => {
       `${NATIVE_START} > TrackEnded:PositionX:true`
     );
     const x = await sample(tag, 'PositionX');
-    expect(x.playbackKeys.length).toBe(1);
+    expect(x.playbacks.length).toBe(1);
     expect(Math.abs(x.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     const y = await sample(tag, 'PositionY');
     expect(y.presentation[0] > y.model[0] - END_TOP).toBe(true);
@@ -1310,8 +1306,8 @@ describe('native layout starts with no duration', () => {
     expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
       `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:PositionX:false > Ended:Interrupted:None > TrackEnded:PositionY:false > ${NATIVE_START_AND_END.replace('LayoutStartPending > LayoutStartMounted > Received > ', '')}`
     );
-    const { presentation, playbackKeys } = await sample(tag, 'PositionX');
-    expect(playbackKeys.length).toBe(0);
+    const { presentation, playbacks } = await sample(tag, 'PositionX');
+    expect(playbacks.length).toBe(0);
     expect(Math.abs(presentation[0] - centerOf(2 * END_LEFT)) < 0.01).toBe(
       true
     );
@@ -1329,9 +1325,9 @@ describe('native layout starts with no duration', () => {
       );
       expect(trackEnd?.finished).toBe(false);
       for (const { row } of rows) {
-        const { playbackKeys, monotonicTimeMs } = row.native.PositionX;
+        const { playbacks, monotonicTimeMs } = row.native.PositionX;
         if (monotonicTimeMs >= trackEnd!.monotonicTimeMs + FRAME_MS) {
-          expect(playbackKeys.length).toBe(0);
+          expect(playbacks.length).toBe(0);
         }
       }
       await render(null);
@@ -1359,7 +1355,7 @@ describe('native layout starts with no duration', () => {
     expect(events[3].generation).toBe(firstGeneration);
     expect(callbacks.join()).toBe('first:false');
     const x = await sample(tag, 'PositionX');
-    expect(x.playbackKeys.length).toBe(1);
+    expect(x.playbacks.length).toBe(1);
     expect(playbackCountOf(x, firstGeneration)).toBe(1);
     expect(x.presentation[0] < centerOf(END_LEFT)).toBe(true);
 
@@ -1368,13 +1364,13 @@ describe('native layout starts with no duration', () => {
     expect(summarize(lateEvents)).toBe('TrackEnded:PositionX:true');
     expect(lateEvents[0].generation).toBe(firstGeneration);
     expect(callbacks.join()).toBe('first:false,second:true');
-    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    expect((await sample(tag, 'PositionX')).playbacks.length).toBe(0);
     await render(null);
   });
 });
 
 describe('a native layout start that is late on its timeline', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1439,7 +1435,7 @@ describe('a native layout start that is late on its timeline', () => {
     const { presentation } = await sample(tag, 'PositionX');
     expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     await wait(100);
-    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    expect((await sample(tag, 'PositionX')).playbacks.length).toBe(0);
     const events = (await takeTraceOf(tag)).filter(isHostEvent);
     expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
     expect(callbacks.join()).toBe('late:true');
@@ -1457,7 +1453,7 @@ describe('a native layout start that is late on its timeline', () => {
     const { presentation } = await sample(tag, 'PositionX');
     expect(Math.abs(presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     await wait(100);
-    expect((await sample(tag, 'PositionX')).playbackKeys.length).toBe(0);
+    expect((await sample(tag, 'PositionX')).playbacks.length).toBe(0);
     const events = (await takeTraceOf(tag)).filter(isHostEvent);
     expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
     expect(callbacks.join()).toBe('late:true');
@@ -1466,7 +1462,7 @@ describe('a native layout start that is late on its timeline', () => {
 });
 
 describe('native layout timing against the curve and the frame driver', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1548,8 +1544,7 @@ describe('native layout timing against the curve and the frame driver', () => {
 describe('layout animations with the native route off', () => {
   if (
     Platform.OS !== 'ios' ||
-    getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') ||
-    devTools.takeNativeAnimationTrace === undefined
+    getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
   ) {
     return;
   }
@@ -1626,7 +1621,7 @@ function ReentryScene({
 }
 
 describe('native layout starts from a client callback', () => {
-  if (!hasNativeLayoutStarts || getStaticFeatureFlag('USE_ANIMATION_BACKEND')) {
+  if (!hasNativeLayoutRoute || getStaticFeatureFlag('USE_ANIMATION_BACKEND')) {
     return;
   }
 
@@ -1676,7 +1671,7 @@ describe('native layout starts from a client callback', () => {
 });
 
 describe('native layout starts on two surfaces', () => {
-  if (!hasNativeLayoutStarts || !isSecondSurfaceAvailable()) {
+  if (!hasNativeLayoutRoute || !isSecondSurfaceAvailable()) {
     return;
   }
 
@@ -1744,7 +1739,7 @@ describe('native layout starts on two surfaces', () => {
 });
 
 describe('native layout size', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -2250,8 +2245,8 @@ describe('native layout size', () => {
           monotonicTimeMs < middleOf(origin) + SIZE_DURATION - FRAME_MS
       );
       expect(playing.length > 0).toBe(true);
-      for (const { playbackKeys } of playing) {
-        expect(playbackKeys.length).toBe(4);
+      for (const { playbacks } of playing) {
+        expect(playbacks.length).toBe(4);
       }
       await render(null);
     });
@@ -2272,7 +2267,7 @@ describe('native layout size', () => {
       const events = await takeTraceOf(tag);
       expect(summarizeStart(events)).toBe(FOUR_TRACKS);
       expect(summarizeResults(events)).toBe('Ended:Finished:None');
-      expect(playing.playbackKeys.length).toBe(4);
+      expect(playing.playbacks.length).toBe(4);
       expect(playing.presentation.x > START_LEFT).toBe(true);
       expect(playing.presentation.x < END_LEFT).toBe(true);
       expect(playing.presentation.width).toBe(BOX_SIZE);

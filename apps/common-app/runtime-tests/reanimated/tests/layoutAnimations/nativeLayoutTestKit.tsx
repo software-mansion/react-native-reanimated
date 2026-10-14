@@ -1,7 +1,7 @@
 import type { ComponentRef, RefObject } from 'react';
 import React, { useEffect, useState } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
-import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
@@ -14,7 +14,6 @@ import type {
 } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  getStaticFeatureFlag,
   makeMutable,
   ReduceMotion,
   setDynamicFeatureFlag,
@@ -35,76 +34,51 @@ import {
   wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import type {
+  AppleTargetSample as TargetSample,
+  CommandHandle,
+  TraceEvent,
+} from '../nativeAnimationObservation';
+import {
+  hasNativeAnimationHost,
+  hasNativeLayoutRoute,
+  isNoView,
+  isOfCommand,
+  NATIVE_ANIMATION_TEST_HOOKS,
+  playbackIdOf,
+  playbackIdsOf,
+  routeOf,
+  sample as sampleOf,
+  takeTrace,
+  testHookOf,
+} from '../nativeAnimationObservation';
 import { blockUIThread } from './nativeLayoutLoad';
 
-export type TraceEvent = {
-  event: string;
-  surfaceId: number;
-  tag: number;
-  owner: string;
-  generation: number;
-  monotonicTimeMs: number;
-  target?: string;
-  endpointPolicy?: string;
-  finished?: boolean;
-  outcome?: string;
-  reason?: string;
-  buildFailure?: string;
-  transactionNumber?: number;
-  /** Of a `Received` event: the start of the timelines on the animation clock. */
-  originTimestampMs?: number;
-  leafValue?: number;
-  layoutAnimationType?: string;
+export type {
+  AppleTargetSample as TargetSample,
+  CommandHandle,
+  Playback,
+  Route,
+  TraceEvent,
+} from '../nativeAnimationObservation';
+export {
+  hasNativeAnimationHost,
+  hasNativeLayoutRoute,
+  isNoView,
+  isOfCommand,
+  NATIVE_ANIMATION_TEST_HOOKS,
+  playbackIdOf,
+  playbackIdsOf,
+  routeOf,
+  takeTrace,
+  testHookOf,
 };
+
+/** The layout suites read the Apple sample. */
+export const sample = (tag: number, target: string) =>
+  sampleOf<TargetSample>(tag, target);
 
 export type Band = { from: number; to: number };
-
-export type TargetSample = {
-  model: number[];
-  presentation: number[];
-  /** The view is allowed to antialias its edges. */
-  edgeAntialiasing: boolean;
-  /**
-   * The platform key of each physical playback on the view:
-   * `reanimated.<owner>.<generation>.<target>`.
-   */
-  playbackKeys: string[];
-  /**
-   * The physical animations of the playback of the target, in the order in
-   * which the platform applies them. Each has its value at the start and at the
-   * end of each segment, and the time of each value as a part of its duration.
-   */
-  members: { property: string; values: number[][]; keyTimes: number[] }[];
-  monotonicTimeMs: number;
-};
-
-export type NativeAnimationDevTools = {
-  takeNativeAnimationTrace?: (callback: (events: TraceEvent[]) => void) => void;
-  sampleNativeAnimationTarget?: (
-    tag: number,
-    target: string,
-    callback: (sample: TargetSample | undefined) => void
-  ) => void;
-};
-
-export const devTools = (
-  globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
-).__reanimatedModuleProxy;
-
-// The entries exist only in development builds of the native code, and the route only with the flag. The legacy
-// proxy has no native route.
-export const hasNativeLayoutStarts =
-  Platform.OS === 'ios' &&
-  getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
-  !getStaticFeatureFlag('USE_LEGACY_LAYOUT_ANIMATIONS_PROXY') &&
-  devTools.takeNativeAnimationTrace !== undefined;
-
-// The samples need the native animation host, which each of the two flags creates.
-export const hasTargetSamples =
-  Platform.OS === 'ios' &&
-  (getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') ||
-    getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION')) &&
-  devTools.sampleNativeAnimationTarget !== undefined;
 
 export const BOX_REF = 'NativeLayoutStartBox';
 export const BOX_SIZE = 50;
@@ -133,20 +107,9 @@ export const SAMPLED_OPACITY_TOLERANCE = 0.03;
 
 export const centerOf = (origin: number) => origin + BOX_SIZE / 2;
 
-export function takeTrace(): Promise<TraceEvent[]> {
-  return new Promise((resolve) => {
-    devTools.takeNativeAnimationTrace?.(resolve);
-  });
-}
-
 export async function takeTraceOf(tag: number) {
   return (await takeTrace()).filter((event) => event.tag === tag);
 }
-
-export type CommandHandle = Pick<
-  TraceEvent,
-  'surfaceId' | 'tag' | 'owner' | 'generation'
->;
 
 export function requireEvent(
   events: TraceEvent[],
@@ -164,15 +127,6 @@ export function requireEvent(
   return found;
 }
 
-export const isOfCommand = (
-  event: TraceEvent,
-  { surfaceId, tag, owner, generation }: CommandHandle
-) =>
-  event.surfaceId === surfaceId &&
-  event.tag === tag &&
-  event.owner === owner &&
-  event.generation === generation;
-
 const describeCommand = ({
   surfaceId,
   tag,
@@ -188,19 +142,6 @@ export const isHostEvent = ({ event }: TraceEvent) =>
 
 export const isClientReport = ({ event }: TraceEvent) =>
   event === 'ClientAdmitted' || event === 'ClientEnded';
-
-const NO_VIEW = 'no view';
-
-export function sample(tag: number, target: string): Promise<TargetSample> {
-  return new Promise((resolve, reject) => {
-    devTools.sampleNativeAnimationTarget?.(tag, target, (targetSample) =>
-      targetSample ? resolve(targetSample) : reject(new Error(NO_VIEW))
-    );
-  });
-}
-
-export const isNoView = (error: unknown) =>
-  error instanceof Error && error.message === NO_VIEW;
 
 /** The reads of one wait for a written model, in their order. */
 export type ModelWait = {
@@ -240,14 +181,14 @@ export async function waitForModel(
 }
 
 export async function sampleOpacity(tag: number) {
-  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+  const { model, presentation, playbacks, monotonicTimeMs } = await sample(
     tag,
     'Opacity'
   );
   return {
     model: model[0],
     presentation: presentation[0],
-    keys: playbackKeys.length,
+    keys: playbacks.length,
     time: monotonicTimeMs,
   };
 }
@@ -261,12 +202,12 @@ export async function sampleOpacityPair(nativeTag: number, frameTag: number) {
 }
 
 export async function samplePosition(tag: number) {
-  const { model, presentation, playbackKeys } = await sample(tag, 'Position');
+  const { model, presentation, playbacks } = await sample(tag, 'Position');
   return {
     x: model[0],
     y: model[1],
     presentationX: presentation[0],
-    keys: playbackKeys.length,
+    keys: playbacks.length,
   };
 }
 
@@ -296,14 +237,14 @@ export const DEFAULT_EASING: TrackEasing = {
 };
 
 export async function readTrack(tag: number, { sampleTarget }: Track) {
-  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+  const { model, presentation, playbacks, monotonicTimeMs } = await sample(
     tag,
     sampleTarget
   );
   return {
     shown: presentation[0],
     model: model[0],
-    keys: playbackKeys.length,
+    keys: playbacks.length,
     timeMs: monotonicTimeMs,
   };
 }
@@ -2361,9 +2302,9 @@ export function nativeOriginOf(
 }
 
 export const playbackCountOf = (
-  { playbackKeys }: TargetSample,
+  { playbacks }: TargetSample,
   generation: number
-) => playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
+) => playbacks.filter((playback) => playback.generation === generation).length;
 
 /**
  * The events of the trace until `isComplete` holds for them: the wait for the
@@ -3192,7 +3133,7 @@ export async function sampleFrame(tag: number) {
   return {
     model: frameOf(position.model, size.model),
     presentation: frameOf(position.presentation, size.presentation),
-    playbackKeys: size.playbackKeys,
+    playbacks: size.playbacks,
     monotonicTimeMs: size.monotonicTimeMs,
   };
 }
@@ -3386,7 +3327,7 @@ export async function sampleFramePair(offset = PAIR_IN_COLUMN) {
       x: frame.model.x - offset.x,
       y: frame.model.y - offset.y,
     },
-    playbackKeys: native.playbackKeys,
+    playbacks: native.playbacks,
     monotonicTimeMs: native.monotonicTimeMs,
   };
 }
@@ -3429,7 +3370,7 @@ export function framePairDistances(rows: FramePairRow[]) {
       frameDistance(end.native, end.frame),
       frameDistance(end.native, end.end)
     ),
-    keysAtEnd: end.playbackKeys.length,
+    keysAtEnd: end.playbacks.length,
   };
 }
 

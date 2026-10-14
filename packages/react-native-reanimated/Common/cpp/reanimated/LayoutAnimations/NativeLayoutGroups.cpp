@@ -66,7 +66,7 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(
     group.members.push_back({.key = {request.handle, track.target}, .track = track, .isHeld = false});
   }
   liveTrackCounts_.insert_or_assign(group.buildId, request.tracks.size());
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   commandTypes_.insert_or_assign(group.buildId, type);
 #endif
   groups_.insert_or_assign(tag, std::move(group));
@@ -122,7 +122,7 @@ NativeLayoutBuildEnds NativeLayoutGroups::clear() {
 }
 
 void NativeLayoutGroups::onAnimationAdmitted(const AnimationHandle &handle) {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   host_->trace().record(
       {.event = TraceEventType::ClientAdmitted, .handle = handle, .objective = traceObjective(handle, false)});
 #endif
@@ -170,7 +170,7 @@ void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const TrackEnd end)
 }
 
 void NativeLayoutGroups::onAnimationEnded(const AnimationHandle &handle, const AnimationResult result) {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   host_->trace().record(
       {.event = TraceEventType::ClientEnded,
        .handle = handle,
@@ -292,7 +292,7 @@ NativeLayoutBuildEnd NativeLayoutGroups::stop(NativeLayoutGroupCancel removed) c
   return std::move(removed.end);
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 uint8_t NativeLayoutGroups::traceObjective(const AnimationHandle &handle, const bool hasResult) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto objective = traceObjectiveOf(commandTypes_.at(handle.generation));

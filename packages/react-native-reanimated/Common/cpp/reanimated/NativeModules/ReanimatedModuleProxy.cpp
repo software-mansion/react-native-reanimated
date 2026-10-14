@@ -459,7 +459,7 @@ jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(jsi::Runtime &rt, const j
   return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 namespace {
 
 jsi::Array componentsToJSI(jsi::Runtime &rt, const std::vector<double> &components) {
@@ -470,35 +470,47 @@ jsi::Array componentsToJSI(jsi::Runtime &rt, const std::vector<double> &componen
   return array;
 }
 
+jsi::String toJSIString(jsi::Runtime &rt, const auto value) {
+  return jsi::String::createFromUtf8(rt, std::string(native_animation::toString(value)));
+}
+
+void setHandle(jsi::Runtime &rt, jsi::Object &object, const native_animation::AnimationHandle &handle) {
+  object.setProperty(rt, "surfaceId", handle.surfaceId);
+  object.setProperty(rt, "tag", handle.tag);
+  object.setProperty(rt, "owner", toJSIString(rt, handle.owner));
+  object.setProperty(rt, "generation", static_cast<double>(handle.generation));
+}
+
+jsi::Object trackKeyToJSI(jsi::Runtime &rt, const native_animation::TrackKey &track) {
+  jsi::Object object(rt);
+  setHandle(rt, object, track.handle);
+  object.setProperty(rt, "target", toJSIString(rt, track.target));
+  return object;
+}
+
 jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent &event) {
-  const auto toJSIString = [&rt](const auto value) {
-    return jsi::String::createFromUtf8(rt, std::string(native_animation::toString(value)));
-  };
   jsi::Object object(rt);
   object.setProperty(rt, "schemaVersion", static_cast<int>(event.schemaVersion));
   object.setProperty(rt, "sequence", static_cast<double>(event.sequence));
   object.setProperty(rt, "monotonicTimeMs", event.monotonicTimeMs);
-  object.setProperty(rt, "event", toJSIString(event.event));
-  object.setProperty(rt, "surfaceId", event.handle.surfaceId);
-  object.setProperty(rt, "tag", event.handle.tag);
-  object.setProperty(rt, "owner", toJSIString(event.handle.owner));
-  object.setProperty(rt, "generation", static_cast<double>(event.handle.generation));
+  object.setProperty(rt, "event", toJSIString(rt, event.event));
+  setHandle(rt, object, event.handle);
   object.setProperty(rt, "objective", static_cast<int>(event.objective));
   if (event.target) {
-    object.setProperty(rt, "target", toJSIString(*event.target));
+    object.setProperty(rt, "target", toJSIString(rt, *event.target));
   }
   if (event.endpointPolicy) {
-    object.setProperty(rt, "endpointPolicy", toJSIString(*event.endpointPolicy));
+    object.setProperty(rt, "endpointPolicy", toJSIString(rt, *event.endpointPolicy));
   }
   if (event.finished) {
     object.setProperty(rt, "finished", *event.finished);
   }
   if (event.result) {
-    object.setProperty(rt, "outcome", toJSIString(event.result->outcome));
-    object.setProperty(rt, "reason", toJSIString(event.result->reason));
+    object.setProperty(rt, "outcome", toJSIString(rt, event.result->outcome));
+    object.setProperty(rt, "reason", toJSIString(rt, event.result->reason));
   }
   if (event.buildFailure) {
-    object.setProperty(rt, "buildFailure", toJSIString(*event.buildFailure));
+    object.setProperty(rt, "buildFailure", toJSIString(rt, *event.buildFailure));
   }
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
@@ -551,11 +563,11 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
       jsi::Object object(rt);
       object.setProperty(rt, "model", componentsToJSI(rt, sample->model));
       object.setProperty(rt, "presentation", componentsToJSI(rt, sample->presentation));
-      auto playbackKeys = jsi::Array(rt, sample->playbackKeys.size());
-      for (size_t index = 0; index < sample->playbackKeys.size(); ++index) {
-        playbackKeys.setValueAtIndex(rt, index, jsi::String::createFromUtf8(rt, sample->playbackKeys[index]));
+      auto playbacks = jsi::Array(rt, sample->playbacks.size());
+      for (size_t index = 0; index < sample->playbacks.size(); ++index) {
+        playbacks.setValueAtIndex(rt, index, trackKeyToJSI(rt, sample->playbacks[index]));
       }
-      object.setProperty(rt, "playbackKeys", playbackKeys);
+      object.setProperty(rt, "playbacks", playbacks);
       auto members = jsi::Array(rt, sample->members.size());
       for (size_t index = 0; index < sample->members.size(); ++index) {
         const auto &member = sample->members[index];
@@ -582,7 +594,7 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
     deliver(std::nullopt);
   }
 }
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 jsi::Value
 ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value) {
@@ -1793,7 +1805,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->runCSSTransition(rt, at<0>(args), at<1>(args), at<2>(args));
       });
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   addMethod<1>(
       rt,
       obj,
@@ -1814,7 +1826,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
               rt, static_cast<Tag>(at<0>(args).asNumber()), at<1>(args).asString(rt).utf8(rt), at<2>(args));
         }
       });
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
   addMethod<1>(
       rt,

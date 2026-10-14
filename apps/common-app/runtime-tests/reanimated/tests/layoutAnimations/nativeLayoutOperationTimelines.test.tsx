@@ -80,12 +80,14 @@ import {
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   layoutBuilderCalls,
   layoutOf,
   middleOf,
   mountScene,
+  playbackIdOf,
+  playbackIdsOf,
   sample,
   SizePair,
   styles,
@@ -145,8 +147,8 @@ async function playCase(caseName: string, referenceCase: ReferenceCase) {
 }
 
 function expectAtRest({ end }: Played) {
-  const { presentation, model, playbackKeys } = end!.native.Transform;
-  expect(playbackKeys.length).toBe(0);
+  const { presentation, model, playbacks } = end!.native.Transform;
+  expect(playbacks.length).toBe(0);
   expect(largestCellDifference(presentation, model)).toBe(0);
   expect(largestCellDifference(model, end!.frame.Transform.model) < 0.01).toBe(
     true
@@ -194,7 +196,7 @@ function membersOf(reads: RowRead[]) {
 }
 
 describe('native layout operation timelines', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -349,14 +351,14 @@ describe('native layout operation timelines', () => {
       summarize(events.filter(({ event }) => event !== 'FrameUpdateMounted'))
     ).toBe('LayoutBuildFailed:UnsupportedTiming');
     for (const { row } of rows) {
-      expect(row.native.Transform.playbackKeys.length).toBe(0);
+      expect(row.native.Transform.playbacks.length).toBe(0);
     }
     await render(null);
   });
 });
 
 describe('native layout operation timelines and a new start', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -412,9 +414,9 @@ describe('native layout operation timelines and a new start', () => {
     expect(second.some(({ event }) => event === 'TrackStarted')).toBe(false);
     const takenMs = played.tracks[0].played.to + FRAME_MS;
     for (const { row } of played.rows) {
-      const { monotonicTimeMs, playbackKeys } = row.native.Transform;
+      const { monotonicTimeMs, playbacks } = row.native.Transform;
       if (monotonicTimeMs >= takenMs) {
-        expect(playbackKeys.length).toBe(0);
+        expect(playbacks.length).toBe(0);
       }
     }
     expectModelOnFrames(caseName, played);
@@ -462,7 +464,7 @@ async function takeTraceOfPair() {
 const sortedCallbacks = () => callbacks.slice().sort().join();
 
 describe('native layout operation timelines and a live size track', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -493,7 +495,7 @@ describe('native layout operation timelines and a live size track', () => {
     await wait(500);
     await takeTraceOfPair();
     const before = await samplePair();
-    expect(before.native.playbackKeys.length).toBe(1);
+    expect(before.native.playbacks.length).toBe(1);
     callbacks.length = 0;
     await render(
       <SizePair
@@ -512,8 +514,12 @@ describe('native layout operation timelines and a live size track', () => {
     ).toBe(true);
     expect(trace.includes('TrackEnded')).toBe(false);
     const during = await samplePair();
-    expect(during.native.playbackKeys.length).toBe(2);
-    expect(during.native.playbackKeys[0]).toBe(before.native.playbackKeys[0]);
+    expect(during.native.playbacks.length).toBe(2);
+    expect(
+      playbackIdsOf(during.native).includes(
+        playbackIdOf(before.native.playbacks[0])
+      )
+    ).toBe(true);
     expect(propertiesOf(during.native.members)).toBe(
       'transform,transform.translateX,transform.rotateZ'
     );
@@ -522,7 +528,7 @@ describe('native layout operation timelines and a live size track', () => {
     expect(sortedCallbacks()).toBe(
       'frame:true,frameSize:false,native:true,nativeSize:false'
     );
-    expect(end.native.playbackKeys.length).toBe(0);
+    expect(end.native.playbacks.length).toBe(0);
     expect(
       largestCellDifference(end.native.model, end.frame.model) < 0.01
     ).toBe(true);
@@ -579,7 +585,7 @@ function EnteringPair({
 }
 
 describe('native layout operation timelines of a keyframe animation', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -627,7 +633,7 @@ describe('native layout operation timelines of a keyframe animation', () => {
     );
     await waitUntil(DURATION + 300);
     const end = await samplePair();
-    expect(end.native.playbackKeys.length).toBe(0);
+    expect(end.native.playbacks.length).toBe(0);
     expect(
       largestCellDifference(end.native.presentation, end.frame.model) < 0.01
     ).toBe(true);

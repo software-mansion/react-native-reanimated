@@ -58,6 +58,7 @@ import type {
   PairLayouts,
   PairProps,
   SizePairProps,
+  TargetSample,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
@@ -78,7 +79,7 @@ import {
   POSITION_TOLERANCE,
   START_OPACITY,
   takeTraceUntilSurfaceClosed,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   LAYOUT_DURATION,
   layoutOf,
   LONG_MOVE,
@@ -106,6 +107,8 @@ import {
   isClientReport,
   middleOf,
   playbackCountOf,
+  playbackIdOf,
+  playbackIdsOf,
   PRESENTATION_STAY_MS,
   waitForCallbacks,
 } from './nativeLayoutTestKit';
@@ -267,7 +270,7 @@ async function sampleSharedContainer(target = 'PositionX') {
 }
 
 describe('native layout continuity', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -292,7 +295,7 @@ describe('native layout continuity', () => {
       // The frame-driven box is one cell below the native box.
       frameY: framePosition.model[1] - PAIR_CELL_HEIGHT,
       frameOpacity: frameOpacity.model[0],
-      playbackKeys: position.playbackKeys,
+      playbacks: position.playbacks,
     };
   }
 
@@ -377,7 +380,7 @@ describe('native layout continuity', () => {
     await expectPairParity(10, PAIR_DURATION / 15, oneFrame());
     await wait(PAIR_DURATION / 3);
     const end = await samplePair();
-    expect(end.playbackKeys.length).toBe(0);
+    expect(end.playbacks.length).toBe(0);
     expect(Math.abs(end.x - end.frameX) < 0.01).toBe(true);
     expect([...callbacks].sort().join()).toBe(
       'frame:false,frame:true,native:false,native:true'
@@ -578,13 +581,13 @@ describe('native layout continuity', () => {
     await wait(PAIR_DURATION / 4);
     const { nativeTag } = pairTags();
     const native = await sample(nativeTag, 'PositionX');
-    expect(native.playbackKeys.length).toBe(2);
+    expect(native.playbacks.length).toBe(2);
     await takeTrace();
     await render(
       <Pair left={PAIR_LEFT / 2} top={PAIR_TOP} opacity={1} {...spring} />
     );
     await expectPairParity(8, PAIR_DURATION / 12, oneFrame());
-    expect((await sample(nativeTag, 'PositionX')).playbackKeys.length).toBe(0);
+    expect((await sample(nativeTag, 'PositionX')).playbacks.length).toBe(0);
     await wait(PAIR_DURATION / 2);
     expect([...callbacks].sort().join()).toBe(
       'frame:false,frame:false,frame:true,native:false,native:false,native:true'
@@ -692,7 +695,7 @@ describe('native layout continuity', () => {
     await wait(PAIR_DURATION / 4);
     // The native box shows the committed prop when its track ends.
     const end = await samplePair();
-    expect(end.playbackKeys.length).toBe(0);
+    expect(end.playbacks.length).toBe(0);
     expect(Math.abs(end.opacity - 0.6) < 0.01).toBe(true);
     expect([...callbacks].sort().join()).toBe('frame:true,native:true');
     await render(null);
@@ -722,7 +725,7 @@ describe('native layout continuity', () => {
     );
     expect(afterTheEndOfY.length > 0).toBe(true);
     for (const read of afterTheEndOfY) {
-      expect(read.playbackKeys.length).toBe(1);
+      expect(read.playbacks.length).toBe(1);
       expect(playbackCountOf(read, firstX.generation)).toBe(1);
     }
     expect(callbacks.filter((name) => name.startsWith('native')).join()).toBe(
@@ -801,7 +804,7 @@ describe('native layout continuity', () => {
       );
       await wait(PAIR_DURATION / 3);
       const source = await sample(tag, 'PositionX');
-      expect(source.playbackKeys.length).toBe(hasCallback ? 0 : 1);
+      expect(source.playbacks.length).toBe(hasCallback ? 0 : 1);
       await render(
         <SharedScreens left={PAIR_LEFT} showTarget layout={layout} />
       );
@@ -858,7 +861,7 @@ describe('native layout continuity', () => {
         await render(screens(end, false));
         await wait(PAIR_DURATION / 3);
         const source = await sampleFrame(tag);
-        expect(source.playbackKeys.length).toBe(hasCallback ? 0 : keys.length);
+        expect(source.playbacks.length).toBe(hasCallback ? 0 : keys.length);
         expect(
           frameDistance(source.presentation, source.model) > BOX_SIZE / 2
         ).toBe(!hasCallback);
@@ -907,7 +910,7 @@ describe('native layout continuity', () => {
       await render(screens(PAIR_LEFT, false));
       await wait(PAIR_DURATION / 3);
       const parent = await sample(parentTag, 'PositionX');
-      expect(parent.playbackKeys.length).toBe(hasCallback ? 0 : 1);
+      expect(parent.playbacks.length).toBe(hasCallback ? 0 : 1);
       await render(screens(PAIR_LEFT, true));
       await wait(2 * FRAME_MS);
       const container = await sampleSharedContainer();
@@ -957,7 +960,7 @@ describe('native layout continuity', () => {
         await render(screens(START_LEFT + 2, false));
         await wait(PAIR_DURATION / 3);
         const moving = await sample(tag, 'Transform');
-        expect(moving.playbackKeys.length).toBe(hasCallback ? 0 : 1);
+        expect(moving.playbacks.length).toBe(hasCallback ? 0 : 1);
         const shown = (hasCallback ? moving.model : moving.presentation)[12];
         expect(shown > TRAVEL / 6 && shown < TRAVEL / 2).toBe(true);
         await render(screens(START_LEFT + 2, true));
@@ -1017,7 +1020,7 @@ describe('native layout continuity', () => {
   async function sampleHiddenX(tag: number, keys = 0) {
     const opacity = await sample(tag, 'Opacity');
     expect(opacity.presentation[0]).toBe(0);
-    expect(opacity.playbackKeys.length).toBe(keys);
+    expect(opacity.playbacks.length).toBe(keys);
     return (await sample(tag, 'Position')).presentation[0];
   }
 
@@ -1061,7 +1064,7 @@ describe('native layout continuity', () => {
         await render(screens(PAIR_LEFT, endOpacity, false));
         await waitUntil(PAIR_DURATION / 3);
         const before = await sample(tag, 'Opacity');
-        expect(before.playbackKeys.length).toBe(hasCallback ? 0 : nativeKeys);
+        expect(before.playbacks.length).toBe(hasCallback ? 0 : nativeKeys);
         await render(screens(PAIR_LEFT, endOpacity, true));
         await wait(2 * FRAME_MS);
         const containerTag = await findSharedContainerTag();
@@ -1110,7 +1113,7 @@ describe('native layout continuity', () => {
       await render(screens(PAIR_LEFT, 0.5, false));
       await wait(PAIR_DURATION / 3);
       const before = await sample(tag, 'Position');
-      expect(before.playbackKeys.length).toBe(hasCallback ? 0 : 2);
+      expect(before.playbacks.length).toBe(hasCallback ? 0 : 2);
       await takeTraceOf(tag);
       const hideMs = performance.now();
       const waitUntil = (elapsedMs: number) =>
@@ -1199,7 +1202,7 @@ const TransferSurfaceScene = secondSurfaceSceneOf({
 });
 
 describe('native layout continuity on a second surface', () => {
-  if (!hasNativeLayoutStarts || !isSecondSurfaceAvailable()) {
+  if (!hasNativeLayoutRoute || !isSecondSurfaceAvailable()) {
     return;
   }
 
@@ -1228,7 +1231,7 @@ describe('native layout continuity on a second surface', () => {
 });
 
 describe('native layout size continuity', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1313,17 +1316,23 @@ describe('native layout size continuity', () => {
       .map(({ target }) => target)
       .join();
 
-  // The last part of a playback key is its target.
-  const targetPartOf = (key: string) => key.split('.').pop();
-
-  // Each key of `before` is in `after`, but one: a key with a new generation has its target.
-  function expectOneTrackReplaced(before: string[], after: string[]) {
-    const ended = before.filter((key) => !after.includes(key));
-    const started = after.filter((key) => !before.includes(key));
-    expect(after.length).toBe(before.length);
+  // Each playback of `before` is in `after`, but one: a playback with a new generation has its target.
+  function expectOneTrackReplaced(
+    before: Pick<TargetSample, 'playbacks'>,
+    after: Pick<TargetSample, 'playbacks'>
+  ) {
+    const beforeIds = playbackIdsOf(before);
+    const afterIds = playbackIdsOf(after);
+    const ended = before.playbacks.filter(
+      (playback) => !afterIds.includes(playbackIdOf(playback))
+    );
+    const started = after.playbacks.filter(
+      (playback) => !beforeIds.includes(playbackIdOf(playback))
+    );
+    expect(afterIds.length).toBe(beforeIds.length);
     expect(ended.length).toBe(1);
     expect(started.length).toBe(1);
-    expect(targetPartOf(started[0])).toBe(targetPartOf(ended[0]));
+    expect(started[0].target).toBe(ended[0].target);
   }
 
   // The old track of `replaced` ends first. Each track on the view then ends one time, and the result comes last.
@@ -1367,8 +1376,8 @@ describe('native layout size continuity', () => {
       toMs - FRAME_MS
     );
     expect(reads.length > 0).toBe(true);
-    for (const { playbackKeys } of reads) {
-      expect(playbackKeys.length).toBe(count);
+    for (const { playbacks } of reads) {
+      expect(playbacks.length).toBe(count);
     }
     return reads;
   }
@@ -1393,10 +1402,7 @@ describe('native layout size continuity', () => {
       replaced,
       newTrack.played.from + PRESENTATION_STAY_MS
     );
-    expectOneTrackReplaced(
-      before[before.length - 1].playbackKeys,
-      after.playbackKeys
-    );
+    expectOneTrackReplaced(before[before.length - 1], after);
     expectOneEndForEachTrack(second, replaced, kept);
   }
 
@@ -1440,8 +1446,8 @@ describe('native layout size continuity', () => {
           (START.width + progress * (FIRST.width - START.width))
       ) < TOLERANCE
     ).toBe(true);
-    expect(before.playbackKeys.length).toBe(2);
-    expect(rows[0].playbackKeys.length).toBe(0);
+    expect(before.playbacks.length).toBe(2);
+    expect(rows[0].playbacks.length).toBe(0);
     expect(distances.during < TOLERANCE).toBe(true);
     expect(distances.atEnd < 0.01).toBe(true);
     expect([...callbacks].sort().join()).toBe(
@@ -1472,7 +1478,7 @@ describe('native layout size continuity', () => {
     expect(
       rows
         .slice(0, -1)
-        .map((row) => row.playbackKeys.length)
+        .map((row) => row.playbacks.length)
         .join()
     ).toBe('2,2,2');
     expect(framePairDistances(rows).during < TOLERANCE).toBe(true);
@@ -1579,9 +1585,9 @@ describe('native layout size continuity', () => {
       test(`${styleName} that comes during a native ${groupName} group gives the group to the frame driver`, async () => {
         const { before, commitEvents, rows, endEvents, distances } =
           await changeStyleDuringAnimation(layouts, end, undefined, style);
-        expect(before.playbackKeys.length).toBe(2);
+        expect(before.playbacks.length).toBe(2);
         expect(summarize(commitEvents.filter(isHostEvent))).toBe(transfer);
-        expect(rows[0].playbackKeys.length).toBe(0);
+        expect(rows[0].playbacks.length).toBe(0);
         expect(summarize(endEvents.filter(isHostEvent))).toBe('');
         expect(distances.during < TOLERANCE).toBe(true);
         expect(distances.atEnd < 0.01).toBe(true);
@@ -1598,11 +1604,11 @@ describe('native layout size continuity', () => {
       await changeStyleDuringAnimation(customPair, FIRST, undefined, BORDER, {
         frameAfter: { ...FIRST, width: 100 },
       });
-    expect(before.playbackKeys.length).toBe(2);
+    expect(before.playbacks.length).toBe(2);
     expect(summarize(commitEvents.filter(isHostEvent))).toBe(
       TRANSFER_OF_X_AND_WIDTH
     );
-    expect(rows[0].playbackKeys.length).toBe(0);
+    expect(rows[0].playbacks.length).toBe(0);
     expect(summarize(endEvents.filter(isHostEvent))).toBe('');
     expect(distances.during < TOLERANCE).toBe(true);
     expect(distances.atEnd < 0.01).toBe(true);
@@ -1638,9 +1644,9 @@ describe('native layout size continuity', () => {
       tracks.length,
       middleOf(tracks[0].origin) + PAIR_DURATION
     );
-    expect(
-      new Set(reads.map(({ playbackKeys }) => playbackKeys.join())).size
-    ).toBe(1);
+    expect(new Set(reads.map((read) => playbackIdsOf(read).join())).size).toBe(
+      1
+    );
   }
 
   for (const [styleName, style] of stylesWithANativeSizeChange) {
@@ -1699,7 +1705,7 @@ describe('native layout size continuity', () => {
     );
     expect(summarize(commitEvents.filter(isRouteEvent))).toBe('');
     expect(summarize(endEvents.filter(isRouteEvent))).toBe('');
-    expect(rows.map((row) => row.playbackKeys.length).join()).toBe('0,0,0,0');
+    expect(rows.map((row) => row.playbacks.length).join()).toBe('0,0,0,0');
     expect(distances.during < TOLERANCE).toBe(true);
     expect(distances.atEnd < 0.01).toBe(true);
     expect([...callbacks].sort().join()).toBe('frame:true,native:true');
@@ -1776,7 +1782,7 @@ describe('native layout size continuity', () => {
           ({ buildFailure }) => buildFailure === 'UnsupportedContinuation'
         )
       ).toBe(startedTrack === '');
-      expect(rows[0].playbackKeys.length).toBe(startedTrack === '' ? 0 : 1);
+      expect(rows[0].playbacks.length).toBe(startedTrack === '' ? 0 : 1);
       expect(distances.during < TOLERANCE).toBe(true);
       expect(distances.atEnd < 0.01).toBe(true);
       expect(distances.keysAtEnd).toBe(0);
@@ -1821,12 +1827,12 @@ describe('native layout size continuity', () => {
       );
       const events = await takeTraceOf(tag);
       const distances = framePairDistances(rows);
-      expect(before.playbackKeys.length).toBe(4);
+      expect(before.playbacks.length).toBe(4);
       expect(targetsOf(events, 'TrackStarted')).toBe('');
       expect(
         events.some(({ buildFailure }) => buildFailure === 'UnsupportedTarget')
       ).toBe(true);
-      expect(rows[0].playbackKeys.length).toBe(0);
+      expect(rows[0].playbacks.length).toBe(0);
       expect(distances.during < TOLERANCE).toBe(true);
       expect(distances.atEnd < 0.01).toBe(true);
       expect([...callbacks].sort().join()).toBe(
@@ -1873,7 +1879,7 @@ describe('native layout size continuity', () => {
       const distances = framePairDistances(rows);
       expect(getTestComponent(BOX_REF).getTag()).toBe(tag);
       expect(targetsOf(events, 'TrackStarted')).toBe('Width');
-      expectOneTrackReplaced(before.playbackKeys, rows[0].playbackKeys);
+      expectOneTrackReplaced(before, rows[0]);
       expectOneEndForEachTrack(events, 'Width', ['PositionX']);
       expect(distances.during).toBeWithinRange(0, TOLERANCE);
       expect(distances.atEnd).toBeWithinRange(0, 0.01);

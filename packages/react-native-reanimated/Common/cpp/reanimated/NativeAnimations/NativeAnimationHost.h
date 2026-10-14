@@ -50,7 +50,7 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// Stops all work of the surface. Commands without a result report SurfaceDestroyed.
   void closeSurface(SurfaceId surfaceId);
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   void takeTrace(std::function<void(std::vector<TraceEvent>)> receiver);
   /// UI thread only.
   TraceRecorder &trace();
@@ -115,7 +115,7 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   std::deque<Operation> mountReports_;
 
   CommandMap commands_;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   TraceRecorder trace_;
 #endif
 };

@@ -98,7 +98,7 @@ import {
   expectNativeReads,
   FRAME_BOX_REF,
   FRAME_MS,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   isHostEvent,
   isNoView,
   middleOf,
@@ -695,12 +695,12 @@ function expectKeysWhilePlaying(
 ) {
   const offCount = reads.flatMap(({ samples }) =>
     tracks.flatMap(({ target, origin, played }) => {
-      const { monotonicTimeMs, playbackKeys } = samples[target];
+      const { monotonicTimeMs, playbacks } = samples[target];
       return monotonicTimeMs >= played.from &&
         monotonicTimeMs < middleOf(origin) + totalMs - FRAME_MS &&
-        !hasCount(playbackKeys.length)
+        !hasCount(playbacks.length)
         ? [
-            `${playbackKeys.length} keys of ${target} at ${monotonicTimeMs - middleOf(origin)} ms`,
+            `${playbacks.length} keys of ${target} at ${monotonicTimeMs - middleOf(origin)} ms`,
           ]
         : [];
     })
@@ -823,7 +823,7 @@ const sortedCallbacks = () => callbacks.slice().sort().join();
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
 
 describe('native layout exiting', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1308,7 +1308,7 @@ const merged = (first: Pair, second: Pair): Pair => ({
 });
 
 describe('native layout exiting and the other animations of the view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -1692,7 +1692,7 @@ const parentTags = () => ({
 });
 
 describe('native layout exiting of a parent and its child', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -2069,7 +2069,7 @@ function TaggedBox(props: SizeBoxProps) {
 }
 
 describe('native layout exiting and the stop of its tracks', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 
@@ -2535,7 +2535,7 @@ function SharedScreens({
 
 describe('native layout exiting of a view that a shared transition hides', () => {
   if (
-    !hasNativeLayoutStarts ||
+    !hasNativeLayoutRoute ||
     !getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')
   ) {
     return;

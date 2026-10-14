@@ -127,7 +127,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::vector<native_animation::MountedOperation> pendingMountOperations_;
   /// The build ends that the pull gives to the UI runtime before it returns.
   mutable NativeLayoutBuildEnds pendingNativeBuildEnds_;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   mutable MountingTransaction::Number pulledTransactionNumber_ = 0;
   /// The native tracks of each view that no frame-driven update changed after their start.
   mutable std::unordered_map<Tag, std::vector<native_animation::TrackKey>> nativeTracksWithoutFrameUpdate_;
@@ -270,7 +270,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> onGestureCancel(int tag) override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void surfaceDidMount() override;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
 #endif

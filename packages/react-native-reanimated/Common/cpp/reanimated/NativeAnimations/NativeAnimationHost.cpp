@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <utility>
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 #define RECORD_TRACE(...) trace_.record(TraceEvent{__VA_ARGS__})
 #else
 #define RECORD_TRACE(...) ((void)0)
@@ -102,7 +102,7 @@ bool NativeAnimationHost::isMountedInWindow(const Tag tag) const {
   return platform_->isInWindow(tag);
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 void NativeAnimationHost::takeTrace(std::function<void(std::vector<TraceEvent>)> receiver) {
   enqueue([weakThis = weak_from_this(), receiver = std::move(receiver)] {
     if (const auto strongThis = weakThis.lock()) {

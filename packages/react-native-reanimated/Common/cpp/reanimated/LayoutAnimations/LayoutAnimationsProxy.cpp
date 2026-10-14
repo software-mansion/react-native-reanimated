@@ -32,7 +32,7 @@ using enum LayoutAnimationType;
 using enum ExitingState;
 
 namespace {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 std::string_view toString(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
@@ -247,7 +247,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   react_native_assert(pendingMountOperations_.empty() && "a pull came before the mount report of the last pull");
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   pulledTransactionNumber_ = transactionNumber;
 #endif
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
@@ -378,7 +378,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   }
   lightNodes_.erase(it);
   cancelNativeLayoutAnimation(node->current.tag);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   nativeTracksWithoutFrameUpdate_.erase(node->current.tag);
 #endif
   snapshottedScreens_.erase(node->current.tag);
@@ -982,7 +982,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
 
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
     traceFirstFrameUpdates(layoutAnimation.currentView, newView);
 #endif
     layoutAnimation.currentView = newView;
@@ -1154,7 +1154,7 @@ bool LayoutAnimationsProxy::admitsNativeEnteringStart(
   if (mountsInWindow(node, transaction)) {
     return true;
   }
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   nativeAnimationHost_->trace().record(
       {.event = native_animation::TraceEventType::LayoutStartRefused,
        .handle = {surfaceId_, node->current.tag, native_animation::AnimationOwner::Layout, 0},
@@ -1201,7 +1201,7 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   auto build = makeNativeLayoutTracks(
       uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_, endpointPolicy);
   if ([[maybe_unused]] const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&build)) {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutBuildFailed,
          .handle = handle,
@@ -1215,7 +1215,7 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   auto &[originTimestampMs, tracks] = std::get<NativeLayoutTracks>(build);
   native_animation::AnimationRequest request{handle, originTimestampMs, std::move(tracks)};
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   auto &tracksWithoutFrameUpdate = nativeTracksWithoutFrameUpdate_[tag];
   for (const auto &track : request.tracks) {
     std::erase_if(tracksWithoutFrameUpdate, [&track](const native_animation::TrackKey &key) {
@@ -1243,7 +1243,7 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
   const auto liveTracks = nativeLayoutGroups_->members(start.tag);
   start.liveLeaves = liveLayoutLeaves(liveTracks);
   const auto capturedView = viewWithLiveLeafValues(start.before, start.liveLeaves);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   for (const auto &track : liveTracks) {
     const auto capturedValue = leafValue(track.target, capturedView);
     const auto *scalar = std::get_if<double>(&capturedValue);
@@ -1408,7 +1408,7 @@ void LayoutAnimationsProxy::completeNativeExits(const NativeLayoutBuildEnds &bui
 void LayoutAnimationsProxy::surfaceDidMount() {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto mountOperations = std::exchange(pendingMountOperations_, {});
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   const MountReportTrace reportTrace(
       nativeAnimationHost_->trace(),
       surfaceId_,
@@ -1423,7 +1423,7 @@ void LayoutAnimationsProxy::surfaceDidMount() {
   }
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 void LayoutAnimationsProxy::traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const {
   const auto tracksIt = nativeTracksWithoutFrameUpdate_.find(newView.tag);
   if (tracksIt == nativeTracksWithoutFrameUpdate_.end()) {
@@ -1457,7 +1457,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
           deliverNativeBuildEnds(*layoutAnimationsManager, uiRuntime, buildEnds);
         });
   }
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   nativeTracksWithoutFrameUpdate_.clear();
   pulledFirstFrameUpdates_.clear();
 #endif

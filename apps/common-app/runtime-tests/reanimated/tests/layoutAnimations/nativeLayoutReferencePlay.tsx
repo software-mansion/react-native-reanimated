@@ -94,6 +94,8 @@ import {
   narrowClockOffset,
   OPACITY_TOLERANCE,
   ownerAt,
+  playbackIdOf,
+  playbackIdsOf,
   PAIR_LEFT,
   PAIR_TOP,
   playedTracksOf,
@@ -541,7 +543,19 @@ const READERS: Record<string, Reader> = {
   borderRadius: { target: 'BorderRadius', tolerance: POSITION_TOLERANCE },
 };
 
-const LAYOUT_KEYS = ['originX', 'originY', 'width', 'height'];
+/** The property of the shadow tree of each layout key. */
+const LAYOUT_PROPS = {
+  originX: 'left',
+  originY: 'top',
+  width: 'width',
+  height: 'height',
+} as const;
+
+type LayoutKey = keyof typeof LAYOUT_PROPS;
+
+const LAYOUT_KEYS = Object.keys(LAYOUT_PROPS) as LayoutKey[];
+
+const isLayoutKey = (key: string): key is LayoutKey => key in LAYOUT_PROPS;
 
 /** A frame check with the key that its leaf declares. */
 export type LeafCheck = FrameCheck & {
@@ -638,6 +652,7 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
   resetCallbacks();
   const mountedTags = places[0] && tagsOf();
   const atStart = mountedTags && (await takeSamples(targets, mountedTags));
+  const layoutsAtStart = mountedTags && (await shadowLayoutsOf());
 
   const rows: TakenRow<Samples>[] = [];
   let rowsBeforeClip: number | undefined;
@@ -685,7 +700,8 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
   );
   const end = lastOf(places) && (await takeSamples(targets, tags!));
   const events = (await takeTrace()).filter(({ tag }) => tag === tags!.native);
-  const mounted = mountedValuesOf(places, [atStart, end]);
+  const layoutsAtEnd = lastOf(places) && (await shadowLayoutsOf());
+  const mounted = mountedValuesOf(places, [layoutsAtStart, layoutsAtEnd]);
   const builtKeys = buildsOf(referenceCase, mounted);
   const declaredKeys = builtKeys.flat().map(({ declared }) => declared);
   const clippedRow =
@@ -767,16 +783,15 @@ function scrollTo(y: number) {
 
 /**
  * The value that the layout gave to each fractional number of a layout key of
- * the first place and of the last place of a case, from the model of each box
- * at rest in the place: `first` before the first commit, `last` after the
+ * the first place and of the last place of a case, from the shadow tree of each
+ * box at rest in the place: `first` before the first commit, `last` after the
  * callbacks. The layout rounds a fractional number to the pixel grid, so the
  * number of the case is not the value that an animation gets, and the two boxes
- * can get two values for one number. A key with no sample of its target keeps
- * the number of the case.
+ * can get two values for one number.
  */
 function mountedValuesOf(
   places: (Place | undefined)[],
-  [first, last]: (Samples | undefined)[]
+  [first, last]: (Layouts | undefined)[]
 ): MountedValue[] {
   return places.flatMap((place, index) => {
     const rest = place && restOf(place);
@@ -790,31 +805,32 @@ function mountedValuesOf(
         `The kit has no view at rest in the place ${index} for its fractional values of ${fractional.join()}.`
       );
     }
-    const laidOutOf = (key: string, box: BoxName) => {
-      const modelOf = (ofKey: string): number | undefined =>
-        atRest![box][READERS[ofKey].target]?.model[0];
-      const { sizeKey } = READERS[key];
-      const shown = modelOf(key);
-      const size = sizeKey ? (modelOf(sizeKey) ?? rest![sizeKey]) : 0;
-      return shown === undefined ? undefined : shown - size / 2;
-    };
-    return fractional.flatMap((key): MountedValue[] => {
-      const [native, frame] = [
-        laidOutOf(key, 'native'),
-        laidOutOf(key, 'frame'),
-      ];
-      return native === undefined || frame === undefined
-        ? []
-        : [
-            {
-              key,
-              place: index,
-              declared: rest![key],
-              laidOut: { native, frame },
-            },
-          ];
-    });
+    return fractional.map(
+      (key): MountedValue => ({
+        key,
+        place: index,
+        declared: rest![key],
+        laidOut: { native: atRest!.native[key], frame: atRest!.frame[key] },
+      })
+    );
   });
+}
+
+type Layouts = Record<BoxName, Record<LayoutKey, number>>;
+
+async function shadowLayoutsOf(): Promise<Layouts> {
+  const layoutOf = async (refName: string) => {
+    const component = getTestComponent(refName);
+    const values: Partial<Record<LayoutKey, number>> = {};
+    for (const key of LAYOUT_KEYS) {
+      values[key] = Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]));
+    }
+    return values as Record<LayoutKey, number>;
+  };
+  return {
+    native: await layoutOf(BOX_REF),
+    frame: await layoutOf(FRAME_BOX_REF),
+  };
 }
 
 const restsOf = (
@@ -1240,10 +1256,12 @@ export function expectOneKeyWhilePlaying(reads: RowRead[]) {
       middleOf(origin) +
       Math.max(...tracks.map(({ timeline }) => declaredDurationOf(timeline)));
     if (target === 'Transform' && timeMs < declaredEndMs - FRAME_MS) {
-      expect(sampled.playbackKeys.length).toBe(1);
+      expect(sampled.playbacks.length).toBe(1);
       keysOf.set(
         generation,
-        (keysOf.get(generation) ?? new Set()).add(sampled.playbackKeys[0])
+        (keysOf.get(generation) ?? new Set()).add(
+          playbackIdOf(sampled.playbacks[0])
+        )
       );
     }
   }
@@ -1266,9 +1284,9 @@ export function expectNoKeyAfterTransfer(
   }
   const takenMs = taken.played.to + FRAME_MS;
   for (const { row } of rows) {
-    const { monotonicTimeMs, playbackKeys } = row.native[target];
+    const { monotonicTimeMs, playbacks } = row.native[target];
     if (monotonicTimeMs >= takenMs) {
-      expect(playbackKeys.length).toBe(0);
+      expect(playbacks.length).toBe(0);
     }
   }
 }
@@ -1394,7 +1412,7 @@ function describeReadsOffTimeline(reads: RowRead[], played: Played) {
       const {
         tracks: [track],
         timeMs,
-        sampled: { presentation, model, playbackKeys },
+        sampled: { presentation, model, playbacks },
       } = read;
       return [
         describeRead(read),
@@ -1402,7 +1420,7 @@ function describeReadsOffTimeline(reads: RowRead[], played: Played) {
         `${(track.played.to - timeMs).toFixed(2)} ms before the end report of its track`,
         `presentation ${presentation.join()}`,
         `model ${model.join()}`,
-        `playback keys ${playbackKeys.join()}`,
+        `playbacks ${playbackIdsOf({ playbacks }).join(', ')}`,
         `start calls of the frame driver for the box, ms after the read: ${frameDriverStarts.map((startMs) => (startMs + middleOf(clockOffset) - timeMs).toFixed(2)).join()}`,
         describeReadBefore(read),
         describeNearestInGap(read),
@@ -1888,7 +1906,7 @@ function expectEnd(
   }
   const written = writtenTargetsOf(referenceCase);
   for (const key of endKeys) {
-    expect(end.native[key.target].playbackKeys.length).toBe(0);
+    expect(end.native[key.target].playbacks.length).toBe(0);
     const isWritten = written.some((target) => target === key.target);
     if (key.operation === undefined && !isWritten) {
       const atRest = shownAtRestOf(key, amountOf(key.to).amount);
@@ -2270,7 +2288,7 @@ function builtKeysOf(
       const initial = leaf.initial as number | undefined;
       const endsOf = (box: BoxName): LeafEnds => {
         const ofBox = restsOfCommit(box);
-        return LAYOUT_KEYS.includes(key)
+        return isLayoutKey(key)
           ? {
               from: (ofBox.before ?? ofBox.rest)[key] + (initial ?? 0),
               to: ofBox.rest[key] + (leaf.to ?? 0),
@@ -2444,7 +2462,7 @@ function describeTracks(
       if (read.members.length === 0) {
         continue;
       }
-      const playback = `${target}: animations ${JSON.stringify(read.members)}, keys of the view ${read.playbackKeys.join()}`;
+      const playback = `${target}: animations ${JSON.stringify(read.members)}, playbacks of the view ${playbackIdsOf(read).join(', ')}`;
       playbacks.set(playback, {
         firstMs: playbacks.get(playback)?.firstMs ?? read.monotonicTimeMs,
         lastMs: read.monotonicTimeMs,

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 #include <reanimated/NativeAnimations/NativeAnimationRequest.h>
 
@@ -91,4 +91,4 @@ class TraceRecorder {
 
 } // namespace reanimated::native_animation
 
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
