@@ -189,6 +189,11 @@ export default class AnimatedComponent
     this._InlinePropManager.detachInlineProps();
   }
 
+  _attachHostBindings() {
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+  }
+
   _detachStyles(viewTag: number = this.getComponentViewTag()) {
     if (viewTag === -1) {
       return;
