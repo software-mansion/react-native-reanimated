@@ -7,11 +7,56 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
+#include <array>
 #include <ranges>
 #include <unordered_set>
 #include <utility>
 
 namespace reanimated {
+
+#ifdef ANDROID
+namespace {
+// The style props that PropsDiffer animates.
+constexpr std::array kAnimatedStyleProps{
+    "opacity",
+    "backgroundColor",
+    "transformOrigin",
+    "boxShadow",
+    "shadowColor",
+    "shadowOffset",
+    "shadowOpacity",
+    "shadowRadius",
+    "elevation",
+    "borderRadius",
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomLeftRadius",
+    "borderBottomRightRadius",
+    "borderTopStartRadius",
+    "borderTopEndRadius",
+    "borderBottomStartRadius",
+    "borderBottomEndRadius",
+    "borderEndEndRadius",
+    "borderEndStartRadius",
+    "borderStartEndRadius",
+    "borderStartStartRadius",
+    "borderWidth",
+    "borderLeftWidth",
+    "borderRightWidth",
+    "borderTopWidth",
+    "borderBottomWidth",
+    "borderStartWidth",
+    "borderEndWidth",
+    "borderHorizontalWidth",
+    "borderVerticalWidth",
+    "borderColor",
+    "borderLeftColor",
+    "borderRightColor",
+    "borderTopColor",
+    "borderBottomColor",
+};
+} // namespace
+#endif
 
 // MARK: Shared Element Transitions
 
@@ -358,7 +403,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    detachCarrier(*run, asCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
+    detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
@@ -396,6 +441,61 @@ ShadowView LayoutAnimationsProxy::ownCarrierView(
   carrierView.layoutMetrics = view.layoutMetrics;
   overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
   return carrierView;
+}
+
+// The animation starts from the style of the source, so the carrier starts with that style and with its
+// own content.
+ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
+    const ShadowView &source,
+    const std::shared_ptr<LightNode> &carrier,
+    const PropsParserContext &propsParserContext) const {
+  auto startView = ownCarrierView(source, carrier, propsParserContext);
+  if (source.componentHandle != startView.componentHandle) {
+    return startView;
+  }
+#ifdef ANDROID
+  const auto &sourceRawProps = source.props->rawProps;
+  const auto &ownRawProps = startView.props->rawProps;
+  auto rawProps = ownRawProps;
+  for (const auto *name : kAnimatedStyleProps) {
+    if (sourceRawProps.count(name) > 0) {
+      rawProps[name] = sourceRawProps[name];
+    } else if (ownRawProps.count(name) > 0) {
+      rawProps[name] = nullptr;
+    }
+  }
+  startView.props = componentDescriptorRegistry_->at(startView.componentHandle)
+                        .cloneProps(propsParserContext, startView.props, RawProps(std::move(rawProps)));
+#else
+  auto props =
+      componentDescriptorRegistry_->at(startView.componentHandle).cloneProps(propsParserContext, startView.props, {});
+  auto &viewProps = *std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
+  const auto &sourceProps = getViewProps(source);
+  viewProps.opacity = sourceProps.opacity;
+  viewProps.backgroundColor = sourceProps.backgroundColor;
+  viewProps.transformOrigin = sourceProps.transformOrigin;
+  viewProps.boxShadow = sourceProps.boxShadow;
+  viewProps.shadowColor = sourceProps.shadowColor;
+  viewProps.shadowOffset = sourceProps.shadowOffset;
+  viewProps.shadowOpacity = sourceProps.shadowOpacity;
+  viewProps.shadowRadius = sourceProps.shadowRadius;
+  viewProps.borderRadii = sourceProps.borderRadii;
+  viewProps.borderColors = sourceProps.borderColors;
+  for (const auto edge :
+       {facebook::yoga::Edge::Left,
+        facebook::yoga::Edge::Top,
+        facebook::yoga::Edge::Right,
+        facebook::yoga::Edge::Bottom,
+        facebook::yoga::Edge::Start,
+        facebook::yoga::Edge::End,
+        facebook::yoga::Edge::Horizontal,
+        facebook::yoga::Edge::Vertical,
+        facebook::yoga::Edge::All}) {
+    viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
+  }
+  startView.props = props;
+#endif
+  return startView;
 }
 
 void LayoutAnimationsProxy::detachCarrier(
