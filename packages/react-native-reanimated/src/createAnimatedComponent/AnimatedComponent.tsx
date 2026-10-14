@@ -368,23 +368,27 @@ export default class AnimatedComponent
       }
       return;
     }
-    this._sharedTransitionTag = this.props.sharedTransitionTag;
     const sharedTransition =
       this.props.sharedTransitionStyle ??
       this._sharedTransition ??
       new SharedTransition();
-    if (this._sharedTransition !== sharedTransition) {
-      updateLayoutAnimations(
-        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-        useNativeId
-          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-        maybeBuild(sharedTransition),
-        undefined,
-        this.props.sharedTransitionTag
-      );
-      this._sharedTransition = sharedTransition;
+    if (
+      this._sharedTransition === sharedTransition &&
+      this._sharedTransitionTag === this.props.sharedTransitionTag
+    ) {
+      return;
     }
+    updateLayoutAnimations(
+      useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+      useNativeId
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      maybeBuild(sharedTransition),
+      undefined,
+      this.props.sharedTransitionTag
+    );
+    this._sharedTransition = sharedTransition;
+    this._sharedTransitionTag = this.props.sharedTransitionTag;
   }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.
