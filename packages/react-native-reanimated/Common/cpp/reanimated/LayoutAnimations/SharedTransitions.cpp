@@ -219,7 +219,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         startProgressTransition(
             run.carrier->current.tag,
             asCarrierView(before, run.carrier, propsParserContext),
-            asCarrierView(after, run.carrier, propsParserContext));
+            asCarrierView(after, run.carrier, propsParserContext),
+            ownCarrierView(after, run.carrier, propsParserContext).props);
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
@@ -262,7 +263,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
       auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
+                          .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), std::move(rawProps));
 #endif
 
       updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
@@ -357,7 +358,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    detachCarrier(*run, asCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
+    // The carrier shows its own props from the start. The animation starts from the props of the
+    // source, so its first frame can write again props that the carrier already shows.
+    detachCarrier(*run, ownCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
@@ -365,21 +368,35 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   return *run;
 }
 
-// The carrier keeps its own state and event emitter, so that an image keeps its image request
-// and events go to the component that owns the view. The props of another component type are
-// not valid for the view of the carrier, so then only the frame comes from the other view.
+// The view at one end of the animation of the carrier. The carrier keeps its own state and event
+// emitter, so that an image keeps its image request and events go to the component that owns the
+// view. The props of another component type are not valid for the view of the carrier, so then
+// only the frame comes from the other view.
 ShadowView LayoutAnimationsProxy::asCarrierView(
+    const ShadowView &view,
+    const std::shared_ptr<LightNode> &carrier,
+    const PropsParserContext &propsParserContext) const {
+  if (view.componentHandle != carrier->current.componentHandle) {
+    return ownCarrierView(view, carrier, propsParserContext);
+  }
+  resolveLightNodeProps(carrier);
+  auto carrierView = carrier->current;
+  carrierView.layoutMetrics = view.layoutMetrics;
+  carrierView.props = view.props;
+  return carrierView;
+}
+
+// The carrier shows its own props, so that its content, for example a video player or an image
+// source, does not change during the run. Only the frame and the animated values come from the
+// other view.
+ShadowView LayoutAnimationsProxy::ownCarrierView(
     const ShadowView &view,
     const std::shared_ptr<LightNode> &carrier,
     const PropsParserContext &propsParserContext) const {
   resolveLightNodeProps(carrier);
   auto carrierView = carrier->current;
   carrierView.layoutMetrics = view.layoutMetrics;
-  if (view.componentHandle == carrier->current.componentHandle) {
-    carrierView.props = view.props;
-  } else {
-    overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
-  }
+  overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
   return carrierView;
 }
 
@@ -578,6 +595,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           run.carrier->current.tag,
           asCarrierView(before, run.carrier, propsParserContext),
           asCarrierView(after, run.carrier, propsParserContext),
+          ownCarrierView(after, run.carrier, propsParserContext).props,
           config);
     }
   } else if (!mutations.empty()) {
@@ -611,12 +629,18 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
       if (hasPendingLayoutAnimation(carrierTag)) {
-        updateLayoutAnimationTarget(carrierTag, carrierAfter, config);
+        updateLayoutAnimationTarget(
+            carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
         continue;
       }
       const auto &layoutAnimation = layoutAnimations_.at(carrierTag);
       if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
-        startSharedTransition(carrierTag, layoutAnimation.currentView, carrierAfter, config);
+        startSharedTransition(
+            carrierTag,
+            layoutAnimation.currentView,
+            carrierAfter,
+            ownCarrierView(after, run.carrier, propsParserContext).props,
+            config);
       }
     }
   }
