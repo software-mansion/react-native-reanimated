@@ -291,6 +291,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
+  ShadowView carrierViewWithStyleOf(
+      const ShadowView &source,
+      const std::shared_ptr<LightNode> &carrier,
+      const PropsParserContext &propsParserContext) const;
   bool endsPathOnScreen(
       const std::shared_ptr<LightNode> &pathNode,
       const std::shared_ptr<LightNode> &node,
