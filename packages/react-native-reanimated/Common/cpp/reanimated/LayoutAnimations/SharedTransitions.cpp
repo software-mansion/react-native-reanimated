@@ -158,8 +158,9 @@ void LayoutAnimationsProxy::resolveDeferredSourceScreen() const {
   if (!needsSourceScreen) {
     return;
   }
-  const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-  if (!sourceScreen || !visibleScreens_.contains(sourceScreen->current.tag) || !transition_->targetScreen ||
+  const auto sourceScreen =
+      topScreen_ && transition_->targetScreen ? findScreenInStackOf(topScreen_, transition_->targetScreen) : nullptr;
+  if (!sourceScreen || !visibleScreens_.contains(sourceScreen->current.tag) ||
       sourceScreen->current.tag == transition_->targetScreen->current.tag) {
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
@@ -185,10 +186,10 @@ void LayoutAnimationsProxy::handleProgressTransition(
   if (transition_->state == TransitionState::START) {
     const auto beforeTopScreen = topScreen_;
     const auto afterTopScreen = findBoundaryGuess(transition_->targetScreen);
-    const auto beforeScreen = beforeTopScreen ? findParentRNSScreen(beforeTopScreen) : nullptr;
     if (!transition_->sourceScreen || !transition_->targetScreen ||
         transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag || !beforeTopScreen ||
-        beforeScreen != transition_->sourceScreen || !afterTopScreen || beforeTopScreen == afterTopScreen) {
+        !isInSubtree(beforeTopScreen, transition_->sourceScreen) || !afterTopScreen ||
+        beforeTopScreen == afterTopScreen) {
       transition_->state = TransitionState::CANCELLED;
     } else {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
@@ -508,8 +509,22 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
   }
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
-  if (isClosing || isGoingForward) {
+  if (isGoingForward) {
     return {};
+  }
+  if (isClosing) {
+    const auto closingIt = lightNodes_.find(tag);
+    const auto below =
+        closingIt != lightNodes_.end() && closingIt->second ? findScreenBelow(closingIt->second) : nullptr;
+    if (!below) {
+      return {};
+    }
+    // A dismissal gesture that the user abandons reports its progress back to zero and no cancel.
+    const bool reversed = progress <= 0 && ((transition_ && transition_->progress > 0) || uncommittedScreenPop_);
+    if (reversed) {
+      return onGestureCancel(tag);
+    }
+    tag = below->current.tag;
   }
   if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
     return {};
@@ -524,7 +539,7 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     }
     std::shared_ptr<LightNode> sourceScreen;
     if (!uncommittedScreenPop_) {
-      sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
+      sourceScreen = topScreen_ ? findScreenInStackOf(topScreen_, targetIt->second) : nullptr;
       if (!sourceScreen || sourceScreen->current.tag == tag || !visibleScreens_.contains(sourceScreen->current.tag)) {
         return {};
       }
