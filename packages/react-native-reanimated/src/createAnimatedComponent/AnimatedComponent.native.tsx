@@ -199,6 +199,37 @@ export default class AnimatedComponent
     }
   }
 
+  _attachHostBindings() {
+    // Configs registered so far, including this update's from the snapshot,
+    // went to the previous tag.
+    this._configureLayoutAnimation(
+      LayoutAnimationType.LAYOUT,
+      this.props.layout
+    );
+    this._configureLayoutAnimation(
+      LayoutAnimationType.EXITING,
+      this.props.exiting
+    );
+
+    this._sharedTransition = undefined;
+    this._configureSharedTransition();
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.registerView(viewTag, this);
+      }
+    }
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
+    }
+
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+  }
+
   _detachStyles(viewTag: number = this.getComponentViewTag()) {
     if (viewTag === -1) {
       return;
@@ -305,36 +336,6 @@ export default class AnimatedComponent
 
   componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
     this._refreshComponentRef();
-
-    // Everything keyed by the view tag was registered for the previous host,
-    // including this update's configs from the snapshot.
-    if (this._hostReplaced) {
-      this._hostReplaced = false;
-
-      this._configureLayoutAnimation(
-        LayoutAnimationType.LAYOUT,
-        this.props.layout
-      );
-      this._configureLayoutAnimation(
-        LayoutAnimationType.EXITING,
-        this.props.exiting
-      );
-
-      this._sharedTransition = undefined;
-      this._configureSharedTransition();
-
-      if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-        const viewTag = this.getComponentViewTag();
-
-        if (viewTag !== -1) {
-          PropsRegistryGarbageCollector.registerView(viewTag, this);
-        }
-      }
-
-      if (this._options?.jsProps?.length) {
-        jsPropsUpdater.registerComponent(this, this._options.jsProps);
-      }
-    }
 
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();

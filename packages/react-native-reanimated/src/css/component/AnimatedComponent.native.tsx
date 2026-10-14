@@ -46,9 +46,6 @@ export default class AnimatedComponent<
   _rawComponentRef: Component | HTMLElement | null = null;
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
-  // Set when the component is pointed at a new host; consumed by
-  // `componentDidUpdate` to re-register what is keyed by the view tag.
-  _hostReplaced: boolean = false;
   _forwardedRefCleanup?: () => void;
 
   constructor(ChildComponent: AnyComponent, props: P) {
@@ -161,10 +158,8 @@ export default class AnimatedComponent<
       return;
     }
 
-    // Release the previous host's bindings while its view info is still cached;
-    // the next update re-creates them for the new host.
+    // Release the previous host's bindings while its view info is still cached.
     this._detachHostBindings(previousViewInfo);
-    this._hostReplaced = true;
 
     // Let the native registries drop the previous host once it has left
     // the shadow tree, as `componentWillUnmount` does.
@@ -181,11 +176,18 @@ export default class AnimatedComponent<
       this._CSSManager = this._createCSSManager();
       this._CSSManager.update(this._cssStyle, this.props);
     }
+
+    // Bind here as well: the ref callback may fire without an update of this component.
+    this._attachHostBindings();
   }
 
   _detachHostBindings(_previousViewInfo: ViewInfo) {
     // Called with the previous host's view info right before the component is
     // pointed at a new host. Subclasses release what they bound to that view.
+  }
+
+  _attachHostBindings() {
+    // Subclasses bind to the new host what `_detachHostBindings` released.
   }
 
   _createCSSManager() {
