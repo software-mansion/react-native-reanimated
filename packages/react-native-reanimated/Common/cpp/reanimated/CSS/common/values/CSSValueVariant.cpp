@@ -11,6 +11,7 @@
 #include <reanimated/CSS/common/values/complex/CSSGradient.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
+#include <reanimated/CSS/svg/values/SVGPlatformBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
@@ -151,6 +152,7 @@ template class CSSValueVariant<SVGPath>;
 template class CSSValueVariant<CSSLengthArray>;
 template class CSSValueVariant<SVGStops>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
-template class CSSValueVariant<SVGBrush>;
+template class CSSValueVariant<SVGBrush, CSSPlatformColor>;
+template class CSSValueVariant<SVGBrush, SVGPlatformBrush>;
 
 } // namespace reanimated::css

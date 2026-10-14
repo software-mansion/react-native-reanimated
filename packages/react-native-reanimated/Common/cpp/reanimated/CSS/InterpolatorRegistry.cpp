@@ -18,6 +18,7 @@
 
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
+#include <reanimated/CSS/svg/values/SVGPlatformBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
@@ -253,15 +254,15 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
     // Color
-    {"color", value<SVGBrush>(BLACK)},
+    {"color", value<SVGBrush, CSSPlatformColor>(BLACK)},
 
     // Fill
-    {"fill", value<SVGBrush>(BLACK)},
+    {"fill", value<SVGBrush, SVGPlatformBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
     {"fillRule", value<CSSIndex>(0)},
 
     // Stroke
-    {"stroke", value<SVGBrush>(BLACK)},
+    {"stroke", value<SVGBrush, SVGPlatformBrush>(BLACK)},
     {"strokeWidth", value<CSSLength>(1, {RelativeTo::Parent, "width"})},
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), {RelativeTo::Parent, "width"})},
