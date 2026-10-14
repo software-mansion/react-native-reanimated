@@ -1331,10 +1331,23 @@ var require_closure = __commonJS({
       const closureVariables = new Array();
       const moduleBindingsToImport = /* @__PURE__ */ new Set();
       const relativeBindingsToImport = /* @__PURE__ */ new Set();
+      const assignments = new Array();
       let recrawled = false;
       funPath.traverse({
         "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
           typePath.skip();
+        },
+        AssignmentExpression(path) {
+          assignments.push([path, path.node.left]);
+        },
+        UpdateExpression(path) {
+          assignments.push([path, path.node.argument]);
+        },
+        "ForInStatement|ForOfStatement"(path) {
+          const left = path.node.left;
+          if (!(0, types_12.isVariableDeclaration)(left)) {
+            assignments.push([path, left]);
+          }
         },
         ReferencedIdentifier(idPath) {
           if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
@@ -1388,11 +1401,39 @@ var require_closure = __commonJS({
           closureVariables.push(toClosureIdentifier(idPath.node));
         }
       }, state);
+      if (!state.opts.bundleMode) {
+        assertNoCapturedAssignment(funPath, capturedNames, assignments);
+      }
       return {
         closureVariables,
         moduleBindingsToImport,
         relativeBindingsToImport
       };
+    }
+    function assertNoCapturedAssignment(funPath, capturedNames, assignments) {
+      for (const [path, target] of assignments) {
+        for (const name of Object.keys((0, types_12.getBindingIdentifiers)(target))) {
+          if (!capturedNames.has(name)) {
+            continue;
+          }
+          const binding = path.scope.getBinding(name);
+          if (binding && isScopeInside(binding.scope, funPath.scope)) {
+            continue;
+          }
+          throw path.buildCodeFrameError(capturedAssignmentMessage(name));
+        }
+      }
+    }
+    function isScopeInside(scope, ancestor) {
+      for (let current = scope; current; current = current.parent) {
+        if (current === ancestor) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function capturedAssignmentMessage(name) {
+      return `A worklet cannot assign to \`${name}\`, because it is captured from the outer scope. Captured variables are read-only inside worklets.`;
     }
   }
 });
