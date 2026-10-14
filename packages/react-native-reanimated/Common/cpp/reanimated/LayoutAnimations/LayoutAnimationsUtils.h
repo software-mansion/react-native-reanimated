@@ -266,6 +266,20 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
   return current;
 }
 
+static inline std::shared_ptr<LightNode> findScreenBelow(const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  if (!stack) {
+    return nullptr;
+  }
+  const auto screenIt = std::ranges::find(stack->children, screen);
+  for (auto below = std::make_reverse_iterator(screenIt); below != stack->children.rend(); ++below) {
+    if (isRNSScreen(*below)) {
+      return *below;
+    }
+  }
+  return nullptr;
+}
+
 static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
   for (; node; node = node->parent.lock()) {
     if (node == root) {

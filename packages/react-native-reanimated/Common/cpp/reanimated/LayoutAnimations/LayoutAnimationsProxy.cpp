@@ -232,10 +232,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
       // shared element, the issue should be gone with the new stack
-      // implementation
-      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+      // implementation. A modal can hold a nested stack, so the popped screen
+      // is the first one with a screen below it.
+      for (auto screen = findParentRNSScreen(afterTopScreen); screen; screen = findParentRNSScreen(screen)) {
         if (forceScreenSnapshot_(screen->current.tag)) {
           snapshottedScreens_.insert(screen->current.tag);
+        }
+        if (findScreenBelow(screen)) {
+          break;
         }
       }
 #endif
