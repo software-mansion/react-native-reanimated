@@ -190,7 +190,7 @@ export function addMatrices<T extends AffineMatrixFlat | AffineMatrix>(
   return isFlatOnStart ? (c as T) : (unflatten(c) as T);
 }
 
-export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
+function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
   maybeFlatA: T,
   scalar: number
 ): T {
@@ -202,10 +202,7 @@ export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
   return isFlatOnStart ? (b as T) : (unflatten(b) as T);
 }
 
-export function getRotationMatrix(
-  angle: number,
-  axis: Axis = 'z'
-): AffineMatrix {
+function getRotationMatrix(angle: number, axis: Axis = 'z'): AffineMatrix {
   'worklet';
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
