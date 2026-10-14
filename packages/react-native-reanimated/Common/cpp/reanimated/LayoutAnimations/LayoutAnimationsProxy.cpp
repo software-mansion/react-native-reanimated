@@ -482,7 +482,7 @@ void LayoutAnimationsProxy::updateLightTree(
         if (config && shouldAnimate) {
           transaction.layout.push_back({node, config});
         } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
-          updateLayoutAnimationTarget(tag, node->current, config);
+          updateLayoutAnimationTarget(tag, node->current, nullptr, config);
         } else {
           if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
             filteredMutations.push_back(
@@ -975,9 +975,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
                                                                          : completedAnimationIt->second.animation;
     auto newView = layoutAnimation.finalView;
-    if (updateValues.newProps) {
-      newView.props = updateValues.newProps;
-    }
+    newView.props = updateValues.newProps ? updateValues.newProps : layoutAnimation.framePropsBase();
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame, layoutAnimation.frameOffset);
 
     mutations.push_back(
@@ -1375,23 +1373,29 @@ void LayoutAnimationsProxy::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
+    const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
+      .frameProps = frameProps,
       .parentTag = surfaceId_,
       .config = config,
   });
 }
 
-void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
-    const {
+void LayoutAnimationsProxy::startProgressTransition(
+    const int tag,
+    const ShadowView &before,
+    const ShadowView &after,
+    const Props::Shared &frameProps) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
+      .frameProps = frameProps,
       .parentTag = surfaceId_,
   });
 }

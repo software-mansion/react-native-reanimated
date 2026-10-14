@@ -27,12 +27,18 @@ namespace reanimated {
 
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
+  // The props that each frame starts from. When it is null, the frames start from the props of finalView.
+  Props::Shared frameProps;
   Tag parentTag;
   std::optional<double> opacity;
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
+
+  const Props::Shared &framePropsBase() const {
+    return frameProps ? frameProps : finalView.props;
+  }
 };
 
 struct CompletedLayoutAnimation {
@@ -44,6 +50,7 @@ struct ManagedLayoutAnimationStart {
   Tag tag;
   LayoutAnimationType type;
   ShadowView before, after;
+  Props::Shared frameProps;
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
@@ -52,6 +59,7 @@ struct ManagedLayoutAnimationStart {
 struct ProgressLayoutAnimationStart {
   Tag tag;
   ShadowView before, after;
+  Props::Shared frameProps;
   Tag parentTag;
 };
 
@@ -142,6 +150,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void updateLayoutAnimationTarget(
       Tag tag,
       const ShadowView &finalView,
+      const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config = nullptr) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
@@ -214,6 +223,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const ShadowView &before,
       const ShadowView &after,
+      const Props::Shared &frameProps,
       Tag parentTag,
       std::optional<double> opacity,
       LayoutAnimationType type,
