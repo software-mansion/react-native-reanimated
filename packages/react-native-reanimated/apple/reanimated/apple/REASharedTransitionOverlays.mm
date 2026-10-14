@@ -77,7 +77,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
 - (UIView *)viewWithTag:(NSInteger)tag
 {
   RCTComponentViewRegistry *registry = _surfacePresenter.mountingManager.componentViewRegistry;
-  return [registry findComponentViewWithTag:tag];
+  return [registry findComponentViewWithTag:static_cast<facebook::react::Tag>(tag)];
 }
 
 - (void)showOverlayWithTag:(NSInteger)tag surfaceId:(NSInteger)surfaceId
