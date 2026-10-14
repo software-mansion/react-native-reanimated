@@ -145,7 +145,7 @@ describe('SharedTransition', () => {
     });
 
     test('applies the reduce motion of the builder', () => {
-      const scale = { onFrame: () => true, onStart: () => {} };
+      const scale = { onFrame: () => true, onStart: () => undefined };
       const { animations } = runLayoutAnimation(
         SharedTransition.custom(() => {
           'worklet';

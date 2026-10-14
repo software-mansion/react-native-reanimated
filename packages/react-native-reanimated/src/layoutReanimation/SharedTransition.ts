@@ -5,7 +5,7 @@ import {
   decomposeMatrixIntoMatricesAndAngles,
   interpolateMatrix,
 } from '../animation/transformationMatrix/matrixUtils';
-import { logger, processColor, processColorsInProps } from '../common';
+import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
   AnimationObject,
@@ -283,18 +283,14 @@ function withTransformMatrixAsTransform(style: StyleProps): StyleProps {
   return { ...rest, transform: [{ matrix: transformMatrix }] };
 }
 
-function withProcessedBoxShadowColors(style: StyleProps): StyleProps {
+function withProcessedBoxShadow(style: StyleProps): StyleProps {
   'worklet';
-  if (!Array.isArray(style.boxShadow)) {
+  if (style.boxShadow === undefined) {
     return style;
   }
-  return {
-    ...style,
-    boxShadow: style.boxShadow.map((shadow: BoxShadowValue) => ({
-      ...shadow,
-      color: processColor(shadow.color),
-    })),
-  };
+  const processed: Record<string, unknown> = { ...style };
+  processed.boxShadow = processBoxShadow(style.boxShadow);
+  return processed;
 }
 
 function getInitialStyle(
@@ -633,7 +629,7 @@ export class SharedTransition
     return (values, progress) => {
       'worklet';
       // Animated styles process only the colors of individually animated shadows.
-      return withProcessedBoxShadowColors(
+      return withProcessedBoxShadow(
         withTransformMatrixAsTransform(progressAnimation(values, progress))
       );
     };
