@@ -79,6 +79,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/boxShadow.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
+      require('./tests/props/hostReplacement.test');
       require('./tests/props/cssArrayKeyframes.test');
     },
   },
