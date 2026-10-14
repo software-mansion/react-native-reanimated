@@ -98,7 +98,12 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   const auto &frameProps = layoutAnimation.framePropsBase();
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(frameProps->rawProps, (folly::dynamic)*rawProps));
+  // Android writes every raw prop of an Update to the view, also a prop with the same value. Only a shared element
+  // carrier has frame props, and its mounted props do not change during the run, so its frames write only the
+  // animated values.
+  if (!layoutAnimation.frameProps) {
+    rawProps = std::make_shared<RawProps>(folly::dynamic::merge(frameProps->rawProps, (folly::dynamic)*rawProps));
+  }
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, frameProps, std::move(*rawProps));
