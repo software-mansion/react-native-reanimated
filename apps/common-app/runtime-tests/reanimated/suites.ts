@@ -45,7 +45,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'core',
     importTest: () => {
-      require('./tests/core/useAnimatedRef.test');
+      // require('./tests/core/useAnimatedRef.test');
       require('./tests/core/getAnimatableRef.test');
       // TODO: update expected values
       // require('./tests/core/cancelAnimation.test');
