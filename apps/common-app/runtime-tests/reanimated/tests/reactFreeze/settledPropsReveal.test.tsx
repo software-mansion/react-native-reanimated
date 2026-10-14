@@ -24,6 +24,7 @@ import { ComparisonMode } from '../../../ReJest/types';
 import { leakingRegistries, NO_LEAKS } from './fixture';
 
 const BOX_REF = 'settledRevealBox';
+const ANIMATED_PROPS_REGISTRY = 'AnimatedPropsRegistry';
 const STALE_OPACITY = 1;
 const CURRENT_OPACITY = 0;
 
@@ -164,6 +165,7 @@ describe('settled props across a Suspense reveal', () => {
 
     await render(<Fixture frozen />);
     await wait(FROZEN_MS);
+    expect(leakingRegistries()).toInclude(ANIMATED_PROPS_REGISTRY);
     await render(<Fixture frozen={false} />);
 
     // The registry no longer backs the value, so the next commit takes it from
@@ -186,6 +188,11 @@ describe('settled props across a Suspense reveal', () => {
     await waitForFrames(2);
 
     probe.opacity!.set(CURRENT_OPACITY);
+    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+    expect(leakingRegistries()).toInclude(ANIMATED_PROPS_REGISTRY);
     await expectEventually(leakingRegistries).toBe(NO_LEAKS);
 
     await render(<Fixture frozen={false} label="re-rendered box" />);
@@ -213,6 +220,7 @@ describe('settled props across a Suspense reveal', () => {
     // Long enough for the settled value to be offered and left unconfirmed.
     await render(<Fixture frozen />);
     await wait(FROZEN_MS);
+    expect(leakingRegistries()).toInclude(ANIMATED_PROPS_REGISTRY);
     await render(null);
 
     await expectEventually(leakingRegistries).toBe(NO_LEAKS);
