@@ -5,6 +5,7 @@ import { transformSync } from '@babel/core';
 import { describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import { stripVTControlCharacters } from 'util';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
 
@@ -240,9 +241,14 @@ describe.each([
     });
 
     test('points at the offending assignment', () => {
-      expect(() => runPlugin(issueRepro, { bundleMode })).toThrow(
-        /test\.js[\s\S]*> 6 \|/
-      );
+      let message = '';
+      try {
+        runPlugin(issueRepro, { bundleMode });
+      } catch (error) {
+        // The code frame is colored when the terminal supports it.
+        message = stripVTControlCharacters((error as Error).message);
+      }
+      expect(message).toMatch(/test\.js[\s\S]*> 6 \|/);
     });
 
     test.each([
