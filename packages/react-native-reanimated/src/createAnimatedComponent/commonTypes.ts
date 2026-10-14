@@ -22,6 +22,8 @@ export interface AnimatedProps extends Record<string, unknown> {
   styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
+export type AnimatableDOMElement = HTMLElement | SVGElement;
+
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
@@ -29,7 +31,7 @@ export interface ViewInfo {
   // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
   // convention used in CSS.
   reactViewName?: string;
-  DOMElement?: HTMLElement | null;
+  DOMElement?: AnimatableDOMElement | null;
 }
 
 export interface IInlinePropManager {
