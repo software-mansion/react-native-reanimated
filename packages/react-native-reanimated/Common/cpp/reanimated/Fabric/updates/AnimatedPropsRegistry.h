@@ -11,6 +11,8 @@ namespace reanimated {
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
+  bool isEmpty() const override;
+
   void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
@@ -22,8 +24,8 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
  private:
   std::unordered_map<Tag, double> timestampMap_;
-  // Tags whose latest values have already been pushed to React `settledProps`.
-  // Intentionally retained after eviction to detect re-animation staleness.
+  // Tags whose latest values have already been pushed to React `settledProps`;
+  // retained until the next sync cycle to evict redundant registry entries.
   std::unordered_set<Tag> syncedTags_;
   // Tags that were synced to React but received a fresh worklet update since;
   // their `settledProps` are stale and need to be refreshed on the next sync.
