@@ -1,16 +1,29 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import { View } from 'react-native';
 import { describe, expect, test } from 'tstyche';
 
+import type {
+  CSSAnimationProperties,
+  CSSTransitionProperties,
+  ScreenTransitionConfig,
+} from '..';
 import {
+  configureReanimatedLogger,
+  createAnimatedComponent,
   createAnimatedPropAdapter,
   Easing,
+  Extrapolation,
+  interpolate,
   interpolateColor,
   isSharedValue,
   Keyframe,
+  LayoutAnimationConfig,
   makeMutable,
+  PerformanceMonitor,
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
+  withClamp,
 } from '..';
 
 describe('makeMutable', () => {
@@ -57,6 +70,98 @@ describe('interpolateColor', () => {
       ['#FF0000', '#00FF99'],
       'HSV'
     );
+  });
+
+  test('accepts undefined for an option, which the default fills', () => {
+    expect(interpolateColor).type.toBeCallableWith(
+      0,
+      [0, 1],
+      ['red', 'blue'],
+      'HSV',
+      { gamma: undefined, useCorrectedHSVInterpolation: undefined }
+    );
+  });
+});
+
+describe('interpolate', () => {
+  test('accepts undefined for an edge, which extends', () => {
+    expect(interpolate).type.toBeCallableWith(0, [0, 1], [0, 1], {
+      extrapolateLeft: undefined,
+      extrapolateRight: Extrapolation.CLAMP,
+    });
+    expect(interpolate).type.toBeCallableWith(0, [0, 1], [0, 1], {
+      extrapolateLeft: Extrapolation.CLAMP,
+      extrapolateRight: undefined,
+    });
+  });
+});
+
+describe('withClamp', () => {
+  test('accepts undefined for a bound, which leaves that side open', () => {
+    expect(withClamp).type.toBeCallableWith({ min: undefined, max: 1 }, 0);
+    expect(withClamp).type.toBeCallableWith({ min: 0, max: undefined }, 0);
+  });
+});
+
+describe('configureReanimatedLogger', () => {
+  test('accepts undefined for a setting, which the default fills', () => {
+    expect(configureReanimatedLogger).type.toBeCallableWith({
+      level: undefined,
+      strict: undefined,
+    });
+  });
+});
+
+describe('optional component props', () => {
+  test('accept undefined, as when the prop is not passed', () => {
+    expect(LayoutAnimationConfig).type.toBeConstructableWith({
+      skipEntering: undefined,
+      skipExiting: undefined,
+      children: null,
+    });
+    expect(PerformanceMonitor).type.toBeCallableWith({
+      smoothingFrames: undefined,
+    });
+  });
+});
+
+describe('createAnimatedComponent', () => {
+  test('accepts undefined for an option, as when it is not passed', () => {
+    expect(createAnimatedComponent).type.toBeCallableWith(View, {
+      jsProps: undefined,
+      setNativeProps: undefined,
+    });
+  });
+});
+
+describe('CSS animation and transition properties', () => {
+  test('accept undefined for a setting, as when it is not set', () => {
+    expect<{
+      animationName: 'none';
+      animationDuration: undefined;
+      animationTimingFunction: undefined;
+      animationDelay: undefined;
+      animationIterationCount: undefined;
+      animationDirection: undefined;
+      animationFillMode: undefined;
+      animationPlayState: undefined;
+    }>().type.toBeAssignableTo<CSSAnimationProperties>();
+    expect<{
+      transitionProperty: undefined;
+      transitionDuration: undefined;
+      transitionTimingFunction: undefined;
+      transitionDelay: undefined;
+      transitionBehavior: undefined;
+      transition: undefined;
+    }>().type.toBeAssignableTo<CSSTransitionProperties>();
+  });
+});
+
+describe('ScreenTransitionConfig', () => {
+  test('accepts undefined for onFinishAnimation, as when it is not passed', () => {
+    expect<{ onFinishAnimation: undefined }>().type.toBeAssignableTo<
+      Pick<ScreenTransitionConfig, 'onFinishAnimation'>
+    >();
   });
 });
 

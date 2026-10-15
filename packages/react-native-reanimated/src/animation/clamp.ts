@@ -14,16 +14,18 @@ import {
   recognizePrefixSuffix,
 } from './util';
 
+type ClampConfig<T> = {
+  min?: T | undefined;
+  max?: T | undefined;
+};
+
 type withClampType = <T extends number | string>(
-  config: {
-    min?: T;
-    max?: T;
-  },
+  config: ClampConfig<T>,
   clampedAnimation: T
 ) => T;
 
 export const withClamp = function <T extends number | string>(
-  config: { min?: T; max?: T; reduceMotion?: ReduceMotion },
+  config: ClampConfig<T> & { reduceMotion?: ReduceMotion | undefined },
   _animationToClamp: AnimationObject<T> | (() => AnimationObject<T>)
 ): Animation<ClampAnimation> {
   'worklet';

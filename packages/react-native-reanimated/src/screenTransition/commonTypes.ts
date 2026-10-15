@@ -44,7 +44,7 @@ export type ScreenTransitionConfig = {
   screenTransition: AnimatedScreenTransition;
   sharedEvent: SharedValue<PanGestureHandlerEventPayload>;
   startingGesturePosition: SharedValue<PanGestureHandlerEventPayload>;
-  onFinishAnimation?: () => void;
+  onFinishAnimation?: (() => void) | undefined;
   isTransitionCanceled: boolean;
   goBackGesture: GoBackGesture;
   screenDimensions: MeasuredDimensions;

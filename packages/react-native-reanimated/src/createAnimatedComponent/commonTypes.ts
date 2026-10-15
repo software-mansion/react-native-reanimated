@@ -30,7 +30,7 @@ export interface ViewInfo {
   // The React Native view class name for the host component
   // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
   // convention used in CSS.
-  reactViewName?: string;
+  reactViewName?: string | undefined;
   DOMElement?: AnimatableDOMElement | null;
 }
 
@@ -127,10 +127,15 @@ export interface AnimatedComponentRef extends Component {
   elementRef?: React.RefObject<HTMLElement>;
 }
 
+export type Options<P> = {
+  setNativeProps?: ((ref: AnimatedComponentRef, props: P) => void) | undefined;
+  jsProps?: string[] | undefined;
+};
+
 export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
   _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _viewInfo?: ViewInfo;
+  _viewInfo?: ViewInfo | undefined;
 
   /**
    * Resolves the tag of the host view backing this component. Used for Layout

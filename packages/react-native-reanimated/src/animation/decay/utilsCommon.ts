@@ -46,11 +46,11 @@ export type DecayConfig = {
   deceleration?: number;
   velocityFactor?: number;
   velocity?: number;
-  reduceMotion?: ReduceMotion;
+  reduceMotion?: ReduceMotion | undefined;
 } & (
   | {
-      rubberBandEffect?: false;
-      clamp?: [min: number, max: number];
+      rubberBandEffect?: false | undefined;
+      clamp?: [min: number, max: number] | undefined;
     }
   | {
       rubberBandEffect: true;

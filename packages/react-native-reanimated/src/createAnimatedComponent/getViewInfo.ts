@@ -20,7 +20,7 @@ import type { IAnimatedComponentInternalBase } from './commonTypes';
 //                         reactViewName via componentNameByReactViewName().
 export function getViewInfo(element: HostInstance): {
   reactViewName?: string;
-  viewTag?: number;
+  viewTag?: number | undefined;
 } {
   return {
     reactViewName: (element?.__viewConfig?.uiViewClassName ??

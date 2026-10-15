@@ -56,28 +56,28 @@ export type CSSAnimationCallback = (event: CSSAnimationEvent) => void;
  */
 export type CSSAnimationCallbacks = {
   /** Fired when the CSS animation starts, after any `animationDelay`. */
-  onCSSAnimationStart?: CSSAnimationCallback;
+  onCSSAnimationStart?: CSSAnimationCallback | undefined;
   /** Fired when the CSS animation completes. */
-  onCSSAnimationEnd?: CSSAnimationCallback;
+  onCSSAnimationEnd?: CSSAnimationCallback | undefined;
   /** Fired at the end of each CSS animation iteration except the last. */
-  onCSSAnimationIteration?: CSSAnimationCallback;
+  onCSSAnimationIteration?: CSSAnimationCallback | undefined;
   /**
    * Fired when the CSS animation is interrupted before completing, including
    * when the component unmounts.
    */
-  onCSSAnimationCancel?: CSSAnimationCallback;
+  onCSSAnimationCancel?: CSSAnimationCallback | undefined;
 };
 
 export type CSSAnimationCallbackProp = keyof CSSAnimationCallbacks;
 
 export type SingleCSSAnimationSettings = {
-  animationDuration?: CSSAnimationDuration;
-  animationTimingFunction?: CSSAnimationTimingFunction;
-  animationDelay?: CSSAnimationDelay;
-  animationIterationCount?: CSSAnimationIterationCount;
-  animationDirection?: CSSAnimationDirection;
-  animationFillMode?: CSSAnimationFillMode;
-  animationPlayState?: CSSAnimationPlayState;
+  animationDuration?: CSSAnimationDuration | undefined;
+  animationTimingFunction?: CSSAnimationTimingFunction | undefined;
+  animationDelay?: CSSAnimationDelay | undefined;
+  animationIterationCount?: CSSAnimationIterationCount | undefined;
+  animationDirection?: CSSAnimationDirection | undefined;
+  animationFillMode?: CSSAnimationFillMode | undefined;
+  animationPlayState?: CSSAnimationPlayState | undefined;
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 

@@ -40,8 +40,9 @@ type AllKeys<U> = U extends unknown ? keyof U : never;
 /**
  * Turns a tuple of object shapes into a union whose members are mutually
  * exclusive: choosing one member forbids every key that belongs only to the
- * others (each such key becomes `?: never`). Use it instead of hand-writing the
- * `?: never` fields.
+ * others (each such key becomes `?: Absent`, `?: never` by default). Use it
+ * instead of hand-writing those fields, and pass `undefined` as `Absent` when
+ * the runtime reads an `undefined` key as unset.
  *
  * @example
  *   `MutuallyExclusiveUnion<[{ x: number }, { y: number }]>` resolves to
@@ -49,6 +50,7 @@ type AllKeys<U> = U extends unknown ? keyof U : never;
  */
 export type MutuallyExclusiveUnion<
   T extends ReadonlyArray<unknown>,
+  Absent extends undefined = never,
   Processed extends ReadonlyArray<unknown> = [],
 > = T extends readonly [infer First, ...infer Rest]
   ? Simplify<
@@ -56,8 +58,8 @@ export type MutuallyExclusiveUnion<
           [K in Exclude<
             AllKeys<[...Processed, ...Rest][number]>,
             keyof First
-          >]?: never;
+          >]?: Absent;
         })
-      | MutuallyExclusiveUnion<Rest, readonly [...Processed, First]>
+      | MutuallyExclusiveUnion<Rest, Absent, readonly [...Processed, First]>
     >
   : never;

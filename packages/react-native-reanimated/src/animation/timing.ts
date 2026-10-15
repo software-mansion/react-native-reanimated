@@ -28,7 +28,7 @@ import {
  */
 interface TimingConfig {
   duration?: number;
-  reduceMotion?: ReduceMotion;
+  reduceMotion?: ReduceMotion | undefined;
   easing?: EasingFunction | EasingFunctionFactory;
 }
 

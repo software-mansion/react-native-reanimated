@@ -23,7 +23,7 @@ type PropsBuilderResult<TProps> = {
     props: Partial<TProps>,
     options?: {
       target?: ValueProcessorTarget;
-      includeUnprocessed?: boolean;
+      includeUnprocessed?: boolean | undefined;
     }
   ): UnknownRecord;
 };

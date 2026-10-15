@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { describe, expect, test } from 'tstyche';
 
+import type { ReduceMotion } from '..';
 import { Easing, useAnimatedStyle, useSharedValue, withTiming } from '..';
 
 describe('withTiming', () => {
@@ -23,5 +24,13 @@ describe('withTiming', () => {
         (_finished) => {}
       ),
     }));
+  });
+
+  test('accepts undefined for reduceMotion, which the default fills', () => {
+    const reduceMotion: ReduceMotion | undefined = undefined;
+    expect(withTiming).type.toBeCallableWith(0, {
+      duration: 300,
+      reduceMotion,
+    });
   });
 });

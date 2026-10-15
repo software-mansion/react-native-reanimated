@@ -66,12 +66,12 @@ interface ReanimatedFlatListPropsWithLayout<T>
    * with a single-column `Animated.FlatList`, `numColumns` property cannot be
    * greater than 1.
    */
-  itemLayoutAnimation?: ILayoutAnimationBuilder;
+  itemLayoutAnimation?: ILayoutAnimationBuilder | undefined;
   /**
    * Lets you skip entering and exiting animations of FlatList items when on
    * FlatList mount or unmount.
    */
-  skipEnteringExitingAnimations?: boolean;
+  skipEnteringExitingAnimations?: boolean | undefined;
   /** Property `CellRendererComponent` is not supported in `Animated.FlatList`. */
   CellRendererComponent?: never;
   /**
@@ -102,7 +102,7 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item> & {
-    ref?: React.Ref<FlatList>;
+    ref?: React.Ref<FlatList> | undefined;
   }
 ) {
   const {
@@ -163,7 +163,7 @@ export const ReanimatedFlatList = FlatListRender as <
   ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
-    ref?: React.Ref<FlatList>;
+    ref?: React.Ref<FlatList> | undefined;
   }
 ) => React.ReactElement;
 

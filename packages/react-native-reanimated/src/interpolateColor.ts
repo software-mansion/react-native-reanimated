@@ -23,8 +23,8 @@ export const Extrapolate = Extrapolation;
  *   the interpolation has to go through. Defaults to `true`.
  */
 export type InterpolationOptions = {
-  gamma?: number;
-  useCorrectedHSVInterpolation?: boolean;
+  gamma?: number | undefined;
+  useCorrectedHSVInterpolation?: boolean | undefined;
 };
 
 const interpolateColorsHSV = (

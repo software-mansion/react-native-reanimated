@@ -26,7 +26,7 @@ const AnimatedScrollViewComponent: AnimatedComponentType<
 export type AnimatedScrollViewProps = ComponentProps<
   typeof AnimatedScrollViewComponent
 > & {
-  scrollViewOffset?: SharedValue<number>;
+  scrollViewOffset?: SharedValue<number> | undefined;
 };
 
 export function AnimatedScrollView({

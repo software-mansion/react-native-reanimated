@@ -20,14 +20,14 @@ export type LogData = {
 export type LogFunction = (data: LogData) => void;
 
 export type LoggerConfig = {
-  level?: ReanimatedLogLevel;
-  strict?: boolean;
+  level?: ReanimatedLogLevel | undefined;
+  strict?: boolean | undefined;
 };
 
 export type LoggerConfigInternal = {
   logFunction: LogFunction;
-  onLog?: LogFunction;
-} & Required<LoggerConfig>;
+  onLog?: LogFunction | undefined;
+} & { [K in keyof LoggerConfig]-?: Exclude<LoggerConfig[K], undefined> };
 
 function logToConsole(data: LogData) {
   'worklet';
