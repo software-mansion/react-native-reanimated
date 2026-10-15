@@ -6,6 +6,7 @@ export {
   processColor,
   processColorNumber,
   processColorsInProps,
+  type ProcessedColor,
 } from './colors';
 export { processFilter } from './filter';
 export { processFontWeight } from './font';
