@@ -37,7 +37,7 @@ class MountedAnimation {
 /// The reason is why the platform rejects the command.
 using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation>, AnimationResultReason>;
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 /// One physical animation of the playback of a target.
 struct PlaybackMember {
   /// The platform name of what the member animates.
@@ -53,8 +53,8 @@ struct PlaybackMember {
 struct TargetSample {
   std::vector<double> model;
   std::vector<double> presentation;
-  /// The platform keys of each physical playback that the platform put on the view, for all targets.
-  std::vector<std::string> playbackKeys;
+  /// The track of each command that has a physical playback on the view, for all targets.
+  std::vector<TrackKey> playbacks;
   /// The members of the playback of the target, in the order in which the platform applies them.
   std::vector<PlaybackMember> members;
   /// The view is allowed to antialias its edges.
@@ -92,7 +92,7 @@ class NativeAnimationPlatform {
   /// thus hold a lock that the operation or a client callback takes.
   virtual void postToUIThread(std::function<void()> operation) = 0;
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   virtual std::optional<TargetSample> sample(Tag tag, AnimationTarget target) = 0;
 #endif
 };

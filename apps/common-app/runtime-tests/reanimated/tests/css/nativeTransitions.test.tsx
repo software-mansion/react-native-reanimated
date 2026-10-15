@@ -24,44 +24,17 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { TraceEvent } from '../nativeAnimationObservation';
+import { takeTrace } from '../nativeAnimationObservation';
 
-type TraceEvent = {
-  event: string;
-  tag: number;
-  generation: number;
-  monotonicTimeMs: number;
-  target?: string;
-  endpointPolicy?: string;
-  finished?: boolean;
-  outcome?: string;
-  reason?: string;
-};
-
-type TraceSource = {
-  takeNativeAnimationTrace?: (callback: (events: TraceEvent[]) => void) => void;
-};
-
-const traceSource = (
-  globalThis as unknown as { __reanimatedModuleProxy: TraceSource }
-).__reanimatedModuleProxy;
-
-// The trace exists only in development builds of the native code, and the host only with the flag.
 const hasNativeTransitions =
-  Platform.OS === 'ios' &&
-  getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION') &&
-  traceSource.takeNativeAnimationTrace !== undefined;
+  Platform.OS === 'ios' && getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION');
 
 const BOX_REF = 'CSSNativeTransitionBox';
 const DURATION = 400;
 const FOCUSED_OPACITY = 0.4;
 
 const AnimatedTextInput = createAnimatedComponent(TextInput);
-
-function takeTrace(): Promise<TraceEvent[]> {
-  return new Promise((resolve) => {
-    traceSource.takeNativeAnimationTrace?.(resolve);
-  });
-}
 
 async function takeTraceOf(tag: number) {
   return (await takeTrace()).filter((event) => event.tag === tag);
