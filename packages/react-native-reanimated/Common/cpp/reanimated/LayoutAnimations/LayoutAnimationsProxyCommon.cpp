@@ -1,5 +1,6 @@
 #ifdef ANDROID
 #include <ReactCommon/CallInvoker.h>
+#include <react/renderer/core/DynamicPropsUtilities.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 #include <folly/dynamic.h>
@@ -696,6 +697,20 @@ ShadowView LayoutAnimationsProxyCommon::cloneViewWithOpacity(
   newView.props = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(opacityProps));
   return newView;
+}
+
+ShadowViewMutation LayoutAnimationsProxyCommon::createPropsUpdate(
+    const ShadowView &oldView,
+    const ShadowView &newView,
+    const Tag parentTag,
+    [[maybe_unused]] const PropsParserContext &propsParserContext) const {
+  auto updateView = newView;
+#ifdef ANDROID
+  auto changedProps = diffDynamicProps(oldView.props->rawProps, newView.props->rawProps);
+  updateView.props = componentDescriptorRegistry_->at(newView.componentHandle)
+                         .cloneProps(propsParserContext, newView.props, RawProps(std::move(changedProps)));
+#endif
+  return ShadowViewMutation::UpdateMutation(oldView, updateView, parentTag);
 }
 
 void LayoutAnimationsProxyCommon::schedulePullOnNextFrame() const {
