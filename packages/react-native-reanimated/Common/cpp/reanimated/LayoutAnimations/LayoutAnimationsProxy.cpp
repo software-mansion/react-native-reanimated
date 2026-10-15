@@ -28,8 +28,6 @@ using enum LayoutAnimationType;
 using enum ExitingState;
 
 namespace {
-// React Native's LayoutAnimation runs before this proxy. It can delete a view without removing its
-// descendants, and keeps sending frames for them in the same and later transactions.
 void markDescendantsDeleted(const std::shared_ptr<LightNode> &node) {
   for (const auto &child : node->children) {
     if (!child->isExiting()) {
@@ -447,7 +445,6 @@ void LayoutAnimationsProxy::updateLightTree(
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
-        // LayoutAnimation can send frames for a view that was torn down with its deleted ancestor.
         const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
         if (nodeIt == lightNodes_.end()) {
           break;
@@ -580,7 +577,6 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Remove: {
-        // A late Remove of a view that was already removed with its deleted ancestor.
         const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
         const auto parentIt = lightNodes_.find(mutation.parentTag);
         if (nodeIt == lightNodes_.end() || parentIt == lightNodes_.end() || nodeIt->second->isExiting()) {
