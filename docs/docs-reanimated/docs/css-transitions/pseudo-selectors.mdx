@@ -193,6 +193,55 @@ import PseudoSelectorsCombinedSrc from '!!raw-loader!@site/src/examples/css-tran
 
 The button drifts between colors over 600ms, but snaps down in 100ms when pressed. `backgroundColor` lists both `:hover` and `:active`, and pressing wins over hovering because `:active` sits later in the priority list.
 
+## Styling a component that isn't Animated
+
+Pseudo values live in the style of an `Animated` component. Code that renders plain host components - a styling library that turns class names into styles, for example - can register the same states with `setPseudoStyles`, which takes the host instance a `ref` gives you:
+
+```tsx
+import { useLayoutEffect, useRef } from 'react';
+import { View } from 'react-native';
+import { setPseudoStyles } from 'react-native-reanimated';
+
+function Card() {
+  const ref = useRef<View>(null);
+
+  useLayoutEffect(() => {
+    const view = ref.current;
+    if (!view) {
+      return;
+    }
+    setPseudoStyles(view, {
+      defaultStyle: { opacity: 1 },
+      selectors: [{ selector: ':active', style: { opacity: 0.6 } }],
+      transition: { transitionProperty: 'opacity', transitionDuration: 150 },
+    });
+    return () => setPseudoStyles(view, null);
+  }, []);
+
+  return <View ref={ref} style={styles.card} />;
+}
+```
+
+Each call replaces the view's previous registration, so call it again whenever the styles change, and with `null` when the view unmounts. A property you leave out of `defaultStyle` rests at whatever React renders for it.
+
+`setPseudoStyles` styles Android and iOS views. On the web it only warns, because the web styles these states with CSS.
+
+### Group selectors
+
+A selector can also match the state of another view, the way Tailwind's `group-active:` styles a child by its parent's press. Create a group with `createPseudoGroup`, let one view host it, and point another view's selectors at it:
+
+```tsx
+const group = createPseudoGroup();
+
+setPseudoStyles(button, { hostsGroup: group });
+setPseudoStyles(label, {
+  defaultStyle: { color: '#001a72' },
+  selectors: [{ selector: ':active', group, style: { color: '#ffffff' } }],
+});
+```
+
+A press anywhere on the button now restyles the label, a press on its padding included. When a view's own selectors and its group selectors match at once, its own win.
+
 ## Animating SVG components
 
 Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
