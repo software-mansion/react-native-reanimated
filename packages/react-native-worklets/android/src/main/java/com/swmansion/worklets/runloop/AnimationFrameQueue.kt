@@ -1,6 +1,7 @@
 package com.swmansion.worklets.runloop
 
 import android.os.SystemClock
+import android.view.animation.AnimationUtils
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
@@ -28,6 +29,14 @@ class AnimationFrameQueue(
     private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
     private val mDispatchLock = Any()
+
+    // Choreographer locks AnimationUtils to the frame's vsync time before input
+    // callbacks and unlocks it after the frame. Input (gestures) runs before this
+    // queue, so a read during a gesture sees the same vsync time [executeQueue]
+    // will be given. Unlocked, the clock is uptime itself, which is "now", not a
+    // frame, and must not be reported. The previous frame's time must not leak out.
+    private var cachedAnimationTimeMs = Long.MIN_VALUE
+    private var cachedFrameTimestampMs = Double.NaN
 
     fun resume() {
         if (mPaused.getAndSet(false)) {
@@ -66,12 +75,36 @@ class AnimationFrameQueue(
         scheduleQueueExecution()
     }
 
+    /**
+     * The timestamp [executeQueue] will pass for the choreographer frame in
+     * progress, or null between frames.
+     */
+    fun getCurrentFrameTimestampMs(): Double? {
+        val animationTimeMs = AnimationUtils.currentAnimationTimeMillis()
+        // Unlocked, this equals uptime. A locked frame time is the vsync, behind
+        // the clock, because callbacks run after vsync.
+        if (animationTimeMs >= SystemClock.uptimeMillis()) {
+            return null
+        }
+        if (animationTimeMs == cachedAnimationTimeMs) {
+            return cachedFrameTimestampMs
+        }
+        // Integer milliseconds; [executeQueue] keeps the fractional part of the
+        // same vsync. The fraction is under a millisecond and makes the flush
+        // slightly later, so a baseline taken here cannot land ahead of it.
+        val timestampMs = calculateTimestamp(animationTimeMs * 1_000_000L)
+        cachedAnimationTimeMs = animationTimeMs
+        cachedFrameTimestampMs = timestampMs
+        return timestampMs
+    }
+
     fun enableSlowAnimations(
         slowAnimationsEnabled: Boolean,
         animationsDragFactor: Int,
     ) {
         mSlowAnimationsEnabled = slowAnimationsEnabled
         mAnimationsDragFactor = animationsDragFactor
+        cachedAnimationTimeMs = Long.MIN_VALUE
         if (slowAnimationsEnabled) {
             mFirstUptime = SystemClock.uptimeMillis()
         }

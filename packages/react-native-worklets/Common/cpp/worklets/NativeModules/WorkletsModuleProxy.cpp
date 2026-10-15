@@ -122,7 +122,9 @@ void WorkletsModuleProxy::startUIRuntime(const std::shared_ptr<JSIWorkletsModule
       std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_->requestAnimationFrame);
 
   UIRuntimeDecorator::decorate(
-      uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
+      uiWorkletRuntime_->getJSIRuntime(),
+      animationFrameBatchinator_->getJsiRequestAnimationFrame(),
+      runtimeBindings_->getCurrentFrameTimestamp);
 
   uiRuntimeStarted_ = true;
 }

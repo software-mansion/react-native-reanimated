@@ -76,6 +76,10 @@ declare global {
   /**
    * @deprecated Internals of `react-native-worklets`, abstain from using in the
    *   future.
+   *
+   * Timestamp of the UI-thread frame in progress. Set for the duration of a
+   * frame flush, and otherwise the platform frame while one is being produced.
+   * `undefined` between frames.
    */
   var __frameTimestamp: number | undefined;
   var __mapperRun: () => void;

@@ -79,7 +79,19 @@ declare global {
    *   synchronously.
    */
   var __flushAnimationFrame: (timestamp: number) => void;
+  /**
+   * Timestamp of the UI-thread frame in progress, in the same domain as
+   * `requestAnimationFrame`. An explicit value is installed for the duration of
+   * a frame flush. Otherwise this reads the platform frame when one is being
+   * produced, and is `undefined` between frames — a finished frame's timestamp
+   * is not reused.
+   */
   var __frameTimestamp: number | undefined;
+  /**
+   * Platform clock of the frame currently being produced. `undefined` when no
+   * frame callback is running. Installed on the UI runtime.
+   */
+  var __getCurrentFrameTimestamp: (() => number | undefined) | undefined;
   var _log: (value: unknown) => void;
   var _startProfiling: (meanHzFreq?: number) => void;
   var _stopProfiling: () => string;
