@@ -7,6 +7,7 @@ import { Platform, StyleSheet } from 'react-native';
 import type { AnyComponent, UnknownRecord } from '../../common';
 import type { InternalHostInstance } from '../../commonTypes';
 import type {
+  AnimatableDOMElement,
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
   ViewInfo,
@@ -44,7 +45,7 @@ export default class AnimatedComponent<
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _rawComponentRef: Component | HTMLElement | null = null;
-  _componentDOMRef: HTMLElement | null = null;
+  _componentDOMRef: AnimatableDOMElement | null = null;
   _willUnmount: boolean = false;
   _forwardedRefCleanup?: () => void;
 
