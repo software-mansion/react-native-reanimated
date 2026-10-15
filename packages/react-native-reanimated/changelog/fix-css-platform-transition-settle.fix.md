@@ -1,0 +1,1 @@
+Fix a property removed from `transitionProperty` mid-transition freezing at its interrupted value on the iOS Core Animation and Android platform animation paths instead of snapping to its committed value.

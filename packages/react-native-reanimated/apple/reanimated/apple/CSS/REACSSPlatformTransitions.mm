@@ -97,7 +97,7 @@ using namespace reanimated::css;
   return YES;
 }
 
-- (void)stopTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName
+- (void)stopTransitionForTag:(Tag)viewTag propertyName:(const std::string &)propertyName settle:(BOOL)settle
 {
   NSString *keyPath = caLayerKeyPathForCSSProperty(propertyName);
   __weak __typeof__(self) weakSelf = self;
@@ -110,10 +110,18 @@ using namespace reanimated::css;
     if (!layer) {
       return;
     }
-    // Freeze the last visible frame into the model so the layer doesn't snap.
-    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-    if (presentationValue) {
-      [layer setValue:presentationValue forKeyPath:keyPath];
+    // Without settle (a hand-off to the loop, or a view leaving the tree) the last
+    // visible frame goes into the model so the layer doesn't snap. A held (persistent)
+    // value has no committed target in the model, so it keeps its frame as well. The
+    // live animation decides, not the proxy's record: a start queued from the JS
+    // thread can land after an inline pseudo start and replace the held one.
+    CAAnimation *animation = [layer animationForKey:keyPath];
+    BOOL held = animation != nil && !animation.removedOnCompletion;
+    if (!settle || held) {
+      id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+      if (presentationValue) {
+        [layer setValue:presentationValue forKeyPath:keyPath];
+      }
     }
     [layer removeAnimationForKey:keyPath];
   });

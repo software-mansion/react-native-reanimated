@@ -11,6 +11,7 @@ import android.view.View
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UIManager
 import com.facebook.react.bridge.UIManagerListener
+import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -38,7 +39,11 @@ internal class CSSPlatformTransitionsManager(
         object : UIManagerListener {
             override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
 
-            override fun willMountItems(uiManager: UIManager) = Unit
+            override fun willMountItems(uiManager: UIManager) {
+                // A settle lands its target before React writes the same property in this
+                // batch; drained after it, the stale target would win.
+                commands.drain()
+            }
 
             override fun didMountItems(uiManager: UIManager) {
                 reactWroteSinceLastDraw = true
@@ -46,7 +51,11 @@ internal class CSSPlatformTransitionsManager(
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
-            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+            override fun didScheduleMountItems(uiManager: UIManager) {
+                // The pull model executes the transaction on the UI thread right after this
+                // call, without going through willMountItems.
+                if (UiThreadUtil.isOnUiThread()) commands.drain()
+            }
         }
 
     init {
@@ -81,6 +90,7 @@ internal class CSSPlatformTransitionsManager(
         val animator: ObjectAnimator,
         val writer: CSSPropertyWriter,
         val startValue: Float,
+        val persistent: Boolean,
     ) {
         /** Final value of a finished persistent transition, which outlives its animator. */
         var heldValue: Float? = null
@@ -108,6 +118,7 @@ internal class CSSPlatformTransitionsManager(
 
         class Remove(
             override val key: Key,
+            val settle: Boolean,
         ) : Command()
     }
 
@@ -188,10 +199,11 @@ internal class CSSPlatformTransitionsManager(
     fun removeTransition(
         viewTag: Int,
         propertyId: Int,
+        settle: Boolean,
     ) {
         // Teardown streams a removal per routed property, and each would post its own message.
         if (invalidated) return
-        commands.enqueue(Command.Remove(Key(viewTag, propertyId)))
+        commands.enqueue(Command.Remove(Key(viewTag, propertyId), settle))
     }
 
     private fun executeCommand(command: Command) {
@@ -199,13 +211,18 @@ internal class CSSPlatformTransitionsManager(
         if (invalidated) return
         when (command) {
             is Command.Start -> beginStart(command)
-            is Command.Remove -> removeNow(command.key)
+            is Command.Remove -> removeNow(command.key, command.settle)
         }
     }
 
-    private fun removeNow(key: Key) {
+    private fun removeNow(
+        key: Key,
+        settle: Boolean,
+    ) {
         pendingStarts.remove(key)
-        animators.remove(key)?.animator?.cancel()
+        val running = animators.remove(key) ?: return
+        // A persistent value has no committed style behind it, so it keeps its last frame.
+        if (settle && !running.persistent) running.animator.end() else running.animator.cancel()
     }
 
     /**
@@ -239,13 +256,17 @@ internal class CSSPlatformTransitionsManager(
                 pendingStarts.clear()
                 return@postFrameCallback
             }
-            val now = getAnimationTimestamp()
-            val iterator = pendingStarts.entries.iterator()
-            while (iterator.hasNext()) {
-                val pending = iterator.next().value
-                if (startIfMounted(pending) || now >= pending.endTimestampMs) iterator.remove()
-            }
+            startPendingIfMounted()
             if (pendingStarts.isNotEmpty()) scheduleRetry()
+        }
+    }
+
+    private fun startPendingIfMounted() {
+        val now = getAnimationTimestamp()
+        val iterator = pendingStarts.entries.iterator()
+        while (iterator.hasNext()) {
+            val pending = iterator.next().value
+            if (startIfMounted(pending) || now >= pending.endTimestampMs) iterator.remove()
         }
     }
 
@@ -300,7 +321,7 @@ internal class CSSPlatformTransitionsManager(
             animator.setCurrentFraction((elapsedMs / durationMs).toFloat().coerceIn(0f, 1f))
         }
         animator.start()
-        animators[key] = RunningTransition(animator, writer, startValue)
+        animators[key] = RunningTransition(animator, writer, startValue, command.persistent)
         reconciler.track(view)
     }
 
@@ -316,10 +337,12 @@ internal class CSSPlatformTransitionsManager(
      */
     private fun onPreDraw(): Boolean {
         commands.drain()
+        // A start drained before its View mounted in this batch begins in the same frame.
+        startPendingIfMounted()
         repairClobberedValues()
         // Retiring while idle leaves the next start with only its posted message to beat the
         // draw that React's commit triggers, and losing that race shows the committed target
-        // for a frame. Both calls above are no-ops while nothing is queued or running.
+        // for a frame. The calls above are no-ops while nothing is queued or running.
         return !invalidated
     }
 

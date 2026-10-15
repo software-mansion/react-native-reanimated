@@ -104,7 +104,7 @@ void CSSPlatformTransitions::replaceEasingId(const Tag viewTag, const std::strin
   it->second = easingId;
 }
 
-void CSSPlatformTransitions::stopTransition(const Tag viewTag, const std::string &propertyName) {
+void CSSPlatformTransitions::stopTransition(const Tag viewTag, const std::string &propertyName, const bool settle) {
   const auto propertyIdsIt = easingIds_.find(viewTag);
   if (propertyIdsIt != easingIds_.end()) {
     const auto it = propertyIdsIt->second.find(propertyName);
@@ -118,7 +118,7 @@ void CSSPlatformTransitions::stopTransition(const Tag viewTag, const std::string
   }
   // A property without an id was never routed, so there is nothing to remove.
   if (const auto propertyId = platformPropertyId(propertyName); propertyId.has_value()) {
-    remove_(static_cast<int>(viewTag), *propertyId);
+    remove_(static_cast<int>(viewTag), *propertyId, settle);
   }
 }
 

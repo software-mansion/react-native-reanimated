@@ -29,7 +29,7 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
       double startTimestampMs,
       int easingId,
       bool persistent)>;
-  using RemoveFunction = std::function<void(int viewTag, int propertyId)>;
+  using RemoveFunction = std::function<void(int viewTag, int propertyId, bool settle)>;
 
   CSSPlatformTransitions(AnimateFunction animate, RemoveFunction remove, std::shared_ptr<CSSPlatformEasings> easings);
 
@@ -47,7 +47,7 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
       const css::EasingConfig &easing,
       bool persistent) override;
 
-  void stopTransition(Tag viewTag, const std::string &propertyName) override;
+  void stopTransition(Tag viewTag, const std::string &propertyName, bool settle) override;
 
  private:
   void replaceEasingId(Tag viewTag, const std::string &propertyName, int easingId);
