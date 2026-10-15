@@ -107,6 +107,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<SharedTag> containersToInsert;
+  bool createsOverlay = false;
   std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
@@ -141,7 +142,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
   // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
-  // the window. It exists while it has containers.
+  // the window. It lives until its surface stops.
   mutable std::shared_ptr<LightNode> containerOverlay_;
   // Containers of finished runs that stay over their restored targets until the next pull.
   mutable std::vector<std::shared_ptr<LightNode>> overlayContainersToRemove_;
@@ -266,7 +267,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void insertContainers(TransactionMeta &transaction, int containerIndex) const;
   Tag allocateContainerTag() const;
-  std::shared_ptr<LightNode> getOrCreateContainerParent() const;
+  std::shared_ptr<LightNode> getOrCreateContainerParent(TransactionMeta &transaction) const;
   bool isDetached(const std::shared_ptr<LightNode> &node) const;
   void followDetachedTargets(const PropsParserContext &propsParserContext) const;
   int containerParentChildCount() const;
@@ -277,7 +278,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       bool gestureDriven,
       TransactionMeta &transaction) const;
-  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before) const;
+  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   void cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
