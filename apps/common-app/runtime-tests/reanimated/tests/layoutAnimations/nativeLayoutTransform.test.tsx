@@ -1,3 +1,50 @@
+/*
+ * Each test that plays a case (`playCase`, or `play` with `expectReference`) has the method of the suite
+ * `native layout reference`, each box on its own clock: each sample of the `Transform` target of the native
+ * box has the 16 cells of the matrix of the declared values of its operations at one time of the 18 ms
+ * before the sample, from the origin of its command (statement A); each frame of the frame-driven
+ * twin and of the frame driver on the native box is on a replay of the declared timeline at its frame time
+ * (statement B); at the end the native box shows its model and the twin has the same model. A check of a
+ * playback key count or of a model value in such a test is for each row, by the time of the row against
+ * the times of the trace and the declared times. A spring has no declared timeline: its frames on the
+ * native box are the frames of the twin. Each other test has state checks, trace checks, and checks of the
+ * two boxes at rest. The tolerance of a cell is 0.005, and a translation has it too.
+ *
+ * Each test in which the frame driver takes the `Transform` track of the native box has statement M: the
+ * model of each read of the native box, from the mount of the first frame update to the last frame of the
+ * frame driver, is the matrix of the last recorded frame at or before the read, of the frame before it, or
+ * of the first frame after the read whose recorded time is at most one display frame and the clock
+ * uncertainty after the read. A cell is equal to 0.0001 and a translation to 0.01. Statement M permits a lag
+ * of one recorded frame and gives no limit of the age of the model on the wall clock. Two frames whose
+ * matrices are equal in these tolerances cannot say which write gave the value. Other display rates are not
+ * tested.
+ *
+ * The method does not prove: the distance of the two boxes at one instant, the lag of the frame driver,
+ * that the two starts are in one display frame, when a callback comes, that a row comes in each part of a
+ * timeline, a native value in the first display frame after its origin to better than one display frame, a
+ * read in the first 18 ms of a track (its operations start at the initial values of the builder, which the
+ * view did not show). After a commit of another style transform, a read from 1.78 ms before the declared
+ * end of the track is not checked: it can show the committed style. The pixels on screen, the order in
+ * which the screen shows the operations, a device, and 120 Hz are not tested.
+ *
+ * Statement A has the edge hold of `native layout reference`. Within the read band, this suite cannot
+ * distinguish the platform hold from a native segment that keeps its start value through eased progress
+ * 0.001 or shows its end value from eased progress 0.999. The frame-driven twin keeps its exact curve check
+ * without a hold allowance.
+ *
+ * The suite `native layout live clock` has the wall-clock statements for the cases of this suite in
+ * `nativeLayoutLiveClockCases.ts`: the pair of the two boxes at one instant, the gap of the two end
+ * callbacks, and a row of the native box in each phase.
+ *
+ * The tests of the synchronous props path need the static flag `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`: the
+ * default build does not run them. An animated style gives each box its transform, and each test plays a
+ * case with a write of the two animated styles. The model of the native box is a state check for each read.
+ * The test of a write between a commit and its mount prints the order that its reads show as a
+ * `WRITE-ORDER` row and asserts the statements of that order. It has no load switch, so it does not assert
+ * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
+ * the interval before the first read.
+ */
+
 import { View } from 'react-native';
 import { Easing, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -14,7 +61,7 @@ import {
   Box,
   BOX_REF,
   FRAME_BOX_REF,
-  hasNativeLayoutStarts,
+  hasNativeLayoutRoute,
   mountScene,
   sample,
   styles,
@@ -22,6 +69,9 @@ import {
 } from './nativeLayoutTestKit';
 
 const START_LEFT = 60;
+
+const pairTags = () =>
+  [BOX_REF, FRAME_BOX_REF].map((ref) => getTestComponent(ref).getTag());
 
 const FLAG_DURATION = 900;
 const FLAG_READ_MS = 300;
@@ -94,9 +144,6 @@ function ExitPair({ exit, isMounted }: ExitPairProps) {
   );
 }
 
-const pairTags = () =>
-  [BOX_REF, FRAME_BOX_REF].map((ref) => getTestComponent(ref).getTag());
-
 /** The edge antialiasing of the native box and of its frame-driven twin. */
 async function edgeAntialiasingAt(
   tags: number[],
@@ -116,7 +163,7 @@ const hasTransformTrack = (events: TraceEvent[]) =>
   );
 
 describe('native layout transform and the edge antialiasing of the view', () => {
-  if (!hasNativeLayoutStarts) {
+  if (!hasNativeLayoutRoute) {
     return;
   }
 

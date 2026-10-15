@@ -66,7 +66,7 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(
     group.members.push_back({.key = {request.handle, track.target}, .track = track, .isHeld = false});
   }
   liveTrackCounts_.insert_or_assign(group.buildId, request.tracks.size());
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   commandTypes_.insert_or_assign(group.buildId, type);
 #endif
   groups_.insert_or_assign(tag, std::move(group));
@@ -94,16 +94,16 @@ std::shared_ptr<worklets::Serializable> NativeLayoutGroups::retargetConfig(const
   return isLayoutGroup ? groupIt->second.config : nullptr;
 }
 
-std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::cancel(const Tag tag) {
+std::optional<NativeLayoutGroupCancel> NativeLayoutGroups::cancel(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);
-  return groupIt == groups_.end() ? std::nullopt : std::optional(fail(groupIt));
+  return groupIt == groups_.end() ? std::nullopt : std::optional(remove(groupIt));
 }
 
-std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::cancelForFrameDriver(const Tag tag) {
+std::optional<NativeLayoutGroupCancel> NativeLayoutGroups::cancelForFrameDriver(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);
-  return groupIt == groups_.end() ? std::nullopt : std::optional(failForFrameDriver(groupIt));
+  return groupIt == groups_.end() ? std::nullopt : std::optional(removeForFrameDriver(groupIt));
 }
 
 NativeLayoutBuildEnds NativeLayoutGroups::clear() {
@@ -122,7 +122,7 @@ NativeLayoutBuildEnds NativeLayoutGroups::clear() {
 }
 
 void NativeLayoutGroups::onAnimationAdmitted(const AnimationHandle &handle) {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   host_->trace().record(
       {.event = TraceEventType::ClientAdmitted, .handle = handle, .objective = traceObjective(handle, false)});
 #endif
@@ -154,7 +154,7 @@ void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const TrackEnd end)
     }
     if (member != nullptr && !finished) {
       // The frame driver can play an animation on a view that left its window.
-      ends.push_back(end == TrackEnd::PlatformRemoved ? failForFrameDriver(groupIt) : fail(groupIt));
+      ends.push_back(stop(end == TrackEnd::PlatformRemoved ? removeForFrameDriver(groupIt) : remove(groupIt)));
     } else if (member != nullptr) {
       if (!isHeld) {
         std::erase_if(groupIt->second.members, [&track](const Member &each) { return each.key == track; });
@@ -170,7 +170,7 @@ void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const TrackEnd end)
 }
 
 void NativeLayoutGroups::onAnimationEnded(const AnimationHandle &handle, const AnimationResult result) {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   host_->trace().record(
       {.event = TraceEventType::ClientEnded,
        .handle = handle,
@@ -198,7 +198,7 @@ void NativeLayoutGroups::onAnimationEnded(const AnimationHandle &handle, const A
       ends.push_back(buildRelease(handle.generation));
     }
     if (groupIt != groups_.end() && needsCommand(groupIt->second)) {
-      ends.push_back(fail(groupIt));
+      ends.push_back(stop(remove(groupIt)));
     }
   }
   if (!ends.empty()) {
@@ -252,30 +252,27 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::finishIfPlayed(const Gro
   return end;
 }
 
-NativeLayoutBuildEnd NativeLayoutGroups::fail(const GroupMap::iterator groupIt) {
+NativeLayoutGroupCancel NativeLayoutGroups::remove(const GroupMap::iterator groupIt) {
   const auto tag = groupIt->first;
   const auto group = std::move(groupIt->second);
   groups_.erase(groupIt);
 
-  std::vector<AnimationHandle> handles;
-  appendHandles(handles, keysOf(group.members));
-  appendHandles(handles, group.replacedAtAdmission);
-  for (const auto &handle : handles) {
-    host_->cancel(handle, TrackStopMode::SettleToModel);
-  }
+  std::vector<AnimationHandle> commandsToStop;
+  appendHandles(commandsToStop, keysOf(group.members));
+  appendHandles(commandsToStop, group.replacedAtAdmission);
   // The host reports the end of a track one time, so the stop of a held track gives no report.
   for (const auto &member : group.members) {
     if (member.isHeld) {
       releaseTrack(member.key.handle.generation);
     }
   }
-  return groupEnd(tag, group, false);
+  return {.end = groupEnd(tag, group, false), .commandsToStop = std::move(commandsToStop)};
 }
 
-NativeLayoutBuildEnd NativeLayoutGroups::failForFrameDriver(const GroupMap::iterator groupIt) {
+NativeLayoutGroupCancel NativeLayoutGroups::removeForFrameDriver(const GroupMap::iterator groupIt) {
   const auto &group = groupIt->second;
   if (group.hasCallbackResult) {
-    return fail(groupIt);
+    return remove(groupIt);
   }
   FrameDriverHandover handover{.tag = groupIt->first, .type = group.type, .config = group.config, .joinedTracks = {}};
   for (const auto &member : group.members) {
@@ -283,12 +280,19 @@ NativeLayoutBuildEnd NativeLayoutGroups::failForFrameDriver(const GroupMap::iter
       handover.joinedTracks.push_back(member.key);
     }
   }
-  auto end = fail(groupIt);
-  end.frameDriverHandover = std::move(handover);
-  return end;
+  auto removed = remove(groupIt);
+  removed.end.frameDriverHandover = std::move(handover);
+  return removed;
 }
 
-#ifndef NDEBUG
+NativeLayoutBuildEnd NativeLayoutGroups::stop(NativeLayoutGroupCancel removed) const {
+  for (const auto &handle : removed.commandsToStop) {
+    host_->cancel(handle, TrackStopMode::SettleToModel);
+  }
+  return std::move(removed.end);
+}
+
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 uint8_t NativeLayoutGroups::traceObjective(const AnimationHandle &handle, const bool hasResult) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto objective = traceObjectiveOf(commandTypes_.at(handle.generation));

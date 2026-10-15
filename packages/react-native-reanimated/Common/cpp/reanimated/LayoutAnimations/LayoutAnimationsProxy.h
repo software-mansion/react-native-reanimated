@@ -149,11 +149,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   /// Null when layout animations have no native route, and before the start of the surface.
   std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
-  /// The native starts of the last pull. The mount report of that transaction takes them.
-  mutable std::vector<native_animation::MountedStart> pendingNativeStarts_;
+  /// The native starts and stops of the last pull, in the order in which the pull decided them. The mount
+  /// report of that transaction takes them.
+  mutable std::vector<native_animation::MountedOperation> pendingMountOperations_;
   /// The build ends that the pull gives to the UI runtime before it returns.
   mutable NativeLayoutBuildEnds pendingNativeBuildEnds_;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   mutable MountingTransaction::Number pulledTransactionNumber_ = 0;
   /// The native tracks of each view that no frame-driven update changed after their start.
   mutable std::unordered_map<Tag, std::vector<native_animation::TrackKey>> nativeTracksWithoutFrameUpdate_;
@@ -202,6 +203,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// has a native opacity track. That track shows the view until it ends; a group with no opacity track
   /// continues on the hidden view.
   void hideNativeOpacityAnimation(Tag tag) const;
+  /// The mount report of the pull stops the commands, after the mount of the state that the pull gives.
+  void stopAfterMount(const std::vector<native_animation::AnimationHandle> &commands) const;
   void flushNativeBuildEnds() const;
   /// Gives the callbacks and the releases of `buildEnds` to the UI runtime. A view whose exiting animation
   /// got its result leaves in the next pull. An end with a handover gets no result when the frame driver takes
@@ -310,7 +313,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> cancelUncommittedScreenPop() const;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void surfaceDidMount() override;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
 #endif

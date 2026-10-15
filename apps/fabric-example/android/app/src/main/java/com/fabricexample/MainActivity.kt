@@ -1,6 +1,7 @@
 package com.fabricexample
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.facebook.react.ReactActivity
@@ -31,10 +32,37 @@ class MainActivity : ReactActivity() {
         MainApplication.runtimeTestsLibrary = it
       }
     }
+    applyRuntimeTestsBundlerHost()
     super.onCreate(savedInstanceState)
 
     // Comment out this for now, as react-native-screens goes crazy with
     // screen height measurements when the nav bar is transparent
     // WindowCompat.setDecorFitsSystemWindows(window, false)
+  }
+
+  /** React Native takes the bundler host from `debug_http_host` before the port of the build. */
+  @Suppress("DEPRECATION")
+  private fun applyRuntimeTestsBundlerHost() {
+    val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+    val host =
+        if (BuildConfig.RUNTIME_TESTS) {
+          intent?.getStringExtra("RUNTIME_TESTS_BUNDLER_HOST")
+        } else {
+          null
+        }
+    if (host != null) {
+      preferences
+          .edit()
+          .putString(BUNDLER_HOST_KEY, host)
+          .putBoolean(RUNTIME_TESTS_HOST_KEY, true)
+          .commit()
+    } else if (preferences.getBoolean(RUNTIME_TESTS_HOST_KEY, false)) {
+      preferences.edit().remove(BUNDLER_HOST_KEY).remove(RUNTIME_TESTS_HOST_KEY).commit()
+    }
+  }
+
+  private companion object {
+    const val BUNDLER_HOST_KEY = "debug_http_host"
+    const val RUNTIME_TESTS_HOST_KEY = "runtime_tests_bundler_host"
   }
 }
