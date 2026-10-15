@@ -99,6 +99,8 @@ To keep a video smooth during the transition:
 - On iOS, pass the same video player to the video views on both screens, so the video plays on without a jump when the transition ends.
 - On Android, use a separate video player on each screen and render the video in a `TextureView`, for example with `surfaceType="textureView"` on the expo-video `VideoView`. A `TextureView` is drawn like a regular view, while a `SurfaceView` is drawn on a separate layer, so another video can show through it while it moves.
 
+The player must stay alive until the transition and any exit animation finish. `useVideoPlayer` releases the player when its owner unmounts. Keeping the native video view does not extend the player's lifetime.
+
 ## Custom animation
 
 You can customize the transition with the `SharedTransition` builder class. The available customization will be extended as the feature matures.
