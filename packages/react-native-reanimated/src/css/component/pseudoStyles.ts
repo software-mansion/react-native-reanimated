@@ -6,9 +6,13 @@ import type { PseudoStylesConfig } from '../types';
 
 export function setPseudoStyles(
   _instance: HostInstance,
-  _config: PseudoStylesConfig | null
+  config: PseudoStylesConfig | null
 ) {
-  logger.warn(
-    'setPseudoStyles() is not supported on web, where these states are styled with CSS.'
-  );
+  // A release has nothing to undo on the web, so only a registration warns.
+  if (config !== null) {
+    logger.warnOnce(
+      'setPseudoStyles() is not supported on web, where these states are styled with CSS.',
+      1
+    );
+  }
 }
