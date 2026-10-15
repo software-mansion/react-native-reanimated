@@ -14,7 +14,6 @@
 #endif // ANDROID
 
 #include <algorithm>
-#include <iterator>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -1164,8 +1163,16 @@ void LayoutAnimationsProxy::cleanupAnimations(
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
 #ifdef __APPLE__
-    std::ranges::move(overlayContainersToRemove_, std::back_inserter(transaction.containersToRemove));
-    overlayContainersToRemove_.clear();
+    const auto now = std::chrono::steady_clock::now();
+    std::erase_if(overlayContainersToRemove_, [&](const DeferredContainerRemoval &removal) {
+      if (transaction.surfaceDropped || now >= removal.removableAt) {
+        transaction.containersToRemove.push_back(removal.container);
+        return true;
+      }
+      preservedTags.insert(removal.container->current.tag);
+      schedulePullOnNextFrame();
+      return false;
+    });
 #endif
     for (auto &[sharedTag, element] : sharedElements_) {
       if (!element.run) {
@@ -1196,20 +1203,23 @@ void LayoutAnimationsProxy::cleanupAnimations(
         preservedTags.insert(tag);
         continue;
       }
-#ifdef __APPLE__
-      // The overlay is in another window, whose updates can reach the screen a frame before the restored target,
-      // so the container stays over the target for one more frame.
-      if (element.run->container->parent.lock() == containerOverlay_) {
-        transaction.restoreRequests.push_back({sharedTag, element.run->target});
-        overlayContainersToRemove_.push_back(element.run->container);
-        element.run.reset();
-        preservedTags.insert(tag);
-        schedulePullOnNextFrame();
-        continue;
-      }
-#endif
       finishSharedTransition(sharedTag, element, transaction);
     }
+#ifdef __APPLE__
+    // The overlay is in another window, whose updates can reach the screen a frame before the restored target, so the
+    // container stays over the target for at least 17 ms, a frame of a 60 Hz display, after this pull. Pulls also run
+    // on events, so the next pull can come in the same frame.
+    const auto removableAt = std::chrono::steady_clock::now() + std::chrono::milliseconds(17);
+    for (const auto &container : transaction.containersOverRestoredTargets) {
+      if (transaction.surfaceDropped) {
+        transaction.containersToRemove.push_back(container);
+        continue;
+      }
+      preservedTags.insert(container->current.tag);
+      overlayContainersToRemove_.push_back({.container = container, .removableAt = removableAt});
+      schedulePullOnNextFrame();
+    }
+#endif
 
     queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);

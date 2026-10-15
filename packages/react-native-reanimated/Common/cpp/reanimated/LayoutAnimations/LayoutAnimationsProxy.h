@@ -16,6 +16,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -48,6 +49,11 @@ struct SharedTransitionRun {
   bool gestureDriven = false;
   bool inserted = false;
   bool targetDetached = false;
+};
+
+struct DeferredContainerRemoval {
+  std::shared_ptr<LightNode> container;
+  std::chrono::steady_clock::time_point removableAt;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -108,6 +114,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> exiting;
   std::vector<SharedTag> containersToInsert;
   bool createsOverlay = false;
+  std::vector<std::shared_ptr<LightNode>> containersOverRestoredTargets;
   std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
@@ -144,8 +151,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
   // the window. It lives until its surface stops.
   mutable std::shared_ptr<LightNode> containerOverlay_;
-  // Containers of finished runs that stay over their restored targets until the next pull.
-  mutable std::vector<std::shared_ptr<LightNode>> overlayContainersToRemove_;
+  // Containers of finished runs that stay over their restored targets until at least 17 ms have passed.
+  mutable std::vector<DeferredContainerRemoval> overlayContainersToRemove_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
