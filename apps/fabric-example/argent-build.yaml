@@ -1,0 +1,64 @@
+# Argent Cloud build of the runtime-tests FabricExample.app, run by
+# .github/workflows/runtime-tests-ios-argent.yml:
+#
+#   sim-remote build <monorepo root> --config apps/fabric-example/argent-build.yaml \
+#     --configuration <DebugRuntimeTests|ReleaseRuntimeTests>
+#
+# The whole monorepo is the archive (paths below are relative to its root);
+# a macOS VM on the build service runs the steps and the service keeps the
+# app, to be installed on a remote simulator by build id. The steps mirror the
+# former macos-26 build job: yarn install, the Reanimated package build, pods,
+# xcodebuild (the same workspace and scheme as `runtime-tests-server.js
+# --build-only`; the configuration comes from the command line).
+version: 1
+
+environment:
+  env:
+    YARN_ENABLE_HARDENED_MODE: '0'
+    CI: '1'
+
+build:
+  workspace: apps/fabric-example/ios/FabricExample.xcworkspace
+  scheme: DebugRuntimeTests
+
+steps:
+  # rustup, for the Worklets Oxc plugin.
+  - run: apps/fabric-example/scripts/argent/setup-vm.sh
+  # A Legacy Eval leg ran `yarn toggle-bundle-mode` before uploading, so the
+  # lockfile is already resolved for the tree being built.
+  - run: yarn install --immutable
+  # Builds Worklets (incl. its Oxc plugin, which needs cargo) and Reanimated.
+  - run: PATH="$HOME/.cargo/bin:$PATH" yarn workspace react-native-reanimated build
+  # bundle install + pod update, with a Ruby fallback.
+  - run: apps/fabric-example/scripts/argent/install-pods.sh
+  - xcodebuild: {}
+
+# A cold build (yarn install, the Oxc plugin, pods and ~15 min of xcodebuild)
+# takes about 25 minutes; the service's default is 30.
+timeout_minutes: 60
+
+# Left out of the upload: everything the build does not read, on top of the
+# service's root-level defaults (node_modules/, Pods/, build/, DerivedData/,
+# .git/ ...), which do not reach into the workspaces.
+excludes:
+  - '**/node_modules/'
+  - .yarn/cache/
+  - .yarn/unplugged/
+  - .yarn/install-state.gz
+  # The docs sites are Yarn workspaces (`yarn install --immutable` needs
+  # their package.json) but their assets are ~150 MB the build never reads.
+  - docs/docs-reanimated/static/
+  - docs/docs-worklets/static/
+  - docs/docs-reanimated/build/
+  - docs/docs-worklets/build/
+  # Build outputs a developer's checkout may hold.
+  - '**/lib/'
+  - '**/build/'
+  - '**/target/'
+  - '**/Pods/'
+  - '**/DerivedData/'
+  - '**/.gradle/'
+  # Gitignored, written by a local `pod install`; pins NODE_BINARY to a path
+  # on the developer's machine, which the VM's Xcode script phases would
+  # then follow.
+  - '**/.xcode.env.local'
