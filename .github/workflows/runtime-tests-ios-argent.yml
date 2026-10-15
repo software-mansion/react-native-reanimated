@@ -120,12 +120,15 @@ jobs:
       # resolves to the earlier build's id without a build or an upload.
       - name: Build runtime-tests app on Argent Cloud
         id: build
+        shell: bash # -o pipefail: a failed build must not hand jq an empty object
         run: |
-          # The whole monorepo is the archive; the build id is the only line
-          # on stdout, the plan and the build log are on stderr.
+          # The whole monorepo is the archive. `--json` is the scripting
+          # contract: one result object on stdout, the plan and the build
+          # log on stderr.
           BUILD_ID=$(sim-remote build . \
             --config "$WORKING_DIRECTORY/argent-build.yaml" \
-            --configuration "$CONFIGURATION")
+            --configuration "$CONFIGURATION" \
+            --json | jq -re .build_id)
           echo "built $BUILD_ID (kept by the build service; fetch it with \`sim-remote builds download $BUILD_ID --out FabricExample.app.tar.gz\`)"
           echo "build-id=$BUILD_ID" >> "$GITHUB_OUTPUT"
 

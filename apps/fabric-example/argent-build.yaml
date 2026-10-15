@@ -38,10 +38,9 @@ steps:
 timeout_minutes: 60
 
 # Left out of the upload: everything the build does not read, on top of the
-# service's root-level defaults (node_modules/, Pods/, build/, DerivedData/,
-# .git/ ...), which do not reach into the workspaces.
+# service's defaults (node_modules/, Pods/, DerivedData/, .git/ at any depth;
+# build/ at the root only).
 excludes:
-  - '**/node_modules/'
   - .yarn/cache/
   - .yarn/unplugged/
   - .yarn/install-state.gz
@@ -55,8 +54,6 @@ excludes:
   - '**/lib/'
   - '**/build/'
   - '**/target/'
-  - '**/Pods/'
-  - '**/DerivedData/'
   - '**/.gradle/'
   # Gitignored, written by a local `pod install`; pins NODE_BINARY to a path
   # on the developer's machine, which the VM's Xcode script phases would
