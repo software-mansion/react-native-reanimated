@@ -210,6 +210,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
           continue;
         }
         if (isDetached(beforeNode)) {
+          cancelSharedTransition(sharedTag, transaction);
           transaction.restoreRequests.push_back({sharedTag, beforeNode});
           transaction.restoreRequests.push_back({sharedTag, afterNode});
           continue;
@@ -388,7 +389,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-      if (!config || isDetached(collectedTransition.nodes[BEFORE])) {
+      const bool sourceDetached = isDetached(collectedTransition.nodes[BEFORE]);
+      if (sourceDetached) {
+        cancelSharedTransition(sharedTag, transaction);
+      }
+      if (!config || sourceDetached) {
         for (const auto &node : collectedTransition.nodes) {
           if (node) {
             transaction.restoreRequests.push_back({sharedTag, node});
@@ -782,6 +787,20 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int c
         ShadowViewMutation::InsertMutation(parent->current.tag, run.container->current, containerIndex++));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
+}
+
+// A source that left the screen has nothing to fly from, which also ends the run that still flies between the views.
+void LayoutAnimationsProxy::cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const {
+  const auto elementIt = sharedElements_.find(sharedTag);
+  if (elementIt == sharedElements_.end() || !elementIt->second.run) {
+    return;
+  }
+  auto &element = elementIt->second;
+  react_native_assert(element.run->inserted && "Cancelled shared container is not inserted");
+  const auto containerTag = element.run->container->current.tag;
+  transaction.restoreRequests.push_back({sharedTag, element.run->source});
+  finishSharedTransition(sharedTag, element, transaction);
+  cancelLayoutAnimation(containerTag);
 }
 
 void LayoutAnimationsProxy::finishSharedTransition(
