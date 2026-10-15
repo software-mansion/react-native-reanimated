@@ -237,4 +237,39 @@ describe('Test `interpolate` function', () => {
       );
     });
   });
+
+  describe('An extrapolation config sets each edge on its own', () => {
+    test('each edge takes its own mode', () => {
+      const config = {
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.IDENTITY,
+      };
+
+      expect(interpolate(-1, [0, 1], [0, 10], config)).toBe(0);
+      expect(interpolate(2, [0, 1], [0, 10], config)).toBe(2);
+    });
+
+    test.each([
+      { name: 'left out', config: { extrapolateLeft: Extrapolation.CLAMP } },
+      {
+        name: 'undefined',
+        config: {
+          extrapolateLeft: Extrapolation.CLAMP,
+          extrapolateRight: undefined,
+        },
+      },
+    ])('an edge that is $name extends', ({ config }) => {
+      expect(interpolate(2, [0, 1], [0, 10], config)).toBe(20);
+      expect(interpolate(-1, [0, 1], [0, 10], config)).toBe(0);
+    });
+
+    test.each([
+      { name: 'left', config: { extrapolateLeft: 'bounce' } },
+      { name: 'right', config: { extrapolateRight: 'bounce' } },
+    ])('an unsupported $name edge throws', ({ config }) => {
+      expect(() => interpolate(2, [0, 1], [0, 10], config)).toThrow(
+        'Unsupported value for "interpolate"'
+      );
+    });
+  });
 });

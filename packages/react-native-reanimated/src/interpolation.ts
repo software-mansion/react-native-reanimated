@@ -77,6 +77,23 @@ function isExtrapolate(value: string): value is Extrapolation {
   );
 }
 
+function validateEdge(edge: string | undefined): Extrapolation {
+  'worklet';
+  if (!edge) {
+    return Extrapolation.EXTEND;
+  }
+  if (!isExtrapolate(edge)) {
+    throw new Error(
+      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
+      interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.IDENTITY
+      }})`
+    );
+  }
+  return edge;
+}
+
 // validates extrapolations type
 // if type is correct, converts it to ExtrapolationConfig
 function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
@@ -104,21 +121,10 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   }
 
   // otherwise type is extrapolation config object
-  if (
-    (type.extrapolateLeft && !isExtrapolate(type.extrapolateLeft)) ||
-    (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
-  ) {
-    throw new Error(
-      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
-      interpolate(value, [inputRange], [outputRange], {
-        extrapolateLeft: Extrapolation.CLAMP,
-        extrapolateRight: Extrapolation.IDENTITY
-      }})`
-    );
-  }
-
-  Object.assign(extrapolationConfig, type);
-  return extrapolationConfig;
+  return {
+    extrapolateLeft: validateEdge(type.extrapolateLeft),
+    extrapolateRight: validateEdge(type.extrapolateRight),
+  };
 }
 
 function internalInterpolate(

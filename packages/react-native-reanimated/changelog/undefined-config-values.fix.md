@@ -1,0 +1,1 @@
+Treat an `undefined` value in a `withTiming`, `withDecay` or `useAnimatedSensor` config, or an `undefined` handler passed to `useHandler` or `useAnimatedScrollHandler`, as unset, and report an inverted spring `clamp` that has a `0` bound.

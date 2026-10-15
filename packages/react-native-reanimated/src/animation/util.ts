@@ -17,6 +17,7 @@ export {
   initialUpdaterRun,
   isValidLayoutAnimationProp,
   recognizePrefixSuffix,
+  safeMergeConfigs,
 } from './utilCommon';
 
 export function assertEasingIsWorklet(

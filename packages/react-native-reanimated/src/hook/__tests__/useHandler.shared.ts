@@ -6,6 +6,7 @@ import * as Worklets from 'react-native-worklets';
 import { cloneWorklet, worklet } from '../../jestUtils';
 import type { DependencyList } from '../commonTypes';
 import { useHandler } from '../useHandler';
+import { areWorkletHandlersEqual } from '../useHandlerCommon';
 
 jest.mock('react-native-worklets', () => {
   const actual = jest.requireActual('react-native-worklets');
@@ -235,6 +236,50 @@ export function runCommonTests() {
 
         expect(result.current.doDependenciesDiffer).toBe(false);
       });
+
+      test.each([
+        { name: 'stays undefined', after: { onPress: undefined } },
+        { name: 'is left out', after: {} },
+      ])('when an undefined handler $name', ({ after }) => {
+        const w = worklet();
+        const { result, rerender } = renderUseHandler({
+          onScroll: w,
+          onPress: undefined,
+        });
+
+        rerender({ handlers: { onScroll: w, ...after } });
+
+        expect(result.current.doDependenciesDiffer).toBe(false);
+      });
+
+      test('when every handler stays undefined', () => {
+        const { result, rerender } = renderUseHandler({ onScroll: undefined });
+
+        rerender({ handlers: { onScroll: undefined } });
+
+        expect(result.current.doDependenciesDiffer).toBe(false);
+      });
+    });
+
+    test('is true when a worklet handler becomes undefined', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w });
+
+      rerender({ handlers: { onScroll: undefined } });
+
+      expect(result.current.doDependenciesDiffer).toBe(true);
+    });
+
+    test('is true when an undefined handler becomes a worklet', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({
+        onScroll: w,
+        onPress: undefined,
+      });
+
+      rerender({ handlers: { onScroll: w, onPress: worklet() } });
+
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
   });
 
@@ -269,6 +314,22 @@ export function runCommonTests() {
 
       expect(result.current).toHaveProperty('context');
       expect(result.current).toHaveProperty('doDependenciesDiffer');
+    });
+  });
+
+  describe('areWorkletHandlersEqual', () => {
+    test('matches a handler that is not a worklet only with itself', () => {
+      const handler = jest.fn();
+
+      expect(
+        areWorkletHandlersEqual({ onScroll: handler }, { onScroll: handler })
+      ).toBe(true);
+      expect(
+        areWorkletHandlersEqual(
+          { onScroll: jest.fn() },
+          { onScroll: jest.fn() }
+        )
+      ).toBe(false);
     });
   });
 }

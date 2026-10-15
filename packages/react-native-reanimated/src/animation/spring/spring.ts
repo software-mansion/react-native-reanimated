@@ -5,7 +5,11 @@ import type {
   AnimationCallback,
   Timestamp,
 } from '../../commonTypes';
-import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import {
+  defineAnimation,
+  getReduceMotionForAnimation,
+  safeMergeConfigs,
+} from '../util';
 import type { SpringConfig } from './springConfigs';
 import {
   GentleSpringConfig,
@@ -24,7 +28,6 @@ import {
   getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
-  safeMergeConfigs,
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';

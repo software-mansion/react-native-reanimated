@@ -1,4 +1,5 @@
 'use strict';
+import type { ConfigInput } from '../common';
 import type {
   AnimatableValue,
   Animation,
@@ -13,6 +14,7 @@ import {
   assertEasingIsWorklet,
   defineAnimation,
   getReduceMotionForAnimation,
+  safeMergeConfigs,
 } from './util';
 
 /**
@@ -26,11 +28,14 @@ import {
  *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#config-
  */
-interface TimingConfig {
-  duration?: number;
-  reduceMotion?: ReduceMotion;
-  easing?: EasingFunction | EasingFunctionFactory;
-}
+type TimingConfig = ConfigInput<
+  TimingDefaults & { reduceMotion: ReduceMotion }
+>;
+
+type TimingDefaults = {
+  duration: number;
+  easing: EasingFunction | EasingFunctionFactory;
+};
 
 export type WithTimingConfig = TimingConfig;
 
@@ -86,17 +91,10 @@ export const withTiming = function (
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
-    const config: Required<Omit<TimingConfig, 'reduceMotion'>> = {
-      duration: 300,
-      easing: Easing.inOut(Easing.quad),
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach(
-        (key) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
-      );
-    }
+    const config = safeMergeConfigs<TimingDefaults>(
+      { duration: 300, easing: Easing.inOut(Easing.quad) },
+      userConfig
+    );
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
