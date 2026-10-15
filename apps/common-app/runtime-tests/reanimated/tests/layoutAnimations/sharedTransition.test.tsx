@@ -292,6 +292,27 @@ describe('Shared element transition between boundaries', () => {
     expect(values.hasBorderTopLeftRadius).toBe(false);
   });
 
+  test('runs a custom animation defined outside the worklet', async () => {
+    const finished: boolean[] = [];
+    const width = withTiming(150, { duration: 100000 });
+    const transition = createTransition(
+      finished,
+      SharedTransition.custom(() => {
+        'worklet';
+        return { width };
+      }).reduceMotion(ReduceMotion.Always)
+    );
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('target', 1);
+  });
+
   test('drives a PROGRESS_ANIMATION transition from 0 to 1', async () => {
     const progresses: number[] = [];
     const transition = createProgressTransition(progresses);

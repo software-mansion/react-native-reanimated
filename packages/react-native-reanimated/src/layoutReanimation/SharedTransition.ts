@@ -301,6 +301,10 @@ function mapAnimations(
   mapAnimation: (animation: AnimationObject) => AnimationObject
 ): unknown {
   'worklet';
+  // An animation created on the React Native runtime arrives as its definition.
+  if (typeof value === 'function') {
+    return mapAnimation((value as () => AnimationObject)());
+  }
   if (Array.isArray(value)) {
     return value.map((item) => mapAnimations(item, mapAnimation));
   }

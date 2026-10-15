@@ -154,6 +154,17 @@ describe('SharedTransition', () => {
       );
       expect(animations.transform[0].scale.reduceMotion).toBe(true);
     });
+
+    test('starts an animation defined outside the worklet', () => {
+      const width = () => ({ onFrame: () => true, onStart: () => undefined });
+      const { animations } = runLayoutAnimation(
+        SharedTransition.custom(() => {
+          'worklet';
+          return { width };
+        }).reduceMotion(ReduceMotion.Always)
+      );
+      expect(animations.width.reduceMotion).toBe(true);
+    });
   });
 
   describe('default progress animation', () => {
