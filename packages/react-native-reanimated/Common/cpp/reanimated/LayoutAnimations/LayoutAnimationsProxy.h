@@ -29,11 +29,10 @@ class LayoutAnimationsProxyRegistry;
 
 using namespace facebook;
 
-struct StartAnimationsRecursivelyConfig {
+struct SubtreeRemovalConfig {
   bool shouldRemoveSubviewsWithoutAnimations;
   bool shouldAnimate;
   bool isScreenPop;
-  bool defersTeardown;
 };
 
 struct PendingNodeAnimation {
@@ -276,10 +275,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
   void attachCarriersThatReactMoves(
-      const std::unordered_set<Tag> &deleted,
       const std::unordered_set<Tag> &moved,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
+  void attachRetainedCarriers(
+      const std::shared_ptr<LightNode> &node,
+      const std::unordered_set<Tag> &removals,
+      TransactionMeta &transaction) const;
+  void removeFromParent(
+      const std::shared_ptr<LightNode> &node,
+      ShadowViewMutationList &mutations,
+      ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   std::pair<const SharedTag, SharedElement> &sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
@@ -355,10 +361,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::array<float, 3>
   getTranslateForTransformOrigin(float viewWidth, float viewHeight, const TransformOrigin &transformOrigin) const;
 
-  void handleSubtreeRemoval(
-      const std::shared_ptr<LightNode> &node,
-      const std::shared_ptr<LightNode> &parent,
-      TransactionMeta &transaction) const;
+  void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
@@ -366,12 +369,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void addOngoingAnimations(TransactionMeta &transaction) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
-  bool startAnimationsRecursively(
+  bool planSubtreeRemoval(
       const std::shared_ptr<LightNode> &node,
       TransactionMeta &transaction,
-      StartAnimationsRecursivelyConfig config) const;
-  void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
-      const;
+      SubtreeRemovalConfig config,
+      std::vector<std::shared_ptr<LightNode>> &removals) const;
+  void endAnimationsRecursively(
+      const std::shared_ptr<LightNode> &node,
+      ShadowViewMutationList &mutations,
+      ShadowViewMutationList &rootMutations,
+      bool removeBeforeChildren = false) const;
 
   // MountingOverrideDelegate
 
