@@ -1,0 +1,1 @@
+Fix a display frame with a view at a wrong position on iOS with `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION` when the frame driver takes a layout animation from a native track, or when a view with a native track leaves the tree: the native animations are now removed in the mount report of that transaction.
