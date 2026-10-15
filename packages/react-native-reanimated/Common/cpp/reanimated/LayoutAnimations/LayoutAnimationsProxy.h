@@ -279,6 +279,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction) const;
   std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
+  void cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
