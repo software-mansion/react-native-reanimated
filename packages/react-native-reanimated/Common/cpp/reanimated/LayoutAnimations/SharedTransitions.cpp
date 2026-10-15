@@ -345,6 +345,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
+  run->targetDetached = false;
   return *run;
 }
 
@@ -402,12 +403,16 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
+      auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
       const auto containerTag = run.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
 
       startSharedTransition(containerTag, before, after, config);
+      run.targetDetached = isDetached(afterNode);
+      if (run.targetDetached) {
+        schedulePullOnNextFrame();
+      }
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -657,6 +662,51 @@ bool LayoutAnimationsProxy::isDetached(const std::shared_ptr<LightNode> &node) c
 #else
   return false;
 #endif
+}
+
+// A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
+// origin of its stack. The run follows the target once the platform places it.
+void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &propsParserContext) const {
+  for (auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->targetDetached) {
+      continue;
+    }
+    auto &run = *element.run;
+    const bool targetMapped = isLightNodeMapped(run.target);
+    if (targetMapped && isDetached(run.target)) {
+      schedulePullOnNextFrame();
+      continue;
+    }
+    run.targetDetached = false;
+    if (!targetMapped) {
+      continue;
+    }
+    const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+        run.source->current.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+    if (!config) {
+      continue;
+    }
+    const auto containerTag = run.container->current.tag;
+    resolveLightNodeProps(run.target);
+    auto after = run.target->current;
+    const auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
+    after.layoutMetrics.frame.origin = absolutePositions[0];
+    overrideTransform(after, parseParentTransforms(run.target, absolutePositions, false), propsParserContext);
+    after.tag = containerTag;
+    if (hasPendingLayoutAnimation(containerTag)) {
+      updateLayoutAnimationTarget(containerTag, after, config);
+      continue;
+    }
+    const LayoutAnimation *animation = nullptr;
+    if (const auto it = layoutAnimations_.find(containerTag); it != layoutAnimations_.end()) {
+      animation = &it->second;
+    } else if (const auto it = completedAnimations_.find(containerTag); it != completedAnimations_.end()) {
+      animation = &it->second.animation;
+    }
+    if (animation && animation->finalView.layoutMetrics != after.layoutMetrics) {
+      startSharedTransition(containerTag, animation->currentView, after, config);
+    }
+  }
 }
 
 Tag LayoutAnimationsProxy::allocateContainerTag() const {

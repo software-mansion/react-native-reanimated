@@ -47,6 +47,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
   bool inserted = false;
+  bool targetDetached = false;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -267,6 +268,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   Tag allocateContainerTag() const;
   std::shared_ptr<LightNode> getOrCreateContainerParent() const;
   bool isDetached(const std::shared_ptr<LightNode> &node) const;
+  void followDetachedTargets(const PropsParserContext &propsParserContext) const;
   int containerParentChildCount() const;
 
   SharedTransitionRun &startSharedTransitionRun(
