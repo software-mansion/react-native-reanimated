@@ -48,9 +48,11 @@ function Target({ transition }: { transition: SharedTransition }) {
 function Screens({
   showTarget,
   transition,
+  sourceTag = 'box',
 }: {
   showTarget: boolean;
   transition: SharedTransition;
+  sourceTag?: string | null;
 }) {
   const sourceRef = useTestRef('source');
   return (
@@ -58,7 +60,7 @@ function Screens({
       <SharedTransitionBoundary isActive={!showTarget}>
         <Animated.View
           ref={sourceRef}
-          sharedTransitionTag="box"
+          sharedTransitionTag={sourceTag ?? undefined}
           sharedTransitionStyle={transition}
           style={styles.source}
         />
@@ -125,6 +127,28 @@ describe('Shared element transition between boundaries', () => {
     await expectMountedAtLayout('source', 0);
     await expectMountedAtLayout('target', 1);
   });
+
+  test.each([
+    ['removed', null],
+    ['changed', 'other'],
+  ] as const)(
+    'shows the source again when its tag is ${0}',
+    async ([, sourceTag]) => {
+      const transition = createTransition([]);
+      await render(<Screens showTarget={false} transition={transition} />);
+      await waitForFrames();
+      await render(<Screens showTarget transition={transition} />);
+      await waitForNotification('shared-transition-finished');
+      await waitForFrames();
+      await expectMountedAtLayout('source', 0);
+      await expectMountedAtLayout('target', 1);
+
+      await render(
+        <Screens showTarget transition={transition} sourceTag={sourceTag} />
+      );
+      await expectMountedAtLayout('source', 1);
+    }
+  );
 });
 
 const styles = StyleSheet.create({

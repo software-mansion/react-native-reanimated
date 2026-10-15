@@ -501,6 +501,17 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    std::vector<Tag> sharedTransitionViewTags;
+    for (const auto &item : batch) {
+      if (item.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+        sharedTransitionViewTags.push_back(item.tag);
+      }
+    }
+    if (layoutAnimationsProxyRegistry_ && !sharedTransitionViewTags.empty()) {
+      layoutAnimationsProxyRegistry_->onSharedTransitionConfigured(sharedTransitionViewTags);
+    }
+  }
   return jsi::Value::undefined();
 }
 
@@ -513,6 +524,10 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
+}
+
+jsi::Value ReanimatedModuleProxy::isSensorAvailable(jsi::Runtime &, const jsi::Value &sensorType) const {
+  return animatedSensorModule_.isSensorAvailable(sensorType);
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -1459,6 +1474,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "isSensorAvailable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return strongThis->isSensorAvailable(rt, at<0>(args));
       });
 
   addMethod<4>(

@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use oxc_syntax::identifier::{is_identifier_part, is_identifier_start};
 
 pub fn worklet_hash(s: &str) -> u64 {
@@ -85,6 +83,10 @@ mod tests {
             source_from_filename("/a/b/node_modules/some-lib/dist/index.js"),
             "some-lib_index.js"
         );
+        assert_eq!(
+            source_from_filename(r"C:\a\b\node_modules\some-lib\dist\index.js"),
+            "some-lib_index.js"
+        );
         assert_eq!(source_from_filename(""), "unknownFile");
     }
 }
@@ -131,18 +133,16 @@ pub fn source_from_filename(filename: &str) -> String {
     if filename.is_empty() {
         return "unknownFile".to_string();
     }
-    let path = Path::new(filename);
-    let base = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("unknownFile")
-        .to_string();
+    let parts: Vec<&str> = filename
+        .split(['/', '\\'])
+        .filter(|part| !part.is_empty())
+        .collect();
+    let base = parts.last().copied().unwrap_or("unknownFile");
 
-    let parts: Vec<&str> = filename.split('/').collect();
     if let Some(idx) = parts.iter().position(|p| *p == "node_modules")
         && let Some(lib) = parts.get(idx + 1)
     {
         return format!("{lib}_{base}");
     }
-    base
+    base.to_string()
 }

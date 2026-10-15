@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/RelativeValueInterpolator.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -15,16 +15,16 @@
 namespace reanimated::css {
 
 template <typename... AllowedTypes>
-ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
+RelativeValueInterpolator<AllowedTypes...>::RelativeValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const ResolvableValueInterpolatorConfig &config)
+    const RelativeValueInterpolatorConfig &config)
     : SimpleValueInterpolator<AllowedTypes...>(propertyPath, defaultStyleValue, viewStylesRepository),
       config_(config) {}
 
 template <typename... AllowedTypes>
-folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
+folly::dynamic RelativeValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
     const std::shared_ptr<CSSValue> &fromValue,
     const std::shared_ptr<CSSValue> &toValue,
@@ -44,9 +44,9 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
       .toDynamic();
 }
 
-template class ResolvableValueInterpolator<CSSLength>;
-template class ResolvableValueInterpolator<CSSLength, CSSKeyword>;
-template class ResolvableValueInterpolator<CSSLengthArray>;
-template class ResolvableValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
+template class RelativeValueInterpolator<CSSLength>;
+template class RelativeValueInterpolator<CSSLength, CSSKeyword>;
+template class RelativeValueInterpolator<CSSLengthArray>;
+template class RelativeValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
 
 } // namespace reanimated::css
