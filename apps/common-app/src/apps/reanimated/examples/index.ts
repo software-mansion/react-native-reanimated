@@ -119,10 +119,6 @@ const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
-const HostReplacementEventsExample: React.FC = () =>
-  React.createElement(
-    require('./HostReplacementEventsExample').default as React.FC
-  );
 const InlineStylesAndPropsExample: React.FC = () =>
   React.createElement(
     require('./InlineStylesAndPropsExample').default as React.FC
@@ -332,12 +328,6 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  HostReplacementEventsExample: {
-    icon: '🔄',
-    title: 'Host replacement events',
-    section: REGRESSIONS,
-    screen: HostReplacementEventsExample,
-  },
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
