@@ -340,7 +340,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     }
   }
   if (!run) {
-    run = SharedTransitionRun{.container = createSharedContainer(before)};
+    run = SharedTransitionRun{.container = createSharedContainer(before, transaction)};
     transaction.containersToInsert.push_back(sharedTag);
   }
   run->source = nodes[BEFORE];
@@ -350,9 +350,11 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   return *run;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const ShadowView &before) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(
+    const ShadowView &before,
+    TransactionMeta &transaction) const {
   const auto containerTag = allocateContainerTag();
-  const auto parent = getOrCreateContainerParent();
+  const auto parent = getOrCreateContainerParent(transaction);
   auto containerView = before;
   containerView.tag = containerTag;
   auto node = std::make_shared<LightNode>();
@@ -721,7 +723,7 @@ Tag LayoutAnimationsProxy::allocateContainerTag() const {
   return tag;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy::getOrCreateContainerParent() const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::getOrCreateContainerParent(TransactionMeta &transaction) const {
 #ifdef __APPLE__
   if (setSharedTransitionOverlay_) {
     if (!containerOverlay_) {
@@ -737,6 +739,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::getOrCreateContainerParent() c
       overlay.layoutMetrics = lightNodes_.at(surfaceId_)->current.layoutMetrics;
       containerOverlay_ = std::make_shared<LightNode>();
       containerOverlay_->current = std::move(overlay);
+      transaction.createsOverlay = true;
     }
     return containerOverlay_;
   }
@@ -763,11 +766,9 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int c
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(transaction.containersToInsert.size() * 2 + 2);
-  const auto parent = getOrCreateContainerParent();
+  const auto parent = getOrCreateContainerParent(transaction);
 #ifdef __APPLE__
-  // The overlay exists only while it has containers.
-  const bool createsOverlay = parent == containerOverlay_ && containerIndex == 0;
-  if (createsOverlay) {
+  if (transaction.createsOverlay) {
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(parent->current));
     // The overlay is never inserted, and a recycled view keeps the props of its previous use until an update.
     const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
@@ -938,7 +939,9 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     unmapLightNode(node);
   }
 #ifdef __APPLE__
-  if (containerOverlay_ && containerOverlay_->children.empty()) {
+  // The overlay is attached to its window after a mount, which misses a commit that the mount forces, such as the
+  // snapshot of a dismissed screen, so the overlay stays attached between transitions.
+  if (transaction.surfaceDropped && containerOverlay_) {
     setSharedTransitionOverlay_(surfaceId_, std::nullopt);
     filteredMutations.push_back(ShadowViewMutation::DeleteMutation(containerOverlay_->current));
     containerOverlay_.reset();
