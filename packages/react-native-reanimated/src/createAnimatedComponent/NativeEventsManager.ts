@@ -3,7 +3,6 @@ import { findHostInstance } from '../platform-specific/findHostInstance';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
-  AnimatedComponentProps,
   AnimatedComponentRef,
   INativeEventsManager,
   InitialComponentProps,
@@ -15,31 +14,31 @@ export class NativeEventsManager implements INativeEventsManager {
   readonly #managedComponent: ManagedAnimatedComponent;
   readonly #componentOptions?: ComponentOptions;
   #eventViewTag = -1;
+  #registeredProps: ManagedAnimatedComponent['props'];
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {
     this.#managedComponent = component;
+    this.#registeredProps = component.props;
     this.#componentOptions = options;
     this.#eventViewTag = this.getEventViewTag();
   }
 
   public attachEvents() {
-    executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
+    this.#registeredProps = this.#managedComponent.props;
+    executeForEachEventHandler(this.#registeredProps, (key, handler) => {
       handler.registerForEvents(this.#eventViewTag, key);
     });
   }
 
   public detachEvents() {
-    executeForEachEventHandler(
-      this.#managedComponent.props,
-      (_key, handler) => {
-        handler.unregisterFromEvents(this.#eventViewTag);
-      }
-    );
+    executeForEachEventHandler(this.#registeredProps, (_key, handler) => {
+      handler.unregisterFromEvents(this.#eventViewTag);
+    });
   }
 
-  public updateEvents(
-    prevProps: AnimatedComponentProps<InitialComponentProps>
-  ) {
+  public updateEvents() {
+    const prevProps = this.#registeredProps;
+    this.#registeredProps = this.#managedComponent.props;
     const computedEventTag = this.getEventViewTag(true);
     // If the event view tag changes, we need to completely re-mount all events
     if (this.#eventViewTag !== computedEventTag) {
@@ -132,7 +131,7 @@ function isWorkletEventHandler(
 }
 
 function executeForEachEventHandler(
-  props: AnimatedComponentProps<InitialComponentProps>,
+  props: ManagedAnimatedComponent['props'],
   callback: (
     key: string,
     handler: InstanceType<typeof WorkletEventHandler>

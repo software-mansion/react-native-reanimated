@@ -200,6 +200,8 @@ export default class AnimatedComponent
   }
 
   _attachHostBindings() {
+    this._NativeEventsManager?.updateEvents();
+
     // Configs registered so far, including this update's from the snapshot,
     // went to the previous tag.
     this._configureLayoutAnimation(
@@ -334,10 +336,10 @@ export default class AnimatedComponent
     );
   }
 
-  componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
+  componentDidUpdate() {
     this._refreshComponentRef();
 
-    this._NativeEventsManager?.updateEvents(prevProps);
+    this._NativeEventsManager?.updateEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
   }
