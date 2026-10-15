@@ -1,4 +1,10 @@
 import {
+  createSynchronizable,
+  RuntimeKind,
+  scheduleOnRuntime,
+} from 'react-native-worklets';
+
+import {
   describe,
   expect,
   createOrderConstraint,
@@ -8,16 +14,10 @@ import {
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
 import { dispatchWorklet } from './dispatchWorklet';
-import {
-  createSynchronizable,
-  RuntimeKind,
-  scheduleOnRuntime,
-} from 'react-native-worklets';
-
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
-import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME } from './executionOrderConfigs/runOnRuntime';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './executionOrderConfigs/threeMethodsScheduling';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
+import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
 import { getMethodMap, MethodsName } from './executionOrderConfigs/utils';
 
 const ANIMATION_QUEUE_POLLING_RATE = 16;

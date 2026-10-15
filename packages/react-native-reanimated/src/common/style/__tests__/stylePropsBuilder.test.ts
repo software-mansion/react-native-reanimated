@@ -1,7 +1,13 @@
 'use strict';
 
+import { logger } from '../../logger';
 import { ValueProcessorTarget } from '../../types';
-import { createNativePropsBuilder } from '../propsBuilder';
+import { ERROR_MESSAGES as COLOR_ERROR_MESSAGES } from '../processors/colors';
+import { WARN_MESSAGES } from '../processStyleValue';
+import { createNativePropsBuilder, stylePropsBuilder } from '../propsBuilder';
+
+const warn = jest.fn();
+logger.warn = warn;
 
 describe('createNativePropsBuilder', () => {
   describe('build without context', () => {
@@ -221,6 +227,61 @@ describe('createNativePropsBuilder', () => {
         ValueProcessorTarget.CSS,
         ValueProcessorTarget.Default,
       ]);
+    });
+  });
+});
+
+describe('stylePropsBuilder', () => {
+  describe('a padded string value parses like a bare one', () => {
+    test.each([
+      ['backgroundColor', '  red  ', 'red'],
+      ['color', '\n#ff0000\n', '#ff0000'],
+      ['borderTopColor', '  rgba(0, 0, 0, 0.5)  ', 'rgba(0, 0, 0, 0.5)'],
+      ['shadowColor', '\t#0f0', '#0f0'],
+      [
+        'transform',
+        '  translate(25, 25) scale(2)  ',
+        'translate(25, 25) scale(2)',
+      ],
+      ['transformOrigin', '  left top  ', 'left top'],
+      ['boxShadow', '  0px 4px 8px red  ', '0px 4px 8px red'],
+      ['filter', '  blur(5px) brightness(0.5)  ', 'blur(5px) brightness(0.5)'],
+      ['fontWeight', '  bold  ', 'bold'],
+      ['aspectRatio', '  1 / 2  ', '1 / 2'],
+      ['gap', '  8  ', '8'],
+    ])('%s', (property, padded, bare) => {
+      expect(stylePropsBuilder.build({ [property]: padded })).toEqual(
+        stylePropsBuilder.build({ [property]: bare })
+      );
+    });
+  });
+
+  test.each([
+    ['drop-shadow(0 0 4px notacolor)', 'notacolor'],
+    ['drop-shadow(2em 4em)', '4em'],
+  ])('ignores the invalid filter %s with a warning', (filter, color) => {
+    expect(stylePropsBuilder.build({ filter, opacity: 1 })).toEqual({
+      opacity: 1,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue(COLOR_ERROR_MESSAGES.invalidColor(color)),
+      { strict: true }
+    );
+    warn.mockClear();
+  });
+
+  test('trims every padded value of a multi-property style', () => {
+    expect(
+      stylePropsBuilder.build({
+        backgroundColor: ' blue ',
+        transform: '\n  rotate(45deg)\n',
+        opacity: 0.5,
+      })
+    ).toEqual({
+      backgroundColor: 4278190335,
+      transform: [{ rotate: '45deg' }],
+      opacity: 0.5,
     });
   });
 });

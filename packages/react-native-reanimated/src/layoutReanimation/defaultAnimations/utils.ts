@@ -19,6 +19,7 @@ export function resolveTransformSlot<
   const [key, defaultValue] = Object.entries(entry)[0];
   const value =
     values?.[key as keyof typeof values] ??
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     (values?.transform?.[index] as UnknownRecord | undefined)?.[key] ??
     defaultValue;
   return { key: key as keyof TEntry, value };

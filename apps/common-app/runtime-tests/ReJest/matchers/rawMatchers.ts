@@ -1,13 +1,14 @@
-import type { TestValue, TrackerCallCount } from '../types';
-import { ComparisonMode } from '../types';
-import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
-import { runOnUIBlocking } from '../utils/runOnUIBlocking';
-import { getComparator } from './Comparators';
 import {
   createSynchronizable,
   getRuntimeKind,
   RuntimeKind,
 } from 'react-native-worklets';
+
+import type { TestValue, TrackerCallCount } from '../types';
+import { ComparisonMode } from '../types';
+import { runOnUIBlocking } from '../utils/runOnUIBlocking';
+import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
+import { getComparator } from './Comparators';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];

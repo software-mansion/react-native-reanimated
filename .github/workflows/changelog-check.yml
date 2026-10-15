@@ -3,6 +3,10 @@ name: Changelog check
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -21,4 +25,4 @@ jobs:
       - name: Require changelog entries
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: node --experimental-strip-types scripts/check-changelog.mts "$BASE_SHA"
+        run: node --experimental-strip-types scripts/changelog/check.mts "$BASE_SHA"

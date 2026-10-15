@@ -117,14 +117,14 @@ std::shared_ptr<Serializable> extractSerializable(
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet));
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet));
 }
 
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
 }
 
 void runSyncOnRuntime(
@@ -132,18 +132,18 @@ void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1) {
-  workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
+  workletRuntime->runSyncAndDiscard(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
 }
 
 void runSyncOnRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime, const facebook::jsi::Function &function) {
-  workletRuntime->runSync(function);
+  workletRuntime->runSyncAndDiscard(function);
 }
 
 void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const facebook::jsi::Function &function,
     const facebook::jsi::Value &arg0) {
-  workletRuntime->runSync(function, arg0);
+  workletRuntime->runSyncAndDiscard(function, arg0);
 }
 
 std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(

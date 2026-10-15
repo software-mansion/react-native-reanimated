@@ -6,6 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 import {
   callTracker,
@@ -31,7 +32,6 @@ import {
 } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);

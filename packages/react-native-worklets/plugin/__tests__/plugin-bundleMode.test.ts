@@ -14,7 +14,7 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
-// The OXC transform writes its files from Rust, so they never reach the `fs`
+// The Oxc transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
   return ((
@@ -53,6 +53,10 @@ const TOGGLE_PATH_CASES: ReadonlyArray<[label: string, filename: string]> = [
   [
     'built mode-check',
     'react-native-worklets/lib/module/debug/bundleMode.native.js',
+  ],
+  [
+    'prepareBundleMode polyfill',
+    'react-native-worklets/bundleMode/polyfills/prepareBundleMode.js',
   ],
 ];
 

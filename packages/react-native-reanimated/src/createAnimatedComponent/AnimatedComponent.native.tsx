@@ -276,18 +276,21 @@ export default class AnimatedComponent
   }
 
   componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
-    this._configureLayoutAnimation(
-      LayoutAnimationType.LAYOUT,
-      this.props.layout,
-      prevProps.layout
-    );
-    this._configureLayoutAnimation(
-      LayoutAnimationType.EXITING,
-      this.props.exiting,
-      prevProps.exiting
-    );
-    this._configureSharedTransition();
-
+    // The ref callback clears the cached view info when the host view is
+    // replaced; the snapshot then registered this update's configs for the old
+    // tag.
+    if (this._viewInfo === undefined) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.LAYOUT,
+        this.props.layout
+      );
+      this._configureLayoutAnimation(
+        LayoutAnimationType.EXITING,
+        this.props.exiting
+      );
+      this._sharedTransition = undefined;
+      this._configureSharedTransition();
+    }
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -380,29 +383,45 @@ export default class AnimatedComponent
       }
       return;
     }
-    this._sharedTransitionTag = this.props.sharedTransitionTag;
     const sharedTransition =
       this.props.sharedTransitionStyle ??
       this._sharedTransition ??
       new SharedTransition();
-    if (this._sharedTransition !== sharedTransition) {
-      updateLayoutAnimations(
-        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-        useNativeId
-          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-        maybeBuild(sharedTransition),
-        undefined,
-        this.props.sharedTransitionTag
-      );
-      this._sharedTransition = sharedTransition;
+    if (
+      this._sharedTransition === sharedTransition &&
+      this._sharedTransitionTag === this.props.sharedTransitionTag
+    ) {
+      return;
     }
+    updateLayoutAnimations(
+      useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+      useNativeId
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      maybeBuild(sharedTransition),
+      undefined,
+      this.props.sharedTransitionTag
+    );
+    this._sharedTransition = sharedTransition;
+    this._sharedTransitionTag = this.props.sharedTransitionTag;
   }
 
-  // This is a component lifecycle method from React, therefore we are not calling it directly.
-  // It is called before the component gets rerendered. This way we can access components' position before it changed
-  // and later on, in componentDidUpdate, calculate translation for layout transition.
-  getSnapshotBeforeUpdate() {
+  // Android pulls the mounting transaction inside the React commit, so the
+  // configs for this update must be published here, not in componentDidUpdate.
+  getSnapshotBeforeUpdate(
+    prevProps: AnimatedComponentProps<InitialComponentProps>
+  ) {
+    this._configureLayoutAnimation(
+      LayoutAnimationType.LAYOUT,
+      this.props.layout,
+      prevProps.layout
+    );
+    this._configureLayoutAnimation(
+      LayoutAnimationType.EXITING,
+      this.props.exiting,
+      prevProps.exiting
+    );
+    this._configureSharedTransition();
     // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
     return null;
   }

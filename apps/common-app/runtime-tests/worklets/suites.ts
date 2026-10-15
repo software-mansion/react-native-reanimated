@@ -7,6 +7,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'memory',
     importTest: () => {
       require('./tests/memory/createSerializable.test');
+      require('./tests/memory/createSerializableTyped.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
       require('./tests/memory/retainingSerializable.test');
@@ -25,6 +26,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
+      require('./tests/runtimes/runOnRNSync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
       require('./tests/runtimes/scheduleOnUI.test');
       require('./tests/runtimes/runOnRuntimeSync.test');
@@ -41,11 +43,19 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'bundle mode core',
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
-      require('./tests/runtimes/turboModuleRegistryShim.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
     disabled: !isBundleModeEnabled() || !__DEV__,
+  },
+  {
+    testSuiteName: 'networking',
+    importTest: () => {
+      require('./tests/networking/api.test');
+      require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
+    },
+    disabled: !isBundleModeEnabled(),
   },
   {
     testSuiteName: 'run loop',

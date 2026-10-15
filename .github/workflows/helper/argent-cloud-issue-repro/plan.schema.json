@@ -1,0 +1,199 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feasible",
+    "reason",
+    "summary",
+    "analysis",
+    "library",
+    "platform",
+    "reactNativeVersion",
+    "reanimatedVersion",
+    "workletsVersion",
+    "architecture",
+    "appKind",
+    "expoSdkVersion",
+    "reproductionSource",
+    "extraDependencies",
+    "staticFeatureFlags",
+    "reproductionSteps",
+    "verification",
+    "limitations",
+    "expectedBehavior",
+    "actualBehavior"
+  ],
+  "properties": {
+    "feasible": {
+      "type": "boolean",
+      "description": "false only as a last resort: the behavior cannot occur on an iOS simulator, needs a Debug bundle or Metro, needs custom native code with no reachable public-API path, or the issue makes no claim about behavior that an app can show."
+    },
+    "reason": {
+      "type": "string",
+      "description": "One or two sentences. When feasible is false, why. When feasible is true, how the plan was derived."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph that describes, in your own words, the behavior that the issue reports."
+    },
+    "analysis": {
+      "type": "string",
+      "description": "Where the behavior comes from: the code in the library sources that causes it, with file paths and line numbers, and whether the claims of the issue agree with that code. Required also when feasible is false."
+    },
+    "library": {
+      "type": "string",
+      "enum": ["reanimated", "worklets"],
+      "description": "The package that the issue is about."
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["ios"],
+      "description": "Only ios is supported by the reproduction runner."
+    },
+    "reactNativeVersion": {
+      "type": "string",
+      "description": "Exact react-native version that exists on npm, for example 0.81.4."
+    },
+    "reanimatedVersion": {
+      "type": "string",
+      "description": "Exact react-native-reanimated version that exists on npm."
+    },
+    "workletsVersion": {
+      "type": ["string", "null"],
+      "description": "Exact react-native-worklets version that exists on npm, or null for Reanimated 3.x."
+    },
+    "architecture": {
+      "type": "string",
+      "enum": ["fabric", "paper"]
+    },
+    "appKind": {
+      "type": "string",
+      "enum": ["rn-cli", "expo"],
+      "description": "rn-cli scaffolds with @react-native-community/cli. expo scaffolds with create-expo-app and runs expo prebuild."
+    },
+    "expoSdkVersion": {
+      "type": ["string", "null"],
+      "description": "Expo SDK major, for example 54, when appKind is expo. null otherwise."
+    },
+    "reproductionSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "url", "copiedFrom"],
+      "description": "Where the code in argent-cloud-work/repro/ came from. Informational only. The build never installs or executes the linked reproduction.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["repository", "snack", "issue-text", "authored"]
+        },
+        "url": {
+          "type": ["string", "null"]
+        },
+        "copiedFrom": {
+          "type": "array",
+          "description": "Paths inside the linked reproduction that you copied or adapted, relative to its root.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "extraDependencies": {
+      "type": "array",
+      "description": "npm packages, besides react-native, react-native-reanimated and react-native-worklets, that the app needs. Only names from allowed-dependencies.json are accepted, each with an exact version that exists on npm.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "staticFeatureFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reanimated", "worklets"],
+      "description": "Static feature flags that the reproduction needs with a value that is not the default. The build job writes them to the package.json of the app. Each name must be a key of src/featureFlags/staticFlags.json of that package at the chosen version. Both lists are empty when the reproduction needs the defaults.",
+      "properties": {
+        "reanimated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "worklets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reproductionSteps": {
+      "type": "array",
+      "description": "Ordered steps that a tester performs in the built app on a simulator. Each step names what to tap or do and what to look at.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "how", "passSignal", "failSignal"],
+      "description": "How the tester decides whether the behavior that the issue reports reproduced.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["screen", "crash", "other"]
+        },
+        "how": {
+          "type": "string",
+          "description": "What to observe on screen, for example a text that the app renders. The tester cannot read memory, logs or the output of other tools."
+        },
+        "passSignal": {
+          "type": "string",
+          "description": "What the tester sees when the behavior that the issue reports does NOT show."
+        },
+        "failSignal": {
+          "type": "string",
+          "description": "What the tester sees when the behavior that the issue reports shows."
+        }
+      }
+    },
+    "limitations": {
+      "type": ["string", "null"],
+      "description": "What the simulator run cannot show about the issue, when the plan covers only a part of it. null when the plan covers the whole issue."
+    },
+    "expectedBehavior": {
+      "type": "string"
+    },
+    "actualBehavior": {
+      "type": "string"
+    }
+  }
+}

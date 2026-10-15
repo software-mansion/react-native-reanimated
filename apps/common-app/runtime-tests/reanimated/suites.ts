@@ -66,10 +66,37 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'event handlers',
+    importTest: () => {
+      require('./tests/events/useAnimatedScrollHandlerMemo.test');
+    },
+  },
+  {
     testSuiteName: 'props',
     importTest: () => {
       require('./tests/props/backgroundImage.test');
+      require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+      require('./tests/props/nonLayoutPropAndRender.test');
+      require('./tests/props/mountedViewProps.test');
+      require('./tests/props/cssArrayKeyframes.test');
+    },
+  },
+  {
+    testSuiteName: 'css animations',
+    importTest: () => {
+      require('./tests/css/animationCancellation.test');
+      require('./tests/css/backgroundImage.test');
+      require('./tests/css/platformColor.test');
+      require('./tests/css/transformNone.test');
+      require('./tests/css/transitionOnRecycledView.test');
+    },
+  },
+  {
+    testSuiteName: 'react-freeze',
+    importTest: () => {
+      require('./tests/reactFreeze/propDriven.test');
+      require('./tests/reactFreeze/nativeStack.test');
     },
   },
   {
@@ -108,6 +135,48 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     // Remove disabled and skipByDefault when fixed
     disabled: true,
     skipByDefault: true,
+  },
+  {
+    testSuiteName: 'layout animation updates',
+    importTest: () => {
+      require('./tests/layoutAnimations/layout/propUpdates.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations view flattening',
+    importTest: () => {
+      require('./tests/layoutAnimations/flattening.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations entering',
+    importTest: () => {
+      require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations nested text',
+    importTest: () => {
+      require('./tests/layoutAnimations/nestedText.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations re-created views',
+    importTest: () => {
+      require('./tests/layoutAnimations/recreatedViews.test');
+    },
+  },
+  {
+    testSuiteName: 'shared element transitions',
+    importTest: () => {
+      require('./tests/layoutAnimations/sharedTransition.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations native stack removal',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeStackRemoval.test');
+    },
   },
   {
     testSuiteName: 'keyframe animations',

@@ -33,7 +33,6 @@ const rule: TSESLint.RuleModule<'useGlobalThis', []> = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 
 export default rule;

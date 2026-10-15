@@ -5,6 +5,7 @@ const PREFIX = '[Reanimated]';
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+const loggedMessages = new Set<string>();
 
 export enum ReanimatedLogLevel {
   warn = 1,
@@ -126,6 +127,25 @@ export const logger = {
   warn(message: string, options: LogOptions = {}) {
     'worklet';
     handleLog(ReanimatedLogLevel.warn, message, options);
+  },
+  warnOnce(message: string, level: number) {
+    'worklet';
+    if (getLoggerConfig().level > ReanimatedLogLevel.warn) {
+      return;
+    }
+
+    const frames = new Error().stack
+      ?.split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('at ') || line.includes('@'));
+    const frame =
+      Number.isInteger(level) && level >= 0 ? frames?.[level + 1] : undefined;
+    const key = JSON.stringify([message, frame ?? null]);
+    if (loggedMessages.has(key)) {
+      return;
+    }
+    loggedMessages.add(key);
+    handleLog(ReanimatedLogLevel.warn, message, {});
   },
   error(message: string, options: LogOptions = {}) {
     'worklet';

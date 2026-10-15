@@ -26,4 +26,32 @@ struct FieldValidator {
   std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
 };
 
+/// Absent fields pass: complex CSS values keep their defaults for anything left out.
+inline bool canConstructFields(const folly::dynamic &value, const std::vector<FieldValidator> &validators) {
+  if (!value.isObject()) {
+    return false;
+  }
+  for (const auto &validator : validators) {
+    if (value.count(validator.fieldName) > 0 && !validator.validateDynamic(value[validator.fieldName])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline bool
+canConstructFields(jsi::Runtime &rt, const jsi::Value &jsiValue, const std::vector<FieldValidator> &validators) {
+  if (!jsiValue.isObject()) {
+    return false;
+  }
+  const auto &obj = jsiValue.asObject(rt);
+  for (const auto &validator : validators) {
+    const auto *fieldName = validator.fieldName.c_str();
+    if (obj.hasProperty(rt, fieldName) && !validator.validateJSI(rt, obj.getProperty(rt, fieldName))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace reanimated::css
