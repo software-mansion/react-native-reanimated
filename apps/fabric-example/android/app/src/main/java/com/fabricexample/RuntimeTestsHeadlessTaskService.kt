@@ -12,6 +12,7 @@ class RuntimeTestsHeadlessTaskService : HeadlessJsTaskService() {
         MainApplication.runtimeTestsLibrary = it
       }
     }
+    RuntimeTestsBundlerHost.apply(this, intent)
     return super.onStartCommand(intent, flags, startId)
   }
 

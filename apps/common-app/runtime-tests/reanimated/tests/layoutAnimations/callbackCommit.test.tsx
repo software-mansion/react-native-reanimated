@@ -19,7 +19,7 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import { hasNativeLayoutStarts, sample } from './nativeLayoutTestKit';
+import { hasNativeLayoutRoute, sample } from './nativeLayoutTestKit';
 
 const DURATION = 1200;
 const TRAVEL = 200;
@@ -114,16 +114,16 @@ describe('a commit from a layout animation callback', () => {
       moveBox(TRAVEL);
       await wait(DURATION / 4);
       const tag = getTestComponent(BOX_REF).getTag();
-      if (hasNativeLayoutStarts) {
-        const { playbackKeys } = await sample(tag, 'Position');
-        expect(playbackKeys.length).toBe(hasLeafCallback ? 0 : 2);
+      if (hasNativeLayoutRoute) {
+        const { playbacks } = await sample(tag, 'Position');
+        expect(playbacks.length).toBe(hasLeafCallback ? 0 : 2);
       }
       await render(<Box top={DROP} hasLeafCallback={hasLeafCallback} />);
       await wait(2.5 * DURATION);
       expect(callbacks.join()).toBe('false,false,true');
-      if (hasNativeLayoutStarts) {
-        const { model, playbackKeys } = await sample(tag, 'Position');
-        expect(playbackKeys.length).toBe(0);
+      if (hasNativeLayoutRoute) {
+        const { model, playbacks } = await sample(tag, 'Position');
+        expect(playbacks.length).toBe(0);
         expect(Math.abs(model[0] - (TRAVEL / 2 + BOX_SIZE / 2)) < 0.01).toBe(
           true
         );
