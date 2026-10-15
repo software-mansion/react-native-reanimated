@@ -263,7 +263,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
         startProgressTransition(
             run.carrier->current.tag,
-            asCarrierView(before, run.carrier, propsParserContext),
+            run.carrierStartView,
             asCarrierView(after, run.carrier, propsParserContext),
             ownCarrierView(after, run.carrier, propsParserContext).props);
       }
@@ -592,7 +592,7 @@ void LayoutAnimationsProxy::attachCarrier(
   const auto parentTag = parent->current.tag;
   mutations.push_back(
       ShadowViewMutation::InsertMutation(parentTag, homeView, parent->hostIndex(parent->positionOf(node))));
-  mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, homeView, parentTag));
+  mutations.push_back(createPropsUpdate(mounted, homeView, parentTag, propsParserContext));
   hideInSharedElement(sharedTag, node);
 }
 
@@ -691,7 +691,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
 
       startSharedTransition(
           run.carrier->current.tag,
-          asCarrierView(before, run.carrier, propsParserContext),
+          run.carrierStartView,
           asCarrierView(after, run.carrier, propsParserContext),
           ownCarrierView(after, run.carrier, propsParserContext).props,
           config);
@@ -761,8 +761,8 @@ void LayoutAnimationsProxy::hideTransitioningViews(
       continue;
     }
     hideInSharedElement(sharedTag, node);
-    auto m = ShadowViewMutation::UpdateMutation(
-        shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
+    auto m = createPropsUpdate(
+        shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag, propsParserContext);
     hiddenMutations.push_back(m);
   }
   auto &filteredMutations = transaction.filteredMutations;
@@ -1040,10 +1040,11 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
       continue;
     }
     const auto opacity = getViewProps(view).opacity;
-    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+    filteredMutations.push_back(createPropsUpdate(
         cloneViewWithoutOpacity(view, propsParserContext),
         cloneViewWithOpacity(view, opacity, propsParserContext),
-        parent->current.tag));
+        parent->current.tag,
+        propsParserContext));
   }
 
   std::erase_if(sharedElements_, [](const auto &entry) {
