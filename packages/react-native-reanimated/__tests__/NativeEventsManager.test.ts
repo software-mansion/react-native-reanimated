@@ -20,7 +20,7 @@ jest.mock('../src/featureFlags', () => ({
 }));
 
 type TestComponent = {
-  _componentRef: { __nativeTag: number };
+  _componentRef: { __nativeTag: number } | null;
   props: AnimatedComponentProps<InitialComponentProps>;
   getComponentViewTag: () => number;
 };
@@ -104,15 +104,62 @@ describe('NativeEventsManager', () => {
 
     expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
   });
+
+  test('waits for a valid host before attaching events', () => {
+    const { component, handler, manager } = setup(-1);
+
+    expect(handler.registerForEvents).not.toHaveBeenCalled();
+
+    component._componentRef = { __nativeTag: 2 };
+    manager.updateEvents();
+
+    expect(handler.registerForEvents).toHaveBeenCalledTimes(1);
+    expect(handler.registerForEvents).toHaveBeenCalledWith(2, 'onScroll');
+  });
+
+  test('does not register added or replaced handlers without a host', () => {
+    const { component, handler, manager } = setup();
+    component._componentRef = null;
+    manager.updateEvents();
+
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.registerForEvents).toHaveBeenCalledTimes(1);
+
+    const nextHandler = makeHandler();
+    const addedHandler = makeHandler();
+    component.props = {
+      onScroll: { workletEventHandler: nextHandler },
+      onMomentumScrollEnd: { workletEventHandler: addedHandler },
+    };
+    manager.updateEvents();
+    manager.updateEvents();
+
+    expect(nextHandler.registerForEvents).not.toHaveBeenCalled();
+    expect(addedHandler.registerForEvents).not.toHaveBeenCalled();
+
+    component._componentRef = { __nativeTag: 2 };
+    manager.updateEvents();
+
+    expect(nextHandler.registerForEvents).toHaveBeenCalledTimes(1);
+    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(2, 'onScroll');
+    expect(addedHandler.registerForEvents).toHaveBeenCalledTimes(1);
+    expect(addedHandler.registerForEvents).toHaveBeenCalledWith(
+      2,
+      'onMomentumScrollEnd'
+    );
+    manager.detachEvents();
+    expect(nextHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
+    expect(addedHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
+  });
 });
 
-function setup() {
+function setup(viewTag = 1) {
   const handler = makeHandler();
   const component: TestComponent = {
-    _componentRef: { __nativeTag: 1 },
+    _componentRef: { __nativeTag: viewTag },
     props: { onScroll: { workletEventHandler: handler } },
     getComponentViewTag() {
-      return this._componentRef.__nativeTag;
+      return this._componentRef?.__nativeTag ?? -1;
     },
   };
   const manager = new NativeEventsManager(

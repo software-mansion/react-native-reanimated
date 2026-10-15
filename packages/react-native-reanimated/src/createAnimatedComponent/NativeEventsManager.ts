@@ -25,6 +25,9 @@ export class NativeEventsManager implements INativeEventsManager {
 
   public attachEvents() {
     this.#registeredProps = this.#managedComponent.props;
+    if (this.#eventViewTag === -1) {
+      return;
+    }
     executeForEachEventHandler(this.#registeredProps, (key, handler) => {
       handler.registerForEvents(this.#eventViewTag, key);
     });
@@ -51,6 +54,10 @@ export class NativeEventsManager implements INativeEventsManager {
       this.#eventViewTag = computedEventTag;
       // Attach the events with a new viewTag
       this.attachEvents();
+      return;
+    }
+
+    if (this.#eventViewTag === -1) {
       return;
     }
 
