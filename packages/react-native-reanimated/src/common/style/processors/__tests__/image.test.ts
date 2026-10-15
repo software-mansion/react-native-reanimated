@@ -12,11 +12,12 @@ describe(processObjectFit, () => {
     expect(processObjectFit(objectFit)).toEqual({ resizeMode });
   });
 
-  test('throws an error for invalid objectFit', () => {
-    expect(() => processObjectFit('invalid')).toThrow(
-      new Error(
-        `[Reanimated] ${ERROR_MESSAGES.unsupportedObjectFit('invalid')}`
-      )
-    );
-  });
+  test.each(['invalid', 'toString'])(
+    'throws an error for invalid objectFit %s',
+    (value) => {
+      expect(() => processObjectFit(value)).toThrow(
+        new Error(`[Reanimated] ${ERROR_MESSAGES.unsupportedObjectFit(value)}`)
+      );
+    }
+  );
 });

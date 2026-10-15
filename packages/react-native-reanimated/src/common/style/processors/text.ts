@@ -17,12 +17,15 @@ const VERTICAL_ALIGN_TO_TEXT_ALIGN_VERTICAL: Record<string, string> = {
 
 export const processVerticalAlign: ValueProcessor<string> = (value) => {
   'worklet';
-  const textAlignVertical =
-    VERTICAL_ALIGN_TO_TEXT_ALIGN_VERTICAL[value as string];
-  if (textAlignVertical === undefined) {
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      VERTICAL_ALIGN_TO_TEXT_ALIGN_VERTICAL,
+      value
+    )
+  ) {
     throw new Error(
-      `[Reanimated] ${ERROR_MESSAGES.unsupportedVerticalAlign(value as string)}`
+      `[Reanimated] ${ERROR_MESSAGES.unsupportedVerticalAlign(value)}`
     );
   }
-  return { textAlignVertical };
+  return { textAlignVertical: VERTICAL_ALIGN_TO_TEXT_ALIGN_VERTICAL[value] };
 };

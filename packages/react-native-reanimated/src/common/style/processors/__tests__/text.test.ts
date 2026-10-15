@@ -11,11 +11,14 @@ describe(processVerticalAlign, () => {
     expect(processVerticalAlign(verticalAlign)).toEqual({ textAlignVertical });
   });
 
-  test('throws an error for invalid verticalAlign', () => {
-    expect(() => processVerticalAlign('invalid')).toThrow(
-      new Error(
-        `[Reanimated] ${ERROR_MESSAGES.unsupportedVerticalAlign('invalid')}`
-      )
-    );
-  });
+  test.each(['invalid', 'toString'])(
+    'throws an error for invalid verticalAlign %s',
+    (value) => {
+      expect(() => processVerticalAlign(value)).toThrow(
+        new Error(
+          `[Reanimated] ${ERROR_MESSAGES.unsupportedVerticalAlign(value)}`
+        )
+      );
+    }
+  );
 });

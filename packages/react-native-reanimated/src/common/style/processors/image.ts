@@ -18,11 +18,10 @@ const OBJECT_FIT_TO_RESIZE_MODE: Record<string, string> = {
 
 export const processObjectFit: ValueProcessor<string> = (value) => {
   'worklet';
-  const resizeMode = OBJECT_FIT_TO_RESIZE_MODE[value as string];
-  if (resizeMode === undefined) {
+  if (!Object.prototype.hasOwnProperty.call(OBJECT_FIT_TO_RESIZE_MODE, value)) {
     throw new Error(
-      `[Reanimated] ${ERROR_MESSAGES.unsupportedObjectFit(value as string)}`
+      `[Reanimated] ${ERROR_MESSAGES.unsupportedObjectFit(value)}`
     );
   }
-  return { resizeMode };
+  return { resizeMode: OBJECT_FIT_TO_RESIZE_MODE[value] };
 };
