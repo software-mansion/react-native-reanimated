@@ -29,7 +29,8 @@ end
 project 'FabricExample.xcodeproj',
         'Debug' => :debug,
         'DebugRuntimeTests' => :debug,
-        'Release' => :release
+        'Release' => :release,
+        'ReleaseRuntimeTests' => :release
 
 target 'FabricExample' do
   config = use_native_modules!
@@ -46,6 +47,13 @@ target 'FabricExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
     )
+
+    installer.pods_project.targets.select { |target| target.name == 'RNReanimated' }.each do |target|
+      target.build_configurations.select { |build_configuration| build_configuration.name.end_with?('RuntimeTests') }.each do |build_configuration|
+        definitions = Array(build_configuration.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || '$(inherited)')
+        build_configuration.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = definitions + ['REANIMATED_RUNTIME_TEST_HOOKS=1']
+      end
+    end
 
     if ENV['USE_CCACHE_LAUNCHER'] == '1'
       ccache_path = `command -v ccache`.strip

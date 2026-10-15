@@ -95,7 +95,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &callback);
 
   jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Gives the callback the native animation trace events recorded since the last call.
   void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
   void

@@ -11,7 +11,7 @@ typedef enum class LayoutAnimationType : std::uint8_t {
   PROGRESS = 6,
 } LayoutAnimationType;
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 /// The roadmap objective that gave the native route to the type, for the development trace.
 inline std::uint8_t traceObjectiveOf(const LayoutAnimationType type) {
   return type == LayoutAnimationType::LAYOUT ? 7 : 11;

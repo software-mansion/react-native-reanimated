@@ -1,0 +1,1 @@
+Keep the native animation test hooks of iOS in an optimized build when the app defines `REANIMATED_RUNTIME_TEST_HOOKS`, so that Release runtime tests can check the native animation route; a production build has no hooks.
