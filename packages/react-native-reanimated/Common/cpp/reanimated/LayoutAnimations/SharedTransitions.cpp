@@ -569,8 +569,6 @@ bool LayoutAnimationsProxy::canDetachBeforeScreenSnapshot(
   });
 }
 
-// The carrier returns to its parent hidden. The restore in cleanupSharedTransitions shows it
-// when it is the target of the run.
 void LayoutAnimationsProxy::attachCarrier(
     const SharedTag &sharedTag,
     const SharedTransitionRun &run,
@@ -587,7 +585,7 @@ void LayoutAnimationsProxy::attachCarrier(
   cancelLayoutAnimation(tag);
 
   resolveLightNodeProps(node);
-  auto homeView = cloneViewWithoutOpacity(node->current, propsParserContext);
+  auto homeView = node->isExiting() ? node->current : cloneViewWithoutOpacity(node->current, propsParserContext);
 #ifdef ANDROID
   homeView = resetPropsMissingFrom(homeView, mounted, propsParserContext);
 #endif
@@ -595,32 +593,47 @@ void LayoutAnimationsProxy::attachCarrier(
   mutations.push_back(
       ShadowViewMutation::InsertMutation(parentTag, homeView, parent->hostIndex(parent->positionOf(node))));
   mutations.push_back(createPropsUpdate(mounted, homeView, parentTag, propsParserContext));
-  hideInSharedElement(sharedTag, node);
+  if (!node->isExiting()) {
+    hideInSharedElement(sharedTag, node);
+  }
 }
 
-// React deletes views at the place where it rendered them, so a carrier that React deletes, alone
-// or with an ancestor, returns to that place first. A carrier that React moves keeps its run, and
-// the light tree follows the move.
-void LayoutAnimationsProxy::attachCarriersThatReactDeletes(
-    const std::unordered_set<Tag> &deleted,
-    TransactionMeta &transaction,
-    const PropsParserContext &propsParserContext) const {
-  if (detachedCarriers_.empty()) {
-    return;
-  }
+void LayoutAnimationsProxy::attachRetainedCarriers(
+    const std::shared_ptr<LightNode> &node,
+    const std::unordered_set<Tag> &removals,
+    TransactionMeta &transaction) const {
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   for (auto &[sharedTag, element] : sharedElements_) {
-    if (!element.run) {
-      continue;
-    }
-    const auto &carrier = element.run->carrier;
-    bool isDeleted = false;
-    for (auto ancestor = carrier; ancestor && !isDeleted; ancestor = ancestor->parent.lock()) {
-      isDeleted = deleted.contains(ancestor->current.tag);
-    }
-    if (isDeleted) {
+    if (element.run && !removals.contains(element.run->carrier->current.tag) &&
+        isInSubtree(element.run->carrier, node)) {
       finishSharedTransition(sharedTag, element, transaction, propsParserContext);
     }
   }
+}
+
+void LayoutAnimationsProxy::removeFromParent(
+    const std::shared_ptr<LightNode> &node,
+    ShadowViewMutationList &mutations,
+    ShadowViewMutationList &rootMutations) const {
+  const auto parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  const auto position = parent->positionOf(node);
+  react_native_assert(position != -1 && "Removed node not found in its parent");
+  if (node->isDetached) {
+    auto &[sharedTag, element] = sharedElementOfCarrier(node);
+    deferRestore({sharedTag, element.run->target});
+    rootMutations.push_back(
+        ShadowViewMutation::RemoveMutation(surfaceId_, carrierViewOnScreen(*element.run), carrierHostIndex(node)));
+    std::erase(detachedCarriers_, node);
+    node->setDetached(false);
+    element.run.reset();
+  } else {
+    auto &parentMutations = parent->current.tag == surfaceId_ ? rootMutations : mutations;
+    parentMutations.push_back(
+        ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, parent->hostIndex(position)));
+  }
+  parent->removeChild(node);
+  cancelLayoutAnimation(node->current.tag);
 }
 
 int LayoutAnimationsProxy::carrierHostIndex(const std::shared_ptr<LightNode> &node) const {

@@ -175,7 +175,7 @@ struct LightNode {
   int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
-        react_native_assert(!children[i]->isDetached && "A detached child is attached before its removal");
+        react_native_assert(!children[i]->isDetached && "Remove the carrier from the root before unlinking its node");
         if (children[i]->isDetached) {
           detachedChildrenCount--;
         }
@@ -195,12 +195,6 @@ struct LightNode {
     detachedChildrenCount--;
     children.erase(children.begin() + position);
     child->parent.reset();
-  }
-
-  void clearChildren() {
-    children.clear();
-    exitingChildrenCount = 0;
-    detachedChildrenCount = 0;
   }
 
   // A new child goes after the exiting children at its shadow position. The differ sends a
