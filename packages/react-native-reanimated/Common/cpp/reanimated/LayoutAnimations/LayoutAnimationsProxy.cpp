@@ -571,16 +571,20 @@ void LayoutAnimationsProxy::updateLightTree(
           transaction.entering.push_back({node, enteringConfig});
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
-          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
-          filteredMutations.push_back(
-              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
+          filteredMutations.push_back(createPropsUpdate(
+              mutation.newChildShadowView,
+              cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
+              mutation.parentTag,
+              propsParserContext));
         } else if (sharedTag && isInsideInactiveBoundary(node)) {
           hideInSharedElement(*sharedTag, node);
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
-          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
-          filteredMutations.push_back(
-              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
+          filteredMutations.push_back(createPropsUpdate(
+              mutation.newChildShadowView,
+              cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
+              mutation.parentTag,
+              propsParserContext));
         } else {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
@@ -927,6 +931,7 @@ void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, Sh
 void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) const {
   ReanimatedSystraceSection s1("addOngoingAnimations");
   auto &mutations = transaction.filteredMutations;
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
@@ -979,7 +984,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame, layoutAnimation.frameOffset);
 
     mutations.push_back(
-        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
+        layoutAnimation.frameProps
+            ? createPropsUpdate(layoutAnimation.currentView, newView, layoutAnimation.parentTag, propsParserContext)
+            : ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
     if (layoutAnimation.opacity &&
         (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
