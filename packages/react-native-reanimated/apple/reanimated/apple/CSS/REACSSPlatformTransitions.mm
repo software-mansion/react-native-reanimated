@@ -124,12 +124,14 @@ static BOOL isAnimationOfView(CAAnimation *_Nullable animation, Tag viewTag)
     }
     CALayer *layer = [strongSelf layerForTag:viewTag];
     if (layer) {
-      // Freeze the last visible frame into the model so the layer doesn't snap.
-      id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-      if (presentationValue) {
-        [layer setValue:presentationValue forKeyPath:keyPath];
+      if (isAnimationOfView([layer animationForKey:keyPath], viewTag)) {
+        // Freeze the last visible frame into the model so the layer doesn't snap.
+        id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+        if (presentationValue) {
+          [layer setValue:presentationValue forKeyPath:keyPath];
+        }
+        [layer removeAnimationForKey:keyPath];
       }
-      [layer removeAnimationForKey:keyPath];
     } else {
       // The view left the registry. React Native sets the props of a recycled view
       // again, so only the animation is removed.
