@@ -31,10 +31,10 @@ Type definitions
 ```typescript
 // --- Function declaration ---
 
-function useAnimatedSensor(
-  sensorType: SensorType,
+function useAnimatedSensor<T extends SensorType>(
+  sensorType: T,
   config?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation | Value3D>;
+): AnimatedSensor<SensorValueMap[T]>;
 
 // --- Configuration types ---
 
@@ -62,7 +62,17 @@ enum IOSReferenceFrame {
 
 // --- Return types ---
 
-type AnimatedSensor<T extends Value3D | ValueRotation> = {
+type SensorValueMap = {
+  [SensorType.ACCELEROMETER]: Value3D;
+  [SensorType.GYROSCOPE]: Value3D;
+  [SensorType.GRAVITY]: Value3D;
+  [SensorType.MAGNETIC_FIELD]: Value3D;
+  [SensorType.ROTATION]: ValueRotation;
+};
+
+type SensorValue = SensorValueMap[SensorType];
+
+type AnimatedSensor<T extends SensorValue> = {
   sensor: SharedValue<T>;
   unregister: () => void;
   isAvailable: boolean;
