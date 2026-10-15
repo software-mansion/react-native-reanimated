@@ -262,6 +262,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
   }
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    followDetachedTargets(propsParserContext);
+  }
 
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
@@ -1242,6 +1245,11 @@ void LayoutAnimationsProxy::cleanupAnimations(
       if (!element.run->inserted) {
         preservedTags.insert(tag);
         schedulePullOnNextFrame();
+        continue;
+      }
+      // The container lands on the target only after the target is placed.
+      if (element.run->targetDetached) {
+        preservedTags.insert(tag);
         continue;
       }
 #ifdef __APPLE__
