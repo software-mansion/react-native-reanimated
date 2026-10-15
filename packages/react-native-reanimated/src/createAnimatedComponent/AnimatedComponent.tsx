@@ -294,7 +294,7 @@ export default class AnimatedComponent
       prevProps.exiting
     );
 
-    this._NativeEventsManager?.updateEvents(prevProps);
+    this._NativeEventsManager?.updateEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
