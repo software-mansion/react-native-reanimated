@@ -39,7 +39,10 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
-  const offset = useRef(providedOffset ?? internalOffset).current;
+  const offset = providedOffset ?? internalOffset;
+  const savedOffset = useRef(offset);
+  const doesOffsetDiffer = savedOffset.current !== offset;
+  savedOffset.current = offset;
 
   const eventHandler = useEvent<RNNativeScrollEvent>(
     (event: ReanimatedScrollEvent) => {
@@ -49,7 +52,8 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
           ? event.contentOffset.y
           : event.contentOffset.x;
     },
-    NATIVE_SCROLL_EVENT_NAMES
+    NATIVE_SCROLL_EVENT_NAMES,
+    doesOffsetDiffer
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
