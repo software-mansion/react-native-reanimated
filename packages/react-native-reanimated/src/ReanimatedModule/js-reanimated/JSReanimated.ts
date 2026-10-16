@@ -343,6 +343,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  markSettledUpdateCommitted(): void {
+    throw new Error(
+      '[Reanimated] `markSettledUpdateCommitted` is not available in JSReanimated.'
+    );
+  }
+
   registerPseudoStyles(): void {
     throw new Error(
       '[Reanimated] `registerPseudoStyles` is not available in JSReanimated.'

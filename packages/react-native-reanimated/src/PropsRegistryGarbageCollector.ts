@@ -17,6 +17,7 @@ const FLUSH_INTERVAL_MS = 500;
 
 export const PropsRegistryGarbageCollector = {
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
+  pendingRevisions: new Map<number, number>(),
   intervalId: null as NodeJS.Timeout | null,
 
   registerView(viewTag: number, component: IAnimatedComponentInternal) {
@@ -35,6 +36,7 @@ export const PropsRegistryGarbageCollector = {
   },
 
   unregisterView(viewTag: number) {
+    this.pendingRevisions.delete(viewTag);
     const deleted = this.viewsMap.delete(viewTag);
     if (deleted && this.viewsMap.size === 0) {
       this.unregisterInterval();
@@ -43,13 +45,24 @@ export const PropsRegistryGarbageCollector = {
 
   syncPropsBackToReact() {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
-    for (const { viewTag, styleProps } of settledUpdates) {
+    for (const { viewTag, styleProps, revision } of settledUpdates) {
       if (styleProps === null) {
+        ReanimatedModule.markSettledUpdateCommitted(viewTag, revision);
         continue;
       }
       const component = this.viewsMap.get(viewTag);
+      if (!component || this.pendingRevisions.get(viewTag) === revision) {
+        // Native re-sends the update until its commit is confirmed.
+        continue;
+      }
+      this.pendingRevisions.set(viewTag, revision);
       unprocessProps(styleProps);
-      component?._syncStylePropsBackToReact(styleProps);
+      component._syncStylePropsBackToReact(styleProps, () => {
+        if (this.pendingRevisions.get(viewTag) === revision) {
+          this.pendingRevisions.delete(viewTag);
+        }
+        ReanimatedModule.markSettledUpdateCommitted(viewTag, revision);
+      });
     }
   },
 

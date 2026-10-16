@@ -679,9 +679,34 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  // Read before taking the registry lock, as the commit hook takes it while a
+  // commit holds the shadow tree.
+  std::unordered_map<SurfaceId, RootShadowNode::Shared> rootShadowNodes;
+  uiManager_->getShadowTreeRegistry().enumerate([&rootShadowNodes](const ShadowTree &shadowTree, bool &) {
+    rootShadowNodes.emplace(shadowTree.getSurfaceId(), shadowTree.getCurrentRevision().rootShadowNode);
+  });
+  const auto isMounted = [&rootShadowNodes](const ShadowNodeFamily &shadowNodeFamily) {
+    const auto it = rootShadowNodes.find(shadowNodeFamily.getSurfaceId());
+    return it != rootShadowNodes.end() && !shadowNodeFamily.getAncestors(*it->second).empty();
+  };
+
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, isMounted);
+}
+
+void ReanimatedModuleProxy::markSettledUpdateCommitted(
+    jsi::Runtime &,
+    const jsi::Value &viewTag,
+    const jsi::Value &revision) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "markSettledUpdateCommitted requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  auto lock = updatesRegistryManager_->lock();
+  animatedPropsRegistry_->markSettledUpdateCommitted(
+      static_cast<Tag>(viewTag.asNumber()), static_cast<uint64_t>(revision.asNumber()));
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -1711,6 +1736,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     }
     return strongThis->getSettledUpdates(rt);
   });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "markSettledUpdateCommitted",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->markSettledUpdateCommitted(rt, at<0>(args), at<1>(args));
+      });
 
   addMethod<2>(
       rt,
