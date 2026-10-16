@@ -2,6 +2,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Dispatch, SetStateAction } from 'react';
 import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import type { ScrollViewProps } from 'react-native';
 import {
   Platform,
   Pressable,
@@ -10,7 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { FlatList, Touchable } from 'react-native-gesture-handler';
+import { FlatList, ScrollView, Touchable } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { createStack, IS_MACOS } from '@/utils';
@@ -98,14 +99,28 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
   // screen and a group screen.
   const [wasClicked, setWasClicked] = useState<Array<string>>([]);
 
-  const allExamples = useMemo(() => flattenExamples(examples), [examples]);
+  const visibleEntries = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(examples).filter(
+          ([, entry]) =>
+            !isExampleGroup(entry) ||
+            !entry.hiddenPlatforms?.includes(Platform.OS)
+        )
+      ),
+    [examples]
+  );
+  const allExamples = useMemo(
+    () => flattenExamples(visibleEntries),
+    [visibleEntries]
+  );
   const allNames = useMemo(() => Object.keys(allExamples), [allExamples]);
   const groups = useMemo(
     () =>
-      Object.entries(examples).filter(
+      Object.entries(visibleEntries).filter(
         (entry): entry is [string, ExampleGroup] => isExampleGroup(entry[1])
       ),
-    [examples]
+    [visibleEntries]
   );
 
   let animation: AnimationType = 'default';
@@ -130,7 +145,7 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
         {({ navigation }: { navigation: NavigationProp }) => (
           <ExampleListScreen
             allExamples={allExamples}
-            entries={examples}
+            entries={visibleEntries}
             navigation={navigation}
             setWasClicked={setWasClicked}
             wasClicked={wasClicked}
@@ -322,6 +337,7 @@ function ExampleListScreen({
         initialNumToRender={entryNames.length}
         ItemSeparatorComponent={ItemSeparator}
         renderItem={renderEntry}
+        renderScrollComponent={renderScrollComponent}
         renderSectionHeader={renderSectionHeader}
         sections={sectionData}
         stickySectionHeadersEnabled={true}
@@ -349,6 +365,10 @@ function SectionHeader({ title }: { title: string }) {
 // Module-level so the list gets a stable callback, like `renderItem` does.
 function renderSectionHeader({ section }: { section: { title: string } }) {
   return <SectionHeader title={section.title} />;
+}
+
+function renderScrollComponent(props: ScrollViewProps) {
+  return <ScrollView {...props} />;
 }
 
 interface ItemProps {

@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)sendRequest:(worklets::RequestConfig &&)config
           requestId:(uint64_t)requestId
-           listener:(const std::shared_ptr<worklets::NetworkRequestListener> &)listener;
+           listener:(std::shared_ptr<worklets::NetworkRequestListener>)listener;
 - (void)abortRequest:(uint64_t)requestId;
 - (void)invalidate;
 

@@ -33,6 +33,7 @@ struct StartAnimationsRecursivelyConfig {
   bool shouldRemoveSubviewsWithoutAnimations;
   bool shouldAnimate;
   bool isScreenPop;
+  bool defersTeardown;
 };
 
 struct PendingNodeAnimation {
@@ -40,11 +41,31 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
-struct SharedContainer {
+struct SharedTransitionRun {
+  std::shared_ptr<LightNode> container;
+  std::shared_ptr<LightNode> source;
+  std::shared_ptr<LightNode> target;
+  bool gestureDriven = false;
+};
+
+// Asks to show a view that the shared tag hid. The request is stale when the
+// view is hidden for a different shared tag now.
+struct RestoreRequest {
   SharedTag sharedTag;
   std::shared_ptr<LightNode> node;
-  std::shared_ptr<LightNode> restoreBeforeNode;
-  std::shared_ptr<LightNode> restoreAfterNode;
+};
+
+struct HiddenView {
+  std::shared_ptr<LightNode> node;
+  bool restoreDeferred = false;
+};
+
+// A view in hiddenViews stays at opacity 0 until it is restored or removed,
+// also after the run ends. A view is in the hiddenViews of one shared tag only,
+// and only while its node is mapped.
+struct SharedElement {
+  std::vector<HiddenView> hiddenViews;
+  std::optional<SharedTransitionRun> run;
 };
 
 // One in-flight back gesture. Created on the first progress event, destroyed
@@ -59,10 +80,10 @@ struct ProgressTransition {
 
 // A finished gesture whose hidden source views wait for React to commit the
 // navigation. The wait ends when React deletes sourceScreen, or a late cancel
-// sets cancelled and the next pull restores sourceNodes.
+// sets cancelled and the next pull restores sources.
 struct UncommittedScreenPop {
   std::shared_ptr<LightNode> sourceScreen;
-  std::vector<std::shared_ptr<LightNode>> sourceNodes;
+  std::vector<RestoreRequest> sources;
   bool cancelled = false;
 };
 
@@ -84,23 +105,33 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> containersToInsert;
-  std::vector<std::shared_ptr<LightNode>> nodesToRestore;
+  std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
+  std::unordered_set<Tag> dueRemovals;
+  std::unordered_set<Tag> recreatedTags;
 };
 
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
-  mutable std::unordered_map<Tag, SharedContainer> sharedContainers_;
-  mutable std::unordered_set<Tag> hiddenViewTags_;
+  // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
+  // back
+  mutable std::unordered_set<Tag> snapshottedScreens_;
+  // A screen becomes visible when its appear transition ends or its dismiss gesture is cancelled.
+  // It stays visible until its disappear transition ends. Only a visible screen can be the source
+  // of a back transition.
+  mutable std::unordered_set<Tag> visibleScreens_;
+  mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
   mutable bool cleanupPullScheduled_ = false;
+  // tags of JS-thread batches that are not in the mount queue yet
+  mutable std::unordered_map<Tag, int> unqueuedBatchTags_;
 #endif
 
 #ifdef __APPLE__
@@ -143,6 +174,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<ShadowView>
   reparentLayoutAnimation(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
+  const ShadowView &mountedView(const std::shared_ptr<LightNode> &node) const;
 
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
   void updateLightNodeProps(
@@ -157,8 +189,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
-  void reconcileContradictedRemovals(const ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
-      const;
+  void reconcileContradictedRemovals(
+      const ShadowViewMutationList &mutations,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+#ifdef ANDROID
+  ShadowView resetPropsMissingFrom(
+      const ShadowView &view,
+      const ShadowView &mounted,
+      const PropsParserContext &propsParserContext) const;
+#endif
 
   void handleSharedTransitionsStart(
       const std::shared_ptr<LightNode> &afterTopScreen,
@@ -176,6 +216,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #ifdef ANDROID
   bool hasPendingStructuralCleanup() const;
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
+  void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
+  void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
 #endif
 
   void hideTransitioningViews(
@@ -192,6 +234,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
+  void onSharedTransitionConfigured(const std::vector<Tag> &viewTags) override;
+  void updateVisibleScreens(int tag, double progress, bool isClosing) const;
+  void markScreenVisible(int tag) const;
+  bool isUncommittedScreenPopSource(int tag) const;
+  std::optional<SurfaceId> cancelUncommittedScreenPop() const;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void clearSurfaceState() const override;
 
@@ -205,30 +252,47 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
 
-  void removeSharedContainer(Tag containerTag, TransactionMeta &transaction) const;
+  SharedTransitionRun &startSharedTransitionRun(
+      const ShadowView &before,
+      const SharedTag &sharedTag,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      bool gestureDriven,
+      TransactionMeta &transaction) const;
+  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
+  void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
+  bool isSharedContainer(Tag tag) const;
+  std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
+  void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
+  bool showHiddenView(const RestoreRequest &request) const;
+  void deferRestore(const RestoreRequest &request) const;
+  void forgetHiddenView(Tag tag) const;
+  std::unordered_set<Tag> hiddenViewTags() const;
+  void queuePendingRestores(TransactionMeta &transaction) const;
+  bool isInSharedTransition(const std::shared_ptr<LightNode> &node) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
-  Tag getOrCreateContainer(
-      const ShadowView &before,
-      const SharedTag &sharedTag,
-      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
-      TransactionMeta &transaction) const;
-
   void overrideTransform(
       ShadowView &shadowView,
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
+
+  struct AncestorTransform {
+    Transform transform;
+    TransformOrigin origin;
+    react::Size ownSize;
+  };
 
   std::optional<Transform> parseParentTransforms(
       const std::shared_ptr<LightNode> &node,
       const std::vector<react::Point> &absolutePositions,
       bool useViewsOnScreen) const;
   react::Transform resolveTransform(
-      const LayoutMetrics &layoutMetrics,
+      const react::Size &originFrameSize,
+      const react::Size &ownSize,
       const Transform &transform,
       const TransformOrigin &transformOrigin) const;
   std::array<float, 3>
@@ -237,11 +301,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &parent,
-      int hostIndex,
       TransactionMeta &transaction) const;
-  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
+  bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
+  void collectDueRemovals(TransactionMeta &transaction) const;
+  void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 
-  void addOngoingAnimations(ShadowViewMutationList &mutations) const;
+  void addOngoingAnimations(TransactionMeta &transaction) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   bool startAnimationsRecursively(
@@ -250,7 +315,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;
-  void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
 
   // MountingOverrideDelegate
 

@@ -13,7 +13,6 @@ export function waitForFrames(
       'worklet';
       let remaining = count;
       const onFrame = () => {
-        'worklet';
         remaining -= 1;
         if (remaining > 0) {
           requestAnimationFrame(onFrame);

@@ -24,7 +24,6 @@ class WorkletRuntime;
 class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsModuleProxy> {
  public:
   explicit JSIWorkletsModuleProxy(
-      const bool isDevBundle,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<MemoryManager> &memoryManager,
@@ -36,8 +35,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
       RuntimeData::RuntimeId hostRuntimeId)
-      : isDevBundle_(isDevBundle),
-        bundleModeConfig_(bundleModeConfig),
+      : bundleModeConfig_(bundleModeConfig),
         jsScheduler_(jsScheduler),
         uiScheduler_(uiScheduler),
         memoryManager_(memoryManager),
@@ -53,7 +51,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
       RuntimeData::RuntimeId hostRuntimeId) {
     return std::make_shared<JSIWorkletsModuleProxy>(
-        sourceProxy->isDevBundle_,
         sourceProxy->jsScheduler_,
         sourceProxy->uiScheduler_,
         sourceProxy->memoryManager_,
@@ -85,10 +82,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
     return bundleModeConfig_.enabled;
   }
 
-  [[nodiscard]] bool isDevBundle() const {
-    return isDevBundle_;
-  }
-
   [[nodiscard]] std::shared_ptr<const ScriptBuffer> getScript() const {
     return bundleModeConfig_.script;
   }
@@ -118,7 +111,6 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   }
 
  private:
-  const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

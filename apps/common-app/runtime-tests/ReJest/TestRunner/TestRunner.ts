@@ -2,6 +2,7 @@ import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
 import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import type { ValueGetter } from '../matchers/EventualMatchers';
 import { EventualMatchers } from '../matchers/EventualMatchers';
@@ -30,7 +31,6 @@ import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { WorkletRuntimePool } from './WorkletRuntimePool';
-import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 

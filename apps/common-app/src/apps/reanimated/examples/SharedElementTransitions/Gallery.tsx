@@ -4,9 +4,9 @@ import * as React from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, cubicBezier } from 'react-native-reanimated';
 
-import florence from './assets/florence.jpg';
 import countryside from './assets/countryside.jpg';
 import dawn from './assets/dawn.jpg';
+import florence from './assets/florence.jpg';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type StackParamList = {

@@ -3,6 +3,7 @@ import {
   scheduleOnRN,
   scheduleOnRuntime,
 } from 'react-native-worklets';
+
 import {
   describe,
   expect,
@@ -131,4 +132,18 @@ describe('createWorkletRuntime', () => {
     expect(scheduledValue).toBe(42);
     expect(runtime.name).toBe('test');
   });
+
+  if (!__DEV__) {
+    test('throws when the initializer throws', async () => {
+      await expect(() => {
+        createWorkletRuntime({
+          name: 'test',
+          initializer: () => {
+            'worklet';
+            throw new Error('Initializer error');
+          },
+        });
+      }).toThrow('Initializer error');
+    });
+  }
 });

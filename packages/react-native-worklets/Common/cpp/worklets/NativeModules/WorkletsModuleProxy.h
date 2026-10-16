@@ -96,14 +96,9 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] inline bool isDevBundle() const {
-    return isDevBundle_;
-  }
-
  private:
   void startUIRuntime(const std::shared_ptr<JSIWorkletsModuleProxy> &uiRuntimeProxy);
 
-  bool isDevBundle_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;

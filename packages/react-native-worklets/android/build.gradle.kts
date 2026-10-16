@@ -28,6 +28,11 @@ if (shouldApplyKotlinAndroidPlugin()) {
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
 
+fun findRootStringProperty(prop: String): String? =
+    (rootProject.findProperty(prop) as? CharSequence)
+        ?.toString()
+        ?.takeIf { it.isNotEmpty() }
+
 fun safeAppExtGet(prop: String, fallback: Any?): Any? {
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
     return if (appProject?.extensions?.extraProperties?.has(prop) == true)
@@ -69,22 +74,13 @@ fun getReactNativeVersion(): String {
     return reactProperties.getProperty("VERSION_NAME")
 }
 
-fun getReactNativeMinorVersion(): Int {
-    val reactNativeVersion = getReactNativeVersion()
-    return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
-}
-
 fun getHermesV1Enabled(): Boolean {
     // Even though `HERMES_V1_ENABLED` is now centralized
-    // in `react-native-flags.cmake` for React Native >= 0.84
-    // that CMake file depends on definitions provided
-    // in local `externalNativeBuild` configuration of the LIBRARY.
+    // in `react-native-flags.cmake`, that CMake file depends
+    // on definitions provided in local `externalNativeBuild`
+    // configuration of the LIBRARY.
     // I hope this is only a temporary workaround.
-    return if (getReactNativeMinorVersion() >= 84) {
-        safeAppExtGet("hermesV1Enabled", true)?.toString()?.toBoolean() ?: true
-    } else {
-        safeAppExtGet("hermesV1Enabled", false)?.toString()?.toBoolean() ?: false
-    }
+    return safeAppExtGet("hermesV1Enabled", true)?.toString()?.toBoolean() ?: true
 }
 
 fun getWorkletsVersion(): String {
@@ -173,13 +169,13 @@ android {
 
     namespace = "com.swmansion.worklets"
 
-    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
-    if (!resolvedNdkPath.isNullOrEmpty()) {
+    val resolvedNdkPath = findRootStringProperty("ndkPath")
+    if (resolvedNdkPath != null) {
         ndkPath = resolvedNdkPath
     }
 
-    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
-    if (!resolvedNdkVersion.isNullOrEmpty()) {
+    val resolvedNdkVersion = findRootStringProperty("ndkVersion")
+    if (resolvedNdkVersion != null) {
         ndkVersion = resolvedNdkVersion
     }
 

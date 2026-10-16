@@ -99,13 +99,14 @@ export default class CSSManager implements ICSSManager {
     );
 
     // Record the committed style as the base so animations (including one
-    // detached by this update) and, on Android, a detaching transition can
-    // revert to it instead of stale values or interpolator defaults.
+    // detached by this update) and, on Android, a property that leaves a
+    // transition or a detaching transition revert to it instead of stale
+    // values or interpolator defaults.
     if (
       normalizedStyle &&
       (hasAnimation ||
         hadAttachedAnimations ||
-        (IS_ANDROID && transitionDetached))
+        (IS_ANDROID && (hasTransition || transitionDetached)))
     ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }

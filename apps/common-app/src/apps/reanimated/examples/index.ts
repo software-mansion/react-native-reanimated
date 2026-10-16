@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
 import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 
@@ -61,8 +63,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -100,6 +100,11 @@ const DispatchCommandExample: React.FC = () =>
 const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
+  );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
   );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
@@ -148,8 +153,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -218,10 +221,6 @@ const SynchronousPropsSETExample: React.FC = () =>
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
-  );
-const NonLayoutPropAndRenderExample: React.FC = () =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default as React.FC
   );
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
@@ -329,18 +328,12 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
     section: REGRESSIONS,
     screen: SuspenseLayoutAnimationCrashExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   SettledPropsLeakExample: {
     icon: '🚿',
@@ -348,12 +341,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -379,11 +366,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -391,11 +380,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Third party components',
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
-  },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    screen: FreezeExample,
   },
   CircularSliderExample: {
     icon: '🔘',
@@ -462,6 +446,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Liquid swipe',
     section: SHOW_CASES_AND_REGRESSIONS,
     screen: LiquidSwipe,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ArticleProgressExample: {
     icon: '📰',
@@ -544,6 +529,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Stinky header',
     section: REGRESSIONS,
     screen: StickyHeaderExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   DispatchCommandExample: {
     icon: '🫡',
@@ -555,11 +541,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Layout props',
     section: REGRESSIONS,
     screen: WidthExample,
-  },
-  NonLayoutPropAndRenderExample: {
-    icon: '🎭',
-    title: 'Non-layout prop and render example',
-    screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
     icon: '🦑',
@@ -657,6 +638,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Profiles',
     section: SHOW_CASES,
     screen: ProfilesExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -667,6 +649,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Progress transition',
     section: SHOW_CASES,
     screen: ProgressTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -677,6 +660,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Gallery',
     section: SHOW_CASES,
     screen: GalleryExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -711,11 +695,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Color interpolation',
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
-  },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
   },
   ExtrapolationExample: {
     title: 'Extrapolation example',
@@ -831,12 +810,18 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
   },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
 
   // Shared Element Transitions
 
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -853,6 +838,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -861,6 +847,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken header height
       android: true,
@@ -869,6 +856,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -877,6 +865,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -885,6 +874,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // goes too far up for some reason?
       android: true,
@@ -893,6 +883,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
@@ -901,6 +892,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken for modals
       android: false, // broken transform, I think due to skew
@@ -909,6 +901,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: false, // broken on back gesture
       android: true,
@@ -917,6 +910,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -925,6 +919,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -959,6 +954,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',
@@ -966,6 +973,7 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
   },
   SharedElementTransitions: {
     examples: withTitlePrefix(SHARED_ELEMENT_TRANSITION_PREFIX),
+    hiddenPlatforms: [REAPlatform.WEB],
     icon: '🔗',
     title: 'Shared Element Transitions',
   },

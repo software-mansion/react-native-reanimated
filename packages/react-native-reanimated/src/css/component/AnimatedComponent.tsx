@@ -8,6 +8,7 @@ import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
+  AnimatableDOMElement,
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
   ViewInfo,
@@ -22,6 +23,14 @@ export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
   style?: StyleProp<DefaultStyle>;
 };
+
+// The element classes do not exist off the DOM (SSR, native Jest project).
+function isAnimatableDOMElement(value: unknown): value is AnimatableDOMElement {
+  return (
+    (typeof HTMLElement !== 'undefined' && value instanceof HTMLElement) ||
+    (typeof SVGElement !== 'undefined' && value instanceof SVGElement)
+  );
+}
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
@@ -40,7 +49,7 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _componentDOMRef: HTMLElement | null = null;
+  _componentDOMRef: AnimatableDOMElement | null = null;
   _willUnmount: boolean = false;
   _forwardedRefCleanup?: () => void;
 
@@ -106,17 +115,19 @@ export default class AnimatedComponent<
   };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
-    const componentRef = ref as AnimatedComponentRef;
+    let componentRef = ref as AnimatedComponentRef | null;
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
-      return componentRef.getAnimatableRef();
+    if (componentRef?.getAnimatableRef) {
+      componentRef = componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
-    if (componentRef && componentRef.elementRef) {
+    if (componentRef?.elementRef) {
       this._componentDOMRef = componentRef.elementRef.current;
     } else {
-      this._componentDOMRef = ref as HTMLElement;
+      this._componentDOMRef = isAnimatableDOMElement(componentRef)
+        ? componentRef
+        : null;
     }
     return componentRef;
   };

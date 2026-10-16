@@ -26,6 +26,7 @@ export interface ExampleGroup {
   icon?: string;
   title: string;
   examples: Record<string, Example>;
+  hiddenPlatforms?: Array<(typeof REAPlatform)[keyof typeof REAPlatform]>;
 
   /** Section titles in display order; without them the group is a flat list. */
   sections?: ReadonlyArray<string>;

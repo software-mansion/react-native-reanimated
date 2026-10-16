@@ -8,14 +8,14 @@
     "test": "yarn run --top-level jest",
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
     "build": "yarn tsc && yarn bundle && rm -rf ./public/* && yarn format",
-    "lint": "eslint --max-warnings=0 src --ignore-pattern 'types/**'",
+    "lint": "yarn run --top-level oxlint --max-warnings=0 src --ignore-pattern 'types/**'",
     "format": "yarn run --top-level oxfmt ."
   },
   "devDependencies": {
     "@types/node": "24.0.14",
-    "@typescript-eslint/parser": "8.37.0",
-    "@typescript-eslint/rule-tester": "8.37.0",
-    "@typescript-eslint/utils": "8.37.0",
+    "@typescript-eslint/parser": "8.62.1",
+    "@typescript-eslint/rule-tester": "8.62.1",
+    "@typescript-eslint/utils": "8.62.1",
     "esbuild": "0.25.10",
     "eslint": "9.37.0",
     "ts-jest": "29.4.12",

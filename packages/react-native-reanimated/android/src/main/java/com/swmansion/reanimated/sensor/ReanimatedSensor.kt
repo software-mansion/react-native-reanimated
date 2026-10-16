@@ -26,7 +26,7 @@ internal class ReanimatedSensor(
     init {
         val wm = reactContext.get()!!.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = wm.defaultDisplay
-        listener = ReanimatedSensorListener(setter, interval.toDouble(), display)
+        listener = ReanimatedSensorListener(setter, interval.toDouble(), display, sensorType)
         sensorManager =
             reactContext.get()!!.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         this.interval = if (interval == -1) DEFAULT_INTERVAL else interval
