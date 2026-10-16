@@ -237,7 +237,7 @@ function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
 
 /** Prepends necessary closure variables to the worklet function. */
 function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
-  const closureDeclaration = variableDeclaration('const', [
+  const closureDeclaration = variableDeclaration('let', [
     variableDeclarator(
       arrayPattern(
         closureVariables.map((variable) => identifier(variable.name))

@@ -1,7 +1,9 @@
 use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
-use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, FunctionType, Statement};
+use oxc_ast::ast::{
+    Expression, FormalParameters, FunctionBody, FunctionType, Statement, VariableDeclarationKind,
+};
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
@@ -95,5 +97,18 @@ fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) ->
         false,
     ));
 
-    const_decl(builder, array_pattern, this_closure)
+    let declarator = builder.variable_declarator(
+        SPAN,
+        VariableDeclarationKind::Let,
+        array_pattern,
+        NONE,
+        Some(this_closure),
+        false,
+    );
+    Statement::VariableDeclaration(builder.alloc_variable_declaration(
+        SPAN,
+        VariableDeclarationKind::Let,
+        builder.vec1(declarator),
+        false,
+    ))
 }

@@ -5,7 +5,6 @@ import { transformSync } from '@babel/core';
 import { describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-import { stripVTControlCharacters } from 'util';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
 
@@ -214,79 +213,20 @@ describe.each([
       const result = runPlugin(input, { bundleMode });
       expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
-  });
 
-  describe('assignment to a captured variable', () => {
-    const issueRepro = html`<script>
-      let x = 0;
-      function w() {
-        'worklet';
-        if (x > 1) {
-          x = 0;
+    test('allows assigning to a captured variable', () => {
+      const input = html`<script>
+        let x = 0;
+        function foo() {
+          'worklet';
+          if (x > 1) {
+            x = 0;
+          }
         }
-      }
-    </script>`;
+      </script>`;
 
-    if (bundleMode) {
-      test('builds the repro from issue #10887', () => {
-        expect(() => runPlugin(issueRepro, { bundleMode })).not.toThrow();
-      });
-      return;
-    }
-
-    const ERROR = 'A worklet cannot assign to `x`';
-
-    test('rejects the repro from issue #10887', () => {
-      expect(() => runPlugin(issueRepro, { bundleMode })).toThrow(ERROR);
-    });
-
-    test('points at the offending assignment', () => {
-      let message = '';
-      try {
-        runPlugin(issueRepro, { bundleMode });
-      } catch (error) {
-        // The code frame is colored when the terminal supports it.
-        message = stripVTControlCharacters((error as Error).message);
-      }
-      expect(message).toMatch(/test\.js[\s\S]*> 6 \|/);
-    });
-
-    test.each([
-      ['an update expression', 'x++;'],
-      ['a compound assignment', 'x += x;'],
-      ['an array destructuring assignment', 'console.log(x); [x] = [1];'],
-      [
-        'an object destructuring assignment',
-        'console.log(x); ({ x } = { x: 1 });',
-      ],
-      ['a for-of target', 'console.log(x); for (x of [1]) {}'],
-      ['a nested function', 'const f = () => { x = x + 1; }; f();'],
-    ])('rejects %s', (_, statement) => {
-      const input = `let x = 0;
-        function w() {
-          'worklet';
-          ${statement}
-        }`;
-
-      expect(() => runPlugin(input, { bundleMode })).toThrow(ERROR);
-    });
-
-    test.each([
-      ['a write-only assignment', 'x = 1;'],
-      [
-        'a local variable shadowing a captured one',
-        'console.log(x); { let x = 1; x++; }',
-      ],
-      ['a property of a captured variable', 'obj.value = obj.value + 1;'],
-    ])('allows %s', (_, statement) => {
-      const input = `let x = 0;
-        const obj = { value: 0 };
-        function w() {
-          'worklet';
-          ${statement}
-        }`;
-
-      expect(() => runPlugin(input, { bundleMode })).not.toThrow();
+      const result = runPlugin(input, { bundleMode });
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
   });
 

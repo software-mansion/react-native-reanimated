@@ -1,20 +1,11 @@
 import type { NodePath } from '@babel/core';
-import type { Binding, Scope } from '@babel/traverse';
+import type { Binding } from '@babel/traverse';
 import type {
-  ForInStatement,
-  ForOfStatement,
   Identifier,
   ImportDeclaration,
   JSXIdentifier,
-  Node,
 } from '@babel/types';
-import {
-  cloneNode,
-  getBindingIdentifiers,
-  identifier,
-  isJSXIdentifier,
-  isVariableDeclaration,
-} from '@babel/types';
+import { cloneNode, identifier, isJSXIdentifier } from '@babel/types';
 
 import { globals } from './globals';
 import {
@@ -41,25 +32,12 @@ export function getClosure(
   const closureVariables = new Array<Identifier>();
   const moduleBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
-  const assignments = new Array<[NodePath, Node]>();
   let recrawled = false;
 
   funPath.traverse(
     {
       'TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration'(typePath) {
         typePath.skip();
-      },
-      AssignmentExpression(path) {
-        assignments.push([path, path.node.left]);
-      },
-      UpdateExpression(path) {
-        assignments.push([path, path.node.argument]);
-      },
-      'ForInStatement|ForOfStatement'(path) {
-        const left = (path.node as ForInStatement | ForOfStatement).left;
-        if (!isVariableDeclaration(left)) {
-          assignments.push([path, left]);
-        }
       },
       ReferencedIdentifier(idPath) {
         if (idPath.isJSXIdentifier() && !state.opts.bundleMode) {
@@ -148,57 +126,9 @@ export function getClosure(
     state
   );
 
-  if (!state.opts.bundleMode) {
-    assertNoCapturedAssignment(funPath, capturedNames, assignments);
-  }
-
   return {
     closureVariables,
     moduleBindingsToImport,
     relativeBindingsToImport,
   };
-}
-
-/**
- * Captured variables are packed as `const [x] = this.__closure`, so assigning
- * to one inside the worklet is a parse error on Hermes.
- */
-function assertNoCapturedAssignment(
-  funPath: NodePath<WorkletizableFunction>,
-  capturedNames: Set<string>,
-  assignments: Array<[NodePath, Node]>
-): void {
-  for (const [path, target] of assignments) {
-    for (const name of Object.keys(getBindingIdentifiers(target))) {
-      if (!capturedNames.has(name)) {
-        continue;
-      }
-      const binding = path.scope.getBinding(name);
-      if (binding && isScopeInside(binding.scope, funPath.scope)) {
-        // A local binding shadowing the captured one.
-        continue;
-      }
-      throw path.buildCodeFrameError(capturedAssignmentMessage(name));
-    }
-  }
-}
-
-function isScopeInside(scope: Scope, ancestor: Scope): boolean {
-  for (
-    let current: Scope | undefined = scope;
-    current;
-    current = current.parent
-  ) {
-    if (current === ancestor) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function capturedAssignmentMessage(name: string): string {
-  return (
-    `A worklet cannot assign to \`${name}\`, because it is captured from the outer scope. ` +
-    'Captured variables are read-only inside worklets.'
-  );
 }
