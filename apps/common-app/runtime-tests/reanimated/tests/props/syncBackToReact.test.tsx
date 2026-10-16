@@ -1,10 +1,16 @@
 import type { ComponentRef } from 'react';
 import { forwardRef, useEffect } from 'react';
-import type { BoxShadowValue, ViewProps, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import type {
+  BoxShadowValue,
+  ScrollViewProps,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
+  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -31,6 +37,15 @@ const NOTIFICATION_NAME = 'SYNC_BACK_ANIMATION_FINISHED';
 const SYNC_BACK_DELAY_MS = 2000;
 // The value settles and stays settled for 2000 ms while no timer can run.
 const JS_THREAD_STALL_MS = 3000;
+const LATE_CONTENT_OFFSET_Y = 100;
+const SETTLED_OPACITY = 0.5;
+const SETTLED_BORDER_RADIUS = 10;
+const SECOND_WRITE_NOTIFICATION_NAME = 'SYNC_BACK_SECOND_WRITE_FINISHED';
+// React receives the first value after 1700 ms at the most. Native removes the
+// settled entry on the next read, 500 ms later. The second write starts after
+// that, with a margin for a slow emulator.
+const SECOND_WRITE_DELAY_MS = 4000;
+const SECOND_WRITE_BORDER_RADIUS = 20;
 
 type Gradient = Exclude<
   NonNullable<ViewStyle['backgroundImage']>,
@@ -180,6 +195,178 @@ function blockJSThread(durationMs: number) {
     now = performance.now();
   }
 }
+
+type ScrollBoxAnimatedProps = ScrollViewProps & { borderRadius?: number };
+
+type ReceivedProps = {
+  props: ScrollBoxAnimatedProps;
+  style: ViewStyle;
+};
+
+type ScrollBoxProps = ScrollBoxAnimatedProps & {
+  onProps: (received: ReceivedProps) => void;
+};
+
+const ScrollBox = forwardRef<ComponentRef<typeof ScrollView>, ScrollBoxProps>(
+  ({ onProps, ...props }, ref) => {
+    onProps({ props, style: StyleSheet.flatten(props.style) ?? {} });
+    return <ScrollView ref={ref} {...props} />;
+  }
+);
+
+const AnimatedScrollBox = Animated.createAnimatedComponent(ScrollBox);
+
+function AnimatedPropsAndStyleComponent({
+  onProps,
+}: {
+  onProps: (received: ReceivedProps) => void;
+}) {
+  const progress = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 1], [1, SETTLED_OPACITY]),
+    borderRadius: progress.value * SETTLED_BORDER_RADIUS,
+  }));
+  const animatedProps = useAnimatedProps<ScrollBoxAnimatedProps>(() =>
+    progress.value === 0
+      ? {}
+      : {
+          contentOffset: { x: 0, y: progress.value * LATE_CONTENT_OFFSET_Y },
+          borderRadius: progress.value * SETTLED_BORDER_RADIUS,
+        }
+  );
+
+  useEffect(() => {
+    progress.value = withTiming(1, { duration: 200 }, () => {
+      notify(NOTIFICATION_NAME);
+    });
+  }, [progress]);
+
+  return (
+    <View style={styles.container}>
+      <AnimatedScrollBox
+        animatedProps={animatedProps}
+        style={[styles.box, animatedStyle]}
+        onProps={onProps}
+      />
+    </View>
+  );
+}
+
+async function renderAndWaitForSyncBack() {
+  const [received, setReceived] = createTestValue<ReceivedProps>({
+    props: {},
+    style: {},
+  });
+
+  await render(<AnimatedPropsAndStyleComponent onProps={setReceived} />);
+  await waitForNotification(NOTIFICATION_NAME);
+  await wait(SYNC_BACK_DELAY_MS);
+
+  return received.value as ReceivedProps;
+}
+
+describe('sync of settled animated props back to React', () => {
+  test('React receives a prop first returned after mount as a top-level prop', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(props.contentOffset?.y).toBe(LATE_CONTENT_OFFSET_Y);
+    expect('contentOffset' in style).toBe(false);
+  });
+
+  test('React receives an animated style value only inside style', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(style.opacity as number).toBe(SETTLED_OPACITY);
+    expect('opacity' in props).toBe(false);
+  });
+
+  test('React receives a value written by both animated props and animated style as a prop and inside style', async () => {
+    const { props, style } = await renderAndWaitForSyncBack();
+
+    expect(props.borderRadius).toBe(SETTLED_BORDER_RADIUS);
+    expect(style.borderRadius as number).toBe(SETTLED_BORDER_RADIUS);
+  });
+});
+
+type WriteOrigin = 'animatedProps' | 'animatedStyle';
+
+function SecondWriteComponent({
+  secondWriteOrigin,
+  onProps,
+}: {
+  secondWriteOrigin: WriteOrigin;
+  onProps: (received: ReceivedProps) => void;
+}) {
+  const styleBorderRadius = useSharedValue(0);
+  const propsBorderRadius = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderRadius: styleBorderRadius.value,
+  }));
+  const animatedProps = useAnimatedProps<ScrollBoxAnimatedProps>(() => ({
+    borderRadius: propsBorderRadius.value,
+  }));
+
+  useEffect(() => {
+    styleBorderRadius.value = withTiming(SETTLED_BORDER_RADIUS, {
+      duration: 200,
+    });
+    propsBorderRadius.value = withTiming(SETTLED_BORDER_RADIUS, {
+      duration: 200,
+    });
+    const secondWriteBorderRadius =
+      secondWriteOrigin === 'animatedStyle'
+        ? styleBorderRadius
+        : propsBorderRadius;
+    const secondWriteTimeout = setTimeout(() => {
+      secondWriteBorderRadius.value = withTiming(
+        SECOND_WRITE_BORDER_RADIUS,
+        { duration: 200 },
+        () => {
+          notify(SECOND_WRITE_NOTIFICATION_NAME);
+        }
+      );
+    }, SECOND_WRITE_DELAY_MS);
+
+    return () => clearTimeout(secondWriteTimeout);
+  }, [styleBorderRadius, propsBorderRadius, secondWriteOrigin]);
+
+  return (
+    <View style={styles.container}>
+      <AnimatedScrollBox
+        animatedProps={animatedProps}
+        style={[styles.box, animatedStyle]}
+        onProps={onProps}
+      />
+    </View>
+  );
+}
+
+describe('sync of a value written by both origins after native removed the settled entry', () => {
+  test.each<WriteOrigin>(['animatedStyle', 'animatedProps'])(
+    'React receives a later value written only by %s as a prop and inside style',
+    async (secondWriteOrigin) => {
+      const [received, setReceived] = createTestValue<ReceivedProps>({
+        props: {},
+        style: {},
+      });
+
+      await render(
+        <SecondWriteComponent
+          secondWriteOrigin={secondWriteOrigin}
+          onProps={setReceived}
+        />
+      );
+      await waitForNotification(SECOND_WRITE_NOTIFICATION_NAME);
+      await wait(SYNC_BACK_DELAY_MS);
+
+      const { props, style } = received.value as ReceivedProps;
+      expect(props.borderRadius).toBe(SECOND_WRITE_BORDER_RADIUS);
+      expect(style.borderRadius as number).toBe(SECOND_WRITE_BORDER_RADIUS);
+    }
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

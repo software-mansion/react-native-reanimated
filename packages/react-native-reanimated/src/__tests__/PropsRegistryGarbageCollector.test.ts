@@ -12,11 +12,11 @@ import {
 } from '../common/style/processors';
 import { ValueProcessorTarget } from '../common/types';
 import type { StyleProps } from '../commonTypes';
-import { unprocessProps } from '../PropsRegistryGarbageCollector';
+import { unprocessSettledUpdate } from '../PropsRegistryGarbageCollector';
 
 const context = { target: ValueProcessorTarget.Default };
 
-describe('unprocessProps', () => {
+describe('unprocessSettledUpdate', () => {
   describe('colors', () => {
     const COLORS = [
       '#ff0000',
@@ -33,21 +33,26 @@ describe('unprocessProps', () => {
         .flat()
     )('round-trips %s: %s through React Native', (property, color) => {
       const props: StyleProps = { [property]: processColor(color) };
+      const style: StyleProps = { [property]: processColor(color) };
 
-      unprocessProps(props);
+      unprocessSettledUpdate({ props, style });
 
-      expect(typeof props[property]).toBe('string');
-      expect(processColorRN(props[property] as string)).toBe(
-        processColorRN(color)
-      );
+      for (const unprocessed of [props, style]) {
+        expect(typeof unprocessed[property]).toBe('string');
+        expect(processColorRN(unprocessed[property] as string)).toBe(
+          processColorRN(color)
+        );
+      }
     });
 
     test('leaves a non-color property untouched', () => {
       const props: StyleProps = { opacity: 0.5, width: 10 };
+      const style: StyleProps = { opacity: 0.5, width: 10 };
 
-      unprocessProps(props);
+      unprocessSettledUpdate({ props, style });
 
       expect(props).toEqual({ opacity: 0.5, width: 10 });
+      expect(style).toEqual({ opacity: 0.5, width: 10 });
     });
   });
 
@@ -67,15 +72,26 @@ describe('unprocessProps', () => {
         },
       ],
     ])('round-trips %s through React Native', (boxShadow) => {
-      const props = {
+      const style = {
         boxShadow: processBoxShadow(boxShadow, context),
       } as unknown as StyleProps;
 
-      unprocessProps(props);
+      unprocessSettledUpdate({ props: {}, style });
 
-      expect(processBoxShadowRN(props.boxShadow)).toEqual(
+      expect(processBoxShadowRN(style.boxShadow)).toEqual(
         processBoxShadowRN(boxShadow)
       );
+    });
+
+    test('leaves a boxShadow passed as a prop untouched', () => {
+      const boxShadow = [
+        { offsetX: 1, offsetY: 2, blurRadius: 3, color: '#ff0000' },
+      ];
+      const props = { boxShadow: [...boxShadow] } as unknown as StyleProps;
+
+      unprocessSettledUpdate({ props, style: {} });
+
+      expect(props.boxShadow).toEqual(boxShadow);
     });
   });
 
@@ -88,13 +104,13 @@ describe('unprocessProps', () => {
       'radial-gradient(ellipse 22% 70% at 50% 0%, #ffe6c4 0%, transparent 100%)',
       'radial-gradient(closest-side, red, blue), linear-gradient(180deg, red, blue)',
     ])('round-trips %s through React Native', (backgroundImage) => {
-      const props = {
+      const style = {
         backgroundImage: processBackgroundImage(backgroundImage, context),
       } as unknown as StyleProps;
 
-      unprocessProps(props);
+      unprocessSettledUpdate({ props: {}, style });
 
-      expect(processBackgroundImageRN(props.backgroundImage)).toEqual(
+      expect(processBackgroundImageRN(style.backgroundImage)).toEqual(
         processBackgroundImageRN(backgroundImage)
       );
     });
