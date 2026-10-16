@@ -2,6 +2,7 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Networking/NetworkingInstaller.h>
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
@@ -103,6 +104,7 @@ WorkletRuntime::~WorkletRuntime() {
     queue_->abortPending(abortToken());
     queue_.reset();
   }
+  WorkletRuntimeRegistry::markRuntimeDead(runtime_.get());
 }
 
 void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
