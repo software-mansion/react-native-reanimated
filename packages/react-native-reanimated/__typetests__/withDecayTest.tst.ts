@@ -44,6 +44,15 @@ describe('withDecay', () => {
     });
   });
 
+  test('accepts undefined for reduceMotion, rubberBandEffect and clamp, which the defaults fill', () => {
+    expect(withDecay).type.toBeCallableWith({
+      velocity: 1,
+      reduceMotion: undefined,
+      rubberBandEffect: undefined,
+      clamp: undefined,
+    });
+  });
+
   test('a non-literal boolean rubberBandEffect still requires clamp', () => {
     const rubberBandOn: boolean = Math.random() < 0.5;
     expect(withDecay).type.not.toBeCallableWith({

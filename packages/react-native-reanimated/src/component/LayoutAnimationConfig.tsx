@@ -23,8 +23,8 @@ export const SkipEnteringContext =
 // skipEntering - don't animate entering of children on wrapper mount
 // skipExiting - don't animate exiting of children on wrapper unmount
 interface LayoutAnimationConfigProps {
-  skipEntering?: boolean;
-  skipExiting?: boolean;
+  skipEntering?: boolean | undefined;
+  skipExiting?: boolean | undefined;
   children: ReactNode;
 }
 
@@ -61,7 +61,7 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   _childInstance: InstanceWithViewTag | null = null;
   _mergedRef?: RefCallback<InstanceWithViewTag>;
-  _mergedRefSource?: Ref<InstanceWithViewTag>;
+  _mergedRefSource?: Ref<InstanceWithViewTag> | undefined;
 
   _setChildInstance = (instance: InstanceWithViewTag | null) => {
     this._childInstance = instance;

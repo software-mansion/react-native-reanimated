@@ -28,6 +28,7 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  Options,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
@@ -36,11 +37,6 @@ import { filterStyles, flattenArray } from './utils';
 
 configureWebLayoutAnimations(); // is-tree-shakable-suppress
 
-export type Options<P> = {
-  setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
-  jsProps?: string[];
-};
-
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
@@ -48,7 +44,7 @@ export default class AnimatedComponent
   >
   implements IAnimatedComponentInternal
 {
-  _options?: Options<InitialComponentProps>;
+  _options?: Options<InitialComponentProps> | undefined;
   _displayName: string;
   _animatedStyles: StyleProps[] = [];
   _prevAnimatedStyles: StyleProps[] = [];

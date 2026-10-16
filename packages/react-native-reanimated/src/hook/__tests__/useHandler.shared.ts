@@ -18,6 +18,8 @@ jest.mock('react-native-worklets', () => {
 
 type Handlers = Parameters<typeof useHandler>[0];
 
+type ClosureProperty = Pick<Worklets.WorkletFunction, '__closure'>;
+
 interface RenderProps {
   handlers: Handlers;
   deps?: DependencyList;
@@ -135,44 +137,48 @@ export function runCommonTests() {
         expect(result.current.doDependenciesDiffer).toBe(true);
       });
 
-      test.each([
+      test.each<{
+        name: string;
+        before: ClosureProperty;
+        after: ClosureProperty;
+      }>([
         {
           name: 'closure order changes',
-          before: [1, 2],
-          after: [2, 1],
+          before: { __closure: [1, 2] },
+          after: { __closure: [2, 1] },
         },
         {
           name: 'closure has additional values',
-          before: [1],
-          after: [1, 2],
+          before: { __closure: [1] },
+          after: { __closure: [1, 2] },
         },
         {
           name: 'closure values change (same length)',
-          before: [1],
-          after: [2],
+          before: { __closure: [1] },
+          after: { __closure: [2] },
         },
         {
           name: 'closure value references differ (same shape, different object)',
-          before: [{ nested: true }],
-          after: [{ nested: true }],
+          before: { __closure: [{ nested: true }] },
+          after: { __closure: [{ nested: true }] },
         },
         {
           name: 'worklet gains a closure',
-          before: undefined,
-          after: [1],
+          before: {},
+          after: { __closure: [1] },
         },
         {
           name: 'worklet loses its closure',
-          before: [1],
-          after: undefined,
+          before: { __closure: [1] },
+          after: {},
         },
       ])('when $name for same hash', ({ before, after }) => {
-        const w = worklet();
-        w.__closure = before;
+        const w = Object.assign(worklet(), before);
         const { result, rerender } = renderUseHandler({ onScroll: w });
 
-        const w2 = cloneWorklet(w);
-        w2.__closure = after;
+        const w2 = Object.assign(worklet(), after, {
+          __workletHash: w.__workletHash,
+        });
         rerender({ handlers: { onScroll: w2 } });
 
         expect(result.current.doDependenciesDiffer).toBe(true);
@@ -180,19 +186,21 @@ export function runCommonTests() {
     });
 
     describe('is false', () => {
-      test.each([
-        { name: 'no captured values', closure: undefined },
-        { name: 'equal captured values', closure: [1, NaN, 'hello'] },
+      test.each<{ name: string; closure: ClosureProperty }>([
+        { name: 'no captured values', closure: {} },
+        {
+          name: 'equal captured values',
+          closure: { __closure: [1, NaN, 'hello'] },
+        },
       ])(
         'when distinct worklets have the same hash and $name',
         ({ closure }) => {
-          const w = worklet();
-          w.__closure = closure;
+          const w = Object.assign(worklet(), closure);
           const { result, rerender } = renderUseHandler({ onScroll: w });
           const cloned = cloneWorklet(w);
 
           expect(cloned).not.toBe(w);
-          if (closure !== undefined) {
+          if (w.__closure !== undefined) {
             expect(cloned.__closure).not.toBe(w.__closure);
           }
 

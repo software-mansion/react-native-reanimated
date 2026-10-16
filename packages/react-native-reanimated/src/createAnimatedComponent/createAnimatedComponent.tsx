@@ -17,11 +17,11 @@ import type { CSSCallbackProps } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
-import type { Options } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 import type {
   AnimatedComponentProps,
   InitialComponentProps,
+  Options,
 } from './commonTypes';
 
 type AnimatedComponentRef<TInstance> =
@@ -140,7 +140,7 @@ export function createAnimatedComponent<
 
   const animatedComponent = (
     props: Omit<AnimatedProps<ComponentProps<TInstance>>, 'ref'> & {
-      ref?: AnimatedComponentRef<TInstance>;
+      ref?: AnimatedComponentRef<TInstance> | undefined;
     }
   ) => (
     <AnimatedComponent

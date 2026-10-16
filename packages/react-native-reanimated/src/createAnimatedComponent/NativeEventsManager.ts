@@ -8,12 +8,13 @@ import type {
   INativeEventsManager,
   InitialComponentProps,
   ManagedAnimatedComponent,
+  Options,
 } from './commonTypes';
 import { has } from './utils';
 
 export class NativeEventsManager implements INativeEventsManager {
   readonly #managedComponent: ManagedAnimatedComponent;
-  readonly #componentOptions?: ComponentOptions;
+  readonly #componentOptions?: ComponentOptions | undefined;
   #eventViewTag = -1;
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {
@@ -146,12 +147,7 @@ function executeForEachEventHandler(
   }
 }
 
-type ComponentOptions = {
-  setNativeProps?: (
-    ref: AnimatedComponentRef,
-    props: InitialComponentProps
-  ) => void;
-};
+type ComponentOptions = Pick<Options<InitialComponentProps>, 'setNativeProps'>;
 
 type WorkletEventHandlerHolder = {
   workletEventHandler: InstanceType<typeof WorkletEventHandler>;

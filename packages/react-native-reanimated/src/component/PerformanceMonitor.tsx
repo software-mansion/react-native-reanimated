@@ -162,7 +162,7 @@ export type PerformanceMonitorProps = {
    *
    * Affects jumpiness of the FPS measurements value.
    */
-  smoothingFrames?: number;
+  smoothingFrames?: number | undefined;
 };
 
 /**

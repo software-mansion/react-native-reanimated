@@ -23,7 +23,7 @@ import { Easing } from '../../Easing';
 interface KeyframePoint {
   duration: number;
   value: number | string;
-  easing?: EasingFunction | EasingFunctionFactory;
+  easing?: EasingFunction | EasingFunctionFactory | undefined;
 }
 interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
@@ -130,7 +130,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing?: EasingFunction | EasingFunctionFactory;
+      easing?: EasingFunction | EasingFunctionFactory | undefined;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw new Error(

@@ -30,6 +30,19 @@ describe('CSS callback props', () => {
     });
   });
 
+  test('accept undefined, as when the callback is not passed', () => {
+    expect(Animated.View).type.toBeCallableWith({
+      onCSSAnimationStart: undefined,
+      onCSSAnimationEnd: undefined,
+      onCSSAnimationIteration: undefined,
+      onCSSAnimationCancel: undefined,
+      onCSSTransitionRun: undefined,
+      onCSSTransitionStart: undefined,
+      onCSSTransitionEnd: undefined,
+      onCSSTransitionCancel: undefined,
+    });
+  });
+
   test('reject a misspelled callback name', () => {
     expect(Animated.View).type.not.toBeCallableWith({
       onCSSAnimationEnded: onAnimation,

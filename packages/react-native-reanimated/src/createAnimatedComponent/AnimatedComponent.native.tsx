@@ -23,6 +23,7 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  Options,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
@@ -36,11 +37,6 @@ const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
   getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
   !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
-export type Options<P> = {
-  setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
-  jsProps?: string[];
-};
-
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
@@ -48,7 +44,7 @@ export default class AnimatedComponent
   >
   implements IAnimatedComponentInternal
 {
-  _options?: Options<InitialComponentProps>;
+  _options?: Options<InitialComponentProps> | undefined;
   _displayName: string;
   _animatedStyles: StyleProps[] = [];
   _prevAnimatedStyles: StyleProps[] = [];
@@ -65,8 +61,8 @@ export default class AnimatedComponent
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
-  _sharedTransition?: SharedTransition;
-  _sharedTransitionTag?: string;
+  _sharedTransition?: SharedTransition | undefined;
+  _sharedTransitionTag?: string | undefined;
 
   constructor(
     ChildComponent: AnyComponent,

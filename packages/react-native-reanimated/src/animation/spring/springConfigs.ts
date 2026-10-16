@@ -77,19 +77,22 @@ export const SnappySpringConfigWithDuration = {
  */
 export type SpringConfig = Simplify<
   {
-    mass?: number;
-    overshootClamping?: boolean;
-    energyThreshold?: number;
-    velocity?: number;
-    reduceMotion?: ReduceMotion;
+    mass?: number | undefined;
+    overshootClamping?: boolean | undefined;
+    energyThreshold?: number | undefined;
+    velocity?: number | undefined;
+    reduceMotion?: ReduceMotion | undefined;
   } & MutuallyExclusiveUnion<
     [
-      { stiffness?: number; damping?: number },
+      { stiffness?: number | undefined; damping?: number | undefined },
       {
-        duration?: number;
-        dampingRatio?: number;
-        clamp?: { min?: number; max?: number };
+        duration?: number | undefined;
+        dampingRatio?: number | undefined;
+        clamp?:
+          | { min?: number | undefined; max?: number | undefined }
+          | undefined;
       },
-    ]
+    ],
+    undefined
   >
 >;

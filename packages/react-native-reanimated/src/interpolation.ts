@@ -25,8 +25,8 @@ interface InterpolationNarrowedInput {
 
 /** Allows to specify extrapolation for left and right edge of the interpolation. */
 export interface ExtrapolationConfig {
-  extrapolateLeft?: Extrapolation | string;
-  extrapolateRight?: Extrapolation | string;
+  extrapolateLeft?: Extrapolation | string | undefined;
+  extrapolateRight?: Extrapolation | string | undefined;
 }
 
 interface RequiredExtrapolationConfig {

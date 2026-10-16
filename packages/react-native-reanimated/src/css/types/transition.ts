@@ -39,30 +39,30 @@ export type CSSTransitionCallback = (event: CSSTransitionEvent) => void;
  */
 export type CSSTransitionCallbacks = {
   /** Fired when the CSS transition is triggered, before any `transitionDelay`. */
-  onCSSTransitionRun?: CSSTransitionCallback;
+  onCSSTransitionRun?: CSSTransitionCallback | undefined;
   /** Fired after `transitionDelay`, when the property starts animating. */
-  onCSSTransitionStart?: CSSTransitionCallback;
+  onCSSTransitionStart?: CSSTransitionCallback | undefined;
   /** Fired when the CSS transition completes. */
-  onCSSTransitionEnd?: CSSTransitionCallback;
+  onCSSTransitionEnd?: CSSTransitionCallback | undefined;
   /**
    * Fired when the CSS transition is interrupted before completing, including
    * when the property is retargeted mid-flight.
    */
-  onCSSTransitionCancel?: CSSTransitionCallback;
+  onCSSTransitionCancel?: CSSTransitionCallback | undefined;
 };
 
 export type CSSTransitionCallbackProp = keyof CSSTransitionCallbacks;
 
 type SingleCSSTransitionSettings = {
-  transitionDuration?: CSSTransitionDuration;
-  transitionTimingFunction?: CSSTransitionTimingFunction;
-  transitionDelay?: CSSTransitionDelay;
-  transitionBehavior?: CSSTransitionBehavior;
+  transitionDuration?: CSSTransitionDuration | undefined;
+  transitionTimingFunction?: CSSTransitionTimingFunction | undefined;
+  transitionDelay?: CSSTransitionDelay | undefined;
+  transitionBehavior?: CSSTransitionBehavior | undefined;
 };
 
 export type SingleCSSTransitionConfig<S extends object = DefaultStyle> =
   SingleCSSTransitionSettings & {
-    transitionProperty?: CSSTransitionProperty<S>;
+    transitionProperty?: CSSTransitionProperty<S> | undefined;
   };
 
 export type CSSTransitionSettings =
@@ -70,8 +70,8 @@ export type CSSTransitionSettings =
 
 export type CSSTransitionProperties<S extends object = DefaultStyle> =
   CSSTransitionSettings & {
-    transitionProperty?: CSSTransitionProperty<S>;
-    transition?: CSSTransitionShorthand;
+    transitionProperty?: CSSTransitionProperty<S> | undefined;
+    transition?: CSSTransitionShorthand | undefined;
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;

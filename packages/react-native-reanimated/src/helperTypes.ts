@@ -71,7 +71,8 @@ type LayoutProps = {
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
-    | typeof BaseAnimationBuilder;
+    | typeof BaseAnimationBuilder
+    | undefined;
   /**
    * Lets you animate an element when it's added to or removed from the view
    * hierarchy.
@@ -81,7 +82,7 @@ type LayoutProps = {
    *
    * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
    */
-  entering?: EntryOrExitLayoutType;
+  entering?: EntryOrExitLayoutType | undefined;
   /**
    * Lets you animate an element when it's added to or removed from the view
    * hierarchy.
@@ -91,12 +92,12 @@ type LayoutProps = {
    *
    * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations
    */
-  exiting?: EntryOrExitLayoutType;
+  exiting?: EntryOrExitLayoutType | undefined;
 };
 
 type SharedTransitionProps = {
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
+  sharedTransitionTag?: string | undefined;
+  sharedTransitionStyle?: SharedTransition | undefined;
 };
 
 export type AnimatedProps<Props extends object> = RestProps<Props> &
@@ -107,9 +108,9 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: NestedArray<
-      CSSStyle<ComponentPropsWithoutStyle<Partial<Props>>>
-    >; // TODO - improve type once useAnimatedProps is typed properly. For now it is typed in the same way as the normal style prop, so it is assignable to the CSSStyle type
+    animatedProps?:
+      | NestedArray<CSSStyle<ComponentPropsWithoutStyle<Partial<Props>>>>
+      | undefined; // TODO - improve type once useAnimatedProps is typed properly. For now it is typed in the same way as the normal style prop, so it is assignable to the CSSStyle type
   } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED
