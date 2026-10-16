@@ -79,8 +79,12 @@ class LayoutAnimationConfigChild extends Component<LayoutAnimationConfigChildPro
     return getViewTagFromInstance(this._childInstance);
   }
 
-  getViewTag() {
-    return this.getChildViewTag() ?? findNodeHandle(this);
+  getViewTags(): number[] {
+    if (this._childInstance instanceof LayoutAnimationConfig) {
+      return this._childInstance.getViewTags();
+    }
+    const tag = this.getChildViewTag() ?? findNodeHandle(this);
+    return tag ? [tag] : [];
   }
 
   componentDidMount(): void {
@@ -114,7 +118,8 @@ class LayoutAnimationConfigChild extends Component<LayoutAnimationConfigChildPro
 // when the wrapper is unmounted to prevent the animation.
 // Since `ReactNode` can be a list of nodes, every child, including each child of
 // a Fragment, is rendered through a `LayoutAnimationConfigChild`, which gives
-// the config access to its tag.
+// the config access to its tag; a nested `LayoutAnimationConfig` hands over the
+// tags of its own children.
 // React unmounts a class component before its children, so the config reads
 // every tag before any child is gone.
 /**
@@ -137,12 +142,15 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     return onlyChild.getChildViewTag() ?? -1;
   }
 
+  getViewTags(): number[] {
+    return [...this._trackedChildren].flatMap((trackedChild) =>
+      trackedChild.getViewTags()
+    );
+  }
+
   setShouldAnimateExiting() {
-    for (const trackedChild of this._trackedChildren) {
-      const tag = trackedChild.getViewTag();
-      if (tag) {
-        setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
-      }
+    for (const tag of this.getViewTags()) {
+      setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
     }
   }
 

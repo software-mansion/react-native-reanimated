@@ -360,6 +360,57 @@ describe('LayoutAnimationConfig skipExiting', () => {
     expect(setShouldAnimateExitingForTag).toHaveBeenCalledWith(43, false);
   });
 
+  describe('around a nested LayoutAnimationConfig', () => {
+    beforeEach(() => {
+      findNodeHandle.mockImplementation(
+        (instance: { props: { children: { props: { tag?: number } } } }) =>
+          instance.props.children.props.tag ?? null
+      );
+    });
+
+    afterEach(() => {
+      findNodeHandle.mockImplementation(() => 1234);
+    });
+
+    test('true skips the exiting of each child of the nested config on unmount', () => {
+      const { unmount } = render(
+        <LayoutAnimationConfig skipExiting>
+          <LayoutAnimationConfig skipEntering>
+            <ForwardsHostInstance tag={42} />
+            <ForwardsHostInstance tag={43} />
+          </LayoutAnimationConfig>
+        </LayoutAnimationConfig>
+      );
+
+      unmount();
+
+      expect(setShouldAnimateExitingForTag.mock.calls).toEqual([
+        [42, false],
+        [43, false],
+      ]);
+    });
+
+    test("the nested config's own skipExiting={false} marks its children last", () => {
+      const { unmount } = render(
+        <LayoutAnimationConfig skipExiting>
+          <LayoutAnimationConfig skipExiting={false}>
+            <ForwardsHostInstance tag={42} />
+            <ForwardsHostInstance tag={43} />
+          </LayoutAnimationConfig>
+        </LayoutAnimationConfig>
+      );
+
+      unmount();
+
+      expect(setShouldAnimateExitingForTag.mock.calls).toEqual([
+        [42, false],
+        [43, false],
+        [42, true],
+        [43, true],
+      ]);
+    });
+  });
+
   test('true renders each child of a generator and skips its exiting on unmount', () => {
     function* generateChildren() {
       yield <ForwardsHostInstance key={42} tag={42} />;
