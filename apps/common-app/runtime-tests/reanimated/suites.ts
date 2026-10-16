@@ -69,6 +69,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'event handlers',
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
+      require('./tests/events/hostReplacement.test');
     },
   },
   {
