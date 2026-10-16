@@ -171,6 +171,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
+      setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
+      nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -1341,6 +1343,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #ifdef __APPLE__
       forceScreenSnapshot_,
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
+      setSharedTransitionOverlay_,
+      nativeViewPlacement_,
 #endif
   };
 

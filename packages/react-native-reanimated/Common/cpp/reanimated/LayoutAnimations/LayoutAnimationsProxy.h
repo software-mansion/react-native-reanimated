@@ -137,6 +137,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  NativeViewPlacementFunction nativeViewPlacement_;
+  // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
+  // the window. It exists while it has containers.
+  mutable std::shared_ptr<LightNode> containerOverlay_;
+  // Containers of finished runs that stay over their restored targets until the next pull.
+  mutable std::vector<std::shared_ptr<LightNode>> overlayContainersToRemove_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
@@ -256,7 +263,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       BeforeOrAfter index,
       TransactionMeta &transaction) const;
 
-  void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
+  void insertContainers(TransactionMeta &transaction, int containerIndex) const;
+  Tag allocateContainerTag() const;
+  std::shared_ptr<LightNode> getOrCreateContainerParent() const;
+  bool isDetached(const std::shared_ptr<LightNode> &node) const;
+  int containerParentChildCount() const;
 
   SharedTransitionRun &startSharedTransitionRun(
       const ShadowView &before,
