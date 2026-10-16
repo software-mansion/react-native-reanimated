@@ -339,7 +339,8 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     }
   }
   if (!run) {
-    run = SharedTransitionRun{.container = createSharedContainer(before, transaction)};
+    run = SharedTransitionRun{.container = createSharedContainer(before)};
+    transaction.containersToInsert.push_back(sharedTag);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
@@ -347,9 +348,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   return *run;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(
-    const ShadowView &before,
-    TransactionMeta &transaction) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const ShadowView &before) const {
   Tag containerTag = -1;
   {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
@@ -367,7 +366,6 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(
 #endif
   node->parent = root;
   root->children.push_back(node);
-  transaction.containersToInsert.push_back(node);
   [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
   return node;
@@ -641,9 +639,12 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(transaction.containersToInsert.size() * 2);
-  for (auto &node : transaction.containersToInsert) {
-    filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
-    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, node->current, rootChildCount++));
+  for (const auto &sharedTag : transaction.containersToInsert) {
+    auto &run = *sharedElements_.at(sharedTag).run;
+    run.inserted = true;
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(run.container->current));
+    filteredMutations.push_back(
+        ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
