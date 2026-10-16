@@ -76,10 +76,11 @@ const WorkletAPI = {
   getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
+  getSerializableMapping: NOOP,
   getStaticFeatureFlag: () => false,
   getUIRuntimeHolder: () => UI_RUNTIME_HOLDER,
   getUISchedulerHolder: () => UI_SCHEDULER_HOLDER,
-  hasSerializableCounterpart: () => false,
+  hasSerializableMapping: () => false,
   isBundleModeEnabled: () => false,
   isRNRuntime: () => true,
   isSerializableRef: ID,
@@ -97,7 +98,7 @@ const WorkletAPI = {
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,
   registerCustomSerializable: NOOP,
-  removeSerializableCounterpart: NOOP,
+  removeSerializableMapping: NOOP,
   runOnJS<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue
   ): (...args: Args) => void {
@@ -190,7 +191,7 @@ const WorkletAPI = {
   },
   serializableMappingCache: new Map(),
   setDynamicFeatureFlag: NOOP,
-  setSerializableCounterpart: NOOP,
+  setSerializableMapping: NOOP,
   shareableMappingCache: new Map(),
   toggleSlowAnimationsOnUIRuntime: () => false,
   UIRuntimeId: RuntimeKind.UI,

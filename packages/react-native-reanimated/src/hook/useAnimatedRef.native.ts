@@ -3,9 +3,9 @@ import { useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
   createShareable,
-  hasSerializableCounterpart,
+  hasSerializableMapping,
   scheduleOnUI,
-  setSerializableCounterpart,
+  setSerializableMapping,
   UIRuntimeId,
 } from 'react-native-worklets';
 
@@ -38,8 +38,8 @@ export function useAnimatedRef<
     return currentWrapper;
   });
 
-  if (!hasSerializableCounterpart(resultRef)) {
-    setSerializableCounterpart(resultRef, sharedWrapper);
+  if (!hasSerializableMapping(resultRef)) {
+    setSerializableMapping(resultRef, sharedWrapper);
   }
 
   return resultRef;

@@ -1,1 +1,1 @@
-Use `setSerializableCounterpart` and `hasSerializableCounterpart` from Worklets instead of `serializableMappingCache`.
+Use `setSerializableMapping` and `hasSerializableMapping` from Worklets instead of `serializableMappingCache`.

@@ -1,1 +1,1 @@
-Add `setSerializableCounterpart`, `hasSerializableCounterpart` and `removeSerializableCounterpart` to control the value that other runtimes receive in place of an object, and deprecate `serializableMappingCache`.
+Add `setSerializableMapping`, `getSerializableMapping`, `hasSerializableMapping` and `removeSerializableMapping` to control the value that other runtimes receive in place of an object, and deprecate `serializableMappingCache`.
