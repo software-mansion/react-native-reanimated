@@ -425,6 +425,26 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
+    test('rebases relative dynamic imports inside the worklet body against the worklets directory', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          return import('./helper');
+        }
+      </script>`;
+
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../some-library/file.js'
+      );
+      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `import("../../some-library/helper")`
+      );
+      expect(files[0].content).toMatchSnapshot();
+    });
+
     test('does not rebase relative requires from non-workletizable files', () => {
       const input = html`<script>
         function baz() {
