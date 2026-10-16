@@ -1,6 +1,5 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
-#include <algorithm>
 #include <cmath>
 #include <string>
 
@@ -68,26 +67,5 @@ template struct CSSNumberBase<CSSDouble, double>;
 template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
-
-#ifdef ANDROID
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid() : CSSNumberBase<CSSShadowRadiusAndroid, double>(1.0) {}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const double value)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(std::max(1.0, value)) {}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(rt, jsiValue) {
-  value = std::max(1.0, value);
-}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const folly::dynamic &value)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(value) {
-  this->value = std::max(1.0, value.getDouble());
-}
-
-template struct CSSNumberBase<CSSShadowRadiusAndroid, double>;
-
-#endif
 
 } // namespace reanimated::css
