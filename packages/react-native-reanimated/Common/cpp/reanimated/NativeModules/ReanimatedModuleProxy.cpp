@@ -769,6 +769,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
+  // RN payload factories return null to cancel an event (see UIManagerBinding::dispatchEventToJS).
+  if (payload.isNull()) {
+    return false;
+  }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return handleEventAndFlush(eventType, tag, payload, GrandCallbackSource::Event);
