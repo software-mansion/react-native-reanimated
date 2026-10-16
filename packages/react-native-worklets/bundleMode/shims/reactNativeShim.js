@@ -18,4 +18,4 @@ if (
   );
 }
 
-module.exports = require('react-native');
+module.exports = require('react-native-worklets/bundleMode/realReactNative');
