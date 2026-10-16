@@ -9,10 +9,12 @@ import type {
 import {
   arrayPattern,
   assertBlockStatement,
+  blockStatement,
   callExpression,
   functionExpression,
   identifier,
   isArrowFunctionExpression,
+  isAssignmentPattern,
   isBlockStatement,
   isExpression,
   isExpressionStatement,
@@ -20,7 +22,9 @@ import {
   isIdentifier,
   isObjectMethod,
   isProgram,
+  isRestElement,
   memberExpression,
+  returnStatement,
   thisExpression,
   variableDeclaration,
   variableDeclarator,
@@ -90,15 +94,6 @@ export function buildWorkletString(
           constructorName + workletClassFactorySuffix;
         closureVariables.push(identifier(workletClassFactoryName));
 
-        assertBlockStatement(expression.body);
-        expression.body.body.unshift(
-          variableDeclaration('const', [
-            variableDeclarator(
-              identifier(constructorName),
-              callExpression(identifier(workletClassFactoryName), [])
-            ),
-          ])
-        );
         parsedClasses.add(constructorName);
       },
     });
@@ -139,7 +134,7 @@ export function buildWorkletString(
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
-      getClosurePlugin(closureVariables),
+      getClosurePlugin(closureVariables, parsedClasses),
       ...(state.opts.extraPlugins ?? []),
     ],
     extraPresets: state.opts.extraPresets,
@@ -198,60 +193,167 @@ function shouldMockSourceMap() {
   return process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
 }
 
-function prependClosure(
-  path: NodePath<WorkletizableFunction>,
-  closureVariables: Array<Identifier>,
-  closureDeclaration: VariableDeclaration
-) {
-  if (closureVariables.length === 0 || !isProgram(path.parent)) {
-    return;
-  }
-
-  if (!isExpression(path.node.body)) {
-    path.node.body.body.unshift(closureDeclaration);
-  }
-}
-
-function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
+function getRecursiveName(
+  path: NodePath<WorkletizableFunction>
+): string | undefined {
   if (
-    isProgram(path.parent) &&
     !isArrowFunctionExpression(path.node) &&
     !isObjectMethod(path.node) &&
     path.node.id &&
-    path.scope.parent
+    path.scope.parent &&
+    path.scope.parent.bindings[path.node.id.name]?.references > 0
   ) {
-    const hasRecursiveCalls =
-      path.scope.parent.bindings[path.node.id.name]?.references > 0;
-    if (hasRecursiveCalls) {
-      path.node.body.body.unshift(
-        variableDeclaration('const', [
-          variableDeclarator(
-            identifier(path.node.id.name),
-            memberExpression(thisExpression(), identifier('_recur'))
-          ),
-        ])
-      );
-    }
+    return path.node.id.name;
   }
+  return undefined;
 }
 
-/** Prepends necessary closure variables to the worklet function. */
-function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
-  const closureDeclaration = variableDeclaration('const', [
-    variableDeclarator(
-      arrayPattern(
-        closureVariables.map((variable) => identifier(variable.name))
+/**
+ * Declares what the worklet reads from outside its code: its own name, its
+ * captures and its worklet classes.
+ */
+function buildPrologue(
+  closureVariables: Array<Identifier>,
+  parsedClasses: ReadonlySet<string>,
+  recursiveName: string | undefined
+): Array<VariableDeclaration> {
+  return [
+    ...(recursiveName !== undefined
+      ? [
+          variableDeclaration('const', [
+            variableDeclarator(
+              identifier(recursiveName),
+              memberExpression(thisExpression(), identifier('_recur'))
+            ),
+          ]),
+        ]
+      : []),
+    ...(closureVariables.length > 0
+      ? [
+          variableDeclaration('const', [
+            variableDeclarator(
+              arrayPattern(
+                closureVariables.map((variable) => identifier(variable.name))
+              ),
+              memberExpression(thisExpression(), identifier('__closure'))
+            ),
+          ]),
+        ]
+      : []),
+    ...[...parsedClasses]
+      .reverse()
+      .map((className) =>
+        variableDeclaration('const', [
+          variableDeclarator(
+            identifier(className),
+            callExpression(
+              identifier(className + workletClassFactorySuffix),
+              []
+            )
+          ),
+        ])
       ),
-      memberExpression(thisExpression(), identifier('__closure'))
+  ];
+}
+
+function readsPrologueInParameters(
+  path: NodePath<WorkletizableFunction>,
+  prologueNames: ReadonlySet<string>
+): boolean {
+  let reads = false;
+  for (const parameter of path.get('params')) {
+    parameter.traverse({
+      ReferencedIdentifier(reference) {
+        if (!reference.isIdentifier()) {
+          return;
+        }
+        const name = reference.node.name;
+        const binding = reference.scope.getBinding(name);
+        if (
+          prologueNames.has(name) &&
+          (binding === undefined || binding.path === path)
+        ) {
+          reads = true;
+          reference.stop();
+        }
+      },
+    });
+  }
+  return reads;
+}
+
+/**
+ * Parameters cannot see what the body declares, so the prologue goes in a
+ * function that encloses the original one, where the source's outer scope was.
+ */
+function encloseInPrologue(
+  path: NodePath<WorkletizableFunction>,
+  prologue: Array<VariableDeclaration>
+) {
+  const { node } = path;
+  assertBlockStatement(node.body);
+  const firstOptionalIndex = node.params.findIndex(
+    (parameter) => isAssignmentPattern(parameter) || isRestElement(parameter)
+  );
+  const placeholders = Array.from(
+    {
+      length:
+        firstOptionalIndex === -1 ? node.params.length : firstOptionalIndex,
+    },
+    () => path.scope.generateUidIdentifier('argument')
+  );
+  const enclosed = functionExpression(
+    null,
+    node.params,
+    node.body,
+    node.generator,
+    node.async
+  );
+  node.params = placeholders;
+  node.generator = false;
+  node.async = false;
+  node.body = blockStatement([
+    ...prologue,
+    returnStatement(
+      callExpression(memberExpression(enclosed, identifier('apply')), [
+        thisExpression(),
+        identifier('arguments'),
+      ])
     ),
   ]);
+}
 
+/**
+ * Prepends the prologue to the worklet, or encloses the worklet in it when a
+ * parameter reads it.
+ */
+function getClosurePlugin(
+  closureVariables: Array<Identifier>,
+  parsedClasses: ReadonlySet<string>
+): PluginItem {
   return {
     visitor: {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
         (path: NodePath<WorkletizableFunction>) => {
-          prependClosure(path, closureVariables, closureDeclaration);
-          prependRecursiveDeclaration(path);
+          if (!isProgram(path.parent) || isExpression(path.node.body)) {
+            return;
+          }
+          const recursiveName = getRecursiveName(path);
+          const prologue = buildPrologue(
+            closureVariables,
+            parsedClasses,
+            recursiveName
+          );
+          const prologueNames = new Set([
+            ...closureVariables.map((variable) => variable.name),
+            ...parsedClasses,
+            ...(recursiveName !== undefined ? [recursiveName] : []),
+          ]);
+          if (readsPrologueInParameters(path, prologueNames)) {
+            encloseInPrologue(path, prologue);
+            return;
+          }
+          path.node.body.body.unshift(...prologue);
         },
     },
   };

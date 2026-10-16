@@ -1,5 +1,5 @@
 import type { NodePath } from '@babel/core';
-import type { Binding } from '@babel/traverse';
+import type { Binding, Scope } from '@babel/traverse';
 import type {
   Identifier,
   ImportDeclaration,
@@ -18,6 +18,24 @@ import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 function toClosureIdentifier(node: Identifier | JSXIdentifier): Identifier {
   return isJSXIdentifier(node) ? identifier(node.name) : cloneNode(node, true);
+}
+
+/**
+ * Whether a binding belongs to the worklet. It is the binding the reference
+ * resolves to, so a parameter's read of a name the body redeclares stays a
+ * capture, as it is in the source.
+ */
+function isDeclaredWithin(scope: Scope, worklet: Scope): boolean {
+  for (
+    let current: Scope | undefined = scope;
+    current;
+    current = current.parent
+  ) {
+    if (current === worklet) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function getClosure(
@@ -86,12 +104,8 @@ export function getClosure(
           }
         }
 
-        let scope = idPath.scope;
-        while (scope !== funPath.scope.parent) {
-          if (scope.hasOwnBinding(name)) {
-            return;
-          }
-          scope = scope.parent;
+        if (isDeclaredWithin(binding.scope, funPath.scope)) {
+          return;
         }
 
         if (state.opts.bundleMode && isImport(binding)) {
