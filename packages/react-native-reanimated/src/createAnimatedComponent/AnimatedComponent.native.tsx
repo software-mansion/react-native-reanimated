@@ -28,7 +28,7 @@ import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray, mergeCSSAnimatedProps } from './utils';
+import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
@@ -302,7 +302,8 @@ export default class AnimatedComponent
     this._animatedStyles = filteredStyles.animatedStyles;
 
     const filteredAnimatedProps = filterStyles(
-      flattenArray(props.animatedProps ?? [])
+      flattenArray(props.animatedProps ?? []),
+      props
     );
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
@@ -316,10 +317,15 @@ export default class AnimatedComponent
         return;
       }
 
-      this._cssStyle = mergeCSSAnimatedProps(
-        props,
-        filteredAnimatedProps.cssStyle
-      );
+      // Add all remaining props to cssStyle object
+      // (e.g. SVG components are styled via top level props, not via style object)
+      const mergedProps = {
+        ...props,
+        ...filteredAnimatedProps.cssStyle,
+      };
+      delete mergedProps.style;
+      delete mergedProps.animatedProps;
+      this._cssStyle = mergedProps;
     } else {
       this._cssStyle = filteredStyles.cssStyle ?? {};
     }

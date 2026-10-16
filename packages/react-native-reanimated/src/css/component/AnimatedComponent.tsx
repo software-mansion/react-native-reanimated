@@ -2,17 +2,22 @@
 import type { ComponentProps, Ref } from 'react';
 import { Component } from 'react';
 import type { StyleProp } from 'react-native';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform } from 'react-native';
 
 import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST } from '../../common';
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import type {
   AnimatableDOMElement,
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
+  NestedArray,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
+import {
+  filterStyles,
+  flattenArray,
+} from '../../createAnimatedComponent/utils';
 import type { DefaultStyle } from '../../hook/commonTypes';
 import { assignRef } from '../../reactUtils';
 import { CSSManager } from '../platform';
@@ -133,9 +138,9 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._cssStyle = (StyleSheet.flatten(
-      props.style as StyleProp<DefaultStyle>
-    ) ?? {}) as CSSStyle;
+    this._cssStyle =
+      filterStyles(flattenArray((props.style ?? []) as NestedArray<StyleProps>))
+        .cssStyle ?? {};
   }
 
   componentDidMount() {

@@ -3,7 +3,7 @@ import { makeMutable } from '../..';
 import type { StyleProps } from '../../commonTypes';
 import type { CSSStyle } from '../../css';
 import { filterCSSAndStyleProperties } from '../../css/utils/props';
-import { filterStyles, mergeCSSAnimatedProps } from '../utils';
+import { filterStyles } from '../utils';
 
 const styleArray = (...entries: Record<string, unknown>[]): StyleProps[] =>
   entries as StyleProps[];
@@ -85,6 +85,38 @@ describe(filterStyles, () => {
 
       expect(cssStyle).toEqual({ opacity: { ':active': 0.5 } });
     });
+
+    test('do not rest at a value that a later animated style overrides', () => {
+      const animatedStyle = {
+        viewDescriptors: {},
+        initial: { value: { backgroundColor: 'blue' } },
+      };
+      const { cssStyle } = filterStyles(
+        styleArray({ backgroundColor: '#eee' }, animatedStyle, {
+          backgroundColor: { ':hover': 'red' },
+        })
+      );
+
+      expect(cssStyle).toEqual({ backgroundColor: { ':hover': 'red' } });
+    });
+
+    test('rest at a value set after an animated style', () => {
+      const animatedStyle = {
+        viewDescriptors: {},
+        initial: { value: { backgroundColor: 'blue' } },
+      };
+      const { cssStyle } = filterStyles(
+        styleArray(
+          animatedStyle,
+          { backgroundColor: '#eee' },
+          { backgroundColor: { ':hover': 'red' } }
+        )
+      );
+
+      expect(cssStyle).toEqual({
+        backgroundColor: { default: '#eee', ':hover': 'red' },
+      });
+    });
   });
 
   test('keeps the default written in the pseudo object', () => {
@@ -132,11 +164,11 @@ describe(filterStyles, () => {
   });
 });
 
-describe(mergeCSSAnimatedProps, () => {
-  test('rests a pseudo object without default at the plain prop', () => {
-    const cssStyle = mergeCSSAnimatedProps(
-      { fill: 'red', style: { width: 10 }, animatedProps: {} },
-      { fill: { ':hover': 'yellow' }, transitionDuration: 100 }
+describe('filterStyles with inherited values', () => {
+  test('rests a pseudo object without default at the inherited value', () => {
+    const { cssStyle } = filterStyles(
+      styleArray({ fill: { ':hover': 'yellow' }, transitionDuration: 100 }),
+      { fill: 'red' }
     );
 
     expect(cssStyle).toEqual({
@@ -145,10 +177,10 @@ describe(mergeCSSAnimatedProps, () => {
     });
   });
 
-  test('keeps the default written in the pseudo object over the plain prop', () => {
-    const cssStyle = mergeCSSAnimatedProps(
-      { fill: 'red' },
-      { fill: { default: 'blue', ':hover': 'yellow' } }
+  test('keeps the default written in the pseudo object over the inherited value', () => {
+    const { cssStyle } = filterStyles(
+      styleArray({ fill: { default: 'blue', ':hover': 'yellow' } }),
+      { fill: 'red' }
     );
 
     expect(cssStyle).toEqual({
@@ -156,15 +188,26 @@ describe(mergeCSSAnimatedProps, () => {
     });
   });
 
-  test('keeps plain props that animatedProps do not override', () => {
-    const cssStyle = mergeCSSAnimatedProps(
-      { r: 20, stroke: 'black' },
-      { fill: { default: 'red', ':hover': 'yellow' } }
+  test('does not rest at an inherited value that animated props override', () => {
+    const animatedProps = {
+      viewDescriptors: {},
+      initial: { value: { fill: 'blue' } },
+    };
+    const { cssStyle } = filterStyles(
+      styleArray(animatedProps, { fill: { ':hover': 'yellow' } }),
+      { fill: 'red' }
+    );
+
+    expect(cssStyle).toEqual({ fill: { ':hover': 'yellow' } });
+  });
+
+  test('does not add inherited values to the CSS style', () => {
+    const { cssStyle } = filterStyles(
+      styleArray({ fill: { default: 'red', ':hover': 'yellow' } }),
+      { r: 20, stroke: 'black' }
     );
 
     expect(cssStyle).toEqual({
-      r: 20,
-      stroke: 'black',
       fill: { default: 'red', ':hover': 'yellow' },
     });
   });
