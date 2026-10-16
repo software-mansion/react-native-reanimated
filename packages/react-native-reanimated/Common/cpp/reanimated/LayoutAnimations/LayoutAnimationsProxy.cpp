@@ -28,6 +28,15 @@ using enum LayoutAnimationType;
 using enum ExitingState;
 
 namespace {
+void markDescendantsDeleted(const std::shared_ptr<LightNode> &node) {
+  for (const auto &child : node->children) {
+    if (!child->isExiting()) {
+      child->setExitingState(DECISION_PENDING);
+    }
+    markDescendantsDeleted(child);
+  }
+}
+
 struct AncestorOrigin {
   Tag tag;
   react::Point origin;
@@ -436,8 +445,11 @@ void LayoutAnimationsProxy::updateLightTree(
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        react_native_assert(node && "LightNode not found");
+        const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        if (nodeIt == lightNodes_.end()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
@@ -493,6 +505,7 @@ void LayoutAnimationsProxy::updateLightTree(
           const auto node = it->second;
           const auto parent = node->parent.lock();
           react_native_assert(parent && "Parent node is nullptr");
+          markDescendantsDeleted(node);
           handleSubtreeRemoval(node, parent, transaction);
         }
         staleSynchronousProps_.forget(tag);
@@ -500,9 +513,14 @@ void LayoutAnimationsProxy::updateLightTree(
       }
       case ShadowViewMutation::Insert: {
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        const auto parentIt = lightNodes_.find(mutation.parentTag);
+        if (nodeIt == lightNodes_.end() || parentIt == lightNodes_.end()) {
+          break;
+        }
+        auto &node = nodeIt->second;
         react_native_assert(node->state == LIVE && "React inserts a view whose removal is withheld");
-        auto &parent = lightNodes_[mutation.parentTag];
+        auto &parent = parentIt->second;
         const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
@@ -559,10 +577,15 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Remove: {
-        const auto &node = lightNodes_[mutation.oldChildShadowView.tag];
+        const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
+        const auto parentIt = lightNodes_.find(mutation.parentTag);
+        if (nodeIt == lightNodes_.end() || parentIt == lightNodes_.end() || nodeIt->second->isExiting()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
-        const auto &parent = lightNodes_[parentTag];
+        const auto &parent = parentIt->second;
         react_native_assert(parent && "Remove mutation from an unknown parent");
         const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
         react_native_assert(
