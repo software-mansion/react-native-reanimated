@@ -22,10 +22,15 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   jsi::Value collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp);
 
  private:
+  struct KeyOrigins {
+    bool writtenByAnimatedProps = false;
+    bool writtenByAnimatedStyle = false;
+    bool lastWrittenByAnimatedStyle = false;
+  };
+
   struct WriteHistory {
     double lastWriteTimestamp = 0;
-    std::unordered_set<std::string> animatedPropsKeys;
-    std::unordered_set<std::string> animatedStyleKeys;
+    std::unordered_map<std::string, KeyOrigins> keyOrigins;
   };
 
   // Kept after eviction of the registry entry, until `removeTag`. Each sync
