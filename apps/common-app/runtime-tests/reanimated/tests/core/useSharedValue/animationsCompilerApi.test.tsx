@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import type { SharedValue } from 'react-native-reanimated';
 import {
   useSharedValue,
   withClamp,
@@ -34,7 +33,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithTiming = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(withTiming(100, {}, notifyCallback));
@@ -44,7 +43,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithClamp = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(
@@ -56,7 +55,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithDecay = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(withDecay({}, notifyCallback));
@@ -66,7 +65,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithDelay = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(withDelay(100, withTiming(100, {}, notifyCallback)));
@@ -76,7 +75,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithSpring = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(withSpring(100, { duration: 250 }, notifyCallback));
@@ -86,7 +85,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithRepeat = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(withRepeat(withTiming(100), 2, true, notifyCallback));
@@ -96,7 +95,7 @@ describe(`Test animation assignments on Shared Value using compiler API`, () => 
 
   const WithSequence = ({ progress }: { progress: number }) => {
     const sharedValue = useSharedValue(0);
-    registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
+    registerValue(SHARED_VALUE_REF, sharedValue);
 
     useEffect(() => {
       sharedValue.set(
