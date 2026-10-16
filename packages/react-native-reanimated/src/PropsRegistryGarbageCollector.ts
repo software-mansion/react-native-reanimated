@@ -72,6 +72,39 @@ export function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
   unprocessBoxShadow(props);
   unprocessBackgroundImage(props);
+  unprocessObjectFit(props);
+  unprocessVerticalAlign(props);
+}
+
+const RESIZE_MODE_TO_OBJECT_FIT: Record<string, string> = {
+  contain: 'contain',
+  cover: 'cover',
+  stretch: 'fill',
+  none: 'none',
+};
+
+function unprocessObjectFit(props: StyleProps) {
+  const objectFit = RESIZE_MODE_TO_OBJECT_FIT[props.resizeMode as string];
+  if (objectFit !== undefined) {
+    // @ts-ignore props is readonly
+    props.objectFit = objectFit;
+  }
+}
+
+const TEXT_ALIGN_VERTICAL_TO_VERTICAL_ALIGN: Record<string, string> = {
+  auto: 'auto',
+  top: 'top',
+  bottom: 'bottom',
+  center: 'middle',
+};
+
+function unprocessVerticalAlign(props: StyleProps) {
+  const verticalAlign =
+    TEXT_ALIGN_VERTICAL_TO_VERTICAL_ALIGN[props.textAlignVertical as string];
+  if (verticalAlign !== undefined) {
+    // @ts-ignore props is readonly
+    props.verticalAlign = verticalAlign;
+  }
 }
 
 function unprocessBoxShadow(props: StyleProps) {

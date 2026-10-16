@@ -9,6 +9,8 @@ import {
   processBackgroundImage,
   processBoxShadow,
   processColor,
+  processObjectFit,
+  processVerticalAlign,
 } from '../common/style/processors';
 import { ValueProcessorTarget } from '../common/types';
 import type { StyleProps } from '../commonTypes';
@@ -97,6 +99,63 @@ describe('unprocessProps', () => {
       expect(processBackgroundImageRN(props.backgroundImage)).toEqual(
         processBackgroundImageRN(backgroundImage)
       );
+    });
+  });
+
+  describe('objectFit', () => {
+    test.each([
+      ['contain', 'contain'],
+      ['cover', 'cover'],
+      ['fill', 'stretch'],
+      ['none', 'none'],
+    ])(
+      'round-trips objectFit %s through resizeMode %s',
+      (objectFit, resizeMode) => {
+        const props: StyleProps = processObjectFit(
+          objectFit,
+          context
+        ) as StyleProps;
+        expect(props).toEqual({ resizeMode });
+
+        unprocessProps(props);
+
+        expect(props.objectFit).toBe(objectFit);
+      }
+    );
+
+    test.each(['center', 'repeat'])(
+      'leaves resizeMode %s without an objectFit counterpart',
+      (resizeMode) => {
+        const props: StyleProps = { resizeMode };
+
+        unprocessProps(props);
+
+        expect(props).toEqual({ resizeMode });
+      }
+    );
+  });
+
+  describe('verticalAlign', () => {
+    test.each(['auto', 'top', 'bottom', 'middle'])(
+      'round-trips verticalAlign %s through textAlignVertical',
+      (verticalAlign) => {
+        const props: StyleProps = processVerticalAlign(
+          verticalAlign,
+          context
+        ) as StyleProps;
+
+        unprocessProps(props);
+
+        expect(props.verticalAlign).toBe(verticalAlign);
+      }
+    );
+
+    test('leaves a props bag without textAlignVertical untouched', () => {
+      const props: StyleProps = { opacity: 0.5 };
+
+      unprocessProps(props);
+
+      expect(props).toEqual({ opacity: 0.5 });
     });
   });
 });
