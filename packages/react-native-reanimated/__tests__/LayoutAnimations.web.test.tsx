@@ -5,9 +5,14 @@ import {
   type RenderOptions,
   type RenderResult,
 } from '@testing-library/react';
-import { Component, type ReactElement, StrictMode, useState } from 'react';
-import type { ViewProps } from 'react-native';
-import { Button, View } from 'react-native';
+import {
+  Component,
+  type ReactElement,
+  type Ref,
+  StrictMode,
+  useState,
+} from 'react';
+import { Button, View, type ViewProps } from 'react-native';
 
 import type { EntryOrExitLayoutType } from '../src';
 import Animated, { FadeIn, FadeOut } from '../src';
@@ -53,6 +58,40 @@ class ClassHost extends Component<ViewProps> {
 
 const AnimatedClassHost = Animated.createAnimatedComponent(ClassHost);
 
+// Exposes its inner host view the way library wrappers do.
+class AnimatableRefWrapper extends Component<ViewProps> {
+  inner: React.ComponentRef<typeof View> | null = null;
+
+  getAnimatableRef() {
+    return this.inner;
+  }
+
+  render() {
+    return (
+      <View
+        ref={(view) => {
+          this.inner = view;
+        }}
+        {...this.props}
+      />
+    );
+  }
+}
+
+function SvgWrapper({
+  ref,
+  testID,
+}: {
+  ref?: Ref<SVGSVGElement>;
+  testID?: string;
+}) {
+  return <svg ref={ref} data-testid={testID} />;
+}
+
+const AnimatedAnimatableRefWrapper =
+  Animated.createAnimatedComponent(AnimatableRefWrapper);
+const AnimatedSvgWrapper = Animated.createAnimatedComponent(SvgWrapper);
+
 describe('Layout Animations', () => {
   describe.each([
     ['without StrictMode', false],
@@ -89,6 +128,10 @@ describe('Layout Animations', () => {
 
     beforeAll(() => {
       jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
     });
 
     describe('on mount', () => {
@@ -160,6 +203,43 @@ describe('Layout Animations', () => {
           jest.advanceTimersByTime(1000);
           expectBoxesInvisible(screen);
         });
+      });
+    });
+
+    describe('on a wrapped element', () => {
+      const expectSameEnteringAnimation = (screen: RenderResult) => {
+        // Entering animations are applied on the next animation frame.
+        act(() => {
+          jest.advanceTimersByTime(50);
+        });
+
+        const host = screen.getByTestId('host');
+        const wrapped = screen.getByTestId('wrapped');
+
+        expect(host.style.animationName).not.toBe('');
+        expect(wrapped.style.animationName).toBe(host.style.animationName);
+      };
+
+      test('animates the view returned by getAnimatableRef', () => {
+        const screen = render(
+          <>
+            <Animated.View entering={FadeIn} testID="host" />
+            <AnimatedAnimatableRefWrapper entering={FadeIn} testID="wrapped" />
+          </>
+        );
+
+        expectSameEnteringAnimation(screen);
+      });
+
+      test('animates a raw SVG element', () => {
+        const screen = render(
+          <>
+            <Animated.View entering={FadeIn} testID="host" />
+            <AnimatedSvgWrapper entering={FadeIn} testID="wrapped" />
+          </>
+        );
+
+        expectSameEnteringAnimation(screen);
       });
     });
   });

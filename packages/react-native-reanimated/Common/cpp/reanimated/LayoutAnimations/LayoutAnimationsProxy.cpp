@@ -310,7 +310,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
+  visibleScreens_.erase(node->current.tag);
   if (node == topScreen_) {
     topScreen_ = nullptr;
   }
@@ -469,7 +471,7 @@ void LayoutAnimationsProxy::updateLightTree(
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          hiddenViewTags_.erase(mutation.newChildShadowView.tag);
+          forgetHiddenView(mutation.newChildShadowView.tag);
         }
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
@@ -505,11 +507,9 @@ void LayoutAnimationsProxy::updateLightTree(
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
-        bool hasSharedTransition = false;
+        std::optional<SharedTag> sharedTag;
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-          hasSharedTransition = mutation.newChildShadowView.traits.check(ShadowNodeTraits::Trait::ViewKind) &&
-              sharedTransitionManager_->tagToName_.contains(tag);
+          sharedTag = findSharedTag(mutation.newChildShadowView);
         }
         const auto layoutConfig = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         const auto enteringConfig = isViewKind(mutation.newChildShadowView)
@@ -545,7 +545,8 @@ void LayoutAnimationsProxy::updateLightTree(
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
               ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
-        } else if (hasSharedTransition && isInsideInactiveBoundary(node)) {
+        } else if (sharedTag && isInsideInactiveBoundary(node)) {
+          hideInSharedElement(*sharedTag, node);
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
@@ -826,9 +827,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   node->setExitingState(TORN_DOWN);
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
-  }
   transaction.filteredMutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, hostIndex));
   (defersTeardown ? transaction.teardownMutations : transaction.filteredMutations)
@@ -980,9 +978,6 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
-  }
   mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
@@ -1026,9 +1021,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       cancelLayoutAnimation(subNode->current.tag);
-      if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-        hiddenViewTags_.erase(subNode->current.tag);
-      }
       mutations.push_back(ShadowViewMutation::RemoveMutation(node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->setExitingState(TORN_DOWN);
@@ -1068,10 +1060,11 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    sharedContainers_.clear();
+    sharedElements_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
+    visibleScreens_.clear();
   }
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
@@ -1131,24 +1124,22 @@ void LayoutAnimationsProxy::cleanupAnimations(
   }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    for (const auto &[tag, _] : completedAnimations_) {
-      if (hasPendingLayoutAnimation(tag)) {
+    for (auto &[sharedTag, element] : sharedElements_) {
+      if (!element.run) {
         continue;
       }
-      const auto containerIt = sharedContainers_.find(tag);
-      if (containerIt == sharedContainers_.end()) {
+      const auto tag = element.run->container->current.tag;
+      if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
         continue;
       }
       if (!flushStructuralMutations) {
         preservedTags.insert(tag);
         continue;
       }
-      if (containerIt->second.restoreAfterNode) {
-        transaction.nodesToRestore.push_back(containerIt->second.restoreAfterNode);
-      }
-      removeSharedContainer(tag, transaction);
+      finishSharedTransition(sharedTag, element, transaction);
     }
 
+    queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
   }
   cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedTags);
@@ -1158,7 +1149,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || sharedContainers_.contains(tag));
+    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedContainer(tag));
   });
 }
 
