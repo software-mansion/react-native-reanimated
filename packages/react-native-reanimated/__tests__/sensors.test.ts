@@ -260,6 +260,18 @@ describe('Sensors', () => {
     expect(result.current.sensor.value).toBeEqualRounded(data270);
   });
 
+  test.each([
+    'interval',
+    'adjustToInterfaceOrientation',
+    'iosReferenceFrame',
+  ] as const)('leaves the default %s in place when it is undefined', (key) => {
+    const configOf = (userConfig: Partial<SensorConfig>) =>
+      renderHook(() => useAnimatedSensor(SensorType.ROTATION, userConfig))
+        .result.current.config;
+
+    expect(configOf({ [key]: undefined })).toEqual(configOf({}));
+  });
+
   test('adjusts orientation of the 3d sensor', () => {
     const { result } = renderHook(() =>
       useAnimatedSensor(SensorType.ACCELEROMETER, {

@@ -1,10 +1,10 @@
 'use strict';
+import type { ConfigInput } from '../../common';
 import type {
   AnimatableValue,
   Animation,
   AnimationObject,
   ReduceMotion,
-  RequiredKeys,
   Timestamp,
 } from '../../commonTypes';
 
@@ -42,33 +42,34 @@ export interface InnerDecayAnimation
  *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay#config
  */
-export type DecayConfig = {
-  deceleration?: number;
-  velocityFactor?: number;
-  velocity?: number;
-  reduceMotion?: ReduceMotion;
-} & (
-  | {
-      rubberBandEffect?: false;
-      clamp?: [min: number, max: number];
-    }
-  | {
-      rubberBandEffect: true;
-      clamp: [min: number, max: number];
-      rubberBandFactor?: number;
-    }
-);
+export type DecayConfig = ConfigInput<
+  Omit<DecayDefaults, 'rubberBandFactor'> & { reduceMotion: ReduceMotion }
+> &
+  (
+    | ConfigInput<{ rubberBandEffect: false; clamp: DecayClamp }>
+    | {
+        rubberBandEffect: true;
+        clamp: DecayClamp;
+        rubberBandFactor?: number | undefined;
+      }
+  );
 
-export type DefaultDecayConfig = RequiredKeys<
-  DecayConfig,
-  'deceleration' | 'velocityFactor' | 'velocity'
-> & { rubberBandFactor: number };
+type DecayClamp = [min: number, max: number];
+
+type DecayDefaults = {
+  deceleration: number;
+  velocityFactor: number;
+  velocity: number;
+  rubberBandFactor: number;
+};
+
+export type DefaultDecayConfig = DecayConfig & DecayDefaults;
 
 // If user wants to use rubber band decay animation we have to make sure he has provided clamp
-export type RubberBandDecayConfig = RequiredKeys<
-  DefaultDecayConfig,
-  'clamp'
-> & { rubberBandEffect: true };
+export type RubberBandDecayConfig = DefaultDecayConfig & {
+  rubberBandEffect: true;
+  clamp: DecayClamp;
+};
 
 export function isValidRubberBandConfig(
   config: DefaultDecayConfig

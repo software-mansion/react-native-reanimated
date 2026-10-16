@@ -54,8 +54,8 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   }
 
   if (
-    config.clamp?.min &&
-    config.clamp?.max &&
+    config.clamp?.min !== undefined &&
+    config.clamp.max !== undefined &&
     config.clamp.min > config.clamp.max
   ) {
     errorMessage += `, clamp.min should be lower than clamp.max, got clamp: {min: ${config.clamp.min}, max: ${config.clamp.max}} `;
@@ -66,25 +66,6 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   }
 
   return errorMessage === '';
-}
-
-export function safeMergeConfigs<TConfig extends object>(
-  defaults: TConfig,
-  userConfig?: Partial<TConfig>
-): TConfig {
-  'worklet';
-  if (!userConfig) {
-    return defaults;
-  }
-
-  const filtered = Object.fromEntries(
-    Object.entries(userConfig).filter(([, v]) => v !== undefined)
-  ) as Partial<TConfig>;
-
-  return {
-    ...defaults,
-    ...filtered,
-  };
 }
 
 function bisectRoot({

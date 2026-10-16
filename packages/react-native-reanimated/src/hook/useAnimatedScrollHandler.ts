@@ -12,11 +12,11 @@ export type ScrollHandler<
   Context extends Record<string, unknown> = Record<string, unknown>,
 > = (event: ReanimatedScrollEvent, context: Context) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
-  onScroll?: ScrollHandler<Context>;
-  onBeginDrag?: ScrollHandler<Context>;
-  onEndDrag?: ScrollHandler<Context>;
-  onMomentumBegin?: ScrollHandler<Context>;
-  onMomentumEnd?: ScrollHandler<Context>;
+  onScroll?: ScrollHandler<Context> | undefined;
+  onBeginDrag?: ScrollHandler<Context> | undefined;
+  onEndDrag?: ScrollHandler<Context> | undefined;
+  onMomentumBegin?: ScrollHandler<Context> | undefined;
+  onMomentumEnd?: ScrollHandler<Context> | undefined;
 }
 
 export type ScrollHandlerProcessed<
