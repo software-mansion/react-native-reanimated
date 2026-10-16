@@ -1,14 +1,12 @@
 use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
-use oxc_ast::ast::{
-    Expression, FormalParameters, FunctionBody, FunctionType, Statement, VariableDeclarationKind,
-};
+use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, FunctionType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
 use crate::ast::{
-    closure_binding_pattern, const_decl, identifier_binding_pattern,
+    closure_binding_pattern, const_decl, identifier_binding_pattern, let_decl,
     replace_implicit_return_with_block,
 };
 use crate::directives::strip_worklet_directives;
@@ -97,18 +95,5 @@ fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) ->
         false,
     ));
 
-    let declarator = builder.variable_declarator(
-        SPAN,
-        VariableDeclarationKind::Let,
-        array_pattern,
-        NONE,
-        Some(this_closure),
-        false,
-    );
-    Statement::VariableDeclaration(builder.alloc_variable_declaration(
-        SPAN,
-        VariableDeclarationKind::Let,
-        builder.vec1(declarator),
-        false,
-    ))
+    let_decl(builder, array_pattern, this_closure)
 }
