@@ -20,6 +20,11 @@ import { DefaultStaticFeatureFlags } from '../../featureFlags/staticFeatureFlags
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
+// The Generic Sensor API has no hinge sensor.
+function isWebSensorType(sensorType: number): sensorType is SensorType {
+  return sensorType in SensorType;
+}
+
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
 }
@@ -53,18 +58,26 @@ class JSReanimated implements IReanimatedModule {
     // no-op
   }
 
-  isSensorAvailable(sensorType: SensorType): boolean {
+  isSensorAvailable(sensorType: number): boolean {
     // the window object is unavailable when building the server portion of a site that uses SSG
-    return IS_WINDOW_AVAILABLE && this.getSensorName(sensorType) in window;
+    return (
+      IS_WINDOW_AVAILABLE &&
+      isWebSensorType(sensorType) &&
+      this.getSensorName(sensorType) in window
+    );
+  }
+
+  setSensorAvailabilityHandler(): void {
+    // noop
   }
 
   registerSensor(
-    sensorType: SensorType,
+    sensorType: number,
     interval: number,
     _iosReferenceFrame: number,
     eventHandler: SerializableRef<(data: SensorValue) => void>
   ): number {
-    if (!IS_WINDOW_AVAILABLE) {
+    if (!IS_WINDOW_AVAILABLE || !isWebSensorType(sensorType)) {
       // the window object is unavailable when building the server portion of a site that uses SSG
       // this check is here to ensure that the server build won't fail
       return -1;

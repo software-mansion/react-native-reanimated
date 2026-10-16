@@ -7,6 +7,9 @@
 
 #import <reanimated/apple/sensor/ReanimatedSensorType.h>
 
+/// Posted on the main thread when the first hinge reading arrives.
+extern NSNotificationName const ReanimatedHingeDidBecomeAvailableNotification;
+
 @interface ReanimatedSensor : NSObject {
   ReanimatedSensorType _sensorType;
   double _interval;
@@ -29,6 +32,7 @@
 - (bool)initializeGravity;
 - (bool)initializeMagnetometer;
 - (bool)initializeOrientation;
+- (bool)initializeHinge;
 - (void)cancel;
 
 @end

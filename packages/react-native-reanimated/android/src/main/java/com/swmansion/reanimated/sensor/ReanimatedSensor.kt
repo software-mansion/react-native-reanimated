@@ -16,7 +16,7 @@ internal class ReanimatedSensor(
 ) {
     val listener: ReanimatedSensorListener
     val sensorManager: SensorManager
-    var sensor: Sensor? = null
+    val sensor: Sensor?
     val interval: Int
 
     companion object {
@@ -26,19 +26,26 @@ internal class ReanimatedSensor(
     init {
         val wm = reactContext.get()!!.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = wm.defaultDisplay
-        listener = ReanimatedSensorListener(setter, interval.toDouble(), display, sensorType)
         sensorManager =
             reactContext.get()!!.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager.getDefaultSensor(sensorType.getType())
+        listener =
+            ReanimatedSensorListener(
+                setter,
+                interval.toDouble(),
+                display,
+                sensorType,
+                sensor?.maximumRange ?: 0f,
+            )
         this.interval = if (interval == -1) DEFAULT_INTERVAL else interval
     }
 
     fun initialize(): Boolean {
-        sensor = sensorManager.getDefaultSensor(sensorType.getType())
-        if (sensor != null) {
-            sensorManager.registerListener(listener, sensor, interval * 1000)
-            return true
+        if (sensor == null) {
+            return false
         }
-        return false
+        sensorManager.registerListener(listener, sensor, interval * 1000)
+        return true
     }
 
     fun cancel() {

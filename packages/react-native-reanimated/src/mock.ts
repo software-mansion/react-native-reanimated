@@ -31,6 +31,7 @@ import {
   GentleSpringConfigWithDuration,
   getAnimatedStyle,
   getUseOfValueInStyleWarning,
+  HingeStatus,
   InterfaceOrientation,
   IOSReferenceFrame,
   isColor,
@@ -62,6 +63,14 @@ const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
 
 const hook = {
+  useAnimatedHinge: () => {
+    const value = { angle: 0, status: HingeStatus.UNKNOWN };
+    return {
+      hinge: { value, get: () => value },
+      unregister: NOOP,
+      isAvailable: false,
+    };
+  },
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedReaction: NOOP,
@@ -481,6 +490,7 @@ const isSharedValue = {
 };
 
 const commonTypes = {
+  HingeStatus,
   InterfaceOrientation,
   IOSReferenceFrame,
   KeyboardState,

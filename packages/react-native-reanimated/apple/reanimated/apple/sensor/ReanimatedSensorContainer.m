@@ -11,6 +11,10 @@ static NSNumber *_nextSensorId = nil;
   self = [super init];
   _sensors = [[NSMutableDictionary alloc] init];
   _nextSensorId = @0;
+  [NSNotificationCenter.defaultCenter addObserver:self
+                                         selector:@selector(hingeDidBecomeAvailable)
+                                             name:ReanimatedHingeDidBecomeAvailableNotification
+                                           object:nil];
   return self;
 }
 
@@ -46,6 +50,19 @@ static NSNumber *_nextSensorId = nil;
   }
   [_sensors[_sensorId] cancel];
   [_sensors removeObjectForKey:_sensorId];
+}
+
+- (void)observeSensorAvailability:(ReanimatedSensorAvailabilityListener)listener
+{
+  self.availabilityListener = listener;
+}
+
+- (void)hingeDidBecomeAvailable
+{
+  ReanimatedSensorAvailabilityListener listener = self.availabilityListener;
+  if (listener != nil) {
+    listener(HINGE, true);
+  }
 }
 
 @end

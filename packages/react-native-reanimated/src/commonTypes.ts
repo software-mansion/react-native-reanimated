@@ -329,6 +329,18 @@ export enum SensorType {
   MAGNETIC_FIELD = 4,
   ROTATION = 5,
 }
+
+/**
+ * Mirrors `UIHingeStatus`. Android derives it from the angle, and flat (180°)
+ * is `FULLY_OPEN` there.
+ */
+export enum HingeStatus {
+  UNKNOWN = 0,
+  CLOSED = 1,
+  PARTIALLY_OPEN = 2,
+  FULLY_OPEN = 3,
+}
+
 export enum IOSReferenceFrame {
   XArbitraryZVertical,
   XArbitraryCorrectedZVertical,
@@ -348,6 +360,16 @@ export type AnimatedSensor<T extends SensorValue> = {
   unregister: () => void;
   isAvailable: boolean;
   config: SensorConfig;
+};
+
+export type AnimatedHinge = {
+  hinge: SharedValue<ValueHinge>;
+  unregister: () => void;
+  /**
+   * On iOS it is `false` until the first hinge reading arrives, because the
+   * system has no other way to tell that the device has a hinge.
+   */
+  isAvailable: boolean;
 };
 
 /**
@@ -378,6 +400,12 @@ export type ValueRotation = {
   pitch: number;
   roll: number;
   interfaceOrientation: InterfaceOrientation;
+};
+
+export type ValueHinge = {
+  /** The opening angle of the hinge in radians, 0 when it is closed. */
+  angle: number;
+  status: HingeStatus;
 };
 
 export type SensorValueMap = {

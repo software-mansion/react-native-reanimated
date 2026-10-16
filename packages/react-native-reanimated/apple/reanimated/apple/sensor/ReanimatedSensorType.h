@@ -4,4 +4,5 @@ typedef NS_ENUM(NSUInteger, ReanimatedSensorType) {
   GRAVITY = 3,
   MAGNETIC_FIELD = 4,
   ROTATION_VECTOR = 5,
+  HINGE = 6,
 };

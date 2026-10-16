@@ -16,6 +16,7 @@ import type {
   SensorValueMap,
   SharedValue,
 } from './commonTypes';
+import { HingeSensor } from './HingeSensor';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
@@ -72,6 +73,13 @@ export function getViewProp<T>(
       }
     );
   });
+}
+
+export function getHingeSensor(): HingeSensor {
+  if (!globalThis.__hingeSensor) {
+    globalThis.__hingeSensor = new HingeSensor();
+  }
+  return globalThis.__hingeSensor;
 }
 
 function getSensorContainer(): SensorContainer {

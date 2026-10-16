@@ -6,10 +6,13 @@
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder,
+    const std::shared_ptr<react::CallInvoker> &jsInvoker)
     : platformIsSensorAvailableFunction_(platformDepMethodsHolder.isSensorAvailable),
       platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
+      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor),
+      jsInvoker_(jsInvoker) {}
 
 jsi::Value AnimatedSensorModule::isSensorAvailable(const jsi::Value &sensorType) const {
   return jsi::Value(platformIsSensorAvailableFunction_(static_cast<int>(sensorType.asNumber())));
@@ -43,23 +46,34 @@ jsi::Value AnimatedSensorModule::registerSensor(
 
         jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
         jsi::Object value(uiRuntime);
-        if (sensorType == SensorType::ROTATION_VECTOR) {
-          // TODO: timestamp should be provided by the platform implementation
-          // such that the native side has a chance of providing a true event
-          // timestamp
-          value.setProperty(uiRuntime, "qx", newValues[0]);
-          value.setProperty(uiRuntime, "qy", newValues[1]);
-          value.setProperty(uiRuntime, "qz", newValues[2]);
-          value.setProperty(uiRuntime, "qw", newValues[3]);
-          value.setProperty(uiRuntime, "yaw", newValues[4]);
-          value.setProperty(uiRuntime, "pitch", newValues[5]);
-          value.setProperty(uiRuntime, "roll", newValues[6]);
-        } else {
-          value.setProperty(uiRuntime, "x", newValues[0]);
-          value.setProperty(uiRuntime, "y", newValues[1]);
-          value.setProperty(uiRuntime, "z", newValues[2]);
+        switch (sensorType) {
+          case SensorType::ACCELEROMETER:
+          case SensorType::GYROSCOPE:
+          case SensorType::GRAVITY:
+          case SensorType::MAGNETIC_FIELD:
+            value.setProperty(uiRuntime, "x", newValues[0]);
+            value.setProperty(uiRuntime, "y", newValues[1]);
+            value.setProperty(uiRuntime, "z", newValues[2]);
+            value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
+            break;
+          case SensorType::ROTATION_VECTOR:
+            // TODO: timestamp should be provided by the platform implementation
+            // such that the native side has a chance of providing a true event
+            // timestamp
+            value.setProperty(uiRuntime, "qx", newValues[0]);
+            value.setProperty(uiRuntime, "qy", newValues[1]);
+            value.setProperty(uiRuntime, "qz", newValues[2]);
+            value.setProperty(uiRuntime, "qw", newValues[3]);
+            value.setProperty(uiRuntime, "yaw", newValues[4]);
+            value.setProperty(uiRuntime, "pitch", newValues[5]);
+            value.setProperty(uiRuntime, "roll", newValues[6]);
+            value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
+            break;
+          case SensorType::HINGE:
+            value.setProperty(uiRuntime, "angle", newValues[0]);
+            value.setProperty(uiRuntime, "status", newValues[1]);
+            break;
         }
-        value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
         runSyncOnRuntime(uiWorkletRuntime, serializableHandler, jsi::Value(uiRuntime, value));
       });
@@ -80,6 +94,29 @@ void AnimatedSensorModule::unregisterAllSensors() {
     platformUnregisterSensorFunction_(sensorId);
   }
   sensorsIds_.clear();
+}
+
+void AnimatedSensorModule::setAvailabilityHandler(jsi::Runtime &rnRuntime, const jsi::Value &handler) {
+  std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+  availabilityHandler_ = std::make_shared<jsi::Function>(handler.asObject(rnRuntime).asFunction(rnRuntime));
+}
+
+void AnimatedSensorModule::removeAvailabilityHandler() {
+  std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+  availabilityHandler_.reset();
+}
+
+void AnimatedSensorModule::notifyAvailabilityChanged(int sensorType, bool isAvailable) {
+  std::weak_ptr<jsi::Function> weakHandler;
+  {
+    std::lock_guard<std::mutex> lock(availabilityHandlerMutex_);
+    weakHandler = availabilityHandler_;
+  }
+  jsInvoker_->invokeAsync([weakHandler, sensorType, isAvailable](jsi::Runtime &rnRuntime) {
+    if (const auto handler = weakHandler.lock()) {
+      handler->call(rnRuntime, sensorType, isAvailable);
+    }
+  });
 }
 
 } // namespace reanimated

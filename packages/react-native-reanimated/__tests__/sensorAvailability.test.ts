@@ -41,4 +41,14 @@ describe('JSReanimated', () => {
     expect(module.isSensorAvailable(SensorType.ACCELEROMETER)).toBe(true);
     expect(module.isSensorAvailable(SensorType.GYROSCOPE)).toBe(false);
   });
+
+  test('has no hinge sensor', () => {
+    const module = createJSReanimatedModule();
+    const hingeSensorType = 6;
+
+    expect(module.isSensorAvailable(hingeSensorType)).toBe(false);
+    expect(
+      module.registerSensor(hingeSensorType, -1, 0, jest.fn() as never)
+    ).toBe(-1);
+  });
 });

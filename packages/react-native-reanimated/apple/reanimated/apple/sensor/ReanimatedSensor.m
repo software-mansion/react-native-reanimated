@@ -1,6 +1,25 @@
+#import <React/RCTUtils.h>
 #import <reanimated/apple/sensor/ReanimatedSensor.h>
+#import <stdatomic.h>
+
+NSNotificationName const ReanimatedHingeDidBecomeAvailableNotification =
+    @"ReanimatedHingeDidBecomeAvailableNotification";
 
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
+// iOS has no query for the hinge, so the first hinge reading is the proof that the device has one.
+static atomic_bool isHingeAvailable = false;
+
+@interface ReanimatedSensor () {
+  id<UIInteraction> _hingeInteraction;
+  atomic_bool _isHingeCancelled;
+}
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+- (void)startHingeUpdates API_AVAILABLE(ios(27.1));
+- (void)attachHingeInteractionToKeyWindow API_AVAILABLE(ios(27.1));
+- (void)keyWindowDidChange:(NSNotification *)notification API_AVAILABLE(ios(27.1));
+#endif
+@end
+
 @implementation ReanimatedSensor
 
 + (bool)isAvailable:(ReanimatedSensorType)sensorType
@@ -19,6 +38,8 @@
     case GRAVITY:
     case ROTATION_VECTOR:
       return [motionManager isDeviceMotionAvailable];
+    case HINGE:
+      return atomic_load(&isHingeAvailable);
   }
   return false;
 }
@@ -43,6 +64,10 @@
 
 - (bool)initialize
 {
+  if (_sensorType == HINGE) {
+    return [self initializeHinge];
+  }
+
   if (![ReanimatedSensor isAvailable:_sensorType]) {
     return false;
   }
@@ -186,9 +211,75 @@
   return true;
 }
 
+- (bool)initializeHinge
+{
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+  if (@available(iOS 27.1, *)) {
+    // Sensors are registered from the JS thread and interactions are main-thread
+    // only, so all hinge state is read and written on the main queue.
+    dispatch_async(dispatch_get_main_queue(), ^{ [self startHingeUpdates]; });
+    return true;
+  }
+#endif
+  return false;
+}
+
+#if __has_include(<UIKit/UIHingeInteraction.h>)
+- (void)startHingeUpdates
+{
+  if (atomic_load(&_isHingeCancelled)) {
+    return;
+  }
+
+  __weak ReanimatedSensor *weakSelf = self;
+  _hingeInteraction = [[UIHingeInteraction alloc]
+      initWithUpdateHandler:^(UIHingeInteraction *interaction, UIHingeInteractionUpdate *update) {
+        ReanimatedSensor *strongSelf = weakSelf;
+        UIHinge *hinge = update.hinge;
+        // nil is not a measurement: it arrives when the interaction leaves a hierarchy with a hinge.
+        if (strongSelf == nil || hinge == nil || atomic_load(&strongSelf->_isHingeCancelled)) {
+          return;
+        }
+        double data[] = {hinge.angle, (double)hinge.status};
+        strongSelf->_setter(data, 0);
+        if (!atomic_exchange(&isHingeAvailable, true)) {
+          [NSNotificationCenter.defaultCenter postNotificationName:ReanimatedHingeDidBecomeAvailableNotification
+                                                            object:nil];
+        }
+      }];
+  NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+  [center addObserver:self selector:@selector(keyWindowDidChange:) name:UIWindowDidBecomeKeyNotification object:nil];
+  [center addObserver:self selector:@selector(keyWindowDidChange:) name:UISceneDidActivateNotification object:nil];
+  [self attachHingeInteractionToKeyWindow];
+}
+
+- (void)keyWindowDidChange:(NSNotification *)notification
+{
+  [self attachHingeInteractionToKeyWindow];
+}
+
+// The app has no key window while it is in the background, and it can replace its key window.
+- (void)attachHingeInteractionToKeyWindow
+{
+  UIWindow *keyWindow = RCTKeyWindow();
+  if (keyWindow == nil || keyWindow == _hingeInteraction.view) {
+    return;
+  }
+  [_hingeInteraction.view removeInteraction:_hingeInteraction];
+  [keyWindow addInteraction:_hingeInteraction];
+}
+#endif
+
 - (void)cancel
 {
-  if (_sensorType == ACCELEROMETER) {
+  if (_sensorType == HINGE) {
+    atomic_store(&_isHingeCancelled, true);
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [NSNotificationCenter.defaultCenter removeObserver:self];
+      [self->_hingeInteraction.view removeInteraction:self->_hingeInteraction];
+      self->_hingeInteraction = nil;
+    });
+  } else if (_sensorType == ACCELEROMETER) {
     [_motionManager stopAccelerometerUpdates];
   } else if (_sensorType == GYROSCOPE) {
     [_motionManager stopGyroUpdates];
@@ -268,6 +359,11 @@
 }
 
 - (bool)initializeOrientation
+{
+  return false;
+}
+
+- (bool)initializeHinge
 {
   return false;
 }
