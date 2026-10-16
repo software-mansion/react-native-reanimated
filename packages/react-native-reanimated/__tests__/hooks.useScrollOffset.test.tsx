@@ -8,11 +8,14 @@ jest.mock('../src/platformFunctions/findNodeHandle', () => {
   const tags = new WeakMap<object, number>();
   let nextTag = 1000;
   return {
-    findNodeHandle: jest.fn((instance: object) => {
-      if (!tags.has(instance)) {
-        tags.set(instance, nextTag++);
+    findNodeHandle: jest.fn((componentOrHandle: unknown) => {
+      if (typeof componentOrHandle !== 'object' || componentOrHandle === null) {
+        return componentOrHandle ?? null;
       }
-      return tags.get(instance);
+      if (!tags.has(componentOrHandle)) {
+        tags.set(componentOrHandle, nextTag++);
+      }
+      return tags.get(componentOrHandle);
     }),
   };
 });
