@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -170,7 +171,7 @@ if (project == rootProject) {
 
 apply(from = "./generate-stub-pch.gradle.kts")
 
-android {
+extensions.configure<LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.reanimated"
