@@ -47,6 +47,14 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
       }
       continue;
     }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID) {
+      if (config == nullptr) {
+        progressSharedTransitionsForNativeID_.erase(tag);
+      } else {
+        progressSharedTransitionsForNativeID_[tag] = config;
+      }
+      continue;
+    }
     if (config == nullptr) {
       getConfigsForType(type).erase(tag);
     } else {
@@ -136,6 +144,13 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);
+
+  // Transfer progress shared transition config from nativeId to view tag
+  const auto progressConfig = progressSharedTransitionsForNativeID_[nativeId];
+  if (progressConfig) {
+    progressSharedTransitions_.insert_or_assign(tag, progressConfig);
+  }
+  progressSharedTransitionsForNativeID_.erase(nativeId);
 }
 
 std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {
@@ -153,6 +168,8 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       return layoutAnimations_;
     case LayoutAnimationType::SHARED_ELEMENT_TRANSITION:
       return sharedTransitions_;
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS:
+      return progressSharedTransitions_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }

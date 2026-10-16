@@ -47,6 +47,7 @@ import {
   ScreenTransition as ScreenTransitionPresets,
   SensorType,
   setUpTests,
+  SharedTransitionType,
   SnappySpringConfig,
   SnappySpringConfigWithDuration,
   steps,
@@ -355,6 +356,20 @@ class BaseAnimationMock {
   }
 }
 
+class SharedTransitionMock extends BaseAnimationMock {
+  custom() {
+    return this;
+  }
+
+  progressAnimation() {
+    return this;
+  }
+
+  defaultTransitionType() {
+    return this;
+  }
+}
+
 class NativeEventsManagerMock {
   attachEvents = NOOP;
   detachEvents = NOOP;
@@ -445,7 +460,8 @@ const layoutReanimation = {
   RotateOutUpLeft: new BaseAnimationMock(),
   RotateOutUpRight: new BaseAnimationMock(),
   SequencedTransition: new BaseAnimationMock(),
-  SharedTransition: new BaseAnimationMock(),
+  SharedTransition: new SharedTransitionMock(),
+  SharedTransitionType,
   SlideInDown: new BaseAnimationMock(),
   SlideInLeft: new BaseAnimationMock(),
   SlideInRight: new BaseAnimationMock(),
