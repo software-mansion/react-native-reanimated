@@ -191,11 +191,6 @@ jobs:
             runtime-tests-ios-argent:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-ios-argent.yml'
-              - '.github/actions/install-sim-remote/**'
-              - '.github/actions/install-pods/**'
-              - '.github/actions/save-pods/**'
-              - '.github/actions/setup-ccache/**'
-              - '.github/actions/save-ccache/**'
               - 'apps/common-app/runtime-tests/**'
               - 'apps/fabric-example/babel.config.js'
               - 'apps/fabric-example/metro.config.js'
@@ -203,7 +198,8 @@ jobs:
               - 'apps/common-app/package.json'
               - 'apps/fabric-example/scripts/runtime-tests-server.js'
               - 'apps/fabric-example/scripts/runtime-tests-remote.mjs'
-              - 'apps/fabric-example/scripts/export-runtime-tests-app.js'
+              - 'apps/fabric-example/argent-build.yaml'
+              - 'apps/fabric-example/scripts/argent/**'
               - 'apps/fabric-example/ios/**'
               - 'packages/react-native-reanimated/RNReanimated.podspec'
               - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
@@ -337,7 +333,6 @@ jobs:
       configuration: ReleaseRuntimeTests
       bundleMode: false
     secrets:
-      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
 
   runtime-tests-ios-bundle-mode:
@@ -349,7 +344,6 @@ jobs:
       configuration: ReleaseRuntimeTests
       bundleMode: true
     secrets:
-      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
 
   worklets-plugin-static-check:

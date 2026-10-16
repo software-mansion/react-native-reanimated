@@ -3,7 +3,7 @@
 // Drive the iOS runtime tests against a REMOTE simulator (argent cloud).
 //
 // Runs from any OS that has node + the `sim-remote` CLI (authenticated via
-// SIM_ROUTER_USERNAME / SIM_ROUTER_API_KEY) — no Xcode, no xcrun, no macOS.
+// SIM_REMOTE_API_KEY) — no Xcode, no xcrun, no macOS.
 //
 // The reporting path is unchanged from local runs: runtime-tests-server.js
 // listens on this host, and `sim-remote proxy` reverse-tunnels the sim's
@@ -19,7 +19,7 @@
 //
 // Usage:
 //   node runtime-tests-remote.mjs pick    [--udid <UUID>]
-//   node runtime-tests-remote.mjs install --udid <UUID> --app-path <path/to/FabricExample.app>
+//   node runtime-tests-remote.mjs install --udid <UUID> (--build-id <id> | --app-path <path/to/FabricExample.app>)
 //   node runtime-tests-remote.mjs run     --udid <UUID> --library <reanimated|worklets|self-tests>
 //                                         [--configuration ReleaseRuntimeTests] [--only "<suites>"]
 //                                         [--metro-port <port>]
@@ -27,7 +27,9 @@
 //
 // `pick` prints the UDID of the best remote simulator (an explicit --udid
 // passes through; otherwise the first available iPhone, preferring booted);
-// `install` boots the sim and uploads the app (once per job);
+// `install` boots the sim and installs the app (once per job): a build id
+// from `sim-remote build` (see argent-build.yaml) has the cloud install its stored build
+// directly, an --app-path is uploaded from here;
 // `run` executes one library's suites (once per workflow step, like --launch).
 
 import { spawn, execFile, execFileSync } from 'node:child_process';
@@ -78,6 +80,7 @@ for (let i = 0; i < rest.length; i++) {
 
 const UDID = args.udid ? args.udid.replace(/^remote:/, '') : '';
 const APP_PATH = args['app-path'] ?? '';
+const BUILD_ID = args['build-id'] ?? '';
 const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
@@ -240,18 +243,26 @@ async function pick() {
 
 async function install() {
   if (!UDID) fail('--udid is required (bare UUID or remote:<UUID>)');
-  if (!APP_PATH) fail('install requires --app-path');
-  if (!fs.existsSync(APP_PATH)) {
+  if (!BUILD_ID && !APP_PATH) fail('install requires --build-id or --app-path');
+  if (BUILD_ID && APP_PATH) fail('install takes --build-id or --app-path, not both');
+  if (APP_PATH && !fs.existsSync(APP_PATH)) {
     fail(`no .app at ${APP_PATH} (unpack the artifact first)`);
   }
   log(`booting remote simulator ${UDID}`);
   await simRemote(['simctl', 'boot', UDID]).catch(() => {}); // tolerate already-booted
   await simRemote(['simctl', 'bootstatus', UDID, '-b'], { timeout: 900_000 });
-  log(`uploading ${APP_PATH} to the orchestrator (QUIC)`);
   await simRemote(['simctl', 'uninstall', UDID, BUNDLE_ID]).catch(() => {});
-  await simRemote(['simctl', 'install', UDID, path.resolve(APP_PATH)], {
-    timeout: 900_000,
-  });
+  if (BUILD_ID) {
+    log(`installing build ${BUILD_ID} from the cloud's store (the app never comes here)`);
+    await simRemote(['install', UDID, '--build-id', BUILD_ID], {
+      timeout: 900_000,
+    });
+  } else {
+    log(`uploading ${APP_PATH} to the orchestrator (QUIC)`);
+    await simRemote(['simctl', 'install', UDID, path.resolve(APP_PATH)], {
+      timeout: 900_000,
+    });
+  }
   log('install done');
 }
 
