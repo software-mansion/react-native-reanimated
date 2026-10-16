@@ -1,0 +1,117 @@
+---
+sidebar_position: 5
+---
+
+# useAnimatedHinge
+
+<Badges version="4.8.0">
+  `useAnimatedHinge` lets you create animations based on the hinge of a foldable device. It gives you the angle between the two halves of the device and the fold state.
+</Badges>
+
+The playground below mimics a hinge with an angle from 0° to 180°:
+
+import { useAnimatedHingePlayground } from '@site/src/components/InteractivePlayground';
+
+<InteractivePlayground usePlayground={useAnimatedHingePlayground}/>
+
+## Reference
+
+```javascript
+import { useAnimatedHinge, useAnimatedStyle } from 'react-native-reanimated';
+
+function App() {
+  const { hinge } = useAnimatedHinge();
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotateY: `${Math.PI - hinge.value.angle}rad` }],
+  }));
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  // --- Function declaration ---
+
+  function useAnimatedHinge(): AnimatedHinge;
+
+  // --- Return types ---
+
+  type AnimatedHinge = {
+    hinge: SharedValue<ValueHinge>;
+    unregister: () => void;
+    isAvailable: boolean;
+  };
+
+  type ValueHinge = {
+    angle: number;
+    status: HingeStatus;
+  };
+
+  enum HingeStatus {
+    UNKNOWN = 0,
+    CLOSED = 1,
+    PARTIALLY_OPEN = 2,
+    FULLY_OPEN = 3,
+  }
+  ```
+</details>
+
+### Arguments
+
+`useAnimatedHinge` takes no arguments. There is no interval option, because the system decides when it reports the hinge.
+
+### Returns
+
+`useAnimatedHinge` returns an object containing these fields:
+
+| Name        | Type                      | Description                                                                                                                                                  |
+| ----------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| hinge       | `SharedValue<ValueHinge>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the fold angle and the hinge status.                                                   |
+| unregister  | `() => void`              | Stops the hinge updates for this component. The hook calls it for you when the component unmounts.                                                           |
+| isAvailable | `boolean`                 | Indicates whether the device has a hinge. On iOS it is `false` until the first hinge reading arrives, see [remarks](/docs/device/useAnimatedHinge#remarks). |
+
+The `hinge` shared value is an object with the fold angle and the hinge status:
+
+- `angle: number` - the angle between the two halves of the device in radians. `0` means the device is closed and `π` (180°) means it is flat. On Android, the angle is larger than `π` on a device that folds past flat.
+- `status: HingeStatus` - tells whether the device is closed, partially open or fully open.
+
+`HingeStatus` is an enum with these values:
+
+- `UNKNOWN` - the status is not known yet.
+- `CLOSED` - the device is closed.
+- `PARTIALLY_OPEN` - the device is open at an angle between closed and fully open.
+- `FULLY_OPEN` - the device is open as far as it allows. On Android, a device that folds past flat is also fully open when it is flat.
+
+Before any hinge reading arrives, the value is `{ angle: 0, status: HingeStatus.UNKNOWN }`.
+
+## Example
+
+The two panels fold around the hinge as the device opens and closes:
+
+import AnimatedHingeSrc from '!!raw-loader!@site/src/examples/AnimatedHinge';
+
+<CollapsibleCode src={AnimatedHingeSrc} showLines={[9, 33]}/>
+
+## Remarks
+
+- The hook needs a foldable device. On Android it reads `Sensor.TYPE_HINGE_ANGLE`. On iOS it needs iOS 27.1 or newer and an app built with Xcode 27.1 or newer. On Web it is not supported and `isAvailable` is `false`.
+
+- On Android, `isAvailable` is correct from the first render.
+
+- iOS has no API that tells whether a device has a hinge. On iOS, `isAvailable` is `false` until the first hinge reading arrives in the app. Then each component that uses the hook renders again with `isAvailable` equal to `true`. On an iOS device without a hinge no reading arrives, and `isAvailable` stays `false`.
+
+- On a device with a hinge, a reading arrives soon after the component mounts, even when the hinge doesn't move. After that, readings arrive when the hinge changes.
+
+- All components that use the hook share one `hinge` shared value and one `isAvailable` state. The updates stop when every component that uses the hook has unmounted or called `unregister`.
+
+- On Android, Reanimated derives the `status` from the angle. On iOS, the system reports it.
+
+- The system decides how often and how precisely it reports the angle. Don't depend on a given update rate or precision. Use `status` when you only need the fold state.
+
+- You can read the hinge data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>
