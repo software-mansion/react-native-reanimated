@@ -3,6 +3,7 @@ import { AccessibilityInfo } from 'react-native';
 
 import { ReducedMotionConfig, ReduceMotion, withTiming } from '../src';
 import type { TimingAnimation } from '../src';
+import { createReducedMotionManager } from '../src/ReducedMotionCommon';
 
 const START = 1_000;
 
@@ -87,6 +88,19 @@ describe('ReduceMotion.System follows a reduce-motion change made while the app 
     expect(isReducingMotion()).toBe(true);
   });
 
+  test('changing the mode of a mounted ReducedMotionConfig replaces its override', () => {
+    const { rerender, unmount } = render(
+      <ReducedMotionConfig mode={ReduceMotion.Never} />
+    );
+
+    rerender(<ReducedMotionConfig mode={ReduceMotion.Always} />);
+
+    expect(isReducingMotion()).toBe(true);
+    changeSystemReduceMotion(true);
+    unmount();
+    expect(isReducingMotion()).toBe(true);
+  });
+
   test('unmounting an override nested in another restores the outer override, which keeps ignoring the system', () => {
     render(<ReducedMotionConfig mode={ReduceMotion.Never} />);
     const { unmount } = render(
@@ -131,5 +145,19 @@ describe('ReduceMotion.System follows a reduce-motion change made while the app 
     expect(isReducingMotion()).toBe(true);
     changeSystemReduceMotion(false);
     expect(isReducingMotion()).toBe(false);
+  });
+});
+
+describe('createReducedMotionManager', () => {
+  test('releasing an override twice leaves the overrides registered after it in force', () => {
+    const manager = createReducedMotionManager(() => false);
+    const releaseNever = manager.override(ReduceMotion.Never);
+    manager.override(ReduceMotion.Always);
+
+    releaseNever();
+    releaseNever();
+
+    expect(manager.jsValue).toBe(true);
+    expect(manager.uiValue.value).toBe(true);
   });
 });
