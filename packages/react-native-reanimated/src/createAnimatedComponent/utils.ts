@@ -1,6 +1,8 @@
 'use strict';
 import type { StyleProps } from '../commonTypes';
 import type { CSSStyle } from '../css';
+import { isPseudoSelectorValue } from '../css/utils';
+import { isSharedValue } from '../isSharedValue';
 import type { NestedArray } from './commonTypes';
 
 export function flattenArray<T>(array: NestedArray<T>): T[] {
@@ -41,20 +43,44 @@ type FilteredStyles = {
   animatedStyles: StyleProps[];
 };
 
-export function filterStyles(styles: StyleProps[] | undefined): FilteredStyles {
+function withInheritedDefault(value: unknown, overridden: unknown): unknown {
+  if (!isPseudoSelectorValue(value) || value.default !== undefined) {
+    return value;
+  }
+  const restingValue = isPseudoSelectorValue(overridden)
+    ? overridden.default
+    : overridden;
+  if (restingValue === undefined || isSharedValue(restingValue)) {
+    return value;
+  }
+  return { ...value, default: restingValue };
+}
+
+export function filterStyles(
+  styles: StyleProps[] | undefined,
+  inheritedValues: Record<string, unknown> = {}
+): FilteredStyles {
+  const animatedStyles: StyleProps[] = [];
   if (!styles) {
-    return { animatedStyles: [], cssStyle: null };
+    return { animatedStyles, cssStyle: null };
   }
 
-  return styles.reduce<FilteredStyles>(
-    ({ animatedStyles, cssStyle }, style) => {
-      if (style?.viewDescriptors) {
-        animatedStyles.push(style);
-      } else {
-        cssStyle = { ...cssStyle, ...style } as CSSStyle;
+  const restingValues = { ...inheritedValues };
+  let cssStyle: Record<string, unknown> | null = null;
+  for (const style of styles) {
+    if (style?.viewDescriptors) {
+      animatedStyles.push(style);
+      for (const key in style.initial?.value) {
+        delete restingValues[key];
       }
-      return { animatedStyles, cssStyle };
-    },
-    { animatedStyles: [], cssStyle: null }
-  );
+    } else {
+      cssStyle ??= {};
+      for (const key of Object.keys(style ?? {})) {
+        const value = withInheritedDefault(style[key], restingValues[key]);
+        cssStyle[key] = value;
+        restingValues[key] = value;
+      }
+    }
+  }
+  return { animatedStyles, cssStyle: cssStyle as CSSStyle | null };
 }
