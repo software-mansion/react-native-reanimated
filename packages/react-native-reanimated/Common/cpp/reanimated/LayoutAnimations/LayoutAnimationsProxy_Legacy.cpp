@@ -134,12 +134,12 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
   }
 }
 
-// On android mutations that alter the view hierarchy are only produced on the JS thread (the push model), so to not
-// race with those, we apply the dead nodes cleanup only on the JS thread, unless there is a surface drop, in which case
-// we can safely cleanup on the UI thread since the surface is gone and no more mutations will be produced for it.
+// With Android's push model, structural mutations from the JS thread may still be waiting to mount when a UI-thread
+// pull runs, so dead nodes must be cleaned up on the JS thread. The pull model mounts transactions on the UI thread,
+// where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -356,18 +356,18 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         }
 
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        const auto enteringConfig =
-            layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING);
+        const auto enteringConfig = isViewKind(mutation.newChildShadowView)
+            ? layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING)
+            : nullptr;
         if (!enteringConfig) {
           filteredMutations.push_back(mutation);
           continue;
         }
 
-        startEnteringAnimation(tag, mutation, enteringConfig);
-        filteredMutations.push_back(mutation);
-
         // temporarily set opacity to 0 to prevent flickering on android
         std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
+        startEnteringAnimation(tag, mutation, *newView, enteringConfig);
+        filteredMutations.push_back(mutation);
 
         filteredMutations.push_back(
             ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, parentTag));
@@ -470,7 +470,8 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
-    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+    if (layoutAnimation.opacity &&
+        (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
     }
   }
@@ -649,18 +650,18 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation,
+    const ShadowView &hiddenView,
     const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::ENTERING,
-      .before = mutation.newChildShadowView,
+      .before = hiddenView,
       .after = mutation.newChildShadowView,
       .parentTag = mutation.parentTag,
-      .opacity = viewProps.opacity,
+      .opacity = getViewProps(mutation.newChildShadowView).opacity,
       .config = config,
   });
 }

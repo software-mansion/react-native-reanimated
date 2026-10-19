@@ -29,6 +29,8 @@ struct AnimatedPropsEntry {
 };
 using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
 
+using PropNamePredicate = bool (*)(const std::string &);
+
 using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
@@ -48,6 +50,9 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
+#ifdef ANDROID
+  void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
+#endif
   void remove(Tag tag);
 
 #ifdef ANDROID

@@ -197,6 +197,22 @@ const config = {
         },
       ],
     ].filter(Boolean),
+    [
+      '@docusaurus/plugin-client-redirects',
+      /** @type {import('@docusaurus/plugin-client-redirects').Options} */
+      ({
+        redirects: [
+          {
+            from: '/docs/worklets-babel-plugin/about',
+            to: '/docs/worklets-plugin/about',
+          },
+          {
+            from: '/docs/worklets-babel-plugin/plugin-options',
+            to: '/docs/worklets-plugin/plugin-options',
+          },
+        ],
+      }),
+    ],
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',

@@ -16,7 +16,7 @@ function resolveWorkletsPlugin() {
   if (wanted === 'oxc') {
     return loadOxcPlugin();
   }
-  // The OXC plugin only implements Bundle Mode: it always emits worklet files,
+  // The Oxc plugin only implements Bundle Mode: it always emits worklet files,
   // which nothing resolves once Bundle Mode is toggled off.
   if (wanted === 'babel' || !workletsPluginOptions.bundleMode) {
     return BABEL_WORKLETS_PLUGIN;
@@ -26,7 +26,7 @@ function resolveWorkletsPlugin() {
   } catch (error) {
     const cause = error instanceof Error ? error.message : String(error);
     console.warn(
-      `[Worklets] oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
+      `[Worklets] Oxc plugin unavailable, falling back to ${BABEL_WORKLETS_PLUGIN}. ` +
         'Run `yarn build` in packages/react-native-worklets/plugin-oxc to use it. ' +
         `Cause: ${cause.split('\n')[0]}`
     );

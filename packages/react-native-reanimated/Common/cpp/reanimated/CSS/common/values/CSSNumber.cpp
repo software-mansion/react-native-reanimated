@@ -1,6 +1,5 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
-#include <algorithm>
 #include <cmath>
 #include <string>
 
@@ -44,20 +43,16 @@ std::string CSSNumberBase<TDerived, TValue>::toString() const {
 
 template <typename TDerived, typename TValue>
 TDerived CSSNumberBase<TDerived, TValue>::interpolate(double progress, const TDerived &other) const {
-  const auto interpolated = value + progress * (other.value - value);
-
-  if constexpr (requires { TDerived::epsilon; }) {
-    if (std::abs(other.value - interpolated) < TDerived::epsilon) {
-      return other;
-    }
-  }
-
-  return TDerived(interpolated);
+  return TDerived(value + progress * (other.value - value));
 }
 
 template <typename TDerived, typename TValue>
 bool CSSNumberBase<TDerived, TValue>::operator==(const CSSNumberBase<TDerived, TValue> &other) const {
   return value == other.value;
+}
+
+CSSTextDouble CSSTextDouble::interpolate(double progress, const CSSTextDouble &other) const {
+  return CSSTextDouble(roundTextMetric(value + progress * (other.value - value)));
 }
 
 CSSInteger CSSInteger::interpolate(double progress, const CSSInteger &other) const {
@@ -72,26 +67,5 @@ template struct CSSNumberBase<CSSDouble, double>;
 template struct CSSNumberBase<CSSTextDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
 template struct CSSNumberBase<CSSIndex, int>;
-
-#ifdef ANDROID
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid() : CSSNumberBase<CSSShadowRadiusAndroid, double>(1.0) {}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const double value)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(std::max(1.0, value)) {}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(rt, jsiValue) {
-  value = std::max(1.0, value);
-}
-
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const folly::dynamic &value)
-    : CSSNumberBase<CSSShadowRadiusAndroid, double>(value) {
-  this->value = std::max(1.0, value.getDouble());
-}
-
-template struct CSSNumberBase<CSSShadowRadiusAndroid, double>;
-
-#endif
 
 } // namespace reanimated::css
