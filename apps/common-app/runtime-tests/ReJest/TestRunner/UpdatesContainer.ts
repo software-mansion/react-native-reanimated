@@ -202,9 +202,8 @@ export function createUpdatesContainer() {
     return runOnUIBlocking(
       () => {
         'worklet';
-        // Return copies: the recorder mutates these arrays in place, and
-        // serialization caches objects by identity, so returning the arrays
-        // themselves makes every later read return the content of the first.
+        // Copies, because serialization caches arrays by identity and the
+        // recorder mutates them in place, so a second read would be stale.
         return {
           jsUpdates: [...jsUpdates.value],
           nativeSnapshots: [...nativeSnapshots.value],

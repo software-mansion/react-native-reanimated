@@ -79,6 +79,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/boxShadow.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
+      require('./tests/props/hostReplacement.test');
       require('./tests/props/cssArrayKeyframes.test');
       require('./tests/props/inlineStylesAndProps.test');
     },
@@ -88,7 +89,9 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
+      require('./tests/css/platformColor.test');
       require('./tests/css/transformNone.test');
+      require('./tests/css/transitionOnRecycledView.test');
     },
   },
   {
@@ -102,6 +105,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');
+    },
+  },
+  {
+    testSuiteName: 'Activity entering animation',
+    importTest: () => {
+      require('./tests/layoutAnimations/activityEntering.test');
     },
   },
   {
