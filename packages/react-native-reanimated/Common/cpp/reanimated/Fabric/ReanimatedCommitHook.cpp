@@ -141,6 +141,9 @@ void ReanimatedCommitHook::shadowTreeDidCommit(
 
 void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowNode, const bool carriesRegistryValues)
     const {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
   trackWillCommit(rootShadowNode, carriesRegistryValues);
   trackDidCommit(rootShadowNode);
 }
