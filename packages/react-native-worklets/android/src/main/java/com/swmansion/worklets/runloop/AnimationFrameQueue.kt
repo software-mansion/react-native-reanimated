@@ -24,7 +24,10 @@ class AnimationFrameQueue(
             }
         }
     private val mCallbackPosted = AtomicBoolean()
-    private val mPaused = AtomicBoolean()
+    // Paused until the host resumes. React Native calls onHostResume right away when the app is
+    // already resumed, and never when React runs without an Activity (headless JS), so the loop
+    // doesn't spin on every vsync in a process with nothing on screen.
+    private val mPaused = AtomicBoolean(true)
     private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
     private val mDispatchLock = Any()
