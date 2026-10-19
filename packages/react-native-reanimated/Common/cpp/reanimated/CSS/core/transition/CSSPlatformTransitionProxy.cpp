@@ -161,8 +161,10 @@ CSSTransitionConfig CSSPlatformTransitionProxy::processConfig(
   }
 
   // The parser pairs every value diff with settings, so all must have matched one.
+#ifndef NDEBUG
   react_native_assert(
       matchedValues == config.changedProperties.size() && "[Reanimated] CSS transition value diff without settings");
+#endif // NDEBUG
 
   for (const auto &propertyName : config.removedProperties) {
     if (routing.platform.erase(propertyName) > 0) {
