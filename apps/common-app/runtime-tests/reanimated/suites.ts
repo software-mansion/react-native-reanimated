@@ -2,6 +2,9 @@
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
+type TransitionValues = {
+  describeTransitionValues: (run: { slowAnimations: boolean }) => void;
+};
 
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
@@ -86,6 +89,23 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/nativeTransitions.test');
     },
+  },
+  {
+    testSuiteName: 'css native transition values',
+    importTest: () => {
+      const { describeTransitionValues } =
+        require('./tests/css/nativeTransitionValues.test') as TransitionValues;
+      describeTransitionValues({ slowAnimations: false });
+    },
+  },
+  {
+    testSuiteName: 'css native transition values with slow animations',
+    importTest: () => {
+      const { describeTransitionValues } =
+        require('./tests/css/nativeTransitionValues.test') as TransitionValues;
+      describeTransitionValues({ slowAnimations: true });
+    },
+    skipByDefault: true,
   },
   {
     testSuiteName: 'utilities',

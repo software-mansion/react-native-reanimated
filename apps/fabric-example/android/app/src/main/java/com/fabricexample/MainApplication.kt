@@ -25,6 +25,8 @@ class MainApplication : Application(), ReactApplication {
         PackageList(this).packages.apply {
           if (BuildConfig.RUNTIME_TESTS) {
             add(RuntimeTestsSurfacePackage())
+            add(RuntimeTestsViewSamplerPackage())
+            add(RuntimeTestsSlowAnimationsPackage())
           }
         },
       jsMainModulePath =

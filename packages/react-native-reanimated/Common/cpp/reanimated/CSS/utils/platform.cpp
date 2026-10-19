@@ -1,5 +1,6 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/CSS/utils/props.h>
+#include <reanimated/NativeAnimations/NativeAnimationValue.h>
 
 #include <algorithm>
 #include <array>
@@ -134,13 +135,7 @@ lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const dou
 }
 
 double packColorChannels(const std::array<double, 4> &channels) {
-  const auto toByte = [](double channel) {
-    const auto clamped = std::clamp(channel, 0.0, 1.0);
-    return static_cast<uint32_t>(std::lround(clamped * 255.0));
-  };
-  const uint32_t packed =
-      (toByte(channels[3]) << 24) | (toByte(channels[0]) << 16) | (toByte(channels[1]) << 8) | toByte(channels[2]);
-  return static_cast<double>(packed);
+  return native_animation::packedColorOf({channels[0], channels[1], channels[2], channels[3]});
 }
 
 jsi::Value platformValueToJSI(jsi::Runtime &rt, const PlatformValue &value) {

@@ -1,5 +1,13 @@
-import { Platform } from 'react-native';
+import React from 'react';
+import { Platform, View } from 'react-native';
 import { getStaticFeatureFlag } from 'react-native-reanimated';
+
+import {
+  getTestComponent,
+  render,
+  useTestRef,
+  waitForFrames,
+} from '../../ReJest/RuntimeTestsApi';
 
 /**
  * The observation contract of the native animation host. Each runtime-test
@@ -87,11 +95,27 @@ export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
   return hook;
 }
 
-/** Each of the two flags creates the native animation host. */
+/** CSS transitions play on the native animation host. */
+export const hasNativeCSSTransitions =
+  (Platform.OS === 'ios' && getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION')) ||
+  (Platform.OS === 'android' &&
+    getStaticFeatureFlag('ANDROID_CSS_PLATFORM_TRANSITIONS'));
+
+/** Each flag of a native route creates the native animation host. */
 export const hasNativeAnimationHost =
-  Platform.OS === 'ios' &&
-  (getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') ||
-    getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION'));
+  hasNativeCSSTransitions ||
+  (Platform.OS === 'ios' &&
+    getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION'));
+
+/**
+ * The timing kinds of the CSS route table of the platform:
+ * `makeCoreAnimationRouteTable` (REACSSPlatformRouteTable.mm) and
+ * `makeAndroidCSSRouteTable` (AndroidCSSRouteTable.cpp).
+ */
+export const CSS_HOST_TIMING_KINDS: readonly string[] =
+  Platform.OS === 'android'
+    ? ['linear', 'cubicBezier', 'steps', 'linear()']
+    : ['linear', 'cubicBezier'];
 
 /** The legacy proxy has no native route. */
 export const hasNativeLayoutRoute =
@@ -124,6 +148,54 @@ export function sample<TPlatformSample extends TargetSample = TargetSample>(
 
 export const isNoView = (error: unknown) =>
   error instanceof Error && error.message === NO_VIEW;
+
+const HOST_PROBE_REF = 'NativeAnimationHostProbe';
+
+function HostProbe() {
+  return React.createElement(View, {
+    ref: useTestRef(HOST_PROBE_REF),
+    collapsable: false,
+    style: { width: 10, height: 10 },
+  });
+}
+
+const PROBE_MOUNT_FRAMES = 10;
+
+/**
+ * The flags of the build create a native animation host
+ * (`hasNativeAnimationHost`). Then the host must sample the probe view, else
+ * the test fails. On Android the view can mount one frame after `render`
+ * resolves, so the probe asks once per frame. Renders a probe view, so the next
+ * render mounts its scene again.
+ */
+export async function nativeAnimationHostExists(): Promise<boolean> {
+  await render(React.createElement(HostProbe));
+  if (!hasNativeAnimationHost) {
+    console.log('NativeAnimationHost none: the host asserts do not run');
+    return false;
+  }
+  const probeTag = getTestComponent(HOST_PROBE_REF).getTag();
+  for (let frame = 0; frame < PROBE_MOUNT_FRAMES; frame++) {
+    if (await samplesView(probeTag)) {
+      return true;
+    }
+    await waitForFrames(1);
+  }
+  throw new Error(
+    `The flags of the build create the native animation host, but it samples no probe view in ${PROBE_MOUNT_FRAMES} frames.`
+  );
+}
+
+const samplesView = (tag: number) =>
+  sample(tag, 'Opacity').then(
+    () => true,
+    (error: unknown) => {
+      if (isNoView(error)) {
+        return false;
+      }
+      throw error;
+    }
+  );
 
 /** The platform gives the playbacks of a sample in no fixed order. */
 export const playbackIdsOf = ({ playbacks }: Pick<TargetSample, 'playbacks'>) =>

@@ -88,4 +88,7 @@ bool isSameMatrix(const facebook::react::Transform &lhs, const facebook::react::
 bool valueMatchesTarget(const AnimationValue &value, AnimationTarget target);
 bool isFinite(const AnimationValue &value);
 
+/// The ARGB int that React Native commits for a color, as a non-negative number.
+double packedColorOf(const AnimationColor &color);
+
 } // namespace reanimated::native_animation

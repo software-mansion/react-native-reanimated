@@ -1,6 +1,8 @@
 #include <reanimated/NativeAnimations/NativeAnimationValue.h>
 
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace reanimated::native_animation {
 
@@ -134,6 +136,15 @@ bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget targe
 
 bool isFinite(const AnimationValue &value) {
   return std::visit(FiniteVisitor{}, value);
+}
+
+double packedColorOf(const AnimationColor &color) {
+  const auto toByte = [](const double channel) {
+    return static_cast<uint32_t>(std::lround(std::clamp(channel, 0.0, 1.0) * 255.0));
+  };
+  const uint32_t packed =
+      (toByte(color.alpha) << 24) | (toByte(color.red) << 16) | (toByte(color.green) << 8) | toByte(color.blue);
+  return static_cast<double>(packed);
 }
 
 } // namespace reanimated::native_animation

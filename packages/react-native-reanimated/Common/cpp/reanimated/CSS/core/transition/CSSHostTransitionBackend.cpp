@@ -88,6 +88,9 @@ class CSSHostTransitionBackend final : public CSSPlatformTransitionBackend,
   }
 
   std::optional<CSSPlatformTransitionRunId> startTransition(const CSSPlatformTransitionRun &run) override {
+    if (routeTable_.isAvailable && !routeTable_.isAvailable()) {
+      return std::nullopt;
+    }
     auto track = buildTrack(run);
     if (std::holds_alternative<TrackBuildFailure>(track)) {
       return std::nullopt;

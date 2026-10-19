@@ -166,7 +166,7 @@ This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#
 Both flags enable the same feature, running CSS transitions with the platform's own animation API instead of Reanimated's animation loop. The platform then drives every frame, so Reanimated no longer recomputes and commits the transitioned values on each of them. One flag per platform:
 
 - `IOS_CSS_CORE_ANIMATION` enables it on iOS, where a transition runs as a Core Animation animation on the view's layer,
-- `ANDROID_CSS_PLATFORM_TRANSITIONS` enables it on Android, where it runs as an `ObjectAnimator` writing the animated value directly to the platform view.
+- `ANDROID_CSS_PLATFORM_TRANSITIONS` enables it on Android, where it runs through the shared native animation host as a `ValueAnimator` writing the animated value directly to the platform view.
 
 Both are experimental and default to `false`. CSS animations always run on the loop, regardless of these flags.
 

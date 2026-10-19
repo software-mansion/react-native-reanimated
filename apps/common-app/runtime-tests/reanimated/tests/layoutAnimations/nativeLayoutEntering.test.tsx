@@ -58,6 +58,7 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
+import { nativeAnimationHostExists } from '../nativeAnimationObservation';
 import type {
   BuiltKey,
   ModelTarget,
@@ -2238,6 +2239,9 @@ describe('entering of a parent and its child in one commit', () => {
   };
   for (const [caseName, isNative] of Object.entries(families)) {
     test(`a parent and its child that enter in one commit ${caseName} both show their initial value first and end at the model`, async () => {
+      if (!(await nativeAnimationHostExists())) {
+        return;
+      }
       const family = familyOf(isNative);
       resetFrameRecords();
       await render(<FamilyScene {...family} />);

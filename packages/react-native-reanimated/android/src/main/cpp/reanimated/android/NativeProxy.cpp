@@ -5,6 +5,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
+#include <reanimated/android/CSS/AndroidCSSRouteTable.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
@@ -29,22 +30,28 @@ NativeProxy::NativeProxy(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
     const std::shared_ptr<UIScheduler> &uiScheduler)
-    : javaPart_(jni::make_global(jThis)),
-      rnRuntime_(rnRuntime),
-      uiRuntime_(uiRuntime),
-      reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
-          uiRuntime,
-          uiScheduler,
-          *rnRuntime,
-          jsCallInvoker,
-          getPlatformDependentMethods(),
-          getIsReducedMotion())) {
+    : javaPart_(jni::make_global(jThis)), rnRuntime_(rnRuntime), uiRuntime_(uiRuntime) {
 #ifndef NDEBUG
   checkJavaVersion();
   injectCppVersion();
 #endif // NDEBUG
-  reanimatedModuleProxy_->init(getPlatformDependentMethods());
   const auto &uiManager = fabricUIManager->getBinding()->getScheduler()->getUIManager();
+  std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
+  std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+    nativeAnimationPlatform_ = native_animation::AndroidNativeAnimationPlatform::create(
+        getNativeAnimationExecutor(), uiManager, bindThis(&NativeProxy::getAnimationTimestamp));
+    nativeAnimationHost = native_animation::NativeAnimationHost::create(nativeAnimationPlatform_);
+    platformTransitionBackend = css::makeCSSHostTransitionBackend(
+        nativeAnimationHost,
+        css::makeAndroidCSSRouteTable(nativeAnimationPlatform_->apiLevel(), [platform = nativeAnimationPlatform_] {
+          return platform->animatorsEnabled();
+        }));
+  }
+  const auto platformDepMethodsHolder = getPlatformDependentMethods(platformTransitionBackend, nativeAnimationHost);
+  reanimatedModuleProxy_ = std::make_shared<ReanimatedModuleProxy>(
+      uiRuntime, uiScheduler, *rnRuntime, jsCallInvoker, platformDepMethodsHolder, getIsReducedMotion());
+  reanimatedModuleProxy_->init(platformDepMethodsHolder);
   reanimatedModuleProxy_->initializeFabric(uiManager);
   registerEventHandler();
   // removed temporarily, event listener mechanism needs to be fixed on RN side
@@ -146,6 +153,10 @@ void NativeProxy::rewriteSynchronousProps() {
   reanimatedModuleProxy_->rewriteSynchronousProps();
 }
 
+bool NativeProxy::hasNativeAnimationPlatform() {
+  return nativeAnimationPlatform_ != nullptr;
+}
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -164,6 +175,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
+       makeNativeMethod("hasNativeAnimationPlatform", NativeProxy::hasNativeAnimationPlatform),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
 }
@@ -259,57 +271,15 @@ void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::fu
       PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
 }
 
-bool NativeProxy::cssAnimateTransition(
-    const int viewTag,
-    const int propertyId,
-    const double fromValue,
-    const double toValue,
-    const double durationMs,
-    const double startTimestampMs,
-    const int easingId,
-    const bool persistent) {
-  static const auto method =
-      getJniMethod<jboolean(int, int, double, double, double, double, int, jboolean)>("cssAnimateTransition");
-  return method(
-             javaPart_.get(),
-             viewTag,
-             propertyId,
-             fromValue,
-             toValue,
-             durationMs,
-             startTimestampMs,
-             easingId,
-             static_cast<jboolean>(persistent)) != JNI_FALSE;
-}
-
-void NativeProxy::cssRemoveTransition(const int viewTag, const int propertyId) {
-  static const auto method = getJniMethod<void(int, int)>("cssRemoveTransition");
-  method(javaPart_.get(), viewTag, propertyId);
-}
-
-void NativeProxy::cssDefineEasing(
-    const int easingId,
-    const int type,
-    const std::vector<float> &pointsX,
-    const std::vector<float> &pointsY) {
-  static const auto method =
-      getJniMethod<void(int, int, jni::alias_ref<jni::JArrayFloat>, jni::alias_ref<jni::JArrayFloat>)>(
-          "cssDefineEasing");
-  auto jPointsX = jni::JArrayFloat::newArray(pointsX.size());
-  jPointsX->setRegion(0, pointsX.size(), pointsX.data());
-  auto jPointsY = jni::JArrayFloat::newArray(pointsY.size());
-  jPointsY->setRegion(0, pointsY.size(), pointsY.data());
-  method(javaPart_.get(), easingId, type, jPointsX, jPointsY);
-}
-
-void NativeProxy::cssUndefineEasing(const int easingId) {
-  static const auto method = getJniMethod<void(int)>("cssUndefineEasing");
-  method(javaPart_.get(), easingId);
-}
-
 void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
   static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
   method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
+}
+
+jni::local_ref<native_animation::JNativeAnimationExecutor::javaobject> NativeProxy::getNativeAnimationExecutor() {
+  static const auto method =
+      getJniMethod<native_animation::JNativeAnimationExecutor::javaobject()>("getNativeAnimationExecutor");
+  return method(javaPart_.get());
 }
 
 double NativeProxy::getAnimationTimestamp() {
@@ -364,7 +334,9 @@ void NativeProxy::handleEvent(
   }
 }
 
-PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
+PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods(
+    const std::shared_ptr<css::CSSPlatformTransitionBackend> &platformTransitionBackend,
+    const std::shared_ptr<native_animation::NativeAnimationHost> &nativeAnimationHost) {
   auto getAnimationTimestamp = bindThis(&NativeProxy::getAnimationTimestamp);
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
@@ -389,8 +361,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
-  auto platformTransitionBackend = makePlatformTransitionBackend();
-
   return {
       requestRender,
       preserveMountedTags,
@@ -405,22 +375,15 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
       platformTransitionBackend,
+      nativeAnimationHost,
   };
 }
 
-std::shared_ptr<css::CSSPlatformTransitionBackend> NativeProxy::makePlatformTransitionBackend() {
-  if constexpr (!StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
-    return nullptr;
-  }
-  // Not a NativeProxy member: this runs from the ctor's member-initializer list,
-  // where a member would still be raw memory.
-  auto easings = std::make_shared<CSSPlatformEasings>(
-      bindThis(&NativeProxy::cssDefineEasing), bindThis(&NativeProxy::cssUndefineEasing));
-  return std::make_shared<CSSPlatformTransitions>(
-      bindThis(&NativeProxy::cssAnimateTransition), bindThis(&NativeProxy::cssRemoveTransition), std::move(easings));
-}
-
 void NativeProxy::invalidateCpp() {
+  if (nativeAnimationPlatform_) {
+    nativeAnimationPlatform_->close();
+    nativeAnimationPlatform_.reset();
+  }
   uiRuntime_.reset();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
