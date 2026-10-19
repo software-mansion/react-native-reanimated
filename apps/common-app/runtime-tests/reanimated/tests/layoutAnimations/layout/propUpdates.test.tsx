@@ -105,6 +105,7 @@ describe('Layout animation prop updates', () => {
     const events = { starts: 0, finished: [] as boolean[] };
     const layout = createTransition(events);
     await render(<Box layout={layout} />);
+    await waitForFrames();
     await render(<Box layout={layout} width={240} />);
     await waitForNotification('layout-start');
     await wait(150);

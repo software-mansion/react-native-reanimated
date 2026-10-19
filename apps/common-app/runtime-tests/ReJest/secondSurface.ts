@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import type { TurboModule } from 'react-native';
-import { AppRegistry, Platform, TurboModuleRegistry } from 'react-native';
+import { AppRegistry, TurboModuleRegistry } from 'react-native';
 
 interface RuntimeTestsSurfaceModule extends TurboModule {
   start(componentName: string): Promise<number>;
@@ -12,7 +12,7 @@ const MODULE_NAME = 'RuntimeTestsSurface';
 let registeredComponentsCount = 0;
 
 export function isSecondSurfaceAvailable(): boolean {
-  return Platform.OS === 'ios' && getSurfaceModule() !== null;
+  return getSurfaceModule() !== null;
 }
 
 export function startSecondSurface(Component: ComponentType): Promise<number> {

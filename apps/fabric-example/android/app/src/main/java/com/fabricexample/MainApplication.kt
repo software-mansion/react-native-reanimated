@@ -9,6 +9,8 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.common.assets.ReactFontManager
 import com.facebook.react.common.ReleaseLevel
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlagsOverrides_RNOSS_Experimental_Android
 
 class MainApplication : Application(), ReactApplication {
 
@@ -21,8 +23,9 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          if (BuildConfig.RUNTIME_TESTS) {
+            add(RuntimeTestsSurfacePackage())
+          }
         },
       jsMainModulePath =
         if (BuildConfig.RUNTIME_TESTS) {
@@ -43,8 +46,17 @@ class MainApplication : Application(), ReactApplication {
     super.onCreate()
     DefaultNewArchitectureEntryPoint.releaseLevel = ReleaseLevel.EXPERIMENTAL
     loadReactNative(this)
+    if (BuildConfig.MOUNT_THREAD_PULL) {
+      ReactNativeFeatureFlags.dangerouslyForceOverride(MountThreadPullFeatureFlags())
+    }
 
     ReactFontManager.getInstance().addCustomFont(this, "Poppins", R.font.poppins)
     ReactFontManager.getInstance().addCustomFont(this, "Ubuntu Mono", R.font.ubuntumono)
   }
+}
+
+private class MountThreadPullFeatureFlags : ReactNativeFeatureFlagsOverrides_RNOSS_Experimental_Android() {
+  override fun enableMountingCoordinatorPullModelAndroid() = true
+
+  override fun enableAccumulatedUpdatesInRawPropsAndroid() = true
 }

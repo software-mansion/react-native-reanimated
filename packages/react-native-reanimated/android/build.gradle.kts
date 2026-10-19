@@ -138,6 +138,7 @@ val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
+val REANIMATED_RUNTIME_TEST_HOOKS: Boolean = findProperty("reanimatedRuntimeTestHooks")?.toString()?.toBoolean() ?: false
 val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
 
 // Set version for prefab
@@ -210,6 +211,7 @@ android {
                     "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                     "-DIS_REANIMATED_EXAMPLE_APP=$IS_REANIMATED_EXAMPLE_APP",
                     "-DREANIMATED_PROFILING=$REANIMATED_PROFILING",
+                    "-DREANIMATED_RUNTIME_TEST_HOOKS=$REANIMATED_RUNTIME_TEST_HOOKS",
                     "-DREANIMATED_VERSION=$REANIMATED_VERSION",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                     "-DREANIMATED_FEATURE_FLAGS=$REANIMATED_FEATURE_FLAGS"
