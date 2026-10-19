@@ -63,6 +63,12 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
+bool AnimatedPropsRegistry::isEmpty() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  return updatesRegistry_.empty() && timestampMap_.empty() && syncedTags_.empty() &&
+      invalidatedTags_.empty();
+}
+
 jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
@@ -74,10 +80,10 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
     if (syncedTags_.contains(viewTag)) {
       // React already has the latest value for this tag (synced on a previous
       // call, so the `settledProps` state is committed by now) — the registry
-      // entry is redundant. `syncedTags_` is intentionally retained to detect
-      // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
-      // are disjoint — `update()` moves tags from the former to the latter.
+      // entry is redundant. Evicting the tag from `syncedTags_` prevents unmounted
+      // or finished views from leaking entries in `syncedTags_`.
       timestampMap_.erase(viewTag);
+      syncedTags_.erase(viewTag);
       it = updatesRegistry_.erase(it);
       continue;
     }
