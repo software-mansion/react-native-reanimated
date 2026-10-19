@@ -2,15 +2,12 @@
 import type React from 'react';
 import { Fragment } from 'react';
 
-import { maybeBuild } from '../animationBuilder';
 import { logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { getStaticFeatureFlag } from '../featureFlags';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
-import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -21,7 +18,6 @@ import {
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
-import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
   AnimatedComponentRef,
@@ -32,16 +28,14 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  ViewInfo,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
 
-let id = 0;
-
-// is-tree-shakable-suppress
-configureWebLayoutAnimations();
+configureWebLayoutAnimations(); // is-tree-shakable-suppress
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -71,9 +65,6 @@ export default class AnimatedComponent
   _hasWarnedAboutLayoutAnimationStyleOverwriting?: boolean;
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
-  reanimatedID = id++;
-  _sharedTransition?: SharedTransition;
-  _sharedTransitionTag?: string;
 
   constructor(
     ChildComponent: AnyComponent,
@@ -85,7 +76,6 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    this._configureSharedTransition(true);
     const entering = this.props.entering;
     const skipEntering = this.context?.current;
     if (!skipEntering) {
@@ -183,15 +173,33 @@ export default class AnimatedComponent
     // noop
   }
 
-  _detachStyles() {
-    const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
-      for (const style of this._animatedStyles) {
-        style.viewDescriptors.remove(viewTag);
-      }
-      for (const animatedProp of this._animatedProps) {
-        animatedProp?.viewDescriptors?.remove(viewTag);
-      }
+  _detachHostBindings(previousViewInfo: ViewInfo) {
+    this._detachStyles(previousViewInfo.viewTag as number);
+    this._InlinePropManager.detachInlineProps();
+  }
+
+  _attachHostBindings() {
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+  }
+
+  _detachStyles(viewTag: number = this.getComponentViewTag()) {
+    if (viewTag === -1) {
+      return;
+    }
+    // A style change in the same update has already moved the attached
+    // styles to the previous lists, so detach from both.
+    for (const style of [
+      ...this._prevAnimatedStyles,
+      ...this._animatedStyles,
+    ]) {
+      style.viewDescriptors.remove(viewTag);
+    }
+    for (const animatedProp of [
+      ...this._prevAnimatedProps,
+      ...this._animatedProps,
+    ]) {
+      animatedProp?.viewDescriptors?.remove(viewTag);
     }
   }
 
@@ -273,6 +281,8 @@ export default class AnimatedComponent
     _prevState: Readonly<unknown>,
     snapshot: DOMRect | null
   ) {
+    this._refreshComponentRef();
+
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,
@@ -283,7 +293,6 @@ export default class AnimatedComponent
       this.props.exiting,
       prevProps.exiting
     );
-    this._configureSharedTransition();
 
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();
@@ -347,44 +356,6 @@ export default class AnimatedComponent
     _previousConfig?: LayoutAnimationOrBuilder
   ) {
     // noop
-  }
-
-  _configureSharedTransition(useNativeId?: boolean) {
-    if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
-      return;
-    }
-    if (!this.props.sharedTransitionTag) {
-      if (this._sharedTransitionTag) {
-        updateLayoutAnimations(
-          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-          useNativeId
-            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-          undefined,
-          undefined,
-          undefined
-        );
-        this._sharedTransitionTag = undefined;
-      }
-      return;
-    }
-    this._sharedTransitionTag = this.props.sharedTransitionTag;
-    const sharedTransition =
-      this.props.sharedTransitionStyle ??
-      this._sharedTransition ??
-      new SharedTransition();
-    if (this._sharedTransition !== sharedTransition) {
-      updateLayoutAnimations(
-        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-        useNativeId
-          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-        maybeBuild(sharedTransition),
-        undefined,
-        this.props.sharedTransitionTag
-      );
-      this._sharedTransition = sharedTransition;
-    }
   }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.
