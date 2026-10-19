@@ -148,17 +148,19 @@ void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowN
 void ReanimatedCommitHook::trackWillCommit(
     const RootShadowNode::Shared &rootShadowNode,
     const bool carriesRegistryValues) const {
-  if (synchronousWritesTracker_) {
-    synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
+  if (!synchronousWritesTracker_) {
+    return;
   }
+  synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
 }
 
 void ReanimatedCommitHook::trackDidCommit([[maybe_unused]] const RootShadowNode::Shared &rootShadowNode) const {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
 #if REACT_NATIVE_VERSION_MINOR < 88
   // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
-  if (synchronousWritesTracker_) {
-    synchronousWritesTracker_->onDidCommit(rootShadowNode);
-  }
+  synchronousWritesTracker_->onDidCommit(rootShadowNode);
 #endif
 }
 
