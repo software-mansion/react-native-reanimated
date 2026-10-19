@@ -86,22 +86,22 @@ std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   return nullptr;
 }
 
-std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
-  const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
-    if (!isSynchronousPropName(keyStr)) {
-      return false;
-    }
+bool isSynchronousProp(const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
+  if (!isSynchronousPropName(keyStr)) {
+    return false;
+  }
 #ifdef ANDROID
-    // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
-    // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
-    const bool isColorProp = keyStr.find("Color") != std::string::npos;
-    if (isColorProp && !value.isNumber()) {
-      return false;
-    }
+  // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
+  // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
+  const bool isColorProp = keyStr.find("Color") != std::string::npos;
+  if (isColorProp && !value.isNumber()) {
+    return false;
+  }
 #endif // ANDROID
-    return true;
-  };
+  return true;
+}
 
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
@@ -112,7 +112,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
 
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
-        if (isSynchronous(keyStr, value)) {
+        if (isSynchronousProp(keyStr, value)) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -134,7 +134,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
   std::unordered_set<const ShadowNodeFamily *> familiesRequiringCommit;
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     const bool hasOnlySynchronousProps = std::all_of(props.items().begin(), props.items().end(), [&](const auto &kv) {
-      return isSynchronous(kv.first.asString(), kv.second);
+      return isSynchronousProp(kv.first.asString(), kv.second);
     });
     if (!hasOnlySynchronousProps) {
       familiesRequiringCommit.insert(shadowNodeFamily.get());
@@ -1342,6 +1342,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       forceScreenSnapshot_,
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
 #endif
+      keepsSynchronousPropsInReinserts ? makeRegistrySynchronousPropsReader() : nullptr,
   };
 
   if constexpr (!StaticFeatureFlags::getFlag("USE_LEGACY_LAYOUT_ANIMATIONS_PROXY")) {
@@ -1369,6 +1370,41 @@ folly::dynamic ReanimatedModuleProxy::readSynchronousProps(const Tag tag) {
   return synchronousProps;
 }
 #endif // ANDROID
+
+RegistrySynchronousPropsReader ReanimatedModuleProxy::makeRegistrySynchronousPropsReader() {
+  return [weakThis = weak_from_this()](const std::vector<Tag> &tags) {
+    const auto strongThis = weakThis.lock();
+    return strongThis ? strongThis->readRegistrySynchronousProps(tags) : std::unordered_map<Tag, folly::dynamic>{};
+  };
+}
+
+std::unordered_map<Tag, folly::dynamic> ReanimatedModuleProxy::readRegistrySynchronousProps(
+    const std::vector<Tag> &tags) {
+  std::unordered_map<Tag, folly::dynamic> synchronousPropsByTag;
+  // The registry lock is not reentrant.
+  if (UpdatesRegistryManager::isLockedByCurrentThread()) {
+    return synchronousPropsByTag;
+  }
+  auto lock = updatesRegistryManager_->lock();
+  folly::dynamic registryProps = folly::dynamic::object;
+  for (const auto tag : tags) {
+    updatesRegistryManager_->mergeRegistryProps(tag, registryProps);
+    if (registryProps.empty()) {
+      continue;
+    }
+    folly::dynamic synchronousProps = folly::dynamic::object;
+    for (const auto &[key, value] : registryProps.items()) {
+      if (isSynchronousProp(key.getString(), value)) {
+        synchronousProps[key] = value;
+      }
+    }
+    if (!synchronousProps.empty()) {
+      synchronousPropsByTag.insert_or_assign(tag, std::move(synchronousProps));
+    }
+    registryProps = folly::dynamic::object;
+  }
+  return synchronousPropsByTag;
+}
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
 

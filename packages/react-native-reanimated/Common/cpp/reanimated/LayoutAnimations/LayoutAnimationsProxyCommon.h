@@ -13,6 +13,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <atomic>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -66,6 +67,9 @@ using LayoutAnimationOperation =
 #ifdef ANDROID
 using SynchronousPropsReader = std::function<folly::dynamic(Tag tag)>;
 #endif
+// Returns the synchronous props held in the updates registry, keyed by tag. Tags without any are left out.
+using RegistrySynchronousPropsReader =
+    std::function<std::unordered_map<Tag, folly::dynamic>(const std::vector<Tag> &tags)>;
 
 struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager;
@@ -84,6 +88,7 @@ struct LayoutAnimationsProxyDependencies {
   ForceScreenSnapshotFunction forceScreenSnapshot;
   ReadMountedViewPropsFunction readMountedViewProps;
 #endif
+  RegistrySynchronousPropsReader readRegistrySynchronousProps;
 };
 
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate,
@@ -108,7 +113,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         ,
         readMountedViewProps_(dependencies.readMountedViewProps)
 #endif
-  {
+        ,
+        readRegistrySynchronousProps_(dependencies.readRegistrySynchronousProps) {
   }
   virtual std::optional<facebook::react::SurfaceId>
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
@@ -125,6 +131,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
+  void registerSynchronousPropsDelegate(const facebook::react::ShadowTree &shadowTree) const;
+  void applyRegistrySynchronousProps(ShadowViewMutationList &mutations) const;
 
  protected:
   Props::Shared propsOfMountedView(const ShadowView &view) const;
@@ -187,6 +195,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #ifdef __APPLE__
   ReadMountedViewPropsFunction readMountedViewProps_;
 #endif
+  RegistrySynchronousPropsReader readRegistrySynchronousProps_;
+  mutable std::atomic_bool synchronousPropsDelegateRegistered_{false};
+  mutable std::shared_ptr<const facebook::react::MountingOverrideDelegate> synchronousPropsDelegate_;
 
  private:
   struct LayoutAnimationStop {

@@ -49,6 +49,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if (const auto proxy = registerLayoutAnimations(shadowTree)) {
     proxy->shadowTreeWillCommit(newRootShadowNode->getChildren().empty());
+    if (commitOptions.source == ShadowTreeCommitSource::React) {
+      proxy->registerSynchronousPropsDelegate(shadowTree);
+    }
   }
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {

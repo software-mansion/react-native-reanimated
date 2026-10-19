@@ -214,6 +214,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   SynchronousPropsReader makeSynchronousPropsReader();
   folly::dynamic readSynchronousProps(Tag tag);
 #endif
+  RegistrySynchronousPropsReader makeRegistrySynchronousPropsReader();
+  std::unordered_map<Tag, folly::dynamic> readRegistrySynchronousProps(const std::vector<Tag> &tags);
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);

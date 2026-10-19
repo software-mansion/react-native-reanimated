@@ -17,6 +17,32 @@
 
 namespace reanimated {
 
+namespace {
+class SynchronousPropsMountingOverrideDelegate final : public facebook::react::MountingOverrideDelegate {
+ public:
+  explicit SynchronousPropsMountingOverrideDelegate(std::weak_ptr<const LayoutAnimationsProxyCommon> proxy)
+      : proxy_(std::move(proxy)) {}
+
+  bool shouldOverridePullTransaction() const override {
+    return true;
+  }
+
+  std::optional<MountingTransaction> pullTransaction(
+      const SurfaceId surfaceId,
+      const MountingTransaction::Number number,
+      const TransactionTelemetry &telemetry,
+      ShadowViewMutationList mutations) const override {
+    if (const auto proxy = proxy_.lock()) {
+      proxy->applyRegistrySynchronousProps(mutations);
+    }
+    return MountingTransaction{surfaceId, number, std::move(mutations), telemetry};
+  }
+
+ private:
+  const std::weak_ptr<const LayoutAnimationsProxyCommon> proxy_;
+};
+} // namespace
+
 #ifdef ANDROID
 namespace {
 const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
@@ -56,6 +82,18 @@ void LayoutAnimationsProxyCommon::startSurface(
     window_ = {size.width, size.height};
   }
   mountingCoordinator->setMountingOverrideDelegate(std::move(mountingOverrideDelegate));
+}
+
+// Mounting override delegates run in the order of registration. React Native registers its LayoutAnimation driver
+// after it starts the surface, so the proxy can run before the driver and miss the props it interpolates. This
+// delegate is registered at the first React commit, after the driver.
+void LayoutAnimationsProxyCommon::registerSynchronousPropsDelegate(
+    const facebook::react::ShadowTree &shadowTree) const {
+  if (!readRegistrySynchronousProps_ || synchronousPropsDelegateRegistered_.exchange(true)) {
+    return;
+  }
+  synchronousPropsDelegate_ = std::make_shared<SynchronousPropsMountingOverrideDelegate>(weak_from_this());
+  shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(synchronousPropsDelegate_);
 }
 
 void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
@@ -182,6 +220,41 @@ Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowVie
   const PropsParserContext propsParserContext{view.surfaceId, *contextContainer_};
   return componentDescriptorRegistry_->at(view.componentHandle)
       .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+}
+
+// Synchronously updated props never reach the shadow tree, so the props of a mutation can hold an older value than
+// the view: a React commit carries the registry values from when it was committed, and React Native's
+// LayoutAnimation interpolates between such commits on every frame. Writing those props would revert the view.
+void LayoutAnimationsProxyCommon::applyRegistrySynchronousProps(ShadowViewMutationList &mutations) const {
+  if (!readRegistrySynchronousProps_) {
+    return;
+  }
+  const auto writesProps = [](const ShadowViewMutation &mutation) {
+    return (mutation.type == ShadowViewMutation::Update || mutation.type == ShadowViewMutation::Insert) &&
+        mutation.newChildShadowView.props;
+  };
+  std::vector<Tag> tags;
+  for (const auto &mutation : mutations) {
+    if (writesProps(mutation)) {
+      tags.push_back(mutation.newChildShadowView.tag);
+    }
+  }
+  if (tags.empty()) {
+    return;
+  }
+  const auto synchronousPropsByTag = readRegistrySynchronousProps_(tags);
+  if (synchronousPropsByTag.empty()) {
+    return;
+  }
+  for (auto &mutation : mutations) {
+    if (!writesProps(mutation)) {
+      continue;
+    }
+    auto &view = mutation.newChildShadowView;
+    if (const auto it = synchronousPropsByTag.find(view.tag); it != synchronousPropsByTag.end()) {
+      view.props = mergeSynchronousProps(view, it->second);
+    }
+  }
 }
 
 // The registry broadcasts one batch to every surface proxy; entries of other surfaces are skipped here.
