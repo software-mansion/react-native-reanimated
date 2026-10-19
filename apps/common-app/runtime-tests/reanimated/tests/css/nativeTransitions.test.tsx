@@ -13,6 +13,8 @@ import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, {
   createAnimatedComponent,
   getStaticFeatureFlag,
+  linear,
+  steps,
 } from 'react-native-reanimated';
 
 import {
@@ -144,6 +146,20 @@ async function renderBoxAndStart(transition?: CSSTransitionProperties) {
   await takeTrace();
   await render(<Box opacity={0.2} transition={transition} />);
   return getTestComponent(BOX_REF).getTag();
+}
+
+async function expectRunOnLoop(
+  transitionTimingFunction: CSSTransitionProperties['transitionTimingFunction']
+) {
+  const tag = await renderBoxAndStart({
+    transitionProperty: 'opacity',
+    transitionTimingFunction,
+  });
+  await wait(DURATION * 0.6);
+  expect(summarize(await takeTraceOf(tag))).toBe('');
+  expect(
+    Number(await getTestComponent(BOX_REF).getAnimatedStyle('opacity'))
+  ).toBeWithinRange(0.21, 0.99);
 }
 
 describe('CSS transitions on the shared native animation host', () => {
@@ -293,6 +309,14 @@ describe('CSS transitions on the shared native animation host', () => {
     await wait(DURATION);
     expect(Number(await box.getAnimatedStyle('opacity'))).toBe(0.2);
     expect(summarize(await takeTraceOf(box.getTag()))).toBe('');
+  });
+
+  test('a steps easing stays on the CSS loop', async () => {
+    await expectRunOnLoop(steps(4));
+  });
+
+  test('a linear() easing stays on the CSS loop', async () => {
+    await expectRunOnLoop(linear(0, [0.25, '50%', '50%'], 1));
   });
 });
 

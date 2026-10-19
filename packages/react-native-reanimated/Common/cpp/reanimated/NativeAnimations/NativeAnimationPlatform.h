@@ -73,8 +73,9 @@ class NativeAnimationPlatform {
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
 
-  /// False when the component and the props of `view` show that the platform cannot play the track on the
-  /// host view. Reads no mounted state, so a client can ask before the mount.
+  /// False when the platform cannot play the track (for example its timing kind), or when the component and the
+  /// props of `view` show that it cannot play the track on the host view. Reads no mounted state, so a client
+  /// can ask before the mount.
   virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;

@@ -38,6 +38,12 @@ void LayoutAnimationsProxyRegistry::surfaceDidMount(const SurfaceId surfaceId) c
   instance->surfaceDidMount();
 }
 
+void LayoutAnimationsProxyRegistry::pulledSurfacesDidMount() const {
+  for (const auto &instance : instances()) {
+    instance->surfaceDidMount();
+  }
+}
+
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {
   std::shared_ptr<LayoutAnimationsProxyCommon> instance;
   {

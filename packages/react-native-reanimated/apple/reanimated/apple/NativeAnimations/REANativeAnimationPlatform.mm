@@ -10,6 +10,7 @@
 #import <React/RCTFabricSurface.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
+#import <react/debug/react_native_assert.h>
 #import <react/renderer/components/view/ViewProps.h>
 #import <react/renderer/components/view/ViewShadowNode.h>
 
@@ -334,6 +335,35 @@ bool pictureFollowsBounds(REAUIView *view)
   return true;
 }
 
+bool playsTiming(const AnimationTiming &timing)
+{
+  return std::ranges::find(kCoreAnimationTimingKinds, kindOf(timing)) != kCoreAnimationTimingKinds.end();
+}
+
+template <typename Value>
+bool playsTimings(const std::vector<TimelineSegment<Value>> &segments)
+{
+  return std::ranges::all_of(
+      segments, [](const TimelineSegment<Value> &segment) { return playsTiming(segment.timingFromPrevious); });
+}
+
+struct PlaysTimingsVisitor {
+  bool operator()(const ValueTimeline &timeline) const
+  {
+    return playsTimings(timeline.segments);
+  }
+  bool operator()(const TransformTimelines &body) const
+  {
+    return std::ranges::all_of(
+        body.operations, [](const OperationTimeline &operation) { return playsTimings(operation.segments); });
+  }
+};
+
+bool playsTimings(const AnimationTrack &track)
+{
+  return std::visit(PlaysTimingsVisitor{}, track.body);
+}
+
 struct TimingFunctionVisitor {
   CAMediaTimingFunction *operator()(const LinearTiming &) const
   {
@@ -343,6 +373,12 @@ struct TimingFunctionVisitor {
   {
     return [CAMediaTimingFunction functionWithControlPoints:(float)bezier.x1:(float)bezier.y1:(float)bezier.x2:(float)
                                                                                                                    bezier.y2];
+  }
+  template <typename UnplayedTiming>
+  CAMediaTimingFunction *operator()(const UnplayedTiming &) const
+  {
+    react_native_assert(false && "resolve refuses a timing that Core Animation does not play");
+    return nil;
   }
 };
 
@@ -707,6 +743,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) override
   {
     using namespace facebook::react;
+    if (!playsTimings(track)) {
+      return false;
+    }
     const bool changesSize = isSizeTarget(track.target) && changesValue(track);
     if (!view.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
       return !changesSize;
@@ -752,6 +791,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return AnimationResultReason::TargetUnavailable;
     }
     for (const auto &track : request.tracks) {
+      if (!playsTimings(track)) {
+        return AnimationResultReason::UnsupportedRealization;
+      }
       if (isSizeTarget(track.target) && changesValue(track) && !pictureFollowsBounds(view)) {
         return AnimationResultReason::UnsupportedRealization;
       }

@@ -20,6 +20,9 @@ class LayoutAnimationsProxyRegistry {
 
   std::shared_ptr<LayoutAnimationsProxyCommon> registerSurface(const facebook::react::ShadowTree &shadowTree);
   void surfaceDidMount(SurfaceId surfaceId) const;
+  /// The platform reports that the transactions of the last pulls are on the host views, and does not name
+  /// their surfaces. UI thread only.
+  void pulledSurfacesDidMount() const;
   void remove(SurfaceId surfaceId);
 
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);

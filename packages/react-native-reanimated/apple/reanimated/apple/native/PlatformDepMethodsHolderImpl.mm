@@ -1,6 +1,7 @@
+#import <reanimated/CSS/core/transition/CSSHostTransitionBackend.h>
 #import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/CSS/REACSSPlatformTransitionBackend.h>
+#import <reanimated/apple/CSS/REACSSPlatformRouteTable.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -222,7 +223,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
         native_animation::makeCoreAnimationPlatform(nodesManager.surfacePresenter));
   }
   if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    platformTransitionBackend = css::makeCSSPlatformTransitionBackend(nativeAnimationHost);
+    platformTransitionBackend =
+        css::makeCSSHostTransitionBackend(nativeAnimationHost, css::makeCoreAnimationRouteTable());
   }
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
