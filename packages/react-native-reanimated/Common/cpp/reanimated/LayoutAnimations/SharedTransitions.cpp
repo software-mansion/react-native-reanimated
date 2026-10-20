@@ -75,7 +75,8 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
     auto &transition = collectedTransition.transition;
     auto &[snapshot, parentTag, transform] = transition;
-    auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
+    auto ancestors = collectAncestors(node, useViewsOnScreen);
+    auto newTransform = parseParentTransforms(ancestors, absolutePositions);
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
@@ -84,9 +85,17 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
     collectedTransition.nodes[indexNum] = node;
+    collectedTransition.absolutePositions[indexNum] = std::move(absolutePositions);
+    collectedTransition.ancestors[indexNum] = std::move(ancestors);
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transaction.transitions.emplace_back(*sharedTag, collectedTransition);
+      transaction.transitions.emplace_back(
+          *sharedTag,
+          CollectedTransition{
+              .transition = transition,
+              .nodes = collectedTransition.nodes,
+              .absolutePositions = std::move(collectedTransition.absolutePositions),
+              .ancestors = std::move(collectedTransition.ancestors)});
     } else if (parentTag[AFTER]) {
       transaction.restoreRequests.push_back({*sharedTag, node});
     }
@@ -198,6 +207,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       hideTransitioningViews(AFTER, transaction, propsParserContext);
 
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+        placeNatively(collectedTransition, BEFORE);
+        placeNatively(collectedTransition, AFTER);
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
@@ -384,6 +395,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
 
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+      placeNatively(collectedTransition, BEFORE);
+      placeNatively(collectedTransition, AFTER);
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
@@ -449,6 +462,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         transaction.restoreRequests.push_back({sharedTag, run.target});
       }
       run.target = afterNode;
+      placeNatively(collectedTransition, AFTER);
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       after.tag = containerTag;
       if (hasPendingLayoutAnimation(containerTag)) {
@@ -697,9 +711,11 @@ void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &prop
     }
     resolveLightNodeProps(run.target);
     auto after = run.target->current;
-    const auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
+    auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
+    const auto ancestors = collectAncestors(run.target, false);
+    placeNatively(ancestors, absolutePositions, true);
     after.layoutMetrics.frame.origin = absolutePositions[0];
-    overrideTransform(after, parseParentTransforms(run.target, absolutePositions, false), propsParserContext);
+    overrideTransform(after, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
     after.tag = containerTag;
     if (hasPendingLayoutAnimation(containerTag)) {
       updateLayoutAnimationTarget(containerTag, after, config);
@@ -979,32 +995,25 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   return node->current;
 }
 
+static react::Point scrollPosition(const ShadowView &view) {
+  react::Point position;
+  if (!strcmp(view.componentName, "ScrollView")) {
+    position -= std::static_pointer_cast<const ConcreteState<ScrollViewState>>(view.state)->getData().contentOffset;
+  }
+  return position;
+}
+
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
-    react::Point viewPosition;
     const auto &componentName = currentNode->current.componentName;
     react_native_assert(componentName && "Component name is nullptr");
-    if (!strcmp(componentName, "ScrollView")) {
-      auto state = std::static_pointer_cast<const ConcreteState<ScrollViewState>>(currentNode->current.state);
-      auto data = state->getData();
-      viewPosition -= data.contentOffset;
-    }
+    react::Point viewPosition = scrollPosition(currentNode->current);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto parent = currentNode->parent.lock();
-#ifdef __APPLE__
-    if (parent && nativeViewPlacement_) {
-      const auto placement =
-          nativeViewPlacement_(surfaceId_, currentNode->current.tag, parent->current.tag, !useViewsOnScreen);
-      if (placement.kind == NativeViewPlacement::Kind::Reparented) {
-        viewsAbsolutePositions.emplace_back(viewPosition + placement.origin);
-        break;
-      }
-    }
-#endif
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
       const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
@@ -1020,14 +1029,47 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
   return viewsAbsolutePositions;
 }
 
-std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
+// UIKit can place a view outside the view of its parent, for example in a presented modal. The view of the first such
+// ancestor gives the position of the path below it.
+bool LayoutAnimationsProxy::placeNatively(
+    const std::vector<Ancestor> &ancestors,
+    std::vector<react::Point> &absolutePositions,
+    const bool settled) const {
+#ifdef __APPLE__
+  if (!nativeViewPlacement_) {
+    return false;
+  }
+  for (size_t i = 0; i + 1 < ancestors.size() && i < absolutePositions.size(); ++i) {
+    const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
+    if (placement.kind == NativeViewPlacement::Kind::Reparented) {
+      const auto shift = ancestors[i].scrollPosition + placement.origin - absolutePositions[i];
+      absolutePositions.resize(i + 1);
+      for (auto &position : absolutePositions) {
+        position += shift;
+      }
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
+// Native views do not change during a pull.
+void LayoutAnimationsProxy::placeNatively(CollectedTransition &collectedTransition, const BeforeOrAfter index) const {
+  const auto &ancestors = collectedTransition.ancestors[index];
+  auto &absolutePositions = collectedTransition.absolutePositions[index];
+  if (placeNatively(ancestors, absolutePositions, index == AFTER)) {
+    collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
+    collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+  }
+}
+
+std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
     const std::shared_ptr<LightNode> &node,
-    const std::vector<react::Point> &absolutePositions,
     const bool useViewsOnScreen) const {
-  std::vector<AncestorTransform> transforms;
-  const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
+  std::vector<Ancestor> ancestors;
   auto currentNode = node;
-  while (currentNode && transforms.size() < absolutePositions.size()) {
+  while (currentNode) {
     resolveLightNodeProps(currentNode);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto &props = getViewProps(view);
@@ -1043,16 +1085,23 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
-    transforms.push_back({props.transform, origin, viewSize});
+    ancestors.push_back(
+        {currentNode->current.tag, scrollPosition(currentNode->current), props.transform, origin, viewSize});
     currentNode = currentNode->parent.lock();
   }
+  return ancestors;
+}
 
+std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
+    const std::vector<Ancestor> &ancestors,
+    const std::vector<react::Point> &absolutePositions) const {
+  const auto &targetSize = ancestors[0].ownSize;
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
   bool parentHasTransform = false;
-  for (int i = static_cast<int>(transforms.size()) - 1; i >= 0; --i) {
-    auto &[transform, transformOrigin, ownSize] = transforms[i];
-    if (transform.operations.empty()) {
+  for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
+    const auto &ancestor = ancestors[i];
+    if (ancestor.transform.operations.empty()) {
       continue;
     } else if (i > 0) {
       parentHasTransform = true;
@@ -1061,10 +1110,11 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
+    auto transformOrigin = ancestor.origin;
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
     combinedMatrix =
-        combinedMatrix * resolveTransform(targetLayoutMetrics.frame.size, ownSize, transform, transformOrigin);
+        combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
