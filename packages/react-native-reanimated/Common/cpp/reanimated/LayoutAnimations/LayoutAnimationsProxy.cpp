@@ -28,15 +28,6 @@ using enum LayoutAnimationType;
 using enum ExitingState;
 
 namespace {
-void markDescendantsDeleted(const std::shared_ptr<LightNode> &node) {
-  for (const auto &child : node->children) {
-    if (!child->isExiting()) {
-      child->setExitingState(DECISION_PENDING);
-    }
-    markDescendantsDeleted(child);
-  }
-}
-
 struct AncestorOrigin {
   Tag tag;
   react::Point origin;
@@ -505,7 +496,6 @@ void LayoutAnimationsProxy::updateLightTree(
           const auto node = it->second;
           const auto parent = node->parent.lock();
           react_native_assert(parent && "Parent node is nullptr");
-          markDescendantsDeleted(node);
           handleSubtreeRemoval(node, parent, transaction);
         }
         staleSynchronousProps_.forget(tag);
@@ -513,14 +503,9 @@ void LayoutAnimationsProxy::updateLightTree(
       }
       case ShadowViewMutation::Insert: {
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
-        const auto parentIt = lightNodes_.find(mutation.parentTag);
-        if (nodeIt == lightNodes_.end() || parentIt == lightNodes_.end()) {
-          break;
-        }
-        auto &node = nodeIt->second;
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node->state == LIVE && "React inserts a view whose removal is withheld");
-        auto &parent = parentIt->second;
+        auto &parent = lightNodes_[mutation.parentTag];
         const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
         node->parent = parent;
@@ -578,14 +563,13 @@ void LayoutAnimationsProxy::updateLightTree(
       }
       case ShadowViewMutation::Remove: {
         const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
-        const auto parentIt = lightNodes_.find(mutation.parentTag);
-        if (nodeIt == lightNodes_.end() || parentIt == lightNodes_.end() || nodeIt->second->isExiting()) {
+        if (nodeIt == lightNodes_.end()) {
           break;
         }
         const auto &node = nodeIt->second;
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
-        const auto &parent = parentIt->second;
+        const auto &parent = lightNodes_[parentTag];
         react_native_assert(parent && "Remove mutation from an unknown parent");
         const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
         react_native_assert(
@@ -1032,7 +1016,9 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-    react_native_assert(subNode->isExiting() && "Subtree removal of a view that React does not delete");
+    if (!subNode->isExiting()) {
+      subNode->setExitingState(DECISION_PENDING);
+    }
     if (subNode->state != DECISION_PENDING) {
       if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
