@@ -95,9 +95,20 @@ struct UncommittedScreenPop {
   bool cancelled = false;
 };
 
+// A node on the path from a shared element up to the root, as it was when the element was collected.
+struct Ancestor {
+  Tag tag;
+  react::Point scrollPosition;
+  Transform transform;
+  TransformOrigin origin;
+  react::Size ownSize;
+};
+
 struct CollectedTransition {
   Transition transition;
   std::array<std::shared_ptr<LightNode>, 2> nodes;
+  std::array<std::vector<react::Point>, 2> absolutePositions;
+  std::array<std::vector<Ancestor>, 2> ancestors;
 };
 
 using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
@@ -301,6 +312,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
+  std::vector<Ancestor> collectAncestors(const std::shared_ptr<LightNode> &node, bool useViewsOnScreen) const;
+  bool placeNatively(const std::vector<Ancestor> &ancestors, std::vector<react::Point> &absolutePositions, bool settled)
+      const;
+  void placeNatively(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   void overrideTransform(
@@ -308,16 +323,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
 
-  struct AncestorTransform {
-    Transform transform;
-    TransformOrigin origin;
-    react::Size ownSize;
-  };
-
   std::optional<Transform> parseParentTransforms(
-      const std::shared_ptr<LightNode> &node,
-      const std::vector<react::Point> &absolutePositions,
-      bool useViewsOnScreen) const;
+      const std::vector<Ancestor> &ancestors,
+      const std::vector<react::Point> &absolutePositions) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,
