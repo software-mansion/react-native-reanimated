@@ -186,6 +186,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations with React Native LayoutAnimation',
+    importTest: () => {
+      require('./tests/layoutAnimations/reactNativeLayoutAnimation.test');
+    },
+  },
+  {
     testSuiteName: 'keyframe animations',
     importTest: () => {
       require('./tests/layoutAnimations/keyframe/basic.test');

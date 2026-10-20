@@ -436,8 +436,11 @@ void LayoutAnimationsProxy::updateLightTree(
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        react_native_assert(node && "LightNode not found");
+        const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        if (nodeIt == lightNodes_.end()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
@@ -559,7 +562,11 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Remove: {
-        const auto &node = lightNodes_[mutation.oldChildShadowView.tag];
+        const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
+        if (nodeIt == lightNodes_.end()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
@@ -1009,7 +1016,9 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-    react_native_assert(subNode->isExiting() && "Subtree removal of a view that React does not delete");
+    if (!subNode->isExiting()) {
+      subNode->setExitingState(DECISION_PENDING);
+    }
     if (subNode->state != DECISION_PENDING) {
       if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
