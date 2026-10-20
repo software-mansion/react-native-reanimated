@@ -143,10 +143,7 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(
-    settledUpdates: StyleProps,
-    onCommitted: () => void
-  ) {
+  _syncStylePropsBackToReact(settledUpdates: StyleProps) {
     if (!FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       return;
     }
@@ -162,12 +159,9 @@ export default class AnimatedComponent
       ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
     ]);
     if (animatedPropsKeys.size === 0) {
-      this.setState(
-        (state) => ({
-          settledStyle: { ...state.settledStyle, ...settledUpdates },
-        }),
-        onCommitted
-      );
+      this.setState((state) => ({
+        settledStyle: { ...state.settledStyle, ...settledUpdates },
+      }));
       return;
     }
     this.setState((state) => {
@@ -181,7 +175,7 @@ export default class AnimatedComponent
         }
       }
       return { settledProps, settledStyle };
-    }, onCommitted);
+    });
     // TODO(future): revert changes when animated styles are detached
   }
 

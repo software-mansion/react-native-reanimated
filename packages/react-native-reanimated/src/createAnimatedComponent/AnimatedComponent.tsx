@@ -179,7 +179,7 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(_props: StyleProps, _onCommitted: () => void) {
+  _syncStylePropsBackToReact(_props: StyleProps) {
     // noop
   }
 

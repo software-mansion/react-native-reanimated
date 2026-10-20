@@ -54,8 +54,6 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
         !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       const auto tag = shadowNode->getTag();
       timestampMap_[tag] = timestamp;
-      revisionMap_[tag] = ++lastRevision_;
-      awaitingCommitRevisions_.erase(tag);
       // If JS already has a `settledProps` snapshot for this tag, it is now
       // stale — schedule a refresh on the next `collectSettledUpdates`.
       if (syncedTags_.erase(tag) > 0) {
@@ -68,27 +66,26 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
     jsi::Runtime &rt,
     const double settledTimestamp,
-    const std::function<bool(const ShadowNodeFamily &)> &isMounted) {
+    const std::unordered_set<Tag> &registeredViewTags) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
-  struct CollectedUpdate {
-    Tag viewTag;
-    std::reference_wrapper<const folly::dynamic> styleProps;
-    uint64_t revision;
-  };
-  std::vector<CollectedUpdate> updates;
-  std::vector<Tag> unmountedTags;
+  std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
 
+    if (!registeredViewTags.contains(viewTag)) {
+      ++it;
+      continue;
+    }
+
     if (syncedTags_.contains(viewTag)) {
-      // React committed the latest value for this tag — the registry entry is
-      // redundant. `syncedTags_` is intentionally retained to detect
+      // React already has the latest value for this tag (synced on a previous
+      // call, so the `settledProps` state is committed by now) — the registry
+      // entry is redundant. `syncedTags_` is intentionally retained to detect
       // re-animation staleness. Note that `syncedTags_` and `invalidatedTags_`
       // are disjoint — `update()` moves tags from the former to the latter.
       timestampMap_.erase(viewTag);
-      revisionMap_.erase(viewTag);
       it = updatesRegistry_.erase(it);
       continue;
     }
@@ -99,22 +96,14 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
       continue;
     }
     const bool isSettled = timestampIt->second < settledTimestamp;
-    const auto &shadowNodeFamily = it->second.first;
-    if (isSettled && (!shadowNodeFamily || !isMounted(*shadowNodeFamily))) {
-      // The view can't confirm a commit anymore.
-      unmountedTags.push_back(viewTag);
-      ++it;
-      continue;
-    }
     const auto invalidatedIt = invalidatedTags_.find(viewTag);
     const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
     if (isSettled || isInvalidated) {
-      const auto revision = revisionMap_[viewTag];
-      updates.push_back({viewTag, std::cref(it->second.second), revision});
+      updates.emplace_back(viewTag, std::cref(it->second.second));
       if (isSettled) {
-        // Only settled-path tags can become "synced" so that an ongoing
+        // Only settled-path tags are tracked as "synced" so that an ongoing
         // animation doesn't re-trigger an invalidation/sync on every GC tick.
-        awaitingCommitRevisions_[viewTag] = revision;
+        syncedTags_.insert(viewTag);
       }
       if (isInvalidated) {
         // Only erase serviced invalidations; if a tag was invalidated but the
@@ -128,37 +117,19 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
 
   const jsi::Array array(rt, updates.size());
   size_t i = 0;
-  for (const auto &[viewTag, styleProps, revision] : updates) {
+  for (const auto &[viewTag, styleProps] : updates) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps.get()));
-    item.setProperty(rt, "revision", static_cast<double>(revision));
     array.setValueAtIndex(rt, i++, item);
-  }
-
-  for (const auto tag : unmountedTags) {
-    removeTag(tag);
   }
 
   return jsi::Value(rt, array);
 }
 
-void AnimatedPropsRegistry::markSettledUpdateCommitted(const Tag tag, const uint64_t revision) {
-  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
-
-  const auto it = awaitingCommitRevisions_.find(tag);
-  if (it == awaitingCommitRevisions_.end() || it->second != revision) {
-    return;
-  }
-  awaitingCommitRevisions_.erase(it);
-  syncedTags_.insert(tag);
-}
-
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
   timestampMap_.erase(tag);
-  revisionMap_.erase(tag);
-  awaitingCommitRevisions_.erase(tag);
   syncedTags_.erase(tag);
   invalidatedTags_.erase(tag);
 }

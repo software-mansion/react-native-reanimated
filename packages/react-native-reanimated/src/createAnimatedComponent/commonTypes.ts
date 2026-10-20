@@ -152,10 +152,7 @@ export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBa
   _NativeEventsManager?: INativeEventsManager;
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
-  _syncStylePropsBackToReact: (
-    props: StyleProps,
-    onCommitted: () => void
-  ) => void;
+  _syncStylePropsBackToReact: (props: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
