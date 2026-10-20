@@ -672,20 +672,22 @@ bool LayoutAnimationsProxy::isDetached(const std::shared_ptr<LightNode> &node) c
 }
 
 // A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
-// origin of its stack. The run follows the target once the platform places it.
+// origin of its stack. The run follows the target once the platform places it, until the transition ends.
 void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &propsParserContext) const {
   for (auto &[_, element] : sharedElements_) {
     if (!element.run || !element.run->targetDetached) {
       continue;
     }
     auto &run = *element.run;
+    const auto containerTag = run.container->current.tag;
     const bool targetMapped = isLightNodeMapped(run.target);
-    if (targetMapped && isDetached(run.target)) {
+    const bool targetDetached = targetMapped && isDetached(run.target);
+    if (targetDetached && (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag))) {
       schedulePullOnNextFrame();
       continue;
     }
     run.targetDetached = false;
-    if (!targetMapped) {
+    if (!targetMapped || targetDetached) {
       continue;
     }
     const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
@@ -693,7 +695,6 @@ void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &prop
     if (!config) {
       continue;
     }
-    const auto containerTag = run.container->current.tag;
     resolveLightNodeProps(run.target);
     auto after = run.target->current;
     const auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
