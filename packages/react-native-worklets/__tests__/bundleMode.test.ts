@@ -1,6 +1,9 @@
 import path from 'path';
 
-import { getBundleModeMetroConfig } from '../bundleMode';
+import {
+  bundleModeMetroConfig,
+  getBundleModeMetroConfig,
+} from '../bundleMode';
 
 describe('bundle mode Metro config', () => {
   test('uses existing resolver for non-bundle mode modules', () => {
@@ -69,6 +72,31 @@ describe('bundle mode Metro config', () => {
     expect(result.type).toBe('sourceFile');
     expect(result.filePath.endsWith(path.join('.worklets', '1.js'))).toBe(true);
     expect(resolveRequest).not.toHaveBeenCalled();
+  });
+
+  test('resolves Windows backslash paths in bundleModeMetroConfig and getBundleModeMetroConfig', () => {
+    const windowsModulePath = 'react-native-worklets\\.worklets\\42.js';
+    const resultFromHelper = getBundleModeMetroConfig({
+      resolver: {},
+      serializer: {},
+      transformer: {},
+    }).resolver.resolveRequest({}, windowsModulePath, 'ios');
+
+    expect(resultFromHelper.type).toBe('sourceFile');
+    expect(
+      resultFromHelper.filePath.endsWith(path.join('.worklets', '42.js'))
+    ).toBe(true);
+
+    const resultFromStaticConfig =
+      bundleModeMetroConfig.resolver.resolveRequest(
+        {},
+        windowsModulePath,
+        'ios'
+      );
+    expect(resultFromStaticConfig.type).toBe('sourceFile');
+    expect(
+      resultFromStaticConfig.filePath.endsWith(path.join('.worklets', '42.js'))
+    ).toBe(true);
   });
 
   test('keeps existing polyfills and appends the prepareBundleMode polyfill', () => {
