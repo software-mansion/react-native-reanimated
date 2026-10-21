@@ -77,10 +77,6 @@ const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
   );
-const ComposedHandlerConditionalExample: React.FC = () =>
-  React.createElement(
-    require('./ComposedHandlerConditionalExample').default as React.FC
-  );
 const ComposedHandlerDifferentEventsExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerDifferentEventsExample').default
@@ -610,11 +606,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Performance monitor',
     section: REGRESSIONS,
     screen: PerformanceMonitorExample,
-  },
-  ComposedHandlerConditionalExample: {
-    icon: '🎛️',
-    title: 'Composed handler conditional compose',
-    screen: ComposedHandlerConditionalExample,
   },
   ComposedHandlerDifferentEventsExample: {
     icon: '📣',
