@@ -18,7 +18,6 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { ValidPropNames } from '../../../ReJest/types';
@@ -31,10 +30,10 @@ import { ComparisonMode } from '../../../ReJest/types';
 // React knows. syncBackToReact.test.tsx checks that React receives values it can
 // process; this file checks that they survive the next render.
 //
-// Each case animates one view with one useAnimatedStyle, like the boxes on the
-// sync back example screen. The shared value is toggled without a React render,
-// like the screen's "Toggle shared value" button, and the scenario then
-// re-renders with a new counter, like "Increase counter".
+// Each case animates one view with one useAnimatedStyle. The shared value is
+// toggled from the test, without a React render. After the sync, the scenario
+// re-renders with a new counter, a React render the animation does not depend
+// on.
 //
 // Readers: `prop` is read from the shadow tree (getAnimatedStyle). transform and
 // filter cannot be read from native, so for every case the test also compares
@@ -44,9 +43,10 @@ const BOX_REF = 'SYNC_BACK_RERENDER_BOX';
 
 // Native sets a view to settled after SETTLED_ANIMATION_THRESHOLD_MS (1000 ms)
 // without a new value, PropsRegistryGarbageCollector reads the settled views
-// every FLUSH_INTERVAL_MS (500 ms), and React then renders the view. Same value
-// as in syncBackToReact.test.tsx; change both if the constants change.
-const SYNC_BACK_DELAY_MS = 2000;
+// every FLUSH_INTERVAL_MS (500 ms), and React then renders the view, so the sync
+// comes at most about 1500 ms after the last update. The test waits for it; the
+// rest of the timeout is slack for a slow emulator.
+const SYNC_BACK_TIMEOUT_MS = 4000;
 // The re-render is committed in a frame or two; the rest is slack.
 const RERENDER_FRAMES = 5;
 
@@ -213,7 +213,7 @@ describe('sync of settled props back to React, then a React render', () => {
       const reactStyleBefore = JSON.stringify(lastReactStyle);
       const nativeBefore = prop ? await readProp(prop) : undefined;
 
-      // "Toggle shared value": no React render.
+      // No React render.
       toggleSharedValue();
       if (prop && target !== undefined) {
         await expectEventually(async () =>
@@ -222,15 +222,14 @@ describe('sync of settled props back to React, then a React render', () => {
             : await readProp(prop)
         ).toBe(target, mode);
       }
-      await wait(SYNC_BACK_DELAY_MS);
+      // React gets the settled value, so the next render starts from it.
+      await expectEventually(
+        () => JSON.stringify(lastReactStyle),
+        SYNC_BACK_TIMEOUT_MS
+      ).not.toBe(reactStyleBefore, ComparisonMode.STRING);
 
       const reactStyleSynced = JSON.stringify(lastReactStyle);
       const nativeSynced = prop ? await readProp(prop) : undefined;
-      // React got the settled value, so the next render starts from it.
-      expect(reactStyleSynced).not.toBe(
-        reactStyleBefore,
-        ComparisonMode.STRING
-      );
       if (prop) {
         expect(nativeSynced as string).not.toBe(
           nativeBefore as string,
@@ -238,7 +237,7 @@ describe('sync of settled props back to React, then a React render', () => {
         );
       }
 
-      // "Increase counter": a React render unrelated to the animation.
+      // A React render unrelated to the animation.
       await render(<Scenario counter={1} getStyle={getStyle} />);
       await waitForFrames(RERENDER_FRAMES);
 
