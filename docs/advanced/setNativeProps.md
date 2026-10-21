@@ -6,7 +6,7 @@
 >
 > `setNativeProps` is an escape hatch for specific edge-cases.
 >
-> You should always reach for [`useAnimatedStyle`](/docs/core/useAnimatedStyle) and [`useAnimatedProps`](/docs/core/useAnimatedProps) first when animating styles or properties.
+> You should always reach for [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) and [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) first when animating styles or properties.
 
 ## Reference
 
@@ -39,7 +39,7 @@ function setNativeProps<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `updates`
 
@@ -53,9 +53,9 @@ An object with properties you want to update. These could be both style props (e
 
 ## Remarks
 
-* You should always reach for [`useAnimatedStyle`](/docs/core/useAnimatedStyle) and [`useAnimatedProps`](/docs/core/useAnimatedProps) first when animating styles or properties.
+* You should always reach for [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) and [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) first when animating styles or properties.
 
-* `setNativeProps` is supposed to only be used on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* `setNativeProps` is supposed to only be used on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 * `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
 

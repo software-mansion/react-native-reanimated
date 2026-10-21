@@ -2,9 +2,9 @@
 
 ## What is the Worklets plugin?
 
-The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize).
 
-The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](/docs/bundleMode/) only. Everything on this page applies to both.
+The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) only. Everything on this page applies to both.
 
 * A function that contains a `'worklet'` directive at its very top, i.e.:
 

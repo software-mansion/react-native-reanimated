@@ -12,9 +12,9 @@ const workletFunction = () => {
   return 1;
 };
 
-const isWorkletFunction = isWorkletFunction(workletFunction);
+const isWorklet = isWorkletFunction(workletFunction);
 
-console.log(isWorkletFunction); // true
+console.log(isWorklet); // true
 
 const nonWorkletFunction = () => {
   return 1;

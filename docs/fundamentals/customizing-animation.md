@@ -1,8 +1,8 @@
 # Customizing animations
 
-[Previous section](/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
+[Previous section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
 
-Reanimated comes with three built-in animation functions: [`withTiming`](/docs/animations/withTiming), [`withSpring`](/docs/animations/withSpring), and [`withDecay`](/docs/animations/withDecay). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](/docs/fundamentals/handling-gestures) section.
+Reanimated comes with three built-in animation functions: [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming), [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring), and [`withDecay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures) section.
 
 It's very easy to customize the behavior of animation functions in Reanimated. You can do this by passing a `config` object to the second parameter of either `withTiming` or `withSpring` function.
 
@@ -25,7 +25,7 @@ The `easing` parameter lets you fine-tune the animation over the specified time.
 
 It all will start to make sense when you compare side by side a `linear` easing with the default easing.
 
-Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](/docs/animations/withTiming).
+Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming).
 
 withTiming interactive playground
 
@@ -51,7 +51,7 @@ Stiffness affects how bouncy the spring is. As an example, think about the diffe
 
 Damping describes how quickly the spring animation finishes. Higher damping means the spring will come to rest faster. In the real world, you could think about the same spring bouncing in the air and underwater. For example, a spring in a vacuum would have zero friction and thus zero damping.
 
-Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](/docs/animations/withSpring).
+Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring).
 
 withSpring interactive playground
 
@@ -65,4 +65,4 @@ In this section, we learned how to customize the `withTiming` and `withSpring` a
 
 ## What's next?
 
-In [the upcoming section](/docs/fundamentals/applying-modifiers), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers will allow us to create more complex and engaging animations.
+In [the upcoming section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/applying-modifiers), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers will allow us to create more complex and engaging animations.

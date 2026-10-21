@@ -58,11 +58,11 @@ type CSSAnimationCallbacks = {
 
 #### `onCSSAnimationStart`
 
-Fires when the animation begins, after [`animationDelay`](/docs/css-animations/animation-delay) has passed.
+Fires when the animation begins, after [`animationDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay) has passed.
 
 #### `onCSSAnimationIteration`
 
-Fires at the boundary between two iterations, so an animation with [`animationIterationCount`](/docs/css-animations/animation-iteration-count) of `3` reports two iterations. It never fires for a single-iteration animation, and it keeps firing forever for an infinite one.
+Fires at the boundary between two iterations, so an animation with [`animationIterationCount`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count) of `3` reports two iterations. It never fires for a single-iteration animation, and it keeps firing forever for an infinite one.
 
 #### `onCSSAnimationEnd`
 
@@ -94,9 +94,9 @@ const fade = css.keyframes({ ... });
 
 ## Remarks
 
-* Callbacks fire only for CSS animations. Transitions have [their own callbacks](/docs/css-transitions/transition-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+* Callbacks fire only for CSS animations. Transitions have [their own callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-callbacks), and [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) and friends report completion through their own callback argument instead.
 * Handlers run on the JavaScript thread. The animation itself keeps running natively, so slow work in a callback delays your code, not the animation.
-* Pausing with [`animationPlayState`](/docs/css-animations/animation-play-state) doesn't emit anything, and time spent paused is excluded from `elapsedTime`.
+* Pausing with [`animationPlayState`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-play-state) doesn't emit anything, and time spent paused is excluded from `elapsedTime`.
 * An animation that is removed before its last iteration emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
 
 ## Platform compatibility

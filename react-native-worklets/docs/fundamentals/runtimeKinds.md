@@ -16,7 +16,7 @@ A JavaScript Runtime spawned by Worklets library. It's pre-configured to be able
 
 We differentiate between two kinds of Worklet Runtimes, **UI Runtime** and **Worker Runtimes**.
 
-Each Worklet Runtime has a unique `runtimeId` that can be used to refer to it when communicating between runtimes or creating [Shareables](/docs/memory/shareable) on a specific Worklet Runtime.
+Each Worklet Runtime has a unique `runtimeId` that can be used to refer to it when communicating between runtimes or creating [Shareables](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) on a specific Worklet Runtime.
 
 ### UI Runtime
 
@@ -34,7 +34,7 @@ There's only one UI Runtime in your app.
 
 ### Worker Runtime
 
-A Worklet Runtime spawned by [createWorkletRuntime](/docs/threading/createWorkletRuntime) API per user request. Worker Runtimes are designed to execute worklets in a separate thread. They allow for custom parallelization of JavaScript code execution, which can be useful for heavy computations or tasks that don't require immediate interaction with the user interface, like data processing or background tasks.
+A Worklet Runtime spawned by [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime) API per user request. Worker Runtimes are designed to execute worklets in a separate thread. They allow for custom parallelization of JavaScript code execution, which can be useful for heavy computations or tasks that don't require immediate interaction with the user interface, like data processing or background tasks.
 
 You can customize its behavior and the thread it runs on.
 

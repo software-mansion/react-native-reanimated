@@ -1,12 +1,12 @@
 # useAnimatedStyle
 
-`useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](/docs/fundamentals/glossary#shared-value).
+`useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
-Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
+Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
 
-In contrast to the [inline styling](/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
+In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
 
-For animating properties use [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+For animating properties use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
 ## Reference
 
@@ -53,7 +53,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 ## Returns
 
-`useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+`useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) that you want to animate.
 
 `useAnimatedStyle` mimics the behavior of `StyleSheet` as much as possible. `updater` callback returns a value that looks like a regular style object in which you can also use shared values.
 
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
 
 * You can share animated styles between components to avoid code duplication.
 
-* The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). This may cause an error if you write your code as if it's running on UI thread only. To avoid this, you can use the `global._WORKLET` variable to check if the code is running on the UI thread:
+* The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). This may cause an error if you write your code as if it's running on UI thread only. To avoid this, you can use the `global._WORKLET` variable to check if the code is running on the UI thread:
 
 ```jsx
 function App() {

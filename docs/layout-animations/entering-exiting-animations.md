@@ -2,7 +2,7 @@
 
 Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
 
-Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
+Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations).
 
 > **Info**
 >
@@ -116,7 +116,7 @@ type FadeYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 FadeOutLeft.duration(500).easing(Easing.ease);
@@ -130,7 +130,7 @@ FadeOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 FadeInUp.springify()
@@ -410,7 +410,7 @@ type FlipYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 FlipOutYLeft.duration(500).easing(Easing.ease);
@@ -424,7 +424,7 @@ FlipOutYLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 FlipInXUp.springify()
@@ -526,7 +526,7 @@ type LightSpeedValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 LightSpeedOutLeft.duration(500).easing(Easing.ease);
@@ -540,7 +540,7 @@ LightSpeedOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 LightSpeedInLeft.springify()
@@ -632,7 +632,7 @@ type PinwheelValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 PinwheelOut.duration(500).easing(Easing.ease);
@@ -646,7 +646,7 @@ PinwheelOut.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 PinwheelIn.springify()
@@ -745,7 +745,7 @@ type RollValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 RollOutLeft.duration(500).easing(Easing.ease);
@@ -759,7 +759,7 @@ RollOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 RollInLeft.springify()
@@ -882,7 +882,7 @@ type RotateValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 RotateOutDownRight.duration(500).easing(Easing.ease);
@@ -896,7 +896,7 @@ RotateOutDownRight.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 RotateInUpLeft.springify()
@@ -1009,7 +1009,7 @@ type SlideYValues = { originY?: number };
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 SlideOutLeft.duration(500).easing(Easing.ease);
@@ -1023,7 +1023,7 @@ SlideOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 SlideInUp.springify()
@@ -1128,7 +1128,7 @@ type StretchYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 StretchOutX.duration(500).easing(Easing.ease);
@@ -1142,7 +1142,7 @@ StretchOutX.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 StretchInX.springify()
@@ -1313,7 +1313,7 @@ type ZoomRotateValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 ZoomOutLeft.duration(500).easing(Easing.ease);
@@ -1327,7 +1327,7 @@ ZoomOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 ZoomInRotate.springify()

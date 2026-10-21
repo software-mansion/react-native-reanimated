@@ -1,6 +1,6 @@
 # isWorkletRuntime
 
-Checks if the current runtime is a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), either the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+Checks if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime), either the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
 
 ## Reference
 
@@ -17,13 +17,13 @@ console.log(isWorkletRuntime()); // false
 scheduleOnUI(() => {
   // highlight-next-line
   console.log(isWorkletRuntime()); // true
-})();
+});
 
 const workerRuntime = createWorkletRuntime();
 scheduleOnRuntime(workerRuntime, () => {
   // highlight-next-line
   console.log(isWorkletRuntime()); // true
-})();
+});
 ```
 
 Type definitions
@@ -34,8 +34,8 @@ function isWorkletRuntime(): boolean;
 
 ### Returns
 
-`true` if the current runtime is a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), `false` otherwise.
+`true` if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime), `false` otherwise.
 
 ## Remarks
 
-* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+* The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](https://docs.swmansion.com/react-native-worklets/docs/utility/getRuntimeKind) for more details.

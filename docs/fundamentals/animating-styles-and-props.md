@@ -1,10 +1,10 @@
 # Animating styles and props
 
-In [the last section](/docs/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
+In [the last section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
 
 ## Animating styles
 
-As we learned in the previous section we can animate styles by [passing shared values inline](/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
+As we learned in the previous section we can animate styles by [passing shared values inline](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
 
 ```jsx
 import Animated, { useSharedValue } from 'react-native-reanimated';
@@ -68,7 +68,7 @@ For example, let's say we would like to animate SVG elements. Instead of passing
 <Circle cx="50" cy="50" r="10" fill="blue" />
 ```
 
-Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent):
 
 ```jsx
 import Animated from 'react-native-reanimated';
@@ -103,7 +103,7 @@ In a function which `useAnimatedProps` takes as an argument, we return an object
 
 Check out the full example below:
 
-For a complete guide to animating `react-native-svg` - including CSS animations and transitions and which props are supported - see [Animating SVG](/docs/guides/animating-svg).
+For a complete guide to animating `react-native-svg` - including CSS animations and transitions and which props are supported - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Summary
 
@@ -116,4 +116,4 @@ In this section, we went through the differences between animating styles and pr
 
 ## What's next?
 
-In [the next section](/docs/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.

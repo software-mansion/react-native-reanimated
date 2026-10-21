@@ -1,13 +1,13 @@
 # runOnRuntime
 
-`runOnRuntime` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on a separate worklet runtime on a separate thread.
+`runOnRuntime` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on a separate worklet runtime on a separate thread.
 
 ## Reference
 
 ```javascript
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
-const workletRuntime = createWorkletRuntime('background');
+const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 function App() {
   // E.g. in event handler or in an effect
@@ -34,11 +34,11 @@ function runOnRuntime<A extends any[], R>(
 
 #### workletRuntime
 
-A reference to worklet runtime created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+A reference to worklet runtime created with [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime).
 
 #### fn
 
-A reference to a function you want to execute on the [UI thread](/docs/fundamentals/glossary#ui-thread) from the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+A reference to a function you want to execute on the worklet runtime passed as `workletRuntime`. Arguments to your function have to be passed to the function returned from `runOnRuntime` i.e. `runOnRuntime(workletRuntime, myWorklet)(10);`.
 
 ### Returns
 
@@ -52,7 +52,7 @@ A reference to a function you want to execute on the [UI thread](/docs/fundament
 
 * It's a common mistake to execute function inside of `runOnRuntime` like this: ~~`runOnRuntime(myWorklet(10))()`~~. Here, the correct usage would be `runOnRuntime(myWorklet)(10)`.
 
-* The callback passed as the argument will not be [workletized](/docs/fundamentals/glossary#to-workletize) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed as the argument will not be [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
 
 * You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
 

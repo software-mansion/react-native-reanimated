@@ -117,7 +117,7 @@ See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanim
 **Problem:** Reanimated supports New Architecture (Fabric) only on the latest minor release of React Native.
 
 **Solution:** Please upgrade to a newer version of React Native or downgrade to an older version of Reanimated.
-See [the compatibility table](/docs/guides/compatibility) for a full list of supported versions of React Native.
+See [the compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) for a full list of supported versions of React Native.
 
 ## Warnings
 
@@ -133,7 +133,7 @@ LogBox.ignoreLogs([
 ]);
 ```
 
-See [the accessibility overview](/docs/guides/accessibility) to learn more about Reduced Motion.
+See [the accessibility overview](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) to learn more about Reduced Motion.
 
 ## Dependency issues
 

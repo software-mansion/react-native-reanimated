@@ -1,6 +1,6 @@
 # useComposedEventHandler
 
-This is a hook that lets you compose [useEvent](/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
+This is a hook that lets you compose [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
 
 ## Reference
 
@@ -53,11 +53,11 @@ function useComposedEventHandler(
 
 #### `handlers`
 
-An array of event handlers created using [useEvent](/docs/advanced/useEvent) hook. `useComposedEventHandler` hook reacts to any changes in given handlers and rebuilds whenever it is needed.
+An array of event handlers created using [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook. `useComposedEventHandler` hook reacts to any changes in given handlers and rebuilds whenever it is needed.
 
 ### Returns
 
-The hook returns a handler object that can be hooked into any [`Animated component`](/docs/fundamentals/glossary#animated-component).
+The hook returns a handler object that can be hooked into any [`Animated component`](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
 The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). If your composed handler aggregates multiple events that have little in common, put it into a new property, e.g. "composedHandler". It will still work, but the best practice here would be to use several composed handlers for code clarity.
 
 ## Example
@@ -65,6 +65,6 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 ## Remarks
 
 * The hook returns a handler that combines functionalities of all the handlers given as an argument. This way, you can have more than one handler responding to a given event, as well as handle many different type events using just one object.
-* It will still work well when passed to multiple [`Animated components`](/docs/fundamentals/glossary#animated-component), firing event callbacks for each connected component.
+* It will still work well when passed to multiple [`Animated components`](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component), firing event callbacks for each connected component.
 
 ## Platform compatibility

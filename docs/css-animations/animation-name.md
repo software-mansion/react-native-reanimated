@@ -55,7 +55,7 @@ animationName: pulse,
 
 #### `<keyframes[]>`
 
-An array of keyframe objects. The order in this array corresponds to the array of style properties passed to the [`animationDuration`](/docs/css-animations/animation-duration).
+An array of keyframe objects. The order in this array corresponds to the array of style properties passed to the [`animationDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration).
 
 ```javascript
 animationName: [fadeInOut, moveLeft, bounce],
@@ -72,6 +72,6 @@ No animation.
 
 * At minimum 1 keyframe is required to create an animation. Reanimated will take the current state of the element as the first keyframe.
 * If multiple animations target the same property, the animation later in the array will override changes from the previous one.
-* You can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too - see [Animating SVG](/docs/guides/animating-svg).
+* You can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Platform compatibility

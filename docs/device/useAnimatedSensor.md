@@ -141,7 +141,7 @@ You can specify the iOS reference frame using an `IOSReferenceFrame` enum contai
 
 | Name        | Type                                  | Description                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with \[sensor(/docs/docs/device/useAnimatedSensor#sensortype) argument. |
+| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with \[sensor(/docs/docs/device/useAnimatedSensor#sensortype) argument. |
 | unregister  | `() => void`                          | Allows to stop listening to sensor updates on call.                                                                                                                                                                                             |
 | isAvailable | `boolean`                             | Indicates whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.                                                                              |
 | config      | `SensorConfig`                        | An object containing sensor configuration.                                                                                                                                                                                                      |
@@ -198,6 +198,6 @@ Depending on the sensor type the measurement is a number in radians per second, 
 
 * Most of the sensors operate in resolutions up to 100Hz.
 
-* You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+* You can read the sensor data on both [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread).
 
 ## Platform compatibility

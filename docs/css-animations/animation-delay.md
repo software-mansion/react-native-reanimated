@@ -57,7 +57,7 @@ animationDelay: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line

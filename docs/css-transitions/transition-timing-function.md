@@ -128,7 +128,7 @@ transitionTimingFunction: steps(4, 'jump-end'),
 
 #### `<timing function[]>`
 
-An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](/docs/css-transitions/transition-property#style-property-1).
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property#style-property-1).
 
 ```typescript
 // highlight-next-line

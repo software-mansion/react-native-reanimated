@@ -2,13 +2,13 @@
 
 A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
 
-A Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
+A Shareable can hold any value that is convertible to a [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable).
 
 A Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
 
 A Shareable is useful in scenarios where it's mostly read and updated on the Host Runtime and only occasionally accessed from the Guest Runtimes.
 
-![Shareable](/img/shareable.svg)
+![Shareable](https://docs.swmansion.com/react-native-worklets/img/shareable.svg)
 
 Shareable memory model, illustrated with a guest RN Runtime, host UI Runtime, and guest Background Runtime.
 
@@ -87,7 +87,7 @@ console.log(shareable.getSync()); // 42
 
 ## Shareable Host
 
-**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](/docs/memory/createShareable#hostdecorator), it has the following interface:
+**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable#hostdecorator), it has the following interface:
 
 ### value
 
@@ -99,7 +99,7 @@ A boolean property indicating whether the Shareable is being accessed from the H
 
 ## Shareable Guest
 
-**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](/docs/memory/createShareable#guestdecorator), it has the following interface:
+**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable#guestdecorator), it has the following interface:
 
 ### isHost
 

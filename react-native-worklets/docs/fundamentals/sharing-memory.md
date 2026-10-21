@@ -5,8 +5,8 @@ single-threaded JavaScript has always let you ignore: **how do two pieces of cod
 same data?**
 
 This page explains why that question has no cheap answer in JavaScript, and why Worklets expose three distinct shared
-memory primitives — the [Serializable](/docs/memory/serializable), the [Synchronizable](/docs/memory/synchronizable),
-and the [Shareable](/docs/memory/shareable) — instead of one.
+memory primitives — the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable), the [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable),
+and the [Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) — instead of one.
 
 ## JavaScript is single-threaded on purpose
 
@@ -49,7 +49,7 @@ We can categorize shared memory into three types, based on how they are implemen
 The simplest of them all: a way to move any value from Runtime A to Runtime B as-is — a number, an object, a string,
 essentially any value that can be expressed as data. However, changes to such a value on any Runtime aren't visible in
 the other Runtimes. Each Runtime is unaware that it has a copy and simply treats its value as the original. **This is
-the [Serializable](/docs/memory/serializable) primitive.**
+the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) primitive.**
 
 Each to-be-copied value is serialized into a byte stream and sent through C++ to the other Runtime, where it's
 reconstructed. This is straightforward for primitives like numbers and strings, but for objects it can be more
@@ -57,7 +57,7 @@ complex — for example, how do you handle an object that contains a circular re
 of the Serializable has to cover all these edge cases and at least produce a meaningful error when a value can't be
 serialized.
 
-![Serializable](/img/model-serializable.svg)
+![Serializable](https://docs.swmansion.com/react-native-worklets/img/model-serializable.svg)
 
 High-level overview of the Serializable memory model — no Runtime holds ownership of the value, they just exchange
 copies of it.
@@ -73,9 +73,9 @@ and all the other Runtimes — but not tied to any particular Runtime, *unbound*
 "real" value outside of any Runtime, in C++, guarded by mutexes and other synchronization primitives. Each JavaScript
 Runtime holds just a specific kind of reference to the C++ value. Each read or write means crossing the boundary between
 JavaScript and C++. Because the memory is thread-safe, each Runtime can safely access it at its own discretion. **This
-is the [Synchronizable](/docs/memory/synchronizable) primitive.**
+is the [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) primitive.**
 
-![Synchronizable](/img/model-synchronizable.svg)
+![Synchronizable](https://docs.swmansion.com/react-native-worklets/img/model-synchronizable.svg)
 
 High-level overview of the Synchronizable memory model — the value is kept outside of any Runtime, and each Runtime
 holds a reference to it.
@@ -97,9 +97,9 @@ designated JavaScript Runtime, called the Host Runtime, by simply holding the va
 Other Runtimes, called Guest Runtimes, only have a specific kind of reference that "knows" that the actual value lives
 on another Runtime — if you want to access it with that reference, you must go to C++, lock the Host Runtime
 exclusively, read the actual value, and return it to the Guest Runtime that initiated the read. **This is the
-[Shareable](/docs/memory/shareable) primitive.**
+[Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) primitive.**
 
-![Shareable](/img/model-shareable.svg)
+![Shareable](https://docs.swmansion.com/react-native-worklets/img/model-shareable.svg)
 
 High-level overview of the Shareable memory model — the value is kept on the Host Runtime, and the Guest Runtimes hold
 a reference to it.
@@ -129,5 +129,5 @@ general guidelines:
     you allow for eventual consistency.
 
 The rest of this section documents each primitive in detail, along with the APIs —
-[createSerializable](/docs/memory/createSerializable), [createSynchronizable](/docs/memory/createSynchronizable),
-[createShareable](/docs/memory/createShareable) — for producing them.
+[createSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable), [createSynchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable),
+[createShareable](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable) — for producing them.

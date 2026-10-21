@@ -1,6 +1,6 @@
 # measure
 
-`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Reference
 
@@ -47,7 +47,7 @@ function measure<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 ### Returns
 
@@ -66,9 +66,9 @@ or returns `null` when the measurement couldn't be performed.
 
 ## Remarks
 
-* `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) function.
+* `measure` is implemented only on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) function.
 
-* The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
+* The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
 
 ```jsx
 function App() {

@@ -132,7 +132,7 @@ animationTimingFunction: steps(4, 'jump-end'),
 
 #### `<timing function[]>`
 
-An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```javascript
 // highlight-next-line

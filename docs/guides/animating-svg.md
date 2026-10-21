@@ -1,14 +1,14 @@
 # Animating SVG
 
-Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](/docs/css-animations/animation-name) and [CSS transitions](/docs/css-transitions/transition-property).
+Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name) and [CSS transitions](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property).
 
 > **Info**
 >
-> CSS animations and transitions for SVG are an experimental feature, enabled by default from Reanimated 4.4. You can opt out with the [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](/docs/guides/feature-flags#experimental_css_animations_for_svg_components) feature flag. Animating SVG with [`useAnimatedProps`](/docs/core/useAnimatedProps) or inline [shared values](/docs/fundamentals/glossary#shared-value) doesn't require it.
+> CSS animations and transitions for SVG are an experimental feature, enabled by default from Reanimated 4.4. You can opt out with the [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#experimental_css_animations_for_svg_components) feature flag. Animating SVG with [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) or inline [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) doesn't require it.
 
 ## Setup
 
-Install [`react-native-svg`](https://github.com/software-mansion/react-native-svg). SVG components aren't built into Reanimated, so wrap the ones you animate with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+Install [`react-native-svg`](https://github.com/software-mansion/react-native-svg). SVG components aren't built into Reanimated, so wrap the ones you animate with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent):
 
 ```tsx
 import Animated from 'react-native-reanimated';
@@ -21,11 +21,11 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 SVG attributes like `cx`, `r`, `d`, and `fill` are **component props**, not React Native `style` keys, so they animate through props rather than `style`. There are three ways to drive them:
 
-* **[Inline](/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
-* **[`useAnimatedProps`](/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
+* **[Inline](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
+* **[`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
 * **CSS** - keep the SVG props as plain values and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
 
-There's one catch with **CSS transitions**: a CSS transition only runs when the prop changes **between renders**. A plain value does that, so the CSS transition runs. An inline [shared value](/docs/fundamentals/glossary#shared-value) doesn't re-render - each `r.value` change updates the `r` prop directly - so the CSS transition never runs:
+There's one catch with **CSS transitions**: a CSS transition only runs when the prop changes **between renders**. A plain value does that, so the CSS transition runs. An inline [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) doesn't re-render - each `r.value` change updates the `r` prop directly - so the CSS transition never runs:
 
 ```tsx
 // Plain value: it changes on re-render, which triggers the CSS transition
@@ -44,15 +44,15 @@ const r = useSharedValue(20);
 
 ## With useAnimatedProps
 
-Drive an attribute with a [shared value](/docs/fundamentals/glossary#shared-value) through [`useAnimatedProps`](/docs/core/useAnimatedProps):
+Drive an attribute with a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) through [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps):
 
 ## With CSS animations
 
-The same animation expressed as a [CSS keyframe animation](/docs/css-animations/animation-name):
+The same animation expressed as a [CSS keyframe animation](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name):
 
 ## With CSS transitions
 
-A [CSS transition](/docs/css-transitions/transition-property) runs whenever a transitioned value changes between renders - including a plain value from `useState` or props, with no shared value involved. Just change the prop:
+A [CSS transition](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) runs whenever a transitioned value changes between renders - including a plain value from `useState` or props, with no shared value involved. Just change the prop:
 
 The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one. You can pass the prop inline or through `animatedProps`; changing it from either place starts the transition, and if both set it, `animatedProps` wins:
 
@@ -69,7 +69,7 @@ The first render never animates (there is no previous value); each later change 
 />
 ```
 
-A [shared value](/docs/fundamentals/glossary#shared-value) is the exception: updating `r.value` doesn't re-render, so it never starts a transition. To animate a prop from a shared value, pass it inline (`r={r}`) or via [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) is the exception: updating `r.value` doesn't re-render, so it never starts a transition. To animate a prop from a shared value, pass it inline (`r={r}`) or via [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
 ## Morphing paths
 
@@ -77,7 +77,7 @@ A `Path` morphs between two shapes when both use the same sequence of commands. 
 
 ## Supported components and properties
 
-The tables below cover what **CSS animations and transitions** can animate, and on which platforms. Every component animates the [common appearance properties](#common-appearance-properties); shape components also animate their [geometry](#geometry-by-component). Properties that aren't listed aren't supported by CSS - use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those, since it can drive any animatable prop the component accepts.
+The tables below cover what **CSS animations and transitions** can animate, and on which platforms. Every component animates the [common appearance properties](#common-appearance-properties); shape components also animate their [geometry](#geometry-by-component). Properties that aren't listed aren't supported by CSS - use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) for those, since it can drive any animatable prop the component accepts.
 
 ### Common appearance properties
 
@@ -160,4 +160,4 @@ A few caveats:
 
 ### Web
 
-On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Polygon`/`Polyline` `points`, `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those.
+On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Polygon`/`Polyline` `points`, `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) for those.

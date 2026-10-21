@@ -2,7 +2,7 @@
 
 Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
 
-For animating `react-native-svg` components, see [Animating SVG](/docs/guides/animating-svg).
+For animating `react-native-svg` components, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 | Property                | Android            | iOS                | Web    |
 | ----------------------- | ------------------ | ------------------ | ------ |
@@ -168,7 +168,7 @@ Style inheritance is not supported. Properties that would normally inherit value
 
 ### Invalid values
 
-A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](/docs/debugging/logger-configuration) as long as its strict mode is enabled.
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration) as long as its strict mode is enabled.
 
 ### Relative Margins
 

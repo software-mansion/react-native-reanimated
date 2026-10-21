@@ -4,7 +4,7 @@ Serializable is a type of shared memory that holds an immutable value that can b
 
 **You can't pass JavaScript values to other Runtimes without prior serialization.**
 
-![Serializable](/img/serializable.svg)
+![Serializable](https://docs.swmansion.com/react-native-worklets/img/serializable.svg)
 
 Serializable memory model
 
@@ -19,7 +19,7 @@ type SerializableRef<TValue = unknown> = {
 
 ## Supported types
 
-If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.
+If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.
 
 ## Remarks
 

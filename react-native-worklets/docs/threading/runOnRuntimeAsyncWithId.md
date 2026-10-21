@@ -1,6 +1,6 @@
 # runOnRuntimeAsyncWithId
 
-`runOnRuntimeAsyncWithId` is a variant of [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+`runOnRuntimeAsyncWithId` is a variant of [runOnRuntimeAsync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
 
 ## Reference
 
@@ -40,19 +40,19 @@ function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ## Remarks
 
-* `runOnRuntimeAsyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+* `runOnRuntimeAsyncWithId` can target the UI Runtime by passing [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId) as the runtime id.
 
 * Errors thrown in the worklet will cause the Promise to reject with that error.
 

@@ -6,7 +6,7 @@ You can use Synchronizable on multiple Runtimes to poll some shared state inform
 
 Synchronizable can be accessed both non-exclusively or exclusively - meaning that a thread (Runtime) could obtain it and all other threads (Runtimes) trying to access it will have to wait until it's released.
 
-![Synchronizable](/img/synchronizable.svg)
+![Synchronizable](https://docs.swmansion.com/react-native-worklets/img/synchronizable.svg)
 
 Synchronizable memory model
 
@@ -16,7 +16,7 @@ Currently there are two subtypes of Synchronizable, which behave slightly differ
 
 ### Synchronizable Dynamic
 
-General subtype of Synchronizable. It can hold any JavaScript type that is convertible to a [Serializable](/docs/memory/serializable) and you can change that type at your discretion, i.e. hold an instance of Set at one point in time, then a String in the other.
+General subtype of Synchronizable. It can hold any JavaScript type that is convertible to a [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) and you can change that type at your discretion, i.e. hold an instance of Set at one point in time, then a String in the other.
 
 This comes with a drawback, that every read and write has to pass serialization-deserialization layer when crossing the C++ - JavaScript boundary.
 
@@ -24,7 +24,7 @@ This comes with a drawback, that every read and write has to pass serialization-
 
 Special subtype of Synchronizable that can only hold a fixed type, and only one of the two - either a JavaScript `number` or `boolean`, which are fixed size primitives. The type stored cannot be changed at runtime.
 
-Primitive JavaScript values are trivially serialized and deserialized, therefore **Synchronizable Fixed comes with no overhead, compared to the Dynamic**. For storing boolean flags or simple number state, we highly recommend [using the Fixed type](/docs/memory/createSynchronizable#config).
+Primitive JavaScript values are trivially serialized and deserialized, therefore **Synchronizable Fixed comes with no overhead, compared to the Dynamic**. For storing boolean flags or simple number state, we highly recommend [using the Fixed type](https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable#config).
 
 Type definitions
 
@@ -62,7 +62,7 @@ scheduleOnUI(() => {
 synchronizable.setBlocking({ a: 24 });
 ```
 
-![Synchronizable flow](/img/synchronizable-flow.svg)
+![Synchronizable flow](https://docs.swmansion.com/react-native-worklets/img/synchronizable-flow.svg)
 
 Possible flow of operations for the above example, assuming that `getBlocking`
 function executes first. Time axis is not to scale.

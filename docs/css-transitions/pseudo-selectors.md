@@ -95,7 +95,7 @@ You write the property as an object: the keys are `default` and the selectors yo
 
 Two things follow from that:
 
-1. **Timing comes from the component's transition settings.** Pseudo selectors animate as CSS transitions, so [`transitionDuration`](/docs/css-transitions/transition-duration), [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function), and [`transitionDelay`](/docs/css-transitions/transition-delay) are read from the top level of the style, not from inside the pseudo object.
+1. **Timing comes from the component's transition settings.** Pseudo selectors animate as CSS transitions, so [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration), [`transitionTimingFunction`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-timing-function), and [`transitionDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay) are read from the top level of the style, not from inside the pseudo object.
 2. **Nothing re-renders.** Hovering or pressing doesn't trigger a React render, so JavaScript work can't get in the way of the animation.
 
 When several selectors match at once, the one later in this list wins:
@@ -144,13 +144,13 @@ The web supports many more selectors, like `:focus-visible`, `:disabled` and `:f
 
 ## Combining selectors
 
-A single property can list several selectors, and different properties on the same component can respond to different ones. Because timing lives at the top level, you can also give each property its own duration by lining up [`transitionProperty`](/docs/css-transitions/transition-property) with [`transitionDuration`](/docs/css-transitions/transition-duration):
+A single property can list several selectors, and different properties on the same component can respond to different ones. Because timing lives at the top level, you can also give each property its own duration by lining up [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) with [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration):
 
 The button drifts between colors over 600ms, but snaps down in 100ms when pressed. `backgroundColor` lists both `:hover` and `:active`, and pressing wins over hovering because `:active` sits later in the priority list.
 
 ## Animating SVG components
 
-Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
+Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 Give every animated attribute a resting value, either as `default` inside the pseudo object or as the plain prop - both work, and `default` wins when you write both. With neither, the attribute falls back to its own default, which for `r` means the shape renders at `0`.
 
@@ -168,11 +168,11 @@ Reanimated hit-tests the front-most element, so when SVG shapes overlap only the
 
 * iOS won't deliver input to a view at or below 1% opacity, so `opacity: { default: 0, ':active': 1 }` never activates there, while the same style works on Android and the web. Write `opacity: { default: 0.02, ':active': 1 }` instead - indistinguishable on screen, and still reachable. Touch `:hover` is the exception and keeps working.
 
-* Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](/docs/core/useAnimatedStyle), where the animation is driven by [shared values](/docs/fundamentals/glossary#shared-value) instead.
+* Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle), where the animation is driven by [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) instead.
 
 * Every selector other than the five cross-platform ones is supported on the web only. Android and iOS ignore them, with a warning in development builds.
 
-* Not every style property can be animated. See [Supported style properties](/docs/guides/supported-properties) for the full list.
+* Not every style property can be animated. See [Supported style properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties) for the full list.
 
 ## Supported selectors by platform
 

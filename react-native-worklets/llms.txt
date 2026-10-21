@@ -3,7 +3,7 @@
 ## BundleMode
 
 - [importForwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
-- [overview](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/overview)
+- [overview](https://docs.swmansion.com/react-native-worklets/docs/bundleMode)
 - [setup](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/setup)
 - [usage](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage)
 
@@ -21,13 +21,12 @@
 - [compatibility](https://docs.swmansion.com/react-native-worklets/docs/guides/compatibility)
 - [Feature flags](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags)
 - [running-on-the-ui-runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime)
-- [testing-with-jest](https://docs.swmansion.com/react-native-worklets/docs/guides/testing-with-jest)
+- [testing-with-jest](https://docs.swmansion.com/react-native-worklets/docs/guides/testing)
 - [Troubleshooting](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting)
 
 ## Memory
 
 - [createSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable)
-- [createSerializableTyped](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializableTyped)
 - [createShareable](https://docs.swmansion.com/react-native-worklets/docs/memory/createShareable)
 - [createSynchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable)
 - [isSerializableRef](https://docs.swmansion.com/react-native-worklets/docs/memory/isSerializableRef)
@@ -46,7 +45,6 @@
 - [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime)
 - [executeOnUIRuntimeSync](https://docs.swmansion.com/react-native-worklets/docs/threading/executeOnUIRuntimeSync)
 - [runOnJS](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS)
-- [runOnRNSync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRNSync)
 - [runOnRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntime)
 - [runOnRuntimeAsync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync)
 - [runOnRuntimeAsyncWithId](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsyncWithId)
@@ -75,6 +73,6 @@
 ## Worklets Plugin
 
 - [About](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about)
-- [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/options)
+- [Options](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options)
 - [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc)
 

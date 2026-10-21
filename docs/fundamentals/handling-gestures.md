@@ -2,7 +2,7 @@
 
 In this section, we'll learn how to handle gestures with Reanimated. To achieve this, Reanimated integrates tightly with [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/docs/), another library created by Software Mansion.
 
-Gesture Handler comes with plentiful gestures like [`Pinch`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [`Fling`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). Right now we'll start simple and get to know [`Tap`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [`Pan`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures as well as how to use [`withDecay`](/docs/animations/withDecay) animation function.
+Gesture Handler comes with plentiful gestures like [`Pinch`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [`Fling`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). Right now we'll start simple and get to know [`Tap`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [`Pan`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures as well as how to use [`withDecay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay) animation function.
 
 Just make sure to go through the Gesture Handler [installation steps](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation) first and come back here to learn how to use it with Reanimated.
 
@@ -28,7 +28,7 @@ function App() {
 
 New tap gestures are defined with `Gesture.Tap()` in your component's body. You can define the behavior of the gesture by chaining methods like [`onBegin`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onbegincallback), [`onStart`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onstartcallback), [`onEnd`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onendcallback), or [`onFinalize`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onfinalizecallback) on the gesture. We'll use them to update a shared value just after the gesture begins and return to the initial value when the gesture finishes.
 
-You can safely access the shared values because callbacks passed to gestures are automatically [workletized](/docs/fundamentals/glossary#to-workletize) for you.
+You can safely access the shared values because callbacks passed to gestures are automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) for you.
 
 We'd like our circle to change color from violet to yellow and smoothly scale by 20% on tap. Let's define that animation logic using `withTiming` in the `useAnimatedStyle`:
 
@@ -62,7 +62,7 @@ The rest of the code is just to make sure the square stays inside the screen.
 
 Play around and see how the square decelerates when let go with some speed!
 
-Make sure to check the full [`withDecay` API reference](/docs/animations/withDecay) to get to know the rest of the configuration options.
+Make sure to check the full [`withDecay` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay) to get to know the rest of the configuration options.
 
 ## Summary
 
@@ -77,4 +77,4 @@ In this section, we went through the basics of handling gestures with Reanimated
 
 In this article, we've barely scratched the surface of what's possible with gestures in Reanimated. Besides [Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures Gesture Handler comes with many more e.g. [Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). We welcome you to dive into the [Quick start](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/quickstart) section of the React Native Gesture Handler documentation and explore all the possibilities that this library comes with.
 
-In [the next section](/docs/fundamentals/glossary), Let's explore a glossary of terms together!
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary), Let's explore a glossary of terms together!

@@ -1,10 +1,10 @@
 # getRuntimeKind
 
-`getRuntimeKind` allows you to get the [kind of the current runtime](/docs/fundamentals/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
+`getRuntimeKind` allows you to get the [kind of the current runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
 
 `getRuntimeKind` is a direct replacement for the deprecated `_WORKLET` global variable.
 
-We recommend using handy shorthands like [isRNRuntime](/docs/utility/isRNRuntime), [isUIRuntime](/docs/utility/isUIRuntime), [isWorkerRuntime](/docs/utility/isWorkerRuntime), and [isWorkletRuntime](/docs/utility/isWorkletRuntime).
+We recommend using handy shorthands like [isRNRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isRNRuntime), [isUIRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isUIRuntime), [isWorkerRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkerRuntime), and [isWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletRuntime).
 
 ## Reference
 

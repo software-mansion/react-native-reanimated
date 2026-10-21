@@ -1,6 +1,6 @@
 # runOnRuntimeSyncWithId
 
-`runOnRuntimeSyncWithId` is a variant of [runOnRuntimeSync](/docs/threading/runOnRuntimeSync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+`runOnRuntimeSyncWithId` is a variant of [runOnRuntimeSync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeSync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
 
 ## Reference
 
@@ -31,19 +31,19 @@ function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ## Remarks
 
-* `runOnRuntimeSyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+* `runOnRuntimeSyncWithId` can target the UI Runtime by passing [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId) as the runtime id.
 
 ## Call table
 

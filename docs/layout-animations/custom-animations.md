@@ -1,6 +1,6 @@
 # Custom animations
 
-Custom animations give you a full control over the Entering/Exiting animations and Layout transitions. However, they tend to be hard to understand and maintain. We recommend starting with predefined [Entering/Exiting](/docs/layout-animations/entering-exiting-animations), [Keyframes](/docs/layout-animations/keyframe-animations) and [Layout](/docs/layout-animations/layout-transitions) presets first before using custom animations.
+Custom animations give you a full control over the Entering/Exiting animations and Layout transitions. However, they tend to be hard to understand and maintain. We recommend starting with predefined [Entering/Exiting](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations), [Keyframes](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/keyframe-animations) and [Layout](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) presets first before using custom animations.
 
 ## Reference
 

@@ -1,6 +1,6 @@
 # List Layout Animations
 
-`itemLayoutAnimation` lets you define a [layout transition](/docs/layout-animations/layout-transitions) that's applied when list items layout changes. You can use one of the [predefined transitions](/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create [your own transition](/docs/layout-animations/custom-animations#custom-layout-transition).
+`itemLayoutAnimation` lets you define a [layout transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) that's applied when list items layout changes. You can use one of the [predefined transitions](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create [your own transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations#custom-layout-transition).
 
 ## Example
 

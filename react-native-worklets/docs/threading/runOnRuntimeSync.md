@@ -1,6 +1,6 @@
 # runOnRuntimeSync
 
-`runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
+`runOnRuntimeSync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
 
 ## Reference
 
@@ -35,11 +35,11 @@ The worklet runtime to run the worklet on.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+A reference to a function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+Arguments to the function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
 
 ## Call table
 

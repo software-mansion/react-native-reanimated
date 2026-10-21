@@ -1,6 +1,6 @@
 # executeOnUIRuntimeSync
 
-`executeOnUIRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`executeOnUIRuntimeSync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
 
 ## Reference
 
@@ -42,6 +42,6 @@ A reference to a function you want to execute on the UI Runtime on the current t
 
 * It's a common mistake to execute function inside of `executeOnUIRuntimeSync` like this: ~~`executeOnUIRuntimeSync(myWorklet(10))()`~~. Here, the correct usage would be `executeOnUIRuntimeSync(myWorklet)(10)`.
 
-* The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
 
 * Make sure not to execute `executeOnUIRuntimeSync` on the UI thread as this will result in an error.

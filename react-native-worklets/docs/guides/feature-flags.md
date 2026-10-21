@@ -22,7 +22,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `FETCH_PREVIEW_ENABLED`
 
-**Removed in 0.13.0.** The [networking API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](/docs/bundleMode/) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking) to `createWorkletRuntime`.
+**Removed in 0.13.0.** The [networking API on Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime#enablenetworking) to `createWorkletRuntime`.
 
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
 
@@ -65,11 +65,11 @@ The call stack reported in LogBox differs depending on whether the flag is enabl
 
 **Enabled**
 
-![Cross-runtime stack trace with flag enabled](/img/cross-runtime-stack-trace-enabled.png)
+![Cross-runtime stack trace with flag enabled](https://docs.swmansion.com/react-native-worklets/img/cross-runtime-stack-trace-enabled.png)
 
 **Disabled**
 
-![Cross-runtime stack trace with flag disabled](/img/cross-runtime-stack-trace-disabled.png)
+![Cross-runtime stack trace with flag disabled](https://docs.swmansion.com/react-native-worklets/img/cross-runtime-stack-trace-disabled.png)
 
 The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
 

@@ -1,6 +1,6 @@
 # useAnimatedReaction
 
-`useAnimatedReaction` allows you to respond to changes in a [shared value](/docs/fundamentals/glossary#shared-value). It's especially useful when comparing values previously stored in the shared value with the current one.
+`useAnimatedReaction` allows you to respond to changes in a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). It's especially useful when comparing values previously stored in the shared value with the current one.
 
 ## Reference
 
@@ -107,7 +107,7 @@ function App() {
 }
 ```
 
-* Callbacks passed to the `prepare` and `result` arguments are automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* Callbacks passed to the `prepare` and `result` arguments are automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 * You can technically react to any stateful React value using `useAnimatedReaction` but you should probably use a `useEffect` for that instead.
 

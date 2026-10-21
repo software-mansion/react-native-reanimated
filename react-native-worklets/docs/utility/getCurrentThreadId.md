@@ -1,6 +1,6 @@
 # getCurrentThreadId
 
-`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](/docs/fundamentals/runtimeKinds). The returned id is a stringified result of [`std::this_thread::get_id()`](https://en.cppreference.com/cpp/thread/get_id).
+`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds). The returned id is a stringified result of [`std::this_thread::get_id()`](https://en.cppreference.com/cpp/thread/get_id).
 
 ## Reference
 

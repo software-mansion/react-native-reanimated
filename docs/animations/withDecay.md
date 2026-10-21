@@ -64,12 +64,12 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ### Returns
 
-`withDecay` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withDecay` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the 2nd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the 2nd argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility

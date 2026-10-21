@@ -1,6 +1,6 @@
 # createSerializable
 
-Recursively converts JavaScript values into [Serializable](/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
+Recursively converts JavaScript values into [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
 
 The returned reference cannot be manipulated as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
 
@@ -66,4 +66,4 @@ The JavaScript value to be converted into a Serializable reference. It must be o
 * This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
 * This function includes cycle detection to prevent infinite recursion.
 * `jsi::NativeState` of a passed value is preserved during serialization.
-* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.
+* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](https://docs.swmansion.com/react-native-worklets/docs/memory/makeShareableCloneOnUIRecursive) instead.

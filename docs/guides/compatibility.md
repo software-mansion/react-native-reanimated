@@ -2,7 +2,7 @@
 
 > **Info**
 >
-> Reanimated 4 works only with the React Native New Architecture. If your app still uses the old architecture, you can use Reanimated in [version 3](/docs/3.x/) (which is no longer actively maintained).
+> Reanimated 4 works only with the React Native New Architecture. If your app still uses the old architecture, you can use Reanimated in [version 3](https://docs.swmansion.com/react-native-reanimated/docs/3.x/) (which is no longer actively maintained).
 
 **The tables assume you're using the latest patch of each Reanimated minor version.**
 For example, `4.2.x` shows support for React Native `0.84` because Reanimated `4.2.2` added it, even though `4.2.0` didn't have it. If you're on an older patch, check the `compatibility.json` file in the Reanimated package for exact version support.
@@ -17,5 +17,5 @@ For example, `4.2.x` shows support for React Native `0.84` because Reanimated `4
 
 Looking for the compatibility table for an older major version?
 
-* [Reanimated 3.x](/docs/3.x/guides/compatibility)
-* [Reanimated 2.x](/docs/2.x/guide/compatibility)
+* [Reanimated 3.x](https://docs.swmansion.com/react-native-reanimated/docs/3.x/guides/compatibility)
+* [Reanimated 2.x](https://docs.swmansion.com/react-native-reanimated/docs/2.x/guide/compatibility)

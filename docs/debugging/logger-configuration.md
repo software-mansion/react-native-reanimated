@@ -1,6 +1,6 @@
 # Logger configuration
 
-Reanimated shows warnings that indicate misuses of the library API, such as modifying the [shared value](/docs/fundamentals/glossary#shared-value) during component re-render. These logs can be configured to be more or less verbose.
+Reanimated shows warnings that indicate misuses of the library API, such as modifying the [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) during component re-render. These logs can be configured to be more or less verbose.
 
 The **default** logger configuration doesn't require any user setup and displays **all warnings and errors**. If you want to change this behavior, use the `configureReanimatedLogger` function.
 
@@ -80,7 +80,7 @@ An optional callback, passed as the **second argument**, that receives every log
 
 * The logger configuration is global and affects all warnings and errors displayed by Reanimated. There's no option to configure the logger per file/component.
 
-* On native, logs raised on the [UI runtime](/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React Native runtime, on a later tick. On web the callback runs synchronously.
+* On native, logs raised on the [UI runtime](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React Native runtime, on a later tick. On web the callback runs synchronously.
 
 * Calling `configureReanimatedLogger` without the `onLog` argument **clears** a previously registered callback, in the same way that omitting `level` or `strict` resets them to their defaults.
 

@@ -20,7 +20,7 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime#enablenetworking).
 
 ```tsx
 const runtime = createWorkletRuntime({ name: 'worker' });

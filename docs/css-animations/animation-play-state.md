@@ -42,7 +42,7 @@ The animation is paused.
 
 #### `<animation play state[]>`
 
-An array of animation play state values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation play state values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```javascript
 // highlight-next-line

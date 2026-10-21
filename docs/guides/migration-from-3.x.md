@@ -10,7 +10,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps. Make sure to install compatible version of `react-native-worklets` as specified in the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
+In Reanimated 4, [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps. Make sure to install compatible version of `react-native-worklets` as specified in the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
 
 You can read more about `react-native-worklets` library in its [documentation](https://docs.swmansion.com/react-native-worklets/).
 
@@ -97,7 +97,7 @@ import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For
 import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
-You can explore the changes in the default parameters in [withSpring reference](/docs/animations/withSpring).
+You can explore the changes in the default parameters in [withSpring reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring).
 
 ### Removed `useWorkletCallback`
 
@@ -126,7 +126,7 @@ Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativePr
 
 ### Removed `combineTransition`
 
-`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](/docs/layout-animations/layout-transitions/#entryexit-transition).
+`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions/#entryexit-transition).
 
 ```js
 EntryExitTransition.entering(entering).exiting(exiting);
@@ -152,4 +152,4 @@ All integrations with other third-party libraries such as [React Native Gesture 
 
 ## Migrating from 2.x
 
-For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](/docs/guides/migration-from-2.x.md).
+For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x.md).

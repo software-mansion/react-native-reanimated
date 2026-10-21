@@ -2,9 +2,9 @@
 
 ## Worklet
 
-Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
-Most of the time when working with libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+Most of the time when working with libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) the code is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
 
 ```javascript
 const style = useAnimatedStyle(() => {
@@ -22,7 +22,7 @@ function myWorklet() {
 }
 ```
 
-[`scheduleOnUI`](/docs/threading/scheduleOnUI) lets you manually run worklets on the UI Runtime (UI thread):
+[`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) lets you manually run worklets on the UI Runtime (UI thread):
 
 ```javascript
 function myWorklet(greeting) {
@@ -38,13 +38,13 @@ function onPress() {
 
 ## to workletize
 
-To convert a JavaScript function into a serializable object which can be copied and run over on [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime).
+To convert a JavaScript function into a serializable object which can be copied and run over on [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
 
 ## JavaScript thread
 
-JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app for the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app for the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 This is the primary place where all the business logic, state management, and JavaScript event handling occur. It runs the JavaScript code that defines your app’s behavior and manages interactions with the user interface.
 
@@ -56,6 +56,6 @@ You can learn more about it by reading the [Threading model](https://reactnative
 
 ## Worklets Babel plugin
 
-The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
+The plugin performs automatic [workletization](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
 You can learn the details [here](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).

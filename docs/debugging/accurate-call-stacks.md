@@ -33,7 +33,7 @@ The following example shows the difference in call stacks before and after apply
 
 | Before                                                                                              | After                                                                                             |
 | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| ![Call Stack before applying Reanimated Metro config wrapper](/img/debugging/MetroConfigBefore.png) | ![Call Stack after applying Reanimated Metro config wrapper](/img/debugging/MetroConfigAfter.png) |
+| ![Call Stack before applying Reanimated Metro config wrapper](https://docs.swmansion.com/react-native-reanimated/img/debugging/MetroConfigBefore.png) | ![Call Stack after applying Reanimated Metro config wrapper](https://docs.swmansion.com/react-native-reanimated/img/debugging/MetroConfigAfter.png) |
 
 ## Remarks
 
@@ -43,6 +43,6 @@ The following example shows the difference in call stacks before and after apply
 
 | Collapsed                                                      | Expanded                                                     |
 | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| ![Collapsed Call Stack](/img/debugging/CollapsedCallStack.png) | ![Expanded Call Stack](/img/debugging/ExpandedCallStack.png) |
+| ![Collapsed Call Stack](https://docs.swmansion.com/react-native-reanimated/img/debugging/CollapsedCallStack.png) | ![Expanded Call Stack](https://docs.swmansion.com/react-native-reanimated/img/debugging/ExpandedCallStack.png) |
 
 * Some errors, particularly from asynchronous code, may still result in stack traces pointing to Reanimated internals instead of the exact problematic line in your code. This occurs because stack traces lose track of the original code that initiated the asynchronous operation. In such a case, you'll need to manually debug the issue based on the error message to identify the potential cause of the problem.

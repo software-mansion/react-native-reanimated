@@ -53,7 +53,7 @@ transitionDelay: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](/docs/css-transitions/transition-property#style-property-1).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property#style-property-1).
 
 ```typescript
 // highlight-next-line

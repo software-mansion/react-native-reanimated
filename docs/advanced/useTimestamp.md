@@ -1,6 +1,6 @@
 # useTimestamp
 
-`useTimestamp` lets you access the current frame timestamp as a [Shared Value](/docs/fundamentals/glossary#shared-value). It's a convenience wrapper around [`useFrameCallback`](/docs/advanced/useFrameCallback) for the common case of driving animations or shaders from the current time.
+`useTimestamp` lets you access the current frame timestamp as a [Shared Value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). It's a convenience wrapper around [`useFrameCallback`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback) for the common case of driving animations or shaders from the current time.
 
 ## Reference
 
@@ -29,7 +29,7 @@ Whether the timestamp should update. Defaults to `true`.
 
 ### Returns
 
-`useTimestamp` returns a [Shared Value](/docs/fundamentals/glossary#shared-value) that updates every frame with the time (in milliseconds) elapsed since the first frame after the hook was activated.
+`useTimestamp` returns a [Shared Value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) that updates every frame with the time (in milliseconds) elapsed since the first frame after the hook was activated.
 
 ## Example
 
@@ -47,7 +47,7 @@ function PulsingDot({ visible }) {
 
 ## Remarks
 
-* Internally wraps [`useFrameCallback`](/docs/advanced/useFrameCallback).
+* Internally wraps [`useFrameCallback`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback).
 * For best performance, prefer to re-use a single `useTimestamp` instance (for example, by lifting it up and passing it via props or React context) instead of calling `useTimestamp` in many components.
 
 ## Platform compatibility

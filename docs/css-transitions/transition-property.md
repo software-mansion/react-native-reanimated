@@ -62,14 +62,14 @@ No properties will transition.
 
 ## Remarks
 
-* You need to use the [`transitionDuration`](/docs/css-transitions/transition-duration) alongside the `transitionProperty` to create transitions.
+* You need to use the [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration) alongside the `transitionProperty` to create transitions.
 
 * The property that you want to transition using `transitionProperty` needs to be applied to the same component.
 
-* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
+* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
 
 * We discourage the use of `all` property as it can lead to performance issues.
 
-* You can also transition [`react-native-svg`](https://github.com/software-mansion/react-native-svg) props - see [Animating SVG](/docs/guides/animating-svg).
+* You can also transition [`react-native-svg`](https://github.com/software-mansion/react-native-svg) props - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Platform compatibility

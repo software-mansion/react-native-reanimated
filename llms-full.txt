@@ -11,7 +11,7 @@
 >
 > As we're rewriting the documentation some of the pages might be a little outdated.
 >
-> If you'd like to help with transition you can find guidelines in [contributing guide](/docs/guides/contributing#helping-with-documentation).
+> If you'd like to help with transition you can find guidelines in [contributing guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/contributing#helping-with-documentation).
 
 
 ---
@@ -69,7 +69,7 @@ function dispatchCommand<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `commandName`
 
@@ -96,11 +96,11 @@ The array of command arguments. Defaults to an empty array.
 
 > **Caution**
 >
-> The usage of `makeMutable` is discouraged in most cases. It's recommended to use the [`useSharedValue`](/docs/core/useSharedValue) hook instead unless you know what you're doing and you are aware of the consequences (see the [Remarks](#remarks) section).
+> The usage of `makeMutable` is discouraged in most cases. It's recommended to use the [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook instead unless you know what you're doing and you are aware of the consequences (see the [Remarks](#remarks) section).
 >
 > `makeMutable` is used internally and its behavior may change over time.
 
-`makeMutable` is a function internally used by the [`useSharedValue`](/docs/core/useSharedValue) hook to create a [shared value](/docs/fundamentals/glossary#shared-value).
+`makeMutable` is a function internally used by the [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook to create a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 It makes it possible to create mutable values without the use of the hook, which can be useful in some cases (e.g. in the global scope, as an array of mutable values, etc.).
 
@@ -149,7 +149,7 @@ You can access data stored in the mutable with either its `value` property or `g
 >
 > We use *mutable value* name for an object created by `makeMutable` to distinguish it from the *shared value* created by `useSharedValue`. Technically, *shared value* is a *mutable value* with an automatic cleanup.
 
-* All remarks from the [useSharedValue](/docs/core/useSharedValue) hook apply to `makeMutable` as well.
+* All remarks from the [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook apply to `makeMutable` as well.
 
 * Don't call `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
 
@@ -224,7 +224,7 @@ function App() {
 
 # measure
 
-`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Reference
 
@@ -271,7 +271,7 @@ function measure<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 ### Returns
 
@@ -290,9 +290,9 @@ or returns `null` when the measurement couldn't be performed.
 
 ## Remarks
 
-* `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) function.
+* `measure` is implemented only on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) function.
 
-* The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
+* The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
 
 ```jsx
 function App() {
@@ -348,7 +348,7 @@ const handlePress = () => {
 >
 > `setNativeProps` is an escape hatch for specific edge-cases.
 >
-> You should always reach for [`useAnimatedStyle`](/docs/core/useAnimatedStyle) and [`useAnimatedProps`](/docs/core/useAnimatedProps) first when animating styles or properties.
+> You should always reach for [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) and [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) first when animating styles or properties.
 
 ## Reference
 
@@ -381,7 +381,7 @@ function setNativeProps<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `updates`
 
@@ -395,9 +395,9 @@ An object with properties you want to update. These could be both style props (e
 
 ## Remarks
 
-* You should always reach for [`useAnimatedStyle`](/docs/core/useAnimatedStyle) and [`useAnimatedProps`](/docs/core/useAnimatedProps) first when animating styles or properties.
+* You should always reach for [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) and [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) first when animating styles or properties.
 
-* `setNativeProps` is supposed to only be used on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* `setNativeProps` is supposed to only be used on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 * `setNativeProps` function was created to allow updating props imperatively from gesture handlers. Because in other cases, you need to wrap `setNativeProps` with an additional `runOnUI` call, React Native's [built-in `setNativeProps`](https://reactnative.dev/docs/animations#setnativeprops) proves to work better with fewer jumps between runtimes.
 
@@ -410,7 +410,7 @@ An object with properties you want to update. These could be both style props (e
 
 # useAnimatedReaction
 
-`useAnimatedReaction` allows you to respond to changes in a [shared value](/docs/fundamentals/glossary#shared-value). It's especially useful when comparing values previously stored in the shared value with the current one.
+`useAnimatedReaction` allows you to respond to changes in a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). It's especially useful when comparing values previously stored in the shared value with the current one.
 
 ## Reference
 
@@ -517,7 +517,7 @@ function App() {
 }
 ```
 
-* Callbacks passed to the `prepare` and `result` arguments are automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* Callbacks passed to the `prepare` and `result` arguments are automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 * You can technically react to any stateful React value using `useAnimatedReaction` but you should probably use a `useEffect` for that instead.
 
@@ -530,7 +530,7 @@ function App() {
 
 # useComposedEventHandler
 
-This is a hook that lets you compose [useEvent](/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
+This is a hook that lets you compose [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
 
 ## Reference
 
@@ -583,11 +583,11 @@ function useComposedEventHandler(
 
 #### `handlers`
 
-An array of event handlers created using [useEvent](/docs/advanced/useEvent) hook. `useComposedEventHandler` hook reacts to any changes in given handlers and rebuilds whenever it is needed.
+An array of event handlers created using [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook. `useComposedEventHandler` hook reacts to any changes in given handlers and rebuilds whenever it is needed.
 
 ### Returns
 
-The hook returns a handler object that can be hooked into any [`Animated component`](/docs/fundamentals/glossary#animated-component).
+The hook returns a handler object that can be hooked into any [`Animated component`](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
 The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` when working with scroll-related handlers). If your composed handler aggregates multiple events that have little in common, put it into a new property, e.g. "composedHandler". It will still work, but the best practice here would be to use several composed handlers for code clarity.
 
 ## Example
@@ -595,7 +595,7 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 ## Remarks
 
 * The hook returns a handler that combines functionalities of all the handlers given as an argument. This way, you can have more than one handler responding to a given event, as well as handle many different type events using just one object.
-* It will still work well when passed to multiple [`Animated components`](/docs/fundamentals/glossary#animated-component), firing event callbacks for each connected component.
+* It will still work well when passed to multiple [`Animated components`](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component), firing event callbacks for each connected component.
 
 ## Platform compatibility
 
@@ -606,7 +606,7 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 
 # useEvent
 
-`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
+`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -681,7 +681,7 @@ The hook returns an event handler that will be invoked when a native event is di
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
 
 ## Remarks
 
@@ -765,7 +765,7 @@ Whether the callback should start automatically. Defaults to `true`.
 
 ## Remarks
 
-* A function passed to the `callback` argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* A function passed to the `callback` argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -776,7 +776,7 @@ Whether the callback should start automatically. Defaults to `true`.
 
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -854,7 +854,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -862,7 +862,7 @@ The hook returns a context that will be reused by event handlers and value that 
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
 
 ## Platform compatibility
 
@@ -873,7 +873,7 @@ This example can be more easily implemented using [`useScrollOffset`](/docs/scro
 
 # useTimestamp
 
-`useTimestamp` lets you access the current frame timestamp as a [Shared Value](/docs/fundamentals/glossary#shared-value). It's a convenience wrapper around [`useFrameCallback`](/docs/advanced/useFrameCallback) for the common case of driving animations or shaders from the current time.
+`useTimestamp` lets you access the current frame timestamp as a [Shared Value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). It's a convenience wrapper around [`useFrameCallback`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback) for the common case of driving animations or shaders from the current time.
 
 ## Reference
 
@@ -902,7 +902,7 @@ Whether the timestamp should update. Defaults to `true`.
 
 ### Returns
 
-`useTimestamp` returns a [Shared Value](/docs/fundamentals/glossary#shared-value) that updates every frame with the time (in milliseconds) elapsed since the first frame after the hook was activated.
+`useTimestamp` returns a [Shared Value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) that updates every frame with the time (in milliseconds) elapsed since the first frame after the hook was activated.
 
 ## Example
 
@@ -920,7 +920,7 @@ function PulsingDot({ visible }) {
 
 ## Remarks
 
-* Internally wraps [`useFrameCallback`](/docs/advanced/useFrameCallback).
+* Internally wraps [`useFrameCallback`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback).
 * For best performance, prefer to re-use a single `useTimestamp` instance (for example, by lifting it up and passing it via props or React context) instead of calling `useTimestamp` in many components.
 
 ## Platform compatibility
@@ -954,8 +954,8 @@ Please mind, that `toValue` and the animated shared value have to share the same
 
 # withClamp
 
-`withClamp` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
-Use it with [withSpring](/docs/animations/withSpring) animation.
+`withClamp` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
+Use it with [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) animation.
 
 ## Reference
 
@@ -1013,7 +1013,7 @@ const clampedStyleWithDelay = useAnimatedStyle(() => {
 
 ### Returns
 
-`withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withClamp` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 
 ---
@@ -1086,13 +1086,13 @@ A function called on animation complete. In case the animation is cancelled, the
 
 ### Returns
 
-`withDecay` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withDecay` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the 2nd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the 2nd argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -1103,7 +1103,7 @@ A function called on animation complete. In case the animation is cancelled, the
 
 # withDelay
 
-`withDelay` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you start an animation with a delay.
+`withDelay` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you start an animation with a delay.
 
 ## Reference
 
@@ -1150,7 +1150,7 @@ A parameter that determines how the animation responds to the device's reduced m
 
 ### Returns
 
-`withDelay` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withDelay` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
@@ -1163,7 +1163,7 @@ A parameter that determines how the animation responds to the device's reduced m
 
 # withRepeat
 
-`withRepeat` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
+`withRepeat` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
 
 ## Reference
 
@@ -1200,19 +1200,19 @@ enum ReduceMotion {
 
 #### `animation`
 
-An [animation object](/docs/fundamentals/glossary#animation-object) you want to repeat.
+An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) you want to repeat.
 
 #### `numberOfReps`&#x20;
 
 The number of times the animation is going to be repeated. Defaults to `2`.
 
-A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](/docs/core/cancelAnimation) was called.
+A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation) was called.
 
 #### `reverse`&#x20;
 
 Whether the animation should run in reverse every other repetition. Defaults to `false`.
 
-This option only supports [animation functions](/docs/fundamentals/glossary#animation-function) (eg. [`withSpring`](/docs/animations/withSpring)) and doesn't work with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](/docs/animations/withSequence)).
+This option only supports [animation functions](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-function) (eg. [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring)) and doesn't work with [animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence)).
 
 #### `callback`&#x20;
 
@@ -1224,13 +1224,13 @@ A parameter that determines how the animation responds to the device's reduced m
 
 ### Returns
 
-`withRepeat` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withRepeat` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the 4th argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the 4th argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -1241,7 +1241,7 @@ A parameter that determines how the animation responds to the device's reduced m
 
 # withSequence
 
-`withSequence` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you run animations in a sequence.
+`withSequence` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you run animations in a sequence.
 
 ## Reference
 
@@ -1279,11 +1279,11 @@ A parameter that determines how the animation responds to the device's reduced m
 
 #### `...animations`
 
-Any number of [animation objects](/docs/fundamentals/glossary#animation-object) to be run in a sequence.
+Any number of [animation objects](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) to be run in a sequence.
 
 ### Returns
 
-`withSequence` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withSequence` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
@@ -1395,13 +1395,13 @@ A function called upon animation completion. If the animation is cancelled, the 
 
 ### Returns
 
-`withSpring` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withSpring` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the 3rd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the 3rd argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -1510,13 +1510,13 @@ A function called upon animation completion. If the animation is cancelled, the 
 
 ### Returns
 
-`withTiming` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withTiming` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the 3rd argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the 3rd argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -1527,7 +1527,7 @@ A function called upon animation completion. If the animation is cancelled, the 
 
 # cancelAnimation
 
-`cancelAnimation` lets you cancel a running animation paired to a [shared value](/docs/fundamentals/glossary#shared-value).
+`cancelAnimation` lets you cancel a running animation paired to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 ## Reference
 
@@ -1631,9 +1631,9 @@ The component you want to make animatable. Function components have to be wrappe
 
 # useAnimatedProps
 
-`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
+`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
 
-For animating style use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+For animating style use [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) instead.
 
 ## Reference
 
@@ -1682,7 +1682,7 @@ An optional function or an array of functions.
 
 Sometimes when working with third-party libraries properties might be named differently on the API surface from what they really represent on the native side. Adapters make it possible to handle these cases by defining a way to convert these props before they reach the native side.
 
-Define an adapter as a [worklet](/docs/fundamentals/glossary#worklet) function and pass it directly to `useAnimatedProps`:
+Define an adapter as a [worklet](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet) function and pass it directly to `useAnimatedProps`:
 
 ```jsx
 const adapter = (props) => {
@@ -1731,7 +1731,7 @@ function App() {
 
 ## Returns
 
-`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) that you want to animate.
 
 ## Example
 
@@ -1739,7 +1739,7 @@ function App() {
 
 * You can share animated props between components to avoid code duplication.
 * We recommend to create adapters outside of the component's body to avoid unnecessary recalculations.
-* For animating [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components, see [Animating SVG](/docs/guides/animating-svg).
+* For animating [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Platform compatibility
 
@@ -1750,7 +1750,7 @@ function App() {
 
 # useAnimatedRef
 
-`useAnimatedRef` lets you get a reference of a view. Used alongside [`measure`](/docs/advanced/measure), [`scrollTo`](/docs/scroll/scrollTo), and [`useScrollOffset`](/docs/scroll/useScrollOffset) functions.
+`useAnimatedRef` lets you get a reference of a view. Used alongside [`measure`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure), [`scrollTo`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo), and [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset) functions.
 
 You need to pass the object defined using `useAnimatedRef` to the `ref` property of a component.
 
@@ -1804,7 +1804,7 @@ function App() {
 
 Alternatively, you can get the value stored in the `current` in [event handlers](https://react.dev/learn/responding-to-events) or in a `onLayout` property.
 
-* The value stored in the `current` property isn't available on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The value stored in the `current` property isn't available on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 
@@ -1815,13 +1815,13 @@ Alternatively, you can get the value stored in the `current` in [event handlers]
 
 # useAnimatedStyle
 
-`useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](/docs/fundamentals/glossary#shared-value).
+`useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
-Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
+Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
 
-In contrast to the [inline styling](/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
+In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
 
-For animating properties use [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+For animating properties use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
 ## Reference
 
@@ -1868,7 +1868,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 ## Returns
 
-`useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+`useAnimatedStyle` returns an animated style object which has to be passed to the `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) that you want to animate.
 
 `useAnimatedStyle` mimics the behavior of `StyleSheet` as much as possible. `updater` callback returns a value that looks like a regular style object in which you can also use shared values.
 
@@ -1939,7 +1939,7 @@ const styles = StyleSheet.create({
 
 * You can share animated styles between components to avoid code duplication.
 
-* The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](/docs/fundamentals/glossary#ui-thread). This may cause an error if you write your code as if it's running on UI thread only. To avoid this, you can use the `global._WORKLET` variable to check if the code is running on the UI thread:
+* The callback passed to the `useAnimatedStyle` is first run on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and immediately after on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). This may cause an error if you write your code as if it's running on UI thread only. To avoid this, you can use the `global._WORKLET` variable to check if the code is running on the UI thread:
 
 ```jsx
 function App() {
@@ -1963,7 +1963,7 @@ function App() {
 
 # useDerivedValue
 
-`useDerivedValue` lets you create new [shared values](/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
+`useDerivedValue` lets you create new [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
 
 ## Reference
 
@@ -2019,15 +2019,15 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 ### Returns
 
-`useDerivedValue` returns a new readonly [shared value](/docs/fundamentals/glossary#shared-value) based on a value returned from the [`updater`](/docs/core/useDerivedValue#updater) function.
+`useDerivedValue` returns a new readonly [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) based on a value returned from the [`updater`](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue#updater) function.
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the first argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the first argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
-* You can also use `useDerivedValue` without returning a value in the `updater` function to react to a change of a shared value. If you need to access the previous value stored in a shared value use [`useAnimatedReaction`](/docs/advanced/useAnimatedReaction) instead.
+* You can also use `useDerivedValue` without returning a value in the `updater` function to react to a change of a shared value. If you need to access the previous value stored in a shared value use [`useAnimatedReaction`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction) instead.
 
 ## Platform compatibility
 
@@ -2038,7 +2038,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 # useSharedValue
 
-`useSharedValue` lets you define [shared values](/docs/fundamentals/glossary#shared-value) in your components.
+`useSharedValue` lets you define [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) in your components.
 
 ## Reference
 
@@ -2120,9 +2120,9 @@ function App() {
 
 * Don't store functions (including worklets) inside shared values. This is not supported and may lead to unexpected behavior.
 
-* When you read the `sv.value` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+* When you read the `sv.value` on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
 
-* When you change the `sv.value` the update will happen synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
+* When you change the `sv.value` the update will happen synchronously on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
 
 ```javascript
 function App() {
@@ -2243,11 +2243,11 @@ type CSSAnimationCallbacks = {
 
 #### `onCSSAnimationStart`
 
-Fires when the animation begins, after [`animationDelay`](/docs/css-animations/animation-delay) has passed.
+Fires when the animation begins, after [`animationDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay) has passed.
 
 #### `onCSSAnimationIteration`
 
-Fires at the boundary between two iterations, so an animation with [`animationIterationCount`](/docs/css-animations/animation-iteration-count) of `3` reports two iterations. It never fires for a single-iteration animation, and it keeps firing forever for an infinite one.
+Fires at the boundary between two iterations, so an animation with [`animationIterationCount`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count) of `3` reports two iterations. It never fires for a single-iteration animation, and it keeps firing forever for an infinite one.
 
 #### `onCSSAnimationEnd`
 
@@ -2279,9 +2279,9 @@ const fade = css.keyframes({ ... });
 
 ## Remarks
 
-* Callbacks fire only for CSS animations. Transitions have [their own callbacks](/docs/css-transitions/transition-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+* Callbacks fire only for CSS animations. Transitions have [their own callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-callbacks), and [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) and friends report completion through their own callback argument instead.
 * Handlers run on the JavaScript thread. The animation itself keeps running natively, so slow work in a callback delays your code, not the animation.
-* Pausing with [`animationPlayState`](/docs/css-animations/animation-play-state) doesn't emit anything, and time spent paused is excluded from `elapsedTime`.
+* Pausing with [`animationPlayState`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-play-state) doesn't emit anything, and time spent paused is excluded from `elapsedTime`.
 * An animation that is removed before its last iteration emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
 
 ## Platform compatibility
@@ -2350,7 +2350,7 @@ animationDelay: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line
@@ -2430,7 +2430,7 @@ For each animation iteration, the animation alternates between running forwards 
 
 #### `<animation direction[]>`
 
-An array of animation direction values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation direction values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line
@@ -2507,7 +2507,7 @@ animationDuration: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line
@@ -2579,7 +2579,7 @@ Styles computed from both from first and last keyframes are persisted.
 
 #### `<animation fill mode[]>`
 
-An array of animation fill mode values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation fill mode values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```javascript
 // highlight-next-line
@@ -2651,7 +2651,7 @@ A non-negative number specifying how many times the animation will repeat.
 
 #### `<animation iteration count[]>`
 
-An array of animation iteration count values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation iteration count values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line
@@ -2731,7 +2731,7 @@ animationName: pulse,
 
 #### `<keyframes[]>`
 
-An array of keyframe objects. The order in this array corresponds to the array of style properties passed to the [`animationDuration`](/docs/css-animations/animation-duration).
+An array of keyframe objects. The order in this array corresponds to the array of style properties passed to the [`animationDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration).
 
 ```javascript
 animationName: [fadeInOut, moveLeft, bounce],
@@ -2748,7 +2748,7 @@ No animation.
 
 * At minimum 1 keyframe is required to create an animation. Reanimated will take the current state of the element as the first keyframe.
 * If multiple animations target the same property, the animation later in the array will override changes from the previous one.
-* You can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too - see [Animating SVG](/docs/guides/animating-svg).
+* You can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Platform compatibility
 
@@ -2801,7 +2801,7 @@ The animation is paused.
 
 #### `<animation play state[]>`
 
-An array of animation play state values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation play state values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```javascript
 // highlight-next-line
@@ -2952,7 +2952,7 @@ animationTimingFunction: steps(4, 'jump-end'),
 
 #### `<timing function[]>`
 
-An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```javascript
 // highlight-next-line
@@ -3032,50 +3032,50 @@ There's no button and no state here - the animation starts as soon as the compon
 
 You describe an animation in two parts:
 
-1. **Keyframes** - [`animationName`](/docs/css-animations/animation-name) takes an object that maps offsets (`from`, `to`, or percentages like `50%`) to the styles at that point in the timeline.
-2. **Timing** - properties like [`animationDuration`](/docs/css-animations/animation-duration), [`animationIterationCount`](/docs/css-animations/animation-iteration-count), and [`animationDirection`](/docs/css-animations/animation-direction) control how that timeline plays.
+1. **Keyframes** - [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name) takes an object that maps offsets (`from`, `to`, or percentages like `50%`) to the styles at that point in the timeline.
+2. **Timing** - properties like [`animationDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration), [`animationIterationCount`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count), and [`animationDirection`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-direction) control how that timeline plays.
 
 Reanimated interpolates between your keyframes and plays them back on the timeline you set.
 
 Passing an object to a prop called `animationName` might look surprising at first. The name comes from CSS on the web, where you declare keyframes under a named `@keyframes` rule and then reference that name from the `animation-name` property. React Native has no global stylesheet to hold named rules, so instead of a name you pass the keyframes object directly to `animationName`.
 
-Not every style property can be animated. See [Supported style properties](/docs/guides/supported-properties) for the full list and where each one works.
+Not every style property can be animated. See [Supported style properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties) for the full list and where each one works.
 
 > **Info**
 >
-> You can define keyframes inline, or pull them out into a separate variable and reuse the same animation across several components. See [`animationName`](/docs/css-animations/animation-name) for all the ways to define keyframes.
+> You can define keyframes inline, or pull them out into a separate variable and reuse the same animation across several components. See [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name) for all the ways to define keyframes.
 
-This is the main difference from a [CSS transition](/docs/css-transitions/overview): a transition animates a single change from A to B when a value changes, while an animation follows a defined, repeatable timeline.
+This is the main difference from a [CSS transition](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/overview): a transition animates a single change from A to B when a value changes, while an animation follows a defined, repeatable timeline.
 
 ## When should I use CSS animations?
 
 Use CSS animations for self-contained, declarative motion: loading spinners, pulsing badges, looping attention-grabbers, or any multi-step animation that plays on its own. Like transitions, this is the recommended starting point for most animations.
 
-When you need frame-by-frame control (gesture-driven or scroll-driven motion, or animations orchestrated from live values), reach for the shared values API with [`useAnimatedStyle`](/docs/core/useAnimatedStyle).
+When you need frame-by-frame control (gesture-driven or scroll-driven motion, or animations orchestrated from live values), reach for the shared values API with [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Summary
 
 * A CSS animation plays a sequence of keyframes over a timeline you define.
-* Describe the steps with [`animationName`](/docs/css-animations/animation-name) and control playback with properties like [`animationDuration`](/docs/css-animations/animation-duration) and [`animationIterationCount`](/docs/css-animations/animation-iteration-count).
+* Describe the steps with [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name) and control playback with properties like [`animationDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration) and [`animationIterationCount`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count).
 * Animations can loop and start on mount, unlike transitions, which run once per change.
-* Use CSS animations for declarative, self-running motion, and [`useAnimatedStyle`](/docs/core/useAnimatedStyle) for interactive, value-driven animations.
+* Use CSS animations for declarative, self-running motion, and [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) for interactive, value-driven animations.
 
 ## What's next?
 
 Explore the properties that shape your animations:
 
-* [`animationName`](/docs/css-animations/animation-name)
-* [`animationDuration`](/docs/css-animations/animation-duration)
-* [`animationTimingFunction`](/docs/css-animations/animation-timing-function)
-* [`animationDelay`](/docs/css-animations/animation-delay)
-* [`animationIterationCount`](/docs/css-animations/animation-iteration-count)
-* [`animationDirection`](/docs/css-animations/animation-direction)
-* [`animationFillMode`](/docs/css-animations/animation-fill-mode)
-* [`animationPlayState`](/docs/css-animations/animation-play-state)
+* [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name)
+* [`animationDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration)
+* [`animationTimingFunction`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-timing-function)
+* [`animationDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay)
+* [`animationIterationCount`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count)
+* [`animationDirection`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-direction)
+* [`animationFillMode`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-fill-mode)
+* [`animationPlayState`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-play-state)
 
-Need to know when an animation starts, repeats, ends, or is cancelled? See [Animation Callbacks](/docs/css-animations/animation-callbacks).
+Need to know when an animation starts, repeats, ends, or is cancelled? See [Animation Callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-callbacks).
 
-Animating something in response to a state change instead? See [CSS Transitions](/docs/css-transitions/overview).
+Animating something in response to a state change instead? See [CSS Transitions](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/overview).
 
 
 ---
@@ -3107,8 +3107,8 @@ There are only two ingredients that turn a plain style change into a smooth tran
 />
 ```
 
-* [`transitionProperty`](/docs/css-transitions/transition-property) tells Reanimated which style properties to watch.
-* [`transitionDuration`](/docs/css-transitions/transition-duration) sets how long the change takes.
+* [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) tells Reanimated which style properties to watch.
+* [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration) sets how long the change takes.
 
 Whenever `width` and `backgroundColor` get new values, Reanimated smoothly animates between the old and new ones.
 
@@ -3118,20 +3118,20 @@ The idea behind a CSS transition is simple: a transition runs when a watched pro
 
 That means two things have to be true for a transition to fire:
 
-1. The style is applied to an [Animated component](/docs/fundamentals/glossary#animated-component), such as `Animated.View`.
+1. The style is applied to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component), such as `Animated.View`.
 2. The new value comes from a re-render - typically a React state or prop change.
 
-Not every style property can be transitioned, and some (like `flexDirection` or `justifyContent`) change discretely instead of animating smoothly. See [Supported style properties](/docs/guides/supported-properties) for what can be animated, and [`transitionBehavior`](/docs/css-transitions/transition-behavior) for how discrete properties are handled.
+Not every style property can be transitioned, and some (like `flexDirection` or `justifyContent`) change discretely instead of animating smoothly. See [Supported style properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties) for what can be animated, and [`transitionBehavior`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-behavior) for how discrete properties are handled.
 
 > **Note**
 >
-> A transition only reacts to values that change between renders. Passing an inline [shared value](/docs/fundamentals/glossary#shared-value) won't trigger a transition, because updating a shared value doesn't re-render the component. For shared-value-driven animations, use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+> A transition only reacts to values that change between renders. Passing an inline [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) won't trigger a transition, because updating a shared value doesn't re-render the component. For shared-value-driven animations, use [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) instead.
 
 ## When should I use CSS transitions?
 
 Reach for CSS transitions whenever an animation is driven by *state*: toggling a menu, expanding and collapsing a section, switching a theme, or showing and hiding an element. This covers most everyday UI animations, and it's the recommended place to start.
 
-When you need frame-by-frame control (gesture-driven or scroll-driven interactions, screen transitions, or several animations orchestrated together), use the shared values API with [`useAnimatedStyle`](/docs/core/useAnimatedStyle).
+When you need frame-by-frame control (gesture-driven or scroll-driven interactions, screen transitions, or several animations orchestrated together), use the shared values API with [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 Why start with CSS?
 
@@ -3140,26 +3140,26 @@ CSS transitions are *declarative*: you describe the result you want, not the ste
 ## Summary
 
 * A CSS transition animates a style property when its value changes between renders.
-* You need [`transitionProperty`](/docs/css-transitions/transition-property) to say what to watch and [`transitionDuration`](/docs/css-transitions/transition-duration) to say how long it takes.
-* Transitions run on [Animated components](/docs/fundamentals/glossary#animated-component) and react to state or prop changes, not to shared value updates.
-* Interaction states like hovering, pressing, and focus don't need React state at all - [Pseudo Selectors](/docs/css-transitions/pseudo-selectors) transition on them directly.
-* Use CSS transitions for state-driven animations, and [`useAnimatedStyle`](/docs/core/useAnimatedStyle) for gesture-driven or orchestrated ones.
+* You need [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) to say what to watch and [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration) to say how long it takes.
+* Transitions run on [Animated components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) and react to state or prop changes, not to shared value updates.
+* Interaction states like hovering, pressing, and focus don't need React state at all - [Pseudo Selectors](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/pseudo-selectors) transition on them directly.
+* Use CSS transitions for state-driven animations, and [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) for gesture-driven or orchestrated ones.
 
 ## What's next?
 
 Now that you've got the basics, explore the individual properties to fine-tune your transitions:
 
-* [`transitionProperty`](/docs/css-transitions/transition-property)
-* [`transitionDuration`](/docs/css-transitions/transition-duration)
-* [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function)
-* [`transitionDelay`](/docs/css-transitions/transition-delay)
-* [`transitionBehavior`](/docs/css-transitions/transition-behavior)
+* [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property)
+* [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration)
+* [`transitionTimingFunction`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-timing-function)
+* [`transitionDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay)
+* [`transitionBehavior`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-behavior)
 
-Want a style to react to hovering, pressing, or focus without wiring up any state? See [Pseudo Selectors](/docs/css-transitions/pseudo-selectors).
+Want a style to react to hovering, pressing, or focus without wiring up any state? See [Pseudo Selectors](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/pseudo-selectors).
 
-Need to know when a transition starts, ends, or gets interrupted? See [Transition Callbacks](/docs/css-transitions/transition-callbacks).
+Need to know when a transition starts, ends, or gets interrupted? See [Transition Callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-callbacks).
 
-Looking for animations that play on their own or loop through multiple steps? Head over to [CSS Animations](/docs/css-animations/overview).
+Looking for animations that play on their own or loop through multiple steps? Head over to [CSS Animations](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/overview).
 
 
 ---
@@ -3263,7 +3263,7 @@ You write the property as an object: the keys are `default` and the selectors yo
 
 Two things follow from that:
 
-1. **Timing comes from the component's transition settings.** Pseudo selectors animate as CSS transitions, so [`transitionDuration`](/docs/css-transitions/transition-duration), [`transitionTimingFunction`](/docs/css-transitions/transition-timing-function), and [`transitionDelay`](/docs/css-transitions/transition-delay) are read from the top level of the style, not from inside the pseudo object.
+1. **Timing comes from the component's transition settings.** Pseudo selectors animate as CSS transitions, so [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration), [`transitionTimingFunction`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-timing-function), and [`transitionDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay) are read from the top level of the style, not from inside the pseudo object.
 2. **Nothing re-renders.** Hovering or pressing doesn't trigger a React render, so JavaScript work can't get in the way of the animation.
 
 When several selectors match at once, the one later in this list wins:
@@ -3312,13 +3312,13 @@ The web supports many more selectors, like `:focus-visible`, `:disabled` and `:f
 
 ## Combining selectors
 
-A single property can list several selectors, and different properties on the same component can respond to different ones. Because timing lives at the top level, you can also give each property its own duration by lining up [`transitionProperty`](/docs/css-transitions/transition-property) with [`transitionDuration`](/docs/css-transitions/transition-duration):
+A single property can list several selectors, and different properties on the same component can respond to different ones. Because timing lives at the top level, you can also give each property its own duration by lining up [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) with [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration):
 
 The button drifts between colors over 600ms, but snaps down in 100ms when pressed. `backgroundColor` lists both `:hover` and `:active`, and pressing wins over hovering because `:active` sits later in the priority list.
 
 ## Animating SVG components
 
-Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](/docs/guides/animating-svg).
+Pseudo selectors work on [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components too. SVG attributes such as `fill` or `r` are component props rather than React Native `style` keys, so their pseudo objects go in `animatedProps`, not in `style`. For everything else about animating SVG, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 Give every animated attribute a resting value, either as `default` inside the pseudo object or as the plain prop - both work, and `default` wins when you write both. With neither, the attribute falls back to its own default, which for `r` means the shape renders at `0`.
 
@@ -3336,11 +3336,11 @@ Reanimated hit-tests the front-most element, so when SVG shapes overlap only the
 
 * iOS won't deliver input to a view at or below 1% opacity, so `opacity: { default: 0, ':active': 1 }` never activates there, while the same style works on Android and the web. Write `opacity: { default: 0.02, ':active': 1 }` instead - indistinguishable on screen, and still reachable. Touch `:hover` is the exception and keeps working.
 
-* Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](/docs/core/useAnimatedStyle), where the animation is driven by [shared values](/docs/fundamentals/glossary#shared-value) instead.
+* Pseudo selectors are a feature of CSS styles. They don't work in [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle), where the animation is driven by [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) instead.
 
 * Every selector other than the five cross-platform ones is supported on the web only. Android and iOS ignore them, with a warning in development builds.
 
-* Not every style property can be animated. See [Supported style properties](/docs/guides/supported-properties) for the full list.
+* Not every style property can be animated. See [Supported style properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties) for the full list.
 
 ## Supported selectors by platform
 
@@ -3408,7 +3408,7 @@ Doesn't allow transitions to be applied to discrete properties, resulting in cha
 
 ## Remarks
 
-* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
+* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
 
 * When using `allow-discrete` the discrete properties flip between two values at the midpoint of the animation, except for the `display` property, which is immediately at the moment of the transition start.
 
@@ -3482,7 +3482,7 @@ type CSSTransitionCallbacks = {
 
 #### `onCSSTransitionRun`
 
-Fires when the transition is created, before [`transitionDelay`](/docs/css-transitions/transition-delay) starts counting down.
+Fires when the transition is created, before [`transitionDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay) starts counting down.
 
 #### `onCSSTransitionStart`
 
@@ -3518,7 +3518,7 @@ Each callback receives a [`CSSTransitionEvent`](#reference) describing **one pro
 
 ## Remarks
 
-* Callbacks fire only for CSS transitions. Animations have [their own callbacks](/docs/css-animations/animation-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+* Callbacks fire only for CSS transitions. Animations have [their own callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-callbacks), and [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) and friends report completion through their own callback argument instead.
 * Handlers run on the JavaScript thread. The transition itself keeps running natively, so slow work in a callback delays your code, not the animation.
 * A transition that is interrupted emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
 
@@ -3584,7 +3584,7 @@ transitionDelay: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](/docs/css-transitions/transition-property#style-property-1).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property#style-property-1).
 
 ```typescript
 // highlight-next-line
@@ -3661,7 +3661,7 @@ transitionDuration: 500;
 
 #### `<time unit[]>`
 
-An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](/docs/css-transitions/transition-property#style-property-1).
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property#style-property-1).
 
 ```typescript
 // highlight-next-line
@@ -3744,15 +3744,15 @@ No properties will transition.
 
 ## Remarks
 
-* You need to use the [`transitionDuration`](/docs/css-transitions/transition-duration) alongside the `transitionProperty` to create transitions.
+* You need to use the [`transitionDuration`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration) alongside the `transitionProperty` to create transitions.
 
 * The property that you want to transition using `transitionProperty` needs to be applied to the same component.
 
-* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
+* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
 
 * We discourage the use of `all` property as it can lead to performance issues.
 
-* You can also transition [`react-native-svg`](https://github.com/software-mansion/react-native-svg) props - see [Animating SVG](/docs/guides/animating-svg).
+* You can also transition [`react-native-svg`](https://github.com/software-mansion/react-native-svg) props - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Platform compatibility
 
@@ -3891,7 +3891,7 @@ transitionTimingFunction: steps(4, 'jump-end'),
 
 #### `<timing function[]>`
 
-An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](/docs/css-transitions/transition-property#style-property-1).
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property#style-property-1).
 
 ```typescript
 // highlight-next-line
@@ -3947,7 +3947,7 @@ The following example shows the difference in call stacks before and after apply
 
 | Before                                                                                              | After                                                                                             |
 | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| ![Call Stack before applying Reanimated Metro config wrapper](/img/debugging/MetroConfigBefore.png) | ![Call Stack after applying Reanimated Metro config wrapper](/img/debugging/MetroConfigAfter.png) |
+| ![Call Stack before applying Reanimated Metro config wrapper](https://docs.swmansion.com/react-native-reanimated/img/debugging/MetroConfigBefore.png) | ![Call Stack after applying Reanimated Metro config wrapper](https://docs.swmansion.com/react-native-reanimated/img/debugging/MetroConfigAfter.png) |
 
 ## Remarks
 
@@ -3957,7 +3957,7 @@ The following example shows the difference in call stacks before and after apply
 
 | Collapsed                                                      | Expanded                                                     |
 | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| ![Collapsed Call Stack](/img/debugging/CollapsedCallStack.png) | ![Expanded Call Stack](/img/debugging/ExpandedCallStack.png) |
+| ![Collapsed Call Stack](https://docs.swmansion.com/react-native-reanimated/img/debugging/CollapsedCallStack.png) | ![Expanded Call Stack](https://docs.swmansion.com/react-native-reanimated/img/debugging/ExpandedCallStack.png) |
 
 * Some errors, particularly from asynchronous code, may still result in stack traces pointing to Reanimated internals instead of the exact problematic line in your code. This occurs because stack traces lose track of the original code that initiated the asynchronous operation. In such a case, you'll need to manually debug the issue based on the error message to identify the potential cause of the problem.
 
@@ -3968,7 +3968,7 @@ The following example shows the difference in call stacks before and after apply
 
 # Logger configuration
 
-Reanimated shows warnings that indicate misuses of the library API, such as modifying the [shared value](/docs/fundamentals/glossary#shared-value) during component re-render. These logs can be configured to be more or less verbose.
+Reanimated shows warnings that indicate misuses of the library API, such as modifying the [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) during component re-render. These logs can be configured to be more or less verbose.
 
 The **default** logger configuration doesn't require any user setup and displays **all warnings and errors**. If you want to change this behavior, use the `configureReanimatedLogger` function.
 
@@ -4048,7 +4048,7 @@ An optional callback, passed as the **second argument**, that receives every log
 
 * The logger configuration is global and affects all warnings and errors displayed by Reanimated. There's no option to configure the logger per file/component.
 
-* On native, logs raised on the [UI runtime](/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React Native runtime, on a later tick. On web the callback runs synchronously.
+* On native, logs raised on the [UI runtime](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread) reach the `onLog` callback **asynchronously**: the callback always runs on the React Native runtime, on a later tick. On web the callback runs synchronously.
 
 * Calling `configureReanimatedLogger` without the `onLog` argument **clears** a previously registered callback, in the same way that omitting `level` or `strict` resets them to their defaults.
 
@@ -4069,7 +4069,7 @@ When debugging animations, it's often useful to slow them down to closely observ
 
 How does it work?
 
-Reanimated animations are driven by frame timestamps. When slow animations are enabled, Reanimated rescales the timestamps passed to its animation loop, so all animations driven by Reanimated – including animations of [shared values](/docs/fundamentals/glossary#shared-value), layout animations and keyboard-driven animations – slow down accordingly.
+Reanimated animations are driven by frame timestamps. When slow animations are enabled, Reanimated rescales the timestamps passed to its animation loop, so all animations driven by Reanimated – including animations of [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value), layout animations and keyboard-driven animations – slow down accordingly.
 
 On iOS, Reanimated reads the Simulator's animation drag coefficient and applies the same slowdown factor. On Android, Reanimated divides the elapsed time by a factor of 10.
 
@@ -4102,7 +4102,7 @@ To enable it, open the Dev Menu (press d in the Metro console, shake the device,
 
 # ReducedMotionConfig
 
-`ReducedMotionConfig` component let's you change behavior in response to the device's reduced motion accessibility setting. By default it disables all animation when the reduced motion is enabled on a device. You can adjust it for your specific use case. You can learn more about [Accessibility](/docs/guides/accessibility) and [`useReducedMotion`](/docs/device/useReducedMotion) in Reanimated.
+`ReducedMotionConfig` component let's you change behavior in response to the device's reduced motion accessibility setting. By default it disables all animation when the reduced motion is enabled on a device. You can adjust it for your specific use case. You can learn more about [Accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) and [`useReducedMotion`](https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion) in Reanimated.
 
 > **Caution**
 >
@@ -4164,7 +4164,7 @@ A parameter that determines how animations should behave in response to the devi
 The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. See the [migration guide](#migration-guide) below.
 caution
 
-Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
+Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard#remarks) section.
 
 :::
 
@@ -4227,8 +4227,8 @@ Hook `useAnimatedKeyboard` returns an object containing these fields:
 
 | Name   | Type                         | Description                                                                                                                                                |
 | ------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| height | `SharedValue<number>`        | A [shared value](/docs/fundamentals/glossary#shared-value) containing current height of the keyboard.                                                      |
-| state  | `SharedValue<KeyboardState>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }` |
+| height | `SharedValue<number>`        | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing current height of the keyboard.                                                      |
+| state  | `SharedValue<KeyboardState>` | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }` |
 
 ## Example
 
@@ -4428,7 +4428,7 @@ You can specify the iOS reference frame using an `IOSReferenceFrame` enum contai
 
 | Name        | Type                                  | Description                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with \[sensor(/docs/docs/device/useAnimatedSensor#sensortype) argument. |
+| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with \[sensor(/docs/docs/device/useAnimatedSensor#sensortype) argument. |
 | unregister  | `() => void`                          | Allows to stop listening to sensor updates on call.                                                                                                                                                                                             |
 | isAvailable | `boolean`                             | Indicates whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.                                                                              |
 | config      | `SensorConfig`                        | An object containing sensor configuration.                                                                                                                                                                                                      |
@@ -4485,7 +4485,7 @@ Depending on the sensor type the measurement is a number in radians per second, 
 
 * Most of the sensors operate in resolutions up to 100Hz.
 
-* You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+* You can read the sensor data on both [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread).
 
 ## Platform compatibility
 
@@ -4545,11 +4545,11 @@ Animating colors *feels* like a separate case but in Reanimated colors are no di
 
 # Animating styles and props
 
-In [the last section](/docs/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
+In [the last section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
 
 ## Animating styles
 
-As we learned in the previous section we can animate styles by [passing shared values inline](/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
+As we learned in the previous section we can animate styles by [passing shared values inline](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
 
 ```jsx
 import Animated, { useSharedValue } from 'react-native-reanimated';
@@ -4613,7 +4613,7 @@ For example, let's say we would like to animate SVG elements. Instead of passing
 <Circle cx="50" cy="50" r="10" fill="blue" />
 ```
 
-Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent):
 
 ```jsx
 import Animated from 'react-native-reanimated';
@@ -4648,7 +4648,7 @@ In a function which `useAnimatedProps` takes as an argument, we return an object
 
 Check out the full example below:
 
-For a complete guide to animating `react-native-svg` - including CSS animations and transitions and which props are supported - see [Animating SVG](/docs/guides/animating-svg).
+For a complete guide to animating `react-native-svg` - including CSS animations and transitions and which props are supported - see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 ## Summary
 
@@ -4661,7 +4661,7 @@ In this section, we went through the differences between animating styles and pr
 
 ## What's next?
 
-In [the next section](/docs/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.
 
 
 ---
@@ -4670,7 +4670,7 @@ In [the next section](/docs/fundamentals/customizing-animation), we'll learn mor
 
 # Applying modifiers
 
-Another way of [customizing animations](/docs/fundamentals/customizing-animation) in Reanimated is by using animation modifiers. Reanimated comes with three built-in modifiers: [`withRepeat`](/docs/animations/withRepeat), [`withSequence`](/docs/animations/withSequence), and [`withDelay`](/docs/animations/withDelay).
+Another way of [customizing animations](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/customizing-animation) in Reanimated is by using animation modifiers. Reanimated comes with three built-in modifiers: [`withRepeat`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat), [`withSequence`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence), and [`withDelay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay).
 
 Let's build a simple shake animation which uses all the modifiers and learn them along the way. Let's go!
 
@@ -4680,11 +4680,11 @@ In this example, we're going to make an animated box which will shake on a butto
 
 Let's start by having an `Animated.View` and a `Button` which moves the view to the right on press. To achieve this we can use `useAnimatedStyle` and `withTiming` function to smoothly animate our box `40px` to the right.
 
-If this sounds new to you, no worries! Start by going through the basics in [Your First Animation](/docs/fundamentals/your-first-animation) and come back here when you're ready.
+If this sounds new to you, no worries! Start by going through the basics in [Your First Animation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation) and come back here when you're ready.
 
 ## Repeating an animation
 
-To implement our desired shake animation we can use [`withRepeat`](/docs/animations/withRepeat) modifier. This modifier lets you repeat a provided animation.
+To implement our desired shake animation we can use [`withRepeat`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat) modifier. This modifier lets you repeat a provided animation.
 
 ```javascript
 import { withRepeat } from 'react-native-reanimated';
@@ -4697,7 +4697,7 @@ function App() {
 
 Pass a number to the second parameter of the function to make it repeat a given number of times. You can make it repeat forever by passing a non-positive value (eg. `0` or `-1`). You can make the animation go back and forth by passing `true` to the third (i.e. `reverse`) argument.
 
-To learn more about it you can check out the full [`withRepeat` API reference](/docs/animations/withRepeat).
+To learn more about it you can check out the full [`withRepeat` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat).
 
 Let's use this function in our example:
 
@@ -4718,7 +4718,7 @@ function App() {
 
 This modifier lets you chain animations together. The next animation starts when the previous one ends. You use it by passing animations as arguments in the order you want them to run.
 
-To learn more about it you can check out the full [`withSequence` API reference](/docs/animations/withSequence).
+To learn more about it you can check out the full [`withSequence` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence).
 
 Coming back to our example - we can utilize `withSequence` to improve our animation. First, we'll sway the box to the left which we'll make it to take half of the duration of one swing. Then, we'll shake the box 5 times and finish up the animation by bringing it to starting position also with half of the animation duration.
 
@@ -4737,7 +4737,7 @@ function App() {
 
 This function as a first parameter takes the duration in milliseconds before the animation starts. The second parameter defines the animation to delay.
 
-To learn more about it you can check out the full [`withDelay` API reference](/docs/animations/withDelay).
+To learn more about it you can check out the full [`withDelay` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay).
 
 ## Summary
 
@@ -4750,7 +4750,7 @@ In this section, we learned how to create complex animations by using animation 
 
 ## What's next?
 
-In the [next section](/docs/fundamentals/handling-gestures), we're going to learn about handling `Tap` and `Pan` gestures. Also, we'll get to know the `withDecay` animation function.
+In the [next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures), we're going to learn about handling `Tap` and `Pan` gestures. Also, we'll get to know the `withDecay` animation function.
 
 
 ---
@@ -4759,9 +4759,9 @@ In the [next section](/docs/fundamentals/handling-gestures), we're going to lear
 
 # Customizing animations
 
-[Previous section](/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
+[Previous section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
 
-Reanimated comes with three built-in animation functions: [`withTiming`](/docs/animations/withTiming), [`withSpring`](/docs/animations/withSpring), and [`withDecay`](/docs/animations/withDecay). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](/docs/fundamentals/handling-gestures) section.
+Reanimated comes with three built-in animation functions: [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming), [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring), and [`withDecay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures) section.
 
 It's very easy to customize the behavior of animation functions in Reanimated. You can do this by passing a `config` object to the second parameter of either `withTiming` or `withSpring` function.
 
@@ -4784,7 +4784,7 @@ The `easing` parameter lets you fine-tune the animation over the specified time.
 
 It all will start to make sense when you compare side by side a `linear` easing with the default easing.
 
-Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](/docs/animations/withTiming).
+Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming).
 
 withTiming interactive playground
 
@@ -4810,7 +4810,7 @@ Stiffness affects how bouncy the spring is. As an example, think about the diffe
 
 Damping describes how quickly the spring animation finishes. Higher damping means the spring will come to rest faster. In the real world, you could think about the same spring bouncing in the air and underwater. For example, a spring in a vacuum would have zero friction and thus zero damping.
 
-Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](/docs/animations/withSpring).
+Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring).
 
 withSpring interactive playground
 
@@ -4824,7 +4824,7 @@ In this section, we learned how to customize the `withTiming` and `withSpring` a
 
 ## What's next?
 
-In [the upcoming section](/docs/fundamentals/applying-modifiers), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers will allow us to create more complex and engaging animations.
+In [the upcoming section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/applying-modifiers), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers will allow us to create more complex and engaging animations.
 
 
 ---
@@ -4839,7 +4839,7 @@ The goal of the *Fundamentals* section is to help you gain a strong foundation o
 
 React Native Reanimated is a powerful animation library built by [Software Mansion](https://swmansion.com/).
 
-With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Prerequisites
 
@@ -4915,7 +4915,7 @@ Worklets Babel plugin comes with several customization options, you can explore 
 
 Why do I need this?
 
-In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
 Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
 
@@ -4947,7 +4947,7 @@ cd ios && pod install && cd ..
 
 For building apps that target web using [react-native-web](https://www.npmjs.com/package/react-native-web) we highly recommend to use [Expo](https://expo.dev/).
 
-More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
+More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support) guide.
 
 
 ---
@@ -4976,7 +4976,7 @@ function App() {
 }
 ```
 
-For components which aren't a part of Reanimated, to make their props and styles animatable, you have to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+For components which aren't a part of Reanimated, to make their props and styles animatable, you have to wrap them with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent):
 
 ```jsx
 import Animated from 'react-native-reanimated';
@@ -4989,7 +4989,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 Shared values are a driving factor of all your animations in Reanimated.
 
-They are defined using [`useSharedValue`](/docs/core/useSharedValue) hook:
+They are defined using [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook:
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -5009,7 +5009,7 @@ function App() {
 }
 ```
 
-It can be a value of any type. When used, the data stored in a shared value is automatically synchronized between the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and the [UI thread](/docs/fundamentals/glossary#ui-thread).
+It can be a value of any type. When used, the data stored in a shared value is automatically synchronized between the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Animatable value
 
@@ -5023,11 +5023,11 @@ Animation functions are functions which let you create animations. They are buil
 
 Reanimated comes with 3 built-in animation functions:
 
-* [`withSpring`](/docs/animations/withSpring) lets you create spring-based animation
-* [`withTiming`](/docs/animations/withTiming) lets you create an animation based on duration and [easing](https://easings.net/)
-* [`withDecay`](/docs/animations/withDecay) lets you create animations that mimic objects in motion that move with a given deceleration rate
+* [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) lets you create spring-based animation
+* [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) lets you create an animation based on duration and [easing](https://easings.net/)
+* [`withDecay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay) lets you create animations that mimic objects in motion that move with a given deceleration rate
 
-These functions can be combined with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) to create rich and complex animations.
+These functions can be combined with [animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) to create rich and complex animations.
 
 ## Animation modifier
 
@@ -5035,16 +5035,16 @@ Animation modifiers are functions used to customize animations. Also known as hi
 
 Reanimated comes with 3 built-in modifiers:
 
-* [`withDelay`](/docs/animations/withDelay) lets you add a delay before the animation starts
-* [`withRepeat`](/docs/animations/withRepeat) lets you repeat an animation certain number of times
-* [`withSequence`](/docs/animations/withSequence) lets you chain animation one after the other
-* [`withClamp`](/docs/animations/withClamp) lets you limit the animation boundaries to a specified range
+* [`withDelay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay) lets you add a delay before the animation starts
+* [`withRepeat`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat) lets you repeat an animation certain number of times
+* [`withSequence`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence) lets you chain animation one after the other
+* [`withClamp`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withClamp) lets you limit the animation boundaries to a specified range
 
 ## Animation object
 
-An animation object is a value returned from [animation functions](/docs/fundamentals/glossary#animation-function) and [modifiers](/docs/fundamentals/glossary#animation-modifier) which holds the current state of the animation including its start and end conditions, as well as a `onFrame` function. These values allow to calculate the animation state for each frame.
+An animation object is a value returned from [animation functions](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-function) and [modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) which holds the current state of the animation including its start and end conditions, as well as a `onFrame` function. These values allow to calculate the animation state for each frame.
 
-When you pass an animation object to a [shared value](/docs/fundamentals/glossary#shared-value) it is automatically treated as an [animatable value](/docs/fundamentals/glossary#animatable-value).
+When you pass an animation object to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) it is automatically treated as an [animatable value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animatable-value).
 
 For example, consider this code:
 
@@ -5088,9 +5088,9 @@ For a list of all available modifiers for each animation refer to the documentat
 
 ## Worklet
 
-Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
+Worklets are short-running JavaScript functions that can be run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
 
-Most of the time when working with Reanimated the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+Most of the time when working with Reanimated the code is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
 
 ```javascript
 const style = useAnimatedStyle(() => {
@@ -5124,7 +5124,7 @@ function onPress() {
 
 ## to workletize
 
-To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](/docs/fundamentals/glossary#ui-thread).
+To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
 
@@ -5142,7 +5142,7 @@ You can learn more about it by reading the [Threading model](https://reactnative
 
 ## Worklets Babel plugin
 
-The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
+The plugin performs automatic [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
 You can learn the details by reading the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
@@ -5155,7 +5155,7 @@ You can learn the details by reading the [Worklets docs](https://docs.swmansion.
 
 In this section, we'll learn how to handle gestures with Reanimated. To achieve this, Reanimated integrates tightly with [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/docs/), another library created by Software Mansion.
 
-Gesture Handler comes with plentiful gestures like [`Pinch`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [`Fling`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). Right now we'll start simple and get to know [`Tap`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [`Pan`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures as well as how to use [`withDecay`](/docs/animations/withDecay) animation function.
+Gesture Handler comes with plentiful gestures like [`Pinch`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [`Fling`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). Right now we'll start simple and get to know [`Tap`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [`Pan`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures as well as how to use [`withDecay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay) animation function.
 
 Just make sure to go through the Gesture Handler [installation steps](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation) first and come back here to learn how to use it with Reanimated.
 
@@ -5181,7 +5181,7 @@ function App() {
 
 New tap gestures are defined with `Gesture.Tap()` in your component's body. You can define the behavior of the gesture by chaining methods like [`onBegin`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onbegincallback), [`onStart`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onstartcallback), [`onEnd`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onendcallback), or [`onFinalize`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onfinalizecallback) on the gesture. We'll use them to update a shared value just after the gesture begins and return to the initial value when the gesture finishes.
 
-You can safely access the shared values because callbacks passed to gestures are automatically [workletized](/docs/fundamentals/glossary#to-workletize) for you.
+You can safely access the shared values because callbacks passed to gestures are automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) for you.
 
 We'd like our circle to change color from violet to yellow and smoothly scale by 20% on tap. Let's define that animation logic using `withTiming` in the `useAnimatedStyle`:
 
@@ -5215,7 +5215,7 @@ The rest of the code is just to make sure the square stays inside the screen.
 
 Play around and see how the square decelerates when let go with some speed!
 
-Make sure to check the full [`withDecay` API reference](/docs/animations/withDecay) to get to know the rest of the configuration options.
+Make sure to check the full [`withDecay` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay) to get to know the rest of the configuration options.
 
 ## Summary
 
@@ -5230,7 +5230,7 @@ In this section, we went through the basics of handling gestures with Reanimated
 
 In this article, we've barely scratched the surface of what's possible with gestures in Reanimated. Besides [Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures Gesture Handler comes with many more e.g. [Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). We welcome you to dive into the [Quick start](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/quickstart) section of the React Native Gesture Handler documentation and explore all the possibilities that this library comes with.
 
-In [the next section](/docs/fundamentals/glossary), Let's explore a glossary of terms together!
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary), Let's explore a glossary of terms together!
 
 
 ---
@@ -5271,11 +5271,11 @@ export default function App() {
 
 > **Info**
 >
-> You can create your own custom Animated components with [`createAnimatedComponent`](/docs/core/createAnimatedComponent).
+> You can create your own custom Animated components with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent).
 
 ## Defining a shared value
 
-A [shared value](/docs/fundamentals/glossary#shared-value) is a driving factor of all your animations. You can think of it as a React state which is automagically kept in sync between the “JavaScript” and the “native” side of your app (hence the name). You create shared values using a `useSharedValue` hook:
+A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) is a driving factor of all your animations. You can think of it as a React state which is automagically kept in sync between the “JavaScript” and the “native” side of your app (hence the name). You create shared values using a `useSharedValue` hook:
 
 ```jsx
 import { useSharedValue } from 'react-native-reanimated';
@@ -5386,7 +5386,7 @@ In this section, we gained a firm grasp on the Reanimated fundamentals. We learn
 
 ## What's next?
 
-In [the next section](/docs/fundamentals/animating-styles-and-props), we will learn more about how to animate styles and props using `useAnimatedStyle` and `useAnimatedProps` hooks.
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props), we will learn more about how to animate styles and props using `useAnimatedStyle` and `useAnimatedProps` hooks.
 
 
 ---
@@ -5519,15 +5519,15 @@ function App() {
 
 # Animating SVG
 
-Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](/docs/css-animations/animation-name) and [CSS transitions](/docs/css-transitions/transition-property).
+Reanimated can animate [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components - both their geometry (`cx`, `r`, `d`, `points`, ...) and their appearance (`fill`, `stroke`, `opacity`, ...). You can drive them with [inline props](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-props), the [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) hook, or the modern, declarative [CSS animations](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name) and [CSS transitions](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property).
 
 > **Info**
 >
-> CSS animations and transitions for SVG are an experimental feature, enabled by default from Reanimated 4.4. You can opt out with the [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](/docs/guides/feature-flags#experimental_css_animations_for_svg_components) feature flag. Animating SVG with [`useAnimatedProps`](/docs/core/useAnimatedProps) or inline [shared values](/docs/fundamentals/glossary#shared-value) doesn't require it.
+> CSS animations and transitions for SVG are an experimental feature, enabled by default from Reanimated 4.4. You can opt out with the [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#experimental_css_animations_for_svg_components) feature flag. Animating SVG with [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) or inline [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) doesn't require it.
 
 ## Setup
 
-Install [`react-native-svg`](https://github.com/software-mansion/react-native-svg). SVG components aren't built into Reanimated, so wrap the ones you animate with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
+Install [`react-native-svg`](https://github.com/software-mansion/react-native-svg). SVG components aren't built into Reanimated, so wrap the ones you animate with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent):
 
 ```tsx
 import Animated from 'react-native-reanimated';
@@ -5540,11 +5540,11 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 SVG attributes like `cx`, `r`, `d`, and `fill` are **component props**, not React Native `style` keys, so they animate through props rather than `style`. There are three ways to drive them:
 
-* **[Inline](/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
-* **[`useAnimatedProps`](/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
+* **[Inline](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-props)** - pass a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) straight to the prop: `<AnimatedCircle r={r} />`.
+* **[`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps)** - compute the props in a worklet and hand the result to the `animatedProps` prop.
 * **CSS** - keep the SVG props as plain values and add `animationName` or `transitionProperty` (with their settings) to `animatedProps`.
 
-There's one catch with **CSS transitions**: a CSS transition only runs when the prop changes **between renders**. A plain value does that, so the CSS transition runs. An inline [shared value](/docs/fundamentals/glossary#shared-value) doesn't re-render - each `r.value` change updates the `r` prop directly - so the CSS transition never runs:
+There's one catch with **CSS transitions**: a CSS transition only runs when the prop changes **between renders**. A plain value does that, so the CSS transition runs. An inline [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) doesn't re-render - each `r.value` change updates the `r` prop directly - so the CSS transition never runs:
 
 ```tsx
 // Plain value: it changes on re-render, which triggers the CSS transition
@@ -5563,15 +5563,15 @@ const r = useSharedValue(20);
 
 ## With useAnimatedProps
 
-Drive an attribute with a [shared value](/docs/fundamentals/glossary#shared-value) through [`useAnimatedProps`](/docs/core/useAnimatedProps):
+Drive an attribute with a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) through [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps):
 
 ## With CSS animations
 
-The same animation expressed as a [CSS keyframe animation](/docs/css-animations/animation-name):
+The same animation expressed as a [CSS keyframe animation](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name):
 
 ## With CSS transitions
 
-A [CSS transition](/docs/css-transitions/transition-property) runs whenever a transitioned value changes between renders - including a plain value from `useState` or props, with no shared value involved. Just change the prop:
+A [CSS transition](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property) runs whenever a transitioned value changes between renders - including a plain value from `useState` or props, with no shared value involved. Just change the prop:
 
 The first render never animates (there is no previous value); each later change of `r` transitions from the old value to the new one. You can pass the prop inline or through `animatedProps`; changing it from either place starts the transition, and if both set it, `animatedProps` wins:
 
@@ -5588,7 +5588,7 @@ The first render never animates (there is no previous value); each later change 
 />
 ```
 
-A [shared value](/docs/fundamentals/glossary#shared-value) is the exception: updating `r.value` doesn't re-render, so it never starts a transition. To animate a prop from a shared value, pass it inline (`r={r}`) or via [`useAnimatedProps`](/docs/core/useAnimatedProps) instead.
+A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) is the exception: updating `r.value` doesn't re-render, so it never starts a transition. To animate a prop from a shared value, pass it inline (`r={r}`) or via [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
 ## Morphing paths
 
@@ -5596,7 +5596,7 @@ A `Path` morphs between two shapes when both use the same sequence of commands. 
 
 ## Supported components and properties
 
-The tables below cover what **CSS animations and transitions** can animate, and on which platforms. Every component animates the [common appearance properties](#common-appearance-properties); shape components also animate their [geometry](#geometry-by-component). Properties that aren't listed aren't supported by CSS - use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those, since it can drive any animatable prop the component accepts.
+The tables below cover what **CSS animations and transitions** can animate, and on which platforms. Every component animates the [common appearance properties](#common-appearance-properties); shape components also animate their [geometry](#geometry-by-component). Properties that aren't listed aren't supported by CSS - use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) for those, since it can drive any animatable prop the component accepts.
 
 ### Common appearance properties
 
@@ -5679,11 +5679,11 @@ A few caveats:
 
 ### Web
 
-On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Polygon`/`Polyline` `points`, `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](/docs/core/useAnimatedProps) for those.
+On Web, Reanimated drives SVG through CSS, so an attribute animates only if it maps to a real CSS property. Attributes that have no CSS equivalent - `Polygon`/`Polyline` `points`, `Line` endpoints, `Text`/`Pattern`/gradient coordinates, and gradient stops - can't animate via CSS on Web; use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) for those.
 
 
 ---
-# URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/building-for-android-on-windows
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/building-on-windows
 # Title: Building for Android on Windows
 
 # Building for Android on Windows
@@ -5745,7 +5745,7 @@ Make sure to use latest supported version of Reanimated, depending on the setup 
 >
 > How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-54/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
 
-**If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](/docs/guides/compatibility).
+**If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
 
 For instance, Reanimated 4.0.x works only with React Native 0.78, 0.79, 0.80 or 0.81 and **is not** compatible with React Native 0.82. If you want to use Reanimated with React Native 0.82, you need to upgrade to at least 4.1.0. It is recommended to use the latest available version (in this case, 4.1.3).
 
@@ -5827,7 +5827,7 @@ If you still have problems with building for Android device on a Windows machine
 
 > **Info**
 >
-> Reanimated 4 works only with the React Native New Architecture. If your app still uses the old architecture, you can use Reanimated in [version 3](/docs/3.x/) (which is no longer actively maintained).
+> Reanimated 4 works only with the React Native New Architecture. If your app still uses the old architecture, you can use Reanimated in [version 3](https://docs.swmansion.com/react-native-reanimated/docs/3.x/) (which is no longer actively maintained).
 
 **The tables assume you're using the latest patch of each Reanimated minor version.**
 For example, `4.2.x` shows support for React Native `0.84` because Reanimated `4.2.2` added it, even though `4.2.0` didn't have it. If you're on an older patch, check the `compatibility.json` file in the Reanimated package for exact version support.
@@ -5842,8 +5842,8 @@ For example, `4.2.x` shows support for React Native `0.84` because Reanimated `4
 
 Looking for the compatibility table for an older major version?
 
-* [Reanimated 3.x](/docs/3.x/guides/compatibility)
-* [Reanimated 2.x](/docs/2.x/guide/compatibility)
+* [Reanimated 3.x](https://docs.swmansion.com/react-native-reanimated/docs/3.x/guides/compatibility)
+* [Reanimated 2.x](https://docs.swmansion.com/react-native-reanimated/docs/2.x/guide/compatibility)
 
 
 ---
@@ -6424,7 +6424,7 @@ When using `Easing` imported from `react-native-reanimated` v1, in v2 you should
 
 # Migrating from Reanimated 2.x to 3.x
 
-Reanimated 3.x doesn't introduce any breaking changes between 2.x and 3.x in terms of the API. All the code you've written in Reanimated v2 API works in 3.x without any changes. However, Reanimated 3.x drops the Reanimated v1 API entirely. For the migration guide between 1.x and 2.x versions please consult [Migration from 1.x to 2.x](/docs/guides/migration-from-1.x.md).
+Reanimated 3.x doesn't introduce any breaking changes between 2.x and 3.x in terms of the API. All the code you've written in Reanimated v2 API works in 3.x without any changes. However, Reanimated 3.x drops the Reanimated v1 API entirely. For the migration guide between 1.x and 2.x versions please consult [Migration from 1.x to 2.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-1.x.md).
 
 
 ---
@@ -6443,7 +6443,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps. Make sure to install compatible version of `react-native-worklets` as specified in the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
+In Reanimated 4, [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps. Make sure to install compatible version of `react-native-worklets` as specified in the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
 
 You can read more about `react-native-worklets` library in its [documentation](https://docs.swmansion.com/react-native-worklets/).
 
@@ -6530,7 +6530,7 @@ import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For
 import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
-You can explore the changes in the default parameters in [withSpring reference](/docs/animations/withSpring).
+You can explore the changes in the default parameters in [withSpring reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring).
 
 ### Removed `useWorkletCallback`
 
@@ -6559,7 +6559,7 @@ Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativePr
 
 ### Removed `combineTransition`
 
-`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](/docs/layout-animations/layout-transitions/#entryexit-transition).
+`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions/#entryexit-transition).
 
 ```js
 EntryExitTransition.entering(entering).exiting(exiting);
@@ -6585,7 +6585,7 @@ All integrations with other third-party libraries such as [React Native Gesture 
 
 ## Migrating from 2.x
 
-For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](/docs/guides/migration-from-2.x.md).
+For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x.md).
 
 
 ---
@@ -6608,13 +6608,13 @@ Please note that downgrading your Expo SDK version or using an older release of 
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
 
-**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
+**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism).
 
 ### ⚠️ Lower FPS while scrolling
 
 **Problem:** FPS drops when there are many animated components on the screen during scrolling.
 
-**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits).
+**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_commit_hook_only_for_react_commits).
 
 You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once).
 
@@ -6622,7 +6622,7 @@ You can also consider enabling `enableCppPropsIteratorSetter` feature flag as de
 
 **Problem:** When animating many components simultaneously (also across multiple screens) you might notice FPS regressions.
 
-**Solution 1:** Enable `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) static feature flags as described [here](/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
+**Solution 1:** Enable `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) static feature flags as described [here](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
@@ -6683,11 +6683,11 @@ Animating non-layout properties (like `transform`, `opacity` or `backgroundColor
 
 Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
 
-Additionally, non-layout properties can be updated using a fast path – more details [here](/docs/guides/feature-flags#android_synchronously_update_ui_props).
+Additionally, non-layout properties can be updated using a fast path – more details [here](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#android_synchronously_update_ui_props).
 
 ### 💡 Memoize frame callbacks
 
-If you are using [`useFrameCallback`](/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you are using React Compiler, the frame callback should be memoized automatically.
+If you are using [`useFrameCallback`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you are using React Compiler, the frame callback should be memoized automatically.
 
 ```tsx
 useFrameCallback(
@@ -6728,7 +6728,7 @@ You can also consider implementing your own native component with rolling ticket
 
 Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
 
-For animating `react-native-svg` components, see [Animating SVG](/docs/guides/animating-svg).
+For animating `react-native-svg` components, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
 | Property                | Android            | iOS                | Web    |
 | ----------------------- | ------------------ | ------------------ | ------ |
@@ -6894,7 +6894,7 @@ Style inheritance is not supported. Properties that would normally inherit value
 
 ### Invalid values
 
-A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](/docs/debugging/logger-configuration) as long as its strict mode is enabled.
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration) as long as its strict mode is enabled.
 
 ### Relative Margins
 
@@ -6994,7 +6994,7 @@ To animate the `tintColor` property on iOS, you must ensure that `tintColor` is 
 
 
 ---
-# URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/testing-with-jest
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/testing
 # Title: testing-with-jest
 
 # Testing with Jest
@@ -7255,7 +7255,7 @@ See [Multiple versions of Reanimated were detected](#multiple-versions-of-reanim
 **Problem:** Reanimated supports New Architecture (Fabric) only on the latest minor release of React Native.
 
 **Solution:** Please upgrade to a newer version of React Native or downgrade to an older version of Reanimated.
-See [the compatibility table](/docs/guides/compatibility) for a full list of supported versions of React Native.
+See [the compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) for a full list of supported versions of React Native.
 
 ## Warnings
 
@@ -7271,7 +7271,7 @@ LogBox.ignoreLogs([
 ]);
 ```
 
-See [the accessibility overview](/docs/guides/accessibility) to learn more about Reduced Motion.
+See [the accessibility overview](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) to learn more about Reduced Motion.
 
 ## Dependency issues
 
@@ -7463,7 +7463,7 @@ function myWorklet() {
 
 ## Workletization
 
-The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -7523,7 +7523,7 @@ function App() {
 }
 ```
 
-Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime):
+Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime):
 
 ```javascript
 function App() {
@@ -7592,7 +7592,7 @@ function someWorklet() {
 }
 ```
 
-To pass data between UI and JS thread we use [shared values](/docs/fundamentals/glossary#shared-value).
+To pass data between UI and JS thread we use [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -7630,7 +7630,7 @@ You can create your own worklet runtimes with [`createWorkletRuntime`](https://d
 
 # Custom animations
 
-Custom animations give you a full control over the Entering/Exiting animations and Layout transitions. However, they tend to be hard to understand and maintain. We recommend starting with predefined [Entering/Exiting](/docs/layout-animations/entering-exiting-animations), [Keyframes](/docs/layout-animations/keyframe-animations) and [Layout](/docs/layout-animations/layout-transitions) presets first before using custom animations.
+Custom animations give you a full control over the Entering/Exiting animations and Layout transitions. However, they tend to be hard to understand and maintain. We recommend starting with predefined [Entering/Exiting](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations), [Keyframes](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/keyframe-animations) and [Layout](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) presets first before using custom animations.
 
 ## Reference
 
@@ -7796,7 +7796,7 @@ interface WindowDimensions {
 
 Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
 
-Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
+Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations).
 
 > **Info**
 >
@@ -7910,7 +7910,7 @@ type FadeYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 FadeOutLeft.duration(500).easing(Easing.ease);
@@ -7924,7 +7924,7 @@ FadeOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 FadeInUp.springify()
@@ -8204,7 +8204,7 @@ type FlipYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 FlipOutYLeft.duration(500).easing(Easing.ease);
@@ -8218,7 +8218,7 @@ FlipOutYLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 FlipInXUp.springify()
@@ -8320,7 +8320,7 @@ type LightSpeedValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 LightSpeedOutLeft.duration(500).easing(Easing.ease);
@@ -8334,7 +8334,7 @@ LightSpeedOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 LightSpeedInLeft.springify()
@@ -8426,7 +8426,7 @@ type PinwheelValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 PinwheelOut.duration(500).easing(Easing.ease);
@@ -8440,7 +8440,7 @@ PinwheelOut.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 PinwheelIn.springify()
@@ -8539,7 +8539,7 @@ type RollValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 RollOutLeft.duration(500).easing(Easing.ease);
@@ -8553,7 +8553,7 @@ RollOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 RollInLeft.springify()
@@ -8676,7 +8676,7 @@ type RotateValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 RotateOutDownRight.duration(500).easing(Easing.ease);
@@ -8690,7 +8690,7 @@ RotateOutDownRight.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 RotateInUpLeft.springify()
@@ -8803,7 +8803,7 @@ type SlideYValues = { originY?: number };
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 SlideOutLeft.duration(500).easing(Easing.ease);
@@ -8817,7 +8817,7 @@ SlideOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 SlideInUp.springify()
@@ -8922,7 +8922,7 @@ type StretchYValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 StretchOutX.duration(500).easing(Easing.ease);
@@ -8936,7 +8936,7 @@ StretchOutX.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 StretchInX.springify()
@@ -9107,7 +9107,7 @@ type ZoomRotateValues = {
 
 #### Time-based&#x20;
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 ZoomOutLeft.duration(500).easing(Easing.ease);
@@ -9121,7 +9121,7 @@ ZoomOutLeft.duration(500).easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 
 ```javascript
 ZoomInRotate.springify()
@@ -9230,7 +9230,7 @@ class Keyframe {
 
 An object, that contains definitions of your animation.
 The object keys should be within range `0-100` and correspond to animation progress.
-The object values should consist of style props and optionally of an [easing function](/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
+The object values should consist of style props and optionally of an [easing function](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
 
 The keys take the following values:
 
@@ -9339,7 +9339,7 @@ Layout transitions allows you to replace layout changes with smooth transitions.
 
 ## Predefined Transitions
 
-Below we listed all of the currently available predefined layout transitions with their [layout animation modifiers](/docs/fundamentals/glossary#layout-animation-modifier).
+Below we listed all of the currently available predefined layout transitions with their [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
 
 ## Linear transition
 
@@ -9359,7 +9359,7 @@ function App() {
 
 #### Easing&#x20;
 
-Easing modifiers are time-based modifiers that rely on [`withTiming`](/docs/animations/withTiming) function.
+Easing modifiers are time-based modifiers that rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 LinearTransition.easing(Easing.ease);
@@ -9373,7 +9373,7 @@ LinearTransition.easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 Just as in `withSpring` config, spring-based modifiers can be physics-based (have `mass` and `damping` modifiers) or duration-based (have `duration` and `dampingRatio` modifiers).
 
 > **Info**
@@ -9413,7 +9413,7 @@ LinearTransition.delay(500)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -9447,7 +9447,7 @@ SequencedTransition.duration(1000)
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 * `.reverse()` determines if the animation should run in reverse. Defaults to `false`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -9479,7 +9479,7 @@ FadingTransition.duration(1000)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -9511,7 +9511,7 @@ JumpingTransition.duration(1000)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -9551,7 +9551,7 @@ CurvedTransition.duration(1000)
 * `.easingY(easing: EasingFunction)` defines easing animation for y-position.
 * `.easingWidth(easing: EasingFunction)` defines easing animation for width.
 * `.easingHeight(easing: EasingFunction)` defines easing animation for height.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Remarks
@@ -9591,7 +9591,7 @@ EntryExitTransition.duration(1000)
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 * `.exiting(animation)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
 * `.entering(animation)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Remarks
@@ -9609,7 +9609,7 @@ EntryExitTransition.duration(1000)
 
 # List Layout Animations
 
-`itemLayoutAnimation` lets you define a [layout transition](/docs/layout-animations/layout-transitions) that's applied when list items layout changes. You can use one of the [predefined transitions](/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create [your own transition](/docs/layout-animations/custom-animations#custom-layout-transition).
+`itemLayoutAnimation` lets you define a [layout transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) that's applied when list items layout changes. You can use one of the [predefined transitions](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create [your own transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations#custom-layout-transition).
 
 ## Example
 
@@ -9723,7 +9723,7 @@ function scrollTo<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `x`
 
@@ -9745,9 +9745,9 @@ Whether the scroll should be smooth (`true`) or instant (`false`).
 
 ## Remarks
 
-* The `scrollTo` function can only be called from [the UI thread](/docs/fundamentals/glossary#ui-thread).
+* The `scrollTo` function can only be called from [the UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 * Supports `Animated.FlatList`.
-* Usually works with other ScrollView-like and FlatList-like components if they use a `ScrollView` under the hood and are [made animated](/docs/core/createAnimatedComponent#reference).
+* Usually works with other ScrollView-like and FlatList-like components if they use a `ScrollView` under the hood and are [made animated](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent#reference).
 * Scrollable components must implement `getNativeScrollRef` method to be compatible with `scrollTo`.
 
 ## Platform compatibility
@@ -9833,7 +9833,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -9897,7 +9897,7 @@ type ScrollableComponent = Component<
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `providedOffset`&#x20;
 
@@ -9905,7 +9905,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 
 ### Returns
 
-`useScrollOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the scrollable component.
+`useScrollOffset` returns a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) which holds the current offset of the scrollable component.
 
 ## Example
 
@@ -9926,7 +9926,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 
 > **Caution**
 >
-> Shared Element Transitions is an experimental feature available [behind a feature flag](/docs/guides/feature-flags#enable_shared_element_transitions), not recommended for production use yet. We are waiting for your feedback to improve the implementation.
+> Shared Element Transitions is an experimental feature available [behind a feature flag](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#enable_shared_element_transitions), not recommended for production use yet. We are waiting for your feedback to improve the implementation.
 
 Shared Element Transitions allow you to smoothly transform a component from one screen into a component on another screen.
 
@@ -9983,7 +9983,7 @@ If it finds two matching components, it hides both of them by changing their opa
 
 After the animation is complete, the third view is removed, and the opacity of both original views is restored.
 
-Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
+Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming/) animation function.
 
 ## Usage
 
@@ -10291,7 +10291,7 @@ interface ComponentCoords {
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
+The product of [`useAnimatedRef`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
 
 #### `absoluteX`
 

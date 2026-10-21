@@ -37,7 +37,7 @@ function scrollTo<T extends Component>(
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `x`
 
@@ -59,9 +59,9 @@ Whether the scroll should be smooth (`true`) or instant (`false`).
 
 ## Remarks
 
-* The `scrollTo` function can only be called from [the UI thread](/docs/fundamentals/glossary#ui-thread).
+* The `scrollTo` function can only be called from [the UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 * Supports `Animated.FlatList`.
-* Usually works with other ScrollView-like and FlatList-like components if they use a `ScrollView` under the hood and are [made animated](/docs/core/createAnimatedComponent#reference).
+* Usually works with other ScrollView-like and FlatList-like components if they use a `ScrollView` under the hood and are [made animated](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent#reference).
 * Scrollable components must implement `getNativeScrollRef` method to be compatible with `scrollTo`.
 
 ## Platform compatibility

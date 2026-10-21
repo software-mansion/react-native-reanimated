@@ -15,7 +15,7 @@ function myWorklet() {
 
 ## Workletization
 
-The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -75,7 +75,7 @@ function App() {
 }
 ```
 
-Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime):
+Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime):
 
 ```javascript
 function App() {
@@ -144,7 +144,7 @@ function someWorklet() {
 }
 ```
 
-To pass data between UI and JS thread we use [shared values](/docs/fundamentals/glossary#shared-value).
+To pass data between UI and JS thread we use [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';

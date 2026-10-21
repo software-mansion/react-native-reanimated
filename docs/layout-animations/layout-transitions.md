@@ -4,7 +4,7 @@ Layout transitions allows you to replace layout changes with smooth transitions.
 
 ## Predefined Transitions
 
-Below we listed all of the currently available predefined layout transitions with their [layout animation modifiers](/docs/fundamentals/glossary#layout-animation-modifier).
+Below we listed all of the currently available predefined layout transitions with their [layout animation modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
 
 ## Linear transition
 
@@ -24,7 +24,7 @@ function App() {
 
 #### Easing&#x20;
 
-Easing modifiers are time-based modifiers that rely on [`withTiming`](/docs/animations/withTiming) function.
+Easing modifiers are time-based modifiers that rely on [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
 
 ```javascript
 LinearTransition.easing(Easing.ease);
@@ -38,7 +38,7 @@ LinearTransition.easing(Easing.ease);
 
 #### Spring-based&#x20;
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function.
 Just as in `withSpring` config, spring-based modifiers can be physics-based (have `mass` and `damping` modifiers) or duration-based (have `duration` and `dampingRatio` modifiers).
 
 > **Info**
@@ -78,7 +78,7 @@ LinearTransition.delay(500)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -112,7 +112,7 @@ SequencedTransition.duration(1000)
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 * `.reverse()` determines if the animation should run in reverse. Defaults to `false`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -144,7 +144,7 @@ FadingTransition.duration(1000)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -176,7 +176,7 @@ JumpingTransition.duration(1000)
 
 * `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -216,7 +216,7 @@ CurvedTransition.duration(1000)
 * `.easingY(easing: EasingFunction)` defines easing animation for y-position.
 * `.easingWidth(easing: EasingFunction)` defines easing animation for width.
 * `.easingHeight(easing: EasingFunction)` defines easing animation for height.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Remarks
@@ -256,7 +256,7 @@ EntryExitTransition.duration(1000)
 * `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 * `.exiting(animation)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
 * `.entering(animation)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
-* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
+* `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting.
 * `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Remarks

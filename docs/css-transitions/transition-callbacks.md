@@ -61,7 +61,7 @@ type CSSTransitionCallbacks = {
 
 #### `onCSSTransitionRun`
 
-Fires when the transition is created, before [`transitionDelay`](/docs/css-transitions/transition-delay) starts counting down.
+Fires when the transition is created, before [`transitionDelay`](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay) starts counting down.
 
 #### `onCSSTransitionStart`
 
@@ -97,7 +97,7 @@ Each callback receives a [`CSSTransitionEvent`](#reference) describing **one pro
 
 ## Remarks
 
-* Callbacks fire only for CSS transitions. Animations have [their own callbacks](/docs/css-animations/animation-callbacks), and [`withTiming`](/docs/animations/withTiming) and friends report completion through their own callback argument instead.
+* Callbacks fire only for CSS transitions. Animations have [their own callbacks](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-callbacks), and [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) and friends report completion through their own callback argument instead.
 * Handlers run on the JavaScript thread. The transition itself keeps running natively, so slow work in a callback delays your code, not the animation.
 * A transition that is interrupted emits `cancel` rather than `end`, so the two are mutually exclusive for a given run.
 

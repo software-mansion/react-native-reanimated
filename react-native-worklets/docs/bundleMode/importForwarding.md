@@ -139,7 +139,7 @@ Import forwarding lets you state which imports used inside worklets should be
 forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
-[`importForwarding`](/docs/worklets-plugin/plugin-options#importforwarding)
+[`importForwarding`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#importforwarding)
 option of the Worklets Babel plugin.
 
 ### Dropping boilerplate
@@ -203,5 +203,5 @@ scheduleOnUI(printRN); // logs 1
 scheduleOnUI(printWorklet); // logs 0
 ```
 
-To learn more about closures, see [this section](/docs/fundamentals/closures)
+To learn more about closures, see [this section](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/closures)
 of the Worklets documentation.

@@ -1,6 +1,6 @@
 # isSynchronizable
 
-Asserts whether a value is a [Synchronizable](/docs/memory/synchronizable).
+Asserts whether a value is a [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable).
 
 You can pass a generic type argument to specify the expected value type held by the Synchronizable.
 

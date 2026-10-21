@@ -53,7 +53,7 @@ interface ComponentCoords {
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
+The product of [`useAnimatedRef`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
 
 #### `absoluteX`
 

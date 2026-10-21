@@ -6,7 +6,7 @@ The goal of the *Fundamentals* section is to help you gain a strong foundation o
 
 React Native Reanimated is a powerful animation library built by [Software Mansion](https://swmansion.com/).
 
-With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Prerequisites
 
@@ -82,7 +82,7 @@ Worklets Babel plugin comes with several customization options, you can explore 
 
 Why do I need this?
 
-In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
 Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
 
@@ -114,4 +114,4 @@ cd ios && pod install && cd ..
 
 For building apps that target web using [react-native-web](https://www.npmjs.com/package/react-native-web) we highly recommend to use [Expo](https://expo.dev/).
 
-More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
+More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support) guide.

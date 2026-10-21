@@ -4,7 +4,7 @@ When debugging animations, it's often useful to slow them down to closely observ
 
 How does it work?
 
-Reanimated animations are driven by frame timestamps. When slow animations are enabled, Reanimated rescales the timestamps passed to its animation loop, so all animations driven by Reanimated – including animations of [shared values](/docs/fundamentals/glossary#shared-value), layout animations and keyboard-driven animations – slow down accordingly.
+Reanimated animations are driven by frame timestamps. When slow animations are enabled, Reanimated rescales the timestamps passed to its animation loop, so all animations driven by Reanimated – including animations of [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value), layout animations and keyboard-driven animations – slow down accordingly.
 
 On iOS, Reanimated reads the Simulator's animation drag coefficient and applies the same slowdown factor. On Android, Reanimated divides the elapsed time by a factor of 10.
 

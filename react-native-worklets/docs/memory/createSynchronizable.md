@@ -1,10 +1,10 @@
 # createSynchronizable
 
-Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+Creates a new [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
 
-By default it creates a [Synchronizable Dynamic](/docs/memory/synchronizable#synchronizable-dynamic).
+By default it creates a [Synchronizable Dynamic](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable#synchronizable-dynamic).
 
-You can pass a config option to create [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) instead.
+You can pass a config option to create [Synchronizable Fixed](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable#synchronizable-fixed) instead.
 
 ## Reference
 
@@ -37,7 +37,7 @@ type SynchronizableConfig = {
 
 ### initialValue
 
-The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) documentation.
 
 With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
 
@@ -45,8 +45,8 @@ With the [`fixedType` option](#config) it isn't serialized and must be a `number
 
 Optional configuration for the Synchronizable. An object with the following properties:
 
-* `fixedType` - when `true`, the created [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. Defaults to `false`.
+* `fixedType` - when `true`, the created [Synchronizable Fixed](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable#setdirty) method. Defaults to `false`.
 
 ## Remarks
 
-* In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
+* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.

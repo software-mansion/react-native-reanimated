@@ -94,7 +94,7 @@
 
 - [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility)
 - [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg)
-- [Building for Android on Windows](https://docs.swmansion.com/react-native-reanimated/docs/guides/building-for-android-on-windows)
+- [Building for Android on Windows](https://docs.swmansion.com/react-native-reanimated/docs/guides/building-on-windows)
 - [compatibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility)
 - [Contributing](https://docs.swmansion.com/react-native-reanimated/docs/guides/contributing)
 - [Feature flags](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags)
@@ -103,7 +103,7 @@
 - [Migrating from Reanimated 3.x to 4.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x)
 - [Performance](https://docs.swmansion.com/react-native-reanimated/docs/guides/performance)
 - [supported-properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties)
-- [testing-with-jest](https://docs.swmansion.com/react-native-reanimated/docs/guides/testing-with-jest)
+- [testing-with-jest](https://docs.swmansion.com/react-native-reanimated/docs/guides/testing)
 - [Troubleshooting](https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting)
 - [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support)
 - [worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets)

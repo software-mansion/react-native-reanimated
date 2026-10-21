@@ -2,7 +2,7 @@
 
 ## What are closures in worklets?
 
-What makes [worklets](/docs/fundamentals/glossary#worklet) special is their **ability to capture variables from their surrounding scope**, similar to regular JavaScript functions. This feature is known as *closures*.
+What makes [worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) special is their **ability to capture variables from their surrounding scope**, similar to regular JavaScript functions. This feature is known as *closures*.
 
 While a closure is [defined as both the function and its lexical environment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures), here we will refer to closures as just the captured variables from the surrounding [scope](https://developer.mozilla.org/en-US/docs/Glossary/Scope).
 
@@ -25,7 +25,7 @@ However, there are some important differences in how closures work in worklets c
 
 ## Closure behavior on the same JavaScript Runtime
 
-If you call a worklet on the same runtime where it's defined (the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet.
+If you call a worklet on the same runtime where it's defined (the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet.
 
 ```tsx
 let count = 0;
@@ -99,7 +99,7 @@ The behavior is slightly different for object (non-primitive) references:
 
 ## Closure behavior across different JavaScript Runtimes
 
-When a worklet is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
+When a worklet is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
 
 ```tsx
 let obj = { value: 0 };

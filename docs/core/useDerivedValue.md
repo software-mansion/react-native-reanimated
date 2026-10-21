@@ -1,6 +1,6 @@
 # useDerivedValue
 
-`useDerivedValue` lets you create new [shared values](/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
+`useDerivedValue` lets you create new [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
 
 ## Reference
 
@@ -56,14 +56,14 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 
 ### Returns
 
-`useDerivedValue` returns a new readonly [shared value](/docs/fundamentals/glossary#shared-value) based on a value returned from the [`updater`](/docs/core/useDerivedValue#updater) function.
+`useDerivedValue` returns a new readonly [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) based on a value returned from the [`updater`](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue#updater) function.
 
 ## Example
 
 ## Remarks
 
-* The callback passed to the first argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The callback passed to the first argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
-* You can also use `useDerivedValue` without returning a value in the `updater` function to react to a change of a shared value. If you need to access the previous value stored in a shared value use [`useAnimatedReaction`](/docs/advanced/useAnimatedReaction) instead.
+* You can also use `useDerivedValue` without returning a value in the `updater` function to react to a change of a shared value. If you need to access the previous value stored in a shared value use [`useAnimatedReaction`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction) instead.
 
 ## Platform compatibility

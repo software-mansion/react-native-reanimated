@@ -1,19 +1,19 @@
 # Running worklets on the UI runtime
 
-Worklets provides three functions for running a [worklet](/docs/fundamentals/glossary#worklet) on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime): [`scheduleOnUI`](/docs/threading/scheduleOnUI), [`runOnUIAsync`](/docs/threading/runOnUIAsync) and [`runOnUISync`](/docs/threading/runOnUISync).
+Worklets provides three functions for running a [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime) from the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime): [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI), [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync) and [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync).
 They differ in whether the worklet runs asynchronously or synchronously, and in what they return to the caller.
 Use the table below to pick the one that fits your case.
 
 ## Comparison
 
-|  | [`scheduleOnUI`](/docs/threading/scheduleOnUI) | [`runOnUIAsync`](/docs/threading/runOnUIAsync) | [`runOnUISync`](/docs/threading/runOnUISync) |
+|  | [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) | [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync) | [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync) |
 | --- | --- | --- | --- |
 | **Execution** | Asynchronous | Asynchronous | Synchronous, blocks the caller until the worklet returns |
 | **Returns** | Nothing | A `Promise` that resolves with the worklet's return value | The worklet's return value directly |
 | **Web support** | ✅ | ✅ | ❌ |
 | **Use when** | You want to run a worklet on the UI Runtime and don't need its result back | You need the worklet's result back, but don't want to block the calling thread | You need the worklet's result immediately, within the same synchronous flow |
 
-The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](/docs/memory/serializable).
+The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable).
 
-All three functions can be called from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime), and additionally from the [UI](/docs/fundamentals/runtimeKinds#ui-runtime) and [Worker](/docs/fundamentals/runtimeKinds#worker-runtime) Runtimes when [Bundle Mode](/docs/bundleMode) is enabled.
-See [Call tables](/docs/guides/call-tables) for the full matrix.
+All three functions can be called from the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime), and additionally from the [UI](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime) and [Worker](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime) Runtimes when [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) is enabled.
+See [Call tables](https://docs.swmansion.com/react-native-worklets/docs/guides/call-tables) for the full matrix.

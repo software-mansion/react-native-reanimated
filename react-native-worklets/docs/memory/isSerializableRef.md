@@ -1,6 +1,6 @@
 # isSerializableRef
 
-Asserts whether a value is a [Serializable](/docs/memory/serializable) reference.
+Asserts whether a value is a [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) reference.
 
 ## Reference
 

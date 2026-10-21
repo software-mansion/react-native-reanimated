@@ -41,7 +41,7 @@ type ScrollableComponent = Component<
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `providedOffset`&#x20;
 
@@ -49,7 +49,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 
 ### Returns
 
-`useScrollOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the scrollable component.
+`useScrollOffset` returns a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) which holds the current offset of the scrollable component.
 
 ## Example
 

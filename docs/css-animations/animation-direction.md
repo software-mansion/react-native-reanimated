@@ -55,7 +55,7 @@ For each animation iteration, the animation alternates between running forwards 
 
 #### `<animation direction[]>`
 
-An array of animation direction values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/css-animations/animation-name).
+An array of animation direction values. The order in this array corresponds to the array of style properties passed to the [`animationName`](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name).
 
 ```typescript
 // highlight-next-line

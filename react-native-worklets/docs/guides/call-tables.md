@@ -1,14 +1,14 @@
 # Call tables
 
-Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](/docs/bundleMode) is enabled or not.
+Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) is enabled or not.
 
 ### Why does Bundle Mode matter?
 
-In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklets. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
 
 ### How to read a call table
 
-Take [scheduleOnUI](/docs/threading/scheduleOnUI) as an example:
+Take [scheduleOnUI](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) as an example:
 
 A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
 

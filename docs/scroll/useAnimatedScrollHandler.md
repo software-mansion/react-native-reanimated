@@ -74,7 +74,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 

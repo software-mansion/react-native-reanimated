@@ -1,10 +1,10 @@
 # scheduleOnRN
 
-`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) from any [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime) from any [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
-To learn more about the different runtime kinds, check [Runtime Kinds](/docs/fundamentals/runtimeKinds).
+To learn more about the different runtime kinds, check [Runtime Kinds](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds).
 
-`scheduleOnRN` is commonly used to update React state from [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
+`scheduleOnRN` is commonly used to update React state from [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
 
 ## Reference
 
@@ -33,11 +33,11 @@ function scheduleOnRN<Args extends unknown[], ReturnValue>(
 
 #### fn
 
-A reference to a function you want to execute on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+A reference to a function you want to execute on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 #### args
 
-Arguments to the function you want to execute on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+Arguments to the function you want to execute on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 ## Example
 
@@ -45,7 +45,7 @@ Arguments to the function you want to execute on the [RN Runtime](/docs/fundamen
 
 ### What functions can be passed to `scheduleOnRN`?
 
-Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
+Functions passed to `scheduleOnRN` must be defined on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `scheduleOnUI` callback, which is only executed on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
 
 ```jsx
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
@@ -63,7 +63,7 @@ function App() {
 }
 ```
 
-To fix it, you have to move the function definition to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope:
+To fix it, you have to move the function definition to the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime) scope:
 
 ```jsx
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
@@ -85,9 +85,9 @@ function App() {
 
 ## Implementation Details
 
-* Scheduling function from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
+* Scheduling function from the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
   uses `queueMicrotask`.
-* When functions need to be scheduled from a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+* When functions need to be scheduled from a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 ## Call table
 

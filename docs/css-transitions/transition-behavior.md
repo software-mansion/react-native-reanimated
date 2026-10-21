@@ -39,7 +39,7 @@ Doesn't allow transitions to be applied to discrete properties, resulting in cha
 
 ## Remarks
 
-* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
+* Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions) to animate discrete style properties instead.
 
 * When using `allow-discrete` the discrete properties flip between two values at the midpoint of the animation, except for the `display` property, which is immediately at the moment of the transition start.
 

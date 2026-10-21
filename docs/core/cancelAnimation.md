@@ -1,6 +1,6 @@
 # cancelAnimation
 
-`cancelAnimation` lets you cancel a running animation paired to a [shared value](/docs/fundamentals/glossary#shared-value).
+`cancelAnimation` lets you cancel a running animation paired to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 ## Reference
 

@@ -1,6 +1,6 @@
 # withDelay
 
-`withDelay` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you start an animation with a delay.
+`withDelay` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you start an animation with a delay.
 
 ## Reference
 
@@ -47,7 +47,7 @@ A parameter that determines how the animation responds to the device's reduced m
 
 ### Returns
 
-`withDelay` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withDelay` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).
 
 ## Example
 

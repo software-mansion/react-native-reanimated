@@ -32,11 +32,11 @@ export default function App() {
 
 > **Info**
 >
-> You can create your own custom Animated components with [`createAnimatedComponent`](/docs/core/createAnimatedComponent).
+> You can create your own custom Animated components with [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent).
 
 ## Defining a shared value
 
-A [shared value](/docs/fundamentals/glossary#shared-value) is a driving factor of all your animations. You can think of it as a React state which is automagically kept in sync between the “JavaScript” and the “native” side of your app (hence the name). You create shared values using a `useSharedValue` hook:
+A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) is a driving factor of all your animations. You can think of it as a React state which is automagically kept in sync between the “JavaScript” and the “native” side of your app (hence the name). You create shared values using a `useSharedValue` hook:
 
 ```jsx
 import { useSharedValue } from 'react-native-reanimated';
@@ -147,4 +147,4 @@ In this section, we gained a firm grasp on the Reanimated fundamentals. We learn
 
 ## What's next?
 
-In [the next section](/docs/fundamentals/animating-styles-and-props), we will learn more about how to animate styles and props using `useAnimatedStyle` and `useAnimatedProps` hooks.
+In [the next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props), we will learn more about how to animate styles and props using `useAnimatedStyle` and `useAnimatedProps` hooks.

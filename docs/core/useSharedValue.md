@@ -1,6 +1,6 @@
 # useSharedValue
 
-`useSharedValue` lets you define [shared values](/docs/fundamentals/glossary#shared-value) in your components.
+`useSharedValue` lets you define [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) in your components.
 
 ## Reference
 
@@ -82,9 +82,9 @@ function App() {
 
 * Don't store functions (including worklets) inside shared values. This is not supported and may lead to unexpected behavior.
 
-* When you read the `sv.value` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+* When you read the `sv.value` on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
 
-* When you change the `sv.value` the update will happen synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
+* When you change the `sv.value` the update will happen synchronously on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
 
 ```javascript
 function App() {

@@ -1,6 +1,6 @@
 # Applying modifiers
 
-Another way of [customizing animations](/docs/fundamentals/customizing-animation) in Reanimated is by using animation modifiers. Reanimated comes with three built-in modifiers: [`withRepeat`](/docs/animations/withRepeat), [`withSequence`](/docs/animations/withSequence), and [`withDelay`](/docs/animations/withDelay).
+Another way of [customizing animations](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/customizing-animation) in Reanimated is by using animation modifiers. Reanimated comes with three built-in modifiers: [`withRepeat`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat), [`withSequence`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence), and [`withDelay`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay).
 
 Let's build a simple shake animation which uses all the modifiers and learn them along the way. Let's go!
 
@@ -10,11 +10,11 @@ In this example, we're going to make an animated box which will shake on a butto
 
 Let's start by having an `Animated.View` and a `Button` which moves the view to the right on press. To achieve this we can use `useAnimatedStyle` and `withTiming` function to smoothly animate our box `40px` to the right.
 
-If this sounds new to you, no worries! Start by going through the basics in [Your First Animation](/docs/fundamentals/your-first-animation) and come back here when you're ready.
+If this sounds new to you, no worries! Start by going through the basics in [Your First Animation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation) and come back here when you're ready.
 
 ## Repeating an animation
 
-To implement our desired shake animation we can use [`withRepeat`](/docs/animations/withRepeat) modifier. This modifier lets you repeat a provided animation.
+To implement our desired shake animation we can use [`withRepeat`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat) modifier. This modifier lets you repeat a provided animation.
 
 ```javascript
 import { withRepeat } from 'react-native-reanimated';
@@ -27,7 +27,7 @@ function App() {
 
 Pass a number to the second parameter of the function to make it repeat a given number of times. You can make it repeat forever by passing a non-positive value (eg. `0` or `-1`). You can make the animation go back and forth by passing `true` to the third (i.e. `reverse`) argument.
 
-To learn more about it you can check out the full [`withRepeat` API reference](/docs/animations/withRepeat).
+To learn more about it you can check out the full [`withRepeat` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat).
 
 Let's use this function in our example:
 
@@ -48,7 +48,7 @@ function App() {
 
 This modifier lets you chain animations together. The next animation starts when the previous one ends. You use it by passing animations as arguments in the order you want them to run.
 
-To learn more about it you can check out the full [`withSequence` API reference](/docs/animations/withSequence).
+To learn more about it you can check out the full [`withSequence` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence).
 
 Coming back to our example - we can utilize `withSequence` to improve our animation. First, we'll sway the box to the left which we'll make it to take half of the duration of one swing. Then, we'll shake the box 5 times and finish up the animation by bringing it to starting position also with half of the animation duration.
 
@@ -67,7 +67,7 @@ function App() {
 
 This function as a first parameter takes the duration in milliseconds before the animation starts. The second parameter defines the animation to delay.
 
-To learn more about it you can check out the full [`withDelay` API reference](/docs/animations/withDelay).
+To learn more about it you can check out the full [`withDelay` API reference](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay).
 
 ## Summary
 
@@ -80,4 +80,4 @@ In this section, we learned how to create complex animations by using animation 
 
 ## What's next?
 
-In the [next section](/docs/fundamentals/handling-gestures), we're going to learn about handling `Tap` and `Pan` gestures. Also, we'll get to know the `withDecay` animation function.
+In the [next section](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures), we're going to learn about handling `Tap` and `Pan` gestures. Also, we'll get to know the `withDecay` animation function.

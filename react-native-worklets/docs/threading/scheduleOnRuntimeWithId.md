@@ -1,6 +1,6 @@
 # scheduleOnRuntimeWithId
 
-`scheduleOnRuntimeWithId` is a variant of [scheduleOnRuntime](/docs/threading/scheduleOnRuntime) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+`scheduleOnRuntimeWithId` is a variant of [scheduleOnRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRuntime) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
 
 ## Reference
 
@@ -28,21 +28,21 @@ function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ## Remarks
 
 * The worklet is scheduled on the Worker Runtime's [Async
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
-* You can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
+* You can target the UI Runtime by passing [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId) as the runtime id.
 
 ## Call table
 

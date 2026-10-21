@@ -1,6 +1,6 @@
 # useAnimatedRef
 
-`useAnimatedRef` lets you get a reference of a view. Used alongside [`measure`](/docs/advanced/measure), [`scrollTo`](/docs/scroll/scrollTo), and [`useScrollOffset`](/docs/scroll/useScrollOffset) functions.
+`useAnimatedRef` lets you get a reference of a view. Used alongside [`measure`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure), [`scrollTo`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo), and [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset) functions.
 
 You need to pass the object defined using `useAnimatedRef` to the `ref` property of a component.
 
@@ -54,6 +54,6 @@ function App() {
 
 Alternatively, you can get the value stored in the `current` in [event handlers](https://react.dev/learn/responding-to-events) or in a `onLayout` property.
 
-* The value stored in the `current` property isn't available on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* The value stored in the `current` property isn't available on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility

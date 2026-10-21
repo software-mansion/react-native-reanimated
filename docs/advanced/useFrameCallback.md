@@ -69,6 +69,6 @@ Whether the callback should start automatically. Defaults to `true`.
 
 ## Remarks
 
-* A function passed to the `callback` argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+* A function passed to the `callback` argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility

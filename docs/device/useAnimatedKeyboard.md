@@ -6,7 +6,7 @@
 The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. See the [migration guide](#migration-guide) below.
 caution
 
-Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
+Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK \< 30, for more details see [remarks](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard#remarks) section.
 
 :::
 
@@ -69,8 +69,8 @@ Hook `useAnimatedKeyboard` returns an object containing these fields:
 
 | Name   | Type                         | Description                                                                                                                                                |
 | ------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| height | `SharedValue<number>`        | A [shared value](/docs/fundamentals/glossary#shared-value) containing current height of the keyboard.                                                      |
-| state  | `SharedValue<KeyboardState>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }` |
+| height | `SharedValue<number>`        | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing current height of the keyboard.                                                      |
+| state  | `SharedValue<KeyboardState>` | A [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) containing current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }` |
 
 ## Example
 

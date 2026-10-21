@@ -1,7 +1,7 @@
 # withClamp
 
-`withClamp` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
-Use it with [withSpring](/docs/animations/withSpring) animation.
+`withClamp` is an [animation modifier](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
+Use it with [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) animation.
 
 ## Reference
 
@@ -59,4 +59,4 @@ const clampedStyleWithDelay = useAnimatedStyle(() => {
 
 ### Returns
 
-`withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withClamp` returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle).

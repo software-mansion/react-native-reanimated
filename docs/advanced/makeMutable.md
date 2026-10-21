@@ -2,11 +2,11 @@
 
 > **Caution**
 >
-> The usage of `makeMutable` is discouraged in most cases. It's recommended to use the [`useSharedValue`](/docs/core/useSharedValue) hook instead unless you know what you're doing and you are aware of the consequences (see the [Remarks](#remarks) section).
+> The usage of `makeMutable` is discouraged in most cases. It's recommended to use the [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook instead unless you know what you're doing and you are aware of the consequences (see the [Remarks](#remarks) section).
 >
 > `makeMutable` is used internally and its behavior may change over time.
 
-`makeMutable` is a function internally used by the [`useSharedValue`](/docs/core/useSharedValue) hook to create a [shared value](/docs/fundamentals/glossary#shared-value).
+`makeMutable` is a function internally used by the [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook to create a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
 
 It makes it possible to create mutable values without the use of the hook, which can be useful in some cases (e.g. in the global scope, as an array of mutable values, etc.).
 
@@ -55,7 +55,7 @@ You can access data stored in the mutable with either its `value` property or `g
 >
 > We use *mutable value* name for an object created by `makeMutable` to distinguish it from the *shared value* created by `useSharedValue`. Technically, *shared value* is a *mutable value* with an automatic cleanup.
 
-* All remarks from the [useSharedValue](/docs/core/useSharedValue) hook apply to `makeMutable` as well.
+* All remarks from the [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook apply to `makeMutable` as well.
 
 * Don't call `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
 

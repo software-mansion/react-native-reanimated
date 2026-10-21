@@ -1,6 +1,6 @@
 # createWorkletRuntime
 
-`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/fundamentals/glossary#javascript-thread) or [UI thread](/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) or [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
 
 The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
 
@@ -84,7 +84,7 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
 
 ##### `enableNetworking`
 
-Determines whether the [networking API](/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+Determines whether the [networking API](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 ##### `enableLocking`
 

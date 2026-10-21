@@ -1,6 +1,6 @@
 # useEvent
 
-`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
+`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -75,7 +75,7 @@ The hook returns an event handler that will be invoked when a native event is di
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
 
 ## Remarks
 
