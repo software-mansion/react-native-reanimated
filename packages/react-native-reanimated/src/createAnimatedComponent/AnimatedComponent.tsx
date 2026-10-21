@@ -28,6 +28,7 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  ViewInfo,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
@@ -172,15 +173,33 @@ export default class AnimatedComponent
     // noop
   }
 
-  _detachStyles() {
-    const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
-      for (const style of this._animatedStyles) {
-        style.viewDescriptors.remove(viewTag);
-      }
-      for (const animatedProp of this._animatedProps) {
-        animatedProp?.viewDescriptors?.remove(viewTag);
-      }
+  _detachHostBindings(previousViewInfo: ViewInfo) {
+    this._detachStyles(previousViewInfo.viewTag as number);
+    this._InlinePropManager.detachInlineProps();
+  }
+
+  _attachHostBindings() {
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+  }
+
+  _detachStyles(viewTag: number = this.getComponentViewTag()) {
+    if (viewTag === -1) {
+      return;
+    }
+    // A style change in the same update has already moved the attached
+    // styles to the previous lists, so detach from both.
+    for (const style of [
+      ...this._prevAnimatedStyles,
+      ...this._animatedStyles,
+    ]) {
+      style.viewDescriptors.remove(viewTag);
+    }
+    for (const animatedProp of [
+      ...this._prevAnimatedProps,
+      ...this._animatedProps,
+    ]) {
+      animatedProp?.viewDescriptors?.remove(viewTag);
     }
   }
 
@@ -262,6 +281,8 @@ export default class AnimatedComponent
     _prevState: Readonly<unknown>,
     snapshot: DOMRect | null
   ) {
+    this._refreshComponentRef();
+
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,
