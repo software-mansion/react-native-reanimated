@@ -1,4 +1,4 @@
-name: Github Actions cache cleanup
+name: GitHub Actions cache cleanup
 on:
   pull_request_target:
     types: [closed]
@@ -23,11 +23,12 @@ jobs:
         env:
           REF: refs/pull/${{ github.event.pull_request.number }}/merge
         run: |
-          gh api --paginate "repos/${REPO}/actions/caches?ref=${REF}&per_page=100" --jq '.actions_caches[].id' |
+          ids=$(gh api --paginate "repos/${REPO}/actions/caches?ref=${REF}&per_page=100" --jq '.actions_caches[].id')
           while read -r id; do
+            [[ -n "${id}" ]] || continue
             echo "Deleting cache ${id}"
             gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
-          done
+          done <<< "${ids}"
 
   # Pods entries are meant to be saved from main only (see save-pods). Runs of
   # pull requests based on a branch that predates that guard still save them
@@ -38,9 +39,24 @@ jobs:
     steps:
       - name: Delete Pods caches saved on pull request refs
         run: |
-          gh api --paginate "repos/${REPO}/actions/caches?key=pods-&per_page=100" \
-            --jq '.actions_caches[] | select(.ref | startswith("refs/pull/")) | "\(.id) \(.ref) \(.key)"' |
+          caches=$(gh api --paginate "repos/${REPO}/actions/caches?key=pods-&per_page=100" \
+            --jq '.actions_caches[] | select(.ref | startswith("refs/pull/")) | "\(.id) \(.ref) \(.key)"')
           while read -r id ref key; do
+            [[ -n "${id}" ]] || continue
             echo "Deleting cache ${id} (${ref} ${key})"
             gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
-          done
+          done <<< "${caches}"
+
+  setup-node-yarn-caches:
+    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete setup-node Yarn caches saved on main
+        run: |
+          caches=$(gh api --paginate "repos/${REPO}/actions/caches?key=node-cache-&ref=refs/heads/main&per_page=100" \
+            --jq '.actions_caches[] | "\(.id) \(.key)"')
+          while read -r id key; do
+            [[ -n "${id}" ]] || continue
+            echo "Deleting cache ${id} (${key})"
+            gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
+          done <<< "${caches}"

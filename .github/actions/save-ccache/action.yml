@@ -31,9 +31,14 @@ runs:
         KEY_PREFIX: ccache-${{ inputs.key-prefix }}-
         CURRENT_KEY: ccache-${{ inputs.key-prefix }}-${{ github.sha }}
       run: |
-        gh api --paginate "repos/${REPO}/actions/caches?key=${KEY_PREFIX}&ref=refs/heads/main&per_page=100" \
-          --jq ".actions_caches[] | select(.key != \"${CURRENT_KEY}\") | .id" |
-        while read -r id; do
-          echo "Deleting cache ${id}"
+        caches=$(gh api --paginate "repos/${REPO}/actions/caches?key=${KEY_PREFIX}&ref=refs/heads/main&per_page=100" \
+          --jq '.actions_caches[] | "\(.id) \(.key)"')
+        if ! awk -v key="${CURRENT_KEY}" '$2 == key { found = 1 } END { exit !found }' <<< "${caches}"; then
+          echo "${CURRENT_KEY} was not saved, keeping the older entries"
+          exit 0
+        fi
+        while read -r id key; do
+          [[ -n "${id}" && "${key}" != "${CURRENT_KEY}" ]] || continue
+          echo "Deleting cache ${id} (${key})"
           gh api -X DELETE "repos/${REPO}/actions/caches/${id}"
-        done
+        done <<< "${caches}"
