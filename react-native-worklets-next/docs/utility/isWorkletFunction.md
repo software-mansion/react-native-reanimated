@@ -1,0 +1,92 @@
+# isWorkletFunction
+
+`isWorkletFunction` checks if a function is a worklet function. It only works with Worklets Babel plugin enabled. Unless you are doing something with internals of the Worklets library you shouldn't need to use this function.
+
+## Reference
+
+```javascript
+import { isWorkletFunction } from 'react-native-worklets';
+
+const workletFunction = () => {
+  'worklet';
+  return 1;
+};
+
+const isWorkletFunction = isWorkletFunction(workletFunction);
+
+console.log(isWorkletFunction); // true
+
+const nonWorkletFunction = () => {
+  return 1;
+};
+
+const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
+
+console.log(isNonWorkletFunction); // false
+```
+
+Type definitions
+
+```typescript
+type WorkletClosure = unknown[];
+
+export type WorkletStackDetails = [
+  error: Error,
+  lineOffset: number,
+  columnOffset: number,
+];
+
+interface WorkletInitData {
+  /** Only when bytecode isn't toggled. */
+  code?: string;
+  /** Only in production builds and explicitly toggled. */
+  bytecode?: ArrayBuffer;
+  /** Only in dev builds. */
+  location?: string;
+  /** Only in dev builds. */
+  sourceMap?: string;
+}
+
+interface WorkletProps {
+  __closure?: WorkletClosure;
+  __workletHash: number;
+  /** Only in Legacy Eval Mode. */
+  __initData?: WorkletInitData;
+  /** `__stackDetails` is removed after parsing. */
+  __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
+}
+
+type WorkletFunction<
+  TArgs extends unknown[] = unknown[],
+  TReturn = unknown,
+> = ((...args: TArgs) => TReturn) & WorkletProps;
+
+function isWorkletFunction<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+>(value: unknown): value is WorkletFunction<Args, ReturnValue>;
+```
+
+### Arguments
+
+#### value
+
+A function to check if it is a worklet function.
+
+### Returns
+
+`isWorkletFunction` returns a boolean value.
+
+### Remarks
+
+* Do not call it before the worklet function is declared, as it will always return `false` then.
+
+  ```ts
+  isWorkletFunction(myWorklet); // Will always return false.
+
+  function myWorklet() {
+    'worklet';
+  }
+  ```

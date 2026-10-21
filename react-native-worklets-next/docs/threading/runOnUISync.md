@@ -1,0 +1,51 @@
+# runOnUISync
+
+`runOnUISync` lets you run a [workletized](/docs/worklets-plugin/about#autoworkletization) function synchronously on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUIAsync`](/docs/threading/runOnUIAsync), see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+
+## Reference
+
+```javascript
+import { runOnUISync } from 'react-native-worklets';
+
+const myFunction = (num: number): number => {
+  'worklet';
+  return num + 1;
+};
+
+const result: number = runOnUISync(myFunction, 0);
+
+console.log(result); // 1
+```
+
+Type definitions
+
+```typescript
+function runOnUISync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+```
+
+### Arguments
+
+#### worklet
+
+A function you want to execute on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+#### args
+
+Arguments to pass to the function.
+
+### Returns
+
+`runOnUISync` returns the return value of the function passed as the first argument. It can only return values that can be converted to a [Serializable](/docs/memory/serializable).
+
+## Remarks
+
+* The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+
+## Call table
+
+## Platform compatibility

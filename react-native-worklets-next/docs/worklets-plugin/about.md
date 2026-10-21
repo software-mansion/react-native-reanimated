@@ -1,0 +1,222 @@
+# Worklets plugin
+
+## What is the Worklets plugin?
+
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](#autoworkletization).
+
+The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [OXC plugin](/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](/docs/bundleMode/) only. Everything on this page applies to both.
+
+* A function that contains a `'worklet'` directive at its very top, i.e.:
+
+```ts
+function foo() {
+  'worklet';
+  console.log('Hello from worklet');
+}
+```
+
+* A function that is *autoworkletizable*, i.e.:
+
+```ts
+useAnimatedStyle(() => {
+  // This function will be ran on the UI thread,
+  // hence it's in a workletizable context and will be
+  // autoworkletized. You don't need to add the 'worklet' directive here.
+  return {
+    width: 100,
+  };
+});
+```
+
+## What can be a worklet?
+
+### JavaScript terms
+
+The Worklets plugin supports the following terms as worklets:
+
+#### Function Declarations
+
+```ts
+function foo() {
+  'worklet';
+  console.log('Hello from FunctionDeclaration');
+}
+```
+
+#### Function Expressions
+
+```ts
+const foo = function () {
+  'worklet';
+  console.log('Hello from FunctionExpression');
+};
+```
+
+#### Arrow Function Expressions
+
+```ts
+const foo = () => {
+  'worklet';
+  console.log('Hello from ArrowFunctionExpression');
+};
+```
+
+#### Object Methods
+
+```ts
+const obj = {
+  foo() {
+    'worklet';
+    console.log('Hello from ObjectMethod');
+  },
+};
+```
+
+### Class Methods
+
+## Autoworkletization
+
+To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+
+```ts
+import { scheduleOnUI } from 'react-native-worklets';
+
+const style = scheduleOnUI((greetings: string) => {
+  // You don't need to add the 'worklet' directive here,
+  // since plugin detects this callback as autoworkletizable.
+  console.log(`${greetings} from UI Runtime`);
+}, 'Hello');
+```
+
+This isn't limited to `useAnimatedStyle` hook - the Worklets plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+
+Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
+
+### Referencing worklet functions
+
+You can define worklet functions **before** they are used and the plugin will autoworkletize them too:
+
+```ts
+function foo() {
+  // You don't need to add
+  // the 'worklet' directive here.
+  return { width: 100 };
+}
+
+// You don't need to define an inline function here,
+// a reference is enough.
+const style = useAnimatedStyle(foo);
+```
+
+### Objects aggregating worklet functions
+
+In some APIs, like `useAnimatedScrollHandler` you can pass an object that contains worklet functions instead of a function:
+
+```ts
+const handlerObject = {
+  // You don't need to mark these methods as worklets.
+  onBeginDrag() {
+    console.log('Dragging...');
+  },
+  onScroll() {
+    console.log('Scrolling...');
+  },
+};
+
+const handler = useAnimatedScrollHandler(handlerObject);
+```
+
+### \[Experimental] Workletizing whole files
+
+You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
+
+This will workletize all *top-level* [JavaScript terms](#javascript-terms) automatically. It can come in handy for files that contain multiple worklet functions.
+
+```ts
+// file.ts
+'worklet';
+
+function foo() {
+  // Function 'foo' will be autoworkletized.
+  return { width: 100 };
+}
+
+function bar() {
+  // Function 'bar' will be autoworkletized.
+  function foobar() {
+    // Function 'foobar' won't since it's not defined in top-level scope.
+    console.log("I'm not a worklet");
+  }
+  return { width: 100 };
+}
+```
+
+## Limits of autoworkletization
+
+The plugin cannot infer whether a function is autoworkletizable or not in some contexts.
+
+### Imports
+
+When importing a function from another file or a module and using it as a worklet function, you must manually add the `'worklet'` directive to the function:
+
+```ts
+// foo.ts
+import { bar } from './bar';
+// ...
+const style = useAnimatedStyle(bar);
+
+// bar.ts
+export function bar() {
+  'worklet'; // Won't work without it.
+  return {
+    width: 100,
+  };
+}
+```
+
+### Custom hooks
+
+Currently Reanimated hasn't exposed APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
+
+### Expressions
+
+A function won't get automatically workletized when it's a result of an expression. You have to add the `'worklet';` directive to make it work:
+
+```ts
+const foo = someCondition
+  ? () => {
+      'worklet'; // Won't work without it.
+      return { width: 100 };
+    }
+  : () => {
+      'worklet'; // Won't work without it.
+      return { width: 200 };
+    };
+
+const style = useAnimatedStyle(foo);
+```
+
+In such cases we recommend either handling the conditional logic in the worklet function itself or refactoring your code to eliminate the need for conditional worklet functions.
+
+## Pitfalls
+
+There are some patterns that won't work with the plugin.
+
+### Hoisting worklet functions
+
+Worklet functions aren't hoisted. This means that you can't use worklet functions before they are defined:
+
+```ts
+// The following line crashes,
+// even though 'foo' is marked as a worklet.
+const style = useAnimatedStyle(foo);
+
+function foo() {
+  'worklet';
+  return { width: 100 };
+}
+```
+
+## Notes
+
+If you feel like the Worklets plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
