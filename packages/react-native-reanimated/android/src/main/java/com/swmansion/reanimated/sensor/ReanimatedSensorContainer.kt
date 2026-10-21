@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.sensor
 
+import android.content.Context
+import android.hardware.SensorManager
 import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.swmansion.reanimated.nativeProxy.SensorSetter
@@ -10,6 +12,13 @@ class ReanimatedSensorContainer(
 ) {
     private var nextSensorId = 0
     private val sensors = HashMap<Int, ReanimatedSensor>()
+
+    fun isSensorAvailable(sensorType: ReanimatedSensorType): Boolean {
+        val sensorManager =
+            reactContext.get()?.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+                ?: return false
+        return sensorManager.getDefaultSensor(sensorType.getType()) != null
+    }
 
     fun registerSensor(
         sensorType: ReanimatedSensorType,
