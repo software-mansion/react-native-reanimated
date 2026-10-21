@@ -6,14 +6,14 @@ sidebar_position: 2137 # Last in the section - deprecated
   text={
 <>
 This API is deprecated and will be removed in the next major release. Use{' '}
-<a href="/docs/threading/scheduleOnRuntime">scheduleOnRuntime</a> instead.
+<a href="../scheduleOnRuntime/">scheduleOnRuntime</a> instead.
 </>
 }
 />
 
 # runOnRuntime
 
-`runOnRuntime` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on a separate worklet runtime on a separate thread.
+`runOnRuntime` lets you asynchronously run [workletized](../fundamentals/glossary.mdx#to-workletize) functions on a separate worklet runtime on a separate thread.
 
 ## Reference
 
@@ -49,7 +49,7 @@ function App() {
 
 #### workletRuntime
 
-A reference to worklet runtime created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+A reference to worklet runtime created with [`createWorkletRuntime`](./createWorkletRuntime.mdx).
 
 #### fn
 
@@ -67,7 +67,7 @@ Don't forget to call the function returned from `runOnRuntime`.
 
 - It's a common mistake to execute function inside of `runOnRuntime` like this: ~~`runOnRuntime(myWorklet(10))()`~~. Here, the correct usage would be `runOnRuntime(myWorklet)(10)`.
 
-- The callback passed as the argument will not be [workletized](/docs/fundamentals/glossary#to-workletize) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+- The callback passed as the argument will not be [workletized](../fundamentals/glossary.mdx#to-workletize) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](../fundamentals/glossary.mdx#ui-thread).
 
 - You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
 

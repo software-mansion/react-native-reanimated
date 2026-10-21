@@ -9,8 +9,8 @@ single-threaded JavaScript has always let you ignore: **how do two pieces of cod
 same data?**
 
 This page explains why that question has no cheap answer in JavaScript, and why Worklets expose three distinct shared
-memory primitives — the [Serializable](/docs/memory/serializable), the [Synchronizable](/docs/memory/synchronizable),
-and the [Shareable](/docs/memory/shareable) — instead of one.
+memory primitives — the [Serializable](../memory/serializable.mdx), the [Synchronizable](../memory/synchronizable.mdx),
+and the [Shareable](../memory/shareable.mdx) — instead of one.
 
 ## JavaScript is single-threaded on purpose
 
@@ -53,7 +53,7 @@ We can categorize shared memory into three types, based on how they are implemen
 The simplest of them all: a way to move any value from Runtime A to Runtime B as-is — a number, an object, a string,
 essentially any value that can be expressed as data. However, changes to such a value on any Runtime aren't visible in
 the other Runtimes. Each Runtime is unaware that it has a copy and simply treats its value as the original. **This is
-the [Serializable](/docs/memory/serializable) primitive.**
+the [Serializable](../memory/serializable.mdx) primitive.**
 
 Each to-be-copied value is serialized into a byte stream and sent through C++ to the other Runtime, where it's
 reconstructed. This is straightforward for primitives like numbers and strings, but for objects it can be more
@@ -79,7 +79,7 @@ and all the other Runtimes — but not tied to any particular Runtime, _unbound_
 "real" value outside of any Runtime, in C++, guarded by mutexes and other synchronization primitives. Each JavaScript
 Runtime holds just a specific kind of reference to the C++ value. Each read or write means crossing the boundary between
 JavaScript and C++. Because the memory is thread-safe, each Runtime can safely access it at its own discretion. **This
-is the [Synchronizable](/docs/memory/synchronizable) primitive.**
+is the [Synchronizable](../memory/synchronizable.mdx) primitive.**
 
 <SVGDiagram>![Synchronizable](/img/model-synchronizable.svg)</SVGDiagram>
 
@@ -105,7 +105,7 @@ designated JavaScript Runtime, called the Host Runtime, by simply holding the va
 Other Runtimes, called Guest Runtimes, only have a specific kind of reference that "knows" that the actual value lives
 on another Runtime — if you want to access it with that reference, you must go to C++, lock the Host Runtime
 exclusively, read the actual value, and return it to the Guest Runtime that initiated the read. **This is the
-[Shareable](/docs/memory/shareable) primitive.**
+[Shareable](../memory/shareable.mdx) primitive.**
 
 <SVGDiagram>![Shareable](/img/model-shareable.svg)</SVGDiagram>
 
@@ -139,5 +139,5 @@ general guidelines:
     you allow for eventual consistency.
 
 The rest of this section documents each primitive in detail, along with the APIs —
-[createSerializable](/docs/memory/createSerializable), [createSynchronizable](/docs/memory/createSynchronizable),
-[createShareable](/docs/memory/createShareable) — for producing them.
+[createSerializable](../memory/createSerializable.mdx), [createSynchronizable](../memory/createSynchronizable.mdx),
+[createShareable](../memory/createShareable.mdx) — for producing them.
