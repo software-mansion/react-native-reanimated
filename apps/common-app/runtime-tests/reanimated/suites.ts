@@ -74,14 +74,14 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'props',
     importTest: () => {
-      // require('./tests/props/backgroundImage.test');
-      // require('./tests/props/syncBackToReact.test');
+      require('./tests/props/backgroundImage.test');
+      require('./tests/props/syncBackToReact.test');
       require('./tests/props/syncBackRerender.test');
-      // require('./tests/props/boxShadow.test');
-      // require('./tests/props/nonLayoutPropAndRender.test');
-      // require('./tests/props/mountedViewProps.test');
-      // require('./tests/props/hostReplacement.test');
-      // require('./tests/props/cssArrayKeyframes.test');
+      require('./tests/props/boxShadow.test');
+      require('./tests/props/nonLayoutPropAndRender.test');
+      require('./tests/props/mountedViewProps.test');
+      require('./tests/props/hostReplacement.test');
+      require('./tests/props/cssArrayKeyframes.test');
     },
   },
   {
