@@ -43,14 +43,29 @@ import type {
   ReferenceCase,
 } from './nativeLayoutReferencePlay';
 import { expectReference, play } from './nativeLayoutReferencePlay';
-import type { Leaf, TraceEvent } from './nativeLayoutTestKit';
+import type {
+  Band,
+  DeclaredKey,
+  Leaf,
+  ScalarKey,
+  TargetSample,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
   hasNativeLayoutRoute,
+  movingGeometryTest,
+  PLAYS_SIZE_CHANGE,
+  declaredTimelineOf,
+  declaredValueOf,
+  layerPositionOf,
+  routeOf,
   START_LEFT,
   END_LEFT,
   DURATION,
+  LAID_OUT_TOLERANCE,
   POSITION_TOLERANCE,
   FIRST_FRAME_TRAVEL,
+  FRAME_MS,
   centerOf,
   takeTraceOf,
   isHostEvent,
@@ -65,6 +80,7 @@ import {
 } from './nativeLayoutTestKit';
 
 const REST_TOLERANCE = 0.01;
+const LAYOUT_TARGETS = ['PositionX', 'PositionY', 'Width', 'Height'];
 
 /**
  * Plays a case on the native box and on its frame-driven twin, with statements
@@ -79,19 +95,32 @@ async function playCase(caseName: string, referenceCase: ReferenceCase) {
 
 /**
  * At the end the native box shows its model, and the twin has the model of the
- * native box.
+ * native box, to one pixel: the twin lays out on its own place of the pixel
+ * grid (measured on Android: a height of 49.904785 for the twin and 50.285721
+ * for the native box in one place).
  */
 function expectAtRest({ end }: Played) {
   for (const [target, { presentation, model }] of Object.entries(
     end?.native ?? {}
   )) {
+    const twinTolerance =
+      REST_TOLERANCE +
+      (LAYOUT_TARGETS.includes(target) ? LAID_OUT_TOLERANCE : 0);
     model.forEach((value, index) => {
       expect(Math.abs(presentation[index] - value) < REST_TOLERANCE).toBe(true);
       expect(
-        Math.abs(end!.frame[target].model[index] - value) < REST_TOLERANCE
+        Math.abs(end!.frame[target].model[index] - value) < twinTolerance
       ).toBe(true);
     });
   }
+}
+
+function firstEventOf(events: TraceEvent[], name: string) {
+  const found = events.find(({ event }) => event === name);
+  if (!found) {
+    throw new Error(`The trace has no ${name} event: ${summarize(events)}`);
+  }
+  return found;
 }
 
 describe('native layout starts after the mount of the final state', () => {
@@ -99,38 +128,44 @@ describe('native layout starts after the mount of the final state', () => {
     return;
   }
 
-  test('the final state mounts before admission and the model holds the endpoint', async () => {
-    const tag = await renderBox();
-    await render(<Scene left={END_LEFT} />);
-    await wait(DURATION / 2);
+  movingGeometryTest(
+    'the final state mounts before admission and the model holds the endpoint',
+    async () => {
+      const tag = await renderBox();
+      await render(<Scene left={END_LEFT} />);
+      await wait(DURATION / 2);
 
-    const events = await takeTraceOf(tag);
-    expect(summarize(events.filter(isHostEvent))).toBe(NATIVE_START);
-    expect(events[0].owner).toBe('Layout');
-    expect(events[1].transactionNumber).toBe(events[0].transactionNumber);
-    expect(events[3].endpointPolicy).toBe('MountedModelMustMatchEndpoint');
+      const events = await takeTraceOf(tag);
+      expect(summarize(events.filter(isHostEvent))).toBe(NATIVE_START);
+      expect(events[0].owner).toBe('Layout');
+      expect(events[1].transactionNumber).toBe(events[0].transactionNumber);
+      expect(events[3].endpointPolicy).toBe('MountedModelMustMatchEndpoint');
 
-    const playing = await sample(tag, 'PositionX');
-    const { model, presentation, monotonicTimeMs } = playing;
-    expect(playing.playbacks.length).toBe(2);
-    expect(playbackCountOf(playing, events[0].generation)).toBe(2);
-    expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
-    const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
-    const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
-    expect(
-      Math.abs(presentation[0] - expectedX) <
-        FIRST_FRAME_TRAVEL + POSITION_TOLERANCE
-    ).toBe(true);
+      const playing = await sample(tag, 'PositionX');
+      const { model, presentation, monotonicTimeMs } = playing;
+      expect(playing.playbacks.length).toBe(2);
+      expect(playbackCountOf(playing, events[0].generation)).toBe(2);
+      expect(
+        Math.abs(model[0] - centerOf(END_LEFT)) <= LAID_OUT_TOLERANCE
+      ).toBe(true);
+      const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
+      const expectedX =
+        centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
+      expect(
+        Math.abs(presentation[0] - expectedX) <
+          FIRST_FRAME_TRAVEL + POSITION_TOLERANCE
+      ).toBe(true);
 
-    await wait(DURATION);
-    expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
-    const end = await sample(tag, 'PositionX');
-    expect(end.playbacks.length).toBe(0);
-    expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
-      true
-    );
-    await render(null);
-  });
+      await wait(DURATION);
+      expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
+      const end = await sample(tag, 'PositionX');
+      expect(end.playbacks.length).toBe(0);
+      expect(
+        Math.abs(end.presentation[0] - centerOf(END_LEFT)) <= LAID_OUT_TOLERANCE
+      ).toBe(true);
+      await render(null);
+    }
+  );
 });
 
 describe('native layout size', () => {
@@ -181,20 +216,180 @@ describe('native layout size', () => {
     ...options,
   });
 
-  const linearCases: [string, Place][] = [
-    ['a position change', MOVED],
-    ['a position change and a size change', MOVED_AND_RESIZED],
-    ['a size change', RESIZED],
-  ];
-  for (const [caseName, end] of linearCases) {
-    test(`LinearTransition with a linear easing plays ${caseName} on four native tracks, and the native values and the frames of the frame driver are on its timeline`, async () => {
-      const { events } = await playCase(
-        caseName,
-        sizeCaseOf(LINEAR, START, end)
+  /**
+   * Android refuses a Width or Height track that changes
+   * (`AndroidNativeAnimationPlatform::playsTarget`): the frame driver plays the
+   * whole animation on the two boxes.
+   */
+  const sizeChangeOf = (referenceCase: ReferenceCase): ReferenceCase =>
+    PLAYS_SIZE_CHANGE
+      ? referenceCase
+      : { ...referenceCase, isFrameDriven: true };
+  const SIZE_FALLBACK_NAME =
+    'keeps the whole animation frame-driven: UnsupportedTarget, and the frames of the frame driver on the two boxes are on its timeline';
+
+  /**
+   * The fallback evidence of a refused size change: the build failure, no
+   * result of a native command, and a frame-driven route of `target` with
+   * models on the declared timeline at their read times. An off-curve model
+   * fails the same check.
+   */
+  function expectSizeFallback(played: Played, target: string) {
+    const events = played.events.filter(
+      ({ event }) => event !== 'FrameUpdateMounted'
+    );
+    expect(summarizeStart(events)).toBe('LayoutBuildFailed:UnsupportedTarget');
+    expect(summarizeResults(events)).toBe('');
+    const refusal = firstEventOf(events, 'LayoutBuildFailed');
+    const valueAt = declaredTargetOf(played, target);
+    const isOnTimeline = (model: number[], readMs: Band) =>
+      isOnFrameDriverTimeline(valueAt, refusal.monotonicTimeMs, model, readMs);
+    const reads = nativeReadsOf(played, target);
+    const moving = reads.filter(
+      ({ sample: { model, monotonicTimeMs } }, index) =>
+        monotonicTimeMs > refusal.monotonicTimeMs &&
+        index > 0 &&
+        reads[index - 1].sample.model.join() !== model.join()
+    );
+    const picked = [0.25, 0.5, 0.75]
+      .map((part) => moving[Math.floor(part * moving.length)])
+      .filter(
+        (read, index, all) =>
+          read !== undefined &&
+          all.findIndex(
+            (other) => other?.sample.model.join() === read.sample.model.join()
+          ) === index
       );
-      expect(summarizeStart(events)).toBe(FOUR_TRACKS);
-      expect(summarizeResults(events)).toBe('Ended:Finished:None');
-      await render(null);
-    });
+    console.log(
+      'RuntimeTestsSizeFallback ' +
+        JSON.stringify({
+          target,
+          picked: picked.map(({ sample: { model }, readMs }) => ({
+            model,
+            fromRefusalMs: {
+              from: readMs.from - refusal.monotonicTimeMs,
+              to: readMs.to - refusal.monotonicTimeMs,
+            },
+          })),
+        })
+    );
+    const route = routeOf(
+      events,
+      refusal.tag,
+      target,
+      picked.map(({ sample, readMs }) => ({ ...sample, readMs })),
+      ({ model, readMs }) => isOnTimeline(model, readMs)
+    );
+    expect(route.kind).toBe('frame-driven');
+    expect(isOnTimeline([valueAt(Infinity)], picked[0].readMs)).toBe(false);
+    for (const { row } of played.rows) {
+      expect(row.native[target].playbacks.length).toBe(0);
+    }
+  }
+
+  const linearCases: [string, Place, string][] = [
+    ['a position change', MOVED, 'PositionX'],
+    ['a position change and a size change', MOVED_AND_RESIZED, 'PositionX'],
+    ['a size change', RESIZED, 'Width'],
+  ];
+  for (const [caseName, end, routeTarget] of linearCases) {
+    const changesSize =
+      end.width !== START.width || end.height !== START.height;
+    const isNative = PLAYS_SIZE_CHANGE || !changesSize;
+    const linearTest = isNative ? movingGeometryTest : test;
+    linearTest(
+      `LinearTransition with a linear easing ${isNative ? `plays ${caseName} on four native tracks, and the native values and the frames of the frame driver are on its timeline` : `with ${caseName} ${SIZE_FALLBACK_NAME}`}`,
+      async () => {
+        const referenceCase = sizeCaseOf(LINEAR, START, end);
+        const played = await playCase(
+          caseName,
+          changesSize ? sizeChangeOf(referenceCase) : referenceCase
+        );
+        if (!isNative) {
+          expectSizeFallback(played, routeTarget);
+          await render(null);
+          return;
+        }
+        expect(summarizeStart(played.events)).toBe(FOUR_TRACKS);
+        expect(summarizeResults(played.events)).toBe('Ended:Finished:None');
+        await render(null);
+      }
+    );
   }
 });
+
+// The extremes of the lag of the frame driver from the refusal that iOS measured, in whole display frames.
+// Android: not measured.
+const FRAME_DRIVER_EARLY_MS = 2 * FRAME_MS;
+const FRAME_DRIVER_LATE_MS = 5 * FRAME_MS;
+
+/**
+ * The declared value of `target` of the native box at a time from the start of
+ * its timelines. A position target is the centre of the box.
+ */
+function declaredTargetOf({ endKeys }: Played, target: string) {
+  const valueOfKey = ({ leaf, from, to, base }: DeclaredKey) =>
+    declaredValueOf(declaredTimelineOf(leaf, from, to, base));
+  const scalarKey = endKeys.find(
+    (key): key is ScalarKey =>
+      key.operation === undefined && key.target === target
+  );
+  if (!scalarKey) {
+    throw new Error(`The case declares no key of the target ${target}.`);
+  }
+  const valueAt = valueOfKey(scalarKey);
+  const { size } = scalarKey;
+  if (!size) {
+    return valueAt;
+  }
+  const sizeKey = endKeys.find(({ key }) => key === size.key);
+  const sizeAt = sizeKey ? valueOfKey(sizeKey) : () => size.rest;
+  return (timeMs: number) => layerPositionOf(valueAt(timeMs), sizeAt(timeMs));
+}
+
+type NativeRead = { sample: TargetSample; readMs: Band };
+
+/**
+ * Each sample of `target` of the native box after the first row, with the
+ * interval of its read on the sample clock: a row starts its reads after the
+ * last read of the row before it ends, and the host stamps a sample after its
+ * read (`NativeAnimationHost::sampleTarget`).
+ */
+const nativeReadsOf = ({ rows }: Played, target: string): NativeRead[] =>
+  rows.slice(1).map(({ row }, index) => ({
+    sample: row.native[target],
+    readMs: {
+      from: Math.max(
+        ...Object.values(rows[index].row).flatMap((samples) =>
+          Object.values(samples).map(({ monotonicTimeMs }) => monotonicTimeMs)
+        )
+      ),
+      to: row.native[target].monotonicTimeMs,
+    },
+  }));
+
+/**
+ * A model of a read in `readMs` is within `POSITION_TOLERANCE` of a declared
+ * value of the frame driver, from `FRAME_DRIVER_LATE_MS` before the read to
+ * `FRAME_DRIVER_EARLY_MS` after it, on the timeline from the refusal.
+ */
+function isOnFrameDriverTimeline(
+  valueAt: (timeMs: number) => number,
+  refusalMs: number,
+  [value]: number[],
+  readMs: Band
+) {
+  const fromMs = readMs.from - refusalMs - FRAME_DRIVER_LATE_MS;
+  const toMs = readMs.to - refusalMs + FRAME_DRIVER_EARLY_MS;
+  const declared = [toMs];
+  for (let timeMs = fromMs; timeMs < toMs; timeMs += DECLARED_STEP_MS) {
+    declared.push(timeMs);
+  }
+  const values = declared.map(valueAt);
+  return (
+    value >= Math.min(...values) - POSITION_TOLERANCE &&
+    value <= Math.max(...values) + POSITION_TOLERANCE
+  );
+}
+
+const DECLARED_STEP_MS = 1;

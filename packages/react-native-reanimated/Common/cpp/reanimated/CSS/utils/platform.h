@@ -8,7 +8,6 @@
 #include <array>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <variant>
 
@@ -17,21 +16,6 @@ namespace reanimated::css {
 /// The value kinds the platform can animate natively: scalars, sizes, and RGBA
 /// colors (normalized to [0, 1]).
 using PlatformValue = std::variant<double, std::array<double, 2>, std::array<double, 4>>;
-
-#ifdef ANDROID
-/// Properties the Android backend animates natively; the index is the id the JNI seam
-/// carries and cssPropertyWriterFor switches on. A new one also needs a traitsFor() entry
-/// in platform.cpp and a writer, or its endpoints never parse and it stays on the loop.
-/// borderWidth affects layout, so it stays on the loop; the writer declines shadowColor
-/// below API 28.
-inline constexpr std::array<std::string_view, 5> kAndroidPlatformProperties{
-    "opacity",
-    "backgroundColor",
-    "borderColor",
-    "borderRadius",
-    "shadowColor",
-};
-#endif // ANDROID
 
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
 

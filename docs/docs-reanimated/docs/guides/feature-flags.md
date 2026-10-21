@@ -31,6 +31,7 @@ Feature flags are available since Reanimated 4.
 | [`IOS_CSS_CORE_ANIMATION`](#ios_css_core_animation-and-android_css_platform_transitions)            | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
 | [`ANDROID_CSS_PLATFORM_TRANSITIONS`](#ios_css_core_animation-and-android_css_platform_transitions)  | [static](#static-feature-flags) |  4.6.0   |  –   |                  `false`                  |
 | [`IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`](#ios_layout_animations_core_animation)                     | [static](#static-feature-flags) |  4.8.0   |  –   |                  `false`                  |
+| [`ANDROID_NATIVE_LAYOUT_ANIMATIONS`](#android_native_layout_animations)                             | [static](#static-feature-flags) |  4.8.0   |  –   |                  `false`                  |
 | [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations)                               | [dynamic](#dynamic-feature-flags)|  4.7.0   |  –   | `false`                                   |
 
 :::info
@@ -166,7 +167,7 @@ This feature flag conflicts with [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#
 Both flags enable the same feature, running CSS transitions with the platform's own animation API instead of Reanimated's animation loop. The platform then drives every frame, so Reanimated no longer recomputes and commits the transitioned values on each of them. One flag per platform:
 
 - `IOS_CSS_CORE_ANIMATION` enables it on iOS, where a transition runs as a Core Animation animation on the view's layer,
-- `ANDROID_CSS_PLATFORM_TRANSITIONS` enables it on Android, where it runs as an `ObjectAnimator` writing the animated value directly to the platform view.
+- `ANDROID_CSS_PLATFORM_TRANSITIONS` enables it on Android, where it runs through the shared native animation host as a `ValueAnimator` writing the animated value directly to the platform view.
 
 Both are experimental and default to `false`. CSS animations always run on the loop, regardless of these flags.
 
@@ -219,6 +220,21 @@ Every other layout animation runs as before. That includes each layout transitio
 A later animation of the view (a layout animation, an exit, or a shared transition) gets the values on screen as its current values. An initial value that the builder sets stays the start value. A layout animation that starts during a Core Animation playback also plays with Core Animation when it does not need the state of the earlier one. An animation with a delay, or with the same end value and a different duration or easing, needs that state and runs as before.
 
 A write to `opacity` from a style, an animated style, or a CSS transition or animation does not show while Core Animation plays the opacity of a layout animation. The written value shows when that animation ends.
+
+### `ANDROID_NATIVE_LAYOUT_ANIMATIONS`
+
+This flag lets Android play some layout animations with platform animators, on the same conditions as [`IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`](#ios_layout_animations_core_animation). It is experimental and defaults to `false`.
+
+The flag has an effect only when the app also turns on two experimental React Native feature flags: `enableMountingCoordinatorPullModelAndroid` and `enableAccumulatedUpdatesInRawPropsAndroid`. With them, the mount of each React commit happens in one step on the UI thread, and a layout animation can start in that step. Without them, every layout animation runs as before.
+
+These layout animations run as before on Android, also with the flag:
+
+- an animation that changes the width or the height of the view,
+- an animation that moves the view, or that changes its transform, on Android 9 (API level 28) or earlier,
+- an animation that moves the view or changes its transform when the transform of the view has a skew, a transform origin, or a translation in percent, or when the final transform makes the view flat (for example a scale of `0`),
+- a transform animation with `rotateX`, `rotateY`, or `perspective`, so the `Flip*` presets for example.
+
+The view has its final position and size from the first frame, so touches and accessibility use the final bounds while the view moves.
 
 ### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <variant>
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 #define RECORD_TRACE(...) trace_.record(TraceEvent{__VA_ARGS__})
@@ -58,24 +59,44 @@ void NativeAnimationHost::runAfterMount(const std::vector<MountedOperation> &ope
   ReanimatedSystraceSection section("NativeAnimationHost::runAfterMount");
   Deliveries deliveries;
   for (const auto &operation : operations) {
-    if (const auto *start = std::get_if<MountedStart>(&operation)) {
-      RECORD_TRACE(
-              .event = TraceEventType::Received,
-              .handle = start->request.handle,
-              .originTimestampMs = start->request.originTimestampMs);
-      admit(start->request, start->client, deliveries);
-      continue;
-    }
-    const auto commandIt = commands_.find(std::get<MountedStop>(operation).handle);
-    if (commandIt != commands_.end()) {
-      stopCommand(commandIt, TrackStopMode::SettleToModel, AnimationOutcome::Cancelled, deliveries);
-    }
+    std::visit([this, &deliveries](const auto &mounted) { runMounted(mounted, deliveries); }, operation);
+  }
+  if (deliveries.empty()) {
+    return;
   }
   post(mountReports_, [deliveries = std::move(deliveries)] {
     for (const auto &delivery : deliveries) {
       delivery();
     }
   });
+}
+
+void NativeAnimationHost::runMounted(const MountedStart &start, Deliveries &deliveries) {
+  RECORD_TRACE(
+          .event = TraceEventType::Received,
+          .handle = start.request.handle,
+          .originTimestampMs = start.request.originTimestampMs);
+  admit(start.request, start.client, deliveries);
+}
+
+void NativeAnimationHost::runMounted(const MountedStop &stop, Deliveries &deliveries) {
+  const auto commandIt = commands_.find(stop.handle);
+  if (commandIt != commands_.end()) {
+    stopCommand(commandIt, TrackStopMode::SettleToModel, AnimationOutcome::Cancelled, deliveries);
+  }
+}
+
+void NativeAnimationHost::runMounted(const MountedModel &model, Deliveries & /*deliveries*/) {
+  for (const auto &[handle, command] : commands_) {
+    if (handle.surfaceId != model.surfaceId || handle.tag != model.tag) {
+      continue;
+    }
+    for (const auto &track : command.tracks) {
+      if (track.target == model.target) {
+        platform_->modelDidChange({handle, track.target}, model.value);
+      }
+    }
+  }
 }
 
 void NativeAnimationHost::cancel(const AnimationHandle &handle, const TrackStopMode mode) {
@@ -98,8 +119,12 @@ bool NativeAnimationHost::canRealize(const AnimationTrack &track, const facebook
   return platform_->canRealize(track, view);
 }
 
-bool NativeAnimationHost::isMountedInWindow(const Tag tag) const {
-  return platform_->isInWindow(tag);
+bool NativeAnimationHost::isMountedInWindow(const SurfaceId surfaceId, const Tag tag) const {
+  return platform_->isInWindow(surfaceId, tag);
+}
+
+std::optional<std::uint64_t> NativeAnimationHost::mountReportOfPull(const SurfaceId surfaceId) const {
+  return platform_->mountReportOfPull(surfaceId);
 }
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)

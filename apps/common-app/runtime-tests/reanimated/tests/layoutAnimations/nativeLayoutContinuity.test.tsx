@@ -12,7 +12,7 @@
  * for the opacity and the transform), when a callback comes, that a row comes in each part of a timeline.
  * The pixels on screen, a device, and 120 Hz are not tested.
  *
- * Not converted (the old pair comparison at planned times, `R/trace/STOPPED-TESTS.md`): each test that
+ * Not converted (the old pair comparison at planned times): each test that
  * calls `expectPairParity`, `sampleFramePairAt`, or `expectHiddenRoutesAgree`, and each shared transition
  * test that compares its container with a read of the source.
  */
@@ -30,7 +30,6 @@ import {
   expect,
   getTestComponent,
   render,
-  test,
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -57,6 +56,7 @@ import {
   START_LEFT,
   takeTrace,
   takeTraceOf,
+  movingGeometryTest,
 } from './nativeLayoutTestKit';
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
@@ -243,30 +243,36 @@ describe('native layout continuity', () => {
       );
   }
 
-  test('the mount report of the first frame-driven update of a hand-over stops the native track', async () => {
-    const frameDriven = layoutOf({
-      originX: { duration: LAYOUT_DURATION, hasCallback: true },
-    });
-    const order = await stopOrderAfter(
-      <Scene left={END_LEFT / 2} layout={frameDriven} />
-    );
-    const transaction = order[0]?.split(':')[2];
-    expect(order.join(' > ')).toBe(
-      `FrameUpdateMounted:PositionX:${transaction} > TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
-    );
-    await render(null);
-  });
+  movingGeometryTest(
+    'the mount report of the first frame-driven update of a hand-over stops the native track',
+    async () => {
+      const frameDriven = layoutOf({
+        originX: { duration: LAYOUT_DURATION, hasCallback: true },
+      });
+      const order = await stopOrderAfter(
+        <Scene left={END_LEFT / 2} layout={frameDriven} />
+      );
+      const transaction = order[0]?.split(':')[2];
+      expect(order.join(' > ')).toBe(
+        `FrameUpdateMounted:PositionX:${transaction} > TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
+      );
+      await render(null);
+    }
+  );
 
-  test('the mount report of the removal of a view stops its native track', async () => {
-    const order = await stopOrderAfter(
-      <Scene left={END_LEFT} layout={LONG_MOVE} isMounted={false} />
-    );
-    const transaction = order[2]?.split(':')[1];
-    expect(order.join(' > ')).toBe(
-      `TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
-    );
-    await render(null);
-  });
+  movingGeometryTest(
+    'the mount report of the removal of a view stops its native track',
+    async () => {
+      const order = await stopOrderAfter(
+        <Scene left={END_LEFT} layout={LONG_MOVE} isMounted={false} />
+      );
+      const transaction = order[2]?.split(':')[1];
+      expect(order.join(' > ')).toBe(
+        `TrackEnded:PositionX:false > Ended:Cancelled > LayoutMountReported:${transaction} > ClientEnded:Cancelled`
+      );
+      await render(null);
+    }
+  );
 
   /**
    * Mounts the source of a shared transition with a layout animation of its X
