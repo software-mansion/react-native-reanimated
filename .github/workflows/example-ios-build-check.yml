@@ -30,7 +30,7 @@ jobs:
       USE_CCACHE_LAUNCHER: 1
       CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
     concurrency:
-      group: ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: ios-${{ github.workflow }}-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository

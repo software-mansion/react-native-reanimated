@@ -33,7 +33,7 @@ jobs:
       USE_CCACHE_LAUNCHER: 1
       CACHE_KEY: tvos-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: tvos-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}
+      group: tvos-${{ github.workflow }}-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
