@@ -63,7 +63,7 @@ module.exports = {
 
 Defaults to `false`.
 
-Enables the [Bundle Mode](/docs/bundleMode/).
+Enables the [Bundle Mode](../bundleMode/overview.mdx).
 
 ### disableInlineStylesWarning
 
@@ -112,9 +112,9 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/0.9/worklets-babel-plugin/about#experimental-worklet-classes).
+support](./about.md#experimental-worklet-classes).
 You might need to disable this feature when using [Custom
-Serializables](/docs/memory/registerCustomSerializable).
+Serializables](../memory/registerCustomSerializable.mdx).
 
 ### extraPlugins
 
@@ -213,7 +213,7 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/fundamentals/closures#global-scoping).
+This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](../fundamentals/closures.mdx#global-scoping).
 
 With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
 
@@ -263,16 +263,16 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).
+This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](../bundleMode/overview.mdx).
 
 ### importForwarding
 
-Configures [import forwarding](/docs/bundleMode/importForwarding) for Bundle Mode. See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwarding) for the full reference.
+Configures [import forwarding](../bundleMode/importForwarding.mdx) for Bundle Mode. See the [0.10 docs](../../version-0.10-0.12/worklets-babel-plugin/options.mdx#importforwarding) for the full reference.
 
 #### importForwarding.moduleNames
 
-See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwardingmodulenames).
+See the [0.10 docs](../../version-0.10-0.12/worklets-babel-plugin/options.mdx#importforwardingmodulenames).
 
 #### importForwarding.relativePaths
 
-See the [0.10 docs](/docs/0.10-0.12/worklets-babel-plugin/plugin-options#importforwardingrelativepaths).
+See the [0.10 docs](../../version-0.10-0.12/worklets-babel-plugin/options.mdx#importforwardingrelativepaths).
