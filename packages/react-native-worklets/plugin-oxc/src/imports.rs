@@ -10,13 +10,9 @@ use oxc_span::SPAN;
 pub fn update_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
     filename: &str,
-    forwardable_relative_paths: &[String],
     worklets_package_dir: Option<&str>,
     builder: AstBuilder<'a>,
 ) {
-    if !can_forward_relative_import(filename, forwardable_relative_paths) {
-        return;
-    }
     let mut visitor = RelativeRequireRewriter {
         filename,
         worklets_package_dir,
