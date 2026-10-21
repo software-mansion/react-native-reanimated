@@ -28,6 +28,7 @@ import Phone from './Phone';
 import { badgeName, runtimeClass } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
 import styles from './styles.module.css';
+import TransportIcon from './TransportIcon';
 import { useSimulation } from './useSimulation';
 
 interface ThreadingSimulationProps {
@@ -51,13 +52,28 @@ interface ThreadingSimulationProps {
   codeOpen?: boolean;
   onCodeOpenChange?: (open: boolean) => void;
   tickMs?: number;
+  onTickMsChange?: (tickMs: number) => void;
   fitWidth?: boolean;
   cpuFooter?: React.ReactNode;
   bootTicks?: number;
   ghostSource?: string;
 }
 
-const DEFAULT_TICK_MS = 1800;
+const DEFAULT_TICK_MS = 1000;
+export const TICK_STEP_MS = 50;
+export const TICK_MIN_MS = 16;
+export const TICK_MAX_MS = 1000;
+
+export function snapTick(value: number): number {
+  if (value < TICK_STEP_MS) {
+    return TICK_MIN_MS;
+  }
+  return Math.min(TICK_MAX_MS, Math.round(value / TICK_STEP_MS) * TICK_STEP_MS);
+}
+
+export function formatTick(ms: number): string {
+  return ms >= 1000 ? `${ms / 1000} s` : `${ms} ms`;
+}
 const REVEAL_MS = 480;
 const PAGE_GUTTER = 32;
 
@@ -108,10 +124,12 @@ interface BoxParts {
   stage: HTMLElement;
   scene: HTMLElement | null;
   code: HTMLElement | null;
+  bar: HTMLElement | null;
+  fadeCode?: boolean;
 }
 
 function animateBox(
-  { outer, stage, scene, code }: BoxParts,
+  { outer, stage, scene, code, bar, fadeCode = false }: BoxParts,
   from: BoxSize,
   to: BoxSize,
   onDone: () => void
@@ -127,24 +145,36 @@ function animateBox(
     scene === null ? '' : getComputedStyle(scene).gridTemplateColumns;
   outer.style.width = `${from.width}px`;
   outer.style.overflow = 'clip';
-  outer.style.overflowClipMargin = '8px';
   stage.style.height = `${from.height}px`;
   stage.style.overflow = 'clip';
-  stage.style.overflowClipMargin = '8px';
   if (scene !== null) {
     scene.style.gridTemplateColumns = columns;
     scene.style.overflow = 'clip';
+  }
+  code?.classList.add(styles.codeNoWrap);
+  if (fadeCode) {
+    code?.classList.add(styles.codeFading);
+    scene?.classList.add(styles.sceneClosing);
+  }
+  if (bar !== null) {
+    stage.style.position = 'relative';
+    bar.style.position = 'absolute';
+    bar.style.bottom = '0';
+    bar.style.left = '0';
+    bar.style.right = '0';
   }
   let frame = 0;
   const followEdge = () => {
     if (scene !== null && code !== null) {
       const style = getComputedStyle(scene);
       const inner =
-        scene.clientWidth -
+        scene.getBoundingClientRect().width -
+        parseFloat(style.borderLeftWidth) -
+        parseFloat(style.borderRightWidth) -
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
       code.style.justifySelf = 'start';
-      code.style.width = `${Math.max(inner, 0)}px`;
+      code.style.width = `${Math.max(Math.ceil(inner), 0)}px`;
     }
     frame = requestAnimationFrame(followEdge);
   };
@@ -166,16 +196,25 @@ function animateBox(
       element.style.width = '';
       element.style.height = '';
       element.style.overflow = '';
-      element.style.overflowClipMargin = '';
       element.style.transition = '';
     }
     if (scene !== null) {
       scene.style.gridTemplateColumns = '';
       scene.style.overflow = '';
+      scene.classList.remove(styles.sceneClosing);
     }
     if (code !== null) {
       code.style.justifySelf = '';
       code.style.width = '';
+      code.classList.remove(styles.codeNoWrap);
+      code.classList.remove(styles.codeFading);
+    }
+    stage.style.position = '';
+    if (bar !== null) {
+      bar.style.position = '';
+      bar.style.bottom = '';
+      bar.style.left = '';
+      bar.style.right = '';
     }
   };
   stage.addEventListener(
@@ -224,7 +263,8 @@ export default function ThreadingSimulation({
   boilerplateToggle = true,
   codeOpen: controlledCodeOpen,
   onCodeOpenChange,
-  tickMs = DEFAULT_TICK_MS,
+  tickMs: controlledTickMs,
+  onTickMsChange,
   fitWidth = true,
   cpuFooter,
   bootTicks = 0,
@@ -232,6 +272,56 @@ export default function ThreadingSimulation({
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
   const [phase, setPhase] = useState<Phase>('idle');
+  const [localTickMs, setLocalTickMs] = useState(
+    controlledTickMs ?? DEFAULT_TICK_MS
+  );
+  const tickMs =
+    onTickMsChange === undefined
+      ? localTickMs
+      : (controlledTickMs ?? DEFAULT_TICK_MS);
+  const setTickMs = (next: number) => {
+    setLocalTickMs(next);
+    onTickMsChange?.(next);
+  };
+  const toggleLabel = (showHide: boolean) => (
+    <>
+      <span
+        className={clsx(
+          styles.expandChevron,
+          showHide && styles.collapseChevron
+        )}
+        aria-hidden="true"
+      />
+      <span className={styles.barLabels}>
+        <span
+          className={clsx(styles.barLabel, showHide && styles.barLabelHidden)}
+          aria-hidden={showHide}>
+          See how it works
+        </span>
+        <span
+          className={clsx(styles.barLabel, !showHide && styles.barLabelHidden)}
+          aria-hidden={!showHide}>
+          Hide simulation
+        </span>
+      </span>
+    </>
+  );
+  const tickSlider = (
+    <label className={styles.speed}>
+      <span className={styles.speedLabel}>tick</span>
+      <input
+        type="range"
+        className={styles.speedSlider}
+        min={TICK_MIN_MS}
+        max={TICK_MAX_MS}
+        step={1}
+        value={tickMs}
+        onChange={(event) => setTickMs(snapTick(Number(event.target.value)))}
+        aria-label="Tick length in milliseconds"
+      />
+      <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+    </label>
+  );
   const simulationId = useId();
   const outerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -449,6 +539,7 @@ export default function ThreadingSimulation({
           stage,
           scene: sceneRef.current,
           code: codePanelOf(sceneRef.current),
+          bar: barRef.current,
         },
         collapsedSizeRef.current,
         sizeOf(outer, stage),
@@ -475,13 +566,18 @@ export default function ThreadingSimulation({
           parseFloat(sceneStyle.paddingBottom) +
           (bar === null ? 0 : stageGap + bar.offsetHeight),
       };
-      animateBox({ outer, stage, scene, code }, from, to, () => {
-        setOpen(false);
-        setPhase('idle');
-        window.dispatchEvent(
-          new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
-        );
-      });
+      animateBox(
+        { outer, stage, scene, code, bar, fadeCode: true },
+        from,
+        to,
+        () => {
+          setOpen(false);
+          setPhase('idle');
+          window.dispatchEvent(
+            new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
+          );
+        }
+      );
     }
   }, [phase, simulationId]);
   const logs = collectLogs(simulation.snapshots, simulation.tick - 1);
@@ -565,14 +661,16 @@ export default function ThreadingSimulation({
     : (simulation.snapshots[Math.max(simulation.tick - 1, 0)]?.screen ??
       snapshot.screen);
 
-  if (!open) {
-    return (
-      <div
-        className={clsx(styles.container, !fitWidth && styles.containerFull)}
-        ref={outerRef}>
-        {title !== undefined && <p className={styles.title}>{title}</p>}
-        <div className={styles.stage} ref={stageRef}>
-          <div className={clsx(styles.scene, styles.sceneCollapsed)}>
+  return (
+    <div
+      className={clsx(styles.container, !fitWidth && styles.containerFull)}
+      ref={outerRef}>
+      {title !== undefined && <p className={styles.title}>{title}</p>}
+      <div className={styles.stage} ref={stageRef}>
+        {!open ? (
+          <div
+            key="scene"
+            className={clsx(styles.scene, styles.sceneCollapsed)}>
             <Panel title="Code" className={styles.areaCode}>
               <CodePanel
                 code={simulation.displayText}
@@ -588,227 +686,229 @@ export default function ThreadingSimulation({
               <div className={styles.codeFooter}>{boilerplateButton}</div>
             </Panel>
           </div>
-          <button
-            type="button"
-            className={clsx(styles.toggleBar, styles.toggleBarButton)}
-            onClick={expand}
-            aria-expanded={false}>
-            <span className={styles.expandChevron} aria-hidden="true" />
-            See how it works
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={clsx(styles.container, !fitWidth && styles.containerFull)}
-      ref={outerRef}>
-      {title !== undefined && <p className={styles.title}>{title}</p>}
-      <div className={styles.stage} ref={stageRef}>
-        <div className={styles.body} ref={simulation.containerRef}>
-          <div
-            ref={sceneRef}
-            className={clsx(
-              styles.scene,
-              phone && styles.sceneWithPhone,
-              !showMemory && styles.sceneNoMemory,
-              simulation.playing && styles.sceneRunning,
-              inspecting && styles.sceneInspect
-            )}
-            style={
-              {
-                '--propagation': `${simulation.propagationMs}ms`,
-              } as React.CSSProperties
-            }
-            onMouseMove={onInspectMove}
-            onMouseLeave={() => {
-              markInspectTarget(null);
-              setTip(null);
-            }}>
-            <button
-              type="button"
+        ) : (
+          <div key="body" className={styles.body} ref={simulation.containerRef}>
+            <div
+              ref={sceneRef}
               className={clsx(
-                styles.inspectButton,
-                inspecting && styles.inspectButtonActive
+                styles.scene,
+                phone && styles.sceneWithPhone,
+                !showMemory && styles.sceneNoMemory,
+                inspecting && styles.sceneInspect
               )}
-              onClick={() => {
-                setInspecting((current) => !current);
+              style={
+                {
+                  '--propagation': `${simulation.propagationMs}ms`,
+                } as React.CSSProperties
+              }
+              onMouseMove={onInspectMove}
+              onMouseLeave={() => {
                 markInspectTarget(null);
                 setTip(null);
-              }}
-              aria-pressed={inspecting}
-              aria-label="Explain the simulation elements"
-              title="What is this?">
-              ?
-            </button>
-            {inspecting && tip !== null && (
-              <div
-                className={styles.inspectTip}
-                style={{ left: tip.x, top: tip.y }}
-                role="tooltip">
-                {tip.text}
-              </div>
-            )}
-            <Panel
-              title="Code"
-              className={styles.areaCode}
-              help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
-              <div
+              }}>
+              <button
+                type="button"
                 className={clsx(
-                  styles.codeReveal,
-                  codeOpen && styles.codeRevealOpen
+                  styles.inspectButton,
+                  inspecting && styles.inspectButtonActive
                 )}
-                aria-hidden={!codeOpen}>
-                <div className={styles.codeRevealInner}>
-                  <CodePanel
-                    code={simulation.displayText}
-                    runtimes={runtimes}
-                    cores={snapshot.cores}
-                    rawToDisplayLine={simulation.rawToDisplayLine}
-                    blockEnds={simulation.blockEnds}
-                    history={history}
-                    settled={simulation.settled}
-                    columns={codeColumns}
-                    ghost={ghost}
+                onClick={() => {
+                  setInspecting((current) => !current);
+                  markInspectTarget(null);
+                  setTip(null);
+                }}
+                aria-pressed={inspecting}
+                aria-label="Explain the simulation elements"
+                title="What is this?">
+                ?
+              </button>
+              {inspecting && tip !== null && (
+                <div
+                  className={styles.inspectTip}
+                  style={{ left: tip.x, top: tip.y }}
+                  role="tooltip">
+                  {tip.text}
+                </div>
+              )}
+              <Panel
+                title="Code"
+                className={styles.areaCode}
+                help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
+                <div
+                  className={clsx(
+                    styles.codeReveal,
+                    codeOpen && styles.codeRevealOpen
+                  )}
+                  aria-hidden={!codeOpen}>
+                  <div className={styles.codeRevealInner}>
+                    <CodePanel
+                      code={simulation.displayText}
+                      runtimes={runtimes}
+                      cores={snapshot.cores}
+                      rawToDisplayLine={simulation.rawToDisplayLine}
+                      blockEnds={simulation.blockEnds}
+                      history={history}
+                      settled={simulation.settled}
+                      columns={codeColumns}
+                      ghost={ghost}
+                    />
+                  </div>
+                </div>
+                <div
+                  className={clsx(
+                    styles.codeFooter,
+                    collapsibleCode && styles.codeFooterCollapsible
+                  )}>
+                  {collapsibleCode && (
+                    <button
+                      type="button"
+                      className={clsx(
+                        styles.codeToggle,
+                        codeOpen && styles.codeToggleOpen
+                      )}
+                      onClick={() => setCodeOpen(!codeOpen)}
+                      aria-expanded={codeOpen}>
+                      <span
+                        className={styles.expandChevron}
+                        aria-hidden="true"
+                      />
+                      {codeOpen ? 'Hide code' : 'Show code'}
+                    </button>
+                  )}
+                  {(codeOpen || !collapsibleCode) && boilerplateButton}
+                </div>
+              </Panel>
+              {phone && (
+                <div className={styles.areaPhone}>
+                  <Phone
+                    screen={shownScreen}
+                    redrawn={redrawn}
+                    onPress={
+                      pressHandler === undefined
+                        ? undefined
+                        : () => simulation.press(pressHandler)
+                    }
                   />
                 </div>
-              </div>
-              <div
-                className={clsx(
-                  styles.codeFooter,
-                  collapsibleCode && styles.codeFooterCollapsible
-                )}>
-                {collapsibleCode && (
-                  <button
-                    type="button"
-                    className={clsx(
-                      styles.codeToggle,
-                      codeOpen && styles.codeToggleOpen
-                    )}
-                    onClick={() => setCodeOpen(!codeOpen)}
-                    aria-expanded={codeOpen}>
-                    <span className={styles.expandChevron} aria-hidden="true" />
-                    {codeOpen ? 'Hide code' : 'Show code'}
-                  </button>
-                )}
-                {(codeOpen || !collapsibleCode) && boilerplateButton}
-              </div>
-            </Panel>
-            {phone && (
-              <div className={styles.areaPhone}>
-                <Phone
-                  screen={shownScreen}
-                  redrawn={redrawn}
-                  onPress={
-                    pressHandler === undefined
-                      ? undefined
-                      : () => simulation.press(pressHandler)
-                  }
-                />
-              </div>
-            )}
-            {showConsole && (
-              <div className={styles.sideSizer} aria-hidden="true">
-                <div className={styles.sideSizerPanel}>
-                  <span className={styles.consoleEmpty}>no output yet</span>
-                  {expectedLogs.map((log, index) => (
-                    <div key={index} className={styles.consoleEntry}>
-                      <span className={styles.badge}>
-                        {badgeName(log.runtime.id)}
-                      </span>
-                      <span>{log.text}</span>
-                      <span className={styles.consoleTime}>00:00:00.000</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className={styles.areaSide}>
-              {showConsole && (
-                <Panel
-                  title="Console"
-                  className={styles.consolePanel}
-                  help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
-                  <div className={styles.console}>
-                    {logs.length === 0 ? (
-                      <span className={styles.consoleEmpty}>no output yet</span>
-                    ) : (
-                      logs.map((log, index) => (
-                        <div key={index} className={styles.consoleEntry}>
-                          <span
-                            className={clsx(
-                              styles.badge,
-                              runtimeClass(log.runtime)
-                            )}>
-                            {badgeName(log.runtime.id)}
-                          </span>
-                          <span>{log.text}</span>
-                          <span className={styles.consoleTime}>
-                            {formatTime(shownAtRef.current.get(log.tick + 1))}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </Panel>
               )}
-            </div>
-            <ForkBus
-              slots={slots}
-              showDown={showMemory}
-              pulse={simulation.propagationMs >= MIN_PULSE_MS}
-            />
-            <Panel
-              title="CPU"
-              className={styles.areaCpu}
-              help="The threads. Each thread executes at most one line per tick.">
-              <CpuPanel
-                runtimes={runtimes}
-                cores={snapshot.cores}
-                rawToDisplayLine={simulation.rawToDisplayLine}
+              {showConsole && (
+                <div className={styles.sideSizer} aria-hidden="true">
+                  <div className={styles.sideSizerPanel}>
+                    <span className={styles.consoleEmpty}>no output yet</span>
+                    {expectedLogs.map((log, index) => (
+                      <div key={index} className={styles.consoleEntry}>
+                        <span className={styles.badge}>
+                          {badgeName(log.runtime.id)}
+                        </span>
+                        <span>{log.text}</span>
+                        <span className={styles.consoleTime}>00:00:00.000</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className={styles.areaSide}>
+                {showConsole && (
+                  <Panel
+                    title="Console"
+                    className={styles.consolePanel}
+                    help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
+                    <div className={styles.console}>
+                      {logs.length === 0 ? (
+                        <span className={styles.consoleEmpty}>
+                          no output yet
+                        </span>
+                      ) : (
+                        logs.map((log, index) => (
+                          <div key={index} className={styles.consoleEntry}>
+                            <span
+                              className={clsx(
+                                styles.badge,
+                                runtimeClass(log.runtime)
+                              )}>
+                              {badgeName(log.runtime.id)}
+                            </span>
+                            <span>{log.text}</span>
+                            <span className={styles.consoleTime}>
+                              {formatTime(shownAtRef.current.get(log.tick + 1))}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Panel>
+                )}
+              </div>
+              <ForkBus
+                slots={slots}
+                showDown={showMemory}
+                pulse={simulation.propagationMs >= MIN_PULSE_MS}
               />
-              {(!alwaysOn || cpuFooter !== undefined) && (
+              <Panel
+                title="CPU"
+                className={styles.areaCpu}
+                help="The threads. Each thread executes at most one line per tick.">
+                <CpuPanel
+                  runtimes={runtimes}
+                  cores={snapshot.cores}
+                  rawToDisplayLine={simulation.rawToDisplayLine}
+                />
                 <div className={styles.cpuFooter}>
                   {!alwaysOn && (
                     <div className={styles.transport}>
                       <button
                         type="button"
-                        className={styles.button}
+                        className={clsx(styles.button, styles.buttonIcon)}
                         onClick={simulation.reset}
-                        disabled={simulation.tick === 0}>
-                        Reset
+                        disabled={simulation.tick === 0}
+                        aria-label="Reset"
+                        title="Reset">
+                        <TransportIcon name="reset" />
                       </button>
                       <button
                         type="button"
-                        className={styles.button}
+                        className={clsx(styles.button, styles.buttonIcon)}
                         onClick={simulation.back}
-                        disabled={simulation.tick === 0}>
-                        Back
+                        disabled={simulation.tick === 0}
+                        aria-label="Back one tick"
+                        title="Back one tick">
+                        <TransportIcon name="back" />
                       </button>
                       <button
                         type="button"
-                        className={styles.button}
+                        className={clsx(styles.button, styles.buttonIcon)}
                         onClick={simulation.step}
-                        disabled={simulation.tick >= simulation.lastTick}>
-                        Step
-                      </button>
-                      <button
-                        type="button"
-                        className={clsx(styles.button, styles.buttonPrimary)}
-                        onClick={simulation.togglePlay}>
-                        {simulation.playing ? 'Pause' : 'Play'}
+                        disabled={simulation.tick >= simulation.lastTick}
+                        aria-label="Step one tick"
+                        title="Step one tick">
+                        <TransportIcon name="step" />
                       </button>
                       <button
                         type="button"
                         className={clsx(
                           styles.button,
+                          styles.buttonIcon,
+                          styles.buttonPrimary
+                        )}
+                        onClick={simulation.togglePlay}
+                        aria-label={simulation.playing ? 'Pause' : 'Play'}
+                        title={simulation.playing ? 'Pause' : 'Play'}>
+                        <TransportIcon
+                          name={simulation.playing ? 'pause' : 'play'}
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        className={clsx(
+                          styles.button,
+                          styles.buttonIcon,
                           simulation.loop && styles.buttonActive
                         )}
                         onClick={simulation.toggleLoop}
-                        aria-pressed={simulation.loop}>
-                        Loop
+                        aria-pressed={simulation.loop}
+                        aria-label="Loop"
+                        title="Loop">
+                        <TransportIcon name="loop" />
                       </button>
                       <span className={styles.tickLabel}>
                         tick {simulation.tick}
@@ -817,46 +917,44 @@ export default function ThreadingSimulation({
                       </span>
                     </div>
                   )}
+                  {tickSlider}
                   {cpuFooter}
                 </div>
-              )}
-            </Panel>
-            {showMemory && (
-              <Panel
-                title="Memory"
-                className={styles.areaMemory}
-                help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
-                <MemoryPanel
-                  runtimes={everRuntimes.filter(
-                    (runtime) =>
-                      runtime.hasRuntime &&
-                      (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
-                  )}
-                  present={new Set(runtimes.map((runtime) => runtime.id))}
-                  allRuntimes={runtimes}
-                  cores={snapshot.cores}
-                  memory={snapshot.memory}
-                  settled={simulation.settled}
-                  steady={steady}
-                />
               </Panel>
-            )}
+              {showMemory && (
+                <Panel
+                  title="Memory"
+                  className={styles.areaMemory}
+                  help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
+                  <MemoryPanel
+                    runtimes={everRuntimes.filter(
+                      (runtime) =>
+                        runtime.hasRuntime &&
+                        (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
+                    )}
+                    present={new Set(runtimes.map((runtime) => runtime.id))}
+                    allRuntimes={runtimes}
+                    cores={snapshot.cores}
+                    memory={snapshot.memory}
+                    settled={simulation.settled}
+                    steady={steady}
+                  />
+                </Panel>
+              )}
+            </div>
           </div>
-          {!alwaysOn && (
-            <button
-              type="button"
-              ref={barRef}
-              className={clsx(styles.toggleBar, styles.toggleBarButton)}
-              onClick={hide}
-              aria-expanded>
-              <span
-                className={clsx(styles.expandChevron, styles.collapseChevron)}
-                aria-hidden="true"
-              />
-              Hide simulation
-            </button>
-          )}
-        </div>
+        )}
+        {(!open || !alwaysOn) && (
+          <button
+            key="bar"
+            type="button"
+            ref={barRef}
+            className={clsx(styles.toggleBar, styles.toggleBarButton)}
+            onClick={open ? hide : expand}
+            aria-expanded={open}>
+            {toggleLabel(open && phase !== 'closing')}
+          </button>
+        )}
       </div>
     </div>
   );

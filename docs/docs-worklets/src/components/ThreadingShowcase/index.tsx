@@ -19,21 +19,6 @@ interface ThreadingShowcaseProps {
 }
 
 const BOOT_TICKS = 4;
-const TICK_STEP_MS = 50;
-const TICK_MIN_MS = 16;
-const TICK_MAX_MS = 1000;
-
-function snapTick(value: number): number {
-  if (value < TICK_STEP_MS) {
-    return TICK_MIN_MS;
-  }
-  return Math.min(TICK_MAX_MS, Math.round(value / TICK_STEP_MS) * TICK_STEP_MS);
-}
-
-function formatTick(ms: number): string {
-  return ms >= 1000 ? `${ms / 1000} s` : `${ms} ms`;
-}
-
 const INITIAL_SCREEN = {
   tree: {
     type: 'View',
@@ -94,24 +79,6 @@ export default function ThreadingShowcase({
         </span>
       </div>
       <ThreadingSimulation
-        cpuFooter={
-          <label className={styles.speed}>
-            <span className={styles.speedLabel}>tick</span>
-            <input
-              type="range"
-              className={styles.speedSlider}
-              min={TICK_MIN_MS}
-              max={TICK_MAX_MS}
-              step={1}
-              value={tickMs}
-              onChange={(event) =>
-                setTickMs(snapTick(Number(event.target.value)))
-              }
-              aria-label="Tick length in milliseconds"
-            />
-            <span className={styles.speedValue}>{formatTick(tickMs)}</span>
-          </label>
-        }
         key={enabled ? 'worklets' : 'single'}
         module={variant.module}
         source={variant.source}
@@ -130,6 +97,7 @@ export default function ThreadingShowcase({
         durationTicks={durationTicks}
         fitWidth={false}
         tickMs={tickMs}
+        onTickMsChange={setTickMs}
       />
     </div>
   );

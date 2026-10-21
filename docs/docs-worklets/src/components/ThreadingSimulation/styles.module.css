@@ -111,7 +111,7 @@
 .stage {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .scene.sceneCollapsed {
@@ -127,7 +127,7 @@
   min-height: 46px;
   padding: 6px 12px;
   border: 2px solid var(--sim-border);
-  border-radius: 12px;
+  border-radius: 0;
   background-color: var(--sim-bg);
   color: var(--ifm-color-primary);
   font: inherit;
@@ -173,10 +173,6 @@
 
 .toggleAction:hover {
   background-color: color-mix(in srgb, var(--sim-bg) 70%, var(--sim-border));
-}
-
-.collapseChevron {
-  transform: translateY(2px) rotate(-135deg);
 }
 
 .codeToggle {
@@ -285,6 +281,28 @@
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: translateY(-2px) rotate(45deg);
+  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.collapseChevron {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.barLabels {
+  display: inline-grid;
+}
+
+.barLabel {
+  grid-area: 1 / 1;
+  transition:
+    opacity 240ms cubic-bezier(0.2, 0, 0, 1),
+    transform 240ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.barLabelHidden {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
 }
 
 .body {
@@ -315,6 +333,15 @@
   cursor: default;
 }
 
+.buttonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 30px;
+  padding: 0;
+}
+
 .buttonActive {
   border-color: var(--ifm-color-primary);
   box-shadow: inset 0 0 0 1px var(--ifm-color-primary);
@@ -332,6 +359,46 @@
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
   color: var(--ifm-color-emphasis-700);
+}
+
+.speed {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 3px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.speedLabel {
+  padding: 0 6px 0 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.speedSlider {
+  flex: 1;
+  min-width: 80px;
+  margin: 0;
+  accent-color: var(--ifm-color-primary);
+  cursor: pointer;
+}
+
+.speedValue {
+  flex-shrink: 0;
+  width: 6.5ch;
+  padding-right: 10px;
+  box-sizing: content-box;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ifm-color-emphasis-800);
 }
 
 .scene {
@@ -355,12 +422,6 @@
   padding: 24px;
   border-radius: 0;
   background-color: var(--sim-bg);
-}
-
-.scene {
-  outline: 2px solid transparent;
-  outline-offset: 3px;
-  transition: outline-color 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .scene {
@@ -422,25 +483,6 @@
   pointer-events: none;
 }
 
-.sceneRunning {
-  outline-color: var(--ifm-color-primary);
-  animation: sceneRunning 1.8s ease-in-out infinite;
-}
-
-@keyframes sceneRunning {
-  0%,
-  100% {
-    outline-color: var(--ifm-color-primary);
-  }
-  50% {
-    outline-color: color-mix(
-      in srgb,
-      var(--ifm-color-primary) 55%,
-      transparent
-    );
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .scene {
     position: relative;
@@ -499,10 +541,6 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
     transform: translate(14px, 14px);
     pointer-events: none;
-  }
-
-  .sceneRunning {
-    animation: none;
   }
 }
 
@@ -821,6 +859,11 @@
   position: relative;
   min-height: 0;
   margin-bottom: -28px;
+  transition: opacity 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sceneClosing .forkBus {
+  opacity: 0;
 }
 
 .busField::before {
@@ -1247,6 +1290,18 @@
   min-width: 0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.codeNoWrap .codeText {
+  white-space: pre;
+}
+
+.codeFading .codeLineActive,
+.codeFading .codeLineDone1,
+.codeFading .codeLineDone2,
+.codeFading .codeLineDone3 {
+  border-left-color: transparent;
+  background-color: transparent;
 }
 
 .codeDots {

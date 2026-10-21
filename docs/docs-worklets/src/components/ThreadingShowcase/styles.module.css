@@ -109,46 +109,6 @@
   color: var(--ifm-color-emphasis-700);
 }
 
-.speed {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 4px 3px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 999px;
-  background-color: var(--ifm-background-surface-color);
-}
-
-.speedLabel {
-  padding: 0 6px 0 10px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ifm-color-emphasis-600);
-}
-
-.speedSlider {
-  flex: 1;
-  min-width: 80px;
-  margin: 0;
-  accent-color: var(--ifm-color-primary);
-  cursor: pointer;
-}
-
-.speedValue {
-  flex-shrink: 0;
-  width: 6.5ch;
-  padding-right: 10px;
-  box-sizing: content-box;
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: var(--ifm-color-emphasis-800);
-}
-
 @keyframes shimmer {
   0% {
     background-position: 0% 50%;
