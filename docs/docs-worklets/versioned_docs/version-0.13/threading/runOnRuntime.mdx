@@ -20,7 +20,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 ```javascript
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
-const workletRuntime = createWorkletRuntime('background');
+const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 function App() {
   // E.g. in event handler or in an effect
@@ -53,7 +53,7 @@ A reference to worklet runtime created with [`createWorkletRuntime`](/docs/threa
 
 #### fn
 
-A reference to a function you want to execute on the [UI thread](/docs/fundamentals/glossary#ui-thread) from the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+A reference to a function you want to execute on the worklet runtime passed as `workletRuntime`. Arguments to your function have to be passed to the function returned from `runOnRuntime` i.e. `runOnRuntime(workletRuntime, myWorklet)(10);`.
 
 ### Returns
 
