@@ -35,7 +35,13 @@ void LayoutAnimationsProxyRegistry::surfaceDidMount(const SurfaceId surfaceId) c
     }
     instance = it->second;
   }
-  instance->surfaceDidMount();
+  instance->surfaceDidMount(std::nullopt);
+}
+
+void LayoutAnimationsProxyRegistry::pulledSurfacesDidMount(const std::uint64_t dispatch) const {
+  for (const auto &instance : instances()) {
+    instance->surfaceDidMount(dispatch);
+  }
 }
 
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {

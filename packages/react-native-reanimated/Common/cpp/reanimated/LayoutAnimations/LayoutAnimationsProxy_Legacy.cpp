@@ -140,7 +140,7 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
 // where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || pullsOnMountThread() || !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -425,7 +425,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
-  if (!isMountingCoordinatorPullModelEnabled()) {
+  if (!pullsOnMountThread()) {
     std::vector<int> tagsToUpdate;
     tagsToUpdate.reserve(updateMap_.size());
 

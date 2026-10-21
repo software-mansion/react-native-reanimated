@@ -14,13 +14,26 @@ concept HasMountingCoordinatorPullModelAndroidFlag = requires {
   { TFeatureFlags::enableMountingCoordinatorPullModelAndroid() } -> std::convertible_to<bool>;
 };
 
+template <typename TFeatureFlags>
+concept HasAccumulatedUpdatesInRawPropsAndroidFlag = requires {
+  { TFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid() } -> std::convertible_to<bool>;
+};
+
+/// True when each React commit pulls on the UI thread, in the mount of its transaction.
 template <typename TFeatureFlags = facebook::react::ReactNativeFeatureFlags>
-bool isMountingCoordinatorPullModelEnabled() {
-  if constexpr (HasMountingCoordinatorPullModelAndroidFlag<TFeatureFlags>) {
-    return TFeatureFlags::enableMountingCoordinatorPullModelAndroid();
+bool pullsOnMountThread() {
+#ifdef ANDROID
+  if constexpr (
+      HasMountingCoordinatorPullModelAndroidFlag<TFeatureFlags> &&
+      HasAccumulatedUpdatesInRawPropsAndroidFlag<TFeatureFlags>) {
+    return TFeatureFlags::enableMountingCoordinatorPullModelAndroid() &&
+        TFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid();
   } else {
     return false;
   }
+#else
+  return true;
+#endif
 }
 
 } // namespace reanimated

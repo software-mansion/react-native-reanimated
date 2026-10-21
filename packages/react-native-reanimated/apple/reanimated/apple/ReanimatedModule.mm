@@ -4,6 +4,7 @@
 #import <React/RCTSurfacePresenter.h>
 
 #import <reanimated/Compat/WorkletsApi.h>
+#import <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/SingleInstanceChecker.h>
@@ -187,8 +188,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   _reanimatedModuleProxy->initializeFabric(uiManager);
-  if (_reanimatedModuleProxy->hasSynchronousWritesTracker() ||
-      StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
+  if (_reanimatedModuleProxy->hasSynchronousWritesTracker() || hasNativeLayoutRouteFlag()) {
     _mountObserver = [[REAMountObserver alloc] initWithSurfacePresenter:_surfacePresenter
                                                   reanimatedModuleProxy:_reanimatedModuleProxy];
   }

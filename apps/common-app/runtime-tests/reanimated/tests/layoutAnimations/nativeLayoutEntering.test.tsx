@@ -67,10 +67,12 @@ import {
   hasNativeLayoutRoute,
   isHostEvent,
   middleOf,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
   frameDrivenOf,
   DEFAULT_EASING,
   summarize,
   summarizeEnd,
+  nativeCasesOf,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -402,7 +404,7 @@ describe('native layout entering', () => {
     return;
   }
 
-  for (const [caseName, enteringCase] of Object.entries(TIMELINE_CASES)) {
+  for (const [caseName, enteringCase] of nativeCasesOf(TIMELINE_CASES)) {
     const { pairOf, tracks } = enteringCase;
 
     test(`${caseName} agrees with the frame driver, ends at the model, and gives its callback true one time`, async () => {
@@ -527,6 +529,31 @@ describe('native layout entering and a clip of its view', () => {
   }
 
   /**
+   * Where the platform removes the tracks of a view out of its window, the
+   * hand-over (`expectHandOver`). Elsewhere the native command plays each track
+   * to its end (`expectPlayedToEnd`), and the callbacks of the two boxes come
+   * within 4 display frames.
+   */
+  function expectClipOutcome(
+    caseName: string,
+    played: Played,
+    track: Track,
+    target: ModelTarget,
+    totalMs: number
+  ) {
+    if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+      expectHandOver(caseName, played, track, target, totalMs);
+      return;
+    }
+    expectPlayedToEnd(played, [track], totalMs);
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+        ? ''
+        : `callback gap: the React Native runtime got the callback of the native box at ${callbackTimes.native.toFixed(3)} ms and the callback of the twin at ${callbackTimes.frame.toFixed(3)} ms, ${(callbackTimes.native - callbackTimes.frame).toFixed(3)} ms later, bound ${(4 * FRAME_MS).toFixed(3)} ms`
+    ).toBe('');
+  }
+
+  /**
    * The first sample of a target of the native box at or after a time from the
    * origin of its command, with its own time from that origin.
    */
@@ -588,8 +615,7 @@ describe('native layout entering and a clip of its view', () => {
     }
   }
 
-  const afterDelayName =
-    'a clip of the view after the delay of its native entering group ended: the frame driver continues the animation at the value of its timeline';
+  const afterDelayName = `a clip of the view after the delay of its native entering group ended: ${REMOVES_TRACKS_OUT_OF_WINDOW ? 'the frame driver continues' : 'the native track plays on'} the animation at the value of its timeline`;
   test(afterDelayName, async () => {
     const timing = { durationMs: 1000, delayMs: 500 };
     const played = await playClip(afterDelayName, referenceOf(FADE, timing), {
@@ -597,7 +623,11 @@ describe('native layout entering and a clip of its view', () => {
       hiddenMs: 1000,
       shownMs: 1250,
     });
-    expectHandOver(afterDelayName, played, OPACITY, 'Opacity', 1500);
+    expectClipOutcome(afterDelayName, played, OPACITY, 'Opacity', 1500);
+    if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+      await render(null);
+      return;
+    }
     const hidden = sampleFrom(played, 'Opacity', 1000);
     expectOnlyFrameUpdatesAfter(played, hidden);
     for (const [sample, fromMs] of [

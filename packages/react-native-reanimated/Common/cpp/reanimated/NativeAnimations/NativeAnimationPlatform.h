@@ -4,6 +4,7 @@
 
 #include <react/renderer/mounting/ShadowView.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -73,16 +74,26 @@ class NativeAnimationPlatform {
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
 
-  /// False when the component and the props of `view` show that the platform cannot play the track on the
-  /// host view. Reads no mounted state, so a client can ask before the mount.
+  /// False when the platform cannot play the track (for example its timing kind), or when the component and the
+  /// props of `view` show that it cannot play the track on the host view. Reads no mounted state, so a client
+  /// can ask before the mount.
   virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
   /// True when the mounted view of the tag is in a window.
-  virtual bool isInWindow(Tag tag) = 0;
+  virtual bool isInWindow(SurfaceId surfaceId, Tag tag) = 0;
+  /// The number of the platform mount report that runs the mount operations of the current pull of the
+  /// surface, after the mount of its transaction. None when no report follows that mount at a known point.
+  /// The client calls it one time at the start of each pull.
+  virtual std::optional<std::uint64_t> mountReportOfPull(SurfaceId surfaceId) = 0;
   /// Finds the mounted view, converts the tracks, and checks the model endpoints. Changes no state and reads
   /// no surface state.
+  /// Surface state is the shadow tree, the tree registry, and the mounting coordinator; the mounted view and
+  /// the platform's own records are not.
   virtual MountedAnimationResolution resolve(const AnimationRequest &request) = 0;
+  /// In a mount report: the mount gave the model of the target of the active track `track` the value `value`.
+  /// A platform whose view keeps its model value during a track does nothing.
+  virtual void modelDidChange(const TrackKey &track, double value) = 0;
 
   /// Removes the physical track. The track end listener does not report a stopped track; each report with
   /// `finished == false` is thus a removal that the host did not ask for.

@@ -43,6 +43,12 @@
  * `WRITE-ORDER` row and asserts the statements of that order. It has no load switch, so it does not assert
  * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
  * the interval before the first read.
+ *
+ * The tests of `native layout transform forms against the frame driver` need the view sampler of the
+ * Android test host. At each draw it maps the four corners of each box through the drawn matrix of the
+ * view. Each test compares the native box with its frame-driven twin in the same draw, at each progress
+ * of the iOS pixel table from the origin of the native track. Pixels and the alignment of the two starts
+ * are not tested.
  */
 
 import { View } from 'react-native';
@@ -58,12 +64,13 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { TraceEvent } from './nativeLayoutTestKit';
 import {
+  appleSample,
   Box,
   BOX_REF,
   FRAME_BOX_REF,
+  HAS_EDGE_ANTIALIASING,
   hasNativeLayoutRoute,
   mountScene,
-  sample,
   styles,
   takeTraceOf,
   transformItemOf,
@@ -158,7 +165,7 @@ async function edgeAntialiasingAt(
 ) {
   await wait(Math.max(0, startMs + elapsedMs - performance.now()));
   const samples = await Promise.all(
-    tags.map((tag) => sample(tag, 'Transform'))
+    tags.map((tag) => appleSample(tag, 'Transform'))
   );
   return samples.map(({ edgeAntialiasing }) => edgeAntialiasing).join();
 }
@@ -169,7 +176,7 @@ const hasTransformTrack = (events: TraceEvent[]) =>
   );
 
 describe('native layout transform and the edge antialiasing of the view', () => {
-  if (!hasNativeLayoutRoute) {
+  if (!hasNativeLayoutRoute || !HAS_EDGE_ANTIALIASING) {
     return;
   }
 
