@@ -74,6 +74,25 @@ module.exports = mergeConfig(
 );
 ```
 
+`bundleModeMetroConfig` sets `serializer.polyfillModuleNames`. `mergeConfig` replaces this array, it does not concatenate it. If your Metro config sets `serializer.polyfillModuleNames` too, use `getBundleModeMetroConfig`, which appends to your list:
+
+```javascript
+const {
+  getDefaultConfig,
+  mergeConfig,
+} = require('@react-native/metro-config');
+
+const { getBundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+
+const config = {
+  // Your Metro config
+};
+
+module.exports = getBundleModeMetroConfig(
+  mergeConfig(getDefaultConfig(__dirname), config)
+);
+```
+
 ## Enable seamless Metro bundling
 
 *This step is optional but highly recommended.*
