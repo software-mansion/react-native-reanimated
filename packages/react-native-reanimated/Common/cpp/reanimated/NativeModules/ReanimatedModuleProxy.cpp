@@ -669,7 +669,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -679,9 +679,15 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
+  std::unordered_set<Tag> viewTags;
+  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
+    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
+  }
+
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -1704,13 +1710,17 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSTransition(rt, at<0>(args));
       });
 
-  addMethod<0>(rt, obj, "getSettledUpdates", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return jsi::Value::undefined();
-    }
-    return strongThis->getSettledUpdates(rt);
-  });
+  addMethod<1>(
+      rt,
+      obj,
+      "getSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
 
   addMethod<2>(
       rt,
