@@ -1,6 +1,8 @@
+#import <reanimated/CSS/core/transition/CSSHostTransitionBackend.h>
+#import <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/CSS/REACSSPlatformTransitionBackend.h>
+#import <reanimated/apple/CSS/REACSSPlatformRouteTable.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -278,14 +280,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
-  if constexpr (
-      StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION") ||
-      StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
+  if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION") || hasNativeLayoutRouteFlag()) {
     nativeAnimationHost = native_animation::NativeAnimationHost::create(
         native_animation::makeCoreAnimationPlatform(nodesManager.surfacePresenter));
   }
   if constexpr (StaticFeatureFlags::getFlag("IOS_CSS_CORE_ANIMATION")) {
-    platformTransitionBackend = css::makeCSSPlatformTransitionBackend(nativeAnimationHost);
+    platformTransitionBackend =
+        css::makeCSSHostTransitionBackend(nativeAnimationHost, css::makeCoreAnimationRouteTable());
   }
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {

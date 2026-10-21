@@ -1690,7 +1690,10 @@ async function buildAndroidApp(serial) {
   console.log(
     `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
   );
-  const gradleArgs = [`assemble${CONFIGURATION}`];
+  const gradleArgs = [
+    `assemble${CONFIGURATION}`,
+    '-PreanimatedRuntimeTestHooks=true',
+  ];
   if (!IS_RELEASE) {
     gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
   }

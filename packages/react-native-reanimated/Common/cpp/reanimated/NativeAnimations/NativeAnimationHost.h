@@ -3,10 +3,12 @@
 #include <reanimated/NativeAnimations/NativeAnimationPlatform.h>
 #include <reanimated/NativeAnimations/NativeAnimationTrace.h>
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -25,7 +27,15 @@ struct MountedStop {
   AnimationHandle handle;
 };
 
-using MountedOperation = std::variant<MountedStart, MountedStop>;
+/// The model value that the mount gave a target of a view with an active track on that target.
+struct MountedModel {
+  SurfaceId surfaceId;
+  Tag tag;
+  AnimationTarget target;
+  double value;
+};
+
+using MountedOperation = std::variant<MountedStart, MountedStop, MountedModel>;
 
 /// The shared playback boundary. It owns the records of active commands and tracks, resolves target
 /// conflicts, and reports results. Any thread can call it; each operation but those of `runAfterMount` runs
@@ -43,7 +53,9 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
   /// True when the mounted view of the tag is in a window. UI thread only.
-  bool isMountedInWindow(Tag tag) const;
+  bool isMountedInWindow(SurfaceId surfaceId, Tag tag) const;
+  /// `NativeAnimationPlatform::mountReportOfPull`. UI thread only.
+  std::optional<std::uint64_t> mountReportOfPull(SurfaceId surfaceId) const;
   /// Stops every track that the command still owns, also after its result. Reports Cancelled when the
   /// command had no result.
   void cancel(const AnimationHandle &handle, TrackStopMode mode);
@@ -82,6 +94,9 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void drain();
 
   void runStart(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client);
+  void runMounted(const MountedStart &start, Deliveries &deliveries);
+  void runMounted(const MountedStop &stop, Deliveries &deliveries);
+  void runMounted(const MountedModel &model, Deliveries &deliveries);
   void
   admit(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client, Deliveries &deliveries);
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);

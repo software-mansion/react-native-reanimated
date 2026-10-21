@@ -10,6 +10,7 @@
 #import <React/RCTFabricSurface.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
+#import <react/debug/react_native_assert.h>
 #import <react/renderer/components/view/ViewProps.h>
 #import <react/renderer/components/view/ViewShadowNode.h>
 
@@ -17,6 +18,7 @@
 
 #import <algorithm>
 #import <cmath>
+#import <cstdint>
 #import <cstring>
 #import <iterator>
 #import <ranges>
@@ -288,17 +290,6 @@ bool hasOpacityFilter(REAUIView<RCTComponentViewProtocol> *view)
   return viewProps != nullptr && hasOpacityFilter(*viewProps);
 }
 
-/// React Native makes the matrix of a transform origin and of a percent translation from the size at the
-/// mount.
-bool hasSizeDependentTransform(const facebook::react::ViewProps &viewProps)
-{
-  using namespace facebook::react;
-  return viewProps.transformOrigin.isSet() ||
-      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
-           return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
-         });
-}
-
 /// False when React Native draws a part of the view from the size at the mount: a private layer, a shadow
 /// path, a transform origin, or a percent translation.
 bool pictureFollowsBounds(
@@ -334,6 +325,35 @@ bool pictureFollowsBounds(REAUIView *view)
   return true;
 }
 
+bool playsTiming(const AnimationTiming &timing)
+{
+  return std::ranges::find(kCoreAnimationTimingKinds, kindOf(timing)) != kCoreAnimationTimingKinds.end();
+}
+
+template <typename Value>
+bool playsTimings(const std::vector<TimelineSegment<Value>> &segments)
+{
+  return std::ranges::all_of(
+      segments, [](const TimelineSegment<Value> &segment) { return playsTiming(segment.timingFromPrevious); });
+}
+
+struct PlaysTimingsVisitor {
+  bool operator()(const ValueTimeline &timeline) const
+  {
+    return playsTimings(timeline.segments);
+  }
+  bool operator()(const TransformTimelines &body) const
+  {
+    return std::ranges::all_of(
+        body.operations, [](const OperationTimeline &operation) { return playsTimings(operation.segments); });
+  }
+};
+
+bool playsTimings(const AnimationTrack &track)
+{
+  return std::visit(PlaysTimingsVisitor{}, track.body);
+}
+
 struct TimingFunctionVisitor {
   CAMediaTimingFunction *operator()(const LinearTiming &) const
   {
@@ -343,6 +363,12 @@ struct TimingFunctionVisitor {
   {
     return [CAMediaTimingFunction functionWithControlPoints:(float)bezier.x1:(float)bezier.y1:(float)bezier.x2:(float)
                                                                                                                    bezier.y2];
+  }
+  template <typename UnplayedTiming>
+  CAMediaTimingFunction *operator()(const UnplayedTiming &) const
+  {
+    react_native_assert(false && "resolve refuses a timing that Core Animation does not play");
+    return nil;
   }
 };
 
@@ -707,6 +733,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) override
   {
     using namespace facebook::react;
+    if (!playsTimings(track)) {
+      return false;
+    }
     const bool changesSize = isSizeTarget(track.target) && changesValue(track);
     if (!view.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
       return !changesSize;
@@ -736,10 +765,17 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return surface != nil && RCTSurfaceStageIsRunning(surface.stage);
   }
 
-  bool isInWindow(const Tag tag) override
+  bool isInWindow(const SurfaceId /*surfaceId*/, const Tag tag) override
   {
     RCTAssertMainQueue();
     return mountedView(tag).window != nil;
+  }
+
+  /// The pull, the mount, and the mount report of a transaction are one call of the mounting manager.
+  std::optional<std::uint64_t> mountReportOfPull(const SurfaceId /*surfaceId*/) override
+  {
+    RCTAssertMainQueue();
+    return ++pullCount_;
   }
 
   MountedAnimationResolution resolve(const AnimationRequest &request) override
@@ -752,6 +788,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return AnimationResultReason::TargetUnavailable;
     }
     for (const auto &track : request.tracks) {
+      if (!playsTimings(track)) {
+        return AnimationResultReason::UnsupportedRealization;
+      }
       if (isSizeTarget(track.target) && changesValue(track) && !pictureFollowsBounds(view)) {
         return AnimationResultReason::UnsupportedRealization;
       }
@@ -767,6 +806,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     }
     return std::make_unique<CoreAnimationMountedAnimation>(*this, layer, request);
   }
+
+  /// The layer keeps the model value during a track.
+  void modelDidChange(const TrackKey & /*track*/, const double /*value*/) override {}
 
   void stop(const TrackKey &track, const TrackStopMode mode) override
   {
@@ -910,6 +952,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   __weak RCTSurfacePresenter *surfacePresenter_;
   TrackEndListener trackEndListener_;
   Tracks tracks_;
+  std::uint64_t pullCount_{0};
 };
 
 std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
