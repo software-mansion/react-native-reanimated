@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # createWorkletRuntime
 
-`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/fundamentals/glossary#javascript-thread) or [UI thread](/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](../fundamentals/glossary.mdx#worklet) possibly on different threads than [JS](../fundamentals/glossary.mdx#javascript-thread) or [UI thread](../fundamentals/glossary.mdx#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
 
 The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
 
@@ -52,6 +52,7 @@ runtime->runGuarded(worklet, ...args);
     name?: string;
     initializer?: () => void;
     animationQueuePollingRate?: number;
+    enableNetworking?: boolean;
     queue?: 'default' | object | null;
   } & (
     | { enableEventLoop?: boolean; enableLocking?: true }
@@ -86,6 +87,12 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
+
+<Badges version="0.13.0">
+  ##### `enableNetworking`
+</Badges>
+
+Determines whether the [networking API](../bundleMode/usage.mdx#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 <Badges version="0.12.0">
   ##### `enableLocking`

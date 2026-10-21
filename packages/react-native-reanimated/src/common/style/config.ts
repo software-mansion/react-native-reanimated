@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import {
@@ -194,7 +194,7 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
 
   // @ts-ignore Available since RN 0.87
   backgroundImage: { process: processBackgroundImage },
-  experimental_backgroundImage: false, // TODO
+  experimental_backgroundImage: { process: processBackgroundImage },
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundPosition: false, // TODO
   // @ts-ignore Available since RN 0.88

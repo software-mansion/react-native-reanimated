@@ -4,6 +4,8 @@ title: Feature flags
 sidebar_label: Feature flags
 ---
 
+# Feature flags
+
 Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
 
 :::info

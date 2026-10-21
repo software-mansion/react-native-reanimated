@@ -42,7 +42,9 @@ export const PropsRegistryGarbageCollector = {
   },
 
   syncPropsBackToReact() {
-    const settledUpdates = ReanimatedModule.getSettledUpdates();
+    const settledUpdates = ReanimatedModule.getSettledUpdates([
+      ...this.viewsMap.keys(),
+    ]);
     for (const { viewTag, styleProps } of settledUpdates) {
       if (styleProps === null) {
         continue;
@@ -85,23 +87,29 @@ function unprocessBoxShadow(props: StyleProps) {
 }
 
 function unprocessBackgroundImage(props: StyleProps) {
-  if (!Array.isArray(props.backgroundImage)) {
-    return;
-  }
-  // @ts-ignore props is readonly
-  props.backgroundImage = (
-    props.backgroundImage as ProcessedBackgroundImageValue[]
-  ).map((backgroundImage) => {
-    const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
-    if (backgroundImage.type === 'linear-gradient') {
-      return {
-        ...backgroundImage,
-        direction: unprocessDirection(backgroundImage.direction),
-        colorStops,
-      };
+  for (const key of [
+    'backgroundImage',
+    'experimental_backgroundImage',
+  ] as const) {
+    const value = props[key];
+    if (!Array.isArray(value)) {
+      continue;
     }
-    return { ...backgroundImage, colorStops };
-  });
+    // @ts-ignore props is readonly
+    props[key] = (value as ProcessedBackgroundImageValue[]).map(
+      (backgroundImage) => {
+        const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
+        if (backgroundImage.type === 'linear-gradient') {
+          return {
+            ...backgroundImage,
+            direction: unprocessDirection(backgroundImage.direction),
+            colorStops,
+          };
+        }
+        return { ...backgroundImage, colorStops };
+      }
+    );
+  }
 }
 
 function unprocessDirection({ type, value }: ProcessedDirection) {

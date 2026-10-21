@@ -1,5 +1,5 @@
-import { AppRegistry } from 'react-native';
 import WorkletsAutoRunApp from 'common-app/runtime-tests/worklets/AutoRunApp';
+import { AppRegistry } from 'react-native';
 
 const RUNTIME_TESTS_APP_NAME = 'FabricExampleRuntimeTests';
 

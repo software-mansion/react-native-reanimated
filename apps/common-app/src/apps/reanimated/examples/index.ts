@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
+
 import React from 'react';
+
 import type { Example, ExampleEntry } from '@/components';
 import { REAPlatform } from '@/components';
 
@@ -61,8 +63,6 @@ const ColorInterpolationExample: React.FC = () =>
   React.createElement(
     require('./ColorInterpolationExample').default as React.FC
   );
-const ContrastColorExample: React.FC = () =>
-  React.createElement(require('./ContrastColorExample').default as React.FC);
 const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
@@ -100,6 +100,11 @@ const DispatchCommandExample: React.FC = () =>
 const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
+  );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
   );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
@@ -148,8 +153,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -218,10 +221,6 @@ const SynchronousPropsSETExample: React.FC = () =>
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
-  );
-const NonLayoutPropAndRenderExample: React.FC = () =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default as React.FC
   );
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
@@ -329,13 +328,6 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
@@ -349,12 +341,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -380,11 +366,13 @@ const ALL_EXAMPLES: Record<string, Example> = {
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
     title: 'Detach animated styles',
+    section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
     title: 'Scroll performance',
+    section: REGRESSIONS,
     screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
@@ -392,11 +380,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Third party components',
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
-  },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    screen: FreezeExample,
   },
   CircularSliderExample: {
     icon: '🔘',
@@ -559,11 +542,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: REGRESSIONS,
     screen: WidthExample,
   },
-  NonLayoutPropAndRenderExample: {
-    icon: '🎭',
-    title: 'Non-layout prop and render example',
-    screen: NonLayoutPropAndRenderExample,
-  },
   RefExample: {
     icon: '🦑',
     title: 'Ref & useImperativeHandle',
@@ -718,11 +696,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: ColorInterpolationExample,
   },
-  ContrastColorExample: {
-    icon: '🔲',
-    title: 'Contrast color',
-    screen: ContrastColorExample,
-  },
   ExtrapolationExample: {
     title: 'Extrapolation example',
     screen: ExtrapolationExample,
@@ -836,6 +809,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FinalFrameAccuracyExample: {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
+  },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Shared Element Transitions
@@ -976,6 +954,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',

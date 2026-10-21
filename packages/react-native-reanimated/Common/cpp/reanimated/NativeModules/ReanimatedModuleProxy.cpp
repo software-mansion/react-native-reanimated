@@ -78,6 +78,14 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
+std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
+  if constexpr (
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return std::make_shared<SynchronousWritesTracker>();
+  }
+  return nullptr;
+}
+
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!isSynchronousPropName(keyStr)) {
@@ -162,6 +170,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+      readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -193,6 +202,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+      synchronousWritesTracker_(makeSynchronousWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the
@@ -347,6 +357,30 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
       requestAnimationFrame);
+
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    jsi_utils::installJsiFunction(
+        uiRuntime,
+        "_obtainMountedViewProps",
+        [obtainMountedViewProps = platformDepMethodsHolder.obtainMountedViewProps](
+            jsi::Runtime &rt, const jsi::Value &tag, const jsi::Value &presented) -> jsi::Value {
+          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()), presented.asBool());
+          if (!props) {
+            return jsi::Value::null();
+          }
+          jsi::Object result(rt);
+          result.setProperty(rt, "x", props->x);
+          result.setProperty(rt, "y", props->y);
+          result.setProperty(rt, "width", props->width);
+          result.setProperty(rt, "height", props->height);
+          result.setProperty(rt, "opacity", props->opacity);
+          result.setProperty(
+              rt,
+              "backgroundColor",
+              jsi::String::createFromUtf8(rt, PropValueProcessor::intColorToHex(props->backgroundColor)));
+          return result;
+        });
+  }
 }
 
 ReanimatedModuleProxy::~ReanimatedModuleProxy() {
@@ -467,6 +501,17 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    std::vector<Tag> sharedTransitionViewTags;
+    for (const auto &item : batch) {
+      if (item.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+        sharedTransitionViewTags.push_back(item.tag);
+      }
+    }
+    if (layoutAnimationsProxyRegistry_ && !sharedTransitionViewTags.empty()) {
+      layoutAnimationsProxyRegistry_->onSharedTransitionConfigured(sharedTransitionViewTags);
+    }
+  }
   return jsi::Value::undefined();
 }
 
@@ -479,6 +524,10 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
+}
+
+jsi::Value ReanimatedModuleProxy::isSensorAvailable(jsi::Runtime &, const jsi::Value &sensorType) const {
+  return animatedSensorModule_.isSensorAvailable(sensorType);
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -620,7 +669,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -630,9 +679,15 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
+  std::unordered_set<Tag> viewTags;
+  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
+    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
+  }
+
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -868,6 +923,30 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
 }
 
+bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
+  return synchronousWritesTracker_ != nullptr;
+}
+
+void ReanimatedModuleProxy::rewriteSynchronousProps() {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
+  const auto families = synchronousWritesTracker_->getFamiliesToRewrite();
+  if (!families.empty()) {
+    UpdatesBatch registryValues;
+    {
+      auto lock = updatesRegistryManager_->lock();
+      for (const auto &family : families) {
+        folly::dynamic props = folly::dynamic::object;
+        updatesRegistryManager_->mergeRegistryProps(family->getTag(), props);
+        registryValues.emplace_back(family, std::move(props));
+      }
+    }
+    writeSynchronousPropsToViews(partitionUpdates(std::move(registryValues), true).first);
+  }
+  synchronousWritesTracker_->onRewrite();
+}
+
 AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
 
@@ -1040,7 +1119,13 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
   }
+  if (synchronousWritesTracker_) {
+    synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
+  }
+  writeSynchronousPropsToViews(synchronousUpdatesBatch);
+}
 
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1201,10 +1286,19 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   // TODO: with the animation backend we still need a way to handleNodeRemovals,
   // for now we leave this to leak the memory, a fix will come in a follow-up
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_, request);
+      uiManager_,
+      updatesRegistryManager_,
+      viewStylesRepository_,
+      layoutAnimationsProxyRegistry_,
+      synchronousWritesTracker_,
+      request);
 
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, viewStylesRepository_, layoutAnimationsProxyRegistry_);
+      uiManager_,
+      updatesRegistryManager_,
+      viewStylesRepository_,
+      layoutAnimationsProxyRegistry_,
+      synchronousWritesTracker_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
@@ -1234,6 +1328,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     });
   };
 
+  constexpr bool keepsSynchronousPropsInReinserts =
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND");
+
   const LayoutAnimationsProxyDependencies dependencies{
       layoutAnimationsManager_,
       componentDescriptorRegistry,
@@ -1245,9 +1342,11 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,
+      keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
 #endif
 #ifdef __APPLE__
       forceScreenSnapshot_,
+      keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
 #endif
   };
 
@@ -1257,6 +1356,25 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     layoutAnimationsProxyRegistry_ = createLayoutAnimationsProxyLegacyRegistry(dependencies);
   }
 }
+
+#ifdef ANDROID
+SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
+  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    return nullptr;
+  }
+  return [weakThis = weak_from_this()](const Tag tag) {
+    const auto strongThis = weakThis.lock();
+    return strongThis ? strongThis->readSynchronousProps(tag) : folly::dynamic::object();
+  };
+}
+
+folly::dynamic ReanimatedModuleProxy::readSynchronousProps(const Tag tag) {
+  folly::dynamic synchronousProps = folly::dynamic::object;
+  auto lock = updatesRegistryManager_->lock();
+  updatesRegistryManager_->mergeRegistryProps(tag, synchronousProps, isSynchronousPropName);
+  return synchronousProps;
+}
+#endif // ANDROID
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
 
@@ -1362,6 +1480,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "isSensorAvailable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return strongThis->isSensorAvailable(rt, at<0>(args));
       });
 
   addMethod<4>(
@@ -1580,13 +1710,17 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSTransition(rt, at<0>(args));
       });
 
-  addMethod<0>(rt, obj, "getSettledUpdates", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return jsi::Value::undefined();
-    }
-    return strongThis->getSettledUpdates(rt);
-  });
+  addMethod<1>(
+      rt,
+      obj,
+      "getSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
 
   addMethod<2>(
       rt,

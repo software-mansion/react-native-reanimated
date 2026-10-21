@@ -16,6 +16,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedRef,
@@ -23,7 +24,6 @@ import Animated, {
   useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
-import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 
 const DATA = [...Array(100).keys()];
 

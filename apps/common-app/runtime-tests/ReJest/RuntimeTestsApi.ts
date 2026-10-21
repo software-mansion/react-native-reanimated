@@ -4,10 +4,6 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { ValueGetter } from './matchers/EventualMatchers';
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import {
-  waitForFrames as waitForFramesImpl,
-  waitUntilSettled as waitUntilSettledImpl,
-} from './utils/waitForFrames';
 import type {
   DefaultValue,
   MaybeAsync,
@@ -15,8 +11,13 @@ import type {
   TestValue,
 } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
+import {
+  waitForFrames as waitForFramesImpl,
+  waitUntilSettled as waitUntilSettledImpl,
+} from './utils/waitForFrames';
 
 export { Presets } from './Presets';
+export { isViewMountedNatively } from './utils/nativeViewHierarchy';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();

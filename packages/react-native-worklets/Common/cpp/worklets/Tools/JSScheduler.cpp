@@ -18,4 +18,12 @@ void JSScheduler::invokeSyncOnJS(const Job &job) {
   job(rnRuntime_);
 }
 
+void JSScheduler::runSyncOnJS(const Job &job) {
+  if (canInvokeSyncOnJS()) {
+    job(rnRuntime_);
+    return;
+  }
+  jsCallInvoker_->invokeSync([&job](jsi::Runtime &rt) { job(rt); });
+}
+
 } // namespace worklets

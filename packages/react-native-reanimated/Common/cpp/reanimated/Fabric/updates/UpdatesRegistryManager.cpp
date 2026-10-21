@@ -115,6 +115,16 @@ void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynami
 
 #ifdef ANDROID
 
+void UpdatesRegistryManager::mergeRegistryProps(
+    const Tag viewTag,
+    folly::dynamic &target,
+    const PropNamePredicate isIncluded) {
+  react_native_assert(isLockedByCurrentThread());
+  for (const auto &registry : registries_) {
+    registry->mergeInto(viewTag, target, isIncluded);
+  }
+}
+
 bool UpdatesRegistryManager::hasPropsToRevert() {
   react_native_assert(isLockedByCurrentThread());
   for (auto &registry : registries_) {
@@ -132,7 +142,7 @@ void UpdatesRegistryManager::addToPropsMap(
   auto it = propsMap.find(shadowNodeFamily);
 
   if (it == propsMap.cend()) {
-    auto propsVector = std::vector<RawProps>{};
+    auto propsVector = std::vector<folly::dynamic>{};
     propsVector.emplace_back(props);
     propsMap.emplace(shadowNodeFamily, propsVector);
   } else {

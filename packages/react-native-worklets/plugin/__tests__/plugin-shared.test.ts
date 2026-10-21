@@ -12,7 +12,7 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
-// The OXC transform writes its files from Rust, so they never reach the `fs`
+// The Oxc transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
   return ((
@@ -207,6 +207,21 @@ describe.each([
         function foo() {
           'worklet';
           return a + b;
+        }
+      </script>`;
+
+      const result = runPlugin(input, { bundleMode });
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
+    });
+
+    test('allows assigning to a captured variable', () => {
+      const input = html`<script>
+        let x = 0;
+        function foo() {
+          'worklet';
+          if (x > 1) {
+            x = 0;
+          }
         }
       </script>`;
 

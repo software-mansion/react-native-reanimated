@@ -15,11 +15,6 @@ using namespace facebook;
 
 namespace worklets {
 
-bool isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) {
-  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
-  return rtDev.isBool() && rtDev.asBool();
-}
-
 void WorkletsModuleProxy::start() {
   react_native_assert(jsScheduler_->canInvokeSyncOnJS() && "start must be called on the JS thread");
   if (!rnRuntimeProxy_) [[unlikely]] {
@@ -37,8 +32,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
     const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus)
-    : isDevBundle_(false),
-      jsScheduler_(jsScheduler),
+    : jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       runtimeBindings_(runtimeBindings),
@@ -66,7 +60,6 @@ void WorkletsModuleProxy::startUIRuntimeInBundleModeAOT(const BundleModeConfig &
 
   bundleModeConfig_ = bundleModeConfig;
   startUIRuntime(std::make_shared<JSIWorkletsModuleProxy>(
-      false, /* isDevBundle_ */
       jsScheduler_,
       uiScheduler_,
       memoryManager_,
@@ -95,12 +88,10 @@ void WorkletsModuleProxy::attachToRNRuntime(
         "[Worklets] attachToRNRuntime requires a Bundle Mode config unless startUIRuntimeInBundleModeAOT was called.");
   }
 
-  isDevBundle_ = isDevBundleFromRNRuntime(rnRuntime);
   if (bundleModeConfig.has_value()) {
     bundleModeConfig_ = *bundleModeConfig;
   }
   rnRuntimeProxy_ = std::make_shared<JSIWorkletsModuleProxy>(
-      isDevBundle_,
       jsScheduler_,
       uiScheduler_,
       memoryManager_,
