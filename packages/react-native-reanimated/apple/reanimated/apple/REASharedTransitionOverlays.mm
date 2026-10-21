@@ -7,19 +7,6 @@
 #import <React/RCTMountingManager.h>
 #import <React/UIView+React.h>
 
-// Touches pass through to the windows below.
-@interface REASharedTransitionWindow : UIWindow
-@end
-
-@implementation REASharedTransitionWindow
-
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
-{
-  return nil;
-}
-
-@end
-
 // The frame of the view in the coordinates of its window, without the transforms of the view and its ancestors. A
 // sheet scales the view that presents it, which must not move the overlay or the measured screens.
 static CGRect untransformedFrameInWindow(UIView *view)
@@ -53,7 +40,6 @@ static UIWindow *surfaceWindow(UIView *rootView)
 @implementation REASharedTransitionOverlays {
   __weak RCTSurfacePresenter *_surfacePresenter;
   NSMutableDictionary<NSNumber *, NSNumber *> *_overlayTags;
-  NSMapTable<UIWindowScene *, REASharedTransitionWindow *> *_windows;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -61,7 +47,6 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
-    _windows = [NSMapTable weakToStrongObjectsMapTable];
     // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
     // See `REAPseudoSelectorAttachQueue`.
     [surfacePresenter addObserver:self];
@@ -94,36 +79,25 @@ static UIWindow *surfaceWindow(UIView *rootView)
     return;
   }
   [_overlayTags removeObjectForKey:@(surfaceId)];
-  // Showing or hiding a window is not part of the Core Animation transaction that mounts the views, so the window
-  // stays visible and only the overlay leaves it.
   [[self viewWithTag:tag.integerValue] removeFromSuperview];
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
-  UIView *rootView = [self viewWithTag:rootTag];
-  UIWindow *rootWindow = surfaceWindow(rootView);
-  if (!rootWindow.windowScene) {
-    return;
-  }
-  // A window shows up a frame after it is created, so it is created with the surface rather than with the first
-  // transition.
-  REASharedTransitionWindow *window = [_windows objectForKey:rootWindow.windowScene];
-  if (!window) {
-    window = [[REASharedTransitionWindow alloc] initWithWindowScene:rootWindow.windowScene];
-    window.accessibilityElementsHidden = YES;
-    window.backgroundColor = UIColor.clearColor;
-    [_windows setObject:window forKey:rootWindow.windowScene];
-  }
-  window.windowLevel = rootWindow.windowLevel + 1;
-  window.frame = rootWindow.frame;
-  window.hidden = NO;
   NSNumber *tag = _overlayTags[@(rootTag)];
   UIView *overlay = tag ? [self viewWithTag:tag.integerValue] : nil;
   if (!overlay) {
     return;
   }
+  UIView *rootView = [self viewWithTag:rootTag];
+  UIWindow *window = surfaceWindow(rootView);
+  if (!window) {
+    return;
+  }
+  overlay.accessibilityElementsHidden = YES;
+  // UIKit can insert a modal's presentation container after the overlay.
+  overlay.layer.zPosition = 1;
   if (overlay.superview != window) {
     [window addSubview:overlay];
   }
