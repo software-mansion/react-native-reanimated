@@ -277,14 +277,14 @@ export function useSimulation(
       if (advance() === 'end') {
         if (loopRef.current) {
           restart();
-        } else if (!alwaysOn) {
+        } else {
           setPlaying(false);
         }
       }
     };
     const id = setInterval(run, Math.max(tickMs, MIN_TICK_MS));
     return () => clearInterval(id);
-  }, [playing, tickMs, advance, restart, alwaysOn]);
+  }, [playing, tickMs, advance, restart]);
 
   const lastTick = session.atEnd
     ? Math.max(session.snapshots.length - 1, 0)

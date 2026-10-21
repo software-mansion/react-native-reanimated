@@ -20,6 +20,7 @@ interface QueueListProps {
 }
 
 export default function QueueList({ pending, paused = false }: QueueListProps) {
+  const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<Entry[]>(() =>
     pending.map((job) => ({ job, exitAt: null }))
   );
@@ -77,7 +78,7 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
   for (const entry of entries) {
     if (entry.exitAt !== null) {
       visible.push(entry);
-    } else if (liveShown < MAX_CHIPS) {
+    } else if (expanded || liveShown < MAX_CHIPS) {
       visible.push(entry);
       liveShown += 1;
     }
@@ -93,7 +94,7 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
   return (
     <div className={clsx(styles.queue, paused && styles.queuePaused)}>
       <span className={styles.queueLabel}>
-        queue
+        {pending.length === 0 ? 'Queue empty' : `Queue · ${pending.length}`}
         {paused && <span className={styles.queuePausedTag}>paused</span>}
       </span>
       <span className={styles.queueChips}>
@@ -123,7 +124,15 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
             )}
           </span>
         ))}
-        {hidden > 0 && <span className={styles.queueMore}>+{hidden}</span>}
+        {(hidden > 0 || (expanded && live > MAX_CHIPS)) && (
+          <button
+            type="button"
+            className={styles.queueMore}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}>
+            {expanded ? 'Show fewer jobs' : `Show ${hidden} more jobs`}
+          </button>
+        )}
       </span>
     </div>
   );

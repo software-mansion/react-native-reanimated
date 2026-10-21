@@ -11,12 +11,6 @@ import type { RuntimeDescriptor } from './runtimeColors';
 
 export type LineHistory = Map<number, Map<string, number>>;
 
-export interface GhostCode {
-  code: string;
-  rawToDisplayLine: number[];
-  blockEnds: Map<number, number>;
-}
-
 interface CodePanelProps {
   code: string;
   runtimes: RuntimeDescriptor[];
@@ -26,7 +20,6 @@ interface CodePanelProps {
   history: LineHistory;
   settled: boolean;
   columns?: number;
-  ghost?: GhostCode;
 }
 
 interface CodeListProps {
@@ -41,30 +34,8 @@ interface CodeListProps {
   className?: string;
 }
 
-export default function CodePanel({
-  ghost,
-  columns = 1,
-  ...list
-}: CodePanelProps) {
-  if (ghost === undefined) {
-    return <CodeList {...list} columns={columns} />;
-  }
-  return (
-    <div className={styles.codeStack}>
-      <CodeList {...list} columns={columns} />
-      <CodeList
-        code={ghost.code}
-        runtimes={[]}
-        cores={[]}
-        rawToDisplayLine={ghost.rawToDisplayLine}
-        blockEnds={ghost.blockEnds}
-        history={new Map()}
-        settled
-        columns={columns}
-        className={styles.codeGhost}
-      />
-    </div>
-  );
+export default function CodePanel({ columns = 1, ...list }: CodePanelProps) {
+  return <CodeList {...list} columns={columns} />;
 }
 
 function CodeList({
@@ -116,6 +87,9 @@ function CodeList({
             columns > 1 && styles.codeListColumns,
             className
           )}
+          tabIndex={0}
+          role="region"
+          aria-label="Example source code"
           style={columns > 1 ? { columnCount: columns } : undefined}>
           {chunkLines(tokens, blockStartOf).map((chunk, chunkIndex) => (
             <div key={chunkIndex} className={styles.codeChunk}>
@@ -135,6 +109,11 @@ function CodeList({
                   <div
                     key={lineNumber}
                     {...getLineProps({ line })}
+                    data-sim-code={
+                      active.length > 0 && !inBlock
+                        ? active.join(' ')
+                        : undefined
+                    }
                     className={clsx(
                       styles.codeLine,
                       blockEnd !== undefined && styles.codeBlockStart,
@@ -146,6 +125,9 @@ function CodeList({
                       active.length === 0 && age === 2 && styles.codeLineDone2,
                       active.length === 0 && age === 3 && styles.codeLineDone3
                     )}>
+                    <span className={styles.lineNumber} aria-hidden="true">
+                      {lineNumber}
+                    </span>
                     <span className={styles.codeText}>
                       {line.map((token, tokenIndex) => (
                         <span key={tokenIndex} {...getTokenProps({ token })} />

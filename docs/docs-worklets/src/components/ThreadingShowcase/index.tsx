@@ -70,7 +70,6 @@ export default function ThreadingShowcase({
               Enable Worklets
             </span>
           </span>
-          {!enabled && <span className={styles.spark} aria-hidden="true" />}
         </button>
         <span className={styles.hint}>
           {enabled
@@ -84,7 +83,6 @@ export default function ThreadingShowcase({
         source={variant.source}
         uiRuntime={enabled}
         bootTicks={BOOT_TICKS}
-        ghostSource={enabled ? single.source : worklets.source}
         phone
         pressHandler={enabled ? 'onPress' : 'handlePress'}
         screen={INITIAL_SCREEN}
@@ -95,7 +93,6 @@ export default function ThreadingShowcase({
         codeOpen={codeOpen}
         onCodeOpenChange={setCodeOpen}
         durationTicks={durationTicks}
-        fitWidth={false}
         tickMs={tickMs}
         onTickMsChange={setTickMs}
       />
