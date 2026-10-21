@@ -1,7 +1,12 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import { processColorNumber, type ValueProcessor } from '../../../../common';
+import {
+  processColor,
+  processColorNumber,
+  type ProcessedColor,
+  type ValueProcessor,
+} from '../../../../common';
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: unknown) =>
@@ -32,4 +37,14 @@ export const processColorSVG: ValueProcessor<
   }
 
   throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidColor(value)}`);
+};
+
+export const processColorOrPlatformColorSVG: ValueProcessor<
+  ColorValue | number,
+  number | false | string | ProcessedColor
+> = (value, context) => {
+  if (typeof value === 'object' && value !== null) {
+    return processColor(value);
+  }
+  return processColorSVG(value, context);
 };

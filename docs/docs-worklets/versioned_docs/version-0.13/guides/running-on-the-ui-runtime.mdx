@@ -1,0 +1,24 @@
+---
+id: running-on-the-ui-runtime
+sidebar_label: Running worklets on the UI runtime
+---
+
+# Running worklets on the UI runtime
+
+Worklets provides three functions for running a [worklet](../fundamentals/glossary.mdx#worklet) on the [UI Runtime](../fundamentals/runtimeKinds.mdx#ui-runtime) from the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime): [`scheduleOnUI`](../threading/scheduleOnUI.mdx), [`runOnUIAsync`](../threading/runOnUIAsync.mdx) and [`runOnUISync`](../threading/runOnUISync.mdx).
+They differ in whether the worklet runs asynchronously or synchronously, and in what they return to the caller.
+Use the table below to pick the one that fits your case.
+
+## Comparison
+
+|  | [`scheduleOnUI`](../threading/scheduleOnUI.mdx) | [`runOnUIAsync`](../threading/runOnUIAsync.mdx) | [`runOnUISync`](../threading/runOnUISync.mdx) |
+| --- | --- | --- | --- |
+| **Execution** | Asynchronous | Asynchronous | Synchronous, blocks the caller until the worklet returns |
+| **Returns** | Nothing | A `Promise` that resolves with the worklet's return value | The worklet's return value directly |
+| **Web support** | ✅ | ✅ | ❌ |
+| **Use when** | You want to run a worklet on the UI Runtime and don't need its result back | You need the worklet's result back, but don't want to block the calling thread | You need the worklet's result immediately, within the same synchronous flow |
+
+The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](../memory/serializable.mdx).
+
+All three functions can be called from the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime), and additionally from the [UI](../fundamentals/runtimeKinds.mdx#ui-runtime) and [Worker](../fundamentals/runtimeKinds.mdx#worker-runtime) Runtimes when [Bundle Mode](../bundleMode/overview.mdx) is enabled.
+See [Call tables](./call-tables.mdx) for the full matrix.
