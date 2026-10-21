@@ -97,7 +97,7 @@ obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been
 scheduleOnUI(worklet);
 ```
 
-and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Worklets. To fix this, you should use a [Synchronizable](../memory/synchronizable.mdx) instead:
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Worklets. To fix this, you should use a [Synchronizable](../memory/synchronizable.mdx) or a [Shareable](../memory/shareable.mdx) instead. For example, with a Synchronizable:
 
 **Solution:**
 
