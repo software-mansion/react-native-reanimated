@@ -111,7 +111,8 @@ and expect the results to be `1` and `2`. However, the results will be `1` and `
 +  console.log(synchronizable.getBlocking().prop);
  }
 
- scheduleOnUI(worklet);
+-scheduleOnUI(worklet);
++runOnUISync(worklet);
 -obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
 +synchronizable.setBlocking({ prop: 2 }); // Everything is fine here.
  scheduleOnUI(worklet);
