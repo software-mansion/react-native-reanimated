@@ -286,6 +286,9 @@ if (project != rootProject) {
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
+            if (IS_REANIMATED_EXAMPLE_APP) {
+                freeCompilerArgs.add("-Xwarning-level=DEPRECATION:error")
+            }
         }
     }
 }
