@@ -21,16 +21,15 @@ import {
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
-// Covers InvalidValueAccessExample.tsx ("Invalid read/write during render"):
-// reading or writing `sv.value` (or calling `sv.get()` / `sv.set()`) while
+// Reading or writing `sv.value` (or calling `sv.get()` / `sv.set()`) while
 // React re-renders a component logs a strict-mode warning, the first render
-// and useEffect do not, and `strict: false` silences it. The warnings are captured with the public
-// `onLog` callback of configureReanimatedLogger, not by patching console.
+// and useEffect do not, and `strict: false` silences it. The warnings are
+// captured with the public `onLog` callback of configureReanimatedLogger, not
+// by patching console.
 //
-// The example's bar animates `transform: scaleX` with withTiming, which the
-// harness cannot read back. BOX_REF animates `opacity` instead (also a
-// non-layout prop, useAnimatedStyle -> ShadowTree commit, read with
-// getAnimatedStyle) to check that a write during render still reaches the UI.
+// BOX_REF animates `opacity` (a non-layout prop, useAnimatedStyle -> ShadowTree
+// commit, read with getAnimatedStyle) to check that a write during render
+// still reaches the UI.
 
 const BOX_REF = 'ACCESS_DURING_RENDER_BOX';
 // Notifications stay set for the whole test, so each render gets its own.
