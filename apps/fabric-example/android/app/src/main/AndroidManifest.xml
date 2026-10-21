@@ -34,5 +34,9 @@
         android:name=".RuntimeTestsHeadlessTaskService"
         android:permission="android.permission.DUMP"
         android:exported="true" />
+      <activity
+        android:name=".RuntimeTestsCoverActivity"
+        android:screenOrientation="portrait"
+        android:exported="false" />
     </application>
 </manifest>

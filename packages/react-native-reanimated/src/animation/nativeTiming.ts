@@ -1,5 +1,5 @@
 'use strict';
-import { IS_IOS } from '../common';
+import { IS_ANDROID, IS_IOS } from '../common';
 import type {
   AnimatableValue,
   AnimationCallback,
@@ -14,8 +14,9 @@ import { Easing } from '../Easing';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { getReduceMotionFromConfig } from './utilCommon';
 
-const DESCRIBES_NATIVE_TIMING: boolean =
-  IS_IOS && getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION');
+const DESCRIBES_NATIVE_TIMING: boolean = IS_IOS
+  ? getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
+  : IS_ANDROID && getStaticFeatureFlag('ANDROID_NATIVE_LAYOUT_ANIMATIONS');
 
 const LINEAR = Easing.linear;
 const EASE = Easing.ease;

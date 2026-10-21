@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { View } from 'react-native';
 import type { EntryAnimationsValues } from 'react-native-reanimated';
 import { Easing, LinearTransition, withTiming } from 'react-native-reanimated';
 
@@ -16,29 +16,47 @@ import type {
   TargetSample,
   TraceEvent,
 } from '../nativeAnimationObservation';
+import type { SizeBoxProps } from './nativeLayoutTestKit';
 import {
   BOX_REF,
   BOX_SIZE,
+  callbacks,
+  centerOf,
   DURATION,
   END_LEFT,
+  entryExitOf,
   FRAME_MS,
+  frameRecordedOf,
   hasNativeLayoutRoute,
+  isHostEvent,
+  isNativeLayoutRouteConfigured,
+  isNoView,
+  layoutOf,
+  middleOf,
   mountScene,
+  narrowClockOffset,
   NATIVE_ANIMATION_TEST_HOOKS,
+  POSITION_TOLERANCE,
+  readFrameRecords,
   renderBox,
+  resetCallbacks,
+  resetFrameRecords,
   routeOf,
   sample,
   Scene,
+  SizeBox,
   SizeScene,
+  START_LEFT,
+  styles,
+  summarize,
   takeTrace,
+  takeTraceOf,
   testHookOf,
+  waitForCallbacks,
+  movingGeometryTest,
 } from './nativeLayoutTestKit';
 
 describe('native layout route: the test hooks', () => {
-  if (Platform.OS !== 'ios') {
-    return;
-  }
-
   for (const name of NATIVE_ANIMATION_TEST_HOOKS) {
     test(`the native animation test hook ${name} exists`, () => {
       expect(typeof testHookOf(name)).toBe('function');
@@ -122,43 +140,52 @@ describe('native layout route', () => {
     return;
   }
 
-  test('a moving native form reports NATIVE PLAYING for each of its targets', async () => {
-    const tag = await renderBox();
-    await render(<Scene left={END_LEFT} />);
-    await wait(DURATION / 2);
-    const events = await takeTrace();
-    for (const target of ['PositionX', 'PositionY']) {
-      const route = routeOf(events, tag, target, [await sample(tag, target)]);
-      expect(route.kind).toBe('native playing');
+  movingGeometryTest(
+    'a moving native form reports NATIVE PLAYING for each of its targets',
+    async () => {
+      const tag = await renderBox();
+      await render(<Scene left={END_LEFT} />);
+      await wait(DURATION / 2);
+      const events = await takeTrace();
+      for (const target of ['PositionX', 'PositionY']) {
+        const route = routeOf(events, tag, target, [await sample(tag, target)]);
+        expect(route.kind).toBe('native playing');
+      }
+      await render(null);
     }
-    await render(null);
-  });
+  );
 
-  test('a form with no duration reports NATIVE IMMEDIATE for each of its targets', async () => {
-    await render(null);
-    await takeTrace();
-    await render(<SizeScene entering={immediateEntering} />);
-    await wait(200);
-    const tag = getTestComponent(BOX_REF).getTag();
-    const events = await takeTrace();
-    for (const target of ['Opacity', 'PositionX']) {
-      const route = routeOf(events, tag, target, [await sample(tag, target)]);
-      expect(route.kind).toBe('native immediate');
+  movingGeometryTest(
+    'a form with no duration reports NATIVE IMMEDIATE for each of its targets',
+    async () => {
+      await render(null);
+      await takeTrace();
+      await render(<SizeScene entering={immediateEntering} />);
+      await wait(200);
+      const tag = getTestComponent(BOX_REF).getTag();
+      const events = await takeTrace();
+      for (const target of ['Opacity', 'PositionX']) {
+        const route = routeOf(events, tag, target, [await sample(tag, target)]);
+        expect(route.kind).toBe('native immediate');
+      }
+      await render(null);
     }
-    await render(null);
-  });
+  );
 
-  test('a native form read after the end of its timed tracks reports no route', async () => {
-    const tag = await renderBox();
-    await render(<Scene left={END_LEFT} />);
-    await wait(DURATION * 1.5);
-    const events = await takeTrace();
-    const ended = await sample(tag, 'PositionX');
-    await expect(() => routeOf(events, tag, 'PositionX', [ended])).toThrow(
-      'no immediate end'
-    );
-    await render(null);
-  });
+  movingGeometryTest(
+    'a native form read after the end of its timed tracks reports no route',
+    async () => {
+      const tag = await renderBox();
+      await render(<Scene left={END_LEFT} />);
+      await wait(DURATION * 1.5);
+      const events = await takeTrace();
+      const ended = await sample(tag, 'PositionX');
+      await expect(() => routeOf(events, tag, 'PositionX', [ended])).toThrow(
+        'no immediate end'
+      );
+      await render(null);
+    }
+  );
 
   test('a form that the route table refuses reports FRAME-DRIVEN', async () => {
     const layout = LinearTransition.duration(REFUSED_DURATION).easing(
@@ -170,14 +197,7 @@ describe('native layout route', () => {
     await render(
       <SizeScene style={REFUSED_STYLE} layout={layout} width={2 * BOX_SIZE} />
     );
-    const startMs = performance.now();
-    const samples = [];
-    for (const part of [1 / 3, 2 / 3]) {
-      await wait(
-        Math.max(0, startMs + part * REFUSED_DURATION - performance.now())
-      );
-      samples.push(await sample(tag, 'Size'));
-    }
+    const samples = await samplesAtParts(tag, 'Size', REFUSED_DURATION);
     const events = await takeTrace();
     const route = routeOf(events, tag, 'Size', samples, isOnRefusedTimeline);
     if (route.kind !== 'frame-driven') {
@@ -189,6 +209,84 @@ describe('native layout route', () => {
   });
 });
 
+describe('the native layout route with no mount-thread pull', () => {
+  if (!isNativeLayoutRouteConfigured || hasNativeLayoutRoute) {
+    return;
+  }
+
+  test('a layout change that the pull model routes natively has no host event and is on the frame-driven timeline', async () => {
+    const layout = frameRecordedOf(
+      'push',
+      layoutOf({ originX: { duration: PUSH_DURATION } }, { name: 'push' })
+    );
+    const tag = await renderBox({ layout });
+    const clockOffset = await narrowClockOffset(tag);
+    resetFrameRecords();
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    const samples = await samplesAtParts(tag, 'PositionX', PUSH_DURATION);
+    expect(await waitForCallbacks(['push:true'])).toBe('');
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    const start = readFrameRecords().find(
+      ({ key }) => key === 'originX'
+    )?.start;
+    console.log(
+      `PUSH-MODEL | events ${summarize(events)} | frame-driver start ${start?.timeMs} | samples ${samples.map(({ model, monotonicTimeMs }) => `${model[0]} at ${monotonicTimeMs}`).join(', ')}`
+    );
+    expect(summarize(events)).toBe('');
+    expect(start !== undefined).toBe(true);
+    const startMs = start!.timeMs + middleOf(clockOffset);
+    for (const { model, playbacks, monotonicTimeMs } of samples) {
+      const sinceStartMs = monotonicTimeMs - startMs;
+      expect(playbacks.length).toBe(0);
+      expect(
+        isOnPushTimeline(model[0], sinceStartMs)
+          ? ''
+          : `the centre ${model[0]} ${sinceStartMs.toFixed(2)} ms after the start of the frame driver is not on its timeline`
+      ).toBe('');
+    }
+    expect(samples[0].model[0] < samples[1].model[0]).toBe(true);
+    const end = await sample(tag, 'PositionX');
+    expect(
+      Math.abs(end.model[0] - centerOf(END_LEFT)) <= POSITION_TOLERANCE
+        ? ''
+        : `the centre ${end.model[0]} after the end is not ${centerOf(END_LEFT)}`
+    ).toBe('');
+    await render(null);
+  });
+
+  test('frame-driven entering and the completed-exit cleanup run', async () => {
+    const animations = {
+      entering: entryExitOf(
+        { opacity: { duration: PUSH_DURATION, initial: 0.2, to: 1 } },
+        { name: 'entering' }
+      ),
+      exiting: entryExitOf(
+        { opacity: { duration: PUSH_DURATION, initial: 1, to: 0.2 } },
+        { name: 'exiting' }
+      ),
+    };
+    await render(<EnteringScene isMounted={false} {...animations} />);
+    await takeTrace();
+    resetCallbacks();
+    await render(<EnteringScene isMounted {...animations} />);
+    const tag = getTestComponent(BOX_REF).getTag();
+    const [first, second] = (
+      await samplesAtParts(tag, 'Opacity', PUSH_DURATION)
+    ).map(({ model }) => model[0]);
+    expect(await waitForCallbacks(['entering:true'])).toBe('');
+    expect(first > 0.2 && first < second && second < 1).toBe(true);
+
+    await render(<EnteringScene isMounted={false} {...animations} />);
+    expect(await waitForCallbacks(['exiting:true'])).toBe('');
+    await wait(200);
+    expect(await hasView(tag)).toBe(false);
+    expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe('');
+    expect(callbacks.slice().sort().join()).toBe('entering:true,exiting:true');
+    await render(null);
+  });
+});
+
+const PUSH_DURATION = 1200;
 const REFUSED_DURATION = 1200;
 // The route table keeps a size change of a view with an elliptical radius on the frame driver.
 const REFUSED_STYLE = { borderRadius: '30%' } as const;
@@ -197,12 +295,66 @@ const REFUSED_STYLE = { borderRadius: '30%' } as const;
 const FRAME_DRIVER_EARLY_MS = 2 * FRAME_MS;
 const FRAME_DRIVER_LATE_MS = 5 * FRAME_MS;
 
-function isOnRefusedTimeline([width]: number[], sinceRefusalMs: number) {
+function isOnRefusedTimeline(
+  { model: [width] }: { model: number[] },
+  sinceRefusalMs: number
+) {
   const widthAt = (timeMs: number) =>
     BOX_SIZE + BOX_SIZE * Math.min(1, Math.max(0, timeMs / REFUSED_DURATION));
   return (
     width >= widthAt(sinceRefusalMs - FRAME_DRIVER_LATE_MS) &&
     width <= widthAt(sinceRefusalMs + FRAME_DRIVER_EARLY_MS)
+  );
+}
+
+function isOnPushTimeline(centerX: number, sinceStartMs: number) {
+  const centerAt = (timeMs: number) =>
+    centerOf(
+      START_LEFT +
+        (END_LEFT - START_LEFT) *
+          Math.min(1, Math.max(0, timeMs / PUSH_DURATION))
+    );
+  return (
+    centerX >=
+      centerAt(sinceStartMs - FRAME_DRIVER_LATE_MS) - POSITION_TOLERANCE &&
+    centerX <=
+      centerAt(sinceStartMs + FRAME_DRIVER_EARLY_MS) + POSITION_TOLERANCE
+  );
+}
+
+/** One sample of a target at one third and at two thirds of a time from now. */
+async function samplesAtParts(tag: number, target: string, durationMs: number) {
+  const startMs = performance.now();
+  const samples: TargetSample[] = [];
+  for (const part of [1 / 3, 2 / 3]) {
+    await wait(Math.max(0, startMs + part * durationMs - performance.now()));
+    samples.push(await sample(tag, target));
+  }
+  return samples;
+}
+
+const hasView = (tag: number) =>
+  sample(tag, 'Opacity').then(
+    () => true,
+    (error: unknown) => {
+      if (isNoView(error)) {
+        return false;
+      }
+      throw error;
+    }
+  );
+
+function EnteringScene({
+  isMounted,
+  entering,
+  exiting,
+}: Pick<SizeBoxProps, 'entering' | 'exiting'> & {
+  isMounted: boolean;
+}) {
+  return (
+    <View style={styles.container}>
+      {isMounted && <SizeBox entering={entering} exiting={exiting} />}
+    </View>
   );
 }
 
