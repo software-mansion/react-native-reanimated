@@ -47,7 +47,8 @@ export default function CpuPanel({
                 styles.core,
                 runtimeClass(runtime),
                 running && styles.boxActive,
-                blockedOn !== undefined && styles.coreBlocked
+                blockedOn !== undefined && styles.coreBlocked,
+                core?.status === 'error' && styles.coreStopped
               )}>
               <div className={styles.coreHeader}>
                 <span className={styles.boxTitle} data-sim-port>

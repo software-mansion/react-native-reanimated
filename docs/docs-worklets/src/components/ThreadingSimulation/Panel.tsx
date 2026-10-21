@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
+import PanelHelp from './PanelHelp';
 import styles from './styles.module.css';
 
 interface PanelProps {
@@ -32,12 +33,7 @@ export default function Panel({
           data-sim-port={connectionNode !== undefined || undefined}>
           {title}
         </h3>
-        {help !== undefined && (
-          <details className={styles.panelHelp}>
-            <summary aria-label={`About ${title}`}>Info</summary>
-            <p>{help}</p>
-          </details>
-        )}
+        {help !== undefined && <PanelHelp title={title}>{help}</PanelHelp>}
       </header>
       <div className={styles.panelBody}>{children}</div>
     </section>

@@ -121,11 +121,13 @@ export default function Connections({
         });
       const obstacles = [
         ...nodes.values(),
-        ...[...root.querySelectorAll('[data-sim-header]')].map(rectangle),
+        ...[
+          ...root.querySelectorAll('[data-sim-header], [data-sim-obstacle]'),
+        ].map(rectangle),
       ];
-      const panels = [...root.querySelectorAll('[data-sim-panel]')].map(
-        rectangle
-      );
+      const panels = [
+        ...root.querySelectorAll('[data-sim-panel], [data-sim-obstacle]'),
+      ].map(rectangle);
       const gap =
         parseFloat(getComputedStyle(root).getPropertyValue('--sim-rail-gap')) ||
         32;

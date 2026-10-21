@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import clsx from 'clsx';
 
 import type {
@@ -9,6 +9,7 @@ import type {
 import CodePanel from './CodePanel';
 import type { LineHistory } from './CodePanel';
 import CpuPanel from './CpuPanel';
+import Disclosure from './Disclosure';
 import Connections from './Connections';
 import MemoryPanel from './MemoryPanel';
 import Panel from './Panel';
@@ -85,6 +86,8 @@ export default function ThreadingSimulation({
   bootTicks = 0,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
+  const [hasOpened, setHasOpened] = useState(open);
+  const disclosureId = useId();
   const [localTickMs, setLocalTickMs] = useState(
     controlledTickMs ?? DEFAULT_TICK_MS
   );
@@ -158,12 +161,12 @@ export default function ThreadingSimulation({
   const code = (
     <CodePanel
       code={simulation.displayText}
-      runtimes={open ? runtimes : []}
-      cores={open ? snapshot.cores : []}
+      runtimes={runtimes}
+      cores={snapshot.cores}
       rawToDisplayLine={simulation.rawToDisplayLine}
       blockEnds={simulation.blockEnds}
-      history={open ? history : new Map()}
-      settled={!open || simulation.settled}
+      history={history}
+      settled={simulation.settled}
       columns={codeColumns}
     />
   );
@@ -177,284 +180,310 @@ export default function ThreadingSimulation({
     </button>
   );
 
+  const codePanel = (
+    <Panel
+      title="Code"
+      className={styles.areaCode}
+      codePanel
+      help="Colours connect each executing thread to its current code line. Recently executed lines fade over the next three ticks.">
+      {code}
+      <div className={styles.codeFooter}>{boilerplateButton}</div>
+    </Panel>
+  );
+  const toolbar = (
+    <div
+      className={styles.toolbar}
+      data-sim-obstacle
+      ref={simulation.containerRef}
+      role="group"
+      aria-label="Simulation playback">
+      <div className={styles.transport}>
+        <button
+          type="button"
+          className={clsx(styles.button, styles.buttonPrimary)}
+          onClick={simulation.togglePlay}
+          aria-label={simulation.playing ? 'Pause' : 'Play'}>
+          <TransportIcon name={simulation.playing ? 'pause' : 'play'} />
+          <span className={styles.playLabel}>
+            {simulation.playing ? 'Pause' : 'Play'}
+          </span>
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.back}
+          disabled={simulation.tick === 0}
+          aria-label="Back one tick"
+          title="Back one tick">
+          <TransportIcon name="back" />
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.step}
+          disabled={simulation.tick >= simulation.lastTick}
+          aria-label="Step one tick"
+          title="Step one tick">
+          <TransportIcon name="step" />
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.reset}
+          disabled={simulation.tick === 0}
+          aria-label="Reset"
+          title="Reset">
+          <TransportIcon name="reset" />
+        </button>
+        <button
+          type="button"
+          className={clsx(
+            styles.button,
+            styles.buttonIcon,
+            simulation.loop && styles.buttonActive
+          )}
+          onClick={simulation.toggleLoop}
+          aria-pressed={simulation.loop}
+          aria-label="Loop"
+          title="Loop">
+          <TransportIcon name="loop" />
+        </button>
+      </div>
+      <span className={styles.tickLabel}>
+        Tick <strong>{simulation.tick}</strong>
+        {Number.isFinite(simulation.lastTick) && ` / ${simulation.lastTick}`}
+      </span>
+      <label className={styles.speed}>
+        <span className={styles.speedLabel}>Step duration</span>
+        <input
+          type="range"
+          className={styles.speedSlider}
+          min={TICK_MIN_MS}
+          max={TICK_MAX_MS}
+          step={1}
+          value={tickMs}
+          onChange={(event) => {
+            const next = snapTick(Number(event.target.value));
+            setLocalTickMs(next);
+            onTickMsChange?.(next);
+          }}
+          aria-label="Tick length in milliseconds"
+        />
+        <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+      </label>
+    </div>
+  );
+  const activity = (
+    <div
+      className={styles.activity}
+      data-sim-obstacle
+      aria-label="Current scheduling activity">
+      {transfers.length > 0 ? (
+        transfers.map((event, index) => (
+          <span key={index}>
+            <strong>{nameOf(event.core)}</strong> queued{' '}
+            <code>{event.job}</code> on <strong>{nameOf(event.target)}</strong>
+          </span>
+        ))
+      ) : (
+        <span>
+          {codeOpen
+            ? 'Follow the highlighted line and its matching thread colour.'
+            : 'Compare the threads and press the app button to try it.'}
+        </span>
+      )}
+      {collapsibleCode && (
+        <button
+          type="button"
+          className={styles.codeToggle}
+          onClick={() => setCodeOpen(!codeOpen)}
+          aria-expanded={codeOpen}>
+          {codeOpen ? 'Hide code' : 'Show code'}
+        </button>
+      )}
+    </div>
+  );
+  const legend = (
+    <div className={styles.connectionLegend} data-sim-obstacle>
+      <span>
+        <i className={styles.legendFlow} /> Thread → runtime in use
+      </span>
+      <span>
+        <i className={styles.legendQueue} /> Job queued
+      </span>
+    </div>
+  );
+  const machine = (
+    <div className={styles.machineArea}>
+      <div
+        className={clsx(
+          styles.executionGrid,
+          phone && styles.executionWithPhone
+        )}>
+        <Panel
+          title="Threads"
+          help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
+          <CpuPanel
+            runtimes={runtimes}
+            cores={snapshot.cores}
+            rawToDisplayLine={simulation.rawToDisplayLine}
+          />
+          {cpuFooter}
+        </Panel>
+        {showMemory && (
+          <Panel
+            title="Runtimes & memory"
+            className={styles.areaMemory}
+            help="A runtime holds JavaScript state. Its event loop queues work and pauses while another thread borrows the runtime. Shareable Hosts store values here; Guests refer to values on another runtime. Synchronizables live in native memory, accessible from any thread.">
+            <MemoryPanel
+              runtimes={everRuntimes.filter(
+                (runtime) =>
+                  runtime.hasRuntime &&
+                  (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
+              )}
+              present={new Set(runtimes.map((runtime) => runtime.id))}
+              allRuntimes={runtimes}
+              cores={snapshot.cores}
+              memory={snapshot.memory}
+              settled={simulation.settled}
+              steady={steady}
+            />
+          </Panel>
+        )}
+        {phone && (
+          <Panel
+            title="App output"
+            className={styles.areaPhone}
+            connectionNode="output"
+            help="The UI thread updates the app screen. Press the button to queue an input event and follow its result.">
+            <Phone
+              screen={shownScreen}
+              redrawn={
+                simulation.settled &&
+                snapshot.events.some((event) => event.type === 'screen')
+              }
+              onPress={
+                pressHandler === undefined
+                  ? undefined
+                  : () => simulation.press(pressHandler)
+              }
+            />
+            {!simulation.playing && (
+              <p className={styles.outputHint}>
+                Paused. Press Play or step forward to process input.
+              </p>
+            )}
+          </Panel>
+        )}
+      </div>
+    </div>
+  );
+  const connections = (
+    <Connections
+      snapshot={snapshot}
+      runtimes={runtimes}
+      tick={simulation.tick}
+      tickMs={tickMs}
+      codeOpen={codeOpen}
+      settled={simulation.settled}
+      playing={open && simulation.playing}
+    />
+  );
+  const consolePanel = showConsole && (
+    <details className={styles.consolePanel} data-sim-obstacle open={!alwaysOn}>
+      <summary className={styles.consoleSummary}>
+        <span>
+          Console <span className={styles.logCount}>{logs.length}</span>
+        </span>
+        <span className={styles.consolePreview}>
+          {logs.at(-1)?.text ?? 'No output yet'}
+        </span>
+      </summary>
+      <div
+        className={styles.console}
+        role="region"
+        tabIndex={0}
+        aria-label="Console output">
+        {logs.length === 0 ? (
+          <span className={styles.consoleEmpty}>
+            Output appears here as the code runs.
+          </span>
+        ) : (
+          [...logs].reverse().map((log, index) => (
+            <div key={index} className={styles.consoleEntry}>
+              <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
+                {badgeName(log.runtime.id)}
+              </span>
+              <span>{log.text}</span>
+              <span className={styles.consoleTime}>tick {log.tick}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </details>
+  );
+
   return (
     <div className={styles.container}>
       {title !== undefined && <p className={styles.title}>{title}</p>}
-      {!open ? (
-        <div className={styles.collapsed}>
-          <Panel title="Code" className={styles.areaCode}>
-            {code}
-            <div className={styles.codeFooter}>{boilerplateButton}</div>
-          </Panel>
-          <button
-            type="button"
-            className={styles.toggleBar}
-            onClick={() => setOpen(true)}
-            aria-expanded={false}>
-            <TransportIcon name="play" /> See how it works
-          </button>
-        </div>
-      ) : (
-        <div className={styles.scene}>
-          <div
-            className={styles.toolbar}
-            ref={simulation.containerRef}
-            role="group"
-            aria-label="Simulation playback">
-            <div className={styles.transport}>
-              <button
-                type="button"
-                className={clsx(styles.button, styles.buttonPrimary)}
-                onClick={simulation.togglePlay}
-                aria-label={simulation.playing ? 'Pause' : 'Play'}>
-                <TransportIcon name={simulation.playing ? 'pause' : 'play'} />
-                <span className={styles.playLabel}>
-                  {simulation.playing ? 'Pause' : 'Play'}
-                </span>
-              </button>
-              <button
-                type="button"
-                className={clsx(styles.button, styles.buttonIcon)}
-                onClick={simulation.back}
-                disabled={simulation.tick === 0}
-                aria-label="Back one tick"
-                title="Back one tick">
-                <TransportIcon name="back" />
-              </button>
-              <button
-                type="button"
-                className={clsx(styles.button, styles.buttonIcon)}
-                onClick={simulation.step}
-                disabled={simulation.tick >= simulation.lastTick}
-                aria-label="Step one tick"
-                title="Step one tick">
-                <TransportIcon name="step" />
-              </button>
-              <button
-                type="button"
-                className={clsx(styles.button, styles.buttonIcon)}
-                onClick={simulation.reset}
-                disabled={simulation.tick === 0}
-                aria-label="Reset"
-                title="Reset">
-                <TransportIcon name="reset" />
-              </button>
-              <button
-                type="button"
-                className={clsx(
-                  styles.button,
-                  styles.buttonIcon,
-                  simulation.loop && styles.buttonActive
-                )}
-                onClick={simulation.toggleLoop}
-                aria-pressed={simulation.loop}
-                aria-label="Loop"
-                title="Loop">
-                <TransportIcon name="loop" />
-              </button>
+      <div className={styles.scene}>
+        {alwaysOn ? (
+          <>
+            {toolbar}
+            {activity}
+            {legend}
+            <div
+              className={clsx(
+                styles.workspace,
+                codeOpen && styles.workspaceWithCode
+              )}>
+              {codeOpen && codePanel}
+              {machine}
+              {connections}
             </div>
-            <span className={styles.tickLabel}>
-              Tick <strong>{simulation.tick}</strong>
-              {Number.isFinite(simulation.lastTick) &&
-                ` / ${simulation.lastTick}`}
-            </span>
-            <label className={styles.speed}>
-              <span className={styles.speedLabel}>Step duration</span>
-              <input
-                type="range"
-                className={styles.speedSlider}
-                min={TICK_MIN_MS}
-                max={TICK_MAX_MS}
-                step={1}
-                value={tickMs}
-                onChange={(event) => {
-                  const next = snapTick(Number(event.target.value));
-                  setLocalTickMs(next);
-                  onTickMsChange?.(next);
-                }}
-                aria-label="Tick length in milliseconds"
-              />
-              <span className={styles.speedValue}>{formatTick(tickMs)}</span>
-            </label>
-          </div>
+            {consolePanel}
+          </>
+        ) : (
           <div
-            className={styles.activity}
-            aria-label="Current scheduling activity">
-            {transfers.length > 0 ? (
-              transfers.map((event, index) => (
-                <span key={index}>
-                  <strong>{nameOf(event.core)}</strong> queued{' '}
-                  <code>{event.job}</code> on{' '}
-                  <strong>{nameOf(event.target)}</strong>
-                </span>
-              ))
-            ) : (
-              <span>
-                {codeOpen
-                  ? 'Follow the highlighted line and its matching thread colour.'
-                  : 'Compare the threads and press the app button to try it.'}
-              </span>
-            )}
-            {collapsibleCode && (
-              <button
-                type="button"
-                className={styles.codeToggle}
-                onClick={() => setCodeOpen(!codeOpen)}
-                aria-expanded={codeOpen}>
-                {codeOpen ? 'Hide code' : 'Show code'}
-              </button>
-            )}
-          </div>
-          <div className={styles.connectionLegend}>
-            <span>
-              <i className={styles.legendFlow} /> Thread → runtime in use
-            </span>
-            <span>
-              <i className={styles.legendQueue} /> Job queued
-            </span>
-          </div>
-          <div
-            className={clsx(
-              styles.workspace,
-              codeOpen && styles.workspaceWithCode
-            )}>
-            {codeOpen && (
-              <Panel
-                title="Code"
-                className={styles.areaCode}
-                codePanel
-                help="Colours connect each executing thread to its current code line. Recently executed lines fade over the next three ticks.">
-                {code}
-                <div className={styles.codeFooter}>{boilerplateButton}</div>
-              </Panel>
-            )}
-            <div className={styles.machineArea}>
-              <div
-                className={clsx(
-                  styles.executionGrid,
-                  phone && styles.executionWithPhone
-                )}>
-                <Panel
-                  title="Threads"
-                  help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
-                  <CpuPanel
-                    runtimes={runtimes}
-                    cores={snapshot.cores}
-                    rawToDisplayLine={simulation.rawToDisplayLine}
-                  />
-                  {cpuFooter}
-                </Panel>
-                {showMemory && (
-                  <Panel
-                    title="Runtimes & memory"
-                    className={styles.areaMemory}
-                    help="A runtime holds JavaScript state. Its event loop queues work and pauses while another thread borrows the runtime. Shareable Hosts store values here; Guests refer to values on another runtime. Synchronizables live in native memory, accessible from any thread.">
-                    <MemoryPanel
-                      runtimes={everRuntimes.filter(
-                        (runtime) =>
-                          runtime.hasRuntime &&
-                          (runtime.kind !== 'ui' ||
-                            usedRuntimes.has(runtime.id))
-                      )}
-                      present={new Set(runtimes.map((runtime) => runtime.id))}
-                      allRuntimes={runtimes}
-                      cores={snapshot.cores}
-                      memory={snapshot.memory}
-                      settled={simulation.settled}
-                      steady={steady}
-                    />
-                  </Panel>
-                )}
-                {phone && (
-                  <Panel
-                    title="App output"
-                    className={styles.areaPhone}
-                    connectionNode="output"
-                    help="The UI thread updates the app screen. Press the button to queue an input event and follow its result.">
-                    <Phone
-                      screen={shownScreen}
-                      redrawn={
-                        simulation.settled &&
-                        snapshot.events.some((event) => event.type === 'screen')
-                      }
-                      onPress={
-                        pressHandler === undefined
-                          ? undefined
-                          : () => simulation.press(pressHandler)
-                      }
-                    />
-                    {!simulation.playing && (
-                      <p className={styles.outputHint}>
-                        Paused. Press Play or step forward to process input.
-                      </p>
-                    )}
-                  </Panel>
-                )}
-              </div>
-            </div>
-            <Connections
-              snapshot={snapshot}
-              runtimes={runtimes}
-              tick={simulation.tick}
-              tickMs={tickMs}
-              codeOpen={codeOpen}
-              settled={simulation.settled}
-              playing={simulation.playing}
-            />
-          </div>
-          {showConsole && (
-            <details className={styles.consolePanel} open={!alwaysOn}>
-              <summary className={styles.consoleSummary}>
-                <span>
-                  Console <span className={styles.logCount}>{logs.length}</span>
-                </span>
-                <span className={styles.consolePreview}>
-                  {logs.at(-1)?.text ?? 'No output yet'}
-                </span>
-              </summary>
-              <div
-                className={styles.console}
-                role="region"
-                tabIndex={0}
-                aria-label="Console output">
-                {logs.length === 0 ? (
-                  <span className={styles.consoleEmpty}>
-                    Output appears here as the code runs.
-                  </span>
-                ) : (
-                  [...logs].reverse().map((log, index) => (
-                    <div key={index} className={styles.consoleEntry}>
-                      <span
-                        className={clsx(
-                          styles.badge,
-                          runtimeClass(log.runtime)
-                        )}>
-                        {badgeName(log.runtime.id)}
-                      </span>
-                      <span>{log.text}</span>
-                      <span className={styles.consoleTime}>
-                        tick {log.tick}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </details>
-          )}
-          {!alwaysOn && (
+            className={clsx(styles.workspace, styles.disclosureWorkspace)}
+            data-expanded={open}>
+            {codePanel}
             <button
               type="button"
-              className={styles.toggleBar}
+              className={styles.disclosureToggle}
+              data-sim-obstacle
               onClick={() => {
-                simulation.pause();
-                setOpen(false);
+                if (open) simulation.pause();
+                setHasOpened(true);
+                setOpen(!open);
               }}
-              aria-expanded={true}>
-              Hide simulation
+              aria-label={open ? 'Hide simulation' : 'Show simulation'}
+              aria-expanded={open}
+              aria-controls={disclosureId}>
+              <span className={styles.disclosureLabel}>
+                <strong>Simulation</strong>
+                <span>Follow this code across threads and runtimes</span>
+              </span>
+              <span className={styles.disclosureAction}>
+                {open ? 'Hide' : 'Show'}
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m4 6 4 4 4-4" />
+                </svg>
+              </span>
             </button>
-          )}
-        </div>
-      )}
+            <Disclosure open={open} id={disclosureId}>
+              <div className={styles.simulationBody}>
+                {toolbar}
+                {activity}
+                {legend}
+                {machine}
+                {consolePanel}
+              </div>
+            </Disclosure>
+            {hasOpened && connections}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

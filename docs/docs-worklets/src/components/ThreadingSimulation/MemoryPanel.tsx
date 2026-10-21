@@ -80,65 +80,79 @@ export default function MemoryPanel({
                 runtimeClass(executorDescriptor ?? runtime),
                 running && styles.boxActive
               )}>
-              <span className={styles.boxTitle} data-sim-port>
-                {displayName(runtime)}
-              </span>
-              <span className={styles.boxDetail}>
-                {!running || executorDescriptor === undefined
-                  ? 'Available'
-                  : `Owner: ${threadName(executorDescriptor)}`}
-              </span>
-              <div className={styles.vmLoop}>
-                <span className={styles.boxDetail}>
-                  Event loop · {threadName(runtime)}
+              <div className={styles.vmHeader}>
+                <span className={styles.boxTitle} data-sim-port>
+                  {displayName(runtime)}
                 </span>
+                <span className={styles.vmOwner}>
+                  {!running || executorDescriptor === undefined
+                    ? 'Available'
+                    : `Owner: ${threadName(executorDescriptor)}`}
+                </span>
+              </div>
+              <div className={styles.vmSection}>
+                <div className={styles.vmSectionHeader}>
+                  <span className={styles.vmSectionTitle}>Event loop</span>
+                  <span className={styles.boxDetail}>
+                    {threadName(runtime)}
+                  </span>
+                </div>
                 {error === null && (
                   <QueueList pending={pending} paused={paused} />
                 )}
+                {error !== null && (
+                  <span className={styles.vmError}>{error}</span>
+                )}
               </div>
-              {shareables.map((cell) => {
-                const accessor = accessorOf(cell);
-                return (
-                  <span
-                    key={`shareable-${cell.id}`}
-                    className={clsx(
-                      styles.shareable,
-                      accessor !== undefined && runtimeClass(accessor),
-                      accessor !== undefined && styles.shareableActive
-                    )}
-                    data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
-                    <span className={styles.shareableLabel}>
-                      Shareable Host
-                    </span>
-                    <span className={styles.cellNumber}>{cell.value}</span>
-                  </span>
-                );
-              })}
-              {guests.map((cell) => {
-                const accessor = accessorOf(cell);
-                const active =
-                  accessor !== undefined && accessor.id === runtime.id;
-                return (
-                  <span
-                    key={`guest-${cell.id}`}
-                    className={clsx(
-                      styles.shareable,
-                      styles.shareableGuest,
-                      active && runtimeClass(accessor),
-                      active && styles.shareableActive
-                    )}
-                    data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
-                    <span className={styles.shareableLabel}>
-                      Shareable Guest
-                    </span>
-                    <span className={styles.shareableHost}>
-                      {badgeName(cell.host!)}
-                    </span>
-                  </span>
-                );
-              })}
-              {error !== null && (
-                <span className={styles.vmError}>{error}</span>
+              {(shareables.length > 0 || guests.length > 0) && (
+                <div className={styles.vmSection}>
+                  <span className={styles.vmSectionTitle}>Memory</span>
+                  <div className={styles.memoryCells}>
+                    {shareables.map((cell) => {
+                      const accessor = accessorOf(cell);
+                      return (
+                        <span
+                          key={`shareable-${cell.id}`}
+                          className={clsx(
+                            styles.shareable,
+                            accessor !== undefined && runtimeClass(accessor),
+                            accessor !== undefined && styles.shareableActive
+                          )}
+                          data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
+                          <span className={styles.shareableLabel}>
+                            Shareable Host
+                          </span>
+                          <span className={styles.cellNumber}>
+                            {cell.value}
+                          </span>
+                        </span>
+                      );
+                    })}
+                    {guests.map((cell) => {
+                      const accessor = accessorOf(cell);
+                      const active =
+                        accessor !== undefined && accessor.id === runtime.id;
+                      return (
+                        <span
+                          key={`guest-${cell.id}`}
+                          className={clsx(
+                            styles.shareable,
+                            styles.shareableGuest,
+                            active && runtimeClass(accessor),
+                            active && styles.shareableActive
+                          )}
+                          data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
+                          <span className={styles.shareableLabel}>
+                            Shareable Guest
+                          </span>
+                          <span className={styles.shareableHost}>
+                            {badgeName(cell.host!)}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           );
@@ -146,23 +160,28 @@ export default function MemoryPanel({
       </div>
       {synchronizables.length > 0 && (
         <div className={styles.nativeRow}>
-          <span className={styles.nativeLabel}>Shared native memory</span>
-          {synchronizables.map((cell) => {
-            const accessor = accessorOf(cell);
-            return (
-              <span
-                key={`cell-${cell.id}`}
-                className={clsx(
-                  styles.synchronizable,
-                  accessor !== undefined && runtimeClass(accessor),
-                  accessor !== undefined && styles.synchronizableActive
-                )}
-                data-help="A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.">
-                <span className={styles.shareableLabel}>Synchronizable</span>
-                <span className={styles.cellNumber}>{cell.value}</span>
-              </span>
-            );
-          })}
+          <div className={styles.nativeHeader}>
+            <span className={styles.nativeLabel}>Shared native memory</span>
+            <span className={styles.boxDetail}>Accessible from any thread</span>
+          </div>
+          <div className={styles.memoryCells}>
+            {synchronizables.map((cell) => {
+              const accessor = accessorOf(cell);
+              return (
+                <span
+                  key={`cell-${cell.id}`}
+                  className={clsx(
+                    styles.synchronizable,
+                    accessor !== undefined && runtimeClass(accessor),
+                    accessor !== undefined && styles.synchronizableActive
+                  )}
+                  data-help="A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.">
+                  <span className={styles.shareableLabel}>Synchronizable</span>
+                  <span className={styles.cellNumber}>{cell.value}</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
