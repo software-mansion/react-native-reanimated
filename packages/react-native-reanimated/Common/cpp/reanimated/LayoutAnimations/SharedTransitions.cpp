@@ -828,13 +828,6 @@ void LayoutAnimationsProxy::finishSharedTransition(
     SharedElement &element,
     TransactionMeta &transaction) const {
   transaction.restoreRequests.push_back({sharedTag, element.run->target});
-#ifdef __APPLE__
-  if (element.run->container->parent.lock() == containerOverlay_) {
-    transaction.containersOverRestoredTargets.push_back(element.run->container);
-    element.run.reset();
-    return;
-  }
-#endif
   transaction.containersToRemove.push_back(element.run->container);
   element.run.reset();
 }
