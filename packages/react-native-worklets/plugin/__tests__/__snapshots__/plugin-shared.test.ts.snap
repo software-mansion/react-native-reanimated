@@ -20,6 +20,22 @@ testJs1.__pluginVersion = "x.y.z";
 export default testJs1;"
 `;
 
+exports[`babel plugin core (bundle mode) closure handling allows assigning to a captured variable 1`] = `
+"export default (function foo_testJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    if (x > 1) {
+      x = 0;
+    }
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
 exports[`babel plugin core (bundle mode) closure handling captures locally bound variables shadowing globals 1`] = `
 "export default (function f_testJs1Factory([console]) {
   const f = function () {
@@ -182,12 +198,36 @@ function Box() {
 }"
 `;
 
+exports[`babel plugin core (bundleless mode) closure handling allows assigning to a captured variable 1`] = `
+"let x = 0;
+const _worklet_1_init_data = {
+  code: "(function foo_testJs1(){let[x]=this.__closure;if(x>1){x=0;}})",
+  location: "test.js"
+};
+const foo = function foo_testJs1Factory([_worklet_1_init_data, x]) {
+  const _e = [new global.Error(), -2, -27];
+  const foo = function () {
+    "use no memo";
+
+    if (x > 1) {
+      x = 0;
+    }
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__initData = _worklet_1_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}([_worklet_1_init_data, x]);"
+`;
+
 exports[`babel plugin core (bundleless mode) closure handling captures locally bound variables shadowing globals 1`] = `
 "const console = {
   log: () => 42
 };
 const _worklet_1_init_data = {
-  code: "(function f_testJs1(){const[console]=this.__closure;console.log(console);})",
+  code: "(function f_testJs1(){let[console]=this.__closure;console.log(console);})",
   location: "test.js"
 };
 const f = function f_testJs1Factory([_worklet_1_init_data, console]) {
@@ -210,7 +250,7 @@ exports[`babel plugin core (bundleless mode) closure handling captures multiple 
 "const a = 1;
 const b = 2;
 const _worklet_1_init_data = {
-  code: "(function foo_testJs1(){const[a,b]=this.__closure;return a+b;})",
+  code: "(function foo_testJs1(){let[a,b]=this.__closure;return a+b;})",
   location: "test.js"
 };
 const foo = function foo_testJs1Factory([_worklet_1_init_data, a, b]) {

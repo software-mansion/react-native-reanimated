@@ -429,11 +429,14 @@ open class NativeProxy {
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
-        handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
         handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
         handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)
     }
+
+    @DoNotStrip
+    fun isSensorAvailable(sensorType: Int): Boolean =
+        reanimatedSensorContainer.isSensorAvailable(ReanimatedSensorType.getInstanceById(sensorType))
 
     @DoNotStrip
     fun registerSensor(
