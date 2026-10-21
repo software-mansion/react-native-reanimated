@@ -100,6 +100,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
   void
   sampleNativeAnimationTarget(jsi::Runtime &rt, Tag tag, const std::string &targetName, const jsi::Value &callback);
+  /// The native animation routes of this build: `hasHost`, `cssTransitions`, `layoutRoute` (`off`,
+  /// `configured`, or `admitted`), `synchronousProps`, and `apiLevel` (null on Apple).
+  jsi::Value nativeAnimationRoutes(jsi::Runtime &rt) const;
 #endif
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
@@ -119,6 +122,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void rewriteSynchronousProps();
   /// The platform reports that a transaction of the surface is on the host views. UI thread only.
   void surfaceDidMount(SurfaceId surfaceId);
+  /// The platform mount report `dispatch` ran; it does not name the surfaces of its transactions. UI thread
+  /// only.
+  void pulledSurfacesDidMount(std::uint64_t dispatch);
   void flushLayoutAnimationOperations();
   void executeLayoutAnimationsRequests();
 
@@ -270,6 +276,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  const bool hasPlatformTransitionBackend_;
+#endif
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;

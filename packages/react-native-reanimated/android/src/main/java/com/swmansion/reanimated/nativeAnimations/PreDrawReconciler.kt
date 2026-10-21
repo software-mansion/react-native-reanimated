@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.css
+package com.swmansion.reanimated.nativeAnimations
 
 import android.view.View
 import android.view.ViewTreeObserver
@@ -8,7 +8,7 @@ import android.view.ViewTreeObserver
  * Running [beforeDraw] at that point puts it after every writer without knowing which one ran,
  * since they all run earlier in the frame. Its return says whether the listener stays.
  */
-internal class CSSPlatformTransitionReconciler(
+internal class PreDrawReconciler(
     private val beforeDraw: () -> Boolean,
 ) {
     /** Keyed by window: getViewTreeObserver is per window, not per view. */
