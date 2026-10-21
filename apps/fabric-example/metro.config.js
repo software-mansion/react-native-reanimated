@@ -26,17 +26,15 @@ const appsRoot = path.resolve(monorepoRoot, 'apps');
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
-const watchFolders = [monorepoRoot, appsRoot];
-
 let config = {
   projectRoot: __dirname,
-  watchFolders,
+  watchFolders: [monorepoRoot, appsRoot],
   resolver: {
     blockList,
     extraNodeModules,
   },
   serializer: {
-    customSerializer: (entryPoint, preModules, graph, options) =>
+    customSerializer: async (entryPoint, preModules, graph, options) =>
       bundleToString(
         baseJSBundle(entryPoint, preModules, graph, {
           ...options,
@@ -51,9 +49,19 @@ let config = {
  * `apps/common-app` gets a `/../common-app/...` path that URL parsing
  * normalizes into a request Metro cannot resolve. Pass the same path through
  * the `bundleEntry` query parameter, which Metro reads verbatim.
+ *
+ * @param {import('metro/private/DeltaBundler/types').ResolvedDependency} dependency
+ * @param {unknown} options
+ * @returns {string}
  */
-function getAsyncDependencyPath(dependency, serializerOptions) {
-  const { searchParams } = new URL(toNormalUrl(serializerOptions.sourceUrl));
+function getAsyncDependencyPath(dependency, options) {
+  const serializerOptions =
+    /** @type {import('metro/private/DeltaBundler/Serializers/helpers/js').Options} */ (
+      options
+    );
+  const { searchParams } = new URL(
+    toNormalUrl(serializerOptions.sourceUrl ?? '')
+  );
   searchParams.set('modulesOnly', 'true');
   searchParams.set('runModule', 'false');
   const modulePath = dependency.absolutePath.slice(
