@@ -24,12 +24,12 @@ console.log(isRNRuntime()); // true
 
 scheduleOnUI(() => {
   console.log(isRNRuntime()); // false
-})();
+});
 
 const workerRuntime = createWorkletRuntime();
 scheduleOnRuntime(workerRuntime, () => {
   console.log(isRNRuntime()); // false
-})();
+});
 ```
 
 <details>

@@ -23,13 +23,13 @@ console.log(isWorkerRuntime()); // false
 
 scheduleOnUI(() => {
   console.log(isWorkerRuntime()); // false
-})();
+});
 
 const workerRuntime = createWorkletRuntime();
 scheduleOnRuntime(workerRuntime, () => {
   // highlight-next-line
   console.log(isWorkerRuntime()); // true
-})();
+});
 ```
 
 <details>
