@@ -1,7 +1,5 @@
 const path = require('path');
 
-// Matches the package directory only, since pnpm also puts `react-native-worklets`
-// in the store directory names of packages that peer-depend on it.
 const WORKLETS_DIR = /[\\/]react-native-worklets[\\/](src|lib)[\\/]/;
 
 /** @type {import('jest-resolve').SyncResolver} */
