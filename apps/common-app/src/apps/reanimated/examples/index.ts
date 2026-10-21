@@ -85,10 +85,6 @@ const ComposedHandlerDifferentEventsExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerDifferentEventsExample').default
   );
-const ComposedHandlerInternalMergingExample: React.FC = () =>
-  React.createElement(
-    require('./ComposedHandlerInternalMergingExample').default
-  );
 const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
@@ -620,11 +616,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '📣',
     title: 'Composed handler different events',
     screen: ComposedHandlerDifferentEventsExample,
-  },
-  ComposedHandlerInternalMergingExample: {
-    icon: '🪢',
-    title: 'Composed handler internal merging',
-    screen: ComposedHandlerInternalMergingExample,
   },
   BBExample: {
     icon: '💀',
