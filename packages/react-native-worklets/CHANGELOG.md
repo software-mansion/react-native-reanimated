@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix the Jest resolver resolving web implementations for every module of packages that peer-depend on Worklets, such as Reanimated, when installed with pnpm. ([#10821](https://github.com/software-mansion/react-native-reanimated/pull/10821) by [@ryanlntn](https://github.com/ryanlntn))
+
 ### 💡 Others
 
 ## 0.13.0 — 2026-09-18
