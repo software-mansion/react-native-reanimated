@@ -56,7 +56,7 @@ internal fun trackWriterFor(target: Int): TrackWriter? =
         else -> null
     }
 
-private abstract class ScalarWriter : TrackWriter {
+internal abstract class ScalarWriter : TrackWriter {
     abstract fun read(view: View): Float
 
     abstract fun write(
@@ -89,7 +89,7 @@ private abstract class ScalarWriter : TrackWriter {
     override fun sampleComponentsOf(value: DoubleArray): DoubleArray = value.copyOf()
 }
 
-private object AlphaWriter : ScalarWriter() {
+internal object AlphaWriter : ScalarWriter() {
     override val property = "alpha"
 
     override fun write(

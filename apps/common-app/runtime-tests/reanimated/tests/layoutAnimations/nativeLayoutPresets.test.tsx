@@ -153,6 +153,10 @@ import {
   isNoView,
   middleOf,
   namedBuilderCalls,
+  PLAYS_3D_OPERATIONS,
+  movesGeometryOf,
+  PLAYS_MOVING_GEOMETRY,
+  PLAYS_SIZE_CHANGE,
   sample,
   SizeBox,
   summarize,
@@ -674,6 +678,75 @@ function routeOf(events: TraceEvent[]) {
 
 const TWIN_ROUTE = `LayoutBuildFailed:${NATIVE_TIMING}`;
 const isNativeRoute = (route: string) => !route.startsWith('Layout');
+const BUILD_FAILED = 'LayoutBuildFailed:';
+/** The failure of a route that is one build failure. */
+const refusalOf = (route: string) =>
+  route.startsWith(BUILD_FAILED) && !route.includes(' > ')
+    ? route.slice(BUILD_FAILED.length)
+    : undefined;
+
+const REFUSED_ROUTE = 'LayoutBuildFailed:UnsupportedTarget';
+
+/**
+ * The presets with a perspective and a rotation about X or Y, from their
+ * source.
+ */
+const THREE_D_PRESETS: Preset[] = [
+  FlipInXUp,
+  FlipInXDown,
+  FlipInYLeft,
+  FlipInYRight,
+  FlipInEasyX,
+  FlipInEasyY,
+  FlipOutXUp,
+  FlipOutXDown,
+  FlipOutYLeft,
+  FlipOutYRight,
+  FlipOutEasyX,
+  FlipOutEasyY,
+];
+
+/** What the animation of a preset needs of the platform for its native route. */
+type PlatformNeeds = {
+  changesSize?: boolean;
+  has3DOperations?: boolean;
+  /** No value: a target of the route is a geometry target. */
+  movesGeometry?: boolean;
+};
+
+/**
+ * The route of a preset on the platform of the build. `makeTrack`
+ * (NativeLayoutTracks.cpp) asks the platform whether it plays a track before
+ * the track form check and the endpoint check of the track: a target that the
+ * platform does not play gives `UnsupportedTarget`, and the whole animation
+ * stays on the frame driver.
+ */
+function platformRouteOf(
+  route: string,
+  {
+    changesSize = false,
+    has3DOperations = false,
+    movesGeometry = movesGeometryOf(
+      route.split('+').map((target) => ({ target, moves: true }))
+    ),
+  }: PlatformNeeds = {}
+) {
+  const isRefused =
+    (changesSize && !PLAYS_SIZE_CHANGE) ||
+    (has3DOperations && !PLAYS_3D_OPERATIONS) ||
+    (movesGeometry && !PLAYS_MOVING_GEOMETRY);
+  return isRefused ? REFUSED_ROUTE : route;
+}
+
+/**
+ * A layout change of the preset rows goes from `REST` to `MOVED`: its size
+ * changes.
+ */
+const presetRouteOf = (PresetClass: Preset, flow: Flow, route: string) =>
+  platformRouteOf(route, {
+    changesSize: flow === 'layout' && isNativeRoute(route),
+    has3DOperations: THREE_D_PRESETS.includes(PresetClass),
+  });
 const routeNameOf = (route: string) =>
   isNativeRoute(route)
     ? `plays natively (${route})`
@@ -727,6 +800,7 @@ async function playTagged(referenceCase: ReferenceCase) {
 
 const caseOf = ({
   flow,
+  route,
   declare: declareFor,
   makeAnimation,
   delayMs,
@@ -737,6 +811,8 @@ const caseOf = ({
     easing: 'default',
     delays: delayMs === undefined ? undefined : [delayMs],
   }),
+  isFrameDriven: !isNativeRoute(route),
+  refusedWith: refusalOf(route),
   places: PLACES[flow],
   totalMs: (delayMs ?? 0) + DURATION,
   builder: makeAnimation as unknown as () => CallbackBuilder,
@@ -931,30 +1007,49 @@ function describeRow(
 }
 
 /** True when each target of the box shows the value of its model. */
-function isAtRest(box: BoxSample) {
-  const shown = scalarsOf(box, 'presentation');
-  const model = scalarsOf(box, 'model');
-  return (
-    SCALARS.every(
+/**
+ * The targets whose values of `first` and `second` differ by the rest tolerance
+ * or more, with the two values.
+ */
+function restFaultsOf(
+  [firstName, first]: [string, Record<string, number>],
+  [secondName, second]: [string, Record<string, number>],
+  [firstCells, secondCells]: [number[], number[]]
+) {
+  return [
+    ...SCALARS.filter(
       (target) =>
-        Math.abs(shown[target] - model[target]) < restToleranceOf(target)
-    ) &&
-    matrixDistance(box.Transform.presentation, box.Transform.model) <
-      AT_REST.cells
-  );
+        !(Math.abs(first[target] - second[target]) < restToleranceOf(target))
+    ).map(
+      (target) =>
+        `${target}: ${firstName} ${first[target]}, ${secondName} ${second[target]}`
+    ),
+    ...(matrixDistance(firstCells, secondCells) < AT_REST.cells
+      ? []
+      : [
+          `Transform: ${firstName} ${firstCells.join()}, ${secondName} ${secondCells.join()}`,
+        ]),
+  ];
 }
 
-function isSameModel(first: BoxSample, second: BoxSample) {
-  const firstModel = scalarsOf(first, 'model');
-  const secondModel = scalarsOf(second, 'model');
+/** The shown values of the rows of a box differ from row to row: the box moves. */
+const hasDistinctRows = (rows: BoxSample[]) =>
+  rows.length >= 2 &&
+  rows.every((row, index) => index === 0 || !isSameShown(row, rows[index - 1]));
+
+function isSameShown(first: BoxSample, second: BoxSample) {
+  const firstShown = scalarsOf(first, 'presentation');
+  const secondShown = scalarsOf(second, 'presentation');
   return (
     SCALARS.every(
       (target) =>
-        Math.abs(firstModel[target] - secondModel[target]) <
+        Math.abs(firstShown[target] - secondShown[target]) <
         restToleranceOf(target)
     ) &&
-    matrixDistance(first.Transform.model, second.Transform.model) <
-      AT_REST.cells
+    matrixDistance(
+      first.Transform.presentation,
+      second.Transform.presentation
+    ) < AT_REST.cells
   );
 }
 
@@ -1088,8 +1183,20 @@ function expectEndAsTwin(
     return;
   }
   expect(box!.Opacity.playbacks.length).toBe(0);
-  expect(isAtRest(box!)).toBe(true);
-  expect(isSameModel(box!, twin!)).toBe(true);
+  expect(
+    restFaultsOf(
+      ['shown', scalarsOf(box!, 'presentation')],
+      ['model', scalarsOf(box!, 'model')],
+      [box!.Transform.presentation, box!.Transform.model]
+    ).join('; ')
+  ).toBe('');
+  expect(
+    restFaultsOf(
+      ['model', scalarsOf(box!, 'model')],
+      ['twin model', scalarsOf(twin!, 'model')],
+      [box!.Transform.model, twin!.Transform.model]
+    ).join('; ')
+  ).toBe('');
 }
 
 /** The end of the two boxes of a played case, each target against the twin. */
@@ -1108,6 +1215,8 @@ async function expectPlayedEndAsTwin(flow: Flow, { events }: Played) {
 }
 
 const FRACTIONS = [0.25, 0.5, 0.75];
+// Not symmetric about one half: a curve that comes back to a value does not give one value at two rows.
+const FALLBACK_FRACTIONS = [0.3, 0.55, 0.8];
 
 /**
  * The route of a preset that stays frame-driven, its rows against its
@@ -1119,11 +1228,12 @@ async function expectAsTwin({
   route,
   makeAnimation,
 }: Omit<TimedPreset, 'declare'>) {
+  const fractions = isNativeRoute(route) ? FRACTIONS : FALLBACK_FRACTIONS;
   const played = await playScene({
     flow,
     makeAnimation,
     durationMs: DURATION,
-    fractions: FRACTIONS,
+    fractions,
   });
 
   expect(played.route).toBe(route);
@@ -1132,6 +1242,9 @@ async function expectAsTwin({
     expect(native.Opacity.playbacks.length).toBe(0);
     return compare(native, frame);
   });
+  if (!isNativeRoute(route)) {
+    expect(hasDistinctRows(played.rows.map(({ native }) => native))).toBe(true);
+  }
   console.log(
     [
       'PRESET',
@@ -1145,7 +1258,7 @@ async function expectAsTwin({
   played.rows.forEach((row, index) => {
     if (!isInBound || row.lateFramesMs.length > 0) {
       console.log(
-        `PRESET-ROW | ${name} | ${FRACTIONS[index]} | ${describeRow(row, comparisons[index], played.starts)}`
+        `PRESET-ROW | ${name} | ${fractions[index]} | ${describeRow(row, comparisons[index], played.starts)}`
       );
     }
   });
@@ -1211,7 +1324,7 @@ describe('native layout presets with their default easing', () => {
       const preset = {
         name: PresetClass.name,
         flow,
-        route,
+        route: presetRouteOf(PresetClass, flow, route),
         makeAnimation:
           makeTimed ?? (() => new PresetClass().duration(DURATION)),
       };
@@ -1225,7 +1338,13 @@ describe('native layout presets with their default easing', () => {
     }
   }
 
-  for (const variant of SEQUENCE_VARIANTS) {
+  for (const appleVariant of SEQUENCE_VARIANTS) {
+    const variant = {
+      ...appleVariant,
+      route: platformRouteOf(appleVariant.route, {
+        changesSize: appleVariant.flow === 'layout',
+      }),
+    };
     test(`${variant.name} ${routeNameOf(variant.route)} and ${ON_TIMELINE}`, () =>
       expectOnTimeline(variant));
   }
@@ -1275,7 +1394,8 @@ describe('native layout presets with no method call', () => {
 
   // The native box and its twin have a callback and no other method call. The third box has the preset itself.
   for (const [flow, presets] of FLOWS) {
-    for (const [PresetClass, route] of presets) {
+    for (const [PresetClass, appleRoute] of presets) {
+      const route = presetRouteOf(PresetClass, flow, appleRoute);
       test(`${PresetClass.name} with no method call ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
         const played = await playScene({
           flow,
@@ -1323,7 +1443,15 @@ describe('native layout transitions and a width change near 250 pt', () => {
     ['CurvedTransition', () => new CurvedTransition(), 240, NATIVE_ROUTE],
     ['CurvedTransition', () => new CurvedTransition(), 280, TWIN_ROUTE],
   ];
-  for (const [transitionName, makeAnimation, change, route] of transitions) {
+  for (const [
+    transitionName,
+    makeAnimation,
+    change,
+    appleRoute,
+  ] of transitions) {
+    const route = platformRouteOf(appleRoute, {
+      changesSize: isNativeRoute(appleRoute),
+    });
     test(`${transitionName} over a width change of ${change} pt ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
       const played = await playScene({
         flow: 'layout',
@@ -1421,7 +1549,14 @@ describe('native layout keyframes', () => {
         'LayoutBuildFailed:ResourceLimit',
       ],
     ];
-  for (const [keyframeName, flow, definitionsOf, delayMs, route] of keyframes) {
+  for (const [
+    keyframeName,
+    flow,
+    definitionsOf,
+    delayMs,
+    appleRoute,
+  ] of keyframes) {
+    const route = platformRouteOf(appleRoute);
     test(`a keyframe animation with ${keyframeName} ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
       const played = await playScene({
         flow,
@@ -1546,7 +1681,9 @@ describe('native layout animations with a plain number', () => {
       'LayoutBuildFailed:UnsupportedTrackForm',
     ],
   ];
-  for (const [caseName, flow, makeOf, offset, route] of plainNumbers) {
+  // Each Apple route of a plain number comes after the question to the platform in `makeTrack`.
+  for (const [caseName, flow, makeOf, offset, appleRoute] of plainNumbers) {
+    const route = platformRouteOf(appleRoute, { movesGeometry: true });
     test(`${caseName} ${routeNameOf(route)}, has its opacity on its declared timeline, shows the plain number in its first frames and at its middle, and ends as its frame-driven twin`, async () => {
       const isNative = isNativeRoute(route);
       const [initial, to] = flow === 'entering' ? [0, 1] : [1, 0];

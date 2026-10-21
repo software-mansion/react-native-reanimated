@@ -78,6 +78,14 @@ struct SameValueVisitor {
   }
 };
 
+/// A translation cell has the tolerance of a length.
+bool isSameCell(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs, const size_t cell) {
+  constexpr size_t firstTranslationCell = 12;
+  constexpr size_t lastTranslationCell = 14;
+  const bool isTranslation = cell >= firstTranslationCell && cell <= lastTranslationCell;
+  return isClose(lhs.matrix[cell], rhs.matrix[cell], isTranslation ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE);
+}
+
 } // namespace
 
 bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs) {
@@ -97,15 +105,24 @@ facebook::react::Transform matrixOf(const AnimationTransform &transform) {
 }
 
 bool isSameMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs) {
-  constexpr size_t firstTranslationCell = 12;
-  constexpr size_t lastTranslationCell = 14;
   for (size_t cell = 0; cell < lhs.matrix.size(); ++cell) {
-    const bool isTranslation = cell >= firstTranslationCell && cell <= lastTranslationCell;
-    if (!isClose(lhs.matrix[cell], rhs.matrix[cell], isTranslation ? ENDPOINT_TOLERANCE : MATRIX_CELL_TOLERANCE)) {
+    if (!isSameCell(lhs, rhs, cell)) {
       return false;
     }
   }
   return true;
+}
+
+bool isSameAffine2DMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs) {
+  return std::ranges::all_of(AFFINE_2D_MATRIX_CELLS, [&](const size_t cell) { return isSameCell(lhs, rhs, cell); });
+}
+
+bool hasSizeDependentTransform(const facebook::react::ViewProps &viewProps) {
+  using namespace facebook::react;
+  return viewProps.transformOrigin.isSet() ||
+      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
+           return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
+         });
 }
 
 bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget target) {

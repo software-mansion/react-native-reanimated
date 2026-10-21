@@ -1,5 +1,6 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -12,6 +13,7 @@
 #include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,10 +40,13 @@ NativeProxy::NativeProxy(
   const auto &uiManager = fabricUIManager->getBinding()->getScheduler()->getUIManager();
   std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
   std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
-  if constexpr (StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
+  if constexpr (
+      StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS") || reanimated::hasNativeLayoutRouteFlag()) {
     nativeAnimationPlatform_ = native_animation::AndroidNativeAnimationPlatform::create(
         getNativeAnimationExecutor(), uiManager, bindThis(&NativeProxy::getAnimationTimestamp));
     nativeAnimationHost = native_animation::NativeAnimationHost::create(nativeAnimationPlatform_);
+  }
+  if constexpr (StaticFeatureFlags::getFlag("ANDROID_CSS_PLATFORM_TRANSITIONS")) {
     platformTransitionBackend = css::makeCSSHostTransitionBackend(
         nativeAnimationHost,
         css::makeAndroidCSSRouteTable(nativeAnimationPlatform_->apiLevel(), [platform = nativeAnimationPlatform_] {
@@ -157,6 +162,29 @@ bool NativeProxy::hasNativeAnimationPlatform() {
   return nativeAnimationPlatform_ != nullptr;
 }
 
+bool NativeProxy::hasNativeLayoutRouteFlag() {
+  return reanimated::hasNativeLayoutRouteFlag();
+}
+
+void NativeProxy::nativeAnimationsWillMountItems() {
+  nativeAnimationPlatform_->willMountItems();
+}
+
+void NativeProxy::nativeAnimationsDidMountItems() {
+  nativeAnimationPlatform_->didMountItems(
+      [this](const std::uint64_t dispatch) { reanimatedModuleProxy_->pulledSurfacesDidMount(dispatch); });
+}
+
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+void NativeProxy::failNextNativeAnimationViewLookup(const int tag) {
+  nativeAnimationPlatform_->failNextViewLookup(tag);
+}
+
+jni::local_ref<jni::JArrayLong> NativeProxy::takeNativeAnimationViewLookupFailure() {
+  return nativeAnimationPlatform_->takeViewLookupFailure();
+}
+#endif
+
 bool NativeProxy::getIsReducedMotion() {
   static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
   return method(javaPart_.get());
@@ -176,8 +204,17 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("hasNativeAnimationPlatform", NativeProxy::hasNativeAnimationPlatform),
+       makeNativeMethod("hasNativeLayoutRouteFlag", NativeProxy::hasNativeLayoutRouteFlag),
+       makeNativeMethod("nativeAnimationsWillMountItems", NativeProxy::nativeAnimationsWillMountItems),
+       makeNativeMethod("nativeAnimationsDidMountItems", NativeProxy::nativeAnimationsDidMountItems),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  javaClassStatic()->registerNatives({
+      makeNativeMethod("failNextNativeAnimationViewLookupCpp", NativeProxy::failNextNativeAnimationViewLookup),
+      makeNativeMethod("takeNativeAnimationViewLookupFailureCpp", NativeProxy::takeNativeAnimationViewLookupFailure),
+  });
+#endif
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {

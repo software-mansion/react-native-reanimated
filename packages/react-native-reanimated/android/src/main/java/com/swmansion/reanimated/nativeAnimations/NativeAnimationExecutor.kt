@@ -1,28 +1,35 @@
 package com.swmansion.reanimated.nativeAnimations
 
 import android.animation.TimeInterpolator
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.view.View
+import android.view.animation.AnimationUtils
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.swmansion.reanimated.BuildConfig
 import java.lang.ref.WeakReference
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
 /**
  * Plays the tracks of the native animation host: one `ValueAnimator` per track, which writes the view
- * property that React Native writes. The C++ platform calls it; all track state is on the UI thread.
+ * property that React Native writes, or the animation matrix of the view for its geometry. The C++ platform
+ * calls it; all track state is on the UI thread.
  */
 internal class NativeAnimationExecutor(
     private val fabricUIManager: FabricUIManager,
     private val reactContext: WeakReference<ReactApplicationContext>,
+    /** Reanimated's clock at a time of `SystemClock.uptimeMillis()`. */
+    private val animationTimestampOf: (Long) -> Long,
     /** Runs a call into C++ only while the C++ state lives, and holds that state for the time of the call. */
     private val nativeCallGuard: (() -> Unit) -> Unit,
 ) {
@@ -30,6 +37,7 @@ internal class NativeAnimationExecutor(
     private lateinit var callbacks: NativeAnimationPlatformCallbacks
 
     private val playbacks = HashMap<TrackKey, TrackPlayback>()
+    private val geometryWriters = WeakHashMap<View, GeometryWriter>()
     private val timingCache = TimingCache()
     private val reconciler = PreDrawReconciler(::onPreDraw)
 
@@ -72,9 +80,50 @@ internal class NativeAnimationExecutor(
     }
 
     @DoNotStrip
-    fun isInWindow(tag: Int): Boolean {
+    fun isInWindow(
+        surfaceId: Int,
+        tag: Int,
+    ): Boolean = findView(surfaceId, tag)?.isAttachedToWindow == true
+
+    /** The model value of the target that the view holds, or that the record of its active track keeps. */
+    @DoNotStrip
+    fun modelOf(
+        view: View,
+        target: Int,
+    ): DoubleArray {
         UiThreadUtil.assertOnUiThread()
-        return viewOf(tag)?.isAttachedToWindow == true
+        if (target == TrackEncoding.TARGET_OPACITY) {
+            return doubleArrayOf(opacityBindingOf(view)?.model ?: view.alpha.toDouble())
+        }
+        return mountedGeometryModelOf(view, target, density)
+            ?: trackWriterFor(target)?.let { writer -> writer.readVisual(view)?.let(writer::sampleComponentsOf) }
+            ?: DoubleArray(0)
+    }
+
+    /** In a mount report: the mount gave the model of the target of the track the value [value]. */
+    @DoNotStrip
+    fun setModel(
+        surfaceId: Int,
+        tag: Int,
+        owner: Int,
+        generation: Long,
+        target: Int,
+        value: Double,
+    ) {
+        UiThreadUtil.assertOnUiThread()
+        if (invalidated) return
+        (playbacks[TrackKey(surfaceId, tag, owner, generation, target)]?.binding as? OpacityBinding)?.model = value
+    }
+
+    /** A synchronous props update wrote [opacity] to the view of the tag. */
+    fun setOpacityModel(
+        tag: Int,
+        opacity: Double,
+    ) {
+        UiThreadUtil.assertOnUiThread()
+        playbacks.values
+            .filter { it.key.tag == tag }
+            .forEach { (it.binding as? OpacityBinding)?.model = opacity }
     }
 
     @DoNotStrip
@@ -84,7 +133,8 @@ internal class NativeAnimationExecutor(
         tag: Int,
         owner: Int,
         generation: Long,
-        elapsedMs: Double,
+        passTimestampMs: Double,
+        originTimestampMs: Double,
         interruptedTargets: IntArray,
         trackInts: IntArray,
         trackDoubles: DoubleArray,
@@ -96,19 +146,20 @@ internal class NativeAnimationExecutor(
 
         val starts = ArrayList<TrackStart>()
         for (spec in TrackBufferParser(trackInts, trackDoubles).parse()) {
-            val writer =
-                trackWriterFor(spec.target) ?: return PreparationRejection(TrackEncoding.REASON_UNSUPPORTED_REALIZATION)
+            val binding =
+                bindingOf(spec, view) ?: return PreparationRejection(TrackEncoding.REASON_UNSUPPORTED_REALIZATION)
             val startValue =
-                startValueOf(spec, writer, view, spec.target in interruptedTargets)
+                startValueOf(spec, view, spec.target in interruptedTargets)
                     ?: return PreparationRejection(TrackEncoding.REASON_CURRENT_VALUE_UNAVAILABLE)
-            starts.add(TrackStart(spec, writer, startValue))
+            starts.add(TrackStart(spec, binding, startValue))
         }
 
+        val start = StartTime(passTimestampMs, originTimestampMs, leadMsAt(originTimestampMs))
         val tracks = ArrayList<TrackPlayback>(starts.size)
         try {
-            for (start in starts) {
-                val key = TrackKey(surfaceId, tag, owner, generation, start.spec.target)
-                tracks.add(playbackOf(key, view, start, elapsedMs, scale))
+            for (trackStart in starts) {
+                val key = TrackKey(surfaceId, tag, owner, generation, trackStart.spec.target)
+                tracks.add(playbackOf(key, view, trackStart, start, scale))
             }
         } catch (e: IllegalArgumentException) {
             tracks.forEach { it.timeline.release(timingCache) }
@@ -117,6 +168,10 @@ internal class NativeAnimationExecutor(
         return PreparedPlayback(this, tracks)
     }
 
+    /**
+     * [inDispatch]: the stop runs in the mount dispatch of its pull, after the mount items that gave the model
+     * its value.
+     */
     @DoNotStrip
     fun stop(
         surfaceId: Int,
@@ -125,14 +180,20 @@ internal class NativeAnimationExecutor(
         generation: Long,
         target: Int,
         mode: Int,
+        inDispatch: Boolean,
     ) {
         UiThreadUtil.assertOnUiThread()
         val playback = remove(TrackKey(surfaceId, tag, owner, generation, target)) ?: return
-        if (BuildConfig.DEBUG && mode == TrackEncoding.STOP_SETTLE_TO_MODEL) {
-            val view = playback.view.get()
-            check(view == null || findView(surfaceId, tag) !== view) {
-                "[Reanimated] A SettleToModel stop of a live view needs its model value, and the Android executor has none."
-            }
+        if (mode != TrackEncoding.STOP_SETTLE_TO_MODEL || inDispatch) return
+        val view = playback.view.get()
+        if (view == null || findView(surfaceId, tag) !== view) return
+        when (val binding = playback.binding) {
+            is OpacityBinding -> binding.writeModel(view)
+            is PropertyBinding ->
+                if (BuildConfig.DEBUG) {
+                    error("[Reanimated] A SettleToModel stop of a live view needs its model value, and the Android executor has none.")
+                }
+            else -> Unit
         }
     }
 
@@ -153,20 +214,12 @@ internal class NativeAnimationExecutor(
         UiThreadUtil.assertOnUiThread()
         val view = viewOf(tag) ?: return null
         val onView = playbacks.values.filter { it.view.get() === view }
-        val writer = trackWriterFor(target)
-        val shown = writer?.readVisual(view)?.let(writer::sampleComponentsOf) ?: DoubleArray(0)
         val member = onView.firstOrNull { it.key.target == target }
         return NativeAnimationSample(
-            model = shown,
-            presentation = shown,
+            model = modelOf(view, target),
+            presentation = presentationOf(view, target),
             playbacks = onView.flatMap { it.key.toLongs().asList() }.toLongArray(),
-            memberProperty = member?.writer?.property,
-            memberComponentCount = member?.let { it.writer.sampleComponentsOf(it.value).size } ?: 0,
-            memberValues =
-                member?.let { playback ->
-                    playback.timeline.values.flatMap { playback.writer.sampleComponentsOf(it).asList() }.toDoubleArray()
-                } ?: DoubleArray(0),
-            memberKeyTimes = member?.let { doubleArrayOf(0.0, *it.timeline.endOffsets) } ?: DoubleArray(0),
+            members = member?.let(::membersOf) ?: emptyArray(),
         )
     }
 
@@ -190,6 +243,7 @@ internal class NativeAnimationExecutor(
             val running = playbacks.values.toList()
             playbacks.clear()
             running.forEach { it.animator.cancel() }
+            geometryWriters.clear()
             reconciler.invalidate()
             timingCache.clear()
             drainPending.set(false)
@@ -212,9 +266,107 @@ internal class NativeAnimationExecutor(
 
     private class TrackStart(
         val spec: TrackSpec,
-        val writer: TrackWriter,
+        val binding: TrackBinding,
         val startValue: DoubleArray,
     )
+
+    /** The times of one request on Reanimated's clock. The tracks hold their start value for [leadMs] before the origin. */
+    private class StartTime(
+        val passTimestampMs: Double,
+        val originTimestampMs: Double,
+        val leadMs: Double,
+    ) {
+        val elapsedMs: Double
+            get() = passTimestampMs - originTimestampMs
+    }
+
+    /** The first animator frame of a start comes at the animation time of now or later. */
+    private fun leadMsAt(originTimestampMs: Double): Double =
+        max(0.0, originTimestampMs - animationTimestampOf(AnimationUtils.currentAnimationTimeMillis()))
+
+    private val density: Float
+        get() = PixelUtil.getDisplayMetricDensity()
+
+    private fun bindingOf(
+        spec: TrackSpec,
+        view: View,
+    ): TrackBinding? =
+        when {
+            spec.binding == TrackEncoding.BINDING_HOLD -> HoldBinding
+            spec.target == TrackEncoding.TARGET_OPACITY -> OpacityBinding(firstOpacityModelOf(spec, view))
+            isGeometryTarget(spec.target) -> geometryBindingOf(spec, view)
+            else -> trackWriterFor(spec.target)?.let(::PropertyBinding)
+        }
+
+    private fun firstOpacityModelOf(
+        spec: TrackSpec,
+        view: View,
+    ): Double =
+        if (spec.endpointPolicy == TrackEncoding.ENDPOINT_POLICY_EXECUTOR_COMMITS_ENDPOINT) {
+            spec.timelines
+                .single()
+                .segments
+                .last()
+                .endValue[0]
+        } else {
+            modelOf(view, spec.target)[0]
+        }
+
+    private fun geometryBindingOf(
+        spec: TrackSpec,
+        view: View,
+    ): TrackBinding? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        val writer = geometryWriters.getOrPut(view) { GeometryWriter(density) }
+        return if (spec.target == TrackEncoding.TARGET_TRANSFORM) {
+            GeometryBinding(writer, spec.target, spec.operations, 0f)
+        } else {
+            GeometryBinding(writer, spec.target, IntArray(0), mountedCentrePx(view, spec.target))
+        }
+    }
+
+    private fun opacityBindingOf(view: View): OpacityBinding? =
+        playbacks.values.firstNotNullOfOrNull { playback ->
+            (playback.binding as? OpacityBinding)?.takeIf { playback.view.get() === view }
+        }
+
+    private fun presentationOf(
+        view: View,
+        target: Int,
+    ): DoubleArray {
+        val model = mountedGeometryModelOf(view, target, density)
+        val writer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) geometryWriters[view] else null
+        return when {
+            model == null -> trackWriterFor(target)?.let { it.readVisual(view)?.let(it::sampleComponentsOf) } ?: DoubleArray(0)
+            writer == null -> model
+            target == TrackEncoding.TARGET_TRANSFORM -> writer.transformCells() ?: model
+            target == TrackEncoding.TARGET_POSITION_X || target == TrackEncoding.TARGET_POSITION_Y ->
+                doubleArrayOf(model[0] + writer.offsetPoints(target))
+            target == TrackEncoding.TARGET_POSITION ->
+                doubleArrayOf(
+                    model[0] + writer.offsetPoints(TrackEncoding.TARGET_POSITION_X),
+                    model[1] + writer.offsetPoints(TrackEncoding.TARGET_POSITION_Y),
+                )
+            else -> model
+        }
+    }
+
+    private fun membersOf(playback: TrackPlayback): Array<NativeAnimationMember> =
+        playback.timeline.components
+            .mapIndexed { index, component ->
+                val values = component.values.map(playback.binding::sampleComponentsOf)
+                NativeAnimationMember(
+                    property = playback.binding.memberProperty(index),
+                    componentCount = values.first().size,
+                    values = values.flatMap { it.asList() }.toDoubleArray(),
+                    keyTimes = doubleArrayOf(0.0, *component.endOffsets),
+                )
+            }.toTypedArray()
+
+    private fun isGeometryTarget(target: Int) =
+        target == TrackEncoding.TARGET_POSITION_X ||
+            target == TrackEncoding.TARGET_POSITION_Y ||
+            target == TrackEncoding.TARGET_TRANSFORM
 
     private fun viewOf(tag: Int): View? =
         try {
@@ -226,14 +378,13 @@ internal class NativeAnimationExecutor(
 
     private fun startValueOf(
         spec: TrackSpec,
-        writer: TrackWriter,
         view: View,
         isInterrupting: Boolean,
     ): DoubleArray? =
         when {
             spec.startForm == TrackEncoding.START_VALUE -> spec.startValue
             spec.startForm == TrackEncoding.START_CURRENT_VISUAL_VALUE || isInterrupting ->
-                writer.readVisual(view) ?: lastAppliedValueOf(view, spec.target)
+                trackWriterFor(spec.target)?.readVisual(view) ?: lastAppliedValueOf(view, spec.target)
             else -> spec.startValue
         }
 
@@ -251,38 +402,44 @@ internal class NativeAnimationExecutor(
     private fun playbackOf(
         key: TrackKey,
         view: View,
-        start: TrackStart,
-        elapsedMs: Double,
+        trackStart: TrackStart,
+        start: StartTime,
         scale: Float,
     ): TrackPlayback {
-        val spec = start.spec
-        val leadMs = max(0.0, -elapsedMs)
+        val spec = trackStart.spec
         val totalMs = spec.delayMs + spec.durationMs
-        val animatedMs = leadMs + totalMs
+        val animatedMs = start.leadMs + totalMs
         // startDelay writes nothing while it waits, so a commit in the delay would stay on
         // screen. Folding the lead and the delay into the timeline rewrites the property instead.
-        val holdFraction = if (animatedMs > 0) ((leadMs + spec.delayMs) / animatedMs).toFloat() else 0f
+        val holdFraction = if (animatedMs > 0) ((start.leadMs + spec.delayMs) / animatedMs).toFloat() else 0f
+        val alignment =
+            if (animatedMs > 0) {
+                AnimatorAlignment(start.originTimestampMs - start.leadMs, animatedMs, animationTimestampOf)
+            } else {
+                null
+            }
         return TrackPlayback(
             key = key,
             view = view,
-            writer = start.writer,
-            timeline = timelineOf(spec, start.writer, start.startValue, holdFraction),
+            binding = trackStart.binding,
+            timeline = timelineOf(spec, trackStart.startValue, holdFraction),
             holdsEndValue = spec.endpointPolicy == TrackEncoding.ENDPOINT_POLICY_HOLD_WITHOUT_COMMIT,
-            startValue = start.startValue,
+            endsAtModel = spec.endpointPolicy == TrackEncoding.ENDPOINT_POLICY_MOUNTED_MODEL_MUST_MATCH_ENDPOINT,
+            startValue = trackStart.startValue,
             animatorDurationMs = (animatedMs * slowAnimationsDragFactor / scale).toLong().coerceAtLeast(1L),
-            seekFraction = if (elapsedMs > 0 && totalMs > 0) (elapsedMs / totalMs).toFloat().coerceIn(0f, 1f) else null,
-            writesStartValue = elapsedMs < totalMs,
+            seekFraction = alignment?.fractionAt(start.passTimestampMs)?.takeIf { it > 0f },
+            writesStartValue = start.elapsedMs < totalMs,
+            alignment = alignment,
             onEnd = ::onAnimationEnd,
         )
     }
 
     private fun timelineOf(
         spec: TrackSpec,
-        writer: TrackWriter,
         startValue: DoubleArray,
         holdFraction: Float,
     ): Timeline {
-        val timingKeys = spec.segments.map { it.timing }
+        val timingKeys = spec.timelines.flatMap { timeline -> timeline.segments.map { it.timing } }
         val timings = ArrayList<TimeInterpolator>(timingKeys.size)
         try {
             timingKeys.forEach { timings.add(timingCache.acquire(it)) }
@@ -290,21 +447,37 @@ internal class NativeAnimationExecutor(
             timingKeys.take(timings.size).forEach(timingCache::release)
             throw e
         }
-        return Timeline(
-            values = listOf(startValue) + spec.segments.map { it.endValue },
-            endOffsets = spec.segments.map { it.endOffset }.toDoubleArray(),
-            timings = timings,
-            timingKeys = timingKeys,
-            holdFraction = holdFraction,
-            writer = writer,
-        )
+        val interpolation = slotInterpolationOf(spec.target)
+        var firstTiming = 0
+        val components =
+            spec.timelines.mapIndexed { index, timeline ->
+                val slot = index * spec.componentCount
+                val segmentCount = timeline.segments.size
+                ComponentTimeline(
+                    slot = slot,
+                    values =
+                        listOf(startValue.copyOfRange(slot, slot + spec.componentCount)) + timeline.segments.map { it.endValue },
+                    endOffsets = timeline.segments.map { it.endOffset }.toDoubleArray(),
+                    timings = timings.subList(firstTiming, firstTiming + segmentCount),
+                    timingKeys = timingKeys.subList(firstTiming, firstTiming + segmentCount),
+                    interpolation = interpolation,
+                ).also { firstTiming += segmentCount }
+            }
+        return Timeline(components, holdFraction)
     }
+
+    /** A writer of a view property blends its whole value; each other slot is one scalar. */
+    private fun slotInterpolationOf(target: Int): SlotInterpolation =
+        trackWriterFor(target)?.let { writer ->
+            SlotInterpolation { from, to, progress, value, _ -> writer.interpolate(from, to, progress, value) }
+        } ?: SCALAR_SLOT
 
     private fun onAnimationEnd(playback: TrackPlayback) {
         // The animator can post a natural end after the record left the map.
         if (playbacks[playback.key] !== playback) return
         if (!playback.holdsEndValue) {
             playbacks.remove(playback.key)
+            playback.view.get()?.let(playback.binding::release)
             playback.timeline.release(timingCache)
         }
         val key = playback.key
@@ -314,6 +487,7 @@ internal class NativeAnimationExecutor(
     private fun remove(key: TrackKey): TrackPlayback? {
         val playback = playbacks.remove(key) ?: return null
         playback.animator.cancel()
+        playback.view.get()?.let(playback.binding::release)
         playback.timeline.release(timingCache)
         return playback
     }

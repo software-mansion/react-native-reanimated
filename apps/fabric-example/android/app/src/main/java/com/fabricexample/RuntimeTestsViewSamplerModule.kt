@@ -1,5 +1,8 @@
 package com.fabricexample
 
+import android.animation.Animator
+import android.graphics.Matrix
+import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
@@ -17,20 +20,25 @@ import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.LengthPercentageType
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.react.uimanager.style.BorderRadiusProp
 import com.facebook.react.uimanager.style.LogicalEdge
+import com.swmansion.reanimated.NativeProxy
+import com.swmansion.reanimated.ReanimatedModule
 
 /**
  * Records the drawn value of view properties at each draw of the window, with the uptime of the draw. It reads the
- * view, so it gives the same data for each driver of the property.
+ * view, so it gives the same data for each driver of the property. A property can have more than one value: the
+ * geometry reads are in dp.
  */
 @ReactModule(name = RuntimeTestsViewSamplerModule.NAME)
 class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
 
   companion object {
     const val NAME = "RuntimeTestsViewSampler"
+    private const val AFFINE_CELL_COUNT = 6
   }
 
   private class Recording(
@@ -93,6 +101,43 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   @ReactMethod
   fun apiLevel(promise: Promise) = promise.resolve(Build.VERSION.SDK_INT)
 
+  /**
+   * `Animator.isPostNotifyEndListenerEnabled()`, a hidden API: true when the natural end of an animator reports in
+   * the next frame. Null when reflection does not reach it.
+   */
+  @ReactMethod
+  fun postsAnimatorEnd(promise: Promise) {
+    val enabled =
+      runCatching { Animator::class.java.getMethod("isPostNotifyEndListenerEnabled").invoke(null) as Boolean }.getOrNull()
+    promise.resolve(enabled)
+  }
+
+  /** The next view lookup of a native layout start of the tag finds no view (`NativeProxy`). */
+  @ReactMethod
+  fun failNextViewLookup(tag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val nativeProxy = nativeProxy()
+      if (nativeProxy == null) {
+        promise.reject("E_NO_NATIVE_PROXY", "Reanimated has no native proxy.")
+        return@runOnUiThread
+      }
+      nativeProxy.failNextNativeAnimationViewLookup(tag.toInt())
+      promise.resolve(null)
+    }
+  }
+
+  /**
+   * The playbacks on the view at the failed lookup, five numbers for each (surface, tag, owner, generation,
+   * target); null when the lookup did not fail.
+   */
+  @ReactMethod
+  fun takeViewLookupFailure(promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val failure = nativeProxy()?.takeNativeAnimationViewLookupFailure()
+      promise.resolve(failure?.let { keys -> Arguments.fromArray(keys.map(Long::toDouble).toDoubleArray()) })
+    }
+  }
+
   override fun invalidate() {
     UiThreadUtil.runOnUiThread { recording?.let(::detach) }
     super.invalidate()
@@ -117,22 +162,69 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
     }
   }
 
+  private fun nativeProxy(): NativeProxy? =
+    reactApplicationContext.getNativeModule(ReanimatedModule::class.java)?.nodesManager?.getNativeProxy()
+
   private fun rowOf(views: List<View>, properties: List<String>): DoubleArray =
     doubleArrayOf(
       SystemClock.uptimeMillis().toDouble(),
-      *views.flatMap { view -> properties.map { valueOf(view, it) } }.toDoubleArray(),
+      *views.flatMap { view -> properties.flatMap { valuesOf(view, it) } }.toDoubleArray(),
     )
 
-  private fun valueOf(view: View, property: String): Double =
+  private fun valuesOf(view: View, property: String): List<Double> =
     when (property) {
-      "opacity" -> view.alpha.toDouble()
-      "backgroundColor" -> colorValueOf(BackgroundStyleApplicator.getBackgroundColor(view))
-      "borderColor" -> colorValueOf(BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL))
-      "borderRadius" -> borderRadiusOf(view)
+      "opacity" -> listOf(view.alpha.toDouble())
+      "backgroundColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBackgroundColor(view)))
+      "borderColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL)))
+      "borderRadius" -> listOf(borderRadiusOf(view))
       "shadowColor" ->
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) colorValueOf(view.outlineAmbientShadowColor) else Double.NaN
-      else -> Double.NaN
+        listOf(
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) colorValueOf(view.outlineAmbientShadowColor) else Double.NaN,
+        )
+      "frame" -> listOf(view.left, view.top, view.width, view.height).map { dpOf(it.toFloat()) }
+      "translation" -> listOf(dpOf(view.translationX), dpOf(view.translationY))
+      "animationMatrix" -> animationMatrixOf(view)?.let(::affineCellsOf) ?: List(AFFINE_CELL_COUNT) { Double.NaN }
+      "drawnMatrix" -> affineCellsOf(drawnMatrixOf(view))
+      "hitRect" -> Rect().also(view::getHitRect).let(::dpOfRect)
+      "accessibilityBounds" -> accessibilityBoundsOf(view)
+      else -> listOf(Double.NaN)
     }
+
+  private fun dpOf(px: Float): Double = (px / PixelUtil.getDisplayMetricDensity()).toDouble()
+
+  private fun dpOfRect(rect: Rect): List<Double> =
+    listOf(rect.left, rect.top, rect.right, rect.bottom).map { dpOf(it.toFloat()) }
+
+  private fun animationMatrixOf(view: View): Matrix? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) view.animationMatrix else null
+
+  /** `animationMatrix ∘ matrix`: the map from the view to its place in the parent, without the frame origin. */
+  private fun drawnMatrixOf(view: View): Matrix =
+    Matrix(view.matrix).apply { animationMatrixOf(view)?.let(::postConcat) }
+
+  /**
+   * The cells 0, 1, 4, 5, 12, and 13 of `facebook::react::Transform` (row vectors): scale x, skew y, skew x,
+   * scale y, and the translation in dp.
+   */
+  private fun affineCellsOf(matrix: Matrix): List<Double> {
+    val cells = FloatArray(9).also(matrix::getValues)
+    return listOf(
+      cells[Matrix.MSCALE_X].toDouble(),
+      cells[Matrix.MSKEW_Y].toDouble(),
+      cells[Matrix.MSKEW_X].toDouble(),
+      cells[Matrix.MSCALE_Y].toDouble(),
+      dpOf(cells[Matrix.MTRANS_X]),
+      dpOf(cells[Matrix.MTRANS_Y]),
+    )
+  }
+
+  private fun accessibilityBoundsOf(view: View): List<Double> {
+    val node = view.createAccessibilityNodeInfo()
+    val bounds = Rect().also(node::getBoundsInScreen)
+    @Suppress("DEPRECATION")
+    node.recycle()
+    return dpOfRect(bounds)
+  }
 
   /** The ARGB int as an unsigned number. No color is NaN. */
   private fun colorValueOf(color: Int?): Double = color?.let { (it.toLong() and 0xFFFFFFFFL).toDouble() } ?: Double.NaN

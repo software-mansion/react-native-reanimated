@@ -5,6 +5,9 @@ type Describe = (name: string, buildSuite: () => void) => void;
 type TransitionValues = {
   describeTransitionValues: (run: { slowAnimations: boolean }) => void;
 };
+type ThrownMountItem = {
+  describeThrownMountItem: (throwForm: 'fatal') => void;
+};
 
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
@@ -195,6 +198,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout mount window',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutMountWindow.test');
+    },
+  },
+  {
     testSuiteName: 'native layout transform',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutTransform.test');
@@ -294,5 +303,14 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/StrictMode/StrictMode.test');
     },
+  },
+  {
+    testSuiteName: 'native layout fatal mount item',
+    importTest: () => {
+      const { describeThrownMountItem } =
+        require('./tests/layoutAnimations/nativeLayoutThrownMountItem') as ThrownMountItem;
+      describeThrownMountItem('fatal');
+    },
+    skipByDefault: true,
   },
 ];

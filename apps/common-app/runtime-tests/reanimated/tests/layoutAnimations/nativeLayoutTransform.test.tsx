@@ -43,6 +43,12 @@
  * `WRITE-ORDER` row and asserts the statements of that order. It has no load switch, so it does not assert
  * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
  * the interval before the first read.
+ *
+ * The tests of `native layout transform forms against the frame driver` need the view sampler of the
+ * Android test host. At each draw it maps the four corners of each box through the drawn matrix of the
+ * view. Each test compares the native box with its frame-driven twin in the same draw, at each progress
+ * of the iOS pixel table from the origin of the native track. Pixels and the alignment of the two starts
+ * are not tested.
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
@@ -51,6 +57,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import {
   Easing,
   getStaticFeatureFlag,
+  Keyframe,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -66,6 +73,13 @@ import {
   test,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { RecordedProperty } from '../viewSampler';
+import {
+  drawnPointOf,
+  isViewSamplerAvailable,
+  recordDrawnValues,
+  valueCountOf,
+} from '../viewSampler';
 import {
   BACK_AT_START,
   COMMITTED_ROTATION,
@@ -107,6 +121,8 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  afterMountOf,
+  appleSample,
   Box,
   BOX_REF,
   builderCalls,
@@ -116,6 +132,8 @@ import {
   endCellsOf,
   endTransformOf,
   FRAME_BOX_REF,
+  frameDrivenOf,
+  HAS_EDGE_ANTIALIASING,
   hasNativeLayoutRoute,
   isHostEvent,
   isSameLeaf,
@@ -123,14 +141,22 @@ import {
   middleOf,
   mountScene,
   namedBuilderCalls,
+  has3D,
+  PLAYS_3D_OPERATIONS,
+  PLAYS_CORE_ANIMATION_MEMBERS,
+  POSITION_TOLERANCE,
   readFrameRecords,
+  routeOf,
   sample,
   SizeBox,
   SizePair,
   styles,
   summarize,
+  takeTrace,
   takeTraceOf,
   withTracking,
+  movingGeometryTest,
+  PLAYS_TRANSFORM_ON_EACH_COMPONENT,
 } from './nativeLayoutTestKit';
 
 type StyleTransform = ViewStyle['transform'];
@@ -141,6 +167,7 @@ const TRANSFORM_START =
   'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Transform > Admitted';
 const TRANSFORM_END = 'TrackEnded:Transform:true > Ended:Finished:None';
 const DEGREE = Math.PI / 180;
+const DRAWN_ANGLE_TOLERANCE = 1e-3;
 const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const REST_TOLERANCE: MatrixTolerance = { cells: 0.0001, translation: 0.01 };
 
@@ -236,49 +263,67 @@ const buildFailures = (events: TraceEvent[]) =>
     .map(({ buildFailure }) => buildFailure)
     .join();
 
-const pieceCountOf = ({ members }: TargetSample) =>
-  members[1].values.length - 1;
+/**
+ * The member of the operation at `operation` in the style array: Core Animation
+ * has an identity base member and the operations in the reverse order, Android
+ * has the operations in their order.
+ */
+const operationMemberOf = ({ members }: TargetSample, operation: number) =>
+  PLAYS_CORE_ANIMATION_MEMBERS
+    ? members[members.length - 1 - operation]
+    : members[operation];
+
+const pieceCountOf = (sampled: TargetSample) =>
+  operationMemberOf(sampled, 0).values.length - 1;
 
 describe('native layout transform', () => {
   if (!hasNativeLayoutRoute) {
     return;
   }
 
-  for (const [caseName, referenceCase] of Object.entries(ONE_OPERATION_CASES)) {
-    test(`${caseName} plays natively, and the native values and the frames of the frame driver are on its timeline`, async () => {
-      const { events, reads } = await playCase(caseName, referenceCase);
-      expect(summarizeStart(events)).toBe(TRANSFORM_START);
-      expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
-      expectOneKeyWhilePlaying(reads);
-      await render(null);
-    });
+  for (const [caseName, referenceCase] of Object.entries(
+    ONE_OPERATION_CASES
+  ).filter(([, { operations }]) => PLAYS_3D_OPERATIONS || !has3D(operations))) {
+    movingGeometryTest(
+      `${caseName} plays natively, and the native values and the frames of the frame driver are on its timeline`,
+      async () => {
+        const { events, reads } = await playCase(caseName, referenceCase);
+        expect(summarizeStart(events)).toBe(TRANSFORM_START);
+        expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
+        expectOneKeyWhilePlaying(reads);
+        await render(null);
+      }
+    );
   }
 
-  test('a rotation of one turn with Easing.bounce of a view of 100 x 60 pt plays natively no more than 0.25 pt at its corner from its easing function, with more pieces than a quarter turn', async () => {
-    const SIZE = { width: 100, height: 60 };
-    const LEVER = Math.hypot(SIZE.width, SIZE.height) / 2;
-    const bounce: Leaf = { easing: Easing.bounce };
-    const quarterTurn = pieceCountOf(
-      (await membersOf([['rotate', '0deg', '90deg']], bounce)).playing
-    );
+  movingGeometryTest(
+    'a rotation of one turn with Easing.bounce of a view of 100 x 60 pt plays natively no more than 0.25 pt at its corner from its easing function, with more pieces than a quarter turn',
+    async () => {
+      const SIZE = { width: 100, height: 60 };
+      const LEVER = Math.hypot(SIZE.width, SIZE.height) / 2;
+      const bounce: Leaf = { easing: Easing.bounce };
+      const quarterTurn = pieceCountOf(
+        (await membersOf([['rotate', '0deg', '90deg']], bounce)).playing
+      );
 
-    const { events, reads } = await playCase(
-      'a rotation of one turn with Easing.bounce',
-      transformCaseOf([['rotate', '0deg', '360deg']], bounce, {
-        places: TRANSFORM_PLACES.map((place) => ({ ...place, ...SIZE })),
-        // The sine and the cosine of the rotation, each this near, put the corner 0.25 pt or less from
-        // its declared place.
-        matrixTolerance: {
-          cells: 0.25 / LEVER / Math.SQRT2,
-          translation: REST_TOLERANCE.translation,
-        },
-      })
-    );
-    expect(summarizeStart(events)).toBe(TRANSFORM_START);
-    expect(pieceCountOf(reads[0].sampled) > quarterTurn).toBe(true);
-    expectOneKeyWhilePlaying(reads);
-    await render(null);
-  });
+      const { events, reads } = await playCase(
+        'a rotation of one turn with Easing.bounce',
+        transformCaseOf([['rotate', '0deg', '360deg']], bounce, {
+          places: TRANSFORM_PLACES.map((place) => ({ ...place, ...SIZE })),
+          // The sine and the cosine of the rotation, each this near, put the corner 0.25 pt or less from
+          // its declared place.
+          matrixTolerance: {
+            cells: 0.25 / LEVER / Math.SQRT2,
+            translation: REST_TOLERANCE.translation,
+          },
+        })
+      );
+      expect(summarizeStart(events)).toBe(TRANSFORM_START);
+      expect(pieceCountOf(reads[0].sampled) > quarterTurn).toBe(true);
+      expectOneKeyWhilePlaying(reads);
+      await render(null);
+    }
+  );
 
   async function membersOf(
     operations: Operation[],
@@ -301,139 +346,260 @@ describe('native layout transform', () => {
     };
   }
 
-  test('the members after the base are the operations in the reverse order of the style array', async () => {
-    const translateThenRotate = await membersOf([
-      ['translateX', 0, 100],
-      ['rotate', 0, 1.5],
-    ]);
-    expect(summarizeStart(translateThenRotate.events)).toBe(TRANSFORM_START);
-    expect(translateThenRotate.properties.join()).toBe(
-      'transform,transform.rotateZ,transform.translateX'
+  const TRANSLATE_THEN_ROTATE: Operation[] = [
+    ['translateX', 0, 100],
+    ['rotate', 0, 1.5],
+  ];
+  const ROTATE_THEN_TRANSLATE: Operation[] = [
+    ['rotate', 0, 1.5],
+    ['translateX', 0, 100],
+  ];
+  const TWO_ROTATIONS: Operation[] = [
+    ['rotate', '10deg', '100deg'],
+    ['rotate', '20deg', '20deg'],
+  ];
+
+  if (PLAYS_CORE_ANIMATION_MEMBERS) {
+    movingGeometryTest(
+      'the members after the base are the operations in the reverse order of the style array',
+      async () => {
+        const translateThenRotate = await membersOf(TRANSLATE_THEN_ROTATE);
+        expect(summarizeStart(translateThenRotate.events)).toBe(
+          TRANSFORM_START
+        );
+        expect(translateThenRotate.properties.join()).toBe(
+          'transform,transform.rotateZ,transform.translateX'
+        );
+        expect(translateThenRotate.members[0].values[0].join()).toBe(
+          '1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1'
+        );
+        expect(translateThenRotate.members[2].values[1].join()).toBe('100');
+
+        const rotateThenTranslate = await membersOf(ROTATE_THEN_TRANSLATE);
+        expect(rotateThenTranslate.properties.join()).toBe(
+          'transform,transform.translateX,transform.rotateZ'
+        );
+      }
     );
-    expect(translateThenRotate.members[0].values[0].join()).toBe(
-      '1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1'
+
+    movingGeometryTest(
+      'two operations of one kind are two members, and one that does not change is a matrix',
+      async () => {
+        const { events, members, properties } = await membersOf(TWO_ROTATIONS);
+        expect(summarizeStart(events)).toBe(TRANSFORM_START);
+        expect(properties.join()).toBe('transform,transform,transform.rotateZ');
+        expect(
+          Math.abs(members[1].values[0][0] - Math.cos(20 * DEGREE)) < 1e-6
+        ).toBe(true);
+        expect(members[1].values[0].join()).toBe(members[1].values[1].join());
+        expect(Math.abs(members[2].values[0][0] - 10 * DEGREE) < 1e-6).toBe(
+          true
+        );
+        expect(Math.abs(members[2].values[1][0] - 100 * DEGREE) < 1e-6).toBe(
+          true
+        );
+      }
     );
-    expect(translateThenRotate.members[2].values[1].join()).toBe('100');
+  } else {
+    movingGeometryTest(
+      'the members are the operations in the order of the style array',
+      async () => {
+        const translateThenRotate = await membersOf(TRANSLATE_THEN_ROTATE);
+        expect(summarizeStart(translateThenRotate.events)).toBe(
+          TRANSFORM_START
+        );
+        expect(translateThenRotate.properties.join()).toBe(
+          'transform.translateX,transform.rotateZ'
+        );
+        expect(translateThenRotate.members[0].values[1].join()).toBe('100');
 
-    const rotateThenTranslate = await membersOf([
-      ['rotate', 0, 1.5],
-      ['translateX', 0, 100],
-    ]);
-    expect(rotateThenTranslate.properties.join()).toBe(
-      'transform,transform.translateX,transform.rotateZ'
+        const rotateThenTranslate = await membersOf(ROTATE_THEN_TRANSLATE);
+        expect(rotateThenTranslate.properties.join()).toBe(
+          'transform.rotateZ,transform.translateX'
+        );
+      }
     );
-  });
 
-  test('two operations of one kind are two members, and one that does not change is a matrix', async () => {
-    const { events, members, properties } = await membersOf([
-      ['rotate', '10deg', '100deg'],
-      ['rotate', '20deg', '20deg'],
-    ]);
-    expect(summarizeStart(events)).toBe(TRANSFORM_START);
-    expect(properties.join()).toBe('transform,transform,transform.rotateZ');
-    expect(
-      Math.abs(members[1].values[0][0] - Math.cos(20 * DEGREE)) < 1e-6
-    ).toBe(true);
-    expect(members[1].values[0].join()).toBe(members[1].values[1].join());
-    expect(Math.abs(members[2].values[0][0] - 10 * DEGREE) < 1e-6).toBe(true);
-    expect(Math.abs(members[2].values[1][0] - 100 * DEGREE) < 1e-6).toBe(true);
-  });
-
-  test('a perspective is a matrix member and scale has one factor for each axis', async () => {
-    const flip = await membersOf([
-      ['perspective', 500, 500],
-      ['rotateX', '90deg', '0deg'],
-    ]);
-    expect(summarizeStart(flip.events)).toBe(TRANSFORM_START);
-    expect(flip.properties.join()).toBe(
-      'transform,transform.rotateX,transform'
+    movingGeometryTest(
+      'two operations of one kind are two members, and one that does not change keeps its value',
+      async () => {
+        const { events, members, properties } = await membersOf(TWO_ROTATIONS);
+        expect(summarizeStart(events)).toBe(TRANSFORM_START);
+        expect(properties.join()).toBe('transform.rotateZ,transform.rotateZ');
+        expect(Math.abs(members[0].values[0][0] - 10 * DEGREE) < 1e-6).toBe(
+          true
+        );
+        expect(Math.abs(members[0].values[1][0] - 100 * DEGREE) < 1e-6).toBe(
+          true
+        );
+        expect(
+          members[1].values.every(
+            ([value]) => Math.abs(value - 20 * DEGREE) < 1e-6
+          )
+        ).toBe(true);
+      }
     );
-    expect(Math.abs(flip.members[2].values[0][11] + 1 / 500) < 1e-6).toBe(true);
 
-    const zoom = await membersOf([['scale', 0.5, 1.5]]);
-    expect(zoom.properties.join()).toBe('transform,transform.scale');
-    expect(zoom.members[1].values[0].join()).toBe('0.5,0.5,0.5');
-    expect(zoom.members[1].values[1].join()).toBe('1.5,1.5,1.5');
-  });
+    movingGeometryTest('scale is one member with one value', async () => {
+      const zoom = await membersOf([['scale', 0.5, 1.5]]);
+      expect(summarizeStart(zoom.events)).toBe(TRANSFORM_START);
+      expect(zoom.properties.join()).toBe('transform.scale');
+      expect(zoom.members[0].values[0].join()).toBe('0.5');
+      expect(zoom.members[0].values[1].join()).toBe('1.5');
+    });
+  }
 
-  test('a rotation of two turns is on its timeline: it shows one quarter turn at one eighth of its time', async () => {
-    const caseName = 'a rotation of two turns';
-    const { rows } = await playCase(caseName, TRANSFORM_CASES[caseName]);
-    for (const { row } of rows) {
-      expectCells(row.native.Transform.model, IDENTITY);
+  if (PLAYS_CORE_ANIMATION_MEMBERS && PLAYS_3D_OPERATIONS) {
+    movingGeometryTest(
+      'a perspective is a matrix member and scale has one factor for each axis',
+      async () => {
+        const flip = await membersOf([
+          ['perspective', 500, 500],
+          ['rotateX', '90deg', '0deg'],
+        ]);
+        expect(summarizeStart(flip.events)).toBe(TRANSFORM_START);
+        expect(flip.properties.join()).toBe(
+          'transform,transform.rotateX,transform'
+        );
+        expect(Math.abs(flip.members[2].values[0][11] + 1 / 500) < 1e-6).toBe(
+          true
+        );
+
+        const zoom = await membersOf([['scale', 0.5, 1.5]]);
+        expect(zoom.properties.join()).toBe('transform,transform.scale');
+        expect(zoom.members[1].values[0].join()).toBe('0.5,0.5,0.5');
+        expect(zoom.members[1].values[1].join()).toBe('1.5,1.5,1.5');
+      }
+    );
+  }
+
+  movingGeometryTest(
+    'a rotation of two turns is on its timeline: it shows one quarter turn at one eighth of its time',
+    async () => {
+      const caseName = 'a rotation of two turns';
+      const { rows } = await playCase(caseName, TRANSFORM_CASES[caseName]);
+      for (const { row } of rows) {
+        expectCells(row.native.Transform.model, IDENTITY);
+      }
+      await render(null);
     }
-    await render(null);
-  });
+  );
 
-  test('a transform leaf on a ScrollView stays frame-driven', async () => {
-    const operations: Operation[] = [['rotate', 0, 1]];
-    const layouts = transformPairOf(operations, { duration: 300 });
-    const style = endTransformOf(operations);
-    const box: SizeBoxProps = { host: 'ScrollView' };
-    const tag = await mountScene(pairSceneOf(layouts, style, box));
-    await render(pairSceneOf(layouts, style, { ...box, left: END_LEFT }));
-    await wait(500);
-    expect(
-      summarize(
-        (await takeTraceOf(tag)).filter(
-          ({ event }) => event !== 'FrameUpdateMounted'
+  movingGeometryTest(
+    `a transform leaf on a ScrollView ${PLAYS_TRANSFORM_ON_EACH_COMPONENT ? 'plays natively' : 'stays frame-driven'}`,
+    async () => {
+      const operations: Operation[] = [['rotate', 0, 1]];
+      const layouts = transformPairOf(operations, { duration: 300 });
+      const style = endTransformOf(operations);
+      const box: SizeBoxProps = { host: 'ScrollView' };
+      const tag = await mountScene(pairSceneOf(layouts, style, box));
+      const move = async () => {
+        await render(pairSceneOf(layouts, style, { ...box, left: END_LEFT }));
+        await wait(500);
+      };
+      let drawnAngles: number[] = [];
+      if (PLAYS_TRANSFORM_ON_EACH_COMPONENT) {
+        const draws = await recordDrawnValues(tag, ['drawnMatrix'], move);
+        drawnAngles = draws.map(({ values: [cosine, sine] }) =>
+          Math.atan2(sine, cosine)
+        );
+      } else {
+        await move();
+      }
+      expect(
+        summarize(
+          (await takeTraceOf(tag)).filter(
+            ({ event }) => event !== 'FrameUpdateMounted'
+          )
         )
-      )
-    ).toBe('LayoutBuildFailed:UnsupportedTarget');
-    expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
-    await render(null);
-  });
-
-  test('the start value stays on screen through the delay', async () => {
-    const caseName = 'a translation after a delay';
-    const { rows, end } = await playCase(caseName, TRANSFORM_CASES[caseName]);
-    for (const { row } of rows) {
-      expect(row.native.Transform.model[12]).toBe(0);
+      ).toBe(
+        PLAYS_TRANSFORM_ON_EACH_COMPONENT
+          ? `${TRANSFORM_START} > ClientAdmitted > ${TRANSFORM_END} > ClientEnded:Finished:None`
+          : 'LayoutBuildFailed:UnsupportedTarget'
+      );
+      expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+      if (PLAYS_TRANSFORM_ON_EACH_COMPONENT) {
+        console.log(
+          `RuntimeTestsScrollViewDrawnAngles ${JSON.stringify(drawnAngles)}`
+        );
+        expect(drawnAngles.some((angle) => angle > 0.1 && angle < 0.9)).toBe(
+          true
+        );
+        expect(
+          drawnAngles.every(
+            (angle, index) =>
+              index === 0 ||
+              angle >= drawnAngles[index - 1] - DRAWN_ANGLE_TOLERANCE
+          )
+        ).toBe(true);
+        expect(
+          Math.abs((drawnAngles[drawnAngles.length - 1] ?? 0) - 1) <
+            DRAWN_ANGLE_TOLERANCE
+        ).toBe(true);
+      }
+      await render(null);
     }
-    expect(end!.native.Transform.presentation[12]).toBe(0);
-    await render(null);
-  });
+  );
 
-  test('no duration with a delay holds the start value, then the model shows', async () => {
-    const { events, reads, end } = await playCase(
-      'no duration with a delay',
-      transformCaseOf(
-        [['scaleX', 0.5, 1]],
-        { duration: 0, delays: [600] },
-        {
-          totalMs: 600,
-          matrixTolerance: { ...REST_TOLERANCE, translation: 0.005 },
-        }
-      )
-    );
-    expect(summarizeStart(events)).toBe(TRANSFORM_START);
-    expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
-    expectOneKeyWhilePlaying(reads);
-    expect(end!.native.Transform.presentation[0]).toBe(1);
-    expect(end!.frame.Transform.model[0]).toBe(1);
-    await render(null);
-  });
+  movingGeometryTest(
+    'the start value stays on screen through the delay',
+    async () => {
+      const caseName = 'a translation after a delay';
+      const { rows, end } = await playCase(caseName, TRANSFORM_CASES[caseName]);
+      for (const { row } of rows) {
+        expect(row.native.Transform.model[12]).toBe(0);
+      }
+      expect(end!.native.Transform.presentation[12]).toBe(0);
+      await render(null);
+    }
+  );
 
-  test('no duration and no delay ends the track with the admission', async () => {
-    const operations: Operation[] = [
-      ['rotate', 0, 1],
-      ['translateX', 0, 30, { isPlain: true }],
-    ];
-    const layouts = transformPairOf(operations, { duration: 0 });
-    const style = endTransformOf(operations);
-    const tag = await mountScene(pairSceneOf(layouts, style));
-    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
-    await wait(200);
-    const events = await takeTraceOf(tag);
-    expect(summarize(events.filter(isHostEvent))).toBe(
-      `${TRANSFORM_START} > ${TRANSFORM_END}`
-    );
-    const [native, frame] = await samplePair();
-    expect(native.playbacks.length).toBe(0);
-    expectCells(native.presentation, frame.model);
-    expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
-    await render(null);
-  });
+  movingGeometryTest(
+    'no duration with a delay holds the start value, then the model shows',
+    async () => {
+      const { events, reads, end } = await playCase(
+        'no duration with a delay',
+        transformCaseOf(
+          [['scaleX', 0.5, 1]],
+          { duration: 0, delays: [600] },
+          {
+            totalMs: 600,
+            matrixTolerance: { ...REST_TOLERANCE, translation: 0.005 },
+          }
+        )
+      );
+      expect(summarizeStart(events)).toBe(TRANSFORM_START);
+      expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
+      expectOneKeyWhilePlaying(reads);
+      expect(end!.native.Transform.presentation[0]).toBe(1);
+      expect(end!.frame.Transform.model[0]).toBe(1);
+      await render(null);
+    }
+  );
+
+  movingGeometryTest(
+    'no duration and no delay ends the track with the admission',
+    async () => {
+      const operations: Operation[] = [
+        ['rotate', 0, 1],
+        ['translateX', 0, 30, { isPlain: true }],
+      ];
+      const layouts = transformPairOf(operations, { duration: 0 });
+      const style = endTransformOf(operations);
+      const tag = await mountScene(pairSceneOf(layouts, style));
+      await render(pairSceneOf(layouts, style, { left: END_LEFT }));
+      await wait(200);
+      const events = await takeTraceOf(tag);
+      expect(summarize(events.filter(isHostEvent))).toBe(
+        `${TRANSFORM_START} > ${TRANSFORM_END}`
+      );
+      const [native, frame] = await samplePair();
+      expect(native.playbacks.length).toBe(0);
+      expectCells(native.presentation, frame.model);
+      expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+      await render(null);
+    }
+  );
 });
 
 describe('native layout transform continuity', () => {
@@ -499,30 +665,36 @@ describe('native layout transform continuity', () => {
     });
   }
 
-  test('a new start with another end value replaces the track, and the native values and the frames of the frame driver are on the two timelines', async () => {
-    const { events, reads } = await playCase(
-      'a new start with another end value',
-      CONTINUITY_CASES['a new start with another end value']
-    );
-    expect(summarize(secondBuildOf(events).filter(isHostEvent))).toBe(
-      `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Transform:false > Ended:Interrupted:None > TrackStarted:Transform > Admitted > ${TRANSFORM_END}`
-    );
-    expectOneKeyWhilePlaying(reads);
-    await render(null);
-  });
+  movingGeometryTest(
+    'a new start with another end value replaces the track, and the native values and the frames of the frame driver are on the two timelines',
+    async () => {
+      const { events, reads } = await playCase(
+        'a new start with another end value',
+        CONTINUITY_CASES['a new start with another end value']
+      );
+      expect(summarize(secondBuildOf(events).filter(isHostEvent))).toBe(
+        `LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Transform:false > Ended:Interrupted:None > TrackStarted:Transform > Admitted > ${TRANSFORM_END}`
+      );
+      expectOneKeyWhilePlaying(reads);
+      await render(null);
+    }
+  );
 
-  test('a new start with the same end value and a position leaf keeps the transform track on its timeline', async () => {
-    const { events } = await playCase(
-      'a new start with the same end value and a position leaf',
-      CONTINUITY_CASES[
-        'a new start with the same end value and a position leaf'
-      ]
-    );
-    const second = secondBuildOf(events);
-    expect(startedTargets(second)).toBe('PositionX');
-    expect(buildFailures(events)).toBe('');
-    await render(null);
-  });
+  movingGeometryTest(
+    'a new start with the same end value and a position leaf keeps the transform track on its timeline',
+    async () => {
+      const { events } = await playCase(
+        'a new start with the same end value and a position leaf',
+        CONTINUITY_CASES[
+          'a new start with the same end value and a position leaf'
+        ]
+      );
+      const second = secondBuildOf(events);
+      expect(startedTargets(second)).toBe('PositionX');
+      expect(buildFailures(events)).toBe('');
+      await render(null);
+    }
+  );
 
   const transfers: [string, ReferenceCase, string][] = [
     [
@@ -569,16 +741,19 @@ describe('native layout transform continuity', () => {
     ],
   ];
   for (const [caseName, referenceCase, failure] of transfers) {
-    test(`${caseName} takes the view from the transform track, and the frames of the frame driver on the two boxes are on the timelines`, async () => {
-      const played = await playCase(caseName, referenceCase);
-      const second = secondBuildOf(played.events);
-      expect(buildFailures(second)).toBe(failure);
-      expect(startedTargets(second)).toBe('');
-      expectNoKeyAfterTransfer(played);
-      expectModelOnFrames(caseName, played);
-      expectSpringFramesOfTwin(referenceCase);
-      await render(null);
-    });
+    movingGeometryTest(
+      `${caseName} takes the view from the transform track, and the frames of the frame driver on the two boxes are on the timelines`,
+      async () => {
+        const played = await playCase(caseName, referenceCase);
+        const second = secondBuildOf(played.events);
+        expect(buildFailures(second)).toBe(failure);
+        expect(startedTargets(second)).toBe('');
+        expectNoKeyAfterTransfer(played);
+        expectModelOnFrames(caseName, played);
+        expectSpringFramesOfTwin(referenceCase);
+        await render(null);
+      }
+    );
   }
 
   const commitCases: [string, Operation[], number][] = [
@@ -588,27 +763,32 @@ describe('native layout transform continuity', () => {
   for (const [trackName, committed, cell] of commitCases) {
     const caseName =
       `a commit of another style transform during a track of ${trackName}` as keyof typeof STYLE_COMMIT_CASES;
-    test(`${caseName} keeps the track on its timeline, and the committed style shows at its end`, async () => {
-      const referenceCase = STYLE_COMMIT_CASES[caseName];
-      const builderCallsBefore = builderCalls;
-      const played = await play(referenceCase);
-      const reads = expectReference(caseName, referenceCase, played);
-      expect(summarize(played.events.filter(isHostEvent))).toBe(
-        `${TRANSFORM_START} > ${TRANSFORM_END}`
-      );
-      expect(builderCalls).toBe(builderCallsBefore + 2);
-      expectOneKeyWhilePlaying(reads);
+    movingGeometryTest(
+      `${caseName} keeps the track on its timeline, and the committed style shows at its end`,
+      async () => {
+        const referenceCase = STYLE_COMMIT_CASES[caseName];
+        const builderCallsBefore = builderCalls;
+        const played = await play(referenceCase);
+        const reads = expectReference(caseName, referenceCase, played);
+        expect(summarize(played.events.filter(isHostEvent))).toBe(
+          `${TRANSFORM_START} > ${TRANSFORM_END}`
+        );
+        expect(builderCalls).toBe(builderCallsBefore + 2);
+        expectOneKeyWhilePlaying(reads);
 
-      const { native, frame } = played.end!;
-      expect(native.Transform.playbacks.length).toBe(0);
-      const shown = native.Transform.presentation[cell];
-      expect(Math.abs(shown - endCellsOf(committed)[cell]) < 0.001).toBe(true);
-      const leafEnd = endCellsOf(referenceCase.operations!)[cell];
-      expect(Math.abs(frame.Transform.model[cell] - leafEnd) < 0.001).toBe(
-        true
-      );
-      await render(null);
-    });
+        const { native, frame } = played.end!;
+        expect(native.Transform.playbacks.length).toBe(0);
+        const shown = native.Transform.presentation[cell];
+        expect(Math.abs(shown - endCellsOf(committed)[cell]) < 0.001).toBe(
+          true
+        );
+        const leafEnd = endCellsOf(referenceCase.operations!)[cell];
+        expect(Math.abs(frame.Transform.model[cell] - leafEnd) < 0.001).toBe(
+          true
+        );
+        await render(null);
+      }
+    );
   }
 
   const unrealizableCommits: [string, StyleTransform, SizeBoxProps['style']][] =
@@ -617,28 +797,31 @@ describe('native layout transform continuity', () => {
       ['a translation in percent', [{ translateX: '160%' }], {}],
     ];
   for (const [caseName, transform, style] of unrealizableCommits) {
-    test(`a commit of ${caseName} during the track gives the view to the frame driver, and its frames are on the timeline of the track`, async () => {
-      const referenceCase = transformCaseOf(
-        TRANSLATION,
-        {},
-        {
-          restyle: {
-            atMs: SECOND_COMMIT_MS,
-            transform,
-            style,
-            handsOver: true,
-          },
-        }
-      );
-      const played = await play(referenceCase);
-      expectReference(`a commit of ${caseName}`, referenceCase, played);
-      const second = secondBuildOf(played.events);
-      expect(buildFailures(second)).toBe('UnsupportedTarget');
-      expect(startedTargets(second)).toBe('');
-      expectNoKeyAfterTransfer(played);
-      expectModelOnFrames(`a commit of ${caseName}`, played);
-      await render(null);
-    });
+    movingGeometryTest(
+      `a commit of ${caseName} during the track gives the view to the frame driver, and its frames are on the timeline of the track`,
+      async () => {
+        const referenceCase = transformCaseOf(
+          TRANSLATION,
+          {},
+          {
+            restyle: {
+              atMs: SECOND_COMMIT_MS,
+              transform,
+              style,
+              handsOver: true,
+            },
+          }
+        );
+        const played = await play(referenceCase);
+        expectReference(`a commit of ${caseName}`, referenceCase, played);
+        const second = secondBuildOf(played.events);
+        expect(buildFailures(second)).toBe('UnsupportedTarget');
+        expect(startedTargets(second)).toBe('');
+        expectNoKeyAfterTransfer(played);
+        expectModelOnFrames(`a commit of ${caseName}`, played);
+        await render(null);
+      }
+    );
   }
 });
 
@@ -882,7 +1065,7 @@ async function edgeAntialiasingAt(
 ) {
   await wait(Math.max(0, startMs + elapsedMs - performance.now()));
   const samples = await Promise.all(
-    tags.map((tag) => sample(tag, 'Transform'))
+    tags.map((tag) => appleSample(tag, 'Transform'))
   );
   return samples.map(({ edgeAntialiasing }) => edgeAntialiasing).join();
 }
@@ -893,7 +1076,7 @@ const hasTransformTrack = (events: TraceEvent[]) =>
   );
 
 describe('native layout transform and the edge antialiasing of the view', () => {
-  if (!hasNativeLayoutRoute) {
+  if (!hasNativeLayoutRoute || !HAS_EDGE_ANTIALIASING) {
     return;
   }
 
@@ -1192,4 +1375,412 @@ describe('native layout transform and the edge antialiasing of the view', () => 
     await wait(HELD_OPACITY_MS);
     await render(null);
   });
+});
+
+const TWIN_TOLERANCE: MatrixTolerance = { cells: 0.005, translation: 0.25 };
+/** Parts of the time of a refused animation at which its transform moves. */
+const FALLBACK_PARTS = [0.2, 0.45, 0.7];
+
+const isNearCells = (
+  shown: number[],
+  expected: number[],
+  tolerance: MatrixTolerance
+) =>
+  shown.length === expected.length &&
+  shown.every(
+    (cell, index) =>
+      Math.abs(cell - expected[index]) < cellToleranceOf(index, tolerance)
+  );
+
+/**
+ * The `Transform` samples of the native box and of its twin at each part of
+ * `FALLBACK_PARTS` of `durationMs` from `startMs`.
+ */
+async function readPairAt(tags: number[], durationMs: number, startMs: number) {
+  const reads: TargetSample[][] = [];
+  for (const part of FALLBACK_PARTS) {
+    await wait(Math.max(0, startMs + part * durationMs - performance.now()));
+    reads.push(await Promise.all(tags.map((tag) => sample(tag, 'Transform'))));
+  }
+  return reads;
+}
+
+/**
+ * The fallback evidence of a start that the platform refuses: the refusal
+ * `UnsupportedTarget`, and the route of the `Transform` target of the native
+ * box is frame-driven, with the model of its frame-driven twin in each read.
+ */
+function expectFrameDrivenAsTwin(
+  events: TraceEvent[],
+  tag: number,
+  reads: TargetSample[][]
+) {
+  const route = routeOf(
+    events,
+    tag,
+    'Transform',
+    reads.map(([native, frame]) => ({ ...native, twin: frame.model })),
+    ({ model, twin }) => isNearCells(model, twin, TWIN_TOLERANCE)
+  );
+  if (route.kind !== 'frame-driven') {
+    throw new Error(`The refused start reports ${route.kind}.`);
+  }
+  expect(route.refusal.event).toBe('LayoutBuildFailed');
+  expect(route.refusal.buildFailure).toBe('UnsupportedTarget');
+}
+
+describe('native layout transform with 3D operations on a platform that does not play them', () => {
+  if (!hasNativeLayoutRoute || PLAYS_3D_OPERATIONS) {
+    return;
+  }
+
+  test('a perspective and a rotation about X keep the whole animation frame-driven: UnsupportedTarget, and the view has the model of its frame-driven twin', async () => {
+    const operations: Operation[] = [
+      ['perspective', 500, 500],
+      ['rotateX', '90deg', '0deg'],
+    ];
+    const layouts = transformPairOf(operations);
+    const style = endTransformOf(operations);
+    const tag = await mountScene(pairSceneOf(layouts, style));
+    const startMs = performance.now();
+    await render(pairSceneOf(layouts, style, { left: END_LEFT }));
+    const reads = await readPairAt(pairTags(), TRANSFORM_DURATION, startMs);
+    expectFrameDrivenAsTwin(await takeTrace(), tag, reads);
+    await wait(
+      Math.max(
+        0,
+        startMs + TRANSFORM_DURATION + FLAG_READ_MS - performance.now()
+      )
+    );
+    const [native, frame] = await samplePair();
+    expect(native.playbacks.length).toBe(0);
+    expect(isNearCells(native.model, frame.model, TWIN_TOLERANCE)).toBe(true);
+    expect(callbacks.slice().sort().join()).toBe('frame:true,native:true');
+    await render(null);
+  });
+
+  const exits: [string, Exit][] = [
+    [
+      'an exit with a perspective',
+      {
+        operations: [
+          ['perspective', 500, 500],
+          ['rotateX', '0deg', '60deg'],
+        ],
+        durationMs: FLAG_DURATION,
+      },
+    ],
+    [
+      'an exit with a rotation about X and then a rotation about Y',
+      {
+        operations: [
+          ['rotateX', '0deg', '50deg', '0deg', '0deg', '0deg'],
+          ['rotateY', '0deg', '0deg', '0deg', '40deg', '0deg'],
+        ],
+        durationMs: FLAG_DURATION,
+      },
+    ],
+  ];
+  for (const [name, exit] of exits) {
+    test(`${name} stays frame-driven: UnsupportedTarget, and the view has the model of its frame-driven twin`, async () => {
+      const tag = await mountScene(<ExitPair exit={exit} isMounted />);
+      const tags = pairTags();
+      const startMs = performance.now();
+      await render(<ExitPair exit={exit} isMounted={false} />);
+      const reads = await readPairAt(tags, exit.durationMs, startMs);
+      const events = await takeTrace();
+      expectFrameDrivenAsTwin(events, tag, reads);
+      expect(
+        hasTransformTrack(events.filter((event) => event.tag === tag))
+      ).toBe(false);
+      await wait(exit.durationMs);
+      await render(null);
+    });
+  }
+});
+
+const FORM_DURATION = 8000;
+const FORM_BOX = { width: 100, height: 60 };
+const FORM_END_MS = 300;
+const FORM_PROPERTIES: RecordedProperty[] = ['frame', 'drawnMatrix'];
+const STANDARD_PARTS = [0.1, 0.25, 0.5, 0.75, 0.9, 1];
+const BOUNCE_KEYS = [4 / 11, 8 / 11, 10 / 11];
+
+/**
+ * The parts of the iOS table: the standard parts, and 0.02 on each side of each
+ * key.
+ */
+const partsOf = (keys: number[], more: number[] = []) =>
+  [
+    ...new Set([
+      ...STANDARD_PARTS,
+      ...keys.flatMap((key) => [key - 0.02, key + 0.02]),
+      ...more,
+    ]),
+  ].sort((first, second) => first - second);
+
+type TransformForm = {
+  /** The transform of a layout transition of the two boxes. */
+  operations?: Operation[];
+  /** The keyframe animation of an entering box, and its transform at the end. */
+  entering?: {
+    keyframeOf: () => SizeBoxProps['entering'];
+    transform: ViewStyle['transform'];
+  };
+  /** The progress of the track at each compared draw. */
+  parts: number[];
+};
+
+/** The transform forms of a measured iOS table. */
+const TRANSFORM_FORMS: Record<string, TransformForm> = {
+  'a: a rotation to 90deg in the first half of a translation': {
+    operations: [
+      ['rotate', '0deg', '90deg', { duration: 0.5 * FORM_DURATION }],
+      ['translateX', 0, 100],
+    ],
+    parts: partsOf([0.5]),
+  },
+  'b: a translation and a rotation with a delay of 0.3 and a duration of 0.5': {
+    operations: [
+      ['translateX', 0, 100],
+      [
+        'rotate',
+        '0deg',
+        '90deg',
+        { delays: [0.3 * FORM_DURATION], duration: 0.5 * FORM_DURATION },
+      ],
+    ],
+    parts: partsOf([0.3, 0.8]),
+  },
+  'c: an entering keyframe animation of a scale and a rotation': {
+    entering: {
+      keyframeOf: () =>
+        new Keyframe({
+          0: { transform: [{ scale: 0.5 }, { rotate: '0deg' }] },
+          40: { transform: [{ scale: 1.2 }] },
+          100: { transform: [{ scale: 1 }, { rotate: '90deg' }] },
+        } as ConstructorParameters<typeof Keyframe>[0]).duration(FORM_DURATION),
+      transform: [{ scale: 1 }, { rotate: '90deg' }],
+    },
+    parts: partsOf([0.4]),
+  },
+  'd: a translation with the default easing, a scale of 0.6, and a rotation of 0.35':
+    {
+      operations: [
+        ['translateX', 0, 80, { easing: 'default' }],
+        ['scale', 0.5, 1.2, { duration: 0.6 * FORM_DURATION }],
+        ['rotate', '0deg', '60deg', { duration: 0.35 * FORM_DURATION }],
+      ],
+      parts: partsOf([0.35, 0.6]),
+    },
+  'e: a rotation with Easing.bounce and a translation with inOut(quad) in 0.6':
+    {
+      operations: [
+        ['rotate', '0deg', '90deg', { easing: Easing.bounce }],
+        [
+          'translateX',
+          0,
+          100,
+          { duration: 0.6 * FORM_DURATION, easing: 'default' },
+        ],
+      ],
+      parts: partsOf([0.3, 0.6, ...BOUNCE_KEYS]),
+    },
+  'f: a translation with Easing.bezier and a rotation with Easing.sin in 0.7': {
+    operations: [
+      ['translateX', 0, 100, { easing: Easing.bezier(0.3, 0, 0.7, 1) }],
+      [
+        'rotate',
+        '0deg',
+        '90deg',
+        { duration: 0.7 * FORM_DURATION, easing: Easing.sin },
+      ],
+    ],
+    parts: partsOf([0.35, 0.7]),
+  },
+  'g: a move, a hold, and a move of translateY with a linear rotation': {
+    operations: [
+      [
+        'translateY',
+        0,
+        0,
+        {
+          via: [{ to: -40, duration: 0.3 * FORM_DURATION }],
+          delay: 0.2 * FORM_DURATION,
+          duration: 0.3 * FORM_DURATION,
+        },
+      ],
+      ['rotate', '0deg', '90deg'],
+    ],
+    parts: partsOf([0.3, 0.5, 0.8]),
+  },
+  'h: a translation from 393 with Easing.bounce and a rotation of 30deg in 0.2':
+    {
+      operations: [
+        ['translateX', 393, 0, { easing: Easing.bounce }],
+        ['rotate', '0deg', '30deg', { duration: 0.2 * FORM_DURATION }],
+      ],
+      parts: partsOf([0.2, ...BOUNCE_KEYS], [0.9075]),
+    },
+};
+
+type EnteringAnimations = Pick<SizeBoxProps, 'entering'>;
+
+function EnteringFormPair({
+  isMounted,
+  transform,
+  native,
+  frame,
+}: {
+  isMounted: boolean;
+  transform: ViewStyle['transform'];
+  native: EnteringAnimations;
+  frame: EnteringAnimations;
+}) {
+  const box = { left: START_LEFT, top: 60, ...FORM_BOX, style: { transform } };
+  return (
+    <View style={styles.sizeRow}>
+      <View style={[styles.sizeCell, styles.sizeRowCell]}>
+        {isMounted && <SizeBox {...box} {...native} />}
+      </View>
+      <View style={[styles.sizeCell, styles.sizeRowCell]}>
+        {isMounted && <SizeBox {...box} {...frame} refName={FRAME_BOX_REF} />}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The drawn values of the two boxes of a form, at each draw from its start to
+ * after its end.
+ */
+async function playForm({ operations, entering }: TransformForm) {
+  const during = () => wait(FORM_DURATION + FORM_END_MS);
+  if (operations) {
+    const layouts = transformPairOf(operations, { duration: FORM_DURATION });
+    const style = endTransformOf(operations);
+    await mountScene(pairSceneOf(layouts, style, FORM_BOX));
+    const tags = pairTags();
+    const samples = await recordDrawnValues(tags, FORM_PROPERTIES, async () => {
+      await render(
+        pairSceneOf(layouts, style, { ...FORM_BOX, left: END_LEFT })
+      );
+      await during();
+    });
+    return { tags, samples };
+  }
+  const pair = {
+    transform: entering!.transform,
+    native: { entering: entering!.keyframeOf() },
+    frame: {
+      entering: frameDrivenOf(
+        entering!.keyframeOf() as unknown as Parameters<typeof frameDrivenOf>[0]
+      ) as SizeBoxProps['entering'],
+    },
+  };
+  await render(<EnteringFormPair {...pair} isMounted={false} />);
+  await wait(200);
+  await takeTrace();
+  await render(<EnteringFormPair {...pair} isMounted />);
+  const tags = pairTags();
+  await Promise.all(
+    tags.map((tag) => afterMountOf(() => sample(tag, 'Transform')))
+  );
+  const samples = await recordDrawnValues(tags, FORM_PROPERTIES, during);
+  return { tags, samples };
+}
+
+const FORM_VALUE_COUNT = FORM_PROPERTIES.reduce(
+  (count, property) => count + valueCountOf(property),
+  0
+);
+
+/** The drawn place of each corner of a box in its parent, from one draw. */
+function drawnCornersOf(values: number[], box: number) {
+  const offset = box * FORM_VALUE_COUNT;
+  const frame = values.slice(offset, offset + valueCountOf('frame'));
+  const matrix = values.slice(offset + frame.length, offset + FORM_VALUE_COUNT);
+  const [, , width, height] = frame;
+  return (
+    [
+      [0, 0],
+      [width, 0],
+      [0, height],
+      [width, height],
+    ] as [number, number][]
+  ).map((corner) => drawnPointOf(frame, matrix, corner));
+}
+
+/**
+ * The place of the cell of the twin from the cell of the native box, from the
+ * frames of the first draw: a frame is in the parent that has the place of the
+ * pair after React flattens the cells (measured on Android: the twin 200 pt to
+ * the right).
+ */
+function cellOffsetOf(values: number[]): [number, number] {
+  const frameOf = (box: number) =>
+    values.slice(box * FORM_VALUE_COUNT, box * FORM_VALUE_COUNT + 2);
+  const [[nativeLeft, nativeTop], [twinLeft, twinTop]] = [0, 1].map(frameOf);
+  return [twinLeft - nativeLeft, twinTop - nativeTop];
+}
+
+describe('native layout transform forms against the frame driver', () => {
+  if (!hasNativeLayoutRoute || !isViewSamplerAvailable()) {
+    return;
+  }
+
+  for (const [formName, form] of Object.entries(TRANSFORM_FORMS)) {
+    movingGeometryTest(
+      `form ${formName}: at each time of the iOS table, each drawn corner of the native box is no more than ${POSITION_TOLERANCE} pt from the corner of its frame-driven twin`,
+      async () => {
+        const { tags, samples } = await playForm(form);
+        const [nativeTag, frameTag] = tags;
+        const events = (await takeTrace()).filter(
+          ({ event }) => event !== 'FrameUpdateMounted'
+        );
+        const ofTag = (tag: number) =>
+          events.filter((event) => event.tag === tag);
+        expect(summarizeStart(ofTag(nativeTag))).toBe(TRANSFORM_START);
+        expect(summarizeAfterStart(ofTag(nativeTag))).toBe(TRANSFORM_END);
+        expect(summarize(ofTag(frameTag))).toBe(
+          'LayoutBuildFailed:UnsupportedTiming'
+        );
+        const originMs = ofTag(nativeTag).find(
+          ({ event }) => event === 'Received'
+        )?.originTimestampMs;
+        expect(originMs === undefined).toBe(false);
+
+        const cellOffset = cellOffsetOf(samples[0].values);
+        const rows = form.parts.map((part) => {
+          const drawn = samples.find(
+            ({ timeMs }) => timeMs >= originMs! + part * FORM_DURATION
+          );
+          if (!drawn) {
+            return { part, distance: NaN };
+          }
+          const native = drawnCornersOf(drawn.values, 0);
+          const twin = drawnCornersOf(drawn.values, 1).map(
+            ([x, y]): [number, number] => [x - cellOffset[0], y - cellOffset[1]]
+          );
+          const distance = Math.max(
+            ...native.map(([x, y], corner) =>
+              Math.hypot(x - twin[corner][0], y - twin[corner][1])
+            )
+          );
+          return { part, timeMs: drawn.timeMs, distance, native, twin };
+        });
+        console.log(
+          'RuntimeTestsTransformForms ' +
+            JSON.stringify({ form: formName, originMs, rows })
+        );
+        expect(
+          rows
+            .filter(({ distance }) => !(distance <= POSITION_TOLERANCE))
+            .map(({ part, distance }) => `${part}: ${distance}`)
+            .join()
+        ).toBe('');
+        await render(null);
+      }
+    );
+  }
 });

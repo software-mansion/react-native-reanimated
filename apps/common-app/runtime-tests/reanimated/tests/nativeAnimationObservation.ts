@@ -1,6 +1,5 @@
 import React from 'react';
 import { Platform, View } from 'react-native';
-import { getStaticFeatureFlag } from 'react-native-reanimated';
 
 import {
   getTestComponent,
@@ -55,16 +54,49 @@ export type TargetSample = {
   monotonicTimeMs: number;
 };
 
-/** The sample of the Apple platform. */
-export type AppleTargetSample = TargetSample & {
-  /**
-   * The physical animations of the playback of the target, in the order in
-   * which the platform applies them. Each has its value at the start and at the
-   * end of each segment, and the time of each value as a part of its duration.
-   */
-  members: { property: string; values: number[][]; keyTimes: number[] }[];
+/**
+ * One physical animation of the playback of a target. It has its value at the
+ * start and at the end of each segment, and the time of each value as a part of
+ * its duration.
+ */
+export type PlaybackMember = {
+  property: string;
+  values: number[][];
+  keyTimes: number[];
+};
+
+/**
+ * The sample of a platform: the physical animations of the playback of the
+ * target, in the order in which the platform applies them.
+ */
+export type PlatformTargetSample = TargetSample & { members: PlaybackMember[] };
+
+export type AppleTargetSample = PlatformTargetSample & {
   /** The view is allowed to antialias its edges. */
   edgeAntialiasing: boolean;
+};
+
+/**
+ * One member for each physical timeline, in the order of the writer: `alpha`,
+ * `position.x`, `position.y`, `hold`, or `transform.<operation>` for each
+ * operation of a transform in list order.
+ */
+export type AndroidTargetSample = PlatformTargetSample;
+
+/** `ReanimatedModuleProxy::nativeAnimationRoutes`: the routes of the build. */
+export type NativeAnimationRoutes = {
+  /** The host exists: the CSS flag or the route flag of the platform is on. */
+  hasHost: boolean;
+  /** The CSS backend is on the host. */
+  cssTransitions: boolean;
+  /**
+   * `configured`: the route flag is on and the proxy is not the Legacy one, but
+   * React commits do not pull in the mount of their transaction.
+   */
+  layoutRoute: 'off' | 'configured' | 'admitted';
+  synchronousProps: boolean;
+  /** Android: the API level of the device. Apple: null. */
+  apiLevel: number | null;
 };
 
 type NativeAnimationTestHooks = {
@@ -74,11 +106,13 @@ type NativeAnimationTestHooks = {
     target: string,
     callback: (sample: TargetSample | undefined) => void
   ) => void;
+  nativeAnimationRoutes: () => NativeAnimationRoutes;
 };
 
 export const NATIVE_ANIMATION_TEST_HOOKS: (keyof NativeAnimationTestHooks)[] = [
   'takeNativeAnimationTrace',
   'sampleNativeAnimationTarget',
+  'nativeAnimationRoutes',
 ];
 
 export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
@@ -95,17 +129,16 @@ export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
   return hook;
 }
 
+/** One read at module load: the routes are fixed for the build. */
+export const NATIVE_ANIMATION_ROUTES: NativeAnimationRoutes = testHookOf(
+  'nativeAnimationRoutes'
+)();
+
 /** CSS transitions play on the native animation host. */
-export const hasNativeCSSTransitions =
-  (Platform.OS === 'ios' && getStaticFeatureFlag('IOS_CSS_CORE_ANIMATION')) ||
-  (Platform.OS === 'android' &&
-    getStaticFeatureFlag('ANDROID_CSS_PLATFORM_TRANSITIONS'));
+export const hasNativeCSSTransitions = NATIVE_ANIMATION_ROUTES.cssTransitions;
 
 /** Each flag of a native route creates the native animation host. */
-export const hasNativeAnimationHost =
-  hasNativeCSSTransitions ||
-  (Platform.OS === 'ios' &&
-    getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION'));
+export const hasNativeAnimationHost = NATIVE_ANIMATION_ROUTES.hasHost;
 
 /**
  * The timing kinds of the CSS route table of the platform:
@@ -117,11 +150,16 @@ export const CSS_HOST_TIMING_KINDS: readonly string[] =
     ? ['linear', 'cubicBezier', 'steps', 'linear()']
     : ['linear', 'cubicBezier'];
 
-/** The legacy proxy has no native route. */
+/** Layout animations start native playback. */
 export const hasNativeLayoutRoute =
-  Platform.OS === 'ios' &&
-  getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
-  !getStaticFeatureFlag('USE_LEGACY_LAYOUT_ANIMATIONS_PROXY');
+  NATIVE_ANIMATION_ROUTES.layoutRoute === 'admitted';
+
+/**
+ * The build configures the native layout route. With no mount-thread pull it
+ * admits no native start.
+ */
+export const isNativeLayoutRouteConfigured =
+  NATIVE_ANIMATION_ROUTES.layoutRoute !== 'off';
 
 /** The events of the host since the last take. The host keeps the newest 1024. */
 export function takeTrace(): Promise<TraceEvent[]> {
@@ -239,14 +277,14 @@ const isRefusal = ({ event, outcome }: TraceEvent) =>
  * of the last `TrackStarted` of the target and the last refusal of a start of
  * the view. A frame-driven start needs two samples whose models differ and are
  * each on the declared timeline of the frame driver: `isOnFrameDriverTimeline`
- * gets the time of the sample from the refusal. Each other evidence throws.
+ * gets the sample and its time from the refusal. Each other evidence throws.
  */
-export function routeOf(
+export function routeOf<TSample extends TargetSample>(
   events: TraceEvent[],
   tag: number,
   target: string,
-  samples: TargetSample[],
-  isOnFrameDriverTimeline?: (model: number[], sinceRefusalMs: number) => boolean
+  samples: TSample[],
+  isOnFrameDriverTimeline?: FrameDriverCheck<TSample>
 ): Route {
   const ofView = events
     .filter((event) => event.tag === tag)
@@ -268,11 +306,16 @@ export function routeOf(
     : nativeRouteOf(events, ofView, start, lastOf(samples));
 }
 
-function frameDrivenRouteOf(
+type FrameDriverCheck<TSample> = (
+  sample: TSample,
+  sinceRefusalMs: number
+) => boolean;
+
+function frameDrivenRouteOf<TSample extends TargetSample>(
   ofView: TraceEvent[],
   refusal: TraceEvent,
-  samples: TargetSample[],
-  isOnFrameDriverTimeline?: (model: number[], sinceRefusalMs: number) => boolean
+  samples: TSample[],
+  isOnFrameDriverTimeline?: FrameDriverCheck<TSample>
 ): Route {
   if (!isOnFrameDriverTimeline) {
     throw new Error(
@@ -283,8 +326,11 @@ function frameDrivenRouteOf(
   const isMoving =
     samples.length >= 2 &&
     new Set(models).size === models.length &&
-    samples.every(({ model, monotonicTimeMs }) =>
-      isOnFrameDriverTimeline(model, monotonicTimeMs - refusal.monotonicTimeMs)
+    samples.every((sample) =>
+      isOnFrameDriverTimeline(
+        sample,
+        sample.monotonicTimeMs - refusal.monotonicTimeMs
+      )
     );
   const isAdmittedLater = ofView.some(
     ({ event, sequence }) => event === 'Admitted' && sequence > refusal.sequence

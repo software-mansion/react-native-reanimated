@@ -8,6 +8,7 @@
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
@@ -15,6 +16,7 @@
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -24,6 +26,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef __ANDROID__
+#include <android/api-level.h>
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
@@ -199,6 +202,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           cssTransitionsRegistry_,
           updatesRegistryManager_)),
       nativeAnimationHost_(platformDepMethodsHolder.nativeAnimationHost),
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+      hasPlatformTransitionBackend_(platformDepMethodsHolder.platformTransitionBackend != nullptr),
+#endif
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -593,6 +599,35 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
   } else {
     deliver(std::nullopt);
   }
+}
+
+namespace {
+
+const char *layoutRouteName() {
+  if (!hasNativeLayoutRouteFlag() || StaticFeatureFlags::getFlag("USE_LEGACY_LAYOUT_ANIMATIONS_PROXY")) {
+    return "off";
+  }
+  return pullsOnMountThread() ? "admitted" : "configured";
+}
+
+jsi::Value apiLevel() {
+#ifdef __ANDROID__
+  return android_get_device_api_level();
+#else
+  return jsi::Value::null();
+#endif
+}
+
+} // namespace
+
+jsi::Value ReanimatedModuleProxy::nativeAnimationRoutes(jsi::Runtime &rt) const {
+  jsi::Object routes(rt);
+  routes.setProperty(rt, "hasHost", nativeAnimationHost_ != nullptr);
+  routes.setProperty(rt, "cssTransitions", hasPlatformTransitionBackend_);
+  routes.setProperty(rt, "layoutRoute", jsi::String::createFromAscii(rt, layoutRouteName()));
+  routes.setProperty(rt, "synchronousProps", hasSynchronousWritesTracker());
+  routes.setProperty(rt, "apiLevel", apiLevel());
+  return routes;
 }
 #endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
@@ -1038,8 +1073,15 @@ bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
 }
 
 void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
-  if constexpr (StaticFeatureFlags::getFlag("IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION")) {
+  if constexpr (hasNativeLayoutRouteFlag()) {
     layoutAnimationsProxyRegistry_->surfaceDidMount(surfaceId);
+  }
+  rewriteSynchronousProps();
+}
+
+void ReanimatedModuleProxy::pulledSurfacesDidMount(const std::uint64_t dispatch) {
+  if constexpr (hasNativeLayoutRouteFlag()) {
+    layoutAnimationsProxyRegistry_->pulledSurfacesDidMount(dispatch);
   }
   rewriteSynchronousProps();
 }
@@ -1826,6 +1868,11 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
               rt, static_cast<Tag>(at<0>(args).asNumber()), at<1>(args).asString(rt).utf8(rt), at<2>(args));
         }
       });
+
+  addMethod<0>(rt, obj, "nativeAnimationRoutes", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
+    const auto strongThis = weakThis.lock();
+    return strongThis ? strongThis->nativeAnimationRoutes(rt) : jsi::Value::undefined();
+  });
 #endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
   addMethod<1>(

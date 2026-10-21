@@ -1,7 +1,14 @@
 import type { ComponentRef, RefObject } from 'react';
 import React, { useEffect, useState } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Modal,
+  PixelRatio,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
@@ -30,19 +37,23 @@ import {
   expect,
   getTestComponent,
   render,
+  test,
   useTestRef,
   wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import type {
-  AppleTargetSample as TargetSample,
+  AppleTargetSample,
   CommandHandle,
+  PlatformTargetSample as TargetSample,
   TraceEvent,
 } from '../nativeAnimationObservation';
 import {
   hasNativeAnimationHost,
   hasNativeLayoutRoute,
+  isNativeLayoutRouteConfigured,
   isNoView,
+  NATIVE_ANIMATION_ROUTES,
   isOfCommand,
   NATIVE_ANIMATION_TEST_HOOKS,
   playbackIdOf,
@@ -52,19 +63,25 @@ import {
   takeTrace,
   testHookOf,
 } from '../nativeAnimationObservation';
+import { DRAW_TIME_STEP_MS } from '../viewSampler';
 import { blockUIThread } from './nativeLayoutLoad';
 
 export type {
-  AppleTargetSample as TargetSample,
+  AndroidTargetSample,
+  AppleTargetSample,
   CommandHandle,
   Playback,
+  PlaybackMember,
   Route,
+  PlatformTargetSample as TargetSample,
   TraceEvent,
 } from '../nativeAnimationObservation';
 export {
   hasNativeAnimationHost,
   hasNativeLayoutRoute,
+  isNativeLayoutRouteConfigured,
   isNoView,
+  NATIVE_ANIMATION_ROUTES,
   isOfCommand,
   NATIVE_ANIMATION_TEST_HOOKS,
   playbackIdOf,
@@ -74,9 +91,136 @@ export {
   testHookOf,
 };
 
-/** The layout suites read the Apple sample. */
+/** The sample of the platform: the reads that each platform has. */
 export const sample = (tag: number, target: string) =>
   sampleOf<TargetSample>(tag, target);
+
+/** The reads of edge antialiasing and of the Core Animation member structure. */
+export const appleSample = (tag: number, target: string) =>
+  sampleOf<AppleTargetSample>(tag, target);
+
+const IS_APPLE = Platform.OS === 'ios';
+
+/**
+ * Android refuses a changing Width or Height
+ * (`AndroidNativeAnimationPlatform::playsTarget`).
+ */
+export const PLAYS_SIZE_CHANGE = IS_APPLE;
+/**
+ * Android refuses RotateX, RotateY, and Perspective in a moving transform
+ * (`isPlanar`).
+ */
+export const PLAYS_3D_OPERATIONS = IS_APPLE;
+/** Android moves the geometry with `View.setAnimationMatrix`, from API 29. */
+export const PLAYS_MOVING_GEOMETRY =
+  IS_APPLE || (NATIVE_ANIMATION_ROUTES.apiLevel ?? 0) >= 29;
+/**
+ * A test that needs a moving native position or transform track: skipped
+ * without `PLAYS_MOVING_GEOMETRY`. The suites `native layout reference` and
+ * `native layout starts` have the fallback forms below API 29.
+ */
+export const movingGeometryTest = PLAYS_MOVING_GEOMETRY ? test : test.skip;
+
+/** The target of a track, and whether the track changes its value. */
+export type GeometryTrack = { target: string; moves: boolean };
+
+/**
+ * The targets that Android plays on `View.setAnimationMatrix`
+ * (`isGeometryTarget` of `AndroidNativeAnimationPlatform.cpp`).
+ */
+const GEOMETRY_TARGETS: readonly string[] = [
+  'PositionX',
+  'PositionY',
+  'Transform',
+];
+
+/**
+ * A track of `tracks` moves a position or a transform: Android plays it
+ * natively from API 29 (`playsTarget` of
+ * `AndroidNativeAnimationPlatform.cpp`).
+ */
+export const movesGeometryOf = (tracks: readonly GeometryTrack[]) =>
+  tracks.some(
+    ({ target, moves }) => moves && GEOMETRY_TARGETS.includes(target)
+  );
+
+/** A key that is not plain, with two different ends or a part in `via`. */
+export const declaresMotion = ({
+  isPlain,
+  from,
+  to,
+  leaf,
+}: {
+  isPlain?: boolean;
+  from: LeafValue;
+  to: LeafValue;
+  leaf: Leaf;
+}) => !isPlain && (from !== to || (leaf.via?.length ?? 0) > 0);
+
+/** `movingGeometryTest` for tracks that move geometry, else `test`. */
+export const testOfTracks = (tracks: readonly GeometryTrack[]) =>
+  movesGeometryOf(tracks) ? movingGeometryTest : test;
+/**
+ * Core Animation removes the animations of a layer that leaves the window; an
+ * Android animator plays to its end.
+ */
+export const REMOVES_TRACKS_OUT_OF_WINDOW = IS_APPLE;
+/**
+ * An identity base member and the additive reverse order
+ * (`makeTransformMembers` of `REANativeAnimationPlatform.mm`).
+ */
+export const PLAYS_CORE_ANIMATION_MEMBERS = IS_APPLE;
+export const HAS_EDGE_ANTIALIASING = IS_APPLE;
+/**
+ * Android plays the geometry on `View.setAnimationMatrix`: a 2D map that needs
+ * the inverse of the model matrix, in the matrix where React Native writes a
+ * skew (`admitsMovingGeometry` of `AndroidNativeAnimationPlatform.cpp`).
+ */
+export const WRITES_ANIMATION_MATRIX = !IS_APPLE;
+/**
+ * The executor record of a native opacity track keeps the committed opacity of
+ * the mount, and the sample `model` reads it (`OpacityBinding` of
+ * `TrackBinding.kt`, `modelOf` of `NativeAnimationExecutor.kt`).
+ */
+export const KEEPS_OPACITY_MODEL_IN_RECORD = !IS_APPLE;
+/**
+ * The end of a native group at a surface stop after a synchronous opacity
+ * write, as measured: `SurfaceDestroyed` on Android, `Cancelled` on Apple. The
+ * cause of the Apple result is not tested.
+ */
+export const SURFACE_STOP_END_AFTER_SYNCHRONOUS_WRITE = IS_APPLE
+  ? 'Cancelled'
+  : 'SurfaceDestroyed';
+/**
+ * Apple plays a transform only on a View, a Paragraph, or an Image
+ * (`playsTransform` of `REANativeAnimationPlatform.mm`); the Android
+ * `canRealize` has no rule of the component.
+ */
+export const PLAYS_TRANSFORM_ON_EACH_COMPONENT = !IS_APPLE;
+/**
+ * Core Animation refuses an opacity track on a view with an opacity filter
+ * (`canRealize` of `REANativeAnimationPlatform.mm`); the Android `playsTarget`
+ * has no filter rule.
+ */
+export const REFUSES_OPACITY_UNDER_FILTER = IS_APPLE;
+/**
+ * The pull of a React commit runs in a dispatch of mount items, and its
+ * `didMountItems` reports it.
+ */
+export const MOUNTS_IN_DISPATCHES = !IS_APPLE;
+/**
+ * An Android matrix has no Z row or column: a sample has the six cells of a 2D
+ * affine map.
+ */
+export const TRANSFORM_SAMPLE_CELLS: readonly number[] = IS_APPLE
+  ? Array.from({ length: 16 }, (_, cell) => cell)
+  : [0, 1, 4, 5, 12, 13];
+/**
+ * React Native on Android decomposes a `matrix` operation and sets only the
+ * translation, the rotation, and the scale of the view: the shear of the matrix
+ * does not show (`BaseViewManager.setTransformProperty`).
+ */
+export const SHOWS_MATRIX_SHEAR = IS_APPLE;
 
 export type Band = { from: number; to: number };
 
@@ -87,6 +231,12 @@ export const END_LEFT = 100;
 export const END_TOP = 40;
 export const DURATION = 400;
 export const POSITION_TOLERANCE = 0.5;
+/**
+ * How far a laid-out position or size can be from its declared number: Android
+ * rounds each edge to the pixel grid, and at a density of 2.625 a whole number
+ * of points is off it (measured: a centre of 125.142857 for 125).
+ */
+export const LAID_OUT_TOLERANCE = IS_APPLE ? 0.01 : 1 / PixelRatio.get();
 export const REPEATED_STARTS = 30;
 export const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
@@ -94,18 +244,55 @@ export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
 export const FRAME_MS = 1000 / 60;
 // The presentation layer has a new animation only after the first display frame of its commit.
 export const FIRST_FRAMES_MS = 3 * FRAME_MS;
-// A presentation value stays 15.7 to 17.7 ms in 76 intervals (`.tmp/native-la-run/12T/trace/S2-RESULTS.md` section 4.1), plus 0.3 ms.
-export const PRESENTATION_STAY_MS = 18;
-// Measured gaps of the reads of a key: 47.05 ms at most, 150.15 ms at least after a block (`.tmp/native-la-run/12T/trace/k3/an-blocks-leaves.txt`).
+/**
+ * How late a frame callback runs after its frame time. Apple: no term. Android:
+ * 21.7 ms, from the presentation reads of the phone (the off reads of the 18 ms
+ * band are 19.4 to 34.1 ms old, 99 % to 32.4 ms). A direct measurement of the
+ * emulator gives callback runs up to 25.7 ms after their frame time.
+ */
+export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 21.7;
+/**
+ * How long a presentation value stays. Apple: 15.7 to 17.7 ms in 76 intervals,
+ * plus 0.3 ms. Android: a sample shows the animator value of the last frame
+ * time, so one display frame plus the frame callback lag.
+ */
+export const PRESENTATION_STAY_MS = IS_APPLE
+  ? 18
+  : FRAME_MS + FRAME_CALLBACK_LAG_MS;
+/**
+ * How long a frame value can stay in the model in a late frame callback state.
+ * Apple: no term. Android: one display frame, plus the largest run of a frame
+ * callback after its frame time in the emulator runs of record REFMODEL-DIAG
+ * step 3 (25.7 ms), plus the largest time from that run to the model value of
+ * the native box in the run with that lag (2.8 ms). Single values of 11.9 to
+ * 47.9 ms in the other runs of that table are not studied.
+ */
+export const LATE_CALLBACK_STAY_MS = IS_APPLE ? 0 : FRAME_MS + 25.7 + 2.8;
+/**
+ * A Fabric write in a frame callback draws from the next frame: its commit
+ * mounts after the draw of its own frame (measured on Android, also with no
+ * track on the view).
+ */
+export const ORDER_B_WRITE_DRAW_DELAY_MS =
+  NATIVE_ANIMATION_ROUTES.synchronousProps ? 0 : FRAME_MS;
+// Measured gaps of the reads of a key: 47.05 ms at most, 150.15 ms at least after a block.
 export const READ_GAP_MS = 100;
-// 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick (`.tmp/native-la-run/12T/trace/k3/an-holds-edges.txt`).
+// 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick.
 export const REMOVAL_LEAD_MS = 1.78;
-// Paused layer: a keyframe segment shows its start value while its eased progress is under 0.001 and its end value while it is over 0.999 (`.tmp/native-la-run/12T/trace/k7c/tables.txt`, `tables2.txt`).
+// Paused layer: a keyframe segment shows its start value while its eased progress is under 0.001 and its end value while it is over 0.999.
 export const KEYFRAME_EDGE_HOLD = 0.001;
 export const LAYOUT_DURATION = 4 * DURATION;
 export const SAMPLED_OPACITY_TOLERANCE = 0.03;
 
 export const centerOf = (origin: number) => origin + BOX_SIZE / 2;
+
+/** The value of `promise`, or `null` when it has none after `timeoutMs`. */
+export async function withTimeout<TValue>(
+  promise: Promise<TValue>,
+  timeoutMs: number
+) {
+  return Promise.race([promise, wait(timeoutMs).then(() => null)]);
+}
 
 export async function takeTraceOf(tag: number) {
   return (await takeTrace()).filter((event) => event.tag === tag);
@@ -224,6 +411,20 @@ export type Track = {
   easing?: TrackEasing;
 };
 
+export const geometryTrackOf = ({ traceTarget, from, to }: Track) => ({
+  target: traceTarget,
+  moves: from !== to,
+});
+
+/** The cases with a native route: below API 29 no case that moves geometry. */
+export const nativeCasesOf = <TCase extends { tracks: Track[] }>(
+  cases: Record<string, TCase>
+) =>
+  Object.entries(cases).filter(
+    ([, { tracks }]) =>
+      PLAYS_MOVING_GEOMETRY || !movesGeometryOf(tracks.map(geometryTrackOf))
+  );
+
 /** The curve of an easing, and the time at which the curve has a progress. */
 export type TrackEasing = { curve: EasingFunction; timeOf: EasingFunction };
 
@@ -253,6 +454,13 @@ export type TrackReading = Awaited<ReturnType<typeof readTrack>>;
 
 export const isNear = (value: number, expected: number, tolerance = 0.01) =>
   Math.abs(value - expected) < tolerance;
+
+/**
+ * The tolerance of `isNear` for a value at an end of a track: a position has
+ * `LAID_OUT_TOLERANCE`, because Android rounds each edge to the pixel grid.
+ */
+export const endToleranceOf = ({ sampleTarget }: Pick<Track, 'sampleTarget'>) =>
+  sampleTarget === 'Position' ? LAID_OUT_TOLERANCE : 0.01;
 
 export const linearAt =
   (from: number, to: number, startMs: number, durationMs: number) =>
@@ -378,6 +586,8 @@ const frameWindowOf = (timeMs: number, framesBefore: number) =>
 export type Phase = {
   durationMs: number;
   move?: { to: number; curve: EasingFunction };
+  /** The declared delay of a hold. It can be negative. */
+  delayMs?: number;
 };
 
 export type Timeline = {
@@ -408,6 +618,7 @@ export function declaredTimelineOf(
 ): Timeline {
   const holdOf = (delayMs: number): Phase => ({
     durationMs: Math.max(0, delayMs),
+    delayMs,
   });
   const { delays, timings } = planOf(leaf, from, to, base);
   return {
@@ -634,9 +845,9 @@ export function nativeResidualOf(
 /**
  * A track that replaced a track, read in its first `PRESENTATION_STAY_MS` and
  * before a read of its target showed it: in the display frame of the start the
- * platform shows the replaced animation until its next display tick
- * (`.tmp/native-la-run/12C/trace/HUNT-RESULTS.md`: 13 of 13 stale first reads
- * with no display tick after the start, 7 of 7 fresh reads after one).
+ * platform shows the replaced animation until its next display tick (measured:
+ * 13 of 13 stale first reads with no display tick after the start, 7 of 7 fresh
+ * reads after one).
  */
 export const isInReplacementWindow = (
   readTimeMs: number,
@@ -811,6 +1022,43 @@ const SHOWN_BANDS = ['stay', 'edgeHold', 'removalWindow'] as const;
 /** The least and the largest value that a read at a time can show of a key. */
 export const declaredBandOf = (track: TimedTrack, readTimeMs: number): Band =>
   stayBandsOf([track], readTimeMs)[0].removalWindow;
+
+const CURVE_READ_STEP_MS = 1;
+
+/**
+ * The lowest and the highest curve value from `earliestMs` to `latestMs`, both
+ * ends in.
+ */
+export function curveBandOf(
+  valueAt: (timeMs: number) => number,
+  earliestMs: number,
+  latestMs: number
+) {
+  const values = [valueAt(latestMs)];
+  for (
+    let timeMs = earliestMs;
+    timeMs < latestMs;
+    timeMs += CURVE_READ_STEP_MS
+  ) {
+    values.push(valueAt(timeMs));
+  }
+  return { low: Math.min(...values), high: Math.max(...values) };
+}
+
+/**
+ * The frame times from `origin` that a read in the band `read` of the sample
+ * clock can show.
+ */
+export const frameTimesOf = (read: Band, origin: Band): Band => ({
+  from: read.from - PRESENTATION_STAY_MS - origin.to,
+  to: read.to - origin.from,
+});
+
+/** The band of the sample clock of a draw at `timeMs` of the draw clock. */
+export const drawnBandOf = (timeMs: number, clockOffset: Band): Band => ({
+  from: timeMs + clockOffset.from,
+  to: timeMs + DRAW_TIME_STEP_MS + clockOffset.to,
+});
 
 /** For each band of `ShownBands`: a distance of a pair that the band gives. */
 export type PairChanges = Record<keyof ShownBands, number>;
@@ -1212,11 +1460,11 @@ export function edgeHoldOf(
 ) {
   const members = samples[target]?.members ?? [];
   const member =
-    operation === undefined
-      ? members[0]
+    operation === undefined || !PLAYS_CORE_ANIMATION_MEMBERS
+      ? members[operation ?? 0]
       : members[members.length - 1 - operation];
   const keysMs =
-    playback && member
+    playback && member && PLAYS_CORE_ANIMATION_MEMBERS
       ? member.keyTimes.map(
           (keyTime) => playback.from + keyTime * (playback.to - playback.from)
         )
@@ -1391,16 +1639,20 @@ function expectNativeReads(
     if (playing.length === 0) {
       return [];
     }
-    const values = playing.some(isOperationTrack)
-      ? presentation
+    const isTransform = playing.some(isOperationTrack);
+    const values = isTransform
+      ? TRANSFORM_SAMPLE_CELLS.map((cell) => presentation[cell])
       : playing.map(() => presentation[0]);
-    const checked = shownTracksOf(
+    const shownTracks = shownTracksOf(
       playing,
       tracks,
       matrixTolerance,
       layerOf(targetSample),
       samples
     );
+    const checked = isTransform
+      ? TRANSFORM_SAMPLE_CELLS.map((cell) => shownTracks[cell])
+      : shownTracks;
     const isChecked =
       checkedTracksOf(tracks, target, timeMs).length === playing.length;
     const afterGap = readAfterGapOf(targetSample, before?.[target]);
@@ -1556,9 +1808,14 @@ export function cellsOf(operations: OperationValue[], layer: Layer) {
     .reduce(cellsProductOf, IDENTITY);
 }
 
-/** The operations of a style in the order of the product of a layer. */
+/**
+ * The operations of a style in the order of the product of a layer. The Android
+ * writer composes the model order also while it plays.
+ */
 const orderedOf = <TOperation,>(operations: TOperation[], layer: Layer) =>
-  layer === 'rest' ? [...operations].reverse() : operations;
+  layer === 'rest' || !PLAYS_CORE_ANIMATION_MEMBERS
+    ? [...operations].reverse()
+    : operations;
 
 /** The cells of a `Transform` sample of a view at rest at the end of operations. */
 export const endCellsOf = (operations: Operation[]) =>
@@ -1570,10 +1827,23 @@ export const endCellsOf = (operations: Operation[]) =>
       if (kind !== 'matrix') {
         throw new Error(`The kit has no matrix of the operation ${kind}.`);
       }
-      return { kind, cells: to };
+      return { kind, cells: SHOWS_MATRIX_SHEAR ? to : withoutShearOf(to) };
     }),
     'rest'
   );
+
+/**
+ * The cells of a 2D matrix with no shear, as the decomposition of React Native
+ * gives them: the second row loses its part along the first row.
+ */
+function withoutShearOf(cells: number[]) {
+  const scaleX = Math.hypot(cells[0], cells[1]);
+  const shear = (cells[0] * cells[4] + cells[1] * cells[5]) / scaleX;
+  const shown = [...cells];
+  shown[4] -= (shear * cells[0]) / scaleX;
+  shown[5] -= (shear * cells[1]) / scaleX;
+  return shown;
+}
 
 /**
  * The cells of a `Transform` sample of a layer for an amount of each of the
@@ -1861,9 +2131,19 @@ export type FrameResidual = {
 };
 
 /**
+ * The builder gets the layout values and the window size as 32-bit floats, and
+ * one value can come from two of them (measured on Android: a first frame of
+ * -391.2380828857422 for 20.190475463867188 minus 411.4285583496094, the 32-bit
+ * form of 411.42857142857144; a width of 50.28572082519531 for the laid-out
+ * 50.28571319580078, two 32-bit steps).
+ */
+const FLOAT32_EPSILON = 2 ** -21;
+
+/**
  * Each frame of a record wrote the value that the frame driver gives to the
  * timeline at the time of the frame, in the unit of the timeline, after the
- * start of the record.
+ * start of the record, to `tolerance` and the 32-bit precision of its largest
+ * value.
  */
 export function expectFrameTimeline(
   check: FrameCheck,
@@ -1875,8 +2155,13 @@ export function expectFrameTimeline(
     const { amount, unit } = amountOf(value);
     return unit === timeline.unit ? Math.abs(amount - values[frame]) : Infinity;
   });
+  const magnitude = Math.max(
+    Math.abs(timeline.from),
+    Math.abs(declaredEndOf(timeline)),
+    ...values.map(Math.abs)
+  );
   const offTimeline = record.frames.flatMap(({ timeMs, value }, frame) =>
-    distances[frame] <= tolerance
+    distances[frame] <= tolerance + magnitude * FLOAT32_EPSILON
       ? []
       : [
           `${value} at ${timeMs} ms is ${distances[frame]} from ${values[frame]}${timeline.unit}`,
@@ -1933,17 +2218,26 @@ function replayOf({ record, timeline, replaced }: FrameCheck): FrameReplay {
 }
 
 /**
- * The value that the replay of a record has after its last frame at or before a
- * time.
+ * The value that the replay of a record has after its frame of the latest time
+ * at or before a time. The frame times of a take-over are not in order: the
+ * frame of the start call has the time of the animation clock, and the next
+ * frames have earlier frame times (measured on Android).
  */
 function replayedValueOf(check: FrameCheck) {
   const { frames } = check.record;
   const { values } = replayOf(check);
-  return (timeMs: number) =>
-    frames.reduce(
-      (value, frame, index) => (frame.timeMs <= timeMs ? values[index] : value),
-      check.timeline.from
-    );
+  return (timeMs: number) => {
+    let latest: { timeMs: number; value: number } | undefined;
+    frames.forEach((frame, index) => {
+      if (
+        frame.timeMs <= timeMs &&
+        frame.timeMs >= (latest?.timeMs ?? -Infinity)
+      ) {
+        latest = { timeMs: frame.timeMs, value: values[index] };
+      }
+    });
+    return latest?.value ?? check.timeline.from;
+  };
 }
 
 type FrameReplay = { values: number[]; starts: number[] };
@@ -1954,12 +2248,14 @@ type FrameReplay = { values: number[]; starts: number[] };
  * `packages/react-native-reanimated/src/animation`: a timing moves its start to
  * a frame that is before it (`timing` of `withTiming`); a delay starts its
  * animation in the first frame at or after its end, and the animation gets that
- * frame (`delay` of `withDelay`); a sequence starts its next animation in the
- * frame in which the current one ends, and the next one gets its first frame
- * after that frame (`sequence` of `withSequence`); a delay before the first
- * move runs the animation that its animation replaced, and the move starts at
- * the value of the frame before it (`delay` of `withDelay`). `replacedValueAt`
- * is the value of the replaced animation after its frame of a time.
+ * frame, and a frame with a time less than the delay after the start of the
+ * delay does not run the animation (`delay` of `withDelay`); a sequence starts
+ * its next animation in the frame in which the current one ends, and the next
+ * one gets its first frame after that frame (`sequence` of `withSequence`); a
+ * delay before the first move runs the animation that its animation replaced,
+ * and the move starts at the value of the frame before it (`delay` of
+ * `withDelay`). `replacedValueAt` is the value of the replaced animation after
+ * its frame of a time.
  */
 export function replayFrames(
   { from, phases }: Timeline,
@@ -1984,6 +2280,14 @@ export function replayFrames(
         }
         starts.push(timeMs);
         continue;
+      }
+      const delay = phases[phase - 1];
+      if (
+        delay &&
+        !delay.move &&
+        timeMs - starts[phase - 1] < (delay.delayMs ?? delay.durationMs)
+      ) {
+        break;
       }
       hasMoved = true;
       starts[phase] = Math.min(starts[phase], timeMs);
@@ -2082,8 +2386,12 @@ export async function takeRows<TRow>(
     return readOf(row);
   };
   try {
+    let hasRead = false;
     while (performance.now() < untilMs) {
-      let read = await takeRead(true);
+      let read = hasRead
+        ? await takeRead(true)
+        : await afterMountOf(() => takeRead(true));
+      hasRead = true;
       const pollUntilMs = read.monotonicTimeMs + 2 * FRAME_MS;
       while (read.monotonicTimeMs < pollUntilMs) {
         const before = read;
@@ -2107,6 +2415,26 @@ export async function takeRows<TRow>(
   }
   return rows;
 }
+
+/**
+ * The first read of a view that a render added. On Android the view can mount
+ * some frames after the render resolves, so a read with no view waits one frame
+ * and reads again, up to `MOUNT_WAIT_FRAMES`.
+ */
+export async function afterMountOf<TRead>(read: () => Promise<TRead>) {
+  for (let frame = 0; ; frame++) {
+    try {
+      return await read();
+    } catch (error) {
+      if (!isNoView(error) || frame === MOUNT_WAIT_FRAMES) {
+        throw error;
+      }
+      await waitForFrames(1);
+    }
+  }
+}
+
+const MOUNT_WAIT_FRAMES = 10;
 
 export async function sampleRows(
   tag: number,
@@ -2151,7 +2479,7 @@ type LeafPlace = Pick<FrameRecord, 'key' | 'operation'>;
  */
 function withPreparedLeaves(
   animation: AnimationSource,
-  prepare: (leaf: BuiltLeaf, place: LeafPlace) => void
+  prepare: (leaf: BuiltLeaf, place: LeafPlace, values: AnimationValues) => void
 ) {
   const build = (
     typeof animation === 'function' ? animation : animation.build()
@@ -2171,7 +2499,7 @@ function withPreparedLeaves(
     );
     for (const [leaf, place] of leaves) {
       if (typeof leaf === 'object' && leaf !== null) {
-        prepare(leaf as BuiltLeaf, place);
+        prepare(leaf as BuiltLeaf, place, values);
       }
     }
     return result;
@@ -2328,11 +2656,21 @@ const animationTime = () => {
 
 const CLOCK_OFFSET_READS = 6;
 
+/**
+ * The step of the animation clock: Android reads `SystemClock.uptimeMillis()`
+ * (`NativeProxy.getAnimationTimestamp`), so a read stands for each time of its
+ * millisecond.
+ */
+const ANIMATION_CLOCK_STEP_MS = IS_APPLE ? 0 : 1;
+
 async function readClockOffset(tag: number): Promise<Band> {
   const before = runOnUISync(animationTime);
   const { monotonicTimeMs } = await sample(tag, 'Transform');
   const after = runOnUISync(animationTime);
-  return { from: monotonicTimeMs - after, to: monotonicTimeMs - before };
+  return {
+    from: monotonicTimeMs - after - ANIMATION_CLOCK_STEP_MS,
+    to: monotonicTimeMs - before,
+  };
 }
 
 /** The time of the sample clock minus the time of the animation clock. */
@@ -2611,6 +2949,15 @@ export type Operation = [
   leaf?: OperationLeaf,
 ];
 
+/**
+ * Android refuses a moving 3D operation (`PLAYS_3D_OPERATIONS`); the describe
+ * of 3D operations on such a platform has its fallback form.
+ */
+export const has3D = (operations: Operation[] = []) =>
+  operations.some(([kind]) =>
+    ['rotateX', 'rotateY', 'perspective'].includes(kind)
+  );
+
 /** The style transform that the mount of the end state of `operations` needs. */
 export const endTransformOf = (operations: Operation[]) =>
   operations.map(([kind, , to]) => ({
@@ -2847,6 +3194,11 @@ export type FrameRecord = {
   adoptedStart?: { timeMs: number; value: number | string };
   /** Each frame that the leaf got, with the value that it wrote. */
   frames: { timeMs: number; value: number | string }[];
+  /**
+   * The numbers of the values that the builder got: the laid-out values of the
+   * view, on the pixel grid of the device.
+   */
+  layoutValues: Record<string, number>;
 };
 
 export type OperationFrameRecord = FrameRecord & { operation: number };
@@ -2880,13 +3232,19 @@ export function readFrameRecords() {
  * leaf of each build under the name `box`.
  */
 export function frameRecordedOf(box: string, animation: AnimationSource) {
-  return withPreparedLeaves(animation, (leaf, place) => {
+  return withPreparedLeaves(animation, (leaf, place, values) => {
     'worklet';
     const { onStart } = leaf;
     if (!onStart || !leaf.onFrame) {
       return;
     }
-    const record: FrameRecord = { box, ...place, frames: [] };
+    const layoutValues: Record<string, number> = {};
+    for (const [name, value] of Object.entries(values ?? {})) {
+      if (typeof value === 'number') {
+        layoutValues[name] = value;
+      }
+    }
+    const record: FrameRecord = { box, ...place, frames: [], layoutValues };
     const replaced = [...frameRecords.value]
       .reverse()
       .find((each) => each.box === box && isSameLeaf(each, place));

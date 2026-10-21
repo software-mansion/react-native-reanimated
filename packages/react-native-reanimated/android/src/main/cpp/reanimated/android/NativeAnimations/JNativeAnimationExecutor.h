@@ -36,6 +36,24 @@ struct JPreparationRejection : JavaClass<JPreparationRejection, JPreparation> {
 };
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+struct JNativeAnimationMember : JavaClass<JNativeAnimationMember> {
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationMember;";
+
+  local_ref<JArrayDouble> doublesOf(const char *name) const {
+    return getFieldValue(javaClassStatic()->getField<JArrayDouble::javaobject>(name));
+  }
+
+  local_ref<JString> property() const {
+    static const auto field = javaClassStatic()->getField<JString::javaobject>("property");
+    return getFieldValue(field);
+  }
+
+  jint componentCount() const {
+    static const auto field = javaClassStatic()->getField<jint>("componentCount");
+    return getFieldValue(field);
+  }
+};
+
 struct JNativeAnimationSample : JavaClass<JNativeAnimationSample> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationSample;";
 
@@ -48,13 +66,9 @@ struct JNativeAnimationSample : JavaClass<JNativeAnimationSample> {
     return getFieldValue(field);
   }
 
-  local_ref<JString> memberProperty() const {
-    static const auto field = javaClassStatic()->getField<JString::javaobject>("memberProperty");
-    return getFieldValue(field);
-  }
-
-  jint memberComponentCount() const {
-    static const auto field = javaClassStatic()->getField<jint>("memberComponentCount");
+  local_ref<JArrayClass<JNativeAnimationMember::javaobject>> members() const {
+    static const auto field =
+        javaClassStatic()->getField<JArrayClass<JNativeAnimationMember::javaobject>::javaobject>("members");
     return getFieldValue(field);
   }
 };
@@ -79,9 +93,26 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
     return method(self(), surfaceId, tag);
   }
 
-  bool isInWindow(const jint tag) const {
-    static const auto method = javaClassStatic()->getMethod<jboolean(jint)>("isInWindow");
-    return method(self(), tag) != JNI_FALSE;
+  bool isInWindow(const jint surfaceId, const jint tag) const {
+    static const auto method = javaClassStatic()->getMethod<jboolean(jint, jint)>("isInWindow");
+    return method(self(), surfaceId, tag) != JNI_FALSE;
+  }
+
+  local_ref<JArrayDouble> modelOf(alias_ref<JView> view, const jint target) const {
+    static const auto method =
+        javaClassStatic()->getMethod<JArrayDouble::javaobject(alias_ref<JView>, jint)>("modelOf");
+    return method(self(), view, target);
+  }
+
+  void setModel(
+      const jint surfaceId,
+      const jint tag,
+      const jint owner,
+      const jlong generation,
+      const jint target,
+      const jdouble value) const {
+    static const auto method = javaClassStatic()->getMethod<void(jint, jint, jint, jlong, jint, jdouble)>("setModel");
+    method(self(), surfaceId, tag, owner, generation, target, value);
   }
 
   local_ref<JPreparation> prepare(
@@ -90,7 +121,8 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
       const jint tag,
       const jint owner,
       const jlong generation,
-      const jdouble elapsedMs,
+      const jdouble passTimestampMs,
+      const jdouble originTimestampMs,
       alias_ref<JArrayInt> interruptedTargets,
       alias_ref<JArrayInt> trackInts,
       alias_ref<JArrayDouble> trackDoubles) const {
@@ -102,11 +134,22 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
                                        jint,
                                        jlong,
                                        jdouble,
+                                       jdouble,
                                        alias_ref<JArrayInt>,
                                        alias_ref<JArrayInt>,
                                        alias_ref<JArrayDouble>)>("prepare");
     return method(
-        self(), view, surfaceId, tag, owner, generation, elapsedMs, interruptedTargets, trackInts, trackDoubles);
+        self(),
+        view,
+        surfaceId,
+        tag,
+        owner,
+        generation,
+        passTimestampMs,
+        originTimestampMs,
+        interruptedTargets,
+        trackInts,
+        trackDoubles);
   }
 
   void stop(
@@ -115,9 +158,11 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
       const jint owner,
       const jlong generation,
       const jint target,
-      const jint mode) const {
-    static const auto method = javaClassStatic()->getMethod<void(jint, jint, jint, jlong, jint, jint)>("stop");
-    method(self(), surfaceId, tag, owner, generation, target, mode);
+      const jint mode,
+      const jboolean inDispatch) const {
+    static const auto method =
+        javaClassStatic()->getMethod<void(jint, jint, jint, jlong, jint, jint, jboolean)>("stop");
+    method(self(), surfaceId, tag, owner, generation, target, mode, inDispatch);
   }
 
   void requestDrain() const {

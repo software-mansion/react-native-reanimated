@@ -9,9 +9,16 @@ internal class NativeAnimationSample(
     @JvmField @DoNotStrip val presentation: DoubleArray,
     /** `TrackEncoding.TRACK_KEY_LENGTH` values for each track on the view. */
     @JvmField @DoNotStrip val playbacks: LongArray,
-    @JvmField @DoNotStrip val memberProperty: String?,
-    @JvmField @DoNotStrip val memberComponentCount: Int,
+    /** One member for each timeline of the playback of the target, in the order in which the writer applies them. */
+    @JvmField @DoNotStrip val members: Array<NativeAnimationMember>,
+)
+
+/** The `PlaybackMember` of the runtime-test hook. */
+@DoNotStrip
+internal class NativeAnimationMember(
+    @JvmField @DoNotStrip val property: String,
+    @JvmField @DoNotStrip val componentCount: Int,
     /** The components of the start value, then of the end value of each segment. */
-    @JvmField @DoNotStrip val memberValues: DoubleArray,
-    @JvmField @DoNotStrip val memberKeyTimes: DoubleArray,
+    @JvmField @DoNotStrip val values: DoubleArray,
+    @JvmField @DoNotStrip val keyTimes: DoubleArray,
 )

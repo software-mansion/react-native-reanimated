@@ -58,6 +58,13 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
+import type { DrawnSample, RecordedProperty } from '../viewSampler';
+import {
+  drawnPointOf,
+  isViewSamplerAvailable,
+  logDrawnValues,
+  recordDrawnValues,
+} from '../viewSampler';
 import type {
   BuiltKey,
   PlannedRead,
@@ -87,6 +94,7 @@ import type {
 } from './nativeLayoutTestKit';
 import {
   BOX_REF,
+  BOX_SIZE,
   callbackOf,
   callbacks,
   callbackTimeOf,
@@ -103,15 +111,21 @@ import {
   isNoView,
   middleOf,
   narrowClockOffset,
+  nativeOriginOf,
+  playbackIdsOf,
   playedTracksOf,
+  POSITION_TOLERANCE,
   readFrameRecords,
   readTrack,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
+  sample,
   frameDrivenOf,
   frameRecordedOf,
   recordedLinearOf,
   DEFAULT_EASING,
+  endToleranceOf,
   SECOND_BOX_REF,
   SizeBox,
   styles,
@@ -121,6 +135,10 @@ import {
   takeTrace,
   takeTraceUntilSurfaceClosed,
   waitForCallbacks,
+  geometryTrackOf,
+  nativeCasesOf,
+  testOfTracks,
+  movingGeometryTest,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -669,7 +687,7 @@ function expectFramesOnTimeline(boxes: string[], builtKeys: BuiltKey[]) {
     .filter((leaf) => declaredLeaves.includes(leaf));
   const describeLeaves = (leaves: string[]) => leaves.sort().join();
   expect(describeLeaves(recordedLeaves)).toBe(describeLeaves(declaredLeaves));
-  const frameChecks = frameChecksOf(builtKeys, records);
+  const frameChecks = frameChecksOf(builtKeys, records, true);
   expect(
     describeLeaves(
       frameChecks.map(
@@ -794,7 +812,11 @@ function expectEndHeld(
     const off = held
       .filter(
         ({ presentation }) =>
-          !isNear(progressOf(track, presentation[0]), 1, 0.001)
+          !isNear(
+            progressOf(track, presentation[0]),
+            1,
+            heldProgressToleranceOf(track)
+          )
       )
       .map(
         ({ presentation, monotonicTimeMs }) =>
@@ -815,6 +837,45 @@ function expectEndHeld(
   }
 }
 
+/**
+ * The reads whose model of a track is not the start value of the track, at most
+ * `MODEL_FAULTS` of them.
+ */
+function modelFaultsOf(reads: TargetReads, tracks: Track[]) {
+  return reads
+    .flatMap(({ samples }) =>
+      tracks
+        .filter(
+          (track) =>
+            !isNear(
+              samples[track.traceTarget].model[0],
+              track.from,
+              endToleranceOf(track)
+            )
+        )
+        .map(
+          ({ traceTarget, from }) =>
+            `${traceTarget} model ${samples[traceTarget].model[0]} at ${samples[traceTarget].monotonicTimeMs} ms, not ${from}`
+        )
+    )
+    .slice(0, MODEL_FAULTS);
+}
+
+const MODEL_FAULTS = 3;
+
+/**
+ * A held end value is at the progress 1 of its track to 0.001, and a position
+ * also to `endToleranceOf`: Android lays out the end on the pixel grid
+ * (measured: 125.14285659790039 for 125).
+ */
+const heldProgressToleranceOf = (track: Track) =>
+  Math.max(
+    0.001,
+    track.sampleTarget === 'Position'
+      ? endToleranceOf(track) / Math.abs(track.to - track.from)
+      : 0
+  );
+
 const sortedCallbacks = () => callbacks.slice().sort().join();
 
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
@@ -824,7 +885,7 @@ describe('native layout exiting', () => {
     return;
   }
 
-  for (const [caseName, exitingCase] of Object.entries(TIMELINE_CASES)) {
+  for (const [caseName, exitingCase] of nativeCasesOf(TIMELINE_CASES)) {
     const { pairOf, tracks } = exitingCase;
     test(`${caseName} plays natively from its initial value, agrees with the frame driver, and holds its end value until the view leaves`, async () => {
       const builtKeys = builtKeysOf(exitingCase);
@@ -884,11 +945,7 @@ describe('native layout exiting', () => {
         EXIT_DURATION,
         (count) => count >= tracks.length
       );
-      for (const { samples } of reads) {
-        for (const { traceTarget, from } of tracks) {
-          expect(isNear(samples[traceTarget].model[0], from)).toBe(true);
-        }
-      }
+      expect(modelFaultsOf(reads, tracks).join('; ')).toBe('');
       expectFramesOnTimeline(['frame'], builtKeys);
       await render(null);
     });
@@ -932,25 +989,76 @@ describe('native layout exiting', () => {
     ['the two segments of the default easing', DEFAULT_EASING.curve],
   ];
   for (const [trackName, easing] of unequalTracks) {
-    test(`an exit whose leaves have unequal durations and tracks of ${trackName} gets its callback at the end of the last leaf, and no track stays`, async () => {
-      const durations = { opacityMs: 400, originXMs: 1200 };
-      const builtKeys = builtOf(unequalDeclaredOf(easing, durations));
+    movingGeometryTest(
+      `an exit whose leaves have unequal durations and tracks of ${trackName} gets its callback at the end of the last leaf, and no track stays`,
+      async () => {
+        const durations = { opacityMs: 400, originXMs: 1200 };
+        const builtKeys = builtOf(unequalDeclaredOf(easing, durations));
+        const targets = targetsOf(builtKeys);
+        const exited = await exit(
+          recordedPairOf(
+            'exiting',
+            unequalExitingOf('native', easing, durations),
+            unequalExitingOf('frame', easing, durations)
+          )
+        );
+        const reads = await readsUntil(exited.nativeTag, targets, exited, 800);
+        const started = await takeTraceOfPair(exited);
+        expect(summarize(started.native.filter(isHostEvent))).toBe(
+          `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`
+        );
+        const opacity = await readPair(exited, UNEQUAL_OPACITY);
+        expect(isNear(opacity.native.shown, CUSTOM_OPACITY)).toBe(true);
+        expect(isNear(opacity.frame.model, CUSTOM_OPACITY)).toBe(true);
+        expect(callbacks.length).toBe(0);
+
+        reads.push(
+          ...(await readsUntilRemoved(
+            exited.nativeTag,
+            targets,
+            exited,
+            durations.originXMs
+          ))
+        );
+        expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
+        expect(sortedCallbacks()).toBe('frame:true,native:true');
+        expect(
+          Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+        ).toBe(true);
+        expect(
+          callbackTimes.native - exited.startMs > durations.originXMs - FRAME_MS
+        ).toBe(true);
+        expect(await hasView(exited.nativeTag)).toBe(false);
+        expect(await leaves(exited.frameTag)).toBe(true);
+        const ended = await takeTraceOfPair(exited);
+        expect(summarizeEnd(ended.native)).toBe(
+          'TrackEnded:PositionX:true > Ended:Cancelled:None'
+        );
+
+        expectOnTimeline(
+          `an exit with unequal leaves of ${trackName}`,
+          tracksOf([...started.native, ...ended.native], exited, builtKeys),
+          reads
+        );
+        expectFramesOnTimeline(['frame'], builtKeys);
+        await render(null);
+      }
+    );
+  }
+
+  movingGeometryTest(
+    'an exit whose operations have unequal durations is one track: the shorter operation holds its end value until the view leaves, and the callback comes at the end of the longer operation',
+    async () => {
+      const durations = { scaleMs: 400, translateXMs: 1200 };
+      const HELD_FROM_MS = 600;
+      const builtKeys = builtOf(unequalTransformDeclaredOf(durations));
       const targets = targetsOf(builtKeys);
-      const exited = await exit(
-        recordedPairOf(
-          'exiting',
-          unequalExitingOf('native', easing, durations),
-          unequalExitingOf('frame', easing, durations)
-        )
-      );
-      const reads = await readsUntil(exited.nativeTag, targets, exited, 800);
+      const exited = await exit(unequalTransformPairOfDurations(durations));
+      const reads = await readsUntil(exited.nativeTag, targets, exited, 1050);
       const started = await takeTraceOfPair(exited);
       expect(summarize(started.native.filter(isHostEvent))).toBe(
-        `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`
+        startOf([UNEQUAL_SCALE])
       );
-      const opacity = await readPair(exited, UNEQUAL_OPACITY);
-      expect(isNear(opacity.native.shown, CUSTOM_OPACITY)).toBe(true);
-      expect(isNear(opacity.frame.model, CUSTOM_OPACITY)).toBe(true);
       expect(callbacks.length).toBe(0);
 
       reads.push(
@@ -958,7 +1066,7 @@ describe('native layout exiting', () => {
           exited.nativeTag,
           targets,
           exited,
-          durations.originXMs
+          durations.translateXMs
         ))
       );
       expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
@@ -967,80 +1075,38 @@ describe('native layout exiting', () => {
         Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
       ).toBe(true);
       expect(
-        callbackTimes.native - exited.startMs > durations.originXMs - FRAME_MS
+        callbackTimes.native - exited.startMs >
+          durations.translateXMs - FRAME_MS
       ).toBe(true);
-      expect(await hasView(exited.nativeTag)).toBe(false);
       expect(await leaves(exited.frameTag)).toBe(true);
       const ended = await takeTraceOfPair(exited);
       expect(summarizeEnd(ended.native)).toBe(
-        'TrackEnded:PositionX:true > Ended:Cancelled:None'
+        playedAndRemoved([UNEQUAL_SCALE])
       );
 
-      expectOnTimeline(
-        `an exit with unequal leaves of ${trackName}`,
-        tracksOf([...started.native, ...ended.native], exited, builtKeys),
-        reads
+      const playedTracks = tracksOf(
+        [...started.native, ...ended.native],
+        exited,
+        builtKeys
       );
+      expectOnTimeline('an exit with unequal operations', playedTracks, reads);
+      expectKeysWhilePlaying(
+        reads,
+        playedTracks,
+        durations.translateXMs,
+        (count) => count === 1
+      );
+      const originMs = middleOf(playedTracks[0].origin);
+      for (const { samples } of reads) {
+        const { monotonicTimeMs, presentation } = samples.Transform;
+        if (monotonicTimeMs - originMs >= HELD_FROM_MS) {
+          expect(isNear(presentation[0], HELD_SCALE, 0.0001)).toBe(true);
+        }
+      }
       expectFramesOnTimeline(['frame'], builtKeys);
       await render(null);
-    });
-  }
-
-  test('an exit whose operations have unequal durations is one track: the shorter operation holds its end value until the view leaves, and the callback comes at the end of the longer operation', async () => {
-    const durations = { scaleMs: 400, translateXMs: 1200 };
-    const HELD_FROM_MS = 600;
-    const builtKeys = builtOf(unequalTransformDeclaredOf(durations));
-    const targets = targetsOf(builtKeys);
-    const exited = await exit(unequalTransformPairOfDurations(durations));
-    const reads = await readsUntil(exited.nativeTag, targets, exited, 1050);
-    const started = await takeTraceOfPair(exited);
-    expect(summarize(started.native.filter(isHostEvent))).toBe(
-      startOf([UNEQUAL_SCALE])
-    );
-    expect(callbacks.length).toBe(0);
-
-    reads.push(
-      ...(await readsUntilRemoved(
-        exited.nativeTag,
-        targets,
-        exited,
-        durations.translateXMs
-      ))
-    );
-    expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
-    expect(sortedCallbacks()).toBe('frame:true,native:true');
-    expect(
-      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
-    ).toBe(true);
-    expect(
-      callbackTimes.native - exited.startMs > durations.translateXMs - FRAME_MS
-    ).toBe(true);
-    expect(await leaves(exited.frameTag)).toBe(true);
-    const ended = await takeTraceOfPair(exited);
-    expect(summarizeEnd(ended.native)).toBe(playedAndRemoved([UNEQUAL_SCALE]));
-
-    const playedTracks = tracksOf(
-      [...started.native, ...ended.native],
-      exited,
-      builtKeys
-    );
-    expectOnTimeline('an exit with unequal operations', playedTracks, reads);
-    expectKeysWhilePlaying(
-      reads,
-      playedTracks,
-      durations.translateXMs,
-      (count) => count === 1
-    );
-    const originMs = middleOf(playedTracks[0].origin);
-    for (const { samples } of reads) {
-      const { monotonicTimeMs, presentation } = samples.Transform;
-      if (monotonicTimeMs - originMs >= HELD_FROM_MS) {
-        expect(isNear(presentation[0], HELD_SCALE, 0.0001)).toBe(true);
-      }
     }
-    expectFramesOnTimeline(['frame'], builtKeys);
-    await render(null);
-  });
+  );
 
   for (const [easingName, easing] of Object.entries(CURVED_EASINGS)) {
     test(`FadeOut with ${easingName} plays natively on the curve of the frame driver`, async () => {
@@ -1122,32 +1188,37 @@ describe('native layout exiting', () => {
     await render(null);
   });
 
-  for (const [caseName, { pairOf }] of Object.entries({
+  for (const [caseName, exitingCase] of Object.entries({
     FadeOut: CASES.FadeOut,
     ZoomOut: CASES.ZoomOut,
   })) {
-    test(`a view that mounts after a native ${caseName} shows its own props and has no track`, async () => {
-      const timing = { durationMs: 400 };
-      const pair = pairOf(timing);
-      const exited = await exit(pair);
-      await waitUntil(exited, 0.8 * timing.durationMs);
-      expect(await leaves(exited.nativeTag)).toBe(true);
+    const { pairOf } = exitingCase;
+    const mountTest = testOfTracks(exitingCase.tracks.map(geometryTrackOf));
+    mountTest(
+      `a view that mounts after a native ${caseName} shows its own props and has no track`,
+      async () => {
+        const timing = { durationMs: 400 };
+        const pair = pairOf(timing);
+        const exited = await exit(pair);
+        await waitUntil(exited, 0.8 * timing.durationMs);
+        expect(await leaves(exited.nativeTag)).toBe(true);
 
-      await render(<ExitingPair {...pair} boxKey="next" />);
-      const mounted = pairTags();
-      expect(mounted.nativeTag !== exited.nativeTag).toBe(true);
-      for (const waitMs of [0, 100]) {
-        await wait(waitMs);
-        for (const track of [OPACITY, SCALE]) {
-          const reading = await readTrack(mounted.nativeTag, track);
-          expect(isNear(reading.shown, 1)).toBe(true);
-          expect(isNear(reading.model, 1)).toBe(true);
-          expect(reading.keys).toBe(0);
+        await render(<ExitingPair {...pair} boxKey="next" />);
+        const mounted = pairTags();
+        expect(mounted.nativeTag !== exited.nativeTag).toBe(true);
+        for (const waitMs of [0, 100]) {
+          await wait(waitMs);
+          for (const track of [OPACITY, SCALE]) {
+            const reading = await readTrack(mounted.nativeTag, track);
+            expect(isNear(reading.shown, 1)).toBe(true);
+            expect(isNear(reading.model, 1)).toBe(true);
+            expect(reading.keys).toBe(0);
+          }
         }
+        await render(null);
+        await wait(timing.durationMs + 300);
       }
-      await render(null);
-      await wait(timing.durationMs + 300);
-    });
+    );
   }
 
   test('the same key that mounts again at 15 % does not stop the exit of the old view', async () => {
@@ -1313,63 +1384,72 @@ describe('native layout exiting and the other animations of the view', () => {
   const SHORT_EXIT = 1000;
   const layoutPair = () => layoutPairOf(LAYOUT_DURATION);
 
-  test('an exit at 40 % of a native layout animation starts the opacity at 1, and the position track continues', async () => {
-    const pair = merged(layoutPair(), fadePairOf({ durationMs: SHORT_EXIT }));
-    const exitKeys = builtKeysOf(FADE, { durationMs: SHORT_EXIT });
-    const moveKeys = moveBuiltOf(LAYOUT_DURATION);
-    const targets = targetsOf([...exitKeys, ...moveKeys]);
-    await mount(<ExitingPair {...pair} />);
-    await render(<ExitingPair {...pair} left={MOVED_LEFT} />);
-    await wait(0.4 * LAYOUT_DURATION);
-    const exited = await exitTo(
-      <ExitingPair {...pair} left={MOVED_LEFT} isMounted={false} />
-    );
-    const reads = await readsUntil(exited.nativeTag, targets, exited, 100);
-    const started = await takeTraceOfPair(exited);
-    const hostEvents = started.native.filter(isHostEvent);
-    expect(summarize(hostEvents)).toBe(startOf([OPACITY]));
-    expect(hostEvents[0].layoutAnimationType).toBe('Exiting');
-    expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
+  movingGeometryTest(
+    'an exit at 40 % of a native layout animation starts the opacity at 1, and the position track continues',
+    async () => {
+      const pair = merged(layoutPair(), fadePairOf({ durationMs: SHORT_EXIT }));
+      const exitKeys = builtKeysOf(FADE, { durationMs: SHORT_EXIT });
+      const moveKeys = moveBuiltOf(LAYOUT_DURATION);
+      const targets = targetsOf([...exitKeys, ...moveKeys]);
+      await mount(<ExitingPair {...pair} />);
+      await render(<ExitingPair {...pair} left={MOVED_LEFT} />);
+      await wait(0.4 * LAYOUT_DURATION);
+      const exited = await exitTo(
+        <ExitingPair {...pair} left={MOVED_LEFT} isMounted={false} />
+      );
+      const reads = await readsUntil(exited.nativeTag, targets, exited, 100);
+      const started = await takeTraceOfPair(exited);
+      const hostEvents = started.native.filter(isHostEvent);
+      expect(summarize(hostEvents)).toBe(startOf([OPACITY]));
+      expect(hostEvents[0].layoutAnimationType).toBe('Exiting');
+      expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
 
-    reads.push(...(await readsUntil(exited.nativeTag, targets, exited, 800)));
-    const position = await readPair(exited, MOVE);
-    expect(isNear(position.native.shown, MOVE.to)).toBe(true);
-    expect(isNear(position.frame.model, MOVE.to)).toBe(true);
-    expect(callbacks.length).toBe(2);
+      reads.push(...(await readsUntil(exited.nativeTag, targets, exited, 800)));
+      const position = await readPair(exited, MOVE);
+      expect(isNear(position.native.shown, MOVE.to, endToleranceOf(MOVE))).toBe(
+        true
+      );
+      expect(isNear(position.frame.model, MOVE.to, endToleranceOf(MOVE))).toBe(
+        true
+      );
+      expect(callbacks.length).toBe(2);
 
-    reads.push(
-      ...(await readsUntilRemoved(
-        exited.nativeTag,
-        targets,
-        exited,
-        SHORT_EXIT
-      ))
-    );
-    expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
-    expect(await hasView(exited.nativeTag)).toBe(false);
-    expect(sortedCallbacks()).toBe(
-      'frame:true,frameLayout:false,native:true,nativeLayout:false'
-    );
-    const ended = await takeTraceOfPair(exited);
-    const events = [
-      ...exited.earlier.native,
-      ...started.native,
-      ...ended.native,
-    ];
-    expectOnTimeline(
-      'an exit at 40 % of a native layout animation',
-      [
-        ...tracksOf(events, exited, moveKeys, 'Layout'),
-        ...tracksOf(events, exited, exitKeys),
-      ],
-      reads
-    );
-    for (const { samples } of reads) {
-      expect(isNear(samples.PositionX.model[0], MOVE.to)).toBe(true);
+      reads.push(
+        ...(await readsUntilRemoved(
+          exited.nativeTag,
+          targets,
+          exited,
+          SHORT_EXIT
+        ))
+      );
+      expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
+      expect(await hasView(exited.nativeTag)).toBe(false);
+      expect(sortedCallbacks()).toBe(
+        'frame:true,frameLayout:false,native:true,nativeLayout:false'
+      );
+      const ended = await takeTraceOfPair(exited);
+      const events = [
+        ...exited.earlier.native,
+        ...started.native,
+        ...ended.native,
+      ];
+      expectOnTimeline(
+        'an exit at 40 % of a native layout animation',
+        [
+          ...tracksOf(events, exited, moveKeys, 'Layout'),
+          ...tracksOf(events, exited, exitKeys),
+        ],
+        reads
+      );
+      for (const { samples } of reads) {
+        expect(
+          isNear(samples.PositionX.model[0], MOVE.to, endToleranceOf(MOVE))
+        ).toBe(true);
+      }
+      expectFramesOnTimeline(['frame'], [...moveKeys, ...exitKeys]);
+      await render(null);
     }
-    expectFramesOnTimeline(['frame'], [...moveKeys, ...exitKeys]);
-    await render(null);
-  });
+  );
 
   const joinedTracks: [string, boolean, ExitingCase['pairOf'], Track][] = [
     ['one segment', false, fadePairOf, OPACITY],
@@ -1392,43 +1472,50 @@ describe('native layout exiting and the other animations of the view', () => {
     exitPairOf,
     exitTrack,
   ] of joinedTracks) {
-    test(`an exit that is shorter than the native layout track of ${trackName} that it joins holds its end value, and the callback comes at the end of that track`, async () => {
-      const layoutDuration = 2000;
-      const exitDuration = 500;
-      const layoutLeftMs = 0.6 * layoutDuration;
-      const pair = merged(
-        layoutPairOf(layoutDuration, hasDefaultEasing),
-        exitPairOf({ durationMs: exitDuration })
-      );
-      await render(<ExitingPair {...pair} />);
-      await wait(300);
-      await render(<ExitingPair {...pair} left={MOVED_LEFT} />);
-      await wait(layoutDuration - layoutLeftMs);
-      const exited = await exitOf(
-        <ExitingPair {...pair} left={MOVED_LEFT} />,
-        <ExitingPair {...pair} left={MOVED_LEFT} isMounted={false} />,
-        0
-      );
-      await waitUntil(exited, exitDuration + 200);
-      expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
-      const { native, frame } = await readPair(exited, exitTrack);
-      expect(isNear(native.shown, exitTrack.to)).toBe(true);
-      expect(isNear(frame.model, exitTrack.to)).toBe(true);
+    movingGeometryTest(
+      `an exit that is shorter than the native layout track of ${trackName} that it joins holds its end value, and the callback comes at the end of that track`,
+      async () => {
+        const layoutDuration = 2000;
+        const exitDuration = 500;
+        const layoutLeftMs = 0.6 * layoutDuration;
+        const pair = merged(
+          layoutPairOf(layoutDuration, hasDefaultEasing),
+          exitPairOf({ durationMs: exitDuration })
+        );
+        await render(<ExitingPair {...pair} />);
+        await wait(300);
+        await render(<ExitingPair {...pair} left={MOVED_LEFT} />);
+        await wait(layoutDuration - layoutLeftMs);
+        const exited = await exitOf(
+          <ExitingPair {...pair} left={MOVED_LEFT} />,
+          <ExitingPair {...pair} left={MOVED_LEFT} isMounted={false} />,
+          0
+        );
+        await waitUntil(exited, exitDuration + 200);
+        expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
+        const { native, frame } = await readPair(exited, exitTrack);
+        expect(
+          isNear(native.shown, exitTrack.to, endToleranceOf(exitTrack))
+        ).toBe(true);
+        expect(
+          isNear(frame.model, exitTrack.to, endToleranceOf(exitTrack))
+        ).toBe(true);
 
-      await waitUntil(exited, layoutLeftMs + 300);
-      expect(sortedCallbacks()).toBe(
-        'frame:true,frameLayout:false,native:true,nativeLayout:false'
-      );
-      expect(
-        Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
-      ).toBe(true);
-      expect(
-        callbackTimes.native - exited.startMs > layoutLeftMs - 6 * FRAME_MS
-      ).toBe(true);
-      expect(await hasView(exited.nativeTag)).toBe(false);
-      expect(await hasView(exited.frameTag)).toBe(false);
-      await render(null);
-    });
+        await waitUntil(exited, layoutLeftMs + 300);
+        expect(sortedCallbacks()).toBe(
+          'frame:true,frameLayout:false,native:true,nativeLayout:false'
+        );
+        expect(
+          Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+        ).toBe(true);
+        expect(
+          callbackTimes.native - exited.startMs > layoutLeftMs - 6 * FRAME_MS
+        ).toBe(true);
+        expect(await hasView(exited.nativeTag)).toBe(false);
+        expect(await hasView(exited.frameTag)).toBe(false);
+        await render(null);
+      }
+    );
   }
 
   for (const startsFlat of [false, true]) {
@@ -1693,130 +1780,144 @@ describe('native layout exiting of a parent and its child', () => {
     return;
   }
 
-  test('the end of the exit of a parent ends the longer exit of its child with false, and both leave together', async () => {
-    const families = familiesOf(
-      [() => new FadeOut(), 1000],
-      [() => new ZoomOut(), 1500]
-    );
-    const childKeys = builtKeysOf(ZOOM, { durationMs: 1500 });
-    const parentKeys = builtKeysOf(FADE, { durationMs: 1000 });
-    await mount(<Family {...families} />);
-    const parents = parentTags();
-    const exited = await exitTo(<Family {...families} hasParents={false} />);
-    const reads: Record<'child' | 'parent', PlannedRead[]> = {
-      child: [],
-      parent: [],
-    };
-    const readUntil = async (elapsedMs: number) => {
-      const [child, parent] = await Promise.all([
-        readsUntil(exited.nativeTag, targetsOf(childKeys), exited, elapsedMs),
-        readsUntil(parents.nativeTag, targetsOf(parentKeys), exited, elapsedMs),
-      ]);
-      reads.child.push(...child);
-      reads.parent.push(...parent);
-    };
-    await readUntil(500);
-    expect(callbacks.length).toBe(0);
+  movingGeometryTest(
+    'the end of the exit of a parent ends the longer exit of its child with false, and both leave together',
+    async () => {
+      const families = familiesOf(
+        [() => new FadeOut(), 1000],
+        [() => new ZoomOut(), 1500]
+      );
+      const childKeys = builtKeysOf(ZOOM, { durationMs: 1500 });
+      const parentKeys = builtKeysOf(FADE, { durationMs: 1000 });
+      await mount(<Family {...families} />);
+      const parents = parentTags();
+      const exited = await exitTo(<Family {...families} hasParents={false} />);
+      const reads: Record<'child' | 'parent', PlannedRead[]> = {
+        child: [],
+        parent: [],
+      };
+      const readUntil = async (elapsedMs: number) => {
+        const [child, parent] = await Promise.all([
+          readsUntil(exited.nativeTag, targetsOf(childKeys), exited, elapsedMs),
+          readsUntil(
+            parents.nativeTag,
+            targetsOf(parentKeys),
+            exited,
+            elapsedMs
+          ),
+        ]);
+        reads.child.push(...child);
+        reads.parent.push(...parent);
+      };
+      await readUntil(500);
+      expect(callbacks.length).toBe(0);
 
-    await readUntil(2000);
-    expect(
-      await waitForCallbacks([
-        'frameChild:false',
-        'frameParent:true',
-        'nativeChild:false',
-        'nativeParent:true',
-      ])
-    ).toBe('');
-    expect(sortedCallbacks()).toBe(
-      'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
-    );
-    expect(await hasView(exited.nativeTag)).toBe(false);
-    expect(await hasView(parents.nativeTag)).toBe(false);
-    expect(await leaves(parents.frameTag)).toBe(true);
-    const events = await takeTrace();
-    const eventsOf = (ofTag: number) =>
-      events.filter(({ tag }) => tag === ofTag);
-    expectOnTimeline(
-      'the end of the exit of a parent, the child',
-      tracksOf(eventsOf(exited.nativeTag), exited, childKeys),
-      reads.child
-    );
-    expectOnTimeline(
-      'the end of the exit of a parent, the parent',
-      tracksOf(eventsOf(parents.nativeTag), exited, parentKeys),
-      reads.parent
-    );
-    expectFramesOnTimeline(['frameChild'], childKeys);
-    expectFramesOnTimeline(['frameParent'], parentKeys);
+      await readUntil(2000);
+      expect(
+        await waitForCallbacks([
+          'frameChild:false',
+          'frameParent:true',
+          'nativeChild:false',
+          'nativeParent:true',
+        ])
+      ).toBe('');
+      expect(sortedCallbacks()).toBe(
+        'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
+      );
+      expect(await hasView(exited.nativeTag)).toBe(false);
+      expect(await hasView(parents.nativeTag)).toBe(false);
+      expect(await leaves(parents.frameTag)).toBe(true);
+      const events = await takeTrace();
+      const eventsOf = (ofTag: number) =>
+        events.filter(({ tag }) => tag === ofTag);
+      expectOnTimeline(
+        'the end of the exit of a parent, the child',
+        tracksOf(eventsOf(exited.nativeTag), exited, childKeys),
+        reads.child
+      );
+      expectOnTimeline(
+        'the end of the exit of a parent, the parent',
+        tracksOf(eventsOf(parents.nativeTag), exited, parentKeys),
+        reads.parent
+      );
+      expectFramesOnTimeline(['frameChild'], childKeys);
+      expectFramesOnTimeline(['frameParent'], parentKeys);
 
-    await waitUntil(exited, 1800);
-    expect(callbacks.length).toBe(4);
-    await render(null);
-  });
-
-  test('a child with the shorter exit leaves first, and its parent plays to its end', async () => {
-    const families = familiesOf(
-      [() => new SlideOutRight(), 1500],
-      [() => new FadeOut(), 500]
-    );
-    await render(<Family {...families} />);
-    await wait(300);
-    const parents = parentTags();
-    const exited = await exitOf(
-      <Family {...families} />,
-      <Family {...families} hasParents={false} />,
-      0
-    );
-    await waitUntil(exited, 800);
-    expect(sortedCallbacks()).toBe('frameChild:true,nativeChild:true');
-    expect(await hasView(exited.nativeTag)).toBe(false);
-    expect(await hasView(exited.frameTag)).toBe(false);
-    expect(await hasView(parents.nativeTag)).toBe(true);
-    expect(await hasView(parents.frameTag)).toBe(true);
-
-    await waitUntil(exited, 1800);
-    expect(sortedCallbacks()).toBe(
-      'frameChild:true,frameParent:true,nativeChild:true,nativeParent:true'
-    );
-    expect(await hasView(parents.nativeTag)).toBe(false);
-    expect(await hasView(parents.frameTag)).toBe(false);
-    await render(null);
-  });
-
-  test('a parent and its child whose exits end in one frame get the callbacks of the frame driver, and both leave', async () => {
-    const families = familiesOf(
-      [() => new FadeOut(), 600],
-      [() => new ZoomOut(), 600]
-    );
-    await render(<Family {...families} />);
-    await wait(300);
-    const parents = parentTags();
-    const exited = await exitOf(
-      <Family {...families} />,
-      <Family {...families} hasParents={false} />,
-      0
-    );
-    await waitUntil(exited, 1000);
-    const resultOf = (name: string) =>
-      callbacks.find((callback) => callback.startsWith(`${name}:`));
-    expect(callbacks.length).toBe(4);
-    expect(resultOf('nativeParent')).toBe('nativeParent:true');
-    expect(resultOf('frameParent')).toBe('frameParent:true');
-    expect(resultOf('nativeChild')?.split(':')[1]).toBe(
-      resultOf('frameChild')?.split(':')[1]
-    );
-    for (const tag of [
-      exited.nativeTag,
-      exited.frameTag,
-      parents.nativeTag,
-      parents.frameTag,
-    ]) {
-      expect(await hasView(tag)).toBe(false);
+      await waitUntil(exited, 1800);
+      expect(callbacks.length).toBe(4);
+      await render(null);
     }
-    await wait(500);
-    expect(callbacks.length).toBe(4);
-    await render(null);
-  });
+  );
+
+  movingGeometryTest(
+    'a child with the shorter exit leaves first, and its parent plays to its end',
+    async () => {
+      const families = familiesOf(
+        [() => new SlideOutRight(), 1500],
+        [() => new FadeOut(), 500]
+      );
+      await render(<Family {...families} />);
+      await wait(300);
+      const parents = parentTags();
+      const exited = await exitOf(
+        <Family {...families} />,
+        <Family {...families} hasParents={false} />,
+        0
+      );
+      await waitUntil(exited, 800);
+      expect(sortedCallbacks()).toBe('frameChild:true,nativeChild:true');
+      expect(await hasView(exited.nativeTag)).toBe(false);
+      expect(await hasView(exited.frameTag)).toBe(false);
+      expect(await hasView(parents.nativeTag)).toBe(true);
+      expect(await hasView(parents.frameTag)).toBe(true);
+
+      await waitUntil(exited, 1800);
+      expect(sortedCallbacks()).toBe(
+        'frameChild:true,frameParent:true,nativeChild:true,nativeParent:true'
+      );
+      expect(await hasView(parents.nativeTag)).toBe(false);
+      expect(await hasView(parents.frameTag)).toBe(false);
+      await render(null);
+    }
+  );
+
+  movingGeometryTest(
+    'a parent and its child whose exits end in one frame get the callbacks of the frame driver, and both leave',
+    async () => {
+      const families = familiesOf(
+        [() => new FadeOut(), 600],
+        [() => new ZoomOut(), 600]
+      );
+      await render(<Family {...families} />);
+      await wait(300);
+      const parents = parentTags();
+      const exited = await exitOf(
+        <Family {...families} />,
+        <Family {...families} hasParents={false} />,
+        0
+      );
+      await waitUntil(exited, 1000);
+      const resultOf = (name: string) =>
+        callbacks.find((callback) => callback.startsWith(`${name}:`));
+      expect(callbacks.length).toBe(4);
+      expect(resultOf('nativeParent')).toBe('nativeParent:true');
+      expect(resultOf('frameParent')).toBe('frameParent:true');
+      expect(resultOf('nativeChild')?.split(':')[1]).toBe(
+        resultOf('frameChild')?.split(':')[1]
+      );
+      for (const tag of [
+        exited.nativeTag,
+        exited.frameTag,
+        parents.nativeTag,
+        parents.frameTag,
+      ]) {
+        expect(await hasView(tag)).toBe(false);
+      }
+      await wait(500);
+      expect(callbacks.length).toBe(4);
+      await render(null);
+    }
+  );
 
   type HeldAndPlaying = {
     trackName: string;
@@ -1862,51 +1963,54 @@ describe('native layout exiting of a parent and its child', () => {
   ];
   for (const each of heldAndPlaying) {
     const { trackName, easing, childOf } = each;
-    test(`the end of the exit of a parent removes a child whose exit holds one leaf and plays one leaf, with tracks of ${trackName}: false one time`, async () => {
-      const families = {
-        native: {
-          ...familiesOf([() => new FadeOut(), 1000], [() => new ZoomOut(), 1])
-            .native,
-          child: { exiting: childOf('nativeChild', easing) },
-        },
-        frame: {
-          ...familiesOf([() => new FadeOut(), 1000], [() => new ZoomOut(), 1])
-            .frame,
-          child: { exiting: frameDrivenOf(childOf('frameChild', easing)) },
-        },
-      };
-      await render(<Family {...families} />);
-      await wait(300);
-      const parents = parentTags();
-      const exited = await exitOf(
-        <Family {...families} />,
-        <Family {...families} hasParents={false} />,
-        0
-      );
-      await waitUntil(exited, 600);
-      const events = await takeTraceOfPair(exited);
-      expect(summarize(events.native.filter(isHostEvent))).toBe(
-        each.startAndHold
-      );
-      const held = await readTrack(exited.nativeTag, each.held);
-      expect(isNear(held.shown, each.held.to)).toBe(true);
-      expect(callbacks.length).toBe(0);
+    movingGeometryTest(
+      `the end of the exit of a parent removes a child whose exit holds one leaf and plays one leaf, with tracks of ${trackName}: false one time`,
+      async () => {
+        const families = {
+          native: {
+            ...familiesOf([() => new FadeOut(), 1000], [() => new ZoomOut(), 1])
+              .native,
+            child: { exiting: childOf('nativeChild', easing) },
+          },
+          frame: {
+            ...familiesOf([() => new FadeOut(), 1000], [() => new ZoomOut(), 1])
+              .frame,
+            child: { exiting: frameDrivenOf(childOf('frameChild', easing)) },
+          },
+        };
+        await render(<Family {...families} />);
+        await wait(300);
+        const parents = parentTags();
+        const exited = await exitOf(
+          <Family {...families} />,
+          <Family {...families} hasParents={false} />,
+          0
+        );
+        await waitUntil(exited, 600);
+        const events = await takeTraceOfPair(exited);
+        expect(summarize(events.native.filter(isHostEvent))).toBe(
+          each.startAndHold
+        );
+        const held = await readTrack(exited.nativeTag, each.held);
+        expect(isNear(held.shown, each.held.to)).toBe(true);
+        expect(callbacks.length).toBe(0);
 
-      await waitUntil(exited, 1300);
-      expect(sortedCallbacks()).toBe(
-        'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
-      );
-      expect(await hasView(exited.nativeTag)).toBe(false);
-      expect(await hasView(parents.nativeTag)).toBe(false);
-      expect(summarizeEnd((await takeTraceOfPair(exited)).native)).toBe(
-        each.removal
-      );
+        await waitUntil(exited, 1300);
+        expect(sortedCallbacks()).toBe(
+          'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
+        );
+        expect(await hasView(exited.nativeTag)).toBe(false);
+        expect(await hasView(parents.nativeTag)).toBe(false);
+        expect(summarizeEnd((await takeTraceOfPair(exited)).native)).toBe(
+          each.removal
+        );
 
-      await waitUntil(exited, 2400);
-      expect(callbacks.length).toBe(4);
-      expect((await takeTraceOfPair(exited)).native.length).toBe(0);
-      await render(null);
-    });
+        await waitUntil(exited, 2400);
+        expect(callbacks.length).toBe(4);
+        expect((await takeTraceOfPair(exited)).native.length).toBe(0);
+        await render(null);
+      }
+    );
   }
 
   test('the removal of a parent with no exit does not stop the exit of its child, and the parent stays until the child leaves', async () => {
@@ -2138,10 +2242,72 @@ describe('native layout exiting and the stop of its tracks', () => {
     await wait(300);
   }
 
-  test('a Modal that goes hidden removes the native tracks: the frame driver plays the exit to its end', async () => {
+  type PairReading = Awaited<ReturnType<typeof readPair>>;
+
+  /** The native box shows the model of the twin, to two display frames. */
+  function expectShowsTwin(
+    statement: string,
+    { native, frame }: PairReading,
+    track: Track,
+    durationMs = EXIT_DURATION
+  ) {
+    const tolerance = twoFramesOf(track, durationMs);
+    expect(
+      isNear(native.shown, frame.model, tolerance)
+        ? ''
+        : `${statement}: the native box shows ${native.shown}, ${Math.abs(native.shown - frame.model)} from the model ${frame.model} of the twin, tolerance ${tolerance}`
+    ).toBe('');
+  }
+
+  /**
+   * The native box left the window at `STOP_AT`. Its native track plays on to
+   * its natural end, as the twin plays.
+   */
+  async function expectNativeTrackPlaysExit(exited: Exited) {
+    await waitUntil(exited, 0.3 * EXIT_DURATION);
+    const outOfWindow = await takeTransferTrace(exited.nativeTag);
+    expect(outOfWindow.host).toBe('');
+    expect(outOfWindow.hasFrameUpdate).toBe(false);
+    expect(callbacks.length).toBe(0);
+    expectShowsTwin(
+      'out of the window at 0.3 of the exit',
+      await readPair(exited, OPACITY),
+      OPACITY
+    );
+
+    await waitUntil(exited, 0.6 * EXIT_DURATION);
+    expectShowsTwin(
+      'out of the window at 0.6 of the exit',
+      await readPair(exited, OPACITY),
+      OPACITY
+    );
+    expect(callbacks.length).toBe(0);
+
+    await waitUntil(exited, EXIT_DURATION + 400);
+    expect(sortedCallbacks()).toBe('frame:true,native:true');
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+    ).toBe(true);
+    expect(builderCalls.slice().sort().join()).toBe('frame,native');
+    expect(await hasView(exited.nativeTag)).toBe(false);
+    expect(await hasView(exited.frameTag)).toBe(false);
+    expect((await takeTransferTrace(exited.nativeTag)).host).toBe(
+      playedAndRemoved([OPACITY])
+    );
+    expect((await takeTraceOfPair(exited)).native.length).toBe(0);
+    await render(null);
+    await wait(300);
+  }
+
+  const hiddenModalResult = REMOVES_TRACKS_OUT_OF_WINDOW
+    ? 'removes the native tracks: the frame driver plays the exit to its end'
+    : 'keeps the native track: the track plays the exit to its natural end';
+  test(`a Modal that goes hidden ${hiddenModalResult}`, async () => {
     const { pair, exited } = await exitUntilStop(ModalPair, countedFadePair());
     await render(<ModalPair {...pair} isMounted={false} isVisible={false} />);
-    await expectFrameDriverTakesExit(exited);
+    await (REMOVES_TRACKS_OUT_OF_WINDOW
+      ? expectFrameDriverTakesExit(exited)
+      : expectNativeTrackPlaysExit(exited));
   });
 
   const HIDDEN_AT = 0.3 * EXIT_DURATION;
@@ -2165,28 +2331,51 @@ describe('native layout exiting and the stop of its tracks', () => {
   };
 
   /**
-   * The first sample of the opacity of the native box at or after a time from
-   * the origin of its command, with its own time from that origin.
+   * The opacity samples of the two boxes in the first row at or after a time
+   * from the origin of the command of the native box, with the time of the
+   * native sample from that origin.
    */
-  function opacityFrom({ rows, tracks: [{ origin }] }: Played, fromMs: number) {
+  function opacitiesFrom(
+    { rows, tracks: [{ origin }] }: Played,
+    fromMs: number
+  ) {
     const elapsedOf = (monotonicTimeMs: number) =>
       monotonicTimeMs - middleOf(origin);
-    const taken = rows
-      .map(({ row }) => row.native.Opacity)
-      .find(({ monotonicTimeMs }) => elapsedOf(monotonicTimeMs) >= fromMs);
+    const taken = rows.find(
+      ({ row }) => elapsedOf(row.native.Opacity.monotonicTimeMs) >= fromMs
+    );
     if (!taken) {
       throw new Error(
         `The case has no row from ${fromMs} ms after its origin.`
       );
     }
-    return { ...taken, elapsedMs: elapsedOf(taken.monotonicTimeMs) };
+    const { native, frame } = taken.row;
+    return {
+      native: native.Opacity,
+      frame: frame.Opacity,
+      elapsedMs: elapsedOf(native.Opacity.monotonicTimeMs),
+    };
   }
 
-  const clipName =
-    'a clip of the view removes the native tracks: the frame driver plays the exit, and the view shows again after a scroll back';
+  /**
+   * The first sample of the opacity of the native box at or after a time from
+   * the origin of its command, with its own time from that origin.
+   */
+  function opacityFrom(played: Played, fromMs: number) {
+    const { native, elapsedMs } = opacitiesFrom(played, fromMs);
+    return { ...native, elapsedMs };
+  }
+
+  const clipName = REMOVES_TRACKS_OUT_OF_WINDOW
+    ? 'a clip of the view removes the native tracks: the frame driver plays the exit, and the view shows again after a scroll back'
+    : 'a clip of the view keeps the native track: the track plays the exit to its natural end, and the view shows the value of the twin after a scroll back';
   test(clipName, async () => {
     const played = await play(CLIPPED_FADE);
     expectReference(clipName, CLIPPED_FADE, played);
+    if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+      await expectClippedFadePlayedToEnd(played);
+      return;
+    }
     const { events, tracks, clockOffset, frameRecords, endKeys } = played;
     expect(
       summarize(
@@ -2282,108 +2471,250 @@ describe('native layout exiting and the stop of its tracks', () => {
     await wait(300);
   });
 
-  test('a clip of an exiting view that has a track of a native layout animation: the frame driver continues the two', async () => {
-    const layoutDuration = 2000;
-    const exitDuration = 1500;
-    const pair = merged(
-      layoutPairOf(layoutDuration),
-      fadePairOf({ durationMs: exitDuration })
-    );
-    await render(<ClippedPair {...pair} />);
-    await wait(600);
-    await render(<ClippedPair {...pair} left={MOVED_LEFT} />);
-    await wait(0.2 * layoutDuration);
-    const exited = await exitOf(
-      <ClippedPair {...pair} left={MOVED_LEFT} />,
-      <ClippedPair {...pair} left={MOVED_LEFT} isMounted={false} />,
-      0
-    );
-    await waitUntil(exited, 150);
-    await takeTrace();
-    scrollTo(CLIPPED_OFFSET);
-    await waitUntil(exited, 350);
-    const transfer = await takeTransferTrace(exited.nativeTag);
-    expect(transfer.host).toBe(
-      'TrackEnded:Height:false > TrackEnded:Opacity:false > TrackEnded:PositionX:false > TrackEnded:PositionY:false > TrackEnded:Width:false > Ended:Interrupted:PlatformRemoved > Ended:Interrupted:PlatformRemoved'
-    );
-    expect(transfer.hasFrameUpdate).toBe(true);
-    expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
-
-    scrollTo(0);
-    await waitUntil(exited, 600);
-    const opacity = await readPair(exited, OPACITY);
-    expect(opacity.native.keys).toBe(0);
+  /**
+   * The native track of `CLIPPED_FADE` played on out of the window to its
+   * natural end, and the view left after the end of its exit.
+   */
+  async function expectClippedFadePlayedToEnd(played: Played) {
+    const { events, frameRecords, endKeys } = played;
+    const hostEventsOf = (taken: TraceEvent[]) =>
+      taken.filter((event) => !isFrameUpdate(event) && isHostEvent(event));
+    expect(events.some(isFrameUpdate)).toBe(false);
+    // A build makes its records before a start (`frameRecordedOf`): the native box has one with no frame.
     expect(
-      isNear(
-        opacity.native.shown,
-        opacity.frame.model,
-        twoFramesOf(OPACITY, exitDuration)
-      )
-    ).toBe(true);
-    expect(isNear(opacity.native.shown, 1 - 600 / exitDuration, 0.08)).toBe(
-      true
+      frameRecords.filter(
+        ({ box, frames }) => box === 'native' && frames.length > 0
+      ).length
+    ).toBe(0);
+    expect(frameRecords.filter(({ box }) => box === 'frame').length).toBe(
+      endKeys.length
     );
-    const position = await readPair(exited, MOVE);
-    expect(
-      isNear(
-        position.native.shown,
-        position.frame.model,
-        twoFramesOf(MOVE, layoutDuration)
-      )
-    ).toBe(true);
-    expect(position.native.shown > MOVE.from).toBe(true);
-    expect(position.native.shown < MOVE.to).toBe(true);
-    expect(callbacks.length).toBe(2);
 
-    await waitUntil(exited, exitDuration + 400);
-    expect(sortedCallbacks()).toBe(
-      'frame:true,frameLayout:false,native:true,nativeLayout:false'
+    for (const fromMs of [HIDDEN_AT, SHOWN_AT]) {
+      const { native, frame, elapsedMs } = opacitiesFrom(played, fromMs);
+      const tolerance = twoFramesOf(OPACITY);
+      expect(
+        isNear(native.presentation[0], frame.model[0], tolerance)
+          ? ''
+          : `after the scroll back, ${elapsedMs.toFixed(3)} ms after the origin (first row from ${fromMs} ms): the native box shows ${native.presentation[0]}, ${Math.abs(native.presentation[0] - frame.model[0])} from the model ${frame.model[0]} of the twin, tolerance ${tolerance}`
+      ).toBe('');
+    }
+
+    expect(sortedCallbacks()).toBe('frame:true,native:true');
+    for (const box of ['native', 'frame']) {
+      const receivedMs = callbackTimeOf(box).receivedMs - played.startMs;
+      expect(
+        receivedMs > SHOWN_AT
+          ? ''
+          : `no callback before ${SHOWN_AT.toFixed(3)} ms: the React Native runtime got the callback of the ${box} box ${receivedMs.toFixed(3)} ms after the first commit`
+      ).toBe('');
+    }
+    expect(
+      Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+        ? ''
+        : `callback gap: the React Native runtime got the callback of the native box at ${callbackTimes.native.toFixed(3)} ms and the callback of the twin at ${callbackTimes.frame.toFixed(3)} ms, ${(callbackTimes.native - callbackTimes.frame).toFixed(3)} ms later, bound ${(4 * FRAME_MS).toFixed(3)} ms`
+    ).toBe('');
+
+    const exitedTags = {
+      nativeTag: playedTags[BOX_REF],
+      frameTag: playedTags[FRAME_BOX_REF],
+    };
+    for (const [box, tag] of Object.entries(exitedTags)) {
+      expect(
+        (await leaves(tag))
+          ? ''
+          : `the view ${tag} (${box}) did not leave in 1000 ms after the end of the play`
+      ).toBe('');
+    }
+    const hostEvents = [
+      ...hostEventsOf(events),
+      ...hostEventsOf((await takeTraceOfPair(exitedTags)).native),
+    ];
+    const isEnd = ({ event }: TraceEvent) => event === 'Ended';
+    expect(summarize(hostEvents.filter((event) => !isEnd(event)))).toBe(
+      `${startOf([OPACITY])} > TrackEnded:Opacity:true`
     );
-    expect(await hasView(exited.nativeTag)).toBe(false);
-    expect(await hasView(exited.frameTag)).toBe(false);
+    expect(summarize(hostEvents.filter(isEnd))).toBe('Ended:Cancelled:None');
+    expect((await takeTraceOfPair(exitedTags)).native.length).toBe(0);
     await render(null);
     await wait(300);
-  });
+  }
 
-  test('the end of the exit of a parent after the platform removed the tracks ends the exit of its child with false one time', async () => {
-    const families = familiesOf(
-      [() => new FadeOut(), 1000],
-      [() => new ZoomOut(), 1500]
-    );
-    await render(<ClippedFamily {...families} />);
-    await wait(600);
-    const parents = parentTags();
-    const exited = await exitOf(
-      <ClippedFamily {...families} />,
-      <ClippedFamily {...families} hasParents={false} />,
-      0
-    );
-    await waitUntil(exited, 150);
-    await takeTrace();
-    scrollTo(CLIPPED_OFFSET);
-    await waitUntil(exited, 400);
-    expect((await takeTransferTrace(exited.nativeTag)).host).toBe(
-      'TrackEnded:Transform:false > Ended:Interrupted:PlatformRemoved'
-    );
-    expect(callbacks.length).toBe(0);
+  const layoutClipResult = REMOVES_TRACKS_OUT_OF_WINDOW
+    ? 'the frame driver continues the two'
+    : 'the native tracks of the two play on';
+  movingGeometryTest(
+    `a clip of an exiting view that has a track of a native layout animation: ${layoutClipResult}`,
+    async () => {
+      // The exit merges into the running layout animation, so it ends and leaves at the layout end.
+      const layoutDuration = 3000;
+      const exitDuration = 1500;
+      const layoutEndAfterExitMs = 0.8 * layoutDuration;
+      const pair = merged(
+        layoutPairOf(layoutDuration),
+        fadePairOf({ durationMs: exitDuration })
+      );
+      await render(<ClippedPair {...pair} />);
+      await wait(600);
+      await render(<ClippedPair {...pair} left={MOVED_LEFT} />);
+      await wait(0.2 * layoutDuration);
+      const exited = await exitOf(
+        <ClippedPair {...pair} left={MOVED_LEFT} />,
+        <ClippedPair {...pair} left={MOVED_LEFT} isMounted={false} />,
+        0
+      );
+      await waitUntil(exited, 150);
+      await takeTrace();
+      scrollTo(CLIPPED_OFFSET);
+      await waitUntil(exited, 350);
+      const exitCallbacks = () =>
+        callbacks.filter((name) => /^(native|frame):/.test(name));
+      const transfer = await takeTransferTrace(exited.nativeTag);
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(transfer.host).toBe(
+          'TrackEnded:Height:false > TrackEnded:Opacity:false > TrackEnded:PositionX:false > TrackEnded:PositionY:false > TrackEnded:Width:false > Ended:Interrupted:PlatformRemoved > Ended:Interrupted:PlatformRemoved'
+        );
+        expect(transfer.hasFrameUpdate).toBe(true);
+        expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
+      } else {
+        expect(transfer.host).toBe('');
+        expect(transfer.hasFrameUpdate).toBe(false);
+        expect(exitCallbacks().join()).toBe('');
+      }
 
-    await waitUntil(exited, 1300);
-    expect(sortedCallbacks()).toBe(
-      'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
-    );
-    expect(await hasView(exited.nativeTag)).toBe(false);
-    expect(await hasView(parents.nativeTag)).toBe(false);
-    expect(await hasView(parents.frameTag)).toBe(false);
+      scrollTo(0);
+      await waitUntil(exited, 600);
+      const opacity = await readPair(exited, OPACITY);
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(opacity.native.keys).toBe(0);
+      }
+      expect(
+        isNear(
+          opacity.native.shown,
+          opacity.frame.model,
+          twoFramesOf(OPACITY, exitDuration)
+        )
+      ).toBe(true);
+      expect(isNear(opacity.native.shown, 1 - 600 / exitDuration, 0.08)).toBe(
+        true
+      );
+      const position = await readPair(exited, MOVE);
+      expect(
+        isNear(
+          position.native.shown,
+          position.frame.model,
+          twoFramesOf(MOVE, layoutDuration)
+        )
+      ).toBe(true);
+      expect(position.native.shown > MOVE.from).toBe(true);
+      expect(position.native.shown < MOVE.to).toBe(true);
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(callbacks.length).toBe(2);
+      } else {
+        expect(exitCallbacks().join()).toBe('');
+      }
 
-    await waitUntil(exited, 1900);
-    expect(callbacks.length).toBe(4);
-    const lateEvents = (await takeTrace()).filter(
-      ({ tag }) => tag === exited.nativeTag || tag === parents.nativeTag
-    );
-    expect(lateEvents.length).toBe(0);
-    await render(null);
-    await wait(300);
-  });
+      await waitUntil(exited, layoutEndAfterExitMs + 400);
+      expect(sortedCallbacks()).toBe(
+        'frame:true,frameLayout:false,native:true,nativeLayout:false'
+      );
+      expect(await hasView(exited.nativeTag)).toBe(false);
+      expect(await hasView(exited.frameTag)).toBe(false);
+      if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+        const ended = (await takeTraceOfPair(exited)).native;
+        const isExitTrackEnd = (event: TraceEvent) =>
+          event.event === 'TrackEnded' && event.target === OPACITY.traceTarget;
+        const isLayoutTrackEnd = (event: TraceEvent) =>
+          event.event === 'TrackEnded' && !isExitTrackEnd(event);
+        expect(summarizeEnd(ended.filter(isExitTrackEnd))).toBe(
+          'TrackEnded:Opacity:true'
+        );
+        expect(summarizeEnd(ended.filter(isLayoutTrackEnd))).toBe(
+          'TrackEnded:Height:true > TrackEnded:PositionX:true > TrackEnded:PositionY:true > TrackEnded:Width:true'
+        );
+        expect(
+          summarize(
+            ended.filter(
+              (event) => isHostEvent(event) && event.event !== 'TrackEnded'
+            )
+          )
+        ).toBe('Ended:Finished:None > Ended:Cancelled:None');
+      }
+      await render(null);
+      await wait(300);
+    }
+  );
+
+  const parentClipResult = REMOVES_TRACKS_OUT_OF_WINDOW
+    ? 'after the platform removed the tracks'
+    : 'out of the window, at the natural end of its native track,';
+  movingGeometryTest(
+    `the end of the exit of a parent ${parentClipResult} ends the exit of its child with false one time`,
+    async () => {
+      const families = familiesOf(
+        [() => new FadeOut(), 1000],
+        [() => new ZoomOut(), 1500]
+      );
+      await render(<ClippedFamily {...families} />);
+      await wait(600);
+      const parents = parentTags();
+      const exited = await exitOf(
+        <ClippedFamily {...families} />,
+        <ClippedFamily {...families} hasParents={false} />,
+        0
+      );
+      await waitUntil(exited, 150);
+      await takeTrace();
+      scrollTo(CLIPPED_OFFSET);
+      await waitUntil(exited, 400);
+      const transfer = await takeTransferTrace(exited.nativeTag);
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(transfer.host).toBe(
+          'TrackEnded:Transform:false > Ended:Interrupted:PlatformRemoved'
+        );
+      } else {
+        expect(transfer.host).toBe('');
+        expect(transfer.hasFrameUpdate).toBe(false);
+      }
+      expect(callbacks.length).toBe(0);
+
+      await waitUntil(exited, 1300);
+      expect(sortedCallbacks()).toBe(
+        'frameChild:false,frameParent:true,nativeChild:false,nativeParent:true'
+      );
+      expect(await hasView(exited.nativeTag)).toBe(false);
+      expect(await hasView(parents.nativeTag)).toBe(false);
+      expect(await hasView(parents.frameTag)).toBe(false);
+      if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+        const ended = await takeTrace();
+        const hostEventsOf = (tag: number, event: string) =>
+          summarize(
+            ended.filter(
+              (each) =>
+                each.tag === tag && isHostEvent(each) && each.event === event
+            )
+          );
+        expect(hostEventsOf(parents.nativeTag, 'TrackEnded')).toBe(
+          'TrackEnded:Opacity:true'
+        );
+        expect(hostEventsOf(parents.nativeTag, 'Ended')).toBe(
+          'Ended:Cancelled:None'
+        );
+        expect(
+          summarizeEnd(ended.filter(({ tag }) => tag === exited.nativeTag))
+        ).toBe('TrackEnded:Transform:false > Ended:Cancelled:None');
+      }
+
+      await waitUntil(exited, 1900);
+      expect(callbacks.length).toBe(4);
+      const lateEvents = (await takeTrace()).filter(
+        ({ tag }) => tag === exited.nativeTag || tag === parents.nativeTag
+      );
+      expect(lateEvents.length).toBe(0);
+      await render(null);
+      await wait(300);
+    }
+  );
 
   test('the unmount of a Modal does not stop a native exit', async () => {
     const pair = fadePairOf();
@@ -2460,34 +2791,451 @@ describe('native layout exiting and the stop of its tracks', () => {
     ).toBe(0);
   });
 
-  test('the stop of the surface after the platform removed the tracks gives the callback false one time', async () => {
+  const surfaceClipResult = REMOVES_TRACKS_OUT_OF_WINDOW
+    ? 'after the platform removed the tracks'
+    : 'while the native track plays out of the window';
+  movingGeometryTest(
+    `the stop of the surface ${surfaceClipResult} gives the callback false one time`,
+    async () => {
+      if (!isSecondSurfaceAvailable()) {
+        return;
+      }
+      const surfaceId = await startSecondSurface(ClippedSurfaceBox);
+      await wait(300);
+      const tag = getTestComponent(SECOND_BOX_REF).getTag();
+      await takeTrace();
+      callbacks.length = 0;
+      setSurfaceBoxMounted(false);
+      await wait(STOP_AT);
+      await takeTrace();
+      scrollTo(CLIPPED_OFFSET);
+      await wait(STOP_AT);
+      const transfer = await takeTransferTrace(tag);
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(transfer.host).toBe(PLATFORM_REMOVED);
+        expect(transfer.hasFrameUpdate).toBe(true);
+      } else {
+        expect(transfer.host).toBe('');
+        expect(transfer.hasFrameUpdate).toBe(false);
+      }
+      expect(callbacks.length).toBe(0);
+
+      await stopSecondSurface(surfaceId);
+      const events = await takeTraceUntilSurfaceClosed(surfaceId);
+      if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+        expect(
+          summarize(
+            events.filter((event) => event.tag === tag).filter(isHostEvent)
+          )
+        ).toBe('TrackEnded:Opacity:false > Ended:SurfaceDestroyed:None');
+      }
+      await wait(500);
+      expect(callbacks.join()).toBe('surface:false');
+      await wait(EXIT_DURATION);
+      expect(callbacks.join()).toBe('surface:false');
+      expect(
+        (await takeTrace()).filter((event) => event.tag === tag).length
+      ).toBe(0);
+    }
+  );
+});
+
+/**
+ * A draw has its time in whole milliseconds, so a draw in the millisecond of
+ * the removal counts as after it (measured on Android: such a draw shows the
+ * view with no animation matrix).
+ */
+const isBeforeRemoval = (drawMs: number, removedMs: number) =>
+  drawMs < Math.floor(removedMs);
+
+// The draw of a frame comes 1.2 to 21.7 ms after its frame time (the measured frame callback lag on
+// Android), and a draw has its time in whole milliseconds. A start
+// value for Android: the first run measures it (the `RuntimeTestsHeldExit` rows and the draws of each case).
+const DRAW_AGE_MS: Band = { from: 0.2, to: 22.7 };
+const DRAWN_OPACITY_TOLERANCE = 0.001;
+const HELD_DURATIONS: LeafDurations = { opacityMs: 400, originXMs: 1200 };
+
+/** The opacity holds its end value while the X plays. */
+const heldPairOf = () =>
+  recordedPairOf(
+    'exiting',
+    unequalExitingOf('native', Easing.linear, HELD_DURATIONS),
+    unequalExitingOf('frame', Easing.linear, HELD_DURATIONS)
+  );
+
+const HELD_START = `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`;
+
+/**
+ * The times of the frame of a draw at `timeMs`, from an origin on the sample
+ * clock.
+ */
+const frameElapsedOf = (timeMs: number, origin: Band): Band => ({
+  from: timeMs - DRAW_AGE_MS.to - origin.to,
+  to: timeMs - DRAW_AGE_MS.from - origin.from,
+});
+
+/** The values that a linear track shows in the frames of `elapsed`. */
+function linearBandOf(
+  { from, to }: Track,
+  durationMs: number,
+  elapsed: Band,
+  tolerance: number
+): Band {
+  const valueAt = (elapsedMs: number) =>
+    from + (to - from) * Math.min(1, Math.max(0, elapsedMs / durationMs));
+  const ends = [valueAt(elapsed.from), valueAt(elapsed.to)];
+  return {
+    from: Math.min(...ends) - tolerance,
+    to: Math.max(...ends) + tolerance,
+  };
+}
+
+const isIn = (value: number, { from, to }: Band) =>
+  value >= from && value <= to;
+
+/** The time of the first event of a trace with this summary. */
+function timeOfEvent(events: TraceEvent[], summary: string) {
+  const found = events.find((event) => summarize([event]) === summary);
+  if (!found) {
+    throw new Error(`The trace has no ${summary} event: ${summarize(events)}`);
+  }
+  return found.monotonicTimeMs;
+}
+
+/**
+ * Renders `removed` on the mounted scene and waits until the two views of the
+ * pair leave. It reads `targets` of the native view while the view is mounted,
+ * and records the draws of `properties` of it where the view sampler exists.
+ */
+async function exitUntilRemoved(
+  removed: Scene,
+  targets: string[],
+  properties: RecordedProperty[]
+) {
+  const tag = getTestComponent(BOX_REF).getTag();
+  let removal: { exited: Exited; reads: TargetReads } | undefined;
+  const run = async () => {
+    const exited = await exitTo(removed);
+    const untilRemoved = readWhileMounted(exited.nativeTag, targets);
+    expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
+    expect(await leaves(exited.nativeTag)).toBe(true);
+    const reads = await untilRemoved.stop();
+    expect(await leaves(exited.frameTag)).toBe(true);
+    removal = { exited, reads };
+  };
+  let draws: DrawnSample[] | undefined;
+  if (isViewSamplerAvailable()) {
+    draws = await recordDrawnValues(tag, properties, run);
+  } else {
+    await run();
+  }
+  const { exited, reads } = removal!;
+  const events = (await takeTraceOfPair(exited)).native;
+  return {
+    exited,
+    reads,
+    draws,
+    events,
+    origin: nativeOriginOf(events, pendingStartOf(events), exited.clock),
+    removedMs: timeOfEvent(events, 'Ended:Cancelled:None'),
+  };
+}
+
+const describeDraws = (draws: DrawnSample[]) =>
+  draws.map(({ timeMs, values }) => `${values.join(' ')} at ${timeMs}`).join();
+
+let setHeldSurfaceBoxMounted: (isMounted: boolean) => void = () => {};
+
+function HeldSurfaceBox() {
+  const [isMounted, setMounted] = useState(true);
+  setHeldSurfaceBoxMounted = setMounted;
+  return (
+    <View style={styles.container}>
+      {isMounted && (
+        <ExitingBox
+          refName={SECOND_BOX_REF}
+          exiting={unequalExitingOf('surface', Easing.linear, HELD_DURATIONS)}
+        />
+      )}
+    </View>
+  );
+}
+
+describe('native layout held exits', () => {
+  if (!hasNativeLayoutRoute) {
+    return;
+  }
+
+  movingGeometryTest(
+    'a SlideOutRight exit draws at its track value from the start, in motion, and in the held interval',
+    async () => {
+      if (!isViewSamplerAvailable()) {
+        return;
+      }
+      const caseName = 'a SlideOutRight exit draws at its track value';
+      const pair = SLIDE_OUT_RIGHT.pairOf();
+      await mount(<ExitingPair {...pair} />);
+      const { draws, events, origin, removedMs } = await exitUntilRemoved(
+        <ExitingPair {...pair} isMounted={false} />,
+        ['PositionX'],
+        ['frame', 'drawnMatrix']
+      );
+      expect(summarize(events.filter(isHostEvent))).toBe(
+        `${startOf([SLIDE])} > ${playedAndRemoved([SLIDE])}`
+      );
+      const endedMs = timeOfEvent(events, 'TrackEnded:PositionX:true');
+      const centreOf = ({ values }: DrawnSample) =>
+        drawnPointOf(values.slice(0, 4), values.slice(4), [
+          BOX_SIZE / 2,
+          BOX_SIZE / 2,
+        ])[0];
+      const mounted = draws!.filter(({ timeMs }) =>
+        isBeforeRemoval(timeMs, removedMs)
+      );
+      const off = mounted.flatMap((draw) => {
+        const elapsed = frameElapsedOf(draw.timeMs, origin);
+        const band = linearBandOf(
+          SLIDE,
+          EXIT_DURATION,
+          elapsed,
+          POSITION_TOLERANCE
+        );
+        const centre = centreOf(draw);
+        return isIn(centre, band)
+          ? []
+          : [
+              `${centre} in the frames of ${elapsed.from.toFixed(1)}..${elapsed.to.toFixed(1)} ms of the track, band ${band.from.toFixed(2)}..${band.to.toFixed(2)}`,
+            ];
+      });
+      const held = mounted.filter(({ timeMs }) => timeMs >= endedMs);
+      const inPartOf = (fromMs: number, toMs: number) =>
+        mounted.filter(({ timeMs }) => {
+          const elapsed = frameElapsedOf(timeMs, origin);
+          return elapsed.from >= fromMs && elapsed.to <= toMs;
+        }).length;
+      const hasHeldFrames = removedMs - endedMs >= 2 * FRAME_MS;
+      const parts = {
+        start: inPartOf(-Infinity, 0.1 * EXIT_DURATION),
+        motion: inPartOf(0.1 * EXIT_DURATION, 0.9 * EXIT_DURATION),
+        ...(hasHeldFrames ? { held: held.length } : {}),
+      };
+      logDrawnValues(caseName, draws!);
+      console.log(
+        `RuntimeTestsHeldExit ${JSON.stringify({ caseName, origin, endedMs, removedMs, parts, off: off.length })}`
+      );
+      expect(off.join()).toBe('');
+      expect(
+        Object.entries(parts)
+          .filter(([, count]) => count === 0)
+          .map(([part]) => `no draw in the ${part} part`)
+          .join()
+      ).toBe('');
+      expect(
+        describeDraws(
+          held.filter(
+            (draw) => !isNear(centreOf(draw), SLIDE.to, POSITION_TOLERANCE)
+          )
+        )
+      ).toBe('');
+      await render(null);
+    }
+  );
+
+  movingGeometryTest(
+    'the held end value shows from the track end to the removal',
+    async () => {
+      const caseName = 'the held end value to the removal';
+      const builtKeys = builtOf(
+        unequalDeclaredOf(Easing.linear, HELD_DURATIONS)
+      );
+      const pair = heldPairOf();
+      await mount(<ExitingPair {...pair} />);
+      const { exited, reads, draws, events, removedMs } =
+        await exitUntilRemoved(
+          <ExitingPair {...pair} isMounted={false} />,
+          targetsOf(builtKeys),
+          ['opacity']
+        );
+      expect(summarize(events.filter(isHostEvent))).toBe(
+        `${HELD_START} > ${playedAndRemoved([UNEQUAL_SLIDE])}`
+      );
+      expectEndHeld(
+        caseName,
+        [UNEQUAL_OPACITY],
+        tracksOf(events, exited, builtKeys),
+        reads
+      );
+      if (draws) {
+        const endedMs = timeOfEvent(events, 'TrackEnded:Opacity:true');
+        const held = draws.filter(
+          ({ timeMs }) => timeMs >= endedMs && timeMs < removedMs
+        );
+        logDrawnValues(caseName, draws);
+        expect(held.length > 0).toBe(true);
+        expect(
+          describeDraws(
+            held.filter(
+              ({ values: [opacity] }) =>
+                !isNear(opacity, CUSTOM_OPACITY, DRAWN_OPACITY_TOLERANCE)
+            )
+          )
+        ).toBe('');
+      }
+      await render(null);
+    }
+  );
+
+  movingGeometryTest(
+    'a sibling change during a held exit starts nothing on the exiting view',
+    async () => {
+      const pair = merged(layoutPairOf(1000), heldPairOf());
+      const scene = (hasSibling: boolean, isMounted: boolean) => (
+        <View>
+          {hasSibling && (
+            <View style={localStyles.sibling} collapsable={false} />
+          )}
+          <ExitingPair {...pair} isMounted={isMounted} />
+        </View>
+      );
+      const exited = await exitOf(scene(true, true), scene(true, false));
+      const heldAtMs = HELD_DURATIONS.opacityMs + 200;
+      await waitUntil(exited, heldAtMs);
+      const before = await sample(exited.nativeTag, 'Opacity');
+      await takeTraceOfPair(exited);
+
+      await render(scene(false, false));
+      await waitUntil(exited, heldAtMs + 300);
+      const events = await takeTraceOfPair(exited);
+      const after = await sample(exited.nativeTag, 'Opacity');
+      expect(summarize(events.native.filter(isHostEvent))).toBe('');
+      expect(playbackIdsOf(after).join()).toBe(playbackIdsOf(before).join());
+      expect(isNear(after.presentation[0], CUSTOM_OPACITY)).toBe(true);
+      expect(callbacks.length).toBe(0);
+
+      expect(await waitForCallbacks(EXIT_CALLBACKS)).toBe('');
+      expect(sortedCallbacks()).toBe('frame:true,native:true');
+      expect(
+        callbackTimes.native - exited.startMs >
+          HELD_DURATIONS.originXMs - FRAME_MS
+      ).toBe(true);
+      expect(
+        Math.abs(callbackTimes.native - callbackTimes.frame) < 4 * FRAME_MS
+      ).toBe(true);
+      expect(await leaves(exited.nativeTag)).toBe(true);
+      expect(await leaves(exited.frameTag)).toBe(true);
+      await render(null);
+    }
+  );
+
+  movingGeometryTest('a cancel of a held exit', async () => {
     if (!isSecondSurfaceAvailable()) {
       return;
     }
-    const surfaceId = await startSecondSurface(ClippedSurfaceBox);
+    const surfaceId = await startSecondSurface(HeldSurfaceBox);
     await wait(300);
     const tag = getTestComponent(SECOND_BOX_REF).getTag();
+    const hostEventsOf = (events: TraceEvent[]) =>
+      events.filter((event) => event.tag === tag && isHostEvent(event));
     await takeTrace();
     callbacks.length = 0;
-    setSurfaceBoxMounted(false);
-    await wait(STOP_AT);
-    await takeTrace();
-    scrollTo(CLIPPED_OFFSET);
-    await wait(STOP_AT);
-    const transfer = await takeTransferTrace(tag);
-    expect(transfer.host).toBe(PLATFORM_REMOVED);
-    expect(transfer.hasFrameUpdate).toBe(true);
+    setHeldSurfaceBoxMounted(false);
+    await wait(HELD_DURATIONS.opacityMs + 300);
+    const held = await readTrack(tag, UNEQUAL_OPACITY);
+    expect(isNear(held.shown, CUSTOM_OPACITY)).toBe(true);
+    expect(summarize(hostEventsOf(await takeTrace()))).toBe(HELD_START);
     expect(callbacks.length).toBe(0);
 
     await stopSecondSurface(surfaceId);
-    await takeTraceUntilSurfaceClosed(surfaceId);
+    const events = await takeTraceUntilSurfaceClosed(surfaceId);
     await wait(500);
     expect(callbacks.join()).toBe('surface:false');
-    await wait(EXIT_DURATION);
+    // The host reports the end of a track one time: the held opacity has no second end.
+    expect(summarize(hostEventsOf(events))).toBe(
+      'TrackEnded:PositionX:false > Ended:SurfaceDestroyed:None'
+    );
+    await wait(HELD_DURATIONS.originXMs);
     expect(callbacks.join()).toBe('surface:false');
     expect(
       (await takeTrace()).filter((event) => event.tag === tag).length
     ).toBe(0);
+  });
+
+  movingGeometryTest(
+    'the removal mount ends the hold: no playback key and no view after it',
+    async () => {
+      const caseName = 'the removal mount ends the hold';
+      const pair = heldPairOf();
+      await mount(<ExitingPair {...pair} />);
+      const { exited, reads, draws, events, removedMs } =
+        await exitUntilRemoved(
+          <ExitingPair {...pair} isMounted={false} />,
+          ['Opacity'],
+          ['opacity', 'animationMatrix']
+        );
+      expect(summarize(events.filter(isHostEvent))).toBe(
+        `${HELD_START} > ${playedAndRemoved([UNEQUAL_SLIDE])}`
+      );
+      const lastRead = reads[reads.length - 1];
+      expect(lastRead.samples.Opacity.playbacks.length > 0).toBe(true);
+      expect(
+        await sample(exited.nativeTag, 'Opacity').then(
+          () => 'a sample of the removed view',
+          (error: unknown) => (isNoView(error) ? '' : String(error))
+        )
+      ).toBe('');
+      await wait(300);
+      expect((await takeTraceOfPair(exited)).native.length).toBe(0);
+      if (draws) {
+        // The draws after the removal read the view object that left: the writer took its animation matrix off.
+        const afterRemoval = draws.filter(
+          ({ timeMs }) => !isBeforeRemoval(timeMs, removedMs)
+        );
+        logDrawnValues(caseName, draws);
+        expect(afterRemoval.length > 0).toBe(true);
+        expect(
+          describeDraws(
+            afterRemoval.filter(
+              ({ values: [, ...matrix] }) => !matrix.every(Number.isNaN)
+            )
+          )
+        ).toBe('');
+      }
+      await render(null);
+    }
+  );
+
+  test('a Fabric opacity write to an exiting view', async () => {
+    if (!isViewSamplerAvailable()) {
+      return;
+    }
+    const caseName = 'a Fabric opacity write to an exiting view';
+    const pair = fadePairOf();
+    await mount(<StyledPair {...pair} />, 100);
+    const { draws, events, origin, removedMs } = await exitUntilRemoved(
+      <StyledPair {...pair} isMounted={false} />,
+      ['Opacity'],
+      ['opacity']
+    );
+    expect(summarize(events.filter(isHostEvent))).toBe(
+      `${startOf([OPACITY])} > ${playedAndRemoved([OPACITY])}`
+    );
+    const checked = draws!.filter(
+      ({ timeMs }) =>
+        frameElapsedOf(timeMs, origin).from >= 0 && timeMs < removedMs
+    );
+    const off = checked.filter(({ timeMs, values: [opacity] }) => {
+      const band = linearBandOf(
+        OPACITY,
+        EXIT_DURATION,
+        frameElapsedOf(timeMs, origin),
+        VALUE_TOLERANCE
+      );
+      return !isIn(opacity, band);
+    });
+    logDrawnValues(caseName, draws!);
+    expect(checked.length > 0).toBe(true);
+    expect(describeDraws(off)).toBe('');
+    await render(null);
   });
 });
 

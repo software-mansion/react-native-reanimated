@@ -30,7 +30,10 @@ import {
   render,
   useTestRef,
   wait,
+  waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { DrawnSample } from '../viewSampler';
+import { isViewSamplerAvailable, recordDrawnValues } from '../viewSampler';
 import type {
   AnimationSource,
   Band,
@@ -63,7 +66,9 @@ import {
   callbacks,
   capturedResidualOf,
   capturesOf,
+  cellsOf,
   cellToleranceOf,
+  checkedTracksOf,
   ClippingScrollView,
   declaredBandOf,
   declaredDurationOf,
@@ -71,6 +76,7 @@ import {
   declaredOf,
   declaredSidesOf,
   declaredTimelineOf,
+  declaredValueOf,
   describeLeaf,
   endCellsOf,
   endTransformOf,
@@ -88,10 +94,14 @@ import {
   isSameLeaf,
   isScalarTrack,
   layerOf,
+  layerPositionOf,
   layoutOf,
   middleOf,
   modelWaits,
+  LAID_OUT_TOLERANCE,
+  LATE_CALLBACK_STAY_MS,
   narrowClockOffset,
+  nativeResidualOf,
   OPACITY_TOLERANCE,
   ownerAt,
   playbackIdOf,
@@ -99,14 +109,22 @@ import {
   PAIR_LEFT,
   PAIR_TOP,
   playedTracksOf,
+  PLAYS_3D_OPERATIONS,
+  movesGeometryOf,
+  declaresMotion,
+  drawnBandOf,
+  PLAYS_MOVING_GEOMETRY,
+  PLAYS_SIZE_CHANGE,
   POSITION_TOLERANCE,
   PRESENTATION_STAY_MS,
   READ_GAP_MS,
   readFrameRecords,
   REMOVAL_LEAD_MS,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
   residualInBandOf,
+  routeOf,
   sample,
   shownAtRestOf,
   SizeBox,
@@ -115,6 +133,7 @@ import {
   summarize,
   takeRows,
   takeTrace,
+  TRANSFORM_SAMPLE_CELLS,
   uncertaintyOf,
   waitForCallbacks,
 } from './nativeLayoutTestKit';
@@ -140,6 +159,11 @@ type Declaration = {
    * two boxes.
    */
   isFrameDriven?: boolean;
+  /**
+   * The failure of the `LayoutBuildFailed` event of the first build of the
+   * native box, of a case that is frame-driven.
+   */
+  refusedWith?: string;
 };
 
 export type ReferenceCase = Declaration & {
@@ -176,13 +200,22 @@ export type ReferenceCase = Declaration & {
   /**
    * The boxes are in a clipping host. A scroll takes them out of its window at
    * `atMs` from the first commit, and a scroll brings them back at `backAtMs`.
-   * The native route gives the box to the frame driver, and each leaf goes on.
-   * The platform removes the animations before the end report of a track, so no
-   * read from the first row after the scroll call is checked by statement A:
-   * the native presentation has no statement there, as after a write.
+   * Where `REMOVES_TRACKS_OUT_OF_WINDOW` holds, the native route gives the box
+   * to the frame driver, and each leaf goes on. The platform removes the
+   * animations before the end report of a track, so no read from the first row
+   * after the scroll call is checked by statement A: the native presentation
+   * has no statement there, as after a write. On the other platforms the native
+   * tracks play on, and statement A checks each read.
    */
   clip?: { atMs: number; backAtMs: number };
   write?: Write;
+  /**
+   * Where the view sampler is available, statement A of the opacity of the
+   * native box is on its drawn values, not on its reads: a writer of the frame
+   * loop sets the view between a mount and the next draw, and that value does
+   * not draw.
+   */
+  drawsOpacity?: boolean;
   /** A statement of the test at a time from the first commit. */
   checkpoint?: { atMs: number; run: () => void };
 };
@@ -227,6 +260,15 @@ export type Restyle = {
 export type CallbackBuilder = {
   withCallback: (callback: (finished: boolean) => void) => AnimationSource;
 };
+
+/**
+ * The platform plays no size change natively: the whole animation is
+ * frame-driven.
+ */
+const SIZE_CHANGE_ROUTE: Pick<Declaration, 'isFrameDriven' | 'refusedWith'> =
+  PLAYS_SIZE_CHANGE
+    ? {}
+    : { isFrameDriven: true, refusedWith: 'UnsupportedTarget' };
 
 const START: Place = { left: START_LEFT, top: 0 };
 const END: Place = { left: PAIR_LEFT, top: PAIR_TOP };
@@ -403,6 +445,7 @@ export const REFERENCE_CASES: Record<string, ReferenceCase> = {
     },
     places: [START, { ...START, width: 120, height: 90 }],
     totalMs: 1200,
+    ...SIZE_CHANGE_ROUTE,
   },
   'a position change and a size change': {
     flow: 'layout',
@@ -414,6 +457,7 @@ export const REFERENCE_CASES: Record<string, ReferenceCase> = {
     },
     places: [START, { ...END, width: 100.3, height: 80.3 }],
     totalMs: 1200,
+    ...SIZE_CHANGE_ROUTE,
   },
   'a border radius': {
     flow: 'layout',
@@ -460,6 +504,7 @@ export const REFERENCE_CASES: Record<string, ReferenceCase> = {
     ],
     commitTimesMs: [500],
     totalMs: 1500,
+    ...SIZE_CHANGE_ROUTE,
   },
   'a new width with a kept X': {
     flow: 'layout',
@@ -471,6 +516,7 @@ export const REFERENCE_CASES: Record<string, ReferenceCase> = {
     ],
     commitTimesMs: [500],
     totalMs: 1500,
+    ...SIZE_CHANGE_ROUTE,
   },
   'a replacement with a new duration and easing': {
     flow: 'layout',
@@ -566,8 +612,9 @@ export type LeafCheck = FrameCheck & {
 export type Samples = Record<BoxName, Record<string, TargetSample>>;
 
 /**
- * A fractional number of a layout key of a place of a case, with the value that
- * the layout gave to the key of each box at rest in the place.
+ * A number of a layout key of a place of a case that is off the pixel grid,
+ * with the value that the layout gave to the key of each box at rest in the
+ * place.
  */
 export type MountedValue = {
   key: string;
@@ -602,6 +649,8 @@ export type Played = {
   missingCallbacks: string;
   /** Each wait of a write of the case for its model. */
   modelWaits: (ModelWait & { box?: BoxName })[];
+  /** Of `drawsOpacity`: each draw of the native box, on the animation clock. */
+  drawnOpacity?: DrawnSample[];
 };
 
 const CLOCK_REF = 'NativeLayoutReferenceClock';
@@ -615,7 +664,8 @@ const BOX_NAMES = Object.keys(BOXES) as BoxName[];
  * Plays a case on the native box and on its frame-driven twin, with rows of
  * samples of the two boxes from the first commit to the end.
  */
-export async function play(referenceCase: ReferenceCase): Promise<Played> {
+export async function play(declaredCase: ReferenceCase): Promise<Played> {
+  const referenceCase = routedCaseOf(declaredCase);
   const {
     places,
     commitTimesMs = [],
@@ -641,6 +691,7 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
     />
   );
   const targets = targetsOf(referenceCase);
+  const layoutsInFlight = await layoutsInFlightOf(referenceCase);
   resetFrameRecords();
   modelWaits.length = 0;
   await render(sceneOf(0, places[0]));
@@ -659,49 +710,61 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
   const steps = stepsOf(referenceCase, {
     restyle: (commit) => render(sceneOf(commit, places[commit + 1], restyle)),
     clip: () => {
-      rowsBeforeClip = rows.length;
+      if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+        rowsBeforeClip = rows.length;
+      }
       scrollTo(CLIPPED_OFFSET);
     },
   });
   let startMs = 0;
   let tags = mountedTags;
-  for (const commit of commits) {
-    const isLast = commit === commits.length - 1;
-    if (isLast && write && write.atMs === undefined) {
-      const written = write.run();
-      if (written) {
-        await written;
+  const playCommits = async () => {
+    for (const commit of commits) {
+      const isLast = commit === commits.length - 1;
+      if (isLast && write && write.atMs === undefined) {
+        const written = write.run();
+        if (written) {
+          await written;
+        }
       }
+      await render(sceneOf(commit, places[commit + 1]));
+      startMs ||= performance.now();
+      tags ??= tagsOf();
+      const commitTags = tags;
+      const takeRowsUntil = async (untilMs: number) => {
+        rows.push(
+          ...(await takeRows(
+            () => takeSamples(targets, commitTags),
+            ({ native }) => native[targets[0]],
+            untilMs
+          ))
+        );
+      };
+      const endMs =
+        commitTimesMs[commit] ?? (lastOf(commitTimesMs) ?? 0) + totalMs;
+      while (steps.length > 0 && (isLast || steps[0].atMs < endMs)) {
+        const { atMs, run } = steps.shift()!;
+        await takeRowsUntil(startMs + atMs);
+        await run(commit);
+      }
+      await takeRowsUntil(startMs + endMs);
     }
-    await render(sceneOf(commit, places[commit + 1]));
-    startMs ||= performance.now();
-    tags ??= tagsOf();
-    const commitTags = tags;
-    const takeRowsUntil = async (untilMs: number) => {
-      rows.push(
-        ...(await takeRows(
-          () => takeSamples(targets, commitTags),
-          ({ native }) => native[targets[0]],
-          untilMs
-        ))
-      );
-    };
-    const endMs =
-      commitTimesMs[commit] ?? (lastOf(commitTimesMs) ?? 0) + totalMs;
-    while (steps.length > 0 && (isLast || steps[0].atMs < endMs)) {
-      const { atMs, run } = steps.shift()!;
-      await takeRowsUntil(startMs + atMs);
-      await run(commit);
-    }
-    await takeRowsUntil(startMs + endMs);
-  }
+  };
+  const drawnOpacity = await drawnOpacityDuring(
+    referenceCase.drawsOpacity ? mountedTags?.native : undefined,
+    playCommits
+  );
   const missingCallbacks = await waitForCallbacks(
     expectedCallbacksOf(referenceCase)
   );
   const end = lastOf(places) && (await takeSamples(targets, tags!));
   const events = (await takeTrace()).filter(({ tag }) => tag === tags!.native);
   const layoutsAtEnd = lastOf(places) && (await shadowLayoutsOf());
-  const mounted = mountedValuesOf(places, [layoutsAtStart, layoutsAtEnd]);
+  const mounted = mountedValuesOf(places, [
+    layoutsAtStart,
+    ...layoutsInFlight,
+    layoutsAtEnd,
+  ]);
   const builtKeys = buildsOf(referenceCase, mounted);
   const declaredKeys = builtKeys.flat().map(({ declared }) => declared);
   const clippedRow =
@@ -715,7 +778,11 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
     clippedRow?.row.native[targets[0]].monotonicTimeMs
   );
   const frameRecords = readFrameRecords();
-  const frameChecks = frameChecksOf(builtKeys.flat(), frameRecords);
+  const frameChecks = frameChecksOf(
+    builtKeys.flat(),
+    frameRecords,
+    referenceCase.builder !== undefined
+  );
   return {
     startMs,
     rows,
@@ -739,7 +806,19 @@ export async function play(referenceCase: ReferenceCase): Promise<Played> {
       ...modelWait,
       box: BOX_NAMES.find((box) => tags![box] === modelWait.tag),
     })),
+    drawnOpacity,
   };
+}
+
+async function drawnOpacityDuring(
+  tag: number | undefined,
+  during: () => Promise<void>
+) {
+  if (tag === undefined || !isViewSamplerAvailable()) {
+    await during();
+    return undefined;
+  }
+  return recordDrawnValues(tag, ['opacity'], during);
 }
 
 type Step = { atMs: number; run: (commit: number) => void | Promise<unknown> };
@@ -782,30 +861,29 @@ function scrollTo(y: number) {
 }
 
 /**
- * The value that the layout gave to each fractional number of a layout key of
- * the first place and of the last place of a case, from the shadow tree of each
- * box at rest in the place: `first` before the first commit, `last` after the
- * callbacks. The layout rounds a fractional number to the pixel grid, so the
- * number of the case is not the value that an animation gets, and the two boxes
- * can get two values for one number.
+ * The value that the layout gave to each number off the pixel grid of a layout
+ * key of each place of a case, from the shadow tree of each box at rest in the
+ * place (`layouts`, one for each place). The layout rounds such a number to the
+ * pixel grid, so the number of the case is not the value that an animation
+ * gets, and the two boxes can get two values for one number. At a density of
+ * 2.625 a whole number of points can be off the grid.
  */
 function mountedValuesOf(
   places: (Place | undefined)[],
-  [first, last]: (Layouts | undefined)[]
+  layouts: (Layouts | undefined)[]
 ): MountedValue[] {
   return places.flatMap((place, index) => {
     const rest = place && restOf(place);
-    const fractional = LAYOUT_KEYS.filter(
-      (key) => rest && !Number.isInteger(rest[key])
+    const offGrid = LAYOUT_KEYS.filter(
+      (key) => rest && !isOnPixelGrid(rest[key])
     );
-    const atRest =
-      index === 0 ? first : index === places.length - 1 ? last : undefined;
-    if (fractional.length > 0 && !atRest) {
+    const atRest = layouts[index];
+    if (offGrid.length > 0 && !atRest) {
       throw new Error(
-        `The kit has no view at rest in the place ${index} for its fractional values of ${fractional.join()}.`
+        `The kit has no view at rest in the place ${index} for its values off the pixel grid of ${offGrid.join()}.`
       );
     }
-    return fractional.map(
+    return offGrid.map(
       (key): MountedValue => ({
         key,
         place: index,
@@ -816,6 +894,53 @@ function mountedValuesOf(
   });
 }
 
+/**
+ * The layouts of the boxes at rest in each place between the first and the last
+ * place of a case, from a render of the place with no animation before the
+ * play: in the play the boxes are in flight in these places.
+ */
+async function layoutsInFlightOf(referenceCase: ReferenceCase) {
+  const { places, box, clip } = referenceCase;
+  const layouts: (Layouts | undefined)[] = [];
+  for (const place of places.slice(1, -1)) {
+    const rest = place && restOf(place);
+    if (!rest || LAYOUT_KEYS.every((key) => isOnPixelGrid(rest[key]))) {
+      layouts.push(undefined);
+      continue;
+    }
+    await render(
+      <ReferenceScene
+        animations={NO_ANIMATIONS}
+        place={place}
+        box={box}
+        transform={undefined}
+        clips={clip !== undefined}
+      />
+    );
+    await waitForFrames(LAYOUT_SETTLE_FRAMES);
+    layouts.push(await shadowLayoutsOf());
+  }
+  if (layouts.some((layout) => layout !== undefined)) {
+    await render(null);
+  }
+  return layouts;
+}
+
+const NO_ANIMATIONS: Record<BoxName, Animations> = { native: {}, frame: {} };
+const LAYOUT_SETTLE_FRAMES = 2;
+
+/**
+ * A laid-out value is a whole number of pixels; the shadow tree gives it with
+ * float noise (measured: 49.90477 and 49.904755 for 131 px at 2.625).
+ */
+const onPixelGrid = (value: number) =>
+  Math.round(value * PixelRatio.get()) / PixelRatio.get();
+
+const isOnPixelGrid = (value: number) => {
+  const pixels = value * PixelRatio.get();
+  return Math.abs(pixels - Math.round(pixels)) < 1e-6;
+};
+
 type Layouts = Record<BoxName, Record<LayoutKey, number>>;
 
 async function shadowLayoutsOf(): Promise<Layouts> {
@@ -823,7 +948,9 @@ async function shadowLayoutsOf(): Promise<Layouts> {
     const component = getTestComponent(refName);
     const values: Partial<Record<LayoutKey, number>> = {};
     for (const key of LAYOUT_KEYS) {
-      values[key] = Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]));
+      values[key] = onPixelGrid(
+        Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]))
+      );
     }
     return values as Record<LayoutKey, number>;
   };
@@ -893,17 +1020,18 @@ export const expectedCallbacksOf = ({ places, restyle }: ReferenceCase) => [
  * read after a gap that is off the band as a `STALE-READ` row, each read that
  * is on the timeline only in a removal window as a `REMOVAL-WINDOW` row, each
  * read that is on the timeline only by a held value of an edge of a segment as
- * an `EDGE-HOLD` row, each fractional number of a place with its two laid-out
- * values as a `MOUNTED` row, the record of the reads of each target as
+ * an `EDGE-HOLD` row, each number off the pixel grid of a place with its two
+ * laid-out values as a `MOUNTED` row, the record of the reads of each target as
  * `READ-UNCHECKED` rows and a `TIMELINE` row, and each wait of a write for its
  * model as a `WRITE-MODEL` row. The largest age of the `REFERENCE` row is a
  * lower-bound estimate. The margin to 18 ms is not printed.
  */
 export function expectReference(
   caseName: string,
-  referenceCase: ReferenceCase,
+  declaredCase: ReferenceCase,
   played: Played
 ) {
+  const referenceCase = routedCaseOf(declaredCase);
   for (const { key, place, declared, laidOut } of played.mounted) {
     console.log(
       `MOUNTED | ${caseName} | ${key} of the place ${place}: declared ${declared}, laid out ${laidOut.native} for the native box and ${laidOut.frame} for the twin`
@@ -912,10 +1040,15 @@ export function expectReference(
       expect(Math.abs(value - declared) < 1 / PixelRatio.get()).toBe(true);
     }
   }
-  const reads = expectNativeRows(played, matrixToleranceOf(referenceCase));
+  const { drawnOpacity } = played;
+  const readPlayed = drawnOpacity ? withoutNativeOpacityOf(played) : played;
+  const reads = expectNativeRows(readPlayed, matrixToleranceOf(referenceCase));
   expect(reads.some(({ isChecked }) => isChecked)).toBe(
     !referenceCase.isFrameDriven
   );
+  if (referenceCase.refusedWith) {
+    expectRefusedRoute(caseName, referenceCase, played);
+  }
   expect(played.frameChecks.some(({ record }) => record.box === 'frame')).toBe(
     true
   );
@@ -938,10 +1071,13 @@ export function expectReference(
   }
   expectTimelineRows(
     caseName,
-    played.tracks,
+    readPlayed.tracks,
     plannedReadsOf(played.rows),
     reads
   );
+  if (drawnOpacity) {
+    expectDrawnOpacity(caseName, referenceCase, played, drawnOpacity);
+  }
   for (const modelWait of describeModelWaits(played)) {
     console.log(['WRITE-MODEL', caseName, modelWait].join(' | '));
   }
@@ -961,6 +1097,347 @@ export function expectReference(
     console.log(['REPLACED-SHOWN', caseName, read].join(' | '));
   }
   return reads;
+}
+
+/** The rows and the tracks of a play with no opacity of the native box. */
+const withoutNativeOpacityOf = ({ rows, tracks }: Played) => ({
+  rows: rows.map((taken) => ({
+    ...taken,
+    row: {
+      ...taken.row,
+      native: Object.fromEntries(
+        Object.entries(taken.row.native).filter(
+          ([target]) => target !== 'Opacity'
+        )
+      ),
+    },
+  })),
+  tracks: tracks.filter(({ target }) => target !== 'Opacity'),
+});
+
+/**
+ * Statement A for each draw of the opacity of the native box in the checked
+ * time of its opacity tracks, at the latest time of the sample clock that the
+ * draw can have.
+ */
+function expectDrawnOpacity(
+  caseName: string,
+  { isFrameDriven }: ReferenceCase,
+  { tracks, clockOffset }: Played,
+  drawnOpacity: DrawnSample[]
+) {
+  const opacityTracks = tracks.filter(
+    (track): track is ScalarTrack =>
+      isScalarTrack(track) && track.target === 'Opacity'
+  );
+  const checked = drawnOpacity.flatMap(({ timeMs, values: [opacity] }) => {
+    const drawnMs = drawnBandOf(timeMs, clockOffset).to;
+    const playing = checkedTracksOf(opacityTracks, 'Opacity', drawnMs).filter(
+      isScalarTrack
+    );
+    return playing.length === 0
+      ? []
+      : [
+          {
+            opacity,
+            fromOriginMs: drawnMs - middleOf(playing[0].origin),
+            residual: nativeResidualOf(
+              playing.map(() => opacity),
+              drawnMs,
+              playing
+            ),
+          },
+        ];
+  });
+  const off = checked.filter(({ residual }) => !residual.isOnTimeline);
+  console.log(
+    [
+      'DRAWN',
+      caseName,
+      `draws ${drawnOpacity.length}, checked ${checked.length}, off the timeline ${off.length}`,
+    ].join(' | ')
+  );
+  expect(checked.length > 0).toBe(!isFrameDriven);
+  expect(
+    off
+      .map(
+        ({ opacity, fromOriginMs, residual }) =>
+          `${opacity.toFixed(4)} drawn ${fromOriginMs.toFixed(2)} ms after the origin is ${Math.max(...residual.distances).toFixed(4)} from the declared values of the frame before`
+      )
+      .join(', ')
+  ).toBe('');
+}
+
+// The extremes of the lag of the frame driver from the refusal, in whole display frames: measured on iOS,
+// not on Android.
+export const FRAME_DRIVER_EARLY_MS = 2 * FRAME_MS;
+export const FRAME_DRIVER_LATE_MS = 5 * FRAME_MS;
+
+/**
+ * A model that `isNear` the value of `valueAt` at a time from
+ * `FRAME_DRIVER_LATE_MS` before its time from the refusal to
+ * `FRAME_DRIVER_EARLY_MS` after it: the check of a frame-driven sample in
+ * `routeOf`.
+ */
+export function isOnFrameDriverWindowOf(
+  valueAt: (timeMs: number) => number[],
+  isNear: (model: number[], reference: number[]) => boolean
+) {
+  return ({ model }: { model: number[] }, sinceRefusalMs: number) => {
+    for (
+      let timeMs = sinceRefusalMs - FRAME_DRIVER_LATE_MS;
+      timeMs <= sinceRefusalMs + FRAME_DRIVER_EARLY_MS;
+      timeMs++
+    ) {
+      if (isNear(model, valueAt(timeMs))) {
+        return true;
+      }
+    }
+    return false;
+  };
+}
+
+/**
+ * The parts of the first build of a refused case at which the fallback check
+ * takes a read, in this order. Two parts with distinct declared values are
+ * taken; they are not symmetric about one half, so that a curve that comes back
+ * to a value does not give one value at both.
+ */
+const FALLBACK_PARTS = [0.3, 0.55, 0.8, 0.95];
+
+/**
+ * The first build of the native box has the `LayoutBuildFailed` event with the
+ * failure of the case, and the frame driver plays each key of that build that
+ * moves: two reads of its target, at two of `FALLBACK_PARTS` of the time of the
+ * build, have models that differ, and each model is the reference of the key at
+ * a time from 5 display frames before the read to 2 after it, on the clock of
+ * the refusal (`routeOf` of the events before the next build of the box). The
+ * reference is the declared value of the key, or, for a key whose declared
+ * value has no sample cells, the model of the frame-driven box in the same row.
+ * The time of the build ends at the first commit, write, restyle, or clip after
+ * it.
+ */
+function expectRefusedRoute(
+  caseName: string,
+  referenceCase: ReferenceCase,
+  { events, rows, mounted }: Played
+) {
+  const refusal = events.find(({ event }) => event === 'LayoutBuildFailed');
+  expect(refusal?.buildFailure).toBe(referenceCase.refusedWith);
+  if (!refusal) {
+    return;
+  }
+  const buildMs = firstBuildMsOf(referenceCase);
+  const [firstBuild] = buildsOf(referenceCase, mounted);
+  const firstBuildEvents = eventsBeforeNextBuildOf(events, refusal);
+  for (const declared of fallbackKeysOf(firstBuild)) {
+    const isOperation = declared.operation !== undefined;
+    const scalarTolerance = isOperation ? 0 : declared.tolerance;
+    const tolerance = (cell: number) =>
+      isOperation ? cellToleranceOf(cell, MATRIX_TOLERANCE) : scalarTolerance;
+    const cells = isOperation ? TRANSFORM_SAMPLE_CELLS : [0];
+    const isNear = (model: number[], reference: number[]) =>
+      cells.every(
+        (cell) => Math.abs(model[cell] - reference[cell]) <= tolerance(cell)
+      );
+    const reads = rows.map(({ row }) => ({
+      ...row.native[declared.target],
+      twin: row.frame[declared.target].model,
+    }));
+    const readAt = (sinceRefusalMs: number) =>
+      reads.find(
+        ({ monotonicTimeMs }) =>
+          monotonicTimeMs - refusal.monotonicTimeMs >= sinceRefusalMs
+      );
+    const valueAt = fallbackValueOf(declared, firstBuild);
+    const referenceName = valueAt ? 'declared' : 'frame-driven box';
+    const referenceAt =
+      valueAt ?? ((timeMs: number) => readAt(timeMs)?.twin ?? []);
+    const isOnReference = valueAt
+      ? isOnFrameDriverWindowOf(valueAt, isNear)
+      : ({ model, twin }: { model: number[]; twin: number[] }) =>
+          isNear(model, twin);
+    const parts = distinctPartsOf(
+      (part) => referenceAt(part * buildMs),
+      cells,
+      tolerance
+    );
+    const samples = parts.flatMap((part) => {
+      const read = readAt(part * buildMs);
+      return read && read.monotonicTimeMs - refusal.monotonicTimeMs < buildMs
+        ? [read]
+        : [];
+    });
+    console.log(
+      `FALLBACK | ${caseName} | ${describeLeaf(declared)} against the ${referenceName} at the parts ${parts.join()}: models ${samples.map(({ model, monotonicTimeMs }) => `${cells.map((cell) => model[cell]).join(' ')} at ${(monotonicTimeMs - refusal.monotonicTimeMs).toFixed(2)} ms`).join(', ')} after the refusal`
+    );
+    expect(
+      routeOf(
+        firstBuildEvents,
+        refusal.tag,
+        declared.target,
+        samples,
+        isOnReference
+      ).kind
+    ).toBe('frame-driven');
+  }
+}
+
+const BUILD_EVENTS = [
+  'LayoutStartPending',
+  'LayoutBuildFailed',
+  'LayoutStartRefused',
+];
+
+/** The events of a trace before the first build of the view after `refusal`. */
+function eventsBeforeNextBuildOf(events: TraceEvent[], refusal: TraceEvent) {
+  const nextBuild = events.find(
+    ({ event, tag, sequence }) =>
+      tag === refusal.tag &&
+      sequence > refusal.sequence &&
+      BUILD_EVENTS.includes(event)
+  );
+  return nextBuild
+    ? events.filter(({ sequence }) => sequence < nextBuild.sequence)
+    : events;
+}
+
+/** The time of the first build of a case before another step changes the box. */
+const firstBuildMsOf = ({
+  commitTimesMs = [],
+  totalMs,
+  write,
+  restyle,
+  clip,
+}: ReferenceCase) =>
+  Math.min(
+    commitTimesMs[0] ?? totalMs,
+    write?.atMs ?? Infinity,
+    restyle?.atMs ?? Infinity,
+    clip?.atMs ?? Infinity
+  );
+
+/** The first two parts whose declared values differ by more than a tolerance. */
+function distinctPartsOf(
+  valuesAtPart: (part: number) => number[],
+  cells: readonly number[],
+  tolerance: (cell: number) => number
+) {
+  const [first, ...later] = FALLBACK_PARTS;
+  const differs = (part: number) =>
+    cells.some(
+      (cell) =>
+        Math.abs(valuesAtPart(part)[cell] - valuesAtPart(first)[cell]) >
+        2 * tolerance(cell)
+    );
+  const second = later.find(differs);
+  return second === undefined ? [first] : [first, second];
+}
+
+/**
+ * The declared value of the target of a key at a time from the start of its
+ * build, in the form of a sample model: a position is the center of the box,
+ * with the declared size of that time; a `Transform` has the cells of all the
+ * operations of the build. No function when an operation of the build has no
+ * declared value, or when the sample has no cells of a 3D operation (an Android
+ * sample has the cells of a 2D map).
+ */
+function fallbackValueOf(
+  declared: DeclaredKey,
+  build: BuiltKey[]
+): ((timeMs: number) => number[]) | undefined {
+  const valueOfKey = (key: DeclaredKey) => {
+    const timeline = declaredTimelineOf(key.leaf, key.from, key.to, key.base);
+    return { valueAt: declaredValueOf(timeline), unit: timeline.unit };
+  };
+  if (declared.operation !== undefined) {
+    const operations = build
+      .map(({ declared: key }) => key)
+      .filter((key) => key.target === 'Transform')
+      .sort((first, second) => first.operation! - second.operation!);
+    const hasNoSampleCells =
+      !PLAYS_3D_OPERATIONS &&
+      operations.some(({ key }) => THREE_D_KINDS.includes(key));
+    if (
+      hasNoSampleCells ||
+      operations.some((key, index) => key.operation !== index)
+    ) {
+      return undefined;
+    }
+    const timelines = operations.map((key) => ({
+      kind: key.key,
+      ...valueOfKey(key),
+    }));
+    return (timeMs) =>
+      cellsOf(
+        timelines.map(({ kind, valueAt, unit }) => ({
+          kind,
+          amount: valueAt(timeMs),
+          unit,
+        })),
+        'rest'
+      );
+  }
+  const { valueAt } = valueOfKey(declared);
+  const sizeKey = READERS[declared.key].sizeKey;
+  if (!sizeKey) {
+    return (timeMs) => [valueAt(timeMs)];
+  }
+  const size = build.find(({ declared: key }) => key.key === sizeKey);
+  const sizeAt = size
+    ? valueOfKey(size.declared).valueAt
+    : () => declared.size?.rest ?? 0;
+  return (timeMs) => [layerPositionOf(valueAt(timeMs), sizeAt(timeMs))];
+}
+
+/**
+ * The keys of a build that move, with one key for all the operations: a
+ * `Transform` sample has the cells of all of them.
+ */
+function fallbackKeysOf(build: BuiltKey[]) {
+  const moving = build.map(({ declared }) => declared).filter(declaresMotion);
+  return moving.filter(
+    (key, index) =>
+      key.operation === undefined ||
+      moving.findIndex(({ operation }) => operation !== undefined) === index
+  );
+}
+
+const THREE_D_KINDS = ['rotateX', 'rotateY', 'perspective'];
+
+/**
+ * The case with the route of the platform. Below API 29 Android refuses each
+ * position or transform track that moves
+ * (`AndroidNativeAnimationPlatform::playsTarget`): the whole animation is
+ * frame-driven, with `UnsupportedTarget`. A case that is frame-driven for
+ * another reason stays as it is.
+ */
+export function routedCaseOf(referenceCase: ReferenceCase): ReferenceCase {
+  const movesGeometry = () =>
+    movesGeometryOf(
+      buildsOf(referenceCase)
+        .flat()
+        .map((built) => ({
+          target: built.declared.target,
+          moves: declaresMotion(built.declared),
+        }))
+    );
+  if (
+    PLAYS_MOVING_GEOMETRY ||
+    referenceCase.isFrameDriven ||
+    !movesGeometry()
+  ) {
+    return referenceCase;
+  }
+  return {
+    ...referenceCase,
+    isFrameDriven: true,
+    refusedWith: 'UnsupportedTarget',
+    replacement: referenceCase.replacement && {
+      ...referenceCase.replacement,
+      isFrameDriven: true,
+    },
+  };
 }
 
 /** The samples of one read of the native box. */
@@ -1709,7 +2186,11 @@ function describeStartOffItsFrame(
 ) {
   const { record } = check;
   const frame = startFrameOf(check, replaced, tracks);
-  if (record.start !== undefined && record.start.value === frame?.value) {
+  if (
+    record.start !== undefined &&
+    frame !== undefined &&
+    isSameStoredValue(record.start.value, frame.value)
+  ) {
     return '';
   }
   const index = frameChecks
@@ -1722,6 +2203,17 @@ function describeStartOffItsFrame(
   return `The record ${index} of ${describeLeaf(record)} of the box ${record.box} starts at ${record.start?.value} with a start call at ${record.start?.timeMs.toFixed(3)} ms, and the frame of the replaced record for its start value wrote ${frame?.value} at ${frame?.timeMs.toFixed(3)} ms. The last frame of the replaced record at the start call wrote ${last?.value} at ${last?.timeMs.toFixed(3)} ms.`;
 }
 
+/**
+ * Two values of a key are one value at the 32-bit precision of a layout value
+ * (measured on Android: a start value of 66.82919311523438 for a frame value of
+ * 66.82919472246657).
+ */
+const isSameStoredValue = (first: number | string, second: number | string) =>
+  first === second ||
+  (typeof first === 'number' &&
+    typeof second === 'number' &&
+    Math.fround(first) === Math.fround(second));
+
 export const MODEL_TOLERANCE: MatrixTolerance = {
   cells: 0.0001,
   translation: 0.01,
@@ -1731,9 +2223,15 @@ const MODEL_ROWS_IN_FULL = 10;
 
 /**
  * The places of the frames of statement M from the last frame at or before a
- * read: that frame, the frame before it, and the first frame after the read.
+ * read: that frame, the frame before it, the first frame after the read, and,
+ * with a frame callback lag (Android), the frame two before it.
  */
-const MODEL_LAGS = [0, 1, -1];
+const COMMON_MODEL_LAGS = [0, 1, -1];
+const TWO_BEFORE = 2;
+const MODEL_LAGS =
+  LATE_CALLBACK_STAY_MS > 0
+    ? [...COMMON_MODEL_LAGS, TWO_BEFORE]
+    : COMMON_MODEL_LAGS;
 
 /** A read of the model of the native box while the frame driver has it. */
 type ModelRead = {
@@ -1751,10 +2249,11 @@ type ModelFrames = { frames: FrameMatrix[]; mountedMs: number };
  * Statement M, for a native box whose track of `target` the frame driver took:
  * the model of each read, from the mount of the first frame update to the last
  * frame, is the matrix of the last recorded frame at or before the read, of the
- * frame before it, or of the first frame after the read whose recorded time is
- * at most `FRAME_MS` and the clock uncertainty after the read. The matrix of an
- * `Opacity` frame is its one value. The statement needs a recorded frame and a
- * read.
+ * frame before it, of the first frame after the read whose recorded time is at
+ * most `FRAME_MS` and the clock uncertainty after the read, or, with a frame
+ * callback lag, of the frame two before it while that frame is at most
+ * `LATE_CALLBACK_STAY_MS` before the read. The matrix of an `Opacity` frame is
+ * its one value. The statement needs a recorded frame and a read.
  */
 export function expectModelOnFrames(
   caseName: string,
@@ -1777,8 +2276,11 @@ export function expectModelOnFrames(
           : []
       )
     );
-  const [last, before, after] = MODEL_LAGS.map((lag) => agesOf([lag]));
-  const ages = agesOf([0, 1]);
+  const [last, before, after, twoBefore] = [
+    ...COMMON_MODEL_LAGS,
+    TWO_BEFORE,
+  ].map((lag) => agesOf([lag]));
+  const ages = agesOf([0, 1, TWO_BEFORE]);
   const failed = reads.filter(({ lag }) => lag === undefined);
   const spacings = sortedOf(
     frames.slice(1).map(({ timeMs }, index) => timeMs - frames[index].timeMs)
@@ -1788,7 +2290,7 @@ export function expectModelOnFrames(
       'MODEL',
       caseName,
       `reads ${reads.length} of the ${target} model from the mount of the first frame update to the last frame`,
-      `the model is the matrix of the last frame at or before the read in ${last.length} reads, of the frame before it in ${before.length}, of the first frame after the read in ${after.length}, of none of the three in ${failed.length}`,
+      `the model is the matrix of the last frame at or before the read in ${last.length} reads, of the frame before it in ${before.length}, of the first frame after the read in ${after.length}, of the frame two before it at most ${LATE_CALLBACK_STAY_MS.toFixed(3)} ms before the read in ${twoBefore.length} (age ${describeSpread(twoBefore)} ms), of none of the four in ${failed.length}`,
       `age against a frame at or before the read: ${describeSpread(ages)} ms`,
       `reads of such an age over ${(2 * FRAME_MS).toFixed(2)} ms ${ages.filter((age) => age > 2 * FRAME_MS).length}`,
       `time from the read to the frame after it: ${describeSpread(after.map((age) => -age).reverse())} ms`,
@@ -1886,17 +2388,24 @@ function modelReadsOf(
           index >= 0 &&
           index < frames.length &&
           frames[index].timeMs - timeMs <= FRAME_MS + uncertaintyMs &&
-          isSameMatrix(model, frames[index].cells)
+          (each !== TWO_BEFORE ||
+            timeMs - frames[index].timeMs <= LATE_CALLBACK_STAY_MS) &&
+          isSameModel(model, frames[index].cells, target)
         );
       });
       return { timeMs, model, framesBefore, lag };
     });
 }
 
-const isSameMatrix = (first: number[], second: number[]) =>
-  first.every(
-    (cell, index) =>
-      Math.abs(cell - second[index]) <= cellToleranceOf(index, MODEL_TOLERANCE)
+/**
+ * The cells of two models of a target are equal: the cells of a sample
+ * (`TRANSFORM_SAMPLE_CELLS`) of a `Transform`, the one cell of another target.
+ */
+const isSameModel = (first: number[], second: number[], target: ModelTarget) =>
+  (target === 'Transform' ? TRANSFORM_SAMPLE_CELLS : [0]).every(
+    (index) =>
+      Math.abs(first[index] - second[index]) <=
+      cellToleranceOf(index, MODEL_TOLERANCE)
   );
 
 function describeModelRead(
@@ -1913,6 +2422,7 @@ function describeModelRead(
     `last frame at or before the read: ${describeFrame(framesBefore - 1)}`,
     `the frame before it: ${describeFrame(framesBefore - 2)}`,
     `first frame after the read: ${describeFrame(framesBefore)}`,
+    `the frame two before the last: ${describeFrame(framesBefore - 3)}`,
   ].join(', ');
 }
 
@@ -1937,27 +2447,34 @@ function expectEnd(
     const isWritten = written.some((target) => target === key.target);
     if (key.operation === undefined && !isWritten) {
       const atRest = shownAtRestOf(key, amountOf(key.to).amount);
-      for (const [shown] of [
-        end.native[key.target].presentation,
-        end.frame[key.target].model,
-      ]) {
-        expect(Math.abs(shown - atRest) <= key.tolerance).toBe(true);
-      }
+      const [nativeShown] = end.native[key.target].presentation;
+      const [twinShown] = end.frame[key.target].model;
+      expect(Math.abs(nativeShown - atRest) <= key.tolerance).toBe(true);
+      // The twin lays out on its own place of the pixel grid (measured: a height of 49.904785 for the twin and
+      // 50.285721 for the native box in one place).
+      expect(
+        Math.abs(twinShown - atRest) <=
+          key.tolerance + (isLayoutKey(key.key) ? LAID_OUT_TOLERANCE : 0)
+      ).toBe(true);
     }
   }
   const operations = endOperationsOf(referenceCase);
   if (operations && !written.includes('Transform')) {
     const cells = endCellsOf(operations);
-    for (const shown of [
-      end.native.Transform.presentation,
-      end.frame.Transform.model,
-    ]) {
-      const distances = cells.map(
-        (cell, index) =>
-          Math.abs(shown[index] - cell) /
+    for (const [box, shown] of [
+      ['native', end.native.Transform.presentation],
+      ['frame', end.frame.Transform.model],
+    ] as const) {
+      const distances = TRANSFORM_SAMPLE_CELLS.map(
+        (index) =>
+          Math.abs(shown[index] - cells[index]) /
           cellToleranceOf(index, matrixToleranceOf(referenceCase))
       );
-      expect(largestOf(distances) <= 1).toBe(true);
+      expect(
+        largestOf(distances) <= 1
+          ? ''
+          : `the ${box} Transform cells ${TRANSFORM_SAMPLE_CELLS.map((index) => shown[index]).join()} are not at the end cells ${TRANSFORM_SAMPLE_CELLS.map((index) => cells[index]).join()}`
+      ).toBe('');
     }
   }
 }
@@ -2200,6 +2717,91 @@ function animationsOf(
   };
 }
 
+/**
+ * The ends of a layout key with each declared number of a place in place of the
+ * laid-out value that the builder got for it (`current` or `target` of the
+ * key), when that value is within one pixel of it: the layout rounds each edge
+ * to the pixel grid, and a case that the kit plays with no read of the shadow
+ * tree has the declared numbers.
+ */
+function laidOutEndsOf(
+  declared: DeclaredKey,
+  ends: LeafEnds,
+  layoutValues: Record<string, number>,
+  isPreset: boolean
+): LeafEnds {
+  if (typeof ends.from !== 'number' || typeof ends.to !== 'number') {
+    return ends;
+  }
+  if (TRANSLATIONS.includes(declared.key)) {
+    return isPreset ? laidOutTranslationOf(ends, layoutValues) : ends;
+  }
+  const name = LAYOUT_VALUE_NAMES[declared.key as LayoutKey];
+  if (!name) {
+    return ends;
+  }
+  const laidOut = [`current${name}`, `target${name}`]
+    .map((valueName) => layoutValues[valueName])
+    .filter((value) => value !== undefined);
+  const laidOutOf = (value: number) =>
+    laidOut
+      .filter((candidate) => Math.abs(candidate - value) < 1 / PixelRatio.get())
+      .sort((a, b) => Math.abs(a - value) - Math.abs(b - value))[0];
+  const onGrid = (value: number) => laidOutOf(value) ?? value;
+  const initial = (declared.leaf.initial as number | undefined) ?? 0;
+  const offset = declared.leaf.to ?? 0;
+  const base = ends.base === undefined ? undefined : onGrid(ends.base);
+  // A start that a preset gives from the target (for example the window width to its left) moves with it.
+  const fromOnGrid = laidOutOf(ends.from - initial);
+  return {
+    from:
+      fromOnGrid === undefined
+        ? ends.from + (base ?? ends.base ?? 0) - (ends.base ?? 0)
+        : fromOnGrid + initial,
+    to: onGrid(ends.to - offset) + offset,
+    base,
+  };
+}
+
+const TRANSLATIONS = ['translateX', 'translateY'];
+
+/**
+ * The ends of a translation that a preset gives from a layout value (for
+ * example the height of the view above it): a declared end of one pixel or more
+ * goes to the laid-out value, or to its negative, that is within one pixel of
+ * it.
+ */
+function laidOutTranslationOf(
+  ends: LeafEnds,
+  layoutValues: Record<string, number>
+): LeafEnds {
+  const candidates = Object.values(layoutValues).flatMap((value) => [
+    value,
+    -value,
+  ]);
+  const onGrid = (value: number) =>
+    Math.abs(value) < 1 / PixelRatio.get()
+      ? value
+      : (candidates
+          .filter(
+            (candidate) => Math.abs(candidate - value) < 1 / PixelRatio.get()
+          )
+          .sort((a, b) => Math.abs(a - value) - Math.abs(b - value))[0] ??
+        value);
+  return {
+    ...ends,
+    from: onGrid(ends.from as number),
+    to: onGrid(ends.to as number),
+  };
+}
+
+const LAYOUT_VALUE_NAMES: Record<LayoutKey, string> = {
+  originX: 'OriginX',
+  originY: 'OriginY',
+  width: 'Width',
+  height: 'Height',
+};
+
 const lastOf = <TItem,>(items: TItem[]): TItem | undefined =>
   items[items.length - 1];
 
@@ -2256,7 +2858,7 @@ export type BuiltKey = {
 /**
  * The keys that the builders of each commit of a case make, then the keys of
  * the build that gives the box to the frame driver. `mounted` has the laid-out
- * values of the fractional numbers of the places.
+ * values of the numbers off the pixel grid of the places.
  */
 export function buildsOf(
   referenceCase: ReferenceCase,
@@ -2273,7 +2875,7 @@ export function buildsOf(
       builtKeysOf(referenceCase, commit, builtKeys[commit - 1] ?? [], rests)
     );
   });
-  if (restyle?.handsOver || clip) {
+  if (restyle?.handsOver || (clip && REMOVES_TRACKS_OUT_OF_WINDOW)) {
     builtKeys.push(
       lastOf(builtKeys)!.map((key) => ({ ...key, continuesTrack: true }))
     );
@@ -2294,7 +2896,7 @@ function builtKeysOf(
   earlierKeys: BuiltKey[],
   rests: Record<BoxName, (Record<string, number> | undefined)[]>
 ): BuiltKey[] {
-  const { flow } = referenceCase;
+  const { flow, places } = referenceCase;
   const { leaves, operations = [] } = declarationOf(referenceCase, commit);
   const earlier: Partial<Declaration> =
     commit > 0 ? declarationOf(referenceCase, commit - 1) : {};
@@ -2305,9 +2907,13 @@ function builtKeysOf(
     return { before, rest: (after ?? before)! };
   };
   const { before, rest } = restsOfCommit('native');
+  // The changes are of the declared numbers: one number can lay out one pixel apart in two places.
+  const declaredBefore = places[commit] && restOf(places[commit]);
+  const declaredRest = restOf((places[commit + 1] ?? places[commit])!);
   return [
     ...Object.entries(leaves).flatMap(([key, leaf]): BuiltKey[] => {
-      const isChanged = flow !== 'layout' || before![key] !== rest[key];
+      const isChanged =
+        flow !== 'layout' || declaredBefore![key] !== declaredRest[key];
       const isAtTarget = !isChanged && !inFlight.includes(key);
       if (leaf.isSpring || (leaf.onlyWhenChanged && isAtTarget)) {
         return [];
@@ -2328,7 +2934,9 @@ function builtKeysOf(
       // A position sample is the center of the box: with a new size and no size track, it starts at a
       // center that the view did not show.
       const startsWithSizeOnScreen =
-        !sizeKey || sizeKey in leaves || before?.[sizeKey] === rest[sizeKey];
+        !sizeKey ||
+        sizeKey in leaves ||
+        declaredBefore?.[sizeKey] === declaredRest[sizeKey];
       return [
         {
           declared: {
@@ -2532,9 +3140,14 @@ function describeTracks(
  * and the end values of that box. A timing that adopts a start has its own
  * duration and easing from the adopted start value (`onStart` of `withTiming`
  * of the package). A leaf that starts on screen after a leaf starts at the
- * value of its start call.
+ * value of its start call. With `isPreset`, the builder of a preset made each
+ * translation from a layout value.
  */
-export function frameChecksOf(builtKeys: BuiltKey[], records: FrameRecord[]) {
+export function frameChecksOf(
+  builtKeys: BuiltKey[],
+  records: FrameRecord[],
+  isPreset: boolean
+) {
   const checks: LeafCheck[] = [];
   for (const record of records) {
     const earlier = checks.filter(
@@ -2548,7 +3161,12 @@ export function frameChecksOf(builtKeys: BuiltKey[], records: FrameRecord[]) {
       continue;
     }
     const { declared, twinEnds } = built;
-    const { from, to, base } = record.box === 'frame' ? twinEnds : declared;
+    const { from, to, base } = laidOutEndsOf(
+      declared,
+      record.box === 'frame' ? twinEnds : declared,
+      record.layoutValues,
+      isPreset
+    );
     const replaced = lastOf(earlier);
     const startValue =
       record.adoptedStart?.value ??

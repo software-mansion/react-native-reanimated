@@ -2,7 +2,6 @@ import type { ComponentRef } from 'react';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import {
   findNodeHandle,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -30,6 +29,7 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
+import { REMOVES_TRACKS_OUT_OF_WINDOW } from '../layoutAnimations/nativeLayoutTestKit';
 import type { TraceEvent } from '../nativeAnimationObservation';
 import {
   CSS_HOST_TIMING_KINDS,
@@ -392,7 +392,7 @@ describe('CSS transitions on the shared native animation host', () => {
   });
 
   // Android ends an animator only at its last frame or when the executor stops it.
-  if (Platform.OS === 'android') {
+  if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
     test('on Android, a run of a clipped view plays to its end and CSS keeps the committed value', async () => {
       const hasHost = await nativeAnimationHostExists();
       await render(<ClippedBox opacity={1} />);

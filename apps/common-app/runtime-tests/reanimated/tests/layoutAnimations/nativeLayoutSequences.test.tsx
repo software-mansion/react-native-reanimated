@@ -80,6 +80,7 @@ import {
   namedBuilderCalls,
   OPACITY_TOLERANCE,
   POSITION_TOLERANCE,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
   recordCallback,
   sample,
   sampleClockOffset,
@@ -805,6 +806,17 @@ const trackEndsOf = (events: TraceEvent[]) =>
     .sort()
     .join();
 
+const CLIPPED_SEQUENCE: Sequence = {
+  parts: [
+    { to: 1, duration: 400 },
+    { to: 0.3, duration: 600 },
+    { to: 1, duration: 400 },
+  ],
+};
+// The clip comes inside the second part, and the view is in the window again before the third part.
+const ANDROID_CLIP_AT_MS = 600;
+const ANDROID_CLIP_FOR_MS = 300;
+
 const commandEndsOf = (events: TraceEvent[]) =>
   events
     .filter(({ event }) => event === 'Ended')
@@ -1214,6 +1226,28 @@ describe('native layout sequences', () => {
 
 describe('native layout sequences and a clip of their view', () => {
   if (!hasNativeLayoutRoute) {
+    return;
+  }
+  if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+    // An Android animator plays to its end out of the window, so no clip gives the sequence to the frame driver.
+    test('a clip of a native entering sequence keeps its tracks: the sequence plays to its end, and each box gives one callback true', async () => {
+      const played = await play(CLIPPED_SEQUENCE, 'entering', {
+        nativeRecords: true,
+      });
+      const { native: nativeTag } = played.tags;
+      await wait(ANDROID_CLIP_AT_MS);
+      scrollTo(CLIPPED_OFFSET);
+      await wait(ANDROID_CLIP_FOR_MS);
+      scrollTo(0);
+      expect(await waitForCallbacks(2)).toBe('');
+      await wait(300);
+      const events = (await takeTrace()).filter(({ tag }) => tag === nativeTag);
+      expect(events.some(({ event }) => event === 'FrameUpdateMounted')).toBe(
+        false
+      );
+      expect(commandEndsOf(events)).toBe('Finished:None');
+      expect(sortedCallbacks()).toBe('frame:true,native:true');
+    });
     return;
   }
 

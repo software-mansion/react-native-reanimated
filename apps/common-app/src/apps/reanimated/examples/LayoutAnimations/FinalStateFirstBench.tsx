@@ -15,6 +15,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+const NATIVE_LAYOUT_ROUTE_FLAG = Platform.select({
+  android: getStaticFeatureFlag('ANDROID_NATIVE_LAYOUT_ANIMATIONS'),
+  default: false,
+  ios: getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION'),
+});
+
 const DURATION = 8000;
 const TRAVEL = 220;
 const DROP = 80;
@@ -49,13 +55,11 @@ export default function FinalStateFirstBench() {
   const [boxPresses, setBoxPresses] = useState(0);
   const [trackPresses, setTrackPresses] = useState(0);
 
-  if (
-    Platform.OS !== 'ios' ||
-    !getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
-  ) {
+  if (!NATIVE_LAYOUT_ROUTE_FLAG) {
     return (
       <Text style={styles.label}>
-        This bench needs iOS with the IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION flag.
+        This bench needs the IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION flag on iOS or
+        the ANDROID_NATIVE_LAYOUT_ANIMATIONS flag on Android.
       </Text>
     );
   }

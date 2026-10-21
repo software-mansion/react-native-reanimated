@@ -9,14 +9,9 @@ import android.view.animation.PathInterpolator
  * start time, the delay, and the duration of the track; the start value shows for the lead and the delay.
  */
 internal class Timeline(
-    /** The components of the start value, then of the end value of each segment. */
-    val values: List<DoubleArray>,
-    /** The end of each segment as a part of the duration. */
-    val endOffsets: DoubleArray,
-    private val timings: List<TimeInterpolator>,
-    private val timingKeys: List<TimingKey>,
+    /** One timeline for each slot of the track value, in slot order. */
+    val components: List<ComponentTimeline>,
     private val holdFraction: Float,
-    private val writer: TrackWriter,
 ) {
     /** Writes the components of the value at [fraction] into [value]. */
     fun fill(
@@ -25,18 +20,53 @@ internal class Timeline(
     ) {
         // Not `<=`: at the boundary a jump-start step already owes its first step.
         if (fraction < holdFraction) {
-            values.first().copyInto(value)
+            components.forEach { it.fillStart(value) }
         } else if (holdFraction >= 1f) {
             // A zero duration is all hold, so the end value shows only at the last frame.
-            values.last().copyInto(value)
+            components.forEach { it.fillEnd(value) }
         } else {
-            fillSegment((fraction - holdFraction) / (1f - holdFraction), value)
+            val progress = (fraction - holdFraction) / (1f - holdFraction)
+            components.forEach { it.fill(progress, value) }
         }
     }
 
-    fun release(timingCache: TimingCache) = timingKeys.forEach(timingCache::release)
+    fun release(timingCache: TimingCache) = components.forEach { it.release(timingCache) }
+}
 
-    private fun fillSegment(
+/** Writes the value of one slot of the track value from its own segments. */
+internal fun interface SlotInterpolation {
+    fun interpolate(
+        from: DoubleArray,
+        to: DoubleArray,
+        progress: Float,
+        value: DoubleArray,
+        slot: Int,
+    )
+}
+
+/** An operation of a transform: one scalar in its slot. */
+internal val SCALAR_SLOT =
+    SlotInterpolation { from, to, progress, value, slot -> value[slot] = from[0] + progress * (to[0] - from[0]) }
+
+internal class ComponentTimeline(
+    private val slot: Int,
+    /** The components of the start value, then of the end value of each segment. */
+    val values: List<DoubleArray>,
+    /** The end of each segment as a part of the duration. */
+    val endOffsets: DoubleArray,
+    private val timings: List<TimeInterpolator>,
+    private val timingKeys: List<TimingKey>,
+    private val interpolation: SlotInterpolation,
+) {
+    fun fillStart(value: DoubleArray) {
+        values.first().copyInto(value, slot)
+    }
+
+    fun fillEnd(value: DoubleArray) {
+        values.last().copyInto(value, slot)
+    }
+
+    fun fill(
         progress: Float,
         value: DoubleArray,
     ) {
@@ -45,8 +75,10 @@ internal class Timeline(
         val segmentStart = if (segment == 0) 0f else endOffsets[segment - 1].toFloat()
         val segmentProgress = (progress - segmentStart) / (endOffsets[segment].toFloat() - segmentStart)
         val easedProgress = timings[segment].getInterpolation(segmentProgress)
-        writer.interpolate(values[segment], values[segment + 1], easedProgress, value)
+        interpolation.interpolate(values[segment], values[segment + 1], easedProgress, value, slot)
     }
+
+    fun release(timingCache: TimingCache) = timingKeys.forEach(timingCache::release)
 }
 
 internal data class TimingKey(

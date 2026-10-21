@@ -2,8 +2,11 @@
 
 #include <reanimated/NativeAnimations/NativeAnimationIdentity.h>
 
+#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/graphics/Transform.h>
 
+#include <array>
+#include <cstddef>
 #include <variant>
 #include <vector>
 
@@ -83,6 +86,17 @@ facebook::react::Transform matrixOf(const AnimationTransform &transform);
 /// True when the translation cells differ by at most `ENDPOINT_TOLERANCE` and each other cell by at most
 /// `MATRIX_CELL_TOLERANCE`.
 bool isSameMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs);
+
+/// The cells of a matrix that a 2D affine map changes: the linear part (0, 1, 4, 5) and the translation in x
+/// and y (12, 13).
+inline constexpr std::array<size_t, 6> AFFINE_2D_MATRIX_CELLS{0, 1, 4, 5, 12, 13};
+
+/// `isSameMatrix` for the cells of `AFFINE_2D_MATRIX_CELLS` only.
+bool isSameAffine2DMatrix(const facebook::react::Transform &lhs, const facebook::react::Transform &rhs);
+
+/// React Native makes the matrix of a transform origin and of a percent translation from the size at the
+/// mount.
+bool hasSizeDependentTransform(const facebook::react::ViewProps &viewProps);
 
 /// No value matches the `Transform` target: its track has a timeline for each operation.
 bool valueMatchesTarget(const AnimationValue &value, AnimationTarget target);

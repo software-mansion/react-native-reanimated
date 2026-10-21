@@ -18,6 +18,7 @@
 
 #import <algorithm>
 #import <cmath>
+#import <cstdint>
 #import <cstring>
 #import <iterator>
 #import <ranges>
@@ -287,17 +288,6 @@ bool hasOpacityFilter(REAUIView<RCTComponentViewProtocol> *view)
 {
   const auto viewProps = std::dynamic_pointer_cast<const facebook::react::ViewProps>([view props]);
   return viewProps != nullptr && hasOpacityFilter(*viewProps);
-}
-
-/// React Native makes the matrix of a transform origin and of a percent translation from the size at the
-/// mount.
-bool hasSizeDependentTransform(const facebook::react::ViewProps &viewProps)
-{
-  using namespace facebook::react;
-  return viewProps.transformOrigin.isSet() ||
-      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
-           return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
-         });
 }
 
 /// False when React Native draws a part of the view from the size at the mount: a private layer, a shadow
@@ -775,10 +765,17 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return surface != nil && RCTSurfaceStageIsRunning(surface.stage);
   }
 
-  bool isInWindow(const Tag tag) override
+  bool isInWindow(const SurfaceId /*surfaceId*/, const Tag tag) override
   {
     RCTAssertMainQueue();
     return mountedView(tag).window != nil;
+  }
+
+  /// The pull, the mount, and the mount report of a transaction are one call of the mounting manager.
+  std::optional<std::uint64_t> mountReportOfPull(const SurfaceId /*surfaceId*/) override
+  {
+    RCTAssertMainQueue();
+    return ++pullCount_;
   }
 
   MountedAnimationResolution resolve(const AnimationRequest &request) override
@@ -809,6 +806,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     }
     return std::make_unique<CoreAnimationMountedAnimation>(*this, layer, request);
   }
+
+  /// The layer keeps the model value during a track.
+  void modelDidChange(const TrackKey & /*track*/, const double /*value*/) override {}
 
   void stop(const TrackKey &track, const TrackStopMode mode) override
   {
@@ -952,6 +952,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   __weak RCTSurfacePresenter *surfacePresenter_;
   TrackEndListener trackEndListener_;
   Tracks tracks_;
+  std::uint64_t pullCount_{0};
 };
 
 std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(

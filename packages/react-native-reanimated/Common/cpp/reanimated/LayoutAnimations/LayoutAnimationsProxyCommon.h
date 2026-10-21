@@ -141,8 +141,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const facebook::react::ShadowTree &shadowTree,
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
-  /// The platform reports that the transaction of the last pull is on the host views. UI thread only.
-  virtual void surfaceDidMount() {}
+  /// The platform reports that the transactions of the pulls since the last report are on the host views.
+  /// `reportedMount` is the number of the report when the platform numbers its reports. UI thread only.
+  virtual void surfaceDidMount(std::optional<std::uint64_t> /*reportedMount*/) {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   ~LayoutAnimationsProxyCommon() override = default;

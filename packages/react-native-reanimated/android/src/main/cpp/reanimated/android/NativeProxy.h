@@ -81,6 +81,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
   jni::local_ref<native_animation::JNativeAnimationExecutor::javaobject> getNativeAnimationExecutor();
   bool hasNativeAnimationPlatform();
+  bool hasNativeLayoutRouteFlag();
+  void nativeAnimationsWillMountItems();
+  void nativeAnimationsDidMountItems();
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  void failNextNativeAnimationViewLookup(int tag);
+  jni::local_ref<jni::JArrayLong> takeNativeAnimationViewLookupFailure();
+#endif
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

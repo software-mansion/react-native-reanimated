@@ -44,8 +44,7 @@
  * origin of its command. The check takes the track of the key at each time of the 18 ms before the
  * sample, with one allowance: a read in the first 18 ms of the new track, before a read of its target
  * showed the new track, can show the replaced track up to the read (measured: in the display frame of
- * the start the platform shows the replaced animation until its next display tick,
- * `.tmp/native-la-run/12C/trace/HUNT-RESULTS.md`); such a read is a `REPLACED-SHOWN` row. A read on
+ * the start the platform shows the replaced animation until its next display tick); such a read is a `REPLACED-SHOWN` row. A read on
  * neither track fails. Each read whose 18 ms have that
  * `TrackStarted` time is a `GATE` row with the time and the track that the check found. A track that
  * replaces a track on screen starts at the value that the route captured from the replaced track for its
@@ -112,32 +111,46 @@ import {
   render,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { Place, ReferenceCase } from './nativeLayoutReferencePlay';
+import { LIVE_CLOCK_CASES } from './nativeLayoutLiveClockCases';
+import type { Place, Played, ReferenceCase } from './nativeLayoutReferencePlay';
 import {
   expectModelOnFrames,
   expectNoKeyAfterTransfer,
   expectReference,
   play,
   REFERENCE_CASES,
+  routedCaseOf,
 } from './nativeLayoutReferencePlay';
-import type { NativeTrack, SizeBoxProps } from './nativeLayoutTestKit';
+import type {
+  NativeTrack,
+  SizeBoxProps,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
   BOX_REF,
   builderCalls,
   callbacks,
   END_LEFT,
   FRAME_BOX_REF,
+  FRAME_MS,
+  has3D,
   hasNativeLayoutRoute,
+  isHostEvent,
   isInReplacementWindow,
   isNear,
   layoutOf,
+  middleOf,
   opacities,
   PAIR_TOP,
+  PLAYS_3D_OPERATIONS,
+  PLAYS_MOVING_GEOMETRY,
   PRESENTATION_STAY_MS,
   readResidualOf,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
   renderBox,
   Scene,
   START_LEFT,
+  summarize,
   takeTraceUntil,
   waitForBuilderCalls,
   waitForCallbacks,
@@ -178,15 +191,20 @@ const HANDED_FADE: ReferenceCase = {
   box: { Box: FadedWriterBox },
 };
 
+const CLIPPED_FADE_NAME = 'a clip of a fade';
+const CLIPPED_FADE: ReferenceCase = {
+  flow: 'entering',
+  leaves: { opacity: { duration: 2000, initial: 0, to: 1 } },
+  places: [undefined, { left: START_LEFT, top: 0 }],
+  totalMs: 2000,
+  clip: { atMs: 300, backAtMs: 1200 },
+};
+
 /** Each case gives its opacity track to the frame driver. */
 const HAND_OVER_CASES: Record<string, ReferenceCase> = {
-  'a clip of a fade': {
-    flow: 'entering',
-    leaves: { opacity: { duration: 2000, initial: 0, to: 1 } },
-    places: [undefined, { left: START_LEFT, top: 0 }],
-    totalMs: 2000,
-    clip: { atMs: 300, backAtMs: 1200 },
-  },
+  ...(REMOVES_TRACKS_OUT_OF_WINDOW
+    ? { [CLIPPED_FADE_NAME]: CLIPPED_FADE }
+    : {}),
   'a box with an animated style': HANDED_FADE,
   'a write of the opacity': {
     ...HANDED_FADE,
@@ -211,7 +229,9 @@ describe('native layout reference', () => {
     return;
   }
 
-  for (const [caseName, referenceCase] of Object.entries(REFERENCE_CASES)) {
+  for (const [caseName, referenceCase] of Object.entries(
+    REFERENCE_CASES
+  ).filter(([, { operations }]) => PLAYS_3D_OPERATIONS || !has3D(operations))) {
     test(`${caseName}: the native samples and the frames of the twin are on the declared timeline`, async () => {
       expectReference(caseName, referenceCase, await play(referenceCase));
       await render(null);
@@ -219,6 +239,13 @@ describe('native layout reference', () => {
   }
 
   for (const [caseName, referenceCase] of Object.entries(HAND_OVER_CASES)) {
+    if (isRoutedToFrameDriver(referenceCase)) {
+      test(`${caseName}: the whole animation is frame-driven below API 29, and the frames of the two boxes are on the declared timeline`, async () => {
+        expectReference(caseName, referenceCase, await play(referenceCase));
+        await render(null);
+      });
+      continue;
+    }
     test(`${caseName}: the native samples and the frames of the twin are on the declared timeline, and the opacity model of the native box is on the frames of the frame driver`, async () => {
       const played = await play(referenceCase);
       const reads = expectReference(caseName, referenceCase, played);
@@ -240,18 +267,28 @@ describe('native layout reference', () => {
     });
   }
 
-  test('three starts: the test waits for the builder call and for the native start of each, and the callbacks are false, false, and true', async () => {
+  if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
+    test(`${CLIPPED_FADE_NAME}: the native track plays to its natural end out of the window, the native samples and the frames of the twin are on the declared timeline, and the native box shows the value of the twin after the scroll back`, async () => {
+      const played = await play(CLIPPED_FADE);
+      expectReference(CLIPPED_FADE_NAME, CLIPPED_FADE, played);
+      expectClippedFadePlayedToEnd(played);
+      await render(null);
+    });
+  }
+
+  test(`three starts: the test waits for the builder call and for the ${PLAYS_MOVING_GEOMETRY ? 'native start' : 'refusal below API 29'} of each, and the callbacks are false, false, and true`, async () => {
     const layout = layoutOf({ originX: {}, originY: {} }, { name: 'chain' });
     const tag = await renderBox({ layout });
+    const isStartOf = PLAYS_MOVING_GEOMETRY ? isAdmittedOf : isRefusedOf;
     let starts = 0;
     for (const left of [END_LEFT, 2 * END_LEFT, START_LEFT]) {
       await render(<Scene left={left} layout={layout} />);
       starts++;
       expect(await waitForBuilderCalls(starts)).toBe('');
       const events = await takeTraceUntil((taken) =>
-        taken.some(isAdmittedOf(tag))
+        taken.some(isStartOf(tag))
       );
-      expect(events.filter(isAdmittedOf(tag)).length).toBe(1);
+      expect(events.filter(isStartOf(tag)).length).toBe(1);
     }
     const expected = ['chain:false', 'chain:false', 'chain:true'];
     expect(await waitForCallbacks(expected)).toBe('');
@@ -261,10 +298,89 @@ describe('native layout reference', () => {
   });
 });
 
+const isFrameUpdate = ({ event }: TraceEvent) => event === 'FrameUpdateMounted';
+
+/**
+ * The native track of `CLIPPED_FADE` played on out of the window to its natural
+ * end, with no hand-over to the frame driver.
+ */
+function expectClippedFadePlayedToEnd(played: Played) {
+  const { events, frameRecords, rows, tracks } = played;
+  const hostEvents = events.filter(
+    (event) => !isFrameUpdate(event) && isHostEvent(event)
+  );
+  const isEnd = ({ event }: TraceEvent) => event === 'Ended';
+  expect(summarize(hostEvents.filter((event) => !isEnd(event)))).toBe(
+    'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:Opacity > Admitted > TrackEnded:Opacity:true'
+  );
+  expect(summarize(hostEvents.filter(isEnd))).toBe('Ended:Finished:None');
+  expect(events.some(isFrameUpdate)).toBe(false);
+  // A build makes its records before a start (`frameRecordedOf`): the native box has one with no frame.
+  expect(
+    frameRecords.filter(
+      ({ box, frames }) => box === 'native' && frames.length > 0
+    ).length
+  ).toBe(0);
+
+  const { backAtMs } = CLIPPED_FADE.clip!;
+  const originMs = middleOf(tracks[0].origin);
+  const shown = rows.find(
+    ({ row }) => row.native.Opacity.monotonicTimeMs - originMs >= backAtMs
+  );
+  expect(
+    shown ? '' : `the case has no row from ${backAtMs} ms after its origin`
+  ).toBe('');
+  if (shown) {
+    const native = shown.row.native.Opacity.presentation[0];
+    const twin = shown.row.frame.Opacity.model[0];
+    const tolerance = 0.01 + (2 * FRAME_MS) / CLIPPED_FADE.totalMs;
+    expect(
+      isNear(native, twin, tolerance)
+        ? ''
+        : `after the scroll back: the native box shows ${native}, ${Math.abs(native - twin)} from the model ${twin} of the twin, tolerance ${tolerance}`
+    ).toBe('');
+  }
+
+  expect([...callbacks].sort().join()).toBe('frame:true,native:true');
+}
+
 const isAdmittedOf =
   (viewTag: number) =>
   ({ event, tag }: { event: string; tag: number }) =>
     event === 'Admitted' && tag === viewTag;
+
+const isRefusedOf =
+  (viewTag: number) =>
+  ({ event, tag }: { event: string; tag: number }) =>
+    event === 'LayoutBuildFailed' && tag === viewTag;
+
+/**
+ * Below API 29 the case moves a position or a transform: the frame driver plays
+ * it.
+ */
+const isRoutedToFrameDriver = (referenceCase: ReferenceCase) =>
+  routedCaseOf(referenceCase) !== referenceCase;
+
+/**
+ * The fallback form of each case of the other native suites that moves a
+ * position or a transform (`LIVE_CLOCK_CASES`). Those suites skip their
+ * describes of native geometry below API 29.
+ */
+describe('native layout reference below API 29', () => {
+  if (!hasNativeLayoutRoute || PLAYS_MOVING_GEOMETRY) {
+    return;
+  }
+
+  for (const [caseName, referenceCase] of Object.entries(LIVE_CLOCK_CASES)) {
+    if (!isRoutedToFrameDriver(referenceCase)) {
+      continue;
+    }
+    test(`${caseName}: the whole animation is frame-driven, UnsupportedTarget, and the frames of the two boxes are on the declared timeline`, async () => {
+      expectReference(caseName, referenceCase, await play(referenceCase));
+      await render(null);
+    });
+  }
+});
 
 describe('native layout reference: the replacement window of the player', () => {
   // A track from 0 to 80 over 2400 ms, and from 960 ms a track from 50 to 20 over 2400 ms that replaced it.
