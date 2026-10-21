@@ -57,9 +57,7 @@ export function installLazyBundleLoader() {
     dependencyMap: unknown,
     ...rest: unknown[]
   ) {
-    if (chunkRootIds.has(moduleId)) {
-      acceptHotUpdates(moduleId);
-    }
+    chunkRootIds.forEach(acceptHotUpdates);
     define.call(this, factory, moduleId, dependencyMap, ...rest);
     definedModuleIds?.push(moduleId);
   };
