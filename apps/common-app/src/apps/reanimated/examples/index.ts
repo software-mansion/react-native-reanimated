@@ -293,8 +293,6 @@ const ScrollViewOffsetExample: React.FC = () =>
   React.createElement(require('./ScrollViewOffsetExample').default as React.FC);
 const SetNativePropsExample: React.FC = () =>
   React.createElement(require('./SetNativePropsExample').default as React.FC);
-const SharedStyleExample: React.FC = () =>
-  React.createElement(require('./SharedStyleExample').default as React.FC);
 const SlowAnimationsExample: React.FC = () =>
   React.createElement(require('./SlowAnimationsExample').default as React.FC);
 const SpringPresetsAndClampExample: React.FC = () =>
@@ -686,10 +684,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-  SharedStyleExample: {
-    title: 'Shared style',
-    screen: SharedStyleExample,
-  },
   ChatHeadsExample: {
     title: 'Chat heads',
     section: REGRESSIONS,
