@@ -1,7 +1,4 @@
-const path = require('path');
 const workletsResolver = require('react-native-worklets/jest/resolver');
-
-const REANIMATED_DIR = /[\\/]react-native-reanimated[\\/](src|lib)[\\/]/;
 
 const WEB_ONLY_IN_JEST = new Set([
   'initializers',
@@ -27,7 +24,7 @@ module.exports = (request, options) => {
   if (
     request.startsWith('.') &&
     isWebOnly &&
-    REANIMATED_DIR.test(options.basedir + path.sep)
+    options.basedir.includes('react-native-reanimated')
   ) {
     return options.defaultResolver(request, {
       ...options,
