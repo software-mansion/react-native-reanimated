@@ -118,6 +118,7 @@ scaffold_expo() {
   (
     cd "$APP_DIR"
     npm install
+    npx expo install babel-preset-expo
     install_library_packages
     node -e '
       const fs = require("fs");
