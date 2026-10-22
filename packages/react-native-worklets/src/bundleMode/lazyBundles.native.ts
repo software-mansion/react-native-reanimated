@@ -1,9 +1,15 @@
 'use strict';
 
-import { isWorkletRuntime } from '../runtimeKind';
+import { createSerializable } from '../memory/serializable';
+import { isWorkletRuntime, RuntimeKind } from '../runtimeKind';
 import { scheduleOnRN } from '../threads';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 
 export type LazyBundleRegistrar = (requestUrl: string) => void;
+
+export type LazyBundle = [bundlePathAndQuery: string, body: string];
+
+type LazyBundleLoader = (bundlePathAndQuery: string) => Promise<void>;
 
 type MetroModule = {
   verboseName?: string;
@@ -21,7 +27,15 @@ const FALLBACK_DEV_SERVER_URL = 'http://localhost:8081/';
 
 const loadPromisesByUrl = new Map<string, Promise<void>>();
 
+const evaluatedUrls = new Set<string>();
+
 const chunkRootIds = new Set<number>();
+
+const lazyBundleBodiesByPath = new Map<string, string>();
+
+const propagationsByPath = new Map<string, Promise<void>>();
+
+const workerRuntimeIds = new Set<number>();
 
 let definedModuleIds: number[] | null = null;
 
@@ -47,6 +61,7 @@ export function installLazyBundleLoader() {
     return;
   }
   global[loaderName] = loadBundleFromServer;
+  globalThis.__workletsEvaluateLazyBundle = evaluateLazyBundle;
 
   const defineName = `${prefix}__d`;
   const define = global[defineName] as MetroDefine;
@@ -61,6 +76,60 @@ export function installLazyBundleLoader() {
     define.call(this, factory, moduleId, dependencyMap, ...rest);
     definedModuleIds?.push(moduleId);
   };
+}
+
+/**
+ * Wraps Metro's `__loadBundleAsync` on the RN Runtime, so a lazy chunk that the
+ * RN Runtime loads is also evaluated on the UI Runtime and on every Worker
+ * Runtime before the `import()` promise resolves. Worklets defined in the chunk
+ * can then be resolved on all runtimes. The chunk is also kept for Worker
+ * Runtimes created later, see {@link getLoadedLazyBundles}.
+ *
+ * Use only in dev builds in Bundle Mode.
+ */
+export function installLazyBundlePropagation() {
+  const global = globalThis as unknown as Record<string, unknown>;
+  const loaderName = `${globalThis.__METRO_GLOBAL_PREFIX__ ?? ''}__loadBundleAsync`;
+  let loader = propagateLazyBundles(
+    global[loaderName] as LazyBundleLoader | undefined
+  );
+  Object.defineProperty(global, loaderName, {
+    configurable: true,
+    enumerable: true,
+    get: () => loader,
+    set: (newLoader: LazyBundleLoader | undefined) => {
+      loader = propagateLazyBundles(newLoader);
+    },
+  });
+}
+
+/**
+ * Adds a Worker Runtime to the runtimes that evaluate the lazy chunks loaded by
+ * the RN Runtime.
+ */
+export function registerWorkerRuntimeForLazyBundles(runtimeId: number) {
+  if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    workerRuntimeIds.add(runtimeId);
+  }
+}
+
+/**
+ * Returns the lazy chunks that the RN Runtime has loaded so far, so a new
+ * Worker Runtime can evaluate them before its initializer runs.
+ */
+export function getLoadedLazyBundles(): LazyBundle[] {
+  if (!__DEV__ || !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    return [];
+  }
+  return Array.from(lazyBundleBodiesByPath.entries());
+}
+
+/** Evaluates lazy chunks on the current Worklet Runtime. */
+export function evaluateLazyBundles(lazyBundles: LazyBundle[]) {
+  'worklet';
+  for (const [bundlePathAndQuery, body] of lazyBundles) {
+    globalThis.__workletsEvaluateLazyBundle!(bundlePathAndQuery, body);
+  }
 }
 
 /**
@@ -111,9 +180,10 @@ function loadBundleFromServer(bundlePathAndQuery: string): Promise<void> {
           `[Worklets] Could not load the bundle "${requestUrl}" on the ${globalThis.__RUNTIME_NAME} Runtime: ${message}`
         );
       }
-      registerLazyBundle(requestUrl);
-      const moduleIds = evaluateBundle(body, requestUrl);
-      markChunkRoot(moduleIds, bundlePathAndQuery);
+      if (!evaluatedUrls.has(requestUrl)) {
+        registerLazyBundle(requestUrl);
+        evaluateChunk(body, requestUrl, bundlePathAndQuery);
+      }
       return undefined;
     })
     .catch((error: unknown) => {
@@ -123,6 +193,130 @@ function loadBundleFromServer(bundlePathAndQuery: string): Promise<void> {
 
   loadPromisesByUrl.set(requestUrl, load);
   return load;
+}
+
+function evaluateLazyBundle(bundlePathAndQuery: string, body: string) {
+  const requestUrl = buildUrlForBundle(bundlePathAndQuery);
+  if (evaluatedUrls.has(requestUrl)) {
+    return;
+  }
+  evaluateChunk(body, requestUrl, bundlePathAndQuery);
+  loadPromisesByUrl.set(requestUrl, Promise.resolve());
+}
+
+function evaluateChunk(
+  body: string,
+  requestUrl: string,
+  bundlePathAndQuery: string
+) {
+  const moduleIds = evaluateBundle(body, requestUrl);
+  evaluatedUrls.add(requestUrl);
+  markChunkRoot(moduleIds, bundlePathAndQuery);
+}
+
+function propagateLazyBundles(
+  loader: LazyBundleLoader | undefined
+): LazyBundleLoader | undefined {
+  if (!loader) {
+    return loader;
+  }
+  return (bundlePathAndQuery: string) => {
+    const pendingPropagation = propagationsByPath.get(bundlePathAndQuery);
+    if (pendingPropagation) {
+      return pendingPropagation;
+    }
+    const propagation = Promise.all([
+      loader(bundlePathAndQuery),
+      fetchLazyBundleOnRN(bundlePathAndQuery),
+    ])
+      .then(([, body]) => {
+        lazyBundleBodiesByPath.set(bundlePathAndQuery, body);
+        return evaluateOnWorkletRuntimes(bundlePathAndQuery, body);
+      })
+      .catch((error: unknown) => {
+        propagationsByPath.delete(bundlePathAndQuery);
+        throw error;
+      });
+    propagationsByPath.set(bundlePathAndQuery, propagation);
+    return propagation;
+  };
+}
+
+async function fetchLazyBundleOnRN(bundlePathAndQuery: string) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const getDevServer =
+    require('react-native/Libraries/Core/Devtools/getDevServer') as {
+      default: () => { url: string };
+    };
+  const serverUrl = getDevServer.default().url;
+  const requestUrl =
+    serverUrl.replace(/\/+$/, '') +
+    '/' +
+    bundlePathAndQuery.replace(/^\/+/, '');
+  const response = await fetch(requestUrl);
+  return response.text();
+}
+
+async function evaluateOnWorkletRuntimes(
+  bundlePathAndQuery: string,
+  body: string
+) {
+  const runtimeIds = [RuntimeKind.UI as number, ...workerRuntimeIds];
+  await Promise.all(
+    runtimeIds.map((runtimeId) =>
+      evaluateOnWorkletRuntime(runtimeId, bundlePathAndQuery, body)
+    )
+  );
+}
+
+function evaluateOnWorkletRuntime(
+  runtimeId: number,
+  bundlePathAndQuery: string,
+  body: string
+) {
+  return new Promise<void>((resolve, reject) => {
+    const onEvaluated = (errorMessage?: string) => {
+      if (errorMessage === undefined) {
+        resolve();
+      } else {
+        reject(
+          new Error(
+            `[Worklets] Could not evaluate the bundle "${bundlePathAndQuery}" ${errorMessage}`
+          )
+        );
+      }
+    };
+    try {
+      WorkletsModule.scheduleOnRuntimeWithId(
+        runtimeId,
+        createSerializable(() => {
+          'worklet';
+          evaluateLazyBundleJob(bundlePathAndQuery, body, onEvaluated);
+        }),
+        undefined
+      );
+    } catch {
+      workerRuntimeIds.delete(runtimeId);
+      resolve();
+    }
+  });
+}
+
+function evaluateLazyBundleJob(
+  bundlePathAndQuery: string,
+  body: string,
+  onEvaluated: (errorMessage?: string) => void
+) {
+  'worklet';
+  try {
+    globalThis.__workletsEvaluateLazyBundle!(bundlePathAndQuery, body);
+    scheduleOnRN(onEvaluated);
+  } catch (error) {
+    scheduleOnRN(
+      onEvaluated,
+      `on the ${globalThis.__RUNTIME_NAME} Runtime: ${(error as Error)?.message ?? String(error)}`
+    );
+  }
 }
 
 function buildUrlForBundle(bundlePathAndQuery: string) {
