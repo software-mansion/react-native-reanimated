@@ -17,6 +17,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -117,6 +118,20 @@ struct TransactionMeta {
   std::unordered_set<Tag> recreatedTags;
 };
 
+/// The native operations that one pull decided, in its order.
+struct PullRecord {
+  /// `NativeAnimationPlatform::mountReportOfPull` at the start of the pull.
+  std::optional<std::uint64_t> mountReport;
+  std::vector<native_animation::MountedOperation> operations;
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  MountingTransaction::Number transactionNumber{0};
+  /// The native tracks whose target a frame-driven update of the pull changes first.
+  std::vector<native_animation::TrackKey> firstFrameUpdates;
+#endif
+
+  bool isEmpty() const;
+};
+
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
@@ -149,16 +164,15 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   /// Null when layout animations have no native route, and before the start of the surface.
   std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
-  /// The native starts and stops of the last pull, in the order in which the pull decided them. The mount
-  /// report of that transaction takes them.
-  mutable std::vector<native_animation::MountedOperation> pendingMountOperations_;
+  /// The record of the pull that runs now.
+  mutable PullRecord currentPull_;
+  /// The records of the pulls whose mount report did not run yet, in pull order. A mount report takes all.
+  mutable std::vector<PullRecord> pendingPulls_;
   /// The build ends that the pull gives to the UI runtime before it returns.
   mutable NativeLayoutBuildEnds pendingNativeBuildEnds_;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  mutable MountingTransaction::Number pulledTransactionNumber_ = 0;
   /// The native tracks of each view that no frame-driven update changed after their start.
   mutable std::unordered_map<Tag, std::vector<native_animation::TrackKey>> nativeTracksWithoutFrameUpdate_;
-  mutable std::vector<native_animation::TrackKey> pulledFirstFrameUpdates_;
 #endif
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
   void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
@@ -180,6 +194,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// of its exiting animation, so no later request starts on it. A view that a shared transition hides admits
   /// no start: a native opacity track shows the view.
   bool admitsNativeStart(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
+  /// The mount report of the current pull. None when the pull is not on the UI thread in the mount of its
+  /// transaction. UI thread only when it has a value.
+  std::optional<std::uint64_t> mountReportOfPull() const;
+  /// Puts the changed opacity of an Update mutation of a view in the pull record, so that each native opacity
+  /// track of the view (layout or CSS) has the model value of the mount. A pull with no mount report records
+  /// nothing.
+  void recordMountedOpacity(const ShadowViewMutation &mutation) const;
   /// True when the entering start of a view that the transaction inserts can ask for native playback: the view
   /// admits a native start, and the mount of the transaction puts it in a window. UI thread only.
   bool admitsNativeEnteringStart(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
@@ -312,10 +333,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool isUncommittedScreenPopSource(int tag) const;
   std::optional<SurfaceId> cancelUncommittedScreenPop() const;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
-  void surfaceDidMount() override;
+  void surfaceDidMount(std::optional<std::uint64_t> reportedMount) override;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
+  /// The refusal of a native start of the view, with no build of the start.
+  void traceStartRefused(Tag tag, LayoutAnimationType type) const;
 #endif
   void clearSurfaceState() const override;
 

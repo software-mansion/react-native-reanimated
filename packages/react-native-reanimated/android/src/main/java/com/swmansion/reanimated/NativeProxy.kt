@@ -23,9 +23,9 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
-import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
+import com.swmansion.reanimated.nativeAnimations.NativeAnimationExecutor
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
@@ -55,7 +55,9 @@ open class NativeProxy {
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
-    private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
+    private val nativeAnimationExecutor: NativeAnimationExecutor
+    private val rewritesSynchronousProps: Boolean
+    private val routesLayoutNatively: Boolean
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -84,9 +86,22 @@ open class NativeProxy {
         object : UIManagerListener {
             override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
 
-            override fun willMountItems(uiManager: UIManager) = Unit
+            override fun willMountItems(uiManager: UIManager) {
+                if (routesLayoutNatively) {
+                    UiThreadUtil.assertOnUiThread()
+                    ifNotInvalidated(Unit) { nativeAnimationsWillMountItems() }
+                }
+            }
 
-            override fun didMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { rewriteSynchronousProps() }
+            override fun didMountItems(uiManager: UIManager) {
+                nativeAnimationExecutor.markFabricWrite()
+                if (routesLayoutNatively) {
+                    UiThreadUtil.assertOnUiThread()
+                    ifNotInvalidated(Unit) { nativeAnimationsDidMountItems() }
+                } else if (rewritesSynchronousProps) {
+                    ifNotInvalidated(Unit) { rewriteSynchronousProps() }
+                }
+            }
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
@@ -121,8 +136,10 @@ open class NativeProxy {
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
-        cssPlatformTransitionsManager =
-            CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
+        nativeAnimationExecutor =
+            NativeAnimationExecutor(mFabricUIManager, mContext, ::animationTimestampOf) { call ->
+                ifNotInvalidated(Unit, call)
+            }
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -134,7 +151,9 @@ open class NativeProxy {
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
-        if (hasSynchronousWritesTracker()) {
+        rewritesSynchronousProps = hasSynchronousWritesTracker()
+        routesLayoutNatively = hasNativeLayoutRouteFlag()
+        if (rewritesSynchronousProps || hasNativeAnimationPlatform()) {
             @OptIn(UnstableReactNativeAPI::class)
             mFabricUIManager.addUIManagerEventListener(mountListener)
         }
@@ -158,6 +177,19 @@ open class NativeProxy {
     private external fun hasSynchronousWritesTracker(): Boolean
 
     private external fun rewriteSynchronousProps()
+
+    private external fun hasNativeAnimationPlatform(): Boolean
+
+    private external fun hasNativeLayoutRouteFlag(): Boolean
+
+    private external fun nativeAnimationsWillMountItems()
+
+    /** Runs the layout mount report of the dispatch, then the synchronous props rewrite. */
+    private external fun nativeAnimationsDidMountItems()
+
+    private external fun failNextNativeAnimationViewLookupCpp(tag: Int)
+
+    private external fun takeNativeAnimationViewLookupFailureCpp(): LongArray?
 
     external fun installJSIBindings()
 
@@ -202,7 +234,7 @@ open class NativeProxy {
         @OptIn(UnstableReactNativeAPI::class)
         mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
-        cssPlatformTransitionsManager.invalidate()
+        nativeAnimationExecutor.invalidate()
         mNativeStateLock.write {
             if (mHybridData.isValid) {
                 invalidateCpp()
@@ -216,7 +248,7 @@ open class NativeProxy {
             firstUptime = SystemClock.uptimeMillis()
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
+        nativeAnimationExecutor.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         ifNotInvalidated(Unit) { toggleSlowAnimationsOnUIRuntime() }
     }
 
@@ -352,7 +384,7 @@ open class NativeProxy {
         intBuffer: IntArray,
         doubleBuffer: DoubleArray,
     ) {
-        cssPlatformTransitionsManager.onPropsWrittenSynchronously()
+        nativeAnimationExecutor.markFabricWrite()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             try {
                 // The props stay in the registry, and the commit hook applies them to the shadow tree.
@@ -360,6 +392,9 @@ open class NativeProxy {
                     return@parse
                 }
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
+                if (routesLayoutNatively && props.hasKey("opacity")) {
+                    nativeAnimationExecutor.setOpacityModel(viewTag, props.getDouble("opacity"))
+                }
             } catch (e: Exception) {
                 Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
             }
@@ -367,48 +402,25 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun cssDefineEasing(
-        easingId: Int,
-        easingType: Int,
-        easingPointsX: FloatArray,
-        easingPointsY: FloatArray,
-    ) {
-        cssPlatformTransitionsManager.defineEasing(easingId, easingType, easingPointsX, easingPointsY)
+    @Suppress("unused")
+    private fun getNativeAnimationExecutor(): NativeAnimationExecutor = nativeAnimationExecutor
+
+    /**
+     * Runtime tests only: the next view lookup of a native layout start of the tag finds no view. A build
+     * without the runtime test hooks has no such entry and throws `UnsatisfiedLinkError`. UI thread only.
+     */
+    fun failNextNativeAnimationViewLookup(tag: Int) {
+        UiThreadUtil.assertOnUiThread()
+        ifNotInvalidated(Unit) { failNextNativeAnimationViewLookupCpp(tag) }
     }
 
-    @DoNotStrip
-    fun cssUndefineEasing(easingId: Int) {
-        cssPlatformTransitionsManager.undefineEasing(easingId)
-    }
-
-    @DoNotStrip
-    fun cssAnimateTransition(
-        viewTag: Int,
-        propertyId: Int,
-        fromValue: Double,
-        toValue: Double,
-        durationMs: Double,
-        startTimestampMs: Double,
-        easingId: Int,
-        persistent: Boolean,
-    ): Boolean =
-        cssPlatformTransitionsManager.animateTransition(
-            viewTag,
-            propertyId,
-            fromValue,
-            toValue,
-            durationMs,
-            startTimestampMs,
-            easingId,
-            persistent,
-        )
-
-    @DoNotStrip
-    fun cssRemoveTransition(
-        viewTag: Int,
-        propertyId: Int,
-    ) {
-        cssPlatformTransitionsManager.removeTransition(viewTag, propertyId)
+    /**
+     * Runtime tests only: the playbacks on the view at the failed lookup, `TRACK_KEY_LENGTH` values for each;
+     * null when the lookup did not fail. UI thread only.
+     */
+    fun takeNativeAnimationViewLookupFailure(): LongArray? {
+        UiThreadUtil.assertOnUiThread()
+        return ifNotInvalidated(null) { takeNativeAnimationViewLookupFailureCpp() }
     }
 
     @DoNotStrip
@@ -420,11 +432,14 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun getAnimationTimestamp(): Long =
+    fun getAnimationTimestamp(): Long = animationTimestampOf(SystemClock.uptimeMillis())
+
+    /** Reanimated's clock at the time [uptimeMs] of `SystemClock.uptimeMillis()`. */
+    private fun animationTimestampOf(uptimeMs: Long): Long =
         if (slowAnimationsEnabled) {
-            firstUptime + (SystemClock.uptimeMillis() - firstUptime) / animationsDragFactor
+            firstUptime + (uptimeMs - firstUptime) / animationsDragFactor
         } else {
-            SystemClock.uptimeMillis()
+            uptimeMs
         }
 
     @DoNotStrip
