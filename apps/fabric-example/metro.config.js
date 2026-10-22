@@ -3,11 +3,6 @@ const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
 const { getMonorepoMetroOptions } = require('../../scripts/metro');
-const { toNormalUrl } = require('jsc-safe-url');
-const {
-  default: baseJSBundle,
-} = require('metro/private/DeltaBundler/Serializers/baseJSBundle');
-const { default: bundleToString } = require('metro/private/lib/bundleToString');
 const path = require('path');
 
 const defaultConfig = getDefaultConfig(__dirname);
@@ -33,47 +28,7 @@ let config = {
     blockList,
     extraNodeModules,
   },
-  serializer: {
-    customSerializer: async (entryPoint, preModules, graph, options) =>
-      bundleToString(
-        baseJSBundle(entryPoint, preModules, graph, {
-          ...options,
-          unstable_getAsyncDependencyPath: getAsyncDependencyPath,
-        })
-      ).code,
-  },
 };
-
-/**
- * Metro emits lazy chunk paths relative to the project root, so a module from
- * `apps/common-app` gets a `/../common-app/...` path that URL parsing
- * normalizes into a request Metro cannot resolve. Pass the same path through
- * the `bundleEntry` query parameter, which Metro reads verbatim.
- *
- * @param {import('metro/private/DeltaBundler/types').ResolvedDependency} dependency
- * @param {unknown} options
- * @returns {string}
- */
-function getAsyncDependencyPath(dependency, options) {
-  const serializerOptions =
-    /** @type {import('metro/private/DeltaBundler/Serializers/helpers/js').Options} */ (
-      options
-    );
-  const { searchParams } = new URL(
-    toNormalUrl(serializerOptions.sourceUrl ?? '')
-  );
-  searchParams.set('modulesOnly', 'true');
-  searchParams.set('runModule', 'false');
-  const modulePath = dependency.absolutePath.slice(
-    0,
-    -path.extname(dependency.absolutePath).length
-  );
-  const bundlePath = `${path.relative(serializerOptions.serverRoot, modulePath)}.bundle`;
-  if (bundlePath.startsWith('..')) {
-    searchParams.set('bundleEntry', bundlePath);
-  }
-  return `/${bundlePath}?${searchParams.toString()}`;
-}
 
 config = mergeConfig(defaultConfig, config);
 

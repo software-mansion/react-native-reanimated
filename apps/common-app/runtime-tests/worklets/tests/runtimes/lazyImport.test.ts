@@ -11,7 +11,7 @@ import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 
 function importLazyModule() {
   'worklet';
-  return import('./lazyImportModule');
+  return import('../../../../../fabric-example/runtime-tests/lazyImportModule');
 }
 
 describe('lazy import()', () => {
