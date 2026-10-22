@@ -24,8 +24,11 @@ ReanimatedCommitHook::ReanimatedCommitHook(
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
       synchronousWritesTracker_(synchronousWritesTracker) {
   uiManager_->registerCommitHook(*this);
-  uiManager_->getShadowTreeRegistry().enumerate(
-      [this](const ShadowTree &shadowTree, bool & /*stop*/) { registerLayoutAnimations(shadowTree); });
+  uiManager_->getShadowTreeRegistry().enumerate([this](const ShadowTree &shadowTree, bool & /*stop*/) {
+    registerLayoutAnimations(shadowTree);
+    auto lock = updatesRegistryManager_->lock();
+    mountedRootsRegistry_->registerSurface(shadowTree.getSurfaceId());
+  });
 }
 
 ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
@@ -55,12 +58,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     return newRootShadowNode;
   }
 
-  if (newRootShadowNode->getChildren().empty()) {
-    // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
+  {
     auto lock = updatesRegistryManager_->lock();
-    mountedRootsRegistry_->remove(shadowTree.getSurfaceId());
-    if (synchronousWritesTracker_) {
-      synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
+    if (newRootShadowNode->getChildren().empty()) {
+      // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
+      mountedRootsRegistry_->remove(shadowTree.getSurfaceId());
+      if (synchronousWritesTracker_) {
+        synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
+      }
+    } else {
+      mountedRootsRegistry_->registerSurface(shadowTree.getSurfaceId());
     }
   }
 

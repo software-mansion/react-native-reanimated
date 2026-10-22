@@ -8,9 +8,10 @@ namespace reanimated {
 
 using namespace facebook::react;
 
-/// Keeps the last mounted root of each running surface.
+/// Tracks running surfaces and their last mounted roots.
 class MountedRootsRegistry {
  public:
+  void registerSurface(SurfaceId surfaceId);
   void set(const RootShadowNode::Shared &rootShadowNode);
   void remove(SurfaceId surfaceId);
   RootShadowNode::Shared get(SurfaceId surfaceId) const;

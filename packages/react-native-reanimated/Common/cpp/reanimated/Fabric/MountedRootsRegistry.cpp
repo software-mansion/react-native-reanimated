@@ -5,6 +5,11 @@
 
 namespace reanimated {
 
+void MountedRootsRegistry::registerSurface(const SurfaceId surfaceId) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  rootsBySurface_.try_emplace(surfaceId, nullptr);
+}
+
 void MountedRootsRegistry::set(const RootShadowNode::Shared &rootShadowNode) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   rootsBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
@@ -24,7 +29,7 @@ RootShadowNode::Shared MountedRootsRegistry::get(const SurfaceId surfaceId) cons
 bool MountedRootsRegistry::isMounted(const ShadowNodeFamily &shadowNodeFamily) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto it = rootsBySurface_.find(shadowNodeFamily.getSurfaceId());
-  return it != rootsBySurface_.end() && !shadowNodeFamily.getAncestors(*it->second).empty();
+  return it != rootsBySurface_.end() && (!it->second || !shadowNodeFamily.getAncestors(*it->second).empty());
 }
 
 } // namespace reanimated
