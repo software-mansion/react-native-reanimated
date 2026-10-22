@@ -33,7 +33,7 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. The build configuration, in `configuration`: `release` unless the behavior exists only in a Debug bundle, for example a `__DEV__` warning, a LogBox message or a development-only check, or unless the only usable signal is `console.log` output. See the constraints of the build.
 1. The static feature flags, in `staticFeatureFlags`. See the section about feature flags.
 1. Verification steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
-1. How the tester tells the two builds apart, in `verification`. The fail signal is what the screen shows without the change. The pass signal is what the screen shows with the change. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
+1. How the tester tells the two builds apart, in `verification`. The fail signal is what the screen shows without the change. The pass signal is what the screen shows with the change. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal. When `configuration` is `debug` and nothing on screen shows the behavior, a named LogBox message or a named `console` output is a usable signal too, but on-screen `<Text>` stays the preferred evidence.
 1. Where the problem comes from, in `analysis`. Read the library sources at the base branch, name the code that causes the behavior with file paths and line numbers, and say if the claims of the pull request and of the linked issues agree with that code.
 1. Your review of the change, in `review` and `reviewVerdict`. See the next section.
 
@@ -74,7 +74,7 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 - Visual changes: make the rendering without and with the change unmistakable, for example large colored blocks with labels.
 - State and timing changes: render every value that matters as `<Text>`, including counters, timestamps and the last event, so the tester can read it from a screenshot.
 - Crashes and hangs: name the action that crashes. A crashed app or a frozen screen is the fail signal.
-- Warnings and development-only checks: set `configuration` to `debug`, name the warning or the error, and say whether it shows in LogBox or in the `console` output. Render the state that matters as `<Text>` as well, because a screenshot is the strongest evidence.
+- Warnings and development-only checks: set `configuration` to `debug`, name the warning or the error, and say whether it shows in LogBox or in the `console` output. Render the state that matters as `<Text>` as well when the app can show it, because a screenshot is the strongest evidence.
 - Memory and resource changes: there is no way to measure memory. Verify them only when the leak has a consequence the app can show on screen, for example a counter of live native objects that the library exposes, a measurable slowdown that the app times itself and renders, or a crash after a bounded number of iterations.
 
 ## Constraints of the build

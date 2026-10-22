@@ -28,7 +28,7 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. The build configuration, in `configuration`: `release` unless the behavior exists only in a Debug bundle, for example a `__DEV__` warning, a LogBox message or a development-only check, or unless the only usable signal is `console.log` output. See the constraints of the build.
 1. The static feature flags, in `staticFeatureFlags`. See the next section.
 1. Reproduction steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
-1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
+1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal. When `configuration` is `debug` and nothing on screen shows the behavior, a named LogBox message or a named `console` output is a usable signal too, but on-screen `<Text>` stays the preferred evidence.
 1. Where the behavior comes from, in `analysis`. Read the library sources, name the code that causes the behavior with file paths and line numbers, and say if the claims of the issue agree with that code. Write it also when `feasible` is false.
 
 ## Feature flags
@@ -55,7 +55,7 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 - Visual bugs: make the wrong and the right rendering unmistakable, for example large colored blocks with labels.
 - State and timing bugs: render every value that matters as `<Text>`, including counters, timestamps and the last event, so the tester can read it from a screenshot.
 - Crashes and hangs: name the action that crashes. A crashed app or a frozen screen is the fail signal.
-- Warnings and development-only checks: set `configuration` to `debug`, name the warning or the error, and say whether it shows in LogBox or in the `console` output. Render the state that matters as `<Text>` as well, because a screenshot is the strongest evidence.
+- Warnings and development-only checks: set `configuration` to `debug`, name the warning or the error, and say whether it shows in LogBox or in the `console` output. Render the state that matters as `<Text>` as well when the app can show it, because a screenshot is the strongest evidence.
 - Memory and resource bugs: there is no way to measure memory. Reproduce them only when the leak has a consequence the app can show on screen, for example a counter of live native objects that the library exposes, a measurable slowdown that the app times itself and renders, or a crash after a bounded number of iterations. When no such consequence exists, set `feasible: false` and say that the verification needs a memory profiler.
 
 ## Constraints of the build

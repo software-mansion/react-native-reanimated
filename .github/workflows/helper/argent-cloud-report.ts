@@ -4,6 +4,7 @@ import path from 'node:path';
 const GITHUB_BODY_LIMIT = 60_000;
 const GITHUB_TITLE_LIMIT = 256;
 const SUMMARY_LIMIT = 600;
+const COMMENT_REPORT_LIMIT = 25_000;
 const SCREENSHOT_EXTENSIONS = /\.(png|jpe?g|gif|webp|svg)$/i;
 
 export type Verdict =
@@ -197,10 +198,18 @@ export function writeCommentFile(lines: string[]): void {
 }
 
 export function reportForComment(output: string): string {
-  return output
+  const report = output
     .replace(/^#\s+[^\n]*\n/, '')
     .trim()
     .replace(/^(#{1,5})\s/gm, '$1## ');
+  if (report.length <= COMMENT_REPORT_LIMIT) {
+    return report;
+  }
+  const note =
+    '\n\n_The report was truncated. The full report is in the workflow artifacts._';
+  const cut = report.slice(0, COMMENT_REPORT_LIMIT - note.length - 8);
+  const openFence = (cut.match(/^```/gm)?.length ?? 0) % 2 === 1;
+  return `${cut}${openFence ? '\n```' : ''}${note}`;
 }
 
 export function commentFooter(runUrl: string): string[] {

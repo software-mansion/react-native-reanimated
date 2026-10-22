@@ -100,15 +100,17 @@ runs:
         archive="$OUTPUT_DIR/screenshots.tar.gz"
         if ! argent-cloud archives download "$session_id" --kind screenshots --out "$archive"; then
           echo "::warning::could not download the screenshots of session $session_id"
+          rm -f "$archive"
           exit 0
         fi
-        echo "screenshots-archive=$archive" >> "$GITHUB_OUTPUT"
         extracted="$OUTPUT_DIR/screenshots"
         mkdir -p "$extracted"
         if ! tar -xzf "$archive" -C "$extracted"; then
           echo "::warning::could not extract $archive"
+          rm -f "$archive"
           exit 0
         fi
+        echo "screenshots-archive=$archive" >> "$GITHUB_OUTPUT"
         nested=$(find "$extracted" -mindepth 1 -type d -name screenshots | head -n 1)
         echo "screenshots-dir=${nested:-$extracted}" >> "$GITHUB_OUTPUT"
         echo "screenshots: $(find "$extracted" -type f | wc -l | tr -d ' ') file(s)"
