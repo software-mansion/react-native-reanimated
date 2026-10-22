@@ -585,7 +585,7 @@ describe('sync of a pending value written by a different origin', () => {
           global._maybeFlushUIUpdatesQueue();
         });
         blockJSThread(SYNC_BACK_DELAY_MS);
-        const firstUpdate = getSettledUpdates().find(
+        const firstUpdate = getSettledUpdates(tag).find(
           (update) => update.viewTag === tag
         );
         expect(firstUpdate !== undefined).toBe(true);
@@ -614,7 +614,7 @@ describe('sync of a pending value written by a different origin', () => {
           // Keep the automatic sync timer from reading the registry.
         }
         expect(written.getBlocking()).toBe(true);
-        const pendingUpdates = getSettledUpdates().filter(
+        const pendingUpdates = getSettledUpdates(tag).filter(
           (update) => update.viewTag === tag
         );
         released.setBlocking(true);
@@ -623,7 +623,7 @@ describe('sync of a pending value written by a different origin', () => {
         const flushDeadline = performance.now() + 3000;
         let flushedUpdate: SettledUpdate | undefined;
         do {
-          flushedUpdate = getSettledUpdates().find(
+          flushedUpdate = getSettledUpdates(tag).find(
             (update) => update.viewTag === tag
           );
         } while (!flushedUpdate && performance.now() < flushDeadline);
@@ -652,10 +652,12 @@ describe('sync of a pending value written by a different origin', () => {
   );
 });
 
-function getSettledUpdates(): SettledUpdate[] {
+function getSettledUpdates(tag: number): SettledUpdate[] {
   return (
-    global.__reanimatedModuleProxy.getSettledUpdates as () => SettledUpdate[]
-  )();
+    global.__reanimatedModuleProxy.getSettledUpdates as (
+      registeredViewTags: number[]
+    ) => SettledUpdate[]
+  )([tag]);
 }
 
 function getNativeBoxShadow(progress: number, isAnimatedStyle: boolean) {

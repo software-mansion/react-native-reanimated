@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/reanimated-typescript-compatibility-test-nightly.yml
+      - .github/actions/reanimated-typescript-compatibility-check/**
   schedule:
     - cron: '37 19 * * *'
   workflow_call:

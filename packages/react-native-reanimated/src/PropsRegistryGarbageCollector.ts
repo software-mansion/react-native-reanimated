@@ -43,7 +43,9 @@ export const PropsRegistryGarbageCollector = {
   },
 
   syncPropsBackToReact() {
-    const settledUpdates = ReanimatedModule.getSettledUpdates();
+    const settledUpdates = ReanimatedModule.getSettledUpdates([
+      ...this.viewsMap.keys(),
+    ]);
     for (const settledUpdate of settledUpdates) {
       const { viewTag, props, style } = settledUpdate;
       const component = this.viewsMap.get(viewTag);

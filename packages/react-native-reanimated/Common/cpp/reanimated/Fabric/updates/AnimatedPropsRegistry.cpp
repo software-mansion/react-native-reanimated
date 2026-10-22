@@ -125,7 +125,10 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
   return settledUpdate;
 }
 
-jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
+    jsi::Runtime &rt,
+    const double settledTimestamp,
+    const std::unordered_set<Tag> &registeredViewTags) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<jsi::Object> settledUpdates;
@@ -134,7 +137,7 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
 
-    if (pendingTags.contains(viewTag)) {
+    if (!registeredViewTags.contains(viewTag) || pendingTags.contains(viewTag)) {
       ++it;
       continue;
     }

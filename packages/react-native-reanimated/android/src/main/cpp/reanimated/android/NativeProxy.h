@@ -48,7 +48,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
-  std::optional<MountedViewProps> obtainMountedViewProps(Tag tag);
+  std::optional<MountedViewProps> obtainMountedViewProps(Tag tag, bool presented);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
@@ -63,6 +63,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
+  bool isSensorAvailable(int sensorType);
   int registerSensor(int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(

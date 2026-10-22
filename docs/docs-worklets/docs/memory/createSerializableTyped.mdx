@@ -7,7 +7,7 @@ sidebar_label: createSerializable[Type]
   # createSerializable\[Type]
 </Badges>
 
-Typed versions of [createSerializable](/docs/memory/createSerializable). Each one accepts one type of value. In development builds, it throws if it gets anything else.
+Typed versions of [createSerializable](./createSerializable.mdx). Each one accepts one type of value. In development builds, it throws if it gets anything else.
 
 ```typescript
 import { createSerializableMap, scheduleOnUI } from 'react-native-worklets';
@@ -36,8 +36,8 @@ scheduleOnUI(() => {
 | `createSerializableRegExp` | `RegExp` |
 | `createSerializableArrayBuffer` | `ArrayBuffer` |
 | `createSerializableArrayBufferView` | Typed array, for example `Uint8Array`, or `DataView` |
-| `createSerializableWorklet` | [Worklet](/docs/fundamentals/glossary#worklet) |
-| `createSerializableRemoteFunction` | Function that is not a worklet. In the [Bundle Mode](/docs/bundleMode/) it can be a function from any runtime, otherwise only from the RN Runtime |
+| `createSerializableWorklet` | [Worklet](../fundamentals/glossary.mdx#worklet) |
+| `createSerializableRemoteFunction` | Function that is not a worklet. In the [Bundle Mode](../bundleMode/overview.mdx) it can be a function from any runtime, otherwise only from the RN Runtime |
 | `createSerializableHostObject` | JSI host object |
 
 ## Remarks
