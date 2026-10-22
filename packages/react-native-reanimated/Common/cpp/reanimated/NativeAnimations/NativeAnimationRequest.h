@@ -41,6 +41,15 @@ struct AnimationResult {
   AnimationResultReason reason{AnimationResultReason::None};
 };
 
+enum class TrackEnd : uint8_t {
+  /// The track reached the end of its timeline.
+  Finished,
+  /// The host stopped the track.
+  Stopped,
+  /// The platform removed the playback and the host did not ask for it.
+  PlatformRemoved,
+};
+
 /// A domain that starts commands. The host calls it on the platform UI thread after its own state change.
 class NativeAnimationClient {
  public:
@@ -48,9 +57,11 @@ class NativeAnimationClient {
 
   /// Native playback started.
   virtual void onAnimationAdmitted(const AnimationHandle &handle) = 0;
-  /// A physical track left the screen or, for HoldWithoutCommit, reached the end of its timeline.
-  /// Tracks that outlive the result of their command still report here.
-  virtual void onTrackEnded(const TrackKey &track, bool finished) = 0;
+  /// The one end of a physical track. `Finished`: the track reached the end of its timeline; a
+  /// HoldWithoutCommit track stays on screen after it. `Stopped`: the host stopped the track.
+  /// `PlatformRemoved`: the platform removed the playback and the host did not ask for it. Tracks that
+  /// outlive the result of their command still report here.
+  virtual void onTrackEnded(const TrackKey &track, TrackEnd end) = 0;
   /// The one terminal result of a command. Rejected, and SurfaceDestroyed for a surface that does not
   /// run, mean that native playback did not start.
   virtual void onAnimationEnded(const AnimationHandle &handle, AnimationResult result) = 0;
