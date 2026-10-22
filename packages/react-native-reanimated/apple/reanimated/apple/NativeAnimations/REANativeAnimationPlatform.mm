@@ -475,7 +475,7 @@ TrackEdgeAntialiasing edgeAntialiasingOf(const AnimationTrack &track)
       .atHeldEnd = hasEdgeAntialiasingInReactNative([endObjectOf(track) CATransform3DValue])};
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 std::vector<double> componentsOfValue(id value)
 {
   if ([value isKindOfClass:[NSNumber class]]) {
@@ -515,17 +515,6 @@ std::vector<double> componentsOfValue(id value)
   return {};
 }
 
-std::vector<std::string> playbackKeys(CALayer *layer)
-{
-  std::vector<std::string> keys;
-  for (NSString *key in layer.animationKeys) {
-    if ([key hasPrefix:kAnimationKeyPrefix]) {
-      keys.emplace_back(key.UTF8String);
-    }
-  }
-  return keys;
-}
-
 std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarget target)
 {
   NSString *targetSuffix = [NSString stringWithFormat:@".%u", static_cast<unsigned>(target)];
@@ -553,7 +542,7 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
   }
   return members;
 }
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 /// One physical animation of a track. It has one value, at one key time, for the start of its timeline and
 /// for the end of each segment.
@@ -805,7 +794,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     dispatch_async(dispatch_get_main_queue(), ^{ operation(); });
   }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   std::optional<TargetSample> sample(const Tag tag, const AnimationTarget target) override
   {
     RCTAssertMainQueue();
@@ -817,9 +806,20 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return TargetSample{
         componentsOfValue([layer valueForKeyPath:keyPath]),
         componentsOfValue(currentVisualValue(layer, keyPath)),
-        playbackKeys(layer),
+        playbacksOn(layer),
         playbackMembers(layer, target),
         layer.allowsEdgeAntialiasing == YES};
+  }
+
+  std::vector<TrackKey> playbacksOn(CALayer *layer) const
+  {
+    std::vector<TrackKey> playbacks;
+    for (const auto &[track, trackLayer] : tracks_) {
+      if (trackLayer == layer && [layer animationForKey:animationKeyForTrack(track)] != nil) {
+        playbacks.push_back(track);
+      }
+    }
+    return playbacks;
   }
 #endif
 

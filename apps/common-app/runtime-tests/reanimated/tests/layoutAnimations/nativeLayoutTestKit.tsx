@@ -1,90 +1,79 @@
 import type { ComponentRef, RefObject } from 'react';
 import React, { useEffect, useState } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type {
   EasingFunction,
   EasingFunctionFactory,
+  EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   LayoutAnimation,
   LayoutAnimationFunction,
 } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  getStaticFeatureFlag,
-  LinearTransition,
   makeMutable,
   ReduceMotion,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { runOnUISync, scheduleOnRN } from 'react-native-worklets';
 
 import {
+  expect,
   getTestComponent,
   render,
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import type {
+  AppleTargetSample as TargetSample,
+  CommandHandle,
+  TraceEvent,
+} from '../nativeAnimationObservation';
+import {
+  hasNativeAnimationHost,
+  hasNativeLayoutRoute,
+  isNoView,
+  isOfCommand,
+  NATIVE_ANIMATION_TEST_HOOKS,
+  playbackIdOf,
+  playbackIdsOf,
+  routeOf,
+  sample as sampleOf,
+  takeTrace,
+  testHookOf,
+} from '../nativeAnimationObservation';
+import { blockUIThread } from './nativeLayoutLoad';
 
-export type TraceEvent = {
-  event: string;
-  surfaceId: number;
-  tag: number;
-  owner: string;
-  generation: number;
-  monotonicTimeMs: number;
-  target?: string;
-  endpointPolicy?: string;
-  finished?: boolean;
-  outcome?: string;
-  reason?: string;
-  buildFailure?: string;
-  transactionNumber?: number;
-  leafValue?: number;
-  layoutAnimationType?: string;
+export type {
+  AppleTargetSample as TargetSample,
+  CommandHandle,
+  Playback,
+  Route,
+  TraceEvent,
+} from '../nativeAnimationObservation';
+export {
+  hasNativeAnimationHost,
+  hasNativeLayoutRoute,
+  isNoView,
+  isOfCommand,
+  NATIVE_ANIMATION_TEST_HOOKS,
+  playbackIdOf,
+  playbackIdsOf,
+  routeOf,
+  takeTrace,
+  testHookOf,
 };
 
-export type TargetSample = {
-  model: number[];
-  presentation: number[];
-  /** The view is allowed to antialias its edges. */
-  edgeAntialiasing: boolean;
-  /**
-   * The platform key of each physical playback on the view:
-   * `reanimated.<owner>.<generation>.<target>`.
-   */
-  playbackKeys: string[];
-  /**
-   * The physical animations of the playback of the target, in the order in
-   * which the platform applies them. Each has its value at the start and at the
-   * end of each segment, and the time of each value as a part of its duration.
-   */
-  members: { property: string; values: number[][]; keyTimes: number[] }[];
-  monotonicTimeMs: number;
-};
+/** The layout suites read the Apple sample. */
+export const sample = (tag: number, target: string) =>
+  sampleOf<TargetSample>(tag, target);
 
-export type NativeAnimationDevTools = {
-  takeNativeAnimationTrace?: (callback: (events: TraceEvent[]) => void) => void;
-  sampleNativeAnimationTarget?: (
-    tag: number,
-    target: string,
-    callback: (sample: TargetSample | undefined) => void
-  ) => void;
-};
-
-export const devTools = (
-  globalThis as unknown as { __reanimatedModuleProxy: NativeAnimationDevTools }
-).__reanimatedModuleProxy;
-
-// The entries exist only in development builds of the native code, and the route only with the flag. The legacy
-// proxy has no native route.
-export const hasNativeLayoutStarts =
-  Platform.OS === 'ios' &&
-  getStaticFeatureFlag('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION') &&
-  !getStaticFeatureFlag('USE_LEGACY_LAYOUT_ANIMATIONS_PROXY') &&
-  devTools.takeNativeAnimationTrace !== undefined;
+export type Band = { from: number; to: number };
 
 export const BOX_REF = 'NativeLayoutStartBox';
 export const BOX_SIZE = 50;
@@ -96,19 +85,44 @@ export const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
 export const FRAME_MS = 1000 / 60;
+// A presentation value stays 15.7 to 17.7 ms in 76 intervals, plus 0.3 ms.
+export const PRESENTATION_STAY_MS = 18;
+// Measured gaps of the reads of a key: 47.05 ms at most, 150.15 ms at least after a block.
+export const READ_GAP_MS = 100;
+// 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick.
+export const REMOVAL_LEAD_MS = 1.78;
+// Paused layer: a keyframe segment shows its start value while its eased progress is under 0.001 and its end value while it is over 0.999.
+export const KEYFRAME_EDGE_HOLD = 0.001;
 export const LAYOUT_DURATION = 4 * DURATION;
 
 export const centerOf = (origin: number) => origin + BOX_SIZE / 2;
 
-export function takeTrace(): Promise<TraceEvent[]> {
-  return new Promise((resolve) => {
-    devTools.takeNativeAnimationTrace?.(resolve);
-  });
-}
-
 export async function takeTraceOf(tag: number) {
   return (await takeTrace()).filter((event) => event.tag === tag);
 }
+
+export function requireEvent(
+  events: TraceEvent[],
+  command: CommandHandle,
+  type: string
+) {
+  const found = events.find(
+    (event) => event.event === type && isOfCommand(event, command)
+  );
+  if (!found) {
+    throw new Error(
+      `The trace has no ${type} event of the command ${describeCommand(command)}.`
+    );
+  }
+  return found;
+}
+
+const describeCommand = ({
+  surfaceId,
+  tag,
+  owner,
+  generation,
+}: CommandHandle) => `${owner} ${surfaceId}.${tag}.${generation}`;
 
 // The events of the host and of the starts. The client reports and the captures of live tracks are not in it.
 export const isHostEvent = ({ event }: TraceEvent) =>
@@ -116,13 +130,16 @@ export const isHostEvent = ({ event }: TraceEvent) =>
   event !== 'ClientEnded' &&
   event !== 'LayoutLeafCaptured';
 
-export function sample(tag: number, target: string): Promise<TargetSample> {
-  return new Promise((resolve, reject) => {
-    devTools.sampleNativeAnimationTarget?.(tag, target, (targetSample) =>
-      targetSample ? resolve(targetSample) : reject(new Error('no view'))
-    );
-  });
-}
+/** The reads of one wait for a written model, in their order. */
+export type ModelWait = {
+  tag: number;
+  target: string;
+  /** The last read is the first with the written model. */
+  reads: TargetSample[];
+};
+
+/** Each wait of `waitForModel` from the last reset, in its order. */
+export const modelWaits: ModelWait[] = [];
 
 /**
  * What one leaf of an entering or exiting animation shows in the first
@@ -150,55 +167,1739 @@ export const DEFAULT_EASING: TrackEasing = {
 };
 
 export async function readTrack(tag: number, { sampleTarget }: Track) {
-  const { model, presentation, playbackKeys, monotonicTimeMs } = await sample(
+  const { model, presentation, playbacks, monotonicTimeMs } = await sample(
     tag,
     sampleTarget
   );
   return {
     shown: presentation[0],
     model: model[0],
-    keys: playbackKeys.length,
+    keys: playbacks.length,
     timeMs: monotonicTimeMs,
   };
 }
 
-export const twinStartTime = makeMutable(0);
-
 /**
- * A linear easing that gives the start time of its animation on the animation
- * clock. Use it in a frame-driven animation: each call writes the time.
+ * One part of a declared timeline: a move to `to` from the end value of the
+ * part before it.
  */
-export const recordedLinearOf = (durationMs: number) => (progress: number) => {
-  'worklet';
-  const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
-  twinStartTime.value = now - progress * durationMs;
-  return progress;
+export type TimedPart = {
+  to: number;
+  startMs: number;
+  durationMs: number;
+  curve: EasingFunction;
 };
 
 /**
- * The curve of `easing` in a form that gives the start time of its animation on
- * the animation clock. Use it in a frame-driven animation.
+ * The declared value at a time from the start of an animation. A part with no
+ * start time did not start. A part with no duration shows its end value at its
+ * start.
  */
-export const recordedCurveOf = (
-  easing: EasingFunction | EasingFunctionFactory,
-  durationMs: number
-) => {
-  const curve = curveOf(easing);
-  return (progress: number) => {
-    'worklet';
-    const now = global.__frameTimestamp ?? global._getAnimationTimestamp();
-    twinStartTime.value = now - progress * durationMs;
-    return curve(progress);
+export function declaredValueAt(
+  start: number,
+  parts: TimedPart[],
+  timeMs: number
+) {
+  let value = start;
+  for (const { to, startMs, durationMs, curve } of parts) {
+    const elapsed = timeMs - startMs;
+    if (!(elapsed >= 0)) {
+      return value;
+    }
+    if (elapsed < durationMs) {
+      return value + (to - value) * curve(elapsed / durationMs);
+    }
+    value = to;
+  }
+  return value;
+}
+
+/**
+ * A segment of a platform animation at one of its edges, and the value that it
+ * holds there.
+ */
+export type EdgeHold = {
+  value: number;
+  /** The place of the segment in its animation. */
+  segment: number;
+  /** The times of the two keys of the segment. */
+  keysMs: Band;
+  easedProgress: number;
+  side: 'start' | 'end';
+};
+
+/**
+ * The edge hold of a platform animation at a time. `keysMs` has the times of
+ * the keys of the animation, and a segment is from one key to the next. The
+ * eased progress of a segment at a time is the part of the declared change of
+ * the segment that the declared value has at that time. The segment holds its
+ * start value while that progress is from 0 to `KEYFRAME_EDGE_HOLD`, and its
+ * end value while it is from `1 - KEYFRAME_EDGE_HOLD` to 1: the measured
+ * segments have no progress outside 0 to 1, so such a progress has no hold. A
+ * time outside the keys has none. A segment with one declared value at its two
+ * keys has none.
+ */
+export function edgeHoldAt(
+  valueAt: (timeMs: number) => number,
+  keysMs: number[],
+  timeMs: number
+): EdgeHold | undefined {
+  const segment = keysMs.findIndex(
+    (keyMs, key) => timeMs >= keyMs && timeMs < keysMs[key + 1]
+  );
+  if (segment < 0) {
+    return undefined;
+  }
+  const keys = { from: keysMs[segment], to: keysMs[segment + 1] };
+  const [from, to] = [valueAt(keys.from), valueAt(keys.to)];
+  if (from === to) {
+    return undefined;
+  }
+  const easedProgress = (valueAt(timeMs) - from) / (to - from);
+  if (easedProgress >= 0 && easedProgress <= KEYFRAME_EDGE_HOLD) {
+    return { value: from, segment, keysMs: keys, easedProgress, side: 'start' };
+  }
+  return easedProgress >= 1 - KEYFRAME_EDGE_HOLD && easedProgress <= 1
+    ? { value: to, segment, keysMs: keys, easedProgress, side: 'end' }
+    : undefined;
+}
+
+/**
+ * One phase of a declared timeline: a move to `to`, or a hold when it has no
+ * move.
+ */
+export type Phase = {
+  durationMs: number;
+  move?: { to: number; curve: EasingFunction };
+};
+
+export type Timeline = {
+  from: number;
+  phases: Phase[];
+  /** The unit of the values. A number has none. */
+  unit: string;
+};
+
+export function amountOf(value: number | string) {
+  if (typeof value === 'number') {
+    return { amount: value, unit: '' };
+  }
+  const amount = parseFloat(value);
+  return { amount, unit: value.replace(/^[-+]?[\d.]+(e[-+]?\d+)?/, '') };
+}
+
+/**
+ * The timeline that a leaf of `layoutOf` declares between its start value and
+ * its end value. A fitted easing has the curve of its function. `base` is the
+ * target value of a layout key.
+ */
+export function declaredTimelineOf(
+  leaf: Leaf,
+  from: number | string,
+  to: number | string,
+  base?: number
+): Timeline {
+  const holdOf = (delayMs: number): Phase => ({
+    durationMs: Math.max(0, delayMs),
+  });
+  const { delays, timings } = planOf(leaf, from, to, base);
+  return {
+    from: amountOf(from).amount,
+    unit: amountOf(to).unit,
+    phases: [
+      ...delays.map(holdOf),
+      ...timings.flatMap(({ delay, duration, easing, to: end }) => [
+        ...(delay === undefined ? [] : [holdOf(delay)]),
+        {
+          durationMs: duration,
+          move: {
+            to: amountOf(end).amount,
+            curve:
+              easing === 'default'
+                ? DEFAULT_EASING.curve
+                : curveOf(easing ?? Easing.linear),
+          },
+        },
+      ]),
+    ],
   };
+}
+
+/** The declared start of each phase, from the start of the animation. */
+export function declaredStartsOf({ phases }: Timeline) {
+  let startMs = 0;
+  return phases.map(({ durationMs }) => {
+    const phaseStartMs = startMs;
+    startMs += durationMs;
+    return phaseStartMs;
+  });
+}
+
+export const declaredDurationOf = ({ phases }: Timeline) =>
+  phases.reduce((sum, { durationMs }) => sum + durationMs, 0);
+
+/**
+ * The value of a timeline at a time from its start, for phases that start at
+ * their declared times.
+ */
+export function declaredValueOf(timeline: Timeline) {
+  const parts = partsOf(timeline);
+  return (timeMs: number) => declaredValueAt(timeline.from, parts, timeMs);
+}
+
+function partsOf(timeline: Timeline) {
+  const starts = declaredStartsOf(timeline);
+  return timeline.phases.flatMap(({ durationMs, move }, phase): TimedPart[] =>
+    move ? [{ ...move, durationMs, startMs: starts[phase] }] : []
+  );
+}
+
+type TimedTrack = {
+  /** The declared value at a time from the origin. */
+  declared: (timeMs: number) => number;
+  /**
+   * The values that one read can show in place of the declared value at a time
+   * from the origin, by `KEYFRAME_EDGE_HOLD`: the track has them only with the
+   * samples of that read. The tracks of the cells of one matrix have one list:
+   * the values of one place are of one matrix.
+   */
+  held?: (timeMs: number) => number[];
+  /** The times from the origin at which a phase of the track starts. */
+  edgesMs: number[];
+  /** The start of the track on the sample clock. */
+  origin: Band;
+  /** From the start to the end of the track in the trace, on the sample clock. */
+  played: Band;
+  /**
+   * The times from the origin at which the platform ended an animation of the
+   * sample of the key by its own duration.
+   */
+  ownEndsMs?: number[];
+  /**
+   * The track that had the key before the start of this track in the trace.
+   * Before that time the key has the declared value of the replaced track, as
+   * if it played on.
+   */
+  replaced?: TimedTrack;
 };
+
+export type NativeTrack = TimedTrack & { tolerance: number };
+
+type Replaceable<TTrack> = TimedTrack & { replaced?: TTrack };
+
+/** The track that has the key of a track at a time of the sample clock. */
+export function ownerAt<TTrack extends Replaceable<TTrack>>(
+  track: TTrack,
+  timeMs: number
+): TTrack {
+  return track.replaced && timeMs < track.played.from
+    ? ownerAt(track.replaced, timeMs)
+    : track;
+}
+
+/** The declared value of the key of a track at a time of the sample clock. */
+export function declaredOf(track: TimedTrack, timeMs: number) {
+  const owner = ownerAt(track, timeMs);
+  return owner.declared(timeMs - middleOf(owner.origin));
+}
+
+/** The held values of the key of a track at a time of the sample clock. */
+export function heldOf(track: TimedTrack, timeMs: number) {
+  const owner = ownerAt(track, timeMs);
+  return owner.held?.(timeMs - middleOf(owner.origin)) ?? [];
+}
+
+export type NativeResidual = {
+  /** How far each value is from the declared values of one time of the band. */
+  distances: number[];
+  /** How long before the read that time is. */
+  ageMs: number;
+  /**
+   * The smallest age found at which the values are on the timeline: how long
+   * before the read the latest such time of the band is. `Infinity` if the
+   * values are not on the timeline.
+   */
+  fitAgeMs: number;
+  isOnTimeline: boolean;
+  /**
+   * The times that the read can show have the start of a track that replaced a
+   * track.
+   */
+  crossesReplacement: boolean;
+  /**
+   * Of a read that is on the timeline only in the removal window of an end of
+   * `ownEndsMs`: that end on the sample clock.
+   */
+  removalEndMs?: number;
+  /**
+   * Of a read that is on the timeline only by a held value: the time of the
+   * sample clock at which it is.
+   */
+  edgeHoldMs?: number;
+  /** The read is on the timeline only by `asReplacedTrack` of its tracks. */
+  showsReplaced?: boolean;
+};
+
+/** A read `READ_GAP_MS` or more after the read before of its target. */
+export type ReadAfterGap = {
+  gapMs: number;
+  /** The presentation of the read before. */
+  before: number[];
+  /** The read has exactly the presentation of the read before. */
+  isRepeated: boolean;
+};
+
+export function readAfterGapOf(
+  { monotonicTimeMs, presentation }: TargetSample,
+  before?: TargetSample
+): ReadAfterGap | undefined {
+  if (!before) {
+    return undefined;
+  }
+  const gapMs = monotonicTimeMs - before.monotonicTimeMs;
+  return gapMs < READ_GAP_MS
+    ? undefined
+    : {
+        gapMs,
+        before: before.presentation,
+        isRepeated: presentation.every(
+          (value, cell) => value === before.presentation[cell]
+        ),
+      };
+}
+
+/**
+ * The values of one read are the declared values of the keys at one time of the
+ * `PRESENTATION_STAY_MS` before the read, or the read is after a gap and
+ * repeats the read before.
+ */
+export function expectNativeTimeline(
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[],
+  afterGap?: ReadAfterGap,
+  residual = nativeResidualOf(values, readTimeMs, tracks)
+) {
+  const row = values
+    .map((value, track) => {
+      const { origin } = tracks[track];
+      return `${value.toFixed(4)} at ${(readTimeMs - origin.to).toFixed(2)}..${(readTimeMs - origin.from).toFixed(2)} ms is ${residual.distances[track].toFixed(4)} from the declared values of the frame before`;
+    })
+    .join(', ');
+  expect(residual.isOnTimeline || afterGap?.isRepeated ? '' : row).toBe('');
+  return residual;
+}
+
+/**
+ * The residual of a read of a presentation value: in the band of the read, or
+ * in the removal window after it.
+ */
+export function nativeResidualOf(
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[]
+): NativeResidual {
+  const { removalEndMs, ...band } = presentationBandOf(readTimeMs, tracks);
+  const inBand = residualIn(band, values, readTimeMs, tracks);
+  if (inBand.isOnTimeline || removalEndMs === undefined) {
+    return inBand;
+  }
+  const inWindow = residualIn(
+    { from: band.to, to: removalEndMs },
+    values,
+    readTimeMs,
+    tracks
+  );
+  return inWindow.isOnTimeline
+    ? {
+        ...inWindow,
+        crossesReplacement: inBand.crossesReplacement,
+        removalEndMs,
+      }
+    : inBand;
+}
+
+/**
+ * A track that replaced a track, read in its first `PRESENTATION_STAY_MS` and
+ * before a read of its target showed it: in the display frame of the start the
+ * platform shows the replaced animation until its next display tick (13 of 13
+ * stale first reads with no display tick after the start, 7 of 7 fresh reads
+ * after one).
+ */
+export const isInReplacementWindow = (
+  readTimeMs: number,
+  startMs: number,
+  hasShownTrack: boolean
+) =>
+  !hasShownTrack &&
+  readTimeMs >= startMs &&
+  readTimeMs - startMs < PRESENTATION_STAY_MS;
+
+/** The replaced track of a track, with the tolerance of the track. */
+const asReplacedTrack = (track: NativeTrack): NativeTrack =>
+  track.replaced ? { ...track.replaced, tolerance: track.tolerance } : track;
+
+/**
+ * `nativeResidualOf` a read, and of a read in `isInReplacementWindow` also of
+ * the replaced tracks up to the time of the read.
+ */
+export function readResidualOf(
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[],
+  isInWindow: boolean
+): NativeResidual {
+  const own = nativeResidualOf(values, readTimeMs, tracks);
+  if (own.isOnTimeline || !isInWindow) {
+    return own;
+  }
+  const replaced = nativeResidualOf(
+    values,
+    readTimeMs,
+    tracks.map(asReplacedTrack)
+  );
+  return replaced.isOnTimeline
+    ? {
+        ...replaced,
+        crossesReplacement: own.crossesReplacement,
+        showsReplaced: true,
+      }
+    : own;
+}
+
+/** The residual of values of a time against the `bandMs` before it. */
+export const residualInBandOf = (
+  values: number[],
+  timeMs: number,
+  tracks: NativeTrack[],
+  bandMs: number
+) => residualIn(possibleBandOf(timeMs, tracks, bandMs), values, timeMs, tracks);
+
+function residualIn(
+  band: Band,
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[]
+): NativeResidual {
+  const declared = nearestOf(values, tracks, band, false);
+  const { distances, excess, timeMs, latestFitMs, isHeld } =
+    declared.excess <= 1 ? declared : nearestOf(values, tracks, band, true);
+  return {
+    distances,
+    ageMs: readTimeMs - timeMs,
+    fitAgeMs: readTimeMs - latestFitMs,
+    isOnTimeline: excess <= 1,
+    edgeHoldMs: isHeld && excess <= 1 ? timeMs : undefined,
+    crossesReplacement: tracks.some(
+      ({ replaced, played }) =>
+        replaced !== undefined && band.from < played.from
+    ),
+  };
+}
+
+/**
+ * The time of a band at which the declared values are nearest to the values:
+ * the nearest time of `possibleTimesOf`, then the nearest of the times around
+ * it, in steps that halve `NARROWING_ROUNDS` times. `latestFitMs` is the latest
+ * time found at which the values are on the timeline. With `hasHeld`, the
+ * values of a time are the nearest of the declared values and of the held
+ * values of each place, and declared values that are on the timeline are nearer
+ * than held values: `isHeld` says that held values are the nearest.
+ */
+function nearestOf(
+  values: number[],
+  tracks: NativeTrack[],
+  band: Band,
+  hasHeld: boolean
+) {
+  const residualOf = (shown: number[], timeMs: number) => {
+    const distances = values.map((value, track) =>
+      Math.abs(value - shown[track])
+    );
+    const excess = Math.max(
+      ...distances.map((distance, track) => distance / tracks[track].tolerance)
+    );
+    return { distances, excess, timeMs, isHeld: false };
+  };
+  type Residual = ReturnType<typeof residualOf>;
+  const isDeclaredFit = ({ isHeld, excess }: Residual) =>
+    !isHeld && excess <= 1;
+  const nearerOf = (first: Residual, second: Residual) => {
+    if (isDeclaredFit(first) !== isDeclaredFit(second)) {
+      return isDeclaredFit(first) ? first : second;
+    }
+    return second.excess < first.excess ? second : first;
+  };
+  const residualAt = (timeMs: number) => {
+    const declared = tracks.map((track) => declaredOf(track, timeMs));
+    const held = hasHeld ? tracks.map((track) => heldOf(track, timeMs)) : [];
+    const places = Math.max(0, ...held.map((ofTrack) => ofTrack.length));
+    return Array.from({ length: places }, (_, place) => ({
+      ...residualOf(
+        declared.map((value, track) => held[track][place] ?? value),
+        timeMs
+      ),
+      isHeld: true,
+    })).reduce(nearerOf, residualOf(declared, timeMs));
+  };
+  let nearest: Residual = {
+    distances: values.map(() => Infinity),
+    excess: Infinity,
+    timeMs: band.to,
+    isHeld: false,
+  };
+  let latestFitMs = -Infinity;
+  const take = (timeMs: number) => {
+    const residual = residualAt(timeMs);
+    nearest = nearerOf(nearest, residual);
+    if (residual.excess <= 1) {
+      latestFitMs = Math.max(latestFitMs, timeMs);
+    }
+  };
+  possibleTimesOf(band, tracks).forEach(take);
+  const bandStepMs = (band.to - band.from) / BAND_STEPS;
+  let stepMs = bandStepMs;
+  for (let round = 0; round < NARROWING_ROUNDS; round++) {
+    stepMs /= 2;
+    [nearest.timeMs + stepMs, nearest.timeMs - stepMs]
+      .filter((timeMs) => timeMs >= band.from && timeMs <= band.to)
+      .forEach(take);
+  }
+  stepMs = bandStepMs;
+  for (let round = 0; round < NARROWING_ROUNDS; round++) {
+    stepMs /= 2;
+    const laterMs = latestFitMs + stepMs;
+    if (
+      laterMs >= band.from &&
+      laterMs <= band.to &&
+      residualAt(laterMs).excess <= 1
+    ) {
+      latestFitMs = laterMs;
+    }
+  }
+  return { ...nearest, latestFitMs };
+}
+
+/**
+ * The least and the largest value of a key that a read at a time can show, by
+ * each rule of statement A in the order of `nativeResidualOf`. Each band has
+ * the band before it.
+ */
+export type ShownBands = {
+  /** The declared values of the times of `presentationBandOf`. */
+  stay: Band;
+  /** With the held values of these times. */
+  edgeHold: Band;
+  /** With the declared and the held values of the removal window. */
+  removalWindow: Band;
+};
+
+/** The least and the largest value that a read at a time can show of a key. */
+export const declaredBandOf = (track: TimedTrack, readTimeMs: number): Band =>
+  stayBandsOf([track], readTimeMs)[0].removalWindow;
+
+/**
+ * `ShownBands` of each track of one sample for a read at a time: the values of
+ * the band of `presentationBandOf` and of the removal window after it, which
+ * are the times of `nativeResidualOf`.
+ */
+function stayBandsOf(tracks: TimedTrack[], readTimeMs: number): ShownBands[] {
+  const { removalEndMs, ...band } = presentationBandOf(readTimeMs, tracks);
+  const inBand = valueBandsIn(band, tracks);
+  const inWindow =
+    removalEndMs === undefined
+      ? undefined
+      : valueBandsIn({ from: band.to, to: removalEndMs }, tracks);
+  return inBand.map(({ declared, shown }, place) => ({
+    stay: declared,
+    edgeHold: shown,
+    removalWindow: inWindow
+      ? {
+          from: Math.min(shown.from, inWindow[place].shown.from),
+          to: Math.max(shown.to, inWindow[place].shown.to),
+        }
+      : shown,
+  }));
+}
+
+/**
+ * The least and the largest declared value of each track at the times of a
+ * band, and these with the held values of the track.
+ */
+function valueBandsIn(times: Band, tracks: TimedTrack[]) {
+  const bands = tracks.map(() => ({
+    declared: { from: Infinity, to: -Infinity },
+    shown: { from: Infinity, to: -Infinity },
+  }));
+  for (const timeMs of possibleTimesOf(times, tracks)) {
+    tracks.forEach((track, place) => {
+      const { declared, shown } = bands[place];
+      const value = declaredOf(track, timeMs);
+      declared.from = Math.min(declared.from, value);
+      declared.to = Math.max(declared.to, value);
+      const held = heldOf(track, timeMs);
+      shown.from = Math.min(shown.from, value, ...held);
+      shown.to = Math.max(shown.to, value, ...held);
+    });
+  }
+  return bands;
+}
+
+/** The declared values of a key before a time of the sample clock and at it. */
+export const declaredSidesOf = (track: TimedTrack, timeMs: number) => [
+  declaredOf(track, timeMs - BEFORE_MS),
+  declaredOf(track, timeMs),
+];
+
+/**
+ * A value that the route took from a track is the declared value of the track
+ * at the origin of the build that took it: the route computes it there, so the
+ * times are that origin with the uncertainty of the origin of the track: no
+ * time before it and no removal window.
+ */
+export function expectCapturedStart(capture: Capture) {
+  const { track, value, timeMs } = capture;
+  const {
+    isOnTimeline,
+    distances: [distance],
+  } = capturedResidualOf(capture);
+  expect(
+    isOnTimeline
+      ? ''
+      : `The captured value ${value} of ${describeLeaf(track)} of the command ${track.generation} is ${distance.toFixed(4)} from the declared value of the track at the origin of the build, ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track.`
+  ).toBe('');
+}
+
+export const capturedResidualOf = ({ track, value, timeMs }: Capture) =>
+  residualInBandOf([value], timeMs, [track], 0);
+
+const BAND_STEPS = 64;
+const NARROWING_ROUNDS = 8;
+const BEFORE_MS = 1e-6;
+
+const withReplacedOf = (track: TimedTrack): TimedTrack[] => [
+  track,
+  ...(track.replaced ? withReplacedOf(track.replaced) : []),
+];
+
+type PresentationBand = Band & {
+  /**
+   * An end of `ownEndsMs` at most `REMOVAL_LEAD_MS` after the band: the read
+   * can show the declared values of each side of it.
+   */
+  removalEndMs?: number;
+};
+
+/**
+ * The times of the sample clock that a read of a presentation value can show:
+ * the `PRESENTATION_STAY_MS` before the read.
+ */
+function presentationBandOf(
+  readTimeMs: number,
+  tracks: TimedTrack[]
+): PresentationBand {
+  const band = possibleBandOf(readTimeMs, tracks, PRESENTATION_STAY_MS);
+  const removalEnds = tracks
+    .flatMap(({ origin, ownEndsMs = [] }) =>
+      ownEndsMs.map((endMs) => middleOf(origin) + endMs)
+    )
+    .filter((endMs) => endMs > band.to && endMs - REMOVAL_LEAD_MS <= band.to);
+  return {
+    ...band,
+    removalEndMs: removalEnds.length > 0 ? Math.max(...removalEnds) : undefined,
+  };
+}
+
+/**
+ * The times of the sample clock that values of a time can have: the `bandMs`
+ * before it, with the uncertainty of the origins on each side.
+ */
+function possibleBandOf(
+  timeMs: number,
+  tracks: TimedTrack[],
+  bandMs: number
+): Band {
+  const uncertaintyMs = Math.max(
+    ...tracks.flatMap(withReplacedOf).map(({ origin }) => uncertaintyOf(origin))
+  );
+  return {
+    from: timeMs - bandMs - uncertaintyMs,
+    to: timeMs + uncertaintyMs,
+  };
+}
+
+/**
+ * The times of a band, the latest first: equal steps, the two sides of each
+ * phase edge, and the two sides of the start of each track that replaced a
+ * track.
+ */
+function possibleTimesOf({ from, to }: Band, tracks: TimedTrack[]) {
+  const edges = tracks
+    .flatMap(withReplacedOf)
+    .flatMap(({ edgesMs, origin, played, replaced }) => [
+      ...edgesMs.map((edgeMs) => middleOf(origin) + edgeMs),
+      ...(replaced ? [played.from] : []),
+    ])
+    .filter((edgeMs) => edgeMs > from && edgeMs <= to);
+  return [
+    ...Array.from(
+      { length: BAND_STEPS + 1 },
+      (_, step) => from + ((to - from) * step) / BAND_STEPS
+    ),
+    ...edges,
+    ...edges.map((edgeMs) => edgeMs - BEFORE_MS),
+  ].sort((first, second) => second - first);
+}
+
+export const middleOf = ({ from, to }: Band) => (from + to) / 2;
+
+/** Each choice of one item of each list. The first has the first items. */
+export const choicesOf = <TItem,>(lists: TItem[][]) =>
+  lists.reduce<TItem[][]>(
+    (choices, list) =>
+      choices.flatMap((choice) => list.map((item) => [...choice, item])),
+    [[]]
+  );
+
+export const uncertaintyOf = ({ from, to }: Band) => (to - from) / 2;
+
+/**
+ * The position of a layer on one axis for an origin and a size of its box: the
+ * anchor point of the layer is its center.
+ */
+export const layerPositionOf = (origin: number, size: number) =>
+  origin + size / 2;
+
+type DeclaredLeaf = LeafPlace & {
+  leaf: Leaf;
+  from: number | string;
+  to: number | string;
+  /** The target value of a layout key. */
+  base?: number;
+  /** The key shows its end value from the start, with no animation. */
+  isPlain?: boolean;
+  /**
+   * The view shows `from` before the command. A track of a key with another
+   * start value that replaces no track has a gate: a read can show the value
+   * before the command for `PRESENTATION_STAY_MS` after the start of the
+   * track.
+   */
+  startsOnScreen: boolean;
+};
+
+export type ScalarKey = DeclaredLeaf & {
+  operation?: undefined;
+  /** The target of the key in the trace and in a sample. */
+  target: string;
+  tolerance: number;
+  /**
+   * Of a position key: the size key of its axis, and the size of the box at
+   * rest after the commit. A sample of a position target is `layerPositionOf`
+   * the origin and the size of one time.
+   */
+  size?: { key: string; rest: number };
+};
+
+/**
+ * An operation of a transform. Its native track starts at the initial value of
+ * its builder: an operation with no initial value has no native track
+ * (`summarizeTransformLeaf` of the package).
+ */
+export type OperationKey = DeclaredLeaf & {
+  operation: number;
+  target: 'Transform';
+  startsOnScreen: false;
+};
+
+export type DeclaredKey = ScalarKey | OperationKey;
+
+export function isSameLeaf(first: LeafPlace, second: LeafPlace) {
+  'worklet';
+  return first.key === second.key && first.operation === second.operation;
+}
+
+export const describeLeaf = ({ key, operation }: LeafPlace) =>
+  operation === undefined ? key : `${key} ${operation}`;
+
+export type PlayedTrack = DeclaredKey &
+  TimedTrack & {
+    /** The key of the test that the track plays. */
+    declaration: DeclaredKey;
+    generation: number;
+    timeline: Timeline;
+    /**
+     * The time of the platform animations of the target of the track, from the
+     * origin. Absent when the platform has no animation with a duration for
+     * it.
+     */
+    playback?: Band;
+    finished?: boolean;
+    replaced?: PlayedTrack;
+    /**
+     * The value that the route took from the replaced track for the build of
+     * the command: the start value of the track.
+     */
+    captured?: Capture;
+    /** No read before this time of the sample clock is checked. */
+    checkedFromMs: number;
+    /** No read from this time of the sample clock is checked. */
+    checkedToMs?: number;
+  };
+
+export type ScalarTrack = PlayedTrack & ScalarKey;
+type OperationTrack = PlayedTrack & OperationKey;
+
+const isOperationTrack = (track: PlayedTrack): track is OperationTrack =>
+  track.operation !== undefined;
+
+export const isScalarTrack = (track: PlayedTrack): track is ScalarTrack =>
+  track.operation === undefined;
+
+/**
+ * The tracks of a native command, from its events and from the keys that the
+ * test declares for it. A track of a key that starts on screen and replaces a
+ * track of `replaced` starts at the value that the route captured from the
+ * replaced track for the build of the command. It replaces the last track of
+ * its key, when that track did not play to its end.
+ */
+export function playedTracksOf(
+  events: TraceEvent[],
+  command: CommandHandle,
+  clockOffset: Band,
+  keys: DeclaredKey[],
+  replaced: PlayedTrack[] = []
+): PlayedTrack[] {
+  const origin = nativeOriginOf(events, command, clockOffset);
+  const played = keys.map((declared) => {
+    const ofTarget = events.filter(({ target }) => target === declared.target);
+    const startedMs = requireEvent(
+      ofTarget,
+      command,
+      'TrackStarted'
+    ).monotonicTimeMs;
+    const ended = ofTarget.find(
+      (event) => event.event === 'TrackEnded' && isOfCommand(event, command)
+    );
+    const lastTrack = replaced.find((track) => isSameLeaf(track, declared));
+    const replacedTrack = lastTrack?.finished ? undefined : lastTrack;
+    const captured =
+      declared.startsOnScreen && replacedTrack
+        ? lastCaptureOf(events, replacedTrack, startedMs, clockOffset)
+        : undefined;
+    const timeline = declaredTimelineOf(
+      declared.leaf,
+      captured?.value ?? declared.from,
+      declared.to,
+      declared.base
+    );
+    return {
+      ...declared,
+      declaration: declared,
+      generation: command.generation,
+      origin,
+      timeline,
+      declared: declaredValueOf(timeline),
+      edgesMs: declaredStartsOf(timeline),
+      played: { from: startedMs, to: ended?.monotonicTimeMs ?? Infinity },
+      ownEndsMs: ended?.finished ? [declaredDurationOf(timeline)] : [],
+      finished: ended?.finished,
+      replaced: replacedTrack,
+      captured,
+      checkedFromMs:
+        declared.startsOnScreen || replacedTrack
+          ? -Infinity
+          : startedMs + PRESENTATION_STAY_MS,
+    };
+  });
+  return played.map((track) => ({
+    ...track,
+    playback: playbackOf(
+      played
+        .filter(({ target }) => target === track.target)
+        .map(({ timeline }) => timeline)
+    ),
+  }));
+}
+
+/**
+ * The time of the platform animations of the timelines of one target of one
+ * command, from their origin: from the first start of a move with a duration to
+ * the last declared end (`timelineOf` and `extentOf` of `nativeLeaves.ts` of
+ * the package, `makeAnimation` of `REANativeAnimationPlatform.mm`).
+ */
+function playbackOf(timelines: Timeline[]): Band | undefined {
+  const extents = timelines.flatMap((timeline): Band[] => {
+    const first = timeline.phases.findIndex(
+      ({ move, durationMs }) => move !== undefined && durationMs > 0
+    );
+    return first < 0
+      ? []
+      : [
+          {
+            from: declaredStartsOf(timeline)[first],
+            to: declaredDurationOf(timeline),
+          },
+        ];
+  });
+  return extents.length > 0
+    ? {
+        from: Math.min(...extents.map(({ from }) => from)),
+        to: Math.max(...extents.map(({ to }) => to)),
+      }
+    : undefined;
+}
+
+export type Samples = Record<string, TargetSample>;
+
+/** The samples of no read: a track with them has no held value. */
+export const NO_HOLD: Samples = {};
+
+/**
+ * `edgeHoldAt` of the platform animation of a track in the samples of one read
+ * of its view, at a time from the origin of the track. The keys of the
+ * animation are the key times of its member in the sample of its target: the
+ * first member of a scalar target, and for an operation the member of its place
+ * from the last one (`makeTransformMembers` of `REANativeAnimationPlatform.mm`
+ * gives the last operation first, after one member that hides the model). A
+ * layer at rest has no member and no hold.
+ */
+export function edgeHoldOf(
+  { target, operation, playback, declared }: PlayedTrack,
+  samples: Samples
+) {
+  const members = samples[target]?.members ?? [];
+  const member =
+    operation === undefined
+      ? members[0]
+      : members[members.length - 1 - operation];
+  const keysMs =
+    playback && member
+      ? member.keyTimes.map(
+          (keyTime) => playback.from + keyTime * (playback.to - playback.from)
+        )
+      : [];
+  return (timeMs: number) => edgeHoldAt(declared, keysMs, timeMs);
+}
+
+function heldValuesOf(track: PlayedTrack, samples: Samples) {
+  const holdAt = edgeHoldOf(track, samples);
+  return (timeMs: number) => {
+    const hold = holdAt(timeMs);
+    return hold ? [hold.value] : [];
+  };
+}
+
+/** `EdgeHold` of a track of a read at a time from the origin of the track. */
+export type KeyHold = EdgeHold & { track: PlayedTrack; fromOriginMs: number };
+
+/**
+ * The edge hold of each key of a read at a time of the sample clock: of the
+ * tracks that play, and of the size track of each position key of them.
+ */
+function keyHoldsAt(
+  playing: PlayedTrack[],
+  tracks: PlayedTrack[],
+  samples: Samples,
+  timeMs: number
+): KeyHold[] {
+  return [
+    ...playing,
+    ...playing.filter(isScalarTrack).flatMap(({ size }) => {
+      const sizeTrack = size && lastSizeTrackOf(tracks, size);
+      return sizeTrack ? [sizeTrack] : [];
+    }),
+  ].flatMap((track) => {
+    const fromOriginMs = timeMs - middleOf(track.origin);
+    const hold =
+      ownerAt(track, timeMs) === track
+        ? edgeHoldOf(track, samples)(fromOriginMs)
+        : undefined;
+    return hold ? [{ ...hold, track, fromOriginMs }] : [];
+  });
+}
+
+/**
+ * A value that the route took from a live track for the build of a commit, with
+ * the track alone: the route computes the value from the timeline of that track
+ * at the origin of the build.
+ */
+export type Capture = {
+  track: ScalarTrack;
+  value: number;
+  /** The origin of the build on the sample clock. */
+  timeMs: number;
+  /** The time of the trace event of the capture. */
+  eventTimeMs: number;
+};
+
+function lastCaptureOf(
+  events: TraceEvent[],
+  track: PlayedTrack,
+  untilMs: number,
+  clockOffset: Band
+) {
+  const captures = capturesOf(events, [track], clockOffset, () => {
+    throw new Error(
+      `The build that took ${describeLeaf(track)} of the command ${track.generation} started no native command.`
+    );
+  }).filter(({ eventTimeMs }) => eventTimeMs <= untilMs);
+  if (captures.length === 0) {
+    throw new Error(
+      `The trace has no captured value of ${describeLeaf(track)} of the command ${track.generation} before its replacement.`
+    );
+  }
+  return captures[captures.length - 1];
+}
+
+/**
+ * The captures of the tracks in the events. The capture of a `Transform` track
+ * has no value. The time of a capture is the origin of its build: the origin of
+ * the native command that the build started in the transaction of the capture,
+ * or `frameDriverOriginOf` the track when the build went to the frame driver.
+ */
+export const capturesOf = (
+  events: TraceEvent[],
+  tracks: PlayedTrack[],
+  clockOffset: Band,
+  frameDriverOriginOf: (track: ScalarTrack) => number
+) =>
+  events.flatMap((captured): Capture[] => {
+    const { event, target, generation, leafValue, tag } = captured;
+    const track = tracks
+      .filter(isScalarTrack)
+      .find((each) => each.target === target && each.generation === generation);
+    if (event !== 'LayoutLeafCaptured' || leafValue === undefined || !track) {
+      return [];
+    }
+    const command = events.find(
+      (started) =>
+        started.event === 'LayoutStartPending' &&
+        started.tag === tag &&
+        started.transactionNumber === captured.transactionNumber
+    );
+    return [
+      {
+        track: { ...track, replaced: undefined },
+        value: leafValue,
+        timeMs: command
+          ? middleOf(nativeOriginOf(events, command, clockOffset))
+          : frameDriverOriginOf(track),
+        eventTimeMs: captured.monotonicTimeMs,
+      },
+    ];
+  });
+
+export type MatrixTolerance = { cells: number; translation: number };
+
+export type NativeRead = {
+  target: string;
+  tracks: PlayedTrack[];
+  timeMs: number;
+  values: number[];
+  checked: NativeTrack[];
+  residual: NativeResidual;
+  /** Of a read with `edgeHoldMs`: the edge hold of each of its keys there. */
+  edgeHolds: KeyHold[];
+  afterGap?: ReadAfterGap;
+  /** False for a read before `checkedFromMs` of a track: it has no assertion. */
+  isChecked: boolean;
+};
+
+/**
+ * `expectNativeReads` of each sample row of one view, in order: each row gets
+ * the rows before it, for the tracks that replaced a track and that an earlier
+ * read showed.
+ */
+export function expectNativeReadRows(
+  rows: Samples[],
+  tracks: PlayedTrack[],
+  matrixTolerance: MatrixTolerance
+): NativeRead[][] {
+  const shown = new Set<PlayedTrack>();
+  return rows.map((samples, index) => {
+    const reads = expectNativeReads(
+      samples,
+      tracks,
+      matrixTolerance,
+      rows[index - 1],
+      shown
+    );
+    reads.flatMap(shownReplacingTracksOf).forEach((track) => shown.add(track));
+    return reads;
+  });
+}
+
+/**
+ * Each sample of one view is on the keys of the tracks that play at its time. A
+ * sample of the `Transform` target is checked as the cells of its matrix.
+ * `before` has the samples of the view directly before these, and `shown` the
+ * tracks that replaced a track and that an earlier read showed.
+ */
+function expectNativeReads(
+  samples: Samples,
+  tracks: PlayedTrack[],
+  matrixTolerance: MatrixTolerance,
+  before: Samples | undefined,
+  shown: ReadonlySet<PlayedTrack>
+): NativeRead[] {
+  return Object.entries(samples).flatMap(([target, targetSample]) => {
+    const { presentation, monotonicTimeMs: timeMs } = targetSample;
+    const playing = playingTracksOf(tracks, target, timeMs);
+    if (playing.length === 0) {
+      return [];
+    }
+    const values = playing.some(isOperationTrack)
+      ? presentation
+      : playing.map(() => presentation[0]);
+    const checked = shownTracksOf(
+      playing,
+      tracks,
+      matrixTolerance,
+      layerOf(targetSample),
+      samples
+    );
+    const isChecked =
+      checkedTracksOf(tracks, target, timeMs).length === playing.length;
+    const afterGap = readAfterGapOf(targetSample, before?.[target]);
+    const isInWindow = playing.some(
+      (track) =>
+        track.replaced !== undefined &&
+        isInReplacementWindow(timeMs, track.played.from, shown.has(track))
+    );
+    const residual = readResidualOf(values, timeMs, checked, isInWindow);
+    if (isChecked) {
+      expectNativeTimeline(values, timeMs, checked, afterGap, residual);
+    }
+    return [
+      {
+        target,
+        tracks: playing,
+        timeMs,
+        values,
+        checked,
+        residual,
+        edgeHolds:
+          residual.edgeHoldMs === undefined
+            ? []
+            : keyHoldsAt(playing, tracks, samples, residual.edgeHoldMs),
+        afterGap,
+        isChecked,
+      },
+    ];
+  });
+}
+
+/** The tracks that replaced a track and that a read shows. */
+const shownReplacingTracksOf = ({ tracks, timeMs, residual }: NativeRead) =>
+  residual.isOnTimeline && !residual.showsReplaced
+    ? tracks.filter(
+        ({ replaced, played }) =>
+          replaced !== undefined && timeMs - residual.ageMs >= played.from
+      )
+    : [];
+
+const playingTracksOf = (
+  tracks: PlayedTrack[],
+  target: string,
+  timeMs: number
+) =>
+  tracks.filter(
+    (track) =>
+      track.target === target &&
+      timeMs >= track.played.from &&
+      timeMs < track.played.to
+  );
+
+export const checkedTracksOf = (
+  tracks: PlayedTrack[],
+  target: string,
+  timeMs: number
+) =>
+  playingTracksOf(tracks, target, timeMs).filter(
+    ({ checkedFromMs, checkedToMs = Infinity }) =>
+      timeMs >= checkedFromMs && timeMs < checkedToMs
+  );
+
+const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+const TRANSLATION_CELLS = [12, 13, 14];
+const PERSPECTIVE_CELL = 11;
+
+export const cellToleranceOf = (
+  cell: number,
+  { cells, translation }: MatrixTolerance
+) => (TRANSLATION_CELLS.includes(cell) ? translation : cells);
+
+/** The value of one transform operation. A `matrix` operation has its cells. */
+export type OperationValue =
+  | { kind: string; amount: number; unit: string }
+  | { kind: 'matrix'; cells: number[] };
+
+/** The cells of the matrix of one transform operation: cell 4 * row + column. */
+function operationCellsOf(operation: OperationValue) {
+  if ('cells' in operation) {
+    return operation.cells;
+  }
+  const { kind, amount, unit } = operation;
+  const cells = [...IDENTITY];
+  const radians = unit === 'deg' ? (amount * Math.PI) / 180 : amount;
+  const rotate = (first: number, second: number) => {
+    cells[5 * first] = cells[5 * second] = Math.cos(radians);
+    cells[4 * first + second] = Math.sin(radians);
+    cells[4 * second + first] = -Math.sin(radians);
+  };
+  switch (kind) {
+    case 'translateX':
+      cells[12] = amount;
+      break;
+    case 'translateY':
+      cells[13] = amount;
+      break;
+    case 'scale':
+      cells[0] = cells[5] = cells[10] = amount;
+      break;
+    case 'scaleX':
+      cells[0] = amount;
+      break;
+    case 'scaleY':
+      cells[5] = amount;
+      break;
+    case 'rotate':
+    case 'rotateZ':
+      rotate(0, 1);
+      break;
+    case 'rotateX':
+      rotate(1, 2);
+      break;
+    case 'rotateY':
+      rotate(2, 0);
+      break;
+    case 'perspective':
+      cells[PERSPECTIVE_CELL] = -1 / amount;
+      break;
+    default:
+      throw new Error(`The kit has no matrix of the operation ${kind}.`);
+  }
+  return cells;
+}
+
+function cellsProductOf(first: number[], second: number[]) {
+  const product: number[] = [];
+  for (let row = 0; row < 4; row++) {
+    for (let column = 0; column < 4; column++) {
+      let sum = 0;
+      for (let index = 0; index < 4; index++) {
+        sum += first[4 * row + index] * second[4 * index + column];
+      }
+      product.push(sum);
+    }
+  }
+  return product;
+}
+
+export type Layer = 'playing' | 'rest';
+
+/** The layer of a sample has an animation of its target, or it is at rest. */
+export const layerOf = ({ members }: TargetSample): Layer =>
+  members.length > 0 ? 'playing' : 'rest';
+
+/**
+ * The cells of a `Transform` sample for the values of the operations of a
+ * style. The presentation layer of a native track that plays has the product of
+ * the operations in the other order than a layer at rest.
+ */
+export function cellsOf(operations: OperationValue[], layer: Layer) {
+  return orderedOf(operations, layer)
+    .map(operationCellsOf)
+    .reduce(cellsProductOf, IDENTITY);
+}
+
+/** The operations of a style in the order of the product of a layer. */
+const orderedOf = <TOperation,>(operations: TOperation[], layer: Layer) =>
+  layer === 'rest' ? [...operations].reverse() : operations;
+
+/** The cells of a `Transform` sample of a view at rest at the end of operations. */
+export const endCellsOf = (operations: Operation[]) =>
+  cellsOf(
+    operations.map(([kind, , to]): OperationValue => {
+      if (typeof to !== 'object') {
+        return { kind, ...amountOf(to) };
+      }
+      if (kind !== 'matrix') {
+        throw new Error(`The kit has no matrix of the operation ${kind}.`);
+      }
+      return { kind, cells: to };
+    }),
+    'rest'
+  );
+
+/**
+ * The cells of a `Transform` sample of a layer for an amount of each of the
+ * operation tracks of one command, in the order of the style.
+ */
+const amountCellsOf =
+  (operations: PlayedTrack[], layer: Layer) => (amounts: number[]) =>
+    cellsOf(
+      operations.map(({ key, timeline: { unit } }, operation) => ({
+        kind: key,
+        amount: amounts[operation],
+        unit,
+      })),
+      layer
+    );
+
+/** A function of a time that keeps the value of its last time. */
+function lastValueOf<TValue>(valueAt: (timeMs: number) => TValue) {
+  let last: { timeMs: number; value: TValue } | undefined;
+  return (timeMs: number) => {
+    if (last?.timeMs !== timeMs) {
+      last = { timeMs, value: valueAt(timeMs) };
+    }
+    return last.value;
+  };
+}
+
+/**
+ * The tracks of the values of one sample of the target of `playing`, which are
+ * the tracks of one target that play at one time: one track for each cell of a
+ * `Transform` sample of a layer, or the track of the sample of each scalar key.
+ * `samples` are of the read of the sample.
+ */
+function shownTracksOf(
+  playing: PlayedTrack[],
+  tracks: PlayedTrack[],
+  matrixTolerance: MatrixTolerance,
+  layer: Layer,
+  samples: Samples
+): NativeTrack[] {
+  const operations = playing.filter(isOperationTrack);
+  return operations.length > 0
+    ? transformTracksOf(operations, tracks, matrixTolerance, layer, samples)
+    : playing
+        .filter(isScalarTrack)
+        .map((track) => shownTrackOf(track, tracks, samples));
+}
+
+/**
+ * The track of a scalar key in the value of a sample of its target. The sample
+ * of a position key has the origin and the size of one time. Each of the two
+ * keys has its own owner at that time: the size is the declared value of the
+ * track that has the size key then, of the command of the position track or of
+ * another command, or the size at rest when the size key has no track. The
+ * track has held values only with the samples of one read of the view, for the
+ * animations of that read: a replaced track has none.
+ */
+export function shownTrackOf(
+  track: ScalarTrack,
+  tracks: PlayedTrack[],
+  samples: Samples
+): NativeTrack {
+  const { size, origin, replaced } = track;
+  const held = heldValuesOf(track, samples);
+  if (!size) {
+    return { ...track, held };
+  }
+  const sizeTracks = sizeTracksOf(tracks, size);
+  const lastSizeTrack = lastSizeTrackOf(tracks, size);
+  const heldSizeTrack = lastSizeTrack && {
+    ...lastSizeTrack,
+    held: heldValuesOf(lastSizeTrack, samples),
+  };
+  const originMs = middleOf(origin);
+  const sizeAt = (timeMs: number) =>
+    lastSizeTrack ? declaredOf(lastSizeTrack, originMs + timeMs) : size.rest;
+  return {
+    ...track,
+    declared: (timeMs) =>
+      layerPositionOf(track.declared(timeMs), sizeAt(timeMs)),
+    held: (timeMs) =>
+      choicesOf([
+        [track.declared(timeMs), ...held(timeMs)],
+        [
+          sizeAt(timeMs),
+          ...(heldSizeTrack ? heldOf(heldSizeTrack, originMs + timeMs) : []),
+        ],
+      ])
+        .slice(1)
+        .map(([position, extent]) => layerPositionOf(position, extent)),
+    edgesMs: [
+      ...track.edgesMs,
+      ...sizeTracks
+        .flatMap((sizeTrack) => [
+          ...sizeTrack.edgesMs.map(
+            (edgeMs) => middleOf(sizeTrack.origin) + edgeMs
+          ),
+          ...(sizeTrack.replaced ? [sizeTrack.played.from] : []),
+        ])
+        .map((edgeMs) => edgeMs - originMs),
+    ],
+    ownEndsMs: [
+      ...(track.ownEndsMs ?? []),
+      ...sizeTracks.flatMap((sizeTrack) =>
+        (sizeTrack.ownEndsMs ?? []).map(
+          (endMs) => middleOf(sizeTrack.origin) + endMs - originMs
+        )
+      ),
+    ],
+    replaced:
+      replaced && isScalarTrack(replaced)
+        ? shownTrackOf(replaced, tracks, NO_HOLD)
+        : undefined,
+  };
+}
+
+type SizeKey = NonNullable<ScalarKey['size']>;
+
+const sizeTracksOf = (tracks: PlayedTrack[], size: SizeKey) =>
+  tracks.filter(({ key }) => key === size.key);
+
+/**
+ * The track of the size of a sample of a position key: the last track of its
+ * size key. The declared value of that track at a time is of the track that has
+ * the size key then.
+ */
+function lastSizeTrackOf(
+  tracks: PlayedTrack[],
+  size: SizeKey
+): PlayedTrack | undefined {
+  const sizeTracks = sizeTracksOf(tracks, size);
+  return sizeTracks[sizeTracks.length - 1];
+}
+
+/**
+ * The value of a sample of the target of a key for a view at rest at a value of
+ * the key.
+ */
+export const shownAtRestOf = ({ size }: ScalarKey, value: number) =>
+  size ? layerPositionOf(value, size.rest) : value;
+
+/**
+ * One track for each cell of a `Transform` sample of a layer for the operation
+ * tracks of one command. The cells of one read need one time of all the
+ * operations: the tracks have the one origin of their command. A held matrix
+ * has the held value of one operation or more, and the declared values of the
+ * others, for the animations in the samples of one read: a replaced track has
+ * none. The platform ends the animations of the command at the end of its
+ * longest operation (`makeAnimation` of `REANativeAnimationPlatform.mm`). The
+ * tracks that they replaced are the operation tracks of the command of the
+ * replaced track.
+ */
+function transformTracksOf(
+  operations: OperationTrack[],
+  tracks: PlayedTrack[],
+  matrixTolerance: MatrixTolerance,
+  layer: Layer,
+  samples: Samples
+): NativeTrack[] {
+  const cellsOfAmounts = amountCellsOf(operations, layer);
+  const declaredAt = lastValueOf((timeMs: number) =>
+    cellsOfAmounts(operations.map(({ declared }) => declared(timeMs)))
+  );
+  const holds = operations.map((operation) => heldValuesOf(operation, samples));
+  const heldAt = lastValueOf((timeMs: number) =>
+    choicesOf(
+      operations.map(({ declared }, operation) => [
+        declared(timeMs),
+        ...holds[operation](timeMs),
+      ])
+    )
+      .slice(1)
+      .map(cellsOfAmounts)
+  );
+  const [{ origin, played, replaced }] = operations;
+  const edgesMs = operations.flatMap((operation) => operation.edgesMs);
+  const ownEndsMs = operations.flatMap(
+    (operation) => operation.ownEndsMs ?? []
+  );
+  const replacedCells =
+    replaced &&
+    transformTracksOf(
+      tracks
+        .filter(isOperationTrack)
+        .filter(({ generation }) => generation === replaced.generation),
+      tracks,
+      matrixTolerance,
+      layer,
+      NO_HOLD
+    );
+  return IDENTITY.map((_, cell) => ({
+    declared: (timeMs: number) => declaredAt(timeMs)[cell],
+    held: (timeMs: number) => heldAt(timeMs).map((cells) => cells[cell]),
+    edgesMs,
+    origin,
+    played,
+    ownEndsMs: ownEndsMs.length > 0 ? [Math.max(...ownEndsMs)] : [],
+    replaced: replacedCells?.[cell],
+    tolerance: cellToleranceOf(cell, matrixTolerance),
+  }));
+}
+
+/**
+ * A record of the frame driver with the timeline that its leaf declares, and
+ * the check of the leaf whose animation the leaf of the record replaced.
+ */
+export type FrameCheck = {
+  record: FrameRecord;
+  timeline: Timeline;
+  replaced?: FrameCheck;
+};
+
+export type FrameResidual = {
+  distance: number;
+  /** The computed start of the first phase on the animation clock. */
+  startMs: number;
+  /** `phaseStartsLateOf`. */
+  startsLateMs: number[];
+};
+
+/**
+ * Each frame of a record wrote the value that the frame driver gives to the
+ * timeline at the time of the frame, in the unit of the timeline, after the
+ * start of the record.
+ */
+export function expectFrameTimeline(
+  check: FrameCheck,
+  tolerance: number
+): FrameResidual {
+  const { record, timeline } = check;
+  const { values, starts } = replayOf(check);
+  const distances = record.frames.map(({ value }, frame) => {
+    const { amount, unit } = amountOf(value);
+    return unit === timeline.unit ? Math.abs(amount - values[frame]) : Infinity;
+  });
+  const offTimeline = record.frames.flatMap(({ timeMs, value }, frame) =>
+    distances[frame] <= tolerance
+      ? []
+      : [
+          `${value} at ${timeMs} ms is ${distances[frame]} from ${values[frame]}${timeline.unit}`,
+        ]
+  );
+  expect(
+    offTimeline.length === 0
+      ? ''
+      : [
+          `${describeLeaf(record)} of ${record.box}: start call at ${record.start?.timeMs} ms, adopted start at ${record.adoptedStart?.timeMs} ms, computed phase starts at ${starts.join()} ms, first frames at ${record.frames
+            .slice(0, 3)
+            .map(({ timeMs }) => timeMs)
+            .join()} ms`,
+          ...offTimeline,
+        ].join(', ')
+  ).toBe('');
+  return {
+    distance: Math.max(0, ...distances),
+    startMs: starts[0],
+    startsLateMs: startsLateOf(starts, timeline),
+  };
+}
+
+function startsLateOf(starts: number[], timeline: Timeline) {
+  const declaredStarts = declaredStartsOf(timeline);
+  return starts.map(
+    (startMs, phase) => startMs - starts[0] - declaredStarts[phase]
+  );
+}
+
+function replayOf({ record, timeline, replaced }: FrameCheck): FrameReplay {
+  const { box, start, adoptedStart, frames } = record;
+  const startMs = (adoptedStart ?? start)?.timeMs;
+  if (startMs === undefined) {
+    throw new Error(
+      `The record of ${describeLeaf(record)} of ${box} has no start.`
+    );
+  }
+  return replayFrames(
+    timeline,
+    startMs,
+    frames.map(({ timeMs }) => timeMs),
+    replaced && replayedValueOf(replaced)
+  );
+}
+
+/**
+ * The value that the replay of a record has after its last frame at or before a
+ * time.
+ */
+function replayedValueOf(check: FrameCheck) {
+  const { frames } = check.record;
+  const { values } = replayOf(check);
+  return (timeMs: number) =>
+    frames.reduce(
+      (value, frame, index) => (frame.timeMs <= timeMs ? values[index] : value),
+      check.timeline.from
+    );
+}
+
+type FrameReplay = { values: number[]; starts: number[] };
+
+/**
+ * The value that the frame driver writes for a timeline in each frame after a
+ * start at a time, and the start of each phase that started. Code facts of
+ * `packages/react-native-reanimated/src/animation`: a timing moves its start to
+ * a frame that is before it (`timing` of `withTiming`); a delay starts its
+ * animation in the first frame at or after its end, and the animation gets that
+ * frame (`delay` of `withDelay`); a sequence starts its next animation in the
+ * frame in which the current one ends, and the next one gets its first frame
+ * after that frame (`sequence` of `withSequence`); a delay before the first
+ * move runs the animation that its animation replaced, and the move starts at
+ * the value of the frame before it (`delay` of `withDelay`). `replacedValueAt`
+ * is the value of the replaced animation after its frame of a time.
+ */
+export function replayFrames(
+  { from, phases }: Timeline,
+  startMs: number,
+  frameTimes: number[],
+  replacedValueAt?: (timeMs: number) => number
+): FrameReplay {
+  const starts = [startMs];
+  let value = from;
+  let moveStart = from;
+  let hasMoved = false;
+  const values = frameTimes.map((timeMs) => {
+    while (starts.length <= phases.length) {
+      const phase = starts.length - 1;
+      const { durationMs, move } = phases[phase];
+      if (!move) {
+        if (timeMs - starts[phase] < durationMs) {
+          if (replacedValueAt && !hasMoved) {
+            value = moveStart = replacedValueAt(timeMs);
+          }
+          break;
+        }
+        starts.push(timeMs);
+        continue;
+      }
+      hasMoved = true;
+      starts[phase] = Math.min(starts[phase], timeMs);
+      const runtimeMs = timeMs - starts[phase];
+      if (runtimeMs < durationMs) {
+        value =
+          moveStart +
+          (move.to - moveStart) * move.curve(runtimeMs / durationMs);
+        break;
+      }
+      value = moveStart = move.to;
+      starts.push(timeMs);
+      break;
+    }
+    return value;
+  });
+  return { values, starts: starts.slice(0, phases.length) };
+}
+
+export type FrameMatrix = { timeMs: number; cells: number[] };
+
+/**
+ * The cells of the `Transform` model of a box after each frame of the records
+ * of its operations: each operation has the value of its last frame at or
+ * before the frame, from its last record that has such a frame.
+ */
+export function frameMatricesOf(
+  records: OperationFrameRecord[]
+): FrameMatrix[] {
+  const places = [...new Set(records.map(({ operation }) => operation))].sort(
+    (first, second) => first - second
+  );
+  const times = [
+    ...new Set(
+      records.flatMap(({ frames }) => frames.map(({ timeMs }) => timeMs))
+    ),
+  ].sort((first, second) => first - second);
+  return times.flatMap((timeMs): FrameMatrix[] => {
+    const values = places.flatMap((place) =>
+      lastFrameValueOf(
+        records.filter(({ operation }) => operation === place),
+        timeMs
+      )
+    );
+    return values.length === places.length
+      ? [{ timeMs, cells: cellsOf(values, 'rest') }]
+      : [];
+  });
+}
+
+function lastFrameValueOf(
+  records: FrameRecord[],
+  untilMs: number
+): OperationValue[] {
+  let last: { timeMs: number; value: OperationValue } | undefined;
+  for (const { key, frames } of records) {
+    for (const { timeMs, value } of frames) {
+      if (timeMs <= untilMs && timeMs >= (last?.timeMs ?? -Infinity)) {
+        last = { timeMs, value: { kind: key, ...amountOf(value) } };
+      }
+    }
+  }
+  return last ? [last.value] : [];
+}
+
+type PresentationRead = { monotonicTimeMs: number; presentation: number[] };
+
+const ROW_INTERVAL_MS = 30;
+
+export type TakenRow<TRow> = {
+  row: TRow;
+  /** The row is the first of a sampling cycle of `takeRows`. */
+  opensCycle: boolean;
+  /**
+   * Of a row that shows a new value: the time from the read of the row before
+   * it. A presentation value is of the time of the first read that shows it, so
+   * the value of such a row is `spacingMs` old at most.
+   */
+  spacingMs?: number;
+};
+
+/**
+ * The rows of `take` to a time, or to the time at which a view of `take`
+ * leaves. Each `ROW_INTERVAL_MS` it takes rows until one shows a new value, for
+ * two display frames at most.
+ */
+export async function takeRows<TRow>(
+  take: () => Promise<TRow>,
+  readOf: (row: TRow) => PresentationRead,
+  untilMs: number
+) {
+  const rows: TakenRow<TRow>[] = [];
+  const takeRead = async (opensCycle: boolean) => {
+    const row = await take();
+    rows.push({ row, opensCycle });
+    return readOf(row);
+  };
+  try {
+    while (performance.now() < untilMs) {
+      let read = await takeRead(true);
+      const pollUntilMs = read.monotonicTimeMs + 2 * FRAME_MS;
+      while (read.monotonicTimeMs < pollUntilMs) {
+        const before = read;
+        read = await takeRead(false);
+        if (
+          read.presentation.some(
+            (value, cell) => value !== before.presentation[cell]
+          )
+        ) {
+          rows[rows.length - 1].spacingMs =
+            read.monotonicTimeMs - before.monotonicTimeMs;
+          break;
+        }
+      }
+      await wait(ROW_INTERVAL_MS);
+    }
+  } catch (error) {
+    if (!isNoView(error)) {
+      throw error;
+    }
+  }
+  return rows;
+}
 
 type AnimationFunction = (values: never) => LayoutAnimation;
 type AnimationValues =
   | Parameters<EntryExitAnimationFunction>[0]
   | Parameters<LayoutAnimationFunction>[0];
 
-type AnimationSource = { build: () => AnimationFunction } | AnimationFunction;
+export type AnimationSource =
+  | { build: () => AnimationFunction }
+  | AnimationFunction;
 type BuiltLeaf = Partial<FrameAnimation> & { __nativeTiming?: unknown };
+type LeafPlace = Pick<FrameRecord, 'key' | 'operation'>;
 
 /**
  * The animation of a builder or of a function, with a call of `prepare` for
@@ -206,7 +1907,7 @@ type BuiltLeaf = Partial<FrameAnimation> & { __nativeTiming?: unknown };
  */
 function withPreparedLeaves(
   animation: AnimationSource,
-  prepare: (leaf: BuiltLeaf) => void
+  prepare: (leaf: BuiltLeaf, place: LeafPlace) => void
 ) {
   const build = (
     typeof animation === 'function' ? animation : animation.build()
@@ -214,16 +1915,19 @@ function withPreparedLeaves(
   return (values: AnimationValues) => {
     'worklet';
     const result = build(values);
-    const leaves = Object.values(result.animations).flatMap((leaf) =>
+    const leaves = Object.entries(result.animations).flatMap(([key, leaf]) =>
       Array.isArray(leaf)
-        ? leaf.flatMap((operation: Record<string, unknown>) =>
-            Object.values(operation)
+        ? leaf.flatMap((entry: Record<string, unknown>, operation) =>
+            Object.entries(entry).map(
+              ([kind, operationLeaf]) =>
+                [operationLeaf, { key: kind, operation }] as const
+            )
           )
-        : [leaf]
+        : [[leaf, { key }] as const]
     );
-    for (const leaf of leaves) {
+    for (const [leaf, place] of leaves) {
       if (typeof leaf === 'object' && leaf !== null) {
-        prepare(leaf as BuiltLeaf);
+        prepare(leaf as BuiltLeaf, place);
       }
     }
     return result;
@@ -243,30 +1947,18 @@ export function frameDrivenOf(animation: AnimationSource) {
   });
 }
 
-export const namedBuilderCalls: string[] = [];
-function recordNamedBuilderCall(name: string) {
-  namedBuilderCalls.push(name);
-}
-
-/**
- * The animation of a builder or of a function, with a record of each call of
- * its function under `name`.
- */
-export function countedOf(
-  name: string,
-  animation: { build: () => AnimationFunction } | AnimationFunction
-) {
-  const build = (
-    typeof animation === 'function' ? animation : animation.build()
-  ) as (values: AnimationValues) => LayoutAnimation;
-  return (values: AnimationValues) => {
-    'worklet';
-    scheduleOnRN(recordNamedBuilderCall, name);
-    return build(values);
-  };
-}
-
 type FrameAnimation = {
+  current: number | string;
+  /** Of a timing and of a delay. */
+  startTime?: number;
+  /** Of a timing. */
+  startValue: number | string;
+  onStart: (
+    animation: FrameAnimation,
+    value: number | string,
+    now: number,
+    previous: unknown
+  ) => void;
   onFrame: (animation: FrameAnimation, now: number) => boolean;
 };
 
@@ -294,27 +1986,64 @@ const animationTime = () => {
   return global._getAnimationTimestamp();
 };
 
-/** The time of the sample clock minus the time of the animation clock. */
-export async function sampleClockOffset(tag: number) {
-  let best = { width: Infinity, offset: 0 };
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const before = runOnUISync(animationTime);
-    const { monotonicTimeMs } = await sample(tag, 'Transform');
-    const after = runOnUISync(animationTime);
-    if (after - before < best.width) {
-      best = {
-        width: after - before,
-        offset: monotonicTimeMs - (before + after) / 2,
-      };
+const CLOCK_OFFSET_READS = 6;
+
+async function readClockOffset(tag: number): Promise<Band> {
+  const before = runOnUISync(animationTime);
+  const { monotonicTimeMs } = await sample(tag, 'Transform');
+  const after = runOnUISync(animationTime);
+  return { from: monotonicTimeMs - after, to: monotonicTimeMs - before };
+}
+
+let clockOffsetOfRun: Band = { from: -Infinity, to: Infinity };
+
+/**
+ * The time of the sample clock minus the time of the animation clock. The two
+ * clocks keep one difference in a run of the app, so each call makes the band
+ * of the run narrower.
+ */
+export async function narrowClockOffset(tag: number) {
+  for (let attempt = 0; attempt < CLOCK_OFFSET_READS; attempt++) {
+    const read = await readClockOffset(tag);
+    const narrowed = {
+      from: Math.max(clockOffsetOfRun.from, read.from),
+      to: Math.min(clockOffsetOfRun.to, read.to),
+    };
+    if (narrowed.from > narrowed.to) {
+      throw new Error(
+        `The clock offset ${read.from}..${read.to} ms of a read is outside the clock offset ${clockOffsetOfRun.from}..${clockOffsetOfRun.to} ms of the run.`
+      );
     }
+    clockOffsetOfRun = narrowed;
   }
-  return best;
+  return clockOffsetOfRun;
+}
+
+/**
+ * The origin of the timelines of a native command on the sample clock, from its
+ * `Received` event.
+ */
+export function nativeOriginOf(
+  events: TraceEvent[],
+  command: CommandHandle,
+  clockOffset: Band
+): Band {
+  const { originTimestampMs } = requireEvent(events, command, 'Received');
+  if (originTimestampMs === undefined) {
+    throw new Error(
+      `The Received event of the command ${describeCommand(command)} has no origin.`
+    );
+  }
+  return {
+    from: originTimestampMs + clockOffset.from,
+    to: originTimestampMs + clockOffset.to,
+  };
 }
 
 export const playbackCountOf = (
-  { playbackKeys }: TargetSample,
+  { playbacks }: TargetSample,
   generation: number
-) => playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
+) => playbacks.filter((playback) => playback.generation === generation).length;
 
 export function summarize(events: TraceEvent[]) {
   return events
@@ -327,21 +2056,97 @@ export function summarize(events: TraceEvent[]) {
 }
 
 export const callbacks: string[] = [];
+/** When the React Native runtime got the last callback of each name. */
 export const callbackTimes: Record<string, number> = {};
-export function recordCallback(name: string, finished: boolean) {
+/** When the UI runtime gave it, on the animation clock. */
+export const callbackEmissionTimes: Record<string, number> = {};
+
+export function resetCallbacks() {
+  callbacks.length = 0;
+  for (const times of [callbackTimes, callbackEmissionTimes]) {
+    for (const name of Object.keys(times)) {
+      delete times[name];
+    }
+  }
+}
+
+/** The times of the last callback of a name since `resetCallbacks`. */
+export function callbackTimeOf(name: string) {
+  if (!(name in callbackTimes)) {
+    throw new Error(`The record has no callback of ${name}.`);
+  }
+  return {
+    receivedMs: callbackTimes[name],
+    emittedMs: callbackEmissionTimes[name],
+  };
+}
+export function recordCallback(
+  name: string,
+  finished: boolean,
+  emittedAtMs: number
+) {
   callbacks.push(`${name}:${finished}`);
   callbackTimes[name] = performance.now();
+  callbackEmissionTimes[name] = emittedAtMs;
 }
 
 /** A callback of a layout animation that records its result under `name`. */
 export const callbackOf = (name: string) => (finished: boolean) => {
   'worklet';
-  scheduleOnRN(recordCallback, name, finished);
+  scheduleOnRN(recordCallback, name, finished, global._getAnimationTimestamp());
 };
 
+/**
+ * Waits until `callbacks` has each of `expected`, as `<name>:<finished>`, or
+ * that count of callbacks. Two equal results are two callbacks. It gives what
+ * is missing at its timeout, or no text.
+ */
+export const waitForCallbacks = (
+  expected: string[] | number,
+  timeoutMs?: number
+) =>
+  waitForNothingMissing(
+    () =>
+      typeof expected === 'number'
+        ? missingCountOf(callbacks.length, expected, 'callbacks')
+        : missingEntriesOf(callbacks, expected),
+    timeoutMs
+  );
+
+async function waitForNothingMissing(
+  missingOf: () => string[],
+  timeoutMs = 3000
+) {
+  const deadline = performance.now() + timeoutMs;
+  while (missingOf().length > 0 && performance.now() < deadline) {
+    await wait(FRAME_MS);
+  }
+  return missingOf().join();
+}
+
+const missingCountOf = (count: number, expected: number, unit: string) =>
+  count < expected ? [`${expected - count} of ${expected} ${unit}`] : [];
+
+/** Two equal entries of `expected` need two entries of `received`. */
+function missingEntriesOf(received: string[], expected: string[]) {
+  const left = [...received];
+  return expected.filter((entry) => {
+    const index = left.indexOf(entry);
+    if (index >= 0) {
+      left.splice(index, 1);
+    }
+    return index < 0;
+  });
+}
+
 export let builderCalls = 0;
-export function recordBuilderCall() {
+/** The name of the layout of each builder call of a layout with a name. */
+export const layoutBuilderCalls: string[] = [];
+export function recordBuilderCall(name?: string) {
   builderCalls++;
+  if (name !== undefined) {
+    layoutBuilderCalls.push(name);
+  }
 }
 
 export type Key =
@@ -352,11 +2157,30 @@ export type Key =
   | 'height'
   | 'borderRadius';
 
-export type Leaf = {
+/** One timing of a `withSequence` before the timing of a leaf. */
+export type LeafPart = {
   duration?: number;
-  /** Each entry is one `withDelay` wrapper, the outer one first. */
-  delays?: number[];
   easing?: EasingFunction | EasingFunctionFactory | 'default';
+  /** A `withDelay` wrapper of the timing. */
+  delay?: number;
+  /** The timing has a callback when the leaf has none on each timing. */
+  hasCallback?: boolean;
+  /**
+   * Where the timing ends between the start value of the leaf, at 0, and its
+   * end value, at 1: the two are numbers.
+   */
+  level?: number;
+  /**
+   * Where the timing ends, when it has no `level`: a value, or an offset from
+   * the target value of a layout key. No value: at the end value of the leaf.
+   */
+  to?: number | string;
+};
+
+export type Leaf = Pick<LeafPart, 'duration' | 'easing' | 'delay'> & {
+  via?: LeafPart[];
+  /** Each entry is one `withDelay` wrapper of the leaf, the outer one first. */
+  delays?: number[];
   /**
    * The opacity before the commit, or an offset from the current value of a
    * layout key.
@@ -390,6 +2214,13 @@ export type Operation = [
   leaf?: OperationLeaf,
 ];
 
+/** The style transform that the mount of the end state of `operations` needs. */
+export const endTransformOf = (operations: Operation[]) =>
+  operations.map(([kind, , to]) => ({
+    [kind]:
+      kind.startsWith('rotate') && typeof to === 'number' ? `${to}rad` : to,
+  })) as ViewStyle['transform'];
+
 export type TransformLeaf = {
   operations: Operation[];
   /** For each operation that does not set the property. */
@@ -408,43 +2239,61 @@ export type LayoutOptions = {
   blocksForMs?: number;
 };
 
-export function blockUIThread(durationMs: number) {
-  'worklet';
-  const end = global._getAnimationTimestamp() + durationMs;
-  while (global._getAnimationTimestamp() < end) {
-    continue;
-  }
-}
+type LeafValue = number | string | number[];
+type CurrentValues = Pick<
+  ExitAnimationsValues,
+  'currentOriginX' | 'currentOriginY' | 'currentWidth' | 'currentHeight'
+>;
+type TargetValues = Pick<
+  EntryAnimationsValues,
+  'targetOriginX' | 'targetOriginY' | 'targetWidth' | 'targetHeight'
+>;
 
-export function layoutOf(
+function animationOf(
   leaves: Leaves,
   { name, initialOnlyKey, transform, blocksForMs = 0 }: LayoutOptions = {}
-): LayoutAnimationFunction {
-  return (values) => {
+) {
+  const callback = name === undefined ? undefined : callbackOf(name);
+  return (values: CurrentValues | TargetValues): LayoutAnimation => {
     'worklet';
-    scheduleOnRN(recordBuilderCall);
+    scheduleOnRN(recordBuilderCall, name);
     blockUIThread(blocksForMs);
-    const animationOf = (toValue: number | string | number[], leaf: Leaf) => {
+    const timingOf = (
+      leaf: Leaf,
+      { to, duration, easing, delay, hasCallback }: PlannedTiming
+    ) => {
       'worklet';
       const config: Record<string, unknown> = {
-        duration: leaf.duration ?? DURATION,
+        duration,
         reduceMotion: leaf.reduceMotion,
       };
-      if (leaf.easing !== 'default') {
-        config.easing = leaf.easing ?? Easing.linear;
+      if (easing !== 'default') {
+        config.easing = easing ?? Easing.linear;
       }
-      let animation = leaf.isSpring
-        ? withSpring(toValue)
+      const timing = leaf.isSpring
+        ? withSpring(to)
         : withTiming(
-            toValue,
+            to,
             config,
-            leaf.hasCallback
+            (hasCallback ?? leaf.hasCallback)
               ? () => {
                   'worklet';
                 }
               : undefined
           );
-      for (const delay of [...(leaf.delays ?? [])].reverse()) {
+      return delay === undefined ? timing : withDelay(delay, timing);
+    };
+    const leafOf = (
+      from: unknown,
+      to: LeafValue,
+      leaf: Leaf,
+      base?: number
+    ) => {
+      'worklet';
+      const { delays, timings } = planOf(leaf, from, to, base);
+      const parts = timings.map((timing) => timingOf(leaf, timing));
+      let animation = parts.length === 1 ? parts[0] : withSequence(...parts);
+      for (const delay of [...delays].reverse()) {
         animation = withDelay(delay, animation);
       }
       if (leaf.setsReduceMotion) {
@@ -452,18 +2301,23 @@ export function layoutOf(
       }
       return animation;
     };
-    const current: Record<string, number> = {
-      originX: values.currentOriginX,
-      originY: values.currentOriginY,
-      width: values.currentWidth,
-      height: values.currentHeight,
-    };
-    const target: Record<string, number> = {
-      originX: values.targetOriginX,
-      originY: values.targetOriginY,
-      width: values.targetWidth,
-      height: values.targetHeight,
-    };
+    const currentOf = (layout: CurrentValues): Record<string, number> => ({
+      originX: layout.currentOriginX,
+      originY: layout.currentOriginY,
+      width: layout.currentWidth,
+      height: layout.currentHeight,
+    });
+    const targetOf = (layout: TargetValues): Record<string, number> => ({
+      originX: layout.targetOriginX,
+      originY: layout.targetOriginY,
+      width: layout.targetWidth,
+      height: layout.targetHeight,
+    });
+    // A view that enters or leaves has the values of one layout.
+    const current =
+      'currentOriginX' in values ? currentOf(values) : targetOf(values);
+    const target =
+      'targetOriginX' in values ? targetOf(values) : currentOf(values);
     const initialValues: Record<string, unknown> = {};
     const animations: Record<string, unknown> = {};
     for (const key of Object.keys(leaves)) {
@@ -472,13 +2326,18 @@ export function layoutOf(
         continue;
       }
       const isLayoutKey = key in target;
+      const initial = leaf.initial === 'none' ? undefined : leaf.initial;
+      const fromValue = isLayoutKey ? current[key] + (initial ?? 0) : initial;
       const toValue = isLayoutKey ? target[key] + (leaf.to ?? 0) : leaf.to!;
       if (leaf.initial !== 'none') {
-        initialValues[key] = isLayoutKey
-          ? current[key] + (leaf.initial ?? 0)
-          : leaf.initial!;
+        initialValues[key] = fromValue;
       }
-      animations[key] = animationOf(toValue, leaf);
+      animations[key] = leafOf(
+        fromValue,
+        toValue,
+        leaf,
+        isLayoutKey ? target[key] : undefined
+      );
     }
     if (transform) {
       if (!transform.hasNoInitialValue) {
@@ -486,26 +2345,190 @@ export function layoutOf(
           [kind]: from,
         }));
       }
-      animations.transform = transform.operations.map(([kind, , to, leaf]) => ({
-        [kind]: leaf?.isPlain
-          ? to
-          : animationOf(to, { ...transform.shared, ...leaf }),
-      }));
+      animations.transform = transform.operations.map(
+        ([kind, from, to, leaf]) => ({
+          [kind]: leaf?.isPlain
+            ? to
+            : leafOf(from, to, { ...transform.shared, ...leaf }),
+        })
+      );
     }
     if (initialOnlyKey) {
       initialValues[initialOnlyKey] = 1;
     }
-    return {
-      initialValues,
-      animations,
-      callback: name
-        ? (finished: boolean) => {
-            'worklet';
-            scheduleOnRN(recordCallback, name, finished);
-          }
-        : undefined,
-    };
+    return { initialValues, animations, callback };
   };
+}
+
+export const layoutOf: (
+  ...args: Parameters<typeof animationOf>
+) => LayoutAnimationFunction = animationOf;
+
+/**
+ * `layoutOf` for a view that enters or leaves. An offset of a layout key is
+ * from its value in the one layout of the view.
+ */
+export const entryExitOf: (
+  ...args: Parameters<typeof animationOf>
+) => EntryExitAnimationFunction = animationOf;
+
+type PlannedTiming<TValue = LeafValue> = Pick<
+  LeafPart,
+  'easing' | 'delay' | 'hasCallback'
+> & {
+  to: TValue | number | string;
+  duration: number;
+};
+
+/**
+ * The `withDelay` wrappers of a leaf and the timings of its sequence, between
+ * its start value and its end value. `layoutOf` builds them, and
+ * `declaredTimelineOf` declares them. `base` is the target value of a layout
+ * key.
+ */
+function planOf<TValue extends LeafValue>(
+  leaf: Leaf,
+  from: unknown,
+  to: TValue,
+  base = 0
+): { delays: number[]; timings: PlannedTiming<TValue>[] } {
+  'worklet';
+  const endOf = (part: LeafPart) => {
+    'worklet';
+    if (part.level !== undefined) {
+      if (typeof from !== 'number' || typeof to !== 'number') {
+        throw new Error('A level is between two numbers.');
+      }
+      return from + (to - from) * part.level;
+    }
+    if (part.to === undefined) {
+      return to;
+    }
+    return typeof part.to === 'number' ? base + part.to : part.to;
+  };
+  return {
+    delays: leaf.delays ?? [],
+    timings: [
+      ...(leaf.via ?? []).map((part) => ({
+        to: endOf(part),
+        duration: part.duration ?? DURATION,
+        easing: part.easing,
+        delay: part.delay,
+        hasCallback: part.hasCallback,
+      })),
+      {
+        to,
+        duration: leaf.duration ?? DURATION,
+        easing: leaf.easing,
+        delay: leaf.delay,
+      },
+    ],
+  };
+}
+
+/**
+ * What the frame driver did with one leaf of one build of an animation of
+ * `frameRecordedOf`. The times are on the animation clock. A value has the unit
+ * that the frame driver wrote.
+ */
+export type FrameRecord = {
+  box: string;
+  /** The key of the leaf, or the kind of its transform operation. */
+  key: string;
+  /** The place of the operation in the transform of the build. */
+  operation?: number;
+  /**
+   * The call that started the animation of the leaf: its frame time, the value
+   * that it gave, and the count of frames that the record before this one of
+   * the leaf of the box had at the call.
+   */
+  start?: { timeMs: number; value: number | string; replacedFrames: number };
+  /**
+   * The start time and the start value that a timing took from the timing that
+   * it replaced, which had its end value (`onStart` of `withTiming`).
+   */
+  adoptedStart?: { timeMs: number; value: number | string };
+  /** Each frame that the leaf got, with the value that it wrote. */
+  frames: { timeMs: number; value: number | string }[];
+};
+
+export type OperationFrameRecord = FrameRecord & { operation: number };
+
+export const isOperationRecord = (
+  record: FrameRecord
+): record is OperationFrameRecord => record.operation !== undefined;
+
+const frameRecords = makeMutable<FrameRecord[]>([]);
+
+export function resetFrameRecords() {
+  runOnUISync(() => {
+    'worklet';
+    frameRecords.value = [];
+  });
+}
+
+/**
+ * The records of each build since `resetFrameRecords`, in the order of the
+ * builds.
+ */
+export function readFrameRecords() {
+  return runOnUISync(() => {
+    'worklet';
+    return frameRecords.value;
+  });
+}
+
+/**
+ * The animation of a builder or of a function, with a `FrameRecord` of each
+ * leaf of each build under the name `box`.
+ */
+export function frameRecordedOf(box: string, animation: AnimationSource) {
+  return withPreparedLeaves(animation, (leaf, place) => {
+    'worklet';
+    const { onStart } = leaf;
+    if (!onStart || !leaf.onFrame) {
+      return;
+    }
+    const record: FrameRecord = { box, ...place, frames: [] };
+    const replaced = [...frameRecords.value]
+      .reverse()
+      .find((each) => each.box === box && isSameLeaf(each, place));
+    frameRecords.value.push(record);
+    let recordedOnFrame: FrameAnimation['onFrame'] | undefined;
+    leaf.onStart = (self, value, now, previous) => {
+      const { startTime, startValue } = self;
+      onStart(self, value, now, previous);
+      // A leaf that starts again from its own start goes on with its record.
+      if (
+        record.start &&
+        self.startTime === startTime &&
+        self.startValue === startValue
+      ) {
+        return;
+      }
+      record.start = {
+        timeMs: now,
+        value,
+        replacedFrames: replaced?.frames.length ?? 0,
+      };
+      if (self.startTime !== undefined && self.startTime !== now) {
+        record.adoptedStart = {
+          timeMs: self.startTime,
+          value: self.startValue,
+        };
+      }
+      // The start of an animation of a value with a unit sets its frame function.
+      if (self.onFrame !== recordedOnFrame) {
+        const onFrame = self.onFrame;
+        recordedOnFrame = (animation, frameTimeMs) => {
+          const finished = onFrame(animation, frameTimeMs);
+          record.frames.push({ timeMs: frameTimeMs, value: animation.current });
+          return finished;
+        };
+        self.onFrame = recordedOnFrame;
+      }
+    };
+  });
 }
 
 export const MOVE = layoutOf({ originX: {}, originY: {} });
@@ -672,8 +2695,11 @@ export function summarizeEnd(events: TraceEvent[]) {
 }
 
 export const FRAME_BOX_REF = 'NativeLayoutStartFrameDrivenBox';
+export const PAIR_DURATION = 3000;
+export const PAIR_LEFT = 200;
 export const PAIR_TOP = 60;
 export const PAIR_CELL_HEIGHT = BOX_SIZE + PAIR_TOP;
+export const OPACITY_TOLERANCE = 0.01;
 
 export const pairLayoutsOf = (leaves: (hasCallback: boolean) => Leaves) => ({
   nativeLayout: layoutOf(leaves(false), { name: 'native' }),
@@ -712,6 +2738,26 @@ export function PairOf<TBox extends object>({
   );
 }
 
+export type PairProps = Pick<BoxProps, 'left' | 'top' | 'opacity' | 'exiting'> &
+  PairLayoutFunctions & { isMounted?: boolean };
+
+export function Pair({
+  nativeLayout,
+  frameLayout,
+  isMounted,
+  ...box
+}: PairProps) {
+  return (
+    <PairOf
+      BoxComponent={Box}
+      box={box}
+      nativeLayout={nativeLayout}
+      frameLayout={frameLayout}
+      isMounted={isMounted}
+    />
+  );
+}
+
 export function curveOf(easing: EasingFunction | EasingFunctionFactory) {
   return typeof easing === 'function' ? easing : easing.factory();
 }
@@ -719,48 +2765,23 @@ export function curveOf(easing: EasingFunction | EasingFunctionFactory) {
 const SIZE_BOX_IMAGE =
   require('../../../../src/apps/reanimated/examples/assets/doge.png') as ImageSourcePropType;
 
-export type Frame = { x: number; y: number; width: number; height: number };
-
-const frameOf = (
-  [centerX, centerY]: number[],
-  [width, height]: number[]
-): Frame => ({
-  x: centerX - width / 2,
-  y: centerY - height / 2,
-  width,
-  height,
-});
-
-export async function sampleFrame(tag: number) {
-  const [position, size] = await Promise.all([
-    sample(tag, 'Position'),
-    sample(tag, 'Size'),
-  ]);
-  return {
-    model: frameOf(position.model, size.model),
-    presentation: frameOf(position.presentation, size.presentation),
-    playbackKeys: size.playbackKeys,
-    monotonicTimeMs: size.monotonicTimeMs,
-  };
-}
-
-export const frameDistance = (first: Frame, second: Frame) =>
-  Math.max(
-    Math.abs(first.x - second.x),
-    Math.abs(first.y - second.y),
-    Math.abs(first.width - second.width),
-    Math.abs(first.height - second.height)
-  );
-
 type SizeBoxHost = 'View' | 'Text' | 'Image' | 'ScrollView';
 
-type SizeBoxHostProps = React.PropsWithChildren<{
-  ref: ReturnType<typeof useTestRef>;
-  layout: BoxProps['layout'];
-  collapsable: boolean;
-  source?: ImageSourcePropType;
-  style: StyleProp<ViewStyle>;
-}>;
+type SizeBoxAnimations = Pick<
+  Parameters<typeof Animated.View>[0],
+  'layout' | 'entering' | 'exiting'
+>;
+
+type SizeBoxStyle = React.ComponentProps<typeof Animated.View>['style'];
+
+type SizeBoxHostProps = React.PropsWithChildren<
+  SizeBoxAnimations & {
+    ref: ReturnType<typeof useTestRef>;
+    collapsable: boolean;
+    source?: ImageSourcePropType;
+    style: SizeBoxStyle;
+  }
+>;
 
 const SIZE_BOX_HOSTS: Record<
   SizeBoxHost,
@@ -773,16 +2794,17 @@ const SIZE_BOX_HOSTS: Record<
   ScrollView: Animated.ScrollView,
 };
 
-export type SizeBoxProps = React.PropsWithChildren<{
-  left?: number;
-  top?: number;
-  width?: number;
-  height?: number;
-  host?: SizeBoxHost;
-  style?: StyleProp<ViewStyle>;
-  layout?: BoxProps['layout'];
-  refName?: string;
-}>;
+export type SizeBoxProps = React.PropsWithChildren<
+  SizeBoxAnimations & {
+    left?: number;
+    top?: number;
+    width?: number;
+    height?: number;
+    host?: SizeBoxHost;
+    style?: SizeBoxStyle;
+    refName?: string;
+  }
+>;
 
 export function SizeBox({
   left = 0,
@@ -792,6 +2814,8 @@ export function SizeBox({
   host = 'View',
   style,
   layout,
+  entering,
+  exiting,
   refName = BOX_REF,
   children,
 }: SizeBoxProps) {
@@ -801,6 +2825,8 @@ export function SizeBox({
     <Host
       ref={ref}
       layout={layout}
+      entering={entering}
+      exiting={exiting}
       collapsable={false}
       source={host === 'Image' ? SIZE_BOX_IMAGE : undefined}
       style={[
@@ -813,115 +2839,16 @@ export function SizeBox({
   );
 }
 
-export const SIZE_CELL_HEIGHT = 220;
-export const SIZE_CELL_WIDTH = 200;
-
-/** Where the cell of the frame-driven box is from the cell of the native box. */
-export type PairOffset = { x: number; y: number };
-export const PAIR_IN_COLUMN: PairOffset = { x: 0, y: SIZE_CELL_HEIGHT };
-// The layout gives the two boxes of a row the same vertical values.
-export const PAIR_IN_ROW: PairOffset = { x: SIZE_CELL_WIDTH, y: 0 };
-
-export type SizePairProps = Omit<SizeBoxProps, 'layout' | 'refName'> & {
-  nativeLayout: BoxProps['layout'];
-  frameLayout: BoxProps['layout'];
-  inRow?: boolean;
-};
-
-export type PairLayouts = Pick<SizePairProps, 'nativeLayout' | 'frameLayout'>;
-
-/**
- * The frame-driven box has the leaves of LinearTransition and a callback on one
- * leaf.
- */
-export const linearPairOf = (durationMs: number): PairLayouts => ({
-  nativeLayout: LinearTransition.duration(durationMs).easing(Easing.linear),
-  frameLayout: layoutOf({
-    originX: { duration: durationMs, hasCallback: true },
-    originY: { duration: durationMs },
-    width: { duration: durationMs },
-    height: { duration: durationMs },
-  }),
-});
-
-export function SizePair({
-  nativeLayout,
-  frameLayout,
-  inRow = false,
-  ...box
-}: SizePairProps) {
-  const cellStyle = [styles.sizeCell, inRow && styles.sizeRowCell];
+export function SizeScene(box: SizeBoxProps) {
   return (
-    <View style={inRow && styles.sizeRow}>
-      <View style={cellStyle}>
-        <SizeBox {...box} layout={nativeLayout} />
-      </View>
-      <View style={cellStyle}>
-        <SizeBox {...box} layout={frameLayout} refName={FRAME_BOX_REF} />
-      </View>
+    <View style={styles.container}>
+      <SizeBox {...box} />
     </View>
   );
 }
 
-export async function sampleFramePair(offset = PAIR_IN_COLUMN) {
-  const [native, frame] = await Promise.all([
-    sampleFrame(getTestComponent(BOX_REF).getTag()),
-    sampleFrame(getTestComponent(FRAME_BOX_REF).getTag()),
-  ]);
-  return {
-    native: native.presentation,
-    end: native.model,
-    frame: {
-      ...frame.model,
-      x: frame.model.x - offset.x,
-      y: frame.model.y - offset.y,
-    },
-    playbackKeys: native.playbackKeys,
-    monotonicTimeMs: native.monotonicTimeMs,
-  };
-}
-
-export type FramePairRow = Awaited<ReturnType<typeof sampleFramePair>>;
-
-/**
- * One row at each fraction of `durationMs` after the call, then one row after
- * the end.
- */
-export async function sampleFramePairAt(
-  durationMs: number,
-  fractions = [0.25, 0.5, 0.75],
-  offset = PAIR_IN_COLUMN
-) {
-  const start = performance.now();
-  const waitUntil = (elapsedMs: number) =>
-    wait(Math.max(0, start + elapsedMs - performance.now()));
-  const rows: FramePairRow[] = [];
-  for (const fraction of fractions) {
-    await waitUntil(fraction * durationMs);
-    rows.push(await sampleFramePair(offset));
-  }
-  await waitUntil(durationMs + 300);
-  rows.push(await sampleFramePair(offset));
-  return rows;
-}
-
-/**
- * The largest distance of the native box from the frame-driven box before the
- * end, and at the end.
- */
-export function framePairDistances(rows: FramePairRow[]) {
-  const end = rows[rows.length - 1];
-  return {
-    during: Math.max(
-      ...rows.slice(0, -1).map((row) => frameDistance(row.native, row.frame))
-    ),
-    atEnd: Math.max(
-      frameDistance(end.native, end.frame),
-      frameDistance(end.native, end.end)
-    ),
-    keysAtEnd: end.playbackKeys.length,
-  };
-}
+export const SIZE_CELL_HEIGHT = 220;
+export const SIZE_CELL_WIDTH = 200;
 
 export const styles = StyleSheet.create({
   container: {
@@ -938,14 +2865,5 @@ export const styles = StyleSheet.create({
   },
   sizeBox: {
     backgroundColor: 'teal',
-  },
-  sizeCell: {
-    height: SIZE_CELL_HEIGHT,
-  },
-  sizeRow: {
-    flexDirection: 'row',
-  },
-  sizeRowCell: {
-    width: SIZE_CELL_WIDTH,
   },
 });
