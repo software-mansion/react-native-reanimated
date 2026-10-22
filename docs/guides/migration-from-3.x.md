@@ -148,7 +148,7 @@ In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the 
 
 ## Integration with other libraries
 
-All integrations with other third-party libraries such as [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/docs/) or [React Native Skia](https://shopify.github.io/react-native-skia/) work the same as on 3.x. However, Reanimated 4 no longer provides support for [React Native V8](https://github.com/Kudo/react-native-v8/issues).
+All integrations with other third-party libraries such as [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/docs/) or [React Native Skia](https://wcandillon.github.io/react-native-skia/) work the same as on 3.x. However, Reanimated 4 no longer provides support for [React Native V8](https://github.com/Kudo/react-native-v8/issues).
 
 ## Migrating from 2.x
 
