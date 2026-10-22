@@ -73,6 +73,9 @@ void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const Sha
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_.erase(viewTag);
+  for (auto &registry : registries_) {
+    registry->handleRemount(viewTag);
+  }
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
@@ -86,7 +89,7 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
 
     if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
       for (auto &registry : registries_) {
-        registry->remove(tag);
+        registry->removeUnmounted(shadowNodeFamily);
       }
       staticPropsRegistry_->remove(tag);
     } else {
