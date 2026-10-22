@@ -6,16 +6,41 @@
 
 #include <cstdint>
 #include <optional>
+#include <variant>
 #include <vector>
 
 namespace reanimated::native_animation {
 
-/// One endpoint after the start value. A segment whose end value equals the prior value is a hold.
-struct AnimationSegment {
+/// One endpoint after the start value of a timeline. A segment whose end value equals the prior value is a hold.
+template <typename Value>
+struct TimelineSegment {
   double endOffset{1};
-  AnimationValue endValue;
+  Value endValue;
   AnimationTiming timingFromPrevious;
 };
+
+using AnimationSegment = TimelineSegment<AnimationValue>;
+
+/// The timeline of a target whose value has one form.
+struct ValueTimeline {
+  AnimationStart start;
+  std::vector<AnimationSegment> segments;
+};
+
+/// The timeline of one operation of a transform. Its offsets are in the time of its track.
+struct OperationTimeline {
+  TransformOperationKind kind;
+  double start{0};
+  std::vector<TimelineSegment<double>> segments;
+};
+
+/// The operations of a style transform in the order of its array. Each operation moves on its own scalar and
+/// its own timeline, so the path of the matrix is the product of the operations at each time.
+struct TransformTimelines {
+  std::vector<OperationTimeline> operations;
+};
+
+using TrackBody = std::variant<ValueTimeline, TransformTimelines>;
 
 enum class EndpointPolicy : uint8_t {
   /// The mounted model already holds the end value. The host checks it and does not write it.
@@ -27,13 +52,12 @@ enum class EndpointPolicy : uint8_t {
   HoldWithoutCommit,
 };
 
-/// Segment offsets increase strictly in (0, 1] and the last one is 1. A `Transform` track has an explicit start
-/// value, the same operation kinds in each of its values, and one value for each perspective: the value on
-/// screen of a transform has no operation list.
+/// The segment offsets of each timeline increase strictly in (0, 1] and the last one is 1. A `Transform` track
+/// has a transform body with one value for each perspective: the value on screen of a transform has no
+/// operation list. Each other track has a value body.
 struct AnimationTrack {
   AnimationTarget target;
-  AnimationStart start;
-  std::vector<AnimationSegment> segments;
+  TrackBody body;
   double delayMs{0};
   double durationMs{0};
   EndpointPolicy endpointPolicy;
@@ -66,6 +90,14 @@ enum class TrackPlayback : uint8_t {
 
 /// False when the track has an explicit start value and each segment ends at that value.
 bool changesValue(const AnimationTrack &track);
+
+struct TransformEndpoints {
+  AnimationTransform start;
+  AnimationTransform end;
+};
+
+/// The operations of a valid transform body at the start and at the end of its track.
+TransformEndpoints endpointsOf(const TransformTimelines &body);
 
 /// A track with no duration has a playback of its own only when the mounted model holds its end value.
 TrackPlayback playbackOf(const AnimationTrack &track);

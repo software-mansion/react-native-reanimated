@@ -120,32 +120,45 @@ export type LayoutAnimationStartFunction = (
  */
 export type NativeTransformOperation = { kind: string; value: number };
 
-/** The native form of a leaf value: a number, or the operations of `transform`. */
-export type NativeLeafValue = number | NativeTransformOperation[];
-
 /**
- * One piece of the timeline of a leaf. It ends at `endOffset` of the duration,
- * at `endValue`. The control points are in the units of the segment. A segment
- * with no control points is linear.
+ * One piece of a timeline of numbers. It ends at `endOffset` of the duration of
+ * its track, at `endValue`. The control points are in the units of the segment.
+ * A segment with no control points is linear.
  */
-export type NativeLeafSegment<TValue = NativeLeafValue> = {
+export type NativeLeafSegment = {
   endOffset: number;
-  endValue: TValue;
+  endValue: number;
   cubicBezier?: [number, number, number, number];
 };
 
-/** The timeline of a leaf after its delay. The last segment ends at 1. */
-export type NativeLeafTrack<TValue = NativeLeafValue> = {
-  delayMs: number;
-  durationMs: number;
-  segments: NativeLeafSegment<TValue>[];
+/**
+ * The timeline of one operation of a `transform` leaf: its native scalar at the
+ * start of the track, then its segments.
+ */
+export type NativeOperationTimeline = {
+  kind: string;
+  start: number;
+  segments: NativeLeafSegment[];
 };
+
+/**
+ * The timeline of a leaf after its delay. The last segment of each list ends at
+ * 1. A leaf of numbers has one list of segments. A `transform` leaf has one
+ * timeline for each operation, in the order of the style array.
+ */
+export type NativeLeafTrack = { delayMs: number; durationMs: number } & (
+  | { kind: 'scalar'; segments: NativeLeafSegment[] }
+  | { kind: 'transform'; operations: NativeOperationTimeline[] }
+);
 
 /** What the native route takes from one layout animation. */
 export type NativeLayoutLimits = {
   leaves: number;
   transformOperations: number;
-  /** The sum of the segments of the tracks of the animation. */
+  /**
+   * The sum of the segments of the tracks of the animation. A `transform` track
+   * counts the sum of the segments of its operation timelines.
+   */
   segments: number;
 };
 
