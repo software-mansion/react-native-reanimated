@@ -5,6 +5,7 @@
 #include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
+#include <reanimated/NativeAnimations/NativeAnimationHost.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
@@ -22,6 +23,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
       const std::shared_ptr<css::ViewStylesRepository> &viewStylesRepository,
       const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
       const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
+      const std::shared_ptr<native_animation::NativeAnimationHost> &nativeAnimationHost,
       const std::function<void()> &requestFlush);
   ~ReanimatedMountHook() noexcept override;
 
@@ -35,6 +37,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
   const std::shared_ptr<css::ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
+  const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   const std::function<void()> requestFlush_;
 };
 

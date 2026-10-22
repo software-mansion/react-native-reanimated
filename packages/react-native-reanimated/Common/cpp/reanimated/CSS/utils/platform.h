@@ -33,9 +33,6 @@ inline constexpr std::array<std::string_view, 5> kAndroidPlatformProperties{
 };
 #endif // ANDROID
 
-/// Whether parsePlatformValues knows the property (value kind and CSS default).
-bool hasPlatformValueTraits(const std::string &propertyName);
-
 std::optional<PlatformValue> lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, double progress);
 
 /// Packs normalized [r, g, b, a] into the ARGB int RN's processColor commits.
