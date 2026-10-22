@@ -17,7 +17,7 @@ function initializeWebGlobals() {
   if (globalThis._getAnimationTimestamp === undefined) {
     globalThis._getAnimationTimestamp = () => performance.now();
   }
-  if (IS_JEST) {
+  if (IS_JEST || !globalThis.requestAnimationFrame) {
     globalThis.requestAnimationFrame = ((
       callback: (timestamp: number) => void
     ) =>
