@@ -21,10 +21,6 @@ class LayoutAnimationsProxyRegistry {
   std::shared_ptr<LayoutAnimationsProxyCommon> registerSurface(const facebook::react::ShadowTree &shadowTree);
   void surfaceDidMount(SurfaceId surfaceId) const;
   void remove(SurfaceId surfaceId);
-#ifndef NDEBUG
-  void armNativeLayoutStart(Tag tag, const ArmedNativeLayoutStart &armedStart) const;
-  void cancelNativeLayoutCommand(Tag tag) const;
-#endif
 
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);

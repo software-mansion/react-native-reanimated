@@ -33,6 +33,8 @@ std::string_view toString(const TraceEventType event) {
       return "ClientAdmitted";
     case TraceEventType::ClientEnded:
       return "ClientEnded";
+    case TraceEventType::LayoutBuildFailed:
+      return "LayoutBuildFailed";
   }
 }
 
@@ -150,6 +152,25 @@ std::string_view toString(const AnimationResultReason reason) {
       return "OwnershipDenied";
     case AnimationResultReason::PlatformRemoved:
       return "PlatformRemoved";
+  }
+}
+
+std::string_view toString(const TrackBuildFailure failure) {
+  switch (failure) {
+    case TrackBuildFailure::UnsupportedTarget:
+      return "UnsupportedTarget";
+    case TrackBuildFailure::UnsupportedValue:
+      return "UnsupportedValue";
+    case TrackBuildFailure::UnsupportedTiming:
+      return "UnsupportedTiming";
+    case TrackBuildFailure::UnsupportedTrackForm:
+      return "UnsupportedTrackForm";
+    case TrackBuildFailure::InvalidValue:
+      return "InvalidValue";
+    case TrackBuildFailure::EndpointMismatch:
+      return "EndpointMismatch";
+    case TrackBuildFailure::ResourceLimit:
+      return "ResourceLimit";
   }
 }
 
