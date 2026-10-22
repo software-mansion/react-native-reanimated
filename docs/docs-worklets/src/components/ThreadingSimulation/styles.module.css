@@ -1,11 +1,12 @@
 .container {
-  --sim-bg: #f5f7fa;
-  --sim-panel: #fff;
-  --sim-border: #d7dfe8;
-  --sim-idle-fill: #edf1f6;
-  --sim-text: #263245;
-  --sim-muted: #536275;
-  --sim-error: #a82e26;
+  --sim-bg: var(--swm-blue-light-20);
+  --sim-panel: var(--swm-code-panel);
+  --sim-border: var(--swm-code-panel-border);
+  --sim-idle-fill: var(--swm-blue-light-20);
+  --sim-bus-idle: #9fd6ed;
+  --sim-text: #000;
+  --sim-muted: #4b6572;
+  --sim-error: #c0392b;
   container: simulation / inline-size;
   width: 100%;
   min-width: 0;
@@ -17,13 +18,12 @@
 }
 
 [data-theme='dark'] .container {
-  --sim-bg: #1d222c;
-  --sim-panel: #242b36;
-  --sim-border: #414c5c;
-  --sim-idle-fill: #2b3442;
-  --sim-text: #edf2f8;
-  --sim-muted: #b4c0d1;
-  --sim-error: #ff9c93;
+  --sim-bg: #172430;
+  --sim-idle-fill: #22384a;
+  --sim-bus-idle: var(--swm-code-panel-border);
+  --sim-text: #f2f7fb;
+  --sim-muted: #a9c1d0;
+  --sim-error: #ff8a80;
 }
 
 .container *,
@@ -48,8 +48,8 @@
   gap: 16px;
   min-width: 0;
   padding: clamp(10px, 2.5cqi, 20px);
-  border: 1px solid var(--sim-border);
-  border-radius: 12px;
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
   background: var(--sim-bg);
 }
 
@@ -83,8 +83,8 @@
   gap: 8px;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid var(--sim-border);
-  border-radius: 7px;
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
   background: var(--sim-panel);
   color: var(--sim-text);
   font: inherit;
@@ -105,14 +105,14 @@
   width: 96px;
   min-width: 96px;
 }
-.buttonPrimary,
 .buttonActive {
   border-color: var(--ifm-color-primary);
-  background: color-mix(
-    in srgb,
-    var(--ifm-color-primary) 12%,
-    var(--sim-panel)
-  );
+  box-shadow: inset 0 0 0 1px var(--ifm-color-primary);
+}
+.buttonPrimary {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: var(--ifm-background-color);
 }
 .button:hover:not(:disabled),
 .codeToggle:hover,
@@ -120,6 +120,10 @@
 .disclosureToggle:hover {
   border-color: var(--ifm-color-primary);
   background: var(--sim-idle-fill);
+}
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--ifm-color-primary);
+  box-shadow: inset 0 0 0 1px var(--ifm-background-color);
 }
 .button:disabled {
   opacity: 0.4;
@@ -144,18 +148,49 @@
   min-height: 44px;
   min-width: 0;
   margin: 0;
+  padding: 0 10px;
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
+  background: var(--sim-panel);
   color: var(--sim-muted);
   font-size: 12px;
   white-space: nowrap;
 }
 .speedSlider {
+  appearance: none;
   flex: 1;
   width: 100%;
   min-width: 40px;
   max-width: 220px;
-  min-height: 44px;
+  min-height: 40px;
   margin: 0;
-  accent-color: var(--ifm-color-primary);
+  background: transparent;
+  cursor: pointer;
+}
+.speedSlider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--sim-border);
+}
+.speedSlider::-moz-range-track {
+  height: 4px;
+  background: var(--sim-border);
+}
+.speedSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 0;
+  background: var(--sim-panel);
+}
+.speedSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 0;
+  background: var(--sim-panel);
 }
 .speedValue {
   min-width: 52px;
@@ -279,27 +314,30 @@
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--sim-border);
-  border-radius: 9px;
-  background: var(--sim-panel);
 }
 .panelHeader {
   display: flex;
-  flex-wrap: wrap;
+  align-self: flex-start;
   align-items: center;
-  justify-content: space-between;
-  gap: 0 8px;
-  min-height: 48px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--sim-border);
+  gap: 2px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 2px 8px 2px 12px;
+  border: 2px solid var(--sim-border);
+  border-bottom: 0;
+  background: var(--sim-panel);
 }
 .panelTitle {
+  min-width: 0;
   margin: 0;
   color: var(--sim-text);
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
 }
 .panelHelp {
   display: inline-flex;
@@ -311,7 +349,7 @@
   padding: 6px;
   margin: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 50%;
   background: transparent;
   color: var(--sim-muted);
   cursor: pointer;
@@ -339,7 +377,7 @@
   overflow: auto;
   margin: 0;
   padding: 12px 16px 16px;
-  border: 1px solid var(--sim-border);
+  border: 2px solid var(--sim-border);
   border-radius: 10px;
   background: var(--sim-panel);
   color: var(--sim-text);
@@ -364,7 +402,7 @@
   margin-right: -6px;
   padding: 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 50%;
   background: transparent;
   color: var(--sim-muted);
   cursor: pointer;
@@ -375,6 +413,8 @@
 .panelBody {
   min-width: 0;
   padding: 16px;
+  border: 2px solid var(--sim-border);
+  background: var(--sim-panel);
 }
 .areaPhone .panelBody {
   padding: 12px;
@@ -400,6 +440,13 @@
   justify-self: start;
   margin: 0;
 }
+.codeToggle,
+.disclosureToggle {
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
+  background: var(--sim-bg);
+  color: var(--ifm-color-primary);
+}
 .codeFooter {
   display: flex;
   justify-content: flex-end;
@@ -410,9 +457,12 @@
 }
 .boilerplateToggle {
   border-color: transparent;
+  border-radius: 0;
   background: transparent;
   color: var(--sim-muted);
   font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .disclosureWorkspace {
   gap: 0;
@@ -609,6 +659,19 @@
   background: var(--rt-color);
 }
 
+.layoutMotion {
+  min-width: 0;
+  overflow: clip;
+  overflow-anchor: none;
+}
+.layoutGrid {
+  position: relative;
+  min-width: 0;
+}
+.layoutGrid > *,
+.layoutGrid [data-sim-layout-key] {
+  transform-origin: top left;
+}
 .coreGrid {
   display: grid;
   grid-template-columns: repeat(
@@ -622,22 +685,25 @@
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-  border: 1px solid var(--sim-border);
+  border: 2px solid var(--sim-border);
   overflow-wrap: anywhere;
 }
 .core {
   gap: 4px;
   min-height: 72px;
   padding: 10px 12px;
+  border-color: color-mix(in srgb, var(--rt-color) 55%, var(--sim-border));
   border-left: 3px solid var(--rt-color);
-  border-radius: 12px;
-  background: var(--sim-bg);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--rt-fill) 70%, var(--sim-panel));
   transition:
     background-color 180ms ease,
     border-color 180ms ease;
 }
 .core.boxActive {
-  background: color-mix(in srgb, var(--rt-fill) 40%, var(--sim-panel));
+  border-color: var(--rt-color);
+  background: var(--rt-fill);
+  box-shadow: inset 0 0 0 1px var(--rt-color);
 }
 .coreHeader {
   display: flex;
@@ -704,8 +770,15 @@
   min-height: 148px;
   padding: 0;
   border-top: 2px solid var(--rt-color);
-  border-radius: 6px;
-  background: var(--sim-panel);
+  border-radius: 0;
+  background: var(--sim-idle-fill);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.vm.boxActive {
+  border-color: var(--rt-color);
+  background: var(--rt-fill);
 }
 .vmHeader {
   display: flex;
@@ -713,12 +786,11 @@
   align-items: flex-start;
   gap: 4px;
   padding: 10px 12px;
-  border-radius: 4px 4px 0 0;
-  background: color-mix(in srgb, var(--rt-color) 6%, var(--sim-panel));
+  background: color-mix(in srgb, var(--rt-fill) 70%, var(--sim-panel));
   transition: background-color 180ms ease;
 }
 .vm.boxActive .vmHeader {
-  background: color-mix(in srgb, var(--rt-fill) 55%, var(--sim-panel));
+  background: var(--rt-fill);
 }
 .vmOwner {
   min-height: 18px;
@@ -765,10 +837,10 @@
 }
 .queueLabel {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
   color: var(--sim-muted);
   font-size: 11px;
+  white-space: nowrap;
 }
 .queuePausedTag {
   color: var(--sim-error);
@@ -777,22 +849,25 @@
 .queueChips {
   position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-start;
   gap: 4px;
-  /* Keep one job row reserved, including its optional status or wrapped name. */
+  /* Keep the row stable even when empty, overflowing, or showing exiting jobs. */
+  height: 44px;
   min-height: 44px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 .queueChip {
-  max-width: 100%;
+  flex: 0 0 auto;
   padding: 3px 6px;
-  border: 1px solid var(--sim-border);
-  border-radius: 4px;
+  border: 1px solid var(--rt-color, var(--sim-border));
+  border-radius: 999px;
   background: var(--sim-panel);
   font-family: var(--ifm-font-family-monospace);
   font-size: 11px;
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 .queueChipExit {
   /* Fade at the last position without making the next job wrap into a new row. */
@@ -804,12 +879,13 @@
   border-color: var(--sim-error);
 }
 .queueChipNote {
-  display: block;
+  margin-left: 6px;
   color: var(--sim-error);
   font-size: 10px;
 }
 .queueMore {
-  min-height: 44px;
+  flex: 0 0 auto;
+  min-height: 32px;
   padding: 4px 6px;
   border: 0;
   border-radius: 4px;
@@ -818,6 +894,7 @@
   font: inherit;
   font-size: 11px;
   text-align: left;
+  white-space: nowrap;
   cursor: pointer;
   text-decoration: underline;
 }
@@ -835,9 +912,24 @@
   min-width: 0;
   min-height: 40px;
   padding: 8px;
-  border: 1px solid var(--sim-border);
-  border-radius: 4px;
-  background: var(--sim-bg);
+  border: 1px solid var(--rt-color, var(--sim-border));
+  border-radius: 6px;
+  background: var(--sim-panel);
+}
+.synchronizable {
+  border-width: 2px;
+  border-radius: 0;
+  animation: memoryCellEnter 360ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes memoryCellEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .shareableActive,
 .synchronizableActive {
@@ -864,8 +956,8 @@
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px dashed var(--sim-border);
-  border-radius: 6px;
+  border: 2px dashed var(--sim-border);
+  background: color-mix(in srgb, var(--sim-bg) 60%, var(--sim-panel));
 }
 .nativeHeader {
   display: flex;
@@ -882,10 +974,9 @@
 .cellNumber {
   min-width: 3ch;
   padding: 1px 5px;
-  border-radius: 3px;
-  background: var(--sim-panel);
   font-family: var(--ifm-font-family-monospace);
   font-size: 15px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -897,8 +988,8 @@
 }
 
 .consolePanel {
-  border: 1px solid var(--sim-border);
-  border-radius: 9px;
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
   background: var(--sim-panel);
 }
 .consoleSummary {
@@ -1216,8 +1307,8 @@
   position: relative;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid var(--sim-border);
-  border-radius: 8px;
+  border: 2px solid var(--sim-border);
+  border-radius: 999px;
   background-color: var(--sim-panel);
   color: inherit;
   font-family: inherit;
@@ -1275,13 +1366,24 @@
   overflow: visible;
   pointer-events: none;
 }
+.connection {
+  animation: connectionEnter 180ms ease-out both;
+}
+@keyframes connectionEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .connectionTrack {
   fill: none;
-  stroke: var(--sim-muted);
+  stroke: var(--sim-bus-idle);
   stroke-width: 1.25;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.4;
+  opacity: 0.7;
   transition:
     stroke 180ms ease,
     stroke-width 180ms ease,
@@ -1351,9 +1453,9 @@
 
 .railGuides {
   fill: none;
-  stroke: var(--sim-muted);
+  stroke: var(--sim-border);
   stroke-width: 1;
-  opacity: 0.14;
+  opacity: 0.25;
 }
 
 .coreLine {

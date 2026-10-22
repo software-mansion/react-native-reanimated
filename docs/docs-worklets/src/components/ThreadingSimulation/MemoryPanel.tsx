@@ -11,6 +11,7 @@ import {
   threadName,
 } from './runtimeColors';
 import QueueList from './QueueList';
+import AnimatedGrid from './AnimatedGrid';
 import type { RuntimeDescriptor } from './runtimeColors';
 
 interface MemoryPanelProps {
@@ -43,7 +44,9 @@ export default function MemoryPanel({
       ? undefined
       : allRuntimes.find((candidate) => candidate.id === cell.accessedBy);
   return (
-    <div className={styles.memoryColumn}>
+    <AnimatedGrid
+      className={styles.memoryColumn}
+      itemSelector="[data-sim-layout-key]">
       <div className={styles.vmRow}>
         {ordered.map((runtime) => {
           const executor = cores.find(
@@ -73,6 +76,7 @@ export default function MemoryPanel({
             <div
               key={runtime.id}
               data-runtime={runtime.id}
+              data-sim-layout-key={`runtime:${runtime.id}`}
               data-sim-node={`runtime:${runtime.id}`}
               className={clsx(
                 styles.box,
@@ -159,7 +163,7 @@ export default function MemoryPanel({
         })}
       </div>
       {synchronizables.length > 0 && (
-        <div className={styles.nativeRow}>
+        <div className={styles.nativeRow} data-sim-layout-key="native-memory">
           <div className={styles.nativeHeader}>
             <span className={styles.nativeLabel}>Shared native memory</span>
             <span className={styles.boxDetail}>Accessible from any thread</span>
@@ -184,7 +188,7 @@ export default function MemoryPanel({
           </div>
         </div>
       )}
-    </div>
+    </AnimatedGrid>
   );
 }
 

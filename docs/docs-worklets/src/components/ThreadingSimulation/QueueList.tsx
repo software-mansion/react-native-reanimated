@@ -41,8 +41,8 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
         .forEach((chip) => {
           const rect = chip.getBoundingClientRect();
           positions.set(Number(chip.dataset.queueJob), {
-            left: rect.left - origin.left,
-            top: rect.top - origin.top,
+            left: rect.left - origin.left + container.scrollLeft,
+            top: rect.top - origin.top + container.scrollTop,
             width: rect.width,
             height: rect.height,
           });
@@ -119,7 +119,12 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
         {pending.length === 0 ? 'Queue empty' : `Queue · ${pending.length}`}
         {paused && <span className={styles.queuePausedTag}>paused</span>}
       </span>
-      <span ref={chipsRef} className={styles.queueChips}>
+      <span
+        ref={chipsRef}
+        className={styles.queueChips}
+        role="group"
+        aria-label="Queued jobs"
+        tabIndex={pending.length > 0 ? 0 : undefined}>
         {visible.map((entry) => (
           <span
             key={entry.job.id}

@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 import type { Snapshot } from '@site/src/simulation';
 import { connectionRails, routeConnection } from './connectionPaths';
 import type { Point, Rect } from './connectionPaths';
@@ -53,7 +54,8 @@ export default function Connections({
     rails: number[];
     panels: Rect[];
     wires: RoutedWire[];
-  }>({ width: 0, height: 0, rails: [], panels: [], wires: [] });
+    moving: boolean;
+  }>({ width: 0, height: 0, rails: [], panels: [], wires: [], moving: false });
   const current = useRef({ snapshot, runtimes });
   current.current = { snapshot, runtimes };
   const previous = useRef({
@@ -116,6 +118,14 @@ export default function Connections({
           const port = element.querySelector('[data-sim-port]');
           const anchor = port ? rectangle(port) : rect;
           const y = (anchor.top + anchor.bottom) / 2;
+          // A new row grows into view; connect it once its port is visible.
+          const clip = element.closest('[data-sim-layout]');
+          if (clip) {
+            const visible = rectangle(clip);
+            if (y < visible.top || y > visible.bottom) return;
+            rect.top = Math.max(rect.top, visible.top);
+            rect.bottom = Math.min(rect.bottom, visible.bottom);
+          }
           nodes.set(element.dataset.simNode!, rect);
           ports.set(element.dataset.simNode!, { ...rect, top: y, bottom: y });
         });
@@ -286,6 +296,7 @@ export default function Connections({
       setLayout((current) => ({
         width: origin.width,
         height: origin.height,
+        moving: root.querySelector('[data-sim-layout-moving]') !== null,
         wires: [
           ...routed,
           ...current.wires
@@ -314,8 +325,22 @@ export default function Connections({
       }));
     };
     const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
+      if (frame !== 0) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
+    let measuredFrame = -1;
+    const followLayout = (event: Event) => {
+      const time = (event as CustomEvent<number | undefined>).detail;
+      if (typeof time !== 'number') {
+        schedule();
+      } else if (time !== measuredFrame) {
+        measuredFrame = time;
+        // Commit rails before paint, once per frame even when both grids move.
+        flushSync(measure);
+      }
     };
     const observer = new ResizeObserver(schedule);
     observer.observe(root);
@@ -323,10 +348,12 @@ export default function Connections({
       .querySelectorAll('[data-sim-node], [data-sim-code-panel]')
       .forEach((element) => observer.observe(element));
     root.addEventListener('scroll', schedule, true);
+    root.addEventListener('simulationlayout', followLayout);
     measure();
     return () => {
       observer.disconnect();
       root.removeEventListener('scroll', schedule, true);
+      root.removeEventListener('simulationlayout', followLayout);
       cancelAnimationFrame(frame);
     };
   }, [snapshot, tick, codeOpen, settled]);
@@ -383,6 +410,7 @@ export default function Connections({
           tick={tick}
           tickMs={tickMs}
           reducedMotion={reducedMotion}
+          followingLayout={layout.moving}
         />
       ))}
     </svg>

@@ -47,10 +47,7 @@ export default function PanelHelp({
           setPosition({
             left: Math.max(
               16,
-              Math.min(
-                anchor.right - bounds.width,
-                window.innerWidth - bounds.width - 16
-              )
+              Math.min(anchor.left, window.innerWidth - bounds.width - 16)
             ),
             top: Math.max(
               16,

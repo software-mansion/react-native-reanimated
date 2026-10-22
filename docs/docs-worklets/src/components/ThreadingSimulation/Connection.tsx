@@ -22,6 +22,7 @@ interface Props {
   tick: number;
   tickMs: number;
   reducedMotion: boolean;
+  followingLayout: boolean;
 }
 
 const REFLOW_MS = 240;
@@ -38,6 +39,7 @@ export default function Connection({
   tick,
   tickMs,
   reducedMotion,
+  followingLayout,
 }: Props) {
   const trackRef = useRef<SVGPathElement>(null);
   const flowRef = useRef<SVGPathElement>(null);
@@ -68,7 +70,7 @@ export default function Connection({
       track.setAttribute('d', roundedPath(next));
       flow.setAttribute('d', roundedPath(shortenPathEnd(next, 12)));
     };
-    if (reducedMotion) {
+    if (reducedMotion || followingLayout) {
       draw(to);
       group.style.opacity = '1';
       ghost.style.opacity = '0';
@@ -87,7 +89,7 @@ export default function Connection({
     };
     animate(start);
     return () => cancelAnimationFrame(frame);
-  }, [path, reducedMotion]);
+  }, [path, reducedMotion, followingLayout]);
 
   // Geometry may change many times during a transfer; its clock must keep running.
   const pulseKey =
@@ -142,6 +144,7 @@ export default function Connection({
   return (
     <g
       className={clsx(
+        styles.connection,
         runtimeClass(runtime),
         active && styles.connectionActive,
         queued && styles.connectionQueued,

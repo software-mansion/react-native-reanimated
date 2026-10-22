@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import type { CoreSnapshot } from '@site/src/simulation';
 
 import styles from './styles.module.css';
+import AnimatedGrid from './AnimatedGrid';
 import { runtimeClass, threadName } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
 
@@ -19,7 +20,7 @@ export default function CpuPanel({
   rawToDisplayLine,
 }: CpuPanelProps) {
   return (
-    <div className={styles.coreGrid}>
+    <AnimatedGrid className={styles.coreGrid}>
       {[...runtimes]
         .sort((a, b) => {
           const rank = (runtime: RuntimeDescriptor) =>
@@ -81,7 +82,7 @@ export default function CpuPanel({
             </div>
           );
         })}
-    </div>
+    </AnimatedGrid>
   );
 }
 

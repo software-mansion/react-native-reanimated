@@ -60,6 +60,7 @@ export default function ThreadingShowcase({
           className={clsx(styles.toggle, enabled && styles.toggleOn)}
           onClick={() => setEnabled((current) => !current)}
           aria-pressed={enabled}>
+          {!enabled && <span className={styles.spark} aria-hidden="true" />}
           <span className={styles.switch} aria-hidden="true" />
           <span className={styles.label}>
             <span>{enabled ? 'Worklets enabled' : 'Enable Worklets'}</span>

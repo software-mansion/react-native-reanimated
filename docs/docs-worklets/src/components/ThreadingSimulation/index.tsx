@@ -266,6 +266,19 @@ export default function ThreadingSimulation({
             setLocalTickMs(next);
             onTickMsChange?.(next);
           }}
+          onKeyDown={(event) => {
+            const direction =
+              event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                ? 1
+                : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                  ? -1
+                  : 0;
+            if (direction === 0) return;
+            event.preventDefault();
+            const next = snapTick(tickMs + direction * TICK_STEP_MS);
+            setLocalTickMs(next);
+            onTickMsChange?.(next);
+          }}
           aria-label="Tick length in milliseconds"
         />
         <span className={styles.speedValue}>{formatTick(tickMs)}</span>
