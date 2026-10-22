@@ -10,14 +10,11 @@ import type {
   LayoutAnimationStartFunction,
   StyleProps,
 } from 'react-native-reanimated';
+import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
 
 export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
-};
-
-type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
 };
 
 export type TrackerCallCount = {
@@ -191,6 +188,7 @@ declare global {
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (
     tag: number,

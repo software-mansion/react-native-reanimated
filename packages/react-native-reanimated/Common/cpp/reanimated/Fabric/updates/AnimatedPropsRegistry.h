@@ -16,6 +16,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
+  /// Skips tags with updates not yet flushed into the registry.
   /// Also evicts entries that have already been synced to React — by the time
   /// of the next call, the corresponding `settledProps` state is guaranteed to
   /// be committed, so the registry entries are redundant.

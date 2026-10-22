@@ -10,11 +10,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
+  processColor,
   useAnimatedProps,
+  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import type { SettledUpdate } from 'react-native-reanimated/lib/typescript/commonTypes';
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
 
 import {
   createTestValue,
@@ -26,7 +30,9 @@ import {
   wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { Operation } from '../../../ReJest/types';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const NOTIFICATION_NAME = 'SYNC_BACK_ANIMATION_FINISHED';
 // Native sets a view to settled after SETTLED_ANIMATION_THRESHOLD_MS (1000 ms)
@@ -525,6 +531,149 @@ describe('sync of a value that only the style props builder processes, written b
     );
   });
 });
+
+function PendingWriteComponent({
+  onReady,
+}: {
+  onReady: (
+    shadowNodeWrapper: NonNullable<Operation['shadowNodeWrapper']>,
+    tag: number
+  ) => void;
+}) {
+  const ref = useAnimatedRef<ComponentRef<typeof ScrollView>>();
+
+  useEffect(() => {
+    onReady(
+      ref() as NonNullable<Operation['shadowNodeWrapper']>,
+      ref.getTag!()!
+    );
+  }, [onReady, ref]);
+
+  return <Animated.ScrollView ref={ref} style={styles.box} />;
+}
+
+describe('sync of a pending value written by a different origin', () => {
+  test.each<WriteOrigin>(['animatedStyle', 'animatedProps'])(
+    'defers the snapshot until the pending %s write reaches the registry',
+    async (lastWriteOrigin) => {
+      let shadowNodeWrapper: NonNullable<Operation['shadowNodeWrapper']>;
+      let tag = -1;
+      await render(
+        <PendingWriteComponent
+          onReady={(wrapper, viewTag) => {
+            shadowNodeWrapper = wrapper;
+            tag = viewTag;
+          }}
+        />
+      );
+      const written = createSynchronizable(false);
+      const released = createSynchronizable(false);
+      const lastWriteIsStyle = lastWriteOrigin === 'animatedStyle';
+
+      try {
+        await runOnUIBlocking(() => {
+          'worklet';
+          const values = getNativeBoxShadow(0, !lastWriteIsStyle);
+          global._updateProps([
+            {
+              name: 'ScrollView',
+              shadowNodeWrapper,
+              updates: values,
+              isAnimatedProps: lastWriteIsStyle,
+            },
+          ]);
+          global._maybeFlushUIUpdatesQueue();
+        });
+        blockJSThread(SYNC_BACK_DELAY_MS);
+        const firstUpdate = getSettledUpdates().find(
+          (update) => update.viewTag === tag
+        );
+        expect(firstUpdate !== undefined).toBe(true);
+
+        scheduleOnUI(() => {
+          'worklet';
+          const values = getNativeBoxShadow(1, lastWriteIsStyle);
+          global._updateProps([
+            {
+              name: 'ScrollView',
+              shadowNodeWrapper,
+              updates: values,
+              isAnimatedProps: !lastWriteIsStyle,
+            },
+          ]);
+          written.setBlocking(true);
+          const deadline = performance.now() + 5000;
+          while (!released.getBlocking() && performance.now() < deadline) {
+            // Keep the pending batch on the UI thread until JS reads it.
+          }
+          global._maybeFlushUIUpdatesQueue();
+        });
+        await Promise.resolve();
+        const deadline = performance.now() + 3000;
+        while (!written.getBlocking() && performance.now() < deadline) {
+          // Keep the automatic sync timer from reading the registry.
+        }
+        expect(written.getBlocking()).toBe(true);
+        const pendingUpdates = getSettledUpdates().filter(
+          (update) => update.viewTag === tag
+        );
+        released.setBlocking(true);
+
+        expect(pendingUpdates.length).toBe(0);
+        const flushDeadline = performance.now() + 3000;
+        let flushedUpdate: SettledUpdate | undefined;
+        do {
+          flushedUpdate = getSettledUpdates().find(
+            (update) => update.viewTag === tag
+          );
+        } while (!flushedUpdate && performance.now() < flushDeadline);
+        expect(flushedUpdate !== undefined).toBe(true);
+        if (flushedUpdate) {
+          expect(
+            flushedUpdate.keysLastWrittenByAnimatedStyle.includes('boxShadow')
+          ).toBe(lastWriteIsStyle);
+          for (const values of [flushedUpdate.props, flushedUpdate.style]) {
+            const [shadow] = values.boxShadow as BoxShadowValue[];
+            expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+            expect('color' in shadow).toBe(lastWriteIsStyle);
+            if (lastWriteIsStyle) {
+              expect(typeof shadow.color).toBe('number');
+            }
+          }
+        }
+      } finally {
+        released.setBlocking(true);
+        await runOnUIBlocking(() => {
+          'worklet';
+          global._maybeFlushUIUpdatesQueue();
+        });
+      }
+    }
+  );
+});
+
+function getSettledUpdates(): SettledUpdate[] {
+  return (
+    global.__reanimatedModuleProxy.getSettledUpdates as () => SettledUpdate[]
+  )();
+}
+
+function getNativeBoxShadow(progress: number, isAnimatedStyle: boolean) {
+  'worklet';
+  const shadow = {
+    offsetX: 0,
+    offsetY: 4,
+    blurRadius: interpolate(progress, [0, 1], [1, SETTLED_BLUR_RADIUS]),
+    spreadDistance: 0,
+  };
+  return {
+    boxShadow: [
+      isAnimatedStyle
+        ? { ...shadow, color: processColor(STYLE_BUILDER_DEFAULT_SHADOW_COLOR) }
+        : shadow,
+    ],
+  };
+}
 
 const styles = StyleSheet.create({
   container: {
