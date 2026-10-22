@@ -69,6 +69,7 @@ describe('reference examples', () => {
       '[rn] 42',
     ],
     shareableHost: ['[rn] Host: 43', '[rn] Guest: 43'],
+    serializableCopy: ['[ui] UI copy: 20', '[rn] RN original: 10'],
     apiSynchronizable: ['[ui] {"a":24}'],
     synchronizableUpdater: ['[rn] 2'],
     runtimeGlobals: ['[rn] RN global: 42', '[rn] UI global: undefined'],
@@ -126,6 +127,26 @@ describe('reference examples', () => {
         .length,
       2
     );
+  });
+
+  it('keeps the source object and earlier snapshots unchanged when UI edits its copy', () => {
+    const snapshots = runExample('serializableCopy');
+    const globals = (snapshot: (typeof snapshots)[number], runtime: string) =>
+      snapshot.cores.find((core) => core.id === runtime)!.globals;
+    const received = snapshots.find(
+      (snapshot) => globals(snapshot, 'ui').settings === '{"volume":10}'
+    )!;
+    assert.ok(received);
+    const changed = snapshots.find(
+      (snapshot) => globals(snapshot, 'ui').settings === '{"volume":20}'
+    )!;
+    assert.ok(changed);
+    assert.ok(changed.tick > received.tick);
+    assert.deepEqual(globals(changed, 'rn'), { settings: '{"volume":10}' });
+    assert.deepEqual(globals(received, 'ui'), { settings: '{"volume":10}' });
+    const last = snapshots.at(-1)!;
+    assert.deepEqual(globals(last, 'rn'), { settings: '{"volume":10}' });
+    assert.deepEqual(globals(last, 'ui'), { settings: '{"volume":20}' });
   });
 
   it('updates the Shareable on its highlighted assignment line', () => {

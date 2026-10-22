@@ -3,6 +3,9 @@ id: serializable # lower-case to fix alphabetical order
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as SerializableCopySnippet from './_examples/serializableCopy';
+import SerializableCopySource from '!!raw-loader!./_examples/serializableCopy';
+
 # Serializable
 
 Serializable is a type of shared memory that holds an immutable value that can be serialized and deserialized across different JavaScript Runtimes. It allows passing JavaScript values between Runtimes while ensuring that the data is correctly transferred and reconstructed. The reference cannot be manipulated, as it doesn't represent any standard JavaScript object.
@@ -25,6 +28,16 @@ Serializable is a type of shared memory that holds an immutable value that can b
   };
   ```
 </details>
+
+## Passing a copy
+
+Scheduling functions such as `scheduleOnUI` automatically serialize their arguments. For a plain object, the destination runtime reconstructs its own JavaScript object from the serialized value.
+
+<ThreadingSimulation module={SerializableCopySnippet} source={SerializableCopySource}/>
+
+Watch `settings` under **Globals** in each runtime. UI receives `{ volume: 10 }` and changes its own copy to `{ volume: 20 }`. The callback on RN then reads the original, which still contains `{ volume: 10 }`.
+
+The Serializable holds an immutable representation of the value; the JavaScript object reconstructed on UI is a separate, mutable copy. Changing that copy does not update the original object or the Serializable. This example stores each object on `globalThis` to make the two copies visible; globals themselves are not shared between runtimes.
 
 ## Supported types
 
