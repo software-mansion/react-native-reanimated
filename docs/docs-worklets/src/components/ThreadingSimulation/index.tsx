@@ -143,7 +143,6 @@ export default function ThreadingSimulation({
   const history = collectHistory(
     simulation.snapshots,
     simulation.tick,
-    simulation.settled,
     simulation.rawToDisplayLine
   );
   const logs = collectLogs(simulation.snapshots, simulation.tick - 1);
@@ -166,7 +165,7 @@ export default function ThreadingSimulation({
       rawToDisplayLine={simulation.rawToDisplayLine}
       blockEnds={simulation.blockEnds}
       history={history}
-      settled={simulation.settled}
+      tickMs={tickMs}
       columns={codeColumns}
     />
   );
@@ -322,6 +321,7 @@ export default function ThreadingSimulation({
         )}>
         <Panel
           title="Threads"
+          className={styles.areaThreads}
           help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
           <CpuPanel
             runtimes={runtimes}
@@ -432,11 +432,7 @@ export default function ThreadingSimulation({
             {toolbar}
             {activity}
             {legend}
-            <div
-              className={clsx(
-                styles.workspace,
-                codeOpen && styles.workspaceWithCode
-              )}>
+            <div className={styles.workspace}>
               {codeOpen && codePanel}
               {machine}
               {connections}
@@ -559,16 +555,12 @@ function collectActiveSince(
 function collectHistory(
   snapshots: Snapshot[],
   currentTick: number,
-  settled: boolean,
   rawToDisplayLine: number[]
 ): LineHistory {
   const history: LineHistory = new Map();
   const seenByCore = new Map<string, Set<number>>();
   const oldest = Math.max(currentTick - HISTORY_DEPTH, 0);
   for (let tick = currentTick; tick >= oldest; tick--) {
-    if (tick === currentTick && !settled) {
-      continue;
-    }
     const snapshot = snapshots[tick];
     if (snapshot === undefined) {
       continue;

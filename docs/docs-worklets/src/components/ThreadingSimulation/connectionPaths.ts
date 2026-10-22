@@ -15,7 +15,7 @@ export interface RailLayout {
   panels: Rect[];
 }
 
-/** Four stable lanes fit in each reserved 32px inter-panel gutter. */
+/** Four stable lanes on each outer edge; never create rails between columns. */
 export function connectionRails(
   panels: Rect[],
   bounds: Rect,
@@ -23,15 +23,13 @@ export function connectionRails(
   gap = 32
 ): RailLayout {
   const offset = ((lane % 4) - 1.5) * 5;
+  if (panels.length === 0) return { vertical: [], horizontal: [], panels };
+  const left = Math.min(...panels.map((panel) => panel.left));
+  const right = Math.max(...panels.map((panel) => panel.right));
   return {
-    vertical: [
-      ...new Set(
-        panels.flatMap((panel) => [
-          panel.left - gap / 2 + offset,
-          panel.right + gap / 2 + offset,
-        ])
-      ),
-    ].filter((x) => x >= bounds.left && x <= bounds.right),
+    vertical: [left - gap / 2 + offset, right + gap / 2 + offset].filter(
+      (x) => x >= bounds.left && x <= bounds.right
+    ),
     horizontal: [
       ...new Set(
         panels.flatMap((panel) => [
@@ -78,9 +76,10 @@ export function routeConnection(
 ): Point[] {
   let best: Point[] = [];
   let bestCost = Infinity;
-  const clear = (a: Point, b: Point) =>
+  const clear = (a: Point, b: Point, attachment = false) =>
     !obstacles.some((rect) => crossesRect(a, b, rect)) &&
-    (a.x !== b.x || !rails.panels.some((rect) => crossesRect(a, b, rect)));
+    ((attachment && a.y === b.y) ||
+      !rails.panels.some((rect) => crossesRect(a, b, rect)));
   const consider = (points: Point[]) => {
     const path = points.filter(
       (point, index) =>
@@ -115,7 +114,8 @@ export function routeConnection(
     for (let index = 1; index < path.length; index++) {
       const a = path[index - 1],
         b = path[index];
-      if (!clear(a, b)) return;
+      // Only the short branches into their own cards may enter a panel.
+      if (!clear(a, b, index === 1 || index === path.length - 1)) return;
       cost += Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
     if (cost < bestCost) {
@@ -128,7 +128,7 @@ export function routeConnection(
     return [rect.left, rect.right].flatMap((x) => {
       const point = { x, y };
       return rails.vertical
-        .filter((rail) => clear(point, { x: rail, y }))
+        .filter((rail) => clear(point, { x: rail, y }, true))
         .map((rail) => ({ point, rail: { x: rail, y } }));
     });
   };

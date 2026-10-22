@@ -12,6 +12,7 @@ const MAX_CHIPS = 4;
 interface Entry {
   job: PendingJob;
   exitAt: number | null;
+  position?: { left: number; top: number; width: number; height: number };
 }
 
 interface QueueListProps {
@@ -26,10 +27,27 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
   );
   const shownRef = useRef<Set<number>>(new Set());
   const timersRef = useRef<Set<number>>(new Set());
+  const chipsRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const now = Date.now();
     const shown = shownRef.current;
+    const container = chipsRef.current;
+    const origin = container?.getBoundingClientRect();
+    const positions = new Map<number, Entry['position']>();
+    if (container && origin) {
+      container
+        .querySelectorAll<HTMLElement>('[data-queue-job]')
+        .forEach((chip) => {
+          const rect = chip.getBoundingClientRect();
+          positions.set(Number(chip.dataset.queueJob), {
+            left: rect.left - origin.left,
+            top: rect.top - origin.top,
+            width: rect.width,
+            height: rect.height,
+          });
+        });
+    }
     setEntries((current) => {
       const next: Entry[] = [];
       const seen = new Set<number>();
@@ -41,7 +59,11 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
         } else if (entry.exitAt !== null) {
           next.push(entry);
         } else if (shown.has(entry.job.id)) {
-          next.push({ job: entry.job, exitAt: now + EXIT_MS });
+          next.push({
+            job: entry.job,
+            exitAt: now + EXIT_MS,
+            position: positions.get(entry.job.id),
+          });
         }
       }
       for (const job of pending) {
@@ -97,10 +119,12 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
         {pending.length === 0 ? 'Queue empty' : `Queue · ${pending.length}`}
         {paused && <span className={styles.queuePausedTag}>paused</span>}
       </span>
-      <span className={styles.queueChips}>
+      <span ref={chipsRef} className={styles.queueChips}>
         {visible.map((entry) => (
           <span
             key={entry.job.id}
+            data-queue-job={entry.job.id}
+            style={entry.exitAt !== null ? entry.position : undefined}
             className={clsx(
               styles.queueChip,
               entry.job.pastDue === true && styles.queueChipPastDue,

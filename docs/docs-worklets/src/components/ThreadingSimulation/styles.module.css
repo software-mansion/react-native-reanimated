@@ -257,24 +257,24 @@
   min-width: 0;
 }
 
-@container simulation (min-width: 1050px) {
-  .workspaceWithCode {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-    align-items: start;
-  }
-}
 @container machine (min-width: 620px) {
   .executionWithPhone {
     grid-template-columns: minmax(0, 1fr) 218px;
-    grid-template-rows: min-content 1fr;
     align-items: start;
+  }
+  .executionWithPhone .areaThreads {
+    grid-column: 1 / -1;
   }
   .executionWithPhone .areaPhone {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 2;
   }
   .executionWithPhone .areaMemory {
     grid-column: 1;
+  }
+  .executionWithPhone .vmRow {
+    /* Both columns must be reachable from the outer gutters. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -557,11 +557,12 @@
   margin-top: 1em;
 }
 .codeLine {
+  position: relative;
+  isolation: isolate;
   display: flex;
   min-width: 0;
   padding: 0 12px 0 0;
   border-left: 3px solid transparent;
-  transition: background-color 120ms ease;
 }
 .lineNumber {
   flex: 0 0 38px;
@@ -582,19 +583,18 @@
 .codeBlockEnd {
   break-inside: avoid;
 }
-.codeLineActive {
-  border-left-color: var(--rt-color);
+.codeHighlight {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 -3px;
+  border-left: 3px solid var(--rt-color);
   background: var(--rt-fill);
+  pointer-events: none;
+  transition: opacity var(--code-fade-ms) linear;
 }
-.codeLineDone1 {
-  border-left-color: var(--rt-color);
-  background: color-mix(in srgb, var(--rt-fill) 65%, transparent);
-}
-.codeLineDone2 {
-  background: color-mix(in srgb, var(--rt-fill) 40%, transparent);
-}
-.codeLineDone3 {
-  background: color-mix(in srgb, var(--rt-fill) 20%, transparent);
+.codeHighlightActive {
+  transition-duration: var(--code-rise-ms);
+  transition-timing-function: ease-out;
 }
 .codeDots {
   display: inline-flex;
@@ -775,10 +775,13 @@
   font-weight: 600;
 }
 .queueChips {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 4px;
+  /* Keep one job row reserved, including its optional status or wrapped name. */
+  min-height: 44px;
 }
 .queueChip {
   max-width: 100%;
@@ -792,6 +795,9 @@
   overflow-wrap: anywhere;
 }
 .queueChipExit {
+  /* Fade at the last position without making the next job wrap into a new row. */
+  position: absolute;
+  pointer-events: none;
   animation: queueExit 320ms ease both;
 }
 .queueChipPastDue {

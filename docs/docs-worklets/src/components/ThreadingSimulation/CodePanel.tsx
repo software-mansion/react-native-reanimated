@@ -18,7 +18,7 @@ interface CodePanelProps {
   rawToDisplayLine: number[];
   blockEnds: Map<number, number>;
   history: LineHistory;
-  settled: boolean;
+  tickMs: number;
   columns?: number;
 }
 
@@ -29,7 +29,7 @@ interface CodeListProps {
   rawToDisplayLine: number[];
   blockEnds: Map<number, number>;
   history: LineHistory;
-  settled: boolean;
+  tickMs: number;
   columns: number;
   className?: string;
 }
@@ -45,7 +45,7 @@ function CodeList({
   rawToDisplayLine,
   blockEnds,
   history,
-  settled,
+  tickMs,
   columns,
   className,
 }: CodeListProps) {
@@ -61,7 +61,7 @@ function CodeList({
   );
   const activeByLine = new Map<number, string[]>();
   for (const core of cores) {
-    if (!settled || core.line === null) {
+    if (core.line === null) {
       continue;
     }
     const displayLine = rawToDisplayLine[core.line] ?? -1;
@@ -90,7 +90,13 @@ function CodeList({
           tabIndex={0}
           role="region"
           aria-label="Example source code"
-          style={columns > 1 ? { columnCount: columns } : undefined}>
+          style={
+            {
+              columnCount: columns > 1 ? columns : undefined,
+              '--code-fade-ms': `${Math.max(100, tickMs)}ms`,
+              '--code-rise-ms': `${Math.min(80, tickMs / 2)}ms`,
+            } as React.CSSProperties
+          }>
           {chunkLines(tokens, blockStartOf).map((chunk, chunkIndex) => (
             <div key={chunkIndex} className={styles.codeChunk}>
               {chunk.map(({ line, lineNumber }) => {
@@ -99,12 +105,6 @@ function CodeList({
                 const executed = history.get(blockStart);
                 const inBlock = blockStart !== lineNumber;
                 const blockEnd = blockEnds.get(blockStart);
-                const recent =
-                  executed === undefined
-                    ? undefined
-                    : [...executed].sort((a, b) => a[1] - b[1])[0];
-                const primary = active[0] ?? recent?.[0];
-                const age = recent?.[1];
                 return (
                   <div
                     key={lineNumber}
@@ -118,13 +118,29 @@ function CodeList({
                       styles.codeLine,
                       blockEnd !== undefined && styles.codeBlockStart,
                       inBlock && styles.codeBlockInner,
-                      inBlock && lineNumber === blockEnd && styles.codeBlockEnd,
-                      primary !== undefined && classFor(primary),
-                      active.length > 0 && styles.codeLineActive,
-                      active.length === 0 && age === 1 && styles.codeLineDone1,
-                      active.length === 0 && age === 2 && styles.codeLineDone2,
-                      active.length === 0 && age === 3 && styles.codeLineDone3
+                      inBlock && lineNumber === blockEnd && styles.codeBlockEnd
                     )}>
+                    {/* Keep each colour mounted so its background and edge fade together. */}
+                    {runtimes.map((runtime) => {
+                      const isActive = active.includes(runtime.id);
+                      const age = executed?.get(runtime.id);
+                      return (
+                        <span
+                          key={runtime.id}
+                          aria-hidden="true"
+                          className={clsx(
+                            styles.codeHighlight,
+                            classFor(runtime.id),
+                            isActive && styles.codeHighlightActive
+                          )}
+                          style={{
+                            opacity: isActive
+                              ? 1
+                              : ([0.65, 0.65, 0.4, 0.2][age ?? -1] ?? 0),
+                          }}
+                        />
+                      );
+                    })}
                     <span className={styles.lineNumber} aria-hidden="true">
                       {lineNumber}
                     </span>

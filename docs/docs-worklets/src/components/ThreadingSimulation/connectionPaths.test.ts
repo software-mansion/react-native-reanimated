@@ -137,6 +137,64 @@ describe('responsive connection routing', () => {
       []
     );
   });
+  it('keeps every lane outside the content, including a phone beside the runtimes', () => {
+    for (const width of [330, 700, 1200]) {
+      const layoutBounds = { left: 0, top: 0, right: width, bottom: 1000 };
+      const panels = [
+        rect(28, 16, width - 56, 200),
+        rect(28, 248, width - 56, 120),
+        rect(28, 400, (width - 88) / 2, 400),
+        rect((width + 32) / 2, 400, (width - 88) / 2, 350),
+      ];
+      for (let lane = 0; lane < 4; lane++) {
+        const rails = connectionRails(panels, layoutBounds, lane);
+        assert.equal(rails.vertical.length, 2);
+        assert.ok(rails.vertical[0] > 0 && rails.vertical[0] < 28);
+        assert.ok(rails.vertical[1] > width - 28 && rails.vertical[1] < width);
+      }
+    }
+  });
+  it('connects all phone-example cards using only the outer gutters', () => {
+    const panels = [
+      rect(28, 16, 644, 160),
+      rect(28, 208, 644, 140),
+      rect(28, 380, 394, 550),
+      rect(454, 380, 218, 400),
+    ];
+    const nodes = [
+      rect(44, 255, 290, 72),
+      rect(366, 255, 290, 72),
+      rect(44, 427, 362, 148),
+      rect(44, 589, 362, 148),
+      panels[3],
+    ];
+    const rails = connectionRails(panels, bounds, 1);
+    for (const [source, target] of [
+      [0, 2],
+      [1, 3],
+      [1, 4],
+      [0, 4],
+    ]) {
+      const path = routeConnection(
+        nodes[source],
+        nodes[target],
+        nodes,
+        bounds,
+        rails
+      );
+      assert.ok(path.length > 1, `route ${source} → ${target} exists`);
+      for (let i = 1; i < path.length; i++) {
+        if (path[i].x === path[i - 1].x) {
+          assert.ok(path[i].x < 28 || path[i].x > 672);
+        }
+        if (i > 1 && i < path.length - 1) {
+          assert.ok(
+            panels.every((panel) => !crossesRect(path[i - 1], path[i], panel))
+          );
+        }
+      }
+    }
+  });
   it('handles missing geometry', () => assert.equal(roundedPath([]), ''));
   it('keeps different threads on separate reserved lanes', () => {
     const from = rect(20, 20),
