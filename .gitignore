@@ -91,7 +91,8 @@ playwright-report/
 playwright/.cache/
 
 # Claude
-.claude
+.claude/*
+!.claude/skills/
 
 # Other agents
 .agents
