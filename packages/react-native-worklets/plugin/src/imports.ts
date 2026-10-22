@@ -24,13 +24,7 @@ export function updateRelativeRequires(
         const requiredModule = nodePath.get(
           'arguments'
         )[0] as NodePath<StringLiteral>;
-        if (
-          requiredModule.node.value.startsWith('.') &&
-          canForwardRelativeImport(
-            state.file.opts.filename || '',
-            state.importForwarding.relativePaths
-          )
-        ) {
+        if (requiredModule.node.value.startsWith('.')) {
           requiredModule.replaceWith(
             createImportPathLiteral(requiredModule.node.value, state)
           );

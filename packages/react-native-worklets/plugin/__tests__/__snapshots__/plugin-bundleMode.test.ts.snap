@@ -115,18 +115,6 @@ foo.__pluginVersion = "x.y.z";
 export default foo;"
 `;
 
-exports[`babel plugin in bundleMode worklet file emission does not rebase relative requires from non-workletizable files 1`] = `
-"const baz = function () {
-  "use no memo";
-
-  const helper = require("./helper");
-  return helper.foo();
-};
-baz.__workletHash = 1;
-baz.__pluginVersion = "x.y.z";
-export default baz;"
-`;
-
 exports[`babel plugin in bundleMode worklet file emission forwards closure variables from source to factory 1`] = `
 "const a = 1;
 const b = 2;
@@ -162,6 +150,18 @@ const bar = function () {
 bar.__workletHash = 1;
 bar.__pluginVersion = "x.y.z";
 export default bar;"
+`;
+
+exports[`babel plugin in bundleMode worklet file emission rebases relative requires from files without import forwarding 1`] = `
+"const baz = function () {
+  "use no memo";
+
+  const helper = require("../../not-a-workletizable-package/src/helper");
+  return helper.foo();
+};
+baz.__workletHash = 1;
+baz.__pluginVersion = "x.y.z";
+export default baz;"
 `;
 
 exports[`babel plugin in bundleMode worklet file emission rebases relative requires inside the worklet body against the worklets directory 1`] = `
