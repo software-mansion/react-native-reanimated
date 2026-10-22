@@ -1,4 +1,3 @@
-#import <reanimated/NativeAnimations/NativeAnimationRealization.h>
 #import <reanimated/Tools/ReanimatedSystraceSection.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -10,11 +9,14 @@
 #import <React/RCTFabricSurface.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
+#import <react/renderer/components/view/ViewProps.h>
+#import <react/renderer/components/view/ViewShadowNode.h>
 
 #import <QuartzCore/QuartzCore.h>
 
 #import <algorithm>
 #import <cmath>
+#import <cstring>
 #import <string>
 #import <unordered_map>
 #import <utility>
@@ -46,8 +48,6 @@
 namespace reanimated::native_animation {
 
 namespace {
-
-constexpr double kModelEndpointEpsilon = 0.01;
 
 NSString *keyPathForTarget(const AnimationTarget target)
 {
@@ -140,7 +140,7 @@ struct ModelMatchesVisitor {
 
   static bool isClose(const double lhs, const double rhs)
   {
-    return std::abs(lhs - rhs) <= kModelEndpointEpsilon;
+    return std::abs(lhs - rhs) <= ENDPOINT_TOLERANCE;
   }
 
   bool operator()(const double scalar) const
@@ -177,10 +177,58 @@ bool modelMatchesEndpoint(CALayer *layer, const AnimationTrack &track)
   return model != nil && std::visit(ModelMatchesVisitor{model}, track.segments.back().endValue);
 }
 
-bool modelHoldsOnlyProp(REAUIView<RCTComponentViewProtocol> *view, const AnimationTarget target)
+/// React Native multiplies the layer opacity by the opacity filter, so the model does not hold the prop.
+bool hasOpacityFilter(const facebook::react::ViewProps &viewProps)
+{
+  return std::ranges::any_of(viewProps.filter, [](const facebook::react::FilterFunction &filter) {
+    return filter.type == facebook::react::FilterType::Opacity;
+  });
+}
+
+bool hasOpacityFilter(REAUIView<RCTComponentViewProtocol> *view)
 {
   const auto viewProps = std::dynamic_pointer_cast<const facebook::react::ViewProps>([view props]);
-  return viewProps == nullptr || modelHoldsOnlyProp(*viewProps, target);
+  return viewProps != nullptr && hasOpacityFilter(*viewProps);
+}
+
+/// False when React Native draws a part of the view from the size at the mount: a private layer, a shadow
+/// path, a transform origin, or a percent translation.
+bool pictureFollowsBounds(
+    const facebook::react::ViewProps &viewProps,
+    const facebook::react::LayoutMetrics &layoutMetrics)
+{
+  using namespace facebook::react;
+  const auto borderMetrics = viewProps.resolveBorderMetrics(layoutMetrics);
+  const auto &radii = borderMetrics.borderRadii;
+  const bool hasNoBorder = borderMetrics.borderWidths.isUniform() && borderMetrics.borderWidths.left == 0 &&
+      borderMetrics.borderColors.isUniform() && borderMetrics.borderStyles.isUniform() &&
+      borderMetrics.borderStyles.left == BorderStyle::Solid;
+  const bool hasCircularRadii = radii.isUniform() && radii.topLeft.horizontal == radii.topLeft.vertical;
+  const bool hasOnlyOpacityFilters = std::ranges::all_of(
+      viewProps.filter, [](const FilterFunction &filter) { return filter.type == FilterType::Opacity; });
+  const bool hasSizeDependentTransform =
+      viewProps.transformOrigin.isSet() ||
+      std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
+        return operation.x.unit == UnitType::Percent || operation.y.unit == UnitType::Percent;
+      });
+  return hasNoBorder && hasCircularRadii && viewProps.outlineWidth == 0 && viewProps.boxShadow.empty() &&
+      hasOnlyOpacityFilters && viewProps.backgroundImage.empty() && viewProps.shadowOpacity == 0 &&
+      !hasSizeDependentTransform;
+}
+
+/// The mounted form: a private layer has no delegate.
+bool pictureFollowsBounds(REAUIView *view)
+{
+  CALayer *layer = view.layer;
+  if (layer.mask != nil) {
+    return false;
+  }
+  for (CALayer *sublayer in layer.sublayers) {
+    if (sublayer.delegate == nil) {
+      return false;
+    }
+  }
+  return true;
 }
 
 struct TimingFunctionVisitor {
@@ -274,6 +322,8 @@ class CoreAnimationMountedAnimation final : public MountedAnimation {
   };
 
   CAAnimation *makeAnimation(const AnimationTrack &track, id fromValue, id toValue) const;
+  NSArray<CABasicAnimation *> *makeValueAnimations(AnimationTarget target, id fromValue, id toValue) const;
+  CABasicAnimation *makeOffsetAnimation(NSString *keyPath, double fromOffset, double toOffset) const;
 
   CoreAnimationPlatform &platform_;
   __strong CALayer *layer_;
@@ -289,6 +339,22 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   void setTrackEndListener(TrackEndListener listener) override
   {
     trackEndListener_ = std::move(listener);
+  }
+
+  bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) override
+  {
+    using namespace facebook::react;
+    const bool changesSize = isSizeTarget(track.target) && changesValue(track);
+    if (!view.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
+      return !changesSize;
+    }
+    const auto &viewProps = static_cast<const ViewProps &>(*view.props);
+    if (track.target == AnimationTarget::Opacity) {
+      return !hasOpacityFilter(viewProps);
+    }
+    return !changesSize ||
+        (std::strcmp(view.componentName, ViewComponentName) == 0 &&
+         pictureFollowsBounds(viewProps, view.layoutMetrics));
   }
 
   bool isSurfaceRunning(const SurfaceId surfaceId) override
@@ -311,13 +377,16 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       if (!canPlayWithCoreAnimation(track)) {
         return AnimationResultReason::UnsupportedRealization;
       }
+      if (isSizeTarget(track.target) && changesValue(track) && !pictureFollowsBounds(view)) {
+        return AnimationResultReason::UnsupportedRealization;
+      }
       if (track.endpointPolicy != EndpointPolicy::MountedModelMustMatchEndpoint) {
         continue;
       }
       if (!modelMatchesEndpoint(layer, track)) {
         return AnimationResultReason::EndpointMismatch;
       }
-      if (!modelHoldsOnlyProp(view, track.target)) {
+      if (track.target == AnimationTarget::Opacity && hasOpacityFilter(view)) {
         return AnimationResultReason::UnsupportedRealization;
       }
     }
@@ -470,21 +539,71 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
   const CFTimeInterval delay = calculateMediaDurationFromSlowAnimationsDuration(track.delayMs / 1000.0);
   // The layer clock can differ from the media clock when an ancestor changes speed or time offset.
   const CFTimeInterval layerOrigin = [layer_ convertTime:origin fromLayer:nil];
+  const CFTimeInterval duration =
+      holdsStartValue ? delay : calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
 
-  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPathForTarget(track.target)];
-  animation.fromValue = fromValue;
-  if (holdsStartValue) {
-    animation.toValue = fromValue;
-    animation.duration = delay;
-    animation.beginTime = layerOrigin;
-  } else {
-    animation.toValue = toValue;
-    animation.duration = calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
-    animation.beginTime = layerOrigin + delay;
+  NSArray<CABasicAnimation *> *members =
+      makeValueAnimations(track.target, fromValue, holdsStartValue ? fromValue : toValue);
+  CAAnimation *animation = members.firstObject;
+  if (members.count > 1) {
+    for (CABasicAnimation *member in members) {
+      member.duration = duration;
+      member.fillMode = kCAFillModeBoth;
+    }
+    CAAnimationGroup *group = [CAAnimationGroup animation];
+    group.animations = members;
+    animation = group;
+  }
+  animation.duration = duration;
+  animation.beginTime = holdsStartValue ? layerOrigin : layerOrigin + delay;
+  if (!holdsStartValue) {
     animation.timingFunction = std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
   }
   animation.fillMode = holdsEndValue ? kCAFillModeBoth : kCAFillModeBackwards;
   animation.removedOnCompletion = !holdsEndValue;
+  return animation;
+}
+
+/// A position plays as an offset from the model, because a value animation hides the animations of its key
+/// path that begin before it. A size moves the position by half of its offset, so the frame origin stays.
+NSArray<CABasicAnimation *> *
+CoreAnimationMountedAnimation::makeValueAnimations(const AnimationTarget target, id fromValue, id toValue) const
+{
+  NSString *keyPath = keyPathForTarget(target);
+  const auto offsetOf = [this, keyPath](id value) {
+    return [value doubleValue] - [[layer_ valueForKeyPath:keyPath] doubleValue];
+  };
+  switch (target) {
+    case AnimationTarget::PositionX:
+    case AnimationTarget::PositionY:
+      return @[ makeOffsetAnimation(keyPath, offsetOf(fromValue), offsetOf(toValue)) ];
+    case AnimationTarget::Width:
+    case AnimationTarget::Height: {
+      CABasicAnimation *size = [CABasicAnimation animationWithKeyPath:keyPath];
+      size.fromValue = fromValue;
+      size.toValue = toValue;
+      NSString *positionKeyPath =
+          keyPathForTarget(target == AnimationTarget::Width ? AnimationTarget::PositionX : AnimationTarget::PositionY);
+      return @[ size, makeOffsetAnimation(positionKeyPath, offsetOf(fromValue) / 2, offsetOf(toValue) / 2) ];
+    }
+    default: {
+      CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
+      animation.fromValue = fromValue;
+      animation.toValue = toValue;
+      return @[ animation ];
+    }
+  }
+}
+
+CABasicAnimation *CoreAnimationMountedAnimation::makeOffsetAnimation(
+    NSString *keyPath,
+    const double fromOffset,
+    const double toOffset) const
+{
+  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
+  animation.additive = YES;
+  animation.fromValue = @(fromOffset);
+  animation.toValue = @(toOffset);
   return animation;
 }
 
