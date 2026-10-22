@@ -1,8 +1,11 @@
 'use strict';
 
 import {
+  evaluateLazyBundles,
+  getLoadedLazyBundles,
   installLazyBundleRegistrar,
   makeLazyBundleRegistrar,
+  registerWorkerRuntimeForLazyBundles,
 } from './bundleMode/lazyBundles';
 import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
@@ -131,8 +134,11 @@ export function createWorkletRuntime(
   }
 
   const lazyBundleRegistrar = makeLazyBundleRegistrar();
+  const lazyBundles = getLoadedLazyBundles();
+  const deferInitializer = lazyBundles.length > 0 && !!initializerFn;
+  const eagerInitializerFn = deferInitializer ? undefined : initializerFn;
 
-  return WorkletsModule.createWorkletRuntime(
+  const workletRuntime = WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
@@ -142,11 +148,12 @@ export function createWorkletRuntime(
       } else if (__DEV__) {
         setupConsoleForwarding(runtimeBoundCapturableConsole!);
         installLazyBundleRegistrar(lazyBundleRegistrar);
+        evaluateLazyBundles(lazyBundles);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }
-      initializerFn?.();
+      eagerInitializerFn?.();
     }),
     useDefaultQueue,
     customQueue,
@@ -154,6 +161,21 @@ export function createWorkletRuntime(
     enableLocking,
     enableNetworking
   );
+
+  /**
+   * The initializer can be defined in a lazy chunk. Its closure is unpacked
+   * before the runtime runs the initializer worklet above, so it must be sent
+   * only after the runtime has evaluated the lazy chunks.
+   */
+  if (deferInitializer) {
+    runOnRuntimeSync(workletRuntime, initializerFn!);
+  }
+
+  if (queue !== null) {
+    registerWorkerRuntimeForLazyBundles(workletRuntime.runtimeId);
+  }
+
+  return workletRuntime;
 }
 
 /**
