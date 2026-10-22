@@ -1,4 +1,5 @@
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
+#import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 
@@ -11,6 +12,9 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+#import <react/renderer/components/view/ViewProps.h>
+
+#import <algorithm>
 #import <cmath>
 #import <unordered_map>
 #import <utility>
@@ -37,6 +41,39 @@
 }
 
 @end
+
+#ifndef NDEBUG
+@interface REANextFrameCallbacks : NSObject
+- (void)add:(void (^)(void))callback;
+@end
+
+@implementation REANextFrameCallbacks {
+  NSMutableArray<void (^)(void)> *_callbacks;
+  READisplayLink *_displayLink;
+}
+
+- (void)add:(void (^)(void))callback
+{
+  if (_callbacks == nil) {
+    _callbacks = [NSMutableArray new];
+    _displayLink = REAMakeDisplayLink(self, @selector(onFrame));
+  }
+  [_callbacks addObject:callback];
+}
+
+- (void)onFrame
+{
+  NSArray<void (^)(void)> *callbacks = _callbacks;
+  _callbacks = nil;
+  [_displayLink invalidate];
+  _displayLink = nil;
+  for (void (^callback)(void) in callbacks) {
+    callback();
+  }
+}
+
+@end
+#endif // NDEBUG
 
 namespace reanimated::native_animation {
 
@@ -169,6 +206,20 @@ bool modelMatchesEndpoint(CALayer *layer, const AnimationTrack &track)
   return model != nil && std::visit(ModelMatchesVisitor{model}, track.segments.back().endValue);
 }
 
+/// False when React Native puts more than the prop of the target into the model value. A start value that
+/// comes from the prop is then not the value on screen. The opacity filter multiplies the layer opacity.
+bool modelHoldsOnlyProp(REAUIView<RCTComponentViewProtocol> *view, const AnimationTarget target)
+{
+  if (target != AnimationTarget::Opacity) {
+    return true;
+  }
+  const auto viewProps = std::dynamic_pointer_cast<const facebook::react::ViewProps>([view props]);
+  return viewProps == nullptr ||
+      std::ranges::none_of(viewProps->filter, [](const facebook::react::FilterFunction &filter) {
+           return filter.type == facebook::react::FilterType::Opacity;
+         });
+}
+
 struct TimingFunctionVisitor {
   CAMediaTimingFunction *operator()(const LinearTiming &) const
   {
@@ -185,6 +236,36 @@ id currentVisualValue(CALayer *layer, NSString *keyPath)
 {
   return [[layer presentationLayer] valueForKeyPath:keyPath] ?: [layer valueForKeyPath:keyPath];
 }
+
+#ifndef NDEBUG
+std::vector<double> componentsOfValue(id value)
+{
+  if ([value isKindOfClass:[NSNumber class]]) {
+    return {[value doubleValue]};
+  }
+  if (![value isKindOfClass:[NSValue class]]) {
+    return {};
+  }
+  const char *type = [value objCType];
+  if (strcmp(type, @encode(CGPoint)) == 0) {
+#if TARGET_OS_OSX
+    const NSPoint point = [value pointValue];
+#else
+    const CGPoint point = [value CGPointValue];
+#endif
+    return {point.x, point.y};
+  }
+  if (strcmp(type, @encode(CGSize)) == 0) {
+#if TARGET_OS_OSX
+    const NSSize size = [value sizeValue];
+#else
+    const CGSize size = [value CGSizeValue];
+#endif
+    return {size.width, size.height};
+  }
+  return {};
+}
+#endif // NDEBUG
 
 class CoreAnimationPlatform;
 
@@ -236,25 +317,33 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     trackEndListener_ = std::move(listener);
   }
 
+  bool isSurfaceRunning(const SurfaceId surfaceId) override
+  {
+    RCTAssertMainQueue();
+    RCTFabricSurface *surface = [surfacePresenter_ surfaceForRootTag:surfaceId];
+    return surface != nil && RCTSurfaceStageIsRunning(surface.stage);
+  }
+
   MountedAnimationResolution resolve(const AnimationRequest &request) override
   {
     RCTAssertMainQueue();
-    const auto &handle = request.handle;
-    RCTFabricSurface *surface = [surfacePresenter_ surfaceForRootTag:handle.surfaceId];
-    if (surface == nil || !RCTSurfaceStageIsRunning(surface.stage)) {
-      return AnimationResult{AnimationOutcome::SurfaceDestroyed};
-    }
-    CALayer *layer = mountedLayer(handle.tag);
+    REAUIView<RCTComponentViewProtocol> *view = mountedView(request.handle.tag);
+    CALayer *layer = view.layer;
     if (layer == nil) {
-      return AnimationResult{AnimationOutcome::Rejected, AnimationResultReason::TargetUnavailable};
+      return AnimationResultReason::TargetUnavailable;
     }
     for (const auto &track : request.tracks) {
       if (!canPlayWithCoreAnimation(track)) {
-        return AnimationResult{AnimationOutcome::Rejected, AnimationResultReason::UnsupportedRealization};
+        return AnimationResultReason::UnsupportedRealization;
       }
-      if (track.endpointPolicy == EndpointPolicy::MountedModelMustMatchEndpoint &&
-          !modelMatchesEndpoint(layer, track)) {
-        return AnimationResult{AnimationOutcome::Rejected, AnimationResultReason::EndpointMismatch};
+      if (track.endpointPolicy != EndpointPolicy::MountedModelMustMatchEndpoint) {
+        continue;
+      }
+      if (!modelMatchesEndpoint(layer, track)) {
+        return AnimationResultReason::EndpointMismatch;
+      }
+      if (!modelHoldsOnlyProp(view, track.target)) {
+        return AnimationResultReason::UnsupportedRealization;
       }
     }
     return std::make_unique<CoreAnimationMountedAnimation>(*this, layer, request);
@@ -286,6 +375,33 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     dispatch_async(dispatch_get_main_queue(), ^{ operation(); });
   }
 
+#ifndef NDEBUG
+  std::optional<TargetSample> sample(const Tag tag, const AnimationTarget target) override
+  {
+    RCTAssertMainQueue();
+    CALayer *layer = mountedLayer(tag);
+    if (layer == nil) {
+      return std::nullopt;
+    }
+    NSString *keyPath = keyPathForTarget(target);
+    return TargetSample{
+        componentsOfValue([layer valueForKeyPath:keyPath]), componentsOfValue(currentVisualValue(layer, keyPath))};
+  }
+
+  void sampleAtNextFrame(
+      const Tag tag,
+      const AnimationTarget target,
+      std::function<void(std::optional<TargetSample>)> receiver) override
+  {
+    const auto weakThis = weak_from_this();
+    [nextFrameCallbacks_ add:^{
+      if (const auto strongThis = weakThis.lock()) {
+        receiver(strongThis->sample(tag, target));
+      }
+    }];
+  }
+#endif
+
   void replace(const TrackKey &track)
   {
     const auto trackIt = tracks_.find(track);
@@ -311,11 +427,14 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   }
 
  private:
+  REAUIView<RCTComponentViewProtocol> *mountedView(const Tag tag) const
+  {
+    return [surfacePresenter_.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+  }
+
   CALayer *mountedLayer(const Tag tag) const
   {
-    REAUIView<RCTComponentViewProtocol> *view =
-        [surfacePresenter_.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
-    return view.layer;
+    return mountedView(tag).layer;
   }
 
   void onAnimationStopped(const TrackKey &track, const bool finished, const bool holdsEndValue)
@@ -333,6 +452,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 
   __weak RCTSurfacePresenter *surfacePresenter_;
   TrackEndListener trackEndListener_;
+#ifndef NDEBUG
+  REANextFrameCallbacks *nextFrameCallbacks_ = [REANextFrameCallbacks new];
+#endif
   std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash> tracks_;
 };
 

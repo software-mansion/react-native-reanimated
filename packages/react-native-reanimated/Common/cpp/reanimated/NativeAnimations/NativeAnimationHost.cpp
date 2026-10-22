@@ -54,6 +54,25 @@ void NativeAnimationHost::start(AnimationRequest request, std::weak_ptr<NativeAn
   });
 }
 
+void NativeAnimationHost::startAfterMount(const std::vector<MountedStart> &starts) {
+  ReanimatedSystraceSection section("NativeAnimationHost::startAfterMount");
+  Deliveries deliveries;
+  for (const auto &[request, client] : starts) {
+    RECORD_TRACE(.event = TraceEventType::Received, .handle = request.handle);
+    admit(request, client, deliveries);
+#ifndef NDEBUG
+    if (commands_.contains(request.handle)) {
+      traceFirstFrame(request);
+    }
+#endif
+  }
+  post(mountedStartReports_, [deliveries = std::move(deliveries)] {
+    for (const auto &delivery : deliveries) {
+      delivery();
+    }
+  });
+}
+
 void NativeAnimationHost::cancel(const AnimationHandle &handle, const TrackStopMode mode) {
   enqueue([weakThis = weak_from_this(), handle, mode] {
     if (const auto strongThis = weakThis.lock()) {
@@ -78,13 +97,83 @@ void NativeAnimationHost::takeTrace(std::function<void(std::vector<TraceEvent>)>
     }
   });
 }
+
+TraceRecorder &NativeAnimationHost::trace() {
+  return trace_;
+}
+
+std::shared_ptr<NativeAnimationClient> NativeAnimationHost::makeTraceClient() {
+  class TraceClient final : public NativeAnimationClient {
+   public:
+    explicit TraceClient(std::weak_ptr<NativeAnimationHost> host) : host_(std::move(host)) {}
+
+    void onAnimationAdmitted(const AnimationHandle &handle) override {
+      record({.event = TraceEventType::ClientAdmitted, .handle = handle, .objective = 6});
+    }
+
+    void onTrackEnded(const TrackKey & /*track*/, bool /*finished*/) override {}
+
+    void onAnimationEnded(const AnimationHandle &handle, const AnimationResult result) override {
+      record({.event = TraceEventType::ClientEnded, .handle = handle, .objective = 6, .result = result});
+    }
+
+   private:
+    void record(TraceEvent event) const {
+      if (const auto host = host_.lock()) {
+        host->trace_.record(std::move(event));
+      }
+    }
+
+    const std::weak_ptr<NativeAnimationHost> host_;
+  };
+  return std::make_shared<TraceClient>(weak_from_this());
+}
+
+void NativeAnimationHost::traceFirstFrame(const AnimationRequest &request) {
+  for (const auto &track : request.tracks) {
+    platform_->sampleAtNextFrame(
+        request.handle.tag,
+        track.target,
+        [weakThis = weak_from_this(),
+         key = TrackKey{request.handle, track.target}](const std::optional<TargetSample> &sample) {
+          const auto strongThis = weakThis.lock();
+          if (strongThis && sample) {
+            strongThis->trace_.record(TraceEvent{
+                .event = TraceEventType::FirstFrameSampled,
+                .handle = key.handle,
+                .target = key.target,
+                .objective = 6,
+                .presentationValue = sample->presentation});
+          }
+        });
+  }
+}
+
+void NativeAnimationHost::sampleTarget(
+    const Tag tag,
+    const AnimationTarget target,
+    std::function<void(std::optional<TargetSample>)> receiver) {
+  enqueue([weakThis = weak_from_this(), tag, target, receiver = std::move(receiver)] {
+    if (const auto strongThis = weakThis.lock()) {
+      auto sample = strongThis->platform_->sample(tag, target);
+      if (sample) {
+        sample->monotonicTimeMs = TraceRecorder::now();
+      }
+      receiver(std::move(sample));
+    }
+  });
+}
 #endif
 
 void NativeAnimationHost::enqueue(Operation operation) {
+  post(queue_, std::move(operation));
+}
+
+void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation) {
   {
     const std::lock_guard lock(queueMutex_);
-    const bool hasPendingDrain = !queue_.empty();
-    queue_.push_back(std::move(operation));
+    const bool hasPendingDrain = !queue_.empty() || !mountedStartReports_.empty();
+    queue.push_back(std::move(operation));
     if (hasPendingDrain) {
       return;
     }
@@ -101,11 +190,12 @@ void NativeAnimationHost::drain() {
     Operation operation;
     {
       const std::lock_guard lock(queueMutex_);
-      if (queue_.empty()) {
+      auto &queue = mountedStartReports_.empty() ? queue_ : mountedStartReports_;
+      if (queue.empty()) {
         break;
       }
-      operation = std::move(queue_.front());
-      queue_.pop_front();
+      operation = std::move(queue.front());
+      queue.pop_front();
     }
     operation();
   }
@@ -118,18 +208,34 @@ void NativeAnimationHost::runStart(
   const auto &handle = request.handle;
   RECORD_TRACE(.event = TraceEventType::Received, .handle = handle);
 
+  Deliveries deliveries;
+  if (platform_->isSurfaceRunning(handle.surfaceId)) {
+    admit(request, client, deliveries);
+  } else {
+    endWithoutAdmission(handle, client, {AnimationOutcome::SurfaceDestroyed}, deliveries);
+  }
+  for (const auto &delivery : deliveries) {
+    delivery();
+  }
+}
+
+void NativeAnimationHost::admit(
+    const AnimationRequest &request,
+    const std::weak_ptr<NativeAnimationClient> &client,
+    Deliveries &deliveries) {
+  const auto &handle = request.handle;
   if (commands_.contains(handle)) {
-    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, AnimationResultReason::StaleIdentity});
+    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, AnimationResultReason::StaleIdentity}, deliveries);
     return;
   }
   if (const auto reason = validate(request)) {
-    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, *reason});
+    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, *reason}, deliveries);
     return;
   }
 
   auto resolution = platform_->resolve(request);
-  if (const auto *result = std::get_if<AnimationResult>(&resolution)) {
-    endWithoutAdmission(handle, client, *result);
+  if (const auto *reason = std::get_if<AnimationResultReason>(&resolution)) {
+    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, *reason}, deliveries);
     return;
   }
   const auto &mountedAnimation = std::get<std::unique_ptr<MountedAnimation>>(resolution);
@@ -139,7 +245,8 @@ void NativeAnimationHost::runStart(
     return !hasPriorityOver(handle.owner, active.handle.owner);
   };
   if (std::ranges::any_of(replacedTracks, losesToActiveOwner)) {
-    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, AnimationResultReason::OwnershipDenied});
+    endWithoutAdmission(
+        handle, client, {AnimationOutcome::Rejected, AnimationResultReason::OwnershipDenied}, deliveries);
     return;
   }
 
@@ -153,11 +260,10 @@ void NativeAnimationHost::runStart(
     }
   }
   if (const auto reason = mountedAnimation->prepare(interruptedTargets)) {
-    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, *reason});
+    endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, *reason}, deliveries);
     return;
   }
 
-  Deliveries deliveries;
   releaseReplacedTracks(replacedTracks, deliveries);
 
   Command command{client, {}};
@@ -174,12 +280,11 @@ void NativeAnimationHost::runStart(
   mountedAnimation->start(replacedTracks);
   RECORD_TRACE(.event = TraceEventType::Admitted, .handle = handle);
 
-  for (const auto &delivery : deliveries) {
-    delivery();
-  }
-  if (const auto strongClient = client.lock()) {
-    strongClient->onAnimationAdmitted(handle);
-  }
+  deliveries.emplace_back([client, handle] {
+    if (const auto strongClient = client.lock()) {
+      strongClient->onAnimationAdmitted(handle);
+    }
+  });
 }
 
 void NativeAnimationHost::runCancel(const AnimationHandle &handle, const TrackStopMode mode) {
@@ -267,11 +372,14 @@ std::vector<TrackKey> NativeAnimationHost::conflictingTracks(const AnimationRequ
 void NativeAnimationHost::endWithoutAdmission(
     const AnimationHandle &handle,
     const std::weak_ptr<NativeAnimationClient> &client,
-    const AnimationResult result) {
+    const AnimationResult result,
+    Deliveries &deliveries) {
   RECORD_TRACE(.event = TraceEventType::Ended, .handle = handle, .result = result);
-  if (const auto strongClient = client.lock()) {
-    strongClient->onAnimationEnded(handle, result);
-  }
+  deliveries.emplace_back([client, handle, result] {
+    if (const auto strongClient = client.lock()) {
+      strongClient->onAnimationEnded(handle, result);
+    }
+  });
 }
 
 void NativeAnimationHost::releaseReplacedTracks(const std::vector<TrackKey> &replacedTracks, Deliveries &deliveries) {
