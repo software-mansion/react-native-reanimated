@@ -56,7 +56,8 @@
 .toolbar {
   position: sticky;
   z-index: 3;
-  top: var(--ifm-navbar-height, 60px);
+  /* The docs navbar scrolls away before the controls reach the viewport edge. */
+  top: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -836,6 +837,11 @@
 .synchronizableActive {
   border-color: var(--rt-color);
   background: var(--rt-fill);
+}
+.synchronizable .cellNumber {
+  /* Include the padding so single- and double-digit values use the same badge. */
+  min-width: calc(2ch + 10px);
+  text-align: center;
 }
 .shareableGuest {
   border-style: dashed;
