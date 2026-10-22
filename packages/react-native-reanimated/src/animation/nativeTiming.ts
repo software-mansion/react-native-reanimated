@@ -22,8 +22,8 @@ const EASE_CONTROL_POINTS: [number, number, number, number] = [0.42, 0, 1, 1];
 
 /**
  * Has no result for an animation that native playback cannot repeat: a callback
- * on the animation, reduced motion, a target that is not a number, or an easing
- * other than linear and cubic Bezier.
+ * on the animation, reduced motion, a target that is not a number or a string,
+ * or an easing other than linear and cubic Bezier.
  */
 export function describeNativeTiming(
   toValue: AnimatableValue,
@@ -41,7 +41,7 @@ export function describeNativeTiming(
   if (
     !DESCRIBES_NATIVE_TIMING ||
     callback !== undefined ||
-    typeof toValue !== 'number' ||
+    (typeof toValue !== 'number' && typeof toValue !== 'string') ||
     getReduceMotionFromConfig(reduceMotion)
   ) {
     return undefined;
