@@ -58,7 +58,9 @@ void UpdatesRegistry::remove(const Tag tag) {
 }
 
 void UpdatesRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
-  remove(shadowNodeFamily->getTag());
+  const auto tag = shadowNodeFamily->getTag();
+  remove(tag);
+  removePendingUpdates(tag);
 }
 
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
@@ -249,6 +251,15 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 
 void UpdatesRegistry::removePendingUpdates(const Tag tag) {
   std::erase_if(updatesBatch_, [tag](const auto &update) { return update.first->getTag() == tag; });
+
+  UpdatesBatchAnimatedProps remaining;
+  remaining.reserve(updatesBatchAnimatedProps_.size());
+  for (auto &entry : updatesBatchAnimatedProps_) {
+    if (entry.shadowNodeFamily->getTag() != tag) {
+      remaining.push_back(std::move(entry));
+    }
+  }
+  updatesBatchAnimatedProps_ = std::move(remaining);
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {

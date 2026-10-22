@@ -132,9 +132,8 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
 }
 
 void AnimatedPropsRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  UpdatesRegistry::removeUnmounted(shadowNodeFamily);
   const auto tag = shadowNodeFamily->getTag();
-  remove(tag);
-  removePendingUpdates(tag);
   unmountedFamilies_[tag] = shadowNodeFamily;
   if (unmountedFamilies_.size() >= unmountedFamiliesPruneThreshold_) {
     pruneExpiredUnmountedFamilies();
