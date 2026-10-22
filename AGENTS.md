@@ -129,5 +129,5 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 
 ## Release facts
 
-- The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Agent skills for releases and cherry-picks live in `.claude/skills/`: `reanimated-release`, `worklets-release`, `reanimated-cherry-pick` and `worklets-cherry-pick`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
+- The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Agent skills for releases and cherry-picks live in `.agents/skills/` (`.claude/skills` links to it): `reanimated-release`, `worklets-release`, `reanimated-cherry-pick` and `worklets-cherry-pick`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
 - When the worklets stable API changes, bump `WORKLETS_STABLE_API_VERSION` in `StableApi.h` and `EXPECTED_WORKLETS_STABLE_API_VERSION` in `WorkletsApi.h` together, also on backports.

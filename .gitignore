@@ -92,9 +92,10 @@ playwright/.cache/
 
 # Claude
 .claude/*
-!.claude/skills/
+!.claude/skills
 
 # Other agents
-.agents
+.agents/*
+!.agents/skills/
 .codex
 .tmp

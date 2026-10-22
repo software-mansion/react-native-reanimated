@@ -35,7 +35,7 @@ These files, matching prior release commits:
 - `apps/tvos-example/ios/Podfile.lock` (same)
 - The changelog (step 3a): `packages/react-native-worklets/CHANGELOG.md`, plus the deleted fragments in `packages/react-native-worklets/changelog/` on stable branches newer than `worklets-0.13-stable`.
 
-`apps/macos-example/ios/Podfile.lock` is **not** part of a release commit — see gotchas.
+`apps/macos-example/macos/Podfile.lock` is **not** part of a release commit — see gotchas.
 
 ## Procedure
 
@@ -210,6 +210,8 @@ gh release create worklets-<version> --draft --target "$sha" \
 
 - **`--target` must be the full 40-char SHA.** An abbreviated SHA returns `HTTP 422: target_commitish is invalid`.
 - `--generate-notes --notes-start-tag worklets-<prev>` reproduces the `## What's Changed` list plus the `worklets-<prev>...worklets-<version>` compare link, matching prior releases.
+- For a patch of an older minor, add `--latest=false`. Only a release of the newest minor is marked as the latest release
+  (for example, `Worklets - 0.12.2` is not the latest release).
 - Created with `--draft`; the `worklets-X.Y.Z` git tag is only created when the draft is published. Leave publishing the draft to the user unless they ask.
 
 Attach the published tarball to the release:
