@@ -57,11 +57,12 @@ For each PR, capture merge commit SHA + upstream title + original author:
 gh pr view <PR> --repo software-mansion/react-native-reanimated \
   --json mergeCommit,title
 git log -1 --format='%an <%ae>' <sha>
-git rev-list --parents -n 1 <sha>
+git show -s --format='%P%n%s' <sha>
 ```
 
-This repo squash-merges PRs, so the merge commit has one parent and its subject ends with `(#<PR>)`. If the commit has two
-parents, or the subject does not end with `(#<PR>)`, the PR was merged in a different way. Stop and ask the user.
+The last command prints the parent SHAs on the first line and the subject on the second. This repo squash-merges PRs, so
+continue only when the first line has exactly one SHA and the subject ends with `(#<PR>)`. Otherwise the PR was merged in a
+different way. Stop and ask the user.
 
 ### 2. Create worktrees
 
@@ -173,7 +174,7 @@ The tracking issue lists the upstream PRs. Under each upstream PR, add the cherr
   - https://github.com/software-mansion/react-native-reanimated/pull/<cherry-pick PR>
 ```
 
-If the upstream PR is not in the list yet, add both lines. Read the body with `gh issue view <N> --json body`, and write it
+If the upstream PR is not in the list yet, add both lines. Read the body with `gh issue view <N> --json body --jq .body > <file>`, and write it
 back with `gh api repos/software-mansion/react-native-reanimated/issues/<N> -X PATCH -F body=@<file>`. Keep the rest of the body unchanged.
 
 ### 10. Cleanup (after PRs are merged)

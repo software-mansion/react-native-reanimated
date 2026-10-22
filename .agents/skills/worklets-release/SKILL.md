@@ -75,8 +75,8 @@ On stable branches newer than `worklets-0.13-stable`, move the changelog fragmen
 yarn workspace react-native-worklets changelog:squash <version>
 ```
 
-It reads the PR number from the first `(#N)` in the subject of the commit that added each fragment, and fails when that
-subject has no `(#N)`. Then add a `pr: N` line to that fragment and run it again (see `packages/react-native-reanimated/RELEASE.md`).
+If a fragment has no `pr: N` line, it reads the PR number from the first `(#N)` in the subject of the commit that added it.
+It fails when neither source gives a PR number. Then add a `pr: N` line to that fragment and run it again (see `packages/react-native-reanimated/RELEASE.md`).
 
 `worklets-0.13-stable` and older have no fragments. There, move the `## Unpublished` entries in `packages/react-native-worklets/CHANGELOG.md` under a new
 `## <version> — <YYYY-MM-DD>` heading by hand, and keep the empty `## Unpublished` section above it.

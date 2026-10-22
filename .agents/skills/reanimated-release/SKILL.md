@@ -75,8 +75,8 @@ On `4.7-stable` and newer, move the changelog fragments into `CHANGELOG.md`. The
 yarn workspace react-native-reanimated changelog:squash <version>
 ```
 
-It reads the PR number from the first `(#N)` in the subject of the commit that added each fragment, and fails when that
-subject has no `(#N)`. Then add a `pr: N` line to that fragment and run it again (see `packages/react-native-reanimated/RELEASE.md`).
+If a fragment has no `pr: N` line, it reads the PR number from the first `(#N)` in the subject of the commit that added it.
+It fails when neither source gives a PR number. Then add a `pr: N` line to that fragment and run it again (see `packages/react-native-reanimated/RELEASE.md`).
 
 Branches older than `4.7-stable` have no fragments. `4.5-stable` and older have no `CHANGELOG.md`, so skip this step there. On
 `4.6-stable`, move the `## Unpublished` entries in `packages/react-native-reanimated/CHANGELOG.md` under a new
