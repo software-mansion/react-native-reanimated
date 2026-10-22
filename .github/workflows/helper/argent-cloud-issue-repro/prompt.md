@@ -25,6 +25,7 @@ The app is always scaffolded by the build job from the official React Native CLI
 1. Exact versions. The issue form has the fields `Reanimated version`, `Worklets version` and `React Native version`. Resolve each one to an exact version that exists on npm. When a field is empty or wrong, pick the newest version that is compatible according to the two `compatibility.json` files. Reanimated 3.x has no worklets package, so `workletsVersion` is null there. When the linked repository has a `package.json`, its versions of react-native, react-native-reanimated and react-native-worklets take precedence over the form fields.
 1. The kind of app: `rn-cli` (React Native CLI, Bare) or `expo` (Expo Dev Client or Expo Go). Read the `Workflow` field and the linked repository. Default to `rn-cli`. For `expo`, pick the Expo SDK major whose bundled React Native matches `reactNativeVersion` and put it in `expoSdkVersion`.
 1. The architecture: `fabric` unless the `Architecture` field or the linked repository says Legacy Architecture (Paper renderer).
+1. The build configuration, in `configuration`: `release` unless the behavior exists only in a Debug bundle, for example a `__DEV__` warning, a LogBox message or a development-only check, or unless the only usable signal is `console.log` output. See the constraints of the build.
 1. The static feature flags, in `staticFeatureFlags`. See the next section.
 1. Reproduction steps that a tester can follow on a simulator with no source access: what to tap, what to look at, how long to wait and what a pass and a fail look like. Bake any needed controls into the screen, for example a button with a visible label, and name them in the steps.
 1. How the tester verifies the result, in `verification`. The signal must be on screen: render state with `<Text>` and describe the pass and the fail output. A crash or a frozen screen is also a usable signal.
@@ -49,16 +50,17 @@ When the simulator can show only a part of what the issue describes, plan that p
 
 ## What the tester can do
 
-The tester is an agent on a Mac with the app installed on an iOS simulator. It has Argent to tap, type, swipe, read the screen and take screenshots, and `sim-remote simctl` to boot the simulator and install and launch the app. That is all. It cannot run programs on the Mac or inside the simulator, so it cannot read process memory, system logs or Instruments traces, and it cannot see `console.log` output from a Release bundle. Design the reproduction for that tester:
+The tester is an agent on a Mac with the app installed on an iOS simulator. It has Argent to tap, type, swipe, read the screen and take screenshots, and `sim-remote simctl` to boot the simulator and install and launch the app. In a Debug run it also runs Metro and can read `console.log` output and LogBox messages. It cannot run programs on the Mac or inside the simulator, so it cannot read process memory or Instruments traces. Design the reproduction for that tester:
 
 - Visual bugs: make the wrong and the right rendering unmistakable, for example large colored blocks with labels.
 - State and timing bugs: render every value that matters as `<Text>`, including counters, timestamps and the last event, so the tester can read it from a screenshot.
 - Crashes and hangs: name the action that crashes. A crashed app or a frozen screen is the fail signal.
+- Warnings and development-only checks: set `configuration` to `debug`, name the warning or the error, and say whether it shows in LogBox or in the `console` output. Render the state that matters as `<Text>` as well, because a screenshot is the strongest evidence.
 - Memory and resource bugs: there is no way to measure memory. Reproduce them only when the leak has a consequence the app can show on screen, for example a counter of live native objects that the library exposes, a measurable slowdown that the app times itself and renders, or a crash after a bounded number of iterations. When no such consequence exists, set `feasible: false` and say that the verification needs a memory profiler.
 
 ## Constraints of the build
 
-- The app is built for the iOS simulator in the Release configuration with the JavaScript bundle embedded. There is no Metro and no Fast Refresh.
+- The app is built for the iOS simulator in the configuration that `configuration` names. `release` embeds the JavaScript bundle: there is no Metro, no `__DEV__` code and no `console.log` output. `debug` embeds no bundle: the tester gets the JavaScript source of the app with the native build, installs its npm dependencies, starts Metro and loads the bundle from it, so `__DEV__` code runs, LogBox shows warnings and errors, and the tester can read `console.log` output. A Debug run is slower and has more ways to fail, so use `debug` only when the signal needs it.
 - The app runs on Hermes.
 - Only Reanimated, Worklets, React Native and the allowlisted packages are available. No custom native code.
 
@@ -67,7 +69,6 @@ The tester is an agent on a Mac with the app installed on an iOS simulator. It h
 `feasible: false` is a last resort, not a default. Before you use it, try to design a reproduction under the rules above, and describe in `reason` what you tried. Use it only when:
 
 - the bug exists only on Android, web, macOS, tvOS or a real device and cannot occur on an iOS simulator;
-- the bug exists only in a Debug bundle or needs Metro, for example a `__DEV__` warning;
 - triggering the bug needs custom native code or a package outside the allowlist, and no path through the public API of Reanimated, Worklets or React Native reaches the same mechanism;
 - the symptom can be observed only with a memory or CPU profiler, a debugger or system logs, and nothing the app can render on screen reflects it;
 - the issue makes no claim about behavior that an app can show.

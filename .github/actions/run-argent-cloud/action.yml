@@ -1,0 +1,114 @@
+name: Run argent-cloud
+description: Run an agent against an app bundle on Argent Cloud, then download the screenshots of the session. Needs the argent-cloud CLI on PATH. Never fails by itself; read `exit-code`.
+
+inputs:
+  prompt-file:
+    description: A file with the prompt for the agent
+    required: true
+  app-bundle:
+    description: A .tar.gz with the simulator .app at its root
+    required: true
+  output-dir:
+    description: Where to write output.md (the final report), stream.md (the running commentary), argent-cloud.log (stderr) and screenshots.tar.gz
+    required: true
+  model:
+    description: The model of the agent. Empty for the default of argent-cloud.
+    required: false
+    default: ''
+  effort:
+    description: The effort of the agent. Empty for the default of argent-cloud.
+    required: false
+    default: ''
+  anthropic-api-key:
+    description: The key the agent runs with
+    required: true
+  sim-router-api-key:
+    description: The Argent Cloud API key
+    required: true
+  backend-ip:
+    description: The address of the Argent Cloud backend
+    required: true
+
+outputs:
+  exit-code:
+    description: The exit code of argent-cloud
+    value: ${{ steps.run.outputs.exit-code }}
+  session-id:
+    description: The ID of the session, empty when the run created none
+    value: ${{ steps.run.outputs.session-id }}
+  cost-usd:
+    description: The cost of the session in USD, as logged by --log-usage
+    value: ${{ steps.run.outputs.cost-usd }}
+  screenshots-archive:
+    description: The downloaded screenshots archive, empty when there is none
+    value: ${{ steps.run.outputs.screenshots-archive }}
+  screenshots-dir:
+    description: The extracted screenshots, empty when there are none
+    value: ${{ steps.run.outputs.screenshots-dir }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run argent-cloud
+      id: run
+      shell: bash
+      env:
+        PROMPT_FILE: ${{ inputs.prompt-file }}
+        APP_BUNDLE: ${{ inputs.app-bundle }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+        MODEL: ${{ inputs.model }}
+        EFFORT: ${{ inputs.effort }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        SIM_ROUTER_API_KEY: ${{ inputs.sim-router-api-key }}
+        ARGENT_BACKEND_IP: ${{ inputs.backend-ip }}
+      run: |
+        set -uo pipefail
+        mkdir -p "$OUTPUT_DIR"
+        OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
+        output="$OUTPUT_DIR/output.md"
+        log="$OUTPUT_DIR/argent-cloud.log"
+
+        args=(--prompt-file "$PROMPT_FILE" --app-bundle "$APP_BUNDLE" --log-usage --stream="$OUTPUT_DIR/stream.md")
+        [ -n "$MODEL" ] && args+=(--model "$MODEL")
+        [ -n "$EFFORT" ] && args+=(--effort "$EFFORT")
+
+        exit_code=0
+        argent-cloud "${args[@]}" 2> >(tee "$log" >&2) | tee "$output" || exit_code=${PIPESTATUS[0]}
+        wait
+        echo "argent-cloud exited with $exit_code"
+        echo "exit-code=$exit_code" >> "$GITHUB_OUTPUT"
+
+        session_id=""
+        if [ -f "$output" ]; then
+          session_id=$(tail -n 1 "$output" | tr -d '\r' | sed -n 's/^session-id=\([A-Za-z0-9_.-]\{1,128\}\)$/\1/p')
+          sed -i '/^session-id=[A-Za-z0-9_.-]*$/d' "$output"
+        fi
+        if [ -z "$session_id" ] && [ -f "$log" ]; then
+          session_id=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'session created session_id=[A-Za-z0-9_.-]+' | head -n 1 | cut -d= -f2 || true)
+        fi
+        echo "session ID: ${session_id:-none}"
+        echo "session-id=$session_id" >> "$GITHUB_OUTPUT"
+
+        cost=0
+        if [ -f "$log" ]; then
+          cost=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | { grep -oE 'cost_usd=[0-9.]+' || true; } | cut -d= -f2 | awk '{ sum += $1 } END { printf "%.6f", sum }')
+        fi
+        echo "cost: $cost USD"
+        echo "cost-usd=$cost" >> "$GITHUB_OUTPUT"
+
+        [ -n "$session_id" ] || exit 0
+        archive="$OUTPUT_DIR/screenshots.tar.gz"
+        if ! argent-cloud archives download "$session_id" --kind screenshots --out "$archive"; then
+          echo "::warning::could not download the screenshots of session $session_id"
+          exit 0
+        fi
+        echo "screenshots-archive=$archive" >> "$GITHUB_OUTPUT"
+        extracted="$OUTPUT_DIR/screenshots"
+        mkdir -p "$extracted"
+        if ! tar -xzf "$archive" -C "$extracted"; then
+          echo "::warning::could not extract $archive"
+          exit 0
+        fi
+        nested=$(find "$extracted" -mindepth 1 -type d -name screenshots | head -n 1)
+        echo "screenshots-dir=${nested:-$extracted}" >> "$GITHUB_OUTPUT"
+        echo "screenshots: $(find "$extracted" -type f | wc -l | tr -d ' ') file(s)"
