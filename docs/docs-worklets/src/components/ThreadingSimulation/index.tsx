@@ -11,6 +11,7 @@ import type { LineHistory } from './CodePanel';
 import CpuPanel from './CpuPanel';
 import Disclosure from './Disclosure';
 import Connections from './Connections';
+import { collectConsoleEntries } from './consoleEntries';
 import MemoryPanel from './MemoryPanel';
 import Panel from './Panel';
 import Phone from './Phone';
@@ -145,7 +146,7 @@ export default function ThreadingSimulation({
     simulation.tick,
     simulation.rawToDisplayLine
   );
-  const logs = collectLogs(simulation.snapshots, simulation.tick - 1);
+  const logs = collectLogs(simulation.snapshots, simulation.tick);
   const shownScreen = simulation.settled
     ? snapshot.screen
     : (simulation.snapshots[Math.max(simulation.tick - 1, 0)]?.screen ??
@@ -153,6 +154,7 @@ export default function ThreadingSimulation({
   const transfers = snapshot.events.filter(
     (event) => event.type === 'scheduled'
   );
+  const failedCore = snapshot.cores.find((core) => core.status === 'error');
   const nameOf = (id: string) => {
     const runtime = runtimes.find((candidate) => candidate.id === id);
     return runtime === undefined ? id : threadName(runtime);
@@ -290,7 +292,11 @@ export default function ThreadingSimulation({
       className={styles.activity}
       data-sim-obstacle
       aria-label="Current scheduling activity">
-      {transfers.length > 0 ? (
+      {failedCore !== undefined ? (
+        <span role="alert" className={styles.error}>
+          <strong>{nameOf(failedCore.id)} stopped.</strong> {failedCore.error}
+        </span>
+      ) : transfers.length > 0 ? (
         transfers.map((event, index) => (
           <span key={index}>
             <strong>{nameOf(event.core)}</strong> queued{' '}
@@ -423,7 +429,12 @@ export default function ThreadingSimulation({
           </span>
         ) : (
           [...logs].reverse().map((log, index) => (
-            <div key={index} className={styles.consoleEntry}>
+            <div
+              key={index}
+              className={clsx(
+                styles.consoleEntry,
+                log.level === 'error' && styles.consoleError
+              )}>
               <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
                 {badgeName(log.runtime.id)}
               </span>
@@ -603,20 +614,10 @@ function collectHistory(
 
 const HISTORY_DEPTH = 3;
 
-function collectLogs(snapshots: Snapshot[], upToTick: number) {
+function collectLogs(snapshots: Snapshot[], tick: number) {
   const runtimes = collectRuntimes(snapshots);
-  const logs: { runtime: RuntimeDescriptor; text: string; tick: number }[] = [];
-  for (const snapshot of snapshots.slice(0, upToTick + 1)) {
-    for (const event of snapshot.events) {
-      if (event.type === 'log') {
-        const runtime = runtimes.find(
-          (candidate) => candidate.id === event.core
-        );
-        if (runtime !== undefined) {
-          logs.push({ runtime, text: event.text, tick: snapshot.tick });
-        }
-      }
-    }
-  }
-  return logs;
+  return collectConsoleEntries(snapshots, tick).flatMap((entry) => {
+    const runtime = runtimes.find((candidate) => candidate.id === entry.core);
+    return runtime === undefined ? [] : [{ ...entry, runtime }];
+  });
 }

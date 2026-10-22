@@ -114,7 +114,7 @@ function finalStep(last: Snapshot): Snapshot {
     cores: last.cores.map((core) => ({
       ...core,
       status: core.status === 'error' ? core.status : 'idle',
-      line: null,
+      line: core.status === 'error' ? core.line : null,
       job: null,
       runtime: null,
       heldRuntimes: [],

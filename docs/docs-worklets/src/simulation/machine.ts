@@ -1,4 +1,4 @@
-import { SnippetError } from './errors';
+import { RemoteFunctionError, SnippetError } from './errors';
 import { isGeneratorFunction, isGeneratorObject } from './loadSnippet';
 import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
 import type {
@@ -274,6 +274,18 @@ export class Machine {
     const core = this.activeCore;
     if (core === null) {
       throw new SnippetError(`${api} was called outside of a simulation step`);
+    }
+    if (api === 'assertRNRuntime') {
+      const runtime = this.currentRuntime(core);
+      if (runtime !== 'rn') {
+        throw new RemoteFunctionError(
+          String(args[0]),
+          runtime === 'ui'
+            ? 'UI'
+            : (runtime?.slice('worker:'.length) ?? 'unknown')
+        );
+      }
+      return undefined;
     }
     if (api === 'createWorkletRuntime') {
       return this.createRuntime(core, args[0]);
@@ -1502,7 +1514,8 @@ export class Machine {
   private fail(core: CoreState, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
     core.status = 'error';
-    core.error = message;
+    core.error =
+      error instanceof RemoteFunctionError ? error.explanation : message;
     core.frames = [];
     core.currentJob = null;
     this.halted = true;
@@ -1574,7 +1587,8 @@ export class Machine {
       currentFn: core.status === 'running' ? core.executedFn : null,
       nativeFrame: core.status === 'running' && core.executedNative,
       status: core.status,
-      line: core.status === 'running' ? core.line : null,
+      line:
+        core.status === 'running' || core.status === 'error' ? core.line : null,
       job:
         core.currentJob?.label ??
         (core.status === 'running' ? core.finishedJob : null),

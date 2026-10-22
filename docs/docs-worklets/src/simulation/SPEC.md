@@ -117,6 +117,14 @@ executes for free inside the step of its caller. A frame whose function is
 **native** (`'native'` directive) runs on a thread without needing a runtime
 and is shown as native code.
 
+The simulated React state setter is bound to the RN Runtime. Calling it while
+executing in another runtime raises an error before changing state, even when
+the calling thread is the JS thread borrowing that runtime synchronously.
+Its error event uses the Worklets Remote Function error format with the
+simulated names; the thread snapshot keeps the explanatory scheduling advice.
+The viewer shows errors in the console on the failing tick, while ordinary logs
+appear one tick after execution.
+
 ### Timer
 
 A pending `setTimeout` or `setInterval` in a runtime's event loop, due at a

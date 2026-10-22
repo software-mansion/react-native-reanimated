@@ -114,6 +114,10 @@ export function getCurrentThreadId(): string {
   return dispatch('getCurrentThreadId', []) as string;
 }
 
+export function assertRNRuntime(name: string): void {
+  dispatch('assertRNRuntime', [name]);
+}
+
 const FRAME_MS = 16;
 
 export function setTimeout(callback: () => unknown, ms = 0): number {

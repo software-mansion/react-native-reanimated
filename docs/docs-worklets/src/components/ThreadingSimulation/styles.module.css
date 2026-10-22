@@ -1060,6 +1060,10 @@
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.consoleError {
+  color: var(--sim-error);
 }
 .consoleTime {
   flex-shrink: 0;

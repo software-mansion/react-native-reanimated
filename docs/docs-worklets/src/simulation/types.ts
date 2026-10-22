@@ -60,6 +60,7 @@ export type InterceptedApi =
   | 'runOnUISync'
   | 'runOnRuntimeSync'
   | 'getCurrentThreadId'
+  | 'assertRNRuntime'
   | 'setTimeout'
   | 'setInterval'
   | 'clearInterval'

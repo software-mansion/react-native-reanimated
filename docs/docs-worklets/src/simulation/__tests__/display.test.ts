@@ -4,11 +4,28 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { displaySource } from '../display';
-import { unindent } from './helpers';
+import { snippetSource, unindent } from './helpers';
 
 const SNIPPETS_DIR = join(__dirname, '..', 'snippets');
 
 describe('displaySource', () => {
+  it('shows React imports and maps the failing callback to its visible line', () => {
+    const source = snippetSource('returningCallbackCrash');
+    const { text, rawToDisplayLine } = displaySource(source, {
+      boilerplate: true,
+    });
+    assert.match(text, /import \{ useState \} from 'react';/);
+    assert.doesNotMatch(text, /@site|resetHooks|yield|function\*/);
+    const rawLine =
+      source
+        .split('\n')
+        .findIndex((line) => line.includes('yield setState(result)')) + 1;
+    assert.match(
+      text.split('\n')[rawToDisplayLine[rawLine] - 1],
+      /setState\(result\)/
+    );
+  });
+
   it('shows only the imports the displayed code uses when boilerplate is on', () => {
     const source = unindent(`
       import { scheduleOnUI, updateScreen } from '../worklets';
