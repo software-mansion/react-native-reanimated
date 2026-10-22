@@ -36,7 +36,10 @@ import {
   hasNativeLayoutStarts,
   isHostEvent,
   readTrack,
+  frameDrivenOf,
+  recordedCurveOf,
   recordedLinearOf,
+  DEFAULT_EASING,
   sampleClockOffset,
   styles,
   summarize,
@@ -92,23 +95,30 @@ const timed = (
     : builder.duration(durationMs).delay(delayMs);
 
 /**
- * The native box has a linear easing; an easing with no native form keeps its
- * twin frame-driven.
+ * The native box has a linear easing, or the default easing when
+ * `hasDefaultEasing` is set. Its twin is frame-driven on the same curve.
  */
 const presetPairOf =
-  (create: () => ComplexAnimationBuilder) =>
-  (timing: Timing = {}): Pair => ({
-    native: {
-      exiting: timed(create(), timing)
-        .easing(Easing.linear)
-        .withCallback(callbackOf('native')),
-    },
-    frame: {
-      exiting: timed(create(), timing)
-        .easing(recordedLinearOf(timing.durationMs ?? EXIT_DURATION))
-        .withCallback(callbackOf('frame')),
-    },
-  });
+  (create: () => ComplexAnimationBuilder, hasDefaultEasing = false) =>
+  (timing: Timing = {}): Pair => {
+    const durationMs = timing.durationMs ?? EXIT_DURATION;
+    const native = timed(create(), timing).withCallback(callbackOf('native'));
+    const frame = timed(create(), timing).withCallback(callbackOf('frame'));
+    return {
+      native: {
+        exiting: hasDefaultEasing ? native : native.easing(Easing.linear),
+      },
+      frame: {
+        exiting: frameDrivenOf(
+          frame.easing(
+            hasDefaultEasing
+              ? recordedCurveOf(DEFAULT_EASING.curve, durationMs)
+              : recordedLinearOf(durationMs)
+          )
+        ),
+      },
+    };
+  };
 
 const customExitingOf = (
   name: string,
@@ -137,10 +147,12 @@ const customExitingOf = (
 const customPairOf = (timing: Timing = {}): Pair => ({
   native: { exiting: customExitingOf('native', Easing.linear, timing) },
   frame: {
-    exiting: customExitingOf(
-      'frame',
-      recordedLinearOf(timing.durationMs ?? EXIT_DURATION),
-      timing
+    exiting: frameDrivenOf(
+      customExitingOf(
+        'frame',
+        recordedLinearOf(timing.durationMs ?? EXIT_DURATION),
+        timing
+      )
     ),
   },
 });
@@ -164,6 +176,24 @@ const CASES: Record<string, ExitingCase> = {
     ],
   },
 };
+
+/** The cases whose native box has the tracks of the default easing. */
+const DEFAULT_EASING_CASES: Record<string, ExitingCase> = {
+  'FadeOut with the default easing': {
+    pairOf: presetPairOf(() => new FadeOut(), true),
+    tracks: [{ ...OPACITY, easing: DEFAULT_EASING }],
+  },
+  'SlideOutRight with the default easing': {
+    pairOf: presetPairOf(() => new SlideOutRight(), true),
+    tracks: [{ ...SLIDE, easing: DEFAULT_EASING }],
+  },
+  'ZoomOut with the default easing': {
+    pairOf: presetPairOf(() => new ZoomOut(), true),
+    tracks: [{ ...SCALE, easing: DEFAULT_EASING }],
+  },
+};
+
+const TIMELINE_CASES = { ...CASES, ...DEFAULT_EASING_CASES };
 
 type BoxProps = BoxAnimations & {
   refName: string;
@@ -312,14 +342,19 @@ const playedAndRemoved = (tracks: Track[]) =>
     'Ended:Cancelled:None',
   ].join(' > ');
 
-const rangeOf = ({ from, to }: Track) => Math.abs(to - from);
+// The default easing moves by no more than two times its mean speed.
+const rangeOf = ({ from, to, easing }: Track) =>
+  Math.abs(to - from) * (easing ? 2 : 1);
 
 /** The change of the value of a track in two display frames. */
 const twoFramesOf = (track: Track, durationMs = EXIT_DURATION) =>
   VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
 
-const progressOf = ({ from, to }: Track, value: number) =>
-  (value - from) / (to - from);
+/** The part of the duration at which the track has the value. */
+const progressOf = ({ from, to, easing }: Track, value: number) => {
+  const progress = (value - from) / (to - from);
+  return easing ? easing.timeOf(progress) : progress;
+};
 
 const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
   Math.abs(value - expected) < tolerance;
@@ -353,7 +388,7 @@ describe('native layout exiting', () => {
     return;
   }
 
-  for (const [caseName, { pairOf, tracks }] of Object.entries(CASES)) {
+  for (const [caseName, { pairOf, tracks }] of Object.entries(TIMELINE_CASES)) {
     test(`${caseName} plays natively from its initial value, agrees with the frame driver, and holds its end value until the view leaves`, async () => {
       const exited = await exit(pairOf());
       await waitUntil(exited, 100);

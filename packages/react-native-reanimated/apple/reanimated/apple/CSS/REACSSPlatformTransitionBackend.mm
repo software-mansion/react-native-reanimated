@@ -87,9 +87,6 @@ std::variant<AnimationTrack, TrackBuildFailure> buildTrack(const CSSPlatformTran
   if (const auto failure = validateTrack(track)) {
     return *failure;
   }
-  if (!canPlayWithCoreAnimation(track)) {
-    return TrackBuildFailure::UnsupportedTrackForm;
-  }
   return track;
 }
 
