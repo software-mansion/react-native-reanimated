@@ -47,18 +47,30 @@ class REASharedTransitionBoundaryView(
         super.onDetachedFromWindow()
     }
 
+    override fun onScrollChanged(
+        l: Int,
+        t: Int,
+        oldl: Int,
+        oldt: Int,
+    ) {
+        super.onScrollChanged(l, t, oldl, oldt)
+        for (i in 0 until childCount) {
+            (getChildAt(i) as? REASharedTransitionBoundaryView)?.coverParent()
+        }
+    }
+
     // Android only delivers touches within a view's bounds, so a child moved
     // out of the laid out frame without a re-layout would stop receiving them.
-    // Cover the whole parent, which bounds the touches anyway, and scroll the
-    // children back to where the layout placed them.
+    // Cover the parent's visible area, which bounds the touches anyway, and
+    // scroll the children back to where the layout placed them.
     private fun coverParent() {
         val parent = parent as? View ?: return
-        val left = minOf(layoutFrame.left, 0)
-        val top = minOf(layoutFrame.top, 0)
+        val left = minOf(layoutFrame.left, parent.scrollX)
+        val top = minOf(layoutFrame.top, parent.scrollY)
         setLeft(left)
         setTop(top)
-        setRight(maxOf(layoutFrame.right, parent.width))
-        setBottom(maxOf(layoutFrame.bottom, parent.height))
+        setRight(maxOf(layoutFrame.right, parent.scrollX + parent.width))
+        setBottom(maxOf(layoutFrame.bottom, parent.scrollY + parent.height))
         scrollTo(left - layoutFrame.left, top - layoutFrame.top)
     }
 }
