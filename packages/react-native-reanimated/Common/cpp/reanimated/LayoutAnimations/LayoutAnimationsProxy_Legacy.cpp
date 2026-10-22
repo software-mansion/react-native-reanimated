@@ -10,10 +10,12 @@
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
+#include <span>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -22,6 +24,24 @@
 #include <vector>
 
 namespace reanimated {
+
+namespace {
+
+std::span<ShadowViewMutation> takeRemovesThenInserts(std::span<ShadowViewMutation> &mutations) {
+  const auto isInsert = [](const ShadowViewMutation &mutation) {
+    return mutation.type == ShadowViewMutation::Insert;
+  };
+  const auto isRemove = [](const ShadowViewMutation &mutation) {
+    return mutation.type == ShadowViewMutation::Remove;
+  };
+  const auto firstInsert = std::find_if(mutations.begin(), mutations.end(), isInsert);
+  const auto nextRemove = std::find_if(firstInsert, mutations.end(), isRemove);
+  const auto batch = mutations.first(nextRemove - mutations.begin());
+  mutations = mutations.subspan(batch.size());
+  return batch;
+}
+
+} // namespace
 
 // We never modify the Shadow Tree, we just send some additional
 // mutations to the mounting layer.
@@ -45,14 +65,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
-  std::vector<std::shared_ptr<MutationNode>> roots;
-  std::unordered_map<Tag, Tag> movedViews;
-
   reconcileContradictedRemovals(mutations, filteredMutations);
 
   addOngoingAnimations(filteredMutations);
-
-  parseRemoveMutations(movedViews, mutations, roots);
 
   // We recognize dropped surfaces by the presence of a Remove mutation for a root child. This can produce false
   // positives. Ideal solution will be to introduce an appropriate API in RN
@@ -65,12 +80,20 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     surfaceToRemove_ = false;
   }
   const bool flushDeadNodes = shouldFlushDeadNodes(surfaceDropped);
-  handleRemovals(filteredMutations, roots, surfaceDropped, flushDeadNodes);
+
+  for (auto remaining = std::span(mutations); !remaining.empty();) {
+    const auto batch = takeRemovesThenInserts(remaining);
+    std::vector<std::shared_ptr<MutationNode>> roots;
+    std::unordered_map<Tag, Tag> movedViews;
+
+    parseRemoveMutations(movedViews, batch, roots);
+    handleRemovals(filteredMutations, roots, surfaceDropped, flushDeadNodes);
+    handleUpdatesAndEnterings(filteredMutations, movedViews, batch, propsParserContext);
+  }
+
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushDeadNodes);
 #endif // ANDROID
-
-  handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext);
 
   configLock.unlock();
   flushLayoutAnimationOperations(lock);
@@ -195,7 +218,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
  */
 void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
     std::unordered_map<Tag, Tag> &movedViews,
-    ShadowViewMutationList &mutations,
+    std::span<ShadowViewMutation> mutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   std::set<Tag> deletedViews;
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>> childrenForTag, unflattenedChildrenForTag;
@@ -320,7 +343,7 @@ void LayoutAnimationsProxy_Legacy::handleRemovals(
 void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
     ShadowViewMutationList &filteredMutations,
     const std::unordered_map<Tag, Tag> &movedViews,
-    ShadowViewMutationList &mutations,
+    std::span<ShadowViewMutation> mutations,
     const PropsParserContext &propsParserContext) const {
   std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
