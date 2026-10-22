@@ -14,7 +14,7 @@ export const RUNTIME_TESTS_NIGHTLY_WORKFLOWS = [
 
 export function formatNightlyOwnerLine(date: Date): string {
   const owner = pickNightlyOwner(date);
-  return `🧑‍🔧 Runtime tests nightly owner for ${utcDay(date)}: ${formatMention(owner)}, please look into the failure.`;
+  return `${formatMention(owner)} plz fix!!!`;
 }
 
 export function pickNightlyOwner(date: Date): string {
@@ -30,7 +30,7 @@ function utcDay(date: Date): string {
 
 function formatMention(githubHandle: string): string {
   const slackId = readSlackIds()[githubHandle];
-  return slackId ? `<@${slackId}>` : `@${githubHandle} (GitHub)`;
+  return slackId ? `<@${slackId}>` : `@${githubHandle}`;
 }
 
 const SLACK_MEMBER_ID_REGEX = /^[UW][A-Z0-9]+$/;
