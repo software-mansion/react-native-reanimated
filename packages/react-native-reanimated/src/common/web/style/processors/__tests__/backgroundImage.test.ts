@@ -4,7 +4,12 @@ import type { ColorValue, ViewStyle } from 'react-native';
 import { processBackgroundImageWeb } from '../backgroundImage';
 
 type BackgroundImageLayer = Exclude<
-  NonNullable<ViewStyle['backgroundImage']>,
+  NonNullable<
+    ViewStyle[Extract<
+      keyof ViewStyle,
+      'backgroundImage' | 'experimental_backgroundImage'
+    >]
+  >,
   string
 >[number];
 

@@ -125,14 +125,12 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
 
-      - name: Run ReJest self-tests (builds the app, retries once)
+      - name: Run ReJest self-tests (builds the app)
         id: self-tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library self-tests
           --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
-          || node scripts/runtime-tests-server.js --launch --library self-tests
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Report ccache statistics
         if: ${{ !inputs.sanitizer }}
@@ -147,20 +145,16 @@ jobs:
           then echo "A failing suite did not fail the runner" && exit 1;
           else echo "Failing tests correctly failed the runner"; fi
 
-      - name: Run Worklets runtime tests (reuses the build, retries once)
+      - name: Run Worklets runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library worklets
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
-          || node scripts/runtime-tests-server.js --launch --library worklets
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
-      - name: Run Reanimated runtime tests (reuses the build, retries once)
+      - name: Run Reanimated runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node scripts/runtime-tests-server.js --launch --library reanimated
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
-          || node scripts/runtime-tests-server.js --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Upload crash reports

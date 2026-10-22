@@ -64,15 +64,15 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 ### TypeError: right operand of 'in' is not an object
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for Worklets.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for Worklets.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for Worklets.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ## Warnings
 
