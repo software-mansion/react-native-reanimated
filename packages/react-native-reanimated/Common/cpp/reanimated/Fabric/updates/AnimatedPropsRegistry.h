@@ -4,6 +4,7 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -23,7 +24,12 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   jsi::Value
   collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp, const std::unordered_set<Tag> &registeredViewTags);
 
+  void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) override;
+  void handleRemount(Tag tag) override;
+
  private:
+  static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
+
   struct WriteHistory {
     double lastWriteTimestamp = 0;
     std::unordered_set<std::string> animatedPropsKeys;
@@ -39,6 +45,13 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   // Tags that were synced to React but received a fresh worklet update since;
   // their `settledProps` are stale and need to be refreshed on the next sync.
   std::unordered_set<Tag> invalidatedTags_;
+  // A mapper can still update a view for a few frames after the view left the
+  // shadow tree. Such updates must not add the view to the registry again.
+  std::unordered_map<Tag, std::weak_ptr<const ShadowNodeFamily>> unmountedFamilies_;
+  size_t unmountedFamiliesPruneThreshold_ = MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD;
+
+  bool isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const;
+  void pruneExpiredUnmountedFamilies();
 
   void trackUpdate(Tag tag, const folly::dynamic &updates, bool isAnimatedProps, double timestamp);
   void invalidateSyncedTag(Tag tag);
