@@ -254,7 +254,25 @@ async function fetchLazyBundleOnRN(bundlePathAndQuery: string) {
     '/' +
     bundlePathAndQuery.replace(/^\/+/, '');
   const response = await fetch(requestUrl);
-  return response.text();
+  const body = await response.text();
+  if (
+    !response.ok ||
+    response.headers.get('Content-Type')?.includes('application/json')
+  ) {
+    throw new Error(
+      `[Worklets] Could not load the bundle "${requestUrl}" on the RN Runtime: ${getMetroErrorMessage(body, response.status)}`
+    );
+  }
+  return body;
+}
+
+function getMetroErrorMessage(body: string, status: number) {
+  try {
+    const { message } = JSON.parse(body) as { message?: string };
+    return message ?? `HTTP ${status}`;
+  } catch {
+    return `HTTP ${status}`;
+  }
 }
 
 async function evaluateOnWorkletRuntimes(
