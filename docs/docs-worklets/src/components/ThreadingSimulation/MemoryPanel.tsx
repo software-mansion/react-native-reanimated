@@ -39,6 +39,9 @@ export default function MemoryPanel({
   const synchronizables = memory.filter(
     (cell) => cell.kind === 'synchronizable'
   );
+  const showGlobals = cores.some(
+    (core) => Object.keys(core.globals).length > 0
+  );
   const accessorOf = (cell: MemorySnapshot) =>
     cell.accessedBy === null || !settled
       ? undefined
@@ -108,6 +111,24 @@ export default function MemoryPanel({
                   <span className={styles.vmError}>{error}</span>
                 )}
               </div>
+              {showGlobals && (
+                <div className={styles.vmSection}>
+                  <span className={styles.vmSectionTitle}>Globals</span>
+                  <div className={styles.memoryCells}>
+                    {Object.entries(own?.globals ?? {}).map(([name, value]) => (
+                      <span key={name} className={styles.shareable}>
+                        <span className={styles.shareableLabel}>{name}</span>
+                        <span className={styles.cellNumber}>{value}</span>
+                      </span>
+                    ))}
+                    {Object.keys(own?.globals ?? {}).length === 0 && (
+                      <span className={styles.boxDetail}>
+                        No globals defined
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               {(shareables.length > 0 || guests.length > 0) && (
                 <div className={styles.vmSection}>
                   <span className={styles.vmSectionTitle}>Memory</span>

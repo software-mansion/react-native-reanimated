@@ -60,6 +60,8 @@ export type InterceptedApi =
   | 'runOnUISync'
   | 'runOnRuntimeSync'
   | 'getCurrentThreadId'
+  | 'getRuntimeKind'
+  | 'runtimeFromId'
   | 'assertRNRuntime'
   | 'setTimeout'
   | 'setInterval'
@@ -193,6 +195,7 @@ export interface CoreState {
 
 export interface CoreSnapshot {
   id: CoreId;
+  globals: Record<string, string>;
   label: string;
   thread: string;
   kind: CoreKind;

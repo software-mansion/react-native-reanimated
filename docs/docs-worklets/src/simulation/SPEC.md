@@ -5,6 +5,16 @@ per visible line) on a small machine of threads. This document is the source of
 truth for how one tick advances the machine. `machine.ts` follows it phase by
 phase; the tests in `__tests__/` reference the numbered rules.
 
+Snippet modules are excluded from the Worklets Babel plugin. Their generators
+and runtime proxies are executed by this machine, not by the native Worklets
+runtime. Tests compile the reference snippets using the docs Babel configuration
+in both development and production to keep this boundary intact.
+
+Writes to observable state must happen before yielding, for example
+`yield (globalThis.value = 42)`, so the snapshot reflects the highlighted line.
+For a conditional one-line statement, a following bare `yield` maps back to that
+statement; it must not pretend that a skipped branch ran.
+
 ## Entities
 
 ### Thread
@@ -53,6 +63,14 @@ another thread's default runtime.
 
 State (in addition to the resource state): globals, hosted Shareables, the
 sibling event loop.
+
+`getRuntimeKind` and the `is*Runtime` predicates inspect the runtime currently
+held by the executing frame, not the thread's default runtime. For example,
+`runOnUISync` called on the JS thread reports the UI kind while
+`getCurrentThreadId` still reports the JS thread. The `*WithId` scheduling
+helpers resolve an existing Worklet Runtime by id and use the same execution
+path as the runtime-handle variants. Unknown ids and the RN Runtime id are
+rejected.
 
 #### Event loop
 
@@ -235,6 +253,10 @@ The snapshot is derived from the committed state:
   line it executed, and its native queue if it has one.
 - Each runtime reports its holder, its globals, the Shareables it hosts and
   the Shareable guests it holds.
+- Globals are formatted into immutable snapshot values and displayed under
+  their owning runtime. Rewinding never exposes a later assignment.
+- Completion waits until newly created runtimes and memory cells are visible,
+  including when the final source line creates a cell.
 - Each event loop reports its holder and its contents: queued jobs, pending
   timers (by due time), suspended jobs (marked `awaiting`).
 - Synchronizables and Shareables report which thread accessed them this

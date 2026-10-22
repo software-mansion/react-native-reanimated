@@ -250,7 +250,12 @@ export class Machine {
   }
 
   isFinished(): boolean {
-    if (this.cores.some((core) => core.createdAtTick === this.tickCount)) {
+    if (
+      this.cores.some((core) => core.createdAtTick === this.tickCount) ||
+      [...this.shared.values()].some(
+        (cell) => cell.createdAtTick === this.tickCount
+      )
+    ) {
       return this.halted;
     }
     if (this.inputs.some((input) => input.tick > this.tickCount)) {
@@ -350,6 +355,30 @@ export class Machine {
     }
     if (api === 'getCurrentThreadId') {
       return threadId(this.cores.indexOf(core));
+    }
+    if (api === 'getRuntimeKind') {
+      const runtime = this.currentRuntime(core);
+      if (runtime === null) {
+        throw new SnippetError('getRuntimeKind requires a JavaScript Runtime');
+      }
+      const kind = this.core(runtime).spec.kind;
+      return kind === 'rn' ? 1 : kind === 'ui' ? 2 : 3;
+    }
+    if (api === 'runtimeFromId') {
+      const target = this.cores.find(
+        (candidate) => this.runtimeIdOf(candidate) === args[0]
+      );
+      if (!target?.spec.hasRuntime || target.spec.kind === 'rn') {
+        throw new SnippetError(
+          'Expected the id of an existing Worklet Runtime'
+        );
+      }
+      return {
+        __workletRuntime: true,
+        name: target.spec.id,
+        coreId: target.spec.id,
+        runtimeId: args[0],
+      };
     }
     if (api === 'setTimeout') {
       return this.addTimer(core, args[0], args[1], false);
@@ -1570,6 +1599,12 @@ export class Machine {
   private snapshotCore(core: CoreState): CoreSnapshot {
     return {
       id: core.spec.id,
+      globals: Object.fromEntries(
+        Object.entries(core.globals).map(([name, value]) => [
+          name,
+          formatValue(value),
+        ])
+      ),
       label: core.spec.label,
       thread: core.spec.thread,
       kind: core.spec.kind,
