@@ -136,11 +136,12 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<jsi::Object> settledUpdates;
+  const auto pendingTags = getPendingTags();
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
 
-    if (!registeredViewTags.contains(viewTag)) {
+    if (!registeredViewTags.contains(viewTag) || pendingTags.contains(viewTag)) {
       ++it;
       continue;
     }
@@ -172,9 +173,6 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
         syncedTags_.insert(viewTag);
       }
       if (isInvalidated) {
-        // Only erase serviced invalidations; if a tag was invalidated but the
-        // matching update batch hasn't been flushed into updatesRegistry_ yet,
-        // we leave the entry so the next sync picks it up.
         invalidatedTags_.erase(invalidatedIt);
       }
     }
