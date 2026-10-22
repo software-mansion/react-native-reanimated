@@ -4,6 +4,7 @@ import type { ViewProps, ViewStyle } from 'react-native';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   DynamicColorIOS,
+  getStaticFeatureFlag,
   PlatformColor,
   useAnimatedStyle,
   useSharedValue,
@@ -22,6 +23,10 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { ValidPropNames } from '../../../ReJest/types';
 import { ComparisonMode } from '../../../ReJest/types';
+import {
+  leakingRegistries,
+  NO_LEAKS,
+} from '../../../ReJest/utils/registriesLeakCheck';
 
 // With FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS, Reanimated re-renders a view
 // with its settled animated values (`settledStyle`) and drops them from the
@@ -38,6 +43,11 @@ import { ComparisonMode } from '../../../ReJest/types';
 // Readers: `prop` is read from the shadow tree (getAnimatedStyle). transform and
 // filter cannot be read from native, so for every case the test also compares
 // the style React passes to the view.
+//
+// The test waits until no registry holds a value. From then on, the commit hook
+// no longer adds the animated value, so the shadow tree shows what React
+// passed. A wrong value written back to React (for example a color with a wrong
+// alpha) or a React render that drops it shows up in the native read.
 
 const BOX_REF = 'SYNC_BACK_RERENDER_BOX';
 
@@ -56,10 +66,13 @@ const WIDTH_ON = 150;
 // The style React passed to the view in its last render. Box writes it during
 // render, on the JS thread, so it is up to date when render() resolves.
 let lastReactStyle: ViewStyle = {};
+// Proves that the unrelated render reached Box.
+let boxRenderCount = 0;
 let toggleSharedValue: () => void = () => {};
 
 const Box = forwardRef<ComponentRef<typeof View>, ViewProps>((props, ref) => {
   lastReactStyle = StyleSheet.flatten(props.style) ?? {};
+  boxRenderCount += 1;
   return <View ref={ref} collapsable={false} {...props} />;
 });
 
@@ -201,55 +214,67 @@ const cases: Case[] = [
   },
 ];
 
-async function readProp(prop: ValidPropNames) {
-  return getTestComponent(BOX_REF).getAnimatedStyle(prop);
+async function readProp(prop: ValidPropNames, mode?: ComparisonMode) {
+  const value = await getTestComponent(BOX_REF).getAnimatedStyle(prop);
+  return mode === ComparisonMode.PIXEL ? Number(value) : value;
 }
 
 describe('sync of settled props back to React, then a React render', () => {
   test.each(cases)(
     'a React render after the sync keeps the settled ${description}',
-    async ({ getStyle, prop, target, mode }) => {
+    async ({ getStyle, prop, target, mode = ComparisonMode.STRING }) => {
+      if (!getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')) {
+        return;
+      }
+
       await render(<Scenario counter={0} getStyle={getStyle} />);
       const reactStyleBefore = JSON.stringify(lastReactStyle);
-      const nativeBefore = prop ? await readProp(prop) : undefined;
+      const nativeBefore = prop ? await readProp(prop, mode) : undefined;
 
-      // No React render.
+      // No React render. The registry carries the new value to the shadow tree.
       toggleSharedValue();
-      if (prop && target !== undefined) {
-        await expectEventually(async () =>
-          mode === ComparisonMode.PIXEL
-            ? Number(await readProp(prop))
-            : await readProp(prop)
-        ).toBe(target, mode);
+      let nativeAnimated: number | string | undefined;
+      if (prop) {
+        if (target !== undefined) {
+          await expectEventually(() => readProp(prop, mode)).toBe(target, mode);
+        } else {
+          await expectEventually(() => readProp(prop, mode)).not.toBe(
+            nativeBefore as string,
+            mode
+          );
+        }
+        nativeAnimated = await readProp(prop, mode);
       }
+
       // React gets the settled value, so the next render starts from it.
       await expectEventually(
         () => JSON.stringify(lastReactStyle),
         SYNC_BACK_TIMEOUT_MS
       ).not.toBe(reactStyleBefore, ComparisonMode.STRING);
+      // React committed it and native dropped its copy.
+      await expectEventually(leakingRegistries, SYNC_BACK_TIMEOUT_MS).toBe(
+        NO_LEAKS
+      );
+      await waitForFrames(RERENDER_FRAMES);
 
       const reactStyleSynced = JSON.stringify(lastReactStyle);
-      const nativeSynced = prop ? await readProp(prop) : undefined;
       if (prop) {
-        expect(nativeSynced as string).not.toBe(
-          nativeBefore as string,
-          ComparisonMode.STRING
-        );
+        expect(await readProp(prop, mode)).toBe(nativeAnimated as string, mode);
       }
 
       // A React render unrelated to the animation.
+      const renderCountBefore = boxRenderCount;
       await render(<Scenario counter={1} getStyle={getStyle} />);
       await waitForFrames(RERENDER_FRAMES);
 
+      expect(boxRenderCount).not.toBe(renderCountBefore);
       expect(JSON.stringify(lastReactStyle)).toBe(
         reactStyleSynced,
         ComparisonMode.STRING
       );
+      expect(leakingRegistries()).toBe(NO_LEAKS);
       if (prop) {
-        expect(await readProp(prop)).toBe(
-          nativeSynced as string,
-          ComparisonMode.STRING
-        );
+        expect(await readProp(prop, mode)).toBe(nativeAnimated as string, mode);
       }
     }
   );
