@@ -46,6 +46,8 @@ enum class TrackBuildFailure : uint8_t {
   /// The end value is not the value that the mounted model will hold.
   EndpointMismatch,
   ResourceLimit,
+  /// The animation continues an active one in a way that only its owner can repeat.
+  UnsupportedContinuation,
 };
 
 std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track);
