@@ -21,7 +21,6 @@ interface PhoneProps {
   className?: string;
 }
 
-const TOUCH_MS = 220;
 const WAVE_MS = 1300;
 
 export default function Phone({
@@ -31,26 +30,8 @@ export default function Phone({
   className,
 }: PhoneProps) {
   const tree = isLayoutNode(screen.tree) ? screen.tree : null;
-  const [touched, setTouched] = useState<{ id: string } | null>(null);
-  const touch =
-    touched?.id ?? (typeof screen.touch === 'string' ? screen.touch : null);
+  const touch = typeof screen.touch === 'string' ? screen.touch : null;
   const nativeProps = (screen.nativeProps ?? {}) as NativeProps;
-
-  useEffect(() => {
-    if (touched === null) {
-      return;
-    }
-    const id = window.setTimeout(() => setTouched(null), TOUCH_MS);
-    return () => window.clearTimeout(id);
-  }, [touched]);
-
-  const press =
-    onPress === undefined
-      ? undefined
-      : (id: string) => {
-          setTouched({ id });
-          onPress(id);
-        };
   const pulse = tree === null ? undefined : findPulse(tree, nativeProps);
   const [waves, setWaves] = useState<number[]>([]);
   const waveIdRef = useRef(0);
@@ -80,7 +61,7 @@ export default function Phone({
       {tree === null ? (
         <span className={styles.phoneEmpty}>nothing rendered yet</span>
       ) : (
-        renderNode(tree, touch, nativeProps, press, 'root')
+        renderNode(tree, touch, nativeProps, onPress, 'root')
       )}
     </PhoneFrame>
   );
@@ -90,7 +71,7 @@ function renderNode(
   node: LayoutNode | string,
   touch: string | null,
   nativeProps: NativeProps,
-  press: ((id: string, event: React.MouseEvent) => void) | undefined,
+  press: ((id: string) => void) | undefined,
   key: string
 ): React.ReactNode {
   if (typeof node === 'string') {
@@ -144,7 +125,10 @@ function renderNode(
     const id =
       typeof node.props.nativeID === 'string' ? node.props.nativeID : title;
     const label = typeof overrides.text === 'string' ? overrides.text : title;
-    const pressed = touch !== null && (touch === id || touch === title);
+    const pressed =
+      press === undefined &&
+      touch !== null &&
+      (touch === id || touch === title);
     const className = clsx(
       styles.phoneButton,
       pressed && styles.phoneButtonPressed,
@@ -156,8 +140,20 @@ function renderNode(
           key={key}
           type="button"
           className={className}
-          onClick={(event) => press(id, event)}>
-          {label || children}
+          onClick={() => press(id)}>
+          <span>{label || children}</span>
+          <span className={styles.phoneButtonHint} aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" focusable="false">
+              <path
+                d="M9 11V5a2 2 0 0 1 4 0v7l2-1a2 2 0 0 1 2 0l3 2-1 6a3 3 0 0 1-3 2h-4a3 3 0 0 1-2-1l-5-6a2 2 0 0 1 3-2l1 1Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Tap to interact
+          </span>
         </button>
       );
     }
