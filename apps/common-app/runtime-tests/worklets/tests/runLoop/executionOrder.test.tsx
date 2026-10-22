@@ -2,6 +2,7 @@ import {
   createSynchronizable,
   RuntimeKind,
   scheduleOnRuntime,
+  type Synchronizable,
 } from 'react-native-worklets';
 
 import {
@@ -21,6 +22,7 @@ import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrde
 import { getMethodMap, MethodsName } from './executionOrderConfigs/utils';
 
 const ANIMATION_QUEUE_POLLING_RATE = 16;
+const HANDSHAKE_TIMEOUT_MS = 1000;
 
 const TIMER_METHODS: MethodsName[] = [
   'setTimeout',
@@ -80,15 +82,15 @@ describe('Test mixed order of execution', () => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = createOrderConstraint();
+      const [handshakeCompleted, setHandshakeCompleted] =
+        createTestValue<boolean>(false);
+      const secondTaskScheduled = createSynchronizable(false);
 
       // Act
       scheduleOnRuntime(rt, () => {
         'worklet';
-        // Stay busy until the second task below is enqueued.
-        const busyUntil = performance.now() + 10;
-        while (performance.now() < busyUntil) {
-          // Do nothing.
-        }
+        // Wait until the second task below is enqueued.
+        setHandshakeCompleted(waitForFlag(secondTaskScheduled));
         getMethodMap()[firstMethodName](() =>
           order(firstMethodOrder, notification1)
         );
@@ -99,8 +101,10 @@ describe('Test mixed order of execution', () => {
           order(secondMethodOrder, notification2)
         );
       });
+      secondTaskScheduled.setBlocking(true);
 
       await waitForNotifications([notification1, notification2]);
+      expect(handshakeCompleted.value).toBe(true);
       expect(confirmedOrder.value).toBe(2);
     }
   );
@@ -113,16 +117,16 @@ describe('Test mixed order of execution', () => {
       const [confirmedOrder, order] = createOrderConstraint();
       const [secondRegisteredInTime, setSecondRegisteredInTime] =
         createTestValue<boolean>(false);
+      const [handshakeCompleted, setHandshakeCompleted] =
+        createTestValue<boolean>(false);
       const animationFrameRegisteredAt = createSynchronizable(0);
+      const secondTaskScheduled = createSynchronizable(false);
 
       // Act
       scheduleOnRuntime(rt, () => {
         'worklet';
-        // Stay busy until the second task below is enqueued.
-        const busyUntil = performance.now() + 10;
-        while (performance.now() < busyUntil) {
-          // Do nothing.
-        }
+        // Wait until the second task below is enqueued.
+        setHandshakeCompleted(waitForFlag(secondTaskScheduled));
         animationFrameRegisteredAt.setBlocking(performance.now());
         requestAnimationFrame(() => order(2, notification2));
       });
@@ -138,8 +142,10 @@ describe('Test mixed order of execution', () => {
         getMethodMap()[secondMethodName](() => order(1, notification1));
         setSecondRegisteredInTime(registeredInTime);
       });
+      secondTaskScheduled.setBlocking(true);
 
       await waitForNotifications([notification1, notification2]);
+      expect(handshakeCompleted.value).toBe(true);
       if (secondRegisteredInTime.value) {
         expect(confirmedOrder.value).toBe(2);
       } else {
@@ -273,3 +279,14 @@ describe('Test mixed order of execution', () => {
     }
   );
 });
+
+function waitForFlag(flag: Synchronizable<boolean>) {
+  'worklet';
+  const deadline = performance.now() + HANDSHAKE_TIMEOUT_MS;
+  while (!flag.getBlocking()) {
+    if (performance.now() > deadline) {
+      return false;
+    }
+  }
+  return true;
+}
