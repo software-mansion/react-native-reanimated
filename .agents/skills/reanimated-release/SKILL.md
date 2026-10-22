@@ -203,6 +203,7 @@ Never do this as part of preparing the release.
 The publish workflow only pushes to npm — it does **not** create the git tag or the GitHub release. Do that manually once published. Convention: release title `Reanimated - X.Y.Z`, git tag `X.Y.Z` (see prior releases via `gh release list`).
 
 ```bash
+git fetch origin <X.Y>-stable   # the merged release commit must be in the ref
 sha=$(git rev-parse origin/<X.Y>-stable)   # FULL 40-char SHA — see gotcha
 gh release create <version> --draft --target "$sha" \
   --title 'Reanimated - <version>' \
@@ -225,6 +226,7 @@ gh release upload <version> react-native-reanimated-<version>.tgz
 ### 15. Cleanup (after the PR is merged)
 
 ```bash
+xcrun simctl spawn <udid> defaults delete org.reactjs.native.example.FabricExample RCT_jsLocation   # only if you ran step 12
 git worktree remove ../rnr-release-<version>
 git branch -D '@<you>/reanimated/release-<version>'
 ```

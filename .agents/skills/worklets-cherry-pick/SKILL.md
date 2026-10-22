@@ -16,8 +16,9 @@ and the tracking issue for the release is updated with links.
 
 Ask for or extract from the request:
 
-- **Release branch** — e.g. `worklets-0.9-stable`
+- **Release branch** — e.g. `worklets-0.13-stable`
 - **PR list** — one or more GitHub PR URLs / numbers in `software-mansion/react-native-reanimated`
+  Use only the PR number for `<PR>` and `$pr` in branch names, paths and commands.
 - **Tracking issue** — the "Worklets X.Y.Z cherry-pick thread" issue. Some titles use the form `[Worklets] [X.Y.Z] cherry-pick thread`.
   Ask if not provided.
 
@@ -54,7 +55,11 @@ For each PR, capture merge commit SHA + upstream title + original author:
 gh pr view <PR> --repo software-mansion/react-native-reanimated \
   --json mergeCommit,title
 git log -1 --format='%an <%ae>' <sha>
+git rev-list --parents -n 1 <sha>
 ```
+
+This repo squash-merges PRs, so the merge commit has one parent and its subject ends with `(#<PR>)`. If the commit has two
+parents, or the subject does not end with `(#<PR>)`, the PR was merged in a different way. Stop and ask the user.
 
 ### 2. Create worktrees
 
@@ -136,23 +141,22 @@ git commit -F "$mm.clean"
 
 ### 6. Fix authorship (only when original author ≠ user)
 
-First check whether the upstream squash commit already carried a `Co-authored-by: <you>` trailer — GitHub's squash-merge often
-adds it, and it flows straight into MERGE\_MSG. If it's already there, **don't add it twice**; just set the author when you
-commit in step 5 (no amend needed):
+Decide this before you commit in step 5. If original author = user, skip this step.
+
+If the upstream squash commit already has a `Co-authored-by: <you>` trailer (GitHub's squash-merge often adds it, and it
+comes into MERGE\_MSG), **don't add it twice**. Add `--author` to the step 5 commit command instead:
 
 ```bash
 git commit --author="<Original Author> <og@email>" -F "<message-file>"
 ```
 
-Otherwise, add the trailer and amend:
+Otherwise, commit as in step 5, then add the trailer and set the author with an amend:
 
 ```bash
 git log -1 --format=%B | \
   git interpret-trailers --trailer "Co-authored-by: <User Name> <user@email>" | \
   git commit --amend --author="<Original Author> <og@email>" -F -
 ```
-
-If original author = user, skip this step.
 
 ### 7. Push
 

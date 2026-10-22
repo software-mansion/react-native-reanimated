@@ -202,6 +202,7 @@ Never do this as part of preparing the release.
 The publish workflow only pushes to npm — it does **not** create the git tag or the GitHub release. Do that manually once published. Convention: release title `Worklets - X.Y.Z`, git tag `worklets-X.Y.Z` (see prior releases via `gh release list`).
 
 ```bash
+git fetch origin worklets-<X.Y>-stable   # the merged release commit must be in the ref
 sha=$(git rev-parse origin/worklets-<X.Y>-stable)   # FULL 40-char SHA — see gotcha
 gh release create worklets-<version> --draft --target "$sha" \
   --title 'Worklets - <version>' \
@@ -224,6 +225,7 @@ gh release upload worklets-<version> react-native-worklets-<version>.tgz
 ### 15. Cleanup (after the PR is merged)
 
 ```bash
+xcrun simctl spawn <udid> defaults delete org.reactjs.native.example.FabricExample RCT_jsLocation   # only if you ran step 12
 git worktree remove ../rwr-release-<version>
 git branch -D '@<you>/worklets/release-<version>'
 ```
