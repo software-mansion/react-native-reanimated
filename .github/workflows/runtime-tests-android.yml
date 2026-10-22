@@ -97,8 +97,10 @@ jobs:
           working-directory: apps/fabric-example
           script: echo "Generated AVD snapshot for caching."
 
-      - name: Run ReJest self-tests on the emulator
+      - name: Run runtime tests on the emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        env:
+          RUNTIME_TESTS_ARGS: --launch --platform android --configuration ${{ env.CONFIGURATION }} --skip-build --connect-timeout 900 --idle-timeout 900
         with:
           api-level: 34
           arch: x86_64
@@ -106,40 +108,19 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900
-
-      - name: Verify CI catches failing tests
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: if node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
-
-      - name: Run Worklets runtime tests on the emulator
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900
-
-      - name: Run Reanimated runtime tests on the emulator
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900
+          script: |
+            echo "::group::ReJest self-tests"
+            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests
+            echo "::endgroup::"
+            echo "::group::Verify CI catches failing tests"
+            if node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
+            echo "::endgroup::"
+            echo "::group::Worklets runtime tests"
+            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library worklets
+            echo "::endgroup::"
+            echo "::group::Reanimated runtime tests"
+            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library reanimated
+            echo "::endgroup::"
 
       - name: Upload crash reports
         if: failure()
