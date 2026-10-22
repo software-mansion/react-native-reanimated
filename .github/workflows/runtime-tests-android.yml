@@ -74,7 +74,10 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
-        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64
+        # Temporary: GWP-ASan is disabled on the x86_64 emulator because its backtrace recorder can crash
+        # the app. Remove -PruntimeTestsDisableGwpAsan when
+        # https://github.com/software-mansion/react-native-reanimated/issues/10960 is resolved.
+        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64 -PruntimeTestsDisableGwpAsan=true
 
       - name: AVD cache
         id: avd-cache
