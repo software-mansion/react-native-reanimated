@@ -79,7 +79,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.
-    if (commitOptions.source != ShadowTreeCommitSource::React) {
+    // ReactRevisionMerge commits are based on the promoted React revision,
+    // so they need the same treatment as React commits when Fabric commit
+    // branching is enabled.
+    if (commitOptions.source != ShadowTreeCommitSource::React &&
+        commitOptions.source != ShadowTreeCommitSource::ReactRevisionMerge) {
       trackCommit(newRootShadowNode, false);
       return newRootShadowNode;
     }

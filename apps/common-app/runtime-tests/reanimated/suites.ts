@@ -66,12 +66,21 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'event handlers',
+    importTest: () => {
+      require('./tests/events/useAnimatedScrollHandlerMemo.test');
+    },
+  },
+  {
     testSuiteName: 'props',
     importTest: () => {
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
       require('./tests/props/nonLayoutPropAndRender.test');
+      require('./tests/props/mountedViewProps.test');
+      require('./tests/props/hostReplacement.test');
+      require('./tests/props/cssArrayKeyframes.test');
     },
   },
   {
@@ -79,12 +88,29 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
+      require('./tests/css/platformColor.test');
+      require('./tests/css/transformNone.test');
+      require('./tests/css/transitionOnRecycledView.test');
+    },
+  },
+  {
+    testSuiteName: 'react-freeze',
+    importTest: () => {
+      require('./tests/reactFreeze/propDriven.test');
+      require('./tests/reactFreeze/nativeStack.test');
+      require('./tests/reactFreeze/settledPropsReveal.test');
     },
   },
   {
     testSuiteName: 'utilities',
     importTest: () => {
       require('./tests/utilities/relativeCoords.test');
+    },
+  },
+  {
+    testSuiteName: 'Activity entering animation',
+    importTest: () => {
+      require('./tests/layoutAnimations/activityEntering.test');
     },
   },
   {
@@ -158,6 +184,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations native stack removal',
     importTest: () => {
       require('./tests/layoutAnimations/nativeStackRemoval.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations with React Native LayoutAnimation',
+    importTest: () => {
+      require('./tests/layoutAnimations/reactNativeLayoutAnimation.test');
     },
   },
   {

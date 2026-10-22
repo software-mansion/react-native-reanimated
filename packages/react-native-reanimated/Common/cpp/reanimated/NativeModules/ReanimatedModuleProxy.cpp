@@ -363,8 +363,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         uiRuntime,
         "_obtainMountedViewProps",
         [obtainMountedViewProps = platformDepMethodsHolder.obtainMountedViewProps](
-            jsi::Runtime &rt, const jsi::Value &tag) -> jsi::Value {
-          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()));
+            jsi::Runtime &rt, const jsi::Value &tag, const jsi::Value &presented) -> jsi::Value {
+          const auto props = obtainMountedViewProps(static_cast<Tag>(tag.asNumber()), presented.asBool());
           if (!props) {
             return jsi::Value::null();
           }
@@ -374,6 +374,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           result.setProperty(rt, "width", props->width);
           result.setProperty(rt, "height", props->height);
           result.setProperty(rt, "opacity", props->opacity);
+          result.setProperty(
+              rt,
+              "backgroundColor",
+              jsi::String::createFromUtf8(rt, PropValueProcessor::intColorToHex(props->backgroundColor)));
           return result;
         });
   }
@@ -497,6 +501,17 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    std::vector<Tag> sharedTransitionViewTags;
+    for (const auto &item : batch) {
+      if (item.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+        sharedTransitionViewTags.push_back(item.tag);
+      }
+    }
+    if (layoutAnimationsProxyRegistry_ && !sharedTransitionViewTags.empty()) {
+      layoutAnimationsProxyRegistry_->onSharedTransitionConfigured(sharedTransitionViewTags);
+    }
+  }
   return jsi::Value::undefined();
 }
 
@@ -509,6 +524,10 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
+}
+
+jsi::Value ReanimatedModuleProxy::isSensorAvailable(jsi::Runtime &, const jsi::Value &sensorType) const {
+  return animatedSensorModule_.isSensorAvailable(sensorType);
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -650,7 +669,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -660,9 +679,15 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
+  std::unordered_set<Tag> viewTags;
+  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
+    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
+  }
+
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS);
+  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -1457,6 +1482,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         return strongThis->getViewProp(rt, at<0>(args), at<1>(args), at<2>(args));
       });
 
+  addMethod<1>(
+      rt,
+      obj,
+      "isSensorAvailable",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return strongThis->isSensorAvailable(rt, at<0>(args));
+      });
+
   addMethod<4>(
       rt,
       obj,
@@ -1673,13 +1710,17 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->unregisterCSSTransition(rt, at<0>(args));
       });
 
-  addMethod<0>(rt, obj, "getSettledUpdates", [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return jsi::Value::undefined();
-    }
-    return strongThis->getSettledUpdates(rt);
-  });
+  addMethod<1>(
+      rt,
+      obj,
+      "getSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value::undefined();
+        }
+        return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
 
   addMethod<2>(
       rt,

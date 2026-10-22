@@ -10,7 +10,7 @@ sidebar_position: 42 # Use alphabetical order
 
 A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
 
-A Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
+A Shareable can hold any value that is convertible to a [Serializable](./serializable.mdx).
 
 A Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
 
@@ -99,7 +99,7 @@ console.log(shareable.getSync()); // 42
 
 ## Shareable Host
 
-**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](/docs/memory/createShareable#hostdecorator), it has the following interface:
+**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](./createShareable.mdx#hostdecorator), it has the following interface:
 
 ### value
 
@@ -111,7 +111,7 @@ A boolean property indicating whether the Shareable is being accessed from the H
 
 ## Shareable Guest
 
-**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](/docs/memory/createShareable#guestdecorator), it has the following interface:
+**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](./createShareable.mdx#guestdecorator), it has the following interface:
 
 ### isHost
 
