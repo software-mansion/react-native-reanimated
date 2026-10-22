@@ -4,6 +4,8 @@ import path from 'node:path';
 const GITHUB_BODY_LIMIT = 60_000;
 const GITHUB_TITLE_LIMIT = 256;
 const SUMMARY_LIMIT = 600;
+const COMMENT_REPORT_LIMIT = 25_000;
+const SCREENSHOT_EXTENSIONS = /\.(png|jpe?g|gif|webp|svg)$/i;
 
 export type Verdict =
   | 'REPRODUCIBLE'
@@ -56,7 +58,10 @@ export async function publishReportIssue({
   });
   console.log(`opened ${issue.html_url}`);
   if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${issue.html_url}\n`);
+    fs.appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `url=${issue.html_url}\nnumber=${issue.number}\n`
+    );
   }
 
   for (const stream of streams) {
@@ -179,6 +184,46 @@ export function screenshotsSection(
   ];
 }
 
+export function writeCommentFile(lines: string[]): void {
+  const commentFile = requireEnv('COMMENT_FILE');
+  fs.mkdirSync(path.dirname(commentFile), { recursive: true });
+  fs.writeFileSync(
+    commentFile,
+    clampBody(
+      lines.join('\n'),
+      'The comment was truncated. The full report is in the workflow artifacts.'
+    )
+  );
+  console.log(`wrote ${commentFile}`);
+}
+
+export function reportForComment(output: string): string {
+  const report = output
+    .replace(/^#\s+[^\n]*\n/, '')
+    .trim()
+    .replace(/^(#{1,5})\s/gm, '$1## ');
+  if (report.length <= COMMENT_REPORT_LIMIT) {
+    return report;
+  }
+  const note =
+    '\n\n_The report was truncated. The full report is in the workflow artifacts._';
+  const cut = report.slice(0, COMMENT_REPORT_LIMIT - note.length - 8);
+  const openFence = (cut.match(/^```/gm)?.length ?? 0) % 2 === 1;
+  return `${cut}${openFence ? '\n```' : ''}${note}`;
+}
+
+export function commentFooter(runUrl: string): string[] {
+  return [
+    `<sub>Posted by the [Argent Cloud workflow](${runUrl}). An AI agent ran this on an iOS simulator, so the result can be wrong.</sub>`,
+  ];
+}
+
+export function configurationLabel(configuration: string | undefined): string {
+  return configuration === 'debug'
+    ? 'Debug, JavaScript from Metro'
+    : 'Release, embedded bundle';
+}
+
 export function staticFeatureFlagsLabel(
   flags: StaticFeatureFlags | undefined
 ): string {
@@ -197,7 +242,11 @@ export function readScreenshots(
   }
   const files = fs
     .readdirSync(directory, { recursive: true, encoding: 'utf8' })
-    .filter((file) => fs.statSync(path.join(directory, file)).isFile())
+    .filter(
+      (file) =>
+        SCREENSHOT_EXTENSIONS.test(file) &&
+        fs.statSync(path.join(directory, file)).isFile()
+    )
     .sort();
   return files.length > 0
     ? { files, artifactUrl: artifactUrl || undefined }
