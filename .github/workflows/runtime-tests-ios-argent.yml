@@ -121,7 +121,7 @@ jobs:
 
       - name: Setup ccache
         if: steps.appcache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
           needs-compile-database: 'false'
@@ -129,7 +129,7 @@ jobs:
       - name: Install Pods
         id: install-pods
         if: steps.appcache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
@@ -141,7 +141,7 @@ jobs:
 
       - name: Save ccache
         if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode
-        uses: ./.github/actions/save-ccache
+        uses: $/.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
 
@@ -150,7 +150,7 @@ jobs:
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
         if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
-        uses: ./.github/actions/save-pods
+        uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
@@ -218,7 +218,7 @@ jobs:
         run: yarn toggle-bundle-mode
 
       - name: Install sim-remote CLI
-        uses: ./.github/actions/install-sim-remote
+        uses: $/.github/actions/install-sim-remote
 
       - name: Log in and acquire a cloud machine
         shell: bash

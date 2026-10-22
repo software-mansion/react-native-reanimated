@@ -73,6 +73,6 @@ jobs:
 
       - name: Run TypeScript Compatibility Check
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        uses: ./.github/actions/reanimated-typescript-compatibility-check
+        uses: $/.github/actions/reanimated-typescript-compatibility-check
         with:
           react-native-version: ${{ matrix.react-native-version }}

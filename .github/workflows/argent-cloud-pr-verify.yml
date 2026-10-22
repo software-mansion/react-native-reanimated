@@ -190,7 +190,7 @@ jobs:
     permissions:
       contents: read
     cache-mode: none
-    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    uses: $/.github/workflows/argent-cloud-pr-verify-build.yml
     with:
       variant: base
       commit: ${{ needs.authorize.outputs.base-sha }}
@@ -203,7 +203,7 @@ jobs:
     permissions:
       contents: read
     cache-mode: none
-    uses: ./.github/workflows/argent-cloud-pr-verify-build.yml
+    uses: $/.github/workflows/argent-cloud-pr-verify-build.yml
     with:
       variant: head
       commit: ${{ github.event.pull_request.head.sha }}
@@ -247,7 +247,7 @@ jobs:
           path: ${{ env.WORK_DIR }}/app
 
       - name: Install the argent-cloud CLI
-        uses: ./.github/actions/install-argent-cloud
+        uses: $/.github/actions/install-argent-cloud
 
       - name: Write the verification brief
         run: |

@@ -34,7 +34,7 @@ jobs:
         with:
           cache: yarn
       - name: Run static checks
-        uses: ./.github/actions/package-static-checks
+        uses: $/.github/actions/package-static-checks
         with:
           package-dir: packages/react-native-reanimated
           build-commands: yarn workspace react-native-reanimated build

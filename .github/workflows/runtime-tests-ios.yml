@@ -88,14 +88,14 @@ jobs:
 
       - name: Setup ccache
         if: ${{ !inputs.sanitizer }}
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
           needs-compile-database: 'false'
 
       - name: Install Pods (with caching)
         if: ${{ !inputs.sanitizer }}
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios

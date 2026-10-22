@@ -450,7 +450,7 @@ jobs:
 
       - name: Install the argent-cloud CLI
         id: install
-        uses: ./.github/actions/install-argent-cloud
+        uses: $/.github/actions/install-argent-cloud
 
       - name: Write the reproduction brief
         id: brief

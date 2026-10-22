@@ -99,7 +99,7 @@ jobs:
 
   npm-worklets-publish:
     needs: build-oxc-plugin
-    uses: ./.github/workflows/npm-package-publish.yml
+    uses: $/.github/workflows/npm-package-publish.yml
     with:
       runs-on: ubuntu-22.04
       artifacts-pattern: oxc-plugin-*
