@@ -36,8 +36,8 @@ export default function MemoryPanel({
   const ordered = runtimes
     .filter((runtime) => present.has(runtime.id))
     .sort((a, b) => memoryRank(a) - memoryRank(b));
-  const synchronizables = memory.filter(
-    (cell) => cell.kind === 'synchronizable'
+  const nativeCells = memory.filter(
+    (cell) => cell.kind === 'synchronizable' || cell.kind === 'serializable'
   );
   const showGlobals = cores.some(
     (core) => Object.keys(core.globals).length > 0
@@ -183,25 +183,35 @@ export default function MemoryPanel({
           );
         })}
       </div>
-      {synchronizables.length > 0 && (
+      {nativeCells.length > 0 && (
         <div className={styles.nativeRow} data-sim-layout-key="native-memory">
           <div className={styles.nativeHeader}>
             <span className={styles.nativeLabel}>Shared native memory</span>
             <span className={styles.boxDetail}>Accessible from any thread</span>
           </div>
           <div className={styles.memoryCells}>
-            {synchronizables.map((cell) => {
+            {nativeCells.map((cell) => {
               const accessor = accessorOf(cell);
+              const serializable = cell.kind === 'serializable';
               return (
                 <span
                   key={`cell-${cell.id}`}
+                  data-memory-kind={cell.kind}
                   className={clsx(
                     styles.synchronizable,
                     accessor !== undefined && runtimeClass(accessor),
                     accessor !== undefined && styles.synchronizableActive
                   )}
-                  data-help="A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.">
-                  <span className={styles.shareableLabel}>Synchronizable</span>
+                  data-help={
+                    serializable
+                      ? 'A Serializable: an immutable serialized value in native memory. Deserializing it on another runtime creates a separate JavaScript value.'
+                      : 'A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.'
+                  }>
+                  <span className={styles.shareableLabel}>
+                    {serializable
+                      ? 'Serializable (immutable)'
+                      : 'Synchronizable'}
+                  </span>
                   <span className={styles.cellNumber}>{cell.value}</span>
                 </span>
               );

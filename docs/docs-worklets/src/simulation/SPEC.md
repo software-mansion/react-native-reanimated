@@ -103,6 +103,22 @@ internal job on the host runtime and returns a promise.
 
 State: value, host, guests, last accessing thread.
 
+### Serializable
+
+An immutable serialized value outside every runtime. `createSerializable`
+copies the input into a native memory cell and returns an opaque reference.
+Repeated serialization of the same object or reference reuses that cell.
+`isSerializableRef` recognizes the reference; it exposes no JavaScript value.
+When a reference is passed across runtimes, including inside an argument object,
+the destination receives a fresh copy of the stored value. Mutating that copy
+cannot change the stored value or earlier snapshots. Unlike a Synchronizable,
+a Serializable has no lock or setter.
+
+The simulator uses structured cloning for supported data values. It does not
+model native serialization of functions or custom serializers, or development
+warnings when a serialized source object is mutated. The example only mutates
+the deserialized copy, which is valid in development and production.
+
 ### Job
 
 A call of a snippet function with arguments. It waits in a queue, executes on

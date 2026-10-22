@@ -147,6 +147,15 @@ describe('reference examples', () => {
     const last = snapshots.at(-1)!;
     assert.deepEqual(globals(last, 'rn'), { settings: '{"volume":10}' });
     assert.deepEqual(globals(last, 'ui'), { settings: '{"volume":20}' });
+    assert.equal(last.memory.length, 1);
+    assert.equal(last.memory[0].kind, 'serializable');
+    assert.equal(last.memory[0].value, '{"volume":10}');
+    assert.ok(snapshots.some((snapshot) => snapshot.memory.length === 0));
+    for (const snapshot of snapshots) {
+      for (const cell of snapshot.memory) {
+        assert.equal(cell.value, '{"volume":10}');
+      }
+    }
   });
 
   it('updates the Shareable on its highlighted assignment line', () => {

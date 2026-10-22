@@ -207,6 +207,27 @@ const runtimeGlobal: Record<string, unknown> = new Proxy(
 
 export { runtimeGlobal as globalThis };
 
+export interface SerializableRef<TValue = unknown> {
+  __serializableRef: true;
+  // Matches the native API's type-only field; it is not present at runtime.
+  __nativeStateSerializableJSRef: TValue;
+}
+
+export function createSerializable<TValue>(
+  value: TValue
+): SerializableRef<TValue> {
+  return dispatch('createSerializable', [value]) as SerializableRef<TValue>;
+}
+
+export function isSerializableRef(value: unknown): value is SerializableRef {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
+  );
+}
+
 export interface Synchronizable<T> {
   __synchronizable: true;
   id: number;

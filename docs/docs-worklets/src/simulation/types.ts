@@ -69,6 +69,7 @@ export type InterceptedApi =
   | 'promiseThen'
   | 'globalGet'
   | 'globalSet'
+  | 'createSerializable'
   | 'createSynchronizable'
   | 'synchronizableRead'
   | 'synchronizableWrite'
@@ -78,7 +79,7 @@ export type InterceptedApi =
   | 'shareableGetSync'
   | 'shareableGetAsync';
 
-export type MemoryKind = 'synchronizable' | 'shareable';
+export type MemoryKind = 'serializable' | 'synchronizable' | 'shareable';
 
 export interface SharedCell {
   id: number;

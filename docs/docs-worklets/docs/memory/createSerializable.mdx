@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as SerializableCopySnippet from './_examples/serializableCopy';
+import SerializableCopySource from '!!raw-loader!./_examples/serializableCopy';
+
 # createSerializable
 
 Recursively converts JavaScript values into [Serializable](/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
@@ -14,17 +17,9 @@ See the [passing a copy simulation](/docs/memory/serializable#passing-a-copy) to
 
 ## Reference
 
-```typescript
-import { createSerializable } from 'react-native-worklets';
+<ThreadingSimulation module={SerializableCopySnippet} source={SerializableCopySource}/>
 
-const object = {
-  a: 1,
-  b: 2,
-  c: 3,
-};
-
-const serializableRef = createSerializable(object);
-```
+The `createSerializable` call creates the immutable value shown in **Shared native memory**. The reference is then passed to UI, where it is deserialized into a separate JavaScript object. Changing UI's copy leaves both the Serializable and RN's original unchanged.
 
 <details>
   <summary>Type definitions</summary>

@@ -1,4 +1,5 @@
 import {
+  createSerializable,
   globalThis,
   scheduleOnRN,
   scheduleOnUI,
@@ -6,6 +7,7 @@ import {
 
 export default function* main() {
   yield (globalThis.settings = { volume: 10 });
+  const settingsRef = yield createSerializable(globalThis.settings);
 
   function* logOriginal() {
     yield console.log('RN original:', globalThis.settings.volume); // 10
@@ -19,6 +21,6 @@ export default function* main() {
     yield scheduleOnRN(logOriginal);
   }
 
-  // The argument is serialized and reconstructed on the UI Runtime.
-  yield scheduleOnUI(changeCopy, globalThis.settings);
+  // The Serializable is deserialized into a JavaScript object on UI.
+  yield scheduleOnUI(changeCopy, settingsRef);
 }

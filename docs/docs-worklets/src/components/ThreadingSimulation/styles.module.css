@@ -73,6 +73,10 @@
   gap: 6px;
 }
 
+.playbackDetails {
+  display: contents;
+}
+
 .button,
 .codeToggle,
 .boilerplateToggle,
@@ -213,44 +217,74 @@
     display: inline;
   }
 }
-@container simulation (max-width: 499px) {
+@container simulation (width < 600px) {
   .toolbar {
-    column-gap: 8px;
+    grid-template-columns: minmax(96px, 1.5fr) repeat(4, minmax(44px, 1fr));
+    gap: 8px 4px;
   }
   .transport {
+    display: contents;
+  }
+  .button {
+    width: 100%;
+  }
+  .playbackDetails {
+    display: flex;
     grid-column: 1 / -1;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 44px;
   }
   .tickLabel {
-    justify-self: start;
+    width: auto;
+    font-size: 12px;
   }
   .speed {
-    grid-column: auto;
+    flex: 1;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
   .speedLabel {
     display: none;
   }
+  .speedSlider {
+    min-width: 24px;
+    max-width: none;
+  }
+  .speedValue {
+    min-width: 6ch;
+  }
 }
 @container simulation (max-width: 330px) {
+  .toolbar {
+    grid-template-columns: repeat(5, minmax(44px, 1fr));
+  }
   .buttonPrimary {
     min-width: 44px;
-    width: 44px;
     padding: 0;
   }
   .playLabel {
     display: none;
   }
+}
+/* Five 44px buttons and four 4px gaps fit from 236px upwards. */
+@container simulation (width < 236px) {
   .toolbar {
-    gap: 4px 8px;
+    grid-template-columns: repeat(4, minmax(44px, 1fr));
+  }
+  .playbackDetails {
+    grid-column: 2 / -1;
+    gap: 8px;
+  }
+  .tickLabel {
+    font-size: 11px;
   }
   .speed {
     gap: 6px;
     font-size: 11px;
-  }
-  .speedValue {
-    min-width: 46px;
-  }
-  .speedSlider {
-    min-width: 30px;
   }
 }
 .activity {
@@ -548,28 +582,6 @@
 .simulationBody > .consolePanel {
   position: relative;
   z-index: 3;
-}
-@container simulation (max-width: 259px) {
-  .toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .transport {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .transport .buttonPrimary {
-    grid-column: 1 / -1;
-    width: auto;
-  }
-  .transport .buttonIcon {
-    width: 100%;
-  }
-  .playLabel {
-    display: inline;
-  }
-  .speed {
-    grid-column: 1;
-  }
 }
 @container simulation (max-width: 499px) {
   .disclosureToggle {

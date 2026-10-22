@@ -250,41 +250,43 @@ export default function ThreadingSimulation({
           <TransportIcon name="loop" />
         </button>
       </div>
-      <span className={styles.tickLabel}>
-        Tick <strong>{simulation.tick}</strong>
-        {Number.isFinite(simulation.lastTick) && ` / ${simulation.lastTick}`}
-      </span>
-      <label className={styles.speed}>
-        <span className={styles.speedLabel}>Step duration</span>
-        <input
-          type="range"
-          className={styles.speedSlider}
-          min={TICK_MIN_MS}
-          max={TICK_MAX_MS}
-          step={1}
-          value={tickMs}
-          onChange={(event) => {
-            const next = snapTick(Number(event.target.value));
-            setLocalTickMs(next);
-            onTickMsChange?.(next);
-          }}
-          onKeyDown={(event) => {
-            const direction =
-              event.key === 'ArrowRight' || event.key === 'ArrowUp'
-                ? 1
-                : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
-                  ? -1
-                  : 0;
-            if (direction === 0) return;
-            event.preventDefault();
-            const next = snapTick(tickMs + direction * TICK_STEP_MS);
-            setLocalTickMs(next);
-            onTickMsChange?.(next);
-          }}
-          aria-label="Tick length in milliseconds"
-        />
-        <span className={styles.speedValue}>{formatTick(tickMs)}</span>
-      </label>
+      <div className={styles.playbackDetails}>
+        <span className={styles.tickLabel}>
+          Tick <strong>{simulation.tick}</strong>
+          {Number.isFinite(simulation.lastTick) && ` / ${simulation.lastTick}`}
+        </span>
+        <label className={styles.speed}>
+          <span className={styles.speedLabel}>Step duration</span>
+          <input
+            type="range"
+            className={styles.speedSlider}
+            min={TICK_MIN_MS}
+            max={TICK_MAX_MS}
+            step={1}
+            value={tickMs}
+            onChange={(event) => {
+              const next = snapTick(Number(event.target.value));
+              setLocalTickMs(next);
+              onTickMsChange?.(next);
+            }}
+            onKeyDown={(event) => {
+              const direction =
+                event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                  ? 1
+                  : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                    ? -1
+                    : 0;
+              if (direction === 0) return;
+              event.preventDefault();
+              const next = snapTick(tickMs + direction * TICK_STEP_MS);
+              setLocalTickMs(next);
+              onTickMsChange?.(next);
+            }}
+            aria-label="Tick length in milliseconds"
+          />
+          <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+        </label>
+      </div>
     </div>
   );
   const activity = (
