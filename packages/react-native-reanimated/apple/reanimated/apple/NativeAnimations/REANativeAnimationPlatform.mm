@@ -1,6 +1,6 @@
 #import <reanimated/NativeAnimations/NativeAnimationRealization.h>
+#import <reanimated/Tools/ReanimatedSystraceSection.h>
 #import <reanimated/apple/NativeAnimations/REANativeAnimationPlatform.h>
-#import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 
@@ -15,8 +15,10 @@
 
 #import <algorithm>
 #import <cmath>
+#import <string>
 #import <unordered_map>
 #import <utility>
+#import <vector>
 
 @interface REANativeAnimationDelegate : NSObject <CAAnimationDelegate>
 - (instancetype)initWithStopHandler:(void (^)(BOOL finished))stopHandler;
@@ -40,39 +42,6 @@
 }
 
 @end
-
-#ifndef NDEBUG
-@interface REANextFrameCallbacks : NSObject
-- (void)add:(void (^)(void))callback;
-@end
-
-@implementation REANextFrameCallbacks {
-  NSMutableArray<void (^)(void)> *_callbacks;
-  READisplayLink *_displayLink;
-}
-
-- (void)add:(void (^)(void))callback
-{
-  if (_callbacks == nil) {
-    _callbacks = [NSMutableArray new];
-    _displayLink = REAMakeDisplayLink(self, @selector(onFrame));
-  }
-  [_callbacks addObject:callback];
-}
-
-- (void)onFrame
-{
-  NSArray<void (^)(void)> *callbacks = _callbacks;
-  _callbacks = nil;
-  [_displayLink invalidate];
-  _displayLink = nil;
-  for (void (^callback)(void) in callbacks) {
-    callback();
-  }
-}
-
-@end
-#endif // NDEBUG
 
 namespace reanimated::native_animation {
 
@@ -114,9 +83,12 @@ NSString *keyPathForTarget(const AnimationTarget target)
   }
 }
 
+NSString *const kAnimationKeyPrefix = @"reanimated.";
+
 NSString *animationKeyForTrack(const TrackKey &track)
 {
-  return [NSString stringWithFormat:@"reanimated.%u.%llu.%u",
+  return [NSString stringWithFormat:@"%@%u.%llu.%u",
+                                    kAnimationKeyPrefix,
                                     static_cast<unsigned>(track.handle.owner),
                                     track.handle.generation,
                                     static_cast<unsigned>(track.target)];
@@ -256,6 +228,17 @@ std::vector<double> componentsOfValue(id value)
   }
   return {};
 }
+
+std::vector<std::string> playbackKeys(CALayer *layer)
+{
+  std::vector<std::string> keys;
+  for (NSString *key in layer.animationKeys) {
+    if ([key hasPrefix:kAnimationKeyPrefix]) {
+      keys.emplace_back(key.UTF8String);
+    }
+  }
+  return keys;
+}
 #endif // NDEBUG
 
 class CoreAnimationPlatform;
@@ -317,6 +300,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 
   MountedAnimationResolution resolve(const AnimationRequest &request) override
   {
+    ReanimatedSystraceSection section("CoreAnimationPlatform::resolve");
     RCTAssertMainQueue();
     REAUIView<RCTComponentViewProtocol> *view = mountedView(request.handle.tag);
     CALayer *layer = view.layer;
@@ -342,6 +326,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 
   void stop(const TrackKey &track, const TrackStopMode mode) override
   {
+    ReanimatedSystraceSection section("CoreAnimationPlatform::stop");
     RCTAssertMainQueue();
     const auto trackIt = tracks_.find(track);
     if (trackIt == tracks_.end()) {
@@ -376,20 +361,9 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     }
     NSString *keyPath = keyPathForTarget(target);
     return TargetSample{
-        componentsOfValue([layer valueForKeyPath:keyPath]), componentsOfValue(currentVisualValue(layer, keyPath))};
-  }
-
-  void sampleAtNextFrame(
-      const Tag tag,
-      const AnimationTarget target,
-      std::function<void(std::optional<TargetSample>)> receiver) override
-  {
-    const auto weakThis = weak_from_this();
-    [nextFrameCallbacks_ add:^{
-      if (const auto strongThis = weakThis.lock()) {
-        receiver(strongThis->sample(tag, target));
-      }
-    }];
+        componentsOfValue([layer valueForKeyPath:keyPath]),
+        componentsOfValue(currentVisualValue(layer, keyPath)),
+        playbackKeys(layer)};
   }
 #endif
 
@@ -443,9 +417,6 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 
   __weak RCTSurfacePresenter *surfacePresenter_;
   TrackEndListener trackEndListener_;
-#ifndef NDEBUG
-  REANextFrameCallbacks *nextFrameCallbacks_ = [REANextFrameCallbacks new];
-#endif
   std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash> tracks_;
 };
 
@@ -467,6 +438,7 @@ std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
 
 void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedTracks)
 {
+  ReanimatedSystraceSection section("CoreAnimationMountedAnimation::start");
   [CATransaction begin];
   [CATransaction setDisableActions:YES];
   for (const auto &replacedTrack : replacedTracks) {
@@ -474,6 +446,9 @@ void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedT
   }
   for (size_t index = 0; index < request_.tracks.size(); ++index) {
     const auto &track = request_.tracks[index];
+    if (playbackOf(track) == TrackPlayback::Immediate) {
+      continue;
+    }
     id endValue = objectFromValue(track.segments.back().endValue);
     if (track.endpointPolicy == EndpointPolicy::ExecutorCommitsEndpoint) {
       [layer_ setValue:endValue forKeyPath:keyPathForTarget(track.target)];
@@ -490,16 +465,24 @@ void CoreAnimationMountedAnimation::start(const std::vector<TrackKey> &replacedT
 CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &track, id fromValue, id toValue) const
 {
   const bool holdsEndValue = track.endpointPolicy == EndpointPolicy::HoldWithoutCommit;
+  const bool holdsStartValue = playbackOf(track) == TrackPlayback::HeldThroughDelay;
   const CFTimeInterval origin = calculateMediaTimeFromSlowAnimationsTimestamp(request_.originTimestampMs / 1000.0);
+  const CFTimeInterval delay = calculateMediaDurationFromSlowAnimationsDuration(track.delayMs / 1000.0);
+  // The layer clock can differ from the media clock when an ancestor changes speed or time offset.
+  const CFTimeInterval layerOrigin = [layer_ convertTime:origin fromLayer:nil];
 
   CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPathForTarget(track.target)];
   animation.fromValue = fromValue;
-  animation.toValue = toValue;
-  animation.duration = calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
-  // The layer clock can differ from the media clock when an ancestor changes speed or time offset.
-  animation.beginTime = [layer_ convertTime:origin fromLayer:nil] +
-      calculateMediaDurationFromSlowAnimationsDuration(track.delayMs / 1000.0);
-  animation.timingFunction = std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
+  if (holdsStartValue) {
+    animation.toValue = fromValue;
+    animation.duration = delay;
+    animation.beginTime = layerOrigin;
+  } else {
+    animation.toValue = toValue;
+    animation.duration = calculateMediaDurationFromSlowAnimationsDuration(track.durationMs / 1000.0);
+    animation.beginTime = layerOrigin + delay;
+    animation.timingFunction = std::visit(TimingFunctionVisitor{}, track.segments.back().timingFromPrevious);
+  }
   animation.fillMode = holdsEndValue ? kCAFillModeBoth : kCAFillModeBackwards;
   animation.removedOnCompletion = !holdsEndValue;
   return animation;
