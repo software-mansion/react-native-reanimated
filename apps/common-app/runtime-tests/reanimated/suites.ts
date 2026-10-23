@@ -5,6 +5,11 @@ type Describe = (name: string, buildSuite: () => void) => void;
 
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
+    testSuiteName: 'matrixInterpolation',
+    importTest: () =>
+      require('./tests/animations/withTiming/transformMatrices.test'),
+  },
+  {
     testSuiteName: 'animations',
     importTest: () => {
       const { describe } = require('../ReJest/RuntimeTestsApi') as {
@@ -18,8 +23,6 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
         // TODO: Fix this test - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
         // Uncomment test when fixed
         // require('./tests/animations/withTiming/easing.test');
-        // TODO: snapshots are stale - the test records 63 updates, the snapshot has 64
-        // require('./tests/animations/withTiming/transformMatrices.test');
       });
       describe('*****withSpring*****', () => {
         require('./tests/animations/withSpring/variousConfig.test');
