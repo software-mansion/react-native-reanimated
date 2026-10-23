@@ -101,6 +101,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    // The registry values include the props written synchronously, so this
+    // tree carries them too.
+    updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps();
     // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
     trackCommit(rootNode, true);
     // If the commit comes from React Native then pause commits from

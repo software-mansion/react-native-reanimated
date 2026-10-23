@@ -44,6 +44,15 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
+  // Whether props were written to the views synchronously (the
+  // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` fast path) since the last commit that
+  // carried the registry values, i.e. whether the shadow tree is behind the
+  // views. Reanimated commits the registry before a touch is handled in JS
+  // while this is the case, so that `measure()` agrees with the screen.
+  void markShadowTreeMissingSynchronousProps();
+  void markShadowTreeInSyncWithSynchronousProps();
+  bool isShadowTreeMissingSynchronousProps() const;
+
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
@@ -65,6 +74,7 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
+  std::atomic<bool> isShadowTreeMissingSynchronousProps_{false};
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;

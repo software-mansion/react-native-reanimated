@@ -735,6 +735,15 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
+  if constexpr (
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // Event listeners run on the UI thread before the event is queued for JS,
+    // so a commit here lands before JS measures anything for this touch.
+    if (eventType == "onTouchStart" || eventType == "onPointerDown") {
+      synchronizeShadowTreeBeforeTouch();
+    }
+  }
+
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
@@ -909,7 +918,27 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(propsMapBySurface);
+  const bool committed = commitUpdates(propsMapBySurface);
+  if (flushRegistry && committed) {
+    // A full flush carries every registry value, including the ones written
+    // synchronously, so the shadow tree is in sync with the views again.
+    updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps();
+  }
+}
+
+void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch() {
+  if (!updatesRegistryManager_->isShadowTreeMissingSynchronousProps()) {
+    return;
+  }
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch");
+  // Pressable (and the other touchables from react-native) validate a press
+  // against the rectangle they `measure()` when the responder is granted,
+  // and `measure()` reads the shadow tree. The synchronous path leaves the
+  // tree behind the views, so commit the registry values before JS handles
+  // the touch. This is at most one commit per touch, and only while the tree
+  // is actually out of date (see #10121).
+  shouldFlushRegistry_ = true;
+  performOperations();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -1126,6 +1155,10 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
 }
 
 void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
+  if (!synchronousUpdatesBatch.empty()) {
+    updatesRegistryManager_->markShadowTreeMissingSynchronousProps();
+  }
+
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1154,10 +1187,11 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+bool ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
+  bool allSucceeded = true;
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -1182,16 +1216,18 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            false,
            /* .mountSynchronously = */ true});
 
+      if (status != ShadowTree::CommitStatus::Succeeded) {
+        allSucceeded = false;
+      }
 #ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
-#else
-      (void)status;
 #endif
     });
   }
+  return allSucceeded;
 }
 
 void ReanimatedModuleProxy::dispatchCommand(
