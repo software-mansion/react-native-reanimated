@@ -2,6 +2,7 @@
 
 import {
   installLazyBundleLoader,
+  installLazyBundlePropagation,
   installLazyBundleRegistrar,
   makeLazyBundleRegistrar,
 } from '../bundleMode/lazyBundles';
@@ -169,6 +170,10 @@ function initializeRNRuntime() {
 
   registerReportFatalRemoteError();
   setupSerializer();
+
+  if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    installLazyBundlePropagation();
+  }
 }
 
 /** A function that should be run only on Worklet runtimes. */

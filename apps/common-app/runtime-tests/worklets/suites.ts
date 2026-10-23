@@ -44,6 +44,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
       require('./tests/runtimes/lazyImport.test');
+      require('./tests/runtimes/lazyChunkWorklets.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
