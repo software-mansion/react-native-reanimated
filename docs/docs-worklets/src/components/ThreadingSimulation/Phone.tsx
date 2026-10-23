@@ -35,6 +35,13 @@ export default function Phone({
   const pulse = tree === null ? undefined : findPulse(tree, nativeProps);
   const [waves, setWaves] = useState<number[]>([]);
   const waveIdRef = useRef(0);
+  const waveTimers = useRef(new Set<number>());
+  useEffect(
+    () => () => {
+      for (const timer of waveTimers.current) window.clearTimeout(timer);
+    },
+    []
+  );
   useEffect(() => {
     if (pulse === undefined) {
       return;
@@ -42,9 +49,12 @@ export default function Phone({
     const waveId = ++waveIdRef.current;
     setWaves((current) => [...current, waveId]);
     const timeout = window.setTimeout(() => {
+      waveTimers.current.delete(timeout);
       setWaves((current) => current.filter((entry) => entry !== waveId));
     }, WAVE_MS);
-    return () => window.clearTimeout(timeout);
+    // Each wave expires independently, even if the next audio pulse arrives
+    // before it finishes. Canceling here would leave older waves mounted.
+    waveTimers.current.add(timeout);
   }, [pulse]);
   return (
     <PhoneFrame

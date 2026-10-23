@@ -26,16 +26,12 @@ export function runtimeClass(runtime: RuntimeDescriptor): string {
 }
 
 export function displayName(runtime: RuntimeDescriptor): string {
-  return runtime.kind === 'worker'
-    ? `${workerName(runtime.id)} runtime`
-    : runtime.hasRuntime
-      ? runtime.label
-      : runtime.thread;
+  return runtime.hasRuntime ? runtime.label : runtime.thread;
 }
 
 export function threadName(runtime: RuntimeDescriptor): string {
   return runtime.kind === 'worker'
-    ? `${workerName(runtime.id)} thread`
+    ? `${badgeName(runtime.id)} thread`
     : runtime.thread;
 }
 
@@ -70,9 +66,4 @@ export function shortName(coreId: string): string {
   return coreId.startsWith('worker:')
     ? coreId.slice('worker:'.length)
     : coreId.toUpperCase();
-}
-
-function workerName(id: string): string {
-  const name = humanize(shortName(id));
-  return name.charAt(0).toUpperCase() + name.slice(1);
 }

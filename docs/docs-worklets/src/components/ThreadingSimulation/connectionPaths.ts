@@ -11,11 +11,39 @@ export interface Rect {
 
 export interface RailLayout {
   vertical: number[];
+  columnGutters?: number[];
   horizontal: number[];
   panels: Rect[];
 }
 
-/** Four stable lanes on each outer edge; never create rails between columns. */
+/** Sample the rail polyline without forcing SVG geometry/layout reads per frame. */
+export function measurePath(points: Point[]) {
+  const segments = points.slice(1).map((to, index) => {
+    const from = points[index];
+    return { from, to, length: Math.hypot(to.x - from.x, to.y - from.y) };
+  });
+  const length = segments.reduce((total, segment) => total + segment.length, 0);
+  return {
+    length,
+    pointAt(distance: number): Point {
+      let remaining = Math.max(0, Math.min(distance, length));
+      for (const segment of segments) {
+        if (segment.length === 0) continue;
+        if (remaining <= segment.length) {
+          const progress = remaining / segment.length;
+          return {
+            x: segment.from.x + (segment.to.x - segment.from.x) * progress,
+            y: segment.from.y + (segment.to.y - segment.from.y) * progress,
+          };
+        }
+        remaining -= segment.length;
+      }
+      return points.at(-1) ?? { x: 0, y: 0 };
+    },
+  };
+}
+
+/** Prefer outer lanes; reserve panel gutters for otherwise unreachable cards. */
 export function connectionRails(
   panels: Rect[],
   bounds: Rect,
@@ -27,6 +55,16 @@ export function connectionRails(
   const left = Math.min(...panels.map((panel) => panel.left));
   const right = Math.max(...panels.map((panel) => panel.right));
   return {
+    columnGutters: panels.flatMap((a) =>
+      panels
+        .filter(
+          (b) =>
+            b.left - a.right >= gap &&
+            b.left - a.right <= gap * 2 &&
+            Math.max(a.top, b.top) < Math.min(a.bottom, b.bottom)
+        )
+        .map((b) => (a.right + b.left) / 2 + offset)
+    ),
     vertical: [left - gap / 2 + offset, right + gap / 2 + offset].filter(
       (x) => x >= bounds.left && x <= bounds.right
     ),
@@ -60,6 +98,144 @@ export function crossesRect(a: Point, b: Point, rect: Rect): boolean {
     );
   }
   return true;
+}
+
+/** Use short gutter links and separate perimeter lanes when panels share a row. */
+export function routeExpandedConnection({
+  from,
+  to,
+  fromPanel,
+  toPanel,
+  fromY,
+  toY,
+  obstacles,
+  panels,
+  bounds,
+  lane,
+  kind,
+}: {
+  from: Rect;
+  to: Rect;
+  fromPanel: Rect;
+  toPanel: Rect;
+  fromY: number;
+  toY: number;
+  obstacles: Rect[];
+  panels: Rect[];
+  bounds: Rect;
+  lane: number;
+  kind: 'runtime' | 'output' | 'borrow' | 'queue';
+}): Point[] {
+  // During reflow, or on a stacked display, use the general obstacle router.
+  if (
+    Math.abs(fromPanel.top - toPanel.top) > 1 ||
+    fromPanel.right >= toPanel.left
+  )
+    return [];
+  const nextPanel = panels
+    .filter(
+      (panel) =>
+        panel.left > fromPanel.right && Math.abs(panel.top - fromPanel.top) <= 1
+    )
+    .sort((a, b) => a.left - b.left)[0];
+  if (!nextPanel) return [];
+  const gutter = nextPanel.left - fromPanel.right;
+  if (gutter < 28) return [];
+  const slot = lane % 4;
+  const output = kind === 'output';
+  const variant = kind === 'queue' ? 4 : kind === 'borrow' ? 2 : 0;
+  const x =
+    fromPanel.right +
+    (output ? 3 + slot * 1.5 : gutter - 6 - slot * 6 + variant / 2);
+  const start = { x: from.right, y: fromY + (output ? -8 : variant * 2) };
+  const branch = { x, y: start.y };
+  const clear = (points: Point[]) => {
+    const path = points.filter(
+      (point, index) =>
+        index === 0 ||
+        point.x !== points[index - 1].x ||
+        point.y !== points[index - 1].y
+    );
+    if (
+      path.some(
+        (point) =>
+          point.x < bounds.left ||
+          point.x > bounds.right ||
+          point.y < bounds.top ||
+          point.y > bounds.bottom
+      )
+    )
+      return [];
+    for (let index = 1; index < path.length; index++) {
+      const a = path[index - 1],
+        b = path[index];
+      if (obstacles.some((rect) => crossesRect(a, b, rect))) return [];
+      // Only the first/last branch may pass into its own panel. Headings,
+      // other cards and native memory remain obstacles even on those branches.
+      if (
+        panels.some((panel) => {
+          const endpoint =
+            index === 1
+              ? fromPanel
+              : index === path.length - 1
+                ? toPanel
+                : undefined;
+          return (
+            !(
+              endpoint &&
+              panel.left === endpoint.left &&
+              panel.top === endpoint.top &&
+              panel.right === endpoint.right &&
+              panel.bottom === endpoint.bottom
+            ) && crossesRect(a, b, panel)
+          );
+        })
+      )
+        return [];
+    }
+    return path;
+  };
+  if (!output) {
+    const direct = clear([
+      start,
+      branch,
+      { x, y: toY + 8 + variant },
+      { x: to.left, y: toY + 8 + variant },
+    ]);
+    if (direct.length > 1) return direct;
+  }
+  const top =
+    Math.min(fromPanel.top, toPanel.top) -
+    (output ? 24 - slot * 3 : 8 + slot * 3 + variant);
+  const bottom = toPanel.bottom + 8 + slot * 3 + variant;
+  // The output's top-right port clears its heading. Runtime ports sit in the
+  // middle of the top/bottom edge, avoiding a trip around the far side.
+  const targetX = output
+    ? to.right - 24 - slot * 4
+    : (to.left + to.right) / 2 + variant * 2;
+  const above = [
+    start,
+    branch,
+    { x, y: top },
+    { x: targetX, y: top },
+    { x: targetX, y: to.top },
+  ];
+  const below = [
+    start,
+    branch,
+    { x, y: bottom },
+    { x: targetX, y: bottom },
+    { x: targetX, y: to.bottom },
+  ];
+  const upperHalf =
+    (to.top + to.bottom) / 2 <= (toPanel.top + toPanel.bottom) / 2;
+  for (const candidate of output || upperHalf
+    ? [above, below]
+    : [below, above]) {
+    const path = clear(candidate);
+    if (path.length > 1) return path;
+  }
+  return [];
 }
 
 /**
@@ -148,6 +324,23 @@ export function routeConnection(
         ]);
       }
     }
+  }
+  // CPU, Memory and the phone can sit side by side in fullscreen. A middle
+  // card may have no clear branch to either outside edge, so use the gutters
+  // between panels while keeping every segment clear of content.
+  if (best.length === 0 && rails.columnGutters?.length) {
+    return routeConnection(
+      from,
+      to,
+      obstacles,
+      bounds,
+      {
+        ...rails,
+        vertical: [...rails.vertical, ...rails.columnGutters],
+        columnGutters: [],
+      },
+      previous
+    );
   }
   return best;
 }

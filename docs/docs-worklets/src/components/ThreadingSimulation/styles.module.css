@@ -7,14 +7,53 @@
   --sim-text: #000;
   --sim-muted: #4b6572;
   --sim-error: #c0392b;
-  container: simulation / inline-size;
+  --sim-fullscreen-duration: 300ms;
+  --sim-page-gutter: var(--ifm-spacing-horizontal);
+  /* 820px for the two-panel row, plus scene padding and connection gutters. */
+  --sim-preferred-width: 920px;
+  --sim-expanded-width: min(
+    calc(var(--sim-page-width) - 2 * var(--sim-page-gutter)),
+    max(
+      calc(100% + var(--sim-side-panels-width, 0px)),
+      var(--sim-preferred-width)
+    )
+  );
   width: 100%;
   min-width: 0;
+  margin-left: 0;
   margin-bottom: 1.5rem;
   color: var(--sim-text);
   font-family: var(--ifm-font-family-base);
   font-size: 14px;
   line-height: 1.5;
+  transition:
+    width var(--sim-fullscreen-duration) cubic-bezier(0.2, 0, 0, 1),
+    margin-left var(--sim-fullscreen-duration) cubic-bezier(0.2, 0, 0, 1);
+}
+
+.containerWithPhone {
+  /* The three-panel row needs 1100px inside the same 100px of gutters. */
+  --sim-preferred-width: 1200px;
+}
+
+.container[data-simulation-fullscreen='true'] {
+  width: var(--sim-expanded-width);
+  margin-left: calc(
+    (var(--sim-page-width) - var(--sim-expanded-width)) / 2 -
+      var(--sim-page-left) - var(--sim-article-shift, 0px)
+  );
+}
+
+@media (max-width: 996px) {
+  .container {
+    --sim-page-gutter: 0px;
+  }
+
+  /* Without side panels, expanding only recovers the article's gutters.
+     Keep Collapse available when an expanded desktop view becomes narrow. */
+  .expandToggle[aria-pressed='false'] {
+    display: none;
+  }
 }
 
 [data-theme='dark'] .container {
@@ -43,14 +82,26 @@
 }
 
 .scene {
+  padding: clamp(10px, calc(var(--sim-collapsed-width, 800px) * 0.025), 20px);
+  border: 2px solid var(--sim-border);
+  border-radius: 0;
+  background: var(--sim-bg);
+}
+
+.sceneContent {
+  container: simulation / inline-size;
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  padding: clamp(10px, 2.5cqi, 20px);
-  border: 2px solid var(--sim-border);
-  border-radius: 0;
-  background: var(--sim-bg);
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* Both layouts fit inside the open area. Let cards travel between them
+   without the destination grid clipping their starting positions. */
+.container[data-simulation-transition-phase='layout'] .layoutMotion {
+  overflow: visible;
 }
 
 .toolbar {
@@ -58,23 +109,22 @@
   z-index: 3;
   /* The docs navbar scrolls away before the controls reach the viewport edge. */
   top: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 8px 16px;
-  padding: 8px 0;
   border-bottom: 1px solid var(--sim-border);
   background: var(--sim-bg);
 }
 
-.transport {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.toolbar > .layoutMotion {
+  overflow: visible;
 }
 
-.playbackDetails {
-  display: contents;
+.toolbarGrid {
+  display: grid;
+  /* Fixed tracks let each control animate its width without moving the
+     destination of its neighbours while the animation is running. */
+  grid-template-columns: 96px repeat(4, 44px) calc(14ch + 10px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 6px;
+  padding: 8px 0;
 }
 
 .button,
@@ -97,6 +147,7 @@
 }
 
 .button svg,
+.codeToggle svg,
 .disclosureToggle svg {
   width: 18px;
   height: 18px;
@@ -136,7 +187,7 @@
 .tickLabel {
   /* Reserve space for both counters before the final tick is known. */
   width: 14ch;
-  justify-self: end;
+  margin-left: 10px;
   color: var(--sim-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -146,12 +197,11 @@
 }
 .speed {
   display: flex;
-  grid-column: 1 / -1;
   align-items: center;
   gap: 10px;
   min-height: 44px;
   min-width: 0;
-  margin: 0;
+  margin: 0 0 0 10px;
   padding: 0 10px;
   border: 2px solid var(--sim-border);
   border-radius: 0;
@@ -159,6 +209,9 @@
   color: var(--sim-muted);
   font-size: 12px;
   white-space: nowrap;
+  transition:
+    border-color 360ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 360ms cubic-bezier(0.2, 0, 0, 1);
 }
 .speedSlider {
   appearance: none;
@@ -201,54 +254,48 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-@container simulation (min-width: 600px) {
-  .toolbar {
-    grid-template-columns: auto auto minmax(0, 1fr);
-  }
-  .speed {
-    grid-column: auto;
-  }
-  .speedLabel {
-    display: none;
-  }
+.speedLabel {
+  flex-shrink: 0;
+  max-width: 90px;
+  overflow: hidden;
+  opacity: 1;
+  transition:
+    max-width 360ms cubic-bezier(0.2, 0, 0, 1),
+    margin-right 360ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 180ms ease-out;
 }
-@container simulation (min-width: 700px) {
+@container simulation (width < 700px) {
   .speedLabel {
-    display: inline;
+    max-width: 0;
+    margin-right: -10px;
+    opacity: 0;
   }
 }
 @container simulation (width < 600px) {
-  .toolbar {
+  .toolbarGrid {
     grid-template-columns: minmax(96px, 1.5fr) repeat(4, minmax(44px, 1fr));
     gap: 8px 4px;
-  }
-  .transport {
-    display: contents;
   }
   .button {
     width: 100%;
   }
-  .playbackDetails {
-    display: flex;
-    grid-column: 1 / -1;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-    min-height: 44px;
-  }
   .tickLabel {
-    width: auto;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-left: 0;
     font-size: 12px;
   }
   .speed {
-    flex: 1;
+    grid-column: 1 / -1;
+    grid-row: 2;
     gap: 8px;
+    margin-left: calc(14ch + 12px);
     padding: 0;
-    border: 0;
+    border-color: transparent;
     background: transparent;
   }
   .speedLabel {
-    display: none;
+    margin-right: -8px;
   }
   .speedSlider {
     min-width: 24px;
@@ -259,7 +306,7 @@
   }
 }
 @container simulation (max-width: 330px) {
-  .toolbar {
+  .toolbarGrid {
     grid-template-columns: repeat(5, minmax(44px, 1fr));
   }
   .buttonPrimary {
@@ -272,17 +319,18 @@
 }
 /* Five 44px buttons and four 4px gaps fit from 236px upwards. */
 @container simulation (width < 236px) {
-  .toolbar {
+  .toolbarGrid {
     grid-template-columns: repeat(4, minmax(44px, 1fr));
   }
-  .playbackDetails {
-    grid-column: 2 / -1;
-    gap: 8px;
-  }
   .tickLabel {
+    grid-column: 2 / -1;
+    width: auto;
     font-size: 11px;
   }
   .speed {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-left: 0;
     gap: 6px;
     font-size: 11px;
   }
@@ -303,6 +351,11 @@
 }
 .activity .codeToggle {
   flex-shrink: 0;
+}
+.viewControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .activity code {
   font-size: inherit;
@@ -344,6 +397,47 @@
   .executionWithPhone .vmRow {
     /* Both columns must be reachable from the outer gutters. */
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container machine (min-width: 820px) {
+  .executionGrid:not(.executionWithPhone) {
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+  }
+  .executionGrid:not(.executionWithPhone) .coreGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container machine (min-width: 1100px) {
+  .executionGrid {
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+  }
+  .executionWithPhone {
+    grid-template-columns: 220px minmax(0, 1fr) 218px;
+  }
+  .executionGrid .areaThreads {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .executionGrid .areaMemory {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .executionGrid .areaPhone {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .executionGrid .coreGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .executionWithPhone .vmRow {
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, max(160px, calc((100% - 14px) / 2))), 1fr)
+    );
   }
 }
 
@@ -1410,6 +1504,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .container,
   .container *,
   .container *::before,
   .container *::after {

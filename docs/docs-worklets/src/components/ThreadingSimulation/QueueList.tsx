@@ -28,6 +28,7 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
   const shownRef = useRef<Set<number>>(new Set());
   const timersRef = useRef<Set<number>>(new Set());
   const chipsRef = useRef<HTMLSpanElement>(null);
+  const pendingKey = JSON.stringify(pending);
 
   useEffect(() => {
     const now = Date.now();
@@ -84,7 +85,7 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
       });
     }, EXIT_MS + 20);
     timersRef.current.add(timer);
-  }, [pending]);
+  }, [pendingKey]);
 
   useEffect(
     () => () => {

@@ -48,7 +48,9 @@ export default function MemoryPanel({
       : allRuntimes.find((candidate) => candidate.id === cell.accessedBy);
   return (
     <AnimatedGrid
+      animateResize
       className={styles.memoryColumn}
+      layoutKey={`${ordered.map((runtime) => runtime.id).join(',')}:${nativeCells.length > 0}`}
       itemSelector="[data-sim-layout-key]">
       <div className={styles.vmRow}>
         {ordered.map((runtime) => {
@@ -99,7 +101,9 @@ export default function MemoryPanel({
               </div>
               <div className={styles.vmSection}>
                 <div className={styles.vmSectionHeader}>
-                  <span className={styles.vmSectionTitle}>Event loop</span>
+                  <span className={styles.vmSectionTitle}>
+                    {badgeName(runtime.id)} event loop
+                  </span>
                   <span className={styles.boxDetail}>
                     {threadName(runtime)}
                   </span>
@@ -186,7 +190,7 @@ export default function MemoryPanel({
       {nativeCells.length > 0 && (
         <div className={styles.nativeRow} data-sim-layout-key="native-memory">
           <div className={styles.nativeHeader}>
-            <span className={styles.nativeLabel}>Shared native memory</span>
+            <span className={styles.nativeLabel}>native heap</span>
             <span className={styles.boxDetail}>Accessible from any thread</span>
           </div>
           <div className={styles.memoryCells}>

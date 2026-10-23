@@ -5,7 +5,7 @@ import type { CoreSnapshot } from '@site/src/simulation';
 
 import styles from './styles.module.css';
 import AnimatedGrid from './AnimatedGrid';
-import { runtimeClass, threadName } from './runtimeColors';
+import { runtimeClass, shortName, threadName } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
 
 interface CpuPanelProps {
@@ -20,68 +20,62 @@ export default function CpuPanel({
   rawToDisplayLine,
 }: CpuPanelProps) {
   return (
-    <AnimatedGrid className={styles.coreGrid}>
-      {[...runtimes]
-        .sort((a, b) => {
-          const rank = (runtime: RuntimeDescriptor) =>
-            runtime.kind === 'rn'
-              ? 0
-              : runtime.kind === 'ui'
-                ? 1
-                : runtime.coreIndex + 2;
-          return rank(a) - rank(b);
-        })
-        .map((runtime) => {
-          const core = cores.find((candidate) => candidate.id === runtime.id);
-          const running = core?.status === 'running';
-          const blockedOn =
-            core?.waitingFor == null
-              ? undefined
-              : (runtimes.find((candidate) => candidate.id === core.waitingFor)
-                  ?.label ?? core.waitingFor);
-          return (
-            <div
-              key={runtime.id}
-              data-sim-node={`thread:${runtime.id}`}
-              className={clsx(
-                styles.box,
-                styles.core,
-                runtimeClass(runtime),
-                running && styles.boxActive,
-                blockedOn !== undefined && styles.coreBlocked,
-                core?.status === 'error' && styles.coreStopped
-              )}>
-              <div className={styles.coreHeader}>
-                <span className={styles.boxTitle} data-sim-port>
-                  {threadName(runtime)}
-                </span>
-                <span className={styles.coreStatus}>
-                  {blockedOn !== undefined
-                    ? 'Waiting'
-                    : running
-                      ? 'Running'
-                      : core?.status === 'error'
-                        ? 'Stopped'
-                        : 'Idle'}
+    <AnimatedGrid animateResize className={styles.coreGrid}>
+      {runtimes.map((runtime) => {
+        const core = cores.find((candidate) => candidate.id === runtime.id);
+        const running = core?.status === 'running';
+        const blockedOn =
+          core?.waitingFor == null
+            ? undefined
+            : (runtimes.find((candidate) => candidate.id === core.waitingFor)
+                ?.label ?? core.waitingFor);
+        return (
+          <div
+            key={runtime.id}
+            data-sim-node={`thread:${runtime.id}`}
+            className={clsx(
+              styles.box,
+              styles.core,
+              runtimeClass(runtime),
+              running && styles.boxActive,
+              blockedOn !== undefined && styles.coreBlocked,
+              core?.status === 'error' && styles.coreStopped
+            )}>
+            <div className={styles.coreHeader}>
+              <span className={styles.boxTitle} data-sim-port>
+                Core {runtime.coreIndex}
+              </span>
+              <span className={styles.coreStatus}>
+                {blockedOn !== undefined
+                  ? 'Waiting'
+                  : running
+                    ? 'Running'
+                    : core?.status === 'error'
+                      ? 'Stopped'
+                      : 'Idle'}
+              </span>
+            </div>
+            <span className={styles.boxDetail}>
+              {threadName(runtime)}
+              {runtime.kind === 'worker' && ` · ${shortName(runtime.id)}`}
+            </span>
+            {blockedOn !== undefined && (
+              <div className={styles.coreLine}>
+                <span className={styles.coreLineText}>
+                  Waiting for {blockedOn}
                 </span>
               </div>
-              {blockedOn !== undefined && (
-                <div className={styles.coreLine}>
-                  <span className={styles.coreLineText}>
-                    Waiting for {blockedOn}
-                  </span>
-                </div>
-              )}
-              {blockedOn === undefined && (
-                <div className={styles.coreLine}>
-                  <span className={styles.coreLineText}>
-                    {describeExecution(core, rawToDisplayLine)}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            )}
+            {blockedOn === undefined && (
+              <div className={styles.coreLine}>
+                <span className={styles.coreLineText}>
+                  {describeExecution(core, rawToDisplayLine)}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </AnimatedGrid>
   );
 }

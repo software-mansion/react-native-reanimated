@@ -20,6 +20,8 @@ import type { RuntimeDescriptor } from './runtimeColors';
 import styles from './styles.module.css';
 import TransportIcon from './TransportIcon';
 import { useSimulation } from './useSimulation';
+import { useFullscreen } from './useFullscreen';
+import AnimatedGrid from './AnimatedGrid';
 
 interface ThreadingSimulationProps {
   module: SnippetModule;
@@ -41,6 +43,8 @@ interface ThreadingSimulationProps {
   boilerplateToggle?: boolean;
   codeOpen?: boolean;
   onCodeOpenChange?: (open: boolean) => void;
+  fullscreen?: boolean;
+  onFullscreenChange?: (fullscreen: boolean) => void;
   tickMs?: number;
   onTickMsChange?: (tickMs: number) => void;
   cpuFooter?: React.ReactNode;
@@ -81,6 +85,8 @@ export default function ThreadingSimulation({
   boilerplateToggle = true,
   codeOpen: controlledCodeOpen,
   onCodeOpenChange,
+  fullscreen: controlledFullscreen,
+  onFullscreenChange,
   tickMs: controlledTickMs,
   onTickMsChange,
   cpuFooter,
@@ -89,11 +95,20 @@ export default function ThreadingSimulation({
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
   const [hasOpened, setHasOpened] = useState(open);
   const disclosureId = useId();
+  const {
+    fullscreen,
+    expanded,
+    setFullscreen,
+    buttonRef,
+    containerRef,
+    transitioning,
+  } = useFullscreen(controlledFullscreen, onFullscreenChange);
   const [localTickMs, setLocalTickMs] = useState(
     controlledTickMs ?? DEFAULT_TICK_MS
   );
   const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
   const [boilerplate, setBoilerplate] = useState(false);
+  const [consoleOpen, setConsoleOpen] = useState(!alwaysOn);
   const tickMs =
     onTickMsChange === undefined
       ? localTickMs
@@ -115,7 +130,8 @@ export default function ThreadingSimulation({
     tickMs,
     open,
     alwaysOn,
-    boilerplate
+    boilerplate,
+    transitioning
   );
 
   if (simulation.error !== null) {
@@ -198,8 +214,9 @@ export default function ThreadingSimulation({
       ref={simulation.containerRef}
       role="group"
       aria-label="Simulation playback">
-      <div className={styles.transport}>
+      <AnimatedGrid animateResize resizeItems className={styles.toolbarGrid}>
         <button
+          key="play"
           type="button"
           className={clsx(styles.button, styles.buttonPrimary)}
           onClick={simulation.togglePlay}
@@ -210,6 +227,7 @@ export default function ThreadingSimulation({
           </span>
         </button>
         <button
+          key="back"
           type="button"
           className={clsx(styles.button, styles.buttonIcon)}
           onClick={simulation.back}
@@ -219,6 +237,7 @@ export default function ThreadingSimulation({
           <TransportIcon name="back" />
         </button>
         <button
+          key="step"
           type="button"
           className={clsx(styles.button, styles.buttonIcon)}
           onClick={simulation.step}
@@ -228,6 +247,7 @@ export default function ThreadingSimulation({
           <TransportIcon name="step" />
         </button>
         <button
+          key="reset"
           type="button"
           className={clsx(styles.button, styles.buttonIcon)}
           onClick={simulation.reset}
@@ -237,6 +257,7 @@ export default function ThreadingSimulation({
           <TransportIcon name="reset" />
         </button>
         <button
+          key="loop"
           type="button"
           className={clsx(
             styles.button,
@@ -249,13 +270,11 @@ export default function ThreadingSimulation({
           title="Loop">
           <TransportIcon name="loop" />
         </button>
-      </div>
-      <div className={styles.playbackDetails}>
-        <span className={styles.tickLabel}>
+        <span key="tick" className={styles.tickLabel}>
           Tick <strong>{simulation.tick}</strong>
           {Number.isFinite(simulation.lastTick) && ` / ${simulation.lastTick}`}
         </span>
-        <label className={styles.speed}>
+        <label key="speed" className={styles.speed}>
           <span className={styles.speedLabel}>Step duration</span>
           <input
             type="range"
@@ -286,7 +305,7 @@ export default function ThreadingSimulation({
           />
           <span className={styles.speedValue}>{formatTick(tickMs)}</span>
         </label>
-      </div>
+      </AnimatedGrid>
     </div>
   );
   const activity = (
@@ -312,15 +331,31 @@ export default function ThreadingSimulation({
             : 'Compare the threads and press the app button to try it.'}
         </span>
       )}
-      {collapsibleCode && (
+      <div className={styles.viewControls}>
+        {collapsibleCode && (
+          <button
+            type="button"
+            className={styles.codeToggle}
+            onClick={() => setCodeOpen(!codeOpen)}
+            aria-expanded={codeOpen}>
+            {codeOpen ? 'Hide code' : 'Show code'}
+          </button>
+        )}
         <button
+          ref={buttonRef}
           type="button"
-          className={styles.codeToggle}
-          onClick={() => setCodeOpen(!codeOpen)}
-          aria-expanded={codeOpen}>
-          {codeOpen ? 'Hide code' : 'Show code'}
+          className={clsx(styles.codeToggle, styles.expandToggle)}
+          onClick={() => setFullscreen(!fullscreen)}
+          aria-pressed={fullscreen}
+          title={
+            fullscreen
+              ? 'Collapse simulation (Esc)'
+              : 'Expand to fit the simulation'
+          }>
+          <TransportIcon name={fullscreen ? 'collapse' : 'expand'} />
+          {fullscreen ? 'Collapse' : 'Expand'}
         </button>
-      )}
+      </div>
     </div>
   );
   const legend = (
@@ -335,13 +370,14 @@ export default function ThreadingSimulation({
   );
   const machine = (
     <div className={styles.machineArea}>
-      <div
+      <AnimatedGrid
+        animateResize
         className={clsx(
           styles.executionGrid,
           phone && styles.executionWithPhone
         )}>
         <Panel
-          title="Threads"
+          title="CPU"
           className={styles.areaThreads}
           help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
           <CpuPanel
@@ -353,7 +389,7 @@ export default function ThreadingSimulation({
         </Panel>
         {showMemory && (
           <Panel
-            title="Runtimes & memory"
+            title="Memory"
             className={styles.areaMemory}
             help="A runtime holds JavaScript state. Its event loop queues work and pauses while another thread borrows the runtime. Shareable Hosts store values here; Guests refer to values on another runtime. Synchronizables live in native memory, accessible from any thread.">
             <MemoryPanel
@@ -396,11 +432,12 @@ export default function ThreadingSimulation({
             )}
           </Panel>
         )}
-      </div>
+      </AnimatedGrid>
     </div>
   );
   const connections = (
     <Connections
+      transitioning={transitioning}
       snapshot={snapshot}
       runtimes={runtimes}
       tick={simulation.tick}
@@ -411,7 +448,11 @@ export default function ThreadingSimulation({
     />
   );
   const consolePanel = showConsole && (
-    <details className={styles.consolePanel} data-sim-obstacle open={!alwaysOn}>
+    <details
+      className={styles.consolePanel}
+      data-sim-obstacle
+      open={consoleOpen}
+      onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
       <summary className={styles.consoleSummary}>
         <span>
           Console <span className={styles.logCount}>{logs.length}</span>
@@ -420,91 +461,101 @@ export default function ThreadingSimulation({
           {logs.at(-1)?.text ?? 'No output yet'}
         </span>
       </summary>
-      <div
-        className={styles.console}
-        role="region"
-        tabIndex={0}
-        aria-label="Console output">
-        {logs.length === 0 ? (
-          <span className={styles.consoleEmpty}>
-            Output appears here as the code runs.
-          </span>
-        ) : (
-          [...logs].reverse().map((log, index) => (
-            <div
-              key={index}
-              className={clsx(
-                styles.consoleEntry,
-                log.level === 'error' && styles.consoleError
-              )}>
-              <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
-                {badgeName(log.runtime.id)}
-              </span>
-              <span>{log.text}</span>
-              <span className={styles.consoleTime}>tick {log.tick}</span>
-            </div>
-          ))
-        )}
-      </div>
+      {consoleOpen && (
+        <div
+          className={styles.console}
+          role="region"
+          tabIndex={0}
+          aria-label="Console output">
+          {logs.length === 0 ? (
+            <span className={styles.consoleEmpty}>
+              Output appears here as the code runs.
+            </span>
+          ) : (
+            [...logs].reverse().map((log, index) => (
+              <div
+                key={index}
+                className={clsx(
+                  styles.consoleEntry,
+                  log.level === 'error' && styles.consoleError
+                )}>
+                <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
+                  {badgeName(log.runtime.id)}
+                </span>
+                <span>{log.text}</span>
+                <span className={styles.consoleTime}>tick {log.tick}</span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </details>
   );
 
   return (
-    <div className={styles.container}>
+    <div
+      ref={containerRef}
+      className={clsx(styles.container, phone && styles.containerWithPhone)}
+      data-simulation-fullscreen={expanded && open}>
       {title !== undefined && <p className={styles.title}>{title}</p>}
       <div className={styles.scene}>
-        {alwaysOn ? (
-          <>
-            {toolbar}
-            {activity}
-            {legend}
-            <div className={styles.workspace}>
-              {codeOpen && codePanel}
-              {machine}
-              {connections}
-            </div>
-            {consolePanel}
-          </>
-        ) : (
-          <div
-            className={clsx(styles.workspace, styles.disclosureWorkspace)}
-            data-expanded={open}>
-            {codePanel}
-            <button
-              type="button"
-              className={styles.disclosureToggle}
-              data-sim-obstacle
-              onClick={() => {
-                if (open) simulation.pause();
-                setHasOpened(true);
-                setOpen(!open);
-              }}
-              aria-label={open ? 'Hide simulation' : 'Show simulation'}
-              aria-expanded={open}
-              aria-controls={disclosureId}>
-              <span className={styles.disclosureLabel}>
-                <strong>Simulation</strong>
-                <span>Follow this code across threads and runtimes</span>
-              </span>
-              <span className={styles.disclosureAction}>
-                {open ? 'Hide' : 'Show'}
-                <svg viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="m4 6 4 4 4-4" />
-                </svg>
-              </span>
-            </button>
-            <Disclosure open={open} id={disclosureId}>
-              <div className={styles.simulationBody}>
-                {toolbar}
-                {activity}
-                {legend}
+        <div className={styles.sceneContent} data-sim-content>
+          {alwaysOn ? (
+            <>
+              {toolbar}
+              {activity}
+              {legend}
+              <div className={styles.workspace}>
+                {codeOpen && codePanel}
                 {machine}
-                {consolePanel}
+                {connections}
               </div>
-            </Disclosure>
-            {hasOpened && connections}
-          </div>
-        )}
+              {consolePanel}
+            </>
+          ) : (
+            <div
+              className={clsx(styles.workspace, styles.disclosureWorkspace)}
+              data-expanded={open}>
+              {codePanel}
+              <button
+                type="button"
+                className={styles.disclosureToggle}
+                data-sim-obstacle
+                onClick={() => {
+                  if (open) {
+                    simulation.pause();
+                    setFullscreen(false);
+                  }
+                  setHasOpened(true);
+                  setOpen(!open);
+                }}
+                aria-label={open ? 'Hide simulation' : 'Show simulation'}
+                aria-expanded={open}
+                aria-controls={disclosureId}>
+                <span className={styles.disclosureLabel}>
+                  <strong>Simulation</strong>
+                  <span>Follow this code across threads and runtimes</span>
+                </span>
+                <span className={styles.disclosureAction}>
+                  {open ? 'Hide' : 'Show'}
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="m4 6 4 4 4-4" />
+                  </svg>
+                </span>
+              </button>
+              <Disclosure open={open} id={disclosureId}>
+                <div className={styles.simulationBody}>
+                  {toolbar}
+                  {activity}
+                  {legend}
+                  {machine}
+                  {consolePanel}
+                </div>
+              </Disclosure>
+              {hasOpened && connections}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

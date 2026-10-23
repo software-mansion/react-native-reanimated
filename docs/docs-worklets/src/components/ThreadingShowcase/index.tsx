@@ -50,6 +50,7 @@ export default function ThreadingShowcase({
   const [enabled, setEnabled] = useState(false);
   const [tickMs, setTickMs] = useState(initialTickMs);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const variant = enabled ? worklets : single;
 
   return (
@@ -79,7 +80,6 @@ export default function ThreadingShowcase({
         </span>
       </div>
       <ThreadingSimulation
-        key={enabled ? 'worklets' : 'single'}
         module={variant.module}
         source={variant.source}
         uiRuntime={enabled}
@@ -93,6 +93,8 @@ export default function ThreadingShowcase({
         boilerplateToggle={false}
         codeOpen={codeOpen}
         onCodeOpenChange={setCodeOpen}
+        fullscreen={fullscreen}
+        onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}
         tickMs={tickMs}
         onTickMsChange={setTickMs}

@@ -285,13 +285,32 @@ html[data-theme='dark'] {
   margin: 8px 0 12px;
 }
 
+/* A simulation may extend outside the article, but never outside the page.
+   Clip at the viewport-sized app root so sticky controls keep working. */
+#__docusaurus:has([data-simulation-fullscreen]) {
+  overflow-x: clip;
+}
+
+html:has([data-simulation-fullscreen]) {
+  scrollbar-gutter: stable;
+}
+
+[class*='docMainContainer'] .row > [class*='docItemCol'] {
+  position: relative;
+  left: 0;
+  transition: left 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
 @media (min-width: 997px) {
   :root {
     --swm-sidebar-motion: 320ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   .theme-doc-sidebar-container {
-    transition: width var(--swm-sidebar-motion) !important;
+    transition:
+      width var(--swm-sidebar-motion),
+      opacity 180ms ease,
+      visibility 0s !important;
   }
 
   .theme-doc-sidebar-container
@@ -322,7 +341,8 @@ html[data-theme='dark'] {
     transition:
       max-width var(--swm-sidebar-motion),
       flex-basis var(--swm-sidebar-motion),
-      margin-left var(--swm-sidebar-motion);
+      margin-left var(--swm-sidebar-motion),
+      left 300ms cubic-bezier(0.2, 0, 0, 1);
   }
 
   [class*='docMainContainer'] .row > .col:has(.theme-doc-toc-desktop) {
@@ -330,37 +350,59 @@ html[data-theme='dark'] {
       max-width var(--swm-sidebar-motion),
       flex-basis var(--swm-sidebar-motion),
       opacity var(--swm-sidebar-motion),
-      transform var(--swm-sidebar-motion);
-  }
-
-  [class*='docMainContainerEnhanced'] .row > .col:has(.theme-doc-toc-desktop) {
-    flex-basis: calc(25% - 95px);
-    max-width: calc(25% - 95px);
-    opacity: 0;
-    transform: translateX(150%);
-    pointer-events: none;
-  }
-
-  [class*='docMainContainerEnhanced'] {
-    --swm-sim-max-width: calc(100vw - 470px);
-  }
-
-  [class*='docMainContainerEnhanced'] > .container {
-    max-width: calc(var(--ifm-container-width) + 380px) !important;
+      transform var(--swm-sidebar-motion),
+      visibility 0s;
   }
 }
 
-@media (min-width: 997px) {
-  [class*='docMainContainerEnhanced'] .row > [class*='docItemCol'] {
-    max-width: calc(75% - 285px) !important;
-    flex-basis: calc(75% - 285px);
-    margin-left: 380px;
-  }
+/* Preserve paragraph widths while centering the reading column. The active
+   simulation also claims the space reserved for both navigation panels. */
+:root:has([data-simulation-fullscreen='true'])
+  [class*='docMainContainer']
+  .row
+  > [class*='docItemCol'] {
+  left: var(--sim-article-shift, 0px);
 }
 
-@media (min-width: 1440px) {
-  [class*='docMainContainerEnhanced'] > .container {
-    max-width: calc(var(--ifm-container-width-xl) + 380px) !important;
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  .theme-doc-sidebar-container,
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  [class*='docMainContainer']
+  .row
+  > .col:has(.theme-doc-toc-desktop) {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    visibility 0s 180ms !important;
+}
+
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  [class*='docMainContainer'] {
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:has([data-simulation-fullscreen])
+    [class*='docMainContainer']
+    .row
+    > [class*='docItemCol'],
+  :root:has([data-simulation-fullscreen]) .theme-doc-sidebar-container,
+  :root:has([data-simulation-fullscreen])
+    [class*='docMainContainer']
+    .row
+    > .col:has(.theme-doc-toc-desktop) {
+    transition: none !important;
   }
 }
 

@@ -5,9 +5,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { flushSync } from 'react-dom';
 import type { Snapshot } from '@site/src/simulation';
-import { connectionRails, routeConnection } from './connectionPaths';
+import {
+  connectionRails,
+  routeConnection,
+  routeExpandedConnection,
+} from './connectionPaths';
 import type { Point, Rect } from './connectionPaths';
 import type { RuntimeDescriptor } from './runtimeColors';
 import Connection from './Connection';
@@ -21,6 +24,7 @@ interface Props {
   codeOpen: boolean;
   settled: boolean;
   playing: boolean;
+  transitioning: boolean;
 }
 interface Wire {
   id: string;
@@ -45,6 +49,7 @@ export default function Connections({
   codeOpen,
   settled,
   playing,
+  transitioning,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const markerId = useId().replace(/:/g, '');
@@ -56,11 +61,11 @@ export default function Connections({
     wires: RoutedWire[];
     moving: boolean;
   }>({ width: 0, height: 0, rails: [], panels: [], wires: [], moving: false });
-  const current = useRef({ snapshot, runtimes });
-  current.current = { snapshot, runtimes };
+  const current = useRef({ snapshot, runtimes, tick });
+  current.current = { snapshot, runtimes, tick };
+  const scheduleRef = useRef(() => {});
   const previous = useRef({
     tick,
-    width: 0,
     wires: new Map<string, Point[]>(),
   });
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -97,20 +102,32 @@ export default function Connections({
     const root = svgRef.current?.parentElement;
     if (!root) return;
     let frame = 0;
+    let geometryKey = '';
+    const routeCache = new Map<string, Point[]>();
     const measure = () => {
-      const { snapshot, runtimes } = current.current;
+      const { snapshot, runtimes, tick } = current.current;
       const origin = root.getBoundingClientRect();
+      const rearranging =
+        root.closest('[data-simulation-transition-phase="layout"]') !== null;
+      const expanded =
+        root.closest('[data-simulation-fullscreen="true"]') !== null;
+      const rectangles = new Map<Element, Rect>();
       const rectangle = (element: Element): Rect => {
+        const cached = rectangles.get(element);
+        if (cached) return cached;
         const r = element.getBoundingClientRect();
-        return {
+        const rect = {
           left: r.left - origin.left,
           right: r.right - origin.left,
           top: r.top - origin.top,
           bottom: r.bottom - origin.top,
         };
+        rectangles.set(element, rect);
+        return rect;
       };
       const nodes = new Map<string, Rect>();
       const ports = new Map<string, Rect>();
+      const nodePanels = new Map<string, Rect>();
       root
         .querySelectorAll<HTMLElement>('[data-sim-node]')
         .forEach((element) => {
@@ -120,7 +137,7 @@ export default function Connections({
           const y = (anchor.top + anchor.bottom) / 2;
           // A new row grows into view; connect it once its port is visible.
           const clip = element.closest('[data-sim-layout]');
-          if (clip) {
+          if (clip && !rearranging) {
             const visible = rectangle(clip);
             if (y < visible.top || y > visible.bottom) return;
             rect.top = Math.max(rect.top, visible.top);
@@ -128,6 +145,8 @@ export default function Connections({
           }
           nodes.set(element.dataset.simNode!, rect);
           ports.set(element.dataset.simNode!, { ...rect, top: y, bottom: y });
+          const panel = element.closest('[data-sim-panel]');
+          if (panel) nodePanels.set(element.dataset.simNode!, rectangle(panel));
         });
       const obstacles = [
         ...nodes.values(),
@@ -259,28 +278,67 @@ export default function Connections({
         right: origin.width + 8,
         bottom: origin.height + 8,
       };
+      // Running/idle colours and queue events change every tick. Reuse routes
+      // until their geometry changes instead of solving the same paths again.
+      const nextGeometryKey =
+        JSON.stringify([nodes, ports].map((map) => [...map])) +
+        JSON.stringify([obstacles, panels, bounds, gap, expanded]);
+      if (nextGeometryKey !== geometryKey || tick < previous.current.tick) {
+        geometryKey = nextGeometryKey;
+        routeCache.clear();
+      }
+      const rails = Array.from({ length: 4 }, (_, lane) =>
+        connectionRails(panels, bounds, lane, gap)
+      );
       const routed = wires
         .map((wire) => {
-          const points = routeConnection(
-            ports.get(wire.from) ?? nodes.get(wire.from)!,
-            ports.get(wire.to) ?? nodes.get(wire.to)!,
-            obstacles,
-            bounds,
-            connectionRails(
-              panels,
-              bounds,
-              wire.runtime.kind === 'rn'
-                ? 0
-                : wire.runtime.kind === 'ui'
-                  ? 1
-                  : wire.runtime.coreIndex,
-              gap
-            ),
-            Math.abs(previous.current.width - origin.width) < 1 &&
-              tick >= previous.current.tick
-              ? previous.current.wires.get(wire.id)
-              : undefined
-          );
+          const lane =
+            (wire.runtime.kind === 'rn'
+              ? 0
+              : wire.runtime.kind === 'ui'
+                ? 1
+                : wire.runtime.coreIndex) % 4;
+          const key = wire.id;
+          let points = routeCache.get(key);
+          if (points === undefined) {
+            const fromPanel = nodePanels.get(wire.from);
+            const toPanel = nodePanels.get(wire.to);
+            points =
+              expanded && fromPanel && toPanel
+                ? routeExpandedConnection({
+                    from: nodes.get(wire.from)!,
+                    to: nodes.get(wire.to)!,
+                    fromPanel,
+                    toPanel,
+                    fromY: ports.get(wire.from)!.top,
+                    toY: ports.get(wire.to)!.top,
+                    obstacles,
+                    panels,
+                    bounds,
+                    lane: wire.runtime.coreIndex,
+                    kind:
+                      wire.to === 'output'
+                        ? 'output'
+                        : wire.queued
+                          ? 'queue'
+                          : wire.id.startsWith('borrow:')
+                            ? 'borrow'
+                            : 'runtime',
+                  })
+                : [];
+            if (points.length < 2)
+              points = routeConnection(
+                ports.get(wire.from) ?? nodes.get(wire.from)!,
+                ports.get(wire.to) ?? nodes.get(wire.to)!,
+                obstacles,
+                bounds,
+                rails[lane],
+                tick >= previous.current.tick
+                  ? previous.current.wires.get(wire.id)
+                  : undefined
+              );
+            routeCache.set(key, points);
+          }
           return {
             ...wire,
             points,
@@ -290,13 +348,14 @@ export default function Connections({
       const rewinding = tick < previous.current.tick;
       previous.current = {
         tick,
-        width: origin.width,
         wires: new Map(routed.map((wire) => [wire.id, wire.points])),
       };
       setLayout((current) => ({
         width: origin.width,
         height: origin.height,
-        moving: root.querySelector('[data-sim-layout-moving]') !== null,
+        moving:
+          root.closest('[data-simulation-fullscreen-transition]') !== null ||
+          root.querySelector('[data-sim-layout-moving]') !== null,
         wires: [
           ...routed,
           ...current.wires
@@ -314,14 +373,7 @@ export default function Connections({
             })),
         ],
         panels,
-        rails: [
-          ...new Set(
-            Array.from(
-              { length: 4 },
-              (_, lane) => connectionRails(panels, bounds, lane, gap).vertical
-            ).flat()
-          ),
-        ],
+        rails: [...new Set(rails.flatMap((rail) => rail.vertical))],
       }));
     };
     const schedule = () => {
@@ -331,32 +383,28 @@ export default function Connections({
         measure();
       });
     };
-    let measuredFrame = -1;
-    const followLayout = (event: Event) => {
-      const time = (event as CustomEvent<number | undefined>).detail;
-      if (typeof time !== 'number') {
-        schedule();
-      } else if (time !== measuredFrame) {
-        measuredFrame = time;
-        // Commit rails before paint, once per frame even when both grids move.
-        flushSync(measure);
-      }
-    };
+    scheduleRef.current = schedule;
     const observer = new ResizeObserver(schedule);
     observer.observe(root);
-    root
-      .querySelectorAll('[data-sim-node], [data-sim-code-panel]')
-      .forEach((element) => observer.observe(element));
     root.addEventListener('scroll', schedule, true);
-    root.addEventListener('simulationlayout', followLayout);
-    measure();
+    const layoutRoot = root.closest('[data-simulation-fullscreen]') ?? root;
+    layoutRoot.addEventListener('simulationlayout', schedule);
+    schedule();
     return () => {
       observer.disconnect();
       root.removeEventListener('scroll', schedule, true);
-      root.removeEventListener('simulationlayout', followLayout);
+      layoutRoot.removeEventListener('simulationlayout', schedule);
       cancelAnimationFrame(frame);
+      scheduleRef.current = () => {};
     };
-  }, [snapshot, tick, codeOpen, settled]);
+  }, []);
+
+  // Keep observers and routing caches alive across ticks. Merge playback,
+  // resizing and nested-grid notifications into one update per frame.
+  useLayoutEffect(
+    () => scheduleRef.current(),
+    [snapshot, tick, codeOpen, settled]
+  );
 
   return (
     <svg ref={svgRef} className={styles.connections} aria-hidden="true">
@@ -410,7 +458,7 @@ export default function Connections({
           tick={tick}
           tickMs={tickMs}
           reducedMotion={reducedMotion}
-          followingLayout={layout.moving}
+          followingLayout={transitioning || layout.moving}
         />
       ))}
     </svg>

@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import clsx from 'clsx';
 import {
   interpolatePath,
+  measurePath,
   roundedPath,
   shortenPathEnd,
 } from './connectionPaths';
@@ -47,6 +48,9 @@ export default function Connection({
   const ghostRef = useRef<SVGPathElement>(null);
   const groupRef = useRef<SVGGElement>(null);
   const drawn = useRef<Point[]>([]);
+  const fade = useRef<{ start: number; opacity: number } | null>(null);
+  const pulsePath = useRef(measurePath([]));
+  const suspendedAt = useRef<number | null>(null);
   const target = useRef(points);
   target.current = points;
   const path = roundedPath(points);
@@ -67,31 +71,50 @@ export default function Connection({
     let frame = 0;
     const draw = (next: Point[]) => {
       drawn.current = next;
+      const shortened = shortenPathEnd(next, 12);
+      pulsePath.current = measurePath(shortened);
       track.setAttribute('d', roundedPath(next));
-      flow.setAttribute('d', roundedPath(shortenPathEnd(next, 12)));
+      flow.setAttribute('d', roundedPath(shortened));
+      flow.setAttribute('stroke-dasharray', `20 ${pulsePath.current.length}`);
     };
-    if (reducedMotion || followingLayout) {
+    if (reducedMotion) {
       draw(to);
       group.style.opacity = '1';
       ghost.style.opacity = '0';
+      fade.current = null;
       return;
     }
-    // A different set of bends fades between routes instead of cutting across cards.
-    ghost.setAttribute('d', morph ? '' : roundedPath(from));
     const start = performance.now();
+    // Follow moving ports directly, but crossfade when a breakpoint forces a
+    // different route. Keep the fade clock across geometry updates so resizing
+    // every frame cannot reset it or make the new route flash at full opacity.
+    if (!morph) {
+      const opacity = Number(group.style.opacity || 1);
+      if (fade.current === null || opacity >= 0.5) {
+        ghost.setAttribute('d', roundedPath(from));
+        fade.current = { start, opacity: from.length > 1 ? opacity : 0 };
+      }
+    }
     const animate = (now: number) => {
       const progress = Math.min(1, (now - start) / REFLOW_MS);
       const eased = 1 - (1 - progress) ** 3;
-      draw(morph ? interpolatePath(from, to, eased)! : to);
-      group.style.opacity = String(morph ? 1 : eased);
-      ghost.style.opacity = String(morph ? 0 : 1 - eased);
-      if (progress < 1) frame = requestAnimationFrame(animate);
+      draw(morph && !followingLayout ? interpolatePath(from, to, eased)! : to);
+      const fading = fade.current;
+      const visibility = fading
+        ? 1 - (1 - Math.min(1, (now - fading.start) / REFLOW_MS)) ** 3
+        : 1;
+      group.style.opacity = String(visibility);
+      ghost.style.opacity = String((fading?.opacity ?? 0) * (1 - visibility));
+      if (visibility === 1) fade.current = null;
+      if (fade.current || (morph && !followingLayout && progress < 1))
+        frame = requestAnimationFrame(animate);
     };
     animate(start);
     return () => cancelAnimationFrame(frame);
   }, [path, reducedMotion, followingLayout]);
 
-  // Geometry may change many times during a transfer; its clock must keep running.
+  // Geometry changes must not restart transfers. Suspend their clock while
+  // panels move, then resume at the same progress on the settled route.
   const pulseKey =
     exitAt !== undefined
       ? (clock.current?.key ?? tick)
@@ -106,12 +129,23 @@ export default function Connection({
       flow.style.opacity = '0';
       pulse.style.opacity = '0';
       clock.current = null;
+      suspendedAt.current = null;
+      return;
+    }
+    if (followingLayout) {
+      flow.style.opacity = '0';
+      pulse.style.opacity = '0';
+      suspendedAt.current ??= performance.now();
       return;
     }
     const duration = playing
       ? Math.max(queued ? 120 : 180, Math.min(tickMs * 0.8, queued ? 650 : 800))
       : 800;
     const now = performance.now();
+    if (suspendedAt.current !== null) {
+      if (clock.current) clock.current.start += now - suspendedAt.current;
+      suspendedAt.current = null;
+    }
     if (clock.current === null || clock.current.key !== pulseKey) {
       clock.current = { key: pulseKey, start: now, duration };
     } else if (clock.current.duration !== duration) {
@@ -125,12 +159,11 @@ export default function Connection({
       const elapsed = (time - start) / duration;
       const progress = repeat ? elapsed % 1 : Math.min(1, elapsed);
       const opacity = Math.min(1, progress / 0.1, (1 - progress) / 0.2);
-      const length = flow.getTotalLength();
+      const { length, pointAt } = pulsePath.current;
       if (length > 0) {
         const distance = progress * length;
-        const point = flow.getPointAtLength(distance);
+        const point = pointAt(distance);
         pulse.setAttribute('transform', `translate(${point.x} ${point.y})`);
-        flow.setAttribute('stroke-dasharray', `20 ${length}`);
         flow.setAttribute('stroke-dashoffset', String(20 - distance));
       }
       flow.style.opacity = String(length > 0 ? opacity : 0);
@@ -139,7 +172,16 @@ export default function Connection({
     };
     animate(now);
     return () => cancelAnimationFrame(frame);
-  }, [active, playing, queued, pulseKey, tickMs, reducedMotion, exitAt]);
+  }, [
+    active,
+    playing,
+    queued,
+    pulseKey,
+    tickMs,
+    reducedMotion,
+    exitAt,
+    followingLayout,
+  ]);
 
   return (
     <g
