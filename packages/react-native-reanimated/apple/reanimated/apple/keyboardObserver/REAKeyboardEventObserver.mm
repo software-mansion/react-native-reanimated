@@ -437,8 +437,7 @@ static UIWindow *_Nullable REAFindKeyWindow(void)
 - (REAUIView *_Nullable)getKeyboardView
 {
   if (!_keyboardView) {
-    // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-    auto window = [self findView:[UIApplication sharedApplication].windows
+    auto window = [self findView:REAFindKeyWindow().windowScene.windows
                        condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
     auto container = [self findView:window.subviews
                           condition:[self withPrefix:@[ @"<UIInputSetContainerView", @"<UITrackingWindowView" ]]];

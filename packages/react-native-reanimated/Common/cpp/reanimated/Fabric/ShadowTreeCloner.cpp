@@ -26,13 +26,13 @@ std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawT
 
 Props::Shared mergeProps(
     const ShadowNode &shadowNode,
-    const std::vector<RawProps> &propsVector,
+    const std::vector<folly::dynamic> &propsVector,
     std::vector<std::shared_ptr<const ShadowNode>> &children) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
-  auto newPropsDynamic = propsVector.front().toDynamic();
+  auto newPropsDynamic = propsVector.front();
   for (const auto &props : propsVector | std::views::drop(1)) {
-    newPropsDynamic.update(props.toDynamic());
+    newPropsDynamic.update(props);
   }
 
   if (isTextComponent(shadowNode)) {

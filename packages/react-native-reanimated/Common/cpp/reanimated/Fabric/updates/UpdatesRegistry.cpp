@@ -57,6 +57,12 @@ void UpdatesRegistry::remove(const Tag tag) {
   removeTag(tag);
 }
 
+void UpdatesRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  const auto tag = shadowNodeFamily->getTag();
+  remove(tag);
+  removePendingUpdates(tag);
+}
+
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flush(updatesBatch);
@@ -205,11 +211,11 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
     const auto it = propsMap.find(shadowNodeFamily);
 
     if (it == propsMap.cend()) {
-      auto propsVector = std::vector<RawProps>{};
-      propsVector.emplace_back(RawProps(props));
+      auto propsVector = std::vector<folly::dynamic>{};
+      propsVector.emplace_back(props);
       propsMap.emplace(shadowNodeFamily, propsVector);
     } else {
-      it->second.push_back(RawProps(props));
+      it->second.push_back(props);
     }
   }
 }
@@ -241,6 +247,19 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
   updatePropsToRevert(tag);
 #endif
   updatesRegistry_.erase(tag);
+}
+
+void UpdatesRegistry::removePendingUpdates(const Tag tag) {
+  std::erase_if(updatesBatch_, [tag](const auto &update) { return update.first->getTag() == tag; });
+
+  UpdatesBatchAnimatedProps remaining;
+  remaining.reserve(updatesBatchAnimatedProps_.size());
+  for (auto &entry : updatesBatchAnimatedProps_) {
+    if (entry.shadowNodeFamily->getTag() != tag) {
+      remaining.push_back(std::move(entry));
+    }
+  }
+  updatesBatchAnimatedProps_ = std::move(remaining);
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {

@@ -185,6 +185,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EXPECTED_MATRIX: ${{ needs.read-bundle-cost-matrix.outputs.matrix }}
           MEASURE_RESULT: ${{ needs.measure-bundle-cost.result }}
+          NIGHTLY_OWNER_SLACK_IDS: ${{ vars.NIGHTLY_OWNER_SLACK_IDS }}
         run: node --experimental-strip-types .github/workflows/helper/daily-report-notification.ts
 
   issue-opened-report:
