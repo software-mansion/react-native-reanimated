@@ -160,8 +160,6 @@ function expectNonDecreasing(values: number[], what: string) {
 
 async function recordFrames(mode: Mode, durationMs: number) {
   await mockAnimationTimer();
-  // No component argument: the recorder files updates under a tag that does
-  // not match `findNodeHandle` of a ref forwarded by createAnimatedComponent.
   const updatesContainer = await recordAnimationUpdates();
 
   await render(
@@ -175,6 +173,9 @@ async function recordFrames(mode: Mode, durationMs: number) {
   );
   await waitForNotification(FRAMES_DONE);
 
+  // Only the box animates, so read the updates without a component: the
+  // recorder files them under a tag that does not match `findNodeHandle` of a
+  // ref forwarded by createAnimatedComponent.
   const jsUpdates = await updatesContainer.getUpdates();
   const nativeSnapshots = await updatesContainer.getNativeSnapshots();
   await stopRecordingAnimationUpdates();
