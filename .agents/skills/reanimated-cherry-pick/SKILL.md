@@ -34,7 +34,8 @@ Ask for or extract from the request:
 | PR body        | `Cherry-picking #<PR>` — no AI preamble                                                                       |
 | Commit message | Upstream message + `(cherry picked from commit <sha>)` trailer (git writes this to `MERGE_MSG` automatically) |
 
-`<you>` is your GitHub login (`gh api user --jq .login`). Run the commands from the root of your main checkout, so `../` is
+`<you>` is your GitHub login (`gh api user --jq .login`). `origin` must be `software-mansion/react-native-reanimated`, because
+the branches are pushed to the upstream repository. Run the commands from the root of your main checkout, so `../` is
 its parent directory.
 
 Example strip: `fix(Reanimated): Babel plugin not detecting production environment` →
@@ -50,6 +51,9 @@ Example strip: `fix(Reanimated): Babel plugin not detecting production environme
 ## Procedure
 
 ### 1. Gather PR metadata
+
+Step 2 creates the worktrees for all PRs. Then complete step 1 and steps 3 to 9 for one PR before you start the next PR,
+and set `sha`, `title` and `author` again in step 1 for each PR.
 
 For each PR, capture merge commit SHA + upstream title + original author. Keep the upstream values in shell variables and
 pass them quoted (`"$author"`, `"$title"`). Never type them into a command: a backtick or `$(...)` in a title runs as a
@@ -164,7 +168,7 @@ If a previous failed attempt left an empty branch on remote, use `--force-with-l
 Open it ready-for-review (omit `--draft`); drafting is optional. The body is just `Cherry-picking #<PR>` — no AI preamble.
 
 ```bash
-gh pr create \
+gh pr create --repo software-mansion/react-native-reanimated \
   --base <release-branch> \
   --head "@<you>/<release-branch>/cherry-pick-#<PR>" \
   --title "cherry-pick(<release-branch>): $title (#<PR>)" \
