@@ -144,7 +144,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Install Pods
-        uses: $/.github/actions/install-pods
+        uses: ./.github/actions/install-pods
         with:
           working-directory: apps/fabric-example
           pod-directory: ios
