@@ -51,14 +51,20 @@ Example strip: `fix(Reanimated): Babel plugin not detecting production environme
 
 ### 1. Gather PR metadata
 
-For each PR, capture merge commit SHA + upstream title + original author:
+For each PR, capture merge commit SHA + upstream title + original author. Keep the upstream values in shell variables and
+pass them quoted (`"$author"`, `"$title"`). Never type them into a command: a backtick or `$(...)` in a title runs as a
+command inside double quotes.
 
 ```bash
-gh pr view <PR> --repo software-mansion/react-native-reanimated \
-  --json mergeCommit,title
-git log -1 --format='%an <%ae>' <sha>
-git show -s --format='%P%n%s' <sha>
+git fetch origin main
+sha="$(gh pr view <PR> --repo software-mansion/react-native-reanimated --json mergeCommit --jq .mergeCommit.oid)"
+git cat-file -e "$sha^{commit}"
+title="$(gh pr view <PR> --repo software-mansion/react-native-reanimated --json title --jq .title | sed -E 's/^[a-z]+(\([^)]*\))?!?: //')"
+author="$(git show -s --format='%an <%ae>' "$sha")"
+git show -s --format='%P%n%s' "$sha"
 ```
+
+`git cat-file -e` fails when the commit is not in the clone. Then fetch again and check that the PR is merged.
 
 The last command prints the parent SHAs on the first line and the subject on the second. This repo squash-merges PRs, so
 continue only when the first line has exactly one SHA and the subject ends with `(#<PR>)`. Otherwise the PR was merged in a
@@ -78,7 +84,7 @@ done
 
 ```bash
 cd ../rnr-cp-<PR>
-git cherry-pick --no-commit -x <sha>
+git cherry-pick --no-commit -x "$sha"
 ```
 
 Note: `-x` does **nothing** when combined with `--no-commit` (the `(cherry picked from commit …)` trailer is only added when
@@ -134,7 +140,7 @@ If the upstream squash commit already has a `Co-authored-by: <you>` trailer (Git
 comes into MERGE\_MSG), **don't add it twice**. Add `--author` to the step 5 commit command instead:
 
 ```bash
-git commit --author="<Original Author> <og@email>" -F "<message-file>"
+git commit --author="$author" -F "<message-file>"
 ```
 
 Otherwise, commit as in step 5, then add the trailer and set the author with an amend:
@@ -142,7 +148,7 @@ Otherwise, commit as in step 5, then add the trailer and set the author with an 
 ```bash
 git log -1 --format=%B | \
   git interpret-trailers --trailer "Co-authored-by: <User Name> <user@email>" | \
-  git commit --amend --author="<Original Author> <og@email>" -F -
+  git commit --amend --author="$author" -F -
 ```
 
 ### 7. Push
@@ -161,7 +167,7 @@ Open it ready-for-review (omit `--draft`); drafting is optional. The body is jus
 gh pr create \
   --base <release-branch> \
   --head "@<you>/<release-branch>/cherry-pick-#<PR>" \
-  --title "cherry-pick(<release-branch>): <stripped title> (#<PR>)" \
+  --title "cherry-pick(<release-branch>): $title (#<PR>)" \
   --body "Cherry-picking #<PR>"
 ```
 
