@@ -48,6 +48,45 @@ scheduleOnRuntime(runtime, async () => {
 
 Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
 
+<Badges version="0.14.0">
+  ## Running worklets from lazy chunks
+</Badges>
+
+Metro can split a bundle into lazy chunks. The RN Runtime loads a lazy chunk when it calls `import()` or renders a `React.lazy` component. When the RN Runtime loads a lazy chunk, Worklets also evaluates it on the UI Runtime and on Worker Runtimes. The `import()` promise resolves only after that. You can then run the worklets from the chunk on these runtimes.
+
+```tsx
+// processData.ts
+export function processData() {
+  'worklet';
+  // ...
+}
+
+// App.tsx
+const runtime = createWorkletRuntime({ name: 'worker' });
+
+async function runProcessData() {
+  const { processData } = await import('./processData');
+
+  scheduleOnRuntime(runtime, () => {
+    'worklet';
+    processData();
+  });
+}
+```
+
+A Worklet Runtime can also call `import()` itself. Then only that runtime evaluates the chunk. The other runtimes do not get it.
+
+Some Worker Runtimes do not get the chunks that the RN Runtime loads after the runtime was created:
+
+- A runtime without a queue ([`queue: null`](../threading/createWorkletRuntime.mdx#queue)). Worklets cannot schedule code on it without interrupting the thread that uses the runtime.
+- A runtime without locking ([`enableLocking: false`](../threading/createWorkletRuntime.mdx#enablelocking)). Worklets cannot send code to it in a thread-safe way.
+
+These runtimes evaluate all chunks that the RN Runtime loaded before they were created. If a worklet from a lazy chunk must run on such a runtime, load the chunk with `import()` first, and then create the runtime.
+
+A worklet that cannot be found on a runtime throws the error `[Worklets] Unable to resolve worklet with hash ...`.
+
+Lazy chunks exist only when the app loads its bundle from a dev server. Release builds are not affected.
+
 ## Reference
 
 To see how the setup looks in a real project, you can check out the [Bundle Mode Showcase App](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app) repository.
