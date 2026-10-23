@@ -174,7 +174,7 @@ The tracking issue lists the upstream PRs. Under each upstream PR, add the cherr
   - https://github.com/software-mansion/react-native-reanimated/pull/<cherry-pick PR>
 ```
 
-If the upstream PR is not in the list yet, add both lines. Read the body with `gh issue view <N> --json body --jq .body > <file>`, and write it
+If the upstream PR is not in the list yet, add both lines. Read the body with `gh issue view <N> --repo software-mansion/react-native-reanimated --json body --jq .body > <file>`, and write it
 back with `gh api repos/software-mansion/react-native-reanimated/issues/<N> -X PATCH -F body=@<file>`. Keep the rest of the body unchanged.
 
 ### 10. Cleanup (after PRs are merged)
