@@ -64,7 +64,7 @@ When Reanimated detects that the current top screen on the stack changes, it che
 
 If it finds two matching components, Reanimated moves one of the native views above the screen content and hides the other view. Usually the source view moves. If React removes the source in the same update, the target view moves instead. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place.
 
-The view moves with its children. Reanimated does not match the children of the two views or add separate fades for them. The target's children appear when the transition ends. A child with its own `sharedTransitionTag` can animate as a separate view.
+The view moves with its children. Reanimated does not match the children of the two views or add separate fades for them. If the source view moves, the target's children appear when the transition ends. If the target view moves, its children move with it from the start. A child with its own `sharedTransitionTag` can animate as a separate view.
 
 The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Keep the props of the shared view stable during the transition.
 
