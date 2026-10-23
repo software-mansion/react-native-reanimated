@@ -77,4 +77,4 @@ import RunOnJSSrc from '!!raw-loader!@site/src/examples/RunOnJS';
 
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
 
-- It's safe to run functions via `runOnJS` on the [JavaScript thread](../fundamentals/glossary.mdx#javascript-thread), as this has no effect.
+- It's safe to run functions via `runOnJS` on the [JavaScript thread](../fundamentals/glossary.mdx#javascript-thread). In this case the function is scheduled with `queueMicrotask` and runs asynchronously.

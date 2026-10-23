@@ -17,7 +17,7 @@ List of supported types for Serialization can be found [here](./serializable.mdx
 const obj = { a: 42 };
 Object.setPrototypeOf(obj, console); // because why not
 
-type ConsoleLike = typeof console;
+type ConsoleLike = typeof console & { a: number };
 
 registerCustomSerializable({
   name: 'ConsoleLike',
@@ -68,7 +68,7 @@ Available properties:
 | name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                    |
 | determine | `(value: object) => value is TValue` | A [worklet](../fundamentals/glossary.mdx#worklet) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                        |
 | pack      | `(value: TValue) => TPacked`         | A [worklet](../fundamentals/glossary.mdx#worklet) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](./serializable.mdx). The function must return a [supported type for Serialization](./serializable.mdx#supported-types). |
-| unpack    | `(value: TPacked) => TValue`         | A [worklet](../fundamentals/glossary.mdx#worklet) that unpacks the packed value, after it's been deserialized from it's packed form, back into the JavaScript value of type `TValue`.                                                                                                                     |
+| unpack    | `(value: TPacked) => TValue`         | A [worklet](../fundamentals/glossary.mdx#worklet) that unpacks the packed value, after it's been deserialized from its packed form, back into the JavaScript value of type `TValue`.                                                                                                                      |
 
 ## Motivation
 
