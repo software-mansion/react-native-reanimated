@@ -30,9 +30,8 @@ jobs:
       - name: checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Use Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          cache: yarn
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
       - name: Run static checks
         uses: $/.github/actions/package-static-checks
         with:
@@ -40,3 +39,10 @@ jobs:
           build-commands: |
             yarn workspace react-native-worklets build
             yarn workspace react-native-reanimated build
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}

@@ -64,6 +64,8 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/android-validation.yml'
               - '.github/actions/android-validation/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
               - 'scripts/validate-android.sh'
               - 'packages/react-native-reanimated/android/src/**'
@@ -123,6 +125,8 @@ jobs:
               - '.github/actions/save-pods/**'
               - '.github/actions/setup-ccache/**'
               - '.github/actions/save-ccache/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
               - 'packages/react-native-reanimated/RNReanimated.podspec'
               - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
@@ -141,12 +145,16 @@ jobs:
             example-next-build-check-and-test:
               - '.github/workflows/ci.yml'
               - '.github/workflows/example-next-build-check-and-test.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'packages/react-native-reanimated/src/**'
               - 'packages/react-native-worklets/src/**'
               - 'apps/next-example/**'
             example-typescript-check-and-lint:
               - '.github/workflows/ci.yml'
               - '.github/workflows/example-typescript-check-and-lint.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'packages/react-native-reanimated/src/**'
               - 'packages/react-native-reanimated/package.json'
               - 'packages/react-native-worklets/src/**'
@@ -226,6 +234,8 @@ jobs:
             worklets-plugin-static-check:
               - '.github/workflows/ci.yml'
               - '.github/workflows/worklets-plugin-static-check.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - '.github/workflows/helper/clear-annotations.sh'
               - '.oxfmtrc.json'
               - '.oxlintrc.json'
@@ -295,6 +305,9 @@ jobs:
     name: Example iOS build check
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-ios-build-check == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: $/.github/workflows/example-ios-build-check.yml
 
   example-next-build-check-and-test:
@@ -333,6 +346,9 @@ jobs:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
@@ -345,6 +361,9 @@ jobs:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    permissions:
+      contents: read
+      actions: write
     uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests

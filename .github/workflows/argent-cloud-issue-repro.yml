@@ -27,6 +27,7 @@ jobs:
       cost-usd: ${{ steps.plan-cost.outputs.cost-usd }}
       reanimated-version: ${{ steps.plan.outputs.reanimated-version }}
       react-native-version: ${{ steps.plan.outputs.react-native-version }}
+      configuration: ${{ steps.plan.outputs.configuration }}
     steps:
       - name: Check that a maintainer applied the label
         env:
@@ -143,6 +144,7 @@ jobs:
             echo "feasible=$(jq -r .feasible "$WORK_DIR/plan.json")"
             echo "reanimated-version=$(jq -r .reanimatedVersion "$WORK_DIR/plan.json")"
             echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
+            echo "configuration=$(jq -r '.configuration // "release"' "$WORK_DIR/plan.json")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Write the report
@@ -276,7 +278,9 @@ jobs:
 
       - name: Build the app for the iOS simulator
         id: build
-        run: '"$HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz"'
+        env:
+          CONFIGURATION: ${{ needs.plan.outputs.configuration == 'debug' && 'Debug' || 'Release' }}
+        run: '"$HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz" "$CONFIGURATION"'
 
       - name: Upload the app
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -428,6 +432,7 @@ jobs:
           sparse-checkout: |
             /.nvmrc
             /.github/actions/install-argent-cloud
+            /.github/actions/run-argent-cloud
             /.github/workflows/helper
           sparse-checkout-cone-mode: false
 
@@ -469,7 +474,11 @@ jobs:
             echo "- react-native-worklets: $(jq -r '.workletsVersion // "none"' "$plan")"
             echo "- Architecture: $(jq -r .architecture "$plan")"
             echo "- Static feature flags: $(jq -r '[.staticFeatureFlags // {} | to_entries[] | .key as $owner | .value[] | "\($owner) \(.name)=\(.value)"] | if length == 0 then "defaults" else join(", ") end' "$plan")"
-            echo "- App: $(jq -r .appKind "$plan") scaffold, code from $(jq -r .reproductionSource.kind "$plan"), iOS simulator, Release configuration with an embedded bundle"
+            if [ "$(jq -r '.configuration // "release"' "$plan")" = "debug" ]; then
+              echo "- App: $(jq -r .appKind "$plan") scaffold, code from $(jq -r .reproductionSource.kind "$plan"), iOS simulator, Debug configuration that loads its JavaScript from Metro"
+            else
+              echo "- App: $(jq -r .appKind "$plan") scaffold, code from $(jq -r .reproductionSource.kind "$plan"), iOS simulator, Release configuration with an embedded bundle"
+            fi
             echo
             echo "### Steps"
             echo
@@ -496,6 +505,10 @@ jobs:
               jq -r .limitations "$plan"
               echo
             fi
+            if [ "$(jq -r '.configuration // "release"' "$plan")" = "debug" ]; then
+              cat "$HELPER_DIR/tester-debug.md"
+              echo
+            fi
             echo "## Original issue"
             echo
             cat "$WORK_DIR/issue.md"
@@ -504,85 +517,34 @@ jobs:
 
       - name: Run argent-cloud
         id: repro
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
-          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
-        run: |
-          mkdir -p "$WORK_DIR/output"
-          set -o pipefail
-          argent-cloud \
-            --prompt-file "$WORK_DIR/brief.md" \
-            --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
-            --log-usage \
-            --stream="$WORK_DIR/output/stream.md" \
-            2> >(tee "$WORK_DIR/output/argent-cloud.log" >&2) \
-            | tee "$WORK_DIR/output/output.md"
+        uses: $/.github/actions/run-argent-cloud
+        with:
+          prompt-file: ${{ env.WORK_DIR }}/brief.md
+          app-bundle: ${{ env.WORK_DIR }}/app/repro-app.tar.gz
+          output-dir: ${{ env.WORK_DIR }}/output
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
 
-      - name: Read the session ID
-        id: session
-        if: always()
-        run: |
-          output="$WORK_DIR/output/output.md"
-          log="$WORK_DIR/output/argent-cloud.log"
-          session_id=""
-          if [ -f "$output" ]; then
-            session_id=$(grep -oE '^session-id=[^[:space:]]+' "$output" | tail -n 1 | cut -d= -f2 || true)
-            sed -i '/^session-id=[^[:space:]]*$/d' "$output"
-          fi
-          if [ -z "$session_id" ] && [ -f "$log" ]; then
-            session_id=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'session created session_id=[^[:space:]]+' | head -n 1 | cut -d= -f2 || true)
-          fi
-          echo "session ID: ${session_id:-none}"
-          echo "id=$session_id" >> "$GITHUB_OUTPUT"
-
-      - name: Download the session archive
-        id: archive
-        if: always() && steps.session.outputs.id != ''
-        continue-on-error: true
-        working-directory: ${{ env.WORK_DIR }}
+      - name: Check the exit code of argent-cloud
+        id: repro-status
         env:
-          SESSION_ID: ${{ steps.session.outputs.id }}
-          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
-          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
+          EXIT_CODE: ${{ steps.repro.outputs.exit-code }}
         run: |
-          mkdir -p archive/extracted
-          cd archive
-          argent-cloud archives download "$SESSION_ID"
-          archive=$(find . -maxdepth 1 -type f -name '*.tar.gz' | head -n 1)
-          if [ -z "$archive" ]; then
-            echo "::warning::argent-cloud downloaded no .tar.gz archive for session $SESSION_ID"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::argent-cloud exited with ${EXIT_CODE:-no exit code}"
             exit 1
           fi
-          tar -xzf "$archive" -C extracted
-          screenshots=$(find extracted -type d -name screenshots | head -n 1)
-          if [ -z "$screenshots" ]; then
-            echo "::warning::the session archive has no screenshots directory"
-            exit 0
-          fi
-          echo "screenshots-dir=$WORK_DIR/archive/$screenshots" >> "$GITHUB_OUTPUT"
 
       - name: Upload the screenshots
         id: screenshots
-        if: always() && steps.archive.outputs.screenshots-dir != ''
+        if: always() && steps.repro.outputs.screenshots-dir != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: argent-cloud-screenshots-issue-${{ github.event.issue.number }}
-          path: ${{ steps.archive.outputs.screenshots-dir }}
+          path: ${{ steps.repro.outputs.screenshots-dir }}
           if-no-files-found: warn
           retention-days: 30
-
-      - name: Read the reproduction cost
-        id: repro-cost
-        if: always()
-        run: |
-          cost=0
-          log="$WORK_DIR/output/argent-cloud.log"
-          if [ -f "$log" ]; then
-            cost=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'cost_usd=[0-9.]+' | cut -d= -f2 | awk '{ sum += $1 } END { printf "%.6f", sum }')
-          fi
-          echo "reproduction cost: $cost USD"
-          echo "cost-usd=$cost" >> "$GITHUB_OUTPUT"
 
       - name: Write the report
         if: always()
@@ -595,13 +557,13 @@ jobs:
           STAGE: reproduce
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
-          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro.outputs.cost-usd }}
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_DIR: ${{ steps.repro.outputs.screenshots-dir }}
           SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro-status.outcome == 'failure' && 'Run argent-cloud' || '' }}
           REPORT_FILE: ${{ env.WORK_DIR }}/report.md
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts report
 
@@ -650,13 +612,13 @@ jobs:
           STAGE: reproduce
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
-          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro.outputs.cost-usd }}
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_DIR: ${{ steps.repro.outputs.screenshots-dir }}
           SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro-status.outcome == 'failure' && 'Run argent-cloud' || '' }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts publish
 
       - name: Report to Slack
@@ -671,13 +633,13 @@ jobs:
           STAGE: reproduce
           PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
           PLAN_COST_USD: ${{ needs.plan.outputs.cost-usd }}
-          REPRO_COST_USD: ${{ steps.repro-cost.outputs.cost-usd }}
+          REPRO_COST_USD: ${{ steps.repro.outputs.cost-usd }}
           BRIEF_FILE: ${{ env.WORK_DIR }}/brief.md
           OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
           STREAM_FILE: ${{ env.WORK_DIR }}/output/stream.md
-          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          SCREENSHOTS_DIR: ${{ steps.repro.outputs.screenshots-dir }}
           SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
-          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro.outcome == 'failure' && 'Run argent-cloud' || '' }}
+          FAILED_STEP: ${{ steps.install.outcome == 'failure' && 'Install the argent-cloud CLI' || steps.brief.outcome == 'failure' && 'Write the reproduction brief' || steps.repro-status.outcome == 'failure' && 'Run argent-cloud' || '' }}
           REPORT_URL: ${{ steps.publish.outputs.url }}
         run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts notify
 
@@ -688,7 +650,99 @@ jobs:
           name: argent-cloud-output-issue-${{ github.event.issue.number }}
           path: |
             ${{ env.WORK_DIR }}/output
-            ${{ env.WORK_DIR }}/archive/*.tar.gz
+            !${{ env.WORK_DIR }}/output/screenshots
             ${{ env.WORK_DIR }}/report.md
           if-no-files-found: warn
           retention-days: 30
+
+  # Runs no code from the issue or from the app, so it can hold a token that can push. The backend
+  # posts the comment as the ArgentCloud GitHub App only for a caller whose token can push to the
+  # repository. Set the repository variable ARGENT_CLOUD_PUBLIC_COMMENTS to false to turn it off.
+  comment:
+    needs: [plan, reproduce]
+    if: ${{ !cancelled() && needs.reproduce.result != 'skipped' && vars.ARGENT_CLOUD_PUBLIC_COMMENTS != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/actions/install-argent-cloud
+            /.github/actions/post-argent-cloud-comment
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-plan-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the reproduction output
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: argent-cloud-output-issue-${{ github.event.issue.number }}
+          path: ${{ env.WORK_DIR }}
+
+      - name: Check that the agent wrote a report
+        id: check
+        run: |
+          if [ ! -s "$WORK_DIR/output/output.md" ]; then
+            echo "::warning::the agent wrote no report, so nothing is posted on the issue"
+            echo "post=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "post=true" >> "$GITHUB_OUTPUT"
+          archive="$WORK_DIR/output/screenshots.tar.gz"
+          if [ -s "$archive" ]; then
+            mkdir -p "$WORK_DIR/screenshots"
+            tar -xzf "$archive" -C "$WORK_DIR/screenshots"
+            echo "screenshots-archive=$archive" >> "$GITHUB_OUTPUT"
+            echo "screenshots-dir=$WORK_DIR/screenshots" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the comment
+        if: steps.check.outputs.post == 'true'
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUS: ${{ needs.reproduce.result }}
+          STAGE: reproduce
+          PLAN_FILE: ${{ env.WORK_DIR }}/plan.json
+          OUTPUT_FILE: ${{ env.WORK_DIR }}/output/output.md
+          SCREENSHOTS_DIR: ${{ steps.check.outputs.screenshots-dir }}
+          COMMENT_FILE: ${{ env.WORK_DIR }}/comment.md
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-issue-repro-report.ts comment
+
+      - name: Install the argent-cloud CLI
+        if: steps.check.outputs.post == 'true'
+        uses: $/.github/actions/install-argent-cloud
+
+      - name: Post the comment on the issue
+        id: post
+        if: steps.check.outputs.post == 'true'
+        uses: $/.github/actions/post-argent-cloud-comment
+        with:
+          target: ${{ github.repository }}#${{ github.event.issue.number }}
+          comment-file: ${{ env.WORK_DIR }}/comment.md
+          screenshots: ${{ steps.check.outputs.screenshots-archive }}
+          github-token: ${{ github.token }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
+
+      - name: Link the comment
+        if: steps.post.outputs.url != ''
+        env:
+          URL: ${{ steps.post.outputs.url }}
+        run: echo "[The comment on the issue]($URL)" >> "$GITHUB_STEP_SUMMARY"

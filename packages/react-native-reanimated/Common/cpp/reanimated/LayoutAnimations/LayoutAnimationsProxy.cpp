@@ -1159,6 +1159,12 @@ void LayoutAnimationsProxy::cleanupAnimations(
         preservedTags.insert(tag);
         continue;
       }
+      // A transaction must not delete a view that it creates.
+      if (!element.run->inserted) {
+        preservedTags.insert(tag);
+        schedulePullOnNextFrame();
+        continue;
+      }
       finishSharedTransition(sharedTag, element, transaction);
     }
 

@@ -68,6 +68,7 @@ jobs:
       feasible: ${{ steps.plan.outputs.feasible }}
       cost-usd: ${{ steps.plan-cost.outputs.cost-usd }}
       react-native-version: ${{ steps.plan.outputs.react-native-version }}
+      configuration: ${{ steps.plan.outputs.configuration }}
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -170,6 +171,7 @@ jobs:
           {
             echo "feasible=$(jq -r .feasible "$WORK_DIR/plan.json")"
             echo "react-native-version=$(jq -r .reactNativeVersion "$WORK_DIR/plan.json")"
+            echo "configuration=$(jq -r '.configuration // "release"' "$WORK_DIR/plan.json")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload the plan
@@ -196,6 +198,7 @@ jobs:
       commit: ${{ needs.authorize.outputs.base-sha }}
       plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
       react-native-version: ${{ needs.plan.outputs.react-native-version }}
+      configuration: ${{ needs.plan.outputs.configuration == 'debug' && 'Debug' || 'Release' }}
 
   build-head:
     needs: [authorize, plan]
@@ -209,6 +212,7 @@ jobs:
       commit: ${{ github.event.pull_request.head.sha }}
       plan-artifact-id: ${{ needs.plan.outputs.artifact-id }}
       react-native-version: ${{ needs.plan.outputs.react-native-version }}
+      configuration: ${{ needs.plan.outputs.configuration == 'debug' && 'Debug' || 'Release' }}
 
   verify:
     needs: [plan, build-base, build-head]
@@ -229,6 +233,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             /.github/actions/install-argent-cloud
+            /.github/actions/run-argent-cloud
             /.github/workflows/helper
           sparse-checkout-cone-mode: false
 
@@ -264,7 +269,11 @@ jobs:
             echo "- react-native: $(jq -r .reactNativeVersion "$plan")"
             echo "- Architecture: $(jq -r .architecture "$plan")"
             echo "- Static feature flags: $(jq -r '[.staticFeatureFlags // {} | to_entries[] | .key as $owner | .value[] | "\($owner) \(.name)=\(.value)"] | if length == 0 then "defaults" else join(", ") end' "$plan")"
-            echo "- App: $(jq -r .appKind "$plan") scaffold, iOS simulator, Release configuration with an embedded bundle"
+            if [ "$(jq -r '.configuration // "release"' "$plan")" = "debug" ]; then
+              echo "- App: $(jq -r .appKind "$plan") scaffold, iOS simulator, Debug configuration that loads its JavaScript from Metro"
+            else
+              echo "- App: $(jq -r .appKind "$plan") scaffold, iOS simulator, Release configuration with an embedded bundle"
+            fi
             echo
             echo "### Steps"
             echo
@@ -283,93 +292,46 @@ jobs:
               jq -r .limitations "$plan"
               echo
             fi
+            if [ "$(jq -r '.configuration // "release"' "$plan")" = "debug" ]; then
+              cat "$APP_HELPER_DIR/tester-debug.md"
+              echo
+            fi
           } > "$WORK_DIR/output/brief.md"
           cat "$WORK_DIR/output/brief.md"
 
       - name: Run argent-cloud
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
-          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
-        run: |
-          set -o pipefail
-          argent-cloud \
-            --prompt-file "$WORK_DIR/output/brief.md" \
-            --app-bundle "$WORK_DIR/app/repro-app.tar.gz" \
-            --log-usage \
-            --stream="$WORK_DIR/output/stream.md" \
-            2> >(tee "$WORK_DIR/output/argent-cloud.log" >&2) \
-            | tee "$WORK_DIR/output/output.md"
-
-      - name: Read the session ID
-        id: session
-        if: always()
-        run: |
-          output="$WORK_DIR/output/output.md"
-          log="$WORK_DIR/output/argent-cloud.log"
-          session_id=""
-          if [ -f "$output" ]; then
-            session_id=$(grep -oE '^session-id=[^[:space:]]+' "$output" | tail -n 1 | cut -d= -f2 || true)
-            sed -i '/^session-id=[^[:space:]]*$/d' "$output"
-          fi
-          if [ -z "$session_id" ] && [ -f "$log" ]; then
-            session_id=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'session created session_id=[^[:space:]]+' | head -n 1 | cut -d= -f2 || true)
-          fi
-          echo "session ID: ${session_id:-none}"
-          echo "id=$session_id" >> "$GITHUB_OUTPUT"
-
-      - name: Download the session archive
-        id: archive
-        if: always() && steps.session.outputs.id != ''
-        continue-on-error: true
-        working-directory: ${{ env.WORK_DIR }}
-        env:
-          SESSION_ID: ${{ steps.session.outputs.id }}
-          SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
-          ARGENT_BACKEND_IP: ${{ secrets.ARGENT_BACKEND_IP }}
-        run: |
-          mkdir -p archive/extracted
-          cd archive
-          argent-cloud archives download "$SESSION_ID"
-          archive=$(find . -maxdepth 1 -type f -name '*.tar.gz' | head -n 1)
-          if [ -z "$archive" ]; then
-            echo "::warning::argent-cloud downloaded no .tar.gz archive for session $SESSION_ID"
-            exit 1
-          fi
-          tar -xzf "$archive" -C extracted
-          screenshots=$(find extracted -type d -name screenshots | head -n 1)
-          if [ -z "$screenshots" ]; then
-            echo "::warning::the session archive has no screenshots directory"
-            exit 0
-          fi
-          echo "screenshots-dir=$WORK_DIR/archive/$screenshots" >> "$GITHUB_OUTPUT"
+        id: run
+        uses: $/.github/actions/run-argent-cloud
+        with:
+          prompt-file: ${{ env.WORK_DIR }}/output/brief.md
+          app-bundle: ${{ env.WORK_DIR }}/app/repro-app.tar.gz
+          output-dir: ${{ env.WORK_DIR }}/output
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
 
       - name: Upload the screenshots
         id: screenshots
-        if: always() && steps.archive.outputs.screenshots-dir != ''
+        if: always() && steps.run.outputs.screenshots-dir != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: argent-cloud-screenshots-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
-          path: ${{ steps.archive.outputs.screenshots-dir }}
+          path: ${{ steps.run.outputs.screenshots-dir }}
           if-no-files-found: warn
           retention-days: 30
 
       - name: Write the run metadata
         if: always()
         env:
-          SCREENSHOTS_DIR: ${{ steps.archive.outputs.screenshots-dir }}
+          COST_USD: ${{ steps.run.outputs.cost-usd }}
+          SCREENSHOTS_DIR: ${{ steps.run.outputs.screenshots-dir }}
           SCREENSHOTS_URL: ${{ steps.screenshots.outputs.artifact-url }}
         run: |
           mkdir -p "$WORK_DIR/output"
-          cost=0
-          log="$WORK_DIR/output/argent-cloud.log"
-          if [ -f "$log" ]; then
-            cost=$(sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -oE 'cost_usd=[0-9.]+' | cut -d= -f2 | awk '{ sum += $1 } END { printf "%.6f", sum }')
-          fi
-          echo "verification cost: $cost USD"
-          printf '%s\n' "$cost" > "$WORK_DIR/output/cost.txt"
+          echo "verification cost: ${COST_USD:-0} USD"
+          printf '%s\n' "${COST_USD:-0}" > "$WORK_DIR/output/cost.txt"
           if [ -n "$SCREENSHOTS_DIR" ]; then
-            (cd "$SCREENSHOTS_DIR" && find . -type f | sed 's|^\./||' | sort) > "$WORK_DIR/output/screenshots.txt"
+            (cd "$SCREENSHOTS_DIR" && find . -type f | sed 's|^\./||' | grep -iE '\.(png|jpe?g|gif|webp|svg)$' | sort) > "$WORK_DIR/output/screenshots.txt" || true
             printf '%s\n' "$SCREENSHOTS_URL" > "$WORK_DIR/output/screenshots-url.txt"
           fi
 
@@ -381,7 +343,7 @@ jobs:
           name: argent-cloud-output-pr-${{ github.event.pull_request.number }}-${{ matrix.variant }}
           path: |
             ${{ env.WORK_DIR }}/output
-            ${{ env.WORK_DIR }}/archive/*.tar.gz
+            !${{ env.WORK_DIR }}/output/screenshots
           if-no-files-found: warn
           retention-days: 30
 
@@ -392,6 +354,15 @@ jobs:
           VARIANT: ${{ matrix.variant }}
           ARTIFACT_ID: ${{ steps.upload-output.outputs.artifact-id }}
         run: echo "$VARIANT=$ARTIFACT_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Check the exit code of argent-cloud
+        env:
+          EXIT_CODE: ${{ steps.run.outputs.exit-code }}
+        run: |
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::argent-cloud exited with ${EXIT_CODE:-no exit code}"
+            exit 1
+          fi
 
   report:
     needs: [authorize, plan, build-base, build-head, verify]
@@ -439,7 +410,7 @@ jobs:
         with:
           artifact-ids: ${{ needs.verify.outputs.output-artifact-id-base }}
           merge-multiple: true
-          path: ${{ env.RUNS_DIR }}/base
+          path: ${{ env.RUNS_DIR }}/base/output
 
       - name: Download the output of the run with the change
         if: needs.verify.outputs.output-artifact-id-head != ''
@@ -447,7 +418,7 @@ jobs:
         with:
           artifact-ids: ${{ needs.verify.outputs.output-artifact-id-head }}
           merge-multiple: true
-          path: ${{ env.RUNS_DIR }}/head
+          path: ${{ env.RUNS_DIR }}/head/output
 
       - name: Read the failed jobs
         env:
@@ -509,3 +480,110 @@ jobs:
           path: ${{ env.REPORT_FILE }}
           if-no-files-found: warn
           retention-days: 30
+
+  # Runs no code from the pull request, so it can hold a token that can push. The backend posts the
+  # comment as the ArgentCloud GitHub App only for a caller whose token can push to the repository.
+  # Set the repository variable ARGENT_CLOUD_PUBLIC_COMMENTS to false to turn it off.
+  comment:
+    needs: [authorize, plan, verify]
+    if: ${{ !cancelled() && needs.verify.result != 'skipped' && vars.ARGENT_CLOUD_PUBLIC_COMMENTS != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      BASE_SHA: ${{ needs.authorize.outputs.base-sha }}
+      STAGE: verify
+      PLAN_FILE: argent-cloud-work/plan.json
+      RUNS_DIR: argent-cloud-work/runs
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.nvmrc
+            /.github/actions/install-argent-cloud
+            /.github/actions/post-argent-cloud-comment
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Download the plan
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          merge-multiple: true
+          path: ${{ env.WORK_DIR }}
+
+      - name: Download the output of the run without the change
+        if: needs.verify.outputs.output-artifact-id-base != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-base }}
+          merge-multiple: true
+          path: ${{ env.RUNS_DIR }}/base/output
+
+      - name: Download the output of the run with the change
+        if: needs.verify.outputs.output-artifact-id-head != ''
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.verify.outputs.output-artifact-id-head }}
+          merge-multiple: true
+          path: ${{ env.RUNS_DIR }}/head/output
+
+      - name: Check that the agents wrote reports and merge the screenshots
+        id: check
+        run: |
+          if [ ! -s "$RUNS_DIR/base/output/output.md" ] && [ ! -s "$RUNS_DIR/head/output/output.md" ]; then
+            echo "::warning::the agents wrote no reports, so nothing is posted on the pull request"
+            echo "post=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "post=true" >> "$GITHUB_OUTPUT"
+          merged="$WORK_DIR/screenshots"
+          for pair in 1-base:base 2-head:head; do
+            archive="$RUNS_DIR/${pair#*:}/output/screenshots.tar.gz"
+            if [ -s "$archive" ]; then
+              mkdir -p "$merged/${pair%%:*}"
+              tar -xzf "$archive" -C "$merged/${pair%%:*}"
+            fi
+          done
+          if [ -d "$merged" ]; then
+            tar -czf "$WORK_DIR/screenshots.tar.gz" -C "$merged" .
+            echo "screenshots-archive=$WORK_DIR/screenshots.tar.gz" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the comment
+        if: steps.check.outputs.post == 'true'
+        env:
+          COMMENT_FILE: ${{ env.WORK_DIR }}/comment.md
+        run: node --experimental-strip-types .github/workflows/helper/argent-cloud-pr-verify-report.ts comment
+
+      - name: Install the argent-cloud CLI
+        if: steps.check.outputs.post == 'true'
+        uses: $/.github/actions/install-argent-cloud
+
+      - name: Post the comment on the pull request
+        id: post
+        if: steps.check.outputs.post == 'true'
+        uses: $/.github/actions/post-argent-cloud-comment
+        with:
+          target: ${{ github.repository }}#${{ github.event.pull_request.number }}
+          comment-file: ${{ env.WORK_DIR }}/comment.md
+          screenshots: ${{ steps.check.outputs.screenshots-archive }}
+          github-token: ${{ github.token }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
+
+      - name: Link the comment
+        if: steps.post.outputs.url != ''
+        env:
+          URL: ${{ steps.post.outputs.url }}
+        run: echo "[The comment on the pull request]($URL)" >> "$GITHUB_STEP_SUMMARY"
