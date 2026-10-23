@@ -13,7 +13,7 @@ import type {
 import { updateProps } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
-import { isAnimated, isStyleValueEqual } from './utils';
+import { countKeys, isAnimated, isStyleValueEqual } from './utils';
 
 export function createAnimatedStyleHandle<THandle extends object>(
   handle: THandle,
@@ -214,7 +214,9 @@ export function styleUpdater(
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
   let hasNonAnimatedChanges = false;
+  let newKeyCount = 0;
   for (const key in newValues) {
+    newKeyCount++;
     const value = newValues[key];
     if (isAnimated(value)) {
       frameTimestamp =
@@ -305,7 +307,7 @@ export function styleUpdater(
     if (
       hasNonAnimatedChanges ||
       forceUpdate ||
-      Object.keys(oldValues).length !== Object.keys(newValues).length
+      countKeys(oldValues) !== newKeyCount
     ) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
     }

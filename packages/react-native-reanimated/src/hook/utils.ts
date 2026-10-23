@@ -14,6 +14,19 @@ export function isAnimated(prop: unknown) {
   return false;
 }
 
+/**
+ * Counts the enumerable keys of an object without allocating like
+ * `Object.keys`.
+ */
+export function countKeys(object: object): number {
+  'worklet';
+  let count = 0;
+  for (const _key in object) {
+    count++;
+  }
+  return count;
+}
+
 const MAX_STYLE_VALUE_DEPTH = 4;
 
 /**
@@ -21,6 +34,8 @@ const MAX_STYLE_VALUE_DEPTH = 4;
  * `shadowOffset` or `boxShadow`) are compared by their contents, because
  * updaters usually return new instances on every run even when nothing changed.
  * Values nested deeper than `MAX_STYLE_VALUE_DEPTH` are treated as different.
+ *
+ * This runs on every style update, so it doesn't allocate (no `Object.keys`).
  */
 export function isStyleValueEqual(a: unknown, b: unknown, depth = 0): boolean {
   'worklet';
@@ -32,27 +47,37 @@ export function isStyleValueEqual(a: unknown, b: unknown, depth = 0): boolean {
     typeof b !== 'object' ||
     a === null ||
     b === null ||
-    Array.isArray(a) !== Array.isArray(b) ||
     depth >= MAX_STYLE_VALUE_DEPTH
   ) {
     return false;
   }
-  const aRecord = a as Record<string, unknown>;
-  const bRecord = b as Record<string, unknown>;
-  const aKeys = Object.keys(aRecord);
-  if (aKeys.length !== Object.keys(bRecord).length) {
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (!isStyleValueEqual(a[i], b[i], depth + 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(b)) {
     return false;
   }
-  for (let i = 0; i < aKeys.length; i++) {
-    const key = aKeys[i];
+  const aRecord = a as Record<string, unknown>;
+  const bRecord = b as Record<string, unknown>;
+  let keyCount = 0;
+  for (const key in aRecord) {
     if (
       !(key in bRecord) ||
       !isStyleValueEqual(aRecord[key], bRecord[key], depth + 1)
     ) {
       return false;
     }
+    keyCount++;
   }
-  return true;
+  return keyCount === countKeys(bRecord);
 }
 
 // This function works because `Object.keys`
