@@ -918,15 +918,14 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(propsMapBySurface);
   if (flushRegistry) {
     // A full flush carries every registry value of every surface, including
     // the ones written synchronously, so the shadow trees are in sync with
-    // the views again. Should a surface skip its commit because React is
-    // committing concurrently, that React commit carries the registry values
-    // instead (see `ReanimatedCommitHook`).
+    // the views again. Cleared before the commit: `commitUpdates` sets it
+    // again if it has to skip the commit of a surface.
     hasUncommittedSynchronousProps_ = false;
   }
+  commitUpdates(propsMapBySurface);
 }
 
 void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouchIfNeeded(const std::string &eventName) {
@@ -1210,6 +1209,12 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+              // React started committing between the check in
+              // `performOperations` and this commit. Flush the registry again
+              // once React's commit is mounted (see `ReanimatedMountHook`) and
+              // keep the touch-start sync armed until then.
+              updatesRegistryManager_->pleaseCommitAfterPause();
+              hasUncommittedSynchronousProps_ = true;
               return nullptr;
             }
 
