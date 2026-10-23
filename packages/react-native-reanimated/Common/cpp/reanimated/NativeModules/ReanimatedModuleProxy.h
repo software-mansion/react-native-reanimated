@@ -208,10 +208,11 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
-  // Commits the registry values when the synchronous props path left the
-  // shadow tree out of date, so that the layout queries JS runs for a touch
-  // (e.g. `measure()` in `Pressable`) see the same positions as the views.
-  void synchronizeShadowTreeBeforeTouch();
+  // For touch-start events: commits the registry values when the synchronous
+  // props path left the shadow tree out of date, so that the layout queries
+  // JS runs for the touch (e.g. `measure()` in `Pressable`) see the same
+  // positions as the views. No-op for other events.
+  void synchronizeShadowTreeBeforeTouchIfNeeded(const std::string &eventName);
   void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
   void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
 #ifdef ANDROID

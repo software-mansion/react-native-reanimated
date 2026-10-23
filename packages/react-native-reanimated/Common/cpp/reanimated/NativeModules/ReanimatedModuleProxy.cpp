@@ -697,6 +697,11 @@ bool ReanimatedModuleProxy::handleEvent(
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
+  // On Android this is the entry point for every event (`NodesManager` is an
+  // `EventDispatcherListener`, invoked on the UI thread before the event is
+  // sent to JS); on iOS `handleRawEvent` already did this.
+  synchronizeShadowTreeBeforeTouchIfNeeded(eventName);
+
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
@@ -735,14 +740,9 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
-  if constexpr (
-      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Event listeners run on the UI thread before the event is queued for JS,
-    // so a commit here lands before JS measures anything for this touch.
-    if (eventType == "onTouchStart" || eventType == "onPointerDown") {
-      synchronizeShadowTreeBeforeTouch();
-    }
-  }
+  // Event listeners run on the UI thread before the event is queued for JS,
+  // so a commit here lands before JS measures anything for this touch.
+  synchronizeShadowTreeBeforeTouchIfNeeded(eventType);
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
@@ -929,11 +929,19 @@ void ReanimatedModuleProxy::performOperations() {
   }
 }
 
-void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch() {
-  if (!hasUncommittedSynchronousProps_) {
+void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouchIfNeeded(const std::string &eventName) {
+  if constexpr (
+      !shouldUseSynchronousUpdatesInPerformOperations() || StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     return;
   }
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch");
+  // Event names arrive as `topTouchStart` from the platforms and as
+  // `onTouchStart` once normalized.
+  const bool isTouchStart = eventName == "topTouchStart" || eventName == "onTouchStart" ||
+      eventName == "topPointerDown" || eventName == "onPointerDown";
+  if (!isTouchStart || !hasUncommittedSynchronousProps_) {
+    return;
+  }
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouchIfNeeded");
   // Pressable (and the other touchables from react-native) validate a press
   // against the rectangle they `measure()` when the responder is granted,
   // and `measure()` reads the shadow tree. The synchronous path leaves the
