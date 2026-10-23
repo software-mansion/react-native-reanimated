@@ -147,6 +147,33 @@ const transition = SharedTransition.custom((values) => {
 
 Call `.defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` to use the progress-based animation for every transition. Transitions that don't follow a screen transition progress drive the progress with the builder's animation (for example `.duration()` or `.springify()`).
 
+### Typing separate callbacks
+
+When defining callbacks separately from the builder, use the exported `CustomSharedTransitionAnimation` and `ProgressSharedTransitionAnimation` types:
+
+```tsx
+import {
+  SharedTransition,
+  withSpring,
+  type CustomSharedTransitionAnimation,
+  type ProgressSharedTransitionAnimation,
+} from 'react-native-reanimated';
+
+const customAnimation: CustomSharedTransitionAnimation = (values) => {
+  'worklet';
+  return { width: withSpring(values.targetWidth) };
+};
+
+const progressAnimation: ProgressSharedTransitionAnimation = (values, progress) => {
+  'worklet';
+  return {
+    width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
+  };
+};
+
+const transition = SharedTransition.custom(customAnimation).progressAnimation(progressAnimation);
+```
+
 ## Example
 
 import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
