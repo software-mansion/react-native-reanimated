@@ -3,13 +3,14 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, logger } from '../common';
+import { IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
@@ -23,12 +24,13 @@ import type {
   InitialComponentProps,
   LayoutAnimationOrBuilder,
   NestedArray,
+  ViewInfo,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -113,6 +115,13 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
+    const skipEntering = this.context?.current;
+    if (IS_IOS && !this._isFirstRender && !skipEntering) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
+    }
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout
@@ -179,15 +188,73 @@ export default class AnimatedComponent
     // TODO(future): revert changes when animated styles are detached
   }
 
-  _detachStyles() {
-    const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
-      for (const style of this._animatedStyles) {
-        style.viewDescriptors.remove(viewTag);
+  _detachHostBindings(previousViewInfo: ViewInfo) {
+    const viewTag = previousViewInfo.viewTag as number;
+    this._detachStyles(viewTag);
+    this._InlinePropManager.detachInlineProps();
+
+    // Nested components share a tag and the collector keeps the first one,
+    // so only release the entry when it is ours.
+    if (
+      FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS &&
+      PropsRegistryGarbageCollector.viewsMap.get(viewTag) === this
+    ) {
+      PropsRegistryGarbageCollector.unregisterView(viewTag);
+    }
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.unregisterComponent(this);
+    }
+  }
+
+  _attachHostBindings() {
+    // Configs registered so far, including this update's from the snapshot,
+    // went to the previous tag.
+    this._configureLayoutAnimation(
+      LayoutAnimationType.LAYOUT,
+      this.props.layout
+    );
+    this._configureLayoutAnimation(
+      LayoutAnimationType.EXITING,
+      this.props.exiting
+    );
+
+    this._sharedTransition = undefined;
+    this._configureSharedTransition();
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.registerView(viewTag, this);
       }
-      for (const animatedProp of this._animatedProps) {
-        animatedProp?.viewDescriptors?.remove(viewTag);
-      }
+    }
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
+    }
+
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+  }
+
+  _detachStyles(viewTag: number = this.getComponentViewTag()) {
+    if (viewTag === -1) {
+      return;
+    }
+    // A style change in the same update has already moved the attached
+    // styles to the previous lists, so detach from both.
+    for (const style of [
+      ...this._prevAnimatedStyles,
+      ...this._animatedStyles,
+    ]) {
+      style.viewDescriptors.remove(viewTag);
+    }
+    for (const animatedProp of [
+      ...this._prevAnimatedProps,
+      ...this._animatedProps,
+    ]) {
+      animatedProp?.viewDescriptors?.remove(viewTag);
     }
   }
 
@@ -276,21 +343,8 @@ export default class AnimatedComponent
   }
 
   componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
-    // The ref callback clears the cached view info when the host view is
-    // replaced; the snapshot then registered this update's configs for the old
-    // tag.
-    if (this._viewInfo === undefined) {
-      this._configureLayoutAnimation(
-        LayoutAnimationType.LAYOUT,
-        this.props.layout
-      );
-      this._configureLayoutAnimation(
-        LayoutAnimationType.EXITING,
-        this.props.exiting
-      );
-      this._sharedTransition = undefined;
-      this._configureSharedTransition();
-    }
+    this._refreshComponentRef();
+
     this._NativeEventsManager?.updateEvents(prevProps);
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -446,6 +500,13 @@ export default class AnimatedComponent
       };
     } else if (!skipEntering) {
       nativeID = `${this.reanimatedID}`;
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(filteredProps.children);
     }
 
     // TODO: Remove need for this \/\/\/\/.

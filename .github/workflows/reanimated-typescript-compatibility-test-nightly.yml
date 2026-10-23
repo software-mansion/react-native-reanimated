@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/reanimated-typescript-compatibility-test-nightly.yml
+      - .github/actions/reanimated-typescript-compatibility-check/**
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
@@ -63,9 +64,8 @@ jobs:
 
       - name: Use Node.js
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          cache: 'yarn'
+        id: setup-node
+        uses: ./.github/actions/setup-node-yarn
       - name: Clear annotations
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         run: .github/workflows/helper/clear-annotations.sh

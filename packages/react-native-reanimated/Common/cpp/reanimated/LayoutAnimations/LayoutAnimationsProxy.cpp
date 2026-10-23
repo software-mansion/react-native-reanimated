@@ -325,26 +325,33 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   }
 }
 
-// React re-creating a tag whose removal is withheld contradicts that removal, so the withheld node is torn
-// down before updateLightTree registers the tag again. The tag keeps its mounted view: React's Create
-// becomes an Update of it, because Android mounts the Deletes of a transaction after its Creates.
+// React re-creating a tag that the light tree still holds keeps its mounted view: the Create becomes an Update of it
+// and the Delete is dropped, because Android mounts the Deletes of a transaction after its Creates. A live node
+// is deleted in the same transaction, for example when React Native's LayoutAnimation flushes a Remove and Delete
+// that it deferred.
 void LayoutAnimationsProxy::reconcileContradictedRemovals(
-    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &mutations,
     TransactionMeta &transaction,
     [[maybe_unused]] const PropsParserContext &propsParserContext) const {
   auto &filteredMutations = transaction.filteredMutations;
   auto &recreatedTags = transaction.recreatedTags;
-  std::vector<std::shared_ptr<LightNode>> recreatedNodes;
+  std::unordered_set<Tag> deletedTags;
   for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Type::Delete) {
+      deletedTags.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  std::vector<std::shared_ptr<LightNode>> withheldNodes;
+  for (auto &mutation : mutations) {
     if (mutation.type != ShadowViewMutation::Type::Create) {
       continue;
     }
-    const auto it = lightNodes_.find(mutation.newChildShadowView.tag);
-    if (it == lightNodes_.end() || it->second->state == LIVE) {
+    const auto tag = mutation.newChildShadowView.tag;
+    const auto it = lightNodes_.find(tag);
+    if (it == lightNodes_.end() || (it->second->state == LIVE && !deletedTags.contains(tag))) {
       continue;
     }
     const auto &node = it->second;
-    const auto tag = node->current.tag;
     const auto parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
     recreatedTags.insert(tag);
@@ -353,13 +360,20 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
 #ifdef ANDROID
     recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
 #endif
-    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(mounted, recreated, parent->current.tag));
-    recreatedNodes.push_back(node);
+    auto update = ShadowViewMutation::UpdateMutation(mounted, recreated, parent->current.tag);
+    if (node->state == LIVE) {
+      mutation = std::move(update);
+    } else {
+      filteredMutations.push_back(std::move(update));
+      withheldNodes.push_back(node);
+    }
   }
-  tearDown(collectRemovals(recreatedNodes), filteredMutations);
-  std::erase_if(filteredMutations, [&recreatedTags](const ShadowViewMutation &mutation) {
+  tearDown(collectRemovals(withheldNodes), filteredMutations);
+  const auto deletesRecreatedTag = [&recreatedTags](const ShadowViewMutation &mutation) {
     return mutation.type == ShadowViewMutation::Delete && recreatedTags.contains(mutation.oldChildShadowView.tag);
-  });
+  };
+  std::erase_if(mutations, deletesRecreatedTag);
+  std::erase_if(filteredMutations, deletesRecreatedTag);
 }
 
 #ifdef ANDROID
@@ -436,8 +450,11 @@ void LayoutAnimationsProxy::updateLightTree(
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        react_native_assert(node && "LightNode not found");
+        const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+        if (nodeIt == lightNodes_.end()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
@@ -559,7 +576,11 @@ void LayoutAnimationsProxy::updateLightTree(
         break;
       }
       case ShadowViewMutation::Remove: {
-        const auto &node = lightNodes_[mutation.oldChildShadowView.tag];
+        const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
+        if (nodeIt == lightNodes_.end()) {
+          break;
+        }
+        const auto &node = nodeIt->second;
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
@@ -1009,7 +1030,9 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-    react_native_assert(subNode->isExiting() && "Subtree removal of a view that React does not delete");
+    if (!subNode->isExiting()) {
+      subNode->setExitingState(DECISION_PENDING);
+    }
     if (subNode->state != DECISION_PENDING) {
       if (shouldAnimate && subNode->state != COMPLETED) {
         hasAnimatedChildren = true;
@@ -1134,6 +1157,12 @@ void LayoutAnimationsProxy::cleanupAnimations(
       }
       if (!flushStructuralMutations) {
         preservedTags.insert(tag);
+        continue;
+      }
+      // A transaction must not delete a view that it creates.
+      if (!element.run->inserted) {
+        preservedTags.insert(tag);
+        schedulePullOnNextFrame();
         continue;
       }
       finishSharedTransition(sharedTag, element, transaction);

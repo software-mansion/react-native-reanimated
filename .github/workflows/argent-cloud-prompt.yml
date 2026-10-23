@@ -1,0 +1,392 @@
+name: Argent Cloud prompt
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: The task for the agent
+        required: true
+        type: string
+      app:
+        description: fabric-example builds apps/fabric-example at `ref`. previous-run reuses the app artifact of an earlier Argent Cloud run.
+        required: true
+        type: choice
+        options:
+          - fabric-example
+          - previous-run
+        default: fabric-example
+      ref:
+        description: 'fabric-example: the branch, tag or commit to build'
+        required: false
+        type: string
+        default: main
+      configuration:
+        description: 'fabric-example: the build configuration. Debug makes the agent clone the repository and run Metro.'
+        required: false
+        type: choice
+        options:
+          - Release
+          - Debug
+        default: Release
+      run-id:
+        description: 'previous-run: the ID of the workflow run that uploaded the app'
+        required: false
+        type: string
+      app-artifact:
+        description: 'previous-run: the name of the app artifact, for example argent-cloud-app-issue-1234 or argent-cloud-app-pr-1234-head'
+        required: false
+        type: string
+      comment-on:
+        description: 'Optional: the number of an issue or pull request in this repository to post the report and the screenshots on'
+        required: false
+        type: string
+      model:
+        description: 'Optional: the model of the agent: opus, sonnet or haiku'
+        required: false
+        type: string
+      effort:
+        description: 'Optional: the effort of the agent: low, medium, high, xhigh or max'
+        required: false
+        type: string
+
+permissions: {}
+
+env:
+  HELPER_DIR: .github/workflows/helper/argent-cloud-prompt
+  APP_HELPER_DIR: .github/workflows/helper/argent-cloud-issue-repro
+  WORK_DIR: argent-cloud-work
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      commit: ${{ steps.commit.outputs.sha }}
+      target: ${{ steps.target.outputs.target }}
+    steps:
+      - name: Check that a maintainer started the run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.triggering_actor }}
+        run: |
+          role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" --jq .role_name 2>/dev/null || echo none)
+          if [ "$role" != "admin" ] && [ "$role" != "maintain" ]; then
+            echo "::error::$ACTOR ($role) is not a maintainer"
+            exit 1
+          fi
+
+      - name: Check the inputs
+        env:
+          APP: ${{ inputs.app }}
+          RUN_ID: ${{ inputs.run-id }}
+          APP_ARTIFACT: ${{ inputs.app-artifact }}
+          MODEL: ${{ inputs.model }}
+          EFFORT: ${{ inputs.effort }}
+        run: |
+          if [ "$APP" = "previous-run" ]; then
+            [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::previous-run needs a numeric run-id"; exit 1; }
+            [[ "$APP_ARTIFACT" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo "::error::previous-run needs an app-artifact name"; exit 1; }
+          fi
+          [[ -z "$MODEL" || "$MODEL" =~ ^(opus|sonnet|haiku)$ ]] || { echo "::error::model must be opus, sonnet or haiku"; exit 1; }
+          [[ -z "$EFFORT" || "$EFFORT" =~ ^(low|medium|high|xhigh|max)$ ]] || { echo "::error::effort must be low, medium, high, xhigh or max"; exit 1; }
+
+      - name: Resolve the commit
+        id: commit
+        if: inputs.app == 'fabric-example'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ inputs.ref }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$REF" --jq .sha)
+          echo "commit: $sha"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve the comment target
+        id: target
+        if: inputs.comment-on != ''
+        env:
+          COMMENT_ON: ${{ inputs.comment-on }}
+        run: |
+          if [[ ! "$COMMENT_ON" =~ ^#?([0-9]+)$ ]]; then
+            echo "::error::comment-on must be the number of an issue or pull request, got '$COMMENT_ON'"
+            exit 1
+          fi
+          echo "comment target: $GITHUB_REPOSITORY#${BASH_REMATCH[1]}"
+          echo "target=$GITHUB_REPOSITORY#${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+  # This job builds code from `ref`. It has a read-only token and no secrets. Do not add them.
+  build:
+    needs: resolve
+    if: inputs.app == 'fabric-example'
+    runs-on: macos-26
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      YARN_ENABLE_HARDENED_MODE: 0
+      CONFIGURATION: ${{ inputs.configuration }}
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ needs.resolve.outputs.commit }}
+          persist-credentials: false
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        with:
+          bundler-cache: true
+
+      - name: Install node dependencies
+        run: yarn install --immutable
+
+      - name: Install Pods
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: apps/fabric-example
+          pod-directory: ios
+
+      - name: Build FabricExample for the iOS simulator
+        working-directory: apps/fabric-example
+        run: |
+          xcodebuild build \
+            -workspace ios/FabricExample.xcworkspace \
+            -scheme "$CONFIGURATION FabricExample" \
+            -configuration "$CONFIGURATION" \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
+      - name: Package the app
+        working-directory: apps/fabric-example
+        run: |
+          products="ios/build/Build/Products/$CONFIGURATION-iphonesimulator"
+          [ -d "$products/FabricExample.app" ] || { echo "::error::no FabricExample.app in $products"; exit 1; }
+          if [ "$CONFIGURATION" = "Release" ] && [ ! -f "$products/FabricExample.app/main.jsbundle" ]; then
+            echo "::error::the Release app has no main.jsbundle"
+            exit 1
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/$WORK_DIR/app"
+          COPYFILE_DISABLE=1 tar --no-mac-metadata -czf "$GITHUB_WORKSPACE/$WORK_DIR/app/FabricExample.app.tar.gz" -C "$products" FabricExample.app
+
+      - name: Upload the app
+        id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-app-prompt-${{ github.run_id }}
+          path: ${{ env.WORK_DIR }}/app/FabricExample.app.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  run:
+    needs: [resolve, build]
+    if: ${{ !cancelled() && needs.resolve.result == 'success' && (needs.build.result == 'success' || (inputs.app == 'previous-run' && needs.build.result == 'skipped')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/actions/install-argent-cloud
+            /.github/actions/run-argent-cloud
+            /.github/workflows/helper
+          sparse-checkout-cone-mode: false
+
+      - name: Download the app built in this run
+        if: inputs.app == 'fabric-example'
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: ${{ env.WORK_DIR }}/app
+
+      - name: Download the app of the earlier run
+        if: inputs.app == 'previous-run'
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          name: ${{ inputs.app-artifact }}
+          run-id: ${{ inputs.run-id }}
+          github-token: ${{ github.token }}
+          path: ${{ env.WORK_DIR }}/app
+
+      - name: Find the app bundle
+        id: app
+        run: |
+          bundle=$(find "$WORK_DIR/app" -type f -name '*.tar.gz' | head -n 1)
+          [ -n "$bundle" ] || { echo "::error::the app artifact has no .tar.gz"; exit 1; }
+          echo "app bundle: $bundle"
+          entries=$(tar -tzf "$bundle")
+          printf '%s\n' "$entries" | awk 'NR <= 20'
+          has_source=false
+          if printf '%s\n' "$entries" | grep -qE '^(\./)?repro-source\.tar\.gz$'; then
+            has_source=true
+          fi
+          {
+            echo "bundle=$bundle"
+            echo "has-source=$has_source"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install the argent-cloud CLI
+        uses: ./.github/actions/install-argent-cloud
+
+      - name: Write the prompt
+        env:
+          TASK: ${{ inputs.prompt }}
+          APP: ${{ inputs.app }}
+          CONFIGURATION: ${{ inputs.configuration }}
+          COMMIT: ${{ needs.resolve.outputs.commit }}
+          HAS_SOURCE: ${{ steps.app.outputs.has-source }}
+        run: |
+          mkdir -p "$WORK_DIR/output"
+          {
+            cat "$HELPER_DIR/preamble.md"
+            echo
+            if [ "$APP" = "fabric-example" ]; then
+              echo "## The app"
+              echo
+              echo "\`FabricExample\` from \`apps/fabric-example\` of https://github.com/software-mansion/react-native-reanimated at commit \`$COMMIT\`, built in the $CONFIGURATION configuration. It is the example app of react-native-reanimated and react-native-worklets: its home screen lists the examples."
+              echo
+              if [ "$CONFIGURATION" = "Debug" ]; then
+                sed "s/{{COMMIT}}/$COMMIT/g" "$HELPER_DIR/debug-fabric-example.md"
+                echo
+              fi
+            elif [ "$HAS_SOURCE" = "true" ]; then
+              cat "$APP_HELPER_DIR/tester-debug.md"
+              echo
+            fi
+            echo "## Task from the maintainer"
+            echo
+            printf '%s\n' "$TASK"
+          } > "$WORK_DIR/output/prompt.md"
+          cat "$WORK_DIR/output/prompt.md"
+
+      - name: Run argent-cloud
+        id: run
+        uses: ./.github/actions/run-argent-cloud
+        with:
+          prompt-file: ${{ env.WORK_DIR }}/output/prompt.md
+          app-bundle: ${{ steps.app.outputs.bundle }}
+          output-dir: ${{ env.WORK_DIR }}/output
+          model: ${{ inputs.model }}
+          effort: ${{ inputs.effort }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
+
+      - name: Write the job summary
+        if: always()
+        env:
+          COST_USD: ${{ steps.run.outputs.cost-usd }}
+          SESSION_ID: ${{ steps.run.outputs.session-id }}
+        run: |
+          output="$WORK_DIR/output/output.md"
+          {
+            echo "### Argent Cloud prompt"
+            echo
+            echo "Session: \`${SESSION_ID:-none}\`, cost: ${COST_USD:-0} USD. The screenshots and the stream are in the \`argent-cloud-prompt-${GITHUB_RUN_ID}\` artifact."
+            echo
+            if [ -s "$output" ]; then
+              echo '```markdown'
+              head -c 60000 "$output"
+              echo
+              echo '```'
+            else
+              echo "The agent produced no output. See the step log."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the output
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: argent-cloud-prompt-${{ github.run_id }}
+          path: |
+            ${{ env.WORK_DIR }}/output
+            !${{ env.WORK_DIR }}/output/screenshots
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Check the exit code of argent-cloud
+        env:
+          EXIT_CODE: ${{ steps.run.outputs.exit-code }}
+        run: |
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::argent-cloud exited with ${EXIT_CODE:-no exit code}"
+            exit 1
+          fi
+
+  # This job runs no code from `ref` or from the app artifact, so it can hold a token that can push.
+  # The backend posts the comment as its own GitHub App only for a caller whose token can push to the
+  # repository of the target.
+  comment:
+    needs: [resolve, run]
+    if: ${{ !cancelled() && needs.resolve.outputs.target != '' && needs.run.outputs.artifact-id != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/actions/install-argent-cloud
+            /.github/actions/post-argent-cloud-comment
+          sparse-checkout-cone-mode: false
+
+      - name: Download the output
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        with:
+          artifact-ids: ${{ needs.run.outputs.artifact-id }}
+          path: ${{ env.WORK_DIR }}/output
+
+      - name: Write the comment
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          output="$WORK_DIR/output/output.md"
+          {
+            echo "## Argent Cloud"
+            echo
+            echo "An AI agent ran a task from a maintainer on an iOS simulator. Its report follows, then its screenshots in the order it took them."
+            echo
+            if [ -s "$output" ]; then
+              head -c 50000 "$output"
+              echo
+            else
+              echo "The agent produced no output."
+            fi
+            echo
+            echo "<sub>Posted by the [Argent Cloud workflow]($RUN_URL). The result can be wrong.</sub>"
+          } > "$WORK_DIR/comment.md"
+
+      - name: Install the argent-cloud CLI
+        uses: ./.github/actions/install-argent-cloud
+
+      - name: Post the comment
+        id: post
+        uses: ./.github/actions/post-argent-cloud-comment
+        with:
+          target: ${{ needs.resolve.outputs.target }}
+          comment-file: ${{ env.WORK_DIR }}/comment.md
+          screenshots: ${{ hashFiles('argent-cloud-work/output/screenshots.tar.gz') != '' && 'argent-cloud-work/output/screenshots.tar.gz' || '' }}
+          github-token: ${{ github.token }}
+          sim-router-api-key: ${{ secrets.SIM_ROUTER_API_KEY }}
+          backend-ip: ${{ secrets.ARGENT_BACKEND_IP }}
+
+      - name: Link the comment
+        if: steps.post.outputs.url != ''
+        env:
+          URL: ${{ steps.post.outputs.url }}
+        run: echo "[The report]($URL)" >> "$GITHUB_STEP_SUMMARY"

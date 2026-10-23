@@ -87,7 +87,10 @@ async function validUrls(data) {
     }
     try {
       const response = await fetch(currentData.url, {
-        headers: [],
+        headers: {
+          'User-Agent':
+            'react-native-reanimated-url-validator (https://github.com/software-mansion/react-native-reanimated)',
+        },
       });
       const status = response.status;
       if (![200, 301, 302, 307, 503].includes(status)) {

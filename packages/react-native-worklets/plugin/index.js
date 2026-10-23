@@ -1269,12 +1269,13 @@ var require_imports = __commonJS({
       (0, core_1.traverse)(node, {
         noScope: true,
         CallExpression(nodePath) {
-          var _a;
-          if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
-            const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.importForwarding.relativePaths)) {
-              requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
-            }
+          const specifier = nodePath.get("arguments")[0];
+          if (!(specifier === null || specifier === void 0 ? void 0 : specifier.isStringLiteral()) || !specifier.node.value.startsWith(".")) {
+            return;
+          }
+          const callee = nodePath.get("callee");
+          if (callee.isImport() || callee.isIdentifier({ name: "require" })) {
+            specifier.replaceWith(createImportPathLiteral(specifier.node.value, state));
           }
         }
       });
@@ -1750,7 +1751,7 @@ var require_workletStringCode = __commonJS({
       }
     }
     function getClosurePlugin(closureVariables) {
-      const closureDeclaration = (0, types_12.variableDeclaration)("const", [
+      const closureDeclaration = (0, types_12.variableDeclaration)("let", [
         (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {
