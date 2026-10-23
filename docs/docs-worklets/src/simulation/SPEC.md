@@ -5,6 +5,16 @@ per visible line) on a small machine of threads. This document is the source of
 truth for how one tick advances the machine. `machine.ts` follows it phase by
 phase; the tests in `__tests__/` reference the numbered rules.
 
+Snippet modules are excluded from the Worklets Babel plugin. Their generators
+and runtime proxies are executed by this machine, not by the native Worklets
+runtime. Tests compile the reference snippets using the docs Babel configuration
+in both development and production to keep this boundary intact.
+
+Writes to observable state must happen before yielding, for example
+`yield (globalThis.value = 42)`, so the snapshot reflects the highlighted line.
+For a conditional one-line statement, a following bare `yield` maps back to that
+statement; it must not pretend that a skipped branch ran.
+
 ## Entities
 
 ### Thread
@@ -54,6 +64,14 @@ another thread's default runtime.
 State (in addition to the resource state): globals, hosted Shareables, the
 sibling event loop.
 
+`getRuntimeKind` and the `is*Runtime` predicates inspect the runtime currently
+held by the executing frame, not the thread's default runtime. For example,
+`runOnUISync` called on the JS thread reports the UI kind while
+`getCurrentThreadId` still reports the JS thread. The `*WithId` scheduling
+helpers resolve an existing Worklet Runtime by id and use the same execution
+path as the runtime-handle variants. Unknown ids and the RN Runtime id are
+rejected.
+
 #### Event loop
 
 Created together with a runtime. It owns that runtime's **queue** (a single
@@ -84,6 +102,22 @@ a **guest** handle. `getSync` requests the host runtime; `getAsync` schedules an
 internal job on the host runtime and returns a promise.
 
 State: value, host, guests, last accessing thread.
+
+### Serializable
+
+An immutable serialized value outside every runtime. `createSerializable`
+copies the input into a native memory cell and returns an opaque reference.
+Repeated serialization of the same object or reference reuses that cell.
+`isSerializableRef` recognizes the reference; it exposes no JavaScript value.
+When a reference is passed across runtimes, including inside an argument object,
+the destination receives a fresh copy of the stored value. Mutating that copy
+cannot change the stored value or earlier snapshots. Unlike a Synchronizable,
+a Serializable has no lock or setter.
+
+The simulator uses structured cloning for supported data values. It does not
+model native serialization of functions or custom serializers, or development
+warnings when a serialized source object is mutated. The example only mutates
+the deserialized copy, which is valid in development and production.
 
 ### Job
 
@@ -116,6 +150,14 @@ it acquired. A frame whose function is **hidden** (`'hidden'` directive)
 executes for free inside the step of its caller. A frame whose function is
 **native** (`'native'` directive) runs on a thread without needing a runtime
 and is shown as native code.
+
+The simulated React state setter is bound to the RN Runtime. Calling it while
+executing in another runtime raises an error before changing state, even when
+the calling thread is the JS thread borrowing that runtime synchronously.
+Its error event uses the Worklets Remote Function error format with the
+simulated names; the thread snapshot keeps the explanatory scheduling advice.
+The viewer shows errors in the console on the failing tick, while ordinary logs
+appear one tick after execution.
 
 ### Timer
 
@@ -227,6 +269,10 @@ The snapshot is derived from the committed state:
   line it executed, and its native queue if it has one.
 - Each runtime reports its holder, its globals, the Shareables it hosts and
   the Shareable guests it holds.
+- Globals are formatted into immutable snapshot values and displayed under
+  their owning runtime. Rewinding never exposes a later assignment.
+- Completion waits until newly created runtimes and memory cells are visible,
+  including when the final source line creates a cell.
 - Each event loop reports its holder and its contents: queued jobs, pending
   timers (by due time), suspended jobs (marked `awaiting`).
 - Synchronizables and Shareables report which thread accessed them this

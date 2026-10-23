@@ -4,10 +4,9 @@ import clsx from 'clsx';
 import type { CoreSnapshot } from '@site/src/simulation';
 
 import styles from './styles.module.css';
+import AnimatedGrid from './AnimatedGrid';
 import { runtimeClass, shortName, threadName } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
-
-export const CORE_COUNT = 4;
 
 interface CpuPanelProps {
   runtimes: RuntimeDescriptor[];
@@ -20,19 +19,11 @@ export default function CpuPanel({
   cores,
   rawToDisplayLine,
 }: CpuPanelProps) {
-  const slots = Array.from({ length: CORE_COUNT }, (_, index) => {
-    const runtime = runtimes[index];
-    const core =
-      runtime === undefined
-        ? undefined
-        : cores.find((candidate) => candidate.id === runtime.id);
-    const running = core?.status === 'running';
-    return { index, runtime, core, running };
-  });
-
   return (
-    <div className={styles.coreGrid}>
-      {slots.map(({ index, runtime, core, running }) => {
+    <AnimatedGrid animateResize className={styles.coreGrid}>
+      {runtimes.map((runtime) => {
+        const core = cores.find((candidate) => candidate.id === runtime.id);
+        const running = core?.status === 'running';
         const blockedOn =
           core?.waitingFor == null
             ? undefined
@@ -40,42 +31,43 @@ export default function CpuPanel({
                 ?.label ?? core.waitingFor);
         return (
           <div
-            key={index}
+            key={runtime.id}
+            data-sim-node={`thread:${runtime.id}`}
             className={clsx(
               styles.box,
               styles.core,
-              runtime !== undefined && runtimeClass(runtime),
+              runtimeClass(runtime),
               running && styles.boxActive,
-              blockedOn !== undefined && styles.coreBlocked
-            )}
-            data-help={
-              runtime === undefined
-                ? 'An unused core.'
-                : `${threadName(runtime)}: a thread. It shows the function and line it executes this tick, or why it is blocked. It holds its runtime while executing JavaScript.`
-            }>
-            <span className={styles.boxTitle}>Core {index}</span>
-            {runtime !== undefined && (
-              <span className={styles.boxDetail}>
-                {threadName(runtime)}
-                {runtime.kind === 'worker' && (
-                  <span className={styles.coreNote}>
-                    {' '}
-                    · {shortName(runtime.id)}
-                  </span>
-                )}
+              blockedOn !== undefined && styles.coreBlocked,
+              core?.status === 'error' && styles.coreStopped
+            )}>
+            <div className={styles.coreHeader}>
+              <span className={styles.boxTitle} data-sim-port>
+                Core {runtime.coreIndex}
               </span>
-            )}
-            {runtime !== undefined && blockedOn !== undefined && (
+              <span className={styles.coreStatus}>
+                {blockedOn !== undefined
+                  ? 'Waiting'
+                  : running
+                    ? 'Running'
+                    : core?.status === 'error'
+                      ? 'Stopped'
+                      : 'Idle'}
+              </span>
+            </div>
+            <span className={styles.boxDetail}>
+              {threadName(runtime)}
+              {runtime.kind === 'worker' && ` · ${shortName(runtime.id)}`}
+            </span>
+            {blockedOn !== undefined && (
               <div className={styles.coreLine}>
-                <span className={styles.blockedTag}>blocked</span>
                 <span className={styles.coreLineText}>
-                  waiting for {blockedOn}
+                  Waiting for {blockedOn}
                 </span>
               </div>
             )}
-            {runtime !== undefined && blockedOn === undefined && (
+            {blockedOn === undefined && (
               <div className={styles.coreLine}>
-                <span className={styles.queueLabel}>executing</span>
                 <span className={styles.coreLineText}>
                   {describeExecution(core, rawToDisplayLine)}
                 </span>
@@ -84,7 +76,7 @@ export default function CpuPanel({
           </div>
         );
       })}
-    </div>
+    </AnimatedGrid>
   );
 }
 
@@ -93,17 +85,17 @@ function describeExecution(
   rawToDisplayLine: number[]
 ): string {
   if (core === undefined || core.status === 'idle') {
-    return 'idle';
+    return 'Ready for the next job';
   }
   if (core.status === 'error') {
-    return 'stopped';
+    return core.error ?? 'Execution stopped';
   }
   const displayLine =
     core.line === null ? -1 : (rawToDisplayLine[core.line] ?? -1);
   if (displayLine < 0) {
-    return core.nativeFrame ? 'native code' : 'framework code';
+    return core.nativeFrame ? 'Native code' : 'Framework code';
   }
   return core.currentFn === null
-    ? `:${displayLine}`
-    : `${core.currentFn}:${displayLine}`;
+    ? `Line ${displayLine}`
+    : `${core.currentFn} · line ${displayLine}`;
 }

@@ -1,35 +1,27 @@
-import React, {
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useId, useState } from 'react';
 import clsx from 'clsx';
-import { flushSync } from 'react-dom';
 
 import type {
   ScreenState,
   Snapshot,
   SnippetModule,
 } from '@site/src/simulation';
-
-import { displaySource, simulate } from '@site/src/simulation';
 import CodePanel from './CodePanel';
 import type { LineHistory } from './CodePanel';
-import CpuPanel, { CORE_COUNT } from './CpuPanel';
-import { SIMULATION_CLOSE_EVENT, SIMULATION_OPEN_EVENT } from './events';
-import ForkBus from './ForkBus';
-import type { BusSlot } from './ForkBus';
+import CpuPanel from './CpuPanel';
+import Disclosure from './Disclosure';
+import Connections from './Connections';
+import { collectConsoleEntries } from './consoleEntries';
 import MemoryPanel from './MemoryPanel';
 import Panel from './Panel';
 import Phone from './Phone';
-import { badgeName, runtimeClass } from './runtimeColors';
+import { badgeName, runtimeClass, threadName } from './runtimeColors';
 import type { RuntimeDescriptor } from './runtimeColors';
 import styles from './styles.module.css';
 import TransportIcon from './TransportIcon';
 import { useSimulation } from './useSimulation';
+import { useFullscreen } from './useFullscreen';
+import AnimatedGrid from './AnimatedGrid';
 
 interface ThreadingSimulationProps {
   module: SnippetModule;
@@ -51,12 +43,12 @@ interface ThreadingSimulationProps {
   boilerplateToggle?: boolean;
   codeOpen?: boolean;
   onCodeOpenChange?: (open: boolean) => void;
+  fullscreen?: boolean;
+  onFullscreenChange?: (fullscreen: boolean) => void;
   tickMs?: number;
   onTickMsChange?: (tickMs: number) => void;
-  fitWidth?: boolean;
   cpuFooter?: React.ReactNode;
   bootTicks?: number;
-  ghostSource?: string;
 }
 
 const DEFAULT_TICK_MS = 1000;
@@ -65,183 +57,13 @@ export const TICK_MIN_MS = 16;
 export const TICK_MAX_MS = 1000;
 
 export function snapTick(value: number): number {
-  if (value < TICK_STEP_MS) {
-    return TICK_MIN_MS;
-  }
+  if (value < TICK_STEP_MS) return TICK_MIN_MS;
   return Math.min(TICK_MAX_MS, Math.round(value / TICK_STEP_MS) * TICK_STEP_MS);
 }
 
 export function formatTick(ms: number): string {
   return ms >= 1000 ? `${ms / 1000} s` : `${ms} ms`;
 }
-const REVEAL_MS = 480;
-const PAGE_GUTTER = 32;
-
-let zoomPropertyRegistered = false;
-
-function registerZoomProperty(): void {
-  if (
-    zoomPropertyRegistered ||
-    typeof CSS === 'undefined' ||
-    !CSS.registerProperty
-  ) {
-    return;
-  }
-  zoomPropertyRegistered = true;
-  try {
-    CSS.registerProperty({
-      name: '--sim-zoom',
-      syntax: '<number>',
-      inherits: false,
-      initialValue: '1',
-    });
-  } catch {
-    return;
-  }
-}
-
-function sidebarWidth(hidden: boolean): number {
-  if (window.innerWidth < 997) {
-    return 0;
-  }
-  const value = getComputedStyle(document.documentElement).getPropertyValue(
-    hidden ? '--doc-sidebar-hidden-width' : '--doc-sidebar-width'
-  );
-  const parsed = parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : hidden ? 30 : 300;
-}
-const REVEAL_EASING = 'cubic-bezier(0.2, 0, 0, 1)';
-
-type Phase = 'idle' | 'measure' | 'opening' | 'closing';
-
-interface BoxSize {
-  width: number;
-  height: number;
-}
-
-interface BoxParts {
-  outer: HTMLElement;
-  stage: HTMLElement;
-  scene: HTMLElement | null;
-  code: HTMLElement | null;
-  bar: HTMLElement | null;
-  fadeCode?: boolean;
-}
-
-function animateBox(
-  { outer, stage, scene, code, bar, fadeCode = false }: BoxParts,
-  from: BoxSize,
-  to: BoxSize,
-  onDone: () => void
-): void {
-  if (
-    Math.abs(from.height - to.height) < 1 &&
-    Math.abs(from.width - to.width) < 1
-  ) {
-    onDone();
-    return;
-  }
-  const columns =
-    scene === null ? '' : getComputedStyle(scene).gridTemplateColumns;
-  outer.style.width = `${from.width}px`;
-  outer.style.overflow = 'clip';
-  stage.style.height = `${from.height}px`;
-  stage.style.overflow = 'clip';
-  if (scene !== null) {
-    scene.style.gridTemplateColumns = columns;
-    scene.style.overflow = 'clip';
-  }
-  code?.classList.add(styles.codeNoWrap);
-  if (fadeCode) {
-    code?.classList.add(styles.codeFading);
-    scene?.classList.add(styles.sceneClosing);
-  }
-  if (bar !== null) {
-    stage.style.position = 'relative';
-    bar.style.position = 'absolute';
-    bar.style.bottom = '0';
-    bar.style.left = '0';
-    bar.style.right = '0';
-  }
-  let frame = 0;
-  const followEdge = () => {
-    if (scene !== null && code !== null) {
-      const style = getComputedStyle(scene);
-      const inner =
-        scene.getBoundingClientRect().width -
-        parseFloat(style.borderLeftWidth) -
-        parseFloat(style.borderRightWidth) -
-        parseFloat(style.paddingLeft) -
-        parseFloat(style.paddingRight);
-      code.style.justifySelf = 'start';
-      code.style.width = `${Math.max(Math.ceil(inner), 0)}px`;
-    }
-    frame = requestAnimationFrame(followEdge);
-  };
-  followEdge();
-  outer.getBoundingClientRect();
-  outer.style.transition = `width ${REVEAL_MS}ms ${REVEAL_EASING}`;
-  stage.style.transition = `height ${REVEAL_MS}ms ${REVEAL_EASING}`;
-  outer.style.width = `${to.width}px`;
-  stage.style.height = `${to.height}px`;
-  let finished = false;
-  const finish = () => {
-    if (finished) {
-      return;
-    }
-    finished = true;
-    cancelAnimationFrame(frame);
-    flushSync(onDone);
-    for (const element of [outer, stage]) {
-      element.style.width = '';
-      element.style.height = '';
-      element.style.overflow = '';
-      element.style.transition = '';
-    }
-    if (scene !== null) {
-      scene.style.gridTemplateColumns = '';
-      scene.style.overflow = '';
-      scene.classList.remove(styles.sceneClosing);
-    }
-    if (code !== null) {
-      code.style.justifySelf = '';
-      code.style.width = '';
-      code.classList.remove(styles.codeNoWrap);
-      code.classList.remove(styles.codeFading);
-    }
-    stage.style.position = '';
-    if (bar !== null) {
-      bar.style.position = '';
-      bar.style.bottom = '';
-      bar.style.left = '';
-      bar.style.right = '';
-    }
-  };
-  stage.addEventListener(
-    'transitionend',
-    (event) => {
-      if (event.target === stage) {
-        finish();
-      }
-    },
-    { once: true }
-  );
-  window.setTimeout(finish, REVEAL_MS + 100);
-}
-
-function codePanelOf(scene: HTMLElement | null): HTMLElement | null {
-  const code = scene?.getElementsByClassName(styles.areaCode)[0];
-  return code instanceof HTMLElement ? code : null;
-}
-
-function sizeOf(outer: HTMLElement, stage: HTMLElement): BoxSize {
-  return { width: outer.offsetWidth, height: stage.offsetHeight };
-}
-
-function reducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-const MIN_PULSE_MS = 64;
 
 export default function ThreadingSimulation({
   module,
@@ -263,106 +85,34 @@ export default function ThreadingSimulation({
   boilerplateToggle = true,
   codeOpen: controlledCodeOpen,
   onCodeOpenChange,
+  fullscreen: controlledFullscreen,
+  onFullscreenChange,
   tickMs: controlledTickMs,
   onTickMsChange,
-  fitWidth = true,
   cpuFooter,
   bootTicks = 0,
-  ghostSource,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
-  const [phase, setPhase] = useState<Phase>('idle');
+  const [hasOpened, setHasOpened] = useState(open);
+  const disclosureId = useId();
+  const {
+    fullscreen,
+    expanded,
+    setFullscreen,
+    buttonRef,
+    containerRef,
+    transitioning,
+  } = useFullscreen(controlledFullscreen, onFullscreenChange);
   const [localTickMs, setLocalTickMs] = useState(
     controlledTickMs ?? DEFAULT_TICK_MS
   );
+  const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
+  const [boilerplate, setBoilerplate] = useState(false);
+  const [consoleOpen, setConsoleOpen] = useState(!alwaysOn);
   const tickMs =
     onTickMsChange === undefined
       ? localTickMs
       : (controlledTickMs ?? DEFAULT_TICK_MS);
-  const setTickMs = (next: number) => {
-    setLocalTickMs(next);
-    onTickMsChange?.(next);
-  };
-  const toggleLabel = (showHide: boolean) => (
-    <>
-      <span
-        className={clsx(
-          styles.expandChevron,
-          showHide && styles.collapseChevron
-        )}
-        aria-hidden="true"
-      />
-      <span className={styles.barLabels}>
-        <span
-          className={clsx(styles.barLabel, showHide && styles.barLabelHidden)}
-          aria-hidden={showHide}>
-          See how it works
-        </span>
-        <span
-          className={clsx(styles.barLabel, !showHide && styles.barLabelHidden)}
-          aria-hidden={!showHide}>
-          Hide simulation
-        </span>
-      </span>
-    </>
-  );
-  const tickSlider = (
-    <label className={styles.speed}>
-      <span className={styles.speedLabel}>tick</span>
-      <input
-        type="range"
-        className={styles.speedSlider}
-        min={TICK_MIN_MS}
-        max={TICK_MAX_MS}
-        step={1}
-        value={tickMs}
-        onChange={(event) => setTickMs(snapTick(Number(event.target.value)))}
-        aria-label="Tick length in milliseconds"
-      />
-      <span className={styles.speedValue}>{formatTick(tickMs)}</span>
-    </label>
-  );
-  const simulationId = useId();
-  const outerRef = useRef<HTMLDivElement | null>(null);
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const barRef = useRef<HTMLButtonElement | null>(null);
-  const collapsedSizeRef = useRef<BoxSize | null>(null);
-  const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
-  const [boilerplate, setBoilerplate] = useState(false);
-  const [inspecting, setInspecting] = useState(false);
-  const [tip, setTip] = useState<{
-    text: string;
-    x: number;
-    y: number;
-  } | null>(null);
-  const sceneRef = useRef<HTMLDivElement | null>(null);
-  const inspectTargetRef = useRef<Element | null>(null);
-  const markInspectTarget = (target: Element | null) => {
-    if (inspectTargetRef.current === target) {
-      return;
-    }
-    inspectTargetRef.current?.classList.remove(styles.inspectTarget);
-    target?.classList.add(styles.inspectTarget);
-    inspectTargetRef.current = target;
-  };
-  const onInspectMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!inspecting || sceneRef.current === null) {
-      return;
-    }
-    const target = (event.target as HTMLElement).closest('[data-help]');
-    const text = target?.getAttribute('data-help');
-    markInspectTarget(text ? target : null);
-    if (!text) {
-      setTip(null);
-      return;
-    }
-    const bounds = sceneRef.current.getBoundingClientRect();
-    setTip({
-      text,
-      x: event.clientX - bounds.left,
-      y: event.clientY - bounds.top,
-    });
-  };
   const codeOpen = controlledCodeOpen ?? localCodeOpen;
   const setCodeOpen = (next: boolean) => {
     setLocalCodeOpen(next);
@@ -380,239 +130,9 @@ export default function ThreadingSimulation({
     tickMs,
     open,
     alwaysOn,
-    boilerplate
+    boilerplate,
+    transitioning
   );
-  const ghost = useMemo(() => {
-    if (ghostSource === undefined) {
-      return undefined;
-    }
-    try {
-      const display = displaySource(ghostSource, { boilerplate });
-      return {
-        code: display.text,
-        rawToDisplayLine: display.rawToDisplayLine,
-        blockEnds: display.blockEnds,
-      };
-    } catch {
-      return undefined;
-    }
-  }, [ghostSource, boilerplate]);
-  const boilerplateButton = boilerplateToggle && (
-    <button
-      type="button"
-      className={styles.boilerplateToggle}
-      onClick={() => setBoilerplate((current) => !current)}
-      aria-pressed={boilerplate}>
-      {boilerplate ? 'Hide boilerplate' : 'See boilerplate'}
-    </button>
-  );
-
-  const expand = () => {
-    if (outerRef.current !== null && stageRef.current !== null) {
-      collapsedSizeRef.current = sizeOf(outerRef.current, stageRef.current);
-    }
-    setOpen(true);
-    setPhase('measure');
-  };
-  const hide = () => {
-    simulation.pause();
-    if (reducedMotion()) {
-      setOpen(false);
-      window.dispatchEvent(
-        new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
-      );
-      return;
-    }
-    setPhase('closing');
-  };
-
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    const outer = outerRef.current;
-    const parent = outer?.parentElement;
-    if (fitWidth || stage === null || outer === null || !parent) {
-      return;
-    }
-    const main = outer.closest('main');
-    registerZoomProperty();
-    const fit = (animate: boolean) => {
-      const outerStyle = getComputedStyle(outer);
-      const shownWidth = outerStyle.width;
-      const shownMargin = outerStyle.marginLeft;
-      const shownZoom = getComputedStyle(stage).getPropertyValue('--sim-zoom');
-      outer.style.transition = 'none';
-      stage.style.transition = 'none';
-      stage.style.setProperty('--sim-zoom', '1');
-      outer.style.width = 'max-content';
-      outer.style.maxWidth = 'none';
-      const natural = outer.offsetWidth;
-      outer.style.width = shownWidth;
-      outer.style.marginLeft = shownMargin;
-      stage.style.setProperty('--sim-zoom', shownZoom || '1');
-      outer.getBoundingClientRect();
-      if (animate) {
-        outer.style.transition = '';
-        stage.style.transition = '';
-      }
-      const column = parent.clientWidth;
-      const enhanced = main !== null && main.className.includes('Enhanced');
-      const sidebar = sidebarWidth(enhanced);
-      const mainLeft = sidebar;
-      const mainWidth = document.documentElement.clientWidth - sidebar;
-      const roomy = enhanced ? mainWidth - 2 * PAGE_GUTTER : 0;
-      const available = Math.max(column, roomy);
-      const width = Math.min(natural, available);
-      outer.style.width = `${width}px`;
-      stage.style.setProperty(
-        '--sim-zoom',
-        natural > available ? String(available / natural) : '1'
-      );
-      if (main !== null && width > column) {
-        const parentLeft = parent.getBoundingClientRect().left;
-        outer.style.marginLeft = `${mainLeft + (mainWidth - width) / 2 - parentLeft}px`;
-      } else {
-        outer.style.marginLeft = '0px';
-      }
-      if (!animate) {
-        outer.getBoundingClientRect();
-        outer.style.transition = '';
-        stage.style.transition = '';
-      }
-    };
-    fit(false);
-    let alive = true;
-    document.fonts?.ready.then(() => {
-      if (alive) {
-        fit(false);
-      }
-    });
-    let timer = 0;
-    const settle = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => fit(false), 150);
-    };
-    const resizes = new ResizeObserver(settle);
-    resizes.observe(parent);
-    const classes =
-      main === null
-        ? null
-        : new MutationObserver(() => {
-            fit(true);
-          });
-    if (main !== null && classes !== null) {
-      classes.observe(main, { attributes: true, attributeFilter: ['class'] });
-    }
-    return () => {
-      alive = false;
-      window.clearTimeout(timer);
-      resizes.disconnect();
-      classes?.disconnect();
-    };
-  }, [fitWidth, open]);
-
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    const outer = outerRef.current;
-    if (stage === null || outer === null) {
-      return;
-    }
-    if (phase === 'measure') {
-      const available = outer.parentElement?.clientWidth ?? Infinity;
-      outer.style.maxWidth = 'none';
-      outer.style.width = 'max-content';
-      const natural = outer.offsetWidth;
-      outer.style.maxWidth = '';
-      outer.style.width = '';
-      if (natural > available + 1) {
-        window.dispatchEvent(
-          new CustomEvent(SIMULATION_OPEN_EVENT, { detail: simulationId })
-        );
-      }
-      if (reducedMotion() || collapsedSizeRef.current === null) {
-        setPhase('idle');
-        return;
-      }
-      setPhase('opening');
-      animateBox(
-        {
-          outer,
-          stage,
-          scene: sceneRef.current,
-          code: codePanelOf(sceneRef.current),
-          bar: barRef.current,
-        },
-        collapsedSizeRef.current,
-        sizeOf(outer, stage),
-        () => setPhase('idle')
-      );
-    }
-    if (phase === 'closing') {
-      const scene = sceneRef.current;
-      const code = codePanelOf(scene);
-      const bar = barRef.current;
-      if (scene === null || code === null) {
-        setOpen(false);
-        setPhase('idle');
-        return;
-      }
-      const sceneStyle = getComputedStyle(scene);
-      const stageGap = parseFloat(getComputedStyle(stage).rowGap) || 0;
-      const from = sizeOf(outer, stage);
-      const to = {
-        width: collapsedSizeRef.current?.width ?? from.width,
-        height:
-          code.getBoundingClientRect().bottom -
-          scene.getBoundingClientRect().top +
-          parseFloat(sceneStyle.paddingBottom) +
-          (bar === null ? 0 : stageGap + bar.offsetHeight),
-      };
-      animateBox(
-        { outer, stage, scene, code, bar, fadeCode: true },
-        from,
-        to,
-        () => {
-          setOpen(false);
-          setPhase('idle');
-          window.dispatchEvent(
-            new CustomEvent(SIMULATION_CLOSE_EVENT, { detail: simulationId })
-          );
-        }
-      );
-    }
-  }, [phase, simulationId]);
-  const logs = collectLogs(simulation.snapshots, simulation.tick - 1);
-  const screenKey = JSON.stringify(screen ?? null);
-  const expectedLogs = useMemo(() => {
-    try {
-      const snapshots = simulate(module, source, {
-        bundleMode,
-        uiRuntime,
-        screen: (JSON.parse(screenKey) as ScreenState | null) ?? undefined,
-        skipTicks,
-        bootTicks,
-        durationTicks,
-      });
-      return collectLogs(snapshots, snapshots.length);
-    } catch {
-      return [];
-    }
-  }, [
-    module,
-    source,
-    bundleMode,
-    uiRuntime,
-    screenKey,
-    skipTicks,
-    bootTicks,
-    durationTicks,
-  ]);
-  const shownAtRef = useRef(new Map<number, number>());
-  useEffect(() => {
-    if (simulation.tick === 0) {
-      shownAtRef.current.clear();
-    }
-    shownAtRef.current.set(simulation.tick, Date.now());
-  }, [simulation.tick]);
 
   if (simulation.error !== null) {
     return (
@@ -627,334 +147,415 @@ export default function ThreadingSimulation({
 
   const snapshot = simulation.snapshots[simulation.tick];
   const runtimes = collectRuntimes([snapshot]);
-  const everRuntimes = collectRuntimes(simulation.snapshots);
-  const usedRuntimes = collectUsedRuntimes(simulation.snapshots, source);
+  // Only use history up to the displayed tick: stepping back must not reveal future runtimes.
+  const past = simulation.snapshots.slice(0, simulation.tick + 1);
+  const everRuntimes = collectRuntimes(past);
+  const usedRuntimes = collectUsedRuntimes(past, source);
   const activeSince = collectActiveSince(simulation.snapshots, simulation.tick);
   const steady = new Set(
     [...activeSince]
       .filter(([, since]) => since < simulation.tick)
       .map(([id]) => id)
   );
-  const slots: BusSlot[] = Array.from({ length: CORE_COUNT }, (_, index) => {
-    const runtime = runtimes[index];
-    const since =
-      runtime === undefined ? undefined : activeSince.get(runtime.id);
-    return {
-      index,
-      runtime,
-      activeSince: since,
-      lineImpulse: since === undefined ? undefined : simulation.tick,
-    };
-  });
   const history = collectHistory(
     simulation.snapshots,
     simulation.tick,
-    simulation.settled,
     simulation.rawToDisplayLine
   );
-
-  const redrawn =
-    simulation.settled &&
-    snapshot.events.some((event) => event.type === 'screen');
+  const logs = collectLogs(simulation.snapshots, simulation.tick);
   const shownScreen = simulation.settled
     ? snapshot.screen
     : (simulation.snapshots[Math.max(simulation.tick - 1, 0)]?.screen ??
       snapshot.screen);
+  const transfers = snapshot.events.filter(
+    (event) => event.type === 'scheduled'
+  );
+  const failedCore = snapshot.cores.find((core) => core.status === 'error');
+  const nameOf = (id: string) => {
+    const runtime = runtimes.find((candidate) => candidate.id === id);
+    return runtime === undefined ? id : threadName(runtime);
+  };
+  const code = (
+    <CodePanel
+      code={simulation.displayText}
+      runtimes={runtimes}
+      cores={snapshot.cores}
+      rawToDisplayLine={simulation.rawToDisplayLine}
+      blockEnds={simulation.blockEnds}
+      history={history}
+      tickMs={tickMs}
+      columns={codeColumns}
+    />
+  );
+  const boilerplateButton = boilerplateToggle && (
+    <button
+      type="button"
+      className={styles.boilerplateToggle}
+      onClick={() => setBoilerplate((current) => !current)}
+      aria-pressed={boilerplate}>
+      {boilerplate ? 'Hide imports' : 'Show imports'}
+    </button>
+  );
+
+  const codePanel = (
+    <Panel
+      title="Code"
+      className={styles.areaCode}
+      codePanel
+      help="Colours connect each executing thread to its current code line. Recently executed lines fade over the next three ticks.">
+      {code}
+      <div className={styles.codeFooter}>{boilerplateButton}</div>
+    </Panel>
+  );
+  const toolbar = (
+    <div
+      className={styles.toolbar}
+      data-sim-obstacle
+      ref={simulation.containerRef}
+      role="group"
+      aria-label="Simulation playback">
+      <AnimatedGrid animateResize resizeItems className={styles.toolbarGrid}>
+        <button
+          key="play"
+          type="button"
+          className={clsx(styles.button, styles.buttonPrimary)}
+          onClick={simulation.togglePlay}
+          aria-label={simulation.playing ? 'Pause' : 'Play'}>
+          <TransportIcon name={simulation.playing ? 'pause' : 'play'} />
+          <span className={styles.playLabel}>
+            {simulation.playing ? 'Pause' : 'Play'}
+          </span>
+        </button>
+        <button
+          key="back"
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.back}
+          disabled={simulation.tick === 0}
+          aria-label="Back one tick"
+          title="Back one tick">
+          <TransportIcon name="back" />
+        </button>
+        <button
+          key="step"
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.step}
+          disabled={simulation.tick >= simulation.lastTick}
+          aria-label="Step one tick"
+          title="Step one tick">
+          <TransportIcon name="step" />
+        </button>
+        <button
+          key="reset"
+          type="button"
+          className={clsx(styles.button, styles.buttonIcon)}
+          onClick={simulation.reset}
+          disabled={simulation.tick === 0}
+          aria-label="Reset"
+          title="Reset">
+          <TransportIcon name="reset" />
+        </button>
+        <button
+          key="loop"
+          type="button"
+          className={clsx(
+            styles.button,
+            styles.buttonIcon,
+            simulation.loop && styles.buttonActive
+          )}
+          onClick={simulation.toggleLoop}
+          aria-pressed={simulation.loop}
+          aria-label="Loop"
+          title="Loop">
+          <TransportIcon name="loop" />
+        </button>
+        <span key="tick" className={styles.tickLabel}>
+          Tick <strong>{simulation.tick}</strong>
+          {Number.isFinite(simulation.lastTick) && ` / ${simulation.lastTick}`}
+        </span>
+        <label key="speed" className={styles.speed}>
+          <span className={styles.speedLabel}>Step duration</span>
+          <input
+            type="range"
+            className={styles.speedSlider}
+            min={TICK_MIN_MS}
+            max={TICK_MAX_MS}
+            step={1}
+            value={tickMs}
+            onChange={(event) => {
+              const next = snapTick(Number(event.target.value));
+              setLocalTickMs(next);
+              onTickMsChange?.(next);
+            }}
+            onKeyDown={(event) => {
+              const direction =
+                event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                  ? 1
+                  : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                    ? -1
+                    : 0;
+              if (direction === 0) return;
+              event.preventDefault();
+              const next = snapTick(tickMs + direction * TICK_STEP_MS);
+              setLocalTickMs(next);
+              onTickMsChange?.(next);
+            }}
+            aria-label="Tick length in milliseconds"
+          />
+          <span className={styles.speedValue}>{formatTick(tickMs)}</span>
+        </label>
+      </AnimatedGrid>
+    </div>
+  );
+  const activity = (
+    <div
+      className={styles.activity}
+      data-sim-obstacle
+      aria-label="Current scheduling activity">
+      {failedCore !== undefined ? (
+        <span role="alert" className={styles.error}>
+          <strong>{nameOf(failedCore.id)} stopped.</strong> {failedCore.error}
+        </span>
+      ) : transfers.length > 0 ? (
+        transfers.map((event, index) => (
+          <span key={index}>
+            <strong>{nameOf(event.core)}</strong> queued{' '}
+            <code>{event.job}</code> on <strong>{nameOf(event.target)}</strong>
+          </span>
+        ))
+      ) : (
+        <span>
+          {codeOpen
+            ? 'Follow the highlighted line and its matching thread colour.'
+            : 'Compare the threads and press the app button to try it.'}
+        </span>
+      )}
+      <div className={styles.viewControls}>
+        {collapsibleCode && (
+          <button
+            type="button"
+            className={styles.codeToggle}
+            onClick={() => setCodeOpen(!codeOpen)}
+            aria-expanded={codeOpen}>
+            {codeOpen ? 'Hide code' : 'Show code'}
+          </button>
+        )}
+        <button
+          ref={buttonRef}
+          type="button"
+          className={clsx(styles.codeToggle, styles.expandToggle)}
+          onClick={() => setFullscreen(!fullscreen)}
+          aria-pressed={fullscreen}
+          title={
+            fullscreen
+              ? 'Collapse simulation (Esc)'
+              : 'Expand to fit the simulation'
+          }>
+          <TransportIcon name={fullscreen ? 'collapse' : 'expand'} />
+          {fullscreen ? 'Collapse' : 'Expand'}
+        </button>
+      </div>
+    </div>
+  );
+  const legend = (
+    <div className={styles.connectionLegend} data-sim-obstacle>
+      <span>
+        <i className={styles.legendFlow} /> Thread → runtime in use
+      </span>
+      <span>
+        <i className={styles.legendQueue} /> Job queued
+      </span>
+    </div>
+  );
+  const machine = (
+    <div className={styles.machineArea}>
+      <AnimatedGrid
+        animateResize
+        className={clsx(
+          styles.executionGrid,
+          phone && styles.executionWithPhone
+        )}>
+        <Panel
+          title="CPU"
+          className={styles.areaThreads}
+          help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
+          <CpuPanel
+            runtimes={runtimes}
+            cores={snapshot.cores}
+            rawToDisplayLine={simulation.rawToDisplayLine}
+          />
+          {cpuFooter}
+        </Panel>
+        {showMemory && (
+          <Panel
+            title="Memory"
+            className={styles.areaMemory}
+            help="A runtime holds JavaScript state. Its event loop queues work and pauses while another thread borrows the runtime. Shareable Hosts store values here; Guests refer to values on another runtime. Synchronizables live in native memory, accessible from any thread.">
+            <MemoryPanel
+              runtimes={everRuntimes.filter(
+                (runtime) =>
+                  runtime.hasRuntime &&
+                  (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
+              )}
+              present={new Set(runtimes.map((runtime) => runtime.id))}
+              allRuntimes={runtimes}
+              cores={snapshot.cores}
+              memory={snapshot.memory}
+              settled={simulation.settled}
+              steady={steady}
+            />
+          </Panel>
+        )}
+        {phone && (
+          <Panel
+            title="App output"
+            className={styles.areaPhone}
+            connectionNode="output"
+            help="The UI thread updates the app screen. Press the button to queue an input event and follow its result.">
+            <Phone
+              screen={shownScreen}
+              redrawn={
+                simulation.settled &&
+                snapshot.events.some((event) => event.type === 'screen')
+              }
+              onPress={
+                pressHandler === undefined
+                  ? undefined
+                  : () => simulation.press(pressHandler)
+              }
+            />
+            {!simulation.playing && (
+              <p className={styles.outputHint}>
+                Paused. Press Play or step forward to process input.
+              </p>
+            )}
+          </Panel>
+        )}
+      </AnimatedGrid>
+    </div>
+  );
+  const connections = (
+    <Connections
+      transitioning={transitioning}
+      snapshot={snapshot}
+      runtimes={runtimes}
+      tick={simulation.tick}
+      tickMs={tickMs}
+      codeOpen={codeOpen}
+      settled={simulation.settled}
+      playing={open && simulation.playing}
+    />
+  );
+  const consolePanel = showConsole && (
+    <details
+      className={styles.consolePanel}
+      data-sim-obstacle
+      open={consoleOpen}
+      onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
+      <summary className={styles.consoleSummary}>
+        <span>
+          Console <span className={styles.logCount}>{logs.length}</span>
+        </span>
+        <span className={styles.consolePreview}>
+          {logs.at(-1)?.text ?? 'No output yet'}
+        </span>
+      </summary>
+      {consoleOpen && (
+        <div
+          className={styles.console}
+          role="region"
+          tabIndex={0}
+          aria-label="Console output">
+          {logs.length === 0 ? (
+            <span className={styles.consoleEmpty}>
+              Output appears here as the code runs.
+            </span>
+          ) : (
+            [...logs].reverse().map((log, index) => (
+              <div
+                key={index}
+                className={clsx(
+                  styles.consoleEntry,
+                  log.level === 'error' && styles.consoleError
+                )}>
+                <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
+                  {badgeName(log.runtime.id)}
+                </span>
+                <span>{log.text}</span>
+                <span className={styles.consoleTime}>tick {log.tick}</span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </details>
+  );
 
   return (
     <div
-      className={clsx(styles.container, !fitWidth && styles.containerFull)}
-      ref={outerRef}>
+      ref={containerRef}
+      className={clsx(styles.container, phone && styles.containerWithPhone)}
+      data-simulation-fullscreen={expanded && open}>
       {title !== undefined && <p className={styles.title}>{title}</p>}
-      <div className={styles.stage} ref={stageRef}>
-        {!open ? (
-          <div
-            key="scene"
-            className={clsx(styles.scene, styles.sceneCollapsed)}>
-            <Panel title="Code" className={styles.areaCode}>
-              <CodePanel
-                code={simulation.displayText}
-                runtimes={[]}
-                cores={[]}
-                rawToDisplayLine={simulation.rawToDisplayLine}
-                blockEnds={simulation.blockEnds}
-                history={new Map()}
-                settled
-                columns={codeColumns}
-                ghost={ghost}
-              />
-              <div className={styles.codeFooter}>{boilerplateButton}</div>
-            </Panel>
-          </div>
-        ) : (
-          <div key="body" className={styles.body} ref={simulation.containerRef}>
+      <div className={styles.scene}>
+        <div className={styles.sceneContent} data-sim-content>
+          {alwaysOn ? (
+            <>
+              {toolbar}
+              {activity}
+              {legend}
+              <div className={styles.workspace}>
+                {codeOpen && codePanel}
+                {machine}
+                {connections}
+              </div>
+              {consolePanel}
+            </>
+          ) : (
             <div
-              ref={sceneRef}
-              className={clsx(
-                styles.scene,
-                phone && styles.sceneWithPhone,
-                !showMemory && styles.sceneNoMemory,
-                inspecting && styles.sceneInspect
-              )}
-              style={
-                {
-                  '--propagation': `${simulation.propagationMs}ms`,
-                } as React.CSSProperties
-              }
-              onMouseMove={onInspectMove}
-              onMouseLeave={() => {
-                markInspectTarget(null);
-                setTip(null);
-              }}>
+              className={clsx(styles.workspace, styles.disclosureWorkspace)}
+              data-expanded={open}>
+              {codePanel}
               <button
                 type="button"
-                className={clsx(
-                  styles.inspectButton,
-                  inspecting && styles.inspectButtonActive
-                )}
+                className={styles.disclosureToggle}
+                data-sim-obstacle
                 onClick={() => {
-                  setInspecting((current) => !current);
-                  markInspectTarget(null);
-                  setTip(null);
+                  if (open) {
+                    simulation.pause();
+                    setFullscreen(false);
+                  }
+                  setHasOpened(true);
+                  setOpen(!open);
                 }}
-                aria-pressed={inspecting}
-                aria-label="Explain the simulation elements"
-                title="What is this?">
-                ?
+                aria-label={open ? 'Hide simulation' : 'Show simulation'}
+                aria-expanded={open}
+                aria-controls={disclosureId}>
+                <span className={styles.disclosureLabel}>
+                  <strong>Simulation</strong>
+                  <span>Follow this code across threads and runtimes</span>
+                </span>
+                <span className={styles.disclosureAction}>
+                  {open ? 'Hide' : 'Show'}
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="m4 6 4 4 4-4" />
+                  </svg>
+                </span>
               </button>
-              {inspecting && tip !== null && (
-                <div
-                  className={styles.inspectTip}
-                  style={{ left: tip.x, top: tip.y }}
-                  role="tooltip">
-                  {tip.text}
+              <Disclosure open={open} id={disclosureId}>
+                <div className={styles.simulationBody}>
+                  {toolbar}
+                  {activity}
+                  {legend}
+                  {machine}
+                  {consolePanel}
                 </div>
-              )}
-              <Panel
-                title="Code"
-                className={styles.areaCode}
-                help="The snippet being executed. A highlighted line is executing right now on the thread of that colour; lines fade out over the next three ticks.">
-                <div
-                  className={clsx(
-                    styles.codeReveal,
-                    codeOpen && styles.codeRevealOpen
-                  )}
-                  aria-hidden={!codeOpen}>
-                  <div className={styles.codeRevealInner}>
-                    <CodePanel
-                      code={simulation.displayText}
-                      runtimes={runtimes}
-                      cores={snapshot.cores}
-                      rawToDisplayLine={simulation.rawToDisplayLine}
-                      blockEnds={simulation.blockEnds}
-                      history={history}
-                      settled={simulation.settled}
-                      columns={codeColumns}
-                      ghost={ghost}
-                    />
-                  </div>
-                </div>
-                <div
-                  className={clsx(
-                    styles.codeFooter,
-                    collapsibleCode && styles.codeFooterCollapsible
-                  )}>
-                  {collapsibleCode && (
-                    <button
-                      type="button"
-                      className={clsx(
-                        styles.codeToggle,
-                        codeOpen && styles.codeToggleOpen
-                      )}
-                      onClick={() => setCodeOpen(!codeOpen)}
-                      aria-expanded={codeOpen}>
-                      <span
-                        className={styles.expandChevron}
-                        aria-hidden="true"
-                      />
-                      {codeOpen ? 'Hide code' : 'Show code'}
-                    </button>
-                  )}
-                  {(codeOpen || !collapsibleCode) && boilerplateButton}
-                </div>
-              </Panel>
-              {phone && (
-                <div className={styles.areaPhone}>
-                  <Phone
-                    screen={shownScreen}
-                    redrawn={redrawn}
-                    onPress={
-                      pressHandler === undefined
-                        ? undefined
-                        : () => simulation.press(pressHandler)
-                    }
-                  />
-                </div>
-              )}
-              {showConsole && (
-                <div className={styles.sideSizer} aria-hidden="true">
-                  <div className={styles.sideSizerPanel}>
-                    <span className={styles.consoleEmpty}>no output yet</span>
-                    {expectedLogs.map((log, index) => (
-                      <div key={index} className={styles.consoleEntry}>
-                        <span className={styles.badge}>
-                          {badgeName(log.runtime.id)}
-                        </span>
-                        <span>{log.text}</span>
-                        <span className={styles.consoleTime}>00:00:00.000</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className={styles.areaSide}>
-                {showConsole && (
-                  <Panel
-                    title="Console"
-                    className={styles.consolePanel}
-                    help="console.log output, tagged with the runtime it ran on and the wall-clock time it was shown.">
-                    <div className={styles.console}>
-                      {logs.length === 0 ? (
-                        <span className={styles.consoleEmpty}>
-                          no output yet
-                        </span>
-                      ) : (
-                        logs.map((log, index) => (
-                          <div key={index} className={styles.consoleEntry}>
-                            <span
-                              className={clsx(
-                                styles.badge,
-                                runtimeClass(log.runtime)
-                              )}>
-                              {badgeName(log.runtime.id)}
-                            </span>
-                            <span>{log.text}</span>
-                            <span className={styles.consoleTime}>
-                              {formatTime(shownAtRef.current.get(log.tick + 1))}
-                            </span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </Panel>
-                )}
-              </div>
-              <ForkBus
-                slots={slots}
-                showDown={showMemory}
-                pulse={simulation.propagationMs >= MIN_PULSE_MS}
-              />
-              <Panel
-                title="CPU"
-                className={styles.areaCpu}
-                help="The threads. Each thread executes at most one line per tick.">
-                <CpuPanel
-                  runtimes={runtimes}
-                  cores={snapshot.cores}
-                  rawToDisplayLine={simulation.rawToDisplayLine}
-                />
-                <div className={styles.cpuFooter}>
-                  {!alwaysOn && (
-                    <div className={styles.transport}>
-                      <button
-                        type="button"
-                        className={clsx(styles.button, styles.buttonIcon)}
-                        onClick={simulation.reset}
-                        disabled={simulation.tick === 0}
-                        aria-label="Reset"
-                        title="Reset">
-                        <TransportIcon name="reset" />
-                      </button>
-                      <button
-                        type="button"
-                        className={clsx(styles.button, styles.buttonIcon)}
-                        onClick={simulation.back}
-                        disabled={simulation.tick === 0}
-                        aria-label="Back one tick"
-                        title="Back one tick">
-                        <TransportIcon name="back" />
-                      </button>
-                      <button
-                        type="button"
-                        className={clsx(styles.button, styles.buttonIcon)}
-                        onClick={simulation.step}
-                        disabled={simulation.tick >= simulation.lastTick}
-                        aria-label="Step one tick"
-                        title="Step one tick">
-                        <TransportIcon name="step" />
-                      </button>
-                      <button
-                        type="button"
-                        className={clsx(
-                          styles.button,
-                          styles.buttonIcon,
-                          styles.buttonPrimary
-                        )}
-                        onClick={simulation.togglePlay}
-                        aria-label={simulation.playing ? 'Pause' : 'Play'}
-                        title={simulation.playing ? 'Pause' : 'Play'}>
-                        <TransportIcon
-                          name={simulation.playing ? 'pause' : 'play'}
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        className={clsx(
-                          styles.button,
-                          styles.buttonIcon,
-                          simulation.loop && styles.buttonActive
-                        )}
-                        onClick={simulation.toggleLoop}
-                        aria-pressed={simulation.loop}
-                        aria-label="Loop"
-                        title="Loop">
-                        <TransportIcon name="loop" />
-                      </button>
-                      <span className={styles.tickLabel}>
-                        tick {simulation.tick}
-                        {Number.isFinite(simulation.lastTick) &&
-                          ` / ${simulation.lastTick}`}
-                      </span>
-                    </div>
-                  )}
-                  {tickSlider}
-                  {cpuFooter}
-                </div>
-              </Panel>
-              {showMemory && (
-                <Panel
-                  title="Memory"
-                  className={styles.areaMemory}
-                  help="JavaScript runtimes with their event loops, plus shared memory outside every runtime.">
-                  <MemoryPanel
-                    runtimes={everRuntimes.filter(
-                      (runtime) =>
-                        runtime.hasRuntime &&
-                        (runtime.kind !== 'ui' || usedRuntimes.has(runtime.id))
-                    )}
-                    present={new Set(runtimes.map((runtime) => runtime.id))}
-                    allRuntimes={runtimes}
-                    cores={snapshot.cores}
-                    memory={snapshot.memory}
-                    settled={simulation.settled}
-                    steady={steady}
-                  />
-                </Panel>
-              )}
+              </Disclosure>
+              {hasOpened && connections}
             </div>
-          </div>
-        )}
-        {(!open || !alwaysOn) && (
-          <button
-            key="bar"
-            type="button"
-            ref={barRef}
-            className={clsx(styles.toggleBar, styles.toggleBarButton)}
-            onClick={open ? hide : expand}
-            aria-expanded={open}>
-            {toggleLabel(open && phase !== 'closing')}
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1031,16 +632,12 @@ function collectActiveSince(
 function collectHistory(
   snapshots: Snapshot[],
   currentTick: number,
-  settled: boolean,
   rawToDisplayLine: number[]
 ): LineHistory {
   const history: LineHistory = new Map();
   const seenByCore = new Map<string, Set<number>>();
   const oldest = Math.max(currentTick - HISTORY_DEPTH, 0);
   for (let tick = currentTick; tick >= oldest; tick--) {
-    if (tick === currentTick && !settled) {
-      continue;
-    }
     const snapshot = snapshots[tick];
     if (snapshot === undefined) {
       continue;
@@ -1070,29 +667,10 @@ function collectHistory(
 
 const HISTORY_DEPTH = 3;
 
-function collectLogs(snapshots: Snapshot[], upToTick: number) {
+function collectLogs(snapshots: Snapshot[], tick: number) {
   const runtimes = collectRuntimes(snapshots);
-  const logs: { runtime: RuntimeDescriptor; text: string; tick: number }[] = [];
-  for (const snapshot of snapshots.slice(0, upToTick + 1)) {
-    for (const event of snapshot.events) {
-      if (event.type === 'log') {
-        const runtime = runtimes.find(
-          (candidate) => candidate.id === event.core
-        );
-        if (runtime !== undefined) {
-          logs.push({ runtime, text: event.text, tick: snapshot.tick });
-        }
-      }
-    }
-  }
-  return logs;
-}
-
-function formatTime(timestamp: number | undefined): string {
-  if (timestamp === undefined) {
-    return '';
-  }
-  const date = new Date(timestamp);
-  const pad = (value: number, width = 2) => String(value).padStart(width, '0');
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad(date.getMilliseconds(), 3)}`;
+  return collectConsoleEntries(snapshots, tick).flatMap((entry) => {
+    const runtime = runtimes.find((candidate) => candidate.id === entry.core);
+    return runtime === undefined ? [] : [{ ...entry, runtime }];
+  });
 }

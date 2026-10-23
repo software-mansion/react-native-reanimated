@@ -50,6 +50,7 @@ export default function ThreadingShowcase({
   const [enabled, setEnabled] = useState(false);
   const [tickMs, setTickMs] = useState(initialTickMs);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const variant = enabled ? worklets : single;
 
   return (
@@ -60,6 +61,7 @@ export default function ThreadingShowcase({
           className={clsx(styles.toggle, enabled && styles.toggleOn)}
           onClick={() => setEnabled((current) => !current)}
           aria-pressed={enabled}>
+          {!enabled && <span className={styles.spark} aria-hidden="true" />}
           <span className={styles.switch} aria-hidden="true" />
           <span className={styles.label}>
             <span>{enabled ? 'Worklets enabled' : 'Enable Worklets'}</span>
@@ -70,7 +72,6 @@ export default function ThreadingShowcase({
               Enable Worklets
             </span>
           </span>
-          {!enabled && <span className={styles.spark} aria-hidden="true" />}
         </button>
         <span className={styles.hint}>
           {enabled
@@ -79,12 +80,10 @@ export default function ThreadingShowcase({
         </span>
       </div>
       <ThreadingSimulation
-        key={enabled ? 'worklets' : 'single'}
         module={variant.module}
         source={variant.source}
         uiRuntime={enabled}
         bootTicks={BOOT_TICKS}
-        ghostSource={enabled ? single.source : worklets.source}
         phone
         pressHandler={enabled ? 'onPress' : 'handlePress'}
         screen={INITIAL_SCREEN}
@@ -94,8 +93,9 @@ export default function ThreadingShowcase({
         boilerplateToggle={false}
         codeOpen={codeOpen}
         onCodeOpenChange={setCodeOpen}
+        fullscreen={fullscreen}
+        onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}
-        fitWidth={false}
         tickMs={tickMs}
         onTickMsChange={setTickMs}
       />

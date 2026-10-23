@@ -4,8 +4,12 @@ sidebar_position: 20
 
 import * as ReturningSyncSnippet from './_returning-results/returningSync';
 import ReturningSyncSource from '!!raw-loader!./_returning-results/returningSync';
+import * as ReturningDirectSnippet from './_returning-results/returningDirect';
+import ReturningDirectSource from '!!raw-loader!./_returning-results/returningDirect';
 import * as ReturningAsyncSnippet from './_returning-results/returningAsync';
 import ReturningAsyncSource from '!!raw-loader!./_returning-results/returningAsync';
+import * as ReturningCallbackCrashSnippet from './_returning-results/returningCallbackCrash';
+import ReturningCallbackCrashSource from '!!raw-loader!./_returning-results/returningCallbackCrash';
 import * as ReturningCallbackSnippet from './_returning-results/returningCallback';
 import ReturningCallbackSource from '!!raw-loader!./_returning-results/returningCallback';
 import * as ReturningPromiseSnippet from './_returning-results/returningPromise';
@@ -26,17 +30,23 @@ function directly to the invoking Runtime:
 
 <ThreadingSimulation module={ReturningSyncSnippet} source={ReturningSyncSource}/>
 
-However, it's not particularly useful to dispatch `foo` synchronously, as we could've just run on
-the same Runtime, by invoking foo:
+:::note Synchronous calls stay on the calling thread
 
-// TODO: convert this one to a threading simulation
+A runtime holds JavaScript code and data; a thread executes code in it. Here, `runOnUISync` and
+`runOnRuntimeSync` let the JS thread temporarily acquire the target runtime and run `foo` there,
+waiting if that runtime is busy. This gives synchronous access to that runtime's data while keeping
+the JS thread occupied, which is why the simulation shows it connected to different runtimes.
 
-```js
-const result = foo(); // 42
-```
+:::
 
-Therefore, we have to return it asynchronously. We'll explore when it's useful to actually return a
-value synchronously in future sections.
+However, dispatching this calculation synchronously doesn't free the calling thread. We could
+also call `foo` directly on the RN Runtime:
+
+<ThreadingSimulation module={ReturningDirectSnippet} source={ReturningDirectSource}/>
+
+Both the function and its caller execute on the JS thread and the result is immediately available.
+To let the calling thread do other work while a calculation runs on another thread, we need an
+asynchronous call. We'll explore when synchronous calls are useful in future sections.
 
 ## Asynchronously
 
@@ -60,33 +70,15 @@ Often times, we'll want to return a value through a callback, i.e. update our ap
 based on a result of a worklet function executed on another Worklet Runtime. You might be tempted to
 write something like this:
 
-// TODO: convert it to a threading simulation that actually visualizes a crash
+<ThreadingSimulation module={ReturningCallbackCrashSnippet} source={ReturningCallbackCrashSource}/>
 
-```js
-const worker = createWorkletRuntime();
+The worker calculates `result`, but stops when it tries to call `setState(result)`.
+The state setter belongs to the RN Runtime. Passing it to the Worker Runtime gives that runtime a
+reference to the callback, not a function it can invoke directly.
 
-// CORE CODE START
-function Component() {
-    const [state, setState] = useState();
-    // code ...
-    scheduleOnRuntime(worker, () => {
-        const result = doImportantStuff();
-        setState(result); // crash!
-    });
-    // code ...
-// CORE CODE END
-}
-```
+The console shows the Worklets error format. The function and runtime names in your app may differ.
 
-This is a common pitfall, and to understand why it crashes, we have to look how it looks in the
-memory of our app.
-
-<ImagePlaceholder>
-  Diagram: showing where `result`, `setState` lives and how threads interact here
-</ImagePlaceholder>
-
-Because `setState` is passed to the Worklet Runtime as a pointer to the callback, we can't just
-invoke it. We have to dispatch it back on the RN Runtime with
+We have to dispatch it back on the RN Runtime with
 [`scheduleOnRN`](/docs/threading/scheduleOnRN) function.
 
 <ThreadingSimulation module={ReturningCallbackSnippet} source={ReturningCallbackSource}/>

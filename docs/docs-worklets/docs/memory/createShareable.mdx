@@ -3,6 +3,9 @@ title: createShareable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiCreateShareableSnippet from './_examples/apiCreateShareable';
+import ApiCreateShareableSource from '!!raw-loader!./_examples/apiCreateShareable';
+
 <Badges version="0.8.0">
   # createShareable
 </Badges>
@@ -17,20 +20,7 @@ You have to explicitly declare which [Worklet Runtime](/docs/concepts/runtimeKin
 
 ## Reference
 
-```tsx
-import {
-  createShareable,
-  createWorkletRuntime,
-  UIRuntimeId,
-} from 'react-native-worklets';
-
-// Shareable hosted on the UI Runtime
-const uiShareable = createShareable(UIRuntimeId, 'hello');
-
-// Shareable hosted on a Worker Runtime
-const workerRuntime = createWorkletRuntime({ name: 'background' });
-const workerShareable = createShareable(workerRuntime.runtimeId, 'hello');
-```
+<ThreadingSimulation module={ApiCreateShareableSnippet} source={ApiCreateShareableSource}/>
 
 <details>
   <summary>Type definitions</summary>

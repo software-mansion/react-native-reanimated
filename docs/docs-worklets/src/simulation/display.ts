@@ -143,7 +143,11 @@ function displayImport(statement: string, body: string): string[] {
   if (names.length === 0) {
     return [];
   }
-  const module = MODULE_NAMES[moduleKey(match[2])] ?? match[2];
+  const key = moduleKey(match[2]);
+  const reactHooks =
+    key === 'react' &&
+    names.every((name) => name === 'useState' || name === 'useEffect');
+  const module = reactHooks ? 'react' : (MODULE_NAMES[key] ?? match[2]);
   const single = `import { ${names.join(', ')} } from '${module}';`;
   if (single.length <= MAX_IMPORT_WIDTH) {
     return [single];

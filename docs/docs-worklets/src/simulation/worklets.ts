@@ -114,6 +114,64 @@ export function getCurrentThreadId(): string {
   return dispatch('getCurrentThreadId', []) as string;
 }
 
+export enum RuntimeKind {
+  ReactNative = 1,
+  UI = 2,
+  Worker = 3,
+}
+
+export function getRuntimeKind(): RuntimeKind {
+  return dispatch('getRuntimeKind', []) as RuntimeKind;
+}
+
+export function isRNRuntime(): boolean {
+  return getRuntimeKind() === RuntimeKind.ReactNative;
+}
+
+export function isUIRuntime(): boolean {
+  return getRuntimeKind() === RuntimeKind.UI;
+}
+
+export function isWorkerRuntime(): boolean {
+  return getRuntimeKind() === RuntimeKind.Worker;
+}
+
+export function isWorkletRuntime(): boolean {
+  return !isRNRuntime();
+}
+
+function runtimeFromId(runtimeId: number): WorkletRuntimeHandle {
+  return dispatch('runtimeFromId', [runtimeId]) as WorkletRuntimeHandle;
+}
+
+export function scheduleOnRuntimeWithId<Args extends unknown[]>(
+  runtimeId: number,
+  fn: SnippetCallback<Args>,
+  ...args: Args
+): void {
+  scheduleOnRuntime(runtimeFromId(runtimeId), fn, ...args);
+}
+
+export function runOnRuntimeSyncWithId<Args extends unknown[]>(
+  runtimeId: number,
+  fn: SnippetCallback<Args>,
+  ...args: Args
+): unknown {
+  return runOnRuntimeSync(runtimeFromId(runtimeId), fn, ...args);
+}
+
+export function runOnRuntimeAsyncWithId<Args extends unknown[]>(
+  runtimeId: number,
+  fn: SnippetCallback<Args>,
+  ...args: Args
+): PromiseHandle {
+  return runOnRuntimeAsync(runtimeFromId(runtimeId), fn, ...args);
+}
+
+export function assertRNRuntime(name: string): void {
+  dispatch('assertRNRuntime', [name]);
+}
+
 const FRAME_MS = 16;
 
 export function setTimeout(callback: () => unknown, ms = 0): number {
@@ -148,6 +206,27 @@ const runtimeGlobal: Record<string, unknown> = new Proxy(
 );
 
 export { runtimeGlobal as globalThis };
+
+export interface SerializableRef<TValue = unknown> {
+  __serializableRef: true;
+  // Matches the native API's type-only field; it is not present at runtime.
+  __nativeStateSerializableJSRef: TValue;
+}
+
+export function createSerializable<TValue>(
+  value: TValue
+): SerializableRef<TValue> {
+  return dispatch('createSerializable', [value]) as SerializableRef<TValue>;
+}
+
+export function isSerializableRef(value: unknown): value is SerializableRef {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
+  );
+}
 
 export interface Synchronizable<T> {
   __synchronizable: true;

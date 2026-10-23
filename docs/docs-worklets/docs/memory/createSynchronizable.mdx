@@ -3,6 +3,9 @@ title: createSynchronizable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiCreateSynchronizableSnippet from './_examples/apiCreateSynchronizable';
+import ApiCreateSynchronizableSource from '!!raw-loader!./_examples/apiCreateSynchronizable';
+
 <Badges version="0.6.0">
   # createSynchronizable
 </Badges>
@@ -15,12 +18,7 @@ You can pass a config option to create [Synchronizable Fixed](/docs/memory/synch
 
 ## Reference
 
-```tsx
-import { createSynchronizable } from 'react-native-worklets';
-
-const synchronizable = createSynchronizable({ a: 42 });
-const counter = createSynchronizable(0, { fixedType: true });
-```
+<ThreadingSimulation module={ApiCreateSynchronizableSnippet} source={ApiCreateSynchronizableSource}/>
 
 <details>
   <summary>Type definitions</summary>

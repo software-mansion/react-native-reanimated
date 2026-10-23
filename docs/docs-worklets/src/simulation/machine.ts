@@ -1,5 +1,6 @@
-import { SnippetError } from './errors';
+import { RemoteFunctionError, SnippetError } from './errors';
 import { isGeneratorFunction, isGeneratorObject } from './loadSnippet';
+import { cloneArguments } from './serialization';
 import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
 import type {
   CoreId,
@@ -86,6 +87,8 @@ export class Machine {
   private readonly promises = new Map<number, PromiseState>();
   private nextPromiseId = 1;
   private readonly shared = new Map<number, SharedCell>();
+  private readonly serializableReferences = new WeakMap<object, number>();
+  private readonly serializableCache = new WeakMap<object, object>();
   private nextCellId = 1;
   private readonly readShareable: SnippetFn;
   private readonly uiBootTick: number;
@@ -250,7 +253,12 @@ export class Machine {
   }
 
   isFinished(): boolean {
-    if (this.cores.some((core) => core.createdAtTick === this.tickCount)) {
+    if (
+      this.cores.some((core) => core.createdAtTick === this.tickCount) ||
+      [...this.shared.values()].some(
+        (cell) => cell.createdAtTick === this.tickCount
+      )
+    ) {
       return this.halted;
     }
     if (this.inputs.some((input) => input.tick > this.tickCount)) {
@@ -274,6 +282,18 @@ export class Machine {
     const core = this.activeCore;
     if (core === null) {
       throw new SnippetError(`${api} was called outside of a simulation step`);
+    }
+    if (api === 'assertRNRuntime') {
+      const runtime = this.currentRuntime(core);
+      if (runtime !== 'rn') {
+        throw new RemoteFunctionError(
+          String(args[0]),
+          runtime === 'ui'
+            ? 'UI'
+            : (runtime?.slice('worker:'.length) ?? 'unknown')
+        );
+      }
+      return undefined;
     }
     if (api === 'createWorkletRuntime') {
       return this.createRuntime(core, args[0]);
@@ -339,6 +359,30 @@ export class Machine {
     if (api === 'getCurrentThreadId') {
       return threadId(this.cores.indexOf(core));
     }
+    if (api === 'getRuntimeKind') {
+      const runtime = this.currentRuntime(core);
+      if (runtime === null) {
+        throw new SnippetError('getRuntimeKind requires a JavaScript Runtime');
+      }
+      const kind = this.core(runtime).spec.kind;
+      return kind === 'rn' ? 1 : kind === 'ui' ? 2 : 3;
+    }
+    if (api === 'runtimeFromId') {
+      const target = this.cores.find(
+        (candidate) => this.runtimeIdOf(candidate) === args[0]
+      );
+      if (!target?.spec.hasRuntime || target.spec.kind === 'rn') {
+        throw new SnippetError(
+          'Expected the id of an existing Worklet Runtime'
+        );
+      }
+      return {
+        __workletRuntime: true,
+        name: target.spec.id,
+        coreId: target.spec.id,
+        runtimeId: args[0],
+      };
+    }
     if (api === 'setTimeout') {
       return this.addTimer(core, args[0], args[1], false);
     }
@@ -359,6 +403,19 @@ export class Machine {
     if (api === 'globalSet') {
       this.globalsOf(core)[String(args[0])] = args[1];
       return undefined;
+    }
+    if (api === 'createSerializable') {
+      const value = args[0];
+      const object = typeof value === 'object' && value !== null ? value : null;
+      const cached =
+        object === null ? undefined : this.serializableCache.get(object);
+      if (cached !== undefined) return cached;
+      const id = this.createCell(core, 'serializable', null, value);
+      const reference = Object.freeze({ __serializableRef: true });
+      this.serializableReferences.set(reference, id);
+      this.serializableCache.set(reference, reference);
+      if (object !== null) this.serializableCache.set(object, reference);
+      return reference;
     }
     if (api === 'createSynchronizable') {
       return this.createCell(core, 'synchronizable', null, args[0]);
@@ -478,7 +535,7 @@ export class Machine {
         );
         return;
       }
-      const job = this.createJob(fn, cloneArgs(input.args ?? []), {
+      const job = this.createJob(fn, this.cloneArgs(input.args ?? []), {
         core: core.spec.id,
         line: 0,
         api: 'sendToUIThread',
@@ -608,7 +665,7 @@ export class Machine {
     const cell: SharedCell = {
       id,
       kind,
-      value: cloneArgs([initial])[0],
+      value: this.cloneArgs([initial])[0],
       host,
       guests: new Set(),
       accessedBy: core.spec.id,
@@ -620,6 +677,13 @@ export class Machine {
       this.addGuest(core, cell);
     }
     return id;
+  }
+
+  private cloneArgs(args: unknown[]): unknown[] {
+    return cloneArguments(args, (reference) => {
+      const id = this.serializableReferences.get(reference);
+      return id === undefined ? undefined : this.cell(id);
+    });
   }
 
   private addGuest(core: CoreState, cell: SharedCell): void {
@@ -642,11 +706,11 @@ export class Machine {
       mode: 'read',
       value: formatValue(cell.value),
     });
-    return cloneArgs([cell.value])[0];
+    return this.cloneArgs([cell.value])[0];
   }
 
   private writeCell(core: CoreState, cell: SharedCell, value: unknown): void {
-    cell.value = cloneArgs([value])[0];
+    cell.value = this.cloneArgs([value])[0];
     cell.accessedBy = core.spec.id;
     cell.accessTick = this.tickCount;
     this.emit({
@@ -714,7 +778,7 @@ export class Machine {
     });
     const job = this.createJob(
       this.resolveFn(api, fn),
-      cloneArgs(args),
+      this.cloneArgs(args),
       this.origin(core, api)
     );
     job.promiseId = id;
@@ -810,7 +874,7 @@ export class Machine {
     core.resolutions.push({
       target: state.origin,
       promiseId: job.promiseId,
-      value: cloneArgs([core.returnValue])[0],
+      value: this.cloneArgs([core.returnValue])[0],
     });
   }
 
@@ -865,7 +929,7 @@ export class Machine {
         `${api} was called but this simulation has no ${owner.spec.label}`
       );
     }
-    const gen = target(...(cloneArgs(rest) as never[]));
+    const gen = target(...(this.cloneArgs(rest) as never[]));
     this.acquired.set(gen as object, { runtime, claim: this.nextClaim++ });
     return gen;
   }
@@ -963,10 +1027,10 @@ export class Machine {
       throw new SnippetError('updateScreen expects an object');
     }
     if (core.spec.kind !== 'ui') {
-      core.screenPatches.push(cloneArgs([patch])[0] as ScreenState);
+      core.screenPatches.push(this.cloneArgs([patch])[0] as ScreenState);
       return;
     }
-    this.applyScreenPatch(core, cloneArgs([patch])[0] as ScreenState);
+    this.applyScreenPatch(core, this.cloneArgs([patch])[0] as ScreenState);
   }
 
   private applyScreenPatch(core: CoreState, patch: ScreenState): void {
@@ -1054,7 +1118,7 @@ export class Machine {
   ): void {
     const job = this.createJob(
       this.resolveFn(api, fn),
-      cloneArgs(args),
+      this.cloneArgs(args),
       this.origin(core, api)
     );
     job.deadline = core.currentJob?.deadline;
@@ -1502,7 +1566,8 @@ export class Machine {
   private fail(core: CoreState, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
     core.status = 'error';
-    core.error = message;
+    core.error =
+      error instanceof RemoteFunctionError ? error.explanation : message;
     core.frames = [];
     core.currentJob = null;
     this.halted = true;
@@ -1557,6 +1622,12 @@ export class Machine {
   private snapshotCore(core: CoreState): CoreSnapshot {
     return {
       id: core.spec.id,
+      globals: Object.fromEntries(
+        Object.entries(core.globals).map(([name, value]) => [
+          name,
+          formatValue(value),
+        ])
+      ),
       label: core.spec.label,
       thread: core.spec.thread,
       kind: core.spec.kind,
@@ -1574,7 +1645,8 @@ export class Machine {
       currentFn: core.status === 'running' ? core.executedFn : null,
       nativeFrame: core.status === 'running' && core.executedNative,
       status: core.status,
-      line: core.status === 'running' ? core.line : null,
+      line:
+        core.status === 'running' || core.status === 'error' ? core.line : null,
       job:
         core.currentJob?.label ??
         (core.status === 'running' ? core.finishedJob : null),
@@ -1662,14 +1734,4 @@ function mergeScreenPatch(base: ScreenState, patch: ScreenState): ScreenState {
     nativeProps[id] = { ...(nativeProps[id] ?? {}), ...props };
   }
   return { ...base, ...patch, nativeProps };
-}
-
-function cloneArgs(args: unknown[]): unknown[] {
-  try {
-    return structuredClone(args);
-  } catch {
-    throw new SnippetError(
-      'arguments passed between runtimes must be serializable (structuredClone failed)'
-    );
-  }
 }

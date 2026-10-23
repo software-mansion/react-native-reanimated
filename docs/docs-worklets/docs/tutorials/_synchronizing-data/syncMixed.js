@@ -13,7 +13,7 @@ export default function* main() {
   let cached = yield 0;
 
   function* onFrame(frame) {
-    progress.value = yield frame * 25;
+    yield (progress.value = frame * 25);
     yield dirty.setDirty(true);
     if (frame < 4) requestAnimationFrame(() => onFrame(frame + 1));
   }
