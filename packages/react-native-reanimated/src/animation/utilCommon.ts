@@ -22,8 +22,8 @@ import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { AffineMatrixFlat } from './transformationMatrix/matrixUtils';
 import {
-  decomposeMatrixIntoMatricesAndAngles,
   interpolateMatrix,
+  prepareMatrixInterpolation,
   isAffineMatrixFlat,
 } from './transformationMatrix/matrixUtils';
 
@@ -280,8 +280,7 @@ export function decorateAnimation<
   ): void => {
     const toValue = animation.toValue as AffineMatrixFlat;
 
-    animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
-    animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
+    animation.matrixInterpolation = prepareMatrixInterpolation(value, toValue);
 
     // We create an animation copy to animate single value between 0 and 100
     // We set limits from 0 to 100 (instead of 0-1) to make spring look good
@@ -313,8 +312,7 @@ export function decorateAnimation<
 
     animation.current = interpolateMatrix(
       progress,
-      animation.startMatrices,
-      animation.stopMatrices
+      animation.matrixInterpolation
     );
 
     return finished;

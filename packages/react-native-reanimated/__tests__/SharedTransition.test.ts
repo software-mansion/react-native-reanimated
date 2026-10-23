@@ -299,3 +299,29 @@ describe('SharedTransition', () => {
     });
   });
 });
+
+describe('SharedTransition singular matrices', () => {
+  const collapsed = IDENTITY.map((value, i) =>
+    i === 0 || i === 5 ? 0 : value
+  );
+  test.each([
+    [IDENTITY, collapsed],
+    [collapsed, IDENTITY],
+  ])('progress interpolates a zero scale %#', (from, to) => {
+    const values = {
+      ...VALUES,
+      currentTransform: { matrix: from },
+      targetTransform: { matrix: to },
+    };
+    for (const progress of [0, 0.5, 1]) {
+      const style = new SharedTransition().getProgressAnimation()(
+        values,
+        progress
+      );
+      const [{ matrix }] = style.transform as [{ matrix: number[] }];
+      matrix.forEach((value, i) =>
+        expect(value).toBeCloseTo(from[i] + progress * (to[i] - from[i]), 10)
+      );
+    }
+  });
+});
