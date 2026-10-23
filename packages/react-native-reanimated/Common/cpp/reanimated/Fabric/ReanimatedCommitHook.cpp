@@ -62,7 +62,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     if (synchronousWritesTracker_) {
       synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
     }
-    updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps(shadowTree.getSurfaceId());
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
@@ -102,9 +101,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
-    // The registry values include the props written synchronously, so the
-    // tree of this surface carries them too.
-    updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps(shadowTree.getSurfaceId());
     // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
     trackCommit(rootNode, true);
     // If the commit comes from React Native then pause commits from

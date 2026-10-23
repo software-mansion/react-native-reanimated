@@ -207,8 +207,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
-  // Returns the ids of the surfaces whose commit succeeded.
-  std::vector<SurfaceId> commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  // Returns `true` when the commit succeeded for every surface.
+  bool commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   // Commits the registry values when the synchronous props path left the
   // shadow tree out of date, so that the layout queries JS runs for a touch
   // (e.g. `measure()` in `Pressable`) see the same positions as the views.
@@ -231,6 +231,14 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const bool isReducedMotion_;
   std::atomic<bool> shouldFlushRegistry_{false};
+  // Set when props are written to the views synchronously (the
+  // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` fast path), cleared when a full registry
+  // flush commits for every surface. While set, the shadow trees may be behind
+  // the views, see `synchronizeShadowTreeBeforeTouch`. A React commit also
+  // carries the registry values (through `ReanimatedCommitHook`), but that is
+  // deliberately not tracked: it only ever costs one redundant commit per
+  // animation and keeps this a single bit without per-surface bookkeeping.
+  std::atomic<bool> hasUncommittedSynchronousProps_{false};
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<worklets::UIScheduler> uiScheduler_;
   std::shared_ptr<CallInvoker> jsInvoker_;

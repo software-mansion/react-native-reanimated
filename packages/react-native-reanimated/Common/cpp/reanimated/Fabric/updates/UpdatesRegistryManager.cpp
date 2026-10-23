@@ -65,21 +65,6 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
-void UpdatesRegistryManager::markShadowTreeMissingSynchronousProps(const SurfaceId surfaceId) {
-  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
-  shadowTreesMissingSynchronousProps_.insert(surfaceId);
-}
-
-void UpdatesRegistryManager::markShadowTreeInSyncWithSynchronousProps(const SurfaceId surfaceId) {
-  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
-  shadowTreesMissingSynchronousProps_.erase(surfaceId);
-}
-
-bool UpdatesRegistryManager::hasShadowTreesMissingSynchronousProps() const {
-  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
-  return !shadowTreesMissingSynchronousProps_.empty();
-}
-
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_[shadowNode->getTag()] = shadowNode->getFamilyShared();
