@@ -1,10 +1,5 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import {
-  createSerializable,
-  serializableMappingCache,
-} from 'react-native-worklets';
-
 import type { ParsedColorArray } from '../Colors';
 import {
   clampRGBA,
@@ -46,9 +41,6 @@ import {
  * object to prevent from freezing it in development.
  */
 export const IN_STYLE_UPDATER = { current: false };
-const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
-// is-tree-shakable-suppress
-serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
