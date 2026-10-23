@@ -7,7 +7,9 @@ import {
   decomposeMatrix,
   decomposeMatrixIntoMatricesAndAngles,
   flatten,
+  interpolateDecomposedMatrix,
   interpolateMatrix,
+  prepareMatrixInterpolation,
   isAffineMatrix,
   isAffineMatrixFlat,
   multiplyMatrices,
@@ -221,12 +223,66 @@ describe('Matrix util functions', () => {
       (ry) => {
         const identity = decomposeMatrixIntoMatricesAndAngles(identityMatrix);
         const angles = { ...identity, rx: 0.4, ry, rz: 0.7 };
-        const matrix = interpolateMatrix(0, angles, angles);
+        const matrix = interpolateDecomposedMatrix(0, angles, angles);
         const decomposition = decomposeMatrixIntoMatricesAndAngles(matrix);
-        interpolateMatrix(0, decomposition, decomposition).forEach((v, i) =>
-          expect(v).toBeCloseTo(matrix[i])
+        interpolateDecomposedMatrix(0, decomposition, decomposition).forEach(
+          (v, i) => expect(v).toBeCloseTo(matrix[i])
         );
       }
     );
+  });
+});
+
+describe('Matrix interpolation', () => {
+  test.each([
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 30, 40, 0, 1],
+    [1, 2, 3, 0, 2, 4, 6, 0, 0, 0, 1, 0, 30, 40, 0, 1],
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+  ])(
+    'interpolates singular matrix entries in both directions %#',
+    (...values) => {
+      const matrix = values as AffineMatrixFlat;
+      for (const [start, stop] of [
+        [flatIdentityMatrix, matrix],
+        [matrix, flatIdentityMatrix],
+      ]) {
+        const interpolation = prepareMatrixInterpolation(start, stop);
+        for (const progress of [-0.1, 0, 0.25, 0.5, 1, 1.1]) {
+          interpolateMatrix(progress, interpolation).forEach((value, index) => {
+            expect(value).toBeCloseTo(
+              start[index] + progress * (stop[index] - start[index]),
+              10
+            );
+          });
+        }
+      }
+    }
+  );
+
+  test('does not normalize inputs in place and preserves exact endpoints', () => {
+    const matrix = flatIdentityMatrix.map(
+      (value) => value * 2
+    ) as AffineMatrixFlat;
+    Object.freeze(matrix);
+    const interpolation = prepareMatrixInterpolation(
+      matrix,
+      flatIdentityMatrix
+    );
+    expect(interpolateMatrix(0, interpolation)).toEqual(matrix);
+    expect(interpolateMatrix(1, interpolation)).toEqual(flatIdentityMatrix);
+    expect(interpolateMatrix(0.5, interpolation)).toEqual(flatIdentityMatrix);
+  });
+
+  test('keeps rotation-aware interpolation for nonsingular matrices', () => {
+    const rotated: AffineMatrixFlat = [
+      0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+    ];
+    const halfway = interpolateMatrix(
+      0.5,
+      prepareMatrixInterpolation(flatIdentityMatrix, rotated)
+    );
+    expect(halfway[0]).toBeCloseTo(Math.SQRT1_2, 10);
+    expect(halfway[1]).toBeCloseTo(Math.SQRT1_2, 10);
+    expect(halfway[4]).toBeCloseTo(-Math.SQRT1_2, 10);
   });
 });
