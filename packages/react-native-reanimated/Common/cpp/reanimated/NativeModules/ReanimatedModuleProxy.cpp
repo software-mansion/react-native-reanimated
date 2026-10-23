@@ -1154,14 +1154,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
+  if (!synchronousUpdatesBatch.empty()) {
+    // New values that no commit carries yet (unlike the post-mount rewrites
+    // in `rewriteSynchronousProps`, which re-apply committed registry values).
+    hasUncommittedSynchronousProps_ = true;
+  }
   writeSynchronousPropsToViews(synchronousUpdatesBatch);
 }
 
 void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
-  if (!synchronousUpdatesBatch.empty()) {
-    hasUncommittedSynchronousProps_ = true;
-  }
-
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
