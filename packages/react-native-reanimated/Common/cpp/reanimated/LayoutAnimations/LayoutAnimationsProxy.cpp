@@ -108,6 +108,8 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
+  nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 }
 
@@ -200,7 +202,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     transaction.surfaceDropped = std::exchange(surfaceToRemove_, false);
   }
   auto &filteredMutations = transaction.filteredMutations;
-  auto rootChildCount = static_cast<int>(lightNodes_[surfaceId_]->children.size());
+  const auto containerIndex = containerParentChildCount();
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
   reconcileContradictedRemovals(mutations, transaction, propsParserContext);
@@ -232,10 +234,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
       // shared element, the issue should be gone with the new stack
-      // implementation
-      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+      // implementation. A modal can hold a nested stack, so the popped screen
+      // is the first one with a screen below it.
+      for (auto screen = findParentRNSScreen(afterTopScreen); screen; screen = findParentRNSScreen(screen)) {
         if (forceScreenSnapshot_(screen->current.tag)) {
           snapshottedScreens_.insert(screen->current.tag);
+        }
+        if (findScreenBelow(screen)) {
+          break;
         }
       }
 #endif
@@ -248,6 +254,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     }
 
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
+  }
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    followDetachedTargets(propsParserContext);
   }
 
   for (const auto &[node, config] : transaction.entering) {
@@ -280,7 +289,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 #endif
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    insertContainers(transaction, rootChildCount);
+    insertContainers(transaction, containerIndex);
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -1083,6 +1092,13 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedElements_.clear();
+#ifdef __APPLE__
+    overlayContainersToRemove_.clear();
+    if (containerOverlay_) {
+      containerOverlay_.reset();
+      setSharedTransitionOverlay_(surfaceId_, std::nullopt);
+    }
+#endif
     snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
@@ -1146,8 +1162,26 @@ void LayoutAnimationsProxy::cleanupAnimations(
   }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+#ifdef __APPLE__
+    const auto now = std::chrono::steady_clock::now();
+    std::erase_if(overlayContainersToRemove_, [&](const DeferredContainerRemoval &removal) {
+      if (transaction.surfaceDropped || now >= removal.removableAt) {
+        transaction.containersToRemove.push_back(removal.container);
+        return true;
+      }
+      preservedTags.insert(removal.container->current.tag);
+      schedulePullOnNextFrame();
+      return false;
+    });
+#endif
     for (auto &[sharedTag, element] : sharedElements_) {
       if (!element.run) {
+        continue;
+      }
+      // React deletes the views of a stopped surface in its last transaction, which has no mutations for containers.
+      if (transaction.surfaceDropped) {
+        transaction.containersToRemove.push_back(element.run->container);
+        element.run.reset();
         continue;
       }
       const auto tag = element.run->container->current.tag;
@@ -1164,8 +1198,28 @@ void LayoutAnimationsProxy::cleanupAnimations(
         schedulePullOnNextFrame();
         continue;
       }
+      // The container lands on the target only after the target is placed.
+      if (element.run->targetDetached) {
+        preservedTags.insert(tag);
+        continue;
+      }
       finishSharedTransition(sharedTag, element, transaction);
     }
+#ifdef __APPLE__
+    // The overlay is in another window, whose updates can reach the screen a frame before the restored target, so the
+    // container stays over the target for at least 17 ms, a frame of a 60 Hz display, after this pull. Pulls also run
+    // on events, so the next pull can come in the same frame.
+    const auto removableAt = std::chrono::steady_clock::now() + std::chrono::milliseconds(17);
+    for (const auto &container : transaction.containersOverRestoredTargets) {
+      if (transaction.surfaceDropped) {
+        transaction.containersToRemove.push_back(container);
+        continue;
+      }
+      preservedTags.insert(container->current.tag);
+      overlayContainersToRemove_.push_back({.container = container, .removableAt = removableAt});
+      schedulePullOnNextFrame();
+    }
+#endif
 
     queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
@@ -1309,7 +1363,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
-      .parentTag = surfaceId_,
+      .parentTag = lightNodes_.at(tag)->parent.lock()->current.tag,
       .config = config,
   });
 }
@@ -1323,7 +1377,7 @@ void LayoutAnimationsProxy::startProgressTransition(
       .tag = tag,
       .before = before,
       .after = after,
-      .parentTag = surfaceId_,
+      .parentTag = lightNodes_.at(tag)->parent.lock()->current.tag,
       .config = config,
   });
 }

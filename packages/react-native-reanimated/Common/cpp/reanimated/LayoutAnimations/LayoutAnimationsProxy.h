@@ -16,6 +16,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -47,6 +48,12 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
   bool inserted = false;
+  bool targetDetached = false;
+};
+
+struct DeferredContainerRemoval {
+  std::shared_ptr<LightNode> container;
+  std::chrono::steady_clock::time_point removableAt;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -88,9 +95,20 @@ struct UncommittedScreenPop {
   bool cancelled = false;
 };
 
+// A node on the path from a shared element up to the root, as it was when the element was collected.
+struct Ancestor {
+  Tag tag;
+  react::Point scrollPosition;
+  Transform transform;
+  TransformOrigin origin;
+  react::Size ownSize;
+};
+
 struct CollectedTransition {
   Transition transition;
   std::array<std::shared_ptr<LightNode>, 2> nodes;
+  std::array<std::vector<react::Point>, 2> absolutePositions;
+  std::array<std::vector<Ancestor>, 2> ancestors;
 };
 
 using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
@@ -106,6 +124,8 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<SharedTag> containersToInsert;
+  bool createsOverlay = false;
+  std::vector<std::shared_ptr<LightNode>> containersOverRestoredTargets;
   std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
@@ -137,6 +157,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  NativeViewPlacementFunction nativeViewPlacement_;
+  // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
+  // the window. It lives until its surface stops.
+  mutable std::shared_ptr<LightNode> containerOverlay_;
+  // Containers of finished runs that stay over their restored targets until at least 17 ms have passed.
+  mutable std::vector<DeferredContainerRemoval> overlayContainersToRemove_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
@@ -256,7 +283,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       BeforeOrAfter index,
       TransactionMeta &transaction) const;
 
-  void insertContainers(TransactionMeta &transaction, int &rootChildCount) const;
+  void insertContainers(TransactionMeta &transaction, int containerIndex) const;
+  Tag allocateContainerTag() const;
+  std::shared_ptr<LightNode> getOrCreateContainerParent(TransactionMeta &transaction) const;
+  bool isDetached(const std::shared_ptr<LightNode> &node) const;
+  void followDetachedTargets(const PropsParserContext &propsParserContext) const;
+  int containerParentChildCount() const;
 
   SharedTransitionRun &startSharedTransitionRun(
       const ShadowView &before,
@@ -264,8 +296,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       bool gestureDriven,
       TransactionMeta &transaction) const;
-  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before) const;
+  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
+  void cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
@@ -279,6 +312,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
+  std::vector<Ancestor> collectAncestors(const std::shared_ptr<LightNode> &node, bool useViewsOnScreen) const;
+  bool placeNatively(const std::vector<Ancestor> &ancestors, std::vector<react::Point> &absolutePositions, bool settled)
+      const;
+  void placeNatively(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   void overrideTransform(
@@ -286,16 +323,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
 
-  struct AncestorTransform {
-    Transform transform;
-    TransformOrigin origin;
-    react::Size ownSize;
-  };
-
   std::optional<Transform> parseParentTransforms(
-      const std::shared_ptr<LightNode> &node,
-      const std::vector<react::Point> &absolutePositions,
-      bool useViewsOnScreen) const;
+      const std::vector<Ancestor> &ancestors,
+      const std::vector<react::Point> &absolutePositions) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,
