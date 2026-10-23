@@ -271,6 +271,15 @@ jobs:
           node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
           --library reanimated --configuration "$CONFIGURATION"
 
+      - name: Upload crash reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          path: apps/fabric-example/crash-reports
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Release remote simulator
         if: always()
         working-directory: ${{ env.WORKING_DIRECTORY }}
