@@ -152,7 +152,9 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * with the Event Loop.
          *
          * Runtime without locking doesn't receive HMR updates
-         * and new Custom Serializable registrations.
+         * and new Custom Serializable registrations. In Bundle Mode, it also
+         * doesn't receive the lazy chunks that the RN Runtime loads after the
+         * runtime was created.
          *
          * Disable only when you can guarantee thread safety of all access to the runtime.
          */
@@ -171,7 +173,9 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * with the Event Loop.
          *
          * Runtime without locking doesn't receive HMR updates
-         * and new Custom Serializable registrations.
+         * and new Custom Serializable registrations. In Bundle Mode, it also
+         * doesn't receive the lazy chunks that the RN Runtime loads after the
+         * runtime was created.
          *
          * Disable only when you can guarantee thread safety of all access to the runtime.
          */
@@ -186,7 +190,9 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * - `'default'` (the default): use the built-in queue implementation.
          * - An object implementing the C++ `AsyncQueue` interface from
          *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
-         * - `null`: do not attach any queue to the runtime.
+         * - `null`: do not attach any queue to the runtime. In Bundle Mode, such
+         *   a runtime doesn't receive the lazy chunks that the RN Runtime loads
+         *   after the runtime was created.
          */
         queue?: 'default' | object | null;
         useDefaultQueue?: never;
