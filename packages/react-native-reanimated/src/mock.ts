@@ -518,7 +518,9 @@ const components = {
 };
 
 const css = {
+  createPseudoGroup: () => 0,
   css: cssStyleSheet,
+  setPseudoStyles: NOOP,
 };
 
 const screenTransition = {

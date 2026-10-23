@@ -1,5 +1,9 @@
 'use strict';
-export { createAnimatedComponent as createCSSAnimatedComponent } from './component';
+export {
+  createAnimatedComponent as createCSSAnimatedComponent,
+  createPseudoGroup,
+  setPseudoStyles,
+} from './component';
 export { cubicBezier, linear, steps } from './easing';
 export * from './stylesheet';
 export type {
@@ -32,4 +36,7 @@ export type {
   CSSTransitionSettings,
   CSSTransitionShorthand,
   CSSTransitionTimingFunction,
+  PseudoGroup,
+  PseudoStylesConfig,
+  PseudoStyleSelector,
 } from './types';

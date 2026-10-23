@@ -48,6 +48,13 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 namespace {
 
+std::optional<PseudoGroup> pseudoGroupFromValue(const jsi::Value &value) {
+  if (!value.isNumber()) {
+    return std::nullopt;
+  }
+  return static_cast<PseudoGroup>(value.asNumber());
+}
+
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
     if (target.rawProps) {
@@ -638,12 +645,13 @@ void ReanimatedModuleProxy::registerPseudoStyles(
   const auto tag = shadowNode->getTag();
   const auto configObj = config.asObject(rt);
 
-  const auto defaultStyle = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
   const auto selectorsArray = configObj.getProperty(rt, "selectors").asObject(rt).asArray(rt);
   const auto selectorsCount = selectorsArray.size(rt);
 
-  std::vector<PseudoStylesRegistry::SelectorRegistration> selectors;
-  selectors.reserve(selectorsCount);
+  PseudoStylesRegistry::Registration registration;
+  registration.defaults = jsi::dynamicFromValue(rt, configObj.getProperty(rt, "defaultStyle"));
+  registration.hostedGroup = pseudoGroupFromValue(configObj.getProperty(rt, "hostsGroup"));
+  registration.selectors.reserve(selectorsCount);
 
   auto lock = updatesRegistryManager_->lock();
 
@@ -660,10 +668,12 @@ void ReanimatedModuleProxy::registerPseudoStyles(
     transitionConfig.changedProperties.clear();
     cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(transitionConfig));
 
-    selectors.push_back({*selectorEnum, jsi::dynamicFromValue(rt, entryObj.getProperty(rt, "selectorStyle"))});
+    registration.selectors.push_back(
+        {{*selectorEnum, pseudoGroupFromValue(entryObj.getProperty(rt, "group"))},
+         jsi::dynamicFromValue(rt, entryObj.getProperty(rt, "selectorStyle"))});
   }
 
-  pseudoStylesRegistry_->registerPseudoStyles(tag, shadowNode, defaultStyle, selectors);
+  pseudoStylesRegistry_->registerPseudoStyles(tag, shadowNode, std::move(registration));
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Value &viewTag) {

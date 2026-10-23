@@ -501,7 +501,7 @@ describe('CSSPseudoStylesManager', () => {
       );
     });
 
-    test('detaches and re-registers when a selector is removed', () => {
+    test('updates in place without detaching when a selector is removed', () => {
       pushStyle(manager, {
         opacity: { default: 0, ':hover': 1, ':active': 0.5 },
       });
@@ -511,8 +511,83 @@ describe('CSSPseudoStylesManager', () => {
         opacity: { default: 0, ':hover': 1 },
       });
 
+      expect(unregisterPseudoStyles).not.toHaveBeenCalled();
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          selectors: [expect.objectContaining({ selector: ':hover' })],
+        })
+      );
+    });
+  });
+
+  describe('updateInput', () => {
+    test('forwards group selectors and the hosted group', () => {
+      manager.updateInput(
+        {
+          defaultStyle: { opacity: 1 },
+          selectors: [
+            { selector: ':active', selectorStyle: { opacity: 0.5 } },
+            { selector: ':active', group: 7, selectorStyle: { opacity: 0.8 } },
+          ],
+          hostsGroup: 3,
+        },
+        null
+      );
+
+      expect(registerPseudoStyles).toHaveBeenCalledWith(
+        shadowNodeWrapper,
+        expect.objectContaining({
+          hostsGroup: 3,
+          selectors: [
+            expect.not.objectContaining({ group: expect.anything() }),
+            expect.objectContaining({
+              group: 7,
+              selectorStyle: { opacity: 0.8 },
+            }),
+          ],
+        })
+      );
+    });
+
+    test('registers a view that only hosts a group', () => {
+      manager.updateInput(
+        { defaultStyle: {}, selectors: [], hostsGroup: 3 },
+        null
+      );
+
+      expect(registerPseudoStyles).toHaveBeenCalledWith(shadowNodeWrapper, {
+        defaultStyle: {},
+        selectors: [],
+        hostsGroup: 3,
+      });
+    });
+
+    test('detaches once nothing is styled and no group is hosted', () => {
+      manager.updateInput(
+        { defaultStyle: {}, selectors: [], hostsGroup: 3 },
+        null
+      );
+      jest.clearAllMocks();
+
+      manager.updateInput({ defaultStyle: {}, selectors: [] }, null);
+
       expect(unregisterPseudoStyles).toHaveBeenCalledWith(viewTag);
-      expect(registerPseudoStyles).toHaveBeenCalled();
+      expect(registerPseudoStyles).not.toHaveBeenCalled();
+    });
+
+    test('does not warn about a transparent view whose press selector follows a group', () => {
+      manager.updateInput(
+        {
+          defaultStyle: { opacity: 0 },
+          selectors: [
+            { selector: ':active', group: 7, selectorStyle: { opacity: 1 } },
+          ],
+        },
+        null
+      );
+
+      expect(console.warn).not.toHaveBeenCalled();
     });
   });
 
