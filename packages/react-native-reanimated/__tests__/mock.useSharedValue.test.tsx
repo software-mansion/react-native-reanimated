@@ -12,4 +12,13 @@ describe('mock useSharedValue', () => {
 
     expect(result.current.get()).toBe(5);
   });
+
+  test('keeps the same shared value across re-renders', () => {
+    const { result, rerender } = renderHook(() => useSharedValue(0));
+    const first = result.current;
+
+    rerender({});
+
+    expect(result.current).toBe(first);
+  });
 });
