@@ -174,7 +174,7 @@ export function createWorkletRuntime(
     runOnRuntimeSync(workletRuntime, initializerFn!);
   }
 
-  if (queue !== null) {
+  if (queue !== null && enableLocking) {
     registerWorkerRuntimeForLazyBundles(workletRuntime.runtimeId);
   }
 

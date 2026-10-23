@@ -2,6 +2,7 @@ import {
   createWorkletRuntime,
   RuntimeKind,
   runOnRuntimeSync,
+  scheduleOnRuntime,
 } from 'react-native-worklets';
 import type { WorkletRuntime } from 'react-native-worklets';
 
@@ -16,6 +17,28 @@ import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 
 function importLazyWorkletModule() {
   return import('../../../../../fabric-example/runtime-tests/lazyWorkletModule');
+}
+
+function importLazyNoLockingWorkletModule() {
+  return import('../../../../../fabric-example/runtime-tests/lazyNoLockingWorkletModule');
+}
+
+function getWorkletHash(worklet: unknown) {
+  return (worklet as { __workletHash: number }).__workletHash;
+}
+
+function resolveWorkletOnCurrentRuntime(workletHash: number) {
+  'worklet';
+  try {
+    (
+      globalThis as unknown as {
+        __valueUnpacker: (objectToUnpack: object) => unknown;
+      }
+    ).__valueUnpacker({ __workletHash: workletHash });
+    return 'resolved';
+  } catch (error) {
+    return (error as Error).message;
+  }
 }
 
 type QueuelessConfig = 'queue: null' | 'useDefaultQueue: false';
@@ -106,14 +129,15 @@ describe('lazy chunks on a Worker Runtime without a queue', () => {
       const workletRuntime = createRuntime(
         `queueless runtime created before the chunk, ${config}`
       );
-      const lazyWorklet = await loadWorklet();
+      const workletHash = getWorkletHash(await loadWorklet());
 
-      await expect(() =>
-        runOnRuntimeSync(workletRuntime, () => {
-          'worklet';
-          return lazyWorklet('lazy');
-        })
-      ).toThrow('Unable to resolve worklet with hash');
+      const result = runOnRuntimeSync(workletRuntime, () => {
+        'worklet';
+        return resolveWorkletOnCurrentRuntime(workletHash);
+      });
+
+      expect(typeof workletHash).toBe('number');
+      expect(result).toInclude('Unable to resolve worklet with hash');
     }
   );
 
@@ -135,4 +159,46 @@ describe('lazy chunks on a Worker Runtime without a queue', () => {
       expect(result).toBe(`lazy:${expectedLabel}:${RuntimeKind.Worker}`);
     }
   );
+});
+
+describe('lazy chunks on a Worker Runtime without locking', () => {
+  test('a runtime without locking does not receive chunks loaded after it was created', async () => {
+    const workletRuntime = createWorkletRuntime({
+      name: 'runtime without locking created before the chunk',
+      enableLocking: false,
+    });
+    const workletHash = getWorkletHash(
+      (await importLazyNoLockingWorkletModule()).describeNoLockingRuntime
+    );
+    const notification = 'no_locking_runtime_before_chunk_done';
+    const [result, setResult] = createTestValue<string>('not_run');
+
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      setResult(resolveWorkletOnCurrentRuntime(workletHash), notification);
+    });
+
+    await waitForNotification(notification);
+    expect(typeof workletHash).toBe('number');
+    expect(result.value).toInclude('Unable to resolve worklet with hash');
+  });
+
+  test('a runtime without locking evaluates chunks loaded before it was created', async () => {
+    const { describeNoLockingRuntime } =
+      await importLazyNoLockingWorkletModule();
+    const workletRuntime = createWorkletRuntime({
+      name: 'runtime without locking created after the chunk',
+      enableLocking: false,
+    });
+    const notification = 'no_locking_runtime_after_chunk_done';
+    const [result, setResult] = createTestValue<string>('not_run');
+
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      setResult(describeNoLockingRuntime('lazy'), notification);
+    });
+
+    await waitForNotification(notification);
+    expect(result.value).toBe(`lazy:no-locking:${RuntimeKind.Worker}`);
+  });
 });

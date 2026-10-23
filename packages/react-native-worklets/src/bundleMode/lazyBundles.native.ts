@@ -81,9 +81,10 @@ export function installLazyBundleLoader() {
 /**
  * Wraps Metro's `__loadBundleAsync` on the RN Runtime, so a lazy chunk that the
  * RN Runtime loads is also evaluated on the UI Runtime and on every Worker
- * Runtime before the `import()` promise resolves. Worklets defined in the chunk
- * can then be resolved on all runtimes. The chunk is also kept for Worker
- * Runtimes created later, see {@link getLoadedLazyBundles}.
+ * Runtime with a queue and locking before the `import()` promise resolves.
+ * Worklets defined in the chunk can then be resolved on these runtimes. The
+ * chunk is also kept for Worker Runtimes created later, see
+ * {@link getLoadedLazyBundles}.
  *
  * Use only in dev builds in Bundle Mode.
  */
