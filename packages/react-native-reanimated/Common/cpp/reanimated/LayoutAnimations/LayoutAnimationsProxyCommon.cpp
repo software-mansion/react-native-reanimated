@@ -131,10 +131,8 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ManagedLayoutAnimationS
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
       pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == type) {
     auto &pending = std::get<ManagedLayoutAnimationStart>(layoutAnimationOperations_[pendingIt->second.operationIndex]);
-    pending.after = start.after;
-    pending.parentTag = start.parentTag;
-    pending.opacity = start.opacity;
-    pending.config = start.config;
+    start.before = std::move(pending.before);
+    pending = std::move(start);
     return;
   }
   layoutAnimationOperations_.push_back(std::move(start));
