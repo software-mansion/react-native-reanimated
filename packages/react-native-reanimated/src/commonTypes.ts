@@ -15,7 +15,6 @@ import type { Maybe, MutuallyExclusiveUnion } from './common';
 import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
 import type { AnimatedStyleHandle, Descriptor } from './hook/commonTypes';
-import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 
 export interface ViewDescriptorsWrapper {
   value: Readonly<Descriptor[]>;
@@ -97,9 +96,13 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  /** Keyed by view tag. */
   SHARED_ELEMENT_TRANSITION = 4,
+  /** Keyed by placeholder nativeID until the view mounts. */
   SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  /** Keyed by view tag. */
   SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  /** Keyed by placeholder nativeID until the view mounts. */
   SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 }
 
@@ -173,9 +176,7 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config:
-    | SerializableRef<ReanimatedKeyframe | LayoutAnimationFunction>
-    | undefined;
+  config: SerializableRef | undefined;
   sharedTransitionTag?: string;
 }
 

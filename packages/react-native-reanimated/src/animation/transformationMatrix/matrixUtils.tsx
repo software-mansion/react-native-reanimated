@@ -190,7 +190,7 @@ export function addMatrices<T extends AffineMatrixFlat | AffineMatrix>(
   return isFlatOnStart ? (c as T) : (unflatten(c) as T);
 }
 
-export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
+function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
   maybeFlatA: T,
   scalar: number
 ): T {
@@ -202,10 +202,7 @@ export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
   return isFlatOnStart ? (b as T) : (unflatten(b) as T);
 }
 
-export function getRotationMatrix(
-  angle: number,
-  axis: Axis = 'z'
-): AffineMatrix {
+function getRotationMatrix(angle: number, axis: Axis = 'z'): AffineMatrix {
   'worklet';
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -401,7 +398,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
   let rz;
   if (sinRy === 1 || sinRy === -1) {
     rz = 0;
-    rx = Math.atan2(sinRy * rotationMatrix[0][1], sinRy * rotationMatrix[0][2]);
+    rx = Math.atan2(-rotationMatrix[2][1], rotationMatrix[1][1]);
   } else {
     rz = Math.atan2(rotationMatrix[0][1], rotationMatrix[0][0]);
     rx = Math.atan2(rotationMatrix[1][2], rotationMatrix[2][2]);
@@ -416,4 +413,57 @@ export function decomposeMatrixIntoMatricesAndAngles(
     ry: ry || 0,
     rz: rz || 0,
   };
+}
+
+function applyProgressToMatrix(
+  progress: number,
+  a: AffineMatrix,
+  b: AffineMatrix
+) {
+  'worklet';
+  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+}
+
+function applyProgressToNumber(progress: number, a: number, b: number) {
+  'worklet';
+  return a + progress * (b - a);
+}
+
+export function interpolateMatrix(
+  progress: number,
+  start: TransformMatrixDecompositionWithAngles,
+  stop: TransformMatrixDecompositionWithAngles
+): AffineMatrixFlat {
+  'worklet';
+  const translation = applyProgressToMatrix(
+    progress,
+    start.translationMatrix,
+    stop.translationMatrix
+  );
+  const scale = applyProgressToMatrix(
+    progress,
+    start.scaleMatrix,
+    stop.scaleMatrix
+  );
+  const skew = applyProgressToMatrix(
+    progress,
+    start.skewMatrix,
+    stop.skewMatrix
+  );
+  const rotation = multiplyMatrices(
+    getRotationMatrix(applyProgressToNumber(progress, start.rx, stop.rx), 'x'),
+    multiplyMatrices(
+      getRotationMatrix(
+        applyProgressToNumber(progress, start.ry, stop.ry),
+        'y'
+      ),
+      getRotationMatrix(applyProgressToNumber(progress, start.rz, stop.rz), 'z')
+    )
+  );
+  return flatten(
+    multiplyMatrices(
+      multiplyMatrices(scale, multiplyMatrices(skew, rotation)),
+      translation
+    )
+  );
 }
