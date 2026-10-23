@@ -25,14 +25,15 @@ import { ComplexAnimationBuilder } from './animationBuilder';
  */
 export enum SharedTransitionType {
   /**
-   * Use the regular animation for screen transitions and the progress-based
-   * animation for transitions that follow the screen transition progress (iOS
-   * back navigation).
+   * Use the regular or custom animation, except during iOS back navigation.
+   * During iOS back navigation, use the progress animation controlled by the
+   * screen transition.
    */
   ANIMATION = 'animation',
   /**
-   * Use the progress-based animation for all transitions. Screen transitions
-   * drive the progress with the builder's animation.
+   * Always use the progress animation. During iOS back navigation, the screen
+   * transition controls progress. Otherwise, the builder settings, such as
+   * `.duration()` or `.springify()`, control progress.
    */
   PROGRESS_ANIMATION = 'progressAnimation',
 }
@@ -432,11 +433,12 @@ export class SharedTransition
   /**
    * Sets the default transition type for the shared transition.
    *
-   * - `SharedTransitionType.ANIMATION` - Uses the regular (or custom) animation
-   *   for screen transitions and the progress animation for transitions that
-   *   follow the screen transition progress (iOS back navigation).
+   * - `SharedTransitionType.ANIMATION` - Uses the regular or custom animation,
+   *   except during iOS back navigation, when the screen transition controls
+   *   the progress animation.
    * - `SharedTransitionType.PROGRESS_ANIMATION` - Uses the progress animation for
-   *   all transitions.
+   *   all transitions. The screen transition controls progress during iOS back
+   *   navigation; otherwise, the builder settings control progress.
    *
    * @param transitionType - The transition type to use.
    */
