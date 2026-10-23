@@ -117,6 +117,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const PressableInAnimatedViewExample: React.FC = () =>
+  React.createElement(
+    require('./PressableInAnimatedViewExample').default as React.FC
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -965,6 +969,11 @@ export const EXAMPLES: Record<string, ExampleEntry> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  PressableInAnimatedViewExample: {
+    icon: '👆',
+    title: 'Pressable in animated view',
+    screen: PressableInAnimatedViewExample,
   },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
