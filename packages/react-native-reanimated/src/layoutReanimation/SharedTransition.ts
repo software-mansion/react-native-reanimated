@@ -2,8 +2,8 @@
 import { defineAnimation, withTiming } from '../animation';
 import type { AffineMatrixFlat } from '../animation/transformationMatrix/matrixUtils';
 import {
-  decomposeMatrixIntoMatricesAndAngles,
   interpolateMatrix,
+  prepareMatrixInterpolation,
 } from '../animation/transformationMatrix/matrixUtils';
 import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
@@ -264,10 +264,8 @@ function defaultProgressAnimation(
     if (key === 'transform') {
       const matrix = interpolateMatrix(
         progress,
-        decomposeMatrixIntoMatricesAndAngles(
-          (current as { matrix: AffineMatrixFlat }).matrix
-        ),
-        decomposeMatrixIntoMatricesAndAngles(
+        prepareMatrixInterpolation(
+          (current as { matrix: AffineMatrixFlat }).matrix,
           (target as { matrix: AffineMatrixFlat }).matrix
         )
       );
