@@ -107,6 +107,7 @@ describe('unprocessProps', () => {
       ['contain', 'contain'],
       ['cover', 'cover'],
       ['fill', 'stretch'],
+      ['scale-down', 'center'],
       ['none', 'none'],
     ])(
       'round-trips objectFit %s through resizeMode %s',
@@ -123,16 +124,38 @@ describe('unprocessProps', () => {
       }
     );
 
-    test.each(['center', 'repeat'])(
-      'leaves resizeMode %s without an objectFit counterpart',
+    test.each(['repeat'])(
+      'clears objectFit for resizeMode %s without an objectFit counterpart',
       (resizeMode) => {
         const props: StyleProps = { resizeMode };
 
         unprocessProps(props);
 
         expect(props).toEqual({ resizeMode });
+        expect('objectFit' in props).toBe(true);
+        expect(props.objectFit).toBeUndefined();
       }
     );
+
+    test('overwrites an objectFit from an earlier settle when resizeMode has no counterpart', () => {
+      const first: StyleProps = { resizeMode: 'contain' };
+      const second: StyleProps = { resizeMode: 'repeat' };
+
+      unprocessProps(first);
+      unprocessProps(second);
+      const settledStyle = { ...first, ...second };
+
+      expect(settledStyle.objectFit).toBeUndefined();
+      expect(settledStyle.resizeMode).toBe('repeat');
+    });
+
+    test('leaves a props bag without resizeMode untouched', () => {
+      const props: StyleProps = { opacity: 0.5 };
+
+      unprocessProps(props);
+
+      expect('objectFit' in props).toBe(false);
+    });
   });
 
   describe('verticalAlign', () => {

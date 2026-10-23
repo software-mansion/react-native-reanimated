@@ -6,7 +6,7 @@ describe(processObjectFit, () => {
     ['contain', 'contain'],
     ['cover', 'cover'],
     ['fill', 'stretch'],
-    ['scale-down', 'contain'],
+    ['scale-down', 'center'],
     ['none', 'none'],
   ])('maps %s to resizeMode %s', (objectFit, resizeMode) => {
     expect(processObjectFit(objectFit)).toEqual({ resizeMode });
