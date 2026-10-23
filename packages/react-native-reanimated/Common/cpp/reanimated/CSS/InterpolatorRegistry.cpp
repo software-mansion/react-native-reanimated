@@ -239,7 +239,6 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 
     // Text (Android)
     {"textAlignVertical", value<CSSKeyword>("auto")},
-    {"verticalAlign", value<CSSKeyword>("auto")},
     {"includeFontPadding", value<CSSBoolean>(false)},
 
     // Image

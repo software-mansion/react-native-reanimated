@@ -9,6 +9,8 @@ import {
   processBackgroundImage,
   processBoxShadow,
   processColor,
+  processObjectFit,
+  processVerticalAlign,
 } from '../common/style/processors';
 import { ValueProcessorTarget } from '../common/types';
 import type { StyleProps } from '../commonTypes';
@@ -97,6 +99,86 @@ describe('unprocessProps', () => {
       expect(processBackgroundImageRN(props.backgroundImage)).toEqual(
         processBackgroundImageRN(backgroundImage)
       );
+    });
+  });
+
+  describe('objectFit', () => {
+    test.each([
+      ['contain', 'contain'],
+      ['cover', 'cover'],
+      ['fill', 'stretch'],
+      ['scale-down', 'center'],
+      ['none', 'none'],
+    ])(
+      'round-trips objectFit %s through resizeMode %s',
+      (objectFit, resizeMode) => {
+        const props: StyleProps = processObjectFit(
+          objectFit,
+          context
+        ) as StyleProps;
+        expect(props).toEqual({ resizeMode });
+
+        unprocessProps(props);
+
+        expect(props.objectFit).toBe(objectFit);
+      }
+    );
+
+    test.each(['repeat'])(
+      'clears objectFit for resizeMode %s without an objectFit counterpart',
+      (resizeMode) => {
+        const props: StyleProps = { resizeMode };
+
+        unprocessProps(props);
+
+        expect(props).toEqual({ resizeMode });
+        expect('objectFit' in props).toBe(true);
+        expect(props.objectFit).toBeUndefined();
+      }
+    );
+
+    test('overwrites an objectFit from an earlier settle when resizeMode has no counterpart', () => {
+      const first: StyleProps = { resizeMode: 'contain' };
+      const second: StyleProps = { resizeMode: 'repeat' };
+
+      unprocessProps(first);
+      unprocessProps(second);
+      const settledStyle = { ...first, ...second };
+
+      expect(settledStyle.objectFit).toBeUndefined();
+      expect(settledStyle.resizeMode).toBe('repeat');
+    });
+
+    test('leaves a props bag without resizeMode untouched', () => {
+      const props: StyleProps = { opacity: 0.5 };
+
+      unprocessProps(props);
+
+      expect('objectFit' in props).toBe(false);
+    });
+  });
+
+  describe('verticalAlign', () => {
+    test.each(['auto', 'top', 'bottom', 'middle'])(
+      'round-trips verticalAlign %s through textAlignVertical',
+      (verticalAlign) => {
+        const props: StyleProps = processVerticalAlign(
+          verticalAlign,
+          context
+        ) as StyleProps;
+
+        unprocessProps(props);
+
+        expect(props.verticalAlign).toBe(verticalAlign);
+      }
+    );
+
+    test('leaves a props bag without textAlignVertical untouched', () => {
+      const props: StyleProps = { opacity: 0.5 };
+
+      unprocessProps(props);
+
+      expect(props).toEqual({ opacity: 0.5 });
     });
   });
 });

@@ -9,6 +9,8 @@ import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
+import { unprocessObjectFit } from './common/style/processors/image';
+import { unprocessVerticalAlign } from './common/style/processors/text';
 import type { StyleProps } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
@@ -74,6 +76,8 @@ export function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
   unprocessBoxShadow(props);
   unprocessBackgroundImage(props);
+  unprocessObjectFit(props);
+  unprocessVerticalAlign(props);
 }
 
 function unprocessBoxShadow(props: StyleProps) {
