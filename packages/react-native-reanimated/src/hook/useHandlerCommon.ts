@@ -1,5 +1,4 @@
 'use strict';
-import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
@@ -22,14 +21,18 @@ export interface UseHandlerContext<TContext extends UnknownRecord> {
   doDependenciesDiffer: boolean;
 }
 
-export function ensureWorkletHandlers(handlers: UnknownRecord) {
-  const nonWorkletNames = Object.entries(handlers).reduce<string[]>(
-    (acc, [name, handler]) => {
-      if (!isWorkletFunction(handler)) acc.push(name);
-      return acc;
-    },
-    []
+export function getDefinedHandlers<THandler>(
+  handlers: Partial<Record<string, THandler>>
+): [string, THandler][] {
+  return Object.entries(handlers).filter(
+    (entry): entry is [string, THandler] => entry[1] !== undefined
   );
+}
+
+export function ensureWorkletHandlers(handlers: UnknownRecord) {
+  const nonWorkletNames = getDefinedHandlers(handlers)
+    .filter(([, handler]) => !isWorkletFunction(handler))
+    .map(([name]) => name);
 
   if (nonWorkletNames.length > 0) {
     throw new Error(
@@ -47,15 +50,14 @@ const objectIs: (a: unknown, b: unknown) => boolean =
 
 const areWorkletClosuresEqual = areDependenciesEqual;
 
-function areWorkletsEqual(
-  next: WorkletFunction,
-  prev: WorkletFunction
-): boolean {
+function areHandlersEqual(next: unknown, prev: unknown): boolean {
   if (objectIs(next, prev)) {
     return true;
   }
 
   return (
+    isWorkletFunction(next) &&
+    isWorkletFunction(prev) &&
     next.__workletHash === prev.__workletHash &&
     ((next.__closure === undefined && prev.__closure === undefined) ||
       areWorkletClosuresEqual(next.__closure, prev.__closure))
@@ -63,30 +65,22 @@ function areWorkletsEqual(
 }
 
 export function areWorkletHandlersEqual(
-  next: Partial<Record<string, WorkletFunction>> | undefined,
-  prev: Partial<Record<string, WorkletFunction>> | undefined
+  next: UnknownRecord | undefined,
+  prev: UnknownRecord | undefined
 ) {
   if (!next || !prev) {
     return false;
   }
 
-  const nextKeys = Object.keys(next);
-  const prevKeys = Object.keys(prev);
+  const nextHandlers = getDefinedHandlers(next);
 
-  if (nextKeys.length !== prevKeys.length) {
+  if (nextHandlers.length !== getDefinedHandlers(prev).length) {
     return false;
   }
 
-  return nextKeys.every((key) => {
-    const nextValue = next[key];
-    const prevValue = prev[key];
-
-    if (!nextValue || !prevValue) {
-      return false;
-    }
-
-    return areWorkletsEqual(nextValue, prevValue);
-  });
+  return nextHandlers.every(([key, nextValue]) =>
+    areHandlersEqual(nextValue, prev[key])
+  );
 }
 
 export function areDependenciesEqual(

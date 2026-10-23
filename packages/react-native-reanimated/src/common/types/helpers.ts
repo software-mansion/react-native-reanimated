@@ -20,6 +20,12 @@ export type Simplify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
+/**
+ * A config as a caller passes it: any key may be left out or set to
+ * `undefined`, and both read as unset.
+ */
+export type ConfigInput<T> = { [K in keyof T]?: T[K] | undefined };
+
 export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = {
   [K in Keys]-?: Required<Pick<T, K>> & Partial<Omit<T, K>>;
 }[Keys];

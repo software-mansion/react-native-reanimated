@@ -1,6 +1,5 @@
 'use strict';
 import { useEffect, useRef } from 'react';
-import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
@@ -10,12 +9,15 @@ import {
   areDependenciesEqual,
   areWorkletHandlersEqual,
   ensureWorkletHandlers,
+  getDefinedHandlers,
 } from './useHandlerCommon';
 
 export type { UseHandlerContext } from './useHandlerCommon';
 
 function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
-  const handlerFunctions = Object.values(handlers);
+  const handlerFunctions = getDefinedHandlers(handlers).map(
+    ([, handler]) => handler
+  );
   // If there is no function provided, we assume that the Babel plugin is enabled.
   return (
     handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
@@ -60,8 +62,8 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
       ensureWorkletHandlers(handlers);
     }
     doDependenciesDiffer = !areWorkletHandlersEqual(
-      handlers as Record<string, WorkletFunction>,
-      state.prevHandlers as Record<string, WorkletFunction>
+      handlers,
+      state.prevHandlers
     );
   } else if (dependencies) {
     doDependenciesDiffer = !areDependenciesEqual(

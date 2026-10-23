@@ -29,4 +29,32 @@ describe('useAnimatedScrollHandler', () => {
 
     unmount();
   });
+
+  test('treats an undefined handler as one that was not passed', () => {
+    const offsets: number[] = [];
+
+    function ScrollComponent() {
+      const scrollHandler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+          offsets.push(event.contentOffset.y);
+        },
+        onBeginDrag: undefined,
+      });
+      return <Animated.ScrollView testID="scroll" onScroll={scrollHandler} />;
+    }
+
+    const { getByTestId, unmount } = render(<ScrollComponent />);
+
+    fireEvent.scroll(getByTestId('scroll'), {
+      nativeEvent: {
+        contentOffset: { x: 0, y: 42 },
+        contentSize: { height: 500, width: 100 },
+        layoutMeasurement: { height: 100, width: 100 },
+      },
+    });
+
+    expect(offsets).toContain(42);
+
+    unmount();
+  });
 });

@@ -1,6 +1,5 @@
 'use strict';
 import { useEffect, useRef } from 'react';
-import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
@@ -55,8 +54,8 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
     ensureWorkletHandlers(handlers);
   }
   const doDependenciesDiffer = !areWorkletHandlersEqual(
-    handlers as Record<string, WorkletFunction>,
-    state.prevHandlers as Record<string, WorkletFunction>
+    handlers,
+    state.prevHandlers
   );
 
   // Write after commit to avoid corruption from interrupted renders (in case of concurrent mode).

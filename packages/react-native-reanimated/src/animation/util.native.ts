@@ -23,6 +23,7 @@ export {
   initialUpdaterRun,
   isValidLayoutAnimationProp,
   recognizePrefixSuffix,
+  safeMergeConfigs,
 } from './utilCommon';
 
 const IN_STYLE_UPDATER_UI = createSerializable({ current: false });

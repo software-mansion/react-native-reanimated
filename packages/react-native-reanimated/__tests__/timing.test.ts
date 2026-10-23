@@ -3,6 +3,7 @@ import type {
   EasingFunction,
   EasingFunctionFactory,
   TimingAnimation,
+  WithTimingConfig,
 } from '../src';
 
 const START = 1_000;
@@ -174,6 +175,27 @@ describe('withTiming', () => {
       expect(animation.current).toBe(20);
       expect(Number.isFinite(animation.current)).toBe(true);
     });
+  });
+
+  describe('an undefined config value', () => {
+    function framesOf(config: WithTimingConfig): unknown[] {
+      const animation = withTiming(100, {
+        reduceMotion: ReduceMotion.Never,
+        ...config,
+      }) as unknown as TimingAnimation;
+      animation.onStart(animation, 0, START, null);
+      return [0, 150, 300].map((runtime) => {
+        animation.onFrame(animation, START + runtime);
+        return animation.current;
+      });
+    }
+
+    test.each(['duration', 'easing'] as const)(
+      'leaves the default %s in place',
+      (key) => {
+        expect(framesOf({ [key]: undefined })).toEqual(framesOf({}));
+      }
+    );
   });
 
   describe('a timing continued onto the same target', () => {

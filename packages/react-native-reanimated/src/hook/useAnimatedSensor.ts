@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 
+import type { ConfigInput } from '../common';
 import type {
   AnimatedSensor,
   SensorConfig,
@@ -124,7 +125,7 @@ const getServerSensorAvailability = () => false;
  */
 export function useAnimatedSensor<T extends SensorType>(
   sensorType: T,
-  userConfig?: Partial<SensorConfig>
+  userConfig?: ConfigInput<SensorConfig>
 ): AnimatedSensor<SensorValueMap[T]> {
   const {
     interval = 'auto',

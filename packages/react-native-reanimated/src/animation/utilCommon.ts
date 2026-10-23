@@ -9,6 +9,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
+import type { ConfigInput } from '../common';
 import { logger } from '../common';
 import type {
   AnimatableValue,
@@ -130,6 +131,27 @@ export function getReduceMotionForAnimation(config?: ReduceMotion) {
   }
 
   return getReduceMotionFromConfig(config);
+}
+
+export function safeMergeConfigs<TConfig extends object>(
+  defaults: TConfig,
+  userConfig?: ConfigInput<TConfig>
+): TConfig {
+  'worklet';
+  if (!userConfig) {
+    return defaults;
+  }
+
+  const merged = { ...defaults };
+  const keys = Object.keys(userConfig) as (keyof TConfig)[];
+  for (let index = 0; index < keys.length; index++) {
+    const key = keys[index];
+    const value = userConfig[key];
+    if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  return merged;
 }
 
 function applyProgressToMatrix(

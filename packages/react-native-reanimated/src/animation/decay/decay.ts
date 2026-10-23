@@ -4,7 +4,11 @@ import type {
   AnimationCallback,
   Timestamp,
 } from '../../commonTypes';
-import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import {
+  defineAnimation,
+  getReduceMotionForAnimation,
+  safeMergeConfigs,
+} from '../util';
 import { rigidDecay } from './rigidDecay';
 import { rubberBandDecay } from './rubberBandDecay';
 import type {
@@ -71,19 +75,15 @@ export const withDecay = function (
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
-    const config: DefaultDecayConfig = {
-      deceleration: 0.998,
-      velocityFactor: 1,
-      velocity: 0,
-      rubberBandFactor: 0.6,
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach(
-        (key) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
-      );
-    }
+    const config = safeMergeConfigs<DefaultDecayConfig>(
+      {
+        deceleration: 0.998,
+        velocityFactor: 1,
+        velocity: 0,
+        rubberBandFactor: 0.6,
+      },
+      userConfig
+    );
 
     const decay: (animation: InnerDecayAnimation, now: number) => boolean =
       isValidRubberBandConfig(config)
