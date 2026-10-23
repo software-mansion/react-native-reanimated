@@ -2,11 +2,8 @@
 import { useEffect } from 'react';
 
 import { logger } from '../common';
-import { ReduceMotion } from '../commonTypes';
-import {
-  isReducedMotionEnabledInSystem,
-  ReducedMotionManager,
-} from '../ReducedMotion';
+import type { ReduceMotion } from '../commonTypes';
+import { ReducedMotionManager } from '../ReducedMotion';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally
@@ -25,23 +22,7 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const wasEnabled = ReducedMotionManager.jsValue;
-    switch (mode) {
-      case ReduceMotion.System:
-        ReducedMotionManager.setEnabled(isReducedMotionEnabledInSystem());
-        break;
-      case ReduceMotion.Always:
-        ReducedMotionManager.setEnabled(true);
-        break;
-      case ReduceMotion.Never:
-        ReducedMotionManager.setEnabled(false);
-        break;
-    }
-    return () => {
-      ReducedMotionManager.setEnabled(wasEnabled);
-    };
-  }, [mode]);
+  useEffect(() => ReducedMotionManager.override(mode), [mode]);
 
   return null;
 }
