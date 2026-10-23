@@ -5,6 +5,8 @@ const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const ZERO_SCALE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 30, 40, 0, 1];
 const SINGULAR = [1, 2, 3, 0, 2, 4, 6, 0, 0, 0, 1, 0, 30, 40, 0, 1];
 
+const PERSPECTIVE = IDENTITY.map((value, i) => (i === 11 ? -0.002 : value));
+
 const drivers = [
   [
     'withTiming',
@@ -43,6 +45,29 @@ describe.each(drivers)('%s transform matrices', (_name, createAnimation) => {
       }
     }
   );
+
+  test('preserves perspective throughout the animation', () => {
+    for (const [from, to] of [
+      [IDENTITY, PERSPECTIVE],
+      [PERSPECTIVE, IDENTITY],
+    ]) {
+      const animation = createAnimation(to) as unknown as AnimationObject;
+      animation.onStart(animation, from, 1000, undefined);
+      let finished = false;
+      let sawPerspective = false;
+      for (let time = 1016; time <= 11000 && !finished; time += 16) {
+        finished = animation.onFrame(animation, time);
+        const matrix = animation.current as number[];
+        expect(matrix.every(Number.isFinite)).toBe(true);
+        if (!finished && matrix[11] !== 0 && matrix[11] !== -0.002) {
+          sawPerspective = true;
+        }
+      }
+      expect(sawPerspective).toBe(true);
+      expect(finished).toBe(true);
+      expect(animation.current).toEqual(to);
+    }
+  });
 
   test('can restart from a partially collapsed matrix', () => {
     const first = createAnimation(ZERO_SCALE) as unknown as AnimationObject;

@@ -13,10 +13,13 @@ export type AffineMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
 
 export type AffineMatrixFlat = FixedLengthArray<number, 16>;
 
-type TransformMatrixDecomposition = Record<
-  'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
-  AffineMatrix
->;
+interface TransformMatrixDecomposition {
+  translationMatrix: AffineMatrix;
+  scaleMatrix: AffineMatrix;
+  rotationMatrix: AffineMatrix;
+  skewMatrix: AffineMatrix;
+  perspective?: FixedLengthArray<number, 4>;
+}
 
 type Axis = 'x' | 'y' | 'z';
 
@@ -343,6 +346,42 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
   };
 }
 
+function determinant3x3(m: AffineMatrixFlat): number {
+  'worklet';
+  return (
+    m[0] * (m[5] * m[10] - m[6] * m[9]) -
+    m[1] * (m[4] * m[10] - m[6] * m[8]) +
+    m[2] * (m[4] * m[9] - m[5] * m[8])
+  );
+}
+
+function extractPerspective(
+  m: AffineMatrixFlat
+): FixedLengthArray<number, 4> | undefined {
+  'worklet';
+  if (m[3] === 0 && m[7] === 0 && m[11] === 0) {
+    return undefined;
+  }
+  // Solve A * perspective = M's last column, where A has no perspective.
+  const determinant = determinant3x3(m);
+  const x =
+    (m[3] * (m[5] * m[10] - m[6] * m[9]) +
+      m[7] * (m[2] * m[9] - m[1] * m[10]) +
+      m[11] * (m[1] * m[6] - m[2] * m[5])) /
+    determinant;
+  const y =
+    (m[3] * (m[6] * m[8] - m[4] * m[10]) +
+      m[7] * (m[0] * m[10] - m[2] * m[8]) +
+      m[11] * (m[2] * m[4] - m[0] * m[6])) /
+    determinant;
+  const z =
+    (m[3] * (m[4] * m[9] - m[5] * m[8]) +
+      m[7] * (m[1] * m[8] - m[0] * m[9]) +
+      m[11] * (m[0] * m[5] - m[1] * m[4])) /
+    determinant;
+  return [x, y, z, 1 - m[12] * x - m[13] * y - m[14] * z];
+}
+
 export function decomposeMatrix(
   unknownTypeMatrix: AffineMatrixFlat | AffineMatrix
 ): TransformMatrixDecomposition {
@@ -352,7 +391,7 @@ export function decomposeMatrix(
   if (input[15] === 0) {
     throw new Error('[Reanimated] Invalid transform matrix.');
   }
-  const matrix = input.map((value) => value / input[15]);
+  const matrix = input.map((value) => value / input[15]) as AffineMatrixFlat;
 
   const translationMatrix: AffineMatrix = [
     [1, 0, 0, 0],
@@ -388,6 +427,7 @@ export function decomposeMatrix(
     scaleMatrix,
     rotationMatrix,
     skewMatrix,
+    perspective: extractPerspective(matrix),
   };
 }
 
@@ -395,9 +435,14 @@ export function decomposeMatrixIntoMatricesAndAngles(
   matrix: AffineMatrixFlat | AffineMatrix
 ): TransformMatrixDecompositionWithAngles {
   'worklet';
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
-    decomposeMatrix(matrix);
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    scaleMatrix,
+    rotationMatrix,
+    translationMatrix,
+    skewMatrix,
+    perspective,
+  } = decomposeMatrix(matrix);
 
   const sinRy = -rotationMatrix[0][2];
 
@@ -417,6 +462,7 @@ export function decomposeMatrixIntoMatricesAndAngles(
     rotationMatrix,
     translationMatrix,
     skewMatrix,
+    perspective,
     rx: rx || 0,
     ry: ry || 0,
     rz: rz || 0,
@@ -435,15 +481,6 @@ function applyProgressToMatrix(
 function applyProgressToNumber(progress: number, a: number, b: number) {
   'worklet';
   return a + progress * (b - a);
-}
-
-function determinant3x3(m: AffineMatrixFlat): number {
-  'worklet';
-  return (
-    m[0] * (m[5] * m[10] - m[6] * m[9]) -
-    m[1] * (m[4] * m[10] - m[6] * m[8]) +
-    m[2] * (m[4] * m[9] - m[5] * m[8])
-  );
 }
 
 function canDecomposeMatrix(matrix: AffineMatrixFlat): boolean {
@@ -511,12 +548,25 @@ export function interpolateDecomposedMatrix(
       getRotationMatrix(applyProgressToNumber(progress, start.rz, stop.rz), 'z')
     )
   );
-  return flatten(
-    multiplyMatrices(
-      multiplyMatrices(scale, multiplyMatrices(skew, rotation)),
-      translation
-    )
+  const matrix = multiplyMatrices(
+    multiplyMatrices(scale, multiplyMatrices(skew, rotation)),
+    translation
   );
+  if (start.perspective || stop.perspective) {
+    const from = start.perspective ?? [0, 0, 0, 1];
+    const to = stop.perspective ?? [0, 0, 0, 1];
+    const perspective = from.map((value, i) =>
+      applyProgressToNumber(progress, value, to[i])
+    );
+    for (const row of matrix) {
+      row[3] =
+        row[0] * perspective[0] +
+        row[1] * perspective[1] +
+        row[2] * perspective[2] +
+        row[3] * perspective[3];
+    }
+  }
+  return flatten(matrix);
 }
 
 export function interpolateMatrix(

@@ -325,3 +325,22 @@ describe('SharedTransition singular matrices', () => {
     }
   });
 });
+
+describe('SharedTransition perspective', () => {
+  test('preserves perspective at intermediate progress and at the target', () => {
+    const target = IDENTITY.map((value, i) => (i === 11 ? -0.002 : value));
+    const values = {
+      ...VALUES,
+      currentTransform: { matrix: IDENTITY },
+      targetTransform: { matrix: target },
+    };
+    for (const progress of [0, 0.25, 0.5, 1]) {
+      const style = new SharedTransition().getProgressAnimation()(
+        values,
+        progress
+      );
+      const [{ matrix }] = style.transform as [{ matrix: number[] }];
+      expect(matrix[11]).toBeCloseTo(-0.002 * progress, 10);
+    }
+  });
+});

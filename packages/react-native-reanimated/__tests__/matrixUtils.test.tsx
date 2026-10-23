@@ -286,3 +286,72 @@ describe('Matrix interpolation', () => {
     expect(halfway[4]).toBeCloseTo(-Math.SQRT1_2, 10);
   });
 });
+
+describe('Perspective interpolation', () => {
+  test('interpolates perspective independently from rotation', () => {
+    const rotated: AffineMatrixFlat = [
+      0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, -0.002, 0, 0, 0, 1,
+    ];
+    const half = interpolateMatrix(
+      0.5,
+      prepareMatrixInterpolation(flatIdentityMatrix, rotated)
+    );
+    expect(half[0]).toBeCloseTo(Math.SQRT1_2, 10);
+    expect(half[1]).toBeCloseTo(Math.SQRT1_2, 10);
+    expect(half[11]).toBeCloseTo(-0.001, 10);
+  });
+
+  test('recomposes a matrix with rotation, translation, scale and perspective', () => {
+    const matrix: AffineMatrixFlat = [
+      0, 2, 0, 0.004, -3, 0, 0, -0.003, 0, 0, 4, -0.008, 30, 40, 50, 1,
+    ];
+    const interpolation = prepareMatrixInterpolation(matrix, matrix);
+    for (const progress of [0.1, 0.5, 0.9]) {
+      interpolateMatrix(progress, interpolation).forEach((value, i) =>
+        expect(value).toBeCloseTo(matrix[i], 10)
+      );
+    }
+  });
+
+  test('preserves normalized perspective without mutating a homogeneous matrix', () => {
+    const matrix: AffineMatrixFlat = [
+      2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, -0.004, 0, 0, 0, 2,
+    ];
+    Object.freeze(matrix);
+    const interpolation = prepareMatrixInterpolation(matrix, matrix);
+    interpolateMatrix(0.5, interpolation).forEach((value, i) =>
+      expect(value).toBeCloseTo(matrix[i] / 2, 10)
+    );
+    expect(interpolateMatrix(1, interpolation)).toEqual(matrix);
+  });
+});
+
+test('rotates the perspective direction along with the interpolated rotation', () => {
+  const angle = Math.PI / 3;
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const target: AffineMatrixFlat = [
+    c,
+    0,
+    -s,
+    s * 0.002,
+    0,
+    1,
+    0,
+    0,
+    s,
+    0,
+    c,
+    -c * 0.002,
+    0,
+    0,
+    0,
+    1,
+  ];
+  const half = interpolateMatrix(
+    0.5,
+    prepareMatrixInterpolation(flatIdentityMatrix, target)
+  );
+  expect(half[3]).toBeCloseTo(Math.sin(angle / 2) * 0.001, 10);
+  expect(half[11]).toBeCloseTo(-Math.cos(angle / 2) * 0.001, 10);
+});
