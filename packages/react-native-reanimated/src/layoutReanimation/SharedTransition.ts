@@ -111,6 +111,11 @@ export type SharedTransitionAnimationsValues = {
   windowHeight: number;
 };
 
+interface SharedTransitionAnimations extends StyleProps {
+  transform?: [{ matrix: number[] }];
+  transformMatrix?: number[];
+}
+
 /**
  * A function that defines a custom shared transition animation. It receives the
  * source/target values and should return an object containing animations for
@@ -118,7 +123,7 @@ export type SharedTransitionAnimationsValues = {
  */
 export type CustomSharedTransitionAnimation = (
   values: SharedTransitionAnimationsValues
-) => StyleProps;
+) => SharedTransitionAnimations;
 
 /**
  * A function that defines a progress-based shared transition animation. It
