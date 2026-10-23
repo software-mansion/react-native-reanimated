@@ -59,7 +59,7 @@ jobs:
       - name: Use Node.js
         if: steps.result-cache.outputs.cache-hit != 'true'
         id: setup-node
-        uses: ./.github/actions/setup-node-yarn
+        uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
@@ -68,7 +68,7 @@ jobs:
         run: yarn install --immutable
       - name: Save Yarn cache
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/save-yarn-cache
+        uses: $/.github/actions/save-yarn-cache
         with:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
@@ -83,14 +83,14 @@ jobs:
 
       - name: Setup ccache
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: ios-${{ env.CONFIGURATION }}
 
       - name: Install Pods (with caching)
         id: install-pods
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
@@ -107,7 +107,7 @@ jobs:
 
       - name: Save ccache
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/save-ccache
+        uses: $/.github/actions/save-ccache
         with:
           key-prefix: ios-${{ env.CONFIGURATION }}
 
@@ -143,7 +143,7 @@ jobs:
       # fan-out does not race for the key.
       - name: Save Pods cache
         if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
-        uses: ./.github/actions/save-pods
+        uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios

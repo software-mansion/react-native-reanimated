@@ -31,15 +31,15 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Use Node.js
         id: setup-node
-        uses: ./.github/actions/setup-node-yarn
+        uses: $/.github/actions/setup-node-yarn
       - name: Run static checks
-        uses: ./.github/actions/package-static-checks
+        uses: $/.github/actions/package-static-checks
         with:
           package-dir: packages/react-native-reanimated
           build-commands: yarn workspace react-native-reanimated build
 
       - name: Save Yarn cache
-        uses: ./.github/actions/save-yarn-cache
+        uses: $/.github/actions/save-yarn-cache
         with:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}

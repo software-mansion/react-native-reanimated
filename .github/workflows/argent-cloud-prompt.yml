@@ -237,7 +237,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Install the argent-cloud CLI
-        uses: ./.github/actions/install-argent-cloud
+        uses: $/.github/actions/install-argent-cloud
 
       - name: Write the prompt
         env:
@@ -272,7 +272,7 @@ jobs:
 
       - name: Run argent-cloud
         id: run
-        uses: ./.github/actions/run-argent-cloud
+        uses: $/.github/actions/run-argent-cloud
         with:
           prompt-file: ${{ env.WORK_DIR }}/output/prompt.md
           app-bundle: ${{ steps.app.outputs.bundle }}
@@ -372,11 +372,11 @@ jobs:
           } > "$WORK_DIR/comment.md"
 
       - name: Install the argent-cloud CLI
-        uses: ./.github/actions/install-argent-cloud
+        uses: $/.github/actions/install-argent-cloud
 
       - name: Post the comment
         id: post
-        uses: ./.github/actions/post-argent-cloud-comment
+        uses: $/.github/actions/post-argent-cloud-comment
         with:
           target: ${{ needs.resolve.outputs.target }}
           comment-file: ${{ env.WORK_DIR }}/comment.md

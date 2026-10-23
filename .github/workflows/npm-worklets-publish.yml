@@ -69,13 +69,13 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Use Node.js
         id: setup-node
-        uses: ./.github/actions/setup-node-yarn
+        uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
       - name: Install monorepo dependencies
         run: yarn install --immutable
       - name: Save Yarn cache
-        uses: ./.github/actions/save-yarn-cache
+        uses: $/.github/actions/save-yarn-cache
         with:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
@@ -105,7 +105,7 @@ jobs:
 
   npm-worklets-publish:
     needs: build-oxc-plugin
-    uses: ./.github/workflows/npm-package-publish.yml
+    uses: $/.github/workflows/npm-package-publish.yml
     with:
       runs-on: ubuntu-22.04
       artifacts-pattern: oxc-plugin-*
