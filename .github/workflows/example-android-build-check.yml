@@ -28,7 +28,7 @@ jobs:
       BUILD_MARKER_DIR: .build-markers
       CACHE_KEY: android-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
     concurrency:
-      group: android-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: android-${{ github.workflow }}-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
