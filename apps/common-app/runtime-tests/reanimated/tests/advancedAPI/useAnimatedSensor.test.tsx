@@ -188,6 +188,13 @@ describe('useAnimatedSensor', () => {
       const expected = getProbe(name);
       expect(switching.isAvailable).toBe(expected.isAvailable);
       expect(switching.sensor === expected.sensor).toBe(true);
+      expect(
+        SENSORS.some(
+          ({ name: otherName }) =>
+            otherName !== name &&
+            switching.sensor === getProbe(otherName).sensor
+        )
+      ).toBe(false);
     }
   });
 
