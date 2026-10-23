@@ -918,11 +918,13 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  const bool committedAllSurfaces = commitUpdates(propsMapBySurface);
-  if (flushRegistry && committedAllSurfaces) {
+  commitUpdates(propsMapBySurface);
+  if (flushRegistry) {
     // A full flush carries every registry value of every surface, including
     // the ones written synchronously, so the shadow trees are in sync with
-    // the views again.
+    // the views again. Should a surface skip its commit because React is
+    // committing concurrently, that React commit carries the registry values
+    // instead (see `ReanimatedCommitHook`).
     hasUncommittedSynchronousProps_ = false;
   }
 }
@@ -1188,11 +1190,10 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-bool ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  bool committedAllSurfaces = true;
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -1217,17 +1218,16 @@ bool ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            false,
            /* .mountSynchronously = */ true});
 
-      if (status == ShadowTree::CommitStatus::Succeeded) {
 #ifdef ANDROID
+      if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
-#endif
-      } else {
-        committedAllSurfaces = false;
       }
+#else
+      (void)status;
+#endif
     });
   }
-  return committedAllSurfaces;
 }
 
 void ReanimatedModuleProxy::dispatchCommand(
