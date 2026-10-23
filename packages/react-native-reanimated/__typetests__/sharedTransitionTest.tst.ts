@@ -1,7 +1,15 @@
 import { describe, expect, test } from 'tstyche';
 
-import type { SharedTransitionAnimationsValues } from '..';
-import { SharedTransition, SharedTransitionType, withSpring } from '..';
+import type {
+  CustomSharedTransitionAnimation,
+  SharedTransitionAnimationsValues,
+} from '..';
+import {
+  SharedTransition,
+  SharedTransitionType,
+  withSpring,
+  withTiming,
+} from '..';
 
 describe('SharedTransition', () => {
   test('custom animation receives typed source and target values', () => {
@@ -21,6 +29,33 @@ describe('SharedTransition', () => {
     expect<SharedTransitionAnimationsValues>().type.not.toHaveProperty(
       'targetMargin'
     );
+  });
+
+  test('custom transforms accept a single matrix and the legacy alias', () => {
+    SharedTransition.custom((values) => ({
+      transform: [{ matrix: withTiming(values.targetTransform.matrix) }],
+    }));
+    SharedTransition.custom((values) => ({
+      transformMatrix: withSpring(values.targetTransformMatrix),
+    }));
+  });
+
+  test('custom transforms reject individual operations and multiple matrices', () => {
+    expect(() => ({
+      transform: [{ scale: withTiming(2) }],
+    })).type.not.toBeAssignableTo<CustomSharedTransitionAnimation>();
+    expect(() => ({
+      transform: [{ rotate: '90deg' }],
+    })).type.not.toBeAssignableTo<CustomSharedTransitionAnimation>();
+    expect(() => ({
+      transform: [{ matrix: [] }, { matrix: [] }],
+    })).type.not.toBeAssignableTo<CustomSharedTransitionAnimation>();
+  });
+
+  test('progress callbacks can compute individual transform operations', () => {
+    SharedTransition.progressAnimation((_values, progress) => ({
+      transform: [{ scale: progress }],
+    }));
   });
 
   test('builders stay SharedTransition through static and chained modifiers', () => {

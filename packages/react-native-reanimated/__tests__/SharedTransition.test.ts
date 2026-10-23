@@ -1,3 +1,4 @@
+import { withTiming } from '../src/animation';
 import { ReduceMotion } from '../src/commonTypes';
 import type {
   AnimationObject,
@@ -145,14 +146,14 @@ describe('SharedTransition', () => {
     });
 
     test('applies the reduce motion of the builder', () => {
-      const scale = { onFrame: () => true, onStart: () => undefined };
+      const matrix = withTiming(IDENTITY);
       const { animations } = runLayoutAnimation(
         SharedTransition.custom(() => {
           'worklet';
-          return { transform: [{ scale }] };
+          return { transform: [{ matrix }] };
         }).reduceMotion(ReduceMotion.Always)
       );
-      expect(animations.transform[0].scale.reduceMotion).toBe(true);
+      expect(animations.transform[0].matrix.reduceMotion).toBe(true);
     });
 
     test('starts an animation defined outside the worklet', () => {

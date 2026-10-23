@@ -127,7 +127,7 @@ const transition = SharedTransition.custom((values) => {
 });
 ```
 
-The values include `OriginX`, `OriginY`, `Width`, `Height`, `Opacity`, `BackgroundColor`, `Transform` (`{ matrix }`), `TransformOrigin`, `BorderRadius`, `BorderWidth`, `BorderColor` and the shadow properties, each with the `current` and the `target` prefix. Per-corner and per-side border values are included when one of the views sets them. `GlobalOriginX`, `GlobalOriginY` and `TransformMatrix` are kept for compatibility with Reanimated 3, and a returned `transformMatrix` is applied as the `transform`. Every animated property starts from its value in the source view, so animate the transform as a whole, with `transform: [{ matrix }]` or `transformMatrix`.
+The values include `OriginX`, `OriginY`, `Width`, `Height`, `Opacity`, `BackgroundColor`, `Transform` (`{ matrix }`), `TransformOrigin`, `BorderRadius`, `BorderWidth`, `BorderColor` and the shadow properties, each with the `current` and the `target` prefix. Per-corner and per-side border values are included when one of the views sets them. `GlobalOriginX`, `GlobalOriginY` and `TransformMatrix` are kept for compatibility with Reanimated 3, and a returned `transformMatrix` is applied as the `transform`. Every animated property starts from its value in the source view, so animate the transform as a whole, with `transform: [{ matrix }]` or `transformMatrix`. The `custom` callback does not support individual transform operations such as `transform: [{ scale: withTiming(2) }]`.
 
 ### Progress-based animation
 
