@@ -8,7 +8,9 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -44,14 +46,16 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  // Whether props were written to the views synchronously (the
-  // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` fast path) since the last commit that
-  // carried the registry values, i.e. whether the shadow tree is behind the
-  // views. Reanimated commits the registry before a touch is handled in JS
-  // while this is the case, so that `measure()` agrees with the screen.
-  void markShadowTreeMissingSynchronousProps();
-  void markShadowTreeInSyncWithSynchronousProps();
-  bool isShadowTreeMissingSynchronousProps() const;
+  // Tracks the surfaces whose views received props synchronously (the
+  // `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` fast path) since the last commit of that
+  // surface that carried the registry values, i.e. whose shadow tree is behind
+  // the views. Reanimated commits the registry before a touch is handled in
+  // JS while any surface is in this state, so that `measure()` agrees with the
+  // screen. The state is per surface: a commit of one surface says nothing
+  // about the trees of the others.
+  void markShadowTreeMissingSynchronousProps(SurfaceId surfaceId);
+  void markShadowTreeInSyncWithSynchronousProps(SurfaceId surfaceId);
+  bool hasShadowTreesMissingSynchronousProps() const;
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
@@ -74,7 +78,8 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  std::atomic<bool> isShadowTreeMissingSynchronousProps_{false};
+  mutable std::mutex shadowTreesMissingSynchronousPropsMutex_;
+  std::unordered_set<SurfaceId> shadowTreesMissingSynchronousProps_;
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;

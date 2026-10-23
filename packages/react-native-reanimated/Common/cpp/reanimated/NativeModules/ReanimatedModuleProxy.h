@@ -207,8 +207,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
-  // Returns `true` when the commit succeeded for every surface.
-  bool commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  // Returns the ids of the surfaces whose commit succeeded.
+  std::vector<SurfaceId> commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   // Commits the registry values when the synchronous props path left the
   // shadow tree out of date, so that the layout queries JS runs for a touch
   // (e.g. `measure()` in `Pressable`) see the same positions as the views.

@@ -65,16 +65,19 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
-void UpdatesRegistryManager::markShadowTreeMissingSynchronousProps() {
-  isShadowTreeMissingSynchronousProps_ = true;
+void UpdatesRegistryManager::markShadowTreeMissingSynchronousProps(const SurfaceId surfaceId) {
+  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
+  shadowTreesMissingSynchronousProps_.insert(surfaceId);
 }
 
-void UpdatesRegistryManager::markShadowTreeInSyncWithSynchronousProps() {
-  isShadowTreeMissingSynchronousProps_ = false;
+void UpdatesRegistryManager::markShadowTreeInSyncWithSynchronousProps(const SurfaceId surfaceId) {
+  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
+  shadowTreesMissingSynchronousProps_.erase(surfaceId);
 }
 
-bool UpdatesRegistryManager::isShadowTreeMissingSynchronousProps() const {
-  return isShadowTreeMissingSynchronousProps_;
+bool UpdatesRegistryManager::hasShadowTreesMissingSynchronousProps() const {
+  auto lock = std::scoped_lock{shadowTreesMissingSynchronousPropsMutex_};
+  return !shadowTreesMissingSynchronousProps_.empty();
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {

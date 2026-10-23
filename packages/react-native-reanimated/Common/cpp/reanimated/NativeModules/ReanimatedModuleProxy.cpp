@@ -918,16 +918,19 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  const bool committed = commitUpdates(propsMapBySurface);
-  if (flushRegistry && committed) {
+  const auto committedSurfaceIds = commitUpdates(propsMapBySurface);
+  if (flushRegistry) {
     // A full flush carries every registry value, including the ones written
-    // synchronously, so the shadow tree is in sync with the views again.
-    updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps();
+    // synchronously, so the committed shadow trees are in sync with the views
+    // again.
+    for (const auto surfaceId : committedSurfaceIds) {
+      updatesRegistryManager_->markShadowTreeInSyncWithSynchronousProps(surfaceId);
+    }
   }
 }
 
 void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch() {
-  if (!updatesRegistryManager_->isShadowTreeMissingSynchronousProps()) {
+  if (!updatesRegistryManager_->hasShadowTreesMissingSynchronousProps()) {
     return;
   }
   ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouch");
@@ -1155,8 +1158,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
 }
 
 void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
-  if (!synchronousUpdatesBatch.empty()) {
-    updatesRegistryManager_->markShadowTreeMissingSynchronousProps();
+  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+    updatesRegistryManager_->markShadowTreeMissingSynchronousProps(shadowNodeFamily->getSurfaceId());
   }
 
 #ifdef ANDROID
@@ -1187,11 +1190,12 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-bool ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+std::vector<SurfaceId> ReanimatedModuleProxy::commitUpdates(
+    const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  bool allSucceeded = true;
+  std::vector<SurfaceId> committedSurfaceIds;
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -1216,18 +1220,16 @@ bool ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            false,
            /* .mountSynchronously = */ true});
 
-      if (status != ShadowTree::CommitStatus::Succeeded) {
-        allSucceeded = false;
-      }
-#ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
+        committedSurfaceIds.push_back(surfaceId);
+#ifdef ANDROID
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
-      }
 #endif
+      }
     });
   }
-  return allSucceeded;
+  return committedSurfaceIds;
 }
 
 void ReanimatedModuleProxy::dispatchCommand(
