@@ -95,7 +95,7 @@ Non-exclusively obtains the Synchronizable and returns its value. It never block
 
 ### setBlocking
 
-Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking`, `setBlocking` or `setDirty` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
 
 ```tsx
 // Set the value to 42

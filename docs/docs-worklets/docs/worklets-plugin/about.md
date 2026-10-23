@@ -26,7 +26,7 @@ function foo() {
 
 ```ts
 useAnimatedStyle(() => {
-  // This function will be ran on the UI thread,
+  // This function will run on the UI thread,
   // hence it's in a workletizable context and will be
   // autoworkletized. You don't need to add the 'worklet' directive here.
   return {
@@ -85,7 +85,7 @@ const obj = {
 
 [Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
 
-`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
+`__workletClass` is a special property that marks a class as a Worklet Class. Its value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
 
 ```ts
 class Clazz {
@@ -112,14 +112,14 @@ To reduce boilerplate code and provide a safer API, the Worklets plugin detects 
 ```ts
 import { scheduleOnUI } from 'react-native-worklets';
 
-const style = scheduleOnUI((greetings: string) => {
+scheduleOnUI((greetings: string) => {
   // You don't need to add the 'worklet' directive here,
   // since plugin detects this callback as autoworkletizable.
   console.log(`${greetings} from UI Runtime`);
 }, 'Hello');
 ```
 
-This isn't limited to `useAnimatedStyle` hook - the Worklets plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes callbacks of its APIs. It also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
@@ -207,7 +207,7 @@ export function bar() {
 
 ### Custom hooks
 
-Currently Reanimated hasn't exposed APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
+Currently Worklets doesn't expose APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
 
 ### Expressions
 
