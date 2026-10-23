@@ -14,6 +14,47 @@ export function isAnimated(prop: unknown) {
   return false;
 }
 
+const MAX_STYLE_VALUE_DEPTH = 4;
+
+/**
+ * Compares two style values. Arrays and plain objects (e.g. `transform`,
+ * `shadowOffset` or `boxShadow`) are compared by their contents, because
+ * updaters usually return new instances on every run even when nothing changed.
+ * Values nested deeper than `MAX_STYLE_VALUE_DEPTH` are treated as different.
+ */
+export function isStyleValueEqual(a: unknown, b: unknown, depth = 0): boolean {
+  'worklet';
+  if (a === b) {
+    return true;
+  }
+  if (
+    typeof a !== 'object' ||
+    typeof b !== 'object' ||
+    a === null ||
+    b === null ||
+    Array.isArray(a) !== Array.isArray(b) ||
+    depth >= MAX_STYLE_VALUE_DEPTH
+  ) {
+    return false;
+  }
+  const aRecord = a as Record<string, unknown>;
+  const bRecord = b as Record<string, unknown>;
+  const aKeys = Object.keys(aRecord);
+  if (aKeys.length !== Object.keys(bRecord).length) {
+    return false;
+  }
+  for (let i = 0; i < aKeys.length; i++) {
+    const key = aKeys[i];
+    if (
+      !(key in bRecord) ||
+      !isStyleValueEqual(aRecord[key], bRecord[key], depth + 1)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // This function works because `Object.keys`
 // return empty array of primitives and on arrays
 // it returns array of its indices.
