@@ -31,13 +31,6 @@ import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesConta
 import { ComparisonMode } from '../../../ReJest/types';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
-// Covers #10140 (settled values leaking into top-level props) and the
-// per-frame color and text ordering from #10339. The runtime-tests app has
-// FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS on and the synchronous props paths
-// off, so the #10339 bug itself (a mount writing a stale color over a
-// synchronous update, only with IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS on) cannot
-// happen here.
-
 const BOX_REF = 'SETTLED_PROPS_LEAK_BOX';
 const FRAMES_DONE = 'SETTLED_PROPS_LEAK_FRAMES_DONE';
 const SETTLE_DONE = 'SETTLED_PROPS_LEAK_SETTLE_DONE';
@@ -167,6 +160,8 @@ function expectNonDecreasing(values: number[], what: string) {
 
 async function recordFrames(mode: Mode, durationMs: number) {
   await mockAnimationTimer();
+  // No component argument: the recorder files updates under a tag that does
+  // not match `findNodeHandle` of a ref forwarded by createAnimatedComponent.
   const updatesContainer = await recordAnimationUpdates();
 
   await render(
@@ -180,9 +175,6 @@ async function recordFrames(mode: Mode, durationMs: number) {
   );
   await waitForNotification(FRAMES_DONE);
 
-  // Only the box animates. The recorder files updates under the view
-  // descriptor tag, which does not match `findNodeHandle` of a ref forwarded
-  // through createAnimatedComponent, so do not pass the component here.
   const jsUpdates = await updatesContainer.getUpdates();
   const nativeSnapshots = await updatesContainer.getNativeSnapshots();
   await stopRecordingAnimationUpdates();
@@ -200,8 +192,6 @@ function colorFrames(
     .filter((index) => index >= 0);
   return {
     js: indices.map((index) => colorAt(jsUpdates, index)),
-    // Read from the shadow tree when the update was sent, so it shows the
-    // commit of the previous frame.
     native: indices.map((index) => colorAt(nativeSnapshots, index)),
   };
 }
@@ -222,7 +212,6 @@ function textFrames(jsUpdates: SingleViewSnapshot): number[] {
 const STYLE_KEYS = ['backgroundColor'];
 const PROP_KEYS = ['text', 'defaultValue'];
 
-// Keys of `from` that are in `keys`, as one string, so a failure names them.
 function keysIn(from: object, keys: string[]): string {
   return keys.filter((key) => key in from).join(',');
 }
@@ -230,18 +219,15 @@ function keysIn(from: object, keys: string[]): string {
 function expectSettledProps(props: ReceivedProps, mode: Mode) {
   const style = flatStyleOf(props);
   expect(colorOf(style.backgroundColor)).toBe(TO_COLOR, ComparisonMode.COLOR);
-  // Style keys that leaked into the top-level props.
   expect(keysIn(props, STYLE_KEYS)).toBe('');
   if (mode === 'styleOnly') {
     return;
   }
   expect(props.text as string).toBe('100');
   expect(props.defaultValue as string).toBe('100');
-  // Animated props keys that leaked into the style.
   expect(keysIn(style, PROP_KEYS)).toBe('');
 }
 
-// The color the platform shows, not the shadow tree.
 async function mountedColor(): Promise<string | undefined> {
   return (await getTestComponent(BOX_REF).getMountedViewProps())
     ?.backgroundColor;
@@ -292,8 +278,7 @@ describe('settled animated style and props of a wrapped component', () => {
 
       const colors = colorFrames(jsUpdates, nativeSnapshots);
       expect(colors.js.length >= minFrames).toBe(true);
-      // The shadow tree follows JS one frame behind. A color stuck on an old
-      // frame while the text commits (#10339) breaks this.
+      // The shadow tree follows JS one frame behind.
       for (let i = 1; i < colors.js.length; i++) {
         expect(colors.native[i]).toBe(colors.js[i - 1], ComparisonMode.COLOR);
       }
@@ -364,7 +349,6 @@ describe('settled animated style and props of a wrapped component', () => {
       ).toBe(TO_COLOR, ComparisonMode.COLOR);
       expect(await mountedColor()).toBe(TO_COLOR, ComparisonMode.COLOR);
 
-      // Renders, over the whole test, that got a style key as a top-level prop.
       const leakingRenders = received.filter(
         (props) => keysIn(props, STYLE_KEYS) !== ''
       );
