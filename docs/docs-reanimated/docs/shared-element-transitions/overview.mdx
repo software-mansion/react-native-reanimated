@@ -145,7 +145,7 @@ const transition = SharedTransition.custom((values) => {
 });
 ```
 
-Call `.defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` to use the progress-based animation for every transition. Transitions that don't follow a screen transition progress drive the progress with the builder's animation (for example `.duration()` or `.springify()`).
+Call `.defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` to use the progress-based animation for every transition. During iOS back navigation, the screen transition controls progress. Otherwise, the builder settings control progress: for example, `.duration(800)` animates progress from 0 to 1 over 800 ms, while `.springify()` uses a spring animation.
 
 ### Typing separate callbacks
 
