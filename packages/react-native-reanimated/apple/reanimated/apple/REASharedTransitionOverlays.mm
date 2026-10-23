@@ -79,7 +79,10 @@ static UIWindow *surfaceWindow(UIView *rootView)
     return;
   }
   [_overlayTags removeObjectForKey:@(surfaceId)];
-  [[self viewWithTag:tag.integerValue] removeFromSuperview];
+  UIView *overlay = [self viewWithTag:tag.integerValue];
+  overlay.layer.zPosition = 0;
+  overlay.accessibilityElementsHidden = NO;
+  [overlay removeFromSuperview];
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
@@ -95,10 +98,10 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (!window) {
     return;
   }
-  overlay.accessibilityElementsHidden = YES;
-  // UIKit can insert a modal's presentation container after the overlay.
-  overlay.layer.zPosition = 1;
   if (overlay.superview != window) {
+    overlay.accessibilityElementsHidden = YES;
+    // UIKit can insert a modal's presentation container after the overlay.
+    overlay.layer.zPosition = 1;
     [window addSubview:overlay];
   }
   overlay.frame = untransformedFrameInWindow(rootView);
