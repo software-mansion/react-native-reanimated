@@ -32,6 +32,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void setEventMask(const std::shared_ptr<const ShadowNode> &shadowNode, CSSEventMask eventMask);
   void run(const std::shared_ptr<const ShadowNode> &shadowNode, const PropertyValueDynamicDiffsMap &propertyDiffs);
 
+  void movePlatformRunToLoop(Tag viewTag, const std::string &propertyName, CSSPlatformTransitionRunId runId);
+
   void setPseudoLockedProperties(Tag viewTag, const TransitionProperties &properties);
   /// Retargets settled pseudo-styled values to the fresh defaults, so a toggle value left in the
   /// updates registry stops overriding later renders.
