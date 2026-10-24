@@ -429,7 +429,6 @@ open class NativeProxy {
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
-        handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
         handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
         handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)

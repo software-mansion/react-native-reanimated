@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
@@ -20,12 +21,15 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-function createTransition(finished: boolean[]) {
+function createTransition(
+  finished: boolean[],
+  transition = SharedTransition.duration(300)
+) {
   const recordEnd = (isFinished: boolean) => {
     finished.push(isFinished);
     notify('shared-transition-finished');
   };
-  return SharedTransition.duration(300).withCallback((isFinished) => {
+  return transition.withCallback((isFinished) => {
     'worklet';
     scheduleOnRN(recordEnd, isFinished);
   });
@@ -149,6 +153,23 @@ describe('Shared element transition between boundaries', () => {
       await expectMountedAtLayout('source', 1);
     }
   );
+
+  test('runs a transition that ends on its first frame', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.reduceMotion(ReduceMotion.Always)
+    );
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('target', 1);
+  });
 });
 
 const styles = StyleSheet.create({

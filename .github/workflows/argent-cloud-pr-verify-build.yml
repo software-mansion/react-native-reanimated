@@ -20,6 +20,11 @@ on:
       react-native-version:
         required: true
         type: string
+      configuration:
+        description: Release or Debug
+        required: false
+        default: Release
+        type: string
     outputs:
       artifact-id:
         description: The ID of the app artifact
@@ -85,7 +90,9 @@ jobs:
         run: '"$APP_HELPER_DIR/prepare-app.sh" "$WORK_DIR/plan.json" "$WORK_DIR/repro" "$APP_DIR" "$RUNNER_TEMP/library-packages"'
 
       - name: Build the app for the iOS simulator
-        run: '"$APP_HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz"'
+        env:
+          CONFIGURATION: ${{ inputs.configuration }}
+        run: '"$APP_HELPER_DIR/build-app.sh" "${{ steps.prepare.outputs.app-root }}" "$WORK_DIR/app/repro-app.tar.gz" "$CONFIGURATION"'
 
       - name: Upload the app
         id: upload

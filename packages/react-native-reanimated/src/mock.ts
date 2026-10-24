@@ -1,6 +1,8 @@
 'use strict';
 
 import type { ReactNode } from 'react';
+import { createElement } from 'react';
+import type { TextProps } from 'react-native';
 import {
   Animated as AnimatedRN,
   Image as ImageRN,
@@ -96,7 +98,7 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result };
+    return { value: result, get: () => result, _isReanimatedSharedValue: true };
   },
   useEvent: <
     Event extends object,
@@ -525,6 +527,22 @@ const screenTransition = {
   startScreenTransition: NOOP,
 };
 
+const AnimatedText = ({
+  children,
+  ...props
+}: Omit<TextProps, 'children'> & { children?: unknown }) => {
+  const content = Array.isArray(children) ? children : [children];
+  return createElement(
+    TextRN,
+    props,
+    ...content.map((child) =>
+      isSharedValueReal(child)
+        ? (child.value as ReactNode)
+        : (child as ReactNode)
+    )
+  );
+};
+
 const Animated = {
   addWhitelistedNativeProps: NOOP,
   addWhitelistedUIProps: NOOP,
@@ -536,7 +554,7 @@ const Animated = {
   interpolate: NOOP,
   interpolateColor: NOOP,
   ScrollView: AnimatedRN.ScrollView,
-  Text: TextRN,
+  Text: AnimatedText,
   View: ViewRN,
 };
 
