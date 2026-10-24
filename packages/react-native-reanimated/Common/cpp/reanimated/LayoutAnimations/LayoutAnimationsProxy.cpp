@@ -424,10 +424,6 @@ void LayoutAnimationsProxy::updateLightTree(
         deleted.insert(mutation.oldChildShadowView.tag);
         break;
       }
-      case ShadowViewMutation::Update: {
-        updatedViews.insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
-        break;
-      }
       case ShadowViewMutation::Insert: {
         inserted.insert(mutation.newChildShadowView.tag);
         break;
@@ -442,6 +438,14 @@ void LayoutAnimationsProxy::updateLightTree(
       default: {
         // Skip other mutation types. We are only interested in moves and deletions here.
         break;
+      }
+    }
+  }
+  // The views before their updates are read only for moved views and their ancestors.
+  if (!moved.empty()) {
+    for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
+      if (it->type == ShadowViewMutation::Update) {
+        updatedViews.insert_or_assign(it->newChildShadowView.tag, it->oldChildShadowView);
       }
     }
   }
