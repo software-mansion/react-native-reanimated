@@ -213,6 +213,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   } else if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
+    activeBoundaryMayHaveChanged_ = true;
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId_];
     react_native_assert(root && "Root node not found");
@@ -224,7 +225,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
     updateLightTree(propsParserContext, mutations, transaction);
 
-    auto afterTopScreen = findActiveBoundary(root);
+    auto afterTopScreen = activeBoundaryMayHaveChanged_ ? findActiveBoundary(root) : topScreen_;
+    activeBoundaryMayHaveChanged_ = false;
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
@@ -310,6 +312,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  activeBoundaryMayHaveChanged_ = true;
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
@@ -367,6 +370,9 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
       filteredMutations.push_back(std::move(update));
       withheldNodes.push_back(node);
     }
+  }
+  if (!withheldNodes.empty()) {
+    activeBoundaryMayHaveChanged_ = true;
   }
   tearDown(collectRemovals(withheldNodes), filteredMutations);
   const auto deletesRecreatedTag = [&recreatedTags](const ShadowViewMutation &mutation) {
@@ -448,6 +454,11 @@ void LayoutAnimationsProxy::updateLightTree(
 
   for (const auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+      if (mutation.type != ShadowViewMutation::Update) {
+        activeBoundaryMayHaveChanged_ = true;
+      }
+    }
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
         const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
@@ -455,6 +466,11 @@ void LayoutAnimationsProxy::updateLightTree(
           break;
         }
         const auto &node = nodeIt->second;
+        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+          if (isSETBoundary(node)) {
+            activeBoundaryMayHaveChanged_ = true;
+          }
+        }
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
         auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
@@ -728,6 +744,11 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+      if (isSETBoundary(node)) {
+        activeBoundaryMayHaveChanged_ = true;
+      }
+    }
     if (!trackInLightTree) {
       staleSynchronousProps_.record(tag, props);
       continue;
@@ -790,6 +811,7 @@ void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRe
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
   }
+  activeBoundaryMayHaveChanged_ = true;
 }
 
 // MARK: Layout Animation Updates
