@@ -686,7 +686,9 @@ void LayoutAnimationsProxy::updateLightNodeProps(
   if (node->accumulatedRawProps.isNull()) {
     node->accumulatedRawProps = currentProps->rawProps;
   }
-  node->accumulatedRawProps.update(newView.props->rawProps);
+  for (const auto &[name, _] : newView.props->rawProps.items()) {
+    node->pendingRawPropOwners[name.getString()] = newView.props;
+  }
   node->propsNeedResolve = true;
 #endif // ANDROID
 }
@@ -696,6 +698,7 @@ void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNod
   if (!node->propsNeedResolve) {
     return;
   }
+  node->foldPendingRawProps();
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   node->current.props = componentDescriptorRegistry_->at(node->current.componentHandle)
                             .cloneProps(propsParserContext, node->current.props, RawProps(node->accumulatedRawProps));
@@ -739,6 +742,8 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (node->accumulatedRawProps.isNull()) {
       node->accumulatedRawProps = node->current.props->rawProps;
     }
+    // Synchronous props are newer than the props of earlier commits.
+    node->foldPendingRawProps();
     node->accumulatedRawProps.update(props);
     node->propsNeedResolve = true;
     resolveLightNodeProps(node);
