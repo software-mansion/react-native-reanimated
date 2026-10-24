@@ -7,6 +7,7 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
+#include <iterator>
 #include <ranges>
 #include <unordered_set>
 #include <utility>
@@ -635,10 +636,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() con
 }
 
 void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
+  if (transaction.containersToInsert.empty()) {
+    return;
+  }
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
-  filteredMutations.reserve(transaction.containersToInsert.size() * 2);
+  filteredMutations.reserve(transaction.containersToInsert.size() * 2 + currentMutations.size());
   for (const auto &sharedTag : transaction.containersToInsert) {
     auto &run = *sharedElements_.at(sharedTag).run;
     run.inserted = true;
@@ -646,7 +650,10 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &
     filteredMutations.push_back(
         ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
   }
-  filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
+  filteredMutations.insert(
+      filteredMutations.end(),
+      std::make_move_iterator(currentMutations.begin()),
+      std::make_move_iterator(currentMutations.end()));
 }
 
 void LayoutAnimationsProxy::finishSharedTransition(
