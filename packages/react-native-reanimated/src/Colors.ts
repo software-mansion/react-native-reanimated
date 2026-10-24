@@ -354,6 +354,10 @@ export const ColorProperties = [
   'stroke',
 ];
 
+/** `ColorProperties` as an object, for lookups that don't scan the array. */
+export const IS_COLOR_PROPERTY: Readonly<Record<string, true>> =
+  Object.fromEntries(ColorProperties.map((property) => [property, true]));
+
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 
@@ -376,9 +380,106 @@ export function normalizeColor(color: unknown): number | null {
   }
 
   // `in` walks the prototype chain, so plain `Object` members such as
-  // 'constructor' or 'toString' would resolve to a function here.
-  if (Object.prototype.hasOwnProperty.call(names, color)) {
-    return names[color];
+  // 'constructor' or 'toString' would resolve to a function here. Every color
+  // name maps to a number, and none of those members do, so checking the type
+  // finds exactly the own properties, without a hasOwnProperty call.
+  const named = names[color];
+  if (typeof named === 'number') {
+    return named;
+  }
+
+  // Fast path for colors whose matcher comes late in the sequence below: the
+  // first characters tell which one of MATCHERS can apply, so run only that
+  // one. A match is used only when it spans the whole string. Then no matcher
+  // tried earlier in the sequence can match either, so the result is the
+  // sequence's. Anything else falls through to the sequence. rgb() and rgba()
+  // come first in the sequence, so the extra checks wouldn't pay off for them.
+  const first = color[0];
+  if (first === '#') {
+    switch (color.length) {
+      case 9:
+        if ((match = MATCHERS.hex8.exec(color))) {
+          return Number.parseInt(match[1], 16) >>> 0;
+        }
+        break;
+      case 4:
+        if ((match = MATCHERS.hex3.exec(color))) {
+          return (
+            Number.parseInt(
+              match[1] +
+                match[1] +
+                match[2] +
+                match[2] +
+                match[3] +
+                match[3] +
+                'ff',
+              16
+            ) >>> 0
+          );
+        }
+        break;
+      case 5:
+        if ((match = MATCHERS.hex4.exec(color))) {
+          return (
+            Number.parseInt(
+              match[1] +
+                match[1] +
+                match[2] +
+                match[2] +
+                match[3] +
+                match[3] +
+                match[4] +
+                match[4],
+              16
+            ) >>> 0
+          );
+        }
+        break;
+    }
+  } else if (first === 'h') {
+    if (color[1] === 's' && color[2] === 'l') {
+      if (color[3] === '(') {
+        match = MATCHERS.hsl.exec(color);
+        if (match && match.index === 0 && match[0].length === color.length) {
+          return (
+            (hslToRgb(
+              parse360(match[1]),
+              parsePercentage(match[2]),
+              parsePercentage(match[3])
+            ) |
+              0x000000ff) >>>
+            0
+          );
+        }
+      } else if (color[3] === 'a' && color[4] === '(') {
+        match = MATCHERS.hsla.exec(color);
+        if (match && match.index === 0 && match[0].length === color.length) {
+          const offset = match[6] !== undefined ? 6 : 2;
+          return (
+            (hslToRgb(
+              parse360(match[offset]),
+              parsePercentage(match[offset + 1]),
+              parsePercentage(match[offset + 2])
+            ) |
+              parse1(match[offset + 3])) >>>
+            0
+          );
+        }
+      }
+    } else if (color[1] === 'w' && color[2] === 'b' && color[3] === '(') {
+      match = MATCHERS.hwb.exec(color);
+      if (match && match.index === 0 && match[0].length === color.length) {
+        return (
+          (hwbToRgb(
+            parse360(match[1]),
+            parsePercentage(match[2]),
+            parsePercentage(match[3])
+          ) |
+            0x000000ff) >>>
+          0
+        );
+      }
+    }
   }
 
   if ((match = MATCHERS.rgb.exec(color))) {
