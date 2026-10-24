@@ -3,6 +3,7 @@
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <react/utils/LowPriorityExecutor.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
@@ -289,6 +290,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
+  if (!droppedViews_.empty()) {
+    LowPriorityExecutor::execute([views = std::exchange(droppedViews_, {})]() {});
+  }
 #ifdef ANDROID
   holdFramesUntilBatchIsQueued(filteredMutations);
 #endif
@@ -669,6 +673,7 @@ void LayoutAnimationsProxy::updateLightNodeProps(
     const ShadowView &newView) const {
   const auto currentProps = node->current.props;
   const auto propsChanged = newView.props != oldView.props;
+  droppedViews_.push_back(std::move(node->previous));
   node->previous = oldView;
   node->current = newView;
   if (!propsChanged) {
