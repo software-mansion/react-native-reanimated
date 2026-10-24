@@ -49,6 +49,15 @@ function Example({
   );
 }
 
+// The ref of the animated component is the class instance, not a DOM element.
+class ClassHost extends Component<ViewProps> {
+  render() {
+    return <View {...this.props} />;
+  }
+}
+
+const AnimatedClassHost = Animated.createAnimatedComponent(ClassHost);
+
 // Exposes its inner host view the way library wrappers do.
 class AnimatableRefWrapper extends Component<ViewProps> {
   inner: React.ComponentRef<typeof View> | null = null;
@@ -160,6 +169,18 @@ describe('Layout Animations', () => {
           jest.advanceTimersByTime(1000);
           expectBoxesVisible(screen);
         });
+      });
+    });
+
+    describe('on mount without a DOM element', () => {
+      test('view with entering does not stay hidden', () => {
+        const screen = render(
+          <AnimatedClassHost entering={FadeIn} testID="class-host" />
+        );
+
+        expect(screen.getByTestId('class-host').style.visibility).not.toBe(
+          'hidden'
+        );
       });
     });
 
