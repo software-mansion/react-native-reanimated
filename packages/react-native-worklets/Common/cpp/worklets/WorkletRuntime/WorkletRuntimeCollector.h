@@ -13,6 +13,8 @@ class WorkletRuntimeCollector : public jsi::HostObject {
   // `jsi::HostObject` into the global object. When worklet runtime is
   // terminated, the object is garbage-collected, which runs the C++ destructor.
   // In the destructor, we unregister the worklet runtime from the registry.
+  // Owners also mark the runtime as dead before they tear it down (see
+  // `WorkletRuntimeRegistry::markRuntimeDead`), so this is a fallback.
 
  public:
   explicit WorkletRuntimeCollector(jsi::Runtime &runtime) : runtime_(runtime) {

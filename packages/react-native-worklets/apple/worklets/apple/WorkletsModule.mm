@@ -1,4 +1,5 @@
 #import <worklets/NativeModules/WorkletsModuleProxyInitializer.h>
+#import <worklets/Registries/WorkletRuntimeRegistry.h>
 #import <worklets/Tools/JSScheduler.h>
 #import <worklets/Tools/RNRuntimeStatus.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
@@ -52,6 +53,7 @@ NSURL *getDownloadedBundleFileURL(RCTBundleManager *bundleManager)
   std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletsModuleProxyInitializer> initializer_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  jsi::Runtime *rnRuntime_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -100,6 +102,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   AssertJavaScriptQueue();
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+  rnRuntime_ = &rnRuntime;
   workletsModuleProxy_ =
       initializer_->finalize(rnRuntime, static_cast<bool>(bundleModeEnabled), [self makeBundleModeConfigLoader]);
   return @YES;
@@ -126,6 +129,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   if (rnRuntimeStatus_) {
     rnRuntimeStatus_->setDead();
   }
+  WorkletRuntimeRegistry::markRuntimeDead(rnRuntime_);
+  rnRuntime_ = nullptr;
   if (initializer_) {
     initializer_->invalidate();
     initializer_.reset();
