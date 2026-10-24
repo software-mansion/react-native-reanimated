@@ -71,6 +71,25 @@ class SerializableJSRef : public facebook::jsi::NativeState {
   }
 };
 
+// Non-owning serializableMappingCache entry for a clone whose subtree holds a JS function.
+// Such a clone owns a SerializableRemoteFunction, which holds the function strongly. If the cache
+// owned the clone, a function whose closure reaches the cache key would close a cycle that spans
+// both runtimes and that no GC can collect: key -> clone -> UI copy -> remote function -> key.
+// The marker hands back the same Serializable while some other owner keeps it alive. Its
+// destructor only drops a weak count, so it is safe on any thread, during GC and after either
+// runtime is gone.
+class WeakSerializableJSRef : public facebook::jsi::NativeState {
+ private:
+  const std::weak_ptr<Serializable> value_;
+
+ public:
+  explicit WeakSerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
+
+  std::shared_ptr<Serializable> lock() const {
+    return value_.lock();
+  }
+};
+
 facebook::jsi::Function getValueUnpacker(facebook::jsi::Runtime &rt);
 
 [[nodiscard]]
