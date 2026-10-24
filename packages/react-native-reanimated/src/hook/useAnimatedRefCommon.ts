@@ -14,7 +14,8 @@ import type {
 } from './commonTypes';
 
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
-  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper,
+  onDetach?: () => void
 ): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
@@ -43,6 +44,15 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
             observers.set(observer, observer(currentTag));
           });
         }
+      } else {
+        // React calls a callback ref with null when the element unmounts.
+        // Drop the instance so that this ref, which the owner's closures often
+        // keep reachable, does not retain the unmounted component and
+        // everything its props reach.
+        wrapperRef.current = null;
+        fun.getTag = () => null;
+        fun.current = null;
+        onDetach?.();
       }
 
       return wrapperRef.current;
