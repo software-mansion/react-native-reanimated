@@ -364,6 +364,11 @@ void LayoutAnimationsProxyCommon::reconcileLayoutAnimationOperations(
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
+  // Runs on every frame; nothing to reconcile or start without queued operations.
+  if (layoutAnimationOperations_.empty()) {
+    pendingLayoutAnimations_.clear();
+    return;
+  }
   auto operations = std::exchange(layoutAnimationOperations_, std::deque<LayoutAnimationOperation>{});
   pendingLayoutAnimations_.clear();
   reconcileLayoutAnimationOperations(operations);
