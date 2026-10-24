@@ -117,6 +117,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
+  // Set whenever the active boundary might no longer be `topScreen_`: on a structural change, a boundary's props
+  // changing or a node leaving the light tree. A light node never becomes live again, so nothing else changes it.
+  mutable bool activeBoundaryMayHaveChanged_ = true;
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
   // back
   mutable std::unordered_set<Tag> snapshottedScreens_;
