@@ -121,8 +121,10 @@ const hook = {
   useReducedMotion: () => false,
   useScrollOffset: () => ({ value: 0 }),
   useScrollViewOffset: () => ({ value: 0 }),
-  useSharedValue: <Value>(init: Value) => {
-    const value = { value: init };
+  useSharedValue: <Value>(init: Value | (() => Value)) => {
+    const value = {
+      value: typeof init === 'function' ? (init as () => Value)() : init,
+    };
     return new Proxy(value, {
       get(target, prop) {
         if (prop === '_isReanimatedSharedValue') {
