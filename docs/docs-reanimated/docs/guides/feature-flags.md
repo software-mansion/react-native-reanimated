@@ -208,7 +208,9 @@ Keep this flag off unless you see the warning described below.
 
 With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props that don't require layout recalculation go straight to the native views and skip the bookkeeping that Shared Element Transitions and Layout Animations start from. A running layout animation always receives those props. An animation that starts later starts with stale values if one of those props was animated before.
 
-When enabled, the synchronous path also updates that bookkeeping. This costs one props clone for each synchronously updated view on every frame. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
+A running shared element transition also keeps this bookkeeping current for the view it moves, even when this flag is off. This keeps synchronous prop values when the transition target changes or when the view returns to its parent. This exception does not track props written before the view starts moving, or props written to other views.
+
+When enabled, the synchronous path also updates that bookkeeping for other views. This costs one extra props clone per view in each synchronous update batch. With the flag off, only detached views in running shared element transitions pay this extra clone cost. Enable the flag only for the screens where a later animation starts with stale values, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 
 When disabled, a development build logs a warning once per view when a layout animation or a shared element transition starts on a view whose synchronous props are missing from that bookkeeping. A shared element transition also warns when it starts under an ancestor whose synchronous transform is missing from it.
 
