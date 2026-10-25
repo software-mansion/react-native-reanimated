@@ -71,6 +71,10 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
+export type RecordingOptions = {
+  nativeSource?: 'shadowTree' | 'mountedView';
+};
+
 export type MountedViewProps = {
   x: number;
   y: number;
@@ -176,6 +180,18 @@ declare global {
     | ((callback: (timestamp: number) => void) => void)
     | undefined;
   var originalGetAnimationTimestamp: (() => number) | undefined;
+  var UpdatePropsManager: {
+    update(
+      descriptors: {
+        value: Array<{ tag: number; shadowNodeWrapper: unknown }>;
+      },
+      updates: OperationUpdate
+    ): void;
+    flush(): void;
+  };
+  var originalUpdatePropsManagerUpdate:
+    | typeof global.UpdatePropsManager.update
+    | undefined;
   var originalUpdateProps: ((operations: Operation[]) => void) | undefined;
   var originalNotifyAboutProgress:
     | ((tag: number, value: Record<string, unknown>) => void)

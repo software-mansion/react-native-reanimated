@@ -1,4 +1,4 @@
-import type { Operation } from '../types';
+import type { Operation, RecordingOptions } from '../types';
 import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 import { sleep, waitFor } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
@@ -7,14 +7,27 @@ import { createUpdatesContainer } from './UpdatesContainer';
 const MAX_WAIT_TIME_MS = 10000;
 
 export class AnimationUpdatesRecorder {
-  public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer();
+  private activeRecording?: ReturnType<typeof createUpdatesContainer>;
+  public async recordAnimationUpdates(options: RecordingOptions = {}) {
+    const updatesContainer = createUpdatesContainer(options);
+    const registerViews = updatesContainer.registerViews;
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
 
     await runOnUIBlocking(() => {
       'worklet';
+      if (global.originalUpdateProps) {
+        throw new Error('Animation updates are already being recorded');
+      }
+      const manager = global.UpdatePropsManager;
+      // oxlint-disable-next-line typescript/unbound-method
+      const originalUpdate = manager.update;
+      global.originalUpdatePropsManagerUpdate = originalUpdate;
+      manager.update = function (descriptors, updates) {
+        registerViews(descriptors.value);
+        originalUpdate.call(manager, descriptors, updates);
+      };
       global.animationUpdatesRecordingStarted = false;
 
       const startCountingFrames = () => {
@@ -47,7 +60,13 @@ export class AnimationUpdatesRecorder {
         originalNotifyAboutProgress(tag, value);
       };
     });
-    return updatesContainer;
+    this.activeRecording = updatesContainer;
+    return {
+      getUpdates: updatesContainer.getUpdates,
+      getAllUpdates: updatesContainer.getAllUpdates,
+      getNativeSnapshots: updatesContainer.getNativeSnapshots,
+      getSnapshots: updatesContainer.getSnapshots,
+    };
   }
 
   public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
@@ -61,8 +80,15 @@ export class AnimationUpdatesRecorder {
         global._notifyAboutProgress = global.originalNotifyAboutProgress;
         global.originalNotifyAboutProgress = undefined;
       }
+      if (global.originalUpdatePropsManagerUpdate) {
+        global.UpdatePropsManager.update =
+          global.originalUpdatePropsManagerUpdate;
+        global.originalUpdatePropsManagerUpdate = undefined;
+      }
       global.animationUpdatesRecordingStarted = undefined;
     }, maxWaitTime);
+    await this.activeRecording?.finalize();
+    this.activeRecording = undefined;
   }
 
   public async mockAnimationTimer() {

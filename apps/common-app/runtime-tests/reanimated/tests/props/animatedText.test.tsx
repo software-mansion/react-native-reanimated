@@ -46,8 +46,7 @@ async function readRecorded<TProp extends string>(
   updates: UpdatesContainer,
   props: TProp[]
 ): Promise<Record<TProp, unknown[]>> {
-  // Updates from `_updateProps` carry no tag, so all views land in one bucket.
-  const recorded = await updates.getUpdates(undefined, props);
+  const recorded = await updates.getAllUpdates(props);
   return Object.fromEntries(
     props.map((prop) => [
       prop,

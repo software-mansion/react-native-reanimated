@@ -46,32 +46,15 @@ function compareSingleViewSnapshots(
   const mismatchedSnapshots: Array<Mismatch> = [];
 
   const matchingLength =
-    Math.abs(expectedSnapshots.length - capturedSnapshots.length) <=
-    Number(native);
+    expectedSnapshots.length === capturedSnapshots.length + Number(native);
   if (!matchingLength) {
     return `Expected ${green(expectedSnapshots.length - Number(native))} snapshots, but received ${red(
       capturedSnapshots.length
     )} snapshots\n`;
   }
 
-  for (let i = 0; i < capturedSnapshots.length - 1; i++) {
+  for (let i = 0; i < capturedSnapshots.length; i++) {
     const capturedSnapshot = capturedSnapshots[i];
-    /**
-     * The TestRunner can collect two types of snapshots:
-     *
-     * - JS snapshots: animation updates sent via `_updateProps`
-     * - Native snapshots: snapshots obtained from the native side via
-     *   `getViewProp`
-     *
-     * Updates applied through `_updateProps` are not synchronously applied to
-     * the native side. Instead, they are batched and applied at the end of each
-     * frame. Therefore, it is not allowed to take a native snapshot immediately
-     * after the `_updateProps` call. To address this issue, we need to wait for
-     * the next frame before capturing the native snapshot. That's why native
-     * snapshots are one frame behind JS snapshots. To account for this delay,
-     * one additional native snapshot is taken during the execution of the
-     * `getNativeSnapshots` function.
-     */
     const expectedSnapshot = expectedSnapshots[i + Number(native)];
     const snapshotMatching = compareSnapshot(
       expectedSnapshot,
