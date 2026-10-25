@@ -95,6 +95,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native transforms',
+    importTest: () => {
+      require('./tests/props/nativeTransform.test');
+    },
+  },
+  {
     testSuiteName: 'react-freeze',
     importTest: () => {
       require('./tests/reactFreeze/propDriven.test');

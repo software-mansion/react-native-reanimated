@@ -269,6 +269,7 @@ ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManage
     CALayer *layer = presented ? (view.layer.presentationLayer ?: view.layer) : view.layer;
     const CGSize size = layer.bounds.size;
     const CGPoint anchor = layer.anchorPoint;
+    const CATransform3D transform = layer.transform;
     return MountedViewProps{
         .x = layer.position.x - size.width * anchor.x,
         .y = layer.position.y - size.height * anchor.y,
@@ -280,6 +281,8 @@ ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManage
         .backgroundColor = argbFromCGColor(
             layer.backgroundColor
                 ?: [view.backgroundColor resolvedColorWithTraitCollection:view.traitCollection].CGColor),
+        .transformTranslateX = transform.m41,
+        .transformTranslateY = transform.m42,
     };
 #endif
   };
