@@ -25,9 +25,15 @@ type NativeUpdate = {
 export function createUpdatesContainer({
   nativeSource = 'shadowTree',
 }: RecordingOptions = {}) {
+  const jsUpdates = makeMutable<Array<JsUpdate>>([]);
+  const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
   const viewTags = makeMutable<Map<unknown, number>>(new Map());
   const stopped = makeMutable(false);
-  const recordingError = makeMutable<string | null>(null);
+  const errorReported = makeMutable(false);
+  const recordingError = makeMutable<{
+    message: string;
+    stack?: string;
+  } | null>(null);
   const stopRequested = makeMutable(false);
   const pairedClockValid = makeMutable(true);
   const hasLayoutUpdates = makeMutable(false);
@@ -50,16 +56,24 @@ export function createUpdatesContainer({
   function saveError(error: unknown) {
     'worklet';
     recordingError.value ??=
-      error instanceof Error ? error.message : String(error);
+      error instanceof Error
+        ? { message: error.message, stack: error.stack }
+        : { message: String(error) };
   }
 
   async function assertNoError() {
     const message = await runOnUIBlocking(() => {
       'worklet';
-      return recordingError.value;
+      const error = recordingError.value;
+      if (error) {
+        errorReported.value = true;
+      }
+      return error;
     });
     if (message) {
-      throw new Error(message);
+      const error = new Error(message.message);
+      error.stack = message.stack ?? error.stack;
+      throw error;
     }
   }
 
@@ -67,15 +81,18 @@ export function createUpdatesContainer({
     descriptors: Array<{ tag: number; shadowNodeWrapper: unknown }>
   ) {
     'worklet';
+    if (stopped.value) {
+      return;
+    }
     viewTags.modify((tags) => {
       for (const { tag, shadowNodeWrapper } of descriptors) {
-        tags.set(shadowNodeWrapper, tag);
+        if (!tags.has(shadowNodeWrapper)) {
+          tags.set(shadowNodeWrapper, tag);
+        }
       }
       return tags;
     });
   }
-  const jsUpdates = makeMutable<Array<JsUpdate>>([]);
-  const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
   function _isUnmountedViewError(error: unknown): boolean {
     'worklet';
@@ -112,7 +129,7 @@ export function createUpdatesContainer({
           }
           const mounted = global._obtainMountedViewProps(updateInfo.tag, false);
           if (!mounted) {
-            continue;
+            throw new Error(`Mounted view ${updateInfo.tag} is not available`);
           }
           for (const prop of propsToUpdate) {
             snapshot[prop] = mounted[prop as 'opacity' | 'backgroundColor'];
@@ -192,19 +209,65 @@ export function createUpdatesContainer({
     return jsUpdates;
   }
 
+  function flushFrame() {
+    'worklet';
+    const entries = [...pendingFrame.value.values()];
+    const sampled: NativeUpdate[] = [];
+    const captured = _updateNativeSnapshot(
+      entries,
+      frameUpdates.value.length,
+      sampled
+    );
+    frameUpdates.modify((values) => {
+      values.push(...captured);
+      return values;
+    });
+    frameSnapshots.modify((values) => {
+      for (const sample of sampled) {
+        values.push(sample);
+      }
+      return values;
+    });
+    pendingFrame.value = new Map();
+  }
+
+  function captureTerminal() {
+    'worklet';
+    try {
+      flushFrame();
+      const latest = new Map<number, JsUpdate>();
+      for (const entry of jsUpdates.value) {
+        const previous = latest.get(entry.tag);
+        latest.set(entry.tag, {
+          ...entry,
+          update: { ...previous?.update, ...entry.update },
+        });
+      }
+      const terminal: NativeUpdate[] = [];
+      _updateNativeSnapshot(
+        [...latest.values()],
+        jsUpdates.value.length - 1,
+        terminal
+      );
+      terminalSnapshots.value = terminal;
+    } catch (error) {
+      saveError(error);
+    }
+  }
+
   function pushAnimationUpdates(operations: Operation[]) {
     'worklet';
     if (stopped.value) {
       return;
     }
-    pairedClockValid.value &&= global.mockedAnimationTimestamp !== undefined;
-    const newUpdates = _extractJSUpdatesUpdatesFromOperation(operations);
     const timestamp = global._getAnimationTimestamp();
     if (stopRequested.value && frameTimestamp.value !== timestamp) {
       captureTerminal();
       stopped.value = true;
       return;
     }
+    pairedClockValid.value &&= global.mockedAnimationTimestamp !== undefined;
+    const newUpdates = _extractJSUpdatesUpdatesFromOperation(operations);
     if (frameTimestamp.value !== null && frameTimestamp.value !== timestamp) {
       flushFrame();
     }
@@ -234,6 +297,16 @@ export function createUpdatesContainer({
     if (stopped.value) {
       return;
     }
+    const timestamp = global._getAnimationTimestamp();
+    if (stopRequested.value && frameTimestamp.value !== timestamp) {
+      captureTerminal();
+      stopped.value = true;
+      return;
+    }
+    if (frameTimestamp.value !== null && frameTimestamp.value !== timestamp) {
+      flushFrame();
+    }
+    frameTimestamp.value = timestamp;
     hasLayoutUpdates.value = true;
     // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
     const updatesCopy = JSON.parse(JSON.stringify(update));
@@ -302,6 +375,11 @@ export function createUpdatesContainer({
       }
       throw new Error(
         'Recorded snapshots of many views, specify component you want to get snapshot of'
+      );
+    }
+    if (Object.keys(sortedUpdates).some((tag) => Number(tag) < 0)) {
+      throw new Error(
+        'Recorded updates include unattributed views; use getAllUpdates'
       );
     }
     const tag = component?.getTag();
@@ -421,52 +499,6 @@ export function createUpdatesContainer({
     });
   }
 
-  function captureTerminal() {
-    'worklet';
-    try {
-      flushFrame();
-      const latest = new Map<number, JsUpdate>();
-      for (const entry of jsUpdates.value) {
-        const previous = latest.get(entry.tag);
-        latest.set(entry.tag, {
-          ...entry,
-          update: { ...previous?.update, ...entry.update },
-        });
-      }
-      const terminal: NativeUpdate[] = [];
-      _updateNativeSnapshot(
-        [...latest.values()],
-        jsUpdates.value.length - 1,
-        terminal
-      );
-      terminalSnapshots.value = terminal;
-    } catch (error) {
-      saveError(error);
-    }
-  }
-
-  function flushFrame() {
-    'worklet';
-    const entries = [...pendingFrame.value.values()];
-    const sampled: NativeUpdate[] = [];
-    const captured = _updateNativeSnapshot(
-      entries,
-      frameUpdates.value.length,
-      sampled
-    );
-    frameUpdates.modify((values) => {
-      values.push(...captured);
-      return values;
-    });
-    frameSnapshots.modify((values) => {
-      for (const sample of sampled) {
-        values.push(sample);
-      }
-      return values;
-    });
-    pendingFrame.value = new Map();
-  }
-
   function readWithTerminal() {
     return runOnUIBlocking(() => {
       'worklet';
@@ -489,8 +521,20 @@ export function createUpdatesContainer({
     });
   }
 
+  function getUnreportedError() {
+    return runOnUIBlocking(() => {
+      'worklet';
+      if (errorReported.value) {
+        return null;
+      }
+      errorReported.value = true;
+      return recordingError.value;
+    });
+  }
+
   return {
     registerViews,
+    getUnreportedError,
     saveError,
     finalize,
     getSnapshots,

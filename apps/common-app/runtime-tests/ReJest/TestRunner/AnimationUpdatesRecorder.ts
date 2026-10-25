@@ -10,6 +10,7 @@ const FROZEN_CLOCK_START_MS = 1_000_000;
 
 export class AnimationUpdatesRecorder {
   private activeRecording?: ReturnType<typeof createUpdatesContainer>;
+  private recordings: Array<ReturnType<typeof createUpdatesContainer>> = [];
   public async recordAnimationUpdates(options: RecordingOptions = {}) {
     const updatesContainer = createUpdatesContainer(options);
     const registerViews = updatesContainer.registerViews;
@@ -28,7 +29,11 @@ export class AnimationUpdatesRecorder {
       const originalUpdate = manager.update;
       global.originalUpdatePropsManagerUpdate = originalUpdate;
       manager.update = function (descriptors, updates) {
-        registerViews(descriptors.value);
+        try {
+          registerViews(descriptors.value);
+        } catch (error) {
+          saveError(error);
+        }
         originalUpdate.call(manager, descriptors, updates);
       };
       global.animationUpdatesRecordingStarted = false;
@@ -72,6 +77,7 @@ export class AnimationUpdatesRecorder {
       };
     });
     this.activeRecording = updatesContainer;
+    this.recordings.push(updatesContainer);
     return {
       getUpdates: updatesContainer.getUpdates,
       getAllUpdates: updatesContainer.getAllUpdates,
@@ -103,6 +109,21 @@ export class AnimationUpdatesRecorder {
       }, maxWaitTime);
       this.activeRecording = undefined;
     }
+  }
+
+  public async takeUnreportedErrors() {
+    const recordings = this.recordings;
+    this.recordings = [];
+    const errors: Error[] = [];
+    for (const recording of recordings) {
+      const recorded = await recording.getUnreportedError();
+      if (recorded) {
+        const error = new Error(recorded.message);
+        error.stack = recorded.stack ?? error.stack;
+        errors.push(error);
+      }
+    }
+    return errors;
   }
 
   public async mockAnimationTimer(autoAdvance = true) {
