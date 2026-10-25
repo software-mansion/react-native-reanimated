@@ -466,8 +466,8 @@ void LayoutAnimationsProxy::updateLightTree(
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
-        // The shared transition owns the mounted props and frame of its carrier. The light
-        // node keeps the values of React, and attachCarrier mounts them.
+        // The shared transition owns the mounted props and frame of its carrier.
+        // attachCarrier mounts React props and synchronous updates from the light node.
         if (node->isDetached) {
           break;
         }
@@ -716,8 +716,8 @@ void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNod
 #endif // ANDROID
 }
 
-// Synchronous prop updates skip pullTransaction. Animation records always take the
-// values; light nodes take them only while the dynamic flag is on.
+// Synchronous prop updates skip pullTransaction. Animation records and detached
+// carriers take the values. The dynamic flag enables updates for other light nodes.
 void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBatch, const bool trackInLightTree) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -741,7 +741,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree) {
+    if (!trackInLightTree && !node->isDetached) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }
