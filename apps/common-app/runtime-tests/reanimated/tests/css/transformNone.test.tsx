@@ -19,12 +19,15 @@ function TransformExample({ from }: { from?: 'none' | 'empty' }) {
   const animatedRef = useAnimatedRef();
   const staticRef = useAnimatedRef();
   const displacement = useSharedValue<number | null>(null);
+  const height = useSharedValue<number | null>(null);
+  registerValue('height', height);
   registerValue('displacement', displacement);
   useFrameCallback(() => {
     const animated = measure(animatedRef);
     const reference = measure(staticRef);
     if (animated && reference) {
       displacement.value = animated.pageX - reference.pageX;
+      height.value = animated.height;
     }
   });
   return (
@@ -36,9 +39,13 @@ function TransformExample({ from }: { from?: 'none' | 'empty' }) {
           animationDuration: 1000,
           animationFillMode: 'both',
           animationName: {
-            ...(from === 'none' ? { from: { transform: 'none' } } : {}),
-            ...(from === 'empty' ? { from: { transform: [] } } : {}),
-            to: { transform: [{ translateX: 40 }] },
+            ...(from === 'none'
+              ? { from: { height: 80, transform: 'none' } }
+              : {}),
+            ...(from === 'empty'
+              ? { from: { height: 80, transform: [] } }
+              : {}),
+            to: { height: 120, transform: [{ translateX: 40 }] },
           },
           animationPlayState: 'paused',
           animationTimingFunction: 'linear',
@@ -55,13 +62,14 @@ function TransformExample({ from }: { from?: 'none' | 'empty' }) {
   );
 }
 
-describe('CSS transform none keyframes', () => {
+describe('CSS transform none keyframes on the commit path', () => {
   test.each([undefined, 'empty', 'none'] as const)(
     'transform keyframe start: %p',
     async (from) => {
       await render(<TransformExample from={from} />);
       // An omitted start keeps the view's own translateX 80, an explicit
       // empty list or none starts from the identity transform.
+      await expectEventually(() => getSharedValue('height'), 3000).toBe(90);
       await expectEventually(() => getSharedValue('displacement'), 3000).toBe(
         from ? -70 : -10
       );

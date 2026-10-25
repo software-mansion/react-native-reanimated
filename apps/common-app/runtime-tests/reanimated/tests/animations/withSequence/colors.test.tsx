@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  makeMutable,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -12,6 +13,7 @@ import {
   advanceAnimationTimer,
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   mockAnimationTimer,
   notify,
@@ -27,6 +29,7 @@ type TestCase = {
   startColor: string;
   middleColor: string;
   finalColor: string;
+  started?: boolean;
 };
 
 const START_ANIMATION_NOTIFICATION_NAME = 'START_ANIMATION_NOTIFICATION';
@@ -39,6 +42,8 @@ describe('withSequence animation of color', () => {
     PASSIVE = 'PASSIVE',
   }
   const DELAY = 300;
+  const nativeTags = makeMutable<Record<string, number>>({});
+  const nativeSamples = makeMutable<Record<string, string>>({});
 
   // Notification names are prefixed per component because the two components
   // don't run in lockstep - the test has to wait for both of them, otherwise
@@ -55,7 +60,18 @@ describe('withSequence animation of color', () => {
       DELAY,
       withTiming(color, { duration }, (finished) => {
         if (finished) {
-          notify(`${component}_${notificationName}`);
+          requestAnimationFrame(() => {
+            const props = global._obtainMountedViewProps(
+              nativeTags.value[component],
+              false
+            );
+            nativeSamples.value = {
+              ...nativeSamples.value,
+              [`${component}_${notificationName}`]:
+                props?.backgroundColor ?? 'unmounted',
+            };
+            notify(`${component}_${notificationName}`);
+          });
         }
       })
     );
@@ -71,6 +87,7 @@ describe('withSequence animation of color', () => {
     startColor,
     middleColor,
     finalColor,
+    started = false,
   }: TestCase) => {
     // null until the effect sets the target, so the first render applies a
     // plain color and only one sequence animation is ever created
@@ -115,10 +132,16 @@ describe('withSequence animation of color', () => {
     });
 
     useEffect(() => {
+      if (!started) {
+        return;
+      }
       colorActiveSV.value = finalColor;
-    }, [colorActiveSV, finalColor]);
+    }, [colorActiveSV, finalColor, started]);
 
     useEffect(() => {
+      if (!started) {
+        return;
+      }
       colorPassiveSV.value = withSequence(
         segment(
           Component.PASSIVE,
@@ -139,7 +162,7 @@ describe('withSequence animation of color', () => {
           FINAL_ANIMATION_NOTIFICATION_NAME
         )
       );
-    }, [colorPassiveSV, finalColor, middleColor]);
+    }, [colorPassiveSV, finalColor, middleColor, started]);
 
     return (
       <View style={styles.container}>
@@ -214,10 +237,7 @@ describe('withSequence animation of color', () => {
       );
       const activeComponent = getTestComponent(Component.ACTIVE);
       const passiveComponent = getTestComponent(Component.PASSIVE);
-      // The effects start the sequences on the UI thread, before the clock moves.
-      await waitForFrames(3);
 
-      await advanceAnimationTimer(DELAY / 2);
       // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
       // It will be fixed in the future. The active component renders its first color through that path,
       // so only the passive one is checked here.
@@ -227,39 +247,75 @@ describe('withSequence animation of color', () => {
           ComparisonMode.COLOR
         );
       }
-      await advanceAnimationTimer(DELAY / 2);
+      nativeTags.value = {
+        [Component.ACTIVE]: activeComponent.getTag(),
+        [Component.PASSIVE]: passiveComponent.getTag(),
+      };
+      nativeSamples.value = {};
+      await render(
+        <WidthComponent
+          startColor={startColor}
+          middleColor={middleColor}
+          finalColor={finalColor}
+          started
+        />
+      );
+      // The effects start the sequences on the UI thread, before the clock moves.
+      await waitForFrames(3);
+      let completedSegment = START_ANIMATION_NOTIFICATION_NAME;
+      await advanceAnimationTimer(DELAY);
       await advanceAnimationTimer(200);
       await bothNotified(START_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
-        finalColor,
-        ComparisonMode.COLOR
-      );
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
-        finalColor,
-        ComparisonMode.COLOR
-      );
+      expect(
+        nativeSamples.value[`${Component.ACTIVE}_${completedSegment}`]
+      ).toBe(finalColor, ComparisonMode.COLOR);
+      expect(
+        nativeSamples.value[`${Component.PASSIVE}_${completedSegment}`]
+      ).toBe(finalColor, ComparisonMode.COLOR);
+      completedSegment = MIDDLE_ANIMATION_NOTIFICATION_NAME;
       await advanceAnimationTimer(DELAY);
       await advanceAnimationTimer(300);
       await bothNotified(MIDDLE_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
-        middleColor,
-        ComparisonMode.COLOR
-      );
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
-        middleColor,
-        ComparisonMode.COLOR
-      );
+      expect(
+        nativeSamples.value[`${Component.ACTIVE}_${completedSegment}`]
+      ).toBe(middleColor, ComparisonMode.COLOR);
+      expect(
+        nativeSamples.value[`${Component.PASSIVE}_${completedSegment}`]
+      ).toBe(middleColor, ComparisonMode.COLOR);
+      completedSegment = FINAL_ANIMATION_NOTIFICATION_NAME;
       await advanceAnimationTimer(DELAY);
       await advanceAnimationTimer(200);
       await bothNotified(FINAL_ANIMATION_NOTIFICATION_NAME);
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
-        finalColor,
-        ComparisonMode.COLOR
+      expect(
+        nativeSamples.value[`${Component.ACTIVE}_${completedSegment}`]
+      ).toBe(finalColor, ComparisonMode.COLOR);
+      expect(
+        nativeSamples.value[`${Component.PASSIVE}_${completedSegment}`]
+      ).toBe(finalColor, ComparisonMode.COLOR);
+      for (const component of [activeComponent, passiveComponent]) {
+        await expectEventually(
+          () => component.getAnimatedStyle('backgroundColor'),
+          5000
+        ).toBe(finalColor, ComparisonMode.COLOR);
+      }
+      await render(
+        <WidthComponent
+          startColor={startColor}
+          middleColor={middleColor}
+          finalColor={finalColor}
+          started
+        />
       );
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
-        finalColor,
-        ComparisonMode.COLOR
-      );
+      for (const component of [activeComponent, passiveComponent]) {
+        expect(await component.getAnimatedStyle('backgroundColor')).toBe(
+          finalColor,
+          ComparisonMode.COLOR
+        );
+        expect((await component.getMountedViewProps())?.backgroundColor).toBe(
+          finalColor,
+          ComparisonMode.COLOR
+        );
+      }
     }
   );
 });
