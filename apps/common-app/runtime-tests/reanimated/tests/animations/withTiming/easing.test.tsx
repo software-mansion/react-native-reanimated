@@ -16,6 +16,7 @@ import {
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -85,6 +86,7 @@ async function getSnapshotUpdates(
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
   await wait(1200);
+  await stopRecordingAnimationUpdates();
   const activeUpdates = await updatesContainerActive.getUpdates();
   const activeNaiveUpdates = await updatesContainerActive.getNativeSnapshots();
 
@@ -94,6 +96,8 @@ async function getSnapshotUpdates(
   const updatesContainerPassive = await recordAnimationUpdates();
   await render(<PassiveAnimatedComponent easing={easingFn} />);
   await wait(1200);
+
+  await stopRecordingAnimationUpdates();
 
   // For passive updates we have the following order of operations:
   // 1. Slightly increase sharedValue
