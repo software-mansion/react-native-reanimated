@@ -11,6 +11,7 @@ export class AnimationUpdatesRecorder {
   public async recordAnimationUpdates(options: RecordingOptions = {}) {
     const updatesContainer = createUpdatesContainer(options);
     const registerViews = updatesContainer.registerViews;
+    const saveError = updatesContainer.saveError;
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
@@ -43,7 +44,11 @@ export class AnimationUpdatesRecorder {
 
       const mockedUpdateProps = (operations: Operation[]) => {
         startCountingFrames();
-        recordAnimationUpdates(operations);
+        try {
+          recordAnimationUpdates(operations);
+        } catch (error) {
+          saveError(error);
+        }
         originalUpdateProps(operations);
       };
 
@@ -56,7 +61,11 @@ export class AnimationUpdatesRecorder {
         value: Record<string, unknown>
       ) => {
         startCountingFrames();
-        recordLayoutAnimationUpdates(tag, value);
+        try {
+          recordLayoutAnimationUpdates(tag, value);
+        } catch (error) {
+          saveError(error);
+        }
         originalNotifyAboutProgress(tag, value);
       };
     });
@@ -70,25 +79,28 @@ export class AnimationUpdatesRecorder {
   }
 
   public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalUpdateProps) {
-        global._updateProps = global.originalUpdateProps;
-        global.originalUpdateProps = undefined;
-      }
-      if (global.originalNotifyAboutProgress) {
-        global._notifyAboutProgress = global.originalNotifyAboutProgress;
-        global.originalNotifyAboutProgress = undefined;
-      }
-      if (global.originalUpdatePropsManagerUpdate) {
-        global.UpdatePropsManager.update =
-          global.originalUpdatePropsManagerUpdate;
-        global.originalUpdatePropsManagerUpdate = undefined;
-      }
-      global.animationUpdatesRecordingStarted = undefined;
-    }, maxWaitTime);
-    await this.activeRecording?.finalize();
-    this.activeRecording = undefined;
+    try {
+      await this.activeRecording?.finalize();
+    } finally {
+      await runOnUIBlocking(() => {
+        'worklet';
+        if (global.originalUpdateProps) {
+          global._updateProps = global.originalUpdateProps;
+          global.originalUpdateProps = undefined;
+        }
+        if (global.originalNotifyAboutProgress) {
+          global._notifyAboutProgress = global.originalNotifyAboutProgress;
+          global.originalNotifyAboutProgress = undefined;
+        }
+        if (global.originalUpdatePropsManagerUpdate) {
+          global.UpdatePropsManager.update =
+            global.originalUpdatePropsManagerUpdate;
+          global.originalUpdatePropsManagerUpdate = undefined;
+        }
+        global.animationUpdatesRecordingStarted = undefined;
+      }, maxWaitTime);
+      this.activeRecording = undefined;
+    }
   }
 
   public async mockAnimationTimer() {

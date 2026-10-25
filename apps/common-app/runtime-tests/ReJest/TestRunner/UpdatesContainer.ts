@@ -27,6 +27,11 @@ export function createUpdatesContainer({
 }: RecordingOptions = {}) {
   const viewTags = makeMutable<Map<unknown, number>>(new Map());
   const stopped = makeMutable(false);
+  const recordingError = makeMutable<string | null>(null);
+  const stopRequested = makeMutable(false);
+  const pairedClockValid = makeMutable(true);
+  const hasLayoutUpdates = makeMutable(false);
+  const terminalSnapshots = makeMutable<NativeUpdate[]>([]);
   const pendingFrame = makeMutable<Map<number, JsUpdate>>(new Map());
   const frameTimestamp = makeMutable<number | null>(null);
   const frameUpdates = makeMutable<JsUpdate[]>([]);
@@ -37,8 +42,26 @@ export function createUpdatesContainer({
         nativeSnapshots: NativeUpdate[];
         frames: JsUpdate[];
         frameSnapshots: NativeUpdate[];
+        pairedClockValid: boolean;
+        hasLayoutUpdates: boolean;
       }
     | undefined;
+
+  function saveError(error: unknown) {
+    'worklet';
+    recordingError.value ??=
+      error instanceof Error ? error.message : String(error);
+  }
+
+  async function assertNoError() {
+    const message = await runOnUIBlocking(() => {
+      'worklet';
+      return recordingError.value;
+    });
+    if (message) {
+      throw new Error(message);
+    }
+  }
 
   function registerViews(
     descriptors: Array<{ tag: number; shadowNodeWrapper: unknown }>
@@ -147,10 +170,18 @@ export function createUpdatesContainer({
     const jsUpdates: Array<Required<JsUpdate>> = [];
     for (const operation of operations) {
       const { updates } = operation;
-      const tag =
+      let tag =
         operation.tag ?? viewTags.value.get(operation.shadowNodeWrapper);
       if (tag === undefined) {
-        throw new Error('Recorded update has no registered view tag');
+        if (nativeSource === 'mountedView' || !operation.shadowNodeWrapper) {
+          throw new Error('Recorded update has no registered view tag');
+        }
+        tag = -viewTags.value.size - 1;
+        const resolvedTag = tag;
+        viewTags.modify((tags) => {
+          tags.set(operation.shadowNodeWrapper, resolvedTag);
+          return tags;
+        });
       }
       jsUpdates.push({
         tag,
@@ -166,8 +197,14 @@ export function createUpdatesContainer({
     if (stopped.value) {
       return;
     }
+    pairedClockValid.value &&= global.mockedAnimationTimestamp !== undefined;
     const newUpdates = _extractJSUpdatesUpdatesFromOperation(operations);
     const timestamp = global._getAnimationTimestamp();
+    if (stopRequested.value && frameTimestamp.value !== timestamp) {
+      captureTerminal();
+      stopped.value = true;
+      return;
+    }
     if (frameTimestamp.value !== null && frameTimestamp.value !== timestamp) {
       flushFrame();
     }
@@ -197,6 +234,7 @@ export function createUpdatesContainer({
     if (stopped.value) {
       return;
     }
+    hasLayoutUpdates.value = true;
     // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
     const updatesCopy = JSON.parse(JSON.stringify(update));
     if ('backgroundColor' in updatesCopy) {
@@ -297,14 +335,25 @@ export function createUpdatesContainer({
     component?: TestComponent,
     propsNames: string[] = []
   ): Promise<SingleViewSnapshot> {
+    await assertNoError();
     const recorded = await _readRecorded();
     const sortedUpdates = _sortUpdatesByViewTag(recorded.jsUpdates, propsNames);
     return _getComponentFromSortedUpdates(sortedUpdates, component);
   }
 
-  function getSnapshots(component?: TestComponent, propsNames: string[] = []) {
+  async function getSnapshots(
+    component?: TestComponent,
+    propsNames: string[] = []
+  ) {
+    await assertNoError();
     if (!completed) {
       throw new Error('Stop recording before reading paired snapshots');
+    }
+    if (!completed.pairedClockValid) {
+      throw new Error('Paired snapshots require mockAnimationTimer');
+    }
+    if (completed.hasLayoutUpdates) {
+      throw new Error('Paired snapshots do not support layout animations');
     }
     return {
       updates: _getComponentFromSortedUpdates(
@@ -322,6 +371,7 @@ export function createUpdatesContainer({
     component?: TestComponent,
     propsNames: string[] = []
   ) {
+    await assertNoError();
     const recorded = completed ?? (await readWithTerminal());
     return _getComponentFromSortedUpdates(
       _sortUpdatesByViewTag(recorded.nativeSnapshots, propsNames),
@@ -330,6 +380,7 @@ export function createUpdatesContainer({
   }
 
   async function getAllUpdates(propsNames: string[] = []) {
+    await assertNoError();
     const recorded = await _readRecorded();
     return recorded.jsUpdates.map(({ update }) =>
       propsNames.length === 0
@@ -349,16 +400,38 @@ export function createUpdatesContainer({
     }
     await runOnUIBlocking(() => {
       'worklet';
-      stopped.value = true;
-      viewTags.value = new Map();
+      stopRequested.value = true;
     });
     await waitForFrames(1);
     completed = await runOnUIBlocking(() => {
       'worklet';
+      if (!stopped.value) {
+        captureTerminal();
+      }
+      stopped.value = true;
+      viewTags.value = new Map();
+      return {
+        jsUpdates: [...jsUpdates.value],
+        nativeSnapshots: [...nativeSnapshots.value, ...terminalSnapshots.value],
+        frames: [...frameUpdates.value],
+        frameSnapshots: [...frameSnapshots.value],
+        pairedClockValid: pairedClockValid.value,
+        hasLayoutUpdates: hasLayoutUpdates.value,
+      };
+    });
+  }
+
+  function captureTerminal() {
+    'worklet';
+    try {
       flushFrame();
       const latest = new Map<number, JsUpdate>();
       for (const entry of jsUpdates.value) {
-        latest.set(entry.tag, entry);
+        const previous = latest.get(entry.tag);
+        latest.set(entry.tag, {
+          ...entry,
+          update: { ...previous?.update, ...entry.update },
+        });
       }
       const terminal: NativeUpdate[] = [];
       _updateNativeSnapshot(
@@ -366,13 +439,10 @@ export function createUpdatesContainer({
         jsUpdates.value.length - 1,
         terminal
       );
-      return {
-        jsUpdates: [...jsUpdates.value],
-        nativeSnapshots: [...nativeSnapshots.value, ...terminal],
-        frames: [...frameUpdates.value],
-        frameSnapshots: [...frameSnapshots.value],
-      };
-    });
+      terminalSnapshots.value = terminal;
+    } catch (error) {
+      saveError(error);
+    }
   }
 
   function flushFrame() {
@@ -390,9 +460,6 @@ export function createUpdatesContainer({
     });
     frameSnapshots.modify((values) => {
       for (const sample of sampled) {
-        if (!values.some((previous) => previous.tag === sample.tag)) {
-          values.push({ ...sample, snapshot: {} });
-        }
         values.push(sample);
       }
       return values;
@@ -424,6 +491,7 @@ export function createUpdatesContainer({
 
   return {
     registerViews,
+    saveError,
     finalize,
     getSnapshots,
     getAllUpdates,

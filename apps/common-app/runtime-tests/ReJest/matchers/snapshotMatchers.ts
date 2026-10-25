@@ -41,21 +41,22 @@ function compareSingleViewSnapshots(
   expectedSnapshots: SingleViewSnapshot, // native
   capturedSnapshots: SingleViewSnapshot, // js
   native: boolean,
-  expectNegativeValueMismatch = false
+  expectNegativeValueMismatch = false,
+  offset = Number(native)
 ) {
   const mismatchedSnapshots: Array<Mismatch> = [];
 
   const matchingLength =
-    expectedSnapshots.length === capturedSnapshots.length + Number(native);
+    expectedSnapshots.length === capturedSnapshots.length + offset;
   if (!matchingLength) {
-    return `Expected ${green(expectedSnapshots.length - Number(native))} snapshots, but received ${red(
+    return `Expected ${green(expectedSnapshots.length - offset)} snapshots, but received ${red(
       capturedSnapshots.length
     )} snapshots\n`;
   }
 
   for (let i = 0; i < capturedSnapshots.length; i++) {
     const capturedSnapshot = capturedSnapshots[i];
-    const expectedSnapshot = expectedSnapshots[i + Number(native)];
+    const expectedSnapshot = expectedSnapshots[i + offset];
     const snapshotMatching = compareSnapshot(
       expectedSnapshot,
       capturedSnapshot,
@@ -65,7 +66,7 @@ function compareSingleViewSnapshots(
     if (!snapshotMatching) {
       mismatchedSnapshots.push({
         index: i,
-        expectedSnapshot: expectedSnapshots[i + Number(native)],
+        expectedSnapshot: expectedSnapshots[i + offset],
         capturedSnapshot: capturedSnapshots[i],
       });
     }
@@ -93,13 +94,15 @@ function compareSingleViewSnapshots(
 function compareSingleViewNativeSnapshots(
   nativeSnapshots: SingleViewSnapshot,
   jsUpdates: Array<OperationUpdate>,
-  expectNegativeValueMismatch = false
+  expectNegativeValueMismatch = false,
+  offset = 1
 ): string | undefined {
   return compareSingleViewSnapshots(
     nativeSnapshots,
     jsUpdates,
     true,
-    expectNegativeValueMismatch
+    expectNegativeValueMismatch,
+    offset
   );
 }
 
@@ -133,7 +136,8 @@ export function compareSnapshots(
   expectedSnapshots: unknown,
   capturedSnapshots: unknown,
   native: boolean,
-  expectNegativeValueMismatch = false
+  expectNegativeValueMismatch = false,
+  offset = Number(native)
 ): string | null {
   let errorMessage = '';
 
@@ -150,7 +154,8 @@ export function compareSnapshots(
         ? compareSingleViewNativeSnapshots(
             expected,
             captured,
-            expectNegativeValueMismatch
+            expectNegativeValueMismatch,
+            offset
           )
         : compareSingleViewJsSnapshots(expected, captured);
     };
