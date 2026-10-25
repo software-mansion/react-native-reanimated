@@ -17,6 +17,7 @@ import {
   getTrackerCallCount,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   waitForAnimationUpdates,
@@ -106,6 +107,7 @@ describe(`Cascade of callbacks`, () => {
       />
     );
     await waitForAnimationUpdates(Snapshots.CallbackCascade.length);
+    await stopRecordingAnimationUpdates();
     const updates = await updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 

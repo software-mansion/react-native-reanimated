@@ -204,6 +204,7 @@ declare global {
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
   ) => void;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;

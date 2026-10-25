@@ -3,6 +3,7 @@ import {
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   waitForAnimationUpdates,
@@ -25,6 +26,7 @@ describe('StrictMode', () => {
     await render(<AssignValueExample />);
     await waitForAnimationUpdates(snapshot.length);
 
+    await stopRecordingAnimationUpdates();
     const jsUpdates = await updateContainer.getUpdates();
     const nativeUpdates = await updateContainer.getNativeSnapshots();
     expect(jsUpdates).toMatchSnapshots(snapshot);
@@ -39,6 +41,7 @@ describe('StrictMode', () => {
     await render(<AssignAnimationExample />);
     await waitForAnimationUpdates(snapshot.length);
 
+    await stopRecordingAnimationUpdates();
     const jsUpdates = await updateContainer.getUpdates();
     const nativeUpdates = await updateContainer.getNativeSnapshots();
     expect(jsUpdates).toMatchSnapshots(snapshot);
@@ -54,6 +57,7 @@ describe('StrictMode', () => {
     await render(<EnteringExample />);
     await waitForAnimationUpdates(snapshot.length);
 
+    await stopRecordingAnimationUpdates();
     const jsUpdates = await updateContainer.getUpdates();
     const nativeUpdates = await updateContainer.getNativeSnapshots();
     expect(jsUpdates).toMatchSnapshots(snapshot);
@@ -69,6 +73,7 @@ describe('StrictMode', () => {
     await render(<LayoutExample />);
     await waitForAnimationUpdates(snapshot.length);
 
+    await stopRecordingAnimationUpdates();
     const jsUpdates = await updateContainer.getUpdates();
     expect(jsUpdates).toMatchSnapshots(snapshot);
   });
@@ -82,6 +87,7 @@ describe('StrictMode', () => {
     await render(<ExitingExample />);
     await waitForAnimationUpdates(snapshot.length);
 
+    await stopRecordingAnimationUpdates();
     const jsUpdates = await updateContainer.getUpdates();
     expect(jsUpdates).toMatchSnapshots(snapshot);
   });

@@ -22,12 +22,13 @@ Paired snapshots do not support layout animations.
 
 `getUpdates(component)` returns raw operations. `getAllUpdates()` returns raw
 operations for all views in send order. Specify a component when a recording has
-more than one view. A direct update with no known tag has its own group in a
-ShadowTree recording; it cannot supply mounted snapshots.
+more than one view. A direct update with no known tag stays in its own group in a
+ShadowTree recording. If any such group exists, all reads that name a component
+throw. Use `getAllUpdates()` instead. These updates cannot supply mounted snapshots.
 
 The native snapshot matcher uses an offset of one for raw operations. Pass zero
 for paired frame snapshots. Both modes check the last value.
 
 Recorder errors do not stop app updates. A read reports the first recorder error.
-Stop restores all hooks, including after a test fails. Stop a recording before
+Cleanup reports errors that no getter reported. Stop restores all hooks, including after a test fails. Stop a recording before
 starting another one.
