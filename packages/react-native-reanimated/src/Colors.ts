@@ -356,7 +356,9 @@ export const ColorProperties = [
 
 /** `ColorProperties` as an object, for lookups that don't scan the array. */
 export const IS_COLOR_PROPERTY: Readonly<Record<string, true>> =
-  Object.fromEntries(ColorProperties.map((property) => [property, true]));
+  /* @__PURE__ */ Object.fromEntries(
+    ColorProperties.map((property) => [property, true])
+  );
 
 export function normalizeColor(color: unknown): number | null {
   'worklet';
