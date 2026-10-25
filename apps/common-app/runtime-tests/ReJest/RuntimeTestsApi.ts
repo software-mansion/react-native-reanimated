@@ -7,6 +7,7 @@ import { TestRunner } from './TestRunner/TestRunner';
 import type {
   DefaultValue,
   MaybeAsync,
+  RecordingOptions,
   TestConfiguration,
   TestValue,
 } from './types';
@@ -276,8 +277,8 @@ export async function unmockWindowDimensions() {
   await windowDimensionsMocker.unmockWindowDimensions();
 }
 
-export async function recordAnimationUpdates() {
-  return animationRecorder.recordAnimationUpdates();
+export async function recordAnimationUpdates(options: RecordingOptions = {}) {
+  return animationRecorder.recordAnimationUpdates(options);
 }
 
 export async function stopRecordingAnimationUpdates() {
