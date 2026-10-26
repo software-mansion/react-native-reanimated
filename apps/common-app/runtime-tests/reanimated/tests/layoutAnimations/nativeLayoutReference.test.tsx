@@ -178,7 +178,7 @@ const HANDED_FADE: ReferenceCase = {
   flow: 'layout',
   leaves: {
     originX: { duration: 1600, onlyWhenChanged: true },
-    originY: { isSpring: true, onlyWhenChanged: true },
+    originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
     opacity: { duration: 1600, initial: 0.9, to: FADED },
   },
   places: [

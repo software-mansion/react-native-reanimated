@@ -108,7 +108,7 @@ const OLDER_LAYOUT = layoutOf(
   { name: 'older' }
 );
 const HAND_OVER_LAYOUT = layoutOf(
-  { originX: { isSpring: true } },
+  { originX: { isFrameDrivenSpring: true } },
   { name: 'handOver' }
 );
 const HAND_OVER_REF = 'NativeLayoutThrownMountItemHandOverBox';

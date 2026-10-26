@@ -137,6 +137,7 @@ import {
   hasNativeLayoutRoute,
   isHostEvent,
   isSameLeaf,
+  isSpringLeaf,
   layoutOf,
   middleOf,
   mountScene,
@@ -648,7 +649,7 @@ describe('native layout transform continuity', () => {
   function expectSpringFramesOfTwin({ replacement }: ReferenceCase) {
     const records = readFrameRecords();
     (replacement?.operations ?? []).forEach(([kind, , , leaf], operation) => {
-      if (!leaf?.isSpring) {
+      if (!leaf || !isSpringLeaf(leaf)) {
         return;
       }
       const [native, twin] = ['native', 'frame'].map((box) =>
@@ -705,7 +706,7 @@ describe('native layout transform continuity', () => {
     [
       'a frame-driven start with a transform leaf',
       transferOf(TRANSLATION, {
-        operations: [['translateX', 50, 20, { isSpring: true }]],
+        operations: [['translateX', 50, 20, { isFrameDrivenSpring: true }]],
       }),
       'UnsupportedTiming',
     ],

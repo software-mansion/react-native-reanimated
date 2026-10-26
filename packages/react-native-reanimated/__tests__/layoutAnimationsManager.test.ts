@@ -11,6 +11,7 @@ import {
   SequencedTransition,
   SlideInLeft,
   withDelay,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -1940,6 +1941,82 @@ describe('LayoutAnimationsManager', () => {
       expect(lastProgress()).toEqual({ originY: 100 });
     });
 
+    describe('a frame-driven start of a build of a spring after its origin', () => {
+      const ORIGIN = 2000;
+      const FRAME_MS = 1000 / 60;
+      const FRAMES_AFTER_HAND_OVER = 3;
+      const springConfig = () =>
+        configOf(
+          { originX: 0 },
+          {
+            originX: onUIRuntime(() =>
+              withSpring(200, { stiffness: 49, damping: 14, mass: 1 })
+            ),
+          }
+        );
+      const framesFrom = (first: number) =>
+        Array.from(
+          { length: FRAMES_AFTER_HAND_OVER },
+          (_, index) => ORIGIN + (first + index) * FRAME_MS
+        );
+      const valuesAt = (frameTimes: number[]) =>
+        frameTimes.map((frameTime) => {
+          runFrame(frameTime);
+          return lastProgress().originX as number;
+        });
+
+      test.each([
+        ['on a frame time', 26 * FRAME_MS],
+        ['between two frame times, at the clip of the writers suite', 442.5],
+      ])(
+        'a hand-over %s gives the frames of a 60 Hz frame run from the origin',
+        (_, handOverMs) => {
+          const firstFrame = Math.floor(handOverMs / FRAME_MS) + 1;
+          startBatchAt(ORIGIN);
+          manager.build(30, {}, springConfig(), LIMITS, []);
+          manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 30, []);
+          for (let frame = 1; frame < firstFrame; frame++) {
+            runFrame(ORIGIN + frame * FRAME_MS);
+          }
+          const frameDriven = valuesAt(framesFrom(firstFrame));
+          manager.stop(TAG);
+
+          startBatchAt(ORIGIN);
+          manager.build(31, {}, springConfig(), LIMITS, []);
+          startBatchAt(ORIGIN + handOverMs);
+          manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 31, []);
+          const handedOver = valuesAt(framesFrom(firstFrame));
+
+          handedOver.forEach((value, index) =>
+            expect(value).toBeCloseTo(frameDriven[index], 9)
+          );
+        }
+      );
+    });
+
+    test('a frame-driven start of a repeat with a callback 400 ms after its origin gives the callbacks of one frame', () => {
+      const callback = jest.fn();
+      const repeat = onUIRuntime(() =>
+        withRepeat(
+          withTiming(10, { duration: 100, easing: Easing.linear }, callback),
+          3
+        )
+      );
+      startBatchAt(2000);
+      manager.build(
+        32,
+        {},
+        configOf({ originY: 0 }, { originY: repeat }),
+        LIMITS,
+        []
+      );
+      startBatchAt(2400);
+      manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 32, []);
+      runFrame(2410);
+      expect(callback.mock.calls).toEqual([[true, 10]]);
+      expect(lastProgress()).toEqual({ originY: 10 });
+    });
+
     describe('a plain number as a scalar leaf', () => {
       const plainConfig = (callback?: (finished: boolean) => void) =>
         configOf(
@@ -2528,7 +2605,26 @@ describe('LayoutAnimationsManager', () => {
         ]);
       });
 
-      test('a leaf with a spring on one operation has values and no track', () => {
+      test('a leaf with a spring with a callback on one operation has values and no track', () => {
+        const { leaf } = leafOf(
+          transformOf(
+            [{ rotate: 0 }, { translateX: 0 }],
+            [
+              { rotate: move(1) },
+              {
+                translateX: onUIRuntime(() =>
+                  withSpring(10, undefined, () => undefined)
+                ),
+              },
+            ]
+          )
+        );
+        expect(operationsOf(leaf.initialValue).length).toBe(2);
+        expect(leaf.track).toBeUndefined();
+        expect(leaf.hasPhaseOfNoDuration).toBeUndefined();
+      });
+
+      test('a spring operation is one spring segment, and the operation beside it holds its end value until the spring ends', () => {
         const { leaf } = leafOf(
           transformOf(
             [{ rotate: 0 }, { translateX: 0 }],
@@ -2538,9 +2634,34 @@ describe('LayoutAnimationsManager', () => {
             ]
           )
         );
-        expect(operationsOf(leaf.initialValue).length).toBe(2);
-        expect(leaf.track).toBeUndefined();
-        expect(leaf.hasPhaseOfNoDuration).toBeUndefined();
+        const GENTLE_OMEGA0 = Math.sqrt(900 / 4);
+        const settleMs = leaf.track!.durationMs;
+        expect(settleMs).toBeGreaterThan(DURATION);
+        expect(timelinesOf(leaf.track)).toEqual([
+          {
+            kind: 'rotate',
+            start: 0,
+            segments: [
+              { endOffset: DURATION / settleMs, endValue: 1 },
+              { endOffset: 1, endValue: 1 },
+            ],
+          },
+          {
+            kind: 'translateX',
+            start: 0,
+            segments: [
+              {
+                endOffset: 1,
+                endValue: 10,
+                spring: {
+                  decay: GENTLE_OMEGA0 * (settleMs / 1000),
+                  frequency: 0,
+                  initialVelocity: 0,
+                },
+              },
+            ],
+          },
+        ]);
       });
 
       test.each<[string, unknown, number | string, unknown[]]>([

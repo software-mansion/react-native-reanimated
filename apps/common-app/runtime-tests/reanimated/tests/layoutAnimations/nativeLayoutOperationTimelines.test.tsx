@@ -517,7 +517,9 @@ describe('native layout operation timelines', () => {
           ],
           600,
           {
-            leaves: { opacity: { isSpring: true, initial: 0.5, to: 1 } },
+            leaves: {
+              opacity: { isFrameDrivenSpring: true, initial: 0.5, to: 1 },
+            },
             isFrameDriven: true,
           }
         )

@@ -71,6 +71,7 @@ import {
   FRAME_BOX_REF,
   END_LEFT,
   FRAME_MS,
+  frameRecordedOf,
   hasNativeLayoutRoute,
   isHostEvent,
   isNoView,
@@ -95,6 +96,9 @@ import {
   POSITION_TOLERANCE,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   PRESENTATION_STAY_MS,
+  readFrameRecords,
+  resetFrameRecords,
+  routeOf,
   SAMPLED_OPACITY_TOLERANCE,
   sampleOpacity,
   sampleOpacityPair,
@@ -106,6 +110,7 @@ import {
   summarizeEnd,
   takeTrace,
   takeTraceOf,
+  waitForCallbacks,
   waitForModel,
   movingGeometryTest,
 } from './nativeLayoutTestKit';
@@ -915,7 +920,7 @@ describe('native layout animations and other writers of the view', () => {
           hasCallback,
         },
         opacity: { duration: LAYOUT_DURATION, initial: 0.9, to: 0.2 },
-        originY: { isSpring: true, onlyWhenChanged: true },
+        originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
       }));
       const pair = (left: number, top: number, opacity: number) => (
         <View>
@@ -1386,6 +1391,96 @@ describe('a native layout group whose tracks the platform removes', () => {
       await render(null);
     }
   );
+
+  /** Damping ratio 1, natural frequency 7/s: it settles in about 1767 ms. */
+  const SLOW_SPRING = { stiffness: 49, damping: 14, mass: 1 };
+  const SLOW_SPRING_MS = 1770;
+
+  if (REMOVES_TRACKS_OUT_OF_WINDOW) {
+    movingGeometryTest(
+      'a clip of the view gives a native spring track to the frame driver, and the first frame-driven value of the view continues from the native value',
+      async () => {
+        const layoutOfBox = (box: string, hasCallback: boolean) =>
+          frameRecordedOf(
+            box,
+            layoutOf(
+              { originX: { spring: SLOW_SPRING, hasCallback } },
+              { name: box }
+            )
+          );
+        const layouts = {
+          nativeLayout: layoutOfBox('native', false),
+          frameLayout: layoutOfBox('frame', true),
+        };
+        resetFrameRecords();
+        const clipped = await move(
+          { left: START_LEFT, ...layouts },
+          { left: PAIR_LEFT, ...layouts }
+        );
+        await waitUntil(clipped, SLOW_SPRING_MS / 4);
+        const startEvents = await takeTraceOf(clipped.nativeTag);
+        const playing = await sample(clipped.nativeTag, 'PositionX');
+        expect(
+          routeOf(startEvents, clipped.nativeTag, 'PositionX', [playing]).kind
+        ).toBe('native playing');
+        scrollTo(CLIPPED_OFFSET);
+        await waitUntil(clipped, SLOW_SPRING_MS / 2);
+        const transfer = await takeTransferTrace(clipped);
+        expect(transfer.host).toBe(
+          'TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
+        );
+        expect(transfer.hasFrameUpdate).toBe(true);
+        const handed = await readPair(clipped);
+        const [nativeRecord, twinRecord] = ['native', 'frame'].map((box) =>
+          readFrameRecords()
+            .filter((record) => record.box === box && record.key === 'originX')
+            .pop()
+        );
+        const twinAt = new Map(
+          (twinRecord?.frames ?? []).map(({ timeMs, value }) => [
+            timeMs,
+            Number(value),
+          ])
+        );
+        const originMs = nativeRecord?.start?.timeMs ?? NaN;
+        const nativeFrames = nativeRecord?.frames ?? [];
+        const firstHandedIndex = nativeFrames.findIndex(
+          ({ timeMs }) => timeMs > originMs && twinAt.has(timeMs)
+        );
+        const firstHanded = nativeFrames[firstHandedIndex] as
+          | (typeof nativeFrames)[number]
+          | undefined;
+        console.log(
+          `SPRING-HAND-OVER | build origin ${originMs}; first native frame after the origin at a time of the twin: native box ${firstHanded?.value} at ${firstHanded && (firstHanded.timeMs - originMs).toFixed(2)} ms after the origin, twin ${firstHanded && twinAt.get(firstHanded.timeMs)}, native frames before it ${firstHandedIndex}; first read after the hand-over: native box ${handed.native.x}, frame driver ${handed.frame.x}, playback keys ${handed.native.keys}`
+        );
+        expect(firstHanded !== undefined).toBe(true);
+        expect(
+          firstHanded !== undefined &&
+            isNear(
+              Number(firstHanded.value),
+              twinAt.get(firstHanded.timeMs)!,
+              POSITION_TOLERANCE
+            )
+        ).toBe(true);
+        expect(handed.native.keys).toBe(0);
+        expect(
+          isNear(handed.native.x, handed.frame.x, POSITION_TOLERANCE)
+        ).toBe(true);
+        scrollTo(0);
+        expect(
+          await waitForCallbacks(['frame:true', 'native:true'], SLOW_SPRING_MS)
+        ).toBe('');
+        await wait(4 * FRAME_MS);
+        expect(sortedCallbacks()).toBe('frame:true,native:true');
+        const end = await readBox(clipped.nativeTag);
+        expect(end.keys).toBe(0);
+        expect(
+          isNear(end.shownX, PAIR_LEFT + BOX_SIZE / 2, LAID_OUT_TOLERANCE)
+        ).toBe(true);
+        await render(null);
+      }
+    );
+  }
 
   const clippedChange = REMOVES_TRACKS_OUT_OF_WINDOW
     ? 'a frame change of a clipped view after the frame driver took its layout group starts no native track'

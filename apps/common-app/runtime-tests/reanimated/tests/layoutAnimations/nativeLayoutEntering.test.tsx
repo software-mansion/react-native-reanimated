@@ -2195,8 +2195,8 @@ describe('native layout entering in the first commit of a surface', () => {
       );
       const isOnFade = isOnFrameDriverWindowOf(
         (timeMs) => [fadeAt(timeMs)],
-        ([value], [declared]) =>
-          Math.abs(value - declared) <= FADE_KEY.tolerance
+        (model) => model,
+        [FADE_KEY.tolerance]
       );
       expect(
         routeOf(

@@ -264,6 +264,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout springs',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutSprings.test');
+    },
+  },
+  {
     testSuiteName: 'native layout live clock',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutLiveClock.test');

@@ -793,7 +793,7 @@ describe('native layout animations and the synchronous props path', () => {
             const layout = layoutOf(
               {
                 originX: { duration: LAYOUT_DURATION, onlyWhenChanged: true },
-                originY: { isSpring: true, onlyWhenChanged: true },
+                originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
               },
               { name: 'x-only' }
             );
@@ -852,7 +852,7 @@ describe('native layout animations and the synchronous props path', () => {
         initial: 0.9,
         to: HANDED_STYLE_OPACITY,
       },
-      originY: { isSpring: true, onlyWhenChanged: true },
+      originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
     },
     places: [
       handedPlaceOf(START_LEFT, 0),

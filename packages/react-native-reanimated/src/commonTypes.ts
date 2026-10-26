@@ -11,6 +11,7 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
+import type { ResolvableSpringConfig } from './animation/spring/springUtils';
 import type { Maybe, MutuallyExclusiveUnion } from './common';
 import type { CSSStyle } from './css';
 import type { EasingFunctionFactory } from './Easing';
@@ -120,16 +121,25 @@ export type LayoutAnimationStartFunction = (
  */
 export type NativeTransformOperation = { kind: string; value: number };
 
+/** The fields of `SpringTiming` in `NativeAnimationTiming.h`. */
+export type NativeSpringTiming = {
+  decay: number;
+  frequency: number;
+  initialVelocity: number;
+};
+
 /**
  * One piece of a timeline of numbers. It ends at `endOffset` of the duration of
  * its track, at `endValue`. The control points are in the units of the segment.
- * A segment with no control points is linear.
+ * A segment with no control points and no spring is linear.
  */
 export type NativeLeafSegment = {
   endOffset: number;
   endValue: number;
-  cubicBezier?: [number, number, number, number];
-};
+} & (
+  | { cubicBezier?: [number, number, number, number]; spring?: never }
+  | { spring: NativeSpringTiming; cubicBezier?: never }
+);
 
 /**
  * The timeline of one operation of a `transform` leaf: its native scalar at the
@@ -419,9 +429,21 @@ export type NativeTimingPhase = {
   easing: NativeEasing;
 };
 
-/** The phases are in the order of time. */
+/**
+ * `config` is a copy of the configuration of `withSpring`, because its start
+ * changes the configuration. The duration of the phase depends on its start
+ * value.
+ */
+export type NativeSpringPhase = {
+  kind: 'spring';
+  /** A string is a number with a unit. */
+  toValue: number | string;
+  config: ResolvableSpringConfig;
+};
+
+/** The phases are in the order of time. Only holds come before a spring. */
 export type NativeTimingDescription = {
-  phases: (NativeHoldPhase | NativeTimingPhase)[];
+  phases: (NativeHoldPhase | NativeTimingPhase | NativeSpringPhase)[];
 };
 
 export interface AnimationObject<T = AnimatableValue> {

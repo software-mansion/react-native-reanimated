@@ -402,7 +402,7 @@ describe('native layout continuity', () => {
     async () => {
       const layouts = pairOf({
         originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
-        originY: { isSpring: true, onlyWhenChanged: true },
+        originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
       });
       await renderPair(layouts);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...layouts} />);
@@ -639,7 +639,7 @@ describe('native layout continuity', () => {
       });
       const spring = pairOf({
         originX: { duration: PAIR_DURATION },
-        originY: { isSpring: true },
+        originY: { isFrameDrivenSpring: true },
       });
       await renderPair(timing);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...timing} />);
@@ -735,7 +735,7 @@ describe('native layout continuity', () => {
     async () => {
       const layouts = pairOf({
         originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
-        originY: { isSpring: true, onlyWhenChanged: true },
+        originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
       });
       await renderPair(layouts);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...layouts} />);
@@ -839,7 +839,7 @@ describe('native layout continuity', () => {
       });
       const offsetSpring = pairOf({
         originX: { duration: PAIR_DURATION, initial: 40 },
-        originY: { isSpring: true, onlyWhenChanged: true },
+        originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
       });
       for (const [second, top] of [
         [offset, 0],
@@ -874,7 +874,7 @@ describe('native layout continuity', () => {
       async () => {
         const layouts = pairOf({
           originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
-          originY: { isSpring: true, onlyWhenChanged: true },
+          originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
         });
         await renderPair(layouts);
         await render(
@@ -1355,7 +1355,7 @@ const TransferSurfaceScene = secondSurfaceSceneOf({
   layout: layoutOf(
     {
       originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
-      originY: { isSpring: true, onlyWhenChanged: true },
+      originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
     },
     { name: 'surface' }
   ),

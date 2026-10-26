@@ -648,7 +648,7 @@ describe('native layout starts after the mount of the final state', () => {
     'the builder of an unsupported input runs one time and its callback gets true one time',
     async () => {
       const layout = layoutOf(
-        { originX: { isSpring: true } },
+        { originX: { isFrameDrivenSpring: true } },
         { name: 'spring' }
       );
       await renderBox({ layout });
@@ -875,7 +875,10 @@ describe('native layout starts after the mount of the final state', () => {
       'an operation with a spring',
       {},
       'UnsupportedTiming',
-      ...transformCase([TURN, ['translateX', 0, 10, { isSpring: true }]]),
+      ...transformCase([
+        TURN,
+        ['translateX', 0, 10, { isFrameDrivenSpring: true }],
+      ]),
     ],
     [
       'a transform leaf on a view with a transform origin',
@@ -1010,7 +1013,7 @@ describe('native layout starts after the mount of the final state', () => {
     ],
     [
       'a spring beside a timing',
-      { originX: {}, originY: { isSpring: true } },
+      { originX: {}, originY: { isFrameDrivenSpring: true } },
       'UnsupportedTiming',
     ],
     [
@@ -1456,7 +1459,7 @@ describe('native layout starts after the mount of the final state', () => {
         },
         { name: 'twice' }
       );
-      const spring = layoutOf({ originX: { isSpring: true } });
+      const spring = layoutOf({ originX: { isFrameDrivenSpring: true } });
       const tag = await renderBox({ layout });
       await render(<Scene left={END_LEFT} top={END_TOP} layout={layout} />);
       await wait(DURATION / 4);
@@ -1579,7 +1582,7 @@ describe('native layout starts after the mount of the final state', () => {
 
   const MOVE_LAYOUT = layoutOf(MOVES, { name: 'move' });
   const SPRING_LAYOUT = layoutOf(
-    { originX: { isSpring: true } },
+    { originX: { isFrameDrivenSpring: true } },
     { name: 'spring' }
   );
   const MOVED_BOX: CancelBox = { left: END_LEFT, layout: MOVE_LAYOUT };
@@ -1706,7 +1709,7 @@ describe('native layout starts after the mount of the final state', () => {
           flow: 'layout',
           leaves: {
             originX: { duration: xDuration, onlyWhenChanged: true },
-            originY: { isSpring: true, onlyWhenChanged: true },
+            originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
           },
           places: [AT_START, AT_END, { ...AT_END, top: END_TOP }],
           commitTimesMs: [DURATION],
@@ -1751,7 +1754,7 @@ describe('native layout starts after the mount of the final state', () => {
   movingGeometryTest(
     'the first frame-driven update after a native command is identified at its mount',
     async () => {
-      const spring = layoutOf({ originX: { isSpring: true } });
+      const spring = layoutOf({ originX: { isFrameDrivenSpring: true } });
       const tag = await renderBox();
       await render(<Scene left={END_LEFT} />);
       await wait(DURATION * 1.5);
@@ -1949,7 +1952,7 @@ describe('native layout starts after the mount of the final state', () => {
     'a start during a frame-driven animation of the view stays frame-driven',
     async () => {
       const spring = layoutOf(
-        { originX: { isSpring: true } },
+        { originX: { isFrameDrivenSpring: true } },
         { name: 'spring' }
       );
       const move = layoutOf({ originX: {}, originY: {} }, { name: 'move' });
@@ -2497,7 +2500,7 @@ const FOLLOWER_LAYOUT = layoutOf({
   originX: { duration: 3 * DURATION },
   originY: {},
 });
-const FOLLOWER_SPRING = layoutOf({ originX: { isSpring: true } });
+const FOLLOWER_SPRING = layoutOf({ originX: { isFrameDrivenSpring: true } });
 
 type UIRuntimeGlobal = {
   __mapperRun?: () => void;
@@ -5274,7 +5277,7 @@ describe('a layout builder that throws', () => {
 
   test('a builder that throws on the frame-driven control runs one time', async () => {
     const spring = layoutOf(
-      { originX: { isSpring: true } },
+      { originX: { isFrameDrivenSpring: true } },
       { name: 'spring' }
     );
     const tag = await renderBox({ layout: spring });
