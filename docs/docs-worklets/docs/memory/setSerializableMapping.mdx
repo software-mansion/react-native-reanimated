@@ -6,7 +6,7 @@ sidebar_position: 42 # Use alphabetical order
   # setSerializableMapping
 </Badges>
 
-When Worklets [serializes](/docs/memory/serializable) an object, for example when a [worklet](/docs/fundamentals/glossary#worklet) captures it in its closure, it sends a serialized copy of that object to the other Runtime and remembers the mapping from the object to that copy. `setSerializableMapping` lets you set the mapping manually.
+When Worklets [serializes](./serializable.mdx) an object, for example when a [worklet](../fundamentals/glossary.mdx#worklet) captures it in its closure, it sends a serialized copy of that object to the other Runtime and remembers the mapping from the object to that copy. `setSerializableMapping` lets you set the mapping manually.
 
 ## Reference
 
@@ -37,7 +37,7 @@ The object to set the mapping for. It's compared by reference.
 
 ### mapping
 
-The value to send in place of `value`. It's serialized once, when `setSerializableMapping` is called. It can also be a [SerializableRef](/docs/memory/isSerializableRef), which is used as is.
+The value to send in place of `value`. It's serialized once, when `setSerializableMapping` is called. It can also be a [SerializableRef](./isSerializableRef.mdx), which is used as is.
 
 ## Remarks
 

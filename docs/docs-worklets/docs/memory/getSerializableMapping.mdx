@@ -6,7 +6,7 @@ sidebar_position: 42 # Use alphabetical order
   # getSerializableMapping
 </Badges>
 
-Returns the [SerializableRef](/docs/memory/isSerializableRef) that Worklets sends to other Runtimes in place of an object. An object has one after [setSerializableMapping](./setSerializableMapping.mdx), or after Worklets [serialized](/docs/memory/serializable) it.
+Returns the [SerializableRef](./isSerializableRef.mdx) that Worklets sends to other Runtimes in place of an object. An object has one after [setSerializableMapping](./setSerializableMapping.mdx), or after Worklets [serialized](./serializable.mdx) it.
 
 ## Reference
 
@@ -20,7 +20,8 @@ const flag = { current: false };
 console.log(getSerializableMapping(flag)); // logs `undefined`
 
 setSerializableMapping(flag, { current: true });
-const mapping = getSerializableMapping(flag); // the SerializableRef of `{ current: true }`
+// the SerializableRef of `{ current: true }`
+const mapping = getSerializableMapping(flag);
 ```
 
 <details>
@@ -39,7 +40,7 @@ The object to get the mapping of. It's compared by reference.
 
 ## Returns
 
-The [SerializableRef](/docs/memory/isSerializableRef) mapped to `value`, or `undefined` if `value` has no mapping.
+The [SerializableRef](./isSerializableRef.mdx) mapped to `value`, or `undefined` if `value` has no mapping.
 
 ## Remarks
 

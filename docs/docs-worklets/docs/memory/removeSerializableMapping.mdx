@@ -6,7 +6,7 @@ sidebar_position: 42 # Use alphabetical order
   # removeSerializableMapping
 </Badges>
 
-Makes Worklets forget the mapping of an object, whether it came from [setSerializableMapping](./setSerializableMapping.mdx) or from an earlier [serialization](/docs/memory/serializable). The next time the object is serialized, Worklets serializes the object itself and remembers the new mapping.
+Makes Worklets forget the mapping of an object, whether it came from [setSerializableMapping](./setSerializableMapping.mdx) or from an earlier [serialization](./serializable.mdx). The next time the object is serialized, Worklets serializes the object itself and remembers the new mapping.
 
 ## Reference
 
@@ -42,6 +42,7 @@ The object whose mapping to remove. It's compared by reference.
 
 ## Remarks
 
+- `removeSerializableMapping` also removes mappings that Worklets or other libraries set.
 - If `value` has no mapping, `removeSerializableMapping` does nothing.
-- Passing a [SerializableRef](/docs/memory/isSerializableRef) does nothing.
+- Passing a [SerializableRef](./isSerializableRef.mdx) does nothing.
 - On the Web `removeSerializableMapping` does nothing.
