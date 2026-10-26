@@ -1,7 +1,11 @@
-import { TurboModuleRegistry } from 'react-native';
 import { runOnUISync } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getWorkletRuntimesFromPool,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 import type { TestValue } from '../../../ReJest/types';
 
 describe('Test createSerializableOnUI', () => {
@@ -91,10 +95,8 @@ describe('Test createSerializableOnUI', () => {
 
   test('createSerializableOnUIHostObject', () => {
     // Arrange & Act
-    // Prototype of TurboModule is a host object
-    const hostObject = Object.getPrototypeOf(
-      TurboModuleRegistry.get('Clipboard')
-    ) as Record<string, unknown>;
+    const [runtime] = getWorkletRuntimesFromPool(1);
+    const hostObject = runtime as unknown as Record<string, unknown>;
     const hostObjectKeys = Object.keys(hostObject);
     const hostObjectValue = runOnUISync(() => {
       'worklet';

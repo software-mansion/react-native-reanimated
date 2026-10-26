@@ -1,7 +1,8 @@
 'use strict';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
+import type { TextProps } from 'react-native';
 import {
   Animated as AnimatedRN,
   Image as ImageRN,
@@ -97,7 +98,14 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result };
+    return {
+      value: result,
+      get: () => result,
+      modify: NOOP,
+      addListener: NOOP,
+      removeListener: NOOP,
+      _isReanimatedSharedValue: true,
+    };
   },
   useEvent: <
     Event extends object,
@@ -146,6 +154,16 @@ const hook = {
                 target.value = newValue;
               }
             };
+          }
+          if (prop === 'modify') {
+            return (modifier?: (currentValue: Value) => Value) => {
+              if (modifier !== undefined) {
+                target.value = modifier(target.value);
+              }
+            };
+          }
+          if (prop === 'addListener' || prop === 'removeListener') {
+            return NOOP;
           }
         },
         set(target, prop: string, newValue) {
@@ -529,6 +547,22 @@ const screenTransition = {
   startScreenTransition: NOOP,
 };
 
+const AnimatedText = ({
+  children,
+  ...props
+}: Omit<TextProps, 'children'> & { children?: unknown }) => {
+  const content = Array.isArray(children) ? children : [children];
+  return createElement(
+    TextRN,
+    props,
+    ...content.map((child) =>
+      isSharedValueReal(child)
+        ? (child.value as ReactNode)
+        : (child as ReactNode)
+    )
+  );
+};
+
 const Animated = {
   addWhitelistedNativeProps: NOOP,
   addWhitelistedUIProps: NOOP,
@@ -540,7 +574,7 @@ const Animated = {
   interpolate: NOOP,
   interpolateColor: NOOP,
   ScrollView: AnimatedRN.ScrollView,
-  Text: TextRN,
+  Text: AnimatedText,
   View: ViewRN,
 };
 

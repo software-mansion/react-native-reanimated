@@ -243,8 +243,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
 
-  getSettledUpdates(): SettledUpdate[] {
-    return this.#reanimatedModuleProxy.getSettledUpdates();
+  getSettledUpdates(registeredViewTags: number[]): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates(registeredViewTags);
   }
 
   registerPseudoStyles(

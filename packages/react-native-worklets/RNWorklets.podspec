@@ -17,6 +17,7 @@ feature_flags = worklets_config[:feature_flags_flag]
 version_flag = "-DWORKLETS_VERSION=#{package['version']}"
 worklets_profiling_flag = ENV['IS_WORKLETS_PROFILING'] ? '-DWORKLETS_PROFILING' : ''
 hermes_v1_flag = ENV['RCT_HERMES_V1_ENABLED'] == '1' ? '-DHERMES_V1_ENABLED' : ''
+deprecation_flag = worklets_config[:is_reanimated_example_app] ? '-Werror=deprecated-declarations' : ''
 
 # React Native doesn't expose these flags, but not having them
 # can lead to runtime errors due to ABI mismatches.
@@ -76,6 +77,7 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited)",
     "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flag} #{compilation_metadata_generation_flag} #{worklets_profiling_flag} #{hermes_v1_flag}",
   }
+  s.compiler_flags = deprecation_flag
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',

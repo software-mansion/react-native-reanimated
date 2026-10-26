@@ -1,7 +1,6 @@
 const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
-const reactNativeShimPath = path.join(__dirname, 'shims', 'reactNativeShim.js');
 const prepareBundleModePolyfillPath = path.join(
   __dirname,
   'polyfills',
@@ -32,12 +31,6 @@ function bundleModeResolveRequest(
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
   }
-  if (
-    moduleName === 'react-native' &&
-    context.originModulePath !== reactNativeShimPath
-  ) {
-    return { type: 'sourceFile', filePath: reactNativeShimPath };
-  }
   return (userConfigResolveRequest || context.resolveRequest)(
     context,
     moduleName,
@@ -60,12 +53,6 @@ const bundleModeMetroConfig = {
       if (moduleName.startsWith(workletsDirPath)) {
         const fullModuleName = path.join(workletsPackageParentDir, moduleName);
         return { type: 'sourceFile', filePath: fullModuleName };
-      }
-      if (
-        moduleName === 'react-native' &&
-        context.originModulePath !== reactNativeShimPath
-      ) {
-        return { type: 'sourceFile', filePath: reactNativeShimPath };
       }
       return context.resolveRequest(context, moduleName, platform);
     },
@@ -93,20 +80,6 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
       platform,
       currentResolveRequest
     );
-
-  const currentGetTransformOptions = config?.transformer?.getTransformOptions;
-  config.transformer.getTransformOptions = async (...args) => {
-    const options = currentGetTransformOptions
-      ? await currentGetTransformOptions(...args)
-      : {};
-    return {
-      ...options,
-      transform: {
-        ...options.transform,
-        inlineRequires: true,
-      },
-    };
-  };
 
   return config;
 }

@@ -46,6 +46,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
+  bool inserted = false;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -104,7 +105,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> layout;
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
-  std::vector<std::shared_ptr<LightNode>> containersToInsert;
+  std::vector<SharedTag> containersToInsert;
   std::vector<RestoreRequest> restoreRequests;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
@@ -190,7 +191,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
   void reconcileContradictedRemovals(
-      const ShadowViewMutationList &mutations,
+      ShadowViewMutationList &mutations,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
@@ -258,7 +259,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       bool gestureDriven,
       TransactionMeta &transaction) const;
-  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
+  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
