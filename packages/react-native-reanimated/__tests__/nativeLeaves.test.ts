@@ -1,8 +1,18 @@
-import { Easing, withDelay, withSequence, withTiming } from '../src';
+import type { WithSpringConfig } from '../src';
+import {
+  Easing,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from '../src';
 import type { AnimationObject } from '../src/commonTypes';
 import {
   advanceNativeLeaf,
   relateToLiveLeaf,
+  replayTimesOfLeaves,
+  summarizeNativeLeaf,
 } from '../src/layoutReanimation/nativeLeaves';
 
 jest.mock('../src/featureFlags', () => ({
@@ -134,6 +144,166 @@ describe('advanceNativeLeaf against a run of frames', () => {
       expect(frameDriven).toBeGreaterThanOrEqual(lateBy - 1e-6);
       expect(frameDriven).toBeLessThanOrEqual(expected + 1e-6);
     }
+  });
+});
+
+describe('advanceNativeLeaf of a spring against a run of frames', () => {
+  const FRAME_MS = 1000 / 60;
+  const FITTING = { fits: new WeakMap(), lever: 100 };
+  const spring = (config: WithSpringConfig, delayMs?: number) =>
+    onUIRuntime(() =>
+      delayMs === undefined
+        ? withSpring(END, config)
+        : withDelay(delayMs, withSpring(END, config))
+    );
+  const durationOf = (config: WithSpringConfig) =>
+    summarizeNativeLeaf('originX', START, spring(config), FITTING).track!
+      .durationMs;
+
+  /** The leaf as the frame driver leaves it at 60 Hz, up to frame `lastFrame`. */
+  function runFrames(leaf: AnimationObject, lastFrame: number) {
+    leaf.onStart(leaf, START, ORIGIN, undefined);
+    for (let frame = 1; frame <= lastFrame; frame++) {
+      leaf.onFrame(leaf, ORIGIN + (frame * 1000) / 60);
+    }
+    return leaf;
+  }
+
+  function expectRelative(actual: number, expected: number, tolerance: number) {
+    expect(Math.abs(actual - expected)).toBeLessThanOrEqual(
+      tolerance * Math.abs(expected)
+    );
+  }
+
+  test.each<[string, WithSpringConfig]>([
+    ['the default configuration', {}],
+    ['an underdamped spring', { stiffness: 400, damping: 12, mass: 1 }],
+    ['duration mode', { duration: 600, dampingRatio: 0.7 }],
+    ['a velocity', { stiffness: 400, damping: 12, mass: 1, velocity: 500 }],
+    [
+      'overshoot clamping',
+      { stiffness: 400, damping: 12, mass: 1, overshootClamping: true },
+    ],
+  ])(
+    '%s at 40 %% of its duration has the position and the velocity of the frame run',
+    (_, config) => {
+      const lastFrame = Math.round((0.4 * durationOf(config)) / FRAME_MS);
+      const leaf = spring(config);
+      advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + (lastFrame * 1000) / 60);
+      const frameDriven = runFrames(spring(config), lastFrame);
+      expect(leaf.finished).toBeUndefined();
+      expectRelative(
+        leaf.current as number,
+        frameDriven.current as number,
+        1e-9
+      );
+      expectRelative(leaf.velocity, frameDriven.velocity, 1e-6);
+    }
+  );
+
+  test('a delayed spring at 40 % of its duration has the position and the velocity of a frame run that meets the end of the delay', () => {
+    const config = { stiffness: 400, damping: 12, mass: 1 };
+    const delayFrames = 6;
+    const delayMs = (delayFrames * 1000) / 60;
+    const lastFrame =
+      delayFrames + Math.round((0.4 * durationOf(config)) / FRAME_MS);
+    /** The delay keeps its spring, which holds the velocity. */
+    const delayedSpring = () =>
+      onUIRuntime(() => {
+        const inner = withSpring(END, config) as unknown as AnimationObject;
+        return { leaf: withDelay(delayMs, inner), inner };
+      }) as unknown as { leaf: AnimationObject; inner: AnimationObject };
+    const replayed = delayedSpring();
+    advanceNativeLeaf(
+      replayed.leaf,
+      START,
+      ORIGIN,
+      ORIGIN + (lastFrame * 1000) / 60
+    );
+    const frameDriven = delayedSpring();
+    runFrames(frameDriven.leaf, lastFrame);
+    expect(replayed.leaf.current).not.toBe(START);
+    expectRelative(
+      replayed.leaf.current as number,
+      frameDriven.leaf.current as number,
+      1e-9
+    );
+    expectRelative(replayed.inner.velocity, frameDriven.inner.velocity, 1e-6);
+  });
+
+  test('a spring after its duration is finished at its end value', () => {
+    const config = { stiffness: 400, damping: 12, mass: 1 };
+    const leaf = spring(config);
+    advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + 2 * durationOf(config));
+    expect(leaf.finished).toBe(true);
+    expect(leaf.current).toBe(END);
+  });
+
+  test('a spring with no description keeps one step to the time of the advance', () => {
+    const leaf = onUIRuntime(() => withSpring(END, {}, jest.fn()));
+    const onFrame = jest.spyOn(leaf, 'onFrame');
+    advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + 400);
+    expect(onFrame.mock.calls.map(([, now]) => now)).toEqual([ORIGIN + 400]);
+  });
+
+  test('a delayed timing has a step only at the end of its delay', () => {
+    const leaf = onUIRuntime(() => withDelay(100, timing()));
+    const onFrame = jest.spyOn(leaf, 'onFrame');
+    advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + 1000);
+    expect(onFrame.mock.calls.map(([, now]) => now)).toEqual([
+      ORIGIN + 100,
+      ORIGIN + 1000,
+    ]);
+  });
+
+  test('a delayed spring has steps of no more than 64 ms after the end of its delay', () => {
+    const leaf = spring({}, 100);
+    const onFrame = jest.spyOn(leaf, 'onFrame');
+    advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + 300);
+    expect(onFrame.mock.calls.map(([, now]) => now)).toEqual(
+      [100, 164, 228, 292, 300].map((elapsed) => ORIGIN + elapsed)
+    );
+  });
+});
+
+describe('replayTimesOfLeaves', () => {
+  test('a delayed spring beside a delayed timing has the phase ends, steps of no more than 64 ms in the spring, and the start', () => {
+    const leaves = [
+      onUIRuntime(() => withDelay(100, withSpring(END))),
+      onUIRuntime(() => withDelay(250, timing())),
+    ];
+    expect(replayTimesOfLeaves(leaves, ORIGIN, ORIGIN + 300)).toEqual(
+      [100, 164, 228, 250, 292, 300].map((elapsed) => ORIGIN + elapsed)
+    );
+  });
+
+  test('leaves with no spring have only the phase ends before the start', () => {
+    const leaves = [
+      onUIRuntime(() => withDelay(100, timing())),
+      onUIRuntime(() => withSequence(timing(40, 200), timing())),
+      onUIRuntime(() => withRepeat(timing(), 3)),
+    ];
+    expect(replayTimesOfLeaves(leaves, ORIGIN, ORIGIN + 300)).toEqual(
+      [100, 200].map((elapsed) => ORIGIN + elapsed)
+    );
+  });
+
+  test('a spring that starts at the start has no replay time', () => {
+    const leaves = [onUIRuntime(() => withDelay(300, withSpring(END)))];
+    expect(replayTimesOfLeaves(leaves, ORIGIN, ORIGIN + 300)).toEqual([]);
+  });
+});
+
+describe('advanceNativeLeaf of a repeat with a callback', () => {
+  test('a start 400 ms late gives the callbacks of one frame', () => {
+    const callback = jest.fn();
+    const leaf = onUIRuntime(() =>
+      withRepeat(withTiming(10, { duration: 100 }, callback), 3)
+    );
+    advanceNativeLeaf(leaf, START, ORIGIN, ORIGIN + 400);
+    expect(callback.mock.calls).toEqual([[true, 10]]);
+    expect(leaf.current).toBe(10);
+    expect(leaf.finished).toBeUndefined();
   });
 });
 
@@ -468,6 +638,32 @@ describe('relateToLiveLeaf', () => {
 
   test('a delayed leaf needs the frame driver', () => {
     expect(relateToLiveLeaf(live(bare()), wrapped([50]))).toBe('frameDriver');
+  });
+
+  describe('a live spring', () => {
+    const liveSpring = () => live(onUIRuntime(() => withSpring(END)));
+
+    test('a timing replaces a live spring', () => {
+      expect(relateToLiveLeaf(liveSpring(), bare())).toBe('replaces');
+    });
+
+    test.each<
+      [string, () => AnimationObject, () => AnimationObject | undefined]
+    >([
+      [
+        'a live spring and a spring',
+        liveSpring,
+        () => onUIRuntime(() => withSpring(END)),
+      ],
+      ['a live spring and no new leaf', liveSpring, () => undefined],
+      [
+        'a live timing and a spring',
+        () => live(bare()),
+        () => onUIRuntime(() => withSpring(END)),
+      ],
+    ])('%s need the frame driver', (_, liveLeaf, next) => {
+      expect(relateToLiveLeaf(liveLeaf(), next())).toBe('frameDriver');
+    });
   });
 
   describe('a leaf with more than one timing phase', () => {
