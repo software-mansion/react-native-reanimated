@@ -1020,6 +1020,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       const bool holdsEndValue,
       const bool hasEdgeAntialiasingAtHeldEnd)
   {
+    ReanimatedSystraceSection section("CoreAnimationPlatform::onAnimationStopped");
     RCTAssertMainQueue();
     const auto trackIt = tracks_.find(track);
     if (trackIt == tracks_.end()) {
@@ -1049,6 +1050,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
     const std::vector<AnimationTarget> &interruptedTargets)
 {
+  ReanimatedSystraceSection section("CoreAnimationMountedAnimation::prepare");
   startValues_.reserve(request_.tracks.size());
   for (const auto &track : request_.tracks) {
     const bool isInterrupting =

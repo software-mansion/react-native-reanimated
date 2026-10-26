@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/NativeLayoutGroups.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
 #include <utility>
@@ -107,6 +108,7 @@ std::optional<NativeLayoutGroupCancel> NativeLayoutGroups::cancelForFrameDriver(
 }
 
 NativeLayoutBuildEnds NativeLayoutGroups::clear() {
+  ReanimatedSystraceSection section("NativeLayoutGroups::clear");
   const std::lock_guard<std::mutex> lock(mutex_);
   NativeLayoutBuildEnds ends;
   for (const auto &[tag, group] : groups_) {
@@ -134,6 +136,7 @@ void NativeLayoutGroups::onAnimationAdmitted(const AnimationHandle &handle) {
 }
 
 void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const TrackEnd end) {
+  ReanimatedSystraceSection section("NativeLayoutGroups::onTrackEnded");
   NativeLayoutBuildEnds ends;
   {
     const std::lock_guard<std::mutex> lock(mutex_);

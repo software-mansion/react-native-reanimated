@@ -161,6 +161,7 @@ void NativeAnimationHost::enqueue(Operation operation) {
 }
 
 void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation) {
+  ReanimatedSystraceSection section("NativeAnimationHost::post");
   {
     const std::lock_guard lock(queueMutex_);
     const bool hasPendingDrain = !queue_.empty() || !mountReports_.empty();
@@ -177,6 +178,7 @@ void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation
 }
 
 void NativeAnimationHost::drain() {
+  ReanimatedSystraceSection section("NativeAnimationHost::drain");
   while (true) {
     Operation operation;
     {
@@ -214,6 +216,7 @@ void NativeAnimationHost::admit(
     const AnimationRequest &request,
     const std::weak_ptr<NativeAnimationClient> &client,
     Deliveries &deliveries) {
+  ReanimatedSystraceSection section("NativeAnimationHost::admit");
   const auto &handle = request.handle;
   if (commands_.contains(handle)) {
     endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, AnimationResultReason::StaleIdentity}, deliveries);
@@ -313,6 +316,7 @@ void NativeAnimationHost::runCloseSurface(const SurfaceId surfaceId) {
 }
 
 void NativeAnimationHost::onPlatformTrackEnded(const TrackKey &key, const bool finished) {
+  ReanimatedSystraceSection section("NativeAnimationHost::onPlatformTrackEnded");
   Deliveries deliveries;
   endTrack(key, finished ? TrackEnd::Finished : TrackEnd::PlatformRemoved, deliveries);
   for (const auto &delivery : deliveries) {

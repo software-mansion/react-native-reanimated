@@ -1073,6 +1073,7 @@ bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
 }
 
 void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::surfaceDidMount");
   if constexpr (hasNativeLayoutRouteFlag()) {
     layoutAnimationsProxyRegistry_->surfaceDidMount(surfaceId);
   }
@@ -1080,6 +1081,7 @@ void ReanimatedModuleProxy::surfaceDidMount(const SurfaceId surfaceId) {
 }
 
 void ReanimatedModuleProxy::pulledSurfacesDidMount(const std::uint64_t dispatch) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::pulledSurfacesDidMount");
   if constexpr (hasNativeLayoutRouteFlag()) {
     layoutAnimationsProxyRegistry_->pulledSurfacesDidMount(dispatch);
   }
@@ -1087,6 +1089,7 @@ void ReanimatedModuleProxy::pulledSurfacesDidMount(const std::uint64_t dispatch)
 }
 
 void ReanimatedModuleProxy::rewriteSynchronousProps() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::rewriteSynchronousProps");
   if (!synchronousWritesTracker_) {
     return;
   }

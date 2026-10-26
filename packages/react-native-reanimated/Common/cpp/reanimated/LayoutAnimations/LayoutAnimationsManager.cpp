@@ -112,6 +112,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
 }
 
 jsi::Object LayoutAnimationsManager::captureLiveLayoutLeaves(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::captureLiveLayoutLeaves");
   return getManagerFunction(rt, "captureLiveLeaves").call(rt, toJSValue(rt, liveLeaves)).asObject(rt);
 }
 
@@ -152,10 +153,12 @@ void LayoutAnimationsManager::finishBuiltLayoutAnimation(
     jsi::Runtime &rt,
     const uint64_t buildId,
     const bool finished) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::finishBuiltLayoutAnimation");
   getManagerFunction(rt, "finishBuilt").call(rt, jsi::Value(static_cast<double>(buildId)), jsi::Value(finished));
 }
 
 void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, const uint64_t buildId) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::releaseBuiltLayoutAnimation");
   getManagerFunction(rt, "releaseBuilt").call(rt, jsi::Value(static_cast<double>(buildId)));
 }
 

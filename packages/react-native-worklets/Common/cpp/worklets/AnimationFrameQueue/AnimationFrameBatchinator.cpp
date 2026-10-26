@@ -1,5 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
@@ -36,6 +37,7 @@ void AnimationFrameBatchinator::flush() {
   }
 
   requestAnimationFrame_([weakThis = weak_from_this()](double timestampMs) {
+    WorkletsSystraceSection section("AnimationFrameBatchinator::flush");
     const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

@@ -4,6 +4,7 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/CSS/AndroidCSSRouteTable.h>
@@ -417,6 +418,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods(
 }
 
 void NativeProxy::invalidateCpp() {
+  ReanimatedSystraceSection section("NativeProxy::invalidateCpp");
   if (nativeAnimationPlatform_) {
     nativeAnimationPlatform_->close();
     nativeAnimationPlatform_.reset();

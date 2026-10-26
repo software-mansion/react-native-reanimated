@@ -652,6 +652,7 @@ bool AndroidNativeAnimationPlatform::modelEndsAt(alias_ref<JView> view, const An
 }
 
 void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const bool finished) {
+  ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::onTrackEnded");
   {
     const std::lock_guard lock(operationsMutex_);
     if (isClosed_) {
@@ -662,6 +663,7 @@ void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const b
 }
 
 void AndroidNativeAnimationPlatform::drainPostedOperations() {
+  ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::drainPostedOperations");
   std::deque<Operation> operations;
   {
     const std::lock_guard lock(operationsMutex_);
