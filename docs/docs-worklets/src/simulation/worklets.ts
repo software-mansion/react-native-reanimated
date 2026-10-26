@@ -140,6 +140,10 @@ export function isWorkletRuntime(): boolean {
   return !isRNRuntime();
 }
 
+export function isWorkletFunction(value: unknown): boolean {
+  return dispatch('isWorkletFunction', [value]) as boolean;
+}
+
 function runtimeFromId(runtimeId: number): WorkletRuntimeHandle {
   return dispatch('runtimeFromId', [runtimeId]) as WorkletRuntimeHandle;
 }

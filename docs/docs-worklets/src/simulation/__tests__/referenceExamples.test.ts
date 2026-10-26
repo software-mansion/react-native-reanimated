@@ -9,6 +9,7 @@ import {
   getRuntimeKind,
   isRNRuntime,
   isUIRuntime,
+  isWorkletFunction,
   isWorkerRuntime,
   isWorkletRuntime,
   runOnRuntimeAsyncWithId,
@@ -62,6 +63,7 @@ describe('reference examples', () => {
       '[ui] true',
       '[worker:background] true',
     ],
+    apiIsWorkletFunction: ['[rn] true', '[rn] false'],
     apiGetCurrentThreadId: ['[rn] 0x7400', '[ui] 0x7000', '[rn] 0x7400'],
     apiShareable: ['[rn] 42'],
     shareableAsync: [
@@ -94,6 +96,45 @@ describe('reference examples', () => {
       assert.equal(snapshots.at(-1)!.finished, true);
     });
   }
+
+  it('detects worklet functions on the current runtime without executing them', () => {
+    function* worklet() {
+      'worklet';
+      yield console.log('Unexpected worklet execution');
+    }
+    function* ordinary() {
+      yield console.log('Unexpected ordinary function execution');
+    }
+    function* inspect() {
+      'worklet';
+      yield console.log(
+        isWorkletFunction(worklet),
+        isWorkletFunction(ordinary),
+        isWorkletFunction(undefined),
+        isWorkletFunction(null),
+        isWorkletFunction({}),
+        isWorkletFunction(() => 1)
+      );
+    }
+    function* main() {
+      yield inspect();
+      yield runOnUISync(inspect);
+      const worker = yield createWorkletRuntime({ name: 'background' });
+      yield runOnRuntimeSyncWithId(worker.runtimeId, inspect);
+      yield inspect();
+    }
+    const snapshots = simulate(
+      asModule({ default: main, worklet, ordinary, inspect }),
+      [worklet, ordinary, inspect, main].map((fn) => fn.toString()).join('\n')
+    );
+    assert.deepEqual(formatLogs(snapshots), [
+      '[rn] true false false false false false',
+      '[rn] false false false false false false',
+      '[rn] false false false false false false',
+      '[rn] true false false false false false',
+    ]);
+    assert.equal(snapshots.at(-1)!.finished, true);
+  });
 
   it('shows globals on the owning runtime at the highlighted assignment', () => {
     for (const name of ['runtimeGlobals', 'assignRuntimeGlobal']) {

@@ -10,6 +10,13 @@ and runtime proxies are executed by this machine, not by the native Worklets
 runtime. Tests compile the reference snippets using the docs Babel configuration
 in both development and production to keep this boundary intact.
 
+`isWorkletFunction` models explicit worklet markers on registered snippet
+functions: a `'worklet'` directive before the function's steps stands in for
+the Babel-generated metadata. Detection returns `true` only on the RN Runtime;
+the JS thread also returns `false` while executing in an acquired Worklet Runtime.
+It inspects the function without executing it. Automatic workletization and
+the Babel transform's declaration-hoisting behavior are not simulated.
+
 Writes to observable state must happen before yielding, for example
 `yield (globalThis.value = 42)`, so the snapshot reflects the highlighted line.
 For a conditional one-line statement, a following bare `yield` maps back to that

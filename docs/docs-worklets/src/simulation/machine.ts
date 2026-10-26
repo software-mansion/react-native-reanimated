@@ -114,6 +114,7 @@ export class Machine {
       yieldEnds: [0],
       isNative: false,
       isHidden: false,
+      isWorklet: false,
       hasLoop: false,
     });
     const uiRuntime = options.uiRuntime ?? true;
@@ -358,6 +359,16 @@ export class Machine {
     }
     if (api === 'getCurrentThreadId') {
       return threadId(this.cores.indexOf(core));
+    }
+    if (api === 'isWorkletFunction') {
+      const [fn] = args;
+      // Snippets skip the Babel transform. Their explicit directive models
+      // the worklet metadata, which is only available on the RN Runtime.
+      return (
+        this.currentRuntime(core) === 'rn' &&
+        this.registerFn(fn) &&
+        this.snippet.fnInfo.get(fn)!.isWorklet
+      );
     }
     if (api === 'getRuntimeKind') {
       const runtime = this.currentRuntime(core);

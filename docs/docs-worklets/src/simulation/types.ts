@@ -15,6 +15,7 @@ export interface FnInfo {
   yieldEnds: number[];
   isNative: boolean;
   isHidden: boolean;
+  isWorklet: boolean;
   hasLoop: boolean;
 }
 
@@ -61,6 +62,7 @@ export type InterceptedApi =
   | 'runOnRuntimeSync'
   | 'getCurrentThreadId'
   | 'getRuntimeKind'
+  | 'isWorkletFunction'
   | 'runtimeFromId'
   | 'assertRNRuntime'
   | 'setTimeout'
