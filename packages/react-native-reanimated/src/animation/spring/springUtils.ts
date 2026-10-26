@@ -17,6 +17,37 @@ export interface SpringConfigInner {
   skipAnimation: boolean;
 }
 
+export type ResolvableSpringConfig = Omit<
+  DefaultSpringConfig & SpringConfigInner,
+  'reduceMotion'
+>;
+
+export type ResolvedSpring = {
+  zeta: number;
+  omega0: number;
+  omega1: number;
+  stiffness: number;
+  /**
+   * True when `clamp` raised `zeta`. The motion then keeps `omega1`, so its
+   * energy can increase again after it is below `energyThreshold`.
+   */
+  clampRaisesZeta: boolean;
+};
+
+/**
+ * The state of a spring at its start: the displacement `x0` from `toValue`, the
+ * played velocity `v0` and the start energy of the end rule, which uses the
+ * velocity of the configuration.
+ */
+export type SpringStart = {
+  x0: number;
+  v0: number;
+  resolved: ResolvedSpring;
+  initialEnergy: number;
+};
+
+type SpringState = { displacement: number; velocity: number };
+
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
   toValue: AnimatableValue;
@@ -37,6 +68,10 @@ export interface InnerSpringAnimation extends Omit<
   toValue: number;
   current: number;
 }
+
+export const LARGEST_SPRING_STEP_MS = 64;
+const SETTLE_TIME_TOLERANCE_S = 1e-12;
+
 export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorMessage = '';
@@ -117,9 +152,9 @@ function bisectRoot({
   return current;
 }
 
-export function initialCalculations(
+function initialCalculations(
   stiffness = 0,
-  config: DefaultSpringConfig & SpringConfigInner
+  config: ResolvableSpringConfig
 ): {
   zeta: number;
   omega0: number;
@@ -159,27 +194,25 @@ export function initialCalculations(
  * of movement. According to theory this change is small and tests shows that we
  * can indeed ignore it.
  */
-export function scaleZetaToMatchClamps(
-  animation: SpringAnimation,
+function scaleZetaToMatchClamps(
+  zeta: number,
+  toValue: number,
+  x0: number,
   clamp: { min?: number; max?: number }
 ): number {
   'worklet';
-  const { zeta, toValue, startValue } = animation;
-  const toValueNum = Number(toValue);
-
-  if (startValue === 0) {
+  if (x0 === 0) {
     return zeta;
   }
 
   const [firstBound, secondBound] =
-    startValue <= 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
+    x0 <= 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
 
   /**
    * The extrema we get from equation below are relative (we obtain a ratio), To
    * get absolute extrema we convert it as follows:
    *
-   * AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
-   * Where ± denotes:
+   * AbsoluteExtremum = x0 ± RelativeExtremum * (toValue - x0) Where ± denotes:
    *
    * - If extremum is over the target
    * - Otherwise
@@ -187,12 +220,12 @@ export function scaleZetaToMatchClamps(
 
   const relativeExtremum1 =
     secondBound !== undefined
-      ? Math.abs((secondBound - toValueNum) / startValue)
+      ? Math.abs((secondBound - toValue) / x0)
       : undefined;
 
   const relativeExtremum2 =
     firstBound !== undefined
-      ? Math.abs((firstBound - toValueNum) / startValue)
+      ? Math.abs((firstBound - toValue) / x0)
       : undefined;
 
   /**
@@ -236,9 +269,9 @@ export function getEnergy(
 }
 
 /** Runs before initial */
-export function calculateNewStiffnessToMatchDuration(
+function calculateNewStiffnessToMatchDuration(
   x0: number,
-  config: DefaultSpringConfig & SpringConfigInner,
+  config: ResolvableSpringConfig,
   v0: number
 ) {
   'worklet';
@@ -304,48 +337,38 @@ export function calculateNewStiffnessToMatchDuration(
   });
 }
 
-export function criticallyDampedSpringCalculations(
-  animation: InnerSpringAnimation,
-  precalculatedValues: {
-    v0: number;
-    x0: number;
-    omega0: number;
-    t: number;
-  }
-): { position: number; velocity: number } {
+function criticallyDampedSpringCalculations(precalculatedValues: {
+  v0: number;
+  x0: number;
+  omega0: number;
+  t: number;
+}): SpringState {
   'worklet';
-  const { toValue } = animation;
-
   const { v0, x0, omega0, t } = precalculatedValues;
 
   const criticallyDampedEnvelope = Math.exp(-omega0 * t);
-  const criticallyDampedPosition =
-    toValue + criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
+  const criticallyDampedDisplacement =
+    criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
 
   const criticallyDampedVelocity =
     criticallyDampedEnvelope * -omega0 * (x0 + (v0 + omega0 * x0) * t) +
     criticallyDampedEnvelope * (v0 + omega0 * x0);
 
   return {
-    position: criticallyDampedPosition,
+    displacement: criticallyDampedDisplacement,
     velocity: criticallyDampedVelocity,
   };
 }
 
-export function underDampedSpringCalculations(
-  animation: InnerSpringAnimation,
-  precalculatedValues: {
-    zeta: number;
-    v0: number;
-    x0: number;
-    omega0: number;
-    omega1: number;
-    t: number;
-  }
-): { position: number; velocity: number } {
+function underDampedSpringCalculations(precalculatedValues: {
+  zeta: number;
+  v0: number;
+  x0: number;
+  omega0: number;
+  omega1: number;
+  t: number;
+}): SpringState {
   'worklet';
-  const { toValue } = animation;
-
   const { zeta, t, omega0, omega1, x0, v0 } = precalculatedValues;
 
   const sin1 = Math.sin(omega1 * t);
@@ -357,14 +380,13 @@ export function underDampedSpringCalculations(
     underDampedEnvelope *
     (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
 
-  const underDampedPosition = toValue + underDampedFrag1;
   // This looks crazy -- it's actually just the derivative of the oscillation function
   const underDampedVelocity =
     -zeta * omega0 * underDampedFrag1 +
     underDampedEnvelope *
       (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
 
-  return { position: underDampedPosition, velocity: underDampedVelocity };
+  return { displacement: underDampedFrag1, velocity: underDampedVelocity };
 }
 
 export function isAnimationTerminatingCalculation(
@@ -392,4 +414,167 @@ export function isAnimationTerminatingCalculation(
     initialEnergy === 0 ||
     currentEnergy / initialEnergy <= config.energyThreshold
   );
+}
+
+function firstTimeWhere(
+  predicate: (t: number) => boolean,
+  step: number,
+  longestTime: number
+) {
+  'worklet';
+  if (!Number.isFinite(step) || step <= 0) {
+    return Infinity;
+  }
+  if (predicate(0)) {
+    return 0;
+  }
+  let before = 0;
+  let after = step;
+  while (!predicate(after)) {
+    if (after > longestTime) {
+      return Infinity;
+    }
+    before = after;
+    after += step;
+  }
+  while (after - before > SETTLE_TIME_TOLERANCE_S) {
+    const middle = (before + after) / 2;
+    if (predicate(middle)) {
+      after = middle;
+    } else {
+      before = middle;
+    }
+  }
+  return after;
+}
+
+/**
+ * The rates in 1/s of the motion of `springStateAt`: `decay` of its envelope
+ * and `frequency` of its oscillation, 0 for `zeta` 1 or more.
+ */
+export function springRatesOf({
+  zeta,
+  omega0,
+  omega1,
+}: Pick<ResolvedSpring, 'zeta' | 'omega0' | 'omega1'>): {
+  decay: number;
+  frequency: number;
+} {
+  'worklet';
+  return zeta < 1
+    ? { decay: zeta * omega0, frequency: omega1 }
+    : { decay: omega0, frequency: 0 };
+}
+
+function scanStep(resolved: ResolvedSpring) {
+  'worklet';
+  const { decay, frequency } = springRatesOf(resolved);
+  return 1 / (4 * Math.hypot(decay, frequency));
+}
+
+export function resolveSpring(
+  config: ResolvableSpringConfig,
+  toValue: number,
+  x0: number,
+  v0: number
+): ResolvedSpring {
+  'worklet';
+  const stiffness = config.useDuration
+    ? calculateNewStiffnessToMatchDuration(x0, config, v0)
+    : config.stiffness;
+  const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
+  const playedZeta =
+    config.clamp === undefined
+      ? zeta
+      : scaleZetaToMatchClamps(zeta, toValue, x0, config.clamp);
+
+  return {
+    zeta: playedZeta,
+    omega0,
+    omega1,
+    stiffness,
+    clampRaisesZeta: playedZeta > zeta,
+  };
+}
+
+export function velocityTowardTarget(
+  velocity: number,
+  displacement: number
+): number {
+  'worklet';
+  const pointsAway =
+    (displacement < 0 && velocity < 0) || (displacement > 0 && velocity > 0);
+  return pointsAway ? 0 : velocity;
+}
+
+export function springStateAt(
+  { zeta, omega0, omega1 }: Pick<ResolvedSpring, 'zeta' | 'omega0' | 'omega1'>,
+  x0: number,
+  v0: number,
+  t: number
+): SpringState {
+  'worklet';
+  return zeta < 1
+    ? underDampedSpringCalculations({ zeta, v0, x0, omega0, omega1, t })
+    : criticallyDampedSpringCalculations({ v0, x0, omega0, t });
+}
+
+export function initialEnergyOf(
+  x0: number,
+  stiffness: number,
+  config: ResolvableSpringConfig
+): number {
+  'worklet';
+  return getEnergy(x0, config.velocity, stiffness, config.mass);
+}
+
+/**
+ * The start of a spring from `start` to `toValue`. `velocity` is the velocity
+ * before the clip of `velocityTowardTarget`.
+ */
+export function springStartOf(
+  config: ResolvableSpringConfig,
+  toValue: number,
+  start: number,
+  velocity: number
+): SpringStart {
+  'worklet';
+  const x0 = start - toValue;
+  const v0 = velocityTowardTarget(velocity, x0);
+  const resolved = resolveSpring(config, toValue, x0, v0);
+  return {
+    x0,
+    v0,
+    resolved,
+    initialEnergy: initialEnergyOf(x0, resolved.stiffness, config),
+  };
+}
+
+/**
+ * Gives the first time in ms at which `isAnimationTerminatingCalculation` is
+ * true for the continuous motion, or `Infinity` after `longestMs`. It uses the
+ * state divided by `x0`, so equal normalized inputs give equal times. `x0` and
+ * `initialEnergy` are not 0.
+ */
+export function springSettleTime(
+  config: ResolvableSpringConfig,
+  { x0, v0, resolved, initialEnergy }: SpringStart,
+  longestMs: number
+): number {
+  'worklet';
+  const { stiffness } = resolved;
+  const { mass, energyThreshold } = config;
+  const startEnergy = initialEnergy / x0 ** 2;
+
+  const hasEnded = (t: number) => {
+    'worklet';
+    const { displacement, velocity } = springStateAt(resolved, 1, v0 / x0, t);
+    if (config.overshootClamping && (displacement < 0 || displacement > 1)) {
+      return true;
+    }
+    const energy = getEnergy(displacement, velocity, stiffness, mass);
+    return energy / startEnergy <= energyThreshold;
+  };
+
+  return firstTimeWhere(hasEnded, scanStep(resolved), longestMs / 1000) * 1000;
 }

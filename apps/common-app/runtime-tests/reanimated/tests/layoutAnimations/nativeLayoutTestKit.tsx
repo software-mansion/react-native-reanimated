@@ -16,6 +16,7 @@ import type {
   ExitAnimationsValues,
   LayoutAnimation,
   LayoutAnimationFunction,
+  WithSpringConfig,
 } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -181,6 +182,19 @@ export const TRANSFORM_SAMPLE_CELLS: readonly number[] = IS_APPLE
  * does not show (`BaseViewManager.setTransformProperty`).
  */
 export const SHOWS_MATRIX_SHEAR = IS_APPLE;
+/**
+ * Core Animation holds a held spring at its curve value, not at its end value,
+ * so Apple refuses a spring segment on a held track (`playsTimings` of
+ * `REANativeAnimationPlatform.mm`): the build of a springified exit fails with
+ * `UnsupportedTarget`.
+ */
+export const PLAYS_HELD_SPRING = !IS_APPLE;
+/**
+ * Apple plays a spring only as the one segment of its timeline (`playsTimings`
+ * of `REANativeAnimationPlatform.mm`): a spring operation with a hold beside it
+ * makes the build fail with `UnsupportedTarget`.
+ */
+export const PLAYS_SPRING_WITH_HOLD = !IS_APPLE;
 
 export type Band = { from: number; to: number };
 
@@ -2456,13 +2470,27 @@ export type Leaf = Pick<LeafPart, 'duration' | 'easing' | 'delay'> & {
    * layout key.
    */
   to?: number;
-  isSpring?: boolean;
+  /**
+   * A `withSpring` with no config and with a leaf callback: it has no native
+   * form, so the frame driver plays it.
+   */
+  isFrameDrivenSpring?: boolean;
+  /**
+   * A `withSpring` with this config in place of the timing. It has a leaf
+   * callback when the leaf has one.
+   */
+  spring?: WithSpringConfig;
   hasCallback?: boolean;
   reduceMotion?: ReduceMotion;
   /** The leaf exists only when the layout value of its key changes. */
   onlyWhenChanged?: boolean;
   /** The builder sets reduced motion on the animation after its creation. */
   setsReduceMotion?: boolean;
+};
+
+export const isSpringLeaf = (leaf: Leaf) => {
+  'worklet';
+  return leaf.isFrameDrivenSpring === true || leaf.spring !== undefined;
 };
 
 export type Leaves = Partial<Record<Key, Leaf>>;
@@ -2535,17 +2563,15 @@ function animationOf(
       if (easing !== 'default') {
         config.easing = easing ?? Easing.linear;
       }
-      const timing = leaf.isSpring
-        ? withSpring(to)
-        : withTiming(
-            to,
-            config,
-            (hasCallback ?? leaf.hasCallback)
-              ? () => {
-                  'worklet';
-                }
-              : undefined
-          );
+      const leafCallback =
+        leaf.isFrameDrivenSpring || (hasCallback ?? leaf.hasCallback)
+          ? () => {
+              'worklet';
+            }
+          : undefined;
+      const timing = isSpringLeaf(leaf)
+        ? withSpring(to, leaf.spring, leafCallback)
+        : withTiming(to, config, leafCallback);
       return delay === undefined ? timing : withDelay(delay, timing);
     };
     const leafOf = (

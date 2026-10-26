@@ -1,6 +1,12 @@
 'use strict';
 import type { EasingCurveFits } from '../animation/nativeEasingCurve';
 import { fitEasingCurveOnce } from '../animation/nativeEasingCurve';
+import {
+  LARGEST_SPRING_STEP_MS,
+  springRatesOf,
+  springSettleTime,
+  springStartOf,
+} from '../animation/spring/springUtils';
 import { withPlainValue } from '../animation/styleAnimation';
 import { recognizePrefixSuffix } from '../animation/utilCommon';
 import type {
@@ -11,6 +17,8 @@ import type {
   NativeLeafSegment,
   NativeLeafTrack,
   NativeOperationTimeline,
+  NativeSpringPhase,
+  NativeSpringTiming,
   NativeTimingDescription,
   NativeTimingPhase,
   NativeTransformOperation,
@@ -37,7 +45,23 @@ type Lowered<TTrack> = {
 
 type LeafSummary = { initialValue: unknown } & Lowered<NativeLeafTrack>;
 
-type Phase = NativeHoldPhase | NativeTimingPhase;
+type Phase = NativeHoldPhase | NativeTimingPhase | NativeSpringPhase;
+
+type WithNumberTarget<TPhase> = Omit<TPhase, 'toValue'> & { toValue: number };
+
+/** A phase whose end value is a number in the unit of the frame driver. */
+type NumberPhase =
+  | NativeHoldPhase
+  | WithNumberTarget<NativeTimingPhase>
+  | WithNumberTarget<NativeSpringPhase>;
+
+/** A spring from its start value: it is at `toValue` after `durationMs`. */
+type SettlingSpringPhase = {
+  kind: 'spring';
+  durationMs: number;
+  toValue: number;
+  spring: NativeSpringTiming;
+};
 
 /** The fields of a phase that do not depend on its end value. */
 type PhaseForm =
@@ -47,7 +71,8 @@ type PhaseForm =
 /** A phase whose end value is a native scalar. */
 type ScalarPhase =
   | NativeHoldPhase
-  | (Omit<NativeTimingPhase, 'toValue'> & { toValue: number });
+  | WithNumberTarget<NativeTimingPhase>
+  | SettlingSpringPhase;
 
 /**
  * The value that a leaf shows from its start, the sum of its first holds, then
@@ -86,15 +111,42 @@ type DescribedOperation = OperationRecord & { timeline: Timeline };
 export type Fitting = { fits: EasingCurveFits; lever: number };
 
 /** The easing of a timing in segments of progress from 0 to 1. */
-type ProgressSegment = Omit<NativeLeafSegment, 'endValue'> & {
+type ProgressSegment = {
+  endOffset: number;
   endProgress: number;
+  cubicBezier?: [number, number, number, number];
 };
+
+/**
+ * A value of an operation as the frame driver reads it, and the factor that
+ * gives its native scalar.
+ */
+type OperationScalar = { value: number; nativeFactor: number };
 
 const ANGLE_KINDS = ['rotate', 'rotateX', 'rotateY', 'rotateZ'];
 const RADIANS_IN_UNIT: Record<string, number> = {
   deg: Math.PI / 180,
   rad: 1,
 };
+
+/**
+ * The closed ranges in which a native spring has the values of the frame
+ * driver: the damping ratio, the natural frequency in 1/s, the duration in ms,
+ * the played velocity as a part of the change in 1/s, and the energy
+ * threshold.
+ */
+export const SPRING_GATES = {
+  zeta: { min: 0.1, max: 3 },
+  omega0: { min: 6.871003810170316, max: 44.721359549995796 },
+  durationMs: { min: 40.00000000014557, max: 9426.53363823126 },
+  velocityOfChange: { min: 0, max: 5 },
+  energyThreshold: { min: 6e-9, max: 0.01 },
+};
+
+/** A gate also holds a value that is outside a bound by this part of the bound. */
+export const SPRING_GATE_MARGIN = 1e-9;
+
+type SpringGate = keyof typeof SPRING_GATES;
 
 const PROGRESS_TOLERANCE = 0.001;
 const POINTS_TOLERANCE = 0.25;
@@ -166,7 +218,7 @@ function phasesOf(animation: unknown): Phase[] | undefined {
 
 /**
  * A first phase with no duration, before a phase with a duration, gives its
- * value to the start. The last phase of a description is a timing.
+ * value to the start. The last phase of a description is a timing or a spring.
  */
 function timelineOf(initialValue: number, phases: ScalarPhase[]): Timeline {
   'worklet';
@@ -209,16 +261,56 @@ function holdOf(durationMs: number, roundingMs: number): NativeHoldPhase[] {
   return durationMs > roundingMs ? [{ kind: 'hold', durationMs }] : [];
 }
 
-/** The end of each phase but the last, from the start of the animation. */
+/**
+ * The end of each phase but the last, from the start of the animation. A spring
+ * phase has no end before the end of the animation.
+ */
 function stepTimesOf(description: NativeTimingDescription | undefined) {
   'worklet';
   const stepTimes: number[] = [];
   let phaseEnd = 0;
-  for (const { durationMs } of description?.phases.slice(0, -1) ?? []) {
-    phaseEnd += durationMs;
+  for (const phase of description?.phases.slice(0, -1) ?? []) {
+    if (phase.kind === 'spring') {
+      break;
+    }
+    phaseEnd += phase.durationMs;
     stepTimes.push(phaseEnd);
   }
   return stepTimes;
+}
+
+/**
+ * The times at which the replay of an animation from `originMs` to a start at
+ * `now` calls `onFrame`. A wrapper starts its next animation in the frame in
+ * which a phase ends, so the replay has each phase end before `now`. A spring
+ * moves no more than `LARGEST_SPRING_STEP_MS` in one frame, so a spring that
+ * started before `now` has steps of that size and a step at `now`: the next
+ * frame continues from `now`.
+ */
+function replayTimesOf(
+  description: NativeTimingDescription | undefined,
+  originMs: number,
+  now: number
+): number[] {
+  'worklet';
+  const stepTimes = stepTimesOf(description);
+  const replayTimes = stepTimes
+    .map((stepTime) => originMs + stepTime)
+    .filter((time) => time < now);
+  const phases = description?.phases ?? [];
+  const springStart = originMs + (stepTimes[stepTimes.length - 1] ?? 0);
+  if (phases[phases.length - 1]?.kind !== 'spring' || springStart >= now) {
+    return replayTimes;
+  }
+  for (
+    let time = springStart + LARGEST_SPRING_STEP_MS;
+    time < now;
+    time += LARGEST_SPRING_STEP_MS
+  ) {
+    replayTimes.push(time);
+  }
+  replayTimes.push(now);
+  return replayTimes;
 }
 
 /**
@@ -301,10 +393,11 @@ function fitToleranceOf(key: string, change: number, lever: number): number {
 
 /**
  * The segments of the phases of the timeline of `key`, a scalar key or an
- * operation kind: a hold keeps the value before it, and a timing has the pieces
- * of its easing from the value before it. A phase with no duration has a track
- * form only as the one phase of the timeline. A timing that changes the value
- * has a track form only when its easing has a fit.
+ * operation kind: a hold keeps the value before it, a spring is one segment,
+ * and a timing has the pieces of its easing from the value before it. A phase
+ * with no duration has a track form only as the one phase of the timeline. A
+ * timing that changes the value has a track form only when its easing has a
+ * fit.
  */
 function trackOf(
   { start, delayMs, phases }: Timeline,
@@ -327,6 +420,13 @@ function trackOf(
         endOffset: offsetOf(phaseStartMs + phase.durationMs),
         endValue: value,
       });
+    } else if (phase.kind === 'spring') {
+      segments.push({
+        endOffset: offsetOf(phaseStartMs + phase.durationMs),
+        endValue: phase.toValue,
+        spring: phase.spring,
+      });
+      value = phase.toValue;
     } else {
       const change = Math.abs(phase.toValue - value);
       const pieces =
@@ -341,14 +441,11 @@ function trackOf(
         return {};
       }
       for (const { endOffset, endProgress, cubicBezier } of pieces) {
-        const segment: NativeLeafSegment = {
+        segments.push({
           endOffset: offsetOf(phaseStartMs + endOffset * phase.durationMs),
           endValue: valueBetween(value, phase.toValue, endProgress),
-        };
-        if (cubicBezier) {
-          segment.cubicBezier = cubicBezier;
-        }
-        segments.push(segment);
+          ...(cubicBezier && { cubicBezier }),
+        });
       }
       value = phase.toValue;
     }
@@ -358,20 +455,19 @@ function trackOf(
 }
 
 /**
- * The native scalar of a value of an operation whose initial value is
- * `initialValue`. A string has a native form only as an angle in degrees or
- * radians. The frame driver gives each value the unit of the initial value, so
- * a string with no unit has that unit, and a value of another type or with
- * another unit has no native form.
+ * A value of an operation whose initial value is `initialValue`. A string has a
+ * native form only as an angle in degrees or radians. The frame driver gives
+ * each value the unit of the initial value, so a string with no unit has that
+ * unit, and a value of another type or with another unit has no native form.
  */
-function nativeScalarOf(
+function operationScalarOf(
   kind: string,
   value: unknown,
   initialValue: unknown
-): number | undefined {
+): OperationScalar | undefined {
   'worklet';
   if (typeof initialValue === 'number') {
-    return typeof value === 'number' ? value : undefined;
+    return typeof value === 'number' ? { value, nativeFactor: 1 } : undefined;
   }
   const isAngle =
     typeof initialValue === 'string' &&
@@ -386,7 +482,114 @@ function nativeScalarOf(
   const hasUnitOfInitialValue = !suffix || suffix === initial.suffix;
   return initial.prefix || prefix || !radiansInUnit || !hasUnitOfInitialValue
     ? undefined
-    : strippedValue * radiansInUnit;
+    : { value: strippedValue, nativeFactor: radiansInUnit };
+}
+
+function nativeScalarOf({ value, nativeFactor }: OperationScalar): number {
+  'worklet';
+  return value * nativeFactor;
+}
+
+function boundsOf(gate: SpringGate): { min: number; max: number } {
+  'worklet';
+  const { min, max } = SPRING_GATES[gate];
+  return {
+    min: min * (1 - SPRING_GATE_MARGIN),
+    max: max * (1 + SPRING_GATE_MARGIN),
+  };
+}
+
+function isInsideGate(gate: SpringGate, value: number): boolean {
+  'worklet';
+  const { min, max } = boundsOf(gate);
+  return min <= value && value <= max;
+}
+
+function jumpTo(toValue: number): ScalarPhase {
+  'worklet';
+  return {
+    kind: 'timing',
+    durationMs: 0,
+    toValue,
+    easing: { kind: 'linear' },
+  };
+}
+
+/**
+ * The phase of a spring from `start`, as `onStart` resolves it. A spring that
+ * ends in its first frame is a jump. Has no result for a spring with no native
+ * form: no change and a start energy, a `clamp` that raises `zeta`, or a value
+ * outside `SPRING_GATES`.
+ */
+function settleSpringPhase(
+  start: number,
+  { toValue, config }: WithNumberTarget<NativeSpringPhase>
+): ScalarPhase | undefined {
+  'worklet';
+  if (config.skipAnimation) {
+    return jumpTo(toValue);
+  }
+  const springStart = springStartOf(config, toValue, start, config.velocity);
+  const { x0, v0, resolved, initialEnergy } = springStart;
+  if (initialEnergy === 0) {
+    return jumpTo(toValue);
+  }
+  const velocityOfChange = v0 / (toValue - start);
+  const hasNativeForm =
+    x0 !== 0 &&
+    !resolved.clampRaisesZeta &&
+    isInsideGate('zeta', resolved.zeta) &&
+    isInsideGate('omega0', resolved.omega0) &&
+    isInsideGate('velocityOfChange', velocityOfChange) &&
+    isInsideGate('energyThreshold', config.energyThreshold);
+  if (!hasNativeForm) {
+    return undefined;
+  }
+  const durationMs = springSettleTime(
+    config,
+    springStart,
+    boundsOf('durationMs').max
+  );
+  if (!isInsideGate('durationMs', durationMs)) {
+    return undefined;
+  }
+  const { decay, frequency } = springRatesOf(resolved);
+  const durationS = durationMs / 1000;
+  return {
+    kind: 'spring',
+    durationMs,
+    toValue,
+    spring: {
+      decay: decay * durationS,
+      frequency: frequency * durationS,
+      initialVelocity: velocityOfChange * durationS,
+    },
+  };
+}
+
+/**
+ * The phases with each spring from the value before it. Has no result when a
+ * spring has no native form.
+ */
+function settleSpringPhases(
+  start: number,
+  phases: NumberPhase[]
+): ScalarPhase[] | undefined {
+  'worklet';
+  const scalarPhases: ScalarPhase[] = [];
+  let value = start;
+  for (const phase of phases) {
+    const scalarPhase =
+      phase.kind === 'spring' ? settleSpringPhase(value, phase) : phase;
+    if (!scalarPhase) {
+      return undefined;
+    }
+    scalarPhases.push(scalarPhase);
+    if (scalarPhase.kind !== 'hold') {
+      value = scalarPhase.toValue;
+    }
+  }
+  return scalarPhases;
 }
 
 function advanceAnimation(
@@ -400,14 +603,15 @@ function advanceAnimation(
     return;
   }
   animation.onStart(animation, initialValue, originMs, null);
-  // A wrapper starts its next animation in the frame in which a phase ends.
-  for (const stepTime of stepTimesOf(animation.__nativeTiming)) {
-    if (originMs + stepTime >= now) {
-      break;
-    }
-    animation.onFrame(animation, originMs + stepTime);
+  const frameTimes = new Set([
+    ...replayTimesOf(animation.__nativeTiming, originMs, now),
+    now,
+  ]);
+  let isFinished = false;
+  for (const frameTime of frameTimes) {
+    isFinished = animation.onFrame(animation, frameTime);
   }
-  if (animation.onFrame(animation, now)) {
+  if (isFinished) {
     animation.finished = true;
   }
 }
@@ -457,27 +661,38 @@ function relateAnimations(
 
 /**
  * The phases of one operation in native scalars: none for an operation with no
- * description, and no result for a value with no native form.
+ * description or with a spring that has no native form, and no result for a
+ * value with no native form. A spring settles in the unit of the frame driver.
  */
 function operationPhasesOf(
   kind: string,
+  start: OperationScalar,
   initialValue: unknown,
   animation: unknown
 ): ScalarPhase[] | undefined {
   'worklet';
-  const scalarPhases: ScalarPhase[] = [];
+  const numberPhases: NumberPhase[] = [];
   for (const phase of phasesOf(animation) ?? []) {
     if (phase.kind === 'hold') {
-      scalarPhases.push(phase);
+      numberPhases.push(phase);
       continue;
     }
-    const toValue = nativeScalarOf(kind, phase.toValue, initialValue);
-    if (toValue === undefined) {
+    const target = operationScalarOf(kind, phase.toValue, initialValue);
+    if (!target) {
       return undefined;
     }
-    scalarPhases.push({ ...phase, toValue });
+    numberPhases.push({ ...phase, toValue: target.value });
   }
-  return scalarPhases;
+  const { nativeFactor } = start;
+  const scalarPhases = settleSpringPhases(start.value, numberPhases) ?? [];
+  return scalarPhases.map((phase) =>
+    phase.kind === 'hold'
+      ? phase
+      : {
+          ...phase,
+          toValue: nativeScalarOf({ value: phase.toValue, nativeFactor }),
+        }
+  );
 }
 
 /**
@@ -567,17 +782,18 @@ function summarizeTransformLeaf(
     const initial = (initialValue as Record<string, unknown>[] | undefined)?.[
       index
     ]?.[kind];
-    const start = nativeScalarOf(kind, initial, initial);
+    const start = operationScalarOf(kind, initial, initial);
     const phases =
-      operationKinds.length === 1 && start !== undefined
-        ? operationPhasesOf(kind, initial, leaf[index][kind])
+      operationKinds.length === 1 && start
+        ? operationPhasesOf(kind, start, initial, leaf[index][kind])
         : undefined;
-    if (start === undefined || !phases) {
+    if (!start || !phases) {
       return { initialValue: undefined };
     }
+    const nativeStart = nativeScalarOf(start);
     const timeline =
-      phases.length > 0 ? operationTimelineOf(start, phases) : undefined;
-    records.push({ kind, start: timeline?.start ?? start, timeline });
+      phases.length > 0 ? operationTimelineOf(nativeStart, phases) : undefined;
+    records.push({ kind, start: timeline?.start ?? nativeStart, timeline });
     phaseCount += phases.length;
   }
   const initialOperations: NativeTransformOperation[] = records.map(
@@ -647,7 +863,14 @@ export function summarizeNativeLeaf(
   if (!hasNumbers) {
     return { initialValue };
   }
-  const timeline = timelineOf(initialValue, phases as ScalarPhase[]);
+  const scalarPhases = settleSpringPhases(
+    initialValue,
+    phases as NumberPhase[]
+  );
+  if (!scalarPhases) {
+    return { initialValue };
+  }
+  const timeline = timelineOf(initialValue, scalarPhases);
   const { track, ...lowered } = trackOf(timeline, key, fitting);
   return {
     initialValue: timeline.start,
@@ -724,20 +947,25 @@ export function advanceNativeLeaf(
 }
 
 /**
- * The times, from the start of the leaves, at which a phase of one of them ends
- * and another phase follows. The earliest time is first.
+ * The times at which the replay of the leaves from `originMs` to a start at
+ * `now` calls `onFrame`: the union of the replay times of each leaf of
+ * `advanceNativeLeaf`. The earliest time is first.
  */
-export function phaseEndsOf(leaves: NativeLeaf[]): number[] {
+export function replayTimesOfLeaves(
+  leaves: NativeLeaf[],
+  originMs: number,
+  now: number
+): number[] {
   'worklet';
   const animations = leaves.flatMap((leaf) =>
     Array.isArray(leaf)
       ? leaf.map((operation) => operation[kindOf(operation)])
       : [leaf]
   );
-  const phaseEnds = animations.flatMap((animation) =>
-    stepTimesOf(animation.__nativeTiming)
+  const replayTimes = animations.flatMap((animation) =>
+    replayTimesOf(animation.__nativeTiming, originMs, now)
   );
-  return [...new Set(phaseEnds)].sort((first, second) => first - second);
+  return [...new Set(replayTimes)].sort((first, second) => first - second);
 }
 
 /** The value on screen of a leaf that `advanceNativeLeaf` brought to a time. */

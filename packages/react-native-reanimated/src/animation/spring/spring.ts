@@ -5,6 +5,7 @@ import type {
   AnimationCallback,
   Timestamp,
 } from '../../commonTypes';
+import { describeNativeSpring } from '../nativeTiming';
 import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import type { SpringConfig } from './springConfigs';
 import {
@@ -18,15 +19,14 @@ import type {
   SpringConfigInner,
 } from './springUtils';
 import {
-  calculateNewStiffnessToMatchDuration,
   checkIfConfigIsValid,
-  criticallyDampedSpringCalculations,
-  getEnergy,
-  initialCalculations,
+  initialEnergyOf,
   isAnimationTerminatingCalculation,
+  LARGEST_SPRING_STEP_MS,
   safeMergeConfigs,
-  scaleZetaToMatchClamps,
-  underDampedSpringCalculations,
+  springStartOf,
+  springStateAt,
+  velocityTowardTarget,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -103,7 +103,10 @@ export const withSpring = ((
       }
       const { lastTimestamp, velocity } = animation;
 
-      const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+      const deltaTime = Math.min(
+        Math.max(now - lastTimestamp, 0),
+        LARGEST_SPRING_STEP_MS
+      );
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
@@ -112,24 +115,14 @@ export const withSpring = ((
 
       const { zeta, omega0, omega1 } = animation;
 
-      const { position: newPosition, velocity: newVelocity } =
-        zeta < 1
-          ? underDampedSpringCalculations(animation, {
-              zeta,
-              v0,
-              x0,
-              omega0,
-              omega1,
-              t,
-            })
-          : criticallyDampedSpringCalculations(animation, {
-              v0,
-              x0,
-              omega0,
-              t,
-            });
+      const { displacement, velocity: newVelocity } = springStateAt(
+        { zeta, omega0, omega1 },
+        x0,
+        v0,
+        t
+      );
 
-      animation.current = newPosition;
+      animation.current = toValue + displacement;
       animation.velocity = newVelocity;
 
       if (isAnimationTerminatingCalculation(animation, config)) {
@@ -164,78 +157,40 @@ export const withSpring = ((
     ): void {
       animation.current = value;
 
-      let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
-
-      const duration = config.duration;
-
-      const x0 = triggeredTwice
-        ? // If animation is triggered twice we want to continue the previous animation
-          // form the previous starting point
-          (previousAnimation?.startValue as number)
-        : value - (animation.toValue as number);
-
-      animation.startValue = x0;
-
-      if (previousAnimation) {
-        animation.velocity =
-          (triggeredTwice
-            ? previousAnimation?.velocity
-            : previousAnimation?.velocity + config.velocity) || 0;
-      } else {
-        animation.velocity = config.velocity || 0;
-      }
-
-      // Clip velocity that would drive the first frame away from the new target.
-      // Inertia is only preserved when it already points toward toValue.
       const toValueNum = Number(animation.toValue);
-      if (
-        (toValueNum > value && animation.velocity < 0) ||
-        (toValueNum < value && animation.velocity > 0)
-      ) {
-        animation.velocity = 0;
-      }
+
+      const velocity = previousAnimation
+        ? (triggeredTwice
+            ? previousAnimation.velocity
+            : previousAnimation.velocity + config.velocity) || 0
+        : config.velocity || 0;
 
       if (triggeredTwice) {
+        // If animation is triggered twice we want to continue the previous animation
+        // form the previous starting point
+        const x0 = previousAnimation?.startValue as number;
+        animation.startValue = x0;
+        animation.velocity = velocityTowardTarget(velocity, value - toValueNum);
         animation.zeta = previousAnimation?.zeta || 0;
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
+        animation.initialEnergy = initialEnergyOf(x0, config.stiffness, config);
       } else {
-        if (config.useDuration) {
-          const actualDuration = triggeredTwice
-            ? // If animation is triggered twice we want to continue the previous animation
-              // so we need to include the time that already elapsed
-              duration -
-              ((previousAnimation?.lastTimestamp || 0) -
-                (previousAnimation?.startTimestamp || 0))
-            : duration;
-
-          config.duration = actualDuration;
-          stiffness = calculateNewStiffnessToMatchDuration(
-            x0,
-            config,
-            animation.velocity
-          );
-          config.stiffness = stiffness;
-        }
-
-        const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
-        animation.zeta = zeta;
-        animation.omega0 = omega0;
-        animation.omega1 = omega1;
-
-        if (config.clamp !== undefined) {
-          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
-        }
+        const { x0, v0, resolved, initialEnergy } = springStartOf(
+          config,
+          toValueNum,
+          value,
+          velocity
+        );
+        animation.startValue = x0;
+        animation.velocity = v0;
+        animation.zeta = resolved.zeta;
+        animation.omega0 = resolved.omega0;
+        animation.omega1 = resolved.omega1;
+        config.stiffness = resolved.stiffness;
+        animation.initialEnergy = initialEnergy;
       }
-
-      const initialEnergy = getEnergy(
-        x0,
-        config.velocity,
-        config.stiffness,
-        config.mass
-      );
-      animation.initialEnergy = initialEnergy;
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
 
@@ -244,7 +199,7 @@ export const withSpring = ((
         : now;
     }
 
-    return {
+    const animation = {
       onFrame: springOnFrame,
       onStart,
       toValue,
@@ -260,5 +215,10 @@ export const withSpring = ((
       initialEnergy: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
+    const nativeTiming = describeNativeSpring(toValue, config, callback);
+    if (nativeTiming) {
+      animation.__nativeTiming = nativeTiming;
+    }
+    return animation;
   });
 }) as withSpringType;

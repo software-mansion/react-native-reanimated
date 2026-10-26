@@ -65,6 +65,7 @@ static_assert(static_cast<int>(EncodedStart::CurrentVisualValue) == 1);
 static_assert(static_cast<int>(AnimationTimingKind::CubicBezier) == 1);
 static_assert(static_cast<int>(AnimationTimingKind::Steps) == 2);
 static_assert(static_cast<int>(AnimationTimingKind::LinearStops) == 3);
+static_assert(static_cast<int>(AnimationTimingKind::Spring) == 4);
 static_assert(static_cast<int>(TrackStopMode::SettleToModel) == 0);
 static_assert(static_cast<int>(AnimationResultReason::UnsupportedRealization) == 4);
 static_assert(static_cast<int>(AnimationResultReason::CurrentValueUnavailable) == 5);
@@ -116,33 +117,40 @@ struct StartEncoder {
   }
 };
 
-void appendPoints(
-    EncodedTrackBuffers &buffers,
-    const std::vector<double> &pointsX,
-    const std::vector<double> &pointsY) {
-  buffers.ints.push_back(static_cast<jint>(pointsX.size()));
+/// The x and the y of each point, in turn.
+std::vector<double> pointParameters(const std::vector<double> &pointsX, const std::vector<double> &pointsY) {
+  std::vector<double> parameters;
+  parameters.reserve(2 * pointsX.size());
   for (size_t index = 0; index < pointsX.size(); ++index) {
-    buffers.doubles.push_back(pointsX[index]);
-    buffers.doubles.push_back(pointsY[index]);
+    parameters.push_back(pointsX[index]);
+    parameters.push_back(pointsY[index]);
   }
+  return parameters;
 }
 
-struct TimingEncoder {
-  EncodedTrackBuffers &buffers;
-
-  void operator()(const LinearTiming &) const {
-    buffers.ints.push_back(0);
+struct TimingParametersVisitor {
+  std::vector<double> operator()(const LinearTiming &) const {
+    return {};
   }
-  void operator()(const CubicBezierTiming &bezier) const {
-    appendPoints(buffers, {bezier.x1, bezier.x2}, {bezier.y1, bezier.y2});
+  std::vector<double> operator()(const CubicBezierTiming &bezier) const {
+    return {bezier.x1, bezier.y1, bezier.x2, bezier.y2};
   }
-  void operator()(const StepsTiming &steps) const {
-    appendPoints(buffers, steps.pointsX, steps.pointsY);
+  std::vector<double> operator()(const StepsTiming &steps) const {
+    return pointParameters(steps.pointsX, steps.pointsY);
   }
-  void operator()(const LinearStopsTiming &stops) const {
-    appendPoints(buffers, stops.pointsX, stops.pointsY);
+  std::vector<double> operator()(const LinearStopsTiming &stops) const {
+    return pointParameters(stops.pointsX, stops.pointsY);
+  }
+  std::vector<double> operator()(const SpringTiming &spring) const {
+    return {spring.decay, spring.frequency, spring.initialVelocity};
   }
 };
+
+void appendTimingParameters(EncodedTrackBuffers &buffers, const AnimationTiming &timing) {
+  const auto parameters = std::visit(TimingParametersVisitor{}, timing);
+  buffers.ints.push_back(static_cast<jint>(parameters.size()));
+  buffers.doubles.insert(buffers.doubles.end(), parameters.begin(), parameters.end());
+}
 
 /// The 2D operations whose matrix `GeometryWriter.kt` composes.
 bool isPlanar(const TransformOperationKind kind) {
@@ -195,7 +203,7 @@ void appendTimeline(
     buffers.ints.push_back(static_cast<jint>(kindOf(segment.timingFromPrevious)));
     buffers.doubles.push_back(segment.endOffset);
     buffers.doubles.push_back(encodeValue(segment.endValue));
-    std::visit(TimingEncoder{buffers}, segment.timingFromPrevious);
+    appendTimingParameters(buffers, segment.timingFromPrevious);
   }
 }
 
@@ -216,10 +224,11 @@ void appendTrackHeader(
 
 /// The layout that `TrackBufferParser.kt` reads. Ints: the track count, then for each track the target, the
 /// endpoint policy, the start form, the binding, the value component count, and the timeline count, then for
-/// each timeline its operation and its segment count, then for each segment the timing kind and the point count.
-/// Doubles: for each track the delay and the duration, then for each timeline the components of its start
-/// value, then for each segment the end offset, the components of the end value, and the x and y of each timing
-/// point. A value body has one timeline over the whole value; a transform body has one for each operation.
+/// each timeline its operation and its segment count, then for each segment the timing kind and the timing
+/// parameter count. Doubles: for each track the delay and the duration, then for each timeline the components of
+/// its start value, then for each segment the end offset, the components of the end value, and the timing
+/// parameters: the x and the y of each point of a curve, or the decay, the frequency, and the initial velocity of
+/// a spring. A value body has one timeline over the whole value; a transform body has one for each operation.
 EncodedTrackBuffers encodeTracks(const std::vector<AnimationTrack> &tracks) {
   EncodedTrackBuffers buffers;
   buffers.ints.push_back(static_cast<jint>(tracks.size()));
