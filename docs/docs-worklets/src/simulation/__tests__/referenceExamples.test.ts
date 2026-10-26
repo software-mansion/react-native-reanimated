@@ -7,6 +7,9 @@ import {
   createWorkletRuntime,
   getCurrentThreadId,
   getRuntimeKind,
+  createSynchronizable,
+  isSynchronizable,
+  globalThis as runtimeGlobal,
   isRNRuntime,
   isUIRuntime,
   isWorkletFunction,
@@ -30,6 +33,17 @@ describe('reference examples', () => {
     createWorker: [],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
+    apiIsSerializableRef: ['[rn] true', '[rn] false'],
+    apiIsSynchronizable: ['[rn] true', '[rn] false', '[rn] 42'],
+    apiCreateWorkletRuntime: [
+      '[rn] Initializer thread: 0x7400',
+      '[rn] Creator thread: 0x7400',
+      '[worker:background] Ready',
+      '[worker:background] Worker thread: 0x7800',
+    ],
+    compareSerializable: ['[ui] UI: 1', '[rn] RN: 0'],
+    compareSynchronizable: ['[ui] UI: 1', '[rn] RN: 1'],
+    compareShareable: ['[ui] UI: 1', '[rn] RN: 1'],
     apiScheduleOnUI: [
       '[ui] Hello from the UI Runtime!',
       '[rn] The RN Runtime continues',
@@ -96,6 +110,151 @@ describe('reference examples', () => {
       assert.equal(snapshots.at(-1)!.finished, true);
     });
   }
+
+  it('initializes the new runtime on the creating thread before returning its handle', () => {
+    function* initialize() {
+      'worklet';
+      yield (runtimeGlobal.ready = true);
+      yield console.log(getRuntimeKind(), getCurrentThreadId());
+      return yield 'ignored initializer result';
+    }
+    function* inspect() {
+      yield console.log(runtimeGlobal.ready);
+    }
+    function* main() {
+      const worker = yield createWorkletRuntime({
+        name: 'background',
+        initializer: initialize,
+      });
+      yield console.log(worker.name, runtimeGlobal.ready);
+      yield runOnRuntimeSyncWithId(worker.runtimeId, inspect);
+    }
+    const snapshots = simulate(
+      asModule({ default: main, initialize, inspect }),
+      [initialize, inspect, main].map((fn) => fn.toString()).join('\n')
+    );
+    assert.deepEqual(formatLogs(snapshots), [
+      '[rn] 3 0x7400',
+      '[rn] background undefined',
+      '[rn] true',
+    ]);
+    const initialized = snapshots.find((snapshot) =>
+      snapshot.cores.some(
+        (core) =>
+          core.id === 'worker:background' && core.globals.ready === 'true'
+      )
+    )!;
+    assert.ok(initialized);
+    assert.ok(
+      initialized.resources.some(
+        (resource) =>
+          resource.id === 'worker:background' && resource.holder === 'rn'
+      )
+    );
+    assert.equal(snapshots.at(-1)!.finished, true);
+  });
+
+  it('rejects an unmarked initializer and stops when a worklet initializer throws', () => {
+    function* ordinary() {
+      yield console.log('must not run');
+    }
+    function* throws() {
+      'worklet';
+      yield console.log('initializing');
+      throw new Error('initializer failed');
+    }
+    for (const initializer of [ordinary, throws]) {
+      function* main() {
+        yield createWorkletRuntime({ initializer });
+        yield console.log('must not continue');
+      }
+      const snapshots = simulate(
+        asModule({ default: main, ordinary, throws }),
+        [ordinary, throws, main].map((fn) => fn.toString()).join('\n')
+      );
+      assert.deepEqual(
+        formatLogs(snapshots),
+        initializer === ordinary ? [] : ['[rn] initializing']
+      );
+      const errors = snapshots.flatMap((snapshot) =>
+        snapshot.events.filter((event) => event.type === 'error')
+      );
+      assert.equal(errors.length, 1);
+      assert.match(
+        errors[0].message,
+        initializer === ordinary
+          ? /initializer.*not a worklet/
+          : /initializer failed/
+      );
+      assert.equal(snapshots.at(-1)!.finished, true);
+    }
+  });
+
+  it('recognizes Synchronizables on RN and UI and rejects ordinary values', () => {
+    let counter: unknown;
+    function* inspect() {
+      yield console.log(
+        isSynchronizable(counter),
+        isSynchronizable(null),
+        isSynchronizable(undefined),
+        isSynchronizable(0),
+        isSynchronizable({}),
+        isSynchronizable({ __synchronizableRef: false })
+      );
+    }
+    function* main() {
+      counter = yield createSynchronizable(0);
+      yield inspect();
+      yield runOnUISync(inspect);
+    }
+    const snapshots = simulate(
+      asModule({ default: main, inspect }),
+      [inspect, main].map((fn) => fn.toString()).join('\n')
+    );
+    assert.deepEqual(formatLogs(snapshots), [
+      '[rn] true false false false false false',
+      '[rn] true false false false false false',
+    ]);
+    assert.equal(snapshots.at(-1)!.finished, true);
+  });
+
+  it('shows the worker-to-UI call failing in Legacy Eval Mode and succeeding in Bundle Mode', () => {
+    const name = 'callTableBundleMode';
+    for (const bundleMode of [false, true]) {
+      const snapshots = simulate(
+        require(snippetPath(name)),
+        snippetSource(name),
+        { bundleMode }
+      );
+      const errors = snapshots.flatMap((snapshot) =>
+        snapshot.events.filter((event) => event.type === 'error')
+      );
+      assert.deepEqual(
+        formatLogs(snapshots),
+        bundleMode
+          ? [
+              '[worker:background] Worker is running',
+              '[ui] UI received the result',
+            ]
+          : ['[worker:background] Worker is running']
+      );
+      if (bundleMode) {
+        assert.deepEqual(errors, []);
+      } else {
+        assert.equal(errors.length, 1);
+        assert.equal(errors[0].core, 'worker:background');
+        assert.equal(
+          errors[0].message,
+          '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+        );
+        assert.match(
+          snippetSource(name).split('\n')[errors[0].line! - 1],
+          /yield scheduleOnUI\(showResult\)/
+        );
+      }
+      assert.equal(snapshots.at(-1)!.finished, true);
+    }
+  });
 
   it('detects worklet functions on the current runtime without executing them', () => {
     function* worklet() {

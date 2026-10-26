@@ -91,6 +91,7 @@ export class Machine {
   private readonly serializableCache = new WeakMap<object, object>();
   private nextCellId = 1;
   private readonly readShareable: SnippetFn;
+  private readonly initializeRuntime: SnippetFn;
   private readonly uiBootTick: number;
 
   constructor(snippet: LoadedSnippet, options: SimulateOptions = {}) {
@@ -114,6 +115,30 @@ export class Machine {
       yieldEnds: [0],
       isNative: false,
       isHidden: false,
+      isWorklet: false,
+      hasLoop: false,
+    });
+    // Wait for the initializer, discard its result, and return the new handle.
+    // The hidden frame keeps this plumbing out of the displayed snippet.
+    this.initializeRuntime = function* initializeRuntime(
+      initializer: unknown,
+      handle: unknown
+    ) {
+      yield initializer;
+      return handle;
+    } as SnippetFn;
+    snippet.protoToFn.set(
+      this.initializeRuntime.prototype as object,
+      this.initializeRuntime
+    );
+    snippet.fnInfo.set(this.initializeRuntime, {
+      name: 'initializeRuntime',
+      headerLine: 0,
+      endLine: 0,
+      yieldLines: [0],
+      yieldEnds: [0],
+      isNative: false,
+      isHidden: true,
       isWorklet: false,
       hasLoop: false,
     });
@@ -1057,9 +1082,22 @@ export class Machine {
   private createRuntime(
     core: CoreState,
     config: unknown
-  ): WorkletRuntimeHandle {
+  ): WorkletRuntimeHandle | Generator<unknown, unknown, unknown> {
     if (core.spec.kind !== 'rn' && !this.bundleMode) {
       throw new Error(CREATE_RUNTIME_GUARD_MESSAGE);
+    }
+    const initializer =
+      typeof config === 'object' && config !== null
+        ? (config as { initializer?: unknown }).initializer
+        : undefined;
+    if (
+      initializer !== undefined &&
+      (!this.registerFn(initializer) ||
+        !this.snippet.fnInfo.get(initializer)!.isWorklet)
+    ) {
+      throw new Error(
+        '[Worklets] The initializer passed to `createWorkletRuntime` is not a worklet.'
+      );
     }
     const name =
       typeof config === 'object' &&
@@ -1088,12 +1126,18 @@ export class Machine {
       runtime: id,
       name,
     });
-    return {
+    const handle: WorkletRuntimeHandle = {
       __workletRuntime: true,
       name,
       coreId: id,
       runtimeId: this.runtimeIdOf(created),
     };
+    if (initializer === undefined) {
+      return handle;
+    }
+    return this.initializeRuntime(
+      ...([this.acquireRuntime(core, id, [initializer]), handle] as never[])
+    );
   }
 
   private scheduleMicrotask(

@@ -16,7 +16,8 @@ const pinSnippetNames = require('../snippetNamesLoader.js');
 const files = globSync(
   [
     'docs/{threading,memory,utility}/_examples/*.js',
-    'docs/concepts/_closures/*.js',
+    'docs/concepts/{_closures,_sharing-memory}/*.js',
+    'docs/guides/_call-tables/*.js',
     'docs/tutorials/_using-event-loop/*.js',
     'docs/tutorials/_your-first-worklet/createWorker.js',
     'docs/tutorials/_synchronizing-data/syncGlobal.js',
@@ -53,6 +54,7 @@ describe('snippets compiled with the docs Babel configuration', () => {
         );
         const snapshots = simulate(compiled.exports as SnippetModule, source, {
           durationTicks: 300,
+          bundleMode: basename(file) === 'callTableBundleMode.js',
         });
         assert.deepEqual(
           snapshots.flatMap((snapshot) =>
@@ -62,6 +64,7 @@ describe('snippets compiled with the docs Babel configuration', () => {
         );
         const reference = simulate(require(file), source, {
           durationTicks: 300,
+          bundleMode: basename(file) === 'callTableBundleMode.js',
         });
         assert.deepEqual(formatLogs(snapshots), formatLogs(reference));
         assert.deepEqual(snapshots.at(-1)!.memory, reference.at(-1)!.memory);
@@ -69,6 +72,21 @@ describe('snippets compiled with the docs Babel configuration', () => {
           snapshots.at(-1)!.cores.map((core) => core.globals),
           reference.at(-1)!.cores.map((core) => core.globals)
         );
+        if (basename(file) === 'callTableBundleMode.js') {
+          const legacy = simulate(compiled.exports as SnippetModule, source);
+          const errors = legacy.flatMap((snapshot) =>
+            snapshot.events.filter((event) => event.type === 'error')
+          );
+          assert.equal(errors.length, 1);
+          assert.equal(errors[0].core, 'worker:background');
+          assert.equal(
+            errors[0].message,
+            '[Worklets] scheduleOnUI cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+          );
+          assert.deepEqual(formatLogs(legacy), [
+            '[worker:background] Worker is running',
+          ]);
+        }
       });
     }
 

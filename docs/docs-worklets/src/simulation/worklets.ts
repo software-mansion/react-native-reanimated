@@ -38,6 +38,7 @@ export function scheduleOnRN<Args extends unknown[]>(
 
 export function createWorkletRuntime(config?: {
   name?: string;
+  initializer?: SnippetCallback<[]>;
 }): WorkletRuntimeHandle {
   return dispatch('createWorkletRuntime', [config]) as WorkletRuntimeHandle;
 }
@@ -233,7 +234,7 @@ export function isSerializableRef(value: unknown): value is SerializableRef {
 }
 
 export interface Synchronizable<T> {
-  __synchronizable: true;
+  __synchronizableRef: true;
   id: number;
   getDirty: () => T;
   getBlocking: () => T;
@@ -247,7 +248,7 @@ export function createSynchronizable<T>(
 ): Synchronizable<T> {
   const id = dispatch('createSynchronizable', [initial, options]) as number;
   return {
-    __synchronizable: true,
+    __synchronizableRef: true,
     id,
     getDirty: () => dispatch('synchronizableRead', [id, 'dirty']) as T,
     getBlocking: () => dispatch('synchronizableRead', [id, 'blocking']) as T,
@@ -258,6 +259,16 @@ export function createSynchronizable<T>(
       dispatch('synchronizableWrite', [id, value, 'blocking']);
     },
   };
+}
+
+export function isSynchronizable<T = unknown>(
+  value: unknown
+): value is Synchronizable<T> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !!(value as Record<string, unknown>).__synchronizableRef
+  );
 }
 
 export interface Shareable<T> {

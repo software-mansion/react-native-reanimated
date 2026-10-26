@@ -64,6 +64,12 @@ Kinds:
 - **Worker Runtime**: created by `createWorkletRuntime`, together with its own
   thread, of which it is the default runtime.
 
+When `createWorkletRuntime` receives an initializer, the creating thread acquires
+the new runtime and runs the initializer synchronously before returning the
+runtime handle. Its globals belong to the new runtime, but its thread ID is the
+creator's. The initializer must have an explicit worklet marker; its return
+value is discarded. An exception stops the caller before it receives the handle.
+
 A thread requests its default runtime whenever that runtime's queue has a
 job to run. `runOnUISync`, `runOnRuntimeSync` and `Shareable.getSync` request
 another thread's default runtime.

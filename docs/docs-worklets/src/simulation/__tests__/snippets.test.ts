@@ -22,6 +22,7 @@ describe('docs snippets', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const snapshots = simulate(require(file), readFileSync(file, 'utf8'), {
         durationTicks: 300,
+        bundleMode: basename(file) === 'callTableBundleMode.js',
       });
       const last = snapshots[snapshots.length - 1];
       assert.ok(last.finished || snapshots.length === 301);

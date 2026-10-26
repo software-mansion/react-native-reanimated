@@ -3,6 +3,11 @@ id: call-tables
 sidebar_label: Call tables
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import * as CallTableBundleModeSnippet from './_call-tables/callTableBundleMode';
+import CallTableBundleModeSource from '!!raw-loader!./_call-tables/callTableBundleMode';
+
 # Call tables
 
 Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](/docs/bundleMode) is enabled or not.
@@ -30,28 +35,18 @@ workerRuntime: false,
 
 A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
 
-```tsx {9-11,14-16,20-22}
-import {
-  scheduleOnUI,
-  scheduleOnRuntime,
-  createWorkletRuntime,
-} from 'react-native-worklets';
+The following example runs the same code in both modes: the RN Runtime schedules a worker, and that worker tries to schedule a function on the UI Runtime.
 
-const workerRuntime = createWorkletRuntime();
+<Tabs lazy>
+  <TabItem value="legacy" label="Legacy Eval Mode">
+    The worker starts, but its call to `scheduleOnUI` throws. The UI function never runs.
 
-// We are on RN Runtime -
-// this is always fine
-scheduleOnUI(/*...*/);
+    <ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource}/>
+  </TabItem>
 
-scheduleOnUI(() => {
-  // We are on the UI Runtime -
-  // this is only fine with Bundle Mode enabled
-  scheduleOnUI(/*...*/);
-});
+  <TabItem value="bundle" label="Bundle Mode">
+    The worker can call `scheduleOnUI`, so the UI Runtime receives the task and logs the result.
 
-scheduleOnRuntime(workerRuntime, () => {
-  // We are on the Worker Runtime -
-  // this is only fine with Bundle Mode enabled
-  scheduleOnUI(/*...*/);
-});
-```
+    <ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource} bundleMode/>
+  </TabItem>
+</Tabs>

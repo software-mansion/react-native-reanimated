@@ -2,18 +2,18 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiIsSerializableRefSnippet from './_examples/apiIsSerializableRef';
+import ApiIsSerializableRefSource from '!!raw-loader!./_examples/apiIsSerializableRef';
+
 # isSerializableRef
 
 Asserts whether a value is a [Serializable](/docs/memory/serializable) reference.
 
 ## Reference
 
-```typescript
-import { isSerializableRef } from 'react-native-worklets';
-const maybeSerializableRef = ...; // type: unknown
+The reference returns `true`; the original JavaScript object returns `false`.
 
-console.log(isSerializableRef(maybeSerializableRef)); // logs `true` if `maybeSerializableRef` is a SerializableRef.
-```
+<ThreadingSimulation module={ApiIsSerializableRefSnippet} source={ApiIsSerializableRefSource} uiRuntime={false}/>
 
 <details>
   <summary>Type definitions</summary>

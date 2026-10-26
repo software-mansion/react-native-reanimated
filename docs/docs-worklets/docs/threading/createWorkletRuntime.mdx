@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiCreateWorkletRuntimeSnippet from './_examples/apiCreateWorkletRuntime';
+import ApiCreateWorkletRuntimeSource from '!!raw-loader!./_examples/apiCreateWorkletRuntime';
+
 # createWorkletRuntime
 
 `createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](/docs/tutorials/concurrency-model#worklet-functions) possibly on different threads than [JS](/docs/tutorials/concurrency-model#the-react-native-model) or [UI thread](/docs/tutorials/concurrency-model#the-react-native-model). Use this function if you need to integrate with Worklet Runtimes in C++.
@@ -12,19 +15,9 @@ The return value represents the runtime. You can pass it to the C++ side using J
 
 ### Usage in JavaScript
 
-```jsx
-import { createWorkletRuntime } from 'react-native-worklets';
+The initializer runs in the new runtime **on the creating thread**, before `createWorkletRuntime` returns. It sets a global variable that the scheduled task later reads on the worker's own thread. Compare the thread IDs in the console: the initializer and creator match, while the scheduled task has a different ID.
 
-function App() {
-  const runtime = createWorkletRuntime({
-    name: 'background',
-    initializer: () => {
-      'worklet';
-      console.log('Runtime initialized!');
-    },
-  });
-}
-```
+<ThreadingSimulation module={ApiCreateWorkletRuntimeSnippet} source={ApiCreateWorkletRuntimeSource}/>
 
 ### Usage in C++
 
