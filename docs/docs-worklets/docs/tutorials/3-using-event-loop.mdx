@@ -42,7 +42,7 @@ is polyfilled with a periodic timer.
 The application UI will not wait for the current iteration of the `requestAnimationFrame` queue
 execution to finish when rendering a frame.
 
-<ThreadingSimulation module={RnTimerSnippet} source={RnTimerSource} tickMs={200}/>
+<ThreadingSimulation module={RnTimerSnippet} source={RnTimerSource} tickMs={1000}/>
 
 <ImagePlaceholder>
   figure showing how the RN Runtime raf queue is disjointed from the native rendering layer
@@ -66,7 +66,7 @@ once per 16ms, assuming no frame drops.
 
 Schedule the next frame from the UI Runtime callback. This example stops after three frames.
 
-<ThreadingSimulation module={UiFramesSnippet} source={UiFramesSource} tickMs={200}/>
+<ThreadingSimulation module={UiFramesSnippet} source={UiFramesSource} tickMs={500}/>
 
 For repeating timers, keep the id returned by `setInterval` and call `clearInterval` on the same Runtime when the work is complete.
 
@@ -81,7 +81,7 @@ yourself.
 
 A worker can poll periodically without occupying the JS thread. This interval clears itself after three callbacks.
 
-<ThreadingSimulation module={WorkerIntervalSnippet} source={WorkerIntervalSource} tickMs={200}/>
+<ThreadingSimulation module={WorkerIntervalSnippet} source={WorkerIntervalSource} tickMs={500}/>
 
 In the next chapter we'll learn how to synchronize with data between JavaScript Runtimes using the
 available event loop APIs.
