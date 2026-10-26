@@ -185,6 +185,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
+      require('./tests/layoutAnimations/sharedTransitionCarrier.test');
     },
   },
   {
