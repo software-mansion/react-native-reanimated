@@ -41,6 +41,9 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   virtual void remove(Tag tag) = 0;
+  virtual void removeUnmounted(
+      const ShadowNodeFamily::Shared &shadowNodeFamily);
+  virtual void handleRemount(Tag /*tag*/) {}
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -63,6 +66,8 @@ class UpdatesRegistry {
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
+  /// Assumes the caller already locked the registry.
+  void removePendingUpdates(Tag tag);
 
  private:
   UpdatesBatch updatesBatch_;
