@@ -32,7 +32,7 @@ registerCustomSerializable({
   unpack(value: object) {
     'worklet';
     // recreate object with prototype
-    return Object.create(console, value);
+    return Object.assign(Object.create(console), value);
   },
 });
 ```

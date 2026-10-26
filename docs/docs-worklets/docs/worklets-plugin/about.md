@@ -119,7 +119,7 @@ scheduleOnUI((greetings: string) => {
 }, 'Hello');
 ```
 
-This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes callbacks of its APIs. It also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes callbacks of most of its APIs, but only at specific argument positions. Some APIs, for example [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx), still need the `'worklet'` directive in the callback. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
