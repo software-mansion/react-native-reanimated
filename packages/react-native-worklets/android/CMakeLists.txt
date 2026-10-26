@@ -30,7 +30,8 @@ if(${WORKLETS_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_PROFILING")
 endif()
 if(${IS_REANIMATED_EXAMPLE_APP})
-  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
+  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic\
+    -Werror=deprecated-declarations")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")

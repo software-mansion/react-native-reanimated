@@ -7,6 +7,7 @@ ReanimatedUtils.assert_minimal_react_native_version(config)
 
 boost_compiler_flags = '-Wno-documentation'
 example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
+deprecation_flag = config[:is_reanimated_example_app] ? '-Werror=deprecated-declarations' : ''
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
 version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 ios_min_version = '13.4'
@@ -73,7 +74,7 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
-  s.compiler_flags = boost_compiler_flags
+  s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag}"
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',

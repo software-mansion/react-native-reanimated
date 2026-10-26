@@ -53,7 +53,7 @@ on:
 
 jobs:
   npm-reanimated-publish:
-    uses: ./.github/workflows/npm-package-publish.yml
+    uses: $/.github/workflows/npm-package-publish.yml
     with:
       package-name: 'react-native-reanimated'
       package-json-path: 'packages/react-native-reanimated/package.json'

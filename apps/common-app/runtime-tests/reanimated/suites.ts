@@ -77,6 +77,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+      require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
       require('./tests/props/hostReplacement.test');
@@ -98,6 +99,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/reactFreeze/propDriven.test');
       require('./tests/reactFreeze/nativeStack.test');
+      require('./tests/reactFreeze/settledPropsReveal.test');
     },
   },
   {
@@ -174,6 +176,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations hidden under LayoutAnimation',
+    importTest: () => {
+      require('./tests/layoutAnimations/hiddenUnderLayoutAnimation.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
@@ -183,6 +191,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations native stack removal',
     importTest: () => {
       require('./tests/layoutAnimations/nativeStackRemoval.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations with React Native LayoutAnimation',
+    importTest: () => {
+      require('./tests/layoutAnimations/reactNativeLayoutAnimation.test');
     },
   },
   {
