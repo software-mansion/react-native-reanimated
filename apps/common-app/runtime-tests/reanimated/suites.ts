@@ -194,6 +194,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
       require('./tests/layoutAnimations/sharedTransitionProps.test');
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
+      require('./tests/layoutAnimations/sharedTransitionRemoval.test');
     },
   },
   {
