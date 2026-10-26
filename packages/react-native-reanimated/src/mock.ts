@@ -16,6 +16,7 @@ import type {
   AnimationCallback,
   EventHandler,
   EventHandlerProcessed,
+  SharedValue,
   WithDecayConfig,
   WithSpringConfig,
   WithTimingConfig,
@@ -62,6 +63,59 @@ const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
+
+function useMockScrollOffset(
+  _animatedRef: unknown,
+  providedOffset?: SharedValue<number>
+) {
+  const internalOffset = useState(() => createMockSharedValue(0))[0];
+  return providedOffset ?? internalOffset;
+}
+
+function createMockSharedValue<Value>(init: Value): SharedValue<Value> {
+  const value = { value: init };
+  return new Proxy(value, {
+    get(target, prop) {
+      if (prop === '_isReanimatedSharedValue') {
+        return true;
+      }
+      if (prop === 'value') {
+        return target.value;
+      }
+      if (prop === 'get') {
+        return () => target.value;
+      }
+      if (prop === 'set') {
+        return (newValue: Value | ((currentValue: Value) => Value)) => {
+          if (typeof newValue === 'function') {
+            target.value = (newValue as (currentValue: Value) => Value)(
+              target.value
+            );
+          } else {
+            target.value = newValue;
+          }
+        };
+      }
+      if (prop === 'modify') {
+        return (modifier?: (currentValue: Value) => Value) => {
+          if (modifier !== undefined) {
+            target.value = modifier(target.value);
+          }
+        };
+      }
+      if (prop === 'addListener' || prop === 'removeListener') {
+        return NOOP;
+      }
+    },
+    set(target, prop: string, newValue) {
+      if (prop === 'value') {
+        target.value = newValue;
+        return true;
+      }
+      return false;
+    },
+  }) as SharedValue<Value>;
+}
 
 const hook = {
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
@@ -126,56 +180,15 @@ const hook = {
     useWeb: false,
   }),
   useReducedMotion: () => false,
-  useScrollOffset: () => ({ value: 0 }),
-  useScrollViewOffset: () => ({ value: 0 }),
+  useScrollOffset: useMockScrollOffset,
+  useScrollViewOffset: useMockScrollOffset,
   useSharedValue: <Value>(init: Value | (() => Value)) =>
-    useState(() => {
-      const value = {
-        value: typeof init === 'function' ? (init as () => Value)() : init,
-      };
-      return new Proxy(value, {
-        get(target, prop) {
-          if (prop === '_isReanimatedSharedValue') {
-            return true;
-          }
-          if (prop === 'value') {
-            return target.value;
-          }
-          if (prop === 'get') {
-            return () => target.value;
-          }
-          if (prop === 'set') {
-            return (newValue: Value | ((currentValue: Value) => Value)) => {
-              if (typeof newValue === 'function') {
-                target.value = (newValue as (currentValue: Value) => Value)(
-                  target.value
-                );
-              } else {
-                target.value = newValue;
-              }
-            };
-          }
-          if (prop === 'modify') {
-            return (modifier?: (currentValue: Value) => Value) => {
-              if (modifier !== undefined) {
-                target.value = modifier(target.value);
-              }
-            };
-          }
-          if (prop === 'addListener' || prop === 'removeListener') {
-            return NOOP;
-          }
-        },
-        set(target, prop: string, newValue) {
-          if (prop === 'value') {
-            target.value = newValue;
-            return true;
-          }
-          return false;
-        },
-      });
-    })[0],
-  useTimestamp: () => ({ value: 0 }),
+    useState(() =>
+      createMockSharedValue(
+        typeof init === 'function' ? (init as () => Value)() : init
+      )
+    )[0],
+  useTimestamp: () => useState(() => createMockSharedValue(0))[0],
 };
 
 const animation = {
@@ -396,7 +409,7 @@ const core = {
   isConfigured: () => false,
   isReanimated3: () => false,
   isWorkletFunction,
-  makeMutable: ID,
+  makeMutable: createMockSharedValue,
   makeShareableCloneRecursive: ID,
   NativeEventsManager: NativeEventsManagerMock,
   ReanimatedLogLevel,
