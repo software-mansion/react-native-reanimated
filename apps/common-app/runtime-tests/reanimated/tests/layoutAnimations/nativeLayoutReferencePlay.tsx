@@ -91,6 +91,7 @@ import {
   isOperationRecord,
   isSameLeaf,
   isScalarTrack,
+  isSpringLeaf,
   layerOf,
   layerPositionOf,
   layoutOf,
@@ -869,27 +870,115 @@ export const FRAME_DRIVER_EARLY_MS = 2 * FRAME_MS;
 export const FRAME_DRIVER_LATE_MS = 5 * FRAME_MS;
 
 /**
- * A model that `isNear` the value of `valueAt` at a time from
+ * A model whose `valuesOf` are near the value of `valueAt` at one time from
  * `FRAME_DRIVER_LATE_MS` before its time from the refusal to
- * `FRAME_DRIVER_EARLY_MS` after it: the check of a frame-driven sample in
- * `routeOf`.
+ * `FRAME_DRIVER_EARLY_MS` after it (`matchInWindowOf`): the check of a
+ * frame-driven sample in `routeOf`. A model off the window logs its smallest
+ * distance.
  */
 export function isOnFrameDriverWindowOf(
   valueAt: (timeMs: number) => number[],
-  isNear: (model: number[], reference: number[]) => boolean
+  valuesOf: (model: number[]) => number[],
+  tolerances: number[]
 ) {
   return ({ model }: { model: number[] }, sinceRefusalMs: number) => {
-    for (
-      let timeMs = sinceRefusalMs - FRAME_DRIVER_LATE_MS;
-      timeMs <= sinceRefusalMs + FRAME_DRIVER_EARLY_MS;
-      timeMs++
-    ) {
-      if (isNear(model, valueAt(timeMs))) {
-        return true;
-      }
+    const values = valuesOf(model);
+    const match = matchInWindowOf(valueAt, values, tolerances, [
+      sinceRefusalMs - FRAME_DRIVER_LATE_MS,
+      sinceRefusalMs + FRAME_DRIVER_EARLY_MS,
+    ]);
+    if (!match.isNear) {
+      console.log(
+        `FRAME-DRIVER-WINDOW | model ${values.join(' ')} at ${sinceRefusalMs.toFixed(2)} ms after the refusal: smallest distance ${match.distance.toFixed(4)} (tolerances ${tolerances.join(' ')}), in the step from ${match.stepMs.toFixed(2)} ms after the refusal`
+      );
     }
-    return false;
+    return match.isNear;
   };
+}
+
+type WindowMatch = {
+  /** Each value is within its tolerance of `valueAt` at one time of the window. */
+  isNear: boolean;
+  /** The smallest distance of the values to the range of a step. */
+  distance: number;
+  /** The start of the step with that distance. */
+  stepMs: number;
+};
+
+/**
+ * Compares `values` with `valueAt` in steps of 1 ms over the window. In each
+ * step the reference is the line between its values at the two ends of the
+ * step, so a fast curve does not step over the values.
+ */
+export function matchInWindowOf(
+  valueAt: (timeMs: number) => number[],
+  values: number[],
+  tolerances: number[],
+  [firstMs, lastMs]: [number, number]
+): WindowMatch {
+  const match: WindowMatch = {
+    isNear: false,
+    distance: Infinity,
+    stepMs: firstMs,
+  };
+  let stepStart = valueAt(firstMs);
+  for (let timeMs = firstMs; timeMs + 1 <= lastMs; timeMs++) {
+    const stepEnd = valueAt(timeMs + 1);
+    match.isNear ||= isNearStep(values, stepStart, stepEnd, tolerances);
+    const distance = distanceToStep(values, stepStart, stepEnd);
+    if (distance < match.distance) {
+      match.distance = distance;
+      match.stepMs = timeMs;
+    }
+    stepStart = stepEnd;
+  }
+  return match;
+}
+
+/**
+ * A point of the line from `stepStart` to `stepEnd` has each value within its
+ * tolerance of `values`. Each value limits the fraction of the line to an
+ * interval; the intervals have a common point.
+ */
+function isNearStep(
+  values: number[],
+  stepStart: number[],
+  stepEnd: number[],
+  tolerances: number[]
+) {
+  let lowest = 0;
+  let highest = 1;
+  values.forEach((value, cell) => {
+    const change = stepEnd[cell] - stepStart[cell];
+    const below = value - tolerances[cell] - stepStart[cell];
+    const above = value + tolerances[cell] - stepStart[cell];
+    if (change === 0) {
+      highest = below <= 0 && above >= 0 ? highest : -1;
+      return;
+    }
+    const [first, last] =
+      change > 0
+        ? [below / change, above / change]
+        : [above / change, below / change];
+    lowest = Math.max(lowest, first);
+    highest = Math.min(highest, last);
+  });
+  return lowest <= highest;
+}
+
+/** The largest distance of a value to the range of its cell in the step. */
+function distanceToStep(
+  values: number[],
+  stepStart: number[],
+  stepEnd: number[]
+) {
+  return Math.max(
+    ...values.map((value, cell) => {
+      const low = Math.min(stepStart[cell], stepEnd[cell]);
+      const high = Math.max(stepStart[cell], stepEnd[cell]);
+      return Math.max(low - value, value - high, 0);
+    })
+  );
 }
 
 /**
@@ -949,7 +1038,11 @@ function expectRefusedRoute(
     const referenceAt =
       valueAt ?? ((timeMs: number) => readAt(timeMs)?.twin ?? []);
     const isOnReference = valueAt
-      ? isOnFrameDriverWindowOf(valueAt, isNear)
+      ? isOnFrameDriverWindowOf(
+          (timeMs) => cells.map((cell) => valueAt(timeMs)[cell]),
+          (model) => cells.map((cell) => model[cell]),
+          cells.map(tolerance)
+        )
       : ({ model, twin }: { model: number[]; twin: number[] }) =>
           isNear(model, twin);
     const parts = distinctPartsOf(
@@ -2430,7 +2523,7 @@ function builtKeysOf(
       const isChanged =
         flow !== 'layout' || declaredBefore![key] !== declaredRest[key];
       const isAtTarget = !isChanged && !inFlight.includes(key);
-      if (leaf.isSpring || (leaf.onlyWhenChanged && isAtTarget)) {
+      if (isSpringLeaf(leaf) || (leaf.onlyWhenChanged && isAtTarget)) {
         return [];
       }
       const initial = leaf.initial as number | undefined;
@@ -2469,7 +2562,11 @@ function builtKeysOf(
       ];
     }),
     ...operations.flatMap(([kind, from, to, leaf = {}], index): BuiltKey[] => {
-      if (typeof from === 'object' || typeof to === 'object' || leaf.isSpring) {
+      if (
+        typeof from === 'object' ||
+        typeof to === 'object' ||
+        isSpringLeaf(leaf)
+      ) {
         return [];
       }
       const ends = { from: leaf.isPlain ? to : from, to };
