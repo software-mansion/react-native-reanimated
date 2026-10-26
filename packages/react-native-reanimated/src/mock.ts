@@ -68,8 +68,7 @@ function useMockScrollOffset(
   _animatedRef: unknown,
   providedOffset?: SharedValue<number>
 ) {
-  const internalOffset = useState(() => createMockSharedValue(0))[0];
-  return providedOffset ?? internalOffset;
+  return useState(() => providedOffset ?? createMockSharedValue(0))[0];
 }
 
 function createMockSharedValue<Value>(init: Value): SharedValue<Value> {

@@ -49,6 +49,19 @@ describe('mocked shared value factories', () => {
     expect(result.current.offset).toBe(result.current.providedOffset);
   });
 
+  test('useScrollOffset keeps the first offset across re-renders', () => {
+    const firstOffset = makeMutable(0);
+    const { result, rerender } = renderHook(
+      ({ providedOffset }: { providedOffset?: SharedValue<number> }) =>
+        useScrollOffset(null, providedOffset),
+      { initialProps: { providedOffset: firstOffset } }
+    );
+
+    rerender({ providedOffset: makeMutable(0) });
+
+    expect(result.current).toBe(firstOffset);
+  });
+
   test('useTimestamp returns a stable shared value', () => {
     const { result, rerender } = renderHook(() => useTimestamp());
     const first = result.current;
