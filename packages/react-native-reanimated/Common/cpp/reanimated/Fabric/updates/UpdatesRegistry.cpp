@@ -94,6 +94,17 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
   updatesRegistry_.erase(tag);
 }
 
+void UpdatesRegistry::removeUnmounted(
+    const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  remove(shadowNodeFamily->getTag());
+}
+
+void UpdatesRegistry::removePendingUpdates(const Tag tag) {
+  std::erase_if(updatesBatch_, [tag](const auto &update) {
+    return update.first->getTag() == tag;
+  });
+}
+
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();

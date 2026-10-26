@@ -53,6 +53,9 @@ void UpdatesRegistryManager::markNodeAsRemovable(
 
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   removableShadowNodes_.erase(viewTag);
+  for (auto &registry : registries_) {
+    registry->handleRemount(viewTag);
+  }
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(
@@ -66,7 +69,7 @@ void UpdatesRegistryManager::handleNodeRemovals(
 
     if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
       for (auto &registry : registries_) {
-        registry->remove(tag);
+        registry->removeUnmounted(shadowNode->getFamilyShared());
       }
       staticPropsRegistry_->remove(tag);
     } else {
