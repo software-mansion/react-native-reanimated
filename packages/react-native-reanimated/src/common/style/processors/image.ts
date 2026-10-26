@@ -18,7 +18,7 @@ const OBJECT_FIT_TO_RESIZE_MODE = {
   contain: 'contain',
   cover: 'cover',
   fill: 'stretch',
-  'scale-down': 'center',
+  'scale-down': 'contain',
   none: 'none',
 } as const satisfies Record<ObjectFit, ResizeMode>;
 
@@ -26,7 +26,7 @@ const RESIZE_MODE_TO_OBJECT_FIT = {
   contain: 'contain',
   cover: 'cover',
   stretch: 'fill',
-  center: 'scale-down',
+  center: undefined,
   none: 'none',
   repeat: undefined,
 } as const satisfies Record<ResizeMode, ObjectFit | undefined>;

@@ -107,7 +107,6 @@ describe('unprocessProps', () => {
       ['contain', 'contain'],
       ['cover', 'cover'],
       ['fill', 'stretch'],
-      ['scale-down', 'center'],
       ['none', 'none'],
     ])(
       'round-trips objectFit %s through resizeMode %s',
@@ -124,7 +123,18 @@ describe('unprocessProps', () => {
       }
     );
 
-    test.each(['repeat'])(
+    test('reads scale-down back as contain, like React Native renders it', () => {
+      const props: StyleProps = processObjectFit(
+        'scale-down',
+        context
+      ) as StyleProps;
+
+      unprocessProps(props);
+
+      expect(props).toEqual({ resizeMode: 'contain', objectFit: 'contain' });
+    });
+
+    test.each(['center', 'repeat'])(
       'clears objectFit for resizeMode %s without an objectFit counterpart',
       (resizeMode) => {
         const props: StyleProps = { resizeMode };
