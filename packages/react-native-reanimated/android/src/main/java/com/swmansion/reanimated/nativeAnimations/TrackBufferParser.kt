@@ -65,14 +65,8 @@ internal class TrackBufferParser(
         val timingKind = nextInt()
         val endOffset = nextDouble()
         val endValue = nextValue(componentCount)
-        val pointCount = nextInt()
-        val pointsX = ArrayList<Float>(pointCount)
-        val pointsY = ArrayList<Float>(pointCount)
-        repeat(pointCount) {
-            pointsX.add(nextDouble().toFloat())
-            pointsY.add(nextDouble().toFloat())
-        }
-        return SegmentSpec(endOffset, endValue, TimingKey(timingKind, pointsX, pointsY))
+        val parameters = List(nextInt()) { nextDouble().toFloat() }
+        return SegmentSpec(endOffset, endValue, TimingKey(timingKind, parameters))
     }
 
     private fun nextValue(componentCount: Int): DoubleArray = DoubleArray(componentCount) { nextDouble() }

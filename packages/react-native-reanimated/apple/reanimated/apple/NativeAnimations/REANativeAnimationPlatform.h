@@ -9,8 +9,11 @@
 
 namespace reanimated::native_animation {
 
-/// CAMediaTimingFunction carries only linear and cubic-bezier curves.
-inline constexpr std::array kCoreAnimationTimingKinds{AnimationTimingKind::Linear, AnimationTimingKind::CubicBezier};
+/// CAMediaTimingFunction carries only linear and cubic-bezier curves. CASpringAnimation plays a spring.
+inline constexpr std::array kCoreAnimationTimingKinds{
+    AnimationTimingKind::Linear,
+    AnimationTimingKind::CubicBezier,
+    AnimationTimingKind::Spring};
 
 std::shared_ptr<NativeAnimationPlatform> makeCoreAnimationPlatform(RCTSurfacePresenter *surfacePresenter);
 

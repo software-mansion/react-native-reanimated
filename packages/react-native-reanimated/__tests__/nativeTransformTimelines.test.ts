@@ -18,8 +18,8 @@ import type { TransformOperationLeaf } from '../src/layoutReanimation/nativeLeav
 import {
   advanceNativeLeaf,
   currentOfNativeLeaf,
-  phaseEndsOf,
   relateToLiveLeaf,
+  replayTimesOfLeaves,
   summarizeNativeLeaf,
 } from '../src/layoutReanimation/nativeLeaves';
 
@@ -656,11 +656,11 @@ describe('a live leaf whose operations have two timelines', () => {
     );
   });
 
-  test('the phase ends of a leaf are the phase ends of each operation', () => {
+  test('the replay times of a leaf are the phase ends of each operation', () => {
     const leaf = onUIRuntime(() => [
       { rotate: withDelay(300, timing(1, 500)) },
       { translateY: withSequence(timing(-40, 200), timing(0, 300)) },
     ]) as unknown as TransformOperationLeaf[];
-    expect(phaseEndsOf([leaf])).toEqual([200, 300]);
+    expect(replayTimesOfLeaves([leaf], 0, 1000)).toEqual([200, 300]);
   });
 });
