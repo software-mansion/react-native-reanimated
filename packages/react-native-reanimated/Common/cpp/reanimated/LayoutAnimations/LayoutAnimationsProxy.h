@@ -152,6 +152,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   ForceScreenSnapshotFunction forceScreenSnapshot_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
+  HideInModalSnapshotFunction hideInModalSnapshot_;
   // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
   // the window. It lives until its surface stops.
   mutable std::shared_ptr<LightNode> containerOverlay_;
@@ -290,6 +291,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   void cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const;
+#ifdef __APPLE__
+  void hideSourcesInModalSnapshots(const ShadowViewMutationList &mutations, const TransactionMeta &transaction) const;
+#endif
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;

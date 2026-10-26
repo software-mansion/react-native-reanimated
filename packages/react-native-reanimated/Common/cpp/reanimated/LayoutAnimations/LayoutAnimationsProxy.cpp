@@ -110,6 +110,7 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
   setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
   nativeViewPlacement_ = dependencies.nativeViewPlacement;
+  hideInModalSnapshot_ = dependencies.hideInModalSnapshot;
 #endif
 }
 
@@ -254,6 +255,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     }
 
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
+#ifdef __APPLE__
+    if (hasScreenChanged) {
+      hideSourcesInModalSnapshots(mutations, transaction);
+    }
+#endif
   }
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     followDetachedTargets(propsParserContext);

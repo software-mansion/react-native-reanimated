@@ -233,6 +233,13 @@ SetSharedTransitionOverlayFunction makeSetSharedTransitionOverlayFunction(REASha
   };
 }
 
+HideInModalSnapshotFunction makeHideInModalSnapshotFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](const std::vector<Tag> &tags) {
+    [overlays hideViewsInModalSnapshots:tags];
+  };
+}
+
 NativeViewPlacementFunction makeNativeViewPlacementFunction(REASharedTransitionOverlays *overlays)
 {
   return [overlays](SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled) {
@@ -332,12 +339,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
   NativeViewPlacementFunction nativeViewPlacementFunction;
+  HideInModalSnapshotFunction hideInModalSnapshotFunction;
 #if TARGET_OS_IOS
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     REASharedTransitionOverlays *sharedTransitionOverlays =
         [[REASharedTransitionOverlays alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
     setSharedTransitionOverlayFunction = makeSetSharedTransitionOverlayFunction(sharedTransitionOverlays);
     nativeViewPlacementFunction = makeNativeViewPlacementFunction(sharedTransitionOverlays);
+    hideInModalSnapshotFunction = makeHideInModalSnapshotFunction(sharedTransitionOverlays);
   }
 #endif
 
@@ -378,6 +387,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       readMountedViewPropsFunction,
       setSharedTransitionOverlayFunction,
       nativeViewPlacementFunction,
+      hideInModalSnapshotFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       isSensorAvailableFunction,
