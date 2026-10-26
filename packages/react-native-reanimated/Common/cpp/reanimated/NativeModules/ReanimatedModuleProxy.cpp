@@ -501,6 +501,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
+    const auto crossfade = item.getProperty(rt, "sharedTransitionCrossfade");
+    batchItem.sharedTransitionCrossfade = crossfade.isBool() && crossfade.getBool();
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {

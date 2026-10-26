@@ -474,6 +474,11 @@ function LayoutAnimationsTest() {
     // `SharedTransition` so it remains assignable to `sharedTransitionStyle`.
     const sharedTransition = SharedTransition.springify(400).dampingRatio(1);
 
+    // `crossfade` keeps the `SharedTransition` type in both chain orders.
+    const crossfadeTransition = SharedTransition.crossfade().duration(400);
+    const springCrossfadeTransition =
+      SharedTransition.springify(400).crossfade();
+
     // `withInitialValues` / `withTargetValues` (defined on
     // `ComplexAnimationBuilder`) must survive a static modifier chain.
     const sharedTransitionWithOverrides = SharedTransition.springify(400)
@@ -494,6 +499,14 @@ function LayoutAnimationsTest() {
         <Animated.View
           sharedTransitionTag="tag"
           sharedTransitionStyle={sharedTransitionWithOverrides}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={crossfadeTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={springCrossfadeTransition}
         />
       </View>
     );

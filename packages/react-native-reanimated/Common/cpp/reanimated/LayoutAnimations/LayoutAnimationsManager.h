@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -38,6 +39,7 @@ struct LayoutAnimationConfig {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
+  bool sharedTransitionCrossfade = false;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -51,6 +53,7 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
+  bool isCrossfadeSharedTransition(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -70,6 +73,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
+  std::unordered_set<int> crossfadeSharedTransitionsForNativeID_;
+  std::unordered_set<int> crossfadeSharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
@@ -77,8 +82,8 @@ class LayoutAnimationsManager {
   std::mutex pendingConfigUpdatesMutex_;
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
-  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
-  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, the crossfade sets, `enteringAnimations_`,
+  // `exitingAnimations_`, `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated

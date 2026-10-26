@@ -13,10 +13,30 @@ export class SharedTransition
 {
   static presetName = 'SharedTransition';
 
+  crossfadeV = false;
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
     return new SharedTransition() as InstanceType<T>;
+  }
+
+  /**
+   * Shows both views during the transition: the source view fades out and the
+   * target view fades in, in the same moving frame. Use it when the two views
+   * have different children. Can be chained alongside other [layout animation
+   * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   */
+  static crossfade<T extends typeof SharedTransition>(
+    this: T
+  ): InstanceType<T> {
+    const instance = this.createInstance();
+    return instance.crossfade();
+  }
+
+  crossfade(): this {
+    this.crossfadeV = true;
+    return this;
   }
 
   build = (): LayoutAnimationFunction => {
@@ -33,6 +53,7 @@ export class SharedTransition
       const values = valuesUntyped as unknown as {
         source: Record<string, number | string>;
         target: Record<string, number | string>;
+        fadesOut?: boolean;
       };
       const animationFactory = (value: number | string) => {
         return delayFunction(delay, animation(value, config));
@@ -79,7 +100,8 @@ export class SharedTransition
       return {
         initialValues,
         animations,
-        callback,
+        // In a crossfade both views animate, and the callback runs for the view that fades in.
+        callback: values.fadesOut ? undefined : callback,
       };
     };
   };

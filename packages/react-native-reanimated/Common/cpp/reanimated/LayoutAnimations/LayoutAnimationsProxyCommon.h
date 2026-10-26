@@ -54,6 +54,8 @@ struct ManagedLayoutAnimationStart {
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  // The view fades out in a shared transition that crossfades.
+  bool fadesOut = false;
 };
 
 struct ProgressLayoutAnimationStart {

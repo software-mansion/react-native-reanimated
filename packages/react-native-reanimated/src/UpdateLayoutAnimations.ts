@@ -26,7 +26,8 @@ export const updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
+  sharedTransitionTag?: string,
+  sharedTransitionCrossfade?: boolean
 ) => void = () => {
   // no-op
 };

@@ -40,14 +40,21 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
-// The carrier is the view that the run animates. It is the source or the target view,
+// A carrier is a view that the run animates. It is the source or the target view,
 // moved from its parent to the root for the time of the run.
+struct SharedTransitionCarrier {
+  std::shared_ptr<LightNode> node;
+  ShadowView startView;
+};
+
+// A run has one carrier. A run that crossfades has two: the source fades out and the target,
+// above it, fades in.
 struct SharedTransitionRun {
-  std::shared_ptr<LightNode> carrier;
-  ShadowView carrierStartView;
+  std::vector<SharedTransitionCarrier> carriers;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
+  bool crossfade = false;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -158,7 +165,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const ShadowView &after,
       const Props::Shared &frameProps,
+      bool fadesOut,
       const std::shared_ptr<Serializable> &config) const;
+  void startRunAnimations(
+      const SharedTransitionRun &run,
+      const ShadowView &after,
+      const std::shared_ptr<Serializable> &config,
+      const PropsParserContext &propsParserContext) const;
   void startProgressTransition(
       int tag,
       const ShadowView &before,
@@ -265,11 +278,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void detachCarrier(
       SharedTransitionRun &run,
+      const std::shared_ptr<LightNode> &node,
       const ShadowView &startView,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
   void attachCarrier(
+      const SharedTag &sharedTag,
+      const SharedTransitionCarrier &carrier,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  void attachCarriers(
       const SharedTag &sharedTag,
       const SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
@@ -287,8 +306,27 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
-  const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
+  const ShadowView &carrierViewOnScreen(const SharedTransitionCarrier &carrier) const;
   std::pair<const SharedTag, SharedElement> &sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
+  const SharedTransitionCarrier &carrierOf(const std::shared_ptr<LightNode> &node) const;
+  bool isRunAnimating(const SharedTransitionRun &run) const;
+  bool isRunCompleted(const SharedTransitionRun &run) const;
+  bool isCarrierOfCompletedRun(Tag tag) const;
+  const SharedTransitionRun *runOfCarrier(Tag tag) const;
+  bool canContinueRun(
+      const SharedTag &sharedTag,
+      const SharedTransitionRun &run,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes) const;
+  ShadowView carrierStartView(
+      const SharedTransitionRun &run,
+      const std::shared_ptr<LightNode> &node,
+      const ShadowView &before,
+      const PropsParserContext &propsParserContext) const;
+  ShadowView carrierFinalView(
+      const SharedTransitionRun &run,
+      const std::shared_ptr<LightNode> &node,
+      const ShadowView &after,
+      const PropsParserContext &propsParserContext) const;
   ShadowView asCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
