@@ -50,6 +50,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
 @implementation REASharedTransitionOverlays {
   __weak RCTSurfacePresenter *_surfacePresenter;
   NSMutableDictionary<NSNumber *, NSNumber *> *_overlayTags;
+  NSMapTable<UIViewController *, UIView *> *_modalSnapshots;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -57,6 +58,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
+    _modalSnapshots = [NSMapTable weakToStrongObjectsMapTable];
     // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
     // See `REAPseudoSelectorAttachQueue`.
     [surfacePresenter addObserver:self];
@@ -95,9 +97,66 @@ static UIWindow *surfaceWindow(UIView *rootView)
   [overlay removeFromSuperview];
 }
 
+- (void)hideViewsInModalSnapshots:(const std::vector<facebook::react::Tag> &)tags
+{
+  RCTAssertMainQueue();
+  NSMapTable<UIViewController *, NSMutableArray<UIView *> *> *viewsByModal = [NSMapTable strongToStrongObjectsMapTable];
+  for (const auto tag : tags) {
+    UIView *view = [self viewWithTag:tag];
+    UIViewController *modal = view.reactViewController;
+    while (modal.parentViewController) {
+      modal = modal.parentViewController;
+    }
+    if (!modal.presentingViewController) {
+      continue;
+    }
+    NSMutableArray<UIView *> *views = [viewsByModal objectForKey:modal];
+    if (!views) {
+      views = [NSMutableArray new];
+      [viewsByModal setObject:views forKey:modal];
+    }
+    [views addObject:view];
+  }
+  for (UIViewController *modal in viewsByModal) {
+    NSArray<UIView *> *views = [viewsByModal objectForKey:modal];
+    NSMutableArray<NSNumber *> *alphas = [NSMutableArray new];
+    for (UIView *view in views) {
+      [alphas addObject:@(view.alpha)];
+      view.alpha = 0;
+    }
+    // Rendering the layers commits nothing, so the views are never shown hidden.
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithBounds:modal.view.bounds];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+      [modal.view.layer renderInContext:context.CGContext];
+    }];
+    [_modalSnapshots setObject:[[UIImageView alloc] initWithImage:image] forKey:modal];
+    [views enumerateObjectsUsingBlock:^(UIView *view, NSUInteger index, BOOL *) {
+      view.alpha = alphas[index].doubleValue;
+    }];
+  }
+}
+
+// React Native removes the views of a dismissed modal, so the only views left in it are its snapshot.
+- (void)replaceModalSnapshots
+{
+  for (UIViewController *modal in _modalSnapshots) {
+    if (!modal.isBeingDismissed) {
+      continue;
+    }
+    for (UIView *view in modal.view.subviews) {
+      view.hidden = YES;
+    }
+    UIView *snapshot = [_modalSnapshots objectForKey:modal];
+    snapshot.frame = modal.view.bounds;
+    [modal.view addSubview:snapshot];
+  }
+  [_modalSnapshots removeAllObjects];
+}
+
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
+  [self replaceModalSnapshots];
   NSNumber *tag = _overlayTags[@(rootTag)];
   UIView *overlay = tag ? [self viewWithTag:tag.integerValue] : nil;
   if (!overlay) {
