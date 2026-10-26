@@ -45,4 +45,5 @@ The value to send in place of `value`. It's serialized once, when `setSerializab
 - Use [hasSerializableMapping](./hasSerializableMapping.mdx) to check whether `value` already has a mapping.
 - Use [getSerializableMapping](./getSerializableMapping.mdx) to read the mapping.
 - Use [removeSerializableMapping](./removeSerializableMapping.mdx) to remove the mapping.
+- Each Runtime keeps its own mappings, so `setSerializableMapping` affects only the values that the calling Runtime serializes.
 - On the Web `setSerializableMapping` does nothing, because values aren't serialized there.
