@@ -21,8 +21,8 @@ struct UncommittedWrite {
 
 using UncommittedWrites = std::vector<UncommittedWrite>;
 
-// Keeps the synchronous writes that the shadow tree does not have yet. A view settles when it gets no write for one
-// full frame. A React commit that takes a registry snapshot after the last write of a view carries its values, so the
+// Keeps the synchronous writes that the shadow tree does not have yet. A view settles when it gets no write for a few
+// frames. A React commit that takes a registry snapshot after the last write of a view carries its values, so the
 // tracker drops that view. Access only on the UI thread.
 class UncommittedWritesTracker {
  public:

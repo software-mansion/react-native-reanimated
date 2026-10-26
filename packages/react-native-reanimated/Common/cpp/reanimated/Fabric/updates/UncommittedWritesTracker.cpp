@@ -7,6 +7,13 @@ namespace reanimated {
 
 namespace {
 
+// One frame without writes is too short: the scroll events of a dragging finger do not arrive in every frame.
+constexpr uint64_t FRAMES_WITHOUT_WRITES_TO_SETTLE = 4;
+
+bool isSettled(const UncommittedWrite &write, const uint64_t frame) {
+  return frame - write.lastWriteFrame >= FRAMES_WITHOUT_WRITES_TO_SETTLE;
+}
+
 uint64_t getSnapshotCount(const ReactCommitSnapshotCounts &snapshotCounts, const SurfaceId surfaceId) {
   const auto it = snapshotCounts.find(surfaceId);
   return it == snapshotCounts.end() ? 0 : it->second;
@@ -63,7 +70,7 @@ UncommittedWrites UncommittedWritesTracker::takeSettledWrites(const ReactCommitS
   UncommittedWrites settledWrites;
   for (auto it = writes_.begin(); it != writes_.end();) {
     auto &write = it->second;
-    if (write.lastWriteFrame == frame_) {
+    if (!isSettled(write, frame_)) {
       ++it;
       continue;
     }
@@ -77,7 +84,7 @@ UncommittedWrites UncommittedWritesTracker::takeSettledWrites(const ReactCommitS
 
 bool UncommittedWritesTracker::hasSettledWrites() const {
   return std::any_of(
-      writes_.begin(), writes_.end(), [this](const auto &entry) { return entry.second.lastWriteFrame < frame_; });
+      writes_.begin(), writes_.end(), [this](const auto &entry) { return isSettled(entry.second, frame_); });
 }
 
 void UncommittedWritesTracker::restore(UncommittedWrites &&writes) {
