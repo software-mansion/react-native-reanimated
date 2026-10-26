@@ -302,6 +302,48 @@ describe('Shared transition keeps the moving view props', () => {
       ).toBe('target input');
     }
   );
+  test('keeps unchanged native content props while React changes the hidden target', async () => {
+    const transition = transitionWithNotification();
+    const color = makeMutable('red');
+    await render(
+      <Screens active={false} transition={transition} color={color} />
+    );
+    await waitForFrames();
+    await render(<Screens active transition={transition} color={color} />);
+    await expectSourceMoving();
+    await waitForFrames(3);
+    expect(
+      (await getTestComponent('source').getTextInputObservation())
+        ?.accessibilityLabel
+    ).toBe('source input');
+    expect(
+      (await getTestComponent('target').getTextInputObservation())
+        ?.accessibilityLabel
+    ).toBe('target input');
+
+    await render(
+      <Screens
+        active
+        transition={transition}
+        color={color}
+        targetLabel="updated target"
+      />
+    );
+    await waitForFrames(3);
+    expect(
+      (await getTestComponent('target').getMountedViewProps())?.opacity
+    ).toBe(0);
+    await waitForNotification('props-finished');
+    await expectEventually(
+      async () =>
+        (await getTestComponent('target').getTextInputObservation())
+          ?.accessibilityLabel
+    ).toBe('updated target');
+    expect(
+      (await getTestComponent('source').getTextInputObservation())
+        ?.accessibilityLabel
+    ).toBe('source input');
+  });
 
   const syncTest =
     RuntimeTestObserver &&
