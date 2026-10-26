@@ -1,7 +1,7 @@
 'use strict';
 
 import type { ReactNode } from 'react';
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import type { TextProps } from 'react-native';
 import {
   Animated as AnimatedRN,
@@ -128,52 +128,53 @@ const hook = {
   useReducedMotion: () => false,
   useScrollOffset: () => ({ value: 0 }),
   useScrollViewOffset: () => ({ value: 0 }),
-  useSharedValue: <Value>(init: Value | (() => Value)) => {
-    const value = {
-      value: typeof init === 'function' ? (init as () => Value)() : init,
-    };
-    return new Proxy(value, {
-      get(target, prop) {
-        if (prop === '_isReanimatedSharedValue') {
-          return true;
-        }
-        if (prop === 'value') {
-          return target.value;
-        }
-        if (prop === 'get') {
-          return () => target.value;
-        }
-        if (prop === 'set') {
-          return (newValue: Value | ((currentValue: Value) => Value)) => {
-            if (typeof newValue === 'function') {
-              target.value = (newValue as (currentValue: Value) => Value)(
-                target.value
-              );
-            } else {
-              target.value = newValue;
-            }
-          };
-        }
-        if (prop === 'modify') {
-          return (modifier?: (currentValue: Value) => Value) => {
-            if (modifier !== undefined) {
-              target.value = modifier(target.value);
-            }
-          };
-        }
-        if (prop === 'addListener' || prop === 'removeListener') {
-          return NOOP;
-        }
-      },
-      set(target, prop: string, newValue) {
-        if (prop === 'value') {
-          target.value = newValue;
-          return true;
-        }
-        return false;
-      },
-    });
-  },
+  useSharedValue: <Value>(init: Value | (() => Value)) =>
+    useState(() => {
+      const value = {
+        value: typeof init === 'function' ? (init as () => Value)() : init,
+      };
+      return new Proxy(value, {
+        get(target, prop) {
+          if (prop === '_isReanimatedSharedValue') {
+            return true;
+          }
+          if (prop === 'value') {
+            return target.value;
+          }
+          if (prop === 'get') {
+            return () => target.value;
+          }
+          if (prop === 'set') {
+            return (newValue: Value | ((currentValue: Value) => Value)) => {
+              if (typeof newValue === 'function') {
+                target.value = (newValue as (currentValue: Value) => Value)(
+                  target.value
+                );
+              } else {
+                target.value = newValue;
+              }
+            };
+          }
+          if (prop === 'modify') {
+            return (modifier?: (currentValue: Value) => Value) => {
+              if (modifier !== undefined) {
+                target.value = modifier(target.value);
+              }
+            };
+          }
+          if (prop === 'addListener' || prop === 'removeListener') {
+            return NOOP;
+          }
+        },
+        set(target, prop: string, newValue) {
+          if (prop === 'value') {
+            target.value = newValue;
+            return true;
+          }
+          return false;
+        },
+      });
+    })[0],
   useTimestamp: () => ({ value: 0 }),
 };
 
