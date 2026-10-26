@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
@@ -29,6 +30,10 @@ class RuntimeManager {
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
+
+  [[nodiscard]] const std::shared_ptr<WorkletRuntimeRegistry> &getRuntimeRegistry() const noexcept {
+    return runtimeRegistry_;
+  }
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
@@ -65,6 +70,7 @@ class RuntimeManager {
   };
 #endif // NDEBUG
 
+  const std::shared_ptr<WorkletRuntimeRegistry> runtimeRegistry_{std::make_shared<WorkletRuntimeRegistry>()};
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;

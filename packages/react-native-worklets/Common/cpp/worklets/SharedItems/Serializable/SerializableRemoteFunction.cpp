@@ -31,12 +31,13 @@ SerializableRemoteFunction::~SerializableRemoteFunction() {
       }
     });
   } else {
-    cleanupRuntimeAware(hostRuntime_, function_);
+    cleanupRuntimeAware(hostIdentity_, function_);
   }
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == hostRuntime_) {
+  const auto *identity = findRuntimeIdentity(rt);
+  if (identity != nullptr && identity->isSameRuntime(hostIdentity_)) {
     return jsi::Value(rt, *function_);
   } else {
     const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
@@ -55,7 +56,7 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
       resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
     });
   } else {
-    const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
+    const auto workletRuntime = runtimeManager->getRuntime(hostIdentity_.runtimeId);
     // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
@@ -72,12 +73,14 @@ jsi::Value makeRNRuntimeSerializableRemoteFunction(
     jsi::Runtime &rnRuntime,
     const std::string &name,
     const jsi::Function &function,
+    const RuntimeIdentity &hostIdentity,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
       rnRuntime,
       name,
       jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
+      hostIdentity,
       jsScheduler,
       rnRuntimeStatus);
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
@@ -87,12 +90,12 @@ jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
     jsi::Runtime &workletRuntime,
     const std::string &name,
     const jsi::Function &function,
-    RuntimeData::RuntimeId hostRuntimeId) {
+    const RuntimeIdentity &hostIdentity) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
       workletRuntime,
       name,
       jsi::Value(workletRuntime, function).getObject(workletRuntime).getFunction(workletRuntime),
-      hostRuntimeId);
+      hostIdentity);
   return SerializableJSRef::newNativeStateObject(workletRuntime, serializable);
 }
 

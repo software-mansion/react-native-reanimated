@@ -23,11 +23,11 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<facebook::jsi::Value> &
   ::operator delete(value.release());
 }
 
-inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, std::unique_ptr<facebook::jsi::Value> &value) {
-  if (value == nullptr || rt == nullptr) {
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value) {
+  if (value == nullptr) {
     return;
   }
-  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+  owner.runWhileLocked([&value](bool isAlive) {
     if (isAlive) {
       value.reset();
     } else {
@@ -36,11 +36,11 @@ inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, std::unique_ptr<face
   });
 }
 
-inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, facebook::jsi::Value &value) {
-  if (rt == nullptr || value.isUndefined()) {
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value) {
+  if (value.isUndefined()) {
     return;
   }
-  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+  owner.runWhileLocked([&value](bool isAlive) {
     if (isAlive) {
       value.~Value();
     }

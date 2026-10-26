@@ -4,6 +4,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 #include <atomic>
 #include <memory>
@@ -87,14 +88,27 @@ struct WorkletsReentrancyCheck {
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
-class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
+class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>,
+                             public IRuntimeIdentityProvider {
  public:
-  explicit WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
+  WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime, RuntimeIdentity identity);
   ~WorkletHermesRuntime() override;
+
+  jsi::ICast *castInterface(const jsi::UUID &interfaceUUID) override {
+    if (interfaceUUID == IRuntimeIdentityProvider::uuid) {
+      return static_cast<IRuntimeIdentityProvider *>(this);
+    }
+    return jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>::castInterface(interfaceUUID);
+  }
+
+  [[nodiscard]] const RuntimeIdentity &getRuntimeIdentity() const noexcept override {
+    return identity_;
+  }
 
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   WorkletsReentrancyCheck reentrancyCheck_;
+  const RuntimeIdentity identity_;
 };
 
 } // namespace worklets

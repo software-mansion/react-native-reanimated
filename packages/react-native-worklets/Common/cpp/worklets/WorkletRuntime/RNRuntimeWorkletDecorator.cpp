@@ -13,7 +13,8 @@ namespace worklets {
 void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Object &&jsiWorkletsModuleProxy,
-    const std::shared_ptr<JSLogger> &jsLogger) {
+    const std::shared_ptr<JSLogger> &jsLogger,
+    const std::shared_ptr<WorkletRuntimeRegistry> &runtimeRegistry) {
   rnRuntime.global().setProperty(
       rnRuntime, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::ReactNative));
 
@@ -26,7 +27,7 @@ void RNRuntimeWorkletDecorator::decorate(
 
   rnRuntime.global().setProperty(rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
-  WorkletRuntimeCollector::install(rnRuntime);
+  WorkletRuntimeCollector::install(rnRuntime, runtimeRegistry, RuntimeData::rnRuntimeId);
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, jsLogger);

@@ -11,8 +11,12 @@
 
 namespace worklets {
 
-WorkletHermesRuntime::WorkletHermesRuntime(std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
-    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
+WorkletHermesRuntime::WorkletHermesRuntime(
+    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+    RuntimeIdentity identity)
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_),
+      runtime_(std::move(runtime)),
+      identity_(std::move(identity)) {
   auto evalBytecode = [](facebook::jsi::Runtime &rt,
                          const facebook::jsi::Value &,
                          const facebook::jsi::Value *args,

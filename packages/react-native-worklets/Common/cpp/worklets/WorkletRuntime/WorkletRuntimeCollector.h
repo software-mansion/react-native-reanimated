@@ -1,10 +1,12 @@
 #pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <utility>
 
 namespace worklets {
 
@@ -15,22 +17,26 @@ class WorkletRuntimeCollector : public jsi::HostObject {
   // In the destructor, we unregister the worklet runtime from the registry.
 
  public:
-  explicit WorkletRuntimeCollector(jsi::Runtime &runtime) : runtime_(runtime) {
-    WorkletRuntimeRegistry::registerRuntime(runtime_);
+  WorkletRuntimeCollector(std::shared_ptr<WorkletRuntimeRegistry> registry, RuntimeData::RuntimeId runtimeId)
+      : registry_(std::move(registry)), runtimeId_(runtimeId) {
+    registry_->registerRuntime(runtimeId_);
   }
 
   ~WorkletRuntimeCollector() override {
-    WorkletRuntimeRegistry::unregisterRuntime(runtime_);
+    registry_->unregisterRuntime(runtimeId_);
   }
 
-  static void install(jsi::Runtime &rt) {
-    auto collector = std::make_shared<WorkletRuntimeCollector>(rt);
+  static void
+  install(jsi::Runtime &rt, const std::shared_ptr<WorkletRuntimeRegistry> &registry, RuntimeData::RuntimeId runtimeId) {
+    setRuntimeIdentityData(rt, RuntimeIdentity{.registry = registry, .runtimeId = runtimeId});
+    auto collector = std::make_shared<WorkletRuntimeCollector>(registry, runtimeId);
     auto object = jsi::Object::createFromHostObject(rt, collector);
     rt.global().setProperty(rt, "__workletRuntimeCollector", object);
   }
 
  private:
-  jsi::Runtime &runtime_;
+  const std::shared_ptr<WorkletRuntimeRegistry> registry_;
+  const RuntimeData::RuntimeId runtimeId_;
 };
 
 } // namespace worklets

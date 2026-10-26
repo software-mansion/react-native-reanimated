@@ -11,6 +11,7 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -23,8 +24,15 @@ class RetainingSerializableStore {
  private:
   static constexpr std::size_t kSlotsPerChunk = 4;
 
+  enum class SlotState : std::uint8_t {
+    Empty,
+    Claimed,
+    Ready,
+  };
+
   struct Slot {
-    std::atomic<facebook::jsi::Runtime *> runtime{nullptr};
+    std::atomic<SlotState> state{SlotState::Empty};
+    RuntimeIdentity owner{};
     facebook::jsi::Value value{facebook::jsi::Value::undefined()};
   };
 
@@ -33,26 +41,28 @@ class RetainingSerializableStore {
   std::atomic<RetainingSerializableStore *> nextChunk_{nullptr};
   std::unique_ptr<RetainingSerializableStore> nextChunkOwner_{};
 
-  const facebook::jsi::Value *find(facebook::jsi::Runtime *rt) {
+  const facebook::jsi::Value *find(const RuntimeIdentity &identity) {
     for (auto &slot : slots_) {
-      if (slot.runtime.load(std::memory_order_acquire) == rt) {
+      if (slot.state.load(std::memory_order_acquire) == SlotState::Ready && slot.owner.isSameRuntime(identity)) {
         return &slot.value;
       }
     }
     if (auto *next = nextChunk_.load(std::memory_order_acquire)) {
-      return next->find(rt);
+      return next->find(identity);
     }
     return nullptr;
   }
 
-  void store(facebook::jsi::Runtime *rt, facebook::jsi::Value value) {
+  void store(const RuntimeIdentity &identity, facebook::jsi::Value value) {
     for (auto &slot : slots_) {
-      if (slot.runtime.load(std::memory_order_relaxed) != nullptr) {
+      if (slot.state.load(std::memory_order_relaxed) != SlotState::Empty) {
         continue;
       }
-      facebook::jsi::Runtime *expected = nullptr;
-      if (slot.runtime.compare_exchange_strong(expected, rt, std::memory_order_acq_rel)) {
+      auto expected = SlotState::Empty;
+      if (slot.state.compare_exchange_strong(expected, SlotState::Claimed, std::memory_order_acq_rel)) {
+        slot.owner = identity;
         slot.value = std::move(value);
+        slot.state.store(SlotState::Ready, std::memory_order_release);
         return;
       }
     }
@@ -66,7 +76,7 @@ class RetainingSerializableStore {
         next = freshChunk;
       }
     }
-    next->store(rt, std::move(value));
+    next->store(identity, std::move(value));
   }
 
  public:
@@ -74,17 +84,24 @@ class RetainingSerializableStore {
 
   ~RetainingSerializableStore() {
     for (auto &slot : slots_) {
-      cleanupRuntimeAware(slot.runtime.load(std::memory_order_relaxed), slot.value);
+      if (slot.state.load(std::memory_order_acquire) == SlotState::Ready) {
+        cleanupRuntimeAware(slot.owner, slot.value);
+      }
     }
   }
 
   facebook::jsi::Value getOrStore(facebook::jsi::Runtime &rt, TSerializable &serializable) {
-    if (const auto *cachedValue = find(&rt)) {
+    const auto *identity = findRuntimeIdentity(rt);
+    if (identity == nullptr) [[unlikely]] {
+      return serializable.TSerializable::toJSValue(rt);
+    }
+
+    if (const auto *cachedValue = find(*identity)) {
       return facebook::jsi::Value(rt, *cachedValue);
     }
 
     auto jsValue = serializable.TSerializable::toJSValue(rt);
-    store(&rt, facebook::jsi::Value(rt, jsValue));
+    store(*identity, facebook::jsi::Value(rt, jsValue));
 
     return jsValue;
   }
