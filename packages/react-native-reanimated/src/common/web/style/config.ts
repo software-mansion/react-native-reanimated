@@ -193,6 +193,7 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
+  // @ts-ignore Available since RN 0.87
   backgroundImage: { process: processBackgroundImageWeb },
   // eslint-disable-next-line eslint-core/camelcase
   experimental_backgroundImage: {

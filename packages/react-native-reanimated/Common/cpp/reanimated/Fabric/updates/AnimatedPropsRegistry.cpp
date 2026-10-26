@@ -5,6 +5,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -36,6 +37,9 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    if (isUnmounted(shadowNode->getFamily())) {
+      continue;
+    }
 
     jsi::Value updates = item.getProperty(rt, "updates");
     roundTextMetrics(rt, updates);
@@ -63,13 +67,21 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   }
 }
 
-jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const double settledTimestamp) {
+jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
+    jsi::Runtime &rt,
+    const double settledTimestamp,
+    const std::unordered_set<Tag> &registeredViewTags) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
+
+    if (!registeredViewTags.contains(viewTag)) {
+      ++it;
+      continue;
+    }
 
     if (syncedTags_.contains(viewTag)) {
       // React already has the latest value for this tag (synced on a previous
@@ -117,6 +129,29 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(jsi::Runtime &rt, const 
   }
 
   return jsi::Value(rt, array);
+}
+
+void AnimatedPropsRegistry::removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) {
+  UpdatesRegistry::removeUnmounted(shadowNodeFamily);
+  const auto tag = shadowNodeFamily->getTag();
+  unmountedFamilies_[tag] = shadowNodeFamily;
+  if (unmountedFamilies_.size() >= unmountedFamiliesPruneThreshold_) {
+    pruneExpiredUnmountedFamilies();
+  }
+}
+
+void AnimatedPropsRegistry::handleRemount(const Tag tag) {
+  unmountedFamilies_.erase(tag);
+}
+
+bool AnimatedPropsRegistry::isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const {
+  const auto it = unmountedFamilies_.find(shadowNodeFamily.getTag());
+  return it != unmountedFamilies_.end() && it->second.lock().get() == &shadowNodeFamily;
+}
+
+void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
+  std::erase_if(unmountedFamilies_, [](const auto &entry) { return entry.second.expired(); });
+  unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {

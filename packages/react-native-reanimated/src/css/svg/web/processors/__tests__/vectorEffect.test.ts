@@ -14,6 +14,10 @@ describe(processVectorEffect, () => {
     expect(processVectorEffect('inherit')).toBe('inherit');
   });
 
+  test('passes through an inherited object key as a string', () => {
+    expect(processVectorEffect('toString')).toBe('toString');
+  });
+
   test('maps `default` to none', () => {
     expect(processVectorEffect('default')).toBe('none');
   });

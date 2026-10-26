@@ -68,7 +68,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 ```sh
 yarn                                   # install (needed in every new worktree)
-yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the OXC plugin, fills lib/
+yarn build-packages                    # builds worklets then reanimated (bob), rebuilds the Babel plugin and the Oxc plugin, fills lib/
 yarn workspace react-native-worklets build
 yarn workspace <pkg> type:check        # native + web + common-app + type tests
 yarn workspace <pkg> lint              # lint:js + lint:android + lint:apple + lint:clang-tidy (+ lint:plugin)
@@ -114,7 +114,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 - New native binding: `Common/cpp`, then `android/src/main/cpp`, Kotlin (if exposed), `apple/`, then `src/` TS (`workletsModuleProxy.ts`, `privateGlobals.d.ts`, `mock.ts`).
 - Worklets public API change: grep `packages/react-native-reanimated/src`, the largest consumer.
 - Babel plugin change: run `plugin/__tests__`, rebuild `plugin/index.js`, rebuild both packages.
-- Any package change needs a new changelog fragment `packages/<pkg>/changelog/<slug>.<breaking|feature|fix|other>.md` that holds one sentence. Write the file directly, or run `yarn workspace <react-native-reanimated|react-native-worklets> changelog:add --type <type> --message '<One sentence>'`. Use single quotes, because the shell runs backticks inside double quotes. Do not write the PR link or the author (the optional lines `pr: <number>` and `by: @user1, @user2` exist for the cases that the release script cannot resolve), and do not edit `CHANGELOG.md`: `yarn changelog:squash` fills it at release. On stable branches older than `4.7-stable` and `worklets-0.13-stable`, `changelog-check` uses the old layout and is always red. Ignore it there. On newer stable branches, a red check means that the cherry-pick lost its fragment.
+- Any package change needs a new changelog fragment `packages/<pkg>/changelog/<slug>.<breaking|feature|fix|other>.md` that holds one sentence. Write the file directly, or run `yarn workspace <react-native-reanimated|react-native-worklets> changelog:add --type <type> --message '<One sentence>'`. Use single quotes, because the shell runs backticks inside double quotes. Do not write the PR link or the author (the optional lines `pr: <number>` and `by: @user1, @user2` exist for the cases that the release script cannot resolve), and do not edit `CHANGELOG.md`: `yarn changelog:squash` fills it at release. On Reanimated stable branches older than `4.7-stable`, `changelog-check` uses the old layout and is always red. Ignore it there. Worklets stable branches up to and including `worklets-0.13-stable` also use the old layout. There, add a bullet under `## Unpublished` in `packages/react-native-worklets/CHANGELOG.md` with the PR and author links instead of a fragment, and leave out changes to other packages, because `changelog-check` requires a `CHANGELOG.md` entry for each changed package. On newer stable branches, a red check means that the cherry-pick lost its fragment.
 - Docs-visible API change: update `docs/docs-reanimated` and/or `docs/docs-worklets`.
 - Do not commit changes to the playground files `apps/common-app/src/apps/reanimated/examples/EmptyExample.tsx` and `apps/common-app/src/apps/css/examples/animations/screens/testExamples/Playground.tsx`.
 - PR template: `.github/PULL_REQUEST_TEMPLATE.md` (Summary, Test plan).
@@ -129,5 +129,5 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 
 ## Release facts
 
-- The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
+- The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Agent skills for releases and cherry-picks live in `.agents/skills/` (`.claude/skills` links to it): `reanimated-release`, `worklets-release`, `reanimated-cherry-pick` and `worklets-cherry-pick`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
 - When the worklets stable API changes, bump `WORKLETS_STABLE_API_VERSION` in `StableApi.h` and `EXPECTED_WORKLETS_STABLE_API_VERSION` in `WorkletsApi.h` together, also on backports.

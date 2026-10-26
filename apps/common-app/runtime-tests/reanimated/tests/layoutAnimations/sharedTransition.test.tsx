@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
@@ -8,50 +9,67 @@ import { scheduleOnRN } from 'react-native-worklets';
 import {
   describe,
   expect,
+  expectEventually,
+  getTestComponent,
   notify,
   render,
   test,
+  useTestRef,
   wait,
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 
-function createTransition(finished: boolean[]) {
+function createTransition(
+  finished: boolean[],
+  transition = SharedTransition.duration(300)
+) {
   const recordEnd = (isFinished: boolean) => {
     finished.push(isFinished);
     notify('shared-transition-finished');
   };
-  return SharedTransition.duration(300).withCallback((isFinished) => {
+  return transition.withCallback((isFinished) => {
     'worklet';
     scheduleOnRN(recordEnd, isFinished);
   });
 }
 
+function Target({ transition }: { transition: SharedTransition }) {
+  const ref = useTestRef('target');
+  return (
+    <SharedTransitionBoundary isActive>
+      <Animated.View
+        ref={ref}
+        sharedTransitionTag="box"
+        sharedTransitionStyle={transition}
+        style={styles.target}
+      />
+    </SharedTransitionBoundary>
+  );
+}
+
 function Screens({
   showTarget,
   transition,
+  sourceTag = 'box',
 }: {
   showTarget: boolean;
   transition: SharedTransition;
+  sourceTag?: string | null;
 }) {
+  const sourceRef = useTestRef('source');
   return (
     <View style={styles.container}>
       <SharedTransitionBoundary isActive={!showTarget}>
         <Animated.View
-          sharedTransitionTag="box"
+          ref={sourceRef}
+          sharedTransitionTag={sourceTag ?? undefined}
           sharedTransitionStyle={transition}
           style={styles.source}
         />
       </SharedTransitionBoundary>
-      {showTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="box"
-            sharedTransitionStyle={transition}
-            style={styles.target}
-          />
-        </SharedTransitionBoundary>
-      )}
+      {showTarget && <Target transition={transition} />}
     </View>
   );
 }
@@ -74,6 +92,21 @@ function NestedTextScreens({ targetActive }: { targetActive: boolean }) {
   );
 }
 
+async function expectMountedAtLayout(name: string, opacity: number) {
+  const component = getTestComponent(name);
+  await expectEventually(
+    async () => (await component.getMountedViewProps())?.opacity
+  ).toBe(opacity, ComparisonMode.FLOAT_DISTANCE);
+  const mounted = await component.getMountedViewProps();
+  expect(mounted).not.toBe(null);
+  const layout = async (prop: 'left' | 'top' | 'width' | 'height') =>
+    Number(await component.getAnimatedStyle(prop));
+  expect(mounted?.x).toBe(await layout('left'), ComparisonMode.PIXEL);
+  expect(mounted?.y).toBe(await layout('top'), ComparisonMode.PIXEL);
+  expect(mounted?.width).toBe(await layout('width'), ComparisonMode.PIXEL);
+  expect(mounted?.height).toBe(await layout('height'), ComparisonMode.PIXEL);
+}
+
 describe('Shared element transition between boundaries', () => {
   test('ignores a nested Text with a shared tag', async () => {
     await render(<NestedTextScreens targetActive={false} />);
@@ -92,11 +125,50 @@ describe('Shared element transition between boundaries', () => {
     await waitForNotification('shared-transition-finished');
     await waitForFrames();
 
-    // ReJest can only read the shadow tree: getViewProp, _obtainProp and measure all use
-    // the newest shadow node clone. The transition's frames and the hiding and restoring of
-    // the shared views exist only in the mutations sent to the platform, so this test cannot
-    // check what is displayed. It checks that the transition runs to completion.
     expect(finished).toBe([true]);
+    // Cleanup restores only the target. The source stays hidden because a screen
+    // transition is expected to cover it.
+    await expectMountedAtLayout('source', 0);
+    await expectMountedAtLayout('target', 1);
+  });
+
+  test.each([
+    ['removed', null],
+    ['changed', 'other'],
+  ] as const)(
+    'shows the source again when its tag is ${0}',
+    async ([, sourceTag]) => {
+      const transition = createTransition([]);
+      await render(<Screens showTarget={false} transition={transition} />);
+      await waitForFrames();
+      await render(<Screens showTarget transition={transition} />);
+      await waitForNotification('shared-transition-finished');
+      await waitForFrames();
+      await expectMountedAtLayout('source', 0);
+      await expectMountedAtLayout('target', 1);
+
+      await render(
+        <Screens showTarget transition={transition} sourceTag={sourceTag} />
+      );
+      await expectMountedAtLayout('source', 1);
+    }
+  );
+
+  test('runs a transition that ends on its first frame', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.reduceMotion(ReduceMotion.Always)
+    );
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('target', 1);
   });
 });
 

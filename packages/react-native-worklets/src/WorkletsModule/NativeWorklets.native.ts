@@ -46,15 +46,8 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
-      if (bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
-      if (onRNRuntime) {
-        checkCppVersion();
-      }
+    if (__DEV__ && onRNRuntime) {
+      checkCppVersion();
     }
     this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
@@ -239,9 +232,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: RemoteFunction | ((...args: TArgs) => unknown),
-    args: SerializableRef<TArgs> | undefined
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
   ): void {
-    this.#workletsModuleProxy.scheduleOnRN(fun, args);
+    this.#workletsModuleProxy.scheduleOnRN(fun, args, scheduleStack);
+  }
+
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRNSync(fun, args, scheduleStack);
   }
 
   scheduleOnUI<TValue>(
