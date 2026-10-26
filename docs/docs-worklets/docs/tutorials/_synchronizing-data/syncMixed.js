@@ -9,7 +9,7 @@ import {
 
 export default function* main() {
   const progress = yield createShareable(UIRuntimeId, 0);
-  const dirty = yield createSynchronizable(false);
+  const dirty = yield createSynchronizable(false, { fixedType: true });
   let cached = yield 0;
 
   function* onFrame(frame) {
