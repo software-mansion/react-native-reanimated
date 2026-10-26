@@ -22,13 +22,22 @@ static CGRect untransformedFrameInWindow(UIView *view)
 }
 
 // The origin of the view in the coordinates of its window, with the transforms of its ancestors but not its own. React
-// applies the transforms of the view and of its React ancestors itself.
-static CGPoint originInWindow(UIView *view)
+// applies the transforms of the view and of its React ancestors itself. The current origin follows running animations,
+// such as the dismissal of a sheet released by a swipe.
+static CGPoint originInWindow(UIView *view, BOOL current)
 {
-  const CGPoint anchor = view.layer.anchorPoint;
+  CALayer *layer = view.layer;
+  CALayer *superlayer = view.superview.layer;
+  CALayer *windowLayer = view.window.layer;
+  if (current) {
+    layer = layer.presentationLayer ?: layer;
+    superlayer = superlayer.presentationLayer ?: superlayer;
+    windowLayer = windowLayer.presentationLayer ?: windowLayer;
+  }
   const CGPoint origin = {
-      view.center.x - view.bounds.size.width * anchor.x, view.center.y - view.bounds.size.height * anchor.y};
-  return [view.superview convertPoint:origin toView:nil];
+      layer.position.x - layer.bounds.size.width * layer.anchorPoint.x,
+      layer.position.y - layer.bounds.size.height * layer.anchorPoint.y};
+  return [superlayer convertPoint:origin toLayer:windowLayer];
 }
 
 // A full screen presentation removes the presenting views from the window, so the window that shows a surface is
@@ -194,7 +203,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (view.window != surfaceWindow(rootView)) {
     return {.kind = reanimated::NativeViewPlacement::Kind::Detached};
   }
-  CGPoint viewOrigin = originInWindow(view);
+  CGPoint viewOrigin = originInWindow(view, !settled);
   UIViewController *presented = view.reactViewController;
   while (presented.parentViewController) {
     presented = presented.parentViewController;
