@@ -1,0 +1,114 @@
+---
+title: Integrating with C++
+description: Call a C++ function from a Worker Runtime and read its result in JavaScript.
+sidebar_position: 50
+---
+
+import * as NativeCallSnippet from './_integrating-with-cpp/nativeCall';
+import NativeCallSource from '!!raw-loader!./_integrating-with-cpp/nativeCall';
+
+# Integrating with C++
+
+In the [previous chapter](/docs/tutorials/synchronizing-data), we shared values between JavaScript
+runtimes. We can also use C++ code from a worklet. Let's start with a native function that simply
+returns `42`.
+
+This example assumes you already have a C++ TurboModule linked to Worklets in a native app build.
+See React Native's [C++ module guide](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules)
+for that setup. `NativeExample` below refers to your own module.
+
+## Creating a Worker Runtime
+
+Create a worker on the RN Runtime, just as in the earlier tutorials:
+
+```js
+import {
+  createWorkletRuntime,
+  runOnRuntimeAsync,
+} from 'react-native-worklets';
+import NativeExample from './specs/NativeExample';
+
+const worker = createWorkletRuntime({ name: 'native-example' });
+```
+
+## Adding a C++ function
+
+We need to install our native function on this worker. A JSI **HostFunction** lets JavaScript call
+a C++ function.
+
+```cpp
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
+namespace jsi = facebook::jsi;
+
+void installNativeAnswer(
+    jsi::Runtime &rnRuntime,
+    const jsi::Value &runtimeValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
+
+  worker->runSync([](jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(
+        workerRuntime,
+        "nativeAnswer",
+        jsi::Function::createFromHostFunction(
+            workerRuntime,
+            jsi::PropNameID::forAscii(workerRuntime, "nativeAnswer"),
+            0,
+            [](jsi::Runtime &, const jsi::Value &,
+               const jsi::Value *, size_t) -> jsi::Value {
+              return jsi::Value(42);
+            }));
+  });
+}
+```
+
+`rnRuntime` owns the incoming `runtimeValue`. We extract the Worklet Runtime from it, then create
+`nativeAnswer` on the worker's global object using `workerRuntime`.
+
+`runSync` runs this short installation on the calling thread, holding the worker's runtime lock.
+When it returns, the function is ready. Keep the default runtime locking enabled.
+
+Expose a synchronous `install` method on your TurboModule. Its Codegen signature is
+`install: (runtime: CodegenTypes.UnsafeObject) => boolean`. Declare the corresponding method in your
+C++ module header and forward it to the helper above:
+
+```cpp
+bool NativeExample::install(jsi::Runtime &rt, jsi::Object runtime) {
+  installNativeAnswer(rt, jsi::Value(rt, runtime));
+  return true;
+}
+```
+
+Pass the original `worker` object to this method. Copying its properties or serializing it as JSON
+would lose the native runtime reference.
+
+## Calling it from a worklet
+
+Install the function, then call it on the worker:
+
+```js
+NativeExample.install(worker);
+
+const result = await runOnRuntimeAsync(worker, () => {
+  'worklet';
+  return globalThis.nativeAnswer();
+});
+
+console.log(result); // 42
+```
+
+Run this code from an async function on the RN Runtime. The worklet calls `nativeAnswer` on the
+worker's thread, and `runOnRuntimeAsync` returns its result to the RN Runtime.
+
+Read `globalThis.nativeAnswer` inside the worklet: that is where it was installed. It is not a global
+on the RN Runtime.
+
+A native function runs synchronously on the thread that calls it. Here we use `runOnRuntimeAsync`
+to run it on the worker's thread. Using `runOnRuntimeSync` instead would keep the calling thread
+occupied, just as it does with a JavaScript function.
+
+With `nativeAnswer` installed, the simulation below follows the call from the RN Runtime to the
+worker and back. The native function runs on the worker's thread, and `42` returns to the RN Runtime.
+The browser models this call; it does not execute C++.
+
+<ThreadingSimulation module={NativeCallSnippet} source={NativeCallSource} tickMs={700}/>

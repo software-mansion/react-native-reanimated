@@ -15619,9 +15619,15 @@ __metadata:
     react-native-svg: "npm:15.15.4"
     react-native-web: "npm:0.21.2"
     react-native-worklets: "npm:0.12.1"
+    remark-directive: "npm:3.0.1"
+    remark-gfm: "npm:4.0.1"
+    remark-mdx: "npm:3.1.1"
+    remark-parse: "npm:11.0.0"
+    remark-stringify: "npm:11.0.0"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     typescript: "npm:5.9.3"
+    unified: "npm:11.0.5"
     usehooks-ts: "npm:2.9.1"
     webpack: "npm:5.105.4"
     webpack-cli: "npm:5.0.1"
@@ -28029,7 +28035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remark-directive@npm:^3.0.0":
+"remark-directive@npm:3.0.1, remark-directive@npm:^3.0.0":
   version: 3.0.1
   resolution: "remark-directive@npm:3.0.1"
   dependencies:
@@ -28090,7 +28096,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remark-mdx@npm:^3.0.0":
+"remark-mdx@npm:3.1.1, remark-mdx@npm:^3.0.0":
   version: 3.1.1
   resolution: "remark-mdx@npm:3.1.1"
   dependencies:
@@ -28100,7 +28106,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remark-parse@npm:^11.0.0":
+"remark-parse@npm:11.0.0, remark-parse@npm:^11.0.0":
   version: 11.0.0
   resolution: "remark-parse@npm:11.0.0"
   dependencies:
@@ -28125,7 +28131,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remark-stringify@npm:^11.0.0":
+"remark-stringify@npm:11.0.0, remark-stringify@npm:^11.0.0":
   version: 11.0.0
   resolution: "remark-stringify@npm:11.0.0"
   dependencies:
@@ -30971,7 +30977,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unified@npm:^11.0.0, unified@npm:^11.0.3, unified@npm:^11.0.4, unified@npm:^11.0.5":
+"unified@npm:11.0.5, unified@npm:^11.0.0, unified@npm:^11.0.3, unified@npm:^11.0.4, unified@npm:^11.0.5":
   version: 11.0.5
   resolution: "unified@npm:11.0.5"
   dependencies:

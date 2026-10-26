@@ -31,6 +31,7 @@ function runExample(name: string) {
 describe('reference examples', () => {
   for (const [name, expected] of Object.entries({
     createWorker: [],
+    nativeCall: ['[rn] 42'],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
     apiIsSerializableRef: ['[rn] true', '[rn] false'],
@@ -110,6 +111,28 @@ describe('reference examples', () => {
       assert.equal(snapshots.at(-1)!.finished, true);
     });
   }
+
+  it('runs the native example on the worker and returns its value to RN', () => {
+    const snapshots = runExample('nativeCall');
+    const nativeFrames = snapshots.flatMap((snapshot) =>
+      snapshot.cores.filter((core) => core.nativeFrame)
+    );
+    assert.ok(nativeFrames.length > 0);
+    assert.ok(
+      nativeFrames.every((core) => core.id === 'worker:native-example')
+    );
+    assert.deepEqual(formatLogs(snapshots), ['[rn] 42']);
+    assert.equal(snapshots.at(-1)!.finished, true);
+    const cores = snapshots.at(-1)!.cores;
+    assert.equal(
+      cores.find((core) => core.id === 'rn')!.globals.nativeAnswer,
+      undefined
+    );
+    assert.ok(
+      cores.find((core) => core.id === 'worker:native-example')!.globals
+        .nativeAnswer
+    );
+  });
 
   it('initializes the new runtime on the creating thread before returning its handle', () => {
     function* initialize() {

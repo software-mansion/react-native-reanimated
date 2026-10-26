@@ -38,6 +38,18 @@ export function displaySource(
   const main = fns.get(MAIN_NAME) ?? null;
   const hidden = [...fns.values()].filter((fn) => fn.isNative || fn.isHidden);
   const rawLines = source.split('\n');
+  const asyncHeaders = new Set(
+    [...fns.values()]
+      .filter((fn) =>
+        fn.yieldLines.some((line, index) =>
+          rawLines
+            .slice(line - 1, fn.yieldEnds[index])
+            .join('\n')
+            .includes('awaitPromise(')
+        )
+      )
+      .map((fn) => fn.headerLine)
+  );
   const displayLines: string[] = [];
   const rawToDisplayLine: number[] = [-1];
   const imports: string[] = [];
@@ -80,7 +92,12 @@ export function displaySource(
       rawToDisplayLine.push(displayLines.length);
       return;
     }
-    displayLines.push(transformLine(text, isInsideMain(main, line)));
+    const transformed = transformLine(text, isInsideMain(main, line));
+    displayLines.push(
+      asyncHeaders.has(line)
+        ? transformed.replace(/\bfunction\b/, 'async function')
+        : transformed
+    );
     rawToDisplayLine.push(displayLines.length);
   });
 

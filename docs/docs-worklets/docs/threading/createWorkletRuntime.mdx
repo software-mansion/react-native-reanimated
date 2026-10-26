@@ -22,14 +22,22 @@ The initializer runs in the new runtime **on the creating thread**, before `crea
 ### Usage in C++
 
 ```cpp
-auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-jsi::Runtime &rt = runtime->getJSIRuntime();
+void scheduleNativeWork(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
 
-auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
-
-runtime->runGuarded(worklet, ...args);
+  worker->schedule([](facebook::jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(workerRuntime, "nativeWorkFinished", true);
+  });
+}
 ```
+
+`rnRuntime` owns the incoming `runtimeValue`. The scheduled callback receives the worker's JSI runtime and runs on its queue with the runtime lock held. Keep the default queue and locking enabled for this example, and retain the Worker Runtime while its work is pending.
+
+Use `worker->runSync(...)` for a short synchronous operation on the calling thread. For a minimal example of calling C++ from a worklet, see [Integrating with C++](/docs/tutorials/integrating-with-cpp).
 
 <details>
   <summary>Type definitions</summary>
@@ -108,7 +116,7 @@ Controls the queue used for scheduling worklet functions on this runtime. Defaul
 
 ### Returns
 
-`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+`createWorkletRuntime` returns a JavaScript object backed by a C++ `worklets::WorkletRuntime`, which derives from `jsi::HostObject`.
 
 ## Remarks
 

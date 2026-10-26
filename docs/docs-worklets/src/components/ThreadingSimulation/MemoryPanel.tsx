@@ -120,9 +120,11 @@ export default function MemoryPanel({
                   <span className={styles.vmSectionTitle}>Globals</span>
                   <div className={styles.memoryCells}>
                     {Object.entries(own?.globals ?? {}).map(([name, value]) => (
-                      <span key={name} className={styles.shareable}>
+                      <span
+                        key={name}
+                        className={clsx(styles.shareable, styles.globalCell)}>
                         <span className={styles.shareableLabel}>{name}</span>
-                        <span className={styles.cellNumber}>{value}</span>
+                        <span className={styles.globalValue}>{value}</span>
                       </span>
                     ))}
                     {Object.keys(own?.globals ?? {}).length === 0 && (

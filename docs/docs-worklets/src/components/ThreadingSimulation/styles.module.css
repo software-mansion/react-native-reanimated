@@ -1058,6 +1058,18 @@
   color: var(--sim-muted);
   font-size: 11px;
 }
+.globalCell {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.globalValue {
+  min-width: 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 .nativeRow {
   display: grid;
   gap: 10px;

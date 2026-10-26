@@ -9,6 +9,23 @@ import { snippetSource, unindent } from './helpers';
 const SNIPPETS_DIR = join(__dirname, '..', 'snippets');
 
 describe('displaySource', () => {
+  it('shows the native example as valid async JavaScript without simulated setup', () => {
+    const { text } = displaySource(snippetSource('nativeCall'), {
+      boilerplate: true,
+    });
+    assert.match(text, /async function runExample\(worker\)/);
+    assert.match(text, /runOnRuntimeAsync\(worker, callNativeAnswer\)/);
+    assert.match(text, /const result = await promise/);
+    assert.match(text, /return globalThis\.nativeAnswer\(\)/);
+    assert.doesNotMatch(
+      text,
+      /yield|awaitPromise|initializer|installNativeAnswer|'native'|@site/
+    );
+    assert.doesNotThrow(
+      () => new Function(text.replace(/^import .*;\n/gm, ''))
+    );
+  });
+
   it('shows React imports and maps the failing callback to its visible line', () => {
     const source = snippetSource('returningCallbackCrash');
     const { text, rawToDisplayLine } = displaySource(source, {

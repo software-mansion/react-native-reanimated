@@ -1043,7 +1043,13 @@ export class Machine {
       return;
     }
     const owner = this.core(runtime);
-    if (this.holders.get(runtime) === runtime && !this.hasStartedJob(owner)) {
+    const holder = this.holders.get(runtime);
+    // A runtime created during this tick has not participated in arbitration
+    // yet. Its synchronous initializer can acquire it immediately too.
+    if (
+      (holder === undefined || holder === runtime) &&
+      !this.hasStartedJob(owner)
+    ) {
       this.holders.set(runtime, core.spec.id);
     }
   }

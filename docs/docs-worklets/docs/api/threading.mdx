@@ -1,0 +1,46 @@
+---
+title: Threading
+description: Choose how to schedule work, await results, and create worker runtimes.
+slug: /category/threading
+---
+
+# Threading
+
+Run work on another runtime, return a result, or create a worker for background calculations.
+Start with [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime) to compare asynchronous and synchronous calls. See [Call tables](/docs/guides/call-tables) for which runtimes can call each API.
+
+## Run on the UI Runtime
+
+- [`scheduleOnUI`](/docs/threading/scheduleOnUI) — Schedule work without waiting for a result.
+- [`runOnUIAsync`](/docs/threading/runOnUIAsync) — Run work asynchronously and await its result.
+- [`runOnUISync`](/docs/threading/runOnUISync) — Run work synchronously on the calling thread, blocking until the result is ready.
+- [`UIRuntimeId`](/docs/threading/uiRuntimeId) — Identify the UI Runtime when an API takes a runtime ID.
+
+## Run on a Worker Runtime
+
+- [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) — Create and configure a worker runtime.
+- [`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) — Schedule work on a worker without waiting for a result.
+- [`runOnRuntimeAsync`](/docs/threading/runOnRuntimeAsync) — Run work on a worker and await its result.
+- [`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) — Access a worker runtime synchronously from the calling thread.
+
+## Return to the RN Runtime
+
+- [`scheduleOnRN`](/docs/threading/scheduleOnRN) — Schedule a function on the React Native runtime, for example to update React state.
+
+## Address a runtime by ID
+
+Use these variants when you have a runtime ID instead of a `WorkletRuntime` object.
+
+- [`scheduleOnRuntimeWithId`](/docs/threading/scheduleOnRuntimeWithId) — Schedule work without waiting for a result.
+- [`runOnRuntimeAsyncWithId`](/docs/threading/runOnRuntimeAsyncWithId) — Run work asynchronously and await its result.
+- [`runOnRuntimeSyncWithId`](/docs/threading/runOnRuntimeSyncWithId) — Run work synchronously and return its result.
+
+## Deprecated APIs
+
+For new code, use the replacements linked from these reference pages.
+
+- [`runOnUI`](/docs/threading/runOnUI) — Use `scheduleOnUI`.
+- [`runOnJS`](/docs/threading/runOnJS) — Use `scheduleOnRN`.
+- [`runOnRuntime`](/docs/threading/runOnRuntime) — Use `scheduleOnRuntime`.
+- [`executeOnUIRuntimeSync`](/docs/threading/executeOnUIRuntimeSync) — Use `runOnUISync`.
+- [`callMicrotasks`](/docs/threading/callMicrotasks) — Legacy helper for manually flushing UI microtasks.

@@ -19,6 +19,7 @@ const files = globSync(
     'docs/concepts/{_closures,_sharing-memory}/*.js',
     'docs/guides/_call-tables/*.js',
     'docs/tutorials/_using-event-loop/*.js',
+    'docs/tutorials/_integrating-with-cpp/*.js',
     'docs/tutorials/_your-first-worklet/createWorker.js',
     'docs/tutorials/_synchronizing-data/syncGlobal.js',
   ],

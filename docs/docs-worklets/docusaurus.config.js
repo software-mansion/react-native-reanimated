@@ -126,10 +126,7 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
-    [
-      require.resolve('@swmansion/t-rex-ui/preset'),
-      { collapsibleSidebar: true },
-    ],
+    [require.resolve('./plugins/preset'), { collapsibleSidebar: true }],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -266,7 +263,10 @@ const config = {
                 {
                   test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
                   enforce: 'pre',
-                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                  use: path.resolve(
+                    __dirname,
+                    'src/simulation/snippetNamesLoader.js'
+                  ),
                 },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },

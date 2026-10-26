@@ -1,0 +1,27 @@
+---
+title: Utility
+description: Inspect the current runtime, thread, worklet functions, and Bundle Mode.
+slug: /category/utility
+---
+
+# Utility
+
+Inspect where your code is running and which Worklets features are available.
+See [Runtime kinds](/docs/concepts/runtimeKinds) for the difference between the RN, UI, and Worker Runtimes.
+
+## Identify the runtime and thread
+
+- [`getRuntimeKind`](/docs/utility/getRuntimeKind) — Get the kind of runtime executing the current code.
+- [`getCurrentThreadId`](/docs/utility/getCurrentThreadId) — Get the platform-specific ID of the executing thread. A runtime and a thread are different things.
+
+## Check the runtime kind
+
+- [`isRNRuntime`](/docs/utility/isRNRuntime) — Check whether code is running on the React Native runtime.
+- [`isUIRuntime`](/docs/utility/isUIRuntime) — Check whether code is running on the UI Runtime.
+- [`isWorkerRuntime`](/docs/utility/isWorkerRuntime) — Check whether code is running on a Worker Runtime.
+- [`isWorkletRuntime`](/docs/utility/isWorkletRuntime) — Check whether code is running on either a UI or Worker Runtime.
+
+## Check functions and configuration
+
+- [`isWorkletFunction`](/docs/utility/isWorkletFunction) — Check whether a function has been workletized.
+- [`isBundleModeEnabled`](/docs/utility/isBundleModeEnabled) — Check whether Bundle Mode is enabled.
