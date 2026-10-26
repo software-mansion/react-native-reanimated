@@ -3,19 +3,22 @@
 #include <react/debug/react_native_assert.h>
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace reanimated {
 
 namespace {
-void setMembership(std::unordered_set<int> &set, const int tag, const bool isMember) {
-  if (isMember) {
-    set.insert(tag);
+void setCrossfade(
+    std::unordered_map<int, SharedTransitionCrossfade> &crossfades,
+    const int tag,
+    const std::optional<SharedTransitionCrossfade> &crossfade) {
+  if (crossfade) {
+    crossfades.insert_or_assign(tag, *crossfade);
   } else {
-    set.erase(tag);
+    crossfades.erase(tag);
   }
 }
 } // namespace
@@ -46,7 +49,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
       sharedTransitionsForNativeID_[tag] = config;
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
-      setMembership(crossfadeSharedTransitionsForNativeID_, tag, crossfade);
+      setCrossfade(crossfadeSharedTransitionsForNativeID_, tag, crossfade);
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
@@ -57,7 +60,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_[tag] = config;
         sharedTransitionManager_->tagToName_[tag] = sharedTag;
       }
-      setMembership(crossfadeSharedTransitions_, tag, config != nullptr && crossfade);
+      setCrossfade(crossfadeSharedTransitions_, tag, config ? crossfade : std::nullopt);
       continue;
     }
     if (config == nullptr) {
@@ -88,9 +91,10 @@ std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
   return configIt == configs.end() ? nullptr : configIt->second;
 }
 
-bool LayoutAnimationsManager::isCrossfadeSharedTransition(const int tag) {
+std::optional<SharedTransitionCrossfade> LayoutAnimationsManager::getSharedTransitionCrossfade(const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return crossfadeSharedTransitions_.contains(tag);
+  const auto it = crossfadeSharedTransitions_.find(tag);
+  return it == crossfadeSharedTransitions_.end() ? std::nullopt : std::make_optional(it->second);
 }
 
 std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
@@ -148,11 +152,16 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   enteringAnimationsForNativeID_.erase(nativeId);
 
   const auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
-  const bool crossfade = crossfadeSharedTransitionsForNativeID_.erase(nativeId) > 0;
+  std::optional<SharedTransitionCrossfade> crossfade;
+  if (const auto it = crossfadeSharedTransitionsForNativeID_.find(nativeId);
+      it != crossfadeSharedTransitionsForNativeID_.end()) {
+    crossfade = it->second;
+    crossfadeSharedTransitionsForNativeID_.erase(it);
+  }
   if (sharedTransitionConfig) {
     sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
     sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
-    setMembership(crossfadeSharedTransitions_, tag, crossfade);
+    setCrossfade(crossfadeSharedTransitions_, tag, crossfade);
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);

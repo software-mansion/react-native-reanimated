@@ -316,8 +316,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
         // TODO (future): Support more props in progress transitions.
         folly::dynamic progressProps = folly::dynamic::object("borderRadius", interpolate(beforeRadius, afterRadius));
-        if (element.run->crossfade) {
-          progressProps["opacity"] = interpolate(beforeProps.opacity, afterProps.opacity);
+        if (const auto &crossfade = element.run->crossfade) {
+          const auto fade = crossfade->fadeAt(progress);
+          progressProps["opacity"] = beforeProps.opacity + fade * (afterProps.opacity - beforeProps.opacity);
         }
 
 #ifdef RN_SERIALIZABLE_STATE
@@ -411,10 +412,11 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   }
   if (!run) {
     const auto &[beforeNode, afterNode] = nodes;
-    const bool crossfades = beforeNode != afterNode && !beforeNode->isExiting() &&
-        layoutAnimationsManager_->isCrossfadeSharedTransition(before.tag);
+    const auto crossfade = beforeNode != afterNode && !beforeNode->isExiting()
+        ? layoutAnimationsManager_->getSharedTransitionCrossfade(before.tag)
+        : std::nullopt;
     std::vector<std::shared_ptr<LightNode>> carrierNodes;
-    if (crossfades) {
+    if (crossfade) {
       carrierNodes = {beforeNode, afterNode};
     } else {
       carrierNodes = {beforeNode->isExiting() ? afterNode : beforeNode};
@@ -426,7 +428,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
       }
     }
-    run = SharedTransitionRun{.source = beforeNode, .target = afterNode, .crossfade = crossfades};
+    run = SharedTransitionRun{.source = beforeNode, .target = afterNode, .crossfade = crossfade};
     for (const auto &node : carrierNodes) {
       detachCarrier(
           *run, node, carrierStartView(*run, node, before, propsParserContext), transaction, propsParserContext);

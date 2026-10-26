@@ -378,7 +378,7 @@ class BaseAnimationMock {
 }
 
 class SharedTransitionMock extends BaseAnimationMock {
-  crossfade() {
+  crossfade(_?: { start?: number; end?: number }) {
     return this;
   }
 }

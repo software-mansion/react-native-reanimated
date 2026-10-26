@@ -501,8 +501,16 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
-    const auto crossfade = item.getProperty(rt, "sharedTransitionCrossfade");
-    batchItem.sharedTransitionCrossfade = crossfade.isBool() && crossfade.getBool();
+    if (const auto crossfade = item.getProperty(rt, "sharedTransitionCrossfade"); crossfade.isObject()) {
+      const auto window = crossfade.asObject(rt);
+      batchItem.sharedTransitionCrossfade = SharedTransitionCrossfade{
+          .start = window.getProperty(rt, "start").asNumber(),
+          .end = window.getProperty(rt, "end").asNumber(),
+      };
+      react_native_assert(
+          batchItem.sharedTransitionCrossfade->start < batchItem.sharedTransitionCrossfade->end &&
+          "The crossfade window must have start < end");
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {

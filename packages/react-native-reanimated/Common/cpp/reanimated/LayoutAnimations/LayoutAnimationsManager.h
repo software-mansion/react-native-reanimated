@@ -6,12 +6,12 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -34,12 +34,22 @@ struct SharedTransitionManager {
   std::unordered_map<Tag, std::string> nativeIDToName_;
 };
 
+// The part of the progress of a shared transition, from 0 to 1, in which its two views fade.
+struct SharedTransitionCrossfade {
+  double start = 0;
+  double end = 1;
+
+  double fadeAt(const double progress) const {
+    return std::clamp((progress - start) / (end - start), 0.0, 1.0);
+  }
+};
+
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
-  bool sharedTransitionCrossfade = false;
+  std::optional<SharedTransitionCrossfade> sharedTransitionCrossfade;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -53,7 +63,7 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
-  bool isCrossfadeSharedTransition(const int tag);
+  std::optional<SharedTransitionCrossfade> getSharedTransitionCrossfade(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -73,8 +83,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
-  std::unordered_set<int> crossfadeSharedTransitionsForNativeID_;
-  std::unordered_set<int> crossfadeSharedTransitions_;
+  std::unordered_map<int, SharedTransitionCrossfade> crossfadeSharedTransitionsForNativeID_;
+  std::unordered_map<int, SharedTransitionCrossfade> crossfadeSharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
@@ -82,7 +92,7 @@ class LayoutAnimationsManager {
   std::mutex pendingConfigUpdatesMutex_;
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
-  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, the crossfade sets, `enteringAnimations_`,
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, the crossfade maps, `enteringAnimations_`,
   // `exitingAnimations_`, `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 

@@ -56,6 +56,8 @@ const LOREM_IPSUM =
 const MODES = {
   default: SharedTransition.duration(600),
   crossfade: SharedTransition.duration(600).crossfade(),
+  'short fade': SharedTransition.duration(600).crossfade({ end: 0.3 }),
+  spring: SharedTransition.springify().crossfade({ end: 0.5 }),
 };
 
 type Mode = keyof typeof MODES;

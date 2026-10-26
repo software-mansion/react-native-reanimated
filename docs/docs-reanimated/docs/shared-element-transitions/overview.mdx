@@ -137,6 +137,8 @@ By default, one view moves and the other view is hidden until the transition end
 
 ```tsx
 const transition = SharedTransition.duration(450).crossfade();
+// Fade only in the first 30% of the transition.
+const shortFade = SharedTransition.duration(450).crossfade({ end: 0.3 });
 
 <Animated.View
   sharedTransitionTag="item"
@@ -146,6 +148,8 @@ const transition = SharedTransition.duration(450).crossfade();
 ```
 
 - The fade uses the same timing or spring as the transition, so it also reverses when the navigation goes back during the transition.
+- By default the views fade during the whole transition. Pass a window to fade only in a part of the way, from `0` (start) to `1` (end). For example, `crossfade({ end: 0.3 })` gives a short fade at the start, like the iOS zoom transition. The window must have `0 <= start < end <= 1`. The way follows the easing or spring, so it is not the same as the part of the duration.
+- A window counts from the start of each transition. When the navigation goes back during a transition, the views fade from where they are, in the same window of the way back. During an iOS back gesture, the window follows the position of the gesture.
 - Each view keeps the layout of its own children. The frame changes, but the children are not laid out again and not scaled. Add `overflow: 'hidden'` to the shared views to clip children that are larger than the moving frame.
 - A child with its own `sharedTransitionTag` moves on its own path above both views and does not fade with them.
 - The transition reads the option of the source view when it starts.

@@ -61,7 +61,7 @@ export const updateLayoutAnimations: (
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionCrossfade?: boolean
+  sharedTransitionCrossfade?: { start: number; end: number }
 ) => void = (
   viewTag,
   type,
