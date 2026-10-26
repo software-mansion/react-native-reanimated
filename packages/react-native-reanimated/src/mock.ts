@@ -98,7 +98,14 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result, _isReanimatedSharedValue: true };
+    return {
+      value: result,
+      get: () => result,
+      modify: NOOP,
+      addListener: NOOP,
+      removeListener: NOOP,
+      _isReanimatedSharedValue: true,
+    };
   },
   useEvent: <
     Event extends object,
@@ -144,6 +151,16 @@ const hook = {
               target.value = newValue;
             }
           };
+        }
+        if (prop === 'modify') {
+          return (modifier?: (currentValue: Value) => Value) => {
+            if (modifier !== undefined) {
+              target.value = modifier(target.value);
+            }
+          };
+        }
+        if (prop === 'addListener' || prop === 'removeListener') {
+          return NOOP;
         }
       },
       set(target, prop: string, newValue) {
