@@ -25,6 +25,7 @@
 #import <string>
 #import <unordered_map>
 #import <utility>
+#import <variant>
 #import <vector>
 
 @interface REANativeAnimationDelegate : NSObject <CAAnimationDelegate>
@@ -331,27 +332,42 @@ bool playsTiming(const AnimationTiming &timing)
 }
 
 template <typename Value>
-bool playsTimings(const std::vector<TimelineSegment<Value>> &segments)
+bool hasSpring(const std::vector<TimelineSegment<Value>> &segments)
 {
-  return std::ranges::all_of(
+  return std::ranges::any_of(segments, [](const TimelineSegment<Value> &segment) {
+    return std::holds_alternative<SpringTiming>(segment.timingFromPrevious);
+  });
+}
+
+/// A spring plays as one animation for its whole timeline. When it holds its end, Core Animation shows the
+/// spring value just before the end and not the end value.
+template <typename Value>
+bool playsTimings(const std::vector<TimelineSegment<Value>> &segments, const EndpointPolicy endpointPolicy)
+{
+  const bool playsEachTiming = std::ranges::all_of(
       segments, [](const TimelineSegment<Value> &segment) { return playsTiming(segment.timingFromPrevious); });
+  return playsEachTiming &&
+      (!hasSpring(segments) || (segments.size() == 1 && endpointPolicy != EndpointPolicy::HoldWithoutCommit));
 }
 
 struct PlaysTimingsVisitor {
+  EndpointPolicy endpointPolicy;
+
   bool operator()(const ValueTimeline &timeline) const
   {
-    return playsTimings(timeline.segments);
+    return playsTimings(timeline.segments, endpointPolicy);
   }
   bool operator()(const TransformTimelines &body) const
   {
-    return std::ranges::all_of(
-        body.operations, [](const OperationTimeline &operation) { return playsTimings(operation.segments); });
+    return std::ranges::all_of(body.operations, [this](const OperationTimeline &operation) {
+      return playsTimings(operation.segments, endpointPolicy);
+    });
   }
 };
 
 bool playsTimings(const AnimationTrack &track)
 {
-  return std::visit(PlaysTimingsVisitor{}, track.body);
+  return std::visit(PlaysTimingsVisitor{track.endpointPolicy}, track.body);
 }
 
 struct TimingFunctionVisitor {
@@ -541,6 +557,29 @@ std::vector<double> componentsOfValue(id value)
   return {};
 }
 
+/// A spring member has the key times of one segment.
+PlaybackMember playbackMemberOf(CAPropertyAnimation *animation)
+{
+  NSString *function = animation.valueFunction.name;
+  NSString *property =
+      function == nil ? animation.keyPath : [NSString stringWithFormat:@"%@.%@", animation.keyPath, function];
+  PlaybackMember member{.property = property.UTF8String};
+  if ([animation isKindOfClass:[CABasicAnimation class]]) {
+    CABasicAnimation *basic = (CABasicAnimation *)animation;
+    member.values = {componentsOfValue(basic.fromValue), componentsOfValue(basic.toValue)};
+    member.keyTimes = {0, 1};
+    return member;
+  }
+  CAKeyframeAnimation *keyframes = (CAKeyframeAnimation *)animation;
+  for (id value in keyframes.values) {
+    member.values.push_back(componentsOfValue(value));
+  }
+  for (NSNumber *keyTime in keyframes.keyTimes) {
+    member.keyTimes.push_back(keyTime.doubleValue);
+  }
+  return member;
+}
+
 std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarget target)
 {
   NSString *targetSuffix = [NSString stringWithFormat:@".%u", static_cast<unsigned>(target)];
@@ -552,86 +591,145 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
     CAAnimation *playback = [layer animationForKey:key];
     NSArray<CAAnimation *> *animations =
         [playback isKindOfClass:[CAAnimationGroup class]] ? ((CAAnimationGroup *)playback).animations : @[ playback ];
-    for (CAKeyframeAnimation *animation in animations) {
-      NSString *function = animation.valueFunction.name;
-      NSString *property =
-          function == nil ? animation.keyPath : [NSString stringWithFormat:@"%@.%@", animation.keyPath, function];
-      PlaybackMember member{.property = property.UTF8String};
-      for (id value in animation.values) {
-        member.values.push_back(componentsOfValue(value));
-      }
-      for (NSNumber *keyTime in animation.keyTimes) {
-        member.keyTimes.push_back(keyTime.doubleValue);
-      }
-      members.push_back(std::move(member));
+    for (CAPropertyAnimation *animation in animations) {
+      members.push_back(playbackMemberOf(animation));
     }
   }
   return members;
 }
 #endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
-/// One physical animation of a track. It has one value, at one key time, for the start of its timeline and
-/// for the end of each segment.
-struct TrackMember {
-  NSString *keyPath;
+/// One value, at one key time, for the start of the timeline and for the end of each segment.
+struct KeyframeCurve {
   NSArray *values;
   NSArray<NSNumber *> *keyTimes;
   NSArray<CAMediaTimingFunction *> *timingFunctions;
+};
+
+/// A timeline of one spring segment.
+struct SpringCurve {
+  id fromValue;
+  id toValue;
+  SpringTiming timing;
+};
+
+using MemberCurve = std::variant<KeyframeCurve, SpringCurve>;
+
+/// One physical animation of a track.
+struct TrackMember {
+  NSString *keyPath;
+  MemberCurve curve;
   bool isAdditive{false};
   CAValueFunction *valueFunction{nil};
 };
 
-CAKeyframeAnimation *makePropertyAnimation(const TrackMember &member)
+/// Null when the timeline is not one spring segment.
+template <typename Value>
+const SpringTiming *springOfTimeline(const std::vector<TimelineSegment<Value>> &segments)
 {
-  CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:member.keyPath];
-  animation.values = member.values;
-  animation.keyTimes = member.keyTimes;
-  animation.timingFunctions = member.timingFunctions;
+  return segments.size() == 1 ? std::get_if<SpringTiming>(&segments.front().timingFromPrevious) : nullptr;
+}
+
+/// The curve of a timeline that starts at `startValue`. `objectOf` gives the object of an end value.
+template <typename Value, typename ObjectOf>
+MemberCurve curveOf(const std::vector<TimelineSegment<Value>> &segments, id startValue, const ObjectOf &objectOf)
+{
+  if (const auto *spring = springOfTimeline(segments)) {
+    return SpringCurve{.fromValue = startValue, .toValue = objectOf(segments.front().endValue), .timing = *spring};
+  }
+  NSMutableArray *values = [NSMutableArray arrayWithObject:startValue];
+  NSMutableArray<NSNumber *> *keyTimes = [NSMutableArray arrayWithObject:@0];
+  NSMutableArray<CAMediaTimingFunction *> *timingFunctions = [NSMutableArray array];
+  for (const auto &segment : segments) {
+    [values addObject:objectOf(segment.endValue)];
+    [keyTimes addObject:@(segment.endOffset)];
+    [timingFunctions addObject:std::visit(TimingFunctionVisitor{}, segment.timingFromPrevious)];
+  }
+  return KeyframeCurve{.values = values, .keyTimes = keyTimes, .timingFunctions = timingFunctions};
+}
+
+/// A spring timing is in the time of its segment, which lasts `duration` seconds. Core Animation takes the spring
+/// in seconds.
+struct PropertyAnimationVisitor {
+  NSString *keyPath;
+  CFTimeInterval duration;
+
+  CAPropertyAnimation *operator()(const KeyframeCurve &curve) const
+  {
+    CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:keyPath];
+    animation.values = curve.values;
+    animation.keyTimes = curve.keyTimes;
+    animation.timingFunctions = curve.timingFunctions;
+    return animation;
+  }
+  CAPropertyAnimation *operator()(const SpringCurve &curve) const
+  {
+    const auto &[decay, frequency, initialVelocity] = curve.timing;
+    CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:keyPath];
+    animation.fromValue = curve.fromValue;
+    animation.toValue = curve.toValue;
+    animation.mass = 1;
+    animation.stiffness = (decay * decay + frequency * frequency) / (duration * duration);
+    animation.damping = 2 * decay / duration;
+    animation.initialVelocity = initialVelocity / duration;
+    return animation;
+  }
+};
+
+CAPropertyAnimation *makePropertyAnimation(const TrackMember &member, const CFTimeInterval duration)
+{
+  CAPropertyAnimation *animation = std::visit(PropertyAnimationVisitor{member.keyPath, duration}, member.curve);
+  animation.duration = duration;
   animation.additive = member.isAdditive;
   animation.valueFunction = member.valueFunction;
   return animation;
 }
 
-/// The key times and the timing functions of the segments of one timeline.
-struct TimelineKeys {
-  NSMutableArray<NSNumber *> *times = [NSMutableArray arrayWithObject:@0];
-  NSMutableArray<CAMediaTimingFunction *> *timingFunctions = [NSMutableArray array];
-};
+/// The curve with each value `value` changed to `(value - model) * scale`.
+struct OffsetCurveVisitor {
+  double model;
+  double scale;
 
-template <typename Value>
-TimelineKeys keysOf(const std::vector<TimelineSegment<Value>> &segments)
-{
-  TimelineKeys keys;
-  for (const auto &segment : segments) {
-    [keys.times addObject:@(segment.endOffset)];
-    [keys.timingFunctions addObject:std::visit(TimingFunctionVisitor{}, segment.timingFromPrevious)];
+  NSNumber *offsetOf(NSNumber *value) const
+  {
+    return @((value.doubleValue - model) * scale);
   }
-  return keys;
-}
+  MemberCurve operator()(const KeyframeCurve &curve) const
+  {
+    NSMutableArray<NSNumber *> *offsets = [NSMutableArray arrayWithCapacity:curve.values.count];
+    for (NSNumber *value in curve.values) {
+      [offsets addObject:offsetOf(value)];
+    }
+    return KeyframeCurve{.values = offsets, .keyTimes = curve.keyTimes, .timingFunctions = curve.timingFunctions};
+  }
+  MemberCurve operator()(const SpringCurve &curve) const
+  {
+    return SpringCurve{
+        .fromValue = offsetOf(curve.fromValue), .toValue = offsetOf(curve.toValue), .timing = curve.timing};
+  }
+};
 
 TrackMember makeOffsetMember(const TrackMember &member, NSString *keyPath, const double model, const double scale)
 {
-  NSMutableArray<NSNumber *> *offsets = [NSMutableArray arrayWithCapacity:member.values.count];
-  for (NSNumber *value in member.values) {
-    [offsets addObject:@((value.doubleValue - model) * scale)];
-  }
-  return {
-      .keyPath = keyPath,
-      .values = offsets,
-      .keyTimes = member.keyTimes,
-      .timingFunctions = member.timingFunctions,
-      .isAdditive = true};
+  return {.keyPath = keyPath, .curve = std::visit(OffsetCurveVisitor{model, scale}, member.curve), .isAdditive = true};
+}
+
+/// A curve that holds `value` for the time of its track.
+KeyframeCurve heldCurveOf(id value)
+{
+  NSArray *values = @[ value, value ];
+  NSArray<NSNumber *> *keyTimes = @[ @0, @1 ];
+  NSArray<CAMediaTimingFunction *> *timingFunctions = @[ TimingFunctionVisitor{}(LinearTiming{}) ];
+  return {.values = values, .keyTimes = keyTimes, .timingFunctions = timingFunctions};
 }
 
 /// A member that holds `transform` for the time of its track.
 TrackMember makeHeldTransformMember(const AnimationTransform &transform, const bool isAdditive)
 {
-  id matrix = objectFromTransform(transform);
-  return
-  {
-    .keyPath = keyPathForTarget(AnimationTarget::Transform), .values = @[ matrix, matrix ], .keyTimes = @[ @0, @1 ],
-    .timingFunctions = @[ TimingFunctionVisitor{}(LinearTiming{}) ], .isAdditive = isAdditive
-  };
+  return {
+      .keyPath = keyPathForTarget(AnimationTarget::Transform),
+      .curve = heldCurveOf(objectFromTransform(transform)),
+      .isAdditive = isAdditive};
 }
 
 TrackMember makeOperationMember(const OperationTimeline &operation, const bool holdsStartValue)
@@ -645,16 +743,9 @@ TrackMember makeOperationMember(const OperationTimeline &operation, const bool h
   const auto objectOf = [hasThreeFactors](const double value) -> id {
     return hasThreeFactors ? @[ @(value), @(value), @(value) ] : @(value);
   };
-  NSMutableArray *values = [NSMutableArray arrayWithObject:objectOf(operation.start)];
-  for (const auto &segment : operation.segments) {
-    [values addObject:objectOf(segment.endValue)];
-  }
-  const auto keys = keysOf(operation.segments);
   return {
       .keyPath = keyPathForTarget(AnimationTarget::Transform),
-      .values = values,
-      .keyTimes = keys.times,
-      .timingFunctions = keys.timingFunctions,
+      .curve = curveOf(operation.segments, objectOf(operation.start), objectOf),
       .isAdditive = true,
       .valueFunction = [CAValueFunction functionWithName:valueFunctionNameForKind(operation.kind)]};
 }
@@ -1010,8 +1101,7 @@ CAAnimation *CoreAnimationMountedAnimation::makeAnimation(const AnimationTrack &
 
   NSMutableArray<CAAnimation *> *members = [NSMutableArray array];
   for (const auto &member : makeMembers(track, startValue)) {
-    CAKeyframeAnimation *memberAnimation = makePropertyAnimation(member);
-    memberAnimation.duration = duration;
+    CAPropertyAnimation *memberAnimation = makePropertyAnimation(member, duration);
     memberAnimation.fillMode = kCAFillModeBoth;
     [members addObject:memberAnimation];
   }
@@ -1034,18 +1124,13 @@ std::vector<TrackMember> CoreAnimationMountedAnimation::makeMembers(const Animat
   if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
     return makeTransformMembers(*body, holdsStartValue);
   }
-  const auto &segments = std::get<ValueTimeline>(track.body).segments;
-  NSMutableArray *values = [NSMutableArray arrayWithObject:startValue];
-  for (const auto &segment : segments) {
-    [values addObject:holdsStartValue ? startValue : objectFromValue(segment.endValue)];
-  }
-  const auto keys = keysOf(segments);
+  const auto objectOf = [holdsStartValue, startValue](const AnimationValue &value) -> id {
+    return holdsStartValue ? startValue : objectFromValue(value);
+  };
   return makeValueMembers(
       track.target,
       {.keyPath = keyPathForTarget(track.target),
-       .values = values,
-       .keyTimes = keys.times,
-       .timingFunctions = keys.timingFunctions});
+       .curve = curveOf(std::get<ValueTimeline>(track.body).segments, startValue, objectOf)});
 }
 
 /// A position plays as an offset from the model, because a value animation hides the animations of its key

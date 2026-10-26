@@ -8,7 +8,10 @@ jest.mock('../src/featureFlags', () => ({
   getStaticFeatureFlag: (name: string) => name === mockEnabledFlag,
 }));
 
-function describeTimingWith(enabledFlag: string) {
+function describeWith(
+  enabledFlag: string,
+  create: (reanimated: typeof Reanimated) => unknown
+) {
   mockEnabledFlag = enabledFlag;
   let description: unknown;
   jest.isolateModules(() => {
@@ -18,15 +21,12 @@ function describeTimingWith(enabledFlag: string) {
     };
     mockPlatform('android', ['android', 'native']);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Easing, withTiming } = require('../src') as typeof Reanimated;
+    const reanimated = require('../src') as typeof Reanimated;
     const runtimeKind = globalThis.__RUNTIME_KIND;
     globalThis.__RUNTIME_KIND = 2;
     try {
-      const animation = withTiming(10, {
-        duration: 200,
-        easing: Easing.linear,
-      });
-      description = (animation as unknown as AnimationObject).__nativeTiming;
+      const animation = create(reanimated);
+      description = (animation as AnimationObject).__nativeTiming;
     } finally {
       globalThis.__RUNTIME_KIND = runtimeKind;
     }
@@ -34,9 +34,13 @@ function describeTimingWith(enabledFlag: string) {
   return description;
 }
 
+const timing = ({ Easing, withTiming }: typeof Reanimated) =>
+  withTiming(10, { duration: 200, easing: Easing.linear });
+const spring = ({ withSpring }: typeof Reanimated) => withSpring(10);
+
 describe('native timing description on Android', () => {
   test('the Android native layout flag gives a description', () => {
-    expect(describeTimingWith('ANDROID_NATIVE_LAYOUT_ANIMATIONS')).toEqual({
+    expect(describeWith('ANDROID_NATIVE_LAYOUT_ANIMATIONS', timing)).toEqual({
       phases: [
         {
           kind: 'timing',
@@ -48,9 +52,18 @@ describe('native timing description on Android', () => {
     });
   });
 
-  test('the iOS native layout flag gives no description', () => {
+  test('the Android native layout flag gives a spring a description', () => {
+    expect(describeWith('ANDROID_NATIVE_LAYOUT_ANIMATIONS', spring)).toEqual({
+      phases: [expect.objectContaining({ kind: 'spring', toValue: 10 })],
+    });
+  });
+
+  test.each([
+    ['a timing', timing],
+    ['a spring', spring],
+  ])('the iOS native layout flag gives %s no description', (_, create) => {
     expect(
-      describeTimingWith('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION')
+      describeWith('IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION', create)
     ).toBeUndefined();
   });
 });

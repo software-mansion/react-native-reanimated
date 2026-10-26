@@ -87,10 +87,31 @@ double numberOf(const jsi::Value &value) {
   return value.isNumber() ? value.getNumber() : std::nan("");
 }
 
-/// A segment with no control points is linear. Control points of a wrong form are not numbers, so that the
-/// track validation refuses them.
+/// Not a valid spring, so that the track validation refuses it.
+SpringTiming invalidSpring() {
+  return {.decay = std::nan(""), .frequency = std::nan(""), .initialVelocity = std::nan("")};
+}
+
+/// Fields of a wrong form are not numbers, so that the track validation refuses them.
+SpringTiming springOf(jsi::Runtime &rt, const jsi::Value &spring) {
+  if (!spring.isObject()) {
+    return invalidSpring();
+  }
+  const auto fields = spring.getObject(rt);
+  return {
+      .decay = numberOf(fields.getProperty(rt, "decay")),
+      .frequency = numberOf(fields.getProperty(rt, "frequency")),
+      .initialVelocity = numberOf(fields.getProperty(rt, "initialVelocity"))};
+}
+
+/// A segment with no control points and no spring is linear. Control points of a wrong form, and a segment with
+/// control points and a spring, are not numbers, so that the track validation refuses them.
 AnimationTiming segmentEasing(jsi::Runtime &rt, const jsi::Object &segment) {
   const auto cubicBezier = segment.getProperty(rt, "cubicBezier");
+  const auto spring = segment.getProperty(rt, "spring");
+  if (!spring.isUndefined()) {
+    return cubicBezier.isUndefined() ? springOf(rt, spring) : invalidSpring();
+  }
   if (cubicBezier.isUndefined()) {
     return LinearTiming{};
   }
