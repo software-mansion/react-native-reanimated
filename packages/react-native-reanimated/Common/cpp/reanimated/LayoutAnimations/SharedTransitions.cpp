@@ -365,7 +365,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const Sh
   node->accumulatedRawProps = node->current.props->rawProps;
 #endif
   node->parent = root;
-  root->children.push_back(node);
+  root->insertChildAt(static_cast<int>(root->children.size()), node);
   [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
   return node;
@@ -778,7 +778,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
       const auto index = static_cast<int>(std::distance(root->children.begin(), childIt));
       filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, node->current, index));
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-      root->children.erase(childIt);
+      root->eraseChildAt(index);
     }
 
     unmapLightNode(node);

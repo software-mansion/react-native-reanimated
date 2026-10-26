@@ -9,6 +9,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -94,6 +95,7 @@ enum class Intent : std::uint8_t {
 struct IndexCursor {
   int shadowIndex = -1;
   int hostIndex = -1;
+  uint64_t childrenRevision = 0;
 };
 
 // One entry per parent, scoped to a single transaction.
@@ -116,6 +118,7 @@ struct LightNode {
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
+  uint64_t childrenRevision = 0;
 
   bool isExiting() const {
     return state != ExitingState::LIVE;
@@ -130,16 +133,27 @@ struct LightNode {
     }
     if (const auto parentNode = parent.lock()) {
       parentNode->exitingChildrenCount++;
+      parentNode->childrenRevision++;
     }
+  }
+
+  void insertChildAt(const int hostIndex, const std::shared_ptr<LightNode> &child) {
+    children.insert(children.begin() + hostIndex, child);
+    childrenRevision++;
+  }
+
+  void eraseChildAt(const int hostIndex) {
+    if (children[hostIndex]->isExiting()) {
+      exitingChildrenCount--;
+    }
+    children.erase(children.begin() + hostIndex);
+    childrenRevision++;
   }
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
-        if (children[i]->isExiting()) {
-          exitingChildrenCount--;
-        }
-        children.erase(children.begin() + i);
+        eraseChildAt(i);
         return i;
       }
     }
@@ -149,12 +163,31 @@ struct LightNode {
   void clearChildren() {
     children.clear();
     exitingChildrenCount = 0;
+    childrenRevision++;
   }
 
   // A new child goes after the exiting children at its shadow position. The differ sends a
   // parent's Removes in descending order and its Inserts in ascending order, so the cursors
-  // resume the previous scan; a query out of order falls back to a full scan. Order source:
+  // resume the previous scan; a query out of order or after another change of the children
+  // falls back to a full scan. Order source:
   // https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/mounting/Differentiator.cpp#L1328-L1357
+  int insertChild(const int shadowIndex, const std::shared_ptr<LightNode> &child, IndexCursors &cursors) {
+    const int hostIndex = toHostIndexForInsert(shadowIndex, cursors);
+    insertChildAt(hostIndex, child);
+    cursors.insert = {shadowIndex, hostIndex, childrenRevision};
+    return hostIndex;
+  }
+
+  void eraseChild(const int shadowIndex, const int hostIndex, IndexCursors &cursors) {
+    eraseChildAt(hostIndex);
+    cursors.remove = {shadowIndex, hostIndex, childrenRevision};
+  }
+
+  void withholdChild(const int shadowIndex, const int hostIndex, IndexCursors &cursors) {
+    children[hostIndex]->setExitingState(ExitingState::DECISION_PENDING);
+    cursors.remove = {shadowIndex, hostIndex, childrenRevision};
+  }
+
   int toHostIndexForRemove(const int shadowIndex, IndexCursors &cursors) const {
     validateExitingChildrenCount(cursors);
     react_native_assert(
@@ -163,21 +196,19 @@ struct LightNode {
     if (exitingChildrenCount == 0) {
       return shadowIndex;
     }
-    auto &cursor = cursors.remove;
-    if (cursor.hostIndex != -1 && shadowIndex < cursor.shadowIndex) {
+    const auto &cursor = cursors.remove;
+    if (isCurrent(cursor) && shadowIndex < cursor.shadowIndex) {
       int liveChildrenBelow = cursor.shadowIndex;
       for (int hostIndex = cursor.hostIndex - 1; hostIndex >= 0; hostIndex--) {
         if (!children[hostIndex]->isExiting() && --liveChildrenBelow == shadowIndex) {
-          cursor = {shadowIndex, hostIndex};
           return hostIndex;
         }
       }
     }
-    const int hostIndex = scanToHostIndex(shadowIndex, 0, 0);
-    cursor = {shadowIndex, hostIndex};
-    return hostIndex;
+    return scanToHostIndex(shadowIndex, 0, 0);
   }
 
+ private:
   int toHostIndexForInsert(const int shadowIndex, IndexCursors &cursors) const {
     validateExitingChildrenCount(cursors);
     react_native_assert(
@@ -186,18 +217,17 @@ struct LightNode {
     if (exitingChildrenCount == 0) {
       return shadowIndex;
     }
-    auto &cursor = cursors.insert;
-    int hostIndex = 0;
-    if (cursor.hostIndex != -1 && shadowIndex > cursor.shadowIndex) {
-      hostIndex = scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
-    } else {
-      hostIndex = scanToHostIndex(shadowIndex, 0, 0);
+    const auto &cursor = cursors.insert;
+    if (isCurrent(cursor) && shadowIndex > cursor.shadowIndex) {
+      return scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
     }
-    cursor = {shadowIndex, hostIndex};
-    return hostIndex;
+    return scanToHostIndex(shadowIndex, 0, 0);
   }
 
- private:
+  bool isCurrent(const IndexCursor &cursor) const {
+    return cursor.hostIndex != -1 && cursor.childrenRevision == childrenRevision;
+  }
+
   int scanToHostIndex(const int shadowIndex, const int startHostIndex, const int startLiveChildren) const {
     const auto childrenCount = static_cast<int>(children.size());
     int hostIndex = startHostIndex;
