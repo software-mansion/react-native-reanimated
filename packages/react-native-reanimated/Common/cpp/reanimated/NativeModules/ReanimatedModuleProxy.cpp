@@ -746,6 +746,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
+  if (eventType == "onTouchStart") {
+    commitUncommittedWrites();
+  }
+
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
@@ -924,7 +928,32 @@ void ReanimatedModuleProxy::performOperations() {
 
   auto settledWrites = collectSettledWrites(propsMapBySurface);
   const auto cancelledSurfaces = commitUpdates(propsMapBySurface);
+#ifdef ANDROID
+  {
+    auto lock = updatesRegistryManager_->lock();
+    for (const auto &[surfaceId, _] : propsMapBySurface) {
+      if (!cancelledSurfaces.contains(surfaceId)) {
+        updatesRegistryManager_->clearPropsToRevert(surfaceId);
+      }
+    }
+  }
+#endif
   restoreCancelledWrites(std::move(settledWrites), cancelledSurfaces);
+  requestSettleCheckFrame();
+}
+
+void ReanimatedModuleProxy::commitUncommittedWrites() {
+  if (!uncommittedWritesTracker_ || uncommittedWritesTracker_->empty() ||
+      updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+    return;
+  }
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUncommittedWrites");
+
+  auto writes = uncommittedWritesTracker_->takeAllWrites(updatesRegistryManager_->getReactCommitSnapshotCounts());
+  std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+  appendToPropsMapBySurface(writes, propsMapBySurface);
+  const auto cancelledSurfaces = commitUpdates(propsMapBySurface);
+  restoreCancelledWrites(std::move(writes), cancelledSurfaces);
   requestSettleCheckFrame();
 }
 
@@ -1249,12 +1278,6 @@ std::unordered_set<SurfaceId> ReanimatedModuleProxy::commitUpdates(
       if (status == ShadowTree::CommitStatus::Cancelled) {
         cancelledSurfaces.insert(surfaceId);
       }
-#ifdef ANDROID
-      if (status == ShadowTree::CommitStatus::Succeeded) {
-        auto lock = updatesRegistryManager_->lock();
-        updatesRegistryManager_->clearPropsToRevert(surfaceId);
-      }
-#endif
     });
   }
   return cancelledSurfaces;
