@@ -8,6 +8,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -16,6 +17,8 @@
 namespace reanimated {
 
 using namespace css;
+
+using ReactCommitSnapshotCounts = std::unordered_map<SurfaceId, uint64_t>;
 
 class UpdatesRegistryManager {
  public:
@@ -51,6 +54,8 @@ class UpdatesRegistryManager {
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals();
   PropsMap collectProps();
+  void countReactCommitSnapshot(SurfaceId surfaceId);
+  ReactCommitSnapshotCounts getReactCommitSnapshotCounts() const;
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 #ifdef ANDROID
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target, PropNamePredicate isIncluded);
@@ -72,6 +77,8 @@ class UpdatesRegistryManager {
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
+  mutable std::mutex reactCommitSnapshotCountsMutex_;
+  ReactCommitSnapshotCounts reactCommitSnapshotCounts_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

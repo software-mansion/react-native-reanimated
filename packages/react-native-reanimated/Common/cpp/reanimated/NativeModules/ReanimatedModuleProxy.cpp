@@ -86,6 +86,14 @@ std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   return nullptr;
 }
 
+std::unique_ptr<UncommittedWritesTracker> makeUncommittedWritesTracker() {
+  if constexpr (
+      shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return std::make_unique<UncommittedWritesTracker>();
+  }
+  return nullptr;
+}
+
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBatch, const bool allowPartialUpdates) {
   const auto isSynchronous = [&](const std::string &keyStr, [[maybe_unused]] const folly::dynamic &value) {
     if (!isSynchronousPropName(keyStr)) {
@@ -205,6 +213,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       synchronousWritesTracker_(makeSynchronousWritesTracker()),
+      uncommittedWritesTracker_(makeUncommittedWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   // Add registries in order of their priority (from the lowest to the
@@ -905,13 +914,18 @@ void ReanimatedModuleProxy::performOperations() {
     if (flushRegistry) {
       shouldFlushRegistry_ = true;
     }
-    if (hasCommitUpdates) {
+    if (hasCommitUpdates || (uncommittedWritesTracker_ && uncommittedWritesTracker_->hasSettledWrites())) {
       updatesRegistryManager_->pleaseCommitAfterPause();
+    } else {
+      requestSettleCheckFrame();
     }
     return;
   }
 
-  commitUpdates(propsMapBySurface);
+  auto settledWrites = collectSettledWrites(propsMapBySurface);
+  const auto cancelledSurfaces = commitUpdates(propsMapBySurface);
+  restoreCancelledWrites(std::move(settledWrites), cancelledSurfaces);
+  requestSettleCheckFrame();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -923,6 +937,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+  requestSettleCheckFrame();
 }
 
 bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
@@ -1124,6 +1139,10 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
+  if (uncommittedWritesTracker_) {
+    uncommittedWritesTracker_->onSynchronousWrite(
+        synchronousUpdatesBatch, updatesRegistryManager_->getReactCommitSnapshotCounts());
+  }
   writeSynchronousPropsToViews(synchronousUpdatesBatch);
 }
 
@@ -1156,10 +1175,53 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   }
 }
 
-void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+UncommittedWrites ReanimatedModuleProxy::collectSettledWrites(
+    std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+  if (!uncommittedWritesTracker_) {
+    return {};
+  }
+  uncommittedWritesTracker_->forgetCommittedProps(propsMapBySurface);
+  if (!std::exchange(isSettleCheckFrame_, false)) {
+    return {};
+  }
+  auto settledWrites =
+      uncommittedWritesTracker_->takeSettledWrites(updatesRegistryManager_->getReactCommitSnapshotCounts());
+  appendToPropsMapBySurface(settledWrites, propsMapBySurface);
+  return settledWrites;
+}
+
+void ReanimatedModuleProxy::restoreCancelledWrites(
+    UncommittedWrites &&writes,
+    const std::unordered_set<SurfaceId> &cancelledSurfaces) {
+  if (writes.empty()) {
+    return;
+  }
+  std::erase_if(writes, [&](const UncommittedWrite &write) {
+    return !cancelledSurfaces.contains(write.shadowNodeFamily->getSurfaceId());
+  });
+  uncommittedWritesTracker_->restore(std::move(writes));
+}
+
+void ReanimatedModuleProxy::requestSettleCheckFrame() {
+  if (!uncommittedWritesTracker_ || uncommittedWritesTracker_->empty() || isSettleCheckFrameRequested_) {
+    return;
+  }
+  isSettleCheckFrameRequested_ = true;
+  requestRender_([weakThis = weak_from_this()](const double) {
+    if (auto strongThis = weakThis.lock()) {
+      strongThis->isSettleCheckFrameRequested_ = false;
+      strongThis->isSettleCheckFrame_ = true;
+      strongThis->uncommittedWritesTracker_->onFrameStart();
+    }
+  });
+}
+
+std::unordered_set<SurfaceId> ReanimatedModuleProxy::commitUpdates(
+    const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
+  std::unordered_set<SurfaceId> cancelledSurfaces;
 
   // No registry lock is held here - shadowTree.commit re-enters via ReanimatedCommitHook.
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -1184,16 +1246,18 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
            false,
            /* .mountSynchronously = */ true});
 
+      if (status == ShadowTree::CommitStatus::Cancelled) {
+        cancelledSurfaces.insert(surfaceId);
+      }
 #ifdef ANDROID
       if (status == ShadowTree::CommitStatus::Succeeded) {
         auto lock = updatesRegistryManager_->lock();
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
-#else
-      (void)status;
 #endif
     });
   }
+  return cancelledSurfaces;
 }
 
 void ReanimatedModuleProxy::dispatchCommand(
