@@ -117,6 +117,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -930,6 +934,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
