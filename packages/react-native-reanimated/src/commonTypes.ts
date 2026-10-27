@@ -246,6 +246,11 @@ export type LayoutAnimationsManager = {
    */
   finishBuilt: (buildId: number, finished: boolean) => void;
   releaseBuilt: (buildId: number) => void;
+  /**
+   * The number of builds that wait for `startBuilt` or `releaseBuilt`. Only
+   * runtime tests read it.
+   */
+  pendingBuildCount: () => number;
 };
 
 export interface ILayoutAnimationBuilder {

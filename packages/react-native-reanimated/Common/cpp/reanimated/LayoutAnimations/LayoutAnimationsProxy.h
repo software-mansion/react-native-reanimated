@@ -296,6 +296,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
   /// The refusal of a native start of the view, with no build of the start.
   void traceStartRefused(Tag tag, LayoutAnimationType type) const;
+  ContainerSizes containerSizes() const override;
 #endif
   void clearSurfaceState() const override;
 

@@ -154,6 +154,29 @@ void NativeAnimationHost::sampleTarget(
     }
   });
 }
+
+void NativeAnimationHost::containerSizes(std::function<void(ContainerSizes)> receiver) {
+  enqueue([weakThis = weak_from_this(), receiver = std::move(receiver)] {
+    if (const auto strongThis = weakThis.lock()) {
+      receiver(strongThis->ownContainerSizes());
+    }
+  });
+}
+
+ContainerSizes NativeAnimationHost::ownContainerSizes() {
+  std::size_t tracks = 0;
+  for (const auto &[_, command] : commands_) {
+    tracks += command.tracks.size();
+  }
+  ContainerSizes sizes{{"commands", commands_.size()}, {"tracks", tracks}};
+  {
+    const std::lock_guard lock(queueMutex_);
+    sizes.emplace("queue", queue_.size());
+    sizes.emplace("mountReports", mountReports_.size());
+  }
+  addContainerSizes(sizes, "platform", platform_->containerSizes());
+  return sizes;
+}
 #endif
 
 void NativeAnimationHost::enqueue(Operation operation) {

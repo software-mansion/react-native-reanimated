@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
 #include <reanimated/LayoutAnimations/NativeLayoutLimits.h>
+#include <reanimated/Tools/ContainerSizes.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -86,6 +87,10 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The number of entries of each config map. It holds one lock at a time.
+  ContainerSizes containerSizes();
+#endif
 
  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);

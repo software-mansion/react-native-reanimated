@@ -12,6 +12,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
+#include <reanimated/Tools/ContainerSizes.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <deque>
@@ -149,6 +150,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The number of entries of each container of the proxy. It holds one lock at a time.
+  virtual ContainerSizes containerSizes() const;
+#endif
 
  protected:
   Props::Shared propsOfMountedView(const ShadowView &view) const;
@@ -160,6 +165,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The sizes of the containers of this class. The lock is held.
+  ContainerSizes commonContainerSizes() const;
+#endif
   /// The values that the builder of the layout animation gets for a view that shows `current`.
   jsi::Object layoutAnimationValues(
       LayoutAnimationType type,

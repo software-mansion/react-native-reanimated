@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/NativeAnimations/NativeAnimationRequest.h>
+#include <reanimated/Tools/ContainerSizes.h>
 
 #include <react/renderer/mounting/ShadowView.h>
 
@@ -105,6 +106,7 @@ class NativeAnimationPlatform {
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   virtual std::optional<TargetSample> sample(Tag tag, AnimationTarget target) = 0;
+  virtual ContainerSizes containerSizes() = 0;
 #endif
 };
 

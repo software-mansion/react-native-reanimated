@@ -120,6 +120,17 @@ void LayoutAnimationsProxyRegistry::applySynchronousProps(
   }
 }
 
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+ContainerSizes LayoutAnimationsProxyRegistry::containerSizes() const {
+  const auto proxies = instances();
+  ContainerSizes sizes{{"surfaces", proxies.size()}};
+  for (const auto &proxy : proxies) {
+    addContainerSizes(sizes, "proxies", proxy->containerSizes());
+  }
+  return sizes;
+}
+#endif
+
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;

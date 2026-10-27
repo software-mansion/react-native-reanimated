@@ -443,6 +443,22 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations() const {
   flushLayoutAnimationOperationsLocked();
 }
 
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+ContainerSizes LayoutAnimationsProxyCommon::containerSizes() const {
+  const std::lock_guard lock(mutex);
+  return commonContainerSizes();
+}
+
+ContainerSizes LayoutAnimationsProxyCommon::commonContainerSizes() const {
+  return {
+      {"updateMap", updateMap_.size()},
+      {"layoutAnimations", layoutAnimations_.size()},
+      {"completedAnimations", completedAnimations_.size()},
+      {"pendingLayoutAnimations", pendingLayoutAnimations_.size()},
+      {"layoutAnimationOperations", layoutAnimationOperations_.size()}};
+}
+#endif
+
 void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto cancelsPendingStart = pendingLayoutAnimations_.contains(tag);

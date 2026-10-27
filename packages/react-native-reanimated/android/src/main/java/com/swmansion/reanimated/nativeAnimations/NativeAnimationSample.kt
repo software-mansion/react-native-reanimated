@@ -22,3 +22,10 @@ internal class NativeAnimationMember(
     @JvmField @DoNotStrip val values: DoubleArray,
     @JvmField @DoNotStrip val keyTimes: DoubleArray,
 )
+
+/** The sizes of the containers of the executor, for the runtime-test hook. The C++ platform reads the fields. */
+@DoNotStrip
+internal class NativeAnimationContainerSizes(
+    @JvmField @DoNotStrip val playbacks: Int,
+    @JvmField @DoNotStrip val geometryWriters: Int,
+)

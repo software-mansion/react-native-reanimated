@@ -3,6 +3,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
+#include <reanimated/Tools/ContainerSizes.h>
 
 #include <functional>
 #include <memory>
@@ -88,6 +89,9 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   /// Ends all groups and releases all builds. Each callback with no result gets `false`. The host stops the
   /// tracks when the surface closes.
   NativeLayoutBuildEnds clear();
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  ContainerSizes containerSizes();
+#endif
 
   void onAnimationAdmitted(const native_animation::AnimationHandle &handle) override;
   void onTrackEnded(const native_animation::TrackKey &track, native_animation::TrackEnd end) override;

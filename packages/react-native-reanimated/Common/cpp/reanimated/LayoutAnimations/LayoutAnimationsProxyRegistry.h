@@ -2,6 +2,7 @@
 
 #include <react/renderer/mounting/ShadowTree.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/Tools/ContainerSizes.h>
 
 #include <cstdint>
 #include <functional>
@@ -32,6 +33,10 @@ class LayoutAnimationsProxyRegistry {
   std::optional<SurfaceId> onGestureCancel(int tag);
   void flushLayoutAnimationOperations() const;
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The number of surfaces, and the sum of the container sizes of all proxies. It holds one lock at a time.
+  ContainerSizes containerSizes() const;
+#endif
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;

@@ -1497,6 +1497,26 @@ void LayoutAnimationsProxy::traceStartRefused(const Tag tag, const LayoutAnimati
        .transactionNumber = currentPull_.transactionNumber,
        .layoutAnimationType = toString(type)});
 }
+
+ContainerSizes LayoutAnimationsProxy::containerSizes() const {
+  ContainerSizes sizes;
+  {
+    const std::lock_guard lock(mutex);
+    sizes = commonContainerSizes();
+    sizes.insert(
+        {{"lightNodes", lightNodes_.size()},
+         {"completedExits", completedExits_.size()},
+         {"pendingTransactions", pendingTransactions_.size()},
+         {"pendingPulls", pendingPulls_.size()},
+         {"sharedContainers", sharedContainers_.size()},
+         {"hiddenViewTags", hiddenViewTags_.size()},
+         {"nativeTracksWithoutFrameUpdate", nativeTracksWithoutFrameUpdate_.size()}});
+  }
+  if (nativeLayoutGroups_) {
+    addContainerSizes(sizes, "nativeLayoutGroups", nativeLayoutGroups_->containerSizes());
+  }
+  return sizes;
+}
 #endif
 
 void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {

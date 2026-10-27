@@ -223,6 +223,12 @@ internal class NativeAnimationExecutor(
         )
     }
 
+    @DoNotStrip
+    fun containerSizes(): NativeAnimationContainerSizes {
+        UiThreadUtil.assertOnUiThread()
+        return NativeAnimationContainerSizes(playbacks = playbacks.size, geometryWriters = geometryWriters.size)
+    }
+
     /** Fabric wrote props to the views: in a mount, or in a synchronous props update. */
     fun markFabricWrite() {
         UiThreadUtil.assertOnUiThread()

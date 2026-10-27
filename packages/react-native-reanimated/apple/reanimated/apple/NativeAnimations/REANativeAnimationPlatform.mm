@@ -597,6 +597,17 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
   }
   return members;
 }
+
+std::size_t reanimatedAnimationKeyCount(CALayer *layer)
+{
+  std::size_t count = 0;
+  for (NSString *key in layer.animationKeys) {
+    if ([key hasPrefix:kAnimationKeyPrefix]) {
+      ++count;
+    }
+  }
+  return count;
+}
 #endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 /// One value, at one key time, for the start of the timeline and for the end of each segment.
@@ -942,6 +953,20 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
         playbacksOn(layer),
         playbackMembers(layer, target),
         layer.allowsEdgeAntialiasing == YES};
+  }
+
+  ContainerSizes containerSizes() override
+  {
+    RCTAssertMainQueue();
+    NSMutableSet<CALayer *> *layers = [NSMutableSet set];
+    for (const auto &[_, layer] : tracks_) {
+      [layers addObject:layer];
+    }
+    std::size_t animationKeys = 0;
+    for (CALayer *layer in layers) {
+      animationKeys += reanimatedAnimationKeyCount(layer);
+    }
+    return {{"tracks", tracks_.size()}, { "animationKeys", animationKeys }};
   }
 
   std::vector<TrackKey> playbacksOn(CALayer *layer) const

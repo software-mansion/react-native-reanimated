@@ -586,6 +586,16 @@ std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag
       false};
 }
 
+ContainerSizes AndroidNativeAnimationPlatform::containerSizes() {
+  const auto executorSizes = executor_->containerSizes();
+  ContainerSizes sizes{
+      {"playbacks", static_cast<std::size_t>(executorSizes->playbacks())},
+      {"geometryWriters", static_cast<std::size_t>(executorSizes->geometryWriters())}};
+  const std::lock_guard lock(operationsMutex_);
+  sizes.emplace("postedOperations", postedOperations_.size());
+  return sizes;
+}
+
 void AndroidNativeAnimationPlatform::failNextViewLookup(const Tag tag) {
   failingViewLookup_ = tag;
 }

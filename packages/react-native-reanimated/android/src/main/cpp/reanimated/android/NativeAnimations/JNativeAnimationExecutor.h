@@ -54,6 +54,20 @@ struct JNativeAnimationMember : JavaClass<JNativeAnimationMember> {
   }
 };
 
+struct JNativeAnimationContainerSizes : JavaClass<JNativeAnimationContainerSizes> {
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationContainerSizes;";
+
+  jint playbacks() const {
+    static const auto field = javaClassStatic()->getField<jint>("playbacks");
+    return getFieldValue(field);
+  }
+
+  jint geometryWriters() const {
+    static const auto field = javaClassStatic()->getField<jint>("geometryWriters");
+    return getFieldValue(field);
+  }
+};
+
 struct JNativeAnimationSample : JavaClass<JNativeAnimationSample> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationSample;";
 
@@ -174,6 +188,12 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
   local_ref<JNativeAnimationSample> sample(const jint tag, const jint target) const {
     static const auto method = javaClassStatic()->getMethod<JNativeAnimationSample::javaobject(jint, jint)>("sample");
     return method(self(), tag, target);
+  }
+
+  local_ref<JNativeAnimationContainerSizes> containerSizes() const {
+    static const auto method =
+        javaClassStatic()->getMethod<JNativeAnimationContainerSizes::javaobject()>("containerSizes");
+    return method(self());
   }
 #endif
 };

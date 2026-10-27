@@ -601,6 +601,31 @@ void ReanimatedModuleProxy::sampleNativeAnimationTarget(
   }
 }
 
+void ReanimatedModuleProxy::nativeAnimationContainerSizes(jsi::Runtime &rt, const jsi::Value &callback) {
+  const auto function = std::make_shared<jsi::Function>(callback.getObject(rt).asFunction(rt));
+  if (!nativeAnimationHost_) {
+    jsInvoker_->invokeAsync([function](jsi::Runtime &rt) { function->call(rt, jsi::Value::undefined()); });
+    return;
+  }
+  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](ContainerSizes hostSizes) {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    ContainerSizes sizes;
+    addContainerSizes(sizes, "host", hostSizes);
+    addContainerSizes(sizes, "registry", strongThis->layoutAnimationsProxyRegistry_->containerSizes());
+    addContainerSizes(sizes, "manager", strongThis->layoutAnimationsManager_->containerSizes());
+    strongThis->jsInvoker_->invokeAsync([function, sizes = std::move(sizes)](jsi::Runtime &rt) {
+      jsi::Object object(rt);
+      for (const auto &[name, size] : sizes) {
+        object.setProperty(rt, name.c_str(), static_cast<double>(size));
+      }
+      function->call(rt, object);
+    });
+  });
+}
+
 namespace {
 
 const char *layoutRouteName() {
@@ -1869,6 +1894,16 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         if (const auto strongThis = weakThis.lock()) {
           strongThis->sampleNativeAnimationTarget(
               rt, static_cast<Tag>(at<0>(args).asNumber()), at<1>(args).asString(rt).utf8(rt), at<2>(args));
+        }
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "nativeAnimationContainerSizes",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (const auto strongThis = weakThis.lock()) {
+          strongThis->nativeAnimationContainerSizes(rt, at<0>(args));
         }
       });
 
