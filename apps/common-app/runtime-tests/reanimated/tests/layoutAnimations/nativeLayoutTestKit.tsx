@@ -1268,6 +1268,60 @@ export const choicesOf = <TItem,>(lists: TItem[][]) =>
 
 export const uncertaintyOf = ({ from, to }: Band) => (to - from) / 2;
 
+/** The property of the shadow tree of each layout key. */
+export const LAYOUT_PROPS = {
+  originX: 'left',
+  originY: 'top',
+  width: 'width',
+  height: 'height',
+} as const;
+
+export type LayoutKey = keyof typeof LAYOUT_PROPS;
+
+export const LAYOUT_KEYS = Object.keys(LAYOUT_PROPS) as LayoutKey[];
+
+export type LaidOutValues = Record<LayoutKey, number>;
+
+/**
+ * A laid-out value is a whole number of pixels; the shadow tree gives it with
+ * float noise (measured: 49.90477 and 49.904755 for 131 px at 2.625).
+ */
+export const onPixelGrid = (value: number) =>
+  Math.round(value * PixelRatio.get()) / PixelRatio.get();
+
+export async function laidOutValuesOf(refName: string): Promise<LaidOutValues> {
+  const component = getTestComponent(refName);
+  const values: Partial<LaidOutValues> = {};
+  for (const key of LAYOUT_KEYS) {
+    values[key] = onPixelGrid(
+      Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]))
+    );
+  }
+  return values as LaidOutValues;
+}
+
+export const shadowLayoutsOf = async () => ({
+  native: await laidOutValuesOf(BOX_REF),
+  frame: await laidOutValuesOf(FRAME_BOX_REF),
+});
+
+export type BoxLayouts = Awaited<ReturnType<typeof shadowLayoutsOf>>;
+
+/**
+ * The position of the mounted parent of a box at rest: its `Position` model
+ * minus the layer position of its laid-out values.
+ */
+export async function mountOffsetOf(tag: number, refName: string) {
+  const [position, laidOut] = await Promise.all([
+    sample(tag, 'Position'),
+    laidOutValuesOf(refName),
+  ]);
+  return {
+    x: position.model[0] - layerPositionOf(laidOut.originX, laidOut.width),
+    y: position.model[1] - layerPositionOf(laidOut.originY, laidOut.height),
+  };
+}
+
 /**
  * The position of a layer on one axis for an origin and a size of its box: the
  * anchor point of the layer is its center.
@@ -3218,8 +3272,11 @@ export type FrameRecord = {
    * it replaced, which had its end value (`onStart` of `withTiming`).
    */
   adoptedStart?: { timeMs: number; value: number | string };
-  /** Each frame that the leaf got, with the value that it wrote. */
-  frames: { timeMs: number; value: number | string }[];
+  /**
+   * Each frame that the leaf got, with the value that it wrote and the time of
+   * the animation clock when its frame function ran.
+   */
+  frames: { timeMs: number; value: number | string; ranMs: number }[];
   /**
    * The numbers of the values that the builder got: the laid-out values of the
    * view, on the pixel grid of the device.
@@ -3303,7 +3360,11 @@ export function frameRecordedOf(box: string, animation: AnimationSource) {
         const onFrame = self.onFrame;
         recordedOnFrame = (animation, frameTimeMs) => {
           const finished = onFrame(animation, frameTimeMs);
-          record.frames.push({ timeMs: frameTimeMs, value: animation.current });
+          record.frames.push({
+            timeMs: frameTimeMs,
+            value: animation.current,
+            ranMs: global._getAnimationTimestamp(),
+          });
           return finished;
         };
         self.onFrame = recordedOnFrame;
@@ -3526,7 +3587,10 @@ export const OPACITY_TOLERANCE = 0.01;
 
 export const pairLayoutsOf = (leaves: (hasCallback: boolean) => Leaves) => ({
   nativeLayout: layoutOf(leaves(false), { name: 'native' }),
-  frameLayout: layoutOf(leaves(true), { name: 'frame' }),
+  frameLayout: frameRecordedOf(
+    'frame',
+    layoutOf(leaves(true), { name: 'frame' })
+  ),
 });
 
 type PairLayoutFunctions = ReturnType<typeof pairLayoutsOf>;
@@ -3600,6 +3664,10 @@ const frameOf = (
   height,
 });
 
+/**
+ * The frame of a box from a `Position` sample and a `Size` sample. Each sample
+ * keeps its own `monotonicTimeMs`.
+ */
 export async function sampleFrame(tag: number) {
   const [position, size] = await Promise.all([
     sample(tag, 'Position'),
@@ -3610,6 +3678,8 @@ export async function sampleFrame(tag: number) {
     presentation: frameOf(position.presentation, size.presentation),
     playbacks: size.playbacks,
     monotonicTimeMs: size.monotonicTimeMs,
+    position,
+    size,
   };
 }
 
@@ -3804,6 +3874,8 @@ export async function sampleFramePair(offset = PAIR_IN_COLUMN) {
     },
     playbacks: native.playbacks,
     monotonicTimeMs: native.monotonicTimeMs,
+    position: native.position,
+    size: native.size,
   };
 }
 

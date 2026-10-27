@@ -148,6 +148,7 @@ import {
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
+  HAS_EDGE_ANTIALIASING,
   hasNativeLayoutRoute,
   isHostEvent,
   isNoView,
@@ -1314,6 +1315,22 @@ const SEQUENCE_VARIANTS: TimedPreset[] = [
   },
 ];
 
+/**
+ * The exiting presets with a rotation from 0. With a delay the frame driver has
+ * edge antialiasing in only a part of the time of the track, so the platform
+ * refuses the `Transform` track.
+ */
+const EXITS_WITH_A_ROTATION_FROM_0: Preset[] = [
+  PinwheelOut,
+  RollOutLeft,
+  RollOutRight,
+  RotateOutDownLeft,
+  RotateOutDownRight,
+  RotateOutUpLeft,
+  RotateOutUpRight,
+  ZoomOutRotate,
+];
+
 describe('native layout presets with their default easing', () => {
   if (!hasNativeLayoutRoute) {
     return;
@@ -1347,6 +1364,20 @@ describe('native layout presets with their default easing', () => {
     };
     test(`${variant.name} ${routeNameOf(variant.route)} and ${ON_TIMELINE}`, () =>
       expectOnTimeline(variant));
+  }
+
+  if (HAS_EDGE_ANTIALIASING) {
+    for (const PresetClass of EXITS_WITH_A_ROTATION_FROM_0) {
+      const name = `${PresetClass.name} with a delay`;
+      test(`${name} ${routeNameOf(REFUSED_ROUTE)} and agrees with its frame-driven twin`, () =>
+        expectAsTwin({
+          name,
+          flow: 'exiting',
+          route: REFUSED_ROUTE,
+          makeAnimation: () =>
+            new PresetClass().duration(DURATION).delay(DELAY),
+        }));
+    }
   }
 
   test('a busy main thread makes a gap in the frames of the frame-driven twin, and each box stays on its declared timeline', async () => {

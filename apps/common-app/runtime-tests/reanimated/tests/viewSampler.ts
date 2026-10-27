@@ -1,5 +1,7 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
+import { makeMutable } from 'react-native-reanimated';
+import { runOnUISync, scheduleOnUI } from 'react-native-worklets';
 
 /**
  * The drawn values of view properties, read from the view at each draw of the
@@ -13,6 +15,7 @@ interface RuntimeTestsViewSamplerModule extends TurboModule {
   now(): Promise<number>;
   animatorDurationScale(): Promise<number>;
   apiLevel(): Promise<number>;
+  collectGarbage(): Promise<void>;
   postsAnimatorEnd(): Promise<boolean | null>;
   failNextViewLookup(tag: number): Promise<void>;
   takeViewLookupFailure(): Promise<number[] | null>;
@@ -119,16 +122,89 @@ export async function recordDrawnValues(
 }
 
 /**
- * One log line for each case, for a comparison of the samples of two builds.
- * `renderStartMs` is the uptime before the render that starts the case.
+ * The frame time of a frame callback of the UI runtime and the animation
+ * timestamp at its run, each in ms.
  */
+export type FrameCallbackRun = [frameTimeMs: number, ranMs: number];
+
+const frameCallbackRuns = makeMutable<FrameCallbackRun[]>([]);
+const isFrameCallbackRecordStopped = makeMutable(true);
+
+/**
+ * `recordDrawnValues`, and a `FrameCallbackRun` of each frame of the UI runtime
+ * from before the start of the sampler to after its stop.
+ */
+export async function recordDrawnValuesAndFrameCallbacks(
+  tags: number | number[],
+  properties: RecordedProperty[],
+  during: () => Promise<void>
+): Promise<{ samples: DrawnSample[]; frameCallbacks: FrameCallbackRun[] }> {
+  scheduleOnUI(startFrameCallbackRecord);
+  try {
+    const samples = await recordDrawnValues(tags, properties, during);
+    return { samples, frameCallbacks: stopFrameCallbackRecord() };
+  } catch (error) {
+    stopFrameCallbackRecord();
+    throw error;
+  }
+}
+
+// A worklet copies its closure at its definition, so a called worklet comes first.
+function requestFrameCallbackRuns() {
+  'worklet';
+  requestAnimationFrame((frameTimeMs: number) => {
+    if (isFrameCallbackRecordStopped.value) {
+      return;
+    }
+    frameCallbackRuns.value.push([
+      frameTimeMs,
+      global._getAnimationTimestamp(),
+    ]);
+    requestFrameCallbackRuns();
+  });
+}
+
+function startFrameCallbackRecord() {
+  'worklet';
+  isFrameCallbackRecordStopped.value = false;
+  frameCallbackRuns.value = [];
+  requestFrameCallbackRuns();
+}
+
+function stopFrameCallbackRecord() {
+  return runOnUISync(() => {
+    'worklet';
+    isFrameCallbackRecordStopped.value = true;
+    return frameCallbackRuns.value;
+  });
+}
+
+/** A declared start value of one value of a sample. */
+export type StartValue = {
+  property: RecordedProperty;
+  value: number;
+  tolerance: number;
+  isColor: boolean;
+};
+
+export type DrawnValuesDetails = {
+  /** The uptime before the render that starts the case. */
+  renderStartMs?: number;
+  /** One for each value of a sample, in the order of the values. */
+  startValues?: StartValue[];
+  /** The declared delay of the case. */
+  delayMs?: number;
+  frameCallbacks?: FrameCallbackRun[];
+};
+
+/** One log line for each case, for a comparison of the samples of two builds. */
 export function logDrawnValues(
   caseName: string,
   samples: DrawnSample[],
-  renderStartMs?: number
+  details: DrawnValuesDetails = {}
 ) {
   console.log(
-    `${LOG_MARKER} ${JSON.stringify({ caseName, samples, renderStartMs })}`
+    `${LOG_MARKER} ${JSON.stringify({ caseName, samples, ...details })}`
   );
 }
 
@@ -143,6 +219,14 @@ export function animatorDurationScale(): Promise<number> {
 
 export function apiLevel(): Promise<number> {
   return getEnforcedSamplerModule().apiLevel();
+}
+
+/**
+ * A garbage collection: the next read of a weak map has no entry of a freed
+ * view.
+ */
+export function collectGarbage(): Promise<void> {
+  return getEnforcedSamplerModule().collectGarbage();
 }
 
 /**

@@ -1125,7 +1125,8 @@ describe('native layout transform and the edge antialiasing of the view', () => 
   const HALF = FLAG_DURATION / 2;
   const IN_SECOND_HALF: Leaf = { delays: [HALF], duration: HALF };
   const IN_FIRST_HALF: Leaf = { duration: HALF };
-  const partRows: [string, Operation[], boolean, string][] = [
+  const AFTER_TRACK_DELAY: Leaf = { delay: HALF, duration: HALF };
+  const partRows: [string, Operation[], boolean, string, string][] = [
     [
       'a translation from 20.3 and a rotation from 0 that wait for half of the time stay frame-driven',
       [
@@ -1134,6 +1135,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       false,
       'false,false',
+      'true,true',
     ],
     [
       'a translation from 0 and a rotation from 0 that wait for half of the time stay frame-driven',
@@ -1143,6 +1145,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       false,
       'false,false',
+      'true,true',
     ],
     [
       'a translation from 20.3 and a rotation from 30deg that wait for half of the time play natively',
@@ -1151,6 +1154,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
         ['rotate', '30deg', '90deg', IN_SECOND_HALF],
       ],
       true,
+      'true,true',
       'true,true',
     ],
     [
@@ -1161,6 +1165,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       false,
       'false,false',
+      'true,true',
     ],
     [
       'a rotation from 0 in the first half of the time of a translation plays natively',
@@ -1170,6 +1175,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       true,
       'true,true',
+      'true,true',
     ],
     [
       'a rotation from 30deg that starts at half of the time of a translation plays natively',
@@ -1178,6 +1184,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
         ['rotate', '30deg', '90deg', IN_SECOND_HALF],
       ],
       true,
+      'true,true',
       'true,true',
     ],
     [
@@ -1189,10 +1196,61 @@ describe('native layout transform and the edge antialiasing of the view', () => 
       ],
       false,
       'false,false',
+      'true,true',
+    ],
+    [
+      'a rotation from 0 after a track delay stays frame-driven',
+      [['rotate', '0deg', '90deg', AFTER_TRACK_DELAY]],
+      false,
+      'false,false',
+      'true,true',
+    ],
+    [
+      'a rotation from 30deg after a track delay plays natively',
+      [['rotate', '30deg', '90deg', AFTER_TRACK_DELAY]],
+      true,
+      'true,true',
+      'true,true',
+    ],
+    [
+      'rotations about X and Y at one time in the second half only stay frame-driven',
+      [
+        ['rotateX', '0deg', '60deg'],
+        ['rotateY', '0deg', '40deg', IN_SECOND_HALF],
+      ],
+      false,
+      'false,false',
+      'true,true',
+    ],
+    [
+      'rotations about X and Y at one time in the first half only stay frame-driven',
+      [
+        ['rotateX', '0deg', '60deg'],
+        ['rotateY', '40deg', '0deg', IN_FIRST_HALF],
+      ],
+      false,
+      'true,true',
+      'false,false',
+    ],
+    [
+      'a perspective after a track delay plays natively',
+      [
+        ['perspective', 500, 500, AFTER_TRACK_DELAY],
+        ['rotateX', '0deg', '60deg', AFTER_TRACK_DELAY],
+      ],
+      true,
+      'true,true',
+      'true,true',
     ],
   ];
-  for (const [name, operations, isNative, inFirstHalf] of partRows) {
-    test(`${name}: the edge antialiasing of the view and of its frame-driven twin is ${inFirstHalf} in the first half of the time and true,true in the second half`, async () => {
+  for (const [
+    name,
+    operations,
+    isNative,
+    inFirstHalf,
+    inSecondHalf,
+  ] of partRows) {
+    test(`${name}: the edge antialiasing of the view and of its frame-driven twin is ${inFirstHalf} in the first half of the time and ${inSecondHalf} in the second half`, async () => {
       const pair = transformPairOf(operations, { duration: FLAG_DURATION });
       const layouts = {
         ...pair,
@@ -1208,7 +1266,7 @@ describe('native layout transform and the edge antialiasing of the view', () => 
         inFirstHalf
       );
       expect(await edgeAntialiasingAt(tags, 0.75 * FLAG_DURATION, start)).toBe(
-        'true,true'
+        inSecondHalf
       );
       expect(callbacks.join()).toBe('');
       await wait(

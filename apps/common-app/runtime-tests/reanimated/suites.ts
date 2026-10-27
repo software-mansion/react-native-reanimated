@@ -8,6 +8,10 @@ type TransitionValues = {
 type ThrownMountItem = {
   describeThrownMountItem: (throwForm: 'fatal') => void;
 };
+type RetainedState = {
+  describeRetainedState: () => void;
+  describeRetainedStateOnLongLivedSurface: () => void;
+};
 
 export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
   {
@@ -273,6 +277,23 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'native layout live clock',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutLiveClock.test');
+    },
+    skipByDefault: true,
+  },
+  {
+    testSuiteName: 'native layout retained state',
+    importTest: () => {
+      const { describeRetainedState } =
+        require('./tests/layoutAnimations/nativeLayoutRetainedState.test') as RetainedState;
+      describeRetainedState();
+    },
+  },
+  {
+    testSuiteName: 'native layout retained state on a long-lived surface',
+    importTest: () => {
+      const { describeRetainedStateOnLongLivedSurface } =
+        require('./tests/layoutAnimations/nativeLayoutRetainedState.test') as RetainedState;
+      describeRetainedStateOnLongLivedSurface();
     },
     skipByDefault: true,
   },

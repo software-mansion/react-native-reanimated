@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, View } from 'react-native';
+import { runOnUISync } from 'react-native-worklets';
 
 import {
   getTestComponent,
@@ -99,6 +100,15 @@ export type NativeAnimationRoutes = {
   apiLevel: number | null;
 };
 
+/**
+ * `ReanimatedModuleProxy::nativeAnimationContainerSizes`: the number of entries
+ * of each container, by name (`host.commands`, `host.platform.tracks`,
+ * `registry.proxies.layoutAnimations`, `manager.enteringAnimations` and the
+ * others). The names of the platform containers differ between Apple and
+ * Android. The host reads all containers in one of its operations.
+ */
+export type NativeAnimationContainerSizes = Readonly<Record<string, number>>;
+
 type NativeAnimationTestHooks = {
   takeNativeAnimationTrace: (callback: (events: TraceEvent[]) => void) => void;
   sampleNativeAnimationTarget: (
@@ -107,12 +117,16 @@ type NativeAnimationTestHooks = {
     callback: (sample: TargetSample | undefined) => void
   ) => void;
   nativeAnimationRoutes: () => NativeAnimationRoutes;
+  nativeAnimationContainerSizes: (
+    callback: (sizes: NativeAnimationContainerSizes | undefined) => void
+  ) => void;
 };
 
 export const NATIVE_ANIMATION_TEST_HOOKS: (keyof NativeAnimationTestHooks)[] = [
   'takeNativeAnimationTrace',
   'sampleNativeAnimationTarget',
   'nativeAnimationRoutes',
+  'nativeAnimationContainerSizes',
 ];
 
 export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
@@ -127,6 +141,23 @@ export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
     throw new Error(`The native animation test hook ${name} is missing.`);
   }
   return hook;
+}
+
+/**
+ * The number of layout animation builds on the UI runtime that wait for their
+ * frame-driven start or their release.
+ */
+export function pendingBuildCountOf(): number {
+  return runOnUISync(() => {
+    'worklet';
+    const { pendingBuildCount } = global.LayoutAnimationsManager;
+    if (pendingBuildCount === undefined) {
+      throw new Error(
+        'The layout animations manager has no method pendingBuildCount.'
+      );
+    }
+    return pendingBuildCount();
+  });
 }
 
 /** One read at module load: the routes are fixed for the build. */
@@ -165,6 +196,18 @@ export const isNativeLayoutRouteConfigured =
 export function takeTrace(): Promise<TraceEvent[]> {
   const take = testHookOf('takeNativeAnimationTrace');
   return new Promise((resolve) => take(resolve));
+}
+
+/** Rejects when the build has no native animation host. */
+export function containerSizes(): Promise<NativeAnimationContainerSizes> {
+  const read = testHookOf('nativeAnimationContainerSizes');
+  return new Promise((resolve, reject) => {
+    read((sizes) =>
+      sizes
+        ? resolve(sizes)
+        : reject(new Error('The build has no native animation host.'))
+    );
+  });
 }
 
 const NO_VIEW = 'no view';

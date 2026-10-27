@@ -301,7 +301,7 @@ describe('native layout mount window', () => {
           await wait(DURATION + SETTLE_MS);
         }
       );
-      logDrawnValues('a start in its dispatch', samples, renderStartMs);
+      logDrawnValues('a start in its dispatch', samples, { renderStartMs });
       const events = await takeTrace();
       const ofView = events.filter((event) => event.tag === tag);
       expect(summarize(ofView.filter(isHostEvent).slice(0, 6))).toBe(
@@ -405,11 +405,9 @@ describe('native layout mount window', () => {
           await wait(SAME_VIEW_DURATION + SETTLE_MS);
         }
       );
-      logDrawnValues(
-        'a second change of the same view',
-        samples,
-        renderStartMs
-      );
+      logDrawnValues('a second change of the same view', samples, {
+        renderStartMs,
+      });
       const commands = commandResultsOf(events, [tag]);
       const pulls = pullsOf(
         events.filter(
@@ -682,7 +680,7 @@ describe('native layout mount window', () => {
           await wait(LAYOUT_DURATION / 2);
         }
       );
-      logDrawnValues('one clock read for a batch', samples, renderStartMs);
+      logDrawnValues('one clock read for a batch', samples, { renderStartMs });
       const events = await takeTrace();
       const received = events.filter((event) => event.event === 'Received');
       expect(received.length).toBe(BATCH_SIZE);
@@ -738,7 +736,7 @@ describe('native layout mount window: the first drawn frame', () => {
             await wait(DURATION + SETTLE_MS);
           }
         );
-        logDrawnValues(`a fresh start ${run}`, samples, renderStartMs);
+        logDrawnValues(`a fresh start ${run}`, samples, { renderStartMs });
         admittedStarts += (await takeTrace()).filter(
           (event) => event.tag === tag && event.event === 'Admitted'
         ).length;
@@ -777,7 +775,7 @@ describe('native layout mount window: the first drawn frame', () => {
             await wait(REPLACED_DURATION + SETTLE_MS);
           }
         );
-        logDrawnValues(`a replacement ${run}`, samples, renderStartMs);
+        logDrawnValues(`a replacement ${run}`, samples, { renderStartMs });
         const received = requireOf(
           (await takeTrace()).filter((event) => event.tag === tag),
           'Received'
@@ -821,7 +819,7 @@ describe('native layout mount window: the first drawn frame', () => {
             await wait(SETTLE_MS);
           }
         );
-        logDrawnValues(`a hand-over ${run}`, samples, renderStartMs);
+        logDrawnValues(`a hand-over ${run}`, samples, { renderStartMs });
         faults.push(
           ...handOverFaultsOf(placeDrawsOf(samples, 1), END_LEFT).map(
             (fault) => `hand-over ${run}: ${fault}`
@@ -866,7 +864,7 @@ describe('native layout mount window: the first drawn frame', () => {
       );
       await wait(SETTLE_MS);
     });
-    logDrawnValues('the 12H opacity hand-over', samples, renderStartMs);
+    logDrawnValues('the 12H opacity hand-over', samples, { renderStartMs });
     const events = await takeTrace();
     const firstUpdate = events.find(
       (event) => event.tag === tag && event.event === 'FrameUpdateMounted'
@@ -913,7 +911,9 @@ describe('native layout mount window: the first drawn frame', () => {
         await render(<SharedScreens hasSource showsTarget />);
         await wait(SETTLE_MS);
       });
-      logDrawnValues('a hide by a shared transition', samples, renderStartMs);
+      logDrawnValues('a hide by a shared transition', samples, {
+        renderStartMs,
+      });
       const events = await takeTrace();
       const stop = events.find(
         (event) =>
@@ -1114,7 +1114,7 @@ async function playEnd(
     await waitUntilUptime(endMs + SETTLE_MS);
   });
   const caseName = `the ${track}: ${write}${hasSecondView ? ', second view' : ''}`;
-  logDrawnValues(caseName, samples, renderStartMs);
+  logDrawnValues(caseName, samples, { renderStartMs });
   events.push(...(await takeTrace()));
   const model = write === 'no write' ? END_OPACITY : WRITTEN_OPACITY;
   const ended = events.find(
@@ -1243,11 +1243,9 @@ async function playOrderBRun(
     orderBWriteAtMs.value = endMs + (offsetFrames - 0.5) * FRAME_MS;
     await waitUntilUptime(endMs + SETTLE_MS);
   });
-  logDrawnValues(
-    `order b: ${subForm}, offset ${offsetFrames}`,
-    samples,
-    renderStartMs
-  );
+  logDrawnValues(`order b: ${subForm}, offset ${offsetFrames}`, samples, {
+    renderStartMs,
+  });
   const writtenAtMs = orderBWrittenAtMs.value;
   const { model } = await sample(tag, 'Opacity');
   await render(null);

@@ -11,8 +11,13 @@
  * a position track (the player has statement M only for the opacity and the transform), when a callback
  * comes. The pixels on screen, a device, and 120 Hz are not tested.
  *
+ * Each test that calls `readPair` puts each native position on the twin timeline: the time error of the native
+ * value against the recorded frames of the frame-driven twin, from the frame times that the read can show
+ * (`nativeLayoutTwinTimeline.ts`). Apple asserts one display frame. Android prints the rows and keeps the pair
+ * comparison of two display frames.
+ *
  * Not converted (the old pair comparison at planned times):
- * the test that calls `sampleOpacityPair`, and each test that calls `readPair`.
+ * the test that calls `sampleOpacityPair`. It compares two frame-driven boxes, not a native route with its twin.
  */
 import type { ComponentRef } from 'react';
 import React from 'react';
@@ -114,6 +119,13 @@ import {
   waitForModel,
   movingGeometryTest,
 } from './nativeLayoutTestKit';
+import type { PairRead, TwinPair } from './nativeLayoutTwinTimeline';
+import {
+  expectKeptPair,
+  expectOnTwinTimeline,
+  twinPairOf,
+  twinRestOf,
+} from './nativeLayoutTwinTimeline';
 
 const WRITER_REF = 'NativeLayoutWriterBox';
 const CSS_DURATION = 6 * DURATION;
@@ -1059,18 +1071,23 @@ describe('a native layout group whose tracks the platform removes', () => {
     return;
   }
 
-  type Clipped = { nativeTag: number; frameTag: number; startMs: number };
+  type Clipped = {
+    nativeTag: number;
+    frameTag: number;
+    twin: TwinPair;
+    startMs: number;
+  };
 
   /** Mounts the pair, then renders `moved`. */
   async function move(mounted: PairProps, moved: PairProps): Promise<Clipped> {
+    resetFrameRecords();
     await mountScene(<ClippedPair {...mounted} />);
-    const tags = {
-      nativeTag: getTestComponent(BOX_REF).getTag(),
-      frameTag: getTestComponent(FRAME_BOX_REF).getTag(),
-    };
+    const nativeTag = getTestComponent(BOX_REF).getTag();
+    const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+    const twin = await twinPairOf(nativeTag);
     const startMs = performance.now();
     await render(<ClippedPair {...moved} />);
-    return { ...tags, startMs };
+    return { nativeTag, frameTag, twin, startMs };
   }
 
   const waitUntil = ({ startMs }: Clipped, elapsedMs: number) =>
@@ -1090,6 +1107,11 @@ describe('a native layout group whose tracks the platform removes', () => {
       shownY: y.presentation[0],
       shownOpacity: opacity.presentation[0],
       keys: x.playbacks.length,
+      timeMs: {
+        x: x.monotonicTimeMs,
+        y: y.monotonicTimeMs,
+        opacity: opacity.monotonicTimeMs,
+      },
     };
   }
 
@@ -1127,6 +1149,26 @@ describe('a native layout group whose tracks the platform removes', () => {
   const twoFrames = (distance: number, durationMs: number) =>
     POSITION_TOLERANCE + (2 * FRAME_MS * distance) / durationMs;
 
+  const pairIsNear = (
+    native: number,
+    frame: number,
+    distance: number,
+    durationMs: number
+  ) => isNear(native, frame, twoFrames(distance, durationMs));
+
+  async function expectOnClippedTwin(
+    caseName: string,
+    { frameTag, twin }: Clipped,
+    reads: Omit<PairRead, 'rest'>[]
+  ) {
+    const rest = await twinRestOf(frameTag);
+    expectOnTwinTimeline(
+      caseName,
+      twin,
+      reads.map((read) => ({ ...read, rest }))
+    );
+  }
+
   const clippedTracks: [string, Leaf['easing'], number][] = [
     ['one segment', Easing.linear, 1],
     ['the two segments of the default easing', 'default', 2],
@@ -1154,6 +1196,7 @@ describe('a native layout group whose tracks the platform removes', () => {
         await waitUntil(clipped, LAYOUT_DURATION / 2);
         const transfer = await takeTransferTrace(clipped);
         expect(callbacks.length).toBe(0);
+        const twinReads: Omit<PairRead, 'rest'>[] = [];
         if (REMOVES_TRACKS_OUT_OF_WINDOW) {
           expect(transfer.host).toBe(
             'TrackEnded:Opacity:false > TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
@@ -1161,13 +1204,14 @@ describe('a native layout group whose tracks the platform removes', () => {
           expect(transfer.hasFrameUpdate).toBe(true);
           const hidden = await readPair(clipped);
           expect(hidden.native.keys).toBe(0);
-          expect(
-            isNear(
-              hidden.native.x,
-              hidden.frame.x,
-              twoFrames(travel, LAYOUT_DURATION)
-            )
-          ).toBe(true);
+          twinReads.push({
+            quantity: 'Position x',
+            t: hidden.native.timeMs.x,
+            native: hidden.native.x,
+          });
+          expectKeptPair(
+            pairIsNear(hidden.native.x, hidden.frame.x, travel, LAYOUT_DURATION)
+          );
           expect(
             isNear(
               hidden.native.opacity,
@@ -1186,13 +1230,20 @@ describe('a native layout group whose tracks the platform removes', () => {
         if (REMOVES_TRACKS_OUT_OF_WINDOW) {
           expect(shown.native.keys).toBe(0);
         }
-        expect(
-          isNear(
+        twinReads.push({
+          quantity: 'Position x',
+          t: shown.native.timeMs.x,
+          native: shown.native.shownX,
+        });
+        await expectOnClippedTwin(`clip, ${trackName}`, clipped, twinReads);
+        expectKeptPair(
+          pairIsNear(
             shown.native.shownX,
             shown.frame.x,
-            twoFrames(travel, LAYOUT_DURATION)
+            travel,
+            LAYOUT_DURATION
           )
-        ).toBe(true);
+        );
         expect(shown.native.shownX > START_LEFT + BOX_SIZE / 2 + 10).toBe(true);
         expect(shown.native.shownX < END_LEFT + BOX_SIZE / 2 - 10).toBe(true);
         expect(
@@ -1274,20 +1325,29 @@ describe('a native layout group whose tracks the platform removes', () => {
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
         expect(shown.native.keys).toBe(0);
       }
-      expect(
-        isNear(
-          shown.native.shownX,
-          shown.frame.x,
-          twoFrames(PAIR_LEFT, PAIR_DURATION)
-        )
-      ).toBe(true);
-      expect(
-        isNear(
+      await expectOnClippedTwin('clip after a replacement', clipped, [
+        {
+          quantity: 'Position x',
+          t: shown.native.timeMs.x,
+          native: shown.native.shownX,
+        },
+        {
+          quantity: 'Position y',
+          t: shown.native.timeMs.y,
+          native: shown.native.shownY,
+        },
+      ]);
+      expectKeptPair(
+        pairIsNear(shown.native.shownX, shown.frame.x, PAIR_LEFT, PAIR_DURATION)
+      );
+      expectKeptPair(
+        pairIsNear(
           shown.native.shownY,
           shown.frame.y,
-          twoFrames(PAIR_TOP, PAIR_DURATION / 2)
+          PAIR_TOP,
+          PAIR_DURATION / 2
         )
-      ).toBe(true);
+      );
       expect(shown.native.shownX < PAIR_LEFT - 20).toBe(true);
       expect(shown.native.shownY < PAIR_TOP + BOX_SIZE / 2 - 5).toBe(true);
       expect(callbacks.length).toBe(2);
@@ -1347,31 +1407,43 @@ describe('a native layout group whose tracks the platform removes', () => {
       expect(sortedCallbacks()).toBe('frame:false,native:false');
 
       const rows: string[] = [];
-      let agrees = true;
+      const twinReads: Omit<PairRead, 'rest'>[] = [];
+      let hasNoKeys = true;
+      let pairsAreNear = true;
       for (const elapsedMs of [1000, 1300, 1600, 1900, 2200]) {
         await waitUntil(clipped, elapsedMs);
         const shown = await readPair(clipped);
-        const isClose =
-          shown.native.keys === 0 &&
-          isNear(
+        twinReads.push(
+          {
+            quantity: 'Position x',
+            t: shown.native.timeMs.x,
+            native: shown.native.shownX,
+          },
+          {
+            quantity: 'Position y',
+            t: shown.native.timeMs.y,
+            native: shown.native.shownY,
+          }
+        );
+        hasNoKeys &&= shown.native.keys === 0;
+        pairsAreNear &&=
+          pairIsNear(
             shown.native.shownX,
             shown.frame.x,
-            twoFrames(PAIR_LEFT, durationMs)
+            PAIR_LEFT,
+            durationMs
           ) &&
-          isNear(
-            shown.native.shownY,
-            shown.frame.y,
-            twoFrames(PAIR_TOP, durationMs)
-          );
-        agrees &&= isClose;
+          pairIsNear(shown.native.shownY, shown.frame.y, PAIR_TOP, durationMs);
         rows.push(
           `${elapsedMs} ms native ${shown.native.shownX.toFixed(2)} ${shown.native.shownY.toFixed(2)} keys ${shown.native.keys} frame driver ${shown.frame.x.toFixed(2)} ${shown.frame.y.toFixed(2)}`
         );
       }
-      if (!agrees) {
+      if (!hasNoKeys || !pairsAreNear) {
         console.log(`MERGED-DELAY-ROWS | ${rows.join(' | ')}`);
       }
-      expect(agrees).toBe(true);
+      await expectOnClippedTwin('new Y in the delay', clipped, twinReads);
+      expect(hasNoKeys).toBe(true);
+      expectKeptPair(pairsAreNear);
 
       await waitUntil(clipped, newYAt + delayMs + durationMs + 400);
       expect(sortedCallbacks()).toBe(
@@ -1520,21 +1592,29 @@ describe('a native layout group whose tracks the platform removes', () => {
       expect(sortedCallbacks()).toBe('frame:false,native:false');
 
       scrollTo(0);
+      const twinReads: Omit<PairRead, 'rest'>[] = [];
       for (const fraction of [0.2, 0.5, 0.8]) {
         await waitUntil(clipped, changeAt + fraction * PAIR_DURATION);
         const shown = await readPair(clipped);
         if (REMOVES_TRACKS_OUT_OF_WINDOW) {
           expect(shown.native.keys).toBe(0);
         }
-        expect(
-          isNear(
+        twinReads.push({
+          quantity: 'Position x',
+          t: shown.native.timeMs.x,
+          native: shown.native.shownX,
+        });
+        expectKeptPair(
+          pairIsNear(
             shown.native.shownX,
             shown.frame.x,
-            twoFrames(PAIR_LEFT, PAIR_DURATION)
+            PAIR_LEFT,
+            PAIR_DURATION
           )
-        ).toBe(true);
+        );
         expect(shown.native.shownX < PAIR_LEFT + BOX_SIZE / 2 - 5).toBe(true);
       }
+      await expectOnClippedTwin(clippedChange, clipped, twinReads);
       expect(callbacks.length).toBe(2);
 
       await waitUntil(clipped, changeAt + PAIR_DURATION + 400);

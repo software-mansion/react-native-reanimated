@@ -91,7 +91,6 @@ import {
   expectFrameTimeline,
   FRAME_BOX_REF,
   FRAME_MS,
-  frameRecordedOf,
   hasNativeLayoutRoute,
   isHostEvent,
   isNear,
@@ -473,11 +472,7 @@ describe('native layout animations and the synchronous props path', () => {
   type PairBox = Pick<WriterBoxProps, 'left' | 'top' | 'initialOpacity'>;
 
   const pairOf = (leaves: (hasCallback: boolean) => Leaves) => {
-    const { nativeLayout, frameLayout } = pairLayoutsOf(leaves);
-    const layouts = {
-      nativeLayout,
-      frameLayout: frameRecordedOf('frame', frameLayout),
-    };
+    const layouts = pairLayoutsOf(leaves);
     return (box: PairBox, padding = 0) => (
       <PairOf
         BoxComponent={WriterBox}

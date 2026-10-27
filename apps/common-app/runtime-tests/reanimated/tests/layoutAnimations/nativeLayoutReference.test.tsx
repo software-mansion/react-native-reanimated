@@ -97,9 +97,17 @@
  * same for each read: a read of a track that the frame driver took, from the start call of the frame driver
  * for the key to the end report of the track, has no rule of its own.
  *
- * No statement here compares the two boxes at one instant. So this suite does not prove: the distance of
- * the two boxes on the wall clock, the lag of the frame driver, when a callback comes, the pixels on
- * screen, the order in which the screen shows the operations of a transform, the edge antialiasing. The
+ * C (`native layout reference at a common time`, Apple and Android API 29 and later): the two boxes at
+ * common times. For each command, the check reads the row nearest to each checkpoint of its declared
+ * duration from its origin, the first row from its origin, and the end samples. Each value of the native
+ * box has its time error on the recorded frames of the twin (`nativeLayoutTwinTimeline.ts`): Apple asserts
+ * one display frame, Android prints. The duration of each command and the emission time of the last
+ * callback of each box on the animation clock are also compared to one display frame. The origin of a
+ * command that the frame driver plays on the native box is the start call of its first record (first
+ * commit) or of the record that replaced a native track (later commit). On Android, the two size cases are
+ * frame-driven on the two boxes from the first commit: their rows are a control. C does not prove: the
+ * pixels on screen, the order in which the screen shows the operations of a transform, the edge
+ * antialiasing, the time of a callback on the React Native runtime (the rows print it with no bound). The
  * suite `native layout live clock` has the wall-clock statements of the same cases.
  */
 import React from 'react';
@@ -114,6 +122,7 @@ import {
 import { LIVE_CLOCK_CASES } from './nativeLayoutLiveClockCases';
 import type { Place, Played, ReferenceCase } from './nativeLayoutReferencePlay';
 import {
+  expectAtCommonTime,
   expectModelOnFrames,
   expectNoKeyAfterTransfer,
   expectReference,
@@ -377,6 +386,35 @@ describe('native layout reference below API 29', () => {
     }
     test(`${caseName}: the whole animation is frame-driven, UnsupportedTarget, and the frames of the two boxes are on the declared timeline`, async () => {
       expectReference(caseName, referenceCase, await play(referenceCase));
+      await render(null);
+    });
+  }
+});
+
+/** The cases that statement C compares at common times. */
+const COMMON_TIME_CASES = [
+  'a timing with a linear easing',
+  'a timing with a Bezier easing',
+  'a delay',
+  'a rotation',
+  'a size',
+  'a position change and a size change',
+  'an entering animation',
+  'an exiting animation',
+  'a replacement',
+  'a replacement with a delay',
+  'a hand-over to the frame driver',
+];
+
+describe('native layout reference at a common time', () => {
+  if (!hasNativeLayoutRoute || !PLAYS_MOVING_GEOMETRY) {
+    return;
+  }
+
+  for (const caseName of COMMON_TIME_CASES) {
+    const referenceCase = REFERENCE_CASES[caseName];
+    test(`${caseName}: at each checkpoint of each command, the native box shows a value of the twin of a time within one display frame of the read, and the durations and the callbacks are within one display frame`, async () => {
+      expectAtCommonTime(caseName, referenceCase, await play(referenceCase));
       await render(null);
     });
   }

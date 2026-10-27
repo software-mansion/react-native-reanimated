@@ -191,6 +191,7 @@ declare global {
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
+    pendingBuildCount?: () => number;
   };
   var originalLayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;

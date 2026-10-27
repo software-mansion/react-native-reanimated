@@ -7,14 +7,26 @@
  * same model. A check of a playback key count in such a test is for each row, by the time of the row
  * against the times of the trace. Each other test has state checks and trace checks at planned times.
  *
- * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, the model of the
- * native box while the frame driver has a position track or a size track (the player has statement M only
- * for the opacity and the transform), when a callback comes, that a row comes in each part of a timeline.
- * The pixels on screen, a device, and 120 Hz are not tested.
+ * The twin timeline (`expectPairParity`, `expectRowsOnTwinTimeline`): each read of the native box during
+ * the animation has its own sample time. The test finds the recorded frames of the frame-driven twin that
+ * have the native value, and gives the time error of the read from the frame times that the read can show
+ * (`nativeLayoutTwinTimeline.ts`). Apple asserts one display frame. Android prints the rows and keeps the old
+ * pair comparison.
  *
- * Not converted (the old pair comparison at planned times): each test that
- * calls `expectPairParity`, `sampleFramePairAt`, or `expectHiddenRoutesAgree`, and each shared transition
- * test that compares its container with a read of the source.
+ * Not proved: the distance of the two boxes at one instant, one common time for the values of one native
+ * sample, the lag of the frame driver, the model of the native box while the frame driver has a position
+ * track or a size track (the player has statement M only for the opacity and the transform), when a callback
+ * comes, that a row comes in each part of a timeline. The pixels on screen, a device, and 120 Hz are not
+ * tested.
+ *
+ * Not converted (a model comparison with a bound; each prints `MODEL-BOUND-ROW`): the shared transition tests
+ * that compare the model of the container with a read of the source (a native X, a native size, a child of a
+ * native X, a native transform; the container animation has no record), and the tests that call
+ * `expectHiddenRoutesAgree` (two runs one after the other, each read at a fraction of the duration from its
+ * own start, so no common time), and `a new initial value is the start value ...`: the two boxes start their
+ * replacements from their own current values, and the gap of the two starts stays in the reads (measured). The
+ * opacity of the exit in `an exit during a native X` keeps the old pair comparison: the exit of the twin has no
+ * record.
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
@@ -63,6 +75,7 @@ import { expectReference, play } from './nativeLayoutReferencePlay';
 import type {
   Band,
   Frame,
+  FramePairRow,
   Key,
   Leaf,
   Leaves,
@@ -140,7 +153,16 @@ import {
   PLAYS_MOVING_GEOMETRY,
   movingGeometryTest,
   MOUNTS_IN_DISPATCHES,
+  resetFrameRecords,
 } from './nativeLayoutTestKit';
+import type { PairRead, TwinPair, TwinRest } from './nativeLayoutTwinTimeline';
+import {
+  expectKeptPair,
+  expectOnTwinTimeline,
+  positionReadsOf,
+  twinPairOf,
+  twinRestOf,
+} from './nativeLayoutTwinTimeline';
 
 const REST_TOLERANCE = 0.01;
 
@@ -187,6 +209,41 @@ const readsIn = (
     );
 
 const isRouteEvent = ({ event }: TraceEvent) => event !== 'FrameUpdateMounted';
+
+/** Mounts a pair scene at rest with no frame records, and reads its twin. */
+async function mountTwinScene(scene: Parameters<typeof render>[0]) {
+  resetFrameRecords();
+  const tag = await mountScene(scene);
+  return { tag, twin: await twinPairOf(tag) };
+}
+
+/** The read of the `Opacity` sample of the native box. */
+const opacityReadOf = (opacity: TargetSample, rest: TwinRest): PairRead => ({
+  quantity: 'Opacity',
+  t: opacity.monotonicTimeMs,
+  native: opacity.presentation[0],
+  rest,
+});
+
+/** A row of a model comparison that has no twin timeline. */
+function logModelBound(
+  caseName: string,
+  quantity: string,
+  error: number,
+  bound: number,
+  terms: string
+) {
+  console.log(
+    [
+      'MODEL-BOUND-ROW',
+      caseName,
+      quantity,
+      error.toFixed(4),
+      bound.toFixed(4),
+      terms,
+    ].join(' | ')
+  );
+}
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
 const SHARED_PARENT_REF = 'NativeLayoutContinuitySharedParent';
@@ -319,6 +376,7 @@ describe('native layout continuity', () => {
       sample(frameTag, 'Opacity'),
     ]);
     return {
+      native: { position, opacity },
       x: position.presentation[0],
       y: position.presentation[1],
       opacity: opacity.presentation[0],
@@ -334,9 +392,10 @@ describe('native layout continuity', () => {
     layouts: Pick<PairProps, 'nativeLayout' | 'frameLayout'>,
     opacity = 1
   ) {
-    await mountScene(
+    const { twin } = await mountTwinScene(
       <Pair left={START_LEFT} top={0} opacity={opacity} {...layouts} />
     );
+    return twin;
   }
 
   const pairOf = (leaves: Leaves, frameKey: Key = 'originX') =>
@@ -349,27 +408,105 @@ describe('native layout continuity', () => {
   const oneFrame = (durationMs = PAIR_DURATION) =>
     POSITION_TOLERANCE + (FRAME_MS * PAIR_LEFT) / durationMs;
   const OPACITY_TOLERANCE = 0.01 + FRAME_MS / PAIR_DURATION;
+  const ONE_FRAME_TERMS = `${POSITION_TOLERANCE} pt + one display frame of ${PAIR_LEFT} pt in ${PAIR_DURATION} ms`;
 
+  type PairParity = {
+    checkpoints: number;
+    intervalMs: number;
+    /** The bound of the old pair comparison of a position. */
+    tolerance: number;
+  };
+
+  /**
+   * A pair after the unmount that starts its exit: the tags and the values at
+   * rest from before the unmount. The exit of the twin has no record, so the
+   * opacity keeps the old pair comparison.
+   */
+  type PairExit = { tags: ReturnType<typeof pairTags>; rest: TwinRest };
+
+  /**
+   * The reads of the native box are on the twin timeline. Where the twin
+   * timeline does not assert, the old pair comparison stays.
+   */
   async function expectPairParity(
-    checkpoints: number,
-    intervalMs: number,
-    tolerance: number,
-    tags = pairTags()
+    caseName: string,
+    twin: TwinPair,
+    parity: PairParity,
+    exit?: PairExit
   ) {
-    let isClose = true;
+    const tags = exit?.tags ?? pairTags();
+    const rest = exit?.rest ?? (await twinRestOf(tags.frameTag));
+    const { reads, distances } = await readPairCheckpoints(tags, parity);
+    expectOnTwinTimeline(
+      caseName,
+      twin,
+      reads.flatMap(({ position, opacity }) => [
+        ...positionReadsOf(position, rest),
+        ...(exit ? [] : [opacityReadOf(opacity, rest)]),
+      ])
+    );
+    expectKeptPair(distances.position < parity.tolerance);
+    if (exit) {
+      expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
+    } else {
+      expectKeptPair(distances.opacity < OPACITY_TOLERANCE);
+    }
+  }
+
+  /**
+   * The old pair comparison on each platform, for a case whose twin starts a
+   * replacement from another value than the native box: each box starts from
+   * its own current value.
+   */
+  async function expectPairWithinBound(caseName: string, parity: PairParity) {
+    const { distances } = await readPairCheckpoints(pairTags(), parity);
+    const terms = `${ONE_FRAME_TERMS}; the twin starts from its last frame`;
+    logModelBound(
+      caseName,
+      'Position',
+      distances.position,
+      parity.tolerance,
+      terms
+    );
+    logModelBound(
+      caseName,
+      'Opacity',
+      distances.opacity,
+      OPACITY_TOLERANCE,
+      terms
+    );
+    expect(distances.position < parity.tolerance).toBe(true);
+    expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
+  }
+
+  /**
+   * The samples of the native box at the checkpoints, and the largest distances
+   * of the pair.
+   */
+  async function readPairCheckpoints(
+    tags: ReturnType<typeof pairTags>,
+    { checkpoints, intervalMs }: PairParity
+  ) {
+    const reads: { position: TargetSample; opacity: TargetSample }[] = [];
+    const distances = { position: 0, opacity: 0 };
     // The presentation layer shows a change of the playback after the next display frame.
     await wait(2 * FRAME_MS);
     for (let checkpoint = 0; checkpoint < checkpoints; checkpoint++) {
-      const { x, y, opacity, frameX, frameY, frameOpacity } =
+      const { native, x, y, opacity, frameX, frameY, frameOpacity } =
         await samplePair(tags);
-      isClose =
-        isClose &&
-        Math.abs(x - frameX) < tolerance &&
-        Math.abs(y - frameY) < tolerance &&
-        Math.abs(opacity - frameOpacity) < OPACITY_TOLERANCE;
+      reads.push(native);
+      distances.position = Math.max(
+        distances.position,
+        Math.abs(x - frameX),
+        Math.abs(y - frameY)
+      );
+      distances.opacity = Math.max(
+        distances.opacity,
+        Math.abs(opacity - frameOpacity)
+      );
       await wait(intervalMs);
     }
-    expect(isClose).toBe(true);
+    return { reads, distances };
   }
 
   const AT_START: Place = { left: START_LEFT, top: 0 };
@@ -404,13 +541,17 @@ describe('native layout continuity', () => {
         originX: { duration: PAIR_DURATION, onlyWhenChanged: true },
         originY: { isFrameDrivenSpring: true, onlyWhenChanged: true },
       });
-      await renderPair(layouts);
+      const twin = await renderPair(layouts);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...layouts} />);
       await wait(PAIR_DURATION / 3);
       await render(
         <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
       );
-      await expectPairParity(10, PAIR_DURATION / 15, oneFrame());
+      await expectPairParity('a spring Y during a long native X', twin, {
+        checkpoints: 10,
+        intervalMs: PAIR_DURATION / 15,
+        tolerance: oneFrame(),
+      });
       await wait(PAIR_DURATION / 3);
       const end = await samplePair();
       expect(end.playbacks.length).toBe(0);
@@ -444,18 +585,22 @@ describe('native layout continuity', () => {
           PAIR_DURATION / 2,
         ],
       ];
-      for (const [leaf, fastestDuration] of variants) {
+      for (const [index, [leaf, fastestDuration]] of variants.entries()) {
         const second = pairOf({ originX: leaf, originY: leaf });
-        await renderPair(first);
+        const twin = await renderPair(first);
         await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...first} />);
         await wait(PAIR_DURATION / 4);
         await render(
           <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...second} />
         );
         await expectPairParity(
-          6,
-          PAIR_DURATION / 20,
-          oneFrame(fastestDuration)
+          `a new timing with the same end value, variant ${index + 1}`,
+          twin,
+          {
+            checkpoints: 6,
+            intervalMs: PAIR_DURATION / 20,
+            tolerance: oneFrame(fastestDuration),
+          }
         );
         await wait(1.5 * PAIR_DURATION);
         expect([...callbacks].sort().join()).toBe(
@@ -473,16 +618,20 @@ describe('native layout continuity', () => {
       const second = pairOf({
         originX: { duration: PAIR_DURATION / 3, delays: [PAIR_DURATION / 5] },
       });
-      await renderPair(first);
+      const twin = await renderPair(first);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...first} />);
       await wait(PAIR_DURATION / 4);
       await render(
         <Pair left={PAIR_LEFT / 4} top={0} opacity={1} {...second} />
       );
       await expectPairParity(
-        8,
-        PAIR_DURATION / 15,
-        oneFrame(PAIR_DURATION / 3)
+        'the old track continues through the delay of its replacement',
+        twin,
+        {
+          checkpoints: 8,
+          intervalMs: PAIR_DURATION / 15,
+          tolerance: oneFrame(PAIR_DURATION / 3),
+        }
       );
       await wait(PAIR_DURATION / 3);
       expect([...callbacks].sort().join()).toBe(
@@ -555,7 +704,7 @@ describe('native layout continuity', () => {
           },
         };
       }) as PairProps['exiting'];
-      await renderPair(layouts);
+      const twin = await renderPair(layouts);
       await render(
         <Pair
           left={PAIR_LEFT}
@@ -567,6 +716,7 @@ describe('native layout continuity', () => {
       );
       await wait(PAIR_DURATION / 3);
       const tags = pairTags();
+      const rest = await twinRestOf(tags.frameTag);
       await render(
         <Pair
           left={PAIR_LEFT}
@@ -577,7 +727,16 @@ describe('native layout continuity', () => {
           {...layouts}
         />
       );
-      await expectPairParity(6, PAIR_DURATION / 15, oneFrame(), tags);
+      await expectPairParity(
+        'an exit during a native X',
+        twin,
+        {
+          checkpoints: 6,
+          intervalMs: PAIR_DURATION / 15,
+          tolerance: oneFrame(),
+        },
+        { tags, rest }
+      );
       await wait(PAIR_DURATION / 2);
       expect([...callbacks].sort().join()).toBe('frame:false,native:false');
       await render(null);
@@ -595,16 +754,20 @@ describe('native layout continuity', () => {
     });
     // The first time is in the delay of X. The second time is after it.
     for (const waitMs of [PAIR_DURATION / 8, PAIR_DURATION / 2]) {
-      await renderPair(layouts);
+      const twin = await renderPair(layouts);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...layouts} />);
       await wait(waitMs);
       await render(
         <Pair left={PAIR_LEFT} top={PAIR_TOP} opacity={1} {...layouts} />
       );
       await expectPairParity(
-        8,
-        PAIR_DURATION / 10,
-        oneFrame(PAIR_DURATION / 2)
+        `a new Y ${waitMs} ms after the start of a delayed native X`,
+        twin,
+        {
+          checkpoints: 8,
+          intervalMs: PAIR_DURATION / 10,
+          tolerance: oneFrame(PAIR_DURATION / 2),
+        }
       );
       await wait(PAIR_DURATION / 2);
       expect([...callbacks].sort().join()).toBe(
@@ -641,7 +804,7 @@ describe('native layout continuity', () => {
         originX: { duration: PAIR_DURATION },
         originY: { isFrameDrivenSpring: true },
       });
-      await renderPair(timing);
+      const twin = await renderPair(timing);
       await render(<Pair left={PAIR_LEFT} top={0} opacity={1} {...timing} />);
       await wait(PAIR_DURATION / 4);
       await render(
@@ -655,7 +818,15 @@ describe('native layout continuity', () => {
       await render(
         <Pair left={PAIR_LEFT / 2} top={PAIR_TOP} opacity={1} {...spring} />
       );
-      await expectPairParity(8, PAIR_DURATION / 12, oneFrame());
+      await expectPairParity(
+        'a native replacement and then a frame-driven start',
+        twin,
+        {
+          checkpoints: 8,
+          intervalMs: PAIR_DURATION / 12,
+          tolerance: oneFrame(),
+        }
+      );
       expect((await sample(nativeTag, 'PositionX')).playbacks.length).toBe(0);
       await wait(PAIR_DURATION / 2);
       expect([...callbacks].sort().join()).toBe(
@@ -766,7 +937,7 @@ describe('native layout continuity', () => {
           to: END_OPACITY,
         },
       });
-      await renderPair(layouts, START_OPACITY);
+      const twin = await renderPair(layouts, START_OPACITY);
       await render(
         <Pair left={PAIR_LEFT} top={0} opacity={END_OPACITY} {...layouts} />
       );
@@ -782,7 +953,15 @@ describe('native layout continuity', () => {
         );
         expect(reads[reads.length - 1].playbacks.length).toBe(2);
       }
-      await expectPairParity(5, PAIR_DURATION / 10, oneFrame());
+      await expectPairParity(
+        'a React commit that changes the opacity prop',
+        twin,
+        {
+          checkpoints: 5,
+          intervalMs: PAIR_DURATION / 10,
+          tolerance: oneFrame(),
+        }
+      );
       await wait(PAIR_DURATION / 4);
       // The native box shows the committed prop when its track ends.
       const end = await samplePair();
@@ -851,7 +1030,14 @@ describe('native layout continuity', () => {
         await render(
           <Pair left={PAIR_LEFT / 2} top={top} opacity={1} {...second} />
         );
-        await expectPairParity(5, PAIR_DURATION / 10, oneFrame());
+        await expectPairWithinBound(
+          `a new initial value is the start value, ${top === 0 ? 'native replacement' : 'frame-driven start'}`,
+          {
+            checkpoints: 5,
+            intervalMs: PAIR_DURATION / 10,
+            tolerance: oneFrame(),
+          }
+        );
         await render(null);
       }
     }
@@ -942,6 +1128,13 @@ describe('native layout continuity', () => {
         const container = await sampleSharedContainer();
         // The container moves to the target for two frames after its start.
         const distance = Math.abs(container!.model[0] - source.presentation[0]);
+        logModelBound(
+          `a shared transition from a view with a native X track, callback ${hasCallback}`,
+          'Position x',
+          distance,
+          oneFrame(),
+          ONE_FRAME_TERMS
+        );
         expect(
           distance < oneFrame()
             ? ''
@@ -1012,20 +1205,32 @@ describe('native layout continuity', () => {
         const container = await sampleFrame(containerTag!);
         // The container changes to the frame of the target for two frames after its start.
         for (const dimension of ['x', 'width', 'height'] as const) {
-          expect(
-            Math.abs(
-              container.model[dimension] - source.presentation[dimension]
-            ) < oneFrame()
-          ).toBe(true);
+          const error = Math.abs(
+            container.model[dimension] - source.presentation[dimension]
+          );
+          logModelBound(
+            `a shared transition from a view with a native ${caseName}, callback ${hasCallback}`,
+            dimension,
+            error,
+            oneFrame(),
+            ONE_FRAME_TERMS
+          );
+          expect(error < oneFrame()).toBe(true);
         }
         firstFrames.push(container.model);
         await wait(PAIR_DURATION / 2);
         await render(null);
       }
       // The container of the native source starts where the container of the frame-driven source starts.
-      expect(frameDistance(firstFrames[0], firstFrames[1]) < oneFrame()).toBe(
-        true
+      const startDistance = frameDistance(firstFrames[0], firstFrames[1]);
+      logModelBound(
+        `a shared transition from a view with a native ${caseName}, the two first frames`,
+        'Frame',
+        startDistance,
+        oneFrame(),
+        ONE_FRAME_TERMS
       );
+      expect(startDistance < oneFrame()).toBe(true);
     });
   }
 
@@ -1057,9 +1262,15 @@ describe('native layout continuity', () => {
         await render(screens(PAIR_LEFT, true));
         await wait(2 * FRAME_MS);
         const container = await sampleSharedContainer();
-        expect(
-          Math.abs(container!.model[0] - parent.presentation[0]) < oneFrame()
-        ).toBe(true);
+        const distance = Math.abs(container!.model[0] - parent.presentation[0]);
+        logModelBound(
+          `a shared transition from a child of a view with a native X track, callback ${hasCallback}`,
+          'Position x',
+          distance,
+          oneFrame(),
+          ONE_FRAME_TERMS
+        );
+        expect(distance < oneFrame()).toBe(true);
         await wait(PAIR_DURATION / 2);
         await render(null);
       }
@@ -1121,10 +1332,16 @@ describe('native layout continuity', () => {
           await render(null);
         }
         // The container moves to the target for two frames after its start.
-        expect(
-          Math.abs(containerStarts[0] - containerStarts[1]) <
-            2 * oneFrame() + (3 * FRAME_MS * TRAVEL) / PAIR_DURATION
-        ).toBe(true);
+        const distance = Math.abs(containerStarts[0] - containerStarts[1]);
+        const bound = 2 * oneFrame() + (3 * FRAME_MS * TRAVEL) / PAIR_DURATION;
+        logModelBound(
+          `a shared transition from ${caseName} with a native transform track`,
+          'Position x and translateX',
+          distance,
+          bound,
+          `2 x (${ONE_FRAME_TERMS}) + 3 display frames of ${TRAVEL} pt in ${PAIR_DURATION} ms`
+        );
+        expect(distance < bound).toBe(true);
       }
     );
   }
@@ -1174,14 +1391,37 @@ describe('native layout continuity', () => {
   type HiddenRoute = { shownX: number[]; callbackMs: number };
 
   // The native route and the frame driver show the same X, and the callback comes at the end of the animation.
-  function expectHiddenRoutesAgree([native, frame]: HiddenRoute[]) {
+  function expectHiddenRoutesAgree(
+    caseName: string,
+    [native, frame]: HiddenRoute[]
+  ) {
+    const xBound = 2 * oneFrame() + 0.5;
     native.shownX.forEach((x, index) => {
-      expect(Math.abs(x - frame.shownX[index]) < 2 * oneFrame() + 0.5).toBe(
-        true
+      const error = Math.abs(x - frame.shownX[index]);
+      logModelBound(
+        `${caseName}, read ${index + 1}`,
+        'Position x',
+        error,
+        xBound,
+        `2 x (${ONE_FRAME_TERMS}) + 0.5 pt`
       );
+      expect(error < xBound).toBe(true);
     });
-    expect(Math.abs(native.callbackMs - frame.callbackMs) < 4 * FRAME_MS).toBe(
-      true
+    const callbackError = Math.abs(native.callbackMs - frame.callbackMs);
+    logModelBound(
+      caseName,
+      'callback time of the two routes, ms',
+      callbackError,
+      4 * FRAME_MS,
+      '4 display frames'
+    );
+    expect(callbackError < 4 * FRAME_MS).toBe(true);
+    logModelBound(
+      caseName,
+      `callback time after ${PAIR_DURATION} ms, ms`,
+      native.callbackMs - PAIR_DURATION,
+      6 * FRAME_MS,
+      'more than 0 and less than 6 display frames'
     );
     expect(
       native.callbackMs > PAIR_DURATION &&
@@ -1241,7 +1481,10 @@ describe('native layout continuity', () => {
           await wait(100);
         }
 
-        expectHiddenRoutesAgree(routes);
+        expectHiddenRoutesAgree(
+          `a shared transition hides a source view, ${caseName}`,
+          routes
+        );
         const [native] = routes;
         expect(
           native.shownX[3] > native.shownX[0] + 0.4 * (PAIR_LEFT - START_LEFT)
@@ -1274,9 +1517,15 @@ describe('native layout continuity', () => {
 
         await wait(2 * FRAME_MS);
         const shownX = [await sampleHiddenX(tag)];
-        expect(
-          Math.abs(shownX[0] - before.presentation[0]) < 3 * oneFrame()
-        ).toBe(true);
+        const hideError = Math.abs(shownX[0] - before.presentation[0]);
+        logModelBound(
+          `a move of a source view in the commit that hides it, callback ${hasCallback}`,
+          'Position x at the hide',
+          hideError,
+          3 * oneFrame(),
+          `3 x (${ONE_FRAME_TERMS})`
+        );
+        expect(hideError < 3 * oneFrame()).toBe(true);
         expect(callbacks.join()).toBe('hidden:false');
         // A hidden view admits no native start, so the frame driver plays the second animation on each route.
         const playbackEvents = (await takeTraceOf(tag)).filter(({ event }) =>
@@ -1303,7 +1552,10 @@ describe('native layout continuity', () => {
         await render(null);
         await wait(100);
       }
-      expectHiddenRoutesAgree(routes);
+      expectHiddenRoutesAgree(
+        'a move of a source view in the commit that hides it',
+        routes
+      );
     }
   );
 
@@ -1346,7 +1598,10 @@ describe('native layout continuity', () => {
         await render(null);
         await wait(100);
       }
-      expectHiddenRoutesAgree(routes);
+      expectHiddenRoutesAgree(
+        'an opacity leaf that starts in the commit that hides the view',
+        routes
+      );
     }
   );
 });
@@ -1402,6 +1657,43 @@ describe('native layout size continuity', () => {
   const FIRST = { left: 120, top: 0, width: 150 };
   const MOVED = { left: 120, top: 0, width: 50 };
   const TOLERANCE = POSITION_TOLERANCE + (FRAME_MS * 120) / PAIR_DURATION;
+
+  /** The reads of the native box in a row: its `Position` and `Size` samples. */
+  const frameReadsOf = (
+    { position, size }: FramePairRow,
+    rest: TwinRest
+  ): PairRead[] => [
+    ...positionReadsOf(position, rest),
+    {
+      quantity: 'Width',
+      t: size.monotonicTimeMs,
+      native: size.presentation[0],
+      rest,
+    },
+    {
+      quantity: 'Height',
+      t: size.monotonicTimeMs,
+      native: size.presentation[1],
+      rest,
+    },
+  ];
+
+  /**
+   * The rows before the end are on the twin timeline. The pair is at rest after
+   * the end row, with no commit after the rows.
+   */
+  async function expectRowsOnTwinTimeline(
+    caseName: string,
+    twin: TwinPair,
+    rows: FramePairRow[]
+  ) {
+    const rest = await twinRestOf(getTestComponent(FRAME_BOX_REF).getTag());
+    expectOnTwinTimeline(
+      caseName,
+      twin,
+      rows.slice(0, -1).flatMap((row) => frameReadsOf(row, rest))
+    );
+  }
 
   const customPair = pairLayoutsOf((hasCallback) => ({
     originX: { duration: PAIR_DURATION, hasCallback },
@@ -1565,7 +1857,9 @@ describe('native layout size continuity', () => {
     second: Partial<SizePairProps>,
     first = FIRST
   ) {
-    const tag = await mountScene(<SizePair {...START} {...layouts} />);
+    const { tag, twin } = await mountTwinScene(
+      <SizePair {...START} {...layouts} />
+    );
     await render(<SizePair {...first} {...layouts} />);
     const firstThird = await waitFirstThird(tag, WIDTH_CHANGE);
     const firstEvents = firstThird?.events ?? (await takeTraceOf(tag));
@@ -1580,6 +1874,7 @@ describe('native layout size continuity', () => {
       rows,
       events,
       distances: framePairDistances(rows),
+      twin,
     };
   }
 
@@ -1718,14 +2013,17 @@ describe('native layout size continuity', () => {
   });
 
   test('a commit with the same end values during a native size group starts no track, and the frame driver takes the group on its timeline', async () => {
-    const { firstThird, firstPending, before, rows, events, distances } =
+    const { firstThird, firstPending, before, rows, events, distances, twin } =
       await replaceDuringSizeGroup(customPair, { top: 40 });
+    const caseName =
+      'a commit with the same end values during a native size group';
     if (firstThird) {
       expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
       expect(summarize(events.filter(isRouteEvent))).toBe('');
       expect(before.playbacks.length).toBe(0);
       expect(rows[0].playbacks.length).toBe(0);
-      expect(distances.during < TOLERANCE).toBe(true);
+      await expectRowsOnTwinTimeline(caseName, twin, rows);
+      expectKeptPair(distances.during < TOLERANCE);
       expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
       expectCallbacksOfTwin();
       await render(null);
@@ -1750,7 +2048,8 @@ describe('native layout size continuity', () => {
     ).toBe(true);
     expect(before.playbacks.length).toBe(2);
     expect(rows[0].playbacks.length).toBe(0);
-    expect(distances.during < TOLERANCE).toBe(true);
+    await expectRowsOnTwinTimeline(caseName, twin, rows);
+    expectKeptPair(distances.during < TOLERANCE);
     expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
     expect([...callbacks].sort().join()).toBe(
       'frame:false,frame:true,native:false,native:true'
@@ -1764,7 +2063,9 @@ describe('native layout size continuity', () => {
   };
 
   test('a native size group plays to its end after the removal of the layout prop', async () => {
-    const tag = await mountScene(<SizePair {...START} {...customPair} />);
+    const { tag, twin } = await mountTwinScene(
+      <SizePair {...START} {...customPair} />
+    );
     await render(<SizePair {...FIRST} {...customPair} />);
     const firstThird = await waitFirstThird(tag, WIDTH_CHANGE);
     await takeTraceOf(tag);
@@ -1788,7 +2089,12 @@ describe('native layout size continuity', () => {
         .map((row) => row.playbacks.length)
         .join()
     ).toBe(firstThird ? '0,0,0' : '2,2,2');
-    expect(framePairDistances(rows).during < TOLERANCE).toBe(true);
+    await expectRowsOnTwinTimeline(
+      'a native size group after the removal of the layout prop',
+      twin,
+      rows
+    );
+    expectKeptPair(framePairDistances(rows).during < TOLERANCE);
     expect(framePairDistances(rows).atEnd <= LAID_OUT_TOLERANCE).toBe(true);
     expect([...callbacks].sort().join()).toBe('frame:true,native:true');
     await render(null);
@@ -1813,7 +2119,7 @@ describe('native layout size continuity', () => {
     const pairOf = (frame: GroupFrame, style: ViewStyle | undefined) => (
       <SizePair {...frame} host={host} style={style} {...layouts} inRow />
     );
-    const tag = await mountScene(pairOf(START, styleBefore));
+    const { tag, twin } = await mountTwinScene(pairOf(START, styleBefore));
     await render(pairOf(end, styleBefore));
     const firstThird = await waitFirstThird(tag, sizeChange);
     const startEvents = firstThird?.events ?? (await takeTraceOf(tag));
@@ -1836,6 +2142,7 @@ describe('native layout size continuity', () => {
       rows,
       endEvents,
       distances: framePairDistances(rows),
+      twin,
     };
   }
 
@@ -1911,10 +2218,17 @@ describe('native layout size continuity', () => {
   ] of groupsWithASizeTrack) {
     for (const [styleName, style] of stylesWithNoNativeSizeChange) {
       test(`${styleName} that comes during a native ${groupName} group gives the group to the frame driver`, async () => {
-        const { firstThird, before, commitEvents, rows, endEvents, distances } =
-          await changeStyleDuringAnimation(layouts, end, undefined, style, {
-            sizeChange,
-          });
+        const {
+          firstThird,
+          before,
+          commitEvents,
+          rows,
+          endEvents,
+          distances,
+          twin,
+        } = await changeStyleDuringAnimation(layouts, end, undefined, style, {
+          sizeChange,
+        });
         if (firstThird) {
           expectFrameDrivenGroup(firstThird, sizeChange);
           expect(before.playbacks.length).toBe(0);
@@ -1925,7 +2239,12 @@ describe('native layout size continuity', () => {
         }
         expect(rows[0].playbacks.length).toBe(0);
         expect(summarize(endEvents.filter(isHostEvent))).toBe('');
-        expect(distances.during < TOLERANCE).toBe(true);
+        await expectRowsOnTwinTimeline(
+          `${styleName} during a native ${groupName} group`,
+          twin,
+          rows
+        );
+        expectKeptPair(distances.during < TOLERANCE);
         expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
         if (firstThird) {
           expectCallbacksOfTwin();
@@ -1940,10 +2259,17 @@ describe('native layout size continuity', () => {
   }
 
   test('a border and a new width in one commit during a native size group give the group to the frame driver', async () => {
-    const { firstThird, before, commitEvents, rows, endEvents, distances } =
-      await changeStyleDuringAnimation(customPair, FIRST, undefined, BORDER, {
-        frameAfter: { ...FIRST, width: 100 },
-      });
+    const {
+      firstThird,
+      before,
+      commitEvents,
+      rows,
+      endEvents,
+      distances,
+      twin,
+    } = await changeStyleDuringAnimation(customPair, FIRST, undefined, BORDER, {
+      frameAfter: { ...FIRST, width: 100 },
+    });
     if (firstThird) {
       expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
       expect(before.playbacks.length).toBe(0);
@@ -1956,7 +2282,12 @@ describe('native layout size continuity', () => {
     }
     expect(rows[0].playbacks.length).toBe(0);
     expect(summarize(endEvents.filter(isHostEvent))).toBe('');
-    expect(distances.during < TOLERANCE).toBe(true);
+    await expectRowsOnTwinTimeline(
+      'a border and a new width in one commit during a native size group',
+      twin,
+      rows
+    );
+    expectKeptPair(distances.during < TOLERANCE);
     expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
     expect([...callbacks].sort().join()).toBe(
       'frame:false,frame:true,native:false,native:true'
@@ -2049,7 +2380,7 @@ describe('native layout size continuity', () => {
   }
 
   test('the removal of a border during a frame-driven size animation starts no native track', async () => {
-    const { startEvents, commitEvents, rows, endEvents, distances } =
+    const { startEvents, commitEvents, rows, endEvents, distances, twin } =
       await changeStyleDuringAnimation(customPair, FIRST, BORDER, undefined);
     expect(summarize(startEvents.filter(isRouteEvent))).toBe(
       'LayoutBuildFailed:UnsupportedTarget'
@@ -2057,7 +2388,12 @@ describe('native layout size continuity', () => {
     expect(summarize(commitEvents.filter(isRouteEvent))).toBe('');
     expect(summarize(endEvents.filter(isRouteEvent))).toBe('');
     expect(rows.map((row) => row.playbacks.length).join()).toBe('0,0,0,0');
-    expect(distances.during < TOLERANCE).toBe(true);
+    await expectRowsOnTwinTimeline(
+      'the removal of a border during a frame-driven size animation',
+      twin,
+      rows
+    );
+    expectKeptPair(distances.during < TOLERANCE);
     expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
     expect([...callbacks].sort().join()).toBe('frame:true,native:true');
     await render(null);
@@ -2099,7 +2435,7 @@ describe('native layout size continuity', () => {
       ...first,
       [writeKey]: first[writeKey] + WRITE_OFFSET[writeKey],
     };
-    const tag = await mountScene(
+    const { tag, twin } = await mountTwinScene(
       <SizePair {...WRITE_START} {...layouts} inRow />
     );
     await render(<SizePair {...first} {...layouts} inRow />);
@@ -2127,6 +2463,7 @@ describe('native layout size continuity', () => {
       rows,
       events,
       distances: framePairDistances(rows),
+      twin,
     };
   }
 
@@ -2143,10 +2480,8 @@ describe('native layout size continuity', () => {
   ];
   for (const [trackLeaf, writeKey, startedTrack] of competingWrites) {
     test(`a write of ${writeKey} with no layout prop during a native ${trackLeaf} track agrees with the frame driver`, async () => {
-      const { firstThird, rows, events, distances } = await writeDuringTrack(
-        trackLeaf,
-        writeKey
-      );
+      const { firstThird, rows, events, distances, twin } =
+        await writeDuringTrack(trackLeaf, writeKey);
       if (firstThird) {
         expectFrameDrivenGroup(firstThird, firstThird.sizeChange);
         expect(summarize(events.filter(isRouteEvent))).toBe('');
@@ -2160,7 +2495,12 @@ describe('native layout size continuity', () => {
       }
       const isNative = !firstThird && startedTrack !== '';
       expect(rows[0].playbacks.length).toBe(isNative ? 1 : 0);
-      expect(distances.during < TOLERANCE).toBe(true);
+      await expectRowsOnTwinTimeline(
+        `a write of ${writeKey} during a native ${trackLeaf} track`,
+        twin,
+        rows
+      );
+      expectKeptPair(distances.during < TOLERANCE);
       expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
       expect(distances.keysAtEnd).toBe(0);
       if (firstThird) {
@@ -2183,7 +2523,7 @@ describe('native layout size continuity', () => {
         height: { duration: PAIR_DURATION },
       }));
       const first = { ...WRITE_START, ...TRACK_END.originX, host };
-      const tag = await mountScene(
+      const { tag, twin } = await mountTwinScene(
         <SizePair {...WRITE_START} host={host} {...layouts} inRow />
       );
       await render(<SizePair {...first} {...layouts} inRow />);
@@ -2214,7 +2554,12 @@ describe('native layout size continuity', () => {
         events.some(({ buildFailure }) => buildFailure === 'UnsupportedTarget')
       ).toBe(true);
       expect(rows[0].playbacks.length).toBe(0);
-      expect(distances.during < TOLERANCE).toBe(true);
+      await expectRowsOnTwinTimeline(
+        `a write of width during the native tracks of ${hostName}`,
+        twin,
+        rows
+      );
+      expectKeptPair(distances.during < TOLERANCE);
       expect(distances.atEnd <= LAID_OUT_TOLERANCE).toBe(true);
       expect([...callbacks].sort().join()).toBe(
         'frame:false,frame:true,native:false,native:true'
@@ -2236,7 +2581,9 @@ describe('native layout size continuity', () => {
           </View>
         </View>
       );
-      const tag = await mountScene(scene(START, startsFlat, customPair));
+      const { tag } = await mountTwinScene(
+        scene(START, startsFlat, customPair)
+      );
       await render(scene(FIRST, startsFlat, customPair));
       const firstThird = await waitFirstThird(tag, WIDTH_CHANGE);
       await render(scene(FIRST, startsFlat, NO_LAYOUT));
@@ -2258,6 +2605,8 @@ describe('native layout size continuity', () => {
       );
       const events = await takeTraceOf(tag);
       const distances = framePairDistances(rows);
+      // The commit changes the mounted parent of the boxes, so the reads after it take the twin from after it.
+      const twinAfterCommit = await twinPairOf(tag);
       expect(getTestComponent(BOX_REF).getTag()).toBe(tag);
       if (firstThird) {
         expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
@@ -2269,7 +2618,12 @@ describe('native layout size continuity', () => {
         expectOneTrackReplaced(before, rows[0]);
         expectOneEndForEachTrack(events, 'Width', ['PositionX']);
       }
-      expect(distances.during).toBeWithinRange(0, TOLERANCE);
+      await expectRowsOnTwinTimeline(
+        `a flattening change of the parent (${startsFlat ? 'the parent unflattens' : 'the parent flattens'})`,
+        twinAfterCommit,
+        rows
+      );
+      expectKeptPair(distances.during <= TOLERANCE);
       expect(distances.atEnd).toBeWithinRange(0, 0.01);
       expect(distances.keysAtEnd).toBe(0);
       if (firstThird) {

@@ -101,6 +101,14 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   @ReactMethod
   fun apiLevel(promise: Promise) = promise.resolve(Build.VERSION.SDK_INT)
 
+  /** A garbage collection: the next read of a weak map has no entry of a freed view. */
+  @ReactMethod
+  fun collectGarbage(promise: Promise) {
+    Runtime.getRuntime().gc()
+    System.runFinalization()
+    promise.resolve(null)
+  }
+
   /**
    * `Animator.isPostNotifyEndListenerEnabled()`, a hidden API: true when the natural end of an animator reports in
    * the next frame. Null when reflection does not reach it.

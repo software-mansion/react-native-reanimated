@@ -41,7 +41,9 @@ import type {
   DeclaredKey,
   FrameCheck,
   FrameMatrix,
+  BoxLayouts,
   FrameRecord,
+  LayoutKey,
   FrameResidual,
   Leaf,
   Leaves,
@@ -56,6 +58,7 @@ import type {
   SizeBoxProps,
   TakenRow,
   TargetSample,
+  Timeline,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
@@ -64,6 +67,7 @@ import {
   BOX_SIZE,
   callbackOf,
   callbacks,
+  callbackTimeOf,
   capturedResidualOf,
   capturesOf,
   cellsOf,
@@ -84,6 +88,7 @@ import {
   expectCapturedStart,
   expectFrameTimeline,
   expectNativeReadRows,
+  FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
   frameDrivenOf,
@@ -119,11 +124,14 @@ import {
   POSITION_TOLERANCE,
   PRESENTATION_STAY_MS,
   READ_GAP_MS,
+  LAYOUT_KEYS,
+  LAYOUT_PROPS,
   readFrameRecords,
   REMOVAL_LEAD_MS,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
+  shadowLayoutsOf,
   residualInBandOf,
   routeOf,
   sample,
@@ -138,6 +146,20 @@ import {
   uncertaintyOf,
   waitForCallbacks,
 } from './nativeLayoutTestKit';
+import type {
+  PairQuantity,
+  PairRead,
+  TwinRead,
+  TwinReadResult,
+  TwinRest,
+} from './nativeLayoutTwinTimeline';
+import {
+  cellQuantitiesOf,
+  expectTwinReads,
+  pairTwinReadsOf,
+  KEEPS_PAIR_COMPARISON,
+  twinRestFrom,
+} from './nativeLayoutTwinTimeline';
 
 export type BoxName = 'native' | 'frame';
 type Flow = 'layout' | 'entering' | 'exiting';
@@ -590,18 +612,6 @@ const READERS: Record<string, Reader> = {
   borderRadius: { target: 'BorderRadius', tolerance: POSITION_TOLERANCE },
 };
 
-/** The property of the shadow tree of each layout key. */
-const LAYOUT_PROPS = {
-  originX: 'left',
-  originY: 'top',
-  width: 'width',
-  height: 'height',
-} as const;
-
-type LayoutKey = keyof typeof LAYOUT_PROPS;
-
-const LAYOUT_KEYS = Object.keys(LAYOUT_PROPS) as LayoutKey[];
-
 const isLayoutKey = (key: string): key is LayoutKey => key in LAYOUT_PROPS;
 
 /** A frame check with the key that its leaf declares. */
@@ -637,6 +647,8 @@ export type Played = {
   end?: Samples;
   mounted: MountedValue[];
   tracks: PlayedTrack[];
+  /** The keys of each build (`buildsOf`), one entry for each commit first. */
+  builtKeys: BuiltKey[][];
   /** The trace of the native box from the first commit. */
   events: TraceEvent[];
   captures: Capture[];
@@ -791,9 +803,15 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
     end,
     mounted,
     tracks,
+    builtKeys,
     events,
     captures: capturesOf(events, tracks, clockOffset, (track) =>
-      frameDriverOriginOf(track, frameChecks, clockOffset)
+      frameDriverOriginOf(
+        isHandOverOf(track),
+        describeHandOver(track),
+        frameChecks,
+        clockOffset
+      )
     ),
     frameChecks,
     frameRecords,
@@ -871,7 +889,7 @@ function scrollTo(y: number) {
  */
 function mountedValuesOf(
   places: (Place | undefined)[],
-  layouts: (Layouts | undefined)[]
+  layouts: (BoxLayouts | undefined)[]
 ): MountedValue[] {
   return places.flatMap((place, index) => {
     const rest = place && restOf(place);
@@ -902,7 +920,7 @@ function mountedValuesOf(
  */
 async function layoutsInFlightOf(referenceCase: ReferenceCase) {
   const { places, box, clip } = referenceCase;
-  const layouts: (Layouts | undefined)[] = [];
+  const layouts: (BoxLayouts | undefined)[] = [];
   for (const place of places.slice(1, -1)) {
     const rest = place && restOf(place);
     if (!rest || LAYOUT_KEYS.every((key) => isOnPixelGrid(rest[key]))) {
@@ -930,36 +948,10 @@ async function layoutsInFlightOf(referenceCase: ReferenceCase) {
 const NO_ANIMATIONS: Record<BoxName, Animations> = { native: {}, frame: {} };
 const LAYOUT_SETTLE_FRAMES = 2;
 
-/**
- * A laid-out value is a whole number of pixels; the shadow tree gives it with
- * float noise (measured: 49.90477 and 49.904755 for 131 px at 2.625).
- */
-const onPixelGrid = (value: number) =>
-  Math.round(value * PixelRatio.get()) / PixelRatio.get();
-
 const isOnPixelGrid = (value: number) => {
   const pixels = value * PixelRatio.get();
   return Math.abs(pixels - Math.round(pixels)) < 1e-6;
 };
-
-type Layouts = Record<BoxName, Record<LayoutKey, number>>;
-
-async function shadowLayoutsOf(): Promise<Layouts> {
-  const layoutOf = async (refName: string) => {
-    const component = getTestComponent(refName);
-    const values: Partial<Record<LayoutKey, number>> = {};
-    for (const key of LAYOUT_KEYS) {
-      values[key] = onPixelGrid(
-        Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]))
-      );
-    }
-    return values as Record<LayoutKey, number>;
-  };
-  return {
-    native: await layoutOf(BOX_REF),
-    frame: await layoutOf(FRAME_BOX_REF),
-  };
-}
 
 const restsOf = (
   places: (Place | undefined)[],
@@ -979,26 +971,38 @@ const restsOf = (
   );
 
 /**
- * The origin on the sample clock of the build that gave a track to the frame
- * driver: the start call of the record of the native box that replaced the
- * record of the track.
+ * The origin on the sample clock of a build of the frame driver: the start call
+ * of the record of the first check of `isStart`. `text` names the build in the
+ * error.
  */
 function frameDriverOriginOf(
-  track: ScalarTrack,
+  isStart: (check: LeafCheck) => boolean,
+  text: string,
   frameChecks: LeafCheck[],
   clockOffset: Band
 ) {
-  const start = frameChecks.find(
-    ({ record, replaced }) =>
-      record.box === 'native' && replaced?.declared === track.declaration
-  )?.record.start;
+  const start = frameChecks.find(isStart)?.record.start;
   if (!start) {
-    throw new Error(
-      `The frame driver has no start call of the build that took ${describeLeaf(track)} of the command ${track.generation}.`
-    );
+    throw new Error(`The frame driver has no start call of ${text}.`);
   }
   return start.timeMs + middleOf(clockOffset);
 }
+
+/**
+ * The check of the record of the native box that replaced the record of a
+ * track.
+ */
+const isHandOverOf =
+  (track: PlayedTrack) =>
+  ({ record, replaced }: LeafCheck) =>
+    record.box === 'native' && replaced?.declared === track.declaration;
+
+const describeHandOver = (track: PlayedTrack) =>
+  `the build that took ${describeLeaf(track)} of the command ${track.generation}`;
+
+/** The check of the first record of the native box that replaced no record. */
+const isFirstStart = ({ record, replaced }: LeafCheck) =>
+  record.box === 'native' && !replaced;
 
 /**
  * Each animation gives its callback `true` one time, after one `false` for each
@@ -1099,6 +1103,426 @@ export function expectReference(
   }
   return reads;
 }
+
+/** The parts of the declared duration of a command at which the check reads. */
+const CHECKPOINTS = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1];
+
+const ASSERTS_COMMON_TIME = !KEEPS_PAIR_COMPARISON;
+
+/**
+ * The cell of each box is its mounted parent: the player compares the native
+ * position samples with no offset (`shownTrackOf`).
+ */
+const CELL_OFFSET = { x: 0, y: 0 };
+
+const PAIR_QUANTITIES: Record<string, PairQuantity> = {
+  PositionX: 'Position x',
+  PositionY: 'Position y',
+  Width: 'Width',
+  Height: 'Height',
+  Opacity: 'Opacity',
+};
+
+/** A commit of a case and the route that played it on the native box. */
+type Stage = {
+  command: number;
+  route: 'native command' | 'frame driver';
+  /** On the sample clock. */
+  origin: Band;
+  /** The longest declared duration of the keys of the commit. */
+  durationMs: number;
+  /** The values of the twin at rest after the commit. */
+  rest: TwinRest;
+  /**
+   * The time from the origin to the end of each box. Absent for a box that did
+   * not play the commit to its end.
+   */
+  playedMs: Partial<Record<BoxName, number>>;
+};
+
+/** The native samples of one read of the common-time check. */
+type CommonRead = {
+  stage: Stage;
+  checkpoint: string;
+  samples: Record<string, TargetSample>;
+};
+
+type CommonRow = {
+  stage: Stage;
+  checkpoint: string;
+  quantity: string;
+  native: string;
+  twin: string;
+  errorsMs: Record<string, number>;
+  result: string;
+  note?: string;
+};
+
+/**
+ * Statement C of `native layout reference at a common time`: the native box and
+ * its twin at common times. Each command reads the row nearest to each
+ * checkpoint of its declared duration from its origin (a command before the
+ * next command only up to the origin of that command), the first row from its
+ * origin, and the end samples. A native command reads from the end of its first
+ * frames. Each value of these rows has its time error on the twin timeline
+ * (`expectTwinReads`). The duration of each command and the emission time of
+ * the last callback of each box are compared to one display frame. Apple
+ * asserts; Android prints. Each read and each time is a `COMMON-TIME` row. A
+ * case that the frame driver plays on the two boxes from its first commit
+ * compares the frame driver with itself: its rows are a control.
+ */
+export function expectAtCommonTime(
+  caseName: string,
+  declaredCase: ReferenceCase,
+  played: Played
+) {
+  const referenceCase = routedCaseOf(declaredCase);
+  const stages = stagesOf(caseName, referenceCase, played);
+  const reads = commonReadsOf(stages, played, targetsOf(referenceCase)[0]);
+  const rows = [
+    ...expectValuesAtCommonTime(
+      caseName,
+      reads,
+      matrixToleranceOf(referenceCase),
+      played
+    ),
+    ...expectTimesAtCommonTime(stages),
+  ];
+  for (const row of rows) {
+    console.log(
+      describeCommonRow(
+        caseName,
+        row,
+        referenceCase.isFrameDriven ? 'control' : row.result
+      )
+    );
+  }
+}
+
+/** The route, the origin, and the durations of each commit of a played case. */
+function stagesOf(
+  caseName: string,
+  referenceCase: ReferenceCase,
+  played: Played
+): Stage[] {
+  const { builtKeys, tracks, frameChecks } = played;
+  const rests = restsOf(referenceCase.places, played.mounted, 'frame');
+  return referenceCase.places.slice(1).map((_, commit): Stage => {
+    const keys = builtKeys[commit];
+    const declared = keys.map((key) => key.declared);
+    const checksOf = (box: BoxName) =>
+      frameChecks.filter(
+        (check) => check.record.box === box && declared.includes(check.declared)
+      );
+    const commandKeys = commandKeysOf(referenceCase, keys, commit);
+    const common = {
+      command: commit + 1,
+      rest: twinRestFrom((rests[commit + 1] ?? rests[commit])!),
+    };
+    if (commandKeys.length > 0) {
+      const commandTracks = tracks.filter(({ declaration }) =>
+        commandKeys.includes(declaration)
+      );
+      const { origin } = commandTracks[0];
+      return {
+        ...common,
+        route: 'native command',
+        origin,
+        durationMs: longestDurationOf(commandTracks),
+        playedMs: {
+          native: commandTracks.every(({ finished }) => finished)
+            ? Math.max(...commandTracks.map(({ played: { to } }) => to)) -
+              middleOf(origin)
+            : undefined,
+          frame: recordedDurationOf(checksOf('frame')),
+        },
+      };
+    }
+    const startMs = frameDriverStageOriginOf(
+      caseName,
+      commit,
+      declared,
+      played
+    );
+    const nativeChecks = checksOf('native');
+    return {
+      ...common,
+      route: 'frame driver',
+      origin: { from: startMs, to: startMs },
+      durationMs: longestDurationOf(nativeChecks),
+      playedMs: {
+        native: recordedDurationOf(nativeChecks),
+        frame: recordedDurationOf(checksOf('frame')),
+      },
+    };
+  });
+}
+
+const longestDurationOf = (timed: { timeline: Timeline }[]) =>
+  Math.max(...timed.map(({ timeline }) => declaredDurationOf(timeline)));
+
+/**
+ * The origin of a commit that the frame driver plays on the native box: of the
+ * first commit, the start call of its first record; of a later commit, the
+ * start call of the record that replaced a native track.
+ */
+function frameDriverStageOriginOf(
+  caseName: string,
+  commit: number,
+  declared: DeclaredKey[],
+  { tracks, frameChecks, clockOffset }: Played
+) {
+  if (commit === 0) {
+    return frameDriverOriginOf(
+      isFirstStart,
+      `${caseName}, stage 0`,
+      frameChecks,
+      clockOffset
+    );
+  }
+  const handedOver = tracks.find((track) =>
+    frameChecks.some(
+      (check) => declared.includes(check.declared) && isHandOverOf(track)(check)
+    )
+  );
+  if (!handedOver) {
+    throw new Error(
+      `The frame-driven stage ${commit} of ${caseName} replaced no native track.`
+    );
+  }
+  return frameDriverOriginOf(
+    isHandOverOf(handedOver),
+    describeHandOver(handedOver),
+    frameChecks,
+    clockOffset
+  );
+}
+
+/** From the first start call to the last frame of the records of checks. */
+function recordedDurationOf(checks: LeafCheck[]) {
+  const spans = checks.flatMap(({ record: { start, frames } }) =>
+    start ? [{ from: start.timeMs, to: frames[frames.length - 1].timeMs }] : []
+  );
+  return spans.length === 0
+    ? undefined
+    : Math.max(...spans.map(({ to }) => to)) -
+        Math.min(...spans.map(({ from }) => from));
+}
+
+/**
+ * The reads of each stage, from the rows from its first read time to the origin
+ * of the next stage: the first row, the row nearest to each checkpoint in that
+ * time, and the end samples. `target` is the target of the time of a row.
+ */
+function commonReadsOf(
+  stages: Stage[],
+  { rows, end }: Played,
+  target: string
+): CommonRead[] {
+  const timeOf = ({ row }: TakenRow<Samples>) =>
+    row.native[target].monotonicTimeMs;
+  const reads = stages.flatMap((stage, index): CommonRead[] => {
+    const originMs = middleOf(stage.origin);
+    const fromMs = originMs + firstReadDelayOf(stage);
+    const next = stages[index + 1];
+    const untilMs = next ? middleOf(next.origin) : Infinity;
+    const stageRows = rows.filter(
+      (row) => timeOf(row) >= fromMs && timeOf(row) < untilMs
+    );
+    if (stageRows.length === 0) {
+      throw new Error(
+        `The case has no row of ${target} from the first read time of the command ${stage.command} to the next stage.`
+      );
+    }
+    const nearestTo = (timeMs: number) =>
+      stageRows.reduce((nearest, row) =>
+        Math.abs(timeOf(row) - timeMs) < Math.abs(timeOf(nearest) - timeMs)
+          ? row
+          : nearest
+      );
+    return [
+      { stage, checkpoint: 'first read', samples: stageRows[0].row.native },
+      ...CHECKPOINTS.map((part) => ({
+        part,
+        atMs: originMs + part * stage.durationMs,
+      }))
+        .filter(({ atMs }) => atMs >= fromMs && atMs < untilMs)
+        .map(({ part, atMs }) => ({
+          stage,
+          checkpoint: `${part}`,
+          samples: nearestTo(atMs).row.native,
+        })),
+    ];
+  });
+  return end
+    ? [
+        ...reads,
+        { stage: lastOf(stages)!, checkpoint: 'end', samples: end.native },
+      ]
+    : reads;
+}
+
+/**
+ * The presentation layer shows the model of a native command until its first
+ * display frame (`FIRST_FRAMES_MS`).
+ */
+const firstReadDelayOf = ({ route }: Stage) =>
+  route === 'native command' ? FIRST_FRAMES_MS : 0;
+
+/** Each value of each read against the twin timeline. */
+function expectValuesAtCommonTime(
+  caseName: string,
+  reads: CommonRead[],
+  matrixTolerance: MatrixTolerance,
+  { frameRecords, clockOffset }: Played
+): CommonRow[] {
+  const cellQuantities = cellQuantitiesOf(
+    frameRecords,
+    'frame',
+    matrixTolerance
+  );
+  const scalars: { at: CommonRead; read: PairRead }[] = [];
+  const cells: { at: CommonRead; read: TwinRead }[] = [];
+  for (const at of reads) {
+    for (const [target, sampled] of Object.entries(at.samples)) {
+      const { presentation, monotonicTimeMs: t } = sampled;
+      if (target === 'Transform') {
+        cells.push(
+          ...TRANSFORM_SAMPLE_CELLS.map((cell) => ({
+            at,
+            read: {
+              quantity: cellQuantities[cell],
+              t,
+              native: presentation[cell],
+            },
+          }))
+        );
+      } else if (target in PAIR_QUANTITIES) {
+        scalars.push({
+          at,
+          read: {
+            quantity: PAIR_QUANTITIES[target],
+            t,
+            native: presentation[0],
+            rest: at.stage.rest,
+          },
+        });
+      } else {
+        throw new Error(`The twin timeline has no quantity of ${target}.`);
+      }
+    }
+  }
+  const results = expectTwinReads(
+    caseName,
+    [
+      ...pairTwinReadsOf(
+        frameRecords,
+        { offset: CELL_OFFSET, recordOffset: CELL_OFFSET, clockOffset },
+        scalars.map(({ read }) => read)
+      ),
+      ...cells.map(({ read }) => read),
+    ],
+    clockOffset
+  );
+  return [...scalars, ...cells].map(({ at }, index) =>
+    valueRowOf(at, results[index])
+  );
+}
+
+const valueRowOf = (
+  { stage, checkpoint }: CommonRead,
+  { read, low, high, result }: TwinReadResult
+): CommonRow => ({
+  stage,
+  checkpoint,
+  quantity: read.quantity.name,
+  native: read.native.toFixed(4),
+  twin: low.values?.map((value) => value.toFixed(4)).join(', ') ?? 'no match',
+  errorsMs: { e_lo: low.ms, e_hi: high.ms },
+  result,
+});
+
+/**
+ * The duration of each stage on the two boxes, and the emission time of the
+ * last callback of each box on the animation clock, against one display frame.
+ */
+function expectTimesAtCommonTime(stages: Stage[]): CommonRow[] {
+  const native = callbackTimeOf('native');
+  const frame = callbackTimeOf('frame');
+  const times = [
+    ...stages.map((stage) => ({
+      stage,
+      checkpoint: 'whole command',
+      quantity: 'duration',
+      native: stage.playedMs.native,
+      twin: stage.playedMs.frame,
+    })),
+    {
+      stage: lastOf(stages)!,
+      checkpoint: 'end',
+      quantity: 'callback emission',
+      native: native.emittedMs,
+      twin: frame.emittedMs,
+      note: `delivery: the native callback came ${(native.receivedMs - frame.receivedMs).toFixed(3)} ms after the twin callback`,
+    },
+  ];
+  const rows = times.map(({ native: ofNative, twin, ...time }): CommonRow => {
+    if (ofNative === undefined || twin === undefined) {
+      return {
+        ...time,
+        native: `${ofNative ?? 'not ended'}`,
+        twin: `${twin ?? 'not ended'}`,
+        errorsMs: {},
+        result: 'not compared',
+      };
+    }
+    const errorMs = Math.abs(ofNative - twin);
+    return {
+      ...time,
+      native: ofNative.toFixed(3),
+      twin: twin.toFixed(3),
+      errorsMs: { difference: errorMs },
+      result: !ASSERTS_COMMON_TIME
+        ? 'not asserted'
+        : errorMs <= FRAME_MS
+          ? 'inside one display frame'
+          : 'failed',
+    };
+  });
+  expect(
+    rows
+      .filter(({ result }) => result === 'failed')
+      .map(
+        ({ stage, quantity, errorsMs }) =>
+          `command ${stage.command} ${quantity}: ${errorsMs.difference.toFixed(3)} ms`
+      )
+      .join('; ')
+  ).toBe('');
+  return rows;
+}
+
+const describeCommonRow = (
+  caseName: string,
+  { stage, checkpoint, quantity, native, twin, errorsMs, note }: CommonRow,
+  result: string
+) => {
+  const errors = Object.entries(errorsMs);
+  return [
+    'COMMON-TIME',
+    caseName,
+    `command ${stage.command} (${stage.route})`,
+    checkpoint,
+    quantity,
+    native,
+    twin,
+    errors.map(([name, ms]) => `${name} ${ms.toFixed(3)} ms`).join(', '),
+    errors
+      .map(([name, ms]) => `${name} ${(ms / FRAME_MS).toFixed(3)}`)
+      .join(', '),
+    result,
+    ...(note ? [note] : []),
+  ].join(' | ');
+};
 
 /** The rows and the tracks of a play with no opacity of the native box. */
 const withoutNativeOpacityOf = ({ rows, tracks }: Played) => ({
@@ -3092,13 +3516,8 @@ function tracksOf(
   const commands = events.filter(({ event }) => event === 'Admitted');
   const tracks: PlayedTrack[] = [];
   builtKeys.forEach((keys, commit) => {
-    const started = keys
-      .filter(({ continuesTrack }) => !continuesTrack)
-      .map(({ declared }) => declared);
-    if (
-      started.length === 0 ||
-      declarationOf(referenceCase, commit).isFrameDriven
-    ) {
+    const started = commandKeysOf(referenceCase, keys, commit);
+    if (started.length === 0) {
       return;
     }
     const command = commands.shift();
@@ -3141,6 +3560,21 @@ function tracksOf(
   }
   return tracks;
 }
+
+/**
+ * The keys of the native command of a commit: none when the commit gives no key
+ * a new timeline or when the frame driver plays it.
+ */
+const commandKeysOf = (
+  referenceCase: ReferenceCase,
+  keys: BuiltKey[],
+  commit: number
+): DeclaredKey[] =>
+  declarationOf(referenceCase, commit).isFrameDriven
+    ? []
+    : keys
+        .filter(({ continuesTrack }) => !continuesTrack)
+        .map(({ declared }) => declared);
 
 /**
  * After a restyle or a write of a target, the model of a box is not the end

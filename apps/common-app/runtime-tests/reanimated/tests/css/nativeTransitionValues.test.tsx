@@ -65,13 +65,19 @@ import {
   takeTrace,
 } from '../nativeAnimationObservation';
 import { setSlowAnimations, SLOW_ANIMATIONS_DRAG } from '../slowAnimations';
-import type { DrawnSample, SampledProperty } from '../viewSampler';
+import type {
+  DrawnSample,
+  FrameCallbackRun,
+  SampledProperty,
+  StartValue,
+} from '../viewSampler';
 import {
   animatorDurationScale,
   apiLevel,
   isViewSamplerAvailable,
   logDrawnValues,
   recordDrawnValues,
+  recordDrawnValuesAndFrameCallbacks,
   uptimeMs,
 } from '../viewSampler';
 
@@ -172,6 +178,11 @@ const isColor = (property: SampledProperty) =>
   property === 'borderColor' ||
   property === 'shadowColor';
 
+const startValueOf = (
+  { property, from, tolerance }: PropertyCase,
+  value = from.drawn
+): StartValue => ({ property, value, tolerance, isColor: isColor(property) });
+
 type Transition = {
   propertyCase: PropertyCase;
   easing?: Easing;
@@ -185,6 +196,7 @@ type RenderInterval = { earliestMs: number; latestMs: number };
 type Played = {
   tag: number;
   samples: DrawnSample[];
+  frameCallbacks: FrameCallbackRun[];
   events: TraceEvent[];
   started: RenderInterval;
 };
@@ -297,7 +309,7 @@ async function play(
   await takeTrace();
   const tag = getTestComponent(BOX_REF).getTag();
   let started: RenderInterval = { earliestMs: 0, latestMs: 0 };
-  const samples = await recordDrawnValues(
+  const { samples, frameCallbacks } = await recordDrawnValuesAndFrameCallbacks(
     tag,
     [propertyCase.property],
     async () => {
@@ -308,7 +320,7 @@ async function play(
     }
   );
   const events = (await takeTrace()).filter((event) => event.tag === tag);
-  return { tag, samples, events, started };
+  return { tag, samples, frameCallbacks, events, started };
 }
 
 /** The eased progress of a CSS easing, in the form of the native timing objects. */
@@ -642,11 +654,20 @@ function curveOfTransition(
 
 function expectOnCurve(
   caseName: string,
-  { samples, started }: Pick<Played, 'samples' | 'started'>,
+  {
+    samples,
+    started,
+    frameCallbacks,
+  }: Pick<Played, 'samples' | 'started' | 'frameCallbacks'>,
   transition: Transition,
   valueIndex = 0
 ) {
-  logDrawnValues(caseName, samples, started.earliestMs);
+  logDrawnValues(caseName, samples, {
+    renderStartMs: started.earliestMs,
+    startValues: [startValueOf(transition.propertyCase)],
+    delayMs: transition.delay,
+    frameCallbacks,
+  });
   expect(
     curveFaults(
       curveOfTransition(transition),
@@ -835,7 +856,7 @@ async function playTwoProperties(
   const tag = getTestComponent(BOX_REF).getTag();
   let started: RenderInterval = { earliestMs: 0, latestMs: 0 };
   let removed: RenderInterval = { earliestMs: 0, latestMs: 0 };
-  const samples = await recordDrawnValues(
+  const { samples, frameCallbacks } = await recordDrawnValuesAndFrameCallbacks(
     tag,
     ['backgroundColor', 'opacity'],
     async () => {
@@ -860,7 +881,7 @@ async function playTwoProperties(
     }
   );
   const events = (await takeTrace()).filter((event) => event.tag === tag);
-  return { tag, samples, started, removed, events };
+  return { tag, samples, frameCallbacks, started, removed, events };
 }
 
 const AnimatedTextInput = createAnimatedComponent(TextInput);
@@ -1016,12 +1037,16 @@ async function playCrowd() {
     getTestComponent(CROWD_LAST_REF).getTag(),
   ];
   let started: RenderInterval = { earliestMs: 0, latestMs: 0 };
-  const samples = await recordDrawnValues(tags, ['opacity'], async () => {
-    started = await renderTimed(<Crowd opacity={0.2} />);
-    await waitClock(DURATION + SETTLE_MS);
-  });
+  const { samples, frameCallbacks } = await recordDrawnValuesAndFrameCallbacks(
+    tags,
+    ['opacity'],
+    async () => {
+      started = await renderTimed(<Crowd opacity={0.2} />);
+      await waitClock(DURATION + SETTLE_MS);
+    }
+  );
   const events = await takeTrace();
-  return { samples, started, events };
+  return { samples, frameCallbacks, started, events };
 }
 
 /**
@@ -1128,7 +1153,7 @@ function registerValueCases() {
 
   test('a color interruption at 50 % continues from the drawn color', async () => {
     let interruptedAtMs = 0;
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: BACKGROUND_COLOR },
       async () => {
         await waitClock(DURATION / 2);
@@ -1139,7 +1164,11 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('color interruption', samples, started.earliestMs);
+    logDrawnValues('color interruption', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(BACKGROUND_COLOR)],
+      frameCallbacks,
+    });
     expect(
       jumpsAfter(
         samples,
@@ -1153,7 +1182,7 @@ function registerValueCases() {
 
   test('a scalar reversal at 50 % continues from the drawn value and ends early', async () => {
     let reversedAtMs = 0;
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: OPACITY },
       async () => {
         await waitClock(DURATION / 2);
@@ -1162,7 +1191,11 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('scalar reversal', samples, started.earliestMs);
+    logDrawnValues('scalar reversal', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     expect(
       jumpsAfter(samples, 'opacity', reversedAtMs, maxStepOf(OPACITY))
     ).toBe('');
@@ -1183,7 +1216,7 @@ function registerValueCases() {
 
   test('a reversal twice continues from the drawn value each time', async () => {
     let firstReversalAtMs = 0;
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: OPACITY },
       async () => {
         await waitClock(DURATION / 2);
@@ -1194,7 +1227,11 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('reversal twice', samples, started.earliestMs);
+    logDrawnValues('reversal twice', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     expect(
       jumpsAfter(samples, 'opacity', firstReversalAtMs, maxStepOf(OPACITY))
     ).toBe('');
@@ -1202,7 +1239,7 @@ function registerValueCases() {
   });
 
   test('a reversal in the delay keeps the start value', async () => {
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: OPACITY, delay: DURATION },
       async () => {
         await waitClock(DURATION / 2);
@@ -1212,7 +1249,12 @@ function registerValueCases() {
         await waitClock(2 * DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('reversal in the delay', samples, started.earliestMs);
+    logDrawnValues('reversal in the delay', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      delayMs: DURATION,
+      frameCallbacks,
+    });
     expect(
       [...valuesAfter(samples, 0)].filter((value) => value !== 1).join(', ')
     ).toBe('');
@@ -1243,8 +1285,13 @@ function registerValueCases() {
   });
 
   test('two properties of one view play their own durations, and a removal of one keeps the other', async () => {
-    const { samples, started, removed } = await playTwoProperties();
-    logDrawnValues('two properties', samples, started.earliestMs);
+    const { samples, started, removed, frameCallbacks } =
+      await playTwoProperties();
+    logDrawnValues('two properties', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(BACKGROUND_COLOR), startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     const background = curveOfTransition({
       propertyCase: BACKGROUND_COLOR,
       duration: 2 * DURATION,
@@ -1274,7 +1321,7 @@ function registerValueCases() {
 
   test('a cancellation in motion keeps the drawn value', async () => {
     let cancelled: RenderInterval = { earliestMs: 0, latestMs: 0 };
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: OPACITY },
       async () => {
         await waitClock(DURATION / 2);
@@ -1288,7 +1335,11 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('cancellation in motion', samples, started.earliestMs);
+    logDrawnValues('cancellation in motion', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     expect(cancellationFaults(samples, OPACITY, cancelled)).toBe('');
     expect(lastValueOf(samples)).toBeWithinRange(
       0.2 + OPACITY.tolerance,
@@ -1298,7 +1349,7 @@ function registerValueCases() {
 
   test('a cancellation in the delay keeps the drawn value', async () => {
     let cancelled: RenderInterval = { earliestMs: 0, latestMs: 0 };
-    const { samples, started } = await play(
+    const { samples, started, frameCallbacks } = await play(
       { propertyCase: OPACITY, delay: DURATION },
       async () => {
         await waitClock(DURATION / 2);
@@ -1313,7 +1364,12 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS);
       }
     );
-    logDrawnValues('cancellation in the delay', samples, started.earliestMs);
+    logDrawnValues('cancellation in the delay', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      delayMs: DURATION,
+      frameCallbacks,
+    });
     expect(cancellationFaults(samples, OPACITY, cancelled)).toBe('');
     expect(
       [...valuesAfter(samples, 0)].filter((value) => value !== 1).join(', ')
@@ -1321,14 +1377,21 @@ function registerValueCases() {
   });
 
   test('a replacement and a cancellation in successive commits keep the drawn value', async () => {
-    const { samples, started, cancelled } = await playRapidReplacements();
-    logDrawnValues('rapid replacements', samples, started.earliestMs);
+    const { samples, started, cancelled, frameCallbacks } =
+      await playRapidReplacements();
+    logDrawnValues('rapid replacements', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     expect(cancellationFaults(samples, OPACITY, cancelled)).toBe('');
   });
 
   test('a held value stays through an unrelated commit and an animated style, and the next start releases it', async () => {
     const { samples, heldFromMs, releasedAtMs } = await playHeldValue();
-    logDrawnValues('held value', samples);
+    logDrawnValues('held value', samples, {
+      startValues: [startValueOf(OPACITY, SEED_OPACITY)],
+    });
     const held = samples.filter(
       ({ timeMs }) => timeMs >= heldFromMs && timeMs < releasedAtMs
     );
@@ -1388,7 +1451,9 @@ function registerValueCases() {
         await waitClock(DURATION + SETTLE_MS / 2);
       }
     });
-    logDrawnValues('start with a style commit', samples);
+    logDrawnValues('start with a style commit', samples, {
+      startValues: [startValueOf(OPACITY)],
+    });
     const targetFirst = targets.filter((target, index) => {
       const startValue = index === 0 ? 1 : targets[index - 1];
       const firstChange = samples.find(
@@ -1414,17 +1479,22 @@ function registerValueCases() {
     await takeTrace();
     const tag = getTestComponent(BOX_REF).getTag();
     let started: RenderInterval = { earliestMs: 0, latestMs: 0 };
-    const samples = await recordDrawnValues(tag, ['opacity'], async () => {
-      started = await renderTimed(
-        <ValueBox
-          propertyCase={OPACITY}
-          value={0.2}
-          onCSSTransitionStart={noop}
-        />
-      );
-      await waitClock(DURATION + SETTLE_MS);
-    });
-    expectOnCurve('transition callback', { samples, started }, transition);
+    const { samples, frameCallbacks } =
+      await recordDrawnValuesAndFrameCallbacks(tag, ['opacity'], async () => {
+        started = await renderTimed(
+          <ValueBox
+            propertyCase={OPACITY}
+            value={0.2}
+            onCSSTransitionStart={noop}
+          />
+        );
+        await waitClock(DURATION + SETTLE_MS);
+      });
+    expectOnCurve(
+      'transition callback',
+      { samples, started, frameCallbacks },
+      transition
+    );
     if (hasHost) {
       expect(
         summarize((await takeTrace()).filter((event) => event.tag === tag))
@@ -1455,18 +1525,23 @@ function registerValueCases() {
     await wait(300);
     const tag = getTestComponent(BOX_REF).getTag();
     let started: RenderInterval = { earliestMs: 0, latestMs: 0 };
-    const samples = await recordDrawnValues(tag, ['opacity'], async () => {
-      started = await renderTimed(<ModalBox value={0.2} />);
-      await waitClock(DURATION + SETTLE_MS);
-    });
+    const { samples, frameCallbacks } =
+      await recordDrawnValuesAndFrameCallbacks(tag, ['opacity'], async () => {
+        started = await renderTimed(<ModalBox value={0.2} />);
+        await waitClock(DURATION + SETTLE_MS);
+      });
     await render(null);
     await wait(300);
-    expectOnCurve('Modal', { samples, started }, transition);
+    expectOnCurve('Modal', { samples, started, frameCallbacks }, transition);
   });
 
   test('100 views that start one cubic curve in one commit draw it in one phase', async () => {
-    const { samples, started } = await playCrowd();
-    logDrawnValues('crowd', samples, started.earliestMs);
+    const { samples, started, frameCallbacks } = await playCrowd();
+    logDrawnValues('crowd', samples, {
+      renderStartMs: started.earliestMs,
+      startValues: [startValueOf(OPACITY), startValueOf(OPACITY)],
+      frameCallbacks,
+    });
     const curve = curveOfTransition({
       propertyCase: OPACITY,
       easing: EASE_IN_OUT,
