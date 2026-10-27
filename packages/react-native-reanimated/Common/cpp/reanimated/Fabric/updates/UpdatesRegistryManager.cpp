@@ -112,6 +112,16 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+void UpdatesRegistryManager::countReactCommitSnapshot(const SurfaceId surfaceId) {
+  auto lock = std::scoped_lock{reactCommitSnapshotCountsMutex_};
+  reactCommitSnapshotCounts_[surfaceId]++;
+}
+
+ReactCommitSnapshotCounts UpdatesRegistryManager::getReactCommitSnapshotCounts() const {
+  auto lock = std::scoped_lock{reactCommitSnapshotCountsMutex_};
+  return reactCommitSnapshotCounts_;
+}
+
 void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynamic &target) {
   react_native_assert(isLockedByCurrentThread());
   for (const auto &registry : registries_) {
