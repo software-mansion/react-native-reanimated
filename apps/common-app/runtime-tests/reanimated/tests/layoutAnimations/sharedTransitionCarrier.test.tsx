@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  FadeOut,
   SharedTransition,
   SharedTransitionBoundary,
   makeMutable,
@@ -27,23 +28,30 @@ function Target({
   opacity,
   active,
   sharedTag,
+  mounted,
+  exiting,
 }: {
   transition: SharedTransition;
   opacity: number;
   active: boolean;
   sharedTag: string;
+  mounted: boolean;
+  exiting?: FadeOut;
 }) {
   const target = useTestRef('target');
   const targetChild = useTestRef('targetChild');
   return (
     <SharedTransitionBoundary isActive={active}>
-      <Animated.View
-        ref={target}
-        sharedTransitionTag={sharedTag}
-        sharedTransitionStyle={transition}
-        style={[styles.target, { opacity }]}>
-        <View ref={targetChild} collapsable={false} style={styles.child} />
-      </Animated.View>
+      {mounted && (
+        <Animated.View
+          ref={target}
+          sharedTransitionTag={sharedTag}
+          sharedTransitionStyle={transition}
+          exiting={exiting}
+          style={[styles.target, { opacity }]}>
+          <View ref={targetChild} collapsable={false} style={styles.child} />
+        </Animated.View>
+      )}
     </SharedTransitionBoundary>
   );
 }
@@ -59,6 +67,9 @@ function Screens({
   keepTarget = false,
   reorder = false,
   moveAncestor = false,
+  targetScreen = active || keepTarget,
+  targetMounted = true,
+  targetExiting,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -70,6 +81,9 @@ function Screens({
   keepTarget?: boolean;
   reorder?: boolean;
   moveAncestor?: boolean;
+  targetScreen?: boolean;
+  targetMounted?: boolean;
+  targetExiting?: FadeOut;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -100,12 +114,14 @@ function Screens({
           {reorder ? [children, ...siblings] : [...siblings, children]}
         </SharedTransitionBoundary>
       )}
-      {(active || keepTarget) && (
+      {targetScreen && (
         <Target
           transition={transition}
           opacity={targetOpacity}
           active={active}
           sharedTag={sharedTag}
+          mounted={targetMounted}
+          exiting={targetExiting}
         />
       )}
     </View>
@@ -302,6 +318,51 @@ describe('Shared transition moves a real native view', () => {
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
   });
+
+  for (const [kind, targetExiting] of [
+    ['without an exit', undefined],
+    ['with an exit that outlasts the run', FadeOut.duration(8000)],
+  ] as const) {
+    test(`shows the source at the end when React removes the target ${kind}`, async () => {
+      const transition = SharedTransition.duration(4000);
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <Screens active transition={transition} targetExiting={targetExiting} />
+      );
+      await expectMoving('source');
+
+      await render(
+        <Screens
+          active
+          transition={transition}
+          targetMounted={false}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetScreen
+          targetMounted={false}
+          targetExiting={targetExiting}
+        />
+      );
+
+      await expectAtHome('source', 60, 1);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+    });
+  }
 });
 
 const styles = StyleSheet.create({
