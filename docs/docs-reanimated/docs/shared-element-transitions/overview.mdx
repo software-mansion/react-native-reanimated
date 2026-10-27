@@ -148,7 +148,7 @@ const transition = SharedTransition.duration(450).fadeContent();
 ```
 
 - The children fade out with the same timing or spring as the movement, so they also come back when the navigation goes back during the transition, and they follow the iOS back gesture.
-- The children of the target view fade in after the move, in half of the transition duration.
+- The children of the target view fade in after the move, in half of the transition duration. A child with its own [`entering`](/docs/layout-animations/entering-exiting-animations) animation plays it when the view lands, instead of the fade-in.
 - The transition uses the `sharedTransitionStyle` of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
 - A child with its own `sharedTransitionTag` moves on its own path and does not fade. A child without a tag fades out and in also when it is the same on both screens, so give such a child, for example an icon, its own `sharedTransitionTag`.
