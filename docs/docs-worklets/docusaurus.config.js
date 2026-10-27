@@ -185,10 +185,11 @@ const config = {
         appId: 'EXKV34DSZ0',
         apiKey: 'b0df4e45a4bec8a2f79aa77da07b56bd',
         indexName: 'react-native-worklets',
-        contextualSearch: false,
+        contextualSearch: true,
       },
     }),
   plugins: [
+    require.resolve('./plugins/search'),
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
       process.env.NODE_ENV === 'production' && [

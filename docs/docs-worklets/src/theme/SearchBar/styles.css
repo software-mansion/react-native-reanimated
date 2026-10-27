@@ -1,0 +1,21 @@
+.DocSearch-Hit .worklets-search-hit {
+  display: flex;
+  align-items: center;
+}
+
+.worklets-search-hit .DocSearch-Hit-Container {
+  flex: 1;
+  min-width: 0;
+}
+
+.worklets-search-version {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
