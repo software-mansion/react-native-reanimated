@@ -40,23 +40,27 @@ function Endpoint({
   active,
   transition,
   style,
+  mounted = true,
 }: {
   name: 'source' | 'target';
   active: boolean;
   transition: SharedTransition;
   style: object;
+  mounted?: boolean;
 }) {
   const ref = useTestRef(name);
   const childRef = useTestRef(`${name}Child`);
   return (
     <SharedTransitionBoundary isActive={active}>
-      <Animated.View
-        ref={ref}
-        sharedTransitionTag="crossfade"
-        sharedTransitionStyle={transition}
-        style={style}>
-        <View ref={childRef} collapsable={false} style={styles.child} />
-      </Animated.View>
+      {mounted && (
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="crossfade"
+          sharedTransitionStyle={transition}
+          style={style}>
+          <View ref={childRef} collapsable={false} style={styles.child} />
+        </Animated.View>
+      )}
     </SharedTransitionBoundary>
   );
 }
@@ -67,11 +71,13 @@ function Screens({
   transition,
   removeSource = false,
   removeTarget = false,
+  targetViewMounted = true,
 }: {
   showTarget: boolean;
   transition: SharedTransition;
   removeSource?: boolean;
   removeTarget?: boolean;
+  targetViewMounted?: boolean;
 }) {
   return (
     <View style={styles.container}>
@@ -89,6 +95,7 @@ function Screens({
           active={showTarget}
           transition={transition}
           style={styles.target}
+          mounted={targetViewMounted}
         />
       )}
     </View>
@@ -218,6 +225,42 @@ describe('Shared transition with crossfade', () => {
     await expectAtHome('source', SOURCE_WIDTH, 1);
     await expectEventually(() => isViewMountedNatively(targetTag)).toBe(false);
   });
+
+  // React removes the target view while its screen stays on top, and the navigation goes back before the run ends.
+  for (const [mode, transition] of [
+    ['a crossfade', SharedTransition.duration(4000).crossfade()],
+    ['a transition without crossfade', SharedTransition.duration(4000)],
+  ] as const) {
+    test(`shows the source at the end of ${mode} whose target React removed`, async () => {
+      await render(<Screens showTarget={false} transition={transition} />);
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(<Screens showTarget transition={transition} />);
+      await expectEventually(async () => {
+        const source = await mountedProps('source');
+        return (
+          !!source &&
+          isBetween(source.width, SOURCE_WIDTH + 5, TARGET_WIDTH - 5)
+        );
+      }).toBe(true);
+
+      await render(
+        <Screens showTarget transition={transition} targetViewMounted={false} />
+      );
+      await waitForFrames();
+      await render(
+        <Screens
+          showTarget={false}
+          transition={transition}
+          targetViewMounted={false}
+        />
+      );
+
+      await expectAtHome('source', SOURCE_WIDTH, 1);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+    });
+  }
 
   test('moves only the target when React removes the source in the same update', async () => {
     const finished: boolean[] = [];
