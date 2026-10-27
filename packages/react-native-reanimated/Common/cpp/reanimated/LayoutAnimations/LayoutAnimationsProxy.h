@@ -43,6 +43,15 @@ struct PendingNodeAnimation {
 
 // The carrier is the view that the run animates. It is the source or the target view,
 // moved from its parent to the root for the time of the run.
+// The children of the carrier fade with the progress of the run. When the carrier lands, the children
+// of the target fade in.
+struct ContentFade {
+  std::shared_ptr<Serializable> fadeIn;
+  ContentOpacityRange range;
+  double mountedOpacity = 1;
+  std::unordered_map<Tag, std::shared_ptr<LightNode>> fadedChildren;
+};
+
 struct SharedTransitionRun {
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
@@ -51,6 +60,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
+  std::optional<ContentFade> contentFade;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -170,7 +180,36 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const ShadowView &after,
       const Props::Shared &frameProps,
-      const std::shared_ptr<Serializable> &config) const;
+      const std::shared_ptr<Serializable> &config,
+      std::optional<ContentOpacityRange> contentOpacity) const;
+  std::optional<ContentOpacityRange> restartContentFade(SharedTransitionRun &run) const;
+  double contentOpacityOnScreen(const SharedTransitionRun &run) const;
+  std::vector<std::shared_ptr<LightNode>> fadingChildren(
+      const std::shared_ptr<LightNode> &node,
+      const std::unordered_set<Tag> &hiddenTags) const;
+  ShadowView withContentOpacity(
+      const std::shared_ptr<LightNode> &child,
+      const ShadowView &view,
+      double contentOpacity,
+      const PropsParserContext &propsParserContext) const;
+  void applyContentOpacity(
+      const std::shared_ptr<LightNode> &child,
+      double fromContentOpacity,
+      double toContentOpacity,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  void composeCarrierContent(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext)
+      const;
+  void restoreFadedChildren(
+      ContentFade &contentFade,
+      const std::vector<std::shared_ptr<LightNode>> &keptChildren,
+      const std::unordered_set<Tag> &hiddenTags,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  void fadeInTargetContent(
+      const SharedTransitionRun &run,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
   void startProgressTransition(
       int tag,
       const ShadowView &before,
@@ -284,7 +323,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
   void attachCarrier(
       const SharedTag &sharedTag,
-      const SharedTransitionRun &run,
+      SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
   void attachCarriersThatReactMoves(
@@ -344,7 +383,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       SharedElement &element,
       TransactionMeta &transaction,
-      const PropsParserContext &propsParserContext) const;
+      const PropsParserContext &propsParserContext,
+      bool landed = false) const;
   bool isSharedCarrier(Tag tag) const;
   bool hasUnqueuedCarrierFrame(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;

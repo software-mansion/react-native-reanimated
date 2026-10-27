@@ -25,6 +25,12 @@
 
 namespace reanimated {
 
+// The opacity of the children of a shared transition carrier, as a factor of their own opacity.
+struct ContentOpacityRange {
+  double from;
+  double to;
+};
+
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
@@ -34,6 +40,7 @@ struct LayoutAnimation {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
+  std::optional<double> contentOpacity;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -54,6 +61,7 @@ struct ManagedLayoutAnimationStart {
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  std::optional<ContentOpacityRange> contentOpacity;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -151,7 +159,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const ShadowView &finalView,
       const Props::Shared &frameProps,
-      const std::shared_ptr<Serializable> &config = nullptr) const;
+      const std::shared_ptr<Serializable> &config = nullptr,
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
