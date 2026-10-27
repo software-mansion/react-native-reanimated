@@ -1,6 +1,13 @@
 import { RemoteFunctionError, SnippetError } from './errors';
 import { isGeneratorFunction, isGeneratorObject } from './loadSnippet';
-import { cloneArguments } from './serialization';
+import {
+  cloneArguments,
+  CustomSerializerRegistry,
+  packArguments,
+  previewArguments,
+  unpackArguments,
+} from './serialization';
+import type { CustomSerializer, PackedArguments } from './serialization';
 import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
 import type {
   CoreId,
@@ -89,6 +96,8 @@ export class Machine {
   private readonly shared = new Map<number, SharedCell>();
   private readonly serializableReferences = new WeakMap<object, number>();
   private readonly serializableCache = new WeakMap<object, object>();
+  private readonly customSerializers = new CustomSerializerRegistry();
+  private readonly serializedValues = new Map<number, PackedArguments>();
   private nextCellId = 1;
   private readonly readShareable: SnippetFn;
   private readonly initializeRuntime: SnippetFn;
@@ -440,13 +449,29 @@ export class Machine {
       this.globalsOf(core)[String(args[0])] = args[1];
       return undefined;
     }
+    if (api === 'registerCustomSerializable') {
+      if (this.currentRuntime(core) !== 'rn') {
+        throw new SnippetError(
+          'registerCustomSerializable can be used only on React Native runtime.'
+        );
+      }
+      this.customSerializers.register(args[0] as CustomSerializer);
+      return undefined;
+    }
     if (api === 'createSerializable') {
       const value = args[0];
       const object = typeof value === 'object' && value !== null ? value : null;
       const cached =
         object === null ? undefined : this.serializableCache.get(object);
       if (cached !== undefined) return cached;
-      const id = this.createCell(core, 'serializable', null, value);
+      const packet = this.packArgs([value]);
+      const id = this.createCell(
+        core,
+        'serializable',
+        null,
+        previewArguments(packet)[0]
+      );
+      this.serializedValues.set(id, packet);
       const reference = Object.freeze({ __serializableRef: true });
       this.serializableReferences.set(reference, id);
       this.serializableCache.set(reference, reference);
@@ -718,8 +743,49 @@ export class Machine {
   private cloneArgs(args: unknown[]): unknown[] {
     return cloneArguments(args, (reference) => {
       const id = this.serializableReferences.get(reference);
+      if (id !== undefined && this.serializedValues.get(id)?.custom.size) {
+        throw new SnippetError(
+          'Custom Serializables are currently supported only in asynchronous call arguments in the simulator.'
+        );
+      }
       return id === undefined ? undefined : this.cell(id);
     });
+  }
+
+  private packArgs(args: unknown[]): PackedArguments {
+    return packArguments(
+      args,
+      (reference) => {
+        const id = this.serializableReferences.get(reference);
+        return id === undefined ? undefined : this.serializedValues.get(id);
+      },
+      this.customSerializers
+    );
+  }
+
+  private createCrossRuntimeJob(
+    core: CoreState,
+    api: ScheduleApi,
+    fn: unknown,
+    args: unknown[]
+  ): Job {
+    const target = this.resolveFn(api, fn);
+    const packet = this.packArgs(args);
+    const job = this.createJob(
+      target,
+      previewArguments(packet),
+      this.origin(core, api)
+    );
+    const registry = this.customSerializers;
+    // Generator bodies are lazy: unpack runs inside the destination's execution
+    // step, with its globals, console and runtime lock, never on the sender.
+    job.gen = (function* () {
+      const values = unpackArguments(packet, (name, value) =>
+        registry.unpack(name, value)
+      );
+      return yield* target(...(values as never[]));
+    })();
+    return job;
   }
 
   private addGuest(core: CoreState, cell: SharedCell): void {
@@ -812,11 +878,7 @@ export class Machine {
       value: undefined,
       callbacks: [],
     });
-    const job = this.createJob(
-      this.resolveFn(api, fn),
-      this.cloneArgs(args),
-      this.origin(core, api)
-    );
+    const job = this.createCrossRuntimeJob(core, api, fn, args);
     job.promiseId = id;
     core.outbox.push({ target, job });
     this.emit({
@@ -1177,11 +1239,7 @@ export class Machine {
     fn: unknown,
     args: unknown[]
   ): void {
-    const job = this.createJob(
-      this.resolveFn(api, fn),
-      this.cloneArgs(args),
-      this.origin(core, api)
-    );
+    const job = this.createCrossRuntimeJob(core, api, fn, args);
     job.deadline = core.currentJob?.deadline;
     core.outbox.push({ target, job });
     this.emit({

@@ -1,4 +1,5 @@
 import { SnippetError } from './errors';
+import type { CustomSerializer } from './serialization';
 import type {
   AwaitMarker,
   InterceptedApi,
@@ -231,6 +232,12 @@ export function isSerializableRef(value: unknown): value is SerializableRef {
     '__serializableRef' in value &&
     value.__serializableRef === true
   );
+}
+
+export function registerCustomSerializable<T extends object, P extends object>(
+  registration: CustomSerializer<T, P>
+): void {
+  dispatch('registerCustomSerializable', [registration]);
 }
 
 export interface Synchronizable<T> {

@@ -34,6 +34,12 @@ describe('reference examples', () => {
     nativeSchedule: ['[rn] true'],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
+    apiRegisterCustomSerializable: [
+      '[rn] determine: true',
+      '[rn] pack: 3 4',
+      '[worker:background] unpack: 3 4',
+      '[worker:background] Distance: 5',
+    ],
     apiIsSerializableRef: ['[rn] true', '[rn] false'],
     apiIsSynchronizable: ['[rn] true', '[rn] false', '[rn] 42'],
     apiCreateWorkletRuntime: [

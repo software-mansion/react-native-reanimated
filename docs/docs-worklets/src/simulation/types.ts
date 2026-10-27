@@ -72,6 +72,7 @@ export type InterceptedApi =
   | 'globalGet'
   | 'globalSet'
   | 'createSerializable'
+  | 'registerCustomSerializable'
   | 'createSynchronizable'
   | 'synchronizableRead'
   | 'synchronizableWrite'

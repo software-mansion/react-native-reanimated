@@ -128,9 +128,36 @@ cannot change the stored value or earlier snapshots. Unlike a Synchronizable,
 a Serializable has no lock or setter.
 
 The simulator uses structured cloning for supported data values. It does not
-model native serialization of functions or custom serializers, or development
-warnings when a serialized source object is mutated. The example only mutates
-the deserialized copy, which is valid in development and production.
+model native serialization of functions or development warnings when a serialized
+source object is mutated. The example only mutates the deserialized copy, which
+is valid in development and production.
+
+### Custom Serializables
+
+`registerCustomSerializable` registers synchronous `determine`, `pack`, and
+`unpack` worklet callbacks on the RN Runtime. Registrations belong to one
+simulation and are available to existing and subsequently created runtimes.
+Duplicate names keep the original registration.
+
+For asynchronous call arguments, `determine` and `pack` execute on the sending
+runtime before the job is queued. The queue holds a copy of the packed data.
+`unpack` executes inside the destination job, with the destination runtime's
+globals and lock, before the worklet receives its arguments. Callback console
+output is attributed to the executing thread. Callbacks run within the transfer
+step rather than as independently stepped generator functions.
+
+`createSerializable` packs once and stores the packed representation. Passing
+its reference to an asynchronous call unpacks a fresh value at the destination
+without packing the original again. Nested values in objects, arrays, Maps and
+Sets are supported. Snapshots display packed data without calling user code.
+
+This first model covers explicit asynchronous arguments and Serializable
+references. It does not model custom values in captured closures, synchronous
+calls, return values, Synchronizables or Shareables, or native registration
+propagation and worklet closure reconstruction. Unsupported custom prototypes
+fail explicitly rather than silently losing their methods. Custom callbacks
+must be ordinary synchronous functions with a `worklet` directive; their closure
+environment is still the simulator's JavaScript environment.
 
 ### Job
 
