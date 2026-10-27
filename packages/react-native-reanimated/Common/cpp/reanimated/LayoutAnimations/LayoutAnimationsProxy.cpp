@@ -110,7 +110,6 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
   setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
   nativeViewPlacement_ = dependencies.nativeViewPlacement;
-  hideInModalSnapshot_ = dependencies.hideInModalSnapshot;
 #endif
 }
 
@@ -255,11 +254,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     }
 
     handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, transaction, mutations, propsParserContext);
-#ifdef __APPLE__
-    if (hasScreenChanged) {
-      hideSourcesInModalSnapshots(mutations, transaction);
-    }
-#endif
   }
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     followOffWindowTargets(propsParserContext);
@@ -865,6 +859,13 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &parent,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+#ifdef __APPLE__
+  if (holdsSourceInModal(node, transaction)) {
+    node->setExitingState(COMPLETED);
+    heldModals_.push_back({node, std::chrono::steady_clock::now() + std::chrono::milliseconds(34)});
+    return;
+  }
+#endif
   const bool defersTeardown = holdsSnapshottedScreen(node);
   const StartAnimationsRecursivelyConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
@@ -901,6 +902,26 @@ bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::s
   return false;
 }
 
+#ifdef __APPLE__
+// React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
+// mount by up to two frames. A modal that holds the source of a transition stays mounted until 34 ms, two frames of a
+// 60 Hz display, after the mount that hides the source.
+bool LayoutAnimationsProxy::holdsSourceInModal(
+    const std::shared_ptr<LightNode> &node,
+    const TransactionMeta &transaction) const {
+  return std::ranges::any_of(transaction.transitionMap, [&](const auto &entry) {
+    bool insideModal = false;
+    for (auto current = entry.second.nodes[BEFORE]; current; current = current->parent.lock()) {
+      insideModal = insideModal || !strcmp(current->current.componentName, "ModalHostView");
+      if (current == node) {
+        return insideModal;
+      }
+    }
+    return false;
+  });
+}
+#endif
+
 // A UI-thread pull on Android must not update the views that the next flushing pull removes, because
 // Android can mount that JS-thread pull first.
 void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) const {
@@ -913,6 +934,17 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
     }
     finishedExits.push_back(nodeIt->second);
   }
+#ifdef __APPLE__
+  std::erase_if(heldModals_, [this](const HeldModal &held) { return !isLightNodeMapped(held.node); });
+  const auto now = std::chrono::steady_clock::now();
+  for (const auto &held : heldModals_) {
+    if (transaction.surfaceDropped || now >= held.removableAt) {
+      finishedExits.push_back(held.node);
+    } else {
+      schedulePullOnNextFrame();
+    }
+  }
+#endif
   transaction.dueRemovals = collectRemovals(finishedExits);
 }
 
