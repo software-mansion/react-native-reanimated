@@ -429,7 +429,8 @@ export default class AnimatedComponent
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
       maybeBuild(sharedTransition),
       undefined,
-      this.props.sharedTransitionTag
+      this.props.sharedTransitionTag,
+      sharedTransition.buildContentFadeIn()
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;
