@@ -298,6 +298,13 @@ static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::share
   return false;
 }
 
+static inline bool isDescendantOfAny(
+    const std::shared_ptr<LightNode> &node,
+    const std::vector<std::shared_ptr<LightNode>> &views) {
+  const auto parent = node->parent.lock();
+  return std::ranges::any_of(views, [&parent](const auto &view) { return isInSubtree(parent, view); });
+}
+
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
 }
