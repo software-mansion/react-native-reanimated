@@ -854,11 +854,15 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 // later Update or Insert for the same view carries full opacity and would show
 // the view again. Force opacity 0 on every outgoing Update and Insert for a
 // hidden view until the restore in cleanupSharedTransitions removes it from
-// its shared element.
+// its shared element. A child with a held entering animation also stays at
+// opacity 0 until the animation starts.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
-  const auto hiddenTags = hiddenViewTags();
+  auto hiddenTags = hiddenViewTags();
+  for (const auto &held : heldEnterings_) {
+    hiddenTags.insert(held.node->current.tag);
+  }
   if (hiddenTags.empty()) {
     return;
   }
@@ -1069,6 +1073,9 @@ void LayoutAnimationsProxy::finishSharedTransition(
     fadeInTargetContent(run, transaction, propsParserContext);
   }
   element.run.reset();
+  if (!heldEnterings_.empty()) {
+    schedulePullOnNextFrame();
+  }
 }
 
 // MARK: Content Fade
@@ -1211,7 +1218,41 @@ void LayoutAnimationsProxy::restoreFadedChildren(
   });
 }
 
-// The target shows its children at opacity 0 when it lands, and they fade in with the fade-in config.
+// An entering animation of a target child waits until the run lands. It starts when the child is no
+// longer target content of a run that fades, for example after the run ends without a landing.
+void LayoutAnimationsProxy::holdTargetEntering(TransactionMeta &transaction) const {
+  std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
+    if (!isLightNodeMapped(held.node) || held.node->isExiting()) {
+      return true;
+    }
+    if (isTargetContentOfFadingRun(held.node)) {
+      return false;
+    }
+    transaction.entering.push_back(held);
+    return true;
+  });
+  std::erase_if(transaction.entering, [&](const PendingNodeAnimation &entering) {
+    if (!isTargetContentOfFadingRun(entering.node)) {
+      return false;
+    }
+    heldEnterings_.push_back(entering);
+    return true;
+  });
+}
+
+bool LayoutAnimationsProxy::isTargetContentOfFadingRun(const std::shared_ptr<LightNode> &node) const {
+  const auto parent = node->parent.lock();
+  if (!parent || !isViewKind(node->current) || findSharedTag(node->current)) {
+    return false;
+  }
+  return std::ranges::any_of(sharedElements_, [&parent](const auto &entry) {
+    const auto &run = entry.second.run;
+    return run && run->contentFade && run->carrier != run->target && run->target == parent;
+  });
+}
+
+// The target shows its children at opacity 0 when it lands. A child with a held entering animation plays it,
+// the other children fade in with the fade-in config.
 void LayoutAnimationsProxy::fadeInTargetContent(
     const SharedTransitionRun &run,
     TransactionMeta &transaction,
@@ -1219,6 +1260,13 @@ void LayoutAnimationsProxy::fadeInTargetContent(
   for (const auto &child : fadingChildren(run.target, hiddenViewTags())) {
     const auto tag = child->current.tag;
     if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+      continue;
+    }
+    if (const auto heldIt =
+            std::ranges::find_if(heldEnterings_, [&child](const auto &held) { return held.node == child; });
+        heldIt != heldEnterings_.end()) {
+      startEnteringAnimation(child, heldIt->config);
+      heldEnterings_.erase(heldIt);
       continue;
     }
     const auto &view = mountedView(child);
