@@ -1796,9 +1796,10 @@ describe('native layout size continuity', () => {
     };
 
   /**
-   * The Android form: the size change keeps the whole animation of the native
-   * box on the frame driver (`AndroidNativeAnimationPlatform::playsTarget`),
-   * and a later commit starts nothing native on a view with frame-driven state
+   * The Android form: a size change of more than one pixel keeps the whole
+   * animation of the native box on the frame driver
+   * (`AndroidNativeAnimationPlatform::canRealize`), and a later commit starts
+   * nothing native on a view with frame-driven state
    * (`LayoutAnimationsProxy::admitsNativeStart`).
    */
   function expectFrameDrivenGroup(

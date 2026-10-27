@@ -285,8 +285,8 @@ export type CallbackBuilder = {
 };
 
 /**
- * The platform plays no size change natively: the whole animation is
- * frame-driven.
+ * The platform plays no size change of more than one pixel natively: the whole
+ * animation is frame-driven.
  */
 const SIZE_CHANGE_ROUTE: Pick<Declaration, 'isFrameDriven' | 'refusedWith'> =
   PLAYS_SIZE_CHANGE

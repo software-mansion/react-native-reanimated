@@ -74,6 +74,7 @@ import {
   PAIR_TOP,
   PLAYS_HELD_SPRING,
   PLAYS_SIZE_CHANGE,
+  playsSizeChangeOf,
   PLAYS_SPRING_WITH_HOLD,
   POSITION_TOLERANCE,
   PRESENTATION_STAY_MS,
@@ -1487,7 +1488,7 @@ describe('native layout springs', () => {
   movingGeometryTest(
     PLAYS_SIZE_CHANGE
       ? 'LinearTransition.springify() with a change of the position plays natively: NATIVE PLAYING for X and Y, NATIVE IMMEDIATE for a size with no change, NATIVE PLAYING for a size that the layout rounds'
-      : 'LinearTransition.springify() with a change of the position: FRAME-DRIVEN, UnsupportedTarget for X and Y when the layout changes a size, else NATIVE PLAYING for X and Y and NATIVE IMMEDIATE for a size with no change',
+      : 'LinearTransition.springify() with a change of the position: FRAME-DRIVEN, UnsupportedTarget for X and Y when the layout changes a size by more than one pixel, else NATIVE PLAYING for X and Y, NATIVE IMMEDIATE for a size with no change, and NATIVE PLAYING for a size that the layout rounds',
     async () => {
       const played = await play(
         {
@@ -1528,10 +1529,7 @@ describe('native layout springs', () => {
       console.log(
         `SPRING-SPRINGIFY | layout values of the native box: ${JSON.stringify(layoutValues)}; ${sizeReads.join('; ')}; after TrackStarted:PositionX: last read ${sinceStartedX(xReads[xReads.length - 1]?.monotonicTimeMs)}, TrackEnded ${trackEnds.join(', ')}`
       );
-      if (
-        !PLAYS_SIZE_CHANGE &&
-        sizes.some(({ change }) => !isNear(change, 0))
-      ) {
+      if (!sizes.every(({ change }) => playsSizeChangeOf(change))) {
         for (const key of [POSITION_X, POSITION_Y]) {
           expectFrameDriven(
             'LinearTransition.springify()',
@@ -1548,7 +1546,7 @@ describe('native layout springs', () => {
       for (const target of ['PositionX', 'PositionY']) {
         expectNativePlaying(played, target);
       }
-      expect(sizes.some(({ change }) => change === 0)).toBe(true);
+      expect(sizes.some(({ change }) => isNear(change, 0))).toBe(true);
       for (const { target, change } of sizes) {
         if (change === 0) {
           const afterEnd = await sampleTargets(played.tags.native, [target]);
@@ -1558,7 +1556,6 @@ describe('native layout springs', () => {
             ]).kind
           ).toBe('native immediate');
         } else {
-          expect(Math.abs(change) <= LAID_OUT_TOLERANCE).toBe(true);
           expectNativePlaying(played, target);
         }
       }

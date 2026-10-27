@@ -11,7 +11,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <numbers>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -30,7 +32,7 @@ enum class EncodedStart : jint {
 /// How the executor binds a track to its view. `TrackEncoding.kt` repeats the values.
 enum class EncodedBinding : jint {
   Writer,
-  /// A track that writes no property: a constant size, or a constant geometry that the view holds.
+  /// A track that writes no property: a size within one pixel of its end, or a constant geometry that the view holds.
   Hold,
 };
 
@@ -352,6 +354,75 @@ bool admitsMovingGeometry(const AnimationTrack &track, const facebook::react::Sh
   return std::abs(determinant) > MATRIX_CELL_TOLERANCE && !hasSizeDependentTransform(viewProps);
 }
 
+/// The largest `|y(t)|` of a spring (`SpringTiming`). With no initial velocity the spring does not pass its
+/// start, so the bound is 1.
+double springDisplacementBoundOf(const SpringTiming &spring) {
+  if (spring.initialVelocity == 0) {
+    return 1;
+  }
+  const double coefficient = spring.decay - spring.initialVelocity;
+  if (spring.frequency == 0) {
+    return 1 + std::abs(coefficient) / (spring.decay * std::numbers::e);
+  }
+  return std::hypot(1.0, coefficient / spring.frequency);
+}
+
+/// The least and the largest progress of a timing.
+std::pair<double, double> progressRangeOf(const AnimationTiming &timing) {
+  const auto rangeWith = [](const std::vector<double> &values) {
+    const auto [least, largest] = std::ranges::minmax(values);
+    return std::pair{std::min(0.0, least), std::max(1.0, largest)};
+  };
+  return std::visit(
+      [&rangeWith](const auto &each) -> std::pair<double, double> {
+        using Timing = std::decay_t<decltype(each)>;
+        if constexpr (std::is_same_v<Timing, LinearTiming>) {
+          return {0.0, 1.0};
+        } else if constexpr (std::is_same_v<Timing, CubicBezierTiming>) {
+          return rangeWith({each.y1, each.y2});
+        } else if constexpr (std::is_same_v<Timing, SpringTiming>) {
+          const double bound = springDisplacementBoundOf(each);
+          return {1 - bound, 1 + bound};
+        } else {
+          return rangeWith(each.pointsY);
+        }
+      },
+      timing);
+}
+
+/// The executor writes no size: the view shows its mounted size for the whole track. The track must end at that
+/// size, start and end each segment within one pixel of it, and stay less than one and a half pixels from it, so
+/// that the frame driver would show at most one pixel more or less at each frame.
+bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::react::ShadowView &view) {
+  const auto &timeline = std::get<ValueTimeline>(track.body);
+  const auto *start = std::get_if<AnimationValue>(&timeline.start);
+  if (start == nullptr) {
+    return false;
+  }
+  const auto &frameSize = view.layoutMetrics.frame.size;
+  const double mounted = track.target == AnimationTarget::Width ? frameSize.width : frameSize.height;
+  const double onePixel = 1 / view.layoutMetrics.pointScaleFactor;
+  if (std::abs(std::get<double>(timeline.segments.back().endValue) - mounted) > ENDPOINT_TOLERANCE) {
+    return false;
+  }
+  double from = std::get<double>(*start);
+  for (const auto &segment : timeline.segments) {
+    const double to = std::get<double>(segment.endValue);
+    const auto [leastProgress, largestProgress] = progressRangeOf(segment.timingFromPrevious);
+    if (std::abs(from - mounted) > onePixel + ENDPOINT_TOLERANCE ||
+        std::abs(to - mounted) > onePixel + ENDPOINT_TOLERANCE) {
+      return false;
+    }
+    for (const double progress : {leastProgress, largestProgress}) {
+      if (std::abs(from + progress * (to - from) - mounted) >= 1.5 * onePixel) {
+        return false;
+      }
+    }
+    from = to;
+  }
+  return true;
+}
+
 class AndroidMountedAnimation final : public MountedAnimation {
  public:
   AndroidMountedAnimation(
@@ -492,8 +563,13 @@ void AndroidNativeAnimationPlatform::setTrackEndListener(TrackEndListener listen
 }
 
 bool AndroidNativeAnimationPlatform::canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) {
-  return plays(track) &&
-      (!isGeometryTarget(track.target) || !movesGeometry(track) || admitsMovingGeometry(track, view));
+  if (!plays(track)) {
+    return false;
+  }
+  if (isSizeTarget(track.target)) {
+    return staysInOnePixelOfMountedSize(track, view);
+  }
+  return !isGeometryTarget(track.target) || !movesGeometry(track) || admitsMovingGeometry(track, view);
 }
 
 bool AndroidNativeAnimationPlatform::isSurfaceRunning(const SurfaceId surfaceId) {
@@ -631,15 +707,14 @@ bool AndroidNativeAnimationPlatform::playsTarget(const AnimationTrack &track) co
     case AnimationTarget::BackgroundColor:
     case AnimationTarget::BorderColor:
     case AnimationTarget::BorderRadius:
+    case AnimationTarget::Width:
+    case AnimationTarget::Height:
       return true;
     case AnimationTarget::ShadowColor:
       return apiLevel_ >= __ANDROID_API_P__;
     case AnimationTarget::PositionX:
     case AnimationTarget::PositionY:
       return !movesGeometry(track) || hasAnimationMatrix;
-    case AnimationTarget::Width:
-    case AnimationTarget::Height:
-      return !changesValue(track);
     case AnimationTarget::Transform: {
       const auto &operations = std::get<TransformTimelines>(track.body).operations;
       const bool isPlanarBody =

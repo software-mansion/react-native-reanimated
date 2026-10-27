@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { PixelRatio, View } from 'react-native';
 import type { EntryAnimationsValues } from 'react-native-reanimated';
 import { Easing, LinearTransition, withTiming } from 'react-native-reanimated';
 
@@ -30,12 +30,16 @@ import {
   hasNativeLayoutRoute,
   isHostEvent,
   isNativeLayoutRouteConfigured,
+  isNear,
   isNoView,
   layoutOf,
   middleOf,
   mountScene,
   narrowClockOffset,
   NATIVE_ANIMATION_TEST_HOOKS,
+  ONE_PIXEL,
+  PLAYS_SIZE_CHANGE,
+  playsSizeChangeOf,
   POSITION_TOLERANCE,
   readFrameRecords,
   renderBox,
@@ -207,6 +211,87 @@ describe('native layout route', () => {
     await wait(REFUSED_DURATION);
     await render(null);
   });
+
+  for (const pixels of [1, 2]) {
+    const isNative = playsSizeChangeOf(pixels * ONE_PIXEL);
+    test(`a width change of ${pixels} px ${routeNameOf(isNative)} and ends at the end width`, async () => {
+      const layout = LinearTransition.duration(PIXEL_DURATION).easing(
+        Easing.linear
+      );
+      const startWidth = PixelRatio.roundToNearestPixel(BOX_SIZE);
+      const endWidth = startWidth + pixels * ONE_PIXEL;
+      const tag = await mountScene(
+        <SizeScene layout={layout} width={startWidth} />
+      );
+      await render(<SizeScene layout={layout} width={endWidth} />);
+      await wait(PIXEL_DURATION / 2);
+      const middle = await sample(tag, 'Width');
+      await wait(PIXEL_DURATION);
+      expectSizeRoute((await takeTraceOf(tag)).filter(isHostEvent), isNative);
+      if (isNative && !PLAYS_SIZE_CHANGE) {
+        expect(isNear(middle.presentation[0], endWidth)).toBe(true);
+      }
+      const end = await sample(tag, 'Width');
+      expect(isNear(end.model[0], endWidth)).toBe(true);
+      expect(isNear(end.presentation[0], endWidth)).toBe(true);
+      await render(null);
+    });
+  }
+
+  test(`a width sequence within 1 px of the end at each segment end, with a Bezier segment that passes 1.5 px, ${routeNameOf(PLAYS_SIZE_CHANGE)} and ends at the end width`, async () => {
+    const endWidth = PixelRatio.roundToNearestPixel(BOX_SIZE) + ONE_PIXEL;
+    const layout = layoutOf({
+      width: {
+        initial: 2 * ONE_PIXEL,
+        via: [
+          {
+            to: -ONE_PIXEL,
+            easing: Easing.bezier(1 / 3, 0, 2 / 3, 3),
+            duration: PIXEL_DURATION / 2,
+          },
+        ],
+        duration: PIXEL_DURATION / 2,
+      },
+    });
+    const tag = await mountScene(
+      <SizeScene layout={layout} width={endWidth - ONE_PIXEL} />
+    );
+    await render(<SizeScene layout={layout} width={endWidth} />);
+    await wait(PIXEL_DURATION * 1.5);
+    expectSizeRoute(
+      (await takeTraceOf(tag)).filter(isHostEvent),
+      PLAYS_SIZE_CHANGE
+    );
+    const end = await sample(tag, 'Width');
+    expect(isNear(end.model[0], endWidth)).toBe(true);
+    expect(isNear(end.presentation[0], endWidth)).toBe(true);
+    await render(null);
+  });
+
+  test(`an exiting width track that ends 79 px from the mounted width ${routeNameOf(PLAYS_SIZE_CHANGE)}`, async () => {
+    const width = PixelRatio.roundToNearestPixel(BOX_SIZE);
+    const exiting = entryExitOf({
+      width: {
+        initial: -80 * ONE_PIXEL,
+        to: -79 * ONE_PIXEL,
+        duration: PIXEL_DURATION,
+      },
+      opacity: { initial: 1, to: 0.2, duration: 2 * PIXEL_DURATION },
+    });
+    const tag = await mountScene(
+      <EnteringScene isMounted width={width} exiting={exiting} />
+    );
+    await render(
+      <EnteringScene isMounted={false} width={width} exiting={exiting} />
+    );
+    await wait(2 * PIXEL_DURATION + 300);
+    expectSizeRoute(
+      (await takeTraceOf(tag)).filter(isHostEvent),
+      PLAYS_SIZE_CHANGE
+    );
+    expect(await hasView(tag)).toBe(false);
+    await render(null);
+  });
 });
 
 describe('the native layout route with no mount-thread pull', () => {
@@ -288,6 +373,7 @@ describe('the native layout route with no mount-thread pull', () => {
 
 const PUSH_DURATION = 1200;
 const REFUSED_DURATION = 1200;
+const PIXEL_DURATION = 600;
 // The route table keeps a size change of a view with an elliptical radius on the frame driver.
 const REFUSED_STYLE = { borderRadius: '30%' } as const;
 // The extremes of the measured and inferred lag of the frame driver from the refusal, in whole display
@@ -322,6 +408,21 @@ function isOnPushTimeline(centerX: number, sinceStartMs: number) {
   );
 }
 
+function routeNameOf(isNative: boolean) {
+  return isNative
+    ? 'starts natively'
+    : 'stays frame-driven with UnsupportedTarget';
+}
+
+function expectSizeRoute(events: TraceEvent[], isNative: boolean) {
+  const refusals = events.filter(({ event }) => event === 'LayoutBuildFailed');
+  const admitted = events.filter(({ event }) => event === 'Admitted');
+  expect(admitted.length).toBe(isNative ? 1 : 0);
+  expect(summarize(refusals)).toBe(
+    isNative ? '' : 'LayoutBuildFailed:UnsupportedTarget'
+  );
+}
+
 /** One sample of a target at one third and at two thirds of a time from now. */
 async function samplesAtParts(tag: number, target: string, durationMs: number) {
   const startMs = performance.now();
@@ -346,15 +447,12 @@ const hasView = (tag: number) =>
 
 function EnteringScene({
   isMounted,
-  entering,
-  exiting,
-}: Pick<SizeBoxProps, 'entering' | 'exiting'> & {
+  ...box
+}: Pick<SizeBoxProps, 'entering' | 'exiting' | 'width'> & {
   isMounted: boolean;
 }) {
   return (
-    <View style={styles.container}>
-      {isMounted && <SizeBox entering={entering} exiting={exiting} />}
-    </View>
+    <View style={styles.container}>{isMounted && <SizeBox {...box} />}</View>
   );
 }
 

@@ -22,7 +22,7 @@
  * callbacks, and a row of the native box in each phase.
  */
 import React from 'react';
-import { PixelRatio, View } from 'react-native';
+import { PixelRatio, Platform, View } from 'react-native';
 import type {
   EasingFunction,
   LayoutAnimationFunction,
@@ -117,6 +117,7 @@ import {
   testOfTracks,
   declaresMotion,
   PLAYS_SIZE_CHANGE,
+  ONE_PIXEL,
   REFUSES_OPACITY_UNDER_FILTER,
   TRANSFORM_SAMPLE_CELLS,
   WRITES_ANIMATION_MATRIX,
@@ -2737,8 +2738,8 @@ describe('native layout size', () => {
     tracks.find((track) => track.target === target)!;
 
   /**
-   * Android refuses a Width or Height track that changes
-   * (`AndroidNativeAnimationPlatform::playsTarget`): the frame driver plays the
+   * Android refuses a Width or Height track that changes by more than one pixel
+   * (`AndroidNativeAnimationPlatform::canRealize`): the frame driver plays the
    * whole animation on the two boxes.
    */
   const sizeChangeOf = (referenceCase: ReferenceCase): ReferenceCase =>
@@ -3054,15 +3055,16 @@ describe('native layout size', () => {
     }
   }
 
-  // A size leaf with a start value at most 0.01 pt from its end value does not change the size.
+  // A size leaf of a Text with a start value at most 0.01 pt from its end value (Android: one pixel plus 0.01 pt)
+  // does not change the size.
   const sizeLeafOffsets: [number, boolean][] = [
     [0.009, true],
-    [0.011, false],
+    [Platform.OS === 'android' ? ONE_PIXEL + 0.011 : 0.011, false],
   ];
   for (const [offset, isNative] of sizeLeafOffsets) {
     const offsetTest = isNative ? movingGeometryTest : test;
     offsetTest(
-      `a size leaf of a Text that starts ${offset} pt from its end value ${isNative ? 'plays natively' : 'keeps the whole animation frame-driven: UnsupportedTarget'}`,
+      `a size leaf of a Text that starts ${offset.toFixed(3)} pt from its end value ${isNative ? 'plays natively' : 'keeps the whole animation frame-driven: UnsupportedTarget'}`,
       async () => {
         const layout = layoutOf({
           originX: { duration: ROUTE_DURATION },

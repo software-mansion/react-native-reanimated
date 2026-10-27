@@ -103,10 +103,18 @@ export const appleSample = (tag: number, target: string) =>
 const IS_APPLE = Platform.OS === 'ios';
 
 /**
- * Android refuses a changing Width or Height
- * (`AndroidNativeAnimationPlatform::playsTarget`).
+ * Android refuses a Width or Height change of more than one pixel
+ * (`AndroidNativeAnimationPlatform::canRealize`).
  */
 export const PLAYS_SIZE_CHANGE = IS_APPLE;
+export const ONE_PIXEL = 1 / PixelRatio.get();
+/**
+ * Android plays a Width or Height change of at most one pixel and a tolerance
+ * of 0.01 (`ENDPOINT_TOLERANCE`) as a hold: the view shows the end size from
+ * the mount.
+ */
+export const playsSizeChangeOf = (change: number) =>
+  PLAYS_SIZE_CHANGE || Math.abs(change) <= ONE_PIXEL + 0.01;
 /**
  * Android refuses RotateX, RotateY, and Perspective in a moving transform
  * (`isPlanar`).
