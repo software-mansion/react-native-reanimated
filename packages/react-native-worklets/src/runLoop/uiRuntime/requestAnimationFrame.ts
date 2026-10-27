@@ -1,5 +1,7 @@
 'use strict';
 
+import { selectFrameTimestamp } from './frameTimestamp';
+
 export function setupRequestAnimationFrame() {
   'worklet';
 
@@ -66,10 +68,48 @@ export function setupRequestAnimationFrame() {
     globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
   }
 
+  // Set only while a flush owns the timestamp. When it is unset, the getter
+  // below reads the platform frame in progress, and between frames it is
+  // undefined. Writing a live reading back into this override would pin that
+  // frame's timestamp after the frame has ended.
+  let frameTimestampOverride: number | undefined;
+
+  function readCurrentFrameTimestamp(): number | undefined {
+    const read = globalThis.__getCurrentFrameTimestamp;
+    if (typeof read !== 'function') {
+      return undefined;
+    }
+    const timestamp = read();
+    if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
+      return undefined;
+    }
+    return timestamp;
+  }
+
+  Object.defineProperty(globalThis, '__frameTimestamp', {
+    configurable: true,
+    enumerable: false,
+    get() {
+      return selectFrameTimestamp(
+        frameTimestampOverride,
+        frameTimestampOverride === undefined
+          ? readCurrentFrameTimestamp()
+          : undefined
+      );
+    },
+    set(value: number | undefined) {
+      frameTimestampOverride =
+        typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+    },
+  });
+
   function flushQueue(timestamp: number) {
     globalThis.__frameTimestamp = timestamp;
-    executeQueue(timestamp);
-    globalThis.__frameTimestamp = undefined;
+    try {
+      executeQueue(timestamp);
+    } finally {
+      globalThis.__frameTimestamp = undefined;
+    }
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;

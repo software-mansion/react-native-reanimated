@@ -2,7 +2,10 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
+
+#import <worklets/RunLoop/FrameTimestamp.h>
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -100,6 +103,16 @@ using namespace facebook::react;
 - (void)onAnimationFrame:(READisplayLink *)displayLink
 {
   RCTAssertMainQueue();
+
+#if TARGET_OS_OSX
+  const CFTimeInterval targetTimestamp = displayLink.timestamp + displayLink.duration;
+#else
+  const CFTimeInterval targetTimestamp = displayLink.targetTimestamp;
+#endif
+  // Same clock reading this display link's callbacks receive. Covers the draw
+  // pass below, which runs after those callbacks and may start animations.
+  const double frameTimestampMs = reanimated::calculateTimestampWithSlowAnimations(targetTimestamp) * 1000.0;
+  worklets::FrameTimestampScope frameTimestampScope(frameTimestampMs);
 
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];

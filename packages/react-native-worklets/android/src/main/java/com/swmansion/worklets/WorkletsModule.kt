@@ -92,6 +92,13 @@ class WorkletsModule(
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }
 
+    /**
+     * Timestamp of the choreographer frame in progress, or NaN between frames.
+     * Called from the UI runtime while an animation is being started.
+     */
+    @DoNotStrip
+    fun getCurrentFrameTimestamp(): Double = mAnimationFrameQueue.getCurrentFrameTimestampMs() ?: Double.NaN
+
     /** @noinspection unused */
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread

@@ -64,6 +64,7 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
     jni::global_ref<JNetworking::javaobject> networking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(javaPart),
+      .getCurrentFrameTimestamp = getCurrentFrameTimestamp(javaPart),
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AndroidNetworkingBackend>(std::move(networking))});
 }
@@ -83,6 +84,15 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
     static const auto jRequestAnimationFrame =
         javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+  };
+}
+
+RuntimeBindings::GetCurrentFrameTimestamp WorkletsModule::getCurrentFrameTimestamp(
+    const jni::global_ref<jhybridobject> &javaPart) {
+  return [javaPart]() -> double {
+    static const auto jGetCurrentFrameTimestamp =
+        javaPart->getClass()->getMethod<jdouble()>("getCurrentFrameTimestamp");
+    return jGetCurrentFrameTimestamp(javaPart.get());
   };
 }
 
