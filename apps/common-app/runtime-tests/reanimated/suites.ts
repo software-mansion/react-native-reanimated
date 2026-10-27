@@ -186,6 +186,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
+      require('./tests/layoutAnimations/sharedTransitionNested.test');
       require('./tests/layoutAnimations/sharedTransitionProps.test');
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
