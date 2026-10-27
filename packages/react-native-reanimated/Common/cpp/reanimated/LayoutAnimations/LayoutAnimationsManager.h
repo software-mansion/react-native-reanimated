@@ -38,6 +38,7 @@ struct LayoutAnimationConfig {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
+  std::shared_ptr<Serializable> sharedTransitionContentFadeIn;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -51,6 +52,7 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
+  std::shared_ptr<Serializable> getSharedTransitionContentFadeIn(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -70,6 +72,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> contentFadeInsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> contentFadeIns_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
@@ -77,8 +81,8 @@ class LayoutAnimationsManager {
   std::mutex pendingConfigUpdatesMutex_;
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
-  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `enteringAnimations_`, `exitingAnimations_`,
-  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, the content fade-ins, `enteringAnimations_`,
+  // `exitingAnimations_`, `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated
