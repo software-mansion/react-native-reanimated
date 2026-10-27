@@ -1041,15 +1041,26 @@ const exitOf =
     };
   };
 
-type ExitPairProps = { exit: Exit; isMounted: boolean };
+type ExitPairProps = {
+  exit: Exit;
+  isMounted: boolean;
+  transform?: StyleTransform;
+};
 
-function ExitPair({ exit, isMounted }: ExitPairProps) {
+function ExitPair({ exit, isMounted, transform }: ExitPairProps) {
   return (
     <View style={styles.container}>
-      {isMounted && <Box left={START_LEFT} exiting={exitOf(exit, false)} />}
       {isMounted && (
         <Box
           left={START_LEFT}
+          transform={transform}
+          exiting={exitOf(exit, false)}
+        />
+      )}
+      {isMounted && (
+        <Box
+          left={START_LEFT}
+          transform={transform}
           exiting={exitOf(exit, true)}
           refName={FRAME_BOX_REF}
         />
@@ -1313,6 +1324,33 @@ describe('native layout transform and the edge antialiasing of the view', () => 
     const tags = pairTags();
     const start = performance.now();
     await render(<ExitPair exit={exit} isMounted={false} />);
+    for (const part of [0.25, 0.75]) {
+      expect(await edgeAntialiasingAt(tags, part * FLAG_DURATION, start)).toBe(
+        'false,false'
+      );
+    }
+    expect(hasTransformTrack(await takeTraceOf(tag))).toBe(true);
+    await wait(FLAG_DURATION);
+    await render(null);
+  });
+
+  test('an exit with a translation of a view that its style rotates: the view and its frame-driven twin have edge antialiasing before the exit and none during the track', async () => {
+    const exit: Exit = {
+      operations: [['translateX', 0, 81]],
+      durationMs: FLAG_DURATION,
+    };
+    const transform: StyleTransform = [{ rotate: '30deg' }];
+    const tag = await mountScene(
+      <ExitPair exit={exit} isMounted transform={transform} />
+    );
+    const tags = pairTags();
+    expect(await edgeAntialiasingAt(tags, 0, performance.now())).toBe(
+      'true,true'
+    );
+    const start = performance.now();
+    await render(
+      <ExitPair exit={exit} isMounted={false} transform={transform} />
+    );
     for (const part of [0.25, 0.75]) {
       expect(await edgeAntialiasingAt(tags, part * FLAG_DURATION, start)).toBe(
         'false,false'

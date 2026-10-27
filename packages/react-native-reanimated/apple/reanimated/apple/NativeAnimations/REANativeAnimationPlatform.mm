@@ -1006,8 +1006,8 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       }
     }];
     tracks_.emplace(track, layer);
-    if (edgeAntialiasing.duringTrack) {
-      layer.allowsEdgeAntialiasing = YES;
+    if (track.target == AnimationTarget::Transform) {
+      layer.allowsEdgeAntialiasing = edgeAntialiasing.duringTrack;
     }
     [layer addAnimation:animation forKey:animationKeyForTrack(track)];
   }
@@ -1015,9 +1015,10 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
  private:
   using Tracks = std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash>;
 
-  /// Takes a track from its layer. A `Transform` track can show a transform with edge antialiasing on a
-  /// layer whose model transform has none, so `play` gives the layer edge antialiasing for the time of such
-  /// a track. After that time, the layer has the value of React Native for its model transform.
+  /// Takes a track from its layer. The edge antialiasing of the transform that a `Transform` track shows can
+  /// differ from that of the model transform of its layer, so `play` gives the layer the edge antialiasing of
+  /// the frame driver for the time of such a track. After that time, the layer has the value of React Native
+  /// for its model transform.
   CALayer *release(const Tracks::iterator trackIt)
   {
     CALayer *layer = trackIt->second;
