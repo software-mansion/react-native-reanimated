@@ -207,8 +207,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       hideTransitioningViews(AFTER, transaction, propsParserContext);
 
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
-        placeNatively(collectedTransition, BEFORE);
-        placeNatively(collectedTransition, AFTER);
+        adjustForNativePlacement(collectedTransition, BEFORE);
+        adjustForNativePlacement(collectedTransition, AFTER);
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
@@ -395,8 +395,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
 
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
-      placeNatively(collectedTransition, BEFORE);
-      placeNatively(collectedTransition, AFTER);
+      adjustForNativePlacement(collectedTransition, BEFORE);
+      adjustForNativePlacement(collectedTransition, AFTER);
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
@@ -462,7 +462,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         transaction.restoreRequests.push_back({sharedTag, run.target});
       }
       run.target = afterNode;
-      placeNatively(collectedTransition, AFTER);
+      adjustForNativePlacement(collectedTransition, AFTER);
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       after.tag = containerTag;
       if (hasPendingLayoutAnimation(containerTag)) {
@@ -685,6 +685,18 @@ bool LayoutAnimationsProxy::isDetached(const std::shared_ptr<LightNode> &node) c
 #endif
 }
 
+// The position of the ancestor from UIKit replaces the positions of the ancestors above it.
+static void moveBelowAncestor(
+    const AncestorOutsideReactParent &ancestor,
+    std::vector<react::Point> &absolutePositions) {
+  react_native_assert(ancestor.index < absolutePositions.size() && "Ancestor outside the absolute positions");
+  const auto shift = ancestor.position - absolutePositions[ancestor.index];
+  absolutePositions.resize(ancestor.index + 1);
+  for (auto &position : absolutePositions) {
+    position += shift;
+  }
+}
+
 // A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
 // origin of its stack. The run follows the target once the platform places it, until the transition ends.
 void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &propsParserContext) const {
@@ -713,7 +725,9 @@ void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &prop
     auto after = run.target->current;
     auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
     const auto ancestors = collectAncestors(run.target, false);
-    placeNatively(ancestors, absolutePositions, true);
+    if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
+      moveBelowAncestor(*ancestor, absolutePositions);
+    }
     after.layoutMetrics.frame.origin = absolutePositions[0];
     overrideTransform(after, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
     after.tag = containerTag;
@@ -1061,39 +1075,37 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
   return viewsAbsolutePositions;
 }
 
-// UIKit can place a view outside the view of its parent, for example in a presented modal. The view of the first such
-// ancestor gives the position of the path below it.
-bool LayoutAnimationsProxy::placeNatively(
+// UIKit can show a view outside the view of its React parent, for example in a presented modal.
+std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOutsideReactParent(
     const std::vector<Ancestor> &ancestors,
-    std::vector<react::Point> &absolutePositions,
     const bool settled) const {
 #ifdef __APPLE__
   if (!nativeViewPlacement_) {
-    return false;
+    return std::nullopt;
   }
-  for (size_t i = 0; i + 1 < ancestors.size() && i < absolutePositions.size(); ++i) {
+  for (size_t i = 0; i + 1 < ancestors.size(); ++i) {
     const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
-    if (placement.kind == NativeViewPlacement::Kind::Reparented) {
-      const auto shift = ancestors[i].scrollPosition + placement.origin - absolutePositions[i];
-      absolutePositions.resize(i + 1);
-      for (auto &position : absolutePositions) {
-        position += shift;
-      }
-      return true;
+    if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
+      return AncestorOutsideReactParent{.index = i, .position = ancestors[i].scrollPosition + placement.origin};
     }
   }
 #endif
-  return false;
+  return std::nullopt;
 }
 
 // Native views do not change during a pull.
-void LayoutAnimationsProxy::placeNatively(CollectedTransition &collectedTransition, const BeforeOrAfter index) const {
+void LayoutAnimationsProxy::adjustForNativePlacement(
+    CollectedTransition &collectedTransition,
+    const BeforeOrAfter index) const {
   const auto &ancestors = collectedTransition.ancestors[index];
-  auto &absolutePositions = collectedTransition.absolutePositions[index];
-  if (placeNatively(ancestors, absolutePositions, index == AFTER)) {
-    collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
-    collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+  const auto ancestor = findAncestorOutsideReactParent(ancestors, index == AFTER);
+  if (!ancestor) {
+    return;
   }
+  auto &absolutePositions = collectedTransition.absolutePositions[index];
+  moveBelowAncestor(*ancestor, absolutePositions);
+  collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
+  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
 }
 
 std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(

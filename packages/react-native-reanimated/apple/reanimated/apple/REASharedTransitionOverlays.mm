@@ -197,7 +197,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
     return {.kind = reanimated::NativeViewPlacement::Kind::Detached};
   }
   if ([view isDescendantOfView:parent]) {
-    return {.kind = reanimated::NativeViewPlacement::Kind::InsideParent};
+    return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
   }
   UIView *rootView = [self viewWithTag:surfaceId];
   if (view.window != surfaceWindow(rootView)) {
@@ -223,7 +223,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
   }
   const CGPoint rootOrigin = untransformedFrameInWindow(rootView).origin;
   return {
-      .kind = reanimated::NativeViewPlacement::Kind::Reparented,
+      .kind = reanimated::NativeViewPlacement::Kind::OutsideReactParent,
       .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y}};
 }
 
