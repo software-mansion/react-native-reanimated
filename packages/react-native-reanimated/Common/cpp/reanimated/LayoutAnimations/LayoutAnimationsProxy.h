@@ -142,6 +142,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   // the detached carriers in their host order under the root, after the children of the root
   mutable std::vector<std::shared_ptr<LightNode>> detachedCarriers_;
+  // Entering animations of target children that wait until their run lands.
+  mutable std::vector<PendingNodeAnimation> heldEnterings_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
@@ -198,6 +200,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::unordered_set<Tag> &hiddenTags,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  void holdTargetEntering(TransactionMeta &transaction) const;
+  bool isTargetContentOfFadingRun(const std::shared_ptr<LightNode> &node) const;
   void fadeInTargetContent(
       const SharedTransitionRun &run,
       TransactionMeta &transaction,

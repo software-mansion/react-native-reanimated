@@ -253,6 +253,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     }
   }
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    holdTargetEntering(transaction);
+  }
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
   }
@@ -1099,6 +1102,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       carrier->setDetached(false);
     }
     detachedCarriers_.clear();
+    heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
