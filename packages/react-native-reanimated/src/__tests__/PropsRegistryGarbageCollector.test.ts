@@ -1,4 +1,5 @@
 'use strict';
+import type { BoxShadowValue } from 'react-native';
 import { processColor as processColorRN } from 'react-native';
 // @ts-expect-error React Native ships no type declarations for this internal module.
 import processBackgroundImageRN from 'react-native/Libraries/StyleSheet/processBackgroundImage';
@@ -15,6 +16,27 @@ import type { StyleProps } from '../commonTypes';
 import { unprocessSettledUpdate } from '../PropsRegistryGarbageCollector';
 
 const context = { target: ValueProcessorTarget.Default };
+
+const RAW_BOX_SHADOW: BoxShadowValue[] = [
+  {
+    offsetX: 1,
+    offsetY: 2,
+    blurRadius: 3,
+    spreadDistance: 0,
+    color: '#ff0000',
+  },
+];
+
+const RAW_BACKGROUND_IMAGE = [
+  {
+    type: 'linear-gradient' as const,
+    direction: '45deg',
+    colorStops: [
+      { color: '#ff0000', positions: ['0%'] },
+      { color: '#0000ff', positions: ['100%'] },
+    ],
+  },
+];
 
 describe('unprocessSettledUpdate', () => {
   describe('colors', () => {
@@ -35,7 +57,11 @@ describe('unprocessSettledUpdate', () => {
       const props: StyleProps = { [property]: processColor(color) };
       const style: StyleProps = { [property]: processColor(color) };
 
-      unprocessSettledUpdate({ props, style });
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: [property],
+      });
 
       for (const unprocessed of [props, style]) {
         expect(typeof unprocessed[property]).toBe('string');
@@ -49,7 +75,11 @@ describe('unprocessSettledUpdate', () => {
       const props: StyleProps = { opacity: 0.5, width: 10 };
       const style: StyleProps = { opacity: 0.5, width: 10 };
 
-      unprocessSettledUpdate({ props, style });
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: ['opacity', 'width'],
+      });
 
       expect(props).toEqual({ opacity: 0.5, width: 10 });
       expect(style).toEqual({ opacity: 0.5, width: 10 });
@@ -76,22 +106,52 @@ describe('unprocessSettledUpdate', () => {
         boxShadow: processBoxShadow(boxShadow, context),
       } as unknown as StyleProps;
 
-      unprocessSettledUpdate({ props: {}, style });
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: ['boxShadow'],
+      });
 
       expect(processBoxShadowRN(style.boxShadow)).toEqual(
         processBoxShadowRN(boxShadow)
       );
     });
 
-    test('leaves a boxShadow passed as a prop untouched', () => {
-      const boxShadow = [
-        { offsetX: 1, offsetY: 2, blurRadius: 3, color: '#ff0000' },
-      ];
-      const props = { boxShadow: [...boxShadow] } as unknown as StyleProps;
+    test('leaves a boxShadow last written by animated props untouched', () => {
+      const props = { boxShadow: [...RAW_BOX_SHADOW] } as unknown as StyleProps;
+      const style = { boxShadow: [...RAW_BOX_SHADOW] } as unknown as StyleProps;
 
-      unprocessSettledUpdate({ props, style: {} });
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: [],
+      });
 
-      expect(props.boxShadow).toEqual(boxShadow);
+      expect(props.boxShadow).toEqual(RAW_BOX_SHADOW);
+      expect(style.boxShadow).toEqual(RAW_BOX_SHADOW);
+    });
+
+    test('unprocesses a boxShadow last written by animated style in props and in style', () => {
+      const props = {
+        boxShadow: processBoxShadow(RAW_BOX_SHADOW, context),
+      } as unknown as StyleProps;
+      const style = {
+        boxShadow: processBoxShadow(RAW_BOX_SHADOW, context),
+      } as unknown as StyleProps;
+
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: ['boxShadow'],
+      });
+
+      for (const unprocessed of [props, style]) {
+        const [shadow] = unprocessed.boxShadow as BoxShadowValue[];
+        expect(typeof shadow.color).toBe('string');
+        expect(processBoxShadowRN(unprocessed.boxShadow)).toEqual(
+          processBoxShadowRN(RAW_BOX_SHADOW)
+        );
+      }
     });
   });
 
@@ -108,11 +168,57 @@ describe('unprocessSettledUpdate', () => {
         backgroundImage: processBackgroundImage(backgroundImage, context),
       } as unknown as StyleProps;
 
-      unprocessSettledUpdate({ props: {}, style });
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: ['backgroundImage'],
+      });
 
       expect(processBackgroundImageRN(style.backgroundImage)).toEqual(
         processBackgroundImageRN(backgroundImage)
       );
     });
+
+    test('leaves a backgroundImage last written by animated props untouched', () => {
+      const props = {
+        backgroundImage: [...RAW_BACKGROUND_IMAGE],
+      } as unknown as StyleProps;
+      const style = {
+        backgroundImage: [...RAW_BACKGROUND_IMAGE],
+      } as unknown as StyleProps;
+
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: [],
+      });
+
+      expect(props.backgroundImage).toEqual(RAW_BACKGROUND_IMAGE);
+      expect(style.backgroundImage).toEqual(RAW_BACKGROUND_IMAGE);
+    });
+
+    test.each(['backgroundImage', 'experimental_backgroundImage'])(
+      'unprocesses a %s last written by animated style in props and in style',
+      (key) => {
+        const props: StyleProps = {
+          [key]: processBackgroundImage(RAW_BACKGROUND_IMAGE, context),
+        };
+        const style: StyleProps = {
+          [key]: processBackgroundImage(RAW_BACKGROUND_IMAGE, context),
+        };
+
+        unprocessSettledUpdate({
+          props,
+          style,
+          keysLastWrittenByAnimatedStyle: [key],
+        });
+
+        for (const unprocessed of [props, style]) {
+          expect(processBackgroundImageRN(unprocessed[key])).toEqual(
+            processBackgroundImageRN(RAW_BACKGROUND_IMAGE)
+          );
+        }
+      }
+    );
   });
 });
