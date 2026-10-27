@@ -2,6 +2,7 @@
 
 import type { FixedSynchronizable, ShareableHost } from 'react-native-worklets';
 
+import { IN_STYLE_UPDATER } from './animation/initialUpdaterContext';
 import { logger } from './common';
 import type { Mutable } from './commonTypes';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
@@ -12,7 +13,8 @@ function shouldWarnAboutAccessDuringRender() {
 }
 
 export function checkInvalidReadDuringRender() {
-  if (shouldWarnAboutAccessDuringRender()) {
+  // Reanimated itself evaluates initial styles during React render.
+  if (!IN_STYLE_UPDATER.current && shouldWarnAboutAccessDuringRender()) {
     logger.warn(
       "Reading from `value` during component render. Please ensure that you don't access the `value` property nor use `get` method of a shared value while React is rendering a component.",
       { strict: true }
