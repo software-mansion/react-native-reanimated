@@ -3,7 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { createContext, useContext, useState } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { SharedTransition } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  SharedTransition,
+} from 'react-native-reanimated';
 
 import duskCover from './assets/fade-content/coverDusk.png';
 import leafIcon from './assets/fade-content/leaf.png';
@@ -78,6 +81,9 @@ const MODES = {
 };
 
 type Mode = keyof typeof MODES;
+
+// With fadeContent, it plays when the moving view lands, instead of the fade-in.
+const TITLE_ENTERING = FadeInDown.duration(400);
 
 const SCENARIOS = ['list', 'player', 'same child'] as const;
 
@@ -186,7 +192,9 @@ function DetailsScreen({
           sharedTransitionStyle={transitions.own}
           style={styles.largeIcon}
         />
-        <Text style={styles.headerTitle}>{item.name}</Text>
+        <Animated.Text entering={TITLE_ENTERING} style={styles.headerTitle}>
+          {item.name}
+        </Animated.Text>
         <Text style={styles.headerSubtitle}>Tap anywhere to go back</Text>
       </Animated.View>
       <Text style={styles.body}>{LOREM_IPSUM}</Text>
@@ -237,7 +245,9 @@ function PlayerScreen({
           sharedTransitionStyle={transitions.own}
           style={styles.largeCover}
         />
-        <Text style={styles.playerTitle}>Dusk</Text>
+        <Animated.Text entering={TITLE_ENTERING} style={styles.playerTitle}>
+          Dusk
+        </Animated.Text>
         <Text style={styles.playerArtist}>The Animators</Text>
         <View style={styles.progress}>
           <View style={styles.progressDone} />
