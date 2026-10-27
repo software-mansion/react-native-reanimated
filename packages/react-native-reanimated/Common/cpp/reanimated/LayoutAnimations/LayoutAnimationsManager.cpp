@@ -99,7 +99,8 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values,
-    const std::shared_ptr<Serializable> &config) {
+    const std::shared_ptr<Serializable> &config,
+    const bool runsCallback) {
   react_native_assert(config && "layout animation config is null");
   if (!config) {
     return;
@@ -109,7 +110,8 @@ void LayoutAnimationsManager::startLayoutAnimation(
       rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
-  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  startAnimationForTag.call(
+      rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt), jsi::Value(runsCallback));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {

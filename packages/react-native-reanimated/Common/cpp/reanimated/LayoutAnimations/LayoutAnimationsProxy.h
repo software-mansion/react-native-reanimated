@@ -41,8 +41,12 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+// The container moves inside clip, a child of the root that clips it like
+// the ancestors of the shared views do. Without clipping ancestors the run has
+// no clip and the container is a child of the root.
 struct SharedTransitionRun {
   std::shared_ptr<LightNode> container;
+  std::shared_ptr<LightNode> clip;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
@@ -152,8 +156,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       int tag,
       const ShadowView &before,
       const ShadowView &after,
+      Tag parentTag,
       const std::shared_ptr<Serializable> &config) const;
-  void startProgressTransition(int tag, const ShadowView &before, const ShadowView &after) const;
+  void startClipTransition(
+      int tag,
+      const ShadowView &before,
+      const ShadowView &after,
+      const std::shared_ptr<Serializable> &config) const;
+  void startProgressTransition(int tag, const ShadowView &before, const ShadowView &after, Tag parentTag) const;
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
@@ -255,11 +265,15 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   SharedTransitionRun &startSharedTransitionRun(
       const ShadowView &before,
+      const ShadowView *clip,
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       bool gestureDriven,
       TransactionMeta &transaction) const;
-  std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before) const;
+  SharedTransitionRun createSharedContainer(const ShadowView &before, const ShadowView *clip) const;
+  std::shared_ptr<LightNode> createSharedNode(const ShadowView &view, Tag tag, const std::shared_ptr<LightNode> &parent)
+      const;
+  void removeRun(const SharedTransitionRun &run, TransactionMeta &transaction) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
@@ -280,6 +294,30 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowView &shadowView,
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
+  void applyAncestorEffects(
+      ShadowView &shadowView,
+      const Transition &transition,
+      BeforeOrAfter index,
+      const PropsParserContext &propsParserContext) const;
+  std::vector<std::shared_ptr<LightNode>> runNodes(const SharedTransitionRun &run) const;
+  bool usesClip(const SharedTag &sharedTag, Transition &transition) const;
+  const react::Rect &windowFrame() const;
+  bool isRunAnimating(const SharedTransitionRun &run) const;
+  const LayoutAnimation &runAnimation(const std::shared_ptr<LightNode> &node) const;
+  void fitClipOfUnclippedSide(Transition &transition) const;
+  bool drawsWithinFrame(const ShadowView &view, const std::optional<Transform> &ancestorTransform) const;
+  bool endsTheSame(const ShadowView &finalView, const ShadowView &target) const;
+  ShadowView createClipView(
+      const AncestorClip &clip,
+      const ShadowView &source,
+      const PropsParserContext &propsParserContext) const;
+  void parseAncestorOpacityAndClip(
+      const std::shared_ptr<LightNode> &node,
+      const std::vector<react::Point> &absolutePositions,
+      bool useViewsOnScreen,
+      Float &opacity,
+      AncestorClip &clip) const;
+  react::Point scrollContentOffset(const ShadowView &view) const;
 
   struct AncestorTransform {
     Transform transform;

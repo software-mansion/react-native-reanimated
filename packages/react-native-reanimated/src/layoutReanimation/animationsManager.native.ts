@@ -109,7 +109,8 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
        * animations.
        */
       yogaValues: Partial<LayoutAnimationValues>,
-      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      runsCallback = true
     ) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
@@ -138,7 +139,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
         }
-        if (style.callback) {
+        if (runsCallback && style.callback) {
           style.callback(finished);
         }
       });
