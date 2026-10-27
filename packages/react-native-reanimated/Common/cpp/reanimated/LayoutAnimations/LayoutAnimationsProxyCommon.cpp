@@ -704,11 +704,13 @@ ShadowViewMutation LayoutAnimationsProxyCommon::createPropsUpdate(
     const ShadowView &newView,
     const Tag parentTag,
     [[maybe_unused]] const PropsParserContext &propsParserContext) const {
-  auto updateView = newView;
 #ifdef ANDROID
+  auto updateView = newView;
   auto changedProps = diffDynamicProps(oldView.props->rawProps, newView.props->rawProps);
   updateView.props = componentDescriptorRegistry_->at(newView.componentHandle)
                          .cloneProps(propsParserContext, newView.props, RawProps(std::move(changedProps)));
+#else
+  const auto &updateView = newView;
 #endif
   return ShadowViewMutation::UpdateMutation(oldView, updateView, parentTag);
 }
