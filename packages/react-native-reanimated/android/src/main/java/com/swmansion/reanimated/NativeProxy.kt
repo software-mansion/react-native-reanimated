@@ -155,6 +155,8 @@ open class NativeProxy {
 
     private external fun performNonLayoutOperationsCpp()
 
+    private external fun commitUncommittedWritesCpp()
+
     private external fun hasSynchronousWritesTracker(): Boolean
 
     private external fun rewriteSynchronousProps()
@@ -194,6 +196,8 @@ open class NativeProxy {
     fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
 
     fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
+
+    fun commitUncommittedWrites() = ifNotInvalidated(Unit) { commitUncommittedWritesCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {

@@ -87,6 +87,17 @@ bool UncommittedWritesTracker::hasSettledWrites() const {
       writes_.begin(), writes_.end(), [this](const auto &entry) { return isSettled(entry.second, frame_); });
 }
 
+UncommittedWrites UncommittedWritesTracker::takeAllWrites(const ReactCommitSnapshotCounts &snapshotCounts) {
+  UncommittedWrites writes;
+  for (auto &[_, write] : writes_) {
+    if (write.reactCommitSnapshotCount == getSnapshotCount(snapshotCounts, write.shadowNodeFamily->getSurfaceId())) {
+      writes.push_back(std::move(write));
+    }
+  }
+  writes_.clear();
+  return writes;
+}
+
 void UncommittedWritesTracker::restore(UncommittedWrites &&writes) {
   for (auto &write : writes) {
     writes_.emplace(write.shadowNodeFamily->getTag(), std::move(write));

@@ -138,6 +138,10 @@ void NativeProxy::performNonLayoutOperations() {
   reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
+void NativeProxy::commitUncommittedWrites() {
+  reanimatedModuleProxy_->commitUncommittedWrites();
+}
+
 bool NativeProxy::hasSynchronousWritesTracker() {
   return reanimatedModuleProxy_->hasSynchronousWritesTracker();
 }
@@ -162,6 +166,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEventCpp", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("commitUncommittedWritesCpp", NativeProxy::commitUncommittedWrites),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),

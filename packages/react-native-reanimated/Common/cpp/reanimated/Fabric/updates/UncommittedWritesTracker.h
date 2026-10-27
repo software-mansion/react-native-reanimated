@@ -31,6 +31,7 @@ class UncommittedWritesTracker {
   void forgetCommittedProps(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   UncommittedWrites takeSettledWrites(const ReactCommitSnapshotCounts &snapshotCounts);
   bool hasSettledWrites() const;
+  UncommittedWrites takeAllWrites(const ReactCommitSnapshotCounts &snapshotCounts);
   void restore(UncommittedWrites &&writes);
   bool empty() const;
 

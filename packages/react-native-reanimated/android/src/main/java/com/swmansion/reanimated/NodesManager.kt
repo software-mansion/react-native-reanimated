@@ -11,6 +11,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcherListener
+import com.facebook.react.uimanager.events.TouchEventType
 import com.swmansion.reanimated.nativeProxy.EventHandler
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -193,6 +194,9 @@ class NodesManager(
                 mDrawPassDetector.initialize()
                 handleEvent(event)
                 performOperationsRespectingDrawPass()
+                if (event.eventName == TouchEventType.START.getJsName() && !isInDrawPass()) {
+                    nativeProxy.commitUncommittedWrites()
+                }
             } else {
                 val eventName = resolveCustomEventName(event.eventName)
                 val viewTag = event.viewTag
