@@ -259,7 +259,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    holdTargetEntering(transaction);
+    holdTargetEntering(transaction, propsParserContext);
   }
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
