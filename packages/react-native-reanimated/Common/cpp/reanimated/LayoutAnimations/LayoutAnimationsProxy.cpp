@@ -1169,21 +1169,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
   }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    for (auto &[sharedTag, element] : sharedElements_) {
-      if (!element.run) {
-        continue;
-      }
-      const auto tag = element.run->carrier->current.tag;
-      if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      if (!flushStructuralMutations || hasUnqueuedCarrierFrame(tag)) {
-        preservedTags.insert(tag);
-        continue;
-      }
-      finishSharedTransition(sharedTag, element, transaction, propsParserContext);
-    }
-
+    finishEndedSharedTransitions(transaction, propsParserContext, flushStructuralMutations, preservedTags);
     queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
   }
@@ -1240,9 +1226,20 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (carrierPullDeferred_ && unqueuedCarrierFrames_.empty()) {
     return true;
   }
-  return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
+  const auto coveringViews = viewsHiddenByContinuingRuns();
+  return std::ranges::any_of(completedAnimations_, [&](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedCarrier(tag));
+    return !hasPendingLayoutAnimation(tag) &&
+        (completedAnimation.shouldRemove || isCarrierOfUncoveredRun(tag, coveringViews));
+  });
+}
+
+bool LayoutAnimationsProxy::isCarrierOfUncoveredRun(
+    const Tag tag,
+    const std::vector<std::shared_ptr<LightNode>> &coveringViews) const {
+  return std::ranges::any_of(sharedElements_, [&](const auto &entry) {
+    const auto &run = entry.second.run;
+    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews);
   });
 }
 
