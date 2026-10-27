@@ -970,8 +970,12 @@ void LayoutAnimationsProxy::finishSharedTransition(
     SharedElement &element,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
-  transaction.restoreRequests.push_back({sharedTag, element.run->target});
-  attachCarrier(sharedTag, *element.run, transaction.filteredMutations, propsParserContext);
+  const auto &run = *element.run;
+  // Without a target the source is the view to show. A gesture-driven run leaves its source to the screen pop.
+  const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
+  const bool showsSource = targetGone && !run.gestureDriven;
+  transaction.restoreRequests.push_back({sharedTag, showsSource ? run.source : run.target});
+  attachCarrier(sharedTag, run, transaction.filteredMutations, propsParserContext);
   element.run.reset();
 }
 
