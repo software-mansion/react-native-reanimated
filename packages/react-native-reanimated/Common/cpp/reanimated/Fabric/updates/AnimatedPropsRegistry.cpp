@@ -95,7 +95,7 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
     const WriteHistory &writeHistory) {
   jsi::Object settledProps(rt);
   jsi::Object settledStyle(rt);
-  std::vector<const std::string *> keysLastWrittenByAnimatedStyle;
+  std::vector<jsi::Value> keysLastWrittenByAnimatedStyle;
 
   for (const auto &[key, value] : props.items()) {
     const auto &keyString = key.getString();
@@ -111,14 +111,13 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
       settledStyle.setProperty(rt, keyString.c_str(), jsi::valueFromDynamic(rt, value));
     }
     if (keyOrigins.lastWrittenByAnimatedStyle) {
-      keysLastWrittenByAnimatedStyle.push_back(&keyString);
+      keysLastWrittenByAnimatedStyle.emplace_back(jsi::String::createFromUtf8(rt, keyString));
     }
   }
 
   jsi::Array keysLastWrittenByAnimatedStyleArray(rt, keysLastWrittenByAnimatedStyle.size());
   for (size_t i = 0; i < keysLastWrittenByAnimatedStyle.size(); ++i) {
-    keysLastWrittenByAnimatedStyleArray.setValueAtIndex(
-        rt, i, jsi::String::createFromUtf8(rt, *keysLastWrittenByAnimatedStyle[i]));
+    keysLastWrittenByAnimatedStyleArray.setValueAtIndex(rt, i, std::move(keysLastWrittenByAnimatedStyle[i]));
   }
 
   jsi::Object settledUpdate(rt);
