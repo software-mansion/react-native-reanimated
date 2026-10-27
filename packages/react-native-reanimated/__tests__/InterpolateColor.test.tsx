@@ -242,6 +242,49 @@ describe('colors interpolation', () => {
     });
   });
 
+  describe('(transparent, transparent) bracket at palette edges', () => {
+    // The bracket-slice path scans outward for a non-transparent neighbour;
+    // these cover the cases where one side has no such neighbour (returns
+    // null) and the other-side rgb is reused as a shadow stop with alpha 0.
+    test.each<[number, string]>([
+      [0, 'rgba(255, 0, 0, 0)'],
+      [0.25, 'rgba(255, 0, 0, 0)'],
+      [0.5, 'rgba(255, 0, 0, 0)'],
+    ])(
+      'leading (T, T) with non-T to the right — value %s → %s',
+      (value, expected) => {
+        expect(
+          interpolateColor(
+            value,
+            [0, 0.5, 1],
+            ['transparent', 'transparent', 'red'],
+            'RGB',
+            { gamma: 1 }
+          )
+        ).toBe(expected);
+      }
+    );
+
+    test.each<[number, string]>([
+      [0.5, 'rgba(0, 0, 255, 0)'],
+      [0.75, 'rgba(0, 0, 255, 0)'],
+      [1, 'rgba(0, 0, 255, 0)'],
+    ])(
+      'trailing (T, T) with non-T to the left — value %s → %s',
+      (value, expected) => {
+        expect(
+          interpolateColor(
+            value,
+            [0, 0.5, 1],
+            ['blue', 'transparent', 'transparent'],
+            'RGB',
+            { gamma: 1 }
+          )
+        ).toBe(expected);
+      }
+    );
+  });
+
   function TestComponent() {
     const color = useSharedValue('#105060');
 
