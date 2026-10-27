@@ -501,6 +501,14 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
+    if (const auto contentFadeIn = item.getProperty(rt, "sharedTransitionContentFadeIn");
+        !contentFadeIn.isUndefined()) {
+      batchItem.sharedTransitionContentFadeIn = extractSerializable(
+          rt,
+          contentFadeIn,
+          "[Reanimated] Shared transition content fade-in must be an object.",
+          Serializable::ValueType::ObjectType);
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {

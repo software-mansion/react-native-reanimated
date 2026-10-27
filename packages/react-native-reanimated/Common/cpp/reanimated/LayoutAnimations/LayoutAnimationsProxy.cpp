@@ -289,6 +289,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 #endif
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    composeCarrierContent(filteredMutations, propsParserContext);
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
 
@@ -1431,7 +1432,8 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const std::optional<ContentOpacityRange> contentOpacity) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
@@ -1440,6 +1442,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .frameProps = frameProps,
       .parentTag = surfaceId_,
       .config = config,
+      .contentOpacity = contentOpacity,
   });
 }
 

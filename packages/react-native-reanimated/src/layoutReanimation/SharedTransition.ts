@@ -1,11 +1,17 @@
 'use strict';
+import { withTiming } from '../animation';
 import { logger } from '../common';
 import type {
+  EntryAnimationsValues,
+  EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../commonTypes';
+import { Easing } from '../Easing';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
+
+const DEFAULT_DURATION = 500;
 
 export class SharedTransition
   extends ComplexAnimationBuilder
@@ -13,16 +19,60 @@ export class SharedTransition
 {
   static presetName = 'SharedTransition';
 
+  fadeContentV = false;
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
     return new SharedTransition() as InstanceType<T>;
   }
 
+  /**
+   * Fades the children of the shared view out while it moves, and fades the
+   * children of the target view in when it lands. The shared view itself stays
+   * visible. Use it when the two views have different children. Can be chained
+   * alongside other [layout animation
+   * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   */
+  static fadeContent<T extends typeof SharedTransition>(
+    this: T
+  ): InstanceType<T> {
+    const instance = this.createInstance();
+    return instance.fadeContent();
+  }
+
+  fadeContent(): this {
+    this.fadeContentV = true;
+    return this;
+  }
+
+  // The children of the target view fade in after the move, in half of its duration.
+  buildContentFadeIn(): EntryExitAnimationFunction | undefined {
+    if (!this.fadeContentV) {
+      return undefined;
+    }
+    const config = {
+      duration: (this.durationV ?? DEFAULT_DURATION) / 2,
+      easing: Easing.out(Easing.quad),
+      reduceMotion: this.reduceMotionV,
+    };
+    const fadeIn = (
+      values: EntryAnimationsValues & { targetOpacity?: number }
+    ) => {
+      'worklet';
+      const { targetOpacity } = values;
+      return {
+        initialValues: { opacity: 0 },
+        animations: { opacity: withTiming(targetOpacity ?? 1, config) },
+      };
+    };
+    return fadeIn;
+  }
+
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     if (!this.durationV) {
-      this.durationV = 500;
+      this.durationV = DEFAULT_DURATION;
     }
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
