@@ -16,7 +16,7 @@
     "react": "19.2.8",
     "react-native": "npm:react-native-tvos@0.86.2-0",
     "react-native-reanimated": "workspace:*",
-    "react-native-screens": "4.27.0",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch",
     "react-native-worklets": "workspace:*"
   },
   "devDependencies": {

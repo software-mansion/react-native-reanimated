@@ -73,7 +73,7 @@ jobs:
 
       - name: Use Node.js
         id: setup-node
-        uses: ./.github/actions/setup-node-yarn
+        uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
@@ -81,7 +81,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Save Yarn cache
-        uses: ./.github/actions/save-yarn-cache
+        uses: $/.github/actions/save-yarn-cache
         with:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
@@ -97,14 +97,14 @@ jobs:
 
       - name: Setup ccache
         if: ${{ !inputs.sanitizer }}
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
           needs-compile-database: 'false'
 
       - name: Install Pods (with caching)
         if: ${{ !inputs.sanitizer }}
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
