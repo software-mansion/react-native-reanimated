@@ -188,6 +188,10 @@ class NodesManager(
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
+                // Serializing the payload costs more than asking the registry, so an event no worklet waits for stops here.
+                if (!nativeProxy.isAnyHandlerWaitingForEvent(resolveCustomEventName(event.eventName), event.viewTag)) {
+                    return
+                }
                 // Ensure draw-pass tracking is attached before event handling; the backend reads
                 // isInDrawPass during receiveEvent.
                 mDrawPassDetector.initialize()

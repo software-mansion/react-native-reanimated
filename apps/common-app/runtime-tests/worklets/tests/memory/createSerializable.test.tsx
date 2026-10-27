@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TurboModuleRegistry } from 'react-native';
+import type { ReanimatedModuleProxy } from 'react-native-reanimated/lib/typescript/ReanimatedModule/reanimatedModuleProxy';
 import {
   createSerializable,
   scheduleOnRN,
@@ -814,6 +815,6 @@ if (__DEV__) {
 }
 
 declare global {
-  var __reanimatedModuleProxy: Record<string, unknown>;
+  var __reanimatedModuleProxy: ReanimatedModuleProxy;
   var __workletsModuleProxy: Record<string, unknown>;
 }
