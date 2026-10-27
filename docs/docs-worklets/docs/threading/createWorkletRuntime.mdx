@@ -37,7 +37,7 @@ void scheduleNativeWork(
 
 `rnRuntime` owns the incoming `runtimeValue`. The scheduled callback receives the worker's JSI runtime and runs on its queue with the runtime lock held. Keep the default queue and locking enabled for this example, and retain the Worker Runtime while its work is pending.
 
-Use `worker->runSync(...)` for a short synchronous operation on the calling thread. For a minimal example of calling C++ from a worklet, see [Integrating with C++](/docs/tutorials/integrating-with-cpp).
+Use `worker->runSync(...)` for a short synchronous operation on the calling thread. For a walkthrough of this example, including passing the worker to C++ and reading the flag from JavaScript, see [Integrating with C++](/docs/tutorials/integrating-with-cpp).
 
 <details>
   <summary>Type definitions</summary>

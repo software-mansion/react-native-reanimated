@@ -31,7 +31,7 @@ function runExample(name: string) {
 describe('reference examples', () => {
   for (const [name, expected] of Object.entries({
     createWorker: [],
-    nativeCall: ['[rn] 42'],
+    nativeSchedule: ['[rn] true'],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
     apiIsSerializableRef: ['[rn] true', '[rn] false'],
@@ -112,25 +112,36 @@ describe('reference examples', () => {
     });
   }
 
-  it('runs the native example on the worker and returns its value to RN', () => {
-    const snapshots = runExample('nativeCall');
+  it('runs the native callback before the queued read and returns its value to RN', () => {
+    const snapshots = runExample('nativeSchedule');
     const nativeFrames = snapshots.flatMap((snapshot) =>
-      snapshot.cores.filter((core) => core.nativeFrame)
+      snapshot.cores.filter(
+        (core) => core.nativeFrame && core.job === 'nativeWork()'
+      )
     );
     assert.ok(nativeFrames.length > 0);
     assert.ok(
       nativeFrames.every((core) => core.id === 'worker:native-example')
     );
-    assert.deepEqual(formatLogs(snapshots), ['[rn] 42']);
+    const workerJobs = snapshots.flatMap((snapshot) =>
+      snapshot.events.flatMap((event) =>
+        event.type === 'jobStart' && event.core === 'worker:native-example'
+          ? [event.job]
+          : []
+      )
+    );
+    assert.deepEqual(workerJobs, ['nativeWork()', 'readNativeResult()']);
+    assert.deepEqual(formatLogs(snapshots), ['[rn] true']);
     assert.equal(snapshots.at(-1)!.finished, true);
     const cores = snapshots.at(-1)!.cores;
     assert.equal(
-      cores.find((core) => core.id === 'rn')!.globals.nativeAnswer,
+      cores.find((core) => core.id === 'rn')!.globals.nativeWorkFinished,
       undefined
     );
-    assert.ok(
+    assert.equal(
       cores.find((core) => core.id === 'worker:native-example')!.globals
-        .nativeAnswer
+        .nativeWorkFinished,
+      'true'
     );
   });
 

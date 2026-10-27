@@ -1,17 +1,18 @@
 ---
 title: Integrating with C++
-description: Call a C++ function from a Worker Runtime and read its result in JavaScript.
+description: Schedule C++ work on a Worker Runtime and read its result in JavaScript.
 sidebar_position: 50
 ---
 
-import * as NativeCallSnippet from './_integrating-with-cpp/nativeCall';
-import NativeCallSource from '!!raw-loader!./_integrating-with-cpp/nativeCall';
+import * as NativeScheduleSnippet from './_integrating-with-cpp/nativeSchedule';
+import NativeScheduleSource from '!!raw-loader!./_integrating-with-cpp/nativeSchedule';
 
 # Integrating with C++
 
 In the [previous chapter](/docs/tutorials/synchronizing-data), we shared values between JavaScript
-runtimes. We can also use C++ code from a worklet. Let's start with a native function that simply
-returns `42`.
+runtimes. We can also schedule C++ work on a Worker Runtime. Let's use the same small example as
+[Usage in C++](/docs/threading/createWorkletRuntime#usage-in-c) in the API reference: set a global
+variable on the worker from C++, then read it from a worklet.
 
 This example assumes you already have a C++ TurboModule linked to Worklets in a native app build.
 See React Native's [C++ module guide](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules)
@@ -31,84 +32,86 @@ import NativeExample from './specs/NativeExample';
 const worker = createWorkletRuntime({ name: 'native-example' });
 ```
 
-## Adding a C++ function
+## Scheduling work from C++
 
-We need to install our native function on this worker. A JSI **HostFunction** lets JavaScript call
-a C++ function.
+On the C++ side, extract the worker from the JavaScript object and use `schedule` to queue a callback:
 
 ```cpp
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-namespace jsi = facebook::jsi;
-
-void installNativeAnswer(
-    jsi::Runtime &rnRuntime,
-    const jsi::Value &runtimeValue) {
+void scheduleNativeWork(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue) {
   auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
 
-  worker->runSync([](jsi::Runtime &workerRuntime) {
-    workerRuntime.global().setProperty(
-        workerRuntime,
-        "nativeAnswer",
-        jsi::Function::createFromHostFunction(
-            workerRuntime,
-            jsi::PropNameID::forAscii(workerRuntime, "nativeAnswer"),
-            0,
-            [](jsi::Runtime &, const jsi::Value &,
-               const jsi::Value *, size_t) -> jsi::Value {
-              return jsi::Value(42);
-            }));
+  worker->schedule([](facebook::jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(workerRuntime, "nativeWorkFinished", true);
   });
 }
 ```
 
-`rnRuntime` owns the incoming `runtimeValue`. We extract the Worklet Runtime from it, then create
-`nativeAnswer` on the worker's global object using `workerRuntime`.
+`rnRuntime` owns the incoming `runtimeValue`. `extractWorkletRuntime` retrieves the native worker
+behind that object. The callback receives `workerRuntime`, which gives it access to the worker's
+JavaScript globals through JSI (JavaScript Interface).
 
-`runSync` runs this short installation on the calling thread, holding the worker's runtime lock.
-When it returns, the function is ready. Keep the default runtime locking enabled.
+The callback runs on the worker's thread with its runtime lock held and sets `nativeWorkFinished`
+to `true`. Keep the default queue and runtime locking enabled for this example, and keep the
+`worker` object alive while its work is pending.
 
-Expose a synchronous `install` method on your TurboModule. Its Codegen signature is
-`install: (runtime: CodegenTypes.UnsafeObject) => boolean`. Declare the corresponding method in your
-C++ module header and forward it to the helper above:
+Expose this helper through a synchronous `NativeExample.schedule(worker)` method on your TurboModule.
 
-```cpp
-bool NativeExample::install(jsi::Runtime &rt, jsi::Object runtime) {
-  installNativeAnswer(rt, jsi::Value(rt, runtime));
-  return true;
-}
-```
+<details>
+  <summary>Connecting the helper to your TurboModule</summary>
+
+  Use the Codegen signature `schedule: (runtime: CodegenTypes.UnsafeObject) => boolean`.
+  Declare the corresponding method in your C++ module header and forward it to the helper above:
+
+  ```cpp
+  bool NativeExample::schedule(
+      facebook::jsi::Runtime &rt,
+      facebook::jsi::Object runtime) {
+    scheduleNativeWork(rt, facebook::jsi::Value(rt, runtime));
+    return true;
+  }
+  ```
+
+  Returning `true` means the callback was queued; it does not indicate that the callback has finished.
+</details>
 
 Pass the original `worker` object to this method. Copying its properties or serializing it as JSON
 would lose the native runtime reference.
 
-## Calling it from a worklet
+## Reading the result
 
-Install the function, then call it on the worker:
+Schedule the C++ callback, then queue a worklet on the same worker to read the flag:
 
 ```js
-NativeExample.install(worker);
+NativeExample.schedule(worker);
 
-const result = await runOnRuntimeAsync(worker, () => {
+const finished = await runOnRuntimeAsync(worker, () => {
   'worklet';
-  return globalThis.nativeAnswer();
+  return globalThis.nativeWorkFinished;
 });
 
-console.log(result); // 42
+console.log(finished); // true
 ```
 
-Run this code from an async function on the RN Runtime. The worklet calls `nativeAnswer` on the
-worker's thread, and `runOnRuntimeAsync` returns its result to the RN Runtime.
+Run this code from an async function on the RN Runtime. Read `globalThis.nativeWorkFinished` inside
+the worklet because C++ set it on the worker's global object. Reading the same property on the RN
+Runtime would give `undefined`.
 
-Read `globalThis.nativeAnswer` inside the worklet: that is where it was installed. It is not a global
-on the RN Runtime.
+:::tip Why is the flag ready when we read it?
 
-A native function runs synchronously on the thread that calls it. Here we use `runOnRuntimeAsync`
-to run it on the worker's thread. Using `runOnRuntimeSync` instead would keep the calling thread
-occupied, just as it does with a JavaScript function.
+`NativeExample.schedule` returns after queuing the C++ callback. The subsequent `runOnRuntimeAsync`
+queues the reading worklet behind it. The default worker queue runs these jobs in order, so the C++
+callback sets the flag before the worklet reads it. `await` then waits for the worklet's result to
+come back to RN without blocking its thread.
 
-With `nativeAnswer` installed, the simulation below follows the call from the RN Runtime to the
-worker and back. The native function runs on the worker's thread, and `42` returns to the RN Runtime.
-The browser models this call; it does not execute C++.
+`runOnRuntimeSync` would not wait for previously queued work and could read the flag too early.
 
-<ThreadingSimulation module={NativeCallSnippet} source={NativeCallSource} tickMs={700}/>
+:::
+
+The simulation follows the same sequence: queue the native callback, read the flag on the worker,
+and return `true` to RN. The browser models the C++ callback; it does not execute C++.
+
+<ThreadingSimulation module={NativeScheduleSnippet} source={NativeScheduleSource} tickMs={700}/>

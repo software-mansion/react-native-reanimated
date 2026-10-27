@@ -10,16 +10,17 @@ const SNIPPETS_DIR = join(__dirname, '..', 'snippets');
 
 describe('displaySource', () => {
   it('shows the native example as valid async JavaScript without simulated setup', () => {
-    const { text } = displaySource(snippetSource('nativeCall'), {
+    const { text } = displaySource(snippetSource('nativeSchedule'), {
       boilerplate: true,
     });
-    assert.match(text, /async function runExample\(worker\)/);
-    assert.match(text, /runOnRuntimeAsync\(worker, callNativeAnswer\)/);
-    assert.match(text, /const result = await promise/);
-    assert.match(text, /return globalThis\.nativeAnswer\(\)/);
+    assert.match(text, /async function runExample\(worker, NativeExample\)/);
+    assert.match(text, /NativeExample\.schedule\(worker\)/);
+    assert.match(text, /runOnRuntimeAsync\(worker, readNativeResult\)/);
+    assert.match(text, /const finished = await promise/);
+    assert.match(text, /return globalThis\.nativeWorkFinished/);
     assert.doesNotMatch(
       text,
-      /yield|awaitPromise|initializer|installNativeAnswer|'native'|@site/
+      /yield|awaitPromise|scheduleOnRuntime|scheduleNativeWork|'native'|@site/
     );
     assert.doesNotThrow(
       () => new Function(text.replace(/^import .*;\n/gm, ''))
