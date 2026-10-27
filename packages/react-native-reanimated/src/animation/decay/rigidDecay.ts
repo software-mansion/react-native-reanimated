@@ -11,12 +11,14 @@ export function rigidDecay(
   const { lastTimestamp, startTimestamp, initialVelocity, current, velocity } =
     animation;
 
-  const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+  if (now < lastTimestamp) {
+    return Math.abs(velocity) < VELOCITY_EPS;
+  }
+
+  const deltaTime = Math.min(now - lastTimestamp, 64);
+  const elapsed = Math.max(now - startTimestamp, 0);
   const v =
-    velocity *
-    Math.exp(
-      -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
-    );
+    velocity * Math.exp(-(1 - config.deceleration) * elapsed * SLOPE_FACTOR);
   animation.current = current + (v * config.velocityFactor * deltaTime) / 1000;
   animation.velocity = v;
   animation.lastTimestamp = now;
