@@ -231,7 +231,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
         const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
             before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
-        const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, true, transaction);
+        const auto &run =
+            startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, config, true, transaction);
         const auto containerTag = run.container->current.tag;
         before.tag = containerTag;
         after.tag = containerTag;
@@ -335,6 +336,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+    const std::shared_ptr<Serializable> &config,
     const bool gestureDriven,
     TransactionMeta &transaction) const {
   auto &run = sharedElements_[sharedTag].run;
@@ -356,6 +358,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
+  run->config = config;
   run->gestureDriven = gestureDriven;
   run->targetOffWindow = false;
   return *run;
@@ -423,7 +426,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
+      auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, config, false, transaction);
       const auto containerTag = run.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
@@ -716,11 +719,6 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
     if (!targetMapped || targetOffWindow) {
       continue;
     }
-    const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-        run.source->current.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-    if (!config) {
-      continue;
-    }
     resolveLightNodeProps(run.target);
     auto after = run.target->current;
     auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
@@ -732,7 +730,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
     overrideTransform(after, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
     after.tag = containerTag;
     if (hasPendingLayoutAnimation(containerTag)) {
-      updateLayoutAnimationTarget(containerTag, after, config);
+      updateLayoutAnimationTarget(containerTag, after, run.config);
       continue;
     }
     const LayoutAnimation *animation = nullptr;
@@ -742,7 +740,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
       animation = &it->second.animation;
     }
     if (animation && animation->finalView.layoutMetrics != after.layoutMetrics) {
-      startSharedTransition(containerTag, animation->currentView, after, config);
+      startSharedTransition(containerTag, animation->currentView, after, run.config);
     }
   }
 }
