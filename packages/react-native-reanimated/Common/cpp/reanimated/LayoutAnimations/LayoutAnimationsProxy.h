@@ -200,8 +200,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::unordered_set<Tag> &hiddenTags,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
-  void holdTargetEntering(TransactionMeta &transaction) const;
+  void holdTargetEntering(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   bool isTargetContentOfFadingRun(const std::shared_ptr<LightNode> &node) const;
+  void startHeldEntering(
+      const PendingNodeAnimation &held,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
   void fadeInTargetContent(
       const SharedTransitionRun &run,
       TransactionMeta &transaction,

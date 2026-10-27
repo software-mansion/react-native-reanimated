@@ -1218,8 +1218,16 @@ void LayoutAnimationsProxy::restoreFadedChildren(
 }
 
 // An entering animation of a target child waits until the run lands. It starts when the child is no
-// longer target content of a run that fades, for example after the run ends without a landing.
-void LayoutAnimationsProxy::holdTargetEntering(TransactionMeta &transaction) const {
+// longer target content of a run that fades, for example after the run ends without a landing, and
+// no layout animation owns the child.
+void LayoutAnimationsProxy::holdTargetEntering(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  const auto hasLayoutAnimation = [&](const std::shared_ptr<LightNode> &node) {
+    const auto tag = node->current.tag;
+    return hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag) ||
+        std::ranges::any_of(transaction.layout, [&node](const auto &layout) { return layout.node == node; });
+  };
   std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
     if (!isLightNodeMapped(held.node) || held.node->isExiting()) {
       return true;
@@ -1227,7 +1235,11 @@ void LayoutAnimationsProxy::holdTargetEntering(TransactionMeta &transaction) con
     if (isTargetContentOfFadingRun(held.node)) {
       return false;
     }
-    transaction.entering.push_back(held);
+    if (hasLayoutAnimation(held.node)) {
+      schedulePullOnNextFrame();
+      return false;
+    }
+    startHeldEntering(held, transaction.filteredMutations, propsParserContext);
     return true;
   });
   std::erase_if(transaction.entering, [&](const PendingNodeAnimation &entering) {
@@ -1241,13 +1253,28 @@ void LayoutAnimationsProxy::holdTargetEntering(TransactionMeta &transaction) con
 
 bool LayoutAnimationsProxy::isTargetContentOfFadingRun(const std::shared_ptr<LightNode> &node) const {
   const auto parent = node->parent.lock();
-  if (!parent || !isViewKind(node->current) || findSharedTag(node->current)) {
-    return false;
-  }
-  return std::ranges::any_of(sharedElements_, [&parent](const auto &entry) {
-    const auto &run = entry.second.run;
-    return run && run->contentFade && run->carrier != run->target && run->target == parent;
-  });
+  const bool isTargetOfFadingRun =
+      parent && std::ranges::any_of(sharedElements_, [&parent](const auto &entry) {
+        const auto &run = entry.second.run;
+        return run && run->contentFade && run->carrier != run->target && run->target == parent;
+      });
+  return isTargetOfFadingRun && isViewKind(node->current) && !findSharedTag(node->current);
+}
+
+// The Update comes after the React mutations of the pull, so the child stays at opacity 0 until the
+// first frame of its entering animation.
+void LayoutAnimationsProxy::startHeldEntering(
+    const PendingNodeAnimation &held,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto view = mountedView(held.node);
+  const auto parent = held.node->parent.lock();
+  mutations.push_back(createPropsUpdate(
+      view,
+      cloneViewWithOpacity(view, 0, propsParserContext),
+      parent ? parent->current.tag : surfaceId_,
+      propsParserContext));
+  startEnteringAnimation(held.node, held.config);
 }
 
 // The target shows its children at opacity 0 when it lands. A child with a held entering animation plays it,
@@ -1264,7 +1291,7 @@ void LayoutAnimationsProxy::fadeInTargetContent(
     if (const auto heldIt =
             std::ranges::find_if(heldEnterings_, [&child](const auto &held) { return held.node == child; });
         heldIt != heldEnterings_.end()) {
-      startEnteringAnimation(child, heldIt->config);
+      startHeldEntering(*heldIt, transaction.filteredMutations, propsParserContext);
       heldEnterings_.erase(heldIt);
       continue;
     }
