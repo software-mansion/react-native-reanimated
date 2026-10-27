@@ -55,11 +55,10 @@ using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 // Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
 using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
-// A reparented view is kept by the platform outside the view of its parent (e.g. in a presented view controller), so
-// its origin relative to the root view of the surface comes from the platform, at the end of the presentation if
-// settled.
+// The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
+// origin relative to the root view of the surface comes from the platform, at the end of the presentation if settled.
 struct NativeViewPlacement {
-  enum class Kind { InsideParent, Detached, Reparented };
+  enum class Kind { InsideReactParent, Detached, OutsideReactParent };
   Kind kind;
   react::Point origin;
 };

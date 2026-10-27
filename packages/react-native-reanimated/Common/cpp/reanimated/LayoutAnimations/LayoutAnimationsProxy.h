@@ -98,6 +98,13 @@ struct Ancestor {
   react::Size ownSize;
 };
 
+// The first ancestor, from the view up, that the platform shows outside the view of its React parent, and its position
+// in the absolute positions of the path.
+struct AncestorOutsideReactParent {
+  size_t index;
+  react::Point position;
+};
+
 struct CollectedTransition {
   Transition transition;
   std::array<std::shared_ptr<LightNode>, 2> nodes;
@@ -308,9 +315,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
   std::vector<Ancestor> collectAncestors(const std::shared_ptr<LightNode> &node, bool useViewsOnScreen) const;
-  bool placeNatively(const std::vector<Ancestor> &ancestors, std::vector<react::Point> &absolutePositions, bool settled)
-      const;
-  void placeNatively(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
+  std::optional<AncestorOutsideReactParent> findAncestorOutsideReactParent(
+      const std::vector<Ancestor> &ancestors,
+      bool settled) const;
+  void adjustForNativePlacement(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   void overrideTransform(
