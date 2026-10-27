@@ -145,6 +145,12 @@ const shortFade = SharedTransition.duration(450).crossfade({ end: 0.3 });
   // highlight-next-line
   sharedTransitionStyle={transition}
 />;
+
+<Animated.View
+  sharedTransitionTag="item-short"
+  // highlight-next-line
+  sharedTransitionStyle={shortFade}
+/>;
 ```
 
 - The fade uses the same timing or spring as the transition, so it also reverses when the navigation goes back during the transition.
