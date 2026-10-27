@@ -86,7 +86,6 @@ struct LayoutAnimationsProxyDependencies {
   ReadMountedViewPropsFunction readMountedViewProps;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
   NativeViewPlacementFunction nativeViewPlacement;
-  HideInModalSnapshotFunction hideInModalSnapshot;
 #endif
 };
 

@@ -20,10 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 // Detaches the overlay before the mount that deletes it.
 - (void)hideOverlayForSurfaceId:(NSInteger)surfaceId;
 
-// Snapshots the modals that hold the views with the given tags, without those views. The snapshot of a modal replaces
-// the one that React Native animates if the mount that follows dismisses the modal.
-- (void)hideViewsInModalSnapshots:(const std::vector<facebook::react::Tag> &)tags;
-
 - (reanimated::NativeViewPlacement)placementOfViewWithTag:(NSInteger)tag
                                                 parentTag:(NSInteger)parentTag
                                                 surfaceId:(NSInteger)surfaceId
