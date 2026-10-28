@@ -10,6 +10,8 @@ import {
   processBackgroundImage,
   processBoxShadow,
   processColor,
+  processObjectFit,
+  processVerticalAlign,
 } from '../common/style/processors';
 import { ValueProcessorTarget } from '../common/types';
 import type { StyleProps } from '../commonTypes';
@@ -220,5 +222,144 @@ describe('unprocessSettledUpdate', () => {
         }
       }
     );
+  });
+
+  describe('objectFit', () => {
+    test.each([
+      ['contain', 'contain'],
+      ['cover', 'cover'],
+      ['fill', 'stretch'],
+      ['none', 'none'],
+    ])(
+      'round-trips objectFit %s through resizeMode %s',
+      (objectFit, resizeMode) => {
+        const style = processObjectFit(objectFit, context) as StyleProps;
+        expect(style).toEqual({ resizeMode });
+
+        unprocessSettledUpdate({
+          props: {},
+          style,
+          keysLastWrittenByAnimatedStyle: ['resizeMode'],
+        });
+
+        expect(style.objectFit).toBe(objectFit);
+      }
+    );
+
+    test('reads scale-down back as contain, like React Native renders it', () => {
+      const style = processObjectFit('scale-down', context) as StyleProps;
+
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: ['resizeMode'],
+      });
+
+      expect(style).toEqual({ resizeMode: 'contain', objectFit: 'contain' });
+    });
+
+    test.each(['center', 'repeat'])(
+      'clears objectFit for resizeMode %s without an objectFit counterpart',
+      (resizeMode) => {
+        const style: StyleProps = { resizeMode };
+
+        unprocessSettledUpdate({
+          props: {},
+          style,
+          keysLastWrittenByAnimatedStyle: ['resizeMode'],
+        });
+
+        expect(style).toEqual({ resizeMode });
+        expect('objectFit' in style).toBe(true);
+        expect(style.objectFit).toBeUndefined();
+      }
+    );
+
+    test('overwrites an objectFit from an earlier settle when resizeMode has no counterpart', () => {
+      const first: StyleProps = { resizeMode: 'contain' };
+      const second: StyleProps = { resizeMode: 'repeat' };
+
+      for (const style of [first, second]) {
+        unprocessSettledUpdate({
+          props: {},
+          style,
+          keysLastWrittenByAnimatedStyle: ['resizeMode'],
+        });
+      }
+      const settledStyle = { ...first, ...second };
+
+      expect(settledStyle.objectFit).toBeUndefined();
+      expect(settledStyle.resizeMode).toBe('repeat');
+    });
+
+    test('leaves a resizeMode last written by animated props untouched', () => {
+      const props: StyleProps = { resizeMode: 'cover' };
+      const style: StyleProps = { resizeMode: 'cover' };
+
+      unprocessSettledUpdate({
+        props,
+        style,
+        keysLastWrittenByAnimatedStyle: [],
+      });
+
+      expect(props).toEqual({ resizeMode: 'cover' });
+      expect(style).toEqual({ resizeMode: 'cover' });
+    });
+
+    test('leaves a settled update without resizeMode untouched', () => {
+      const style: StyleProps = { opacity: 0.5 };
+
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: ['resizeMode'],
+      });
+
+      expect(style).toEqual({ opacity: 0.5 });
+    });
+  });
+
+  describe('verticalAlign', () => {
+    test.each(['auto', 'top', 'bottom', 'middle'])(
+      'round-trips verticalAlign %s through textAlignVertical',
+      (verticalAlign) => {
+        const style = processVerticalAlign(
+          verticalAlign,
+          context
+        ) as StyleProps;
+
+        unprocessSettledUpdate({
+          props: {},
+          style,
+          keysLastWrittenByAnimatedStyle: ['textAlignVertical'],
+        });
+
+        expect(style.verticalAlign).toBe(verticalAlign);
+      }
+    );
+
+    test('leaves a textAlignVertical last written by animated props untouched', () => {
+      const style: StyleProps = { textAlignVertical: 'center' };
+
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: [],
+      });
+
+      expect(style).toEqual({ textAlignVertical: 'center' });
+    });
+
+    test('leaves a settled update without textAlignVertical untouched', () => {
+      const style: StyleProps = { opacity: 0.5 };
+
+      unprocessSettledUpdate({
+        props: {},
+        style,
+        keysLastWrittenByAnimatedStyle: ['textAlignVertical'],
+      });
+
+      expect(style).toEqual({ opacity: 0.5 });
+    });
   });
 });
