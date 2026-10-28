@@ -18,16 +18,10 @@ internal class ReanimatedSensor(
     var listener: ReanimatedSensorListener? = null
     val sensorManager: SensorManager
     var sensor: Sensor? = null
-    val interval: Int
-
-    companion object {
-        private const val DEFAULT_INTERVAL = 8
-    }
 
     init {
         sensorManager =
             reactContext.get()!!.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        this.interval = if (listenerInterval == -1) DEFAULT_INTERVAL else listenerInterval
     }
 
     fun initialize(): Boolean {
@@ -35,8 +29,22 @@ internal class ReanimatedSensor(
         val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY) ?: return false
         sensor = sensorManager.getDefaultSensor(sensorType.getType()) ?: return false
         listener = ReanimatedSensorListener(setter, listenerInterval.toDouble(), display, sensorType)
-        sensorManager.registerListener(listener, sensor, interval * 1000)
+        sensorManager.registerListener(listener, sensor, getSamplingPeriodUs(display))
         return true
+    }
+
+    // `interval: 'auto'` (-1) matches the refresh rate of the display, as on iOS. Sampling faster
+    // only wakes the UI thread for readings that no frame will show.
+    private fun getSamplingPeriodUs(display: Display): Int {
+        if (listenerInterval != -1) {
+            return listenerInterval * 1000
+        }
+        val refreshRate = display.refreshRate.takeIf { it > 0 } ?: DEFAULT_REFRESH_RATE
+        return (1_000_000 / refreshRate).toInt()
+    }
+
+    companion object {
+        private const val DEFAULT_REFRESH_RATE = 60f
     }
 
     fun cancel() {
