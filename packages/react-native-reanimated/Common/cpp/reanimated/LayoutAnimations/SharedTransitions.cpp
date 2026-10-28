@@ -748,7 +748,8 @@ void LayoutAnimationsProxy::attachRetainedCarriers(
       continue;
     }
     // A removed carrier stays at the root, and the teardown removes it from there.
-    transaction.restoreRequests.push_back({sharedTag, run.target});
+    const auto &shownEndpoint = removals.contains(run.target->current.tag) ? run.source : run.target;
+    transaction.restoreRequests.push_back({sharedTag, shownEndpoint});
     for (const auto &carrier : run.carriers) {
       if (!isRemoved(carrier)) {
         attachCarrier(sharedTag, carrier, transaction.filteredMutations, propsParserContext);
