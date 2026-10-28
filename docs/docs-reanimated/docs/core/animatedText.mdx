@@ -24,7 +24,7 @@ function App() {
   ```typescript
   type AnimatedTextChild =
     | ReactNode
-    | SharedValue<string | number | null | undefined>;
+    | Omit<SharedValue<string | number | null | undefined>, 'set' | 'modify'>;
 
   type AnimatedTextProps = Omit<AnimatedProps<TextProps>, 'children'> & {
     children?: AnimatedTextChild | AnimatedTextChild[];
