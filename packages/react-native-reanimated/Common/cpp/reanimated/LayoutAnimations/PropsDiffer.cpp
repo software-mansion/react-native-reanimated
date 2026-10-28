@@ -3,6 +3,7 @@
 #include <react/renderer/graphics/Transform.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -23,6 +24,34 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   diff.setProperty(runtime, "source", sourceValues_);
   diff.setProperty(runtime, "target", targetValues_);
   return diff;
+}
+
+bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps) {
+#ifdef ANDROID
+  if (sourceProps.elevation != targetProps.elevation) {
+    return true;
+  }
+#endif
+  const auto sameAnimatedBoxShadow = [](const BoxShadow &source, const BoxShadow &target) {
+    return source.offsetX == target.offsetX && source.offsetY == target.offsetY &&
+        source.blurRadius == target.blurRadius && source.spreadDistance == target.spreadDistance &&
+        source.color == target.color;
+  };
+  const auto &sourceWidths = sourceProps.getBorderWidths();
+  const auto &targetWidths = targetProps.getBorderWidths();
+  const auto &sourceColors = sourceProps.borderColors;
+  const auto &targetColors = targetProps.borderColors;
+  return sourceProps.opacity != targetProps.opacity || sourceProps.backgroundColor != targetProps.backgroundColor ||
+      sourceProps.transform != targetProps.transform || sourceProps.transformOrigin != targetProps.transformOrigin ||
+      !std::ranges::equal(sourceProps.boxShadow, targetProps.boxShadow, sameAnimatedBoxShadow) ||
+      sourceProps.shadowColor != targetProps.shadowColor || sourceProps.shadowOffset != targetProps.shadowOffset ||
+      sourceProps.shadowOpacity != targetProps.shadowOpacity || sourceProps.shadowRadius != targetProps.shadowRadius ||
+      sourceProps.borderRadii != targetProps.borderRadii || sourceWidths.all != targetWidths.all ||
+      sourceWidths.left != targetWidths.left || sourceWidths.right != targetWidths.right ||
+      sourceWidths.top != targetWidths.top || sourceWidths.bottom != targetWidths.bottom ||
+      sourceColors.all != targetColors.all || sourceColors.left != targetColors.left ||
+      sourceColors.right != targetColors.right || sourceColors.top != targetColors.top ||
+      sourceColors.bottom != targetColors.bottom;
 }
 
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {
