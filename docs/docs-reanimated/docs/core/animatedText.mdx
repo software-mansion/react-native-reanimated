@@ -1,0 +1,65 @@
+---
+sidebar_position: 8
+---
+
+# Animated.Text
+
+`Animated.Text` is a built-in [Animated component](/docs/fundamentals/glossary#animated-component) based on the React Native `Text`. Besides animating its styles and props, it accepts [shared values](/docs/fundamentals/glossary#shared-value) as children. The text is updated on the UI thread, without re-rendering the component.
+
+## Reference
+
+```javascript
+import Animated, { useSharedValue } from 'react-native-reanimated';
+
+function App() {
+  const count = useSharedValue(0);
+
+  return <Animated.Text>{count}</Animated.Text>;
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type AnimatedTextChild =
+    | ReactNode
+    | SharedValue<string | number | null | undefined>;
+
+  type AnimatedTextProps = Omit<AnimatedProps<TextProps>, 'children'> & {
+    children?: AnimatedTextChild | AnimatedTextChild[];
+  };
+  ```
+</details>
+
+### Props
+
+`Animated.Text` accepts all props of the React Native `Text` component, and every style and prop can be animated the same way as in other Animated components.
+
+#### `children`
+
+A shared value, a derived value, or any children supported by `Text`. Shared values can be mixed with static children in a single `Animated.Text`:
+
+```jsx
+<Animated.Text>Progress: {progress}%</Animated.Text>
+```
+
+A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. Other types, like `boolean`, objects and arrays, are rejected by TypeScript.
+
+## Example
+
+import AnimatedText from '@site/src/examples/AnimatedText';
+import AnimatedTextSrc from '!!raw-loader!@site/src/examples/AnimatedText';
+
+<InteractiveExample src={AnimatedTextSrc} component={AnimatedText} showCode/>
+
+## Remarks
+
+- A `null`, `undefined` or empty string value renders an empty text. Reanimated keeps the `Text` from collapsing by rendering a zero-width space in its place.
+- A number is converted to a string, so use [`useDerivedValue`](/docs/core/useDerivedValue) to format it, for example to round it or to add a unit.
+- The text keeps updating while the JavaScript thread is busy, since the update doesn't go through React.
+- `Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](/docs/guides/feature-flags) static feature flag is enabled. A warning is logged in development builds.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web/>
