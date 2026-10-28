@@ -23,12 +23,14 @@ enum class SensorType : std::uint8_t {
 
 class AnimatedSensorModule {
   std::unordered_set<int> sensorsIds_;
+  IsSensorAvailableFunction platformIsSensorAvailableFunction_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
 
  public:
   explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
+  jsi::Value isSensorAvailable(const jsi::Value &sensorType) const;
   jsi::Value registerSensor(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<WorkletRuntime> &uiRuntime,

@@ -7,7 +7,7 @@ sidebar_position: 42 # Use alphabetical order
   # createSynchronizable
 </Badges>
 
-Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+Creates a new [Synchronizable](./synchronizable.mdx) holding the provided initial value. Returns the created Synchronizable.
 
 ## Reference
 
@@ -31,8 +31,8 @@ const synchronizable = createSynchronizable({ a: 42 });
 
 ### initialValue
 
-The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](./serializable.mdx) documentation.
 
 ## Remarks
 
-- In [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](/docs/0.9/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
+- In [Legacy Eval Mode](../bundleMode/overview.mdx#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime). In Bundle Mode, it can be called on any Runtime.

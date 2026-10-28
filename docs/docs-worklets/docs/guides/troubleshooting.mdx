@@ -64,15 +64,15 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 ### TypeError: right operand of 'in' is not an object
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ## Warnings
 
@@ -97,24 +97,24 @@ obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been
 scheduleOnUI(worklet);
 ```
 
-and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
+and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Worklets. To fix this, you should use a [Synchronizable](../memory/synchronizable.mdx) or a [Shareable](../memory/shareable.mdx) instead. For example, with a Synchronizable:
 
 **Solution:**
 
 ```diff
 -const obj = { prop: 1 };
-+const sv = useSharedValue({ prop: 1 });
++const synchronizable = createSynchronizable({ prop: 1 });
 
  function worklet() {
    'worklet';
 -  console.log(obj.prop);
-+  console.log(sv.value.prop);
++  console.log(synchronizable.getBlocking().prop);
  }
 
- scheduleOnUI(worklet);
+-scheduleOnUI(worklet);
++runOnUISync(worklet);
 -obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-+sv.value = { prop: 2 }; // Everything is fine here.
-+// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
++synchronizable.setBlocking({ prop: 2 }); // Everything is fine here.
  scheduleOnUI(worklet);
 ```
 
@@ -204,4 +204,4 @@ See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call
 
 ### Locally defined function passed to scheduleOnRN
 
-See [this page](/docs/threading/scheduleOnRN#what-functions-can-be-passed-to-scheduleonrn) to learn more about functions that can be passed to `scheduleOnRN`.
+See [this page](../threading/scheduleOnRN.mdx#what-functions-can-be-passed-to-scheduleonrn) to learn more about functions that can be passed to `scheduleOnRN`.

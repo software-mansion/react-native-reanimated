@@ -813,9 +813,14 @@ function dumpCrashDiagnostics() {
 
 async function dumpIOSCrashDiagnostics() {
   if (process.platform !== 'darwin') {
-    console.error(
-      '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
-    );
+    const remoteUdid = process.env.RUNTIME_TESTS_REMOTE_UDID;
+    if (remoteUdid) {
+      await dumpRemoteIOSCrashDiagnostics(remoteUdid);
+    } else {
+      console.error(
+        '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
+      );
+    }
     return;
   }
   const reportsDir = path.join(
@@ -844,6 +849,153 @@ async function dumpIOSCrashDiagnostics() {
     );
     return;
   }
+  printIOSCrashReports(reports);
+}
+
+/** @param {string} udid */
+async function dumpRemoteIOSCrashDiagnostics(udid) {
+  console.error(
+    `[runtime-tests] fetching FabricExample crash reports from the remote simulator ${udid}…`
+  );
+  /** @type {{ name: string; file: string; mtimeMs: number }[]} */
+  let reports = [];
+  for (let attempt = 0; attempt < 10 && reports.length === 0; attempt++) {
+    await sleep(3000);
+    const reportsDir = await fetchRemoteIOSCrashReports(udid);
+    reports = reportsDir ? findFreshRemoteIOSCrashReports(reportsDir) : [];
+  }
+  await archiveRemoteIOSLogs(udid);
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports on the remote simulator (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  printIOSCrashReports(reports);
+}
+
+/**
+ * @param {string} udid
+ * @returns {Promise<string | null>}
+ */
+async function fetchRemoteIOSCrashReports(udid) {
+  try {
+    const { stdout } = await run(
+      'sim-remote',
+      ['logs', udid, '--kind', 'crash', '--process', 'FabricExample'],
+      { timeout: 120_000 }
+    );
+    return stdout.split('\n')[0].trim() || null;
+  } catch (error) {
+    console.error(
+      `[runtime-tests] sim-remote logs failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return null;
+  }
+}
+
+/**
+ * @param {string} reportsDir
+ * @returns {{ name: string; file: string; mtimeMs: number }[]}
+ */
+function findFreshRemoteIOSCrashReports(reportsDir) {
+  return listFilesRecursively(reportsDir)
+    .filter((file) => {
+      const name = path.basename(file);
+      return (
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+      );
+    })
+    .map((file) => ({
+      name: path.basename(file),
+      file,
+      mtimeMs: iosCrashReportTimeMs(file),
+    }))
+    .filter(
+      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/** @param {string} udid */
+async function archiveRemoteIOSLogs(udid) {
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  const archive = path.join(
+    CRASH_REPORT_DIR,
+    `ios-remote-logs-${LIBRARY}.tar.gz`
+  );
+  try {
+    await run(
+      'sim-remote',
+      [
+        'logs',
+        udid,
+        '--process',
+        'FabricExample',
+        '--last',
+        '15m',
+        '--archive',
+        archive,
+      ],
+      { timeout: 300_000 }
+    );
+    console.error(
+      `[runtime-tests] crash reports and logs of the remote simulator saved to ${archive}`
+    );
+  } catch (error) {
+    console.error(
+      `[runtime-tests] could not archive the remote simulator logs: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * @param {string} dir
+ * @returns {string[]}
+ */
+function listFilesRecursively(dir) {
+  /** @type {fs.Dirent[]} */
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.flatMap((entry) => {
+    const file = path.join(dir, entry.name);
+    return entry.isDirectory() ? listFilesRecursively(file) : [file];
+  });
+}
+
+/**
+ * @param {string} file
+ * @returns {number}
+ */
+function iosCrashReportTimeMs(file) {
+  const timestamp = Date.parse(
+    String(readIOSCrashReportHeader(file).timestamp).replace(
+      /^(\S+) (\S+) ([+-]\d{2})(\d{2})$/,
+      '$1T$2$3:$4'
+    )
+  );
+  return Number.isNaN(timestamp) ? fs.statSync(file).mtimeMs : timestamp;
+}
+
+/**
+ * @param {string} file
+ * @returns {{ timestamp?: string }}
+ */
+function readIOSCrashReportHeader(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8').split('\n')[0]);
+  } catch {
+    return {};
+  }
+}
+
+/** @param {{ name: string; file: string }[]} reports */
+function printIOSCrashReports(reports) {
   fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
   for (const report of reports.slice(0, 3)) {
     const saved = path.join(CRASH_REPORT_DIR, report.name);

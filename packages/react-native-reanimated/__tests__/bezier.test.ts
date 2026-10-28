@@ -4,7 +4,7 @@ import { Bezier } from '../src/Bezier';
 /*
  * https://github.com/gre/bezier-easing/blob/master/test/test.test.js
  * BezierEasing - use bezier curve for transition easing function
- * by Gaëtan Renaudeau 2014 - 2015 – MIT License
+ * by Gaëtan Renaudeau 2014 - 2026 – MIT License
  */
 // spell-checker:enable
 
@@ -258,7 +258,36 @@ describe('Test `Bezier` function', () => {
     });
   });
 
-  // TODO: Fix this test
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  describe('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {});
+  test('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {
+    repeat(100)(() => {
+      const a = seededRandom();
+      const b = 2 * seededRandom() - 0.5;
+      const easing = Bezier(a, b, 1 - a, 1 - b);
+      for (let i = 1; i < 100; ++i) {
+        const x = i / 100;
+        expect(easing(x) + easing(1 - x)).toBeCloseTo(1, 10);
+      }
+    });
+  });
+
+  test('Bezier(1, 0, 0, 1) is monotonic around x = 0.5', () => {
+    const easing = Bezier(1, 0, 0, 1);
+    let previous = 0;
+    for (let i = 0; i <= 10000; ++i) {
+      const y = easing(0.49 + (0.02 * i) / 10000);
+      expect(y).toBeGreaterThanOrEqual(previous);
+      previous = y;
+    }
+  });
+
+  test('x outside of [0, 1] is clamped', () => {
+    const easing = Bezier(0, 0, 0.2, 1);
+    expect(easing(0)).toBe(0);
+    expect(easing(1)).toBe(1);
+    expect(easing(Number.MIN_VALUE)).toBeGreaterThan(0);
+    expect(easing(-0.1)).toBe(0);
+    expect(easing(-1e-9)).toBe(0);
+    expect(easing(1.5)).toBe(1);
+    expect(easing(NaN)).toBeNaN();
+  });
 });

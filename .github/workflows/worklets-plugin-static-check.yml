@@ -37,15 +37,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Use Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          cache: 'yarn'
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
       - name: Clear annotations
         shell: bash
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo dependencies
         run: yarn install --immutable
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
       - name: Build Worklets
         if: matrix.os != 'windows-latest'
         working-directory: ${{ env.WORKLETS_DIR }}
@@ -81,15 +86,15 @@ jobs:
             ${{ env.OXC_PLUGIN_DIR }}/target
           key: cargo-${{ runner.os }}-${{ hashFiles('packages/react-native-worklets/plugin-oxc/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
-      - name: OXC plugin own tests
+      - name: Oxc plugin own tests
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}
         run: yarn test:oxc
-      - name: Babel plugin test suite against the OXC plugin
+      - name: Babel plugin test suite against the Oxc plugin
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}
         run: yarn test:babel-suite
-      - name: Build OXC plugin
+      - name: Build Oxc plugin
         if: matrix.plugin == 'oxc'
         working-directory: ${{ env.OXC_PLUGIN_DIR }}
         run: yarn build

@@ -2,18 +2,17 @@ package com.swmansion.reanimated.nativeProxy
 
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
-import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
-import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.events.RCTModernEventEmitter
+import com.swmansion.reanimated.resolveCustomEventName
 
 @DoNotStrip
 class EventHandler : RCTModernEventEmitter {
     @field:DoNotStrip
     private val mHybridData: HybridData
 
-    var mCustomEventNamesResolver: UIManagerModule.CustomEventNamesResolver? = null
     internal var isInDrawPassProvider: (() -> Boolean)? = null
+    internal var nativeCallGuard: (() -> Unit) -> Unit = { it() }
 
     @DoNotStrip
     private constructor(hybridData: HybridData) {
@@ -22,6 +21,7 @@ class EventHandler : RCTModernEventEmitter {
 
     private fun isInDrawPass(): Boolean = isInDrawPassProvider?.invoke() == true
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun receiveEvent(
         surfaceId: Int,
         targetTag: Int,
@@ -31,35 +31,16 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
         category: Int,
     ) {
-        val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
+        handle(eventName, targetTag, params)
     }
 
-    override fun receiveEvent(
-        surfaceId: Int,
-        targetTag: Int,
+    internal fun handle(
         eventName: String,
+        targetTag: Int,
         params: WritableMap?,
     ) {
-        val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
-    }
-
-    override fun receiveEvent(
-        targetTag: Int,
-        eventName: String,
-        params: WritableMap?,
-    ) {
-        val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
-        receiveEvent(resolvedEventName, targetTag, params, isInDrawPass())
-    }
-
-    override fun receiveTouches(
-        eventName: String,
-        touches: WritableArray,
-        changedIndices: WritableArray,
-    ) {
-        // not interested in processing touch events this way, we process raw events only
+        val resolvedEventName = resolveCustomEventName(eventName)
+        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
     }
 
     external fun receiveEvent(

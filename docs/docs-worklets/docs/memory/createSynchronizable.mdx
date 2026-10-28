@@ -7,11 +7,11 @@ sidebar_position: 42 # Use alphabetical order
   # createSynchronizable
 </Badges>
 
-Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+Creates a new [Synchronizable](./synchronizable.mdx) holding the provided initial value. Returns the created Synchronizable.
 
-By default it creates a [Synchronizable Dynamic](/docs/memory/synchronizable#synchronizable-dynamic).
+By default it creates a [Synchronizable Dynamic](./synchronizable.mdx#synchronizable-dynamic).
 
-You can pass a config option to create [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) instead.
+You can pass a config option to create [Synchronizable Fixed](./synchronizable.mdx#synchronizable-fixed) instead.
 
 ## Reference
 
@@ -46,7 +46,7 @@ const counter = createSynchronizable(0, { fixedType: true });
 
 ### initialValue
 
-The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](./serializable.mdx) documentation.
 
 With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
 
@@ -56,7 +56,7 @@ With the [`fixedType` option](#config) it isn't serialized and must be a `number
 
 Optional configuration for the Synchronizable. An object with the following properties:
 
-- `fixedType` - when `true`, the created [Synchronizable Fixed](/docs/memory/synchronizable#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](/docs/memory/synchronizable#setdirty) method. Defaults to `false`.
+- `fixedType` - when `true`, the created [Synchronizable Fixed](./synchronizable.mdx#synchronizable-fixed) stores its `number` or `boolean` value directly in native memory, without serialization, and exposes the additional [`setDirty`](./synchronizable.mdx#setdirty) method. Defaults to `false`.
 
 ## Remarks
 

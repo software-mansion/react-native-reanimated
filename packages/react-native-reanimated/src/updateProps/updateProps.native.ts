@@ -4,7 +4,7 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   processColorsInProps,
-  processStyleValue,
+  processStylePropInPlace,
   processTransform,
   processTransformOrigin,
   stylePropsBuilder,
@@ -27,7 +27,7 @@ const updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: PropUpdates,
   isAnimatedProps?: boolean
-) => void = (viewDescriptors, updates, isAnimatedProps) => {
+) => void = (viewDescriptors, updates, isAnimatedProps = false) => {
   'worklet';
 
   // TODO: Remove this if once we have SVG props builder implemented
@@ -35,16 +35,14 @@ const updateProps: (
   if (isAnimatedProps) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
-      updates.transformOrigin = processStyleValue(
-        processTransformOrigin,
-        updates.transformOrigin
+      processStylePropInPlace(
+        updates,
+        'transformOrigin',
+        processTransformOrigin
       );
     }
     if ('transform' in updates) {
-      updates.transform = processStyleValue(
-        processTransform,
-        updates.transform
-      );
+      processStylePropInPlace(updates, 'transform', processTransform);
     }
   }
 
@@ -53,7 +51,8 @@ const updateProps: (
     // Use props builder only for style updaters, since animated props
     // can contain any properties of different types, depending on the
     // component, which we cannot process properly with the props builder.
-    isAnimatedProps ? updates : stylePropsBuilder.build(updates)
+    isAnimatedProps ? updates : stylePropsBuilder.build(updates),
+    isAnimatedProps
   );
 };
 
@@ -66,6 +65,7 @@ function updateJSProps(operations: JSPropsOperation[]) {
 type NativePropsOperation = {
   shadowNodeWrapper: ShadowNodeWrapper;
   updates: StyleProps;
+  isAnimatedProps: boolean;
 };
 
 function createUpdatePropsManager() {
@@ -91,7 +91,11 @@ function createUpdatePropsManager() {
     }, {});
 
   return {
-    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
+    update(
+      viewDescriptors: ViewDescriptorsWrapper,
+      updates: PropUpdates,
+      isAnimatedProps: boolean
+    ) {
       viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
         const viewTag = tag as number;
         const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
@@ -103,6 +107,7 @@ function createUpdatePropsManager() {
           nativeOperations.push({
             shadowNodeWrapper,
             updates: nativePropUpdates,
+            isAnimatedProps,
           });
         }
         if (jsPropUpdates) {

@@ -10,14 +10,11 @@ import type {
   LayoutAnimationStartFunction,
   StyleProps,
 } from 'react-native-reanimated';
+import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
 
 export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
-};
-
-type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
 };
 
 export type TrackerCallCount = {
@@ -69,6 +66,15 @@ export type TestSuite = {
   afterEach?: MaybeAsync<void>;
   skip?: boolean;
   decorator?: DescribeDecorator | null;
+};
+
+export type MountedViewProps = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  backgroundColor: string;
 };
 
 export type ValidPropNames =
@@ -124,6 +130,7 @@ export interface Operation {
   shadowNodeWrapper?: ShadowNodeWrapper;
   name: string;
   updates: OperationUpdate;
+  isAnimatedProps: boolean;
 }
 
 export type TestValue =
@@ -182,12 +189,17 @@ declare global {
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _obtainMountedViewProps: (
+    tag: number,
+    presented: boolean
+  ) => MountedViewProps | null;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;

@@ -69,7 +69,7 @@ module.exports = {
 
 Defaults to `false`.
 
-Enables the [Bundle Mode](/docs/bundleMode/).
+Enables the [Bundle Mode](../bundleMode/overview.mdx).
 
 ### disableInlineStylesWarning
 
@@ -118,9 +118,9 @@ This option turns off the source map generation for worklets. Mostly used for te
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/0.10-0.12/worklets-babel-plugin/about#experimental-worklet-classes).
+support](./about.md#experimental-worklet-classes).
 You might need to disable this feature when using [Custom
-Serializables](/docs/memory/registerCustomSerializable).
+Serializables](../memory/registerCustomSerializable.mdx).
 
 ### extraPlugins
 
@@ -235,7 +235,7 @@ Experimental feature.
 Defaults to `false`.
 
 Enabled compilation of worklets to [Hermes](https://github.com/facebook/hermes) bytecode
-ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
+ahead of time instead of shipping them as source strings in [Legacy Eval Mode](../bundleMode/overview.mdx#legacy-eval-mode).
 At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
 skipping code evaluation overhead costs.
 
@@ -246,7 +246,7 @@ Enabling it requires the
 [`getHBCBinary`](#gethbcbinary) option so the plugin can locate the Hermes compiler.
 
 Bytecode is only emitted for production builds.
-This option has no effect in [Bundle Mode](/docs/bundleMode/).
+This option has no effect in [Bundle Mode](../bundleMode/overview.mdx).
 
 ### omitNativeOnlyData
 
@@ -270,7 +270,7 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/0.10-0.12/fundamentals/closures#global-scoping).
+This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](../fundamentals/closures.mdx#global-scoping).
 
 With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
 

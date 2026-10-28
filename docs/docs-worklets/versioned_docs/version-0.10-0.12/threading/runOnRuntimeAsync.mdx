@@ -7,7 +7,7 @@ sidebar_position: 42 # Use alphabetical order
   # runOnRuntimeAsync
 </Badges>
 
-`runOnRuntimeAsync` lets you asynchronously run [worklets](/docs/0.10-0.12/fundamentals/glossary#worklet) on a [Worker Runtime](/docs/0.10-0.12/fundamentals/runtimeKinds#worker-runtime).
+`runOnRuntimeAsync` lets you asynchronously run [worklets](../fundamentals/glossary.mdx#worklet) on a [Worker Runtime](../fundamentals/runtimeKinds.mdx#worker-runtime).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
 ## Reference
@@ -48,21 +48,21 @@ async function performHeavyComputation(data: number[]) {
 
 ### workletRuntime
 
-The worklet runtime to run the worklet on. Created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+The worklet runtime to run the worklet on. Created with [`createWorkletRuntime`](./createWorkletRuntime.mdx).
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](/docs/0.10-0.12/fundamentals/runtimeKinds#worker-runtime). Arguments to your function have to be passed after the worklet i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
+A reference to a function you want to execute on the [Worker Runtime](../fundamentals/runtimeKinds.mdx#worker-runtime). Arguments to your function have to be passed after the worklet i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
 
 ### args
 
-Arguments to the function you want to execute on the [Worker Runtime](/docs/0.10-0.12/fundamentals/runtimeKinds#worker-runtime).
+Arguments to the function you want to execute on the [Worker Runtime](../fundamentals/runtimeKinds.mdx#worker-runtime).
 
 ## Remarks
 
 - It's a common mistake to execute function inside of `runOnRuntimeAsync` like this: ~~`runOnRuntimeAsync(workletRuntime, myWorklet(10))`~~. Here, the correct usage would be `runOnRuntimeAsync(workletRuntime, myWorklet, 10)`.
 
-- The callback passed as the argument is automatically [workletized](/docs/0.10-0.12/fundamentals/glossary#to-workletize) and ready to be run on the [Worker Runtime](/docs/0.10-0.12/fundamentals/runtimeKinds#worker-runtime).
+- The callback passed as the argument is automatically [workletized](../fundamentals/glossary.mdx#to-workletize) and ready to be run on the [Worker Runtime](../fundamentals/runtimeKinds.mdx#worker-runtime).
 
 - Errors thrown in the worklet will cause the Promise to reject with that error.
 

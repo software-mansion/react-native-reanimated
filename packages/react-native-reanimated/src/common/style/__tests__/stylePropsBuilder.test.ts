@@ -1,7 +1,13 @@
 'use strict';
 
+import { logger } from '../../logger';
 import { ValueProcessorTarget } from '../../types';
+import { ERROR_MESSAGES as COLOR_ERROR_MESSAGES } from '../processors/colors';
+import { WARN_MESSAGES } from '../processStyleValue';
 import { createNativePropsBuilder, stylePropsBuilder } from '../propsBuilder';
+
+const warn = jest.fn();
+logger.warn = warn;
 
 describe('createNativePropsBuilder', () => {
   describe('build without context', () => {
@@ -248,6 +254,34 @@ describe('stylePropsBuilder', () => {
         stylePropsBuilder.build({ [property]: bare })
       );
     });
+  });
+
+  describe('discrete props', () => {
+    test.each([
+      ['borderCurve', 'continuous', { borderCurve: 'continuous' }],
+      ['writingDirection', 'rtl', { writingDirection: 'rtl' }],
+      ['verticalAlign', 'middle', { textAlignVertical: 'center' }],
+      ['verticalAlign', 'top', { textAlignVertical: 'top' }],
+      ['objectFit', 'fill', { resizeMode: 'stretch' }],
+      ['objectFit', 'cover', { resizeMode: 'cover' }],
+    ])('%s: %s', (property, value, expected) => {
+      expect(stylePropsBuilder.build({ [property]: value })).toEqual(expected);
+    });
+  });
+
+  test.each([
+    ['drop-shadow(0 0 4px notacolor)', 'notacolor'],
+    ['drop-shadow(2em 4em)', '4em'],
+  ])('ignores the invalid filter %s with a warning', (filter, color) => {
+    expect(stylePropsBuilder.build({ filter, opacity: 1 })).toEqual({
+      opacity: 1,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      WARN_MESSAGES.ignoredValue(COLOR_ERROR_MESSAGES.invalidColor(color)),
+      { strict: true }
+    );
+    warn.mockClear();
   });
 
   test('trims every padded value of a multi-property style', () => {

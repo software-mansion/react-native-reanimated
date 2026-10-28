@@ -356,18 +356,18 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
         }
 
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
-        const auto enteringConfig =
-            layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING);
+        const auto enteringConfig = isViewKind(mutation.newChildShadowView)
+            ? layoutAnimationsManager_->getLayoutAnimationConfig(tag, LayoutAnimationType::ENTERING)
+            : nullptr;
         if (!enteringConfig) {
           filteredMutations.push_back(mutation);
           continue;
         }
 
-        startEnteringAnimation(tag, mutation, enteringConfig);
-        filteredMutations.push_back(mutation);
-
         // temporarily set opacity to 0 to prevent flickering on android
         std::shared_ptr<ShadowView> newView = cloneViewWithoutOpacity(mutation, propsParserContext);
+        startEnteringAnimation(tag, mutation, *newView, enteringConfig);
+        filteredMutations.push_back(mutation);
 
         filteredMutations.push_back(
             ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, *newView, parentTag));
@@ -470,7 +470,8 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
     mutations.push_back(
         ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
-    if (layoutAnimation.opacity && static_cast<const ViewProps &>(*newView.props).opacity == *layoutAnimation.opacity) {
+    if (layoutAnimation.opacity &&
+        (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
     }
   }
@@ -649,18 +650,18 @@ bool LayoutAnimationsProxy_Legacy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy_Legacy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation,
+    const ShadowView &hiddenView,
     const std::shared_ptr<Serializable> &config) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::ENTERING,
-      .before = mutation.newChildShadowView,
+      .before = hiddenView,
       .after = mutation.newChildShadowView,
       .parentTag = mutation.parentTag,
-      .opacity = viewProps.opacity,
+      .opacity = getViewProps(mutation.newChildShadowView).opacity,
       .config = config,
   });
 }

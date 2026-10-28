@@ -23,13 +23,13 @@ console.log(isWorkerRuntime()); // false
 
 scheduleOnUI(() => {
   console.log(isWorkerRuntime()); // false
-})();
+});
 
 const workerRuntime = createWorkletRuntime();
 scheduleOnRuntime(workerRuntime, () => {
   // highlight-next-line
   console.log(isWorkerRuntime()); // true
-})();
+});
 ```
 
 <details>
@@ -46,4 +46,4 @@ scheduleOnRuntime(workerRuntime, () => {
 
 ## Remarks
 
-- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](./getRuntimeKind.mdx) for more details.

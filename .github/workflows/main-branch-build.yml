@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   android:
@@ -18,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-    uses: ./.github/workflows/example-android-build-check.yml
+    uses: $/.github/workflows/example-android-build-check.yml
     with:
       configuration: ${{ matrix.configuration }}
 
@@ -28,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-    uses: ./.github/workflows/example-ios-build-check.yml
+    uses: $/.github/workflows/example-ios-build-check.yml
     with:
       configuration: ${{ matrix.configuration }}
 
@@ -41,6 +42,6 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [Debug, Release]
-    uses: ./.github/workflows/example-tvos-build-check.yml
+    uses: $/.github/workflows/example-tvos-build-check.yml
     with:
       configuration: ${{ matrix.configuration }}

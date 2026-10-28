@@ -34,4 +34,5 @@ export const serializableMappingCache = {
     cache.set(serializable, serializableRef || serializableMappingFlag);
   },
   get: cache.get.bind(cache),
+  delete: cache.delete.bind(cache),
 };

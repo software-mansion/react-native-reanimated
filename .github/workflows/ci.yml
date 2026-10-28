@@ -64,12 +64,15 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/android-validation.yml'
               - '.github/actions/android-validation/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
-              - 'packages/react-native-reanimated/android/src/main/java/**'
-              - 'packages/react-native-reanimated/android/build.gradle'
+              - 'scripts/validate-android.sh'
+              - 'packages/react-native-reanimated/android/src/**'
+              - 'packages/react-native-reanimated/android/build.gradle.kts'
               - 'packages/react-native-reanimated/Common/cpp/**'
               - 'packages/react-native-worklets/android/src/**'
-              - 'packages/react-native-worklets/android/build.gradle'
+              - 'packages/react-native-worklets/android/build.gradle.kts'
               - 'packages/react-native-worklets/Common/**'
             apple-validation:
               - '.github/workflows/ci.yml'
@@ -122,6 +125,8 @@ jobs:
               - '.github/actions/save-pods/**'
               - '.github/actions/setup-ccache/**'
               - '.github/actions/save-ccache/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
               - 'packages/react-native-reanimated/RNReanimated.podspec'
               - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
@@ -140,12 +145,16 @@ jobs:
             example-next-build-check-and-test:
               - '.github/workflows/ci.yml'
               - '.github/workflows/example-next-build-check-and-test.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'packages/react-native-reanimated/src/**'
               - 'packages/react-native-worklets/src/**'
               - 'apps/next-example/**'
             example-typescript-check-and-lint:
               - '.github/workflows/ci.yml'
               - '.github/workflows/example-typescript-check-and-lint.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - 'packages/react-native-reanimated/src/**'
               - 'packages/react-native-reanimated/package.json'
               - 'packages/react-native-worklets/src/**'
@@ -181,7 +190,13 @@ jobs:
               - 'packages/react-native-worklets/Common/**'
               - 'packages/react-native-worklets/android/**'
               - 'packages/react-native-worklets/bundleMode/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/plugin/index.js'
+              - 'packages/react-native-worklets/plugin-oxc/**'
               - 'packages/react-native-worklets/src/**'
+              - 'scripts/patches/**'
+              - 'scripts/toggle-bundle-mode.sh'
+              - '.yarn/patches/metro-*.patch'
             runtime-tests-ios-argent:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-ios-argent.yml'
@@ -209,10 +224,18 @@ jobs:
               - 'packages/react-native-worklets/apple/**'
               - 'packages/react-native-worklets/Common/**'
               - 'packages/react-native-worklets/bundleMode/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/plugin/index.js'
+              - 'packages/react-native-worklets/plugin-oxc/**'
               - 'packages/react-native-worklets/src/**'
+              - 'scripts/patches/**'
+              - 'scripts/toggle-bundle-mode.sh'
+              - '.yarn/patches/metro-*.patch'
             worklets-plugin-static-check:
               - '.github/workflows/ci.yml'
               - '.github/workflows/worklets-plugin-static-check.yml'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
               - '.github/workflows/helper/clear-annotations.sh'
               - '.oxfmtrc.json'
               - '.oxlintrc.json'
@@ -252,49 +275,52 @@ jobs:
     name: Android validation
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.android-validation == 'true') }}
-    uses: ./.github/workflows/android-validation.yml
+    uses: $/.github/workflows/android-validation.yml
 
   apple-validation:
     name: Apple validation
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.apple-validation == 'true') }}
-    uses: ./.github/workflows/apple-validation.yml
+    uses: $/.github/workflows/apple-validation.yml
 
   check-ruby-pods-versions:
     name: Check Ruby and CocoaPods versions
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.check-ruby-pods-versions == 'true') }}
-    uses: ./.github/workflows/check-ruby-pods-versions.yml
+    uses: $/.github/workflows/check-ruby-pods-versions.yml
 
   docs-build:
     name: Docs build
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.docs-build == 'true') }}
-    uses: ./.github/workflows/docs-build.yml
+    uses: $/.github/workflows/docs-build.yml
 
   example-android-build-check:
     name: Example Android build check
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-android-build-check == 'true') }}
-    uses: ./.github/workflows/example-android-build-check.yml
+    uses: $/.github/workflows/example-android-build-check.yml
 
   example-ios-build-check:
     name: Example iOS build check
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-ios-build-check == 'true') }}
-    uses: ./.github/workflows/example-ios-build-check.yml
+    permissions:
+      contents: read
+      actions: write
+    uses: $/.github/workflows/example-ios-build-check.yml
 
   example-next-build-check-and-test:
     name: Example Next build check and tests
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-next-build-check-and-test == 'true') }}
-    uses: ./.github/workflows/example-next-build-check-and-test.yml
+    uses: $/.github/workflows/example-next-build-check-and-test.yml
 
   example-typescript-check-and-lint:
     name: Example TypeScript check and lint
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
-    uses: ./.github/workflows/example-typescript-check-and-lint.yml
+    uses: $/.github/workflows/example-typescript-check-and-lint.yml
 
   # Not a matrix: a skipped matrix job shows its `name:` unexpanded.
   # Not on pushes to main: too expensive to rerun after every merge.
@@ -302,7 +328,7 @@ jobs:
     name: Runtime tests Android (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
-    uses: ./.github/workflows/runtime-tests-android.yml
+    uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
       bundleMode: false
@@ -311,7 +337,7 @@ jobs:
     name: Runtime tests Android (Bundle Mode)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
-    uses: ./.github/workflows/runtime-tests-android.yml
+    uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
       bundleMode: true
@@ -320,7 +346,10 @@ jobs:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
-    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    permissions:
+      contents: read
+      actions: write
+    uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
       bundleMode: false
@@ -332,7 +361,10 @@ jobs:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
     if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
-    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    permissions:
+      contents: read
+      actions: write
+    uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ReleaseRuntimeTests
       bundleMode: true
@@ -344,13 +376,13 @@ jobs:
     name: Worklets plugin static check
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.worklets-plugin-static-check == 'true') }}
-    uses: ./.github/workflows/worklets-plugin-static-check.yml
+    uses: $/.github/workflows/worklets-plugin-static-check.yml
 
   yarn-validation:
     name: Yarn validation
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.yarn-validation == 'true') }}
-    uses: ./.github/workflows/yarn-validation.yml
+    uses: $/.github/workflows/yarn-validation.yml
 
   # The only required status. `always()`, not `!cancelled()`: a skipped
   # required check counts as passing.

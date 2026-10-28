@@ -6,7 +6,7 @@ sidebar_position: 2137 # Last in the section - deprecated
   text={
 <>
 This API is deprecated and will be removed in the next major release. Use{' '}
-<a href="/docs/threading/scheduleOnRuntime">scheduleOnRuntime</a> instead.
+<a href="../scheduleOnRuntime/">scheduleOnRuntime</a> instead.
 </>
 }
 />
@@ -20,7 +20,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 ```javascript
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
-const workletRuntime = createWorkletRuntime('background');
+const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 function App() {
   // E.g. in event handler or in an effect
@@ -49,11 +49,11 @@ function App() {
 
 #### workletRuntime
 
-A reference to worklet runtime created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+A reference to worklet runtime created with [`createWorkletRuntime`](./createWorkletRuntime.mdx).
 
 #### fn
 
-A reference to a function you want to execute on the [UI thread](/docs/tutorials/concurrency-model#the-react-native-model) from the [JavaScript thread](/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+A reference to a function you want to execute on the worklet runtime passed as `workletRuntime`. Arguments to your function have to be passed to the function returned from `runOnRuntime` i.e. `runOnRuntime(workletRuntime, myWorklet)(10);`.
 
 ### Returns
 

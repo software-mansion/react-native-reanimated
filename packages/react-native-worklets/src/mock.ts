@@ -27,6 +27,23 @@ globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 const WorkletAPI = {
   callMicrotasks: NOOP,
   createSerializable: ID,
+  createSerializableArray: ID,
+  createSerializableArrayBuffer: ID,
+  createSerializableArrayBufferView: ID,
+  createSerializableBigInt: ID,
+  createSerializableBoolean: ID,
+  createSerializableError: ID,
+  createSerializableHostObject: ID,
+  createSerializableMap: ID,
+  createSerializableNull: ID,
+  createSerializableNumber: ID,
+  createSerializableObject: ID,
+  createSerializableRegExp: ID,
+  createSerializableRemoteFunction: ID,
+  createSerializableSet: ID,
+  createSerializableString: ID,
+  createSerializableUndefined: ID,
+  createSerializableWorklet: ID,
   createShareable<TValue>(_hostRuntimeId: number, initial: TValue) {
     let value = initial;
     const set = (next: TValue | ((prev: TValue) => TValue)) => {
@@ -76,9 +93,11 @@ const WorkletAPI = {
   getCurrentThreadId: () => '0',
   getDynamicFeatureFlag: () => false,
   getRuntimeKind: () => RuntimeKind.ReactNative,
+  getSerializableMapping: NOOP,
   getStaticFeatureFlag: () => false,
   getUIRuntimeHolder: () => UI_RUNTIME_HOLDER,
   getUISchedulerHolder: () => UI_SCHEDULER_HOLDER,
+  hasSerializableMapping: () => false,
   isBundleModeEnabled: () => false,
   isRNRuntime: () => true,
   isSerializableRef: ID,
@@ -96,6 +115,7 @@ const WorkletAPI = {
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,
   registerCustomSerializable: NOOP,
+  removeSerializableMapping: NOOP,
   runOnJS<Args extends unknown[], ReturnValue>(
     fun: (...args: Args) => ReturnValue
   ): (...args: Args) => void {
@@ -106,6 +126,7 @@ const WorkletAPI = {
           : (fun as () => ReturnValue)
       );
   },
+  runOnRNSync: IMMEDIATE_CALLBACK_INVOCATION,
   runOnRuntime: ID,
   runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     _workletRuntime: unknown,
@@ -188,6 +209,7 @@ const WorkletAPI = {
   },
   serializableMappingCache: new Map(),
   setDynamicFeatureFlag: NOOP,
+  setSerializableMapping: NOOP,
   shareableMappingCache: new Map(),
   toggleSlowAnimationsOnUIRuntime: () => false,
   UIRuntimeId: RuntimeKind.UI,

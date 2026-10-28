@@ -116,9 +116,15 @@ const config = {
           sidebarCollapsed: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          lastVersion: 'current',
+          lastVersion: '0.13',
           versions: {
-            current: { label: '0.13' },
+            current: {
+              label: 'Unreleased',
+              path: 'unreleased',
+              banner: 'unreleased',
+              noIndex: true,
+            },
+            0.13: { label: '0.13', banner: 'none' },
             '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
           },
