@@ -81,7 +81,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props);
 
-  void collectProps(PropsMap &propsMap);
+  void collectProps(PropsMap &propsMap) const;
   UpdatesBatch getPendingUpdates();
 
  protected:
