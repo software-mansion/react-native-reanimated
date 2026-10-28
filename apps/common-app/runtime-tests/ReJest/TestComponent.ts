@@ -39,6 +39,15 @@ export class TestComponent {
     });
   }
 
+  public getTransformObservation() {
+    if (!RuntimeTestObserver) {
+      throw new Error(
+        'RuntimeTestObserver requires a FabricExample runtime-test build'
+      );
+    }
+    return RuntimeTestObserver.observeTransform(this.getTag());
+  }
+
   public getTextInputObservation() {
     if (!RuntimeTestObserver) {
       throw new Error(

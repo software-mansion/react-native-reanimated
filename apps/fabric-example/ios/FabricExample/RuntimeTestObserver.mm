@@ -20,6 +20,19 @@ RCT_EXPORT_MODULE()
   return NO;
 }
 
+- (void)observeTransform:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    if (view.window == nil) {
+      resolve((id)kCFNull);
+      return;
+    }
+    CALayer *layer = view.layer.presentationLayer ?: view.layer;
+    resolve(@{@"translateX" : @(layer.transform.m41)});
+  });
+}
+
 - (void)observeTextInput:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{
