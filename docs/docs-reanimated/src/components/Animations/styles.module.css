@@ -24,6 +24,13 @@
   position: relative;
 }
 
+/* The phone's demo area is full-bleed; the fling clamps to this box, so the
+ * inset keeps the square off the screen edges. */
+.gestureInset {
+  display: flex;
+  padding: 0 20px;
+}
+
 .stageSticky {
   position: sticky;
   top: max(calc(var(--ifm-navbar-height) + 1.5rem), calc(50vh - 350px));

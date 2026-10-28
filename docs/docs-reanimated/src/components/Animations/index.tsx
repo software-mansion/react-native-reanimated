@@ -47,7 +47,11 @@ function App() {
     </GestureDetector>
   );
 }`,
-    render: () => <DecayBasicExample />,
+    render: () => (
+      <div className={styles.gestureInset}>
+        <DecayBasicExample />
+      </div>
+    ),
     hint: 'Grab and fling the square',
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures',
