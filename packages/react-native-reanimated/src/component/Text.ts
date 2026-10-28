@@ -83,12 +83,13 @@ AnimatedTextWithRef.displayName = 'AnimatedText';
  * fetched from the UI thread, and the text becomes a static snapshot that never
  * updates.
  *
- * @example
- *   // Antipattern
- *   <Animated.Text>{sv.value}</Animated.Text>
+ * ```tsx
+ * // Antipattern
+ * <Animated.Text>{sv.value}</Animated.Text>;
  *
- *   // Correct
- *   <Animated.Text>{sv}</Animated.Text>
+ * // Correct
+ * <Animated.Text>{sv}</Animated.Text>;
+ * ```
  */
 // is-tree-shakable-suppress
 export const AnimatedText = AnimatedTextWithRef as AnimatedComponentType<
