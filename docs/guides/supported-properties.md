@@ -1,174 +1,169 @@
 # Supported style properties
 
-Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
+Not all CSS properties are available and animatable in React Native. The following table describes which style properties can be animated on which platform.
 
 For animating `react-native-svg` components, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
-| Property                | Android            | iOS                | Web    |
-| ----------------------- | ------------------ | ------------------ | ------ |
-| alignContent            |              |              |  |
-| alignItems              |              |              |  |
-| alignSelf               |              |              |  |
-| aspectRatio             |              |              |  |
-| backfaceVisibility      |              |              |  |
-| backgroundColor         |              |              |  |
-| backgroundImage         |  |  |  |
-| borderBlockColor        |              |              |  |
-| borderBlockEndColor     |              |              |  |
-| borderBlockStartColor   |              |              |  |
-| borderBottomColor       |              |              |  |
-| borderBottomEndRadius   |              |              |  |
-| borderBottomLeftRadius  |              |              |  |
-| borderBottomRightRadius |              |              |  |
-| borderBottomStartRadius |              |              |  |
-| borderBottomWidth       |              |              |  |
-| borderColor             |              |              |  |
-| borderCurve             |               |  |   |
-| borderEndColor          |              |              |  |
-| borderEndEndRadius      |              |              |  |
-| borderEndStartRadius    |              |              |  |
-| borderEndWidth          |              |              |  |
-| borderLeftColor         |              |              |  |
-| borderLeftWidth         |              |              |  |
-| borderRadius            |              |              |  |
-| borderRightColor        |              |              |  |
-| borderRightWidth        |              |              |  |
-| borderStartColor        |              |              |  |
-| borderStartEndRadius    |              |              |  |
-| borderStartStartRadius  |              |              |  |
-| borderStartWidth        |              |              |  |
-| borderStyle             |              |              |  |
-| borderTopColor          |              |              |  |
-| borderTopEndRadius      |              |              |  |
-| borderTopLeftRadius     |              |              |  |
-| borderTopRightRadius    |              |              |  |
-| borderTopStartRadius    |              |              |  |
-| borderTopWidth          |              |              |  |
-| borderWidth             |              |              |  |
-| bottom                  |              |              |  |
-| boxShadow               |              |              |  |
-| boxSizing               |               |               |  |
-| color                   |              |              |  |
-| columnGap               |              |              |  |
-| cursor                  |              |              |  |
-| direction               |              |              |   |
-| display                 |              |              |  |
-| elevation               |              |               |   |
-| end                     |              |              |   |
-| filter                  |  |  |  |
-| flex                    |              |              |  |
-| flexBasis               |               |               |  |
-| flexDirection           |              |              |  |
-| flexGrow                |              |              |  |
-| flexShrink              |              |              |  |
-| flexWrap                |              |              |  |
-| fontFamily              |              |              |  |
-| fontSize                |              |              |  |
-| fontStyle               |              |              |  |
-| fontVariant             |              |              |  |
-| fontWeight              |              |              |  |
-| gap                     |              |              |  |
-| height                  |              |              |  |
-| includeFontPadding      |              |               |   |
-| inset                   |              |              |  |
-| insetBlock              |              |              |  |
-| insetBlockEnd           |              |              |  |
-| insetBlockStart         |              |              |  |
-| insetInline             |              |              |  |
-| insetInlineEnd          |              |              |  |
-| insetInlineStart        |              |              |  |
-| isolation               |               |               |  |
-| justifyContent          |              |              |  |
-| left                    |              |              |  |
-| letterSpacing           |              |              |  |
-| lineHeight              |              |              |  |
-| margin                  |              |              |  |
-| marginBlock             |              |              |  |
-| marginBlockEnd          |              |              |  |
-| marginBlockStart        |              |              |  |
-| marginBottom            |              |              |  |
-| marginEnd               |              |              |  |
-| marginHorizontal        |              |              |  |
-| marginInline            |              |              |  |
-| marginInlineEnd         |              |              |  |
-| marginInlineStart       |              |              |  |
-| marginLeft              |              |              |  |
-| marginRight             |              |              |  |
-| marginStart             |              |              |  |
-| marginTop               |              |              |  |
-| marginVertical          |              |              |  |
-| maxHeight               |              |              |  |
-| maxWidth                |              |              |  |
-| minHeight               |              |              |  |
-| minWidth                |              |              |  |
-| mixBlendMode            |              |              |  |
-| objectFit               |  |  |   |
-| opacity                 |              |              |  |
-| outlineColor            |              |              |  |
-| outlineOffset           |              |              |  |
-| outlineStyle            |              |              |  |
-| outlineWidth            |              |              |  |
-| overflow                |              |              |  |
-| overlayColor            |               |               |   |
-| padding                 |              |              |  |
-| paddingBlock            |              |              |  |
-| paddingBlockEnd         |              |              |  |
-| paddingBlockStart       |              |              |  |
-| paddingBottom           |              |              |  |
-| paddingEnd              |              |              |  |
-| paddingHorizontal       |              |              |  |
-| paddingInline           |              |              |  |
-| paddingInlineEnd        |              |              |  |
-| paddingInlineStart      |              |              |  |
-| paddingLeft             |              |              |  |
-| paddingRight            |              |              |  |
-| paddingStart            |              |              |  |
-| paddingTop              |              |              |  |
-| paddingVertical         |              |              |  |
-| pointerEvents           |              |              |  |
-| position                |              |              |  |
-| resizeMode              |              |              |   |
-| right                   |              |              |  |
-| rotation                |               |               |   |
-| rowGap                  |              |              |  |
-| scaleX                  |               |               |   |
-| scaleY                  |               |               |   |
-| shadowColor             |              |              |  |
-| shadowOffset            |               |              |  |
-| shadowOpacity           |               |              |  |
-| shadowRadius            |               |              |  |
-| start                   |              |              |   |
-| textAlign               |              |              |  |
-| textAlignVertical       |              |               |   |
-| textDecorationColor     |               |              |  |
-| textDecorationLine      |              |              |  |
-| textDecorationStyle     |               |              |  |
-| textShadowColor         |              |              |  |
-| textShadowOffset        |              |              |  |
-| textShadowRadius        |              |              |  |
-| textTransform           |              |              |  |
-| tintColor               |              |              |   |
-| top                     |              |              |  |
-| transform               |              |              |  |
-| transformMatrix         |               |               |   |
-| transformOrigin         |              |              |  |
-| translateX              |               |               |   |
-| translateY              |               |               |   |
-| userSelect              |               |               |  |
-| verticalAlign           |  |               |  |
-| width                   |              |              |  |
-| writingDirection        |               |  |   |
-| zIndex                  |              |              |  |
+| Property                | Android | iOS    | Web    |
+| ----------------------- | ------- | ------ | ------ |
+| flex                    |   |  |  |
+| flexBasis               |    |   |  |
+| flexDirection           |   |  |  |
+| justifyContent          |   |  |  |
+| alignItems              |   |  |  |
+| alignSelf               |   |  |  |
+| alignContent            |   |  |  |
+| flexGrow                |   |  |  |
+| flexShrink              |   |  |  |
+| flexWrap                |   |  |  |
+| gap                     |   |  |  |
+| rowGap                  |   |  |  |
+| columnGap               |   |  |  |
+| start                   |   |  |   |
+| end                     |   |  |   |
+| direction               |   |  |   |
+| height                  |   |  |  |
+| width                   |   |  |  |
+| maxHeight               |   |  |  |
+| maxWidth                |   |  |  |
+| minHeight               |   |  |  |
+| minWidth                |   |  |  |
+| margin                  |   |  |  |
+| marginTop               |   |  |  |
+| marginRight             |   |  |  |
+| marginBottom            |   |  |  |
+| marginLeft              |   |  |  |
+| marginStart             |   |  |  |
+| marginEnd               |   |  |  |
+| marginBlock             |   |  |  |
+| marginBlockEnd          |   |  |  |
+| marginBlockStart        |   |  |  |
+| marginInline            |   |  |  |
+| marginInlineEnd         |   |  |  |
+| marginInlineStart       |   |  |  |
+| marginHorizontal        |   |  |  |
+| marginVertical          |   |  |  |
+| padding                 |   |  |  |
+| paddingTop              |   |  |  |
+| paddingRight            |   |  |  |
+| paddingBottom           |   |  |  |
+| paddingLeft             |   |  |  |
+| paddingStart            |   |  |  |
+| paddingEnd              |   |  |  |
+| paddingBlock            |   |  |  |
+| paddingBlockEnd         |   |  |  |
+| paddingBlockStart       |   |  |  |
+| paddingInline           |   |  |  |
+| paddingInlineEnd        |   |  |  |
+| paddingInlineStart      |   |  |  |
+| paddingHorizontal       |   |  |  |
+| paddingVertical         |   |  |  |
+| top                     |   |  |  |
+| left                    |   |  |  |
+| bottom                  |   |  |  |
+| right                   |   |  |  |
+| inset                   |   |  |  |
+| insetBlock              |   |  |  |
+| insetInline             |   |  |  |
+| insetBlockStart         |   |  |  |
+| insetBlockEnd           |   |  |  |
+| insetInlineStart        |   |  |  |
+| insetInlineEnd          |   |  |  |
+| position                |   |  |  |
+| display                 |   |  |  |
+| overflow                |   |  |  |
+| zIndex                  |   |  |  |
+| aspectRatio             |   |  |  |
+| boxSizing               |    |   |  |
+| backgroundColor         |   |  |  |
+| color                   |   |  |  |
+| textDecorationColor     |    |  |  |
+| textShadowColor         |   |  |  |
+| borderColor             |   |  |  |
+| borderTopColor          |   |  |  |
+| borderBlockStartColor   |   |  |  |
+| borderRightColor        |   |  |  |
+| borderEndColor          |   |  |  |
+| borderBottomColor       |   |  |  |
+| borderBlockEndColor     |   |  |  |
+| borderLeftColor         |   |  |  |
+| borderStartColor        |   |  |  |
+| borderBlockColor        |   |  |  |
+| outlineColor            |   |  |  |
+| shadowColor             |   |  |  |
+| overlayColor            |    |   |   |
+| tintColor               |   |  |   |
+| shadowOffset            |    |  |  |
+| shadowOpacity           |    |  |  |
+| shadowRadius            |    |  |  |
+| elevation               |   |   |   |
+| textShadowOffset        |   |  |  |
+| textShadowRadius        |   |  |  |
+| boxShadow               |   |  |  |
+| borderRadius            |   |  |  |
+| borderTopLeftRadius     |   |  |  |
+| borderTopStartRadius    |   |  |  |
+| borderStartStartRadius  |   |  |  |
+| borderTopRightRadius    |   |  |  |
+| borderTopEndRadius      |   |  |  |
+| borderStartEndRadius    |   |  |  |
+| borderBottomLeftRadius  |   |  |  |
+| borderBottomStartRadius |   |  |  |
+| borderEndStartRadius    |   |  |  |
+| borderBottomRightRadius |   |  |  |
+| borderBottomEndRadius   |   |  |  |
+| borderEndEndRadius      |   |  |  |
+| borderWidth             |   |  |  |
+| borderTopWidth          |   |  |  |
+| borderStartWidth        |   |  |  |
+| borderBottomWidth       |   |  |  |
+| borderEndWidth          |   |  |  |
+| borderLeftWidth         |   |  |  |
+| borderRightWidth        |   |  |  |
+| borderCurve             |    |   |   |
+| borderStyle             |   |  |  |
+| outlineOffset           |   |  |  |
+| outlineStyle            |   |  |  |
+| outlineWidth            |   |  |  |
+| transformOrigin         |   |  |  |
+| transform               |   |  |  |
+| transformMatrix         |    |   |   |
+| rotation                |    |   |   |
+| scaleX                  |    |   |   |
+| scaleY                  |    |   |   |
+| translateX              |    |   |   |
+| translateY              |    |   |   |
+| backfaceVisibility      |   |  |  |
+| opacity                 |   |  |  |
+| mixBlendMode            |   |  |  |
+| fontFamily              |   |  |  |
+| fontSize                |   |  |  |
+| fontStyle               |   |  |  |
+| fontVariant             |   |  |  |
+| fontWeight              |   |  |  |
+| textAlign               |   |  |  |
+| textAlignVertical       |   |   |   |
+| verticalAlign           |    |   |  |
+| letterSpacing           |   |  |  |
+| lineHeight              |   |  |  |
+| textTransform           |   |  |  |
+| textDecorationLine      |   |  |  |
+| textDecorationStyle     |    |  |  |
+| userSelect              |    |   |  |
+| writingDirection        |    |   |   |
+| includeFontPadding      |   |   |   |
+| resizeMode              |   |  |   |
+| objectFit               |    |   |   |
+| cursor                  |   |  |  |
+| pointerEvents           |   |  |  |
+| filter                  |   |  |  |
+| isolation               |    |   |  |
 
 ## Remarks
 
 ### Style Inheritance
 
 Style inheritance is not supported. Properties that would normally inherit values (e.g., textDecorationColor inheriting from color) must be provided separately, as inheritance is not implemented.
-
-### Invalid values
-
-A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration) as long as its strict mode is enabled.
 
 ### Relative Margins
 
@@ -253,14 +248,6 @@ and the shadow styles aren't inherited from the style object provided to the ele
 Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
 
 We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
-
-### Animating background image
-
-The `backgroundImage` style property has this name since React Native 0.87. On older React Native versions use `experimental_backgroundImage` instead; both names are supported and animate the same way.
-
-`useAnimatedStyle` supports `backgroundImage` since 4.7 on native and 4.0 on the web.
-
-On the Web, browsers do not interpolate `background-image` values, so the gradient switches at the midpoint between keyframes instead of animating.
 
 ### Animating image tint color
 

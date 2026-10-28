@@ -1,5 +1,3 @@
-# useAnimatedSensor
-
 `useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
 
 * **Accelerometer** - the device acceleration (without gravity).
@@ -31,10 +29,10 @@ Type definitions
 ```typescript
 // --- Function declaration ---
 
-function useAnimatedSensor<T extends SensorType>(
-  sensorType: T,
+function useAnimatedSensor(
+  sensorType: SensorType,
   config?: Partial<SensorConfig>
-): AnimatedSensor<SensorValueMap[T]>;
+): AnimatedSensor<ValueRotation | Value3D>;
 
 // --- Configuration types ---
 
@@ -62,17 +60,7 @@ enum IOSReferenceFrame {
 
 // --- Return types ---
 
-type SensorValueMap = {
-  [SensorType.ACCELEROMETER]: Value3D;
-  [SensorType.GYROSCOPE]: Value3D;
-  [SensorType.GRAVITY]: Value3D;
-  [SensorType.MAGNETIC_FIELD]: Value3D;
-  [SensorType.ROTATION]: ValueRotation;
-};
-
-type SensorValue = SensorValueMap[SensorType];
-
-type AnimatedSensor<T extends SensorValue> = {
+type AnimatedSensor<T extends Value3D | ValueRotation> = {
   sensor: SharedValue<T>;
   unregister: () => void;
   isAvailable: boolean;
