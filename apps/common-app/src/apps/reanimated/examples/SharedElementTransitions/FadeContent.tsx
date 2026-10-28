@@ -78,6 +78,13 @@ const MODES = {
     container: SharedTransition.springify().fadeContent(),
     own: SharedTransition.springify(),
   },
+  'quick fades': {
+    container: SharedTransition.duration(600).fadeContent({
+      fadeOut: { end: 0.4 },
+      fadeIn: { duration: 150 },
+    }),
+    own: SharedTransition.duration(600),
+  },
 };
 
 type Mode = keyof typeof MODES;
