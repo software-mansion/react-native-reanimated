@@ -501,13 +501,16 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
-    if (const auto contentFadeIn = item.getProperty(rt, "sharedTransitionContentFadeIn");
-        !contentFadeIn.isUndefined()) {
-      batchItem.sharedTransitionContentFadeIn = extractSerializable(
-          rt,
-          contentFadeIn,
-          "[Reanimated] Shared transition content fade-in must be an object.",
-          Serializable::ValueType::ObjectType);
+    if (const auto contentFade = item.getProperty(rt, "sharedTransitionContentFade"); contentFade.isObject()) {
+      const auto contentFadeObject = contentFade.asObject(rt);
+      batchItem.sharedTransitionContentFade = SharedTransitionContentFade{
+          .fadeIn = extractSerializable(
+              rt,
+              contentFadeObject.getProperty(rt, "fadeIn"),
+              "[Reanimated] Shared transition content fade-in must be an object.",
+              Serializable::ValueType::ObjectType),
+          .fadeOutEnd = contentFadeObject.getProperty(rt, "fadeOutEnd").asNumber(),
+      };
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);

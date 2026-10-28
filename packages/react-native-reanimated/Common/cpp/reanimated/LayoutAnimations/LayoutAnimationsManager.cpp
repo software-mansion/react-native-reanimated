@@ -11,13 +11,13 @@ namespace reanimated {
 
 namespace {
 void setOrErase(
-    std::unordered_map<int, std::shared_ptr<Serializable>> &configs,
+    std::unordered_map<int, SharedTransitionContentFade> &contentFades,
     const int tag,
-    const std::shared_ptr<Serializable> &config) {
-  if (config) {
-    configs.insert_or_assign(tag, config);
+    const std::optional<SharedTransitionContentFade> &contentFade) {
+  if (contentFade) {
+    contentFades.insert_or_assign(tag, *contentFade);
   } else {
-    configs.erase(tag);
+    contentFades.erase(tag);
   }
 }
 } // namespace
@@ -39,7 +39,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
   }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : configUpdates) {
-    const auto &[tag, type, config, sharedTag, contentFadeIn] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag, contentFade] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
@@ -48,7 +48,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
       sharedTransitionsForNativeID_[tag] = config;
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
-      setOrErase(contentFadeInsForNativeID_, tag, contentFadeIn);
+      setOrErase(contentFadesForNativeID_, tag, contentFade);
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
@@ -59,7 +59,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_[tag] = config;
         sharedTransitionManager_->tagToName_[tag] = sharedTag;
       }
-      setOrErase(contentFadeIns_, tag, config ? contentFadeIn : nullptr);
+      setOrErase(contentFades_, tag, config ? contentFade : std::nullopt);
       continue;
     }
     if (config == nullptr) {
@@ -90,10 +90,10 @@ std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
   return configIt == configs.end() ? nullptr : configIt->second;
 }
 
-std::shared_ptr<Serializable> LayoutAnimationsManager::getSharedTransitionContentFadeIn(const int tag) {
+std::optional<SharedTransitionContentFade> LayoutAnimationsManager::getSharedTransitionContentFade(const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  const auto it = contentFadeIns_.find(tag);
-  return it == contentFadeIns_.end() ? nullptr : it->second;
+  const auto it = contentFades_.find(tag);
+  return it == contentFades_.end() ? std::nullopt : std::optional(it->second);
 }
 
 std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
@@ -154,10 +154,14 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   if (sharedTransitionConfig) {
     sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
     sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
-    setOrErase(contentFadeIns_, tag, contentFadeInsForNativeID_[nativeId]);
+    const auto contentFadeIt = contentFadesForNativeID_.find(nativeId);
+    setOrErase(
+        contentFades_,
+        tag,
+        contentFadeIt == contentFadesForNativeID_.end() ? std::nullopt : std::optional(contentFadeIt->second));
   }
   sharedTransitionsForNativeID_.erase(nativeId);
-  contentFadeInsForNativeID_.erase(nativeId);
+  contentFadesForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);
 }
 
