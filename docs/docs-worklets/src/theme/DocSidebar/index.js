@@ -1,14 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import {
-  useActiveVersion,
-  useDocsVersion,
-} from '@docusaurus/plugin-content-docs/client';
+import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import { DocSidebar } from '@swmansion/t-rex-ui';
-import {
-  SIMULATION_CLOSE_EVENT,
-  SIMULATION_OPEN_EVENT,
-} from '@site/src/components/ThreadingSimulation/events';
 
 const SECTIONS = [
   { id: 'guides', label: 'Learn' },
@@ -19,7 +12,7 @@ function sectionOf(sidebar, docsSidebars) {
   const match = Object.entries(docsSidebars).find(
     ([, items]) => items === sidebar || sameItems(items, sidebar)
   );
-  return match === undefined ? 'guides' : match[0];
+  return match?.[0] === 'api' ? 'api' : 'guides';
 }
 
 function sameItems(a, b) {
@@ -56,15 +49,10 @@ export default function DocSidebarWrapper(props) {
     'memory/makeShareableCloneOnUIRecursive',
   ];
 
-  const fallbackDocsRoot = useBaseUrl('/docs/');
-  const activeVersion = useActiveVersion(undefined);
-  const docsRoot =
-    activeVersion?.docs.find((doc) => doc.id === activeVersion.mainDocId)
-      ?.path ?? fallbackDocsRoot;
   const { docsSidebars } = useDocsVersion();
-  const hasSections = 'guides' in docsSidebars && 'api' in docsSidebars;
-  const onStartPage =
-    (props.path ?? '').replace(/\/$/, '') === docsRoot.replace(/\/$/, '');
+  const hasSections =
+    'gettingStarted' in docsSidebars &&
+    SECTIONS.every(({ id }) => id in docsSidebars);
   const docSection = sectionOf(props.sidebar, docsSidebars);
   const [section, setSection] = useState(docSection);
 
@@ -84,91 +72,38 @@ export default function DocSidebarWrapper(props) {
     return () => document.removeEventListener('click', onClick);
   }, []);
 
-  const wideSimulations = useRef(new Set());
-  const hiddenForSimulations = useRef(false);
-
-  useEffect(() => {
-    const isWide = () => {
-      const container = document.querySelector('.theme-doc-sidebar-container');
-      return (
-        container !== null && container.getBoundingClientRect().width > 100
-      );
-    };
-    const toggle = () => {
-      if (typeof props.onCollapse === 'function') {
-        props.onCollapse();
-      }
-    };
-    const onSimulationOpen = (event) => {
-      wideSimulations.current.add(event.detail);
-      if (isWide()) {
-        hiddenForSimulations.current = true;
-        toggle();
-      }
-    };
-    const onSimulationClose = (event) => {
-      wideSimulations.current.delete(event.detail);
-      if (
-        hiddenForSimulations.current &&
-        wideSimulations.current.size === 0 &&
-        !isWide()
-      ) {
-        hiddenForSimulations.current = false;
-        toggle();
-      }
-    };
-    const onManualToggle = (event) => {
-      if (
-        event.target.closest(
-          '[class*="collapseSidebarButton"], [class*="expandButton"]'
-        ) !== null
-      ) {
-        hiddenForSimulations.current = false;
-        wideSimulations.current.clear();
-      }
-    };
-    window.addEventListener(SIMULATION_OPEN_EVENT, onSimulationOpen);
-    window.addEventListener(SIMULATION_CLOSE_EVENT, onSimulationClose);
-    document.addEventListener('click', onManualToggle, true);
-    return () => {
-      window.removeEventListener(SIMULATION_OPEN_EVENT, onSimulationOpen);
-      window.removeEventListener(SIMULATION_CLOSE_EVENT, onSimulationClose);
-      document.removeEventListener('click', onManualToggle, true);
-    };
-  }, [props.onCollapse]);
-
   const sidebar = useMemo(() => {
     if (!hasSections) {
       return props.sidebar;
     }
-    const entries = [
+    const gettingStarted = {
+      type: 'category',
+      label: 'Getting started',
+      collapsible: false,
+      collapsed: false,
+      items: docsSidebars.gettingStarted,
+    };
+    const items =
+      section === 'guides'
+        ? [gettingStarted, ...docsSidebars.guides]
+        : docsSidebars.api;
+
+    return [
       {
-        type: 'link',
-        label: 'Getting started',
-        href: docsRoot,
-        className: onStartPage
-          ? 'sidebar-section sidebar-section--active'
-          : 'sidebar-section',
-      },
-      ...SECTIONS.map(({ id, label }) => ({
         type: 'html',
-        value: `<button type="button" class="sidebar-section-button" data-sidebar-section="${id}">${label}</button>`,
-        className:
-          section === id
-            ? 'sidebar-section sidebar-section--active'
-            : 'sidebar-section',
-      })),
-      { type: 'html', value: '<hr />', className: 'sidebar-section-divider' },
+        className: 'sidebar-sections',
+        value: `<div role="group" aria-label="Documentation section">${SECTIONS.map(
+          ({ id, label }) =>
+            `<button type="button" data-sidebar-section="${id}" aria-pressed="${section === id}">${label}</button>`
+        ).join('')}</div>`,
+      },
+      ...items.map((item) =>
+        item.type === 'category'
+          ? { ...item, collapsible: false, collapsed: false }
+          : item
+      ),
     ];
-    return [...entries, ...docsSidebars[section]];
-  }, [
-    hasSections,
-    props.sidebar,
-    docsSidebars,
-    section,
-    onStartPage,
-    docsRoot,
-  ]);
+  }, [hasSections, props.sidebar, docsSidebars, section]);
 
   return (
     <DocSidebar

@@ -15,6 +15,7 @@ export interface FnInfo {
   yieldEnds: number[];
   isNative: boolean;
   isHidden: boolean;
+  isWorklet: boolean;
   hasLoop: boolean;
 }
 
@@ -60,12 +61,18 @@ export type InterceptedApi =
   | 'runOnUISync'
   | 'runOnRuntimeSync'
   | 'getCurrentThreadId'
+  | 'getRuntimeKind'
+  | 'isWorkletFunction'
+  | 'runtimeFromId'
+  | 'assertRNRuntime'
   | 'setTimeout'
   | 'setInterval'
   | 'clearInterval'
   | 'promiseThen'
   | 'globalGet'
   | 'globalSet'
+  | 'createSerializable'
+  | 'registerCustomSerializable'
   | 'createSynchronizable'
   | 'synchronizableRead'
   | 'synchronizableWrite'
@@ -75,7 +82,7 @@ export type InterceptedApi =
   | 'shareableGetSync'
   | 'shareableGetAsync';
 
-export type MemoryKind = 'synchronizable' | 'shareable';
+export type MemoryKind = 'serializable' | 'synchronizable' | 'shareable';
 
 export interface SharedCell {
   id: number;
@@ -192,6 +199,7 @@ export interface CoreState {
 
 export interface CoreSnapshot {
   id: CoreId;
+  globals: Record<string, string>;
   label: string;
   thread: string;
   kind: CoreKind;

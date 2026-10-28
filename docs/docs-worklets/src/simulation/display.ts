@@ -38,6 +38,18 @@ export function displaySource(
   const main = fns.get(MAIN_NAME) ?? null;
   const hidden = [...fns.values()].filter((fn) => fn.isNative || fn.isHidden);
   const rawLines = source.split('\n');
+  const asyncHeaders = new Set(
+    [...fns.values()]
+      .filter((fn) =>
+        fn.yieldLines.some((line, index) =>
+          rawLines
+            .slice(line - 1, fn.yieldEnds[index])
+            .join('\n')
+            .includes('awaitPromise(')
+        )
+      )
+      .map((fn) => fn.headerLine)
+  );
   const displayLines: string[] = [];
   const rawToDisplayLine: number[] = [-1];
   const imports: string[] = [];
@@ -80,7 +92,12 @@ export function displaySource(
       rawToDisplayLine.push(displayLines.length);
       return;
     }
-    displayLines.push(transformLine(text, isInsideMain(main, line)));
+    const transformed = transformLine(text, isInsideMain(main, line));
+    displayLines.push(
+      asyncHeaders.has(line)
+        ? transformed.replace(/\bfunction\b/, 'async function')
+        : transformed
+    );
     rawToDisplayLine.push(displayLines.length);
   });
 
@@ -143,7 +160,11 @@ function displayImport(statement: string, body: string): string[] {
   if (names.length === 0) {
     return [];
   }
-  const module = MODULE_NAMES[moduleKey(match[2])] ?? match[2];
+  const key = moduleKey(match[2]);
+  const reactHooks =
+    key === 'react' &&
+    names.every((name) => name === 'useState' || name === 'useEffect');
+  const module = reactHooks ? 'react' : (MODULE_NAMES[key] ?? match[2]);
   const single = `import { ${names.join(', ')} } from '${module}';`;
   if (single.length <= MAX_IMPORT_WIDTH) {
     return [single];

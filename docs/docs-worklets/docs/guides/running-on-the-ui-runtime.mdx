@@ -3,6 +3,15 @@ id: running-on-the-ui-runtime
 sidebar_label: Running worklets on the UI runtime
 ---
 
+import * as ApiRunOnUISyncSnippet from '../threading/_examples/apiRunOnUISync';
+import ApiRunOnUISyncSource from '!!raw-loader!../threading/_examples/apiRunOnUISync';
+
+import * as ApiRunOnUIAsyncSnippet from '../threading/_examples/apiRunOnUIAsync';
+import ApiRunOnUIAsyncSource from '!!raw-loader!../threading/_examples/apiRunOnUIAsync';
+
+import * as ApiScheduleOnUISnippet from '../threading/_examples/apiScheduleOnUI';
+import ApiScheduleOnUISource from '!!raw-loader!../threading/_examples/apiScheduleOnUI';
+
 # Running worklet functions on the UI runtime
 
 The Worklets library provides three functions for running a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) from the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime): [`scheduleOnUI`](../threading/scheduleOnUI.mdx), [`runOnUIAsync`](../threading/runOnUIAsync.mdx) and [`runOnUISync`](../threading/runOnUISync.mdx).
@@ -22,3 +31,23 @@ The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable
 
 All three functions can be called from the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime), and additionally from the [UI](../concepts/runtimeKinds.mdx#ui-runtime) and [Worker](../concepts/runtimeKinds.mdx#worker-runtime) Runtimes when [Bundle Mode](../bundleMode/overview.mdx) is enabled.
 See [Call tables](./call-tables.mdx) for the full matrix.
+
+## Watch the execution
+
+### Schedule work without waiting
+
+The UI thread runs the callback while the JS thread continues with the next line.
+
+<ThreadingSimulation module={ApiScheduleOnUISnippet} source={ApiScheduleOnUISource}/>
+
+### Await a result
+
+The callback runs on the UI thread. Awaiting its Promise suspends this function; the JS thread remains available for other queued work.
+
+<ThreadingSimulation module={ApiRunOnUIAsyncSnippet} source={ApiRunOnUIAsyncSource}/>
+
+### Read a result synchronously
+
+The calling JS thread acquires the UI Runtime and executes the callback itself. It resumes the next line only after the result is ready.
+
+<ThreadingSimulation module={ApiRunOnUISyncSnippet} source={ApiRunOnUISyncSource}/>

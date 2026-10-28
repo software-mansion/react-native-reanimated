@@ -29,6 +29,16 @@
   "engines": {
     "node": ">= 22.11.0"
   },
+  "codegenConfig": {
+    "name": "WorkletsExampleSpec",
+    "type": "modules",
+    "jsSrcsDir": "specs",
+    "ios": {
+      "modulesProvider": {
+        "NativeExample": "NativeExampleProvider"
+      }
+    }
+  },
   "installConfig": {
     "selfReferences": false
   },

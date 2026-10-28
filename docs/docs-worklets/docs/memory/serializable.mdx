@@ -3,6 +3,9 @@ id: serializable # lower-case to fix alphabetical order
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as SerializableCopySnippet from './_examples/serializableCopy';
+import SerializableCopySource from '!!raw-loader!./_examples/serializableCopy';
+
 # Serializable
 
 Serializable is a type of shared memory that holds an immutable value that can be serialized and deserialized across different JavaScript Runtimes. It allows passing JavaScript values between Runtimes while ensuring that the data is correctly transferred and reconstructed. The reference cannot be manipulated, as it doesn't represent any standard JavaScript object.
@@ -25,6 +28,18 @@ Serializable is a type of shared memory that holds an immutable value that can b
   };
   ```
 </details>
+
+## Passing a copy
+
+First, `createSerializable(settings)` creates an immutable serialized representation of the object in native memory and returns an opaque reference. Passing that reference to `scheduleOnUI` reconstructs the value as a JavaScript object on UI.
+
+<ThreadingSimulation module={SerializableCopySnippet} source={SerializableCopySource}/>
+
+Watch the **Serializable (immutable)** appear in **Shared native memory** with `{ volume: 10 }`. UI receives a JavaScript copy and changes it to `{ volume: 20 }`, visible under its **Globals**. Both the Serializable and RN's original stay at `{ volume: 10 }`.
+
+The Serializable holds an immutable representation of the value; the JavaScript object reconstructed on UI is a separate, mutable copy. Changing that copy does not update the original object or the Serializable. This example stores each object on `globalThis` to make the two copies visible; globals themselves are not shared between runtimes.
+
+Usually, you can pass the original value directly: `scheduleOnUI(changeCopy, globalThis.settings)`. Scheduling functions automatically serialize their arguments. This example calls `createSerializable` explicitly to show the intermediate representation.
 
 ## Supported types
 

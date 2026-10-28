@@ -3,6 +3,9 @@ title: registerCustomSerializable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as CustomSerializableSnippet from './_examples/apiRegisterCustomSerializable';
+import CustomSerializableSource from '!!raw-loader!./_examples/apiRegisterCustomSerializable';
+
 <Badges version="0.7.0">
   # registerCustomSerializable
 </Badges>
@@ -13,29 +16,25 @@ List of supported types for Serialization can be found [here](./serializable.mdx
 
 ## Reference
 
-```typescript
-const obj = { a: 42 };
-Object.setPrototypeOf(obj, console); // because why not
+This example transfers a `Point` with a custom prototype to a Worker Runtime. Its `x` and `y`
+coordinates are ordinary data, but its `length()` method belongs to the prototype.
 
-type ConsoleLike = typeof console;
+Register the serializer on the RN Runtime before passing the point to another runtime.
+`scheduleOnRuntime` then handles the transfer automatically:
 
-registerCustomSerializable({
-  name: 'ConsoleLike',
-  determine(value: object): value is ConsoleLike {
-    'worklet';
-    return Object.getPrototypeOf(value) === console;
-  },
-  pack(value: ConsoleLike) {
-    'worklet';
-    return { a: value.a }; // transfer data
-  },
-  unpack(value: object) {
-    'worklet';
-    // recreate object with prototype
-    return Object.create(console, value);
-  },
-});
-```
+1. `determine` recognizes the point on RN.
+1. `pack` runs on RN and returns just `{ x, y }`.
+1. `unpack` runs on the worker and creates a new point with its own prototype and `length()` method.
+
+<ThreadingSimulation module={CustomSerializableSnippet} source={CustomSerializableSource}/>
+
+:::tip What crosses the runtime boundary?
+
+The packed coordinates cross the boundary. The original object and its prototype stay on RN.
+`unpack` uses `createPoint` to reconstruct the object on the worker, where `point.length()` returns `5`.
+The console identifies the runtime running each callback. You don't call `pack` or `unpack` yourself.
+
+:::
 
 <details>
   <summary>Type definitions</summary>
