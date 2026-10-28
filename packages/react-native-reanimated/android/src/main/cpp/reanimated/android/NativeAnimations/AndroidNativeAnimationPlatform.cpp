@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <numbers>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -352,42 +350,6 @@ bool admitsMovingGeometry(const AnimationTrack &track, const facebook::react::Sh
   const auto &model = viewProps.resolveTransform(finalView.layoutMetrics).matrix;
   const auto determinant = model[0] * model[5] - model[1] * model[4];
   return std::abs(determinant) > MATRIX_CELL_TOLERANCE && !hasSizeDependentTransform(viewProps);
-}
-
-/// The largest `|y(t)|` of a spring (`SpringTiming`). With no initial velocity the spring does not pass its
-/// start, so the bound is 1.
-double springDisplacementBoundOf(const SpringTiming &spring) {
-  if (spring.initialVelocity == 0) {
-    return 1;
-  }
-  const double coefficient = spring.decay - spring.initialVelocity;
-  if (spring.frequency == 0) {
-    return 1 + std::abs(coefficient) / (spring.decay * std::numbers::e);
-  }
-  return std::hypot(1.0, coefficient / spring.frequency);
-}
-
-/// The least and the largest progress of a timing.
-std::pair<double, double> progressRangeOf(const AnimationTiming &timing) {
-  const auto rangeWith = [](const std::vector<double> &values) {
-    const auto [least, largest] = std::ranges::minmax(values);
-    return std::pair{std::min(0.0, least), std::max(1.0, largest)};
-  };
-  return std::visit(
-      [&rangeWith](const auto &each) -> std::pair<double, double> {
-        using Timing = std::decay_t<decltype(each)>;
-        if constexpr (std::is_same_v<Timing, LinearTiming>) {
-          return {0.0, 1.0};
-        } else if constexpr (std::is_same_v<Timing, CubicBezierTiming>) {
-          return rangeWith({each.y1, each.y2});
-        } else if constexpr (std::is_same_v<Timing, SpringTiming>) {
-          const double bound = springDisplacementBoundOf(each);
-          return {1 - bound, 1 + bound};
-        } else {
-          return rangeWith(each.pointsY);
-        }
-      },
-      timing);
 }
 
 /// The executor writes no size: the view shows its mounted size for the whole track. The track must end at that

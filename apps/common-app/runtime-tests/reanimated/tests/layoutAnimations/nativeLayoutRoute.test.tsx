@@ -268,6 +268,25 @@ describe('native layout route', () => {
     await render(null);
   });
 
+  test(`an entering width track from 1 pt to 1.005 pt with a Bezier that takes it below 0 ${routeNameOf(false)}`, async () => {
+    const width = PixelRatio.roundToNearestPixel(1);
+    const entering = entryExitOf({
+      width: {
+        initial: 0,
+        to: 0.005,
+        easing: Easing.bezier(1 / 3, -1000, 2 / 3, -1000),
+        duration: PIXEL_DURATION,
+      },
+    });
+    await render(null);
+    await takeTrace();
+    await render(<EnteringScene isMounted width={width} entering={entering} />);
+    const tag = getTestComponent(BOX_REF).getTag();
+    await wait(PIXEL_DURATION * 1.5);
+    expectSizeRoute((await takeTraceOf(tag)).filter(isHostEvent), false);
+    await render(null);
+  });
+
   test(`an exiting width track that ends 79 px from the mounted width ${routeNameOf(PLAYS_SIZE_CHANGE)}`, async () => {
     const width = PixelRatio.roundToNearestPixel(BOX_SIZE);
     const exiting = entryExitOf({

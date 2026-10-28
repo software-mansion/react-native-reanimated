@@ -104,7 +104,8 @@ const IS_APPLE = Platform.OS === 'ios';
 
 /**
  * Android refuses a Width or Height change of more than one pixel
- * (`AndroidNativeAnimationPlatform::canRealize`).
+ * (`AndroidNativeAnimationPlatform::canRealize`). Apple refuses a Width or
+ * Height track that can go below 0.
  */
 export const PLAYS_SIZE_CHANGE = IS_APPLE;
 export const ONE_PIXEL = 1 / PixelRatio.get();

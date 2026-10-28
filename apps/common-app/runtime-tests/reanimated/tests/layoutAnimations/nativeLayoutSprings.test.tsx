@@ -1396,56 +1396,90 @@ describe('native layout springs', () => {
     }
   );
 
+  /**
+   * The least height is `to - 0.3723 * (100 - to)`: with damping ratio 0.3 and
+   * no initial velocity, the first overshoot is 0.3723 of the change
+   * (`narrowProgressRangeOf`).
+   */
+  const playHeightSpring = (to: number) =>
+    play(
+      {
+        leaves: { height: { spring: physics(0.3, 8) } },
+        places: [
+          { ...START, height: 100 },
+          { ...START, height: to },
+        ],
+        totalMs: 4400,
+        targets: ['Height'],
+      },
+      DEFAULT_SPRING_CALLBACKS
+    );
+
+  const HEIGHT: ScalarKey = { key: 'height', tolerance: POSITION_TOLERANCE };
+
+  const expectHeightEndsAt = (played: Played, to: number) => {
+    const last = played.reads[played.reads.length - 1];
+    for (const value of [
+      last.native?.Height.presentation[0],
+      last.native?.Height.model[0],
+      last.frame?.Height.model[0],
+    ]) {
+      expect(Math.abs((value ?? NaN) - to) <= LAID_OUT_TOLERANCE).toBe(true);
+    }
+  };
+
   test(
     PLAYS_SIZE_CHANGE
-      ? 'an underdamped height spring from 100 to 0 plays natively: NATIVE PLAYING, and it ends at 0'
+      ? 'an underdamped height spring from 100 to 0 can go below 0, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0'
       : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0',
     async () => {
-      const height: ScalarKey = {
-        key: 'height',
-        tolerance: POSITION_TOLERANCE,
-      };
-      const played = await play(
-        {
-          leaves: { height: { spring: physics(0.3, 8) } },
-          places: [
-            { ...START, height: 100 },
-            { ...START, height: 0 },
-          ],
-          totalMs: 4400,
-          targets: ['Height'],
-        },
-        DEFAULT_SPRING_CALLBACKS
-      );
-      const twin = scalarTwinOf(played, height);
+      const played = await playHeightSpring(0);
+      const twin = scalarTwinOf(played, HEIGHT);
       for (const read of played.reads) {
         console.log(
           `SPRING-SIZE | native presentation ${read.native?.Height.presentation[0]}, native model ${read.native?.Height.model[0]}, twin model ${read.frame?.Height.model[0]}, twin frames ${twin.shownAt((read.native?.Height.monotonicTimeMs ?? NaN) - twin.startMs)[0]} at ${read.native?.Height.monotonicTimeMs}`
         );
       }
-      if (PLAYS_SIZE_CHANGE) {
-        expectNativePlaying(played, 'Height');
-      } else {
-        expectFrameDriven(
-          'a height spring',
-          played,
-          'Height',
-          'UnsupportedTarget',
-          twin
-        );
-      }
-      const last = played.reads[played.reads.length - 1];
-      for (const value of [
-        last.native?.Height.presentation[0],
-        last.native?.Height.model[0],
-        last.frame?.Height.model[0],
-      ]) {
-        expect(Math.abs((value ?? NaN) - 0) <= LAID_OUT_TOLERANCE).toBe(true);
-      }
+      expectFrameDriven(
+        'a height spring',
+        played,
+        'Height',
+        'UnsupportedTarget',
+        twin
+      );
+      expectHeightEndsAt(played, 0);
       expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
       await render(null);
     }
   );
+
+  for (const [to, least] of [
+    [60, 45.1],
+    [40, 17.7],
+  ]) {
+    test(
+      PLAYS_SIZE_CHANGE
+        ? `an underdamped height spring from 100 to ${to} stays above 0 (least ${least}), so it plays natively: NATIVE PLAYING, and it ends at ${to}`
+        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at ${to}`,
+      async () => {
+        const played = await playHeightSpring(to);
+        if (PLAYS_SIZE_CHANGE) {
+          expectNativePlaying(played, 'Height');
+        } else {
+          expectFrameDriven(
+            'a height spring that stays above 0',
+            played,
+            'Height',
+            'UnsupportedTarget',
+            scalarTwinOf(played, HEIGHT)
+          );
+        }
+        expectHeightEndsAt(played, to);
+        expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
+        await render(null);
+      }
+    );
+  }
 
   movingGeometryTest(
     'a spring on X beside a timing of another duration on Y plays natively, and the reads of each are on the frames of the twin',

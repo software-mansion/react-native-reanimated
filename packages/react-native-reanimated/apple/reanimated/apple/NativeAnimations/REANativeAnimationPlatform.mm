@@ -326,6 +326,27 @@ bool pictureFollowsBounds(REAUIView *view)
   return true;
 }
 
+/// Core Animation shows no layer while its size is below 0, and the frame driver shows the view. So a width or
+/// height track plays only when no value in the progress range of each segment is below 0.
+bool staysAtOrAboveZero(const AnimationTrack &track)
+{
+  const auto &timeline = std::get<ValueTimeline>(track.body);
+  const auto *start = std::get_if<AnimationValue>(&timeline.start);
+  if (start == nullptr) {
+    return false;
+  }
+  double from = std::get<double>(*start);
+  for (const auto &segment : timeline.segments) {
+    const double to = std::get<double>(segment.endValue);
+    const auto [leastProgress, largestProgress] = narrowProgressRangeOf(segment.timingFromPrevious);
+    if (std::min(from + leastProgress * (to - from), from + largestProgress * (to - from)) < 0) {
+      return false;
+    }
+    from = to;
+  }
+  return true;
+}
+
 bool playsTiming(const AnimationTiming &timing)
 {
   return std::ranges::find(kCoreAnimationTimingKinds, kindOf(timing)) != kCoreAnimationTimingKinds.end();
@@ -836,6 +857,10 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
   {
     using namespace facebook::react;
     if (!playsTimings(track)) {
+      return false;
+    }
+    const bool isLength = track.target == AnimationTarget::Width || track.target == AnimationTarget::Height;
+    if (isLength && !staysAtOrAboveZero(track)) {
       return false;
     }
     const bool changesSize = isSizeTarget(track.target) && changesValue(track);
