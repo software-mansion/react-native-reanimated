@@ -15,6 +15,8 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc --noEmit",
+    "test": "node -r ./scripts/register-simulation.js --test 'src/simulation/**/*.test.ts'",
+    "trace": "node -r ./scripts/register-simulation.js src/simulation/cli.ts",
     "lint": "yarn run --top-level oxfmt --check docs src versioned_docs",
     "format": "yarn run --top-level oxfmt docs src versioned_docs"
   },

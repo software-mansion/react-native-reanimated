@@ -13,7 +13,7 @@ This API is deprecated and will be removed in the next major release. Use{' '}
 
 # executeOnUIRuntimeSync
 
-`executeOnUIRuntimeSync` lets you run a [workletized](../fundamentals/glossary.mdx#to-workletize) function synchronously on the [UI thread](../fundamentals/glossary.mdx#ui-thread).
+`executeOnUIRuntimeSync` lets you run a [workletized](../worklets-plugin/about.mdx#autoworkletization) function synchronously on the [UI thread](../tutorials/0-concurrency-model.mdx#the-react-native-model).
 
 ## Reference
 
@@ -47,7 +47,7 @@ A reference to a function you want to execute on the UI Runtime on the current t
 
 ### Returns
 
-`executeOnUIRuntimeSync` returns the return value of the worklet.
+`executeOnUIRuntimeSync` returns the return value of the worklet function.
 
 :::info
 Don't forget to call the function returned from `executeOnUIRuntimeSync`.
@@ -57,6 +57,6 @@ Don't forget to call the function returned from `executeOnUIRuntimeSync`.
 
 - It's a common mistake to execute function inside of `executeOnUIRuntimeSync` like this: ~~`executeOnUIRuntimeSync(myWorklet(10))()`~~. Here, the correct usage would be `executeOnUIRuntimeSync(myWorklet)(10)`.
 
-- The callback passed as the argument is automatically [workletized](../fundamentals/glossary.mdx#to-workletize) and ready to be run on the [UI thread](../fundamentals/glossary.mdx#ui-thread).
+- The callback passed as the argument is automatically [workletized](../worklets-plugin/about.mdx#autoworkletization) and ready to be run on the [UI thread](../tutorials/0-concurrency-model.mdx#the-react-native-model).
 
 - Make sure not to execute `executeOnUIRuntimeSync` on the UI thread as this will result in an error.
