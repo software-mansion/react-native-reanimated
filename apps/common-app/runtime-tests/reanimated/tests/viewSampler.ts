@@ -13,6 +13,7 @@ interface RuntimeTestsViewSamplerModule extends TurboModule {
   now(): Promise<number>;
   animatorDurationScale(): Promise<number>;
   apiLevel(): Promise<number>;
+  collectGarbage(): Promise<void>;
   postsAnimatorEnd(): Promise<boolean | null>;
   failNextViewLookup(tag: number): Promise<void>;
   takeViewLookupFailure(): Promise<number[] | null>;
@@ -113,16 +114,37 @@ export async function recordDrawnValues(
 }
 
 /**
- * One log line for each case, for a comparison of the samples of two builds.
- * `renderStartMs` is the uptime before the render that starts the case.
+ * The frame time of a frame callback of the UI runtime and the animation
+ * timestamp at its run, each in ms.
  */
+export type FrameCallbackRun = [frameTimeMs: number, ranMs: number];
+
+/** A declared start value of one value of a sample. */
+export type StartValue = {
+  property: RecordedProperty;
+  value: number;
+  tolerance: number;
+  isColor: boolean;
+};
+
+export type DrawnValuesDetails = {
+  /** The uptime before the render that starts the case. */
+  renderStartMs?: number;
+  /** One for each value of a sample, in the order of the values. */
+  startValues?: StartValue[];
+  /** The declared delay of the case. */
+  delayMs?: number;
+  frameCallbacks?: FrameCallbackRun[];
+};
+
+/** One log line for each case, for a comparison of the samples of two builds. */
 export function logDrawnValues(
   caseName: string,
   samples: DrawnSample[],
-  renderStartMs?: number
+  details: DrawnValuesDetails = {}
 ) {
   console.log(
-    `${LOG_MARKER} ${JSON.stringify({ caseName, samples, renderStartMs })}`
+    `${LOG_MARKER} ${JSON.stringify({ caseName, samples, ...details })}`
   );
 }
 

@@ -289,6 +289,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     releaseBuilt(buildId: number) {
       builds.delete(buildId);
     },
+    pendingBuildCount() {
+      return builds.size;
+    },
     stop,
   };
 

@@ -30,7 +30,7 @@ enum class EncodedStart : jint {
 /// How the executor binds a track to its view. `TrackEncoding.kt` repeats the values.
 enum class EncodedBinding : jint {
   Writer,
-  /// A track that writes no property: a constant size, or a constant geometry that the view holds.
+  /// A track that writes no property: a size within one pixel of its end, or a constant geometry that the view holds.
   Hold,
 };
 
@@ -352,6 +352,39 @@ bool admitsMovingGeometry(const AnimationTrack &track, const facebook::react::Sh
   return std::abs(determinant) > MATRIX_CELL_TOLERANCE && !hasSizeDependentTransform(viewProps);
 }
 
+/// The executor writes no size: the view shows its mounted size for the whole track. The track must end at that
+/// size, start and end each segment within one pixel of it, and stay less than one and a half pixels from it, so
+/// that the frame driver would show at most one pixel more or less at each frame.
+bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::react::ShadowView &view) {
+  const auto &timeline = std::get<ValueTimeline>(track.body);
+  const auto *start = std::get_if<AnimationValue>(&timeline.start);
+  if (start == nullptr) {
+    return false;
+  }
+  const auto &frameSize = view.layoutMetrics.frame.size;
+  const double mounted = track.target == AnimationTarget::Width ? frameSize.width : frameSize.height;
+  const double onePixel = 1 / view.layoutMetrics.pointScaleFactor;
+  if (std::abs(std::get<double>(timeline.segments.back().endValue) - mounted) > ENDPOINT_TOLERANCE) {
+    return false;
+  }
+  double from = std::get<double>(*start);
+  for (const auto &segment : timeline.segments) {
+    const double to = std::get<double>(segment.endValue);
+    const auto [leastProgress, largestProgress] = progressRangeOf(segment.timingFromPrevious);
+    if (std::abs(from - mounted) > onePixel + ENDPOINT_TOLERANCE ||
+        std::abs(to - mounted) > onePixel + ENDPOINT_TOLERANCE) {
+      return false;
+    }
+    for (const double progress : {leastProgress, largestProgress}) {
+      if (std::abs(from + progress * (to - from) - mounted) >= 1.5 * onePixel) {
+        return false;
+      }
+    }
+    from = to;
+  }
+  return true;
+}
+
 class AndroidMountedAnimation final : public MountedAnimation {
  public:
   AndroidMountedAnimation(
@@ -492,8 +525,13 @@ void AndroidNativeAnimationPlatform::setTrackEndListener(TrackEndListener listen
 }
 
 bool AndroidNativeAnimationPlatform::canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) {
-  return plays(track) &&
-      (!isGeometryTarget(track.target) || !movesGeometry(track) || admitsMovingGeometry(track, view));
+  if (!plays(track)) {
+    return false;
+  }
+  if (isSizeTarget(track.target)) {
+    return staysInOnePixelOfMountedSize(track, view);
+  }
+  return !isGeometryTarget(track.target) || !movesGeometry(track) || admitsMovingGeometry(track, view);
 }
 
 bool AndroidNativeAnimationPlatform::isSurfaceRunning(const SurfaceId surfaceId) {
@@ -586,6 +624,16 @@ std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag
       false};
 }
 
+ContainerSizes AndroidNativeAnimationPlatform::containerSizes() {
+  const auto executorSizes = executor_->containerSizes();
+  ContainerSizes sizes{
+      {"playbacks", static_cast<std::size_t>(executorSizes->playbacks())},
+      {"geometryWriters", static_cast<std::size_t>(executorSizes->geometryWriters())}};
+  const std::lock_guard lock(operationsMutex_);
+  sizes.emplace("postedOperations", postedOperations_.size());
+  return sizes;
+}
+
 void AndroidNativeAnimationPlatform::failNextViewLookup(const Tag tag) {
   failingViewLookup_ = tag;
 }
@@ -621,15 +669,14 @@ bool AndroidNativeAnimationPlatform::playsTarget(const AnimationTrack &track) co
     case AnimationTarget::BackgroundColor:
     case AnimationTarget::BorderColor:
     case AnimationTarget::BorderRadius:
+    case AnimationTarget::Width:
+    case AnimationTarget::Height:
       return true;
     case AnimationTarget::ShadowColor:
       return apiLevel_ >= __ANDROID_API_P__;
     case AnimationTarget::PositionX:
     case AnimationTarget::PositionY:
       return !movesGeometry(track) || hasAnimationMatrix;
-    case AnimationTarget::Width:
-    case AnimationTarget::Height:
-      return !changesValue(track);
     case AnimationTarget::Transform: {
       const auto &operations = std::get<TransformTimelines>(track.body).operations;
       const bool isPlanarBody =
@@ -652,6 +699,7 @@ bool AndroidNativeAnimationPlatform::modelEndsAt(alias_ref<JView> view, const An
 }
 
 void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const bool finished) {
+  ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::onTrackEnded");
   {
     const std::lock_guard lock(operationsMutex_);
     if (isClosed_) {
@@ -662,6 +710,7 @@ void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const b
 }
 
 void AndroidNativeAnimationPlatform::drainPostedOperations() {
+  ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::drainPostedOperations");
   std::deque<Operation> operations;
   {
     const std::lock_guard lock(operationsMutex_);

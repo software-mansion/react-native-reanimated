@@ -11,8 +11,13 @@
  * a position track (the player has statement M only for the opacity and the transform), when a callback
  * comes. The pixels on screen, a device, and 120 Hz are not tested.
  *
+ * Each test that calls `readPair` puts each native position on the twin timeline: the time error of the native
+ * value against the recorded frames of the frame-driven twin, from the frame times that the read can show
+ * (`nativeLayoutTwinTimeline.ts`). Apple asserts one display frame. Android prints the rows and keeps the pair
+ * comparison of two display frames.
+ *
  * Not converted (the old pair comparison at planned times):
- * the test that calls `sampleOpacityPair`, and each test that calls `readPair`.
+ * the test that calls `sampleOpacityPair`. It compares two frame-driven boxes, not a native route with its twin.
  */
 import type { ComponentRef } from 'react';
 import React from 'react';
@@ -54,6 +59,12 @@ import {
   waitForCallbacks,
   movingGeometryTest,
 } from './nativeLayoutTestKit';
+import type { PairRead, TwinPair } from './nativeLayoutTwinTimeline';
+import {
+  expectOnTwinTimeline,
+  twinPairOf,
+  twinRestOf,
+} from './nativeLayoutTwinTimeline';
 
 const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
 
@@ -76,18 +87,23 @@ describe('a native layout group whose tracks the platform removes', () => {
     return;
   }
 
-  type Clipped = { nativeTag: number; frameTag: number; startMs: number };
+  type Clipped = {
+    nativeTag: number;
+    frameTag: number;
+    twin: TwinPair;
+    startMs: number;
+  };
 
   /** Mounts the pair, then renders `moved`. */
   async function move(mounted: PairProps, moved: PairProps): Promise<Clipped> {
+    resetFrameRecords();
     await mountScene(<ClippedPair {...mounted} />);
-    const tags = {
-      nativeTag: getTestComponent(BOX_REF).getTag(),
-      frameTag: getTestComponent(FRAME_BOX_REF).getTag(),
-    };
+    const nativeTag = getTestComponent(BOX_REF).getTag();
+    const frameTag = getTestComponent(FRAME_BOX_REF).getTag();
+    const twin = await twinPairOf(nativeTag);
     const startMs = performance.now();
     await render(<ClippedPair {...moved} />);
-    return { ...tags, startMs };
+    return { nativeTag, frameTag, twin, startMs };
   }
 
   const waitUntil = ({ startMs }: Clipped, elapsedMs: number) =>
@@ -107,6 +123,11 @@ describe('a native layout group whose tracks the platform removes', () => {
       shownY: y.presentation[0],
       shownOpacity: opacity.presentation[0],
       keys: x.playbacks.length,
+      timeMs: {
+        x: x.monotonicTimeMs,
+        y: y.monotonicTimeMs,
+        opacity: opacity.monotonicTimeMs,
+      },
     };
   }
 
@@ -131,6 +152,19 @@ describe('a native layout group whose tracks the platform removes', () => {
   }
 
   const sortedCallbacks = () => callbacks.slice().sort().join();
+
+  async function expectOnClippedTwin(
+    caseName: string,
+    { frameTag, twin }: Clipped,
+    reads: Omit<PairRead, 'rest'>[]
+  ) {
+    const rest = await twinRestOf(frameTag);
+    expectOnTwinTimeline(
+      caseName,
+      twin,
+      reads.map((read) => ({ ...read, rest }))
+    );
+  }
 
   /** Damping ratio 1, natural frequency 7/s: it settles in about 1767 ms. */
   const SLOW_SPRING = { stiffness: 49, damping: 14, mass: 1 };
