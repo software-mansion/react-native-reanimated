@@ -126,7 +126,7 @@ Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativePr
 
 ### Removed `combineTransition`
 
-`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions/#entryexit-transition).
+`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#entryexit-transition).
 
 ```js
 EntryExitTransition.entering(entering).exiting(exiting);
@@ -152,4 +152,4 @@ All integrations with other third-party libraries such as [React Native Gesture 
 
 ## Migrating from 2.x
 
-For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x.md).
+For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x).

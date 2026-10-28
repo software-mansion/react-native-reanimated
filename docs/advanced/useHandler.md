@@ -1,6 +1,6 @@
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler).
 
 ## Reference
 
@@ -78,7 +78,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -86,6 +86,6 @@ The hook returns a context that will be reused by event handlers and value that 
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset).
 
 ## Platform compatibility

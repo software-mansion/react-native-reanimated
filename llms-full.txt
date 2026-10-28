@@ -606,7 +606,7 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 
 # useEvent
 
-`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
+`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler).
 
 ## Reference
 
@@ -681,7 +681,7 @@ The hook returns an event handler that will be invoked when a native event is di
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset).
 
 ## Remarks
 
@@ -776,7 +776,7 @@ Whether the callback should start automatically. Defaults to `true`.
 
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler/).
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset) or [`useAnimatedScrollHandler`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler).
 
 ## Reference
 
@@ -854,7 +854,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -862,7 +862,7 @@ The hook returns a context that will be reused by event handlers and value that 
 
 ## Example
 
-This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset/).
+This example can be more easily implemented using [`useScrollOffset`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset).
 
 ## Platform compatibility
 
@@ -1819,7 +1819,7 @@ Alternatively, you can get the value stored in the `current` in [event handlers]
 
 Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
 
-In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
+In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-styles) in the styles object it defines.
 
 For animating properties use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
@@ -6412,7 +6412,7 @@ When using `Easing` imported from `react-native-reanimated` v1, in v2 you should
 
 # Migrating from Reanimated 2.x to 3.x
 
-Reanimated 3.x doesn't introduce any breaking changes between 2.x and 3.x in terms of the API. All the code you've written in Reanimated v2 API works in 3.x without any changes. However, Reanimated 3.x drops the Reanimated v1 API entirely. For the migration guide between 1.x and 2.x versions please consult [Migration from 1.x to 2.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-1.x.md).
+Reanimated 3.x doesn't introduce any breaking changes between 2.x and 3.x in terms of the API. All the code you've written in Reanimated v2 API works in 3.x without any changes. However, Reanimated 3.x drops the Reanimated v1 API entirely. For the migration guide between 1.x and 2.x versions please consult [Migration from 1.x to 2.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-1.x).
 
 
 ---
@@ -6547,7 +6547,7 @@ Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativePr
 
 ### Removed `combineTransition`
 
-`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions/#entryexit-transition).
+`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#entryexit-transition).
 
 ```js
 EntryExitTransition.entering(entering).exiting(exiting);
@@ -6573,7 +6573,7 @@ All integrations with other third-party libraries such as [React Native Gesture 
 
 ## Migrating from 2.x
 
-For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x.md).
+For the migration guide between 2.x and 3.x versions please consult [Migration from 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x).
 
 
 ---
@@ -9205,7 +9205,7 @@ class Keyframe {
 
 An object, that contains definitions of your animation.
 The object keys should be within range `0-100` and correspond to animation progress.
-The object values should consist of style props and optionally of an [easing function](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
+The object values should consist of style props and optionally of an [easing function](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#easing). If easing property is not provided, it defaults to `Easing.linear`.
 
 The keys take the following values:
 
@@ -9808,7 +9808,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -9958,7 +9958,7 @@ If it finds two matching components, it hides both of them by changing their opa
 
 After the animation is complete, the third view is removed, and the opacity of both original views is restored.
 
-Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming/) animation function.
+Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) animation function.
 
 ## Usage
 

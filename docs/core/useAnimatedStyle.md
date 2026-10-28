@@ -4,7 +4,7 @@
 
 Styles defined using `useAnimatedStyle` have to be passed to `style` property of an [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component). Styles are automatically updated whenever an associated shared value or React state changes.
 
-In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props/#animating-styles) in the styles object it defines.
+In contrast to the [inline styling](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling), `useAnimatedStyle` allows to [access values stored in shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props#animating-styles) in the styles object it defines.
 
 For animating properties use [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) instead.
 
