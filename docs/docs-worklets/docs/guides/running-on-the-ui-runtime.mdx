@@ -5,7 +5,7 @@ sidebar_label: Running worklets on the UI runtime
 
 # Running worklet functions on the UI runtime
 
-The Worklets library provides three functions for running a [worklet function](/docs/tutorials/concurrency-model#worklet-functions) on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) from the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime): [`scheduleOnUI`](/docs/threading/scheduleOnUI), [`runOnUIAsync`](/docs/threading/runOnUIAsync) and [`runOnUISync`](/docs/threading/runOnUISync).
+The Worklets library provides three functions for running a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) from the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime): [`scheduleOnUI`](../threading/scheduleOnUI.mdx), [`runOnUIAsync`](../threading/runOnUIAsync.mdx) and [`runOnUISync`](../threading/runOnUISync.mdx).
 They differ in whether the worklet function runs asynchronously or synchronously, and in what they return to the caller.
 Use the table below to pick the one that fits your case.
 
@@ -20,5 +20,5 @@ Use the table below to pick the one that fits your case.
 
 The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](../memory/serializable.mdx).
 
-All three functions can be called from the [RN Runtime](/docs/concepts/runtimeKinds#rn-runtime), and additionally from the [UI](/docs/concepts/runtimeKinds#ui-runtime) and [Worker](/docs/concepts/runtimeKinds#worker-runtime) Runtimes when [Bundle Mode](/docs/bundleMode) is enabled.
-See [Call tables](/docs/guides/call-tables) for the full matrix.
+All three functions can be called from the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime), and additionally from the [UI](../concepts/runtimeKinds.mdx#ui-runtime) and [Worker](../concepts/runtimeKinds.mdx#worker-runtime) Runtimes when [Bundle Mode](../bundleMode/overview.mdx) is enabled.
+See [Call tables](./call-tables.mdx) for the full matrix.

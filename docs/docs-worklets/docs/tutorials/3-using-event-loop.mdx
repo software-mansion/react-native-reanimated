@@ -4,7 +4,7 @@ sidebar_position: 30
 
 # Using the event loop
 
-In the [previous chapter](/docs/tutorials/returning-results) we learned how to return results from
+In the [previous chapter](./2-returning-results.mdx) we learned how to return results from
 dispatched worklet functions.
 
 In this chapter we'll learn some theory about event loops, which you can use for more robust
@@ -16,8 +16,8 @@ The event loops available in React Native are similar to the ones
 [in the browser](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model).
 All
 functions to use the event loop, like `setTimeout` or `requestAnimationFrame` are available on the
-[RN Runtime](/docs/concepts/runtimeKinds#rn-runtime) and
-[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime), but they might behave slightly
+[RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) and
+[Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime), but they might behave slightly
 different
 based on the context.
 
@@ -63,7 +63,7 @@ For a Worker Runtime that runs on its dedicated thread, it's very similar to the
 `requestAnimationFrame` queue is polyfilled with a periodic timer.
 
 For advanced use cases, you can create a Worker Runtime
-[without an event loop](/docs/threading/createWorkletRuntime#enableeventloop) and then implement it
+[without an event loop](../threading/createWorkletRuntime.mdx#enableeventloop) and then implement it
 yourself.
 
 {/* TODO: code snippet showing how to use Worker Runtime timers */}

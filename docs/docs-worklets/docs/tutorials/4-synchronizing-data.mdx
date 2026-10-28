@@ -19,7 +19,7 @@ import SyncMixedSource from '!!raw-loader!./_synchronizing-data/syncMixed';
 
 # Synchronizing data
 
-In the [previous chapter](/docs/tutorials/using-event-loop) we learned some theory about event
+In the [previous chapter](./3-using-event-loop.mdx) we learned some theory about event
 loops, which we'll now put to use.
 
 In this chapter, we'll more advanced patterns of synchronizing data between JavaScript Runtimes,
@@ -38,7 +38,7 @@ We'll explore how can we obtain the value of the local `result` value and pass i
 ## With callbacks — anti-pattern
 
 We could use the same pattern as
-[returning results with a callback](/docs/tutorials/returning-results#with-callbacks).
+[returning results with a callback](./2-returning-results.mdx#with-callbacks).
 
 <ThreadingSimulation module={SyncCallbacksSnippet} source={SyncCallbacksSource} durationTicks={120} tickMs={200}/>
 
@@ -60,12 +60,12 @@ anti-pattern, but please **use it as a last resort escape hatch.**
 
 ## With a Synchronizable
 
-A [Synchronizable](/docs/memory/synchronizable) is a memory primitive in the Worklets library, that
+A [Synchronizable](../memory/synchronizable.mdx) is a memory primitive in the Worklets library, that
 lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making
 cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
 
 You can find detailed documentation for Synchronizable on its
-[API reference](/docs/memory/synchronizable), but for the sake of this example we'll stick to its
+[API reference](../memory/synchronizable.mdx), but for the sake of this example we'll stick to its
 `getDirty`
 and `setBlocking` methods. `getDirty` method simply returns the value of the Synchronizable, without
 waiting for any
@@ -81,9 +81,9 @@ heap and both Runtimes (threads) can access it with little overhead and without 
 another.
 
 For this simple case, we can even optimize our code further and use a
-[Synchronizable with a fixed type](/docs/memory/synchronizable#synchronizable-fixed),
+[Synchronizable with a fixed type](../memory/synchronizable.mdx#synchronizable-fixed),
 which exposes `setDirty` method and is generally faster than a general
-[Synchronizable with a dynamic type](/docs/memory/synchronizable#synchronizable-dynamic)
+[Synchronizable with a dynamic type](../memory/synchronizable.mdx#synchronizable-dynamic)
 that we just used.
 
 <ThreadingSimulation module={SyncSynchronizableFixedSnippet} source={SyncSynchronizableFixedSource} durationTicks={120} tickMs={200}/>
@@ -93,12 +93,12 @@ This approach works best when you poll the data frequently or from multiple Runt
 The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the
 JavaScript - native boundary and store the value there. This is particularly costly when it comes to
 storing non-primitive types, like objects or arrays - which require
-[serialization](/docs/memory/serializable)
+[serialization](../memory/serializable.mdx)
 on each boundary crossing.
 
 ## With a Shareable
 
-A [Shareable](/docs/memory/shareable) is another memory primitive, but this contrary to the
+A [Shareable](../memory/shareable.mdx) is another memory primitive, but this contrary to the
 Synchronizable,
 it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called
 Guest Runtimes,
@@ -108,7 +108,7 @@ of useful
 encapsulation.
 
 To create a Shareable, we have to explicitly state the Host Runtime by its
-[Runtime ID](/docs/concepts/runtimeKinds#worklet-runtime).
+[Runtime ID](../concepts/runtimeKinds.mdx#worklet-runtime).
 
 ```js
 const worker = createWorkletRuntime();

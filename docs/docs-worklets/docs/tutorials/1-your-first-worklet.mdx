@@ -12,17 +12,17 @@ import FirstWorkletArgsSource from '!!raw-loader!./_your-first-worklet/firstWork
 # Your first worklet function
 
 In this chapter we'll learn the basics of dispatching your JavaScript code to
-[Worklet Runtimes](/docs/concepts/runtimeKinds#worklet-runtime) to execute in parallel, using
+[Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime) to execute in parallel, using
 worklet
 functions. We strongly recommend you to become acknowledged with the
-[concurrency model](/docs/tutorials/concurrency-model) before continuing.
+[concurrency model](./0-concurrency-model.mdx) before continuing.
 
 ## Creating a Worklet Runtime
 
 To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can
-either use the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) which is always available,
-or create our own [Worker Runtime](/docs/concepts/runtimeKinds#worker-runtime) with
-[`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
+either use the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) which is always available,
+or create our own [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime) with
+[`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) function.
 
 ```js
 import {createWorkletRuntime} from 'react-native-worklets';
@@ -36,11 +36,11 @@ In the next steps we'll dispatch some work to our new Worker Runtime and the UI 
 Let's start small with dispatching functions that perform only a `console.log` on different
 runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show
 that they indeed are dispatched to different thread, with
-[`getCurrentThreadId`](/docs/utility/getCurrentThreadId) function. This function prints the result
+[`getCurrentThreadId`](../utility/getCurrentThreadId.mdx) function. This function prints the result
 of [`std::this_thread::get_id`](https://en.cppreference.com/w/cpp/thread/get_id).
 
-We'll use [`scheduleOnUI`](/docs/threading/scheduleOnUI) to dispatch to the UI Runtime and
-[`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) to dispatch to the Worker Runtime. These
+We'll use [`scheduleOnUI`](../threading/scheduleOnUI.mdx) to dispatch to the UI Runtime and
+[`scheduleOnRuntime`](../threading/scheduleOnRuntime.mdx) to dispatch to the Worker Runtime. These
 functions are fire-and-forget style — they return immediately after dispatching the worklet
 function, without waiting for it to complete, and do not yield any result.
 
@@ -53,8 +53,8 @@ worklet function to different threads.
 
 Sometimes you might want to execute a worklet function synchronously, from the same thread, but on
 the other Runtime. For that purpose the Worklets library exposes
-[`runOnUISync`](/docs/threading/runOnUISync) and
-[`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) methods. These methods are blocking — they
+[`runOnUISync`](../threading/runOnUISync.mdx) and
+[`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) methods. These methods are blocking — they
 return only after the worklet function has completed. If a different thread is currently using the Runtime, these methods will wait for the targeted Runtime to be released before executing the worklet function.
 
 <ThreadingSimulation module={FirstWorkletSyncSnippet} source={FirstWorkletSyncSource}/>
@@ -76,7 +76,7 @@ for a given method invocation.
 
 In previous code snippets we always marked worklet functions with the `'worklet'` directive.
 However, in most cases you can omit the directive. Worklets Babel plugin
-[automatically detects](/docs/worklets-plugin/about#autoworkletization) which functions should
+[automatically detects](../worklets-plugin/about.mdx#autoworkletization) which functions should
 be
 treated as worklet functions and applies the transformation regardless. In the future examples we
 will omit the directive whenever applicable.

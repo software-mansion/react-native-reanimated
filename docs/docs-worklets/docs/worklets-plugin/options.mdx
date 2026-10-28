@@ -121,7 +121,7 @@ This option turns off the source map generation for worklet functions. Mostly us
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](/docs/worklets-plugin/about#class-methods).
+support](./about.mdx#class-methods).
 You might need to disable this feature when using [Custom
 Serializables](../memory/registerCustomSerializable.mdx).
 
@@ -238,7 +238,7 @@ Experimental feature.
 Defaults to `false`.
 
 Enabled compilation of worklet functions to [Hermes](https://github.com/facebook/hermes) bytecode
-ahead of time instead of shipping them as source strings in [Legacy Eval Mode](/docs/bundleMode#legacy-eval-mode).
+ahead of time instead of shipping them as source strings in [Legacy Eval Mode](../bundleMode/overview.mdx#legacy-eval-mode).
 At runtime the Worklet Runtime evaluates the precompiled bytecode directly,
 skipping code evaluation overhead costs.
 
@@ -273,7 +273,7 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](/docs/concepts/closures#global-scoping).
+This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](../concepts/closures.mdx#global-scoping).
 
 With this option disabled, accessing global variables inside worklet functions will lead to capturing them from the scheduler scope:
 

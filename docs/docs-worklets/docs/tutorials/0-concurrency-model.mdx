@@ -22,7 +22,7 @@ and draws them on screen.
 Your JavaScript doesn't run there. At startup, the native app creates two things: a separate thread, the
 **JavaScript thread** (JS thread) and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
 Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the
-[React Native Runtime](/docs/concepts/runtimeKinds#rn-runtime). Then, it delegates the execution of
+[React Native Runtime](../concepts/runtimeKinds.mdx#rn-runtime). Then, it delegates the execution of
 your JavaScript Bundle to the JS thread and running its
 [event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)
 there.
@@ -81,7 +81,7 @@ RN Runtime to the new Runtime.
 <SameThreadRuntimeDiagram/>
 
 Now, when the event comes, we can synchronously handle it on the UI thread, using our new Runtime.
-This is exactly the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime) that the Worklets library
+This is exactly the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) that the Worklets library
 exposes.
 
 <UIRuntimeDiagram/>
@@ -122,7 +122,7 @@ function myWorklet() {
 ```
 
 Functions marked with the directive are transformed with the
-[Worklets Babel plugin](/docs/worklets-plugin/about), in a process we call **workletization**,
+[Worklets Babel plugin](../worklets-plugin/about.mdx), in a process we call **workletization**,
 into special entities
 that are safe to be juggled between JavaScript runtimes.
 

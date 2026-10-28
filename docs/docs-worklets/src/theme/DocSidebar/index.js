@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
+import {
+  useActiveVersion,
+  useDocsVersion,
+} from '@docusaurus/plugin-content-docs/client';
 import { DocSidebar } from '@swmansion/t-rex-ui';
 import {
   SIMULATION_CLOSE_EVENT,
@@ -53,7 +56,11 @@ export default function DocSidebarWrapper(props) {
     'memory/makeShareableCloneOnUIRecursive',
   ];
 
-  const docsRoot = useBaseUrl('/docs/');
+  const fallbackDocsRoot = useBaseUrl('/docs/');
+  const activeVersion = useActiveVersion(undefined);
+  const docsRoot =
+    activeVersion?.docs.find((doc) => doc.id === activeVersion.mainDocId)
+      ?.path ?? fallbackDocsRoot;
   const { docsSidebars } = useDocsVersion();
   const hasSections = 'guides' in docsSidebars && 'api' in docsSidebars;
   const onStartPage =

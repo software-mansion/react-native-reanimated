@@ -4,9 +4,9 @@ sidebar_position: 42 # Use alphabetical order
 
 # runOnUISync
 
-`runOnUISync` lets you run a [workletized](/docs/worklets-plugin/about#autoworkletization) function synchronously on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+`runOnUISync` lets you run a [workletized](../worklets-plugin/about.mdx#autoworkletization) function synchronously on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
-To compare it with [`scheduleOnUI`](/docs/threading/scheduleOnUI) and [`runOnUIAsync`](/docs/threading/runOnUIAsync), see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime).
+To compare it with [`scheduleOnUI`](./scheduleOnUI.mdx) and [`runOnUIAsync`](./runOnUIAsync.mdx), see [Running worklet functions on the UI runtime](../guides/running-on-the-ui-runtime.mdx).
 
 ## Reference
 
@@ -38,7 +38,7 @@ console.log(result); // 1
 
 #### worklet
 
-A function you want to execute on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+A function you want to execute on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
 #### args
 
@@ -50,7 +50,7 @@ Arguments to pass to the function.
 
 ## Remarks
 
-- The callback passed as the argument is automatically [workletized](/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI Runtime](/docs/concepts/runtimeKinds#ui-runtime).
+- The callback passed as the argument is automatically [workletized](../worklets-plugin/about.mdx#autoworkletization) and ready to be run on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
 ## Call table
 

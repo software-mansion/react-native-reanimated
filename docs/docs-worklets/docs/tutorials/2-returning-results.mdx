@@ -13,15 +13,15 @@ import ReturningPromiseSource from '!!raw-loader!./_returning-results/returningP
 
 # Returning results
 
-In the [previous chapter](/docs/tutorials/your-first-worklet) we dispatched some console logs to
+In the [previous chapter](./1-your-first-worklet.mdx) we dispatched some console logs to
 other Runtimes. However, logging itself is not particularly useful.
 
 In this chapter we'll learn how to obtain execution results from dispatched worklet functions.
 
 ## Synchronously
 
-Simplest way of returning values. [`runOnUISync`](/docs/threading/runOnUISync) and
-[`runOnRuntimeSync`](/docs/threading/runOnRuntimeSync) functions return the result of a worklet
+Simplest way of returning values. [`runOnUISync`](../threading/runOnUISync.mdx) and
+[`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) functions return the result of a worklet
 function directly to the invoking Runtime:
 
 <ThreadingSimulation module={ReturningSyncSnippet} source={ReturningSyncSource}/>
@@ -41,12 +41,12 @@ value synchronously in future sections.
 ## Asynchronously
 
 For asynchronous returns, i.e. results of complex calculations, you can use
-[`runOnUIAsync`](/docs/threading/runOnUIAsync) and
-[`runOnRuntimeAsync`](/docs/threading/runOnRuntimeAsync) functions. They return an awaitable
+[`runOnUIAsync`](../threading/runOnUIAsync.mdx) and
+[`runOnRuntimeAsync`](../threading/runOnRuntimeAsync.mdx) functions. They return an awaitable
 promise.
 
-Remember that [`scheduleOnUI`](/docs/threading/scheduleOnUI) and
-[`scheduleOnRuntime`](/docs/threading/scheduleOnRuntime) functions do not return a value.
+Remember that [`scheduleOnUI`](../threading/scheduleOnUI.mdx) and
+[`scheduleOnRuntime`](../threading/scheduleOnRuntime.mdx) functions do not return a value.
 
 <ThreadingSimulation module={ReturningAsyncSnippet} source={ReturningAsyncSource}/>
 
@@ -87,7 +87,7 @@ memory of our app.
 
 Because `setState` is passed to the Worklet Runtime as a pointer to the callback, we can't just
 invoke it. We have to dispatch it back on the RN Runtime with
-[`scheduleOnRN`](/docs/threading/scheduleOnRN) function.
+[`scheduleOnRN`](../threading/scheduleOnRN.mdx) function.
 
 <ThreadingSimulation module={ReturningCallbackSnippet} source={ReturningCallbackSource}/>
 
