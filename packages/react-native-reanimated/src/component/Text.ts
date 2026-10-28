@@ -74,6 +74,22 @@ const AnimatedTextWithRef = forwardRef<
 });
 AnimatedTextWithRef.displayName = 'AnimatedText';
 
+/**
+ * Animated version of the React Native `Text`. Its children can be shared
+ * values, and the text follows them on the UI thread without re-rendering.
+ *
+ * Pass the shared value itself as a child. Don't read its `value` during
+ * render: it is a side effect that blocks the JS thread until the value is
+ * fetched from the UI thread, and the text becomes a static snapshot that never
+ * updates.
+ *
+ * @example
+ *   // Antipattern
+ *   <Animated.Text>{sv.value}</Animated.Text>
+ *
+ *   // Correct
+ *   <Animated.Text>{sv}</Animated.Text>
+ */
 // is-tree-shakable-suppress
 export const AnimatedText = AnimatedTextWithRef as AnimatedComponentType<
   Readonly<Omit<TextProps, 'children'>>,
