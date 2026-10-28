@@ -25,6 +25,8 @@ const BBExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/BBExample').default as React.FC
   );
+const BatteryBenchmarkExample: React.FC = () =>
+  React.createElement(require('./BatteryBenchmark').default as React.FC);
 const BokehExample: React.FC = () =>
   React.createElement(require('./BokehExample').default as React.FC);
 const BorderRadiiExample: React.FC = () =>
@@ -368,6 +370,12 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Detach animated styles',
     section: REGRESSIONS,
     screen: DetachAnimatedStylesExample,
+  },
+  BatteryBenchmarkExample: {
+    icon: '🔋',
+    title: 'Battery benchmark',
+    section: REGRESSIONS,
+    screen: BatteryBenchmarkExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
