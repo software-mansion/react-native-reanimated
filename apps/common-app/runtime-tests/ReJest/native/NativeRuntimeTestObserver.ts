@@ -6,7 +6,15 @@ export type TextInputObservation = {
   placeholderTextColor: string | null;
 };
 
+export type TransformObservation = {
+  translateX: number;
+};
+
 export interface Spec extends TurboModule {
+  observeTransform(
+    tag: CodegenTypes.Int32
+  ): Promise<TransformObservation | null>;
+
   observeTextInput(
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;
