@@ -358,6 +358,46 @@ describe('LayoutAnimationsManager', () => {
 
       expect(callback.mock.calls).toEqual([[false]]);
     });
+
+    describe('the pending build count', () => {
+      beforeEach(() => {
+        getAnimationTimestamp.mockReturnValue(100);
+      });
+
+      test('a frame-driven start removes the build', () => {
+        const before = manager.pendingBuildCount();
+        summaryOf(40, makeConfig([]));
+        const afterBuild = manager.pendingBuildCount();
+        manager.startBuilt(12, LayoutAnimationType.LAYOUT, 40, []);
+
+        expect(afterBuild).toBe(before + 1);
+        expect(manager.pendingBuildCount()).toBe(before);
+      });
+
+      test('a release of a refused build removes the build', () => {
+        const before = manager.pendingBuildCount();
+        summaryOf(41, makeConfig([]));
+        const afterBuild = manager.pendingBuildCount();
+        manager.releaseBuilt(41);
+
+        expect(afterBuild).toBe(before + 1);
+        expect(manager.pendingBuildCount()).toBe(before);
+      });
+
+      test('a frame-driven start of a build whose builder throws removes the build', () => {
+        const before = manager.pendingBuildCount();
+        summaryOf(42, () => {
+          throw new Error('[Reanimated] builder error');
+        });
+        const afterBuild = manager.pendingBuildCount();
+
+        expect(() =>
+          manager.startBuilt(13, LayoutAnimationType.LAYOUT, 42, [])
+        ).toThrow('builder error');
+        expect(afterBuild).toBe(before + 1);
+        expect(manager.pendingBuildCount()).toBe(before);
+      });
+    });
   });
 
   describe('builds of entering presets', () => {

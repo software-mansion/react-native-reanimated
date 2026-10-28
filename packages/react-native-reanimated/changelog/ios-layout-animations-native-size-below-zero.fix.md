@@ -1,0 +1,1 @@
+Fix a view that disappears on iOS when a native layout animation takes its width or height below 0: a width or height track that can go below 0, for example an underdamped spring, now plays on the frame driver.

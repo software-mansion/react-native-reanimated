@@ -1353,6 +1353,7 @@ bool LayoutAnimationsProxy::admitsNativeEnteringStart(
 
 bool LayoutAnimationsProxy::mountsInWindow(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction)
     const {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::mountsInWindow");
   auto ancestor = node->parent.lock();
   while (ancestor && transaction.insertedTags.contains(ancestor->current.tag)) {
     if (std::strcmp(ancestor->current.componentName, ViewComponentName) != 0 ||
@@ -1366,6 +1367,7 @@ bool LayoutAnimationsProxy::mountsInWindow(const std::shared_ptr<LightNode> &nod
 }
 
 bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &start) const {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::startNativePlayback");
   const auto tag = start.tag;
   if (const auto completedView = takeCompletedLayoutAnimationView(tag)) {
     start.before = *completedView;
@@ -1581,6 +1583,7 @@ bool LayoutAnimationsProxy::transferToFrameDriver(const NativeLayoutBuildEnd &bu
 }
 
 void LayoutAnimationsProxy::completeNativeExits(const NativeLayoutBuildEnds &buildEnds) const {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::completeNativeExits");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   bool hasCompletedExit = false;
   for (const auto &buildEnd : buildEnds) {
@@ -1601,6 +1604,7 @@ void LayoutAnimationsProxy::completeNativeExits(const NativeLayoutBuildEnds &bui
 }
 
 void LayoutAnimationsProxy::surfaceDidMount(const std::optional<std::uint64_t> reportedMount) {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::surfaceDidMount");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto pulls = std::exchange(pendingPulls_, {});
   react_native_assert(
@@ -1649,6 +1653,26 @@ void LayoutAnimationsProxy::traceStartRefused(const Tag tag, const LayoutAnimati
        .transactionNumber = currentPull_.transactionNumber,
        .layoutAnimationType = toString(type)});
 }
+
+ContainerSizes LayoutAnimationsProxy::containerSizes() const {
+  ContainerSizes sizes;
+  {
+    const std::lock_guard lock(mutex);
+    sizes = commonContainerSizes();
+    sizes.insert(
+        {{"lightNodes", lightNodes_.size()},
+         {"completedExits", completedExits_.size()},
+         {"pendingTransactions", pendingTransactions_.size()},
+         {"pendingPulls", pendingPulls_.size()},
+         {"sharedElements", sharedElements_.size()},
+         {"hiddenViewTags", hiddenViewTags().size()},
+         {"nativeTracksWithoutFrameUpdate", nativeTracksWithoutFrameUpdate_.size()}});
+  }
+  if (nativeLayoutGroups_) {
+    addContainerSizes(sizes, "nativeLayoutGroups", nativeLayoutGroups_->containerSizes());
+  }
+  return sizes;
+}
 #endif
 
 void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
@@ -1657,6 +1681,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 }
 
 void LayoutAnimationsProxy::clearSurfaceState() const {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::clearSurfaceState");
   LayoutAnimationsProxyCommon::clearSurfaceState();
   completedExits_.clear();
   currentPull_ = {};
