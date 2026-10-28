@@ -74,7 +74,7 @@ const config = {
   // Set the production url of your site here
   url: 'https://docs.swmansion.com',
 
-  baseUrl: process.env.DOCS_BASE_URL ?? '/react-native-worklets/',
+  baseUrl: '/react-native-worklets/',
 
   trailingSlash: true,
 
@@ -146,9 +146,6 @@ const config = {
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
-        ...(process.env.DOCS_NOINDEX === 'true'
-          ? [{ name: 'robots', content: 'noindex, nofollow' }]
-          : []),
       ],
       navbar: {
         title: 'React Native Worklets',
