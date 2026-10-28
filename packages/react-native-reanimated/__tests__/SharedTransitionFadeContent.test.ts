@@ -1,5 +1,17 @@
+import { withTiming } from '../src/animation';
 import { logger } from '../src/common';
+import type { EntryAnimationsValues } from '../src/commonTypes';
 import { SharedTransition } from '../src/layoutReanimation';
+
+jest.mock('../src/animation', () => ({
+  ...jest.requireActual('../src/animation'),
+  withTiming: jest.fn(),
+}));
+
+function fadeInDuration(transition: SharedTransition) {
+  transition.buildContentFade()?.fadeIn({} as EntryAnimationsValues);
+  return jest.mocked(withTiming).mock.lastCall?.[1]?.duration;
+}
 
 describe('SharedTransition.fadeContent', () => {
   beforeEach(() => {
@@ -55,4 +67,33 @@ describe('SharedTransition.fadeContent', () => {
     SharedTransition.fadeContent({ fadeIn: { duration: 0 } });
     expect(logger.warn).not.toHaveBeenCalled();
   });
+
+  test('fades in over half of the transition by default', () => {
+    expect(fadeInDuration(SharedTransition.duration(400).fadeContent())).toBe(
+      200
+    );
+  });
+
+  test('fades in over a valid fadeIn.duration', () => {
+    expect(
+      fadeInDuration(
+        SharedTransition.duration(400).fadeContent({
+          fadeIn: { duration: 150 },
+        })
+      )
+    ).toBe(150);
+  });
+
+  test.each([-1, Number.POSITIVE_INFINITY, Number.NaN, '200'])(
+    'fades in over half of the transition for fadeIn.duration %p',
+    (duration) => {
+      expect(
+        fadeInDuration(
+          SharedTransition.duration(400).fadeContent({
+            fadeIn: { duration: duration as number },
+          })
+        )
+      ).toBe(200);
+    }
+  );
 });
