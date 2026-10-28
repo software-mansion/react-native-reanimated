@@ -75,20 +75,39 @@ function createUpdatePropsManager() {
 
   let flushPending = false;
 
-  const processViewUpdates = (tag: number, updates: PropUpdates) =>
-    Object.entries(updates).reduce<{
-      nativePropUpdates?: PropUpdates;
-      jsPropUpdates?: PropUpdates;
-    }>((acc, [propName, value]) => {
-      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
-        acc.jsPropUpdates ??= {};
-        acc.jsPropUpdates[propName] = value;
-      } else {
-        acc.nativePropUpdates ??= {};
-        acc.nativePropUpdates[propName] = value;
+  const processViewUpdates = (
+    tag: number,
+    updates: PropUpdates
+  ): {
+    nativePropUpdates?: PropUpdates;
+    jsPropUpdates?: PropUpdates;
+  } => {
+    const jsPropNames = global._tagToJSPropNamesMapping[tag];
+    if (!jsPropNames) {
+      // Fast path for the common case of a view without JS props: hand the
+      // updates over as they are instead of copying them every frame.
+      for (const _ in updates) {
+        return { nativePropUpdates: updates };
       }
-      return acc;
-    }, {});
+      return {};
+    }
+    let nativePropUpdates: Record<string, unknown> | undefined;
+    let jsPropUpdates: Record<string, unknown> | undefined;
+    for (const propName in updates) {
+      if (jsPropNames[propName]) {
+        jsPropUpdates ??= {};
+        jsPropUpdates[propName] = (updates as Record<string, unknown>)[
+          propName
+        ];
+      } else {
+        nativePropUpdates ??= {};
+        nativePropUpdates[propName] = (updates as Record<string, unknown>)[
+          propName
+        ];
+      }
+    }
+    return { nativePropUpdates, jsPropUpdates };
+  };
 
   return {
     update(
