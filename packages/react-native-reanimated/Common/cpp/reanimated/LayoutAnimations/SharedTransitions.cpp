@@ -442,7 +442,14 @@ ShadowView LayoutAnimationsProxy::ownCarrierView(
   resolveLightNodeProps(carrier);
   auto carrierView = carrier->current;
   carrierView.layoutMetrics = view.layoutMetrics;
+#ifdef ANDROID
+  auto rawProps = carrierView.props->rawProps;
+  rawProps["transform"] = view.props->rawProps.getDefault("transform", nullptr);
+  carrierView.props = componentDescriptorRegistry_->at(carrierView.componentHandle)
+                          .cloneProps(propsParserContext, carrierView.props, RawProps(std::move(rawProps)));
+#else
   overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
+#endif
   return carrierView;
 }
 
