@@ -372,6 +372,9 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
     const ShadowView &view,
     const std::shared_ptr<LightNode> &carrier,
     const PropsParserContext &propsParserContext) const {
+  react_native_assert(
+      view.componentHandle == carrier->current.componentHandle &&
+      "Shared element transitions require matching native view types");
   resolveLightNodeProps(carrier);
   auto carrierView = carrier->current;
   carrierView.layoutMetrics = view.layoutMetrics;
