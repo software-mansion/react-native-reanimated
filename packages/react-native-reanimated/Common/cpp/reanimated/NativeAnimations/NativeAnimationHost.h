@@ -67,6 +67,9 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// UI thread only.
   TraceRecorder &trace();
   void sampleTarget(Tag tag, AnimationTarget target, std::function<void(std::optional<TargetSample>)> receiver);
+  /// Gives `receiver` the sizes of the containers of the host and of the platform, on the UI thread, after the
+  /// operations that were queued before the call.
+  void containerSizes(std::function<void(ContainerSizes)> receiver);
 #endif
 
  private:
@@ -121,6 +124,9 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
       const TrackKey &key,
       TrackEnd end,
       Deliveries &deliveries);
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  ContainerSizes ownContainerSizes();
+#endif
 
   const std::shared_ptr<NativeAnimationPlatform> platform_;
 
