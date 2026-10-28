@@ -59,6 +59,7 @@ function Screens({
   targetScreen = active,
   targetMounted = true,
   targetExiting,
+  sourceMoved = false,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -67,20 +68,28 @@ function Screens({
   targetScreen?: boolean;
   targetMounted?: boolean;
   targetExiting?: FadeOut;
+  sourceMoved?: boolean;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
+  const sourceView = (
+    <Animated.View
+      key="source"
+      ref={source}
+      sharedTransitionTag="carrier"
+      sharedTransitionStyle={transition}
+      style={styles.source}>
+      <View ref={sourceChild} collapsable={false} style={styles.child} />
+    </Animated.View>
+  );
+  const sibling = (
+    <View key="sibling" collapsable={false} style={styles.sibling} />
+  );
   return (
     <View style={styles.container}>
       {!(active && removeSource) && (
         <SharedTransitionBoundary isActive={!active}>
-          <Animated.View
-            ref={source}
-            sharedTransitionTag="carrier"
-            sharedTransitionStyle={transition}
-            style={styles.source}>
-            <View ref={sourceChild} collapsable={false} style={styles.child} />
-          </Animated.View>
+          {sourceMoved ? [sourceView, sibling] : [sibling, sourceView]}
         </SharedTransitionBoundary>
       )}
       {targetScreen && (
@@ -227,6 +236,37 @@ describe('Shared transition moves a real native view', () => {
       await expectAtHome('source', 60, 1);
       expect(getTestComponent('source').getTag()).toBe(sourceTag);
     });
+
+    test(`shows the source when React moves it and removes the target ${kind} in the same update`, async () => {
+      const transition = SharedTransition.duration(4000);
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <Screens active transition={transition} targetExiting={targetExiting} />
+      );
+      await expectMoving('source');
+
+      await render(
+        <Screens
+          active
+          transition={transition}
+          targetMounted={false}
+          targetExiting={targetExiting}
+          sourceMoved
+        />
+      );
+
+      await expectAtHome('source', 60, 1);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+    });
   }
 });
 
@@ -241,4 +281,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#2277dd',
   },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
+  sibling: { width: 10, height: 10, backgroundColor: '#888888' },
 });
