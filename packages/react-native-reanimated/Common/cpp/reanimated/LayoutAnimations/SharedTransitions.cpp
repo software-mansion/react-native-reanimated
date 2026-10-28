@@ -448,8 +448,8 @@ const LayoutAnimation &LayoutAnimationsProxy::runAnimation(const std::shared_ptr
 bool LayoutAnimationsProxy::endsTheSame(const ShadowView &finalView, const ShadowView &target) const {
   const auto &finalProps = getViewProps(finalView);
   const auto &targetProps = getViewProps(target);
-  return finalView.layoutMetrics == target.layoutMetrics && finalProps.opacity == targetProps.opacity &&
-      finalProps.borderRadii == targetProps.borderRadii;
+  return finalView.layoutMetrics == target.layoutMetrics && finalProps.transform == targetProps.transform &&
+      finalProps.opacity == targetProps.opacity && finalProps.borderRadii == targetProps.borderRadii;
 }
 
 SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
