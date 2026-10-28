@@ -6,6 +6,18 @@ import type {
 } from '../commonTypes';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
+import type { CrossfadeWindow } from './crossfadeWindow';
+import { withCrossfadeWindow } from './crossfadeWindow';
+
+/**
+ * The part of the way, from 0 to 1, in which the views of a shared transition
+ * fade. The way follows the easing or spring of the transition, so it is not
+ * the same as the part of the duration. The default is the whole transition.
+ */
+export interface SharedTransitionCrossfadeWindow {
+  start?: number;
+  end?: number;
+}
 
 export class SharedTransition
   extends ComplexAnimationBuilder
@@ -13,7 +25,7 @@ export class SharedTransition
 {
   static presetName = 'SharedTransition';
 
-  crossfadeV = false;
+  crossfadeV?: CrossfadeWindow;
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -26,16 +38,31 @@ export class SharedTransition
    * target view fades in, in the same moving frame. Use it when the two views
    * have different children. Can be chained alongside other [layout animation
    * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param window - The part of the way, from 0 to 1, in which the views fade,
+   *   for example `{ end: 0.3 }` for a short fade at the start. Defaults to the
+   *   whole transition.
    */
   static crossfade<T extends typeof SharedTransition>(
-    this: T
+    this: T,
+    window?: SharedTransitionCrossfadeWindow
   ): InstanceType<T> {
     const instance = this.createInstance();
-    return instance.crossfade();
+    return instance.crossfade(window);
   }
 
-  crossfade(): this {
-    this.crossfadeV = true;
+  crossfade({
+    start = 0,
+    end = 1,
+  }: SharedTransitionCrossfadeWindow = {}): this {
+    const isProgress = (value: unknown) =>
+      typeof value === 'number' && value >= 0 && value <= 1;
+    if (!isProgress(start) || !isProgress(end) || start >= end) {
+      throw new Error(
+        `[Reanimated] The crossfade window must have 0 <= start < end <= 1, got start ${start} and end ${end}.`
+      );
+    }
+    this.crossfadeV = { start, end };
     return this;
   }
 
@@ -47,6 +74,11 @@ export class SharedTransition
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
+    const crossfade = this.crossfadeV;
+    const fadeWindow =
+      crossfade && (crossfade.start > 0 || crossfade.end < 1)
+        ? crossfade
+        : undefined;
 
     return (valuesUntyped) => {
       'worklet';
@@ -92,6 +124,15 @@ export class SharedTransition
           } else {
             logger.error(`Unexpected array in SharedTransition: ${key}`);
           }
+        } else if (key === 'opacity' && fadeWindow) {
+          animations[key] = delayFunction(
+            delay,
+            withCrossfadeWindow(
+              target as number,
+              fadeWindow,
+              animation(1, config)
+            )
+          );
         } else {
           animations[key] = animationFactory(values.target[key]);
         }

@@ -478,6 +478,12 @@ function LayoutAnimationsTest() {
     const crossfadeTransition = SharedTransition.crossfade().duration(400);
     const springCrossfadeTransition =
       SharedTransition.springify(400).crossfade();
+    const windowCrossfadeTransition = SharedTransition.crossfade({
+      start: 0,
+      end: 0.3,
+    }).duration(400);
+    // @ts-expect-error The window takes numbers.
+    SharedTransition.crossfade({ end: '30%' });
 
     // `withInitialValues` / `withTargetValues` (defined on
     // `ComplexAnimationBuilder`) must survive a static modifier chain.
@@ -507,6 +513,10 @@ function LayoutAnimationsTest() {
         <Animated.View
           sharedTransitionTag="tag"
           sharedTransitionStyle={springCrossfadeTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={windowCrossfadeTransition}
         />
       </View>
     );

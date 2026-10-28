@@ -1,4 +1,5 @@
 import { StyleSheet, View } from 'react-native';
+import type { SharedTransitionCrossfadeWindow } from 'react-native-reanimated';
 import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
@@ -22,13 +23,19 @@ import {
 const SOURCE_WIDTH = 60;
 const TARGET_WIDTH = 150;
 
-function createTransition(finished: boolean[], duration = 2000) {
+function createTransition(
+  finished: boolean[],
+  {
+    duration = 2000,
+    window,
+  }: { duration?: number; window?: SharedTransitionCrossfadeWindow } = {}
+) {
   const recordEnd = (isFinished: boolean) => {
     finished.push(isFinished);
     notify('crossfade-finished');
   };
   return SharedTransition.duration(duration)
-    .crossfade()
+    .crossfade(window)
     .withCallback((isFinished) => {
       'worklet';
       scheduleOnRN(recordEnd, isFinished);
@@ -199,7 +206,7 @@ describe('Shared transition with crossfade', () => {
 
   test('keeps the source on screen when the navigation goes back and React removes the target', async () => {
     const finished: boolean[] = [];
-    const transition = createTransition(finished, 4000);
+    const transition = createTransition(finished, { duration: 4000 });
     await render(<Screens showTarget={false} transition={transition} />);
     await waitForFrames();
 
@@ -261,6 +268,31 @@ describe('Shared transition with crossfade', () => {
       expect(getTestComponent('source').getTag()).toBe(sourceTag);
     });
   }
+
+  test('ends the fade at the end of its window while the views still move', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(finished, { window: { end: 0.25 } });
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await expectEventually(async () => {
+      const endpoints = await mountedEndpoints();
+      return (
+        !!endpoints &&
+        isBetween(
+          endpoints.source.width,
+          SOURCE_WIDTH + 30,
+          TARGET_WIDTH - 15
+        ) &&
+        endpoints.source.opacity < 0.01 &&
+        endpoints.target.opacity > 0.99
+      );
+    }).toBe(true);
+
+    await waitForNotification('crossfade-finished');
+    await expectAtHome('target', TARGET_WIDTH, 1);
+  });
 
   test('moves only the target when React removes the source in the same update', async () => {
     const finished: boolean[] = [];

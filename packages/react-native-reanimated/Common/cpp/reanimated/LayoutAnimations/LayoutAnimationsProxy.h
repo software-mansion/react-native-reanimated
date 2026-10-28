@@ -54,7 +54,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
-  bool crossfade = false;
+  std::optional<SharedTransitionCrossfade> crossfade;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
