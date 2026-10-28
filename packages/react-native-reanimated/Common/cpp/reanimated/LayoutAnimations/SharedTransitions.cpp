@@ -4,6 +4,7 @@
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
@@ -258,8 +259,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
-        const auto &run = startSharedTransitionRun(
+        auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
+        run.targetEndView = after;
 
         startProgressTransition(
             run.carrier->current.tag,
@@ -430,6 +432,12 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   carrierView.layoutMetrics = view.layoutMetrics;
   carrierView.props = view.props;
   return carrierView;
+}
+
+bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &targetView) const {
+  const auto &previousView = run.targetEndView;
+  return previousView.layoutMetrics != targetView.layoutMetrics ||
+      PropsDiffer::hasAnimatedChanges(getViewProps(previousView), getViewProps(targetView));
 }
 
 // The carrier shows its own props, so that its content, for example a video player or an image
@@ -735,8 +743,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      const auto &run = startSharedTransitionRun(
+      auto &run = startSharedTransitionRun(
           before, sharedTag, collectedTransition.nodes, false, transaction, propsParserContext);
+      run.targetEndView = after;
 
       startSharedTransition(
           run.carrier->current.tag,
@@ -776,16 +785,17 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       run.target = afterNode;
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
+      const bool targetChanged = targetEndChanged(run, after);
+      run.targetEndView = after;
       if (hasPendingLayoutAnimation(carrierTag)) {
         updateLayoutAnimationTarget(
             carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
         continue;
       }
-      const auto &layoutAnimation = carrierAnimation(run);
-      if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
+      if (targetChanged) {
         startSharedTransition(
             carrierTag,
-            layoutAnimation.currentView,
+            carrierAnimation(run).currentView,
             carrierAfter,
             ownCarrierView(after, run.carrier, propsParserContext).props,
             config);
