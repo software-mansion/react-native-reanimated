@@ -23,7 +23,7 @@ For animating `react-native-svg` components, see [Animating SVG](https://docs.sw
 | borderBottomStartRadius |              |              |  |
 | borderBottomWidth       |              |              |  |
 | borderColor             |              |              |  |
-| borderCurve             |               |               |   |
+| borderCurve             |               |  |   |
 | borderEndColor          |              |              |  |
 | borderEndEndRadius      |              |              |  |
 | borderEndStartRadius    |              |              |  |
@@ -102,7 +102,7 @@ For animating `react-native-svg` components, see [Animating SVG](https://docs.sw
 | minHeight               |              |              |  |
 | minWidth                |              |              |  |
 | mixBlendMode            |              |              |  |
-| objectFit               |               |               |   |
+| objectFit               |  |  |   |
 | opacity                 |              |              |  |
 | outlineColor            |              |              |  |
 | outlineOffset           |              |              |  |
@@ -155,9 +155,9 @@ For animating `react-native-svg` components, see [Animating SVG](https://docs.sw
 | translateX              |               |               |   |
 | translateY              |               |               |   |
 | userSelect              |               |               |  |
-| verticalAlign           |               |               |  |
+| verticalAlign           |  |               |  |
 | width                   |              |              |  |
-| writingDirection        |               |               |   |
+| writingDirection        |               |  |   |
 | zIndex                  |              |              |  |
 
 ## Remarks
