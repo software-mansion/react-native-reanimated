@@ -3,9 +3,11 @@ import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
+  makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import {
   callTracker,
@@ -173,6 +175,24 @@ async function expectMovingWithChildOpacity(
   }).toBe(true);
 }
 
+// Records the highest opacity on screen of a view on each UI frame until the view is unmounted.
+function recordHighestOpacity(tag: number) {
+  const highest = makeMutable(0);
+  scheduleOnUI(() => {
+    'worklet';
+    const record = () => {
+      const opacity = global._obtainMountedViewProps(tag, true)?.opacity;
+      if (opacity === undefined) {
+        return;
+      }
+      highest.value = Math.max(highest.value, opacity);
+      requestAnimationFrame(record);
+    };
+    requestAnimationFrame(record);
+  });
+  return highest;
+}
+
 async function expectOpacity(name: string, opacity: number) {
   await expectEventually(async () => {
     const props = await mountedProps(name);
@@ -267,13 +287,14 @@ describe('Shared transition with fadeContent', () => {
     ).toBeCalledUI(1);
   });
 
-  test('removes a target child that React removes while its entering animation waits', async () => {
+  test('keeps hidden a target child that React removes while its entering animation waits', async () => {
     await render(<ScreensWithEnteringChild showTarget={false} childExits />);
     await waitForFrames();
 
     await render(<ScreensWithEnteringChild showTarget childExits />);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     const childTag = getTestComponent('enteringChild').getTag();
+    const highestChildOpacity = recordHighestOpacity(childTag);
     await render(
       <ScreensWithEnteringChild showTarget showChild={false} childExits />
     );
@@ -282,6 +303,7 @@ describe('Shared transition with fadeContent', () => {
     await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
       false
     );
+    expect(highestChildOpacity.value).toBe(0);
     expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
   });
 
