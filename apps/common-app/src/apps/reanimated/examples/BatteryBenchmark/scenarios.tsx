@@ -368,6 +368,55 @@ function AnimatedPropsTextItem({ size }: { size: number }) {
   );
 }
 
+/** `Animated.Text` with a shared value child that changes every frame. */
+function AnimatedTextItem({ size }: { size: number }) {
+  const sv = useSharedValue(0);
+  useEffect(() => {
+    sv.value = withRepeat(withTiming(100, linear), -1, true);
+  }, [sv]);
+  const text = useDerivedValue(() => `${Math.round(sv.value)}`);
+  return (
+    <Animated.Text
+      style={[boxStyle(size), styles.text, { fontSize: size * 0.4 }]}>
+      {text}
+    </Animated.Text>
+  );
+}
+
+/** Same as above, but the displayed text changes only 10 times per second. */
+function AnimatedTextSlowItem({ size }: { size: number }) {
+  const sv = useSharedValue(0);
+  useEffect(() => {
+    sv.value = withRepeat(withTiming(100, linear), -1, true);
+  }, [sv]);
+  const text = useDerivedValue(() => `${Math.round(sv.value / 10) * 10}`);
+  return (
+    <Animated.Text
+      style={[boxStyle(size), styles.text, { fontSize: size * 0.4 }]}>
+      {text}
+    </Animated.Text>
+  );
+}
+
+/** TextInput counter like `props-text`, updated only 10 times per second. */
+function AnimatedPropsTextSlowItem({ size }: { size: number }) {
+  const sv = useSharedValue(0);
+  useEffect(() => {
+    sv.value = withRepeat(withTiming(100, linear), -1, true);
+  }, [sv]);
+  const props = useAnimatedProps(() => {
+    const text = `${Math.round(sv.value / 10) * 10}`;
+    return { text, defaultValue: text } as object;
+  });
+  return (
+    <AnimatedTextInput
+      animatedProps={props}
+      editable={false}
+      style={[boxStyle(size), styles.text, { fontSize: size * 0.4 }]}
+    />
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Layout animations
 // ---------------------------------------------------------------------------
@@ -619,6 +668,18 @@ export const SCENARIOS: Record<string, Scenario> = {
   'props-text': {
     description: 'useAnimatedProps TextInput text counter',
     component: perItem(AnimatedPropsTextItem),
+  },
+  'props-text-slow': {
+    description: 'useAnimatedProps TextInput text, changes 10x per second',
+    component: perItem(AnimatedPropsTextSlowItem),
+  },
+  'animated-text': {
+    description: 'Animated.Text with a shared value child',
+    component: perItem(AnimatedTextItem),
+  },
+  'animated-text-slow': {
+    description: 'Animated.Text shared value child, changes 10x per second',
+    component: perItem(AnimatedTextSlowItem),
   },
   'layout-enter-exit': {
     description: 'FadeIn/FadeOut on half the boxes every second',
