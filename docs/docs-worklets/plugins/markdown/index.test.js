@@ -42,7 +42,14 @@ test('nested simulations and showcase variants keep their labels and examples', 
   const showcase = await convertDoc('docs/getting-started/getting-started.mdx');
   assert.match(showcase, /Without Worklets\n\n```js/);
   assert.match(showcase, /With Worklets\n\n```js/);
-  assert.match(showcase, /React Native Community CLI/);
+  assert.doesNotMatch(showcase, /React Native Community CLI/);
+  const installation = await convertDoc(
+    'docs/getting-started/installation.mdx'
+  );
+  assert.match(installation, /React Native Community CLI/);
+  assert.match(installation, /npm install react-native-worklets/);
+  assert.match(installation, /yarn add react-native-worklets/);
+  assert.doesNotMatch(installation, /Without Worklets|With Worklets/);
 });
 
 test('API exports retain call and platform support tables', async () => {
@@ -107,8 +114,14 @@ test('exports and index follow resolved routes, custom slugs, versions and baseU
     },
     {
       source: '@site/docs/getting-started/getting-started.mdx',
-      title: 'Getting started',
+      title: 'Introduction',
       permalink: `${baseUrl}docs/`,
+      version: 'current',
+    },
+    {
+      source: '@site/docs/getting-started/installation.mdx',
+      title: 'Installation',
+      permalink: `${baseUrl}docs/getting-started/installation`,
       version: 'current',
     },
     {

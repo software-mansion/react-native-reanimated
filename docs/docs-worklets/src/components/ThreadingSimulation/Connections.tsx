@@ -52,7 +52,7 @@ export default function Connections({
   transitioning,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const markerId = useId().replace(/:/g, '');
+  const railsId = useId().replace(/:/g, '');
   const [layout, setLayout] = useState<{
     width: number;
     height: number;
@@ -409,7 +409,7 @@ export default function Connections({
   return (
     <svg ref={svgRef} className={styles.connections} aria-hidden="true">
       <defs>
-        <mask id={`${markerId}-rails`}>
+        <mask id={`${railsId}-rails`}>
           <rect
             x="-8"
             y="-8"
@@ -428,23 +428,8 @@ export default function Connections({
             />
           ))}
         </mask>
-        <marker
-          id={markerId}
-          viewBox="0 0 8 8"
-          refX="7"
-          refY="4"
-          markerWidth="5"
-          markerHeight="5"
-          orient="auto-start-reverse">
-          <path
-            d="M1 1 L7 4 L1 7"
-            fill="none"
-            stroke="context-stroke"
-            strokeWidth="1.5"
-          />
-        </marker>
       </defs>
-      <g mask={`url(#${markerId}-rails)`} className={styles.railGuides}>
+      <g mask={`url(#${railsId}-rails)`} className={styles.railGuides}>
         {layout.rails.map((x) => (
           <line key={x} x1={x} x2={x} y1={0} y2={layout.height} />
         ))}
@@ -453,7 +438,6 @@ export default function Connections({
         <Connection
           key={wire.id}
           {...wire}
-          markerId={markerId}
           playing={playing}
           tick={tick}
           tickMs={tickMs}

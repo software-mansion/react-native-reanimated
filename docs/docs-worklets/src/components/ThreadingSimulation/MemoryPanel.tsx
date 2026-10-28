@@ -86,7 +86,9 @@ export default function MemoryPanel({
               className={clsx(
                 styles.box,
                 styles.vm,
-                runtimeClass(executorDescriptor ?? runtime),
+                running &&
+                  executorDescriptor !== undefined &&
+                  runtimeClass(executorDescriptor),
                 running && styles.boxActive
               )}>
               <div className={styles.vmHeader}>
@@ -99,7 +101,13 @@ export default function MemoryPanel({
                     : `Owner: ${threadName(executorDescriptor)}`}
                 </span>
               </div>
-              <div className={styles.vmSection}>
+              <div
+                className={clsx(
+                  styles.vmSection,
+                  styles.vmLoop,
+                  runtimeClass(runtime),
+                  running && !paused && styles.vmLoopActive
+                )}>
                 <div className={styles.vmSectionHeader}>
                   <span className={styles.vmSectionTitle}>
                     {badgeName(runtime.id)} event loop

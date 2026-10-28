@@ -12,7 +12,7 @@ function sectionOf(sidebar, docsSidebars) {
   const match = Object.entries(docsSidebars).find(
     ([, items]) => items === sidebar || sameItems(items, sidebar)
   );
-  return match === undefined ? 'guides' : match[0];
+  return match?.[0] === 'api' ? 'api' : 'guides';
 }
 
 function sameItems(a, b) {
@@ -49,11 +49,10 @@ export default function DocSidebarWrapper(props) {
     'memory/makeShareableCloneOnUIRecursive',
   ];
 
-  const docsRoot = useBaseUrl('/docs/');
   const { docsSidebars } = useDocsVersion();
-  const hasSections = 'guides' in docsSidebars && 'api' in docsSidebars;
-  const onStartPage =
-    (props.path ?? '').replace(/\/$/, '') === docsRoot.replace(/\/$/, '');
+  const hasSections =
+    'gettingStarted' in docsSidebars &&
+    SECTIONS.every(({ id }) => id in docsSidebars);
   const docSection = sectionOf(props.sidebar, docsSidebars);
   const [section, setSection] = useState(docSection);
 
@@ -77,34 +76,34 @@ export default function DocSidebarWrapper(props) {
     if (!hasSections) {
       return props.sidebar;
     }
-    const entries = [
+    const gettingStarted = {
+      type: 'category',
+      label: 'Getting started',
+      collapsible: false,
+      collapsed: false,
+      items: docsSidebars.gettingStarted,
+    };
+    const items =
+      section === 'guides'
+        ? [gettingStarted, ...docsSidebars.guides]
+        : docsSidebars.api;
+
+    return [
       {
-        type: 'link',
-        label: 'Getting started',
-        href: docsRoot,
-        className: onStartPage
-          ? 'sidebar-section sidebar-section--active'
-          : 'sidebar-section',
-      },
-      ...SECTIONS.map(({ id, label }) => ({
         type: 'html',
-        value: `<button type="button" class="sidebar-section-button" data-sidebar-section="${id}">${label}</button>`,
-        className:
-          section === id
-            ? 'sidebar-section sidebar-section--active'
-            : 'sidebar-section',
-      })),
-      { type: 'html', value: '<hr />', className: 'sidebar-section-divider' },
+        className: 'sidebar-sections',
+        value: `<div role="group" aria-label="Documentation section">${SECTIONS.map(
+          ({ id, label }) =>
+            `<button type="button" data-sidebar-section="${id}" aria-pressed="${section === id}">${label}</button>`
+        ).join('')}</div>`,
+      },
+      ...items.map((item) =>
+        item.type === 'category'
+          ? { ...item, collapsible: false, collapsed: false }
+          : item
+      ),
     ];
-    return [...entries, ...docsSidebars[section]];
-  }, [
-    hasSections,
-    props.sidebar,
-    docsSidebars,
-    section,
-    onStartPage,
-    docsRoot,
-  ]);
+  }, [hasSections, props.sidebar, docsSidebars, section]);
 
   return (
     <DocSidebar

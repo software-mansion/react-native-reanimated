@@ -32,6 +32,7 @@ describe('reference examples', () => {
   for (const [name, expected] of Object.entries({
     createWorker: [],
     nativeSchedule: ['[rn] true'],
+    nativeSerializable: ['[rn] Worker copy: 20', '[rn] RN original: 10'],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
     apiRegisterCustomSerializable: [
@@ -149,6 +150,40 @@ describe('reference examples', () => {
         .nativeWorkFinished,
       'true'
     );
+  });
+
+  it('keeps the Serializable immutable when a native callback changes the worker copy', () => {
+    const snapshots = runExample('nativeSerializable');
+    const workerGlobals = (snapshot: (typeof snapshots)[number]) =>
+      snapshot.cores.find((core) => core.id === 'worker:native-example')
+        ?.globals;
+    const received = snapshots.find(
+      (snapshot) => workerGlobals(snapshot)?.nativeSettings === '{"volume":10}'
+    )!;
+    const changed = snapshots.find(
+      (snapshot) => workerGlobals(snapshot)?.nativeSettings === '{"volume":20}'
+    )!;
+    assert.ok(received);
+    assert.ok(changed);
+    assert.ok(changed.tick > received.tick);
+    assert.ok(
+      snapshots.some((snapshot) =>
+        snapshot.cores.some(
+          (core) =>
+            core.id === 'worker:native-example' &&
+            core.nativeFrame &&
+            core.job?.startsWith('applyNativeSettings(')
+        )
+      )
+    );
+    assert.deepEqual(
+      snapshots.at(-1)!.memory.map((cell) => [cell.kind, cell.value]),
+      [['serializable', '{"volume":10}']]
+    );
+    assert.deepEqual(formatLogs(snapshots), [
+      '[rn] Worker copy: 20',
+      '[rn] RN original: 10',
+    ]);
   });
 
   it('initializes the new runtime on the creating thread before returning its handle', () => {

@@ -5,6 +5,10 @@
   --swm-logo-title-width: 120px;
 }
 
+:root.docs-version-current {
+  --doc-sidebar-width: 280px !important;
+}
+
 table {
   display: table;
   width: 100%;
@@ -242,47 +246,117 @@ html[data-theme='dark'] {
   color-scheme: dark;
 }
 
-.theme-doc-sidebar-menu .sidebar-section,
-.theme-doc-sidebar-menu .sidebar-section-divider {
+.docs-version-current .menu:has(> .theme-doc-sidebar-menu) {
+  padding: 12px 16px 24px;
+}
+
+.docs-version-current .navbar-sidebar__items {
+  padding-left: 0;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list {
+  margin: 0;
+  padding-left: 0;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list-item {
   width: 100%;
-  align-self: stretch;
   margin: 0;
 }
 
-.theme-doc-sidebar-menu .sidebar-section > .menu__link,
-.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button {
-  display: block;
-  width: calc(100% + 8px);
-  margin: 0 0 4px -20px;
-  padding: 6px 12px 6px 20px;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  font: inherit;
-  font-weight: 700;
-  font-size: 1rem;
-  line-height: 1.25;
-  text-align: left;
-  color: var(--ifm-font-color-base);
-  cursor: pointer;
-  transition: color 120ms ease;
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .theme-doc-sidebar-item-category-level-1 {
+  margin-bottom: 24px;
 }
 
-.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button:hover {
+.docs-version-current .theme-doc-sidebar-menu .menu__link {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: none;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 22px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list-item-collapsible {
+  margin-bottom: 4px;
+  background: none;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .menu__list-item-collapsible
+  > .menu__link {
+  color: var(--ifm-font-color-base);
+  font-weight: 600;
+}
+
+.docs-version-current .theme-doc-sidebar-menu a.menu__link[href]:hover,
+.docs-version-current
+  .theme-doc-sidebar-menu
+  a.menu__link[aria-current='page'] {
   color: var(--ifm-link-color);
 }
 
-.theme-doc-sidebar-menu .menu__list-item.sidebar-section--active > a.menu__link,
-.theme-doc-sidebar-menu
-  .menu__list-item.sidebar-section--active
-  > a.menu__link:hover,
-.theme-doc-sidebar-menu .sidebar-section--active > .sidebar-section-button {
-  color: var(--ifm-link-color) !important;
-  background-color: color-mix(in srgb, var(--ifm-link-color) 14%, transparent);
+.docs-version-current
+  .theme-doc-sidebar-menu
+  a.menu__link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateY(-50%);
 }
 
-.theme-doc-sidebar-menu .sidebar-section-divider {
-  margin: 8px 0 12px;
+.theme-doc-sidebar-menu .sidebar-sections {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.sidebar-sections > div {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.sidebar-sections button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ifm-color-content-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.sidebar-sections button:hover,
+.sidebar-sections button[aria-pressed='true'] {
+  color: var(--ifm-link-color);
+}
+
+.sidebar-sections button[aria-pressed='true'] {
+  border-bottom-color: currentColor;
+}
+
+.sidebar-sections button:focus-visible,
+.docs-version-current .theme-doc-sidebar-menu a:focus-visible {
+  outline: 2px solid var(--ifm-link-color);
+  outline-offset: 2px;
 }
 
 /* A simulation may extend outside the article, but never outside the page.
@@ -404,14 +478,6 @@ html:has([data-simulation-fullscreen]) {
     > .col:has(.theme-doc-toc-desktop) {
     transition: none !important;
   }
-}
-
-.theme-doc-sidebar-menu .sidebar-section-divider > hr {
-  display: block;
-  height: 1px;
-  margin: 0 12px 0 -20px;
-  border: none;
-  background-color: var(--ifm-color-emphasis-300);
 }
 
 :not(pre) > code {

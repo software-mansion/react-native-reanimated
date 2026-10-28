@@ -45,10 +45,9 @@ export default function ThreadingShowcase({
   single,
   worklets,
   durationTicks = 2137,
-  tickMs: initialTickMs = 100,
+  tickMs = 100,
 }: ThreadingShowcaseProps) {
   const [enabled, setEnabled] = useState(false);
-  const [tickMs, setTickMs] = useState(initialTickMs);
   const [codeOpen, setCodeOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const variant = enabled ? worklets : single;
@@ -88,6 +87,7 @@ export default function ThreadingShowcase({
         pressHandler={enabled ? 'onPress' : 'handlePress'}
         screen={INITIAL_SCREEN}
         alwaysOn
+        showControls={false}
         collapsibleCode
         codeColumns={2}
         boilerplateToggle={false}
@@ -97,7 +97,6 @@ export default function ThreadingShowcase({
         onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}
         tickMs={tickMs}
-        onTickMsChange={setTickMs}
       />
     </div>
   );

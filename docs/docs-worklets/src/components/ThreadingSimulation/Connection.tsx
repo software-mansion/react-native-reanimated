@@ -18,7 +18,6 @@ interface Props {
   active: boolean;
   queued?: boolean;
   exitAt?: number;
-  markerId: string;
   playing: boolean;
   tick: number;
   tickMs: number;
@@ -35,7 +34,6 @@ export default function Connection({
   active,
   queued,
   exitAt,
-  markerId,
   playing,
   tick,
   tickMs,
@@ -196,14 +194,9 @@ export default function Connection({
       <path
         ref={ghostRef}
         className={clsx(styles.connectionTrack, styles.connectionGhost)}
-        markerEnd={`url(#${markerId})`}
       />
       <g ref={groupRef}>
-        <path
-          ref={trackRef}
-          className={styles.connectionTrack}
-          markerEnd={`url(#${markerId})`}
-        />
+        <path ref={trackRef} className={styles.connectionTrack} />
         <path ref={flowRef} className={styles.connectionFlow} />
         <circle ref={pulseRef} r="3" className={styles.connectionPulse} />
       </g>

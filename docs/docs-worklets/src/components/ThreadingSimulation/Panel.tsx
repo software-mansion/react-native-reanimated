@@ -8,6 +8,7 @@ interface PanelProps {
   title: string;
   className?: string;
   help?: string;
+  headerActions?: React.ReactNode;
   connectionNode?: string;
   codePanel?: boolean;
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export default function Panel({
   title,
   className,
   help,
+  headerActions,
   connectionNode,
   codePanel,
   children,
@@ -29,6 +31,7 @@ export default function Panel({
       <header className={styles.panelHeader} data-sim-header>
         <h3 className={styles.panelTitle}>{title}</h3>
         {help !== undefined && <PanelHelp title={title}>{help}</PanelHelp>}
+        {headerActions}
       </header>
       <div className={styles.panelBody} data-sim-node={connectionNode}>
         {children}

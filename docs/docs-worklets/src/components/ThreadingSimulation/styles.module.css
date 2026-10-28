@@ -575,15 +575,9 @@
   background: var(--sim-bg);
   color: var(--ifm-color-primary);
 }
-.codeFooter {
-  display: flex;
-  justify-content: flex-end;
-  padding: 4px 12px;
-}
-.codeFooter:empty {
-  display: none;
-}
 .boilerplateToggle {
+  min-height: 32px;
+  padding: 4px 6px;
   border-color: transparent;
   border-radius: 0;
   background: transparent;
@@ -673,9 +667,39 @@
   opacity: 1;
   transition-delay: 320ms;
 }
-.simulationBody > .consolePanel {
+.disclosureWorkspace > .consolePanel {
   position: relative;
   z-index: 3;
+  margin-top: 16px;
+}
+@container simulation (min-width: 820px) {
+  .container[data-simulation-fullscreen='true'] .disclosureWorkspace {
+    grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+    column-gap: var(--sim-rail-gap);
+    align-items: start;
+  }
+  .container[data-simulation-fullscreen='true']
+    .disclosureWorkspace
+    > .areaCode {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .container[data-simulation-fullscreen='true']
+    .disclosureWorkspace
+    > .consolePanel {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+  }
+  .container[data-simulation-fullscreen='true']
+    .disclosureWorkspace
+    > :is(.disclosureToggle, .disclosure) {
+    grid-column: 1 / -1;
+  }
+  .container[data-simulation-fullscreen='true']
+    .disclosureWorkspace:not(:has(> .consolePanel)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @container simulation (max-width: 499px) {
   .disclosureToggle {
@@ -875,7 +899,6 @@
   gap: 0;
   min-height: 148px;
   padding: 0;
-  border-top: 2px solid var(--rt-color);
   border-radius: 0;
   background: var(--sim-idle-fill);
   transition:
@@ -892,7 +915,7 @@
   align-items: flex-start;
   gap: 4px;
   padding: 10px 12px;
-  background: color-mix(in srgb, var(--rt-fill) 70%, var(--sim-panel));
+  background: var(--sim-panel);
   transition: background-color 180ms ease;
 }
 .vm.boxActive .vmHeader {
@@ -912,6 +935,14 @@
   gap: 6px;
   padding: 10px 12px;
   border-top: 1px solid var(--sim-border);
+}
+.vmLoop {
+  border-top-color: var(--rt-color);
+  background: color-mix(in srgb, var(--rt-fill) 45%, var(--sim-idle-fill));
+  transition: background-color 180ms ease;
+}
+.vmLoopActive {
+  background: var(--rt-fill);
 }
 .vmSectionHeader {
   display: flex;

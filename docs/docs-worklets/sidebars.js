@@ -1,13 +1,16 @@
 // @ts-check
 
 /**
- * Two lists, Guides and API Reference. The DocSidebar theme wrapper adds the
- * three section entries (Getting started, Guides, API Reference) above the list
- * and lets the last two switch which list is shown.
+ * Three lists: Getting started, Learn and API Reference. The DocSidebar theme
+ * wrapper groups Getting started with Learn and switches to API Reference.
  */
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
+  gettingStarted: [
+    'getting-started/getting-started',
+    'getting-started/installation',
+  ],
   guides: [
     {
       type: 'category',

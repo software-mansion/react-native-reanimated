@@ -29,6 +29,7 @@ interface ThreadingSimulationProps {
   title?: string;
   defaultOpen?: boolean;
   alwaysOn?: boolean;
+  showControls?: boolean;
   bundleMode?: boolean;
   uiRuntime?: boolean;
   phone?: boolean;
@@ -71,6 +72,7 @@ export default function ThreadingSimulation({
   title,
   defaultOpen = false,
   alwaysOn = false,
+  showControls = true,
   bundleMode = false,
   uiRuntime = true,
   phone = false,
@@ -184,7 +186,7 @@ export default function ThreadingSimulation({
       blockEnds={simulation.blockEnds}
       history={history}
       tickMs={tickMs}
-      columns={codeColumns}
+      columns={alwaysOn ? codeColumns : 1}
     />
   );
   const boilerplateButton = boilerplateToggle && (
@@ -202,12 +204,12 @@ export default function ThreadingSimulation({
       title="Code"
       className={styles.areaCode}
       codePanel
+      headerActions={boilerplateButton}
       help="Colours connect each executing thread to its current code line. Recently executed lines fade over the next three ticks.">
       {code}
-      <div className={styles.codeFooter}>{boilerplateButton}</div>
     </Panel>
   );
-  const toolbar = (
+  const toolbar = showControls && (
     <div
       className={styles.toolbar}
       data-sim-obstacle
@@ -451,6 +453,7 @@ export default function ThreadingSimulation({
     <details
       className={styles.consolePanel}
       data-sim-obstacle
+      hidden={!open}
       open={consoleOpen}
       onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
       <summary className={styles.consoleSummary}>
@@ -549,9 +552,9 @@ export default function ThreadingSimulation({
                   {activity}
                   {legend}
                   {machine}
-                  {consolePanel}
                 </div>
               </Disclosure>
+              {consolePanel}
               {hasOpened && connections}
             </div>
           )}
