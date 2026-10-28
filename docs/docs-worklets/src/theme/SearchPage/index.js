@@ -96,7 +96,7 @@ function Results({ query, version, versions }) {
             <article className={styles.result} key={hit.objectID}>
               <h2>
                 <Link to={resultUrl(hit.url, siteConfig.baseUrl)}>{title}</Link>
-                {label && <span className={styles.version}>v{label}</span>}
+                {label && <span className={styles.version}>{label}</span>}
               </h2>
               <p className={styles.breadcrumbs}>{headings.join(' › ')}</p>
               {summary && <p>{resultText(summary)}</p>}

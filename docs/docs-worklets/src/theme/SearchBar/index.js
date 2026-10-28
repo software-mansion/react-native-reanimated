@@ -53,7 +53,7 @@ export default function SearchBar() {
             className="worklets-search-hit"
             to={resultUrl(hit.url, siteConfig.baseUrl)}>
             {children}
-            {label && <span className="worklets-search-version">v{label}</span>}
+            {label && <span className="worklets-search-version">{label}</span>}
           </Link>
         );
       }}
