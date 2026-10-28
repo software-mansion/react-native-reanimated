@@ -1,10 +1,10 @@
 'use strict';
 import type {
-  EntryExitAnimationFunction,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { SharedTransitionContentFade } from './layoutReanimation/SharedTransition';
 
 /**
  * Lets you update the current configuration of the layout animation or shared
@@ -28,7 +28,7 @@ export const updateLayoutAnimations: (
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFadeIn?: EntryExitAnimationFunction
+  sharedTransitionContentFade?: SharedTransitionContentFade
 ) => void = () => {
   // no-op
 };

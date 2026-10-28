@@ -45,7 +45,7 @@ struct PendingNodeAnimation {
 // The children of the carrier fade with the progress of the run. When the carrier lands, the children
 // of the target fade in.
 struct ContentFade {
-  std::shared_ptr<Serializable> fadeIn;
+  SharedTransitionContentFade options;
   ContentOpacityRange range;
   double mountedOpacity = 1;
   std::unordered_map<Tag, std::shared_ptr<LightNode>> fadedChildren;
