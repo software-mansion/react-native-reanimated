@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
   FadeIn,
   FadeOut,
   LinearTransition,
@@ -20,6 +21,7 @@ import {
   render,
   test,
   useTestRef,
+  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 
@@ -35,10 +37,12 @@ function Endpoint({
   name,
   active,
   style,
+  sharedTransition = transition,
 }: {
   name: 'source' | 'target';
   active: boolean;
   style: object;
+  sharedTransition?: SharedTransition;
 }) {
   const ref = useTestRef(name);
   const childRef = useTestRef(`${name}Child`);
@@ -47,7 +51,7 @@ function Endpoint({
       <Animated.View
         ref={ref}
         sharedTransitionTag="fadeContent"
-        sharedTransitionStyle={transition}
+        sharedTransitionStyle={sharedTransition}
         style={style}>
         <View ref={childRef} collapsable={false} style={styles.child} />
       </Animated.View>
@@ -59,16 +63,28 @@ function Endpoint({
 function Screens({
   showTarget,
   removeSource = false,
+  sharedTransition = transition,
 }: {
   showTarget: boolean;
   removeSource?: boolean;
+  sharedTransition?: SharedTransition;
 }) {
   return (
     <View style={styles.container}>
       {!(showTarget && removeSource) && (
-        <Endpoint name="source" active={!showTarget} style={styles.source} />
+        <Endpoint
+          name="source"
+          active={!showTarget}
+          style={styles.source}
+          sharedTransition={sharedTransition}
+        />
       )}
-      <Endpoint name="target" active={showTarget} style={styles.target} />
+      <Endpoint
+        name="target"
+        active={showTarget}
+        style={styles.target}
+        sharedTransition={sharedTransition}
+      />
     </View>
   );
 }
@@ -317,6 +333,67 @@ describe('Shared transition with fadeContent', () => {
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
 
     await expectOpacity('target', 1);
+    await expectOpacity('targetChild', CHILD_OPACITY);
+  });
+
+  test('ends the fade-out at fadeOut.end of the move', async () => {
+    const earlyFadeOut = SharedTransition.duration(3000)
+      .easing(Easing.linear)
+      .fadeContent({ fadeOut: { end: 0.4 } });
+    await render(
+      <Screens showTarget={false} sharedTransition={earlyFadeOut} />
+    );
+    await waitForFrames();
+
+    await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+    await expectEventually(async () => {
+      const [view, child] = await Promise.all([
+        mountedProps('source'),
+        mountedProps('sourceChild'),
+      ]);
+      // A width below this is less than 20% of the move.
+      const earlyWidth = SOURCE_WIDTH + 0.2 * (TARGET_WIDTH - SOURCE_WIDTH);
+      return (
+        !!view &&
+        !!child &&
+        isBetween(view.width, SOURCE_WIDTH + 2, earlyWidth) &&
+        isBetween(child.opacity, 0.1, CHILD_OPACITY - 0.05)
+      );
+    }).toBe(true);
+    await expectEventually(async () => {
+      const [view, child] = await Promise.all([
+        mountedProps('source'),
+        mountedProps('sourceChild'),
+      ]);
+      // A width above this is more than 50% of the move.
+      const midWidth = SOURCE_WIDTH + 0.5 * (TARGET_WIDTH - SOURCE_WIDTH);
+      return (
+        !!view &&
+        !!child &&
+        isBetween(view.width, midWidth, TARGET_WIDTH - 5) &&
+        child.opacity < 0.01
+      );
+    }).toBe(true);
+
+    await expectOpacity('targetChild', CHILD_OPACITY);
+  });
+
+  test('fades the children of the target in over fadeIn.duration', async () => {
+    const slowFadeIn = SharedTransition.duration(600).fadeContent({
+      fadeIn: { duration: 3000 },
+    });
+    await render(<Screens showTarget={false} sharedTransition={slowFadeIn} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget sharedTransition={slowFadeIn} />);
+    await expectOpacity('target', 1);
+    // The default fade-in lasts 300 ms here.
+    await wait(1000);
+    const child = await mountedProps('targetChild');
+    expect(
+      !!child && isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
+    ).toBe(true);
+
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 });
