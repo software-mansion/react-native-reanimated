@@ -1212,7 +1212,7 @@ void LayoutAnimationsProxy::restoreFadedChildren(
 
 // An entering animation of a target child waits until the run lands. It starts when the child is no
 // longer target content of a run that fades, for example after the run ends without a landing, and
-// no layout animation owns the child.
+// no layout animation owns the child. A child that React removes before then stays hidden until it is gone.
 void LayoutAnimationsProxy::holdTargetEntering(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -1222,10 +1222,10 @@ void LayoutAnimationsProxy::holdTargetEntering(
         std::ranges::any_of(transaction.layout, [&node](const auto &layout) { return layout.node == node; });
   };
   std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
-    if (!isLightNodeMapped(held.node) || held.node->isExiting()) {
+    if (!isLightNodeMapped(held.node)) {
       return true;
     }
-    if (isTargetContentOfFadingRun(held.node)) {
+    if (held.node->isExiting() || isTargetContentOfFadingRun(held.node)) {
       return false;
     }
     if (hasLayoutAnimation(held.node)) {
