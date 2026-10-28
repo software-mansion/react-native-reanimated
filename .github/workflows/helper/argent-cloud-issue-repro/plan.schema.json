@@ -12,6 +12,7 @@
     "reanimatedVersion",
     "workletsVersion",
     "architecture",
+    "configuration",
     "appKind",
     "expoSdkVersion",
     "reproductionSource",
@@ -26,7 +27,7 @@
   "properties": {
     "feasible": {
       "type": "boolean",
-      "description": "false only as a last resort: the behavior cannot occur on an iOS simulator, needs a Debug bundle or Metro, needs custom native code with no reachable public-API path, or the issue makes no claim about behavior that an app can show."
+      "description": "false only as a last resort: the behavior cannot occur on an iOS simulator, needs custom native code with no reachable public-API path, or the issue makes no claim about behavior that an app can show."
     },
     "reason": {
       "type": "string",
@@ -65,6 +66,11 @@
     "architecture": {
       "type": "string",
       "enum": ["fabric", "paper"]
+    },
+    "configuration": {
+      "type": "string",
+      "enum": ["release", "debug"],
+      "description": "release builds the app with the JavaScript bundle embedded. debug builds it without a bundle, and the tester starts Metro, so the run can show __DEV__-only behavior, LogBox warnings and console output. Use debug only when the signal needs it."
     },
     "appKind": {
       "type": "string",

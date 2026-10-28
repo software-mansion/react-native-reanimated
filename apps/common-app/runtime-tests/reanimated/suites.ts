@@ -77,6 +77,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
       require('./tests/props/boxShadow.test');
+      require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
       require('./tests/props/hostReplacement.test');
@@ -175,9 +176,21 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations hidden under LayoutAnimation',
+    importTest: () => {
+      require('./tests/layoutAnimations/hiddenUnderLayoutAnimation.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations skip exiting',
+    importTest: () => {
+      require('./tests/layoutAnimations/skipExiting.test');
     },
   },
   {
@@ -209,6 +222,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       // TODO: investigate and fix, measure returns null sometimes
       // require('./tests/advancedAPI/measure.test');
       require('./tests/advancedAPI/staticFeatureFlags.test');
+    },
+  },
+  {
+    testSuiteName: 'animated sensor',
+    importTest: () => {
+      require('./tests/advancedAPI/useAnimatedSensor.test');
     },
   },
   {

@@ -7,6 +7,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { isSharedValue } from '../isSharedValue';
 import { type BaseAnimationBuilder } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
@@ -33,7 +34,7 @@ import type {
 import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 configureWebLayoutAnimations(); // is-tree-shakable-suppress
 
@@ -169,7 +170,7 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(_props: StyleProps) {
+  _syncStylePropsBackToReact(_props: StyleProps, _style: StyleProps) {
     // noop
   }
 
@@ -388,6 +389,13 @@ export default class AnimatedComponent
             ...(filteredProps.style ?? {}),
             visibility: 'hidden', // Hide component until `componentDidMount` triggers
           };
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(this.props.children.value);
     }
 
     // TODO: Remove need for this \/\/\/\/.

@@ -1,6 +1,8 @@
 'use strict';
 
 import type { ReactNode } from 'react';
+import { createElement, useState } from 'react';
+import type { TextProps } from 'react-native';
 import {
   Animated as AnimatedRN,
   Image as ImageRN,
@@ -14,6 +16,7 @@ import type {
   AnimationCallback,
   EventHandler,
   EventHandlerProcessed,
+  SharedValue,
   WithDecayConfig,
   WithSpringConfig,
   WithTimingConfig,
@@ -61,6 +64,58 @@ const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
 
+function useMockScrollOffset(
+  _animatedRef: unknown,
+  providedOffset?: SharedValue<number>
+) {
+  return useState(() => providedOffset ?? createMockSharedValue(0))[0];
+}
+
+function createMockSharedValue<Value>(init: Value): SharedValue<Value> {
+  const value = { value: init };
+  return new Proxy(value, {
+    get(target, prop) {
+      if (prop === '_isReanimatedSharedValue') {
+        return true;
+      }
+      if (prop === 'value') {
+        return target.value;
+      }
+      if (prop === 'get') {
+        return () => target.value;
+      }
+      if (prop === 'set') {
+        return (newValue: Value | ((currentValue: Value) => Value)) => {
+          if (typeof newValue === 'function') {
+            target.value = (newValue as (currentValue: Value) => Value)(
+              target.value
+            );
+          } else {
+            target.value = newValue;
+          }
+        };
+      }
+      if (prop === 'modify') {
+        return (modifier?: (currentValue: Value) => Value) => {
+          if (modifier !== undefined) {
+            target.value = modifier(target.value);
+          }
+        };
+      }
+      if (prop === 'addListener' || prop === 'removeListener') {
+        return NOOP;
+      }
+    },
+    set(target, prop: string, newValue) {
+      if (prop === 'value') {
+        target.value = newValue;
+        return true;
+      }
+      return false;
+    },
+  }) as SharedValue<Value>;
+}
+
 const hook = {
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
@@ -96,7 +151,14 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result };
+    return {
+      value: result,
+      get: () => result,
+      modify: NOOP,
+      addListener: NOOP,
+      removeListener: NOOP,
+      _isReanimatedSharedValue: true,
+    };
   },
   useEvent: <
     Event extends object,
@@ -117,43 +179,15 @@ const hook = {
     useWeb: false,
   }),
   useReducedMotion: () => false,
-  useScrollOffset: () => ({ value: 0 }),
-  useScrollViewOffset: () => ({ value: 0 }),
-  useSharedValue: <Value>(init: Value) => {
-    const value = { value: init };
-    return new Proxy(value, {
-      get(target, prop) {
-        if (prop === '_isReanimatedSharedValue') {
-          return true;
-        }
-        if (prop === 'value') {
-          return target.value;
-        }
-        if (prop === 'get') {
-          return () => target.value;
-        }
-        if (prop === 'set') {
-          return (newValue: Value | ((currentValue: Value) => Value)) => {
-            if (typeof newValue === 'function') {
-              target.value = (newValue as (currentValue: Value) => Value)(
-                target.value
-              );
-            } else {
-              target.value = newValue;
-            }
-          };
-        }
-      },
-      set(target, prop: string, newValue) {
-        if (prop === 'value') {
-          target.value = newValue;
-          return true;
-        }
-        return false;
-      },
-    });
-  },
-  useTimestamp: () => ({ value: 0 }),
+  useScrollOffset: useMockScrollOffset,
+  useScrollViewOffset: useMockScrollOffset,
+  useSharedValue: <Value>(init: Value | (() => Value)) =>
+    useState(() =>
+      createMockSharedValue(
+        typeof init === 'function' ? (init as () => Value)() : init
+      )
+    )[0],
+  useTimestamp: () => useState(() => createMockSharedValue(0))[0],
 };
 
 const animation = {
@@ -374,7 +408,7 @@ const core = {
   isConfigured: () => false,
   isReanimated3: () => false,
   isWorkletFunction,
-  makeMutable: ID,
+  makeMutable: createMockSharedValue,
   makeShareableCloneRecursive: ID,
   NativeEventsManager: NativeEventsManagerMock,
   ReanimatedLogLevel,
@@ -525,6 +559,22 @@ const screenTransition = {
   startScreenTransition: NOOP,
 };
 
+const AnimatedText = ({
+  children,
+  ...props
+}: Omit<TextProps, 'children'> & { children?: unknown }) => {
+  const content = Array.isArray(children) ? children : [children];
+  return createElement(
+    TextRN,
+    props,
+    ...content.map((child) =>
+      isSharedValueReal(child)
+        ? (child.value as ReactNode)
+        : (child as ReactNode)
+    )
+  );
+};
+
 const Animated = {
   addWhitelistedNativeProps: NOOP,
   addWhitelistedUIProps: NOOP,
@@ -536,7 +586,7 @@ const Animated = {
   interpolate: NOOP,
   interpolateColor: NOOP,
   ScrollView: AnimatedRN.ScrollView,
-  Text: TextRN,
+  Text: AnimatedText,
   View: ViewRN,
 };
 

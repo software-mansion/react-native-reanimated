@@ -9,4 +9,4 @@ on:
 
 jobs:
   npm-reanimated-publish-check:
-    uses: ./.github/workflows/npm-reanimated-publish.yml
+    uses: $/.github/workflows/npm-reanimated-publish.yml

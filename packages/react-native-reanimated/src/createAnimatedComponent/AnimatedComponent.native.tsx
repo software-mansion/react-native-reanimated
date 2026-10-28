@@ -10,6 +10,7 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
@@ -29,7 +30,7 @@ import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -151,39 +152,14 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(settledUpdates: StyleProps) {
+  _syncStylePropsBackToReact(props: StyleProps, style: StyleProps) {
     if (!FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       return;
     }
-    // Settled updates arrive as one bag with no style-vs-props origin, so
-    // partition them by the keys of attached animated props — only values
-    // from `useAnimatedProps` or shared values passed as inline top-level
-    // props may be passed as top-level props, all the other ones are
-    // style-only.
-    const animatedPropsKeys = new Set([
-      ...this._animatedProps.flatMap((animatedProp) =>
-        Object.keys(animatedProp.initial?.value ?? {})
-      ),
-      ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
-    ]);
-    if (animatedPropsKeys.size === 0) {
-      this.setState((state) => ({
-        settledStyle: { ...state.settledStyle, ...settledUpdates },
-      }));
-      return;
-    }
-    this.setState((state) => {
-      const settledProps = { ...state.settledProps };
-      const settledStyle = { ...state.settledStyle };
-      for (const key in settledUpdates) {
-        if (animatedPropsKeys.has(key)) {
-          settledProps[key] = settledUpdates[key];
-        } else {
-          settledStyle[key] = settledUpdates[key];
-        }
-      }
-      return { settledProps, settledStyle };
-    });
+    this.setState((state) => ({
+      settledProps: { ...state.settledProps, ...props },
+      settledStyle: { ...state.settledStyle, ...style },
+    }));
     // TODO(future): revert changes when animated styles are detached
   }
 
@@ -499,6 +475,13 @@ export default class AnimatedComponent
       };
     } else if (!skipEntering) {
       nativeID = `${this.reanimatedID}`;
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(filteredProps.children);
     }
 
     // TODO: Remove need for this \/\/\/\/.

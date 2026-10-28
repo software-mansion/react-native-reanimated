@@ -54,6 +54,8 @@ class UpdatesRegistry {
   void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
 #endif
   void remove(Tag tag);
+  virtual void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily);
+  virtual void handleRemount(Tag /*tag*/) {}
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -79,7 +81,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props);
 
-  void collectProps(PropsMap &propsMap);
+  void collectProps(PropsMap &propsMap) const;
   UpdatesBatch getPendingUpdates();
 
  protected:
@@ -98,6 +100,9 @@ class UpdatesRegistry {
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
 
   /// Assumes the caller already locked the registry.
+  std::unordered_set<Tag> getPendingTags() const;
+
+  /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
 
   /// Assumes the caller already locked the registry.
@@ -105,6 +110,9 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void removeFromUpdatesRegistry(Tag tag);
+
+  /// Assumes the caller already locked the registry.
+  void removePendingUpdates(Tag tag);
 
  private:
   UpdatesBatch updatesBatch_;

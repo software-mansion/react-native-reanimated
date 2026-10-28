@@ -10,6 +10,7 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:usesCleartextTraffic="${usesCleartextTraffic}"
+      android:gwpAsanMode="${gwpAsanMode}"
       android:supportsRtl="true">
       <activity
         android:name=".MainActivity"
