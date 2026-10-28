@@ -129,12 +129,27 @@ function FreshHandleHost({
   );
 }
 
+// Exposes methods instead of a view, so the animated component has to find
+// the view itself.
+function ImperativeHandleHost({
+  ref,
+  hostKey: _hostKey,
+  innerRef,
+  ...viewProps
+}: HostProps & { ref?: React.Ref<{ ping: () => void }> }) {
+  useImperativeHandle(ref, () => ({ ping: () => undefined }));
+
+  return <View ref={innerRef} {...viewProps} />;
+}
+
 const AnimatedAnimatableRefHost =
   Animated.createAnimatedComponent(AnimatableRefHost);
 const AnimatedForwardedRefHost =
   Animated.createAnimatedComponent(ForwardedRefHost);
 const AnimatedFreshHandleHost =
   Animated.createAnimatedComponent(FreshHandleHost);
+const AnimatedImperativeHandleHost =
+  Animated.createAnimatedComponent(ImperativeHandleHost);
 
 type HostComponent = React.ComponentType<AnimatedProps<HostProps>>;
 
@@ -271,6 +286,16 @@ describe('Host replacement', () => {
 
       await expectBindingsOnCurrentHost();
       await expectTransitionOnCurrentHost(AnimatedFreshHandleHost);
+    });
+  });
+
+  describe('the ref is an imperative handle', () => {
+    test('binds to the view the component renders', async () => {
+      await render(<Example Host={AnimatedImperativeHandleHost} />);
+      await waitForFrames();
+
+      await expectBindingsOnCurrentHost();
+      await expectTransitionOnCurrentHost(AnimatedImperativeHandleHost);
     });
   });
 });
