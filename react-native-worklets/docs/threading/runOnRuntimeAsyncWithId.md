@@ -40,7 +40,7 @@ function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
@@ -54,7 +54,7 @@ Arguments to the function you want to execute on the [Worklet Runtime](https://d
 
 * `runOnRuntimeAsyncWithId` can target the UI Runtime by passing [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId) as the runtime id.
 
-* Errors thrown in the worklet will cause the Promise to reject with that error.
+* Errors thrown in the worklet function will cause the Promise to reject with that error.
 
 ## Call table
 

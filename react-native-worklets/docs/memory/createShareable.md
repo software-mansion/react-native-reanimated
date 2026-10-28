@@ -72,11 +72,11 @@ Optional advanced configuration for the Shareable.
 
 #### hostDecorator
 
-A [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### guestDecorator
 
-A [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### initSynchronously
 

@@ -1,9 +1,9 @@
 # runOnUIAsync
 
 `runOnUIAsync` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
-It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+It returns a Promise of the worklet function's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
-To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync), see [Running worklets on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
+To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync), see [Running worklet functions on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
 
 ## Reference
 

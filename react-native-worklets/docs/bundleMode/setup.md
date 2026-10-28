@@ -99,7 +99,7 @@ module.exports = getBundleModeMetroConfig(
 
 If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
 
-This is due to fact that Bundle Mode isolates each worklet in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
+This is due to fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
 
 To fix this issue you can do one of the following:
 
@@ -112,9 +112,9 @@ This patch is a temporary workaround until necessary changes are merged into Met
 
 *This step is optional but highly recommended.*
 
-React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change worklet's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
+React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
 
-This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that new worklet with the given hash exists.
+This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that a new worklet function with the given hash exists.
 
 To fix this issue you can do one of two thing:
 

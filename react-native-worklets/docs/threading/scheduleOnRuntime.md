@@ -1,6 +1,6 @@
 # scheduleOnRuntime
 
-`scheduleOnRuntime` lets you schedule a [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+`scheduleOnRuntime` lets you schedule a [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
 
 ## Reference
 
@@ -28,7 +28,7 @@ function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
 
 ### workletRuntime
 
-The worklet runtime to schedule the worklet on.
+The worklet runtime to schedule the worklet function on.
 
 ### worklet
 
@@ -40,7 +40,7 @@ Arguments to the function you want to execute on the [Worker Runtime](https://do
 
 ## Remarks
 
-* The worklet is scheduled on the Worker Runtime's [Async
+* The worklet function is scheduled on the Worker Runtime's [Async
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
 
 ## Call table

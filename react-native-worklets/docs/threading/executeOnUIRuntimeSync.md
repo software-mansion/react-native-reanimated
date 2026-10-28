@@ -32,7 +32,7 @@ A reference to a function you want to execute on the UI Runtime on the current t
 
 ### Returns
 
-`executeOnUIRuntimeSync` returns the return value of the worklet.
+`executeOnUIRuntimeSync` returns the return value of the worklet function.
 
 > **Info**
 >

@@ -28,7 +28,7 @@ function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
@@ -40,7 +40,7 @@ Arguments to the function you want to execute on the [Worklet Runtime](https://d
 
 ## Remarks
 
-* The worklet is scheduled on the Worker Runtime's [Async
+* The worklet function is scheduled on the Worker Runtime's [Async
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
 * You can target the UI Runtime by passing [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId) as the runtime id.
 

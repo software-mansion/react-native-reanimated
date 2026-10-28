@@ -1,7 +1,7 @@
 # runOnRuntimeAsync
 
-`runOnRuntimeAsync` lets you asynchronously run [worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
-It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+`runOnRuntimeAsync` lets you asynchronously run [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+It returns a Promise of the worklet function's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
 ## Reference
 
@@ -39,11 +39,11 @@ function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 
 ### workletRuntime
 
-The worklet runtime to run the worklet on. Created with [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime).
+The worklet runtime to run the worklet function on. Created with [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime).
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime). Arguments to your function have to be passed after the worklet i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
+A reference to a function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime). Arguments to your function have to be passed after the worklet function i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
 
 ### args
 
@@ -55,7 +55,7 @@ Arguments to the function you want to execute on the [Worker Runtime](https://do
 
 * The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and ready to be run on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
 
-* Errors thrown in the worklet will cause the Promise to reject with that error.
+* Errors thrown in the worklet function will cause the Promise to reject with that error.
 
 ## Call table
 

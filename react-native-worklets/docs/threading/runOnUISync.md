@@ -2,7 +2,7 @@
 
 `runOnUISync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
 
-To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync), see [Running worklets on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
+To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync), see [Running worklet functions on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
 
 ## Reference
 

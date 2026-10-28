@@ -15,7 +15,7 @@
 
 <script>!function(){try{var e=location.pathname;if(["/react-native-worklets/docs","/react-native-worklets/search"].some(function(t){return e===t||0===e.indexOf(t+"/")}))return;var t=localStorage.getItem("swm.topbarbanner.v1.react-native-worklets-topbar-1.ea15c4216158c4097b65fe6504a4b3b7");if(!t)return;var r=JSON.parse(t);if(!r||"number"!=typeof r.height||r.height<5)return;if(Date.now()-r.timestamp>=2592e6)return;var a=document.documentElement;a.style.setProperty("--banner-height-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.height+"px"),"string"==typeof r.bgColor&&a.style.setProperty("--banner-bg-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.bgColor)}catch(e){}}()</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://swmansion.com/#organization","name":"Software Mansion","url":"https://swmansion.com","sameAs":["https://github.com/software-mansion","https://www.linkedin.com/company/software-mansion/","https://twitter.com/swmansion","https://www.youtube.com/c/SoftwareMansion"]},{"@type":"SoftwareSourceCode","name":"React Native Worklets","description":"Multithreading engine for React Native apps and libraries.","codeRepository":"https://github.com/software-mansion/react-native-reanimated","programmingLanguage":["TypeScript","C++"],"runtimePlatform":"React Native","author":{"@id":"https://swmansion.com/#organization"},"maintainer":{"@id":"https://swmansion.com/#organization"}}]}</script><link rel="stylesheet" href="/react-native-worklets/assets/css/styles.19c0c8fb.css">
-<script src="/react-native-worklets/assets/js/runtime~main.c5f1d99d.js" defer="defer"></script>
+<script src="/react-native-worklets/assets/js/runtime~main.fcb23aeb.js" defer="defer"></script>
 <script src="/react-native-worklets/assets/js/main.c99ca78c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -47,7 +47,7 @@
 <p><em>This step is optional but highly recommended.</em></p>
 <p>If you run the app after just executing the above steps, you will see an error &quot;Failed to get the SHA-1 for ...&quot;:</p>
 <img src="/react-native-worklets/img/sha-light.png" alt="Bundle Mode Metro error logs" class="_themedImage_hipmx_1 themedComponent_mlkZ themedComponent--light_NVdE"><img src="/react-native-worklets/img/sha-dark.png" alt="Bundle Mode Metro error logs" class="_themedImage_hipmx_1 themedComponent_mlkZ themedComponent--dark_xIcU">
-<p>This is due to fact that Bundle Mode isolates each worklet in a separate module (file) on the fly and the Metro bundler doesn&#x27;t index these isolated modules in time.</p>
+<p>This is due to fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn&#x27;t index these isolated modules in time.</p>
 <p>To fix this issue you can do one of the following:</p>
 <ol>
 <li>Reload the app and Metro a couple of times until Metro picks up all the new modules. You will have to do it each time. Not recommended.</li>
@@ -56,9 +56,9 @@
 <p>This patch is a temporary workaround until necessary changes are merged into Metro.</p>
 <h2 class="anchor _anchorWithHideOnScrollNavbar_1jjlx_10" id="enable-fast-refresh-on-worklet-runtimes">Enable fast refresh on Worklet Runtimes<a href="#enable-fast-refresh-on-worklet-runtimes" class="hash-link" aria-label="Direct link to Enable fast refresh on Worklet Runtimes" title="Direct link to Enable fast refresh on Worklet Runtimes">​</a></h2>
 <p><em>This step is optional but highly recommended.</em></p>
-<p>React Native&#x27;s Fast Refresh (hot reload) feature doesn&#x27;t apply to Worklet Runtimes out of the box. Therefore, when you change worklet&#x27;s code you will see an error &quot;[Worklets] Unable to resolve worklet with hash ...&quot;.</p>
+<p>React Native&#x27;s Fast Refresh (hot reload) feature doesn&#x27;t apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function&#x27;s code you will see an error &quot;[Worklets] Unable to resolve worklet with hash ...&quot;.</p>
 <img src="/react-native-worklets/img/hot-light.png" alt="Bundle Mode Fast Refresh error logs" class="_themedImage_hipmx_1 themedComponent_mlkZ themedComponent--light_NVdE"><img src="/react-native-worklets/img/hot-dark.png" alt="Bundle Mode Fast Refresh error logs" class="_themedImage_hipmx_1 themedComponent_mlkZ themedComponent--dark_xIcU">
-<p>This is due to fact that the Fast Refresh update wasn&#x27;t sent to the Worklet Runtime and it doesn&#x27;t know that new worklet with the given hash exists.</p>
+<p>This is due to fact that the Fast Refresh update wasn&#x27;t sent to the Worklet Runtime and it doesn&#x27;t know that a new worklet function with the given hash exists.</p>
 <p>To fix this issue you can do one of two thing:</p>
 <ol>
 <li>Reload the app on each worklet code change. This virtually defeats the purpose of Fast Refresh. Not recommended.</li>

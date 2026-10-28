@@ -15,7 +15,7 @@
 
 <script>!function(){try{var e=location.pathname;if(["/react-native-worklets/docs","/react-native-worklets/search"].some(function(t){return e===t||0===e.indexOf(t+"/")}))return;var t=localStorage.getItem("swm.topbarbanner.v1.react-native-worklets-topbar-1.ea15c4216158c4097b65fe6504a4b3b7");if(!t)return;var r=JSON.parse(t);if(!r||"number"!=typeof r.height||r.height<5)return;if(Date.now()-r.timestamp>=2592e6)return;var a=document.documentElement;a.style.setProperty("--banner-height-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.height+"px"),"string"==typeof r.bgColor&&a.style.setProperty("--banner-bg-react-native-worklets-topbar-1-ea15c4216158c4097b65fe6504a4b3b7",r.bgColor)}catch(e){}}()</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://swmansion.com/#organization","name":"Software Mansion","url":"https://swmansion.com","sameAs":["https://github.com/software-mansion","https://www.linkedin.com/company/software-mansion/","https://twitter.com/swmansion","https://www.youtube.com/c/SoftwareMansion"]},{"@type":"SoftwareSourceCode","name":"React Native Worklets","description":"Multithreading engine for React Native apps and libraries.","codeRepository":"https://github.com/software-mansion/react-native-reanimated","programmingLanguage":["TypeScript","C++"],"runtimePlatform":"React Native","author":{"@id":"https://swmansion.com/#organization"},"maintainer":{"@id":"https://swmansion.com/#organization"}}]}</script><link rel="stylesheet" href="/react-native-worklets/assets/css/styles.19c0c8fb.css">
-<script src="/react-native-worklets/assets/js/runtime~main.c5f1d99d.js" defer="defer"></script>
+<script src="/react-native-worklets/assets/js/runtime~main.fcb23aeb.js" defer="defer"></script>
 <script src="/react-native-worklets/assets/js/main.c99ca78c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -44,7 +44,7 @@
 <ul>
 <li>This function automatically detects the type of the input value and applies appropriate serialization strategies.</li>
 <li>For objects and arrays, it recursively processes nested properties.</li>
-<li>This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.</li>
+<li>This function is rarely used as in almost all cases the Worklets library handles the creation of Serializables for you.</li>
 <li>This function includes cycle detection to prevent infinite recursion.</li>
 <li><code>jsi::NativeState</code> of a passed value is preserved during serialization.</li>
 <li>In <a href="/react-native-worklets/docs/0.10-0.12/bundleMode/#legacy-eval-mode">Legacy Eval Mode</a>, <code>createSerializable</code> can be called only on the <a href="/react-native-worklets/docs/0.10-0.12/fundamentals/runtimeKinds/#rn-runtime">RN Runtime</a>. In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a <a href="/react-native-worklets/docs/0.10-0.12/fundamentals/runtimeKinds/#worklet-runtime">Worklet Runtime</a> in Legacy Eval Mode, use deprecated <a href="/react-native-worklets/docs/0.10-0.12/memory/makeShareableCloneOnUIRecursive/">makeShareableCloneOnUIRecursive</a> instead.</li>

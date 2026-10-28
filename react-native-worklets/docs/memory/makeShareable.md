@@ -1,7 +1,7 @@
 # makeShareable
 
 `makeShareable` lets you create a `Shareable` object from a given value on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
-Any modifications made to this shared object on the UI thread will be automatically visible to all worklets on the UI thread.
+Any modifications made to this shared object on the UI thread will be automatically visible to all worklet functions on the UI thread.
 
 ## Reference
 

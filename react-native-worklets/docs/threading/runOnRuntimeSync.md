@@ -31,7 +31,7 @@ function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 
 ### workletRuntime
 
-The worklet runtime to run the worklet on.
+The worklet runtime to run the worklet function on.
 
 ### worklet
 

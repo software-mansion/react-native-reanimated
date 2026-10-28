@@ -1,6 +1,6 @@
 # createWorkletRuntime
 
-`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) or [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) or [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
 
 The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
 
@@ -71,7 +71,7 @@ A name of the runtime used in debugging. Defaults to `'anonymous'`.
 
 ##### `initializer`
 
-An optional worklet that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
+An optional worklet function that will be run synchronously on the same thread immediately after the runtime is created. It can be used to inject some global variables or functions into the runtime.
 
 ##### `animationQueuePollingRate`
 
@@ -97,7 +97,7 @@ Disable only when you can guarantee thread safety of all access to the runtime.
 
 ##### `queue`
 
-Controls the queue used for scheduling worklets on this runtime. Defaults to `'default'`.
+Controls the queue used for scheduling worklet functions on this runtime. Defaults to `'default'`.
 
 * `'default'`: use the built-in queue implementation.
 * An object implementing the C++ `AsyncQueue` interface from `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.

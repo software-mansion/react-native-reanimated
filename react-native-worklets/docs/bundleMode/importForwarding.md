@@ -1,10 +1,10 @@
 # Import forwarding
 
 Import forwarding is a feature of Bundle Mode that lets you use third-party
-libraries inside worklets without adding boilerplate code.
+libraries inside worklet functions without adding boilerplate code.
 
 To understand the motivation behind this feature, let's look at the ambiguity
-of using imports inside worklets.
+of using imports inside worklet functions.
 
 ## Motivation
 
@@ -21,7 +21,7 @@ function worklet() {
 scheduleOnUI(worklet);
 ```
 
-Your intent is clearly to invoke `foo` from `my-library` inside the worklet —
+Your intent is clearly to invoke `foo` from `my-library` inside the worklet function —
 there shouldn't be any ambiguity. But consider another example.
 
 Say `my-library` is a library that provides a counter:
@@ -58,7 +58,7 @@ Different JavaScript Runtimes don't share any state, so the invocation of
 `incrementValue` on the RN Runtime didn't affect the `value` variable on the
 Worklet Runtime.
 
-So what's the intent behind the `getValue` invocation inside the worklet here?
+So what's the intent behind the `getValue` invocation inside the worklet function here?
 Did the author want to print the state of the RN Runtime or the Worklet Runtime?
 Both interpretations are valid, but during static analysis of the code — which
 the Worklets Babel plugin does — it's impossible to tell which one is correct.
@@ -84,7 +84,7 @@ scheduleOnUI(worklet); // logs 1
 ```
 
 Here you explicitly assigned the result of `getValue` to a variable and passed
-that variable as a closure of the worklet. It's clear that you wanted to print
+that variable as a closure of the worklet function. It's clear that you wanted to print
 the state of the RN Runtime.
 
 ### Printing Worklet Runtime state
@@ -104,13 +104,13 @@ function worklet() {
 scheduleOnUI(worklet); // logs 0
 ```
 
-You used `require` to import `getValue` inside the worklet. There's no doubt
+You used `require` to import `getValue` inside the worklet function. There's no doubt
 that you wanted to print the state of the Worklet Runtime.
 
 ### The cost of explicit disambiguation
 
 Writing your code exactly as in the previous example requires you to
-re-specify all the imports in each worklet, which adds a lot of boilerplate:
+re-specify all the imports in each worklet function, which adds a lot of boilerplate:
 
 ```javascript
 function incrementOnce() {
@@ -135,7 +135,7 @@ function incrementTwice() {
 
 ## Using import forwarding
 
-Import forwarding lets you state which imports used inside worklets should be
+Import forwarding lets you state which imports used inside worklet functions should be
 forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
@@ -173,7 +173,7 @@ scheduleOnUI(worklet); // logs 0
 ```
 
 This works because you explicitly stated all imports from `my-library` should
-be forwarded into worklets — the worklet gets its own copy of `my-library`'s
+be forwarded into worklet functions — the Worklet Runtime gets its own copy of `my-library`'s
 state.
 
 ### Explicit closure capture

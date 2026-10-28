@@ -32,7 +32,7 @@ npx expo prebuild
 yarn expo prebuild
 ```
 
-And that's it! Worklets library is now configured in your Expo project.
+And that's it! The Worklets library is now configured in your Expo project.
 
 Don't I need the Worklets babel plugin?
 
@@ -68,7 +68,7 @@ Worklets Babel plugin comes with several options, you can explore what they are 
 
 Why do I need this?
 
-In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)
+In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)
 
 To learn more about the plugin go to [Worklets babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) section.
 

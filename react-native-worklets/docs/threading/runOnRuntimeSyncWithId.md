@@ -31,7 +31,7 @@ function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 

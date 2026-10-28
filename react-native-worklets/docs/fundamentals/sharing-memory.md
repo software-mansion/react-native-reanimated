@@ -1,10 +1,10 @@
 # Sharing memory
 
-Worklets let you run JavaScript on more than one thread. The moment you do that, you have to answer a question that
+The Worklets library lets you run JavaScript on more than one thread. The moment you do that, you have to answer a question that
 single-threaded JavaScript has always let you ignore: **how do two pieces of code, running at the same time, look at the
 same data?**
 
-This page explains why that question has no cheap answer in JavaScript, and why Worklets expose three distinct shared
+This page explains why that question has no cheap answer in JavaScript, and why the Worklets library exposes three distinct shared
 memory primitives — the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable), the [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable),
 and the [Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) — instead of one.
 
@@ -62,7 +62,7 @@ serialized.
 High-level overview of the Serializable memory model — no Runtime holds ownership of the value, they just exchange
 copies of it.
 
-From the user's perspective, a Serializable is an opaque C++ value that Worklets know how to pass around and turn into
+From the user's perspective, a Serializable is an opaque C++ value that the Worklets library knows how to pass around and turn into
 regular JavaScript values on the other side. In all cases, this is done implicitly by the library APIs, and you never
 need to create Serializables directly.
 

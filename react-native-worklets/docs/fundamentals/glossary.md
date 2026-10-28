@@ -1,8 +1,8 @@
 # Glossary of terms
 
-## Worklet
+## Worklet function \{#worklet}
 
-Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+A worklet function is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
 
 Most of the time when working with libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) the code is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
 
