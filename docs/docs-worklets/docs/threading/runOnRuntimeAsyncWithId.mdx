@@ -3,6 +3,9 @@ title: runOnRuntimeAsyncWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiRunOnRuntimeAsyncWithIdSnippet from './_examples/apiRunOnRuntimeAsyncWithId';
+import ApiRunOnRuntimeAsyncWithIdSource from '!!raw-loader!./_examples/apiRunOnRuntimeAsyncWithId';
+
 <Badges version="0.9.0">
   # runOnRuntimeAsyncWithId
 </Badges>
@@ -11,27 +14,7 @@ sidebar_position: 42 # Use alphabetical order
 
 ## Reference
 
-```javascript
-import {
-  runOnRuntimeAsyncWithId,
-  createWorkletRuntime,
-} from 'react-native-worklets';
-
-const backgroundRuntime = createWorkletRuntime({ name: 'background' });
-
-async function performHeavyComputation(data: number[]) {
-  const result = await runOnRuntimeAsyncWithId(
-    backgroundRuntime.runtimeId,
-    (numbers: number[]) => {
-      'worklet';
-      return numbers.reduce((sum, n) => sum + n, 0);
-    },
-    data
-  );
-
-  console.log('Computation result:', result);
-}
-```
+<ThreadingSimulation module={ApiRunOnRuntimeAsyncWithIdSnippet} source={ApiRunOnRuntimeAsyncWithIdSource}/>
 
 <details>
   <summary>Type definitions</summary>

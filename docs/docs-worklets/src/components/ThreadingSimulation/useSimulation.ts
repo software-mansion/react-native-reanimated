@@ -114,7 +114,7 @@ function finalStep(last: Snapshot): Snapshot {
     cores: last.cores.map((core) => ({
       ...core,
       status: core.status === 'error' ? core.status : 'idle',
-      line: null,
+      line: core.status === 'error' ? core.line : null,
       job: null,
       runtime: null,
       heldRuntimes: [],
@@ -161,7 +161,8 @@ export function useSimulation(
   tickMs: number,
   enabled: boolean,
   alwaysOn: boolean,
-  boilerplate: boolean
+  boilerplate: boolean,
+  suspended = false
 ): SimulationState {
   const display = useMemo(() => {
     try {
@@ -197,7 +198,23 @@ export function useSimulation(
     ]
   );
 
-  const [tick, setTick] = useState(0);
+  // A new example starts with one snapshot. Associate the playhead with its
+  // session so the first render cannot index it with the previous example's
+  // tick, and the surrounding layout can stay mounted when examples change.
+  const [position, setPosition] = useState({ session, tick: 0 });
+  const tick = position.session === session ? position.tick : 0;
+  const setTick = useCallback(
+    (next: number | ((current: number) => number)) => {
+      setPosition((current) => {
+        const value = current.session === session ? current.tick : 0;
+        return {
+          session,
+          tick: typeof next === 'function' ? next(value) : next,
+        };
+      });
+    },
+    [session]
+  );
   const [, setVersion] = useState(0);
   const [playing, setPlaying] = useState(alwaysOn);
   const [loop, setLoop] = useState(alwaysOn);
@@ -211,9 +228,10 @@ export function useSimulation(
 
   useEffect(() => {
     setTick(0);
+    setSettledTick(0);
     setPlaying(alwaysOn);
     startedRef.current = alwaysOn;
-  }, [session, alwaysOn]);
+  }, [setTick, alwaysOn]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -241,12 +259,12 @@ export function useSimulation(
 
   const propagationMs = Math.min(PROPAGATION_MS, Math.floor(tickMs / 2));
   useEffect(() => {
-    if (tick === 0 || propagationMs === 0) {
+    if (tick === 0 || propagationMs === 0 || suspended) {
       return;
     }
     const id = setTimeout(() => setSettledTick(tick), propagationMs);
     return () => clearTimeout(id);
-  }, [tick, session, propagationMs]);
+  }, [tick, session, propagationMs, suspended]);
   const settled = tick === 0 || propagationMs === 0 || settledTick === tick;
 
   const advance = useCallback((): 'moved' | 'end' => {
@@ -261,30 +279,32 @@ export function useSimulation(
       return 'moved';
     }
     return 'end';
-  }, [session]);
+  }, [session, setTick]);
 
   const restart = useCallback(() => {
     session.reset();
     setVersion((version) => version + 1);
     setTick(0);
-  }, [session]);
+  }, [session, setTick]);
 
   useEffect(() => {
-    if (!playing) {
+    // A layout transition suspends the clock without changing the user's
+    // playback choice. Manual pause remains paused when the layout settles.
+    if (!playing || suspended) {
       return;
     }
     const run = () => {
       if (advance() === 'end') {
         if (loopRef.current) {
           restart();
-        } else if (!alwaysOn) {
+        } else {
           setPlaying(false);
         }
       }
     };
     const id = setInterval(run, Math.max(tickMs, MIN_TICK_MS));
     return () => clearInterval(id);
-  }, [playing, tickMs, advance, restart, alwaysOn]);
+  }, [playing, suspended, tickMs, advance, restart]);
 
   const lastTick = session.atEnd
     ? Math.max(session.snapshots.length - 1, 0)
@@ -297,7 +317,7 @@ export function useSimulation(
   const back = useCallback(() => {
     setPlaying(false);
     setTick((current) => Math.max(current - 1, 0));
-  }, []);
+  }, [setTick]);
   const reset = useCallback(() => {
     setPlaying(false);
     restart();

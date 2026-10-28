@@ -2,6 +2,15 @@
 title: Sharing memory
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import * as CompareSerializableSnippet from './_sharing-memory/compareSerializable';
+import CompareSerializableSource from '!!raw-loader!./_sharing-memory/compareSerializable';
+import * as CompareSynchronizableSnippet from './_sharing-memory/compareSynchronizable';
+import CompareSynchronizableSource from '!!raw-loader!./_sharing-memory/compareSynchronizable';
+import * as CompareShareableSnippet from './_sharing-memory/compareShareable';
+import CompareShareableSource from '!!raw-loader!./_sharing-memory/compareShareable';
+
 # Sharing memory
 
 The Worklets library lets you run JavaScript on more than one thread. The moment you do that, you have to answer a question that
@@ -117,6 +126,30 @@ exclusively, read the actual value, and return it to the Guest Runtime that init
 **The Shareable should be the preferred way of handling non-trivial data sharing since it comes with the least overhead
 when used correctly**. However, it requires a more careful design of your data flow and access patterns, to avoid too many
 round trips between the Guest Runtimes and the Host Runtime.
+
+## Compare the same update
+
+Each example starts with a counter at `0`, increments it on the UI Runtime, and then reads it on the RN Runtime. The callback runs after the update, so the different results come from the memory primitive, not the order of execution.
+
+<Tabs lazy>
+  <TabItem value="serializable" label="Serializable">
+    UI increments its own copy to `1`. RN still reads `0` from the original object. Passing a regular object would serialize it automatically; this example creates the reference explicitly to show the copy.
+
+    <ThreadingSimulation module={CompareSerializableSnippet} source={CompareSerializableSource}/>
+  </TabItem>
+
+  <TabItem value="synchronizable" label="Synchronizable">
+    UI updates the shared value to `1`, and RN reads `1` from the same Synchronizable. Each access goes through the shared memory outside both runtimes.
+
+    <ThreadingSimulation module={CompareSynchronizableSnippet} source={CompareSynchronizableSource}/>
+  </TabItem>
+
+  <TabItem value="shareable" label="Shareable">
+    UI owns the value and updates it directly to `1`. RN also reads `1`, but its `getSync` call must acquire the UI Runtime to read the hosted value.
+
+    <ThreadingSimulation module={CompareShareableSnippet} source={CompareShareableSource}/>
+  </TabItem>
+</Tabs>
 
 ## Choosing between them
 

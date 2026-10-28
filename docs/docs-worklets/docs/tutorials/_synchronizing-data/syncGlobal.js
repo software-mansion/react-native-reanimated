@@ -13,7 +13,7 @@ export default function* main() {
   const worker = yield createWorkletRuntime();
 
   function* taskDispatch() {
-    globalThis.result = yield -1;
+    yield (globalThis.result = -1);
 
     function* task() {
       yield globalThis.result++;

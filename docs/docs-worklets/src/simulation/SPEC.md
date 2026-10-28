@@ -5,6 +5,23 @@ per visible line) on a small machine of threads. This document is the source of
 truth for how one tick advances the machine. `machine.ts` follows it phase by
 phase; the tests in `__tests__/` reference the numbered rules.
 
+Snippet modules are excluded from the Worklets Babel plugin. Their generators
+and runtime proxies are executed by this machine, not by the native Worklets
+runtime. Tests compile the reference snippets using the docs Babel configuration
+in both development and production to keep this boundary intact.
+
+`isWorkletFunction` models explicit worklet markers on registered snippet
+functions: a `'worklet'` directive before the function's steps stands in for
+the Babel-generated metadata. Detection returns `true` only on the RN Runtime;
+the JS thread also returns `false` while executing in an acquired Worklet Runtime.
+It inspects the function without executing it. Automatic workletization and
+the Babel transform's declaration-hoisting behavior are not simulated.
+
+Writes to observable state must happen before yielding, for example
+`yield (globalThis.value = 42)`, so the snapshot reflects the highlighted line.
+For a conditional one-line statement, a following bare `yield` maps back to that
+statement; it must not pretend that a skipped branch ran.
+
 ## Entities
 
 ### Thread
@@ -47,12 +64,26 @@ Kinds:
 - **Worker Runtime**: created by `createWorkletRuntime`, together with its own
   thread, of which it is the default runtime.
 
+When `createWorkletRuntime` receives an initializer, the creating thread acquires
+the new runtime and runs the initializer synchronously before returning the
+runtime handle. Its globals belong to the new runtime, but its thread ID is the
+creator's. The initializer must have an explicit worklet marker; its return
+value is discarded. An exception stops the caller before it receives the handle.
+
 A thread requests its default runtime whenever that runtime's queue has a
 job to run. `runOnUISync`, `runOnRuntimeSync` and `Shareable.getSync` request
 another thread's default runtime.
 
 State (in addition to the resource state): globals, hosted Shareables, the
 sibling event loop.
+
+`getRuntimeKind` and the `is*Runtime` predicates inspect the runtime currently
+held by the executing frame, not the thread's default runtime. For example,
+`runOnUISync` called on the JS thread reports the UI kind while
+`getCurrentThreadId` still reports the JS thread. The `*WithId` scheduling
+helpers resolve an existing Worklet Runtime by id and use the same execution
+path as the runtime-handle variants. Unknown ids and the RN Runtime id are
+rejected.
 
 #### Event loop
 
@@ -85,6 +116,49 @@ internal job on the host runtime and returns a promise.
 
 State: value, host, guests, last accessing thread.
 
+### Serializable
+
+An immutable serialized value outside every runtime. `createSerializable`
+copies the input into a native memory cell and returns an opaque reference.
+Repeated serialization of the same object or reference reuses that cell.
+`isSerializableRef` recognizes the reference; it exposes no JavaScript value.
+When a reference is passed across runtimes, including inside an argument object,
+the destination receives a fresh copy of the stored value. Mutating that copy
+cannot change the stored value or earlier snapshots. Unlike a Synchronizable,
+a Serializable has no lock or setter.
+
+The simulator uses structured cloning for supported data values. It does not
+model native serialization of functions or development warnings when a serialized
+source object is mutated. The example only mutates the deserialized copy, which
+is valid in development and production.
+
+### Custom Serializables
+
+`registerCustomSerializable` registers synchronous `determine`, `pack`, and
+`unpack` worklet callbacks on the RN Runtime. Registrations belong to one
+simulation and are available to existing and subsequently created runtimes.
+Duplicate names keep the original registration.
+
+For asynchronous call arguments, `determine` and `pack` execute on the sending
+runtime before the job is queued. The queue holds a copy of the packed data.
+`unpack` executes inside the destination job, with the destination runtime's
+globals and lock, before the worklet receives its arguments. Callback console
+output is attributed to the executing thread. Callbacks run within the transfer
+step rather than as independently stepped generator functions.
+
+`createSerializable` packs once and stores the packed representation. Passing
+its reference to an asynchronous call unpacks a fresh value at the destination
+without packing the original again. Nested values in objects, arrays, Maps and
+Sets are supported. Snapshots display packed data without calling user code.
+
+This first model covers explicit asynchronous arguments and Serializable
+references. It does not model custom values in captured closures, synchronous
+calls, return values, Synchronizables or Shareables, or native registration
+propagation and worklet closure reconstruction. Unsupported custom prototypes
+fail explicitly rather than silently losing their methods. Custom callbacks
+must be ordinary synchronous functions with a `worklet` directive; their closure
+environment is still the simulator's JavaScript environment.
+
 ### Job
 
 A call of a snippet function with arguments. It waits in a queue, executes on
@@ -116,6 +190,14 @@ it acquired. A frame whose function is **hidden** (`'hidden'` directive)
 executes for free inside the step of its caller. A frame whose function is
 **native** (`'native'` directive) runs on a thread without needing a runtime
 and is shown as native code.
+
+The simulated React state setter is bound to the RN Runtime. Calling it while
+executing in another runtime raises an error before changing state, even when
+the calling thread is the JS thread borrowing that runtime synchronously.
+Its error event uses the Worklets Remote Function error format with the
+simulated names; the thread snapshot keeps the explanatory scheduling advice.
+The viewer shows errors in the console on the failing tick, while ordinary logs
+appear one tick after execution.
 
 ### Timer
 
@@ -227,6 +309,10 @@ The snapshot is derived from the committed state:
   line it executed, and its native queue if it has one.
 - Each runtime reports its holder, its globals, the Shareables it hosts and
   the Shareable guests it holds.
+- Globals are formatted into immutable snapshot values and displayed under
+  their owning runtime. Rewinding never exposes a later assignment.
+- Completion waits until newly created runtimes and memory cells are visible,
+  including when the final source line creates a cell.
 - Each event loop reports its holder and its contents: queued jobs, pending
   timers (by due time), suspended jobs (marked `awaiting`).
 - Synchronizables and Shareables report which thread accessed them this

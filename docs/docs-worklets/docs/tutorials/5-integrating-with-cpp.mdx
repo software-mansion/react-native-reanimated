@@ -1,0 +1,241 @@
+---
+title: Integrating with C++
+description: Schedule C++ work on a Worker Runtime and pass JavaScript data through native code with a Serializable.
+sidebar_position: 50
+---
+
+import * as NativeScheduleSnippet from './_integrating-with-cpp/nativeSchedule';
+import NativeScheduleSource from '!!raw-loader!./_integrating-with-cpp/nativeSchedule';
+import * as NativeSerializableSnippet from './_integrating-with-cpp/nativeSerializable';
+import NativeSerializableSource from '!!raw-loader!./_integrating-with-cpp/nativeSerializable';
+
+# Integrating with C++
+
+In the [previous chapter](./4-synchronizing-data.mdx), we shared values between JavaScript
+runtimes. We can also schedule C++ work on a Worker Runtime. Let's use the same small example as
+[Usage in C++](../threading/createWorkletRuntime.mdx#usage-in-c) in the API reference: set a global
+variable on the worker from C++, then read it from a worklet.
+
+This example assumes you already have a C++ TurboModule linked to Worklets in a native app build.
+See React Native's [C++ module guide](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules)
+for that setup. `NativeExample` below refers to your own module.
+
+## Creating a Worker Runtime
+
+Create a worker on the RN Runtime, just as in the earlier tutorials:
+
+```js
+import {
+  createWorkletRuntime,
+  runOnRuntimeAsync,
+} from 'react-native-worklets';
+import NativeExample from './specs/NativeExample';
+
+const worker = createWorkletRuntime({ name: 'native-example' });
+```
+
+## Scheduling work from C++
+
+On the C++ side, extract the worker from the JavaScript object and use `schedule` to queue a callback:
+
+```cpp
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
+void scheduleNativeWork(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
+
+  worker->schedule([](facebook::jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(workerRuntime, "nativeWorkFinished", true);
+  });
+}
+```
+
+`rnRuntime` owns the incoming `runtimeValue`. `extractWorkletRuntime` retrieves the native worker
+behind that object. The callback receives `workerRuntime`, which gives it access to the worker's
+JavaScript globals through JSI (JavaScript Interface).
+
+The callback runs on the worker's thread with its runtime lock held and sets `nativeWorkFinished`
+to `true`. Keep the default queue and runtime locking enabled for this example, and keep the
+`worker` object alive while its work is pending.
+
+Expose this helper through a synchronous `NativeExample.schedule(worker)` method on your TurboModule.
+
+<details>
+  <summary>Connecting the helper to your TurboModule</summary>
+
+  Use the Codegen signature `schedule: (runtime: CodegenTypes.UnsafeObject) => boolean`.
+  Declare the corresponding method in your C++ module header and forward it to the helper above:
+
+  ```cpp
+  bool NativeExample::schedule(
+      facebook::jsi::Runtime &rt,
+      facebook::jsi::Object runtime) {
+    scheduleNativeWork(rt, facebook::jsi::Value(rt, runtime));
+    return true;
+  }
+  ```
+
+  Returning `true` means the callback was queued; it does not indicate that the callback has finished.
+</details>
+
+Pass the original `worker` object to this method. Copying its properties or serializing it as JSON
+would lose the native runtime reference.
+
+## Reading the result
+
+Schedule the C++ callback, then queue a worklet on the same worker to read the flag:
+
+```js
+NativeExample.schedule(worker);
+
+const finished = await runOnRuntimeAsync(worker, () => {
+  'worklet';
+  return globalThis.nativeWorkFinished;
+});
+
+console.log(finished); // true
+```
+
+Run this code from an async function on the RN Runtime. Read `globalThis.nativeWorkFinished` inside
+the worklet because C++ set it on the worker's global object. Reading the same property on the RN
+Runtime would give `undefined`.
+
+:::tip Why is the flag ready when we read it?
+
+`NativeExample.schedule` returns after queuing the C++ callback. The subsequent `runOnRuntimeAsync`
+queues the reading worklet behind it. The default worker queue runs these jobs in order, so the C++
+callback sets the flag before the worklet reads it. `await` then waits for the worklet's result to
+come back to RN without blocking its thread.
+
+`runOnRuntimeSync` would not wait for previously queued work and could read the flag too early.
+
+:::
+
+The simulation follows the same sequence: queue the native callback, read the flag on the worker,
+and return `true` to RN. The browser models the C++ callback; it does not execute C++.
+
+<ThreadingSimulation module={NativeScheduleSnippet} source={NativeScheduleSource} tickMs={700}/>
+
+## Passing data with a Serializable
+
+So far, the C++ callback has only written a boolean. What if it needs an object created on the RN
+Runtime? A JavaScript object belongs to the runtime that created it. Capturing its `jsi::Object`
+in a callback does not make it usable on another runtime.
+
+This is where a [Serializable](../memory/serializable.mdx) becomes useful. For a plain object, it
+holds an immutable representation in native memory that can be reconstructed as a separate
+JavaScript object on another runtime. The flow is:
+
+1. JavaScript creates a Serializable and passes its opaque reference to C++.
+1. C++ extracts the native Serializable and keeps it alive while the callback is queued.
+1. The callback reconstructs the value on the worker, where it can use and modify the copy.
+
+We've already used serialization in earlier chapters: scheduling APIs handle it automatically
+for arguments, captured values, and returned results. A custom TurboModule method doesn't do
+this Worklets conversion for us, so here we'll call
+[`createSerializable`](../memory/createSerializable.mdx) explicitly.
+
+### Creating the reference
+
+On the RN Runtime, create a settings object and serialize it before passing it to a new method
+on our native module:
+
+```js
+import { createSerializable } from 'react-native-worklets';
+
+const settings = { volume: 10 };
+const settingsRef = createSerializable(settings);
+
+NativeExample.scheduleWithSettings(worker, settingsRef);
+```
+
+`settingsRef` is a handle to the native representation, not the settings object itself. Pass it
+unchanged; reading `settingsRef.volume` won't give us the original value.
+
+### Reconstructing the value on the worker
+
+Extend the C++ example with a helper that accepts the reference:
+
+```cpp
+#include <worklets/Compat/StableApi.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
+void scheduleNativeWorkWithSettings(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue,
+    const facebook::jsi::Value &settingsValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
+  auto settings = worklets::extractSerializable(
+      rnRuntime, settingsValue, "Expected a reference from createSerializable.");
+
+  worker->schedule([settings](facebook::jsi::Runtime &workerRuntime) {
+    auto copy = settings->toJSValue(workerRuntime).asObject(workerRuntime);
+    const double volume = copy.getProperty(workerRuntime, "volume").asNumber();
+    copy.setProperty(workerRuntime, "volume", volume * 2);
+    workerRuntime.global().setProperty(workerRuntime, "nativeSettings", copy);
+  });
+}
+```
+
+`extractSerializable` unwraps the reference on the RN Runtime; it does not serialize a plain
+object. The returned `std::shared_ptr<worklets::Serializable>` is captured by value so the
+serialized data stays alive until the callback finishes. No RN-owned `jsi::Object` is captured.
+
+Inside the scheduled callback, `toJSValue(workerRuntime)` creates the worker's copy. All JSI
+operations on that copy use `workerRuntime`. Doubling its volume changes only this JavaScript
+object, leaving the Serializable and RN's original settings unchanged.
+
+<details>
+  <summary>Exposing the method on your TurboModule</summary>
+
+  Add this method to the same Codegen spec as `schedule`:
+
+  ```ts
+  scheduleWithSettings: (
+    runtime: CodegenTypes.UnsafeObject,
+    settings: CodegenTypes.UnsafeObject
+  ) => boolean;
+  ```
+
+  Declare the corresponding method in your C++ module header and forward it to the helper:
+
+  ```cpp
+  bool NativeExample::scheduleWithSettings(
+      facebook::jsi::Runtime &rt,
+      facebook::jsi::Object runtime,
+      facebook::jsi::Object settings) {
+    scheduleNativeWorkWithSettings(
+        rt, facebook::jsi::Value(rt, runtime), facebook::jsi::Value(rt, settings));
+    return true;
+  }
+  ```
+
+  As before, `true` means the callback was queued, not that it has finished.
+</details>
+
+After calling `NativeExample.scheduleWithSettings`, read the result with the same queueing
+pattern as before:
+
+```js
+const volume = await runOnRuntimeAsync(worker, () => {
+  'worklet';
+  return globalThis.nativeSettings.volume;
+});
+
+console.log('Worker copy:', volume); // 20
+console.log('RN original:', settings.volume); // 10
+```
+
+The simulation models the native callback and its effect on the worker's copy. Watch the
+Serializable stay at `{ volume: 10 }` in **Shared native memory**, while `nativeSettings` in
+the worker's **Globals** changes to `{ volume: 20 }`. The browser does not execute the C++ code.
+
+<ThreadingSimulation module={NativeSerializableSnippet} source={NativeSerializableSource} tickMs={700}/>
+
+A Serializable transfers a value; it does not keep the resulting copies in sync. For ongoing
+updates shared between runtimes, use the Synchronizable or Shareable patterns from the
+[previous chapter](./4-synchronizing-data.mdx). See
+[supported Serializable types](../memory/serializable.mdx#supported-types) for the values you can
+pass and [custom serialization](../memory/registerCustomSerializable.mdx) for your own types.

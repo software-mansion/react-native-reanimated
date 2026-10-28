@@ -3,6 +3,9 @@ title: scheduleOnRuntimeWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiScheduleOnRuntimeWithIdSnippet from './_examples/apiScheduleOnRuntimeWithId';
+import ApiScheduleOnRuntimeWithIdSource from '!!raw-loader!./_examples/apiScheduleOnRuntimeWithId';
+
 <Badges version="0.8.0">
   # scheduleOnRuntimeWithId
 </Badges>
@@ -11,15 +14,7 @@ sidebar_position: 42 # Use alphabetical order
 
 ## Reference
 
-```javascript
-import { scheduleOnRuntimeWithId, createWorkletRuntime } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
-```
+<ThreadingSimulation module={ApiScheduleOnRuntimeWithIdSnippet} source={ApiScheduleOnRuntimeWithIdSource}/>
 
 <details>
   <summary>Type definitions</summary>

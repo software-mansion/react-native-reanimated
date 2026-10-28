@@ -4,6 +4,12 @@ title: Synchronizable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as SynchronizableUpdaterSnippet from './_examples/synchronizableUpdater';
+import SynchronizableUpdaterSource from '!!raw-loader!./_examples/synchronizableUpdater';
+
+import * as ApiSynchronizableSnippet from './_examples/apiSynchronizable';
+import ApiSynchronizableSource from '!!raw-loader!./_examples/apiSynchronizable';
+
 <Badges version="0.6.0">
   # Synchronizable
 </Badges>
@@ -57,28 +63,17 @@ Primitive JavaScript values are trivially serialized and deserialized, therefore
 
 ## Reference
 
-```tsx
-import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
+<ThreadingSimulation module={ApiSynchronizableSnippet} source={ApiSynchronizableSource}/>
 
-// RN Runtime, JS thread
+The RN Runtime updates the value before scheduling the UI read, so UI reads `{ a: 24 }`. Watch the value change in **Shared native memory**: both runtimes access the same Synchronizable.
 
-const synchronizable = createSynchronizable({ a: 42 });
-
-scheduleOnUI(() => {
-  // UI Runtime, UI thread
-  const value = synchronizable.getBlocking();
-  console.log(value); // {a: 24}
-});
-
-// Could execute either before or after the UI Runtime reads the value.
-synchronizable.setBlocking({ a: 24 });
-```
+When reads and writes compete on different threads, the value read depends on which thread acquires the Synchronizable first. The diagram below illustrates a read that happens before a competing write.
 
 <SVGDiagram>![Synchronizable flow](/img/synchronizable-flow.svg)</SVGDiagram>
 
 <figcaption style={{ textAlign: 'center' }}>
-  Possible flow of operations for the above example, assuming that `getBlocking`
-  function executes first. Time axis is not to scale.
+  Competing operations with `getBlocking` executing first. Time axis is not to
+  scale.
 </figcaption>
 
 ## Methods
@@ -97,12 +92,7 @@ Non-exclusively obtains the Synchronizable and returns its value. It never block
 
 Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
 
-```tsx
-// Set the value to 42
-synchronizable.setBlocking(42);
-// Increment the value by 1
-synchronizable.setBlocking((prev) => prev + 1);
-```
+<ThreadingSimulation module={SynchronizableUpdaterSnippet} source={SynchronizableUpdaterSource}/>
 
 For non-fixed-type Synchronizables, the value provided to `setBlocking` is serialized automatically. Fixed-type Synchronizables take the plain value without serialization.
 

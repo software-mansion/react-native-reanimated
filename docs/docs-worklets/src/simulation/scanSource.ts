@@ -5,6 +5,7 @@ const HEADER_PATTERN =
   /^\s*(?:export\s+(?:default\s+)?)?function\s*\*\s*([A-Za-z_$][\w$]*)\s*\(/;
 const NATIVE_DIRECTIVE_PATTERN = /^\s*'native';\s*$/;
 const HIDDEN_DIRECTIVE_PATTERN = /^\s*'hidden';\s*$/;
+const WORKLET_DIRECTIVE_PATTERN = /^\s*(['"])worklet\1;\s*(?:\/\/.*)?$/;
 const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
 const YIELD_PATTERN =
   /^\s*(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?yield\b/;
@@ -26,6 +27,7 @@ export function scanSource(source: string): Map<string, FnInfo> {
         yieldEnds: [],
         isNative: false,
         isHidden: false,
+        isWorklet: false,
         hasLoop: false,
       };
       if (fns.has(info.name)) {
@@ -57,6 +59,13 @@ export function scanSource(source: string): Map<string, FnInfo> {
     }
     if (HIDDEN_DIRECTIVE_PATTERN.test(text)) {
       current.isHidden = true;
+    }
+    if (
+      top.depth === 1 &&
+      current.yieldLines.length === 0 &&
+      WORKLET_DIRECTIVE_PATTERN.test(text)
+    ) {
+      current.isWorklet = true;
     }
     if (LOOP_PATTERN.test(text)) {
       current.hasLoop = true;

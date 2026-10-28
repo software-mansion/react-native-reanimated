@@ -3,6 +3,9 @@ sidebar_position: 42 # Use alphabetical order
 title: isUIRuntime
 ---
 
+import * as ApiIsUIRuntimeSnippet from './_examples/apiIsUIRuntime';
+import ApiIsUIRuntimeSource from '!!raw-loader!./_examples/apiIsUIRuntime';
+
 <Badges version="0.8.0">
   # isUIRuntime
 </Badges>
@@ -11,26 +14,7 @@ Checks if the current runtime is the [UI Runtime](../concepts/runtimeKinds.mdx#u
 
 ## Reference
 
-```typescript
-import {
-  isUIRuntime,
-  scheduleOnUI,
-  scheduleOnRuntime,
-  createWorkletRuntime,
-} from 'react-native-worklets';
-
-console.log(isUIRuntime()); // false
-
-scheduleOnUI(() => {
-  // highlight-next-line
-  console.log(isUIRuntime()); // true
-});
-
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  console.log(isUIRuntime()); // false
-});
-```
+<ThreadingSimulation module={ApiIsUIRuntimeSnippet} source={ApiIsUIRuntimeSource}/>
 
 <details>
   <summary>Type definitions</summary>

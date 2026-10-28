@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiScheduleOnUISnippet from './_examples/apiScheduleOnUI';
+import ApiScheduleOnUISource from '!!raw-loader!./_examples/apiScheduleOnUI';
+
 # scheduleOnUI
 
 `scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime). The callback executes asynchronously and doesn't return a value.
@@ -10,16 +13,7 @@ To compare it with [`runOnUIAsync`](./runOnUIAsync.mdx) and [`runOnUISync`](./ru
 
 ## Reference
 
-```javascript
-import { scheduleOnUI } from 'react-native-worklets';
-
-const myFunction = (): void => {
-  'worklet';
-  console.log('Hello from the UI Runtime!');
-};
-
-scheduleOnUI(myFunction); // Hello from the UI Runtime!
-```
+<ThreadingSimulation module={ApiScheduleOnUISnippet} source={ApiScheduleOnUISource}/>
 
 <details>
   <summary>Type definitions</summary>

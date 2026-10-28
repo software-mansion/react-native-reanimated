@@ -2,6 +2,15 @@
 sidebar_position: 30
 ---
 
+import * as WorkerIntervalSnippet from './_using-event-loop/workerInterval';
+import WorkerIntervalSource from '!!raw-loader!./_using-event-loop/workerInterval';
+
+import * as UiFramesSnippet from './_using-event-loop/uiFrames';
+import UiFramesSource from '!!raw-loader!./_using-event-loop/uiFrames';
+
+import * as RnTimerSnippet from './_using-event-loop/rnTimer';
+import RnTimerSource from '!!raw-loader!./_using-event-loop/rnTimer';
+
 # Using the event loop
 
 In the [previous chapter](./2-returning-results.mdx) we learned how to return results from
@@ -33,6 +42,8 @@ is polyfilled with a periodic timer.
 The application UI will not wait for the current iteration of the `requestAnimationFrame` queue
 execution to finish when rendering a frame.
 
+<ThreadingSimulation module={RnTimerSnippet} source={RnTimerSource} tickMs={1000}/>
+
 <ImagePlaceholder>
   figure showing how the RN Runtime raf queue is disjointed from the native rendering layer
 </ImagePlaceholder>
@@ -53,9 +64,11 @@ Timers like `setImmediate`, `setTimeout`, `setInterval` on the UI Runtime actual
 `requestAnimationFrame` under the hood. This means that i.e. for 60Hz devices, will be executed only
 once per 16ms, assuming no frame drops.
 
-{/* TODO: code snippet showing how to use UI Runtime timers */}
+Schedule the next frame from the UI Runtime callback. This example stops after three frames.
 
-{/* TODO: Note about stopping timers */}
+<ThreadingSimulation module={UiFramesSnippet} source={UiFramesSource} tickMs={500}/>
+
+For repeating timers, keep the id returned by `setInterval` and call `clearInterval` on the same Runtime when the work is complete.
 
 ## Worker Runtime
 
@@ -66,7 +79,9 @@ For advanced use cases, you can create a Worker Runtime
 [without an event loop](../threading/createWorkletRuntime.mdx#enableeventloop) and then implement it
 yourself.
 
-{/* TODO: code snippet showing how to use Worker Runtime timers */}
+A worker can poll periodically without occupying the JS thread. This interval clears itself after three callbacks.
 
-In the next chapter we'll learn how to synchronize with data between JavaScript Runtimes. using the
+<ThreadingSimulation module={WorkerIntervalSnippet} source={WorkerIntervalSource} tickMs={500}/>
+
+In the next chapter we'll learn how to synchronize with data between JavaScript Runtimes using the
 available event loop APIs.

@@ -2,6 +2,9 @@
 sidebar_position: 10
 ---
 
+import * as CreateWorkerSnippet from './_your-first-worklet/createWorker';
+import CreateWorkerSource from '!!raw-loader!./_your-first-worklet/createWorker';
+
 import * as FirstWorkletAsyncSnippet from './_your-first-worklet/firstWorkletAsync';
 import FirstWorkletAsyncSource from '!!raw-loader!./_your-first-worklet/firstWorkletAsync';
 import * as FirstWorkletSyncSnippet from './_your-first-worklet/firstWorkletSync';
@@ -24,10 +27,7 @@ either use the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) which is al
 or create our own [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime) with
 [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) function.
 
-```js
-import {createWorkletRuntime} from 'react-native-worklets';
-const worker = createWorkletRuntime();
-```
+<ThreadingSimulation module={CreateWorkerSnippet} source={CreateWorkerSource}/>
 
 In the next steps we'll dispatch some work to our new Worker Runtime and the UI Runtime.
 
