@@ -71,6 +71,7 @@ function Screens({
   targetScreen = active || keepTarget,
   targetMounted = true,
   targetExiting,
+  sourceMoved = false,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -85,6 +86,7 @@ function Screens({
   targetScreen?: boolean;
   targetMounted?: boolean;
   targetExiting?: FadeOut;
+  sourceMoved?: boolean;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -112,7 +114,9 @@ function Screens({
     <View style={styles.container}>
       {!(active && removeSource) && (
         <SharedTransitionBoundary isActive={!active}>
-          {reorder ? [children, ...siblings] : [...siblings, children]}
+          {reorder || sourceMoved
+            ? [children, ...siblings]
+            : [...siblings, children]}
         </SharedTransitionBoundary>
       )}
       {targetScreen && (
@@ -375,6 +379,37 @@ describe('Shared transition moves a real native view', () => {
           targetScreen
           targetMounted={false}
           targetExiting={targetExiting}
+        />
+      );
+
+      await expectAtHome('source', 60, 1);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+    });
+
+    test(`shows the source when React moves it and removes the target ${kind} in the same update`, async () => {
+      const transition = SharedTransition.duration(4000);
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <Screens active transition={transition} targetExiting={targetExiting} />
+      );
+      await expectMoving('source');
+
+      await render(
+        <Screens
+          active
+          transition={transition}
+          targetMounted={false}
+          targetExiting={targetExiting}
+          sourceMoved
         />
       );
 
