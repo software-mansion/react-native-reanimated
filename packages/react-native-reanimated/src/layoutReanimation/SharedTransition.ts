@@ -13,13 +13,32 @@ import { ComplexAnimationBuilder } from './animationBuilder';
 
 const DEFAULT_DURATION = 500;
 
+export type FadeContentConfig = {
+  /**
+   * The fade-out of the children of the moving view. `end` is the part of the
+   * move, more than 0 and at most 1, at which they reach opacity 0. Defaults to
+   * 1.
+   */
+  fadeOut?: { end?: number };
+  /**
+   * The fade-in of the children of the target view after the move. `duration`
+   * is in milliseconds. Defaults to half of the transition duration.
+   */
+  fadeIn?: { duration?: number };
+};
+
+export type SharedTransitionContentFade = {
+  fadeIn: EntryExitAnimationFunction;
+  fadeOutEnd: number;
+};
+
 export class SharedTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
 {
   static presetName = 'SharedTransition';
 
-  fadeContentV = false;
+  fadeContentV?: FadeContentConfig;
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -33,26 +52,41 @@ export class SharedTransition
    * visible. Use it when the two views have different children. Can be chained
    * alongside other [layout animation
    * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param config - When the fade-out ends and how long the fade-in lasts.
    */
   static fadeContent<T extends typeof SharedTransition>(
-    this: T
+    this: T,
+    config?: FadeContentConfig
   ): InstanceType<T> {
     const instance = this.createInstance();
-    return instance.fadeContent();
+    return instance.fadeContent(config);
   }
 
-  fadeContent(): this {
-    this.fadeContentV = true;
+  fadeContent(config: FadeContentConfig = {}): this {
+    this.fadeContentV = {
+      fadeOut: { end: validFadeOutEnd(config.fadeOut?.end) },
+      fadeIn: { duration: validFadeInDuration(config.fadeIn?.duration) },
+    };
     return this;
   }
 
-  // The children of the target view fade in after the move, in half of its duration.
-  buildContentFadeIn(): EntryExitAnimationFunction | undefined {
+  buildContentFade(): SharedTransitionContentFade | undefined {
     if (!this.fadeContentV) {
       return undefined;
     }
+    const { fadeOut, fadeIn } = this.fadeContentV;
+    return {
+      fadeIn: this.buildContentFadeIn(
+        fadeIn?.duration ?? (this.durationV ?? DEFAULT_DURATION) / 2
+      ),
+      fadeOutEnd: fadeOut?.end ?? 1,
+    };
+  }
+
+  private buildContentFadeIn(duration: number): EntryExitAnimationFunction {
     const config = {
-      duration: (this.durationV ?? DEFAULT_DURATION) / 2,
+      duration,
       easing: Easing.out(Easing.quad),
       reduceMotion: this.reduceMotionV,
     };
@@ -133,4 +167,27 @@ export class SharedTransition
       };
     };
   };
+}
+
+function validFadeOutEnd(end: number | undefined) {
+  if (end === undefined || (typeof end === 'number' && end > 0 && end <= 1)) {
+    return end;
+  }
+  logger.warn(
+    `fadeContent: fadeOut.end must be more than 0 and at most 1, got ${end}. The default 1 is used.`
+  );
+  return undefined;
+}
+
+function validFadeInDuration(duration: number | undefined) {
+  if (
+    duration === undefined ||
+    (typeof duration === 'number' && Number.isFinite(duration) && duration >= 0)
+  ) {
+    return duration;
+  }
+  logger.warn(
+    `fadeContent: fadeIn.duration must be a finite number of milliseconds, 0 or more, got ${duration}. The default is used.`
+  );
+  return undefined;
 }

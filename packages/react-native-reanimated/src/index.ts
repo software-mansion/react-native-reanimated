@@ -173,7 +173,10 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
-export type { ReanimatedKeyframe } from './layoutReanimation';
+export type {
+  FadeContentConfig,
+  ReanimatedKeyframe,
+} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
