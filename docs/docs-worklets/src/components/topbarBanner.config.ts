@@ -5,8 +5,6 @@ export const TOP_BAR_BANNER = {
   hiddenPaths: [
     '/react-native-worklets/docs',
     '/react-native-worklets/search',
-    '/react-native-worklets-next/docs',
-    '/react-native-worklets-next/search',
   ] as string[],
   zones: [
     {

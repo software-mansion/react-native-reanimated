@@ -10,7 +10,10 @@ export default function HomepageTryOutSection(): JSX.Element {
           <span className={styles.titleHighlight}>Worklets</span>?
         </div>
       </h2>
-      <HomepageButton title="Get started" href="/react-native-worklets/docs/" />
+      <HomepageButton
+        title="Get started"
+        href="/react-native-worklets/docs/fundamentals/getting-started"
+      />
     </div>
   );
 }
