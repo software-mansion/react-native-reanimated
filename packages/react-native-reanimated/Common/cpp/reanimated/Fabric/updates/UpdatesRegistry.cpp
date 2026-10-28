@@ -201,7 +201,7 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) const {
 
   for (const auto &[tag, pair] : updatesRegistry_) {
     const auto &[shadowNodeFamily, props] = pair;
-    propsMap[shadowNodeFamily].emplace_back(props);
+    propsMap[shadowNodeFamily].push_back(props);
   }
 }
 
