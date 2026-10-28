@@ -971,10 +971,8 @@ void LayoutAnimationsProxy::finishSharedTransition(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   const auto &run = *element.run;
-  // Without a target the source is the view to show. A gesture-driven run leaves its source to the screen pop.
-  const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
-  const bool showsSource = targetGone && !run.gestureDriven;
-  transaction.restoreRequests.push_back({sharedTag, showsSource ? run.source : run.target});
+  // A gesture-driven run leaves its source to the screen pop.
+  transaction.restoreRequests.push_back({sharedTag, run.target, run.gestureDriven ? nullptr : run.source});
   attachCarrier(sharedTag, run, transaction.filteredMutations, propsParserContext);
   element.run.reset();
 }
@@ -993,6 +991,14 @@ void LayoutAnimationsProxy::hideInSharedElement(const SharedTag &sharedTag, cons
   }
   forgetHiddenView(node->current.tag);
   sharedElements_[sharedTag].hiddenViews.push_back(HiddenView{.node = node});
+}
+
+RestoreRequest LayoutAnimationsProxy::withShownEndpoint(const RestoreRequest &request) const {
+  const auto &target = request.node;
+  if (request.sourceIfTargetGone && (!isLightNodeMapped(target) || target->isExiting())) {
+    return {request.sharedTag, request.sourceIfTargetGone};
+  }
+  return request;
 }
 
 bool LayoutAnimationsProxy::showHiddenView(const RestoreRequest &request) const {
@@ -1066,8 +1072,9 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("cleanupSharedTransitions");
   auto &filteredMutations = transaction.filteredMutations;
-  for (const auto &request : transaction.restoreRequests) {
+  for (const auto &pendingRequest : transaction.restoreRequests) {
     ReanimatedSystraceSection s("Restore tag");
+    const auto request = withShownEndpoint(pendingRequest);
     const auto &node = request.node;
     if (isInSharedTransition(node)) {
       deferRestore(request);

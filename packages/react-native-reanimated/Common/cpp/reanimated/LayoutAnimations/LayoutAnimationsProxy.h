@@ -51,10 +51,12 @@ struct SharedTransitionRun {
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
-// view is hidden for a different shared tag now.
+// view is hidden for a different shared tag now. A finished run asks to show
+// its target, and shows its source if the target is removed or exiting.
 struct RestoreRequest {
   SharedTag sharedTag;
   std::shared_ptr<LightNode> node;
+  std::shared_ptr<LightNode> sourceIfTargetGone = nullptr;
 };
 
 struct HiddenView {
@@ -326,6 +328,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool hasUnqueuedCarrierFrame(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
+  RestoreRequest withShownEndpoint(const RestoreRequest &request) const;
   bool showHiddenView(const RestoreRequest &request) const;
   void deferRestore(const RestoreRequest &request) const;
   void forgetHiddenView(Tag tag) const;
