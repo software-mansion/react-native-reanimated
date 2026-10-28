@@ -1166,12 +1166,16 @@ void LayoutAnimationsProxy::cleanupAnimations(
       if (!element.run) {
         continue;
       }
-      const auto tag = element.run->carrier->current.tag;
-      if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      if (!flushStructuralMutations || hasUnqueuedCarrierFrame(tag)) {
-        preservedTags.insert(tag);
+      const auto &carriers = element.run->carriers;
+      const auto hasUnqueuedFrame = [this](const auto &carrier) {
+        return hasUnqueuedCarrierFrame(carrier.node->current.tag);
+      };
+      // The carriers of a run stay at the root until all of them complete.
+      if (!isRunCompleted(*element.run) || !flushStructuralMutations ||
+          std::ranges::any_of(carriers, hasUnqueuedFrame)) {
+        for (const auto &carrier : carriers) {
+          preservedTags.insert(carrier.node->current.tag);
+        }
         continue;
       }
       finishSharedTransition(sharedTag, element, transaction, propsParserContext);
@@ -1195,7 +1199,7 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedCarrier(tag));
+    return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isCarrierOfCompletedRun(tag));
   });
 }
 
@@ -1368,6 +1372,7 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
+    const bool fadesOut,
     const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
@@ -1377,6 +1382,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .frameProps = frameProps,
       .parentTag = surfaceId_,
       .config = config,
+      .fadesOut = fadesOut,
   });
 }
 

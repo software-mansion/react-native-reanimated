@@ -60,14 +60,23 @@ export const updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
-) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>
+  sharedTransitionTag?: string,
+  sharedTransitionCrossfade?: boolean
+) => void = (
+  viewTag,
+  type,
+  config,
+  isUnmounting,
+  sharedTransitionTag,
+  sharedTransitionCrossfade
+) =>
   updateLayoutAnimationsManager.update(
     {
       viewTag,
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionCrossfade,
     },
     isUnmounting
   );

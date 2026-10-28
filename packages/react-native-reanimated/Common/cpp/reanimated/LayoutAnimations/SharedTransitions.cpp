@@ -8,6 +8,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <ranges>
 #include <unordered_set>
 #include <utility>
@@ -59,6 +60,16 @@ constexpr std::array kAnimatedStyleProps{
 #endif
 
 // MARK: Shared Element Transitions
+
+namespace {
+bool fadesIn(const SharedTransitionRun &run, const std::shared_ptr<LightNode> &node) {
+  return run.crossfade && node == run.target;
+}
+
+bool fadesOut(const SharedTransitionRun &run, const std::shared_ptr<LightNode> &node) {
+  return run.crossfade && node == run.source;
+}
+} // namespace
 
 // A boundary is active when its `isActive` prop (controlled from JS,
 // e.g. with `useIsFocused`) is true and it's not currently exiting.
@@ -114,7 +125,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     ShadowView copy;
     std::optional<Transform> newTransform;
     if (useViewsOnScreen && node->isDetached) {
-      copy = carrierViewOnScreen(*sharedElementOfCarrier(node).second.run);
+      copy = carrierViewOnScreen(carrierOf(node));
     } else {
       copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
       const auto absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
@@ -260,58 +271,66 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
         const auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
-
-        startProgressTransition(
-            run.carrier->current.tag,
-            run.carrierStartView,
-            asCarrierView(after, run.carrier, propsParserContext),
-            ownCarrierView(after, run.carrier, propsParserContext).props);
+        for (const auto &carrier : run.carriers) {
+          startProgressTransition(
+              carrier.node->current.tag,
+              carrier.startView,
+              carrierFinalView(run, carrier.node, after, propsParserContext),
+              ownCarrierView(after, carrier.node, propsParserContext).props);
+        }
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
     }
   } else if (transition_->state == TransitionState::ACTIVE) {
+    const auto progress = transition_->progress;
+    const auto interpolate = [progress](const double from, const double to) {
+      return from + progress * (to - from);
+    };
     for (const auto &[_, element] : sharedElements_) {
       if (!element.run || !element.run->gestureDriven) {
         continue;
       }
-      const auto tag = element.run->carrier->current.tag;
-      if (hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      const auto layoutAnimationIt = layoutAnimations_.find(tag);
-      if (layoutAnimationIt == layoutAnimations_.end()) {
-        react_native_assert(false && "Shared transition animation not found");
-        continue;
-      }
-      const auto &layoutAnimation = layoutAnimationIt->second;
-      auto before = layoutAnimation.startView.layoutMetrics.frame;
-      auto after = layoutAnimation.finalView.layoutMetrics.frame;
-      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
-      auto y = before.origin.y + transition_->progress * (after.origin.y - before.origin.y);
-      auto width = before.size.width + transition_->progress * (after.size.width - before.size.width);
-      auto height = before.size.height + transition_->progress * (after.size.height - before.size.height);
+      for (const auto &carrier : element.run->carriers) {
+        const auto tag = carrier.node->current.tag;
+        if (hasPendingLayoutAnimation(tag)) {
+          continue;
+        }
+        const auto layoutAnimationIt = layoutAnimations_.find(tag);
+        if (layoutAnimationIt == layoutAnimations_.end()) {
+          react_native_assert(false && "Shared transition animation not found");
+          continue;
+        }
+        const auto &layoutAnimation = layoutAnimationIt->second;
+        const auto &before = layoutAnimation.startView.layoutMetrics.frame;
+        const auto &after = layoutAnimation.finalView.layoutMetrics.frame;
+        const auto x = interpolate(before.origin.x, after.origin.x);
+        const auto y = interpolate(before.origin.y, after.origin.y);
+        const auto width = interpolate(before.size.width, after.size.width);
+        const auto height = interpolate(before.size.height, after.size.height);
 
-      auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
-      auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
-      auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-      auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        const auto &beforeProps = getViewProps(layoutAnimation.startView);
+        const auto &afterProps = getViewProps(layoutAnimation.finalView);
+        const auto beforeRadius = beforeProps.borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        const auto afterRadius = afterProps.borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
 
-      // TODO (future): Support more props in progress transitions.
-      auto borderRadiusDynamic =
-          folly::dynamic::object("borderRadius", beforeRadius + transition_->progress * (afterRadius - beforeRadius));
+        // TODO (future): Support more props in progress transitions.
+        folly::dynamic progressProps = folly::dynamic::object("borderRadius", interpolate(beforeRadius, afterRadius));
+        if (element.run->crossfade) {
+          progressProps["opacity"] = interpolate(beforeProps.opacity, afterProps.opacity);
+        }
 
 #ifdef RN_SERIALIZABLE_STATE
-      // TODO (future): Support borderRadius on Android.
-      const Props::Shared newProps = nullptr;
+        // TODO (future): Support borderRadius on Android.
+        const Props::Shared newProps = nullptr;
 #else
-      auto rawProps = RawProps(std::move(borderRadiusDynamic));
-
-      auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), std::move(rawProps));
+        auto newProps =
+            componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
+                .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), RawProps(std::move(progressProps)));
 #endif
 
-      updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
+        updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
+      }
     }
   }
 
@@ -369,9 +388,9 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
-// A run that still animates keeps its carrier. A new carrier is the source view, because its
+// A run that still animates keeps its carriers. A new carrier is the source view, because its
 // content is already on screen. A source that React removes in this transaction cannot stay
-// mounted, so then the target view is the carrier.
+// mounted, so then the target view is the carrier, also when the run would crossfade.
 SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
     const SharedTag &sharedTag,
@@ -385,30 +404,114 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     if (oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
       transaction.restoreRequests.push_back({sharedTag, oldTarget});
     }
-    const auto tag = run->carrier->current.tag;
-    const bool isAnimating = hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
-    const bool carrierChangedTag = findSharedTag(run->carrier->current) != sharedTag;
-    if (!isAnimating || carrierChangedTag) {
-      react_native_assert((isAnimating || completedAnimations_.contains(tag)) && "Shared carrier has no animation");
-      attachCarrier(sharedTag, *run, transaction.filteredMutations, propsParserContext);
+    if (!canContinueRun(sharedTag, *run, nodes)) {
+      attachCarriers(sharedTag, *run, transaction.filteredMutations, propsParserContext);
       run.reset();
     }
   }
   if (!run) {
     const auto &[beforeNode, afterNode] = nodes;
-    const auto &carrier = beforeNode->isExiting() ? afterNode : beforeNode;
-    // A view carries one run. Its shared tag can change while it carries the run of the old tag.
-    if (carrier->isDetached) {
-      auto &[carriedTag, carriedElement] = sharedElementOfCarrier(carrier);
-      finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
+    const bool crossfades = beforeNode != afterNode && !beforeNode->isExiting() &&
+        layoutAnimationsManager_->isCrossfadeSharedTransition(before.tag);
+    std::vector<std::shared_ptr<LightNode>> carrierNodes;
+    if (crossfades) {
+      carrierNodes = {beforeNode, afterNode};
+    } else {
+      carrierNodes = {beforeNode->isExiting() ? afterNode : beforeNode};
     }
-    run = SharedTransitionRun{.carrier = carrier};
-    detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
+    // A view carries one run. Its shared tag can change while it carries the run of the old tag.
+    for (const auto &node : carrierNodes) {
+      if (node->isDetached) {
+        auto &[carriedTag, carriedElement] = sharedElementOfCarrier(node);
+        finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
+      }
+    }
+    run = SharedTransitionRun{.source = beforeNode, .target = afterNode, .crossfade = crossfades};
+    for (const auto &node : carrierNodes) {
+      detachCarrier(
+          *run, node, carrierStartView(*run, node, before, propsParserContext), transaction, propsParserContext);
+    }
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
   return *run;
+}
+
+// A run that crossfades continues when its carriers stay endpoints and the target is one of them, for example
+// when the navigation goes back during the transition. React can remove one of the carriers then.
+bool LayoutAnimationsProxy::canContinueRun(
+    const SharedTag &sharedTag,
+    const SharedTransitionRun &run,
+    const std::array<std::shared_ptr<LightNode>, 2> &nodes) const {
+  if (!isRunAnimating(run)) {
+    react_native_assert(
+        std::ranges::all_of(
+            run.carriers,
+            [this](const auto &carrier) { return completedAnimations_.contains(carrier.node->current.tag); }) &&
+        "Shared carrier has no animation");
+    return false;
+  }
+  const bool carrierChangedTag = std::ranges::any_of(
+      run.carriers, [&](const auto &carrier) { return findSharedTag(carrier.node->current) != sharedTag; });
+  const auto isCarrier = [&run](const auto &node) {
+    return std::ranges::find(run.carriers, node, &SharedTransitionCarrier::node) != run.carriers.end();
+  };
+  const bool carriersStayEndpoints = std::ranges::all_of(
+      run.carriers, [&nodes](const auto &carrier) { return std::ranges::find(nodes, carrier.node) != nodes.end(); });
+  const bool keepsCrossfade =
+      !run.crossfade || (nodes[BEFORE] != nodes[AFTER] && carriersStayEndpoints && isCarrier(nodes[AFTER]));
+  return !carrierChangedTag && keepsCrossfade;
+}
+
+bool LayoutAnimationsProxy::isRunCompleted(const SharedTransitionRun &run) const {
+  return std::ranges::all_of(run.carriers, [this](const auto &carrier) {
+    const auto tag = carrier.node->current.tag;
+    return completedAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
+  });
+}
+
+bool LayoutAnimationsProxy::isRunAnimating(const SharedTransitionRun &run) const {
+  return std::ranges::any_of(run.carriers, [this](const auto &carrier) {
+    const auto tag = carrier.node->current.tag;
+    return hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
+  });
+}
+
+// In a crossfade the target starts transparent and the source ends transparent.
+ShadowView LayoutAnimationsProxy::carrierStartView(
+    const SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &node,
+    const ShadowView &before,
+    const PropsParserContext &propsParserContext) const {
+  const auto startView = carrierViewWithStyleOf(before, node, propsParserContext);
+  return fadesIn(run, node) ? cloneViewWithOpacity(startView, 0, propsParserContext) : startView;
+}
+
+ShadowView LayoutAnimationsProxy::carrierFinalView(
+    const SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &node,
+    const ShadowView &after,
+    const PropsParserContext &propsParserContext) const {
+  const auto finalView = asCarrierView(after, node, propsParserContext);
+  return fadesOut(run, node) ? cloneViewWithOpacity(finalView, 0, propsParserContext) : finalView;
+}
+
+void LayoutAnimationsProxy::startRunAnimations(
+    const SharedTransitionRun &run,
+    const ShadowView &after,
+    const std::shared_ptr<Serializable> &config,
+    const PropsParserContext &propsParserContext) const {
+  for (const auto &carrier : run.carriers) {
+    const auto &node = carrier.node;
+    startSharedTransition(
+        node->current.tag,
+        carrier.startView,
+        carrierFinalView(run, node, after, propsParserContext),
+        ownCarrierView(after, node, propsParserContext).props,
+        fadesOut(run, node),
+        config);
+  }
 }
 
 // The view at one end of the animation of the carrier. The carrier keeps its own state and event
@@ -500,10 +603,10 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
 
 void LayoutAnimationsProxy::detachCarrier(
     SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &node,
     const ShadowView &startView,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
-  const auto &node = run.carrier;
   const auto tag = node->current.tag;
   const auto parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
@@ -526,12 +629,13 @@ void LayoutAnimationsProxy::detachCarrier(
   forgetHiddenView(tag);
   // Android writes only the raw props of an Update, so the opacity must be in them to show
   // a carrier that was hidden.
-  run.carrierStartView = cloneViewWithOpacity(startView, getViewProps(startView).opacity, propsParserContext);
+  auto insertedView = cloneViewWithOpacity(startView, getViewProps(startView).opacity, propsParserContext);
 #ifdef ANDROID
-  run.carrierStartView = resetPropsMissingFrom(run.carrierStartView, mounted, propsParserContext);
+  insertedView = resetPropsMissingFrom(insertedView, mounted, propsParserContext);
 #endif
-  mutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, run.carrierStartView, carrierHostIndex(node)));
-  mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, surfaceId_));
+  mutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, insertedView, carrierHostIndex(node)));
+  mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, insertedView, surfaceId_));
+  run.carriers.push_back({.node = node, .startView = std::move(insertedView)});
 
   auto &filteredMutations = transaction.filteredMutations;
   if (!beforeScreenSnapshot) {
@@ -567,14 +671,24 @@ bool LayoutAnimationsProxy::canDetachBeforeScreenSnapshot(
   });
 }
 
-void LayoutAnimationsProxy::attachCarrier(
+void LayoutAnimationsProxy::attachCarriers(
     const SharedTag &sharedTag,
     const SharedTransitionRun &run,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
-  const auto node = run.carrier;
+  for (const auto &carrier : run.carriers) {
+    attachCarrier(sharedTag, carrier, mutations, propsParserContext);
+  }
+}
+
+void LayoutAnimationsProxy::attachCarrier(
+    const SharedTag &sharedTag,
+    const SharedTransitionCarrier &carrier,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto node = carrier.node;
   const auto tag = node->current.tag;
-  const auto mounted = carrierViewOnScreen(run);
+  const auto mounted = carrierViewOnScreen(carrier);
   const auto parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   mutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, mounted, carrierHostIndex(node)));
@@ -607,7 +721,9 @@ void LayoutAnimationsProxy::attachCarriersThatReactMoves(
     if (!element.run) {
       continue;
     }
-    if (moved.contains(element.run->carrier->current.tag)) {
+    const bool movesCarrier = std::ranges::any_of(
+        element.run->carriers, [&moved](const auto &carrier) { return moved.contains(carrier.node->current.tag); });
+    if (movesCarrier) {
       finishSharedTransition(sharedTag, element, transaction, propsParserContext);
     }
   }
@@ -619,9 +735,29 @@ void LayoutAnimationsProxy::attachRetainedCarriers(
     TransactionMeta &transaction) const {
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   for (auto &[sharedTag, element] : sharedElements_) {
-    if (element.run && !removals.contains(element.run->carrier->current.tag) &&
-        isInSubtree(element.run->carrier, node)) {
-      finishSharedTransition(sharedTag, element, transaction, propsParserContext);
+    if (!element.run) {
+      continue;
+    }
+    auto &run = *element.run;
+    const auto isRemoved = [&removals](const auto &carrier) {
+      return removals.contains(carrier.node->current.tag);
+    };
+    const bool retainsCarrier = std::ranges::any_of(
+        run.carriers, [&](const auto &carrier) { return !isRemoved(carrier) && isInSubtree(carrier.node, node); });
+    if (!retainsCarrier) {
+      continue;
+    }
+    // A removed carrier stays at the root, and the teardown removes it from there.
+    const auto &shownEndpoint = removals.contains(run.target->current.tag) ? run.source : run.target;
+    transaction.restoreRequests.push_back({sharedTag, shownEndpoint});
+    for (const auto &carrier : run.carriers) {
+      if (!isRemoved(carrier)) {
+        attachCarrier(sharedTag, carrier, transaction.filteredMutations, propsParserContext);
+      }
+    }
+    std::erase_if(run.carriers, std::not_fn(isRemoved));
+    if (run.carriers.empty()) {
+      element.run.reset();
     }
   }
 }
@@ -635,13 +771,18 @@ void LayoutAnimationsProxy::removeFromParent(
   const auto position = parent->positionOf(node);
   react_native_assert(position != -1 && "Removed node not found in its parent");
   if (node->isDetached) {
+    // The run continues with its other carrier, if it has one.
     auto &[sharedTag, element] = sharedElementOfCarrier(node);
-    deferRestore({sharedTag, element.run->target});
+    auto &run = *element.run;
     rootMutations.push_back(
-        ShadowViewMutation::RemoveMutation(surfaceId_, carrierViewOnScreen(*element.run), carrierHostIndex(node)));
+        ShadowViewMutation::RemoveMutation(surfaceId_, carrierViewOnScreen(carrierOf(node)), carrierHostIndex(node)));
     std::erase(detachedCarriers_, node);
     node->setDetached(false);
-    element.run.reset();
+    std::erase_if(run.carriers, [&node](const auto &carrier) { return carrier.node == node; });
+    if (run.carriers.empty()) {
+      deferRestore({sharedTag, run.target});
+      element.run.reset();
+    }
   } else {
     auto &parentMutations = parent->current.tag == surfaceId_ ? rootMutations : mutations;
     parentMutations.push_back(
@@ -659,25 +800,30 @@ int LayoutAnimationsProxy::carrierHostIndex(const std::shared_ptr<LightNode> &no
   return rootChildCount + static_cast<int>(std::distance(detachedCarriers_.begin(), carrierIt));
 }
 
-const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransitionRun &run) const {
-  const auto tag = run.carrier->current.tag;
+const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransitionCarrier &carrier) const {
+  const auto tag = carrier.node->current.tag;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return it->second.currentView;
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
     return it->second.animation.currentView;
   }
-  return run.carrierStartView;
+  return carrier.startView;
 }
 
 std::pair<const SharedTag, SharedElement> &LayoutAnimationsProxy::sharedElementOfCarrier(
     const std::shared_ptr<LightNode> &node) const {
   const auto elementIt = std::ranges::find_if(sharedElements_, [&node](const auto &entry) {
     const auto &run = entry.second.run;
-    return run && run->carrier == node;
+    return run && std::ranges::find(run->carriers, node, &SharedTransitionCarrier::node) != run->carriers.end();
   });
   react_native_assert(elementIt != sharedElements_.end() && "The node is not a carrier");
   return *elementIt;
+}
+
+const SharedTransitionCarrier &LayoutAnimationsProxy::carrierOf(const std::shared_ptr<LightNode> &node) const {
+  const auto &carriers = sharedElementOfCarrier(node).second.run->carriers;
+  return *std::ranges::find(carriers, node, &SharedTransitionCarrier::node);
 }
 
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
@@ -718,13 +864,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       warnIfSnapshotIsStale(after, transaction);
       const auto &run = startSharedTransitionRun(
           before, sharedTag, collectedTransition.nodes, false, transaction, propsParserContext);
-
-      startSharedTransition(
-          run.carrier->current.tag,
-          run.carrierStartView,
-          asCarrierView(after, run.carrier, propsParserContext),
-          ownCarrierView(after, run.carrier, propsParserContext).props,
-          config);
+      startRunAnimations(run, after, config, propsParserContext);
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -736,8 +876,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         continue;
       }
       auto &run = *elementIt->second.run;
-      const auto carrierTag = run.carrier->current.tag;
-      if (!hasPendingLayoutAnimation(carrierTag) && !layoutAnimations_.contains(carrierTag)) {
+      if (!isRunAnimating(run)) {
         continue;
       }
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
@@ -750,25 +889,34 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
+      // The target of a crossfade is a carrier, so a new target view ends the run.
+      if (run.crossfade &&
+          std::ranges::find(run.carriers, afterNode, &SharedTransitionCarrier::node) == run.carriers.end()) {
+        finishSharedTransition(sharedTag, elementIt->second, transaction, propsParserContext);
+        continue;
+      }
       if (run.target != afterNode) {
         transaction.restoreRequests.push_back({sharedTag, run.target});
       }
       run.target = afterNode;
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
-      const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
-      if (hasPendingLayoutAnimation(carrierTag)) {
-        updateLayoutAnimationTarget(
-            carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
-        continue;
-      }
-      const auto &layoutAnimation = layoutAnimations_.at(carrierTag);
-      if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
-        startSharedTransition(
-            carrierTag,
-            layoutAnimation.currentView,
-            carrierAfter,
-            ownCarrierView(after, run.carrier, propsParserContext).props,
-            config);
+      for (const auto &carrier : run.carriers) {
+        const auto carrierTag = carrier.node->current.tag;
+        const auto carrierAfter = carrierFinalView(run, carrier.node, after, propsParserContext);
+        const auto frameProps = ownCarrierView(after, carrier.node, propsParserContext).props;
+        if (hasPendingLayoutAnimation(carrierTag)) {
+          updateLayoutAnimationTarget(carrierTag, carrierAfter, frameProps, config);
+          continue;
+        }
+        const auto layoutAnimationIt = layoutAnimations_.find(carrierTag);
+        if (layoutAnimationIt == layoutAnimations_.end()) {
+          continue;
+        }
+        const auto &layoutAnimation = layoutAnimationIt->second;
+        if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
+          startSharedTransition(
+              carrierTag, layoutAnimation.currentView, carrierAfter, frameProps, fadesOut(run, carrier.node), config);
+        }
       }
     }
   }
@@ -965,15 +1113,28 @@ void LayoutAnimationsProxy::finishSharedTransition(
   const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
   const bool showsSource = targetGone && !run.gestureDriven;
   transaction.restoreRequests.push_back({sharedTag, showsSource ? run.source : run.target});
-  attachCarrier(sharedTag, run, transaction.filteredMutations, propsParserContext);
+  attachCarriers(sharedTag, run, transaction.filteredMutations, propsParserContext);
   element.run.reset();
 }
 
 bool LayoutAnimationsProxy::isSharedCarrier(const Tag tag) const {
-  return std::ranges::any_of(sharedElements_, [tag](const auto &entry) {
-    const auto &run = entry.second.run;
-    return run && run->carrier->current.tag == tag;
-  });
+  return runOfCarrier(tag) != nullptr;
+}
+
+bool LayoutAnimationsProxy::isCarrierOfCompletedRun(const Tag tag) const {
+  const auto *run = runOfCarrier(tag);
+  return run && isRunCompleted(*run);
+}
+
+const SharedTransitionRun *LayoutAnimationsProxy::runOfCarrier(const Tag tag) const {
+  for (const auto &[_, element] : sharedElements_) {
+    const auto &run = element.run;
+    if (run &&
+        std::ranges::any_of(run->carriers, [tag](const auto &carrier) { return carrier.node->current.tag == tag; })) {
+      return &*run;
+    }
+  }
+  return nullptr;
 }
 
 void LayoutAnimationsProxy::hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node)
@@ -1120,7 +1281,7 @@ const ShadowView &LayoutAnimationsProxy::pathView(
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
   if (endsPathOnScreen(pathNode, node, useViewsOnScreen)) {
-    return carrierViewOnScreen(*sharedElementOfCarrier(pathNode).second.run);
+    return carrierViewOnScreen(carrierOf(pathNode));
   }
   return useViewsOnScreen ? viewOnScreen(pathNode) : pathNode->current;
 }

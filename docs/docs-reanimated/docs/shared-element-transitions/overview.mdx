@@ -131,6 +131,26 @@ function SharedView() {
 
 On iOS, when the animation is triggered by a swipe gesture or the OS back button we instead run a progress-based transition. This way the animation responds to the user swiping their finger accordingly, and allows for transition cancellation. This behavior will be possible to customize in the future.
 
+### Crossfade
+
+By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `crossfade()` to show both views in the same moving frame: the source fades out and the target fades in.
+
+```tsx
+const transition = SharedTransition.duration(450).crossfade();
+
+<Animated.View
+  sharedTransitionTag="item"
+  // highlight-next-line
+  sharedTransitionStyle={transition}
+/>;
+```
+
+- The fade uses the same timing or spring as the transition, so it also reverses when the navigation goes back during the transition.
+- Each view keeps the layout of its own children. The frame changes, but the children are not laid out again and not scaled. Add `overflow: 'hidden'` to the shared views to clip children that are larger than the moving frame.
+- A child with its own `sharedTransitionTag` moves on its own path above both views and does not fade with them.
+- The transition reads the option of the source view when it starts.
+- When React removes the source view in the same update that starts the transition, the source cannot stay on screen. Then only the target view moves, without a fade. On Android this is the case for back navigation.
+
 ## Example
 
 import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';

@@ -79,6 +79,8 @@ const ComposedHandlerInternalMergingExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerInternalMergingExample').default
   );
+const CrossfadeExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/Crossfade').default);
 const CustomLayoutAnimationScreen: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/CustomLayout').default as React.FC
@@ -919,6 +921,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CrossfadeExample: {
+    title: '[SET] Crossfade',
+    screen: CrossfadeExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

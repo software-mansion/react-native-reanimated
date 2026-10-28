@@ -400,6 +400,9 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       auto propsDiffer = PropsDiffer(uiRuntime_, start.before, start.after);
       values = propsDiffer.computeDiff(uiRuntime_);
+      if (start.fadesOut) {
+        values.setProperty(uiRuntime_, "fadesOut", true);
+      }
     } else {
       const Snapshot current(start.before, window);
       const Snapshot target(start.after, window);
