@@ -2,7 +2,6 @@
 import { createSerializable } from 'react-native-worklets';
 
 import type {
-  EntryExitAnimationFunction,
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -10,6 +9,7 @@ import type {
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type { SharedTransitionContentFade } from './layoutReanimation/SharedTransition';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -54,7 +54,7 @@ function createUpdateManager() {
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
  * @param sharedTransitionTag - The shared tag that pairs the views.
- * @param sharedTransitionContentFadeIn - The target content fade after landing.
+ * @param sharedTransitionContentFade - The content fade settings of the run.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 
@@ -64,14 +64,14 @@ export const updateLayoutAnimations: (
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFadeIn?: EntryExitAnimationFunction
+  sharedTransitionContentFade?: SharedTransitionContentFade
 ) => void = (
   viewTag,
   type,
   config,
   isUnmounting,
   sharedTransitionTag,
-  sharedTransitionContentFadeIn
+  sharedTransitionContentFade
 ) =>
   updateLayoutAnimationsManager.update(
     {
@@ -79,8 +79,11 @@ export const updateLayoutAnimations: (
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
-      sharedTransitionContentFadeIn: sharedTransitionContentFadeIn
-        ? createSerializable(sharedTransitionContentFadeIn)
+      sharedTransitionContentFade: sharedTransitionContentFade
+        ? {
+            fadeIn: createSerializable(sharedTransitionContentFade.fadeIn),
+            fadeOutEnd: sharedTransitionContentFade.fadeOutEnd,
+          }
         : undefined,
     },
     isUnmounting

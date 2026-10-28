@@ -22,7 +22,7 @@ describe('SharedTransition content fade builder', () => {
     (create) => {
       const transition = create();
       expect(transition).toBeInstanceOf(SharedTransition);
-      transition.buildContentFadeIn()?.({
+      transition.buildContentFade()?.fadeIn({
         targetOpacity: 0.4,
       } as EntryAnimationsValues);
       expect(withTiming).toHaveBeenCalledWith(
@@ -33,9 +33,10 @@ describe('SharedTransition content fade builder', () => {
   );
 
   test('uses the default spring fade-in duration', () => {
-    SharedTransition.springify().fadeContent().buildContentFadeIn()?.(
-      {} as EntryAnimationsValues
-    );
+    SharedTransition.springify()
+      .fadeContent()
+      .buildContentFade()
+      ?.fadeIn({} as EntryAnimationsValues);
     expect(withTiming).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ duration: 250 })

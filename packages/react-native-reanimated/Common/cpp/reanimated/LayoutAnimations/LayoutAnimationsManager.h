@@ -33,12 +33,18 @@ struct SharedTransitionManager {
   std::unordered_map<Tag, std::string> nativeIDToName_;
 };
 
+// The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.
+struct SharedTransitionContentFade {
+  std::shared_ptr<Serializable> fadeIn;
+  double fadeOutEnd = 1;
+};
+
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
-  std::shared_ptr<Serializable> sharedTransitionContentFadeIn;
+  std::optional<SharedTransitionContentFade> sharedTransitionContentFade;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -53,7 +59,7 @@ class LayoutAnimationsManager {
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
-  std::shared_ptr<Serializable> getSharedTransitionContentFadeIn(const int tag);
+  std::optional<SharedTransitionContentFade> getSharedTransitionContentFade(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -62,7 +68,7 @@ class LayoutAnimationsManager {
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config);
   void clearLayoutAnimationConfig(const int tag);
-  void clearSharedTransitionContentFadeIn(int tag);
+  void clearSharedTransitionContentFade(int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
@@ -74,8 +80,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> contentFadeInsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> contentFadeIns_;
+  std::unordered_map<int, SharedTransitionContentFade> contentFadesForNativeID_;
+  std::unordered_map<int, SharedTransitionContentFade> contentFades_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
