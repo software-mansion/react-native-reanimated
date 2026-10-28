@@ -635,17 +635,14 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         updateLayoutAnimationTarget(containerTag, after, config);
         continue;
       }
+      if (clipAfter && !endsTheSame(runAnimation(run.clip).finalView, *clipAfter)) {
+        startClipTransition(clipAfter->tag, runAnimation(run.clip).currentView, *clipAfter, config);
+      }
       const auto &containerAnimation = runAnimation(run.container);
-      const bool clipChanged = clipAfter && !endsTheSame(runAnimation(run.clip).finalView, *clipAfter);
-      if (endsTheSame(containerAnimation.finalView, after) && !clipChanged) {
-        continue;
+      if (!endsTheSame(containerAnimation.finalView, after)) {
+        startSharedTransition(
+            containerTag, containerAnimation.currentView, after, clipAfter ? clipAfter->tag : surfaceId_, config);
       }
-      auto parentTag = surfaceId_;
-      if (clipAfter) {
-        parentTag = clipAfter->tag;
-        startClipTransition(parentTag, runAnimation(run.clip).currentView, *clipAfter, config);
-      }
-      startSharedTransition(containerTag, containerAnimation.currentView, after, parentTag, config);
     }
   }
 }
