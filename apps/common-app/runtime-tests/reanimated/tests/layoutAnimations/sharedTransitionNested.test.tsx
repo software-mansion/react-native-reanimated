@@ -27,10 +27,25 @@ function transitionWithNotification(duration: number, name: string) {
   });
 }
 
-const outerTransition = transitionWithNotification(6000, 'outer-finished');
-const innerTransition = transitionWithNotification(300, 'inner-finished');
+type Transitions = { outer: SharedTransition; inner: SharedTransition };
 
-function Target({ innerSize }: { innerSize: number }) {
+const innerEndsFirst: Transitions = {
+  outer: transitionWithNotification(6000, 'outer-finished'),
+  inner: transitionWithNotification(300, 'inner-finished'),
+};
+
+const outerEndsFirst: Transitions = {
+  outer: transitionWithNotification(300, 'outer-finished'),
+  inner: transitionWithNotification(3000, 'inner-finished'),
+};
+
+function Target({
+  innerSize,
+  transitions,
+}: {
+  innerSize: number;
+  transitions: Transitions;
+}) {
   const outer = useTestRef('targetOuter');
   const inner = useTestRef('targetInner');
   return (
@@ -38,12 +53,12 @@ function Target({ innerSize }: { innerSize: number }) {
       <Animated.View
         ref={outer}
         sharedTransitionTag="outer"
-        sharedTransitionStyle={outerTransition}
+        sharedTransitionStyle={transitions.outer}
         style={styles.targetOuter}>
         <Animated.View
           ref={inner}
           sharedTransitionTag="inner"
-          sharedTransitionStyle={innerTransition}
+          sharedTransitionStyle={transitions.inner}
           style={[styles.targetInner, { width: innerSize, height: innerSize }]}
         />
       </Animated.View>
@@ -54,9 +69,11 @@ function Target({ innerSize }: { innerSize: number }) {
 function Screens({
   active,
   innerSize = 60,
+  transitions = innerEndsFirst,
 }: {
   active: boolean;
   innerSize?: number;
+  transitions?: Transitions;
 }) {
   const inner = useTestRef('sourceInner');
   return (
@@ -64,17 +81,17 @@ function Screens({
       <SharedTransitionBoundary isActive={!active}>
         <Animated.View
           sharedTransitionTag="outer"
-          sharedTransitionStyle={outerTransition}
+          sharedTransitionStyle={transitions.outer}
           style={styles.sourceOuter}>
           <Animated.View
             ref={inner}
             sharedTransitionTag="inner"
-            sharedTransitionStyle={innerTransition}
+            sharedTransitionStyle={transitions.inner}
             style={styles.sourceInner}
           />
         </Animated.View>
       </SharedTransitionBoundary>
-      {active && <Target innerSize={innerSize} />}
+      {active && <Target innerSize={innerSize} transitions={transitions} />}
     </View>
   );
 }
@@ -98,6 +115,28 @@ async function sampleInnerViewWhileOuterTargetIsHidden() {
     await waitForFrames(1);
   }
   await outerNotification;
+  return samples;
+}
+
+async function sampleInnerViewUntilItLands() {
+  let innerFinished = false;
+  const markInnerFinished = () => {
+    innerFinished = true;
+  };
+  const innerNotification = waitForNotification('inner-finished');
+  innerNotification.then(markInnerFinished, markInnerFinished);
+  const samples = { shown: 0, hidden: 0 };
+  while (!innerFinished) {
+    const [sourceInner, targetInner] = await opacitiesOf(
+      'sourceInner',
+      'targetInner'
+    );
+    if (targetInner === 0) {
+      samples[sourceInner === 1 ? 'shown' : 'hidden']++;
+    }
+    await waitForFrames(1);
+  }
+  await innerNotification;
   return samples;
 }
 
@@ -159,6 +198,19 @@ describe('Nested shared transitions', () => {
     }).toBe(true);
 
     await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
+
+  test('keeps the inner view on screen when the outer transition ends first', async () => {
+    await render(<Screens active={false} transitions={outerEndsFirst} />);
+    await waitForFrames();
+
+    await render(<Screens active transitions={outerEndsFirst} />);
+    await waitForNotification('outer-finished');
+    const samples = await sampleInnerViewUntilItLands();
+    expect(samples.hidden).toBe(0);
+    expect(samples.shown > 0).toBe(true);
+
     await expectAllShownAtTargets();
   });
 });
