@@ -10,6 +10,10 @@ export type TextInputObservation = {
   placeholderTextColor: string | null;
 };
 
+export type TransformObservation = {
+  translateX: number;
+};
+
 export interface Spec extends TurboModule {
   emitScreenTransitionProgress(
     tag: CodegenTypes.Int32,
@@ -22,6 +26,10 @@ export interface Spec extends TurboModule {
 
   /** Returns null when the parent of the mounted view is not a React view. */
   observeParent(tag: CodegenTypes.Int32): Promise<number | null>;
+
+  observeTransform(
+    tag: CodegenTypes.Int32
+  ): Promise<TransformObservation | null>;
 
   observeTextInput(
     tag: CodegenTypes.Int32
