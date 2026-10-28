@@ -1,8 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import {
   describe,
@@ -16,6 +18,7 @@ import {
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { MountedViewProps } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 function transitionWithNotification(duration: number, name: string) {
@@ -30,8 +33,8 @@ function transitionWithNotification(duration: number, name: string) {
 type Transitions = { outer: SharedTransition; inner: SharedTransition };
 
 const innerEndsFirst: Transitions = {
-  outer: transitionWithNotification(6000, 'outer-finished'),
-  inner: transitionWithNotification(300, 'inner-finished'),
+  outer: transitionWithNotification(8000, 'outer-finished'),
+  inner: transitionWithNotification(2000, 'inner-finished'),
 };
 
 const outerEndsFirst: Transitions = {
@@ -41,9 +44,11 @@ const outerEndsFirst: Transitions = {
 
 function Target({
   innerSize,
+  innerColor,
   transitions,
 }: {
   innerSize: number;
+  innerColor: string;
   transitions: Transitions;
 }) {
   const outer = useTestRef('targetOuter');
@@ -59,7 +64,14 @@ function Target({
           ref={inner}
           sharedTransitionTag="inner"
           sharedTransitionStyle={transitions.inner}
-          style={[styles.targetInner, { width: innerSize, height: innerSize }]}
+          style={[
+            styles.targetInner,
+            {
+              width: innerSize,
+              height: innerSize,
+              backgroundColor: innerColor,
+            },
+          ]}
         />
       </Animated.View>
     </SharedTransitionBoundary>
@@ -69,10 +81,12 @@ function Target({
 function Screens({
   active,
   innerSize = 60,
+  innerColor = '#ffffff',
   transitions = innerEndsFirst,
 }: {
   active: boolean;
   innerSize?: number;
+  innerColor?: string;
   transitions?: Transitions;
 }) {
   const inner = useTestRef('sourceInner');
@@ -91,7 +105,13 @@ function Screens({
           />
         </Animated.View>
       </SharedTransitionBoundary>
-      {active && <Target innerSize={innerSize} transitions={transitions} />}
+      {active && (
+        <Target
+          innerSize={innerSize}
+          innerColor={innerColor}
+          transitions={transitions}
+        />
+      )}
     </View>
   );
 }
@@ -140,6 +160,51 @@ async function sampleInnerViewUntilItLands() {
   return samples;
 }
 
+// Records a presented prop of the waiting inner view on each UI frame while the outer target is hidden.
+function recordInnerViewProp<K extends 'width' | 'backgroundColor'>(prop: K) {
+  const innerTag = getTestComponent('sourceInner').getTag();
+  const outerTag = getTestComponent('targetOuter').getTag();
+  const values = makeMutable<MountedViewProps[K][]>([]);
+  const recording = makeMutable(true);
+  scheduleOnUI(() => {
+    'worklet';
+    const record = () => {
+      if (
+        !recording.value ||
+        global._obtainMountedViewProps(outerTag, false)?.opacity !== 0
+      ) {
+        return;
+      }
+      const value = global._obtainMountedViewProps(innerTag, true)?.[prop];
+      if (value !== undefined) {
+        values.modify((list) => {
+          'worklet';
+          list.push(value);
+          return list;
+        });
+      }
+      requestAnimationFrame(record);
+    };
+    requestAnimationFrame(record);
+  });
+  return () => {
+    recording.value = false;
+    return values.value;
+  };
+}
+
+async function expectInnerViewToReach<K extends 'width' | 'backgroundColor'>(
+  prop: K,
+  isEnd: (value: MountedViewProps[K]) => boolean
+) {
+  await expectEventually(async () => {
+    const props = await getTestComponent('sourceInner').getPresentedViewProps();
+    return (
+      !!props && isEnd(props[prop]) && (await opacityOf('targetOuter')) === 0
+    );
+  }).toBe(true);
+}
+
 function opacitiesOf(...names: string[]) {
   const tags = names.map((name) => getTestComponent(name).getTag());
   return runOnUIBlocking(() => {
@@ -185,17 +250,43 @@ describe('Nested shared transitions', () => {
     await render(<Screens active />);
     await waitForNotification('inner-finished');
     await waitForFrames(2);
+    const stopRecording = recordInnerViewProp('width');
     await render(<Screens active innerSize={90} />);
-    await expectEventually(async () => {
-      const props = await getTestComponent('sourceInner').getMountedViewProps();
-      const targetOuter = await opacityOf('targetOuter');
-      return (
-        !!props &&
-        Math.abs(props.width - 90) < 0.5 &&
-        props.opacity === 1 &&
-        targetOuter === 0
-      );
-    }).toBe(true);
+    await expectInnerViewToReach(
+      'width',
+      (width) => Math.abs(width - 90) < 0.5
+    );
+    const widths = stopRecording();
+    expect(widths.some((width) => width > 61 && width < 89)).toBe(true);
+    expect(await opacityOf('sourceInner')).toBe(1);
+
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
+
+  test('animates the waiting inner view to a new color of its target', async () => {
+    await render(<Screens active={false} />);
+    await waitForFrames();
+
+    await render(<Screens active />);
+    await waitForNotification('inner-finished');
+    await waitForFrames(2);
+    const oldColor = (
+      await getTestComponent('sourceInner').getPresentedViewProps()
+    )?.backgroundColor;
+    const stopRecording = recordInnerViewProp('backgroundColor');
+    await render(<Screens active innerColor="#00ff00" />);
+    const newColor = (
+      await getTestComponent('targetInner').getMountedViewProps()
+    )?.backgroundColor;
+    await expectInnerViewToReach(
+      'backgroundColor',
+      (color) => color === newColor
+    );
+    const colors = stopRecording();
+    expect(
+      colors.some((color) => color !== oldColor && color !== newColor)
+    ).toBe(true);
 
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
