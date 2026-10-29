@@ -25,8 +25,8 @@ struct ReloadStash {
 };
 
 ReloadStash &getReloadStash() {
-  static auto *stash = new ReloadStash();
-  return *stash;
+  static ReloadStash stash;
+  return stash;
 }
 
 } // namespace
