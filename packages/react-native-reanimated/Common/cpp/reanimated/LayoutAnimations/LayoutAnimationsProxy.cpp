@@ -434,7 +434,7 @@ void LayoutAnimationsProxy::updateLightTree(
       }
       case ShadowViewMutation::Remove: {
         const auto tag = mutation.oldChildShadowView.tag;
-        if (inserted.contains(tag)) {
+        if (inserted.contains(tag) && !deleted.contains(tag)) {
           moved.insert(tag);
         }
         break;
