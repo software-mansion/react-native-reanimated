@@ -28,7 +28,7 @@ class CopiedEvent(
                     category: Int,
                 ) {
                     this@CopiedEvent.targetTag = targetTag
-                    this@CopiedEvent.payload = params!!.copy()
+                    this@CopiedEvent.payload = params?.copy()
                 }
             },
         )
