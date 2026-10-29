@@ -213,7 +213,7 @@ std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, boo
   if (!values) {
     return std::nullopt;
   }
-  const auto region = values->getRegion(0, 6);
+  const auto region = values->getRegion(0, 8);
   return MountedViewProps{
       .x = region[0],
       .y = region[1],
@@ -221,6 +221,8 @@ std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, boo
       .height = region[3],
       .opacity = region[4],
       .backgroundColor = static_cast<int>(region[5]),
+      .transformTranslateX = region[6],
+      .transformTranslateY = region[7],
   };
 }
 

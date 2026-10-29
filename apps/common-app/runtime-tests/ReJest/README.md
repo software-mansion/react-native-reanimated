@@ -32,3 +32,15 @@ for paired frame snapshots. Both modes check the last value.
 Recorder errors do not stop app updates. A read reports the first recorder error.
 Cleanup reports errors that no getter reported. Stop restores all hooks, including after a test fails. Stop a recording before
 starting another one.
+
+# Native transform reads
+
+`getMountedViewProps()` and `getPresentedViewProps()` return
+`transformTranslateX` and `transformTranslateY`. These are the translation parts
+of the resolved native transform, in points. They include transform-origin
+adjustments. The frame fields `x` and `y` still exclude transforms.
+
+Use these fields to check resolved translation components. Android skew uses a separate
+animation matrix, so these fields cannot check skew. They do not describe a full
+transform matrix or provide rotation, scale, or perspective checks. Mounted
+recordings still accept only opacity and background color.

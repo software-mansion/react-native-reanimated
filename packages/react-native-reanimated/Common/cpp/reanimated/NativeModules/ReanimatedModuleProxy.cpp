@@ -376,6 +376,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           result.setProperty(rt, "width", props->width);
           result.setProperty(rt, "height", props->height);
           result.setProperty(rt, "opacity", props->opacity);
+          result.setProperty(rt, "transformTranslateX", props->transformTranslateX);
+          result.setProperty(rt, "transformTranslateY", props->transformTranslateY);
           result.setProperty(
               rt,
               "backgroundColor",

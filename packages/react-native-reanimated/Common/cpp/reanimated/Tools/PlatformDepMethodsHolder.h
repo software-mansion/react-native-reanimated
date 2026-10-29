@@ -62,6 +62,9 @@ struct MountedViewProps {
   double height;
   double opacity;
   int backgroundColor;
+  // Translation part of the resolved transform, in points. Not valid for skew on Android.
+  double transformTranslateX;
+  double transformTranslateY;
 };
 // Presented props are the ones on screen, which differ from the view's own while Core Animation animates it.
 using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag, bool presented)>;

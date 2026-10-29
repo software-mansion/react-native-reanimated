@@ -293,6 +293,8 @@ open class NativeProxy {
             PixelUtil.toDIPFromPixel(view.height.toFloat()).toDouble(),
             view.alpha.toDouble(),
             (BackgroundStyleApplicator.getBackgroundColor(view) ?: Color.TRANSPARENT).toDouble(),
+            PixelUtil.toDIPFromPixel(view.translationX).toDouble(),
+            PixelUtil.toDIPFromPixel(view.translationY).toDouble(),
         )
     }
 
