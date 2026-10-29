@@ -33,6 +33,7 @@ using namespace facebook;
 using namespace react;
 
 class Networking;
+class Synchronizable;
 
 template <typename TCallable>
 concept RuntimeCallable = std::is_same_v<std::remove_cvref_t<TCallable>, jsi::Function> ||
@@ -260,6 +261,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   void abort();
 
+  [[nodiscard]] bool isAbortable() const noexcept {
+    return abortable_;
+  }
+
+  void trackLock(const std::shared_ptr<Synchronizable> &synchronizable) const;
+
+  void untrackLock(const std::shared_ptr<Synchronizable> &synchronizable) const;
+
+  void releaseTrackedLocks() const;
+
   [[nodiscard]] bool isAborted() const noexcept {
     return aborted_;
   }
@@ -275,7 +286,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
       bool enableLocking = true,
-      bool enableNetworking = true);
+      bool enableNetworking = true,
+      bool abortable = false);
 
   ~WorkletRuntime() override;
 
@@ -440,6 +452,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       return function.call(rt, std::forward<TArgs>(args)...);
     } catch (jsi::JSError &e) {
       if (aborted_) {
+        releaseTrackedLocks();
         throw std::runtime_error(
             "[Worklets] The Worklet Runtime \"" + name_ + "\" was aborted while running a worklet.");
       }
@@ -478,6 +491,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const RuntimeData::RuntimeId runtimeId_;
   const bool enableLocking_;
   const bool enableNetworking_;
+  const bool abortable_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   std::function<void()> interruptRuntime_;
@@ -488,6 +502,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
   std::atomic_bool aborted_{false};
+  mutable std::mutex trackedLocksMutex_;
+  mutable std::vector<std::shared_ptr<Synchronizable>> trackedLocks_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

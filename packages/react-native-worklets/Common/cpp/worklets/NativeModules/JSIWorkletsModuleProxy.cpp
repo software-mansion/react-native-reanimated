@@ -31,6 +31,7 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -47,6 +48,8 @@ using namespace facebook;
 namespace worklets {
 
 namespace {
+
+constexpr double kMaxSafeInteger = 9007199254740991.0;
 
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
@@ -235,9 +238,10 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
     bool enableLocking,
-    bool enableNetworking) {
+    bool enableNetworking,
+    bool abortable) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking);
+      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -652,11 +656,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<7>(
+  jsi_utils::addMethod<8>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[7]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[8]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -672,6 +676,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto enableEventLoop = at<4>(args).getBool();
         const auto enableLocking = at<5>(args).getBool();
         const auto enableNetworking = at<6>(args).getBool();
+        const auto abortable = at<7>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
@@ -683,7 +688,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             asyncQueue,
             enableEventLoop,
             enableLocking,
-            enableNetworking);
+            enableNetworking,
+            abortable);
       });
 
   jsi_utils::addMethod<5>(
@@ -733,7 +739,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "abortWorkletRuntime",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        const int runtimeId = at<0>(args).asNumber();
+        const double runtimeIdValue = at<0>(args).asNumber();
+        if (!std::isfinite(runtimeIdValue) || runtimeIdValue < 0 || runtimeIdValue > kMaxSafeInteger ||
+            std::trunc(runtimeIdValue) != runtimeIdValue) {
+          throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: runtimeId must be a non-negative safe integer.");
+        }
+        const auto runtimeId = static_cast<uint64_t>(runtimeIdValue);
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -741,6 +752,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         if (workletRuntime->getRuntimeKind() != RuntimeData::RuntimeKind::Worker) {
           throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: only Worker Runtimes can be aborted.");
+        }
+        if (!workletRuntime->isAbortable()) {
+          throw jsi::JSError(
+              rt,
+              "[Worklets] abortWorkletRuntime: the Worklet Runtime \"" + workletRuntime->getRuntimeName() +
+                  "\" was not created with `abortable: true`.");
         }
         workletRuntime->abort();
       });
@@ -834,15 +851,27 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<1>(
-      rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+      rt,
+      obj,
+      "synchronizableLock",
+      [abortableRuntime = abortableRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->lock();
+        if (const auto runtime = abortableRuntime.lock()) {
+          runtime->trackLock(synchronizable);
+        }
       });
 
   jsi_utils::addMethod<1>(
-      rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+      rt,
+      obj,
+      "synchronizableUnlock",
+      [abortableRuntime = abortableRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->unlock();
+        if (const auto runtime = abortableRuntime.lock()) {
+          runtime->untrackLock(synchronizable);
+        }
       });
 
   jsi_utils::addMethod<5>(

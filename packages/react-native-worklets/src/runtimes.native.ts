@@ -83,6 +83,7 @@ export function createWorkletRuntime(
   let enableEventLoop = true;
   let enableLocking = true;
   let enableNetworking = true;
+  let abortable = false;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -114,11 +115,18 @@ export function createWorkletRuntime(
      */
     enableNetworking =
       (nameOrConfig?.enableNetworking ?? true) && enableEventLoop;
+    abortable = nameOrConfig?.abortable ?? false;
   }
 
   const useDefaultQueue = queue === 'default';
   const customQueue =
     typeof queue === 'object' && queue !== null ? queue : undefined;
+
+  if (abortable && !useDefaultQueue) {
+    throw new Error(
+      '[Worklets] `abortable` is supported only with the default queue.'
+    );
+  }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(
@@ -145,7 +153,8 @@ export function createWorkletRuntime(
     customQueue,
     enableEventLoop,
     enableLocking,
-    enableNetworking
+    enableNetworking,
+    abortable
   );
 }
 

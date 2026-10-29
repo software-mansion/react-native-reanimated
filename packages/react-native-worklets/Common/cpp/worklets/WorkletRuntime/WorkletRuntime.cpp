@@ -2,6 +2,7 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Networking/NetworkingInstaller.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
@@ -10,6 +11,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -57,12 +59,15 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
     bool enableLocking,
     bool enableMicrotaskQueue,
+    bool abortable,
     std::function<void()> &interruptRuntime) {
   auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
   auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
-  interruptRuntime = [hermes = hermesRuntime.get()] {
-    hermes->asyncTriggerTimeout();
-  };
+  if (abortable) {
+    interruptRuntime = [hermes = hermesRuntime.get()] {
+      hermes->asyncTriggerTimeout();
+    };
+  }
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
     return jsiRuntime;
@@ -77,13 +82,15 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
     bool enableLocking,
-    bool enableNetworking)
+    bool enableNetworking,
+    bool abortable)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
+      abortable_(abortable),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_, interruptRuntime_)),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_, abortable_, interruptRuntime_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -112,6 +119,7 @@ WorkletRuntime::~WorkletRuntime() {
 }
 
 void WorkletRuntime::abort() {
+  react_native_assert(abortable_ && "[Worklets] Tried to abort a Worklet Runtime that is not abortable.");
   if (aborted_.exchange(true)) {
     return;
   }
@@ -124,6 +132,29 @@ void WorkletRuntime::abort() {
   }
   if (interruptRuntime_) {
     interruptRuntime_();
+  }
+}
+
+void WorkletRuntime::trackLock(const std::shared_ptr<Synchronizable> &synchronizable) const {
+  std::lock_guard lock(trackedLocksMutex_);
+  if (std::ranges::find(trackedLocks_, synchronizable) == trackedLocks_.end()) {
+    trackedLocks_.push_back(synchronizable);
+  }
+}
+
+void WorkletRuntime::untrackLock(const std::shared_ptr<Synchronizable> &synchronizable) const {
+  std::lock_guard lock(trackedLocksMutex_);
+  std::erase(trackedLocks_, synchronizable);
+}
+
+void WorkletRuntime::releaseTrackedLocks() const {
+  std::vector<std::shared_ptr<Synchronizable>> locks;
+  {
+    std::lock_guard lock(trackedLocksMutex_);
+    locks.swap(trackedLocks_);
+  }
+  for (const auto &synchronizable : locks) {
+    synchronizable->unlock();
   }
 }
 
@@ -296,6 +327,7 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
           if (!strongThis->isAborted()) {
             throw;
           }
+          strongThis->releaseTrackedLocks();
         }
       },
       abortToken());

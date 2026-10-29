@@ -58,12 +58,21 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
     bool enableLocking,
-    bool enableNetworking) {
+    bool enableNetworking,
+    bool abortable) {
   const auto runtimeId = getNextRuntimeId();
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking, enableNetworking);
-  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
+      runtimeId,
+      RuntimeData::RuntimeKind::Worker,
+      name,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking,
+      abortable);
+  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(
+      sourceProxy, runtimeId, abortable ? workletRuntime : std::shared_ptr<WorkletRuntime>());
 
   workletRuntime->init(targetProxy);
 

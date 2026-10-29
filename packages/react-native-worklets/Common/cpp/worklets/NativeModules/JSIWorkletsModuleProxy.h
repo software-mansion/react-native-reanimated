@@ -34,7 +34,8 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
       const BundleModeConfig &bundleModeConfig,
       const std::shared_ptr<UnpackerLoader> &unpackerLoader,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus,
-      RuntimeData::RuntimeId hostRuntimeId)
+      RuntimeData::RuntimeId hostRuntimeId,
+      const std::weak_ptr<WorkletRuntime> &abortableRuntime = {})
       : bundleModeConfig_(bundleModeConfig),
         jsScheduler_(jsScheduler),
         uiScheduler_(uiScheduler),
@@ -45,11 +46,13 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         networking_(networking),
         unpackerLoader_(unpackerLoader),
         rnRuntimeStatus_(rnRuntimeStatus),
-        hostRuntimeId_(hostRuntimeId) {}
+        hostRuntimeId_(hostRuntimeId),
+        abortableRuntime_(abortableRuntime) {}
 
   static std::shared_ptr<JSIWorkletsModuleProxy> createForNewRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
-      RuntimeData::RuntimeId hostRuntimeId) {
+      RuntimeData::RuntimeId hostRuntimeId,
+      const std::weak_ptr<WorkletRuntime> &abortableRuntime = {}) {
     return std::make_shared<JSIWorkletsModuleProxy>(
         sourceProxy->jsScheduler_,
         sourceProxy->uiScheduler_,
@@ -61,7 +64,8 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
         sourceProxy->bundleModeConfig_,
         sourceProxy->unpackerLoader_,
         sourceProxy->rnRuntimeStatus_,
-        hostRuntimeId);
+        hostRuntimeId,
+        abortableRuntime);
   }
 
   /** No copy constructor to prevent making JSIWorkletsModuleProxy with wrong hostRuntimeId. */
@@ -122,6 +126,7 @@ class JSIWorkletsModuleProxy : public std::enable_shared_from_this<JSIWorkletsMo
   const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   const RuntimeData::RuntimeId hostRuntimeId_;
+  const std::weak_ptr<WorkletRuntime> abortableRuntime_;
 };
 
 } // namespace worklets

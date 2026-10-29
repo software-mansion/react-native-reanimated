@@ -7,14 +7,14 @@ sidebar_position: 42 # Use alphabetical order
   # abortWorkletRuntime
 </Badges>
 
-`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) and the thread it runs on. It drops the work that's still waiting in the runtime's queue and interrupts the JavaScript that's currently running, so it also stops a worklet stuck in an infinite loop.
+`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that was created with `abortable: true`, and the thread it runs on. It drops the work that's still waiting in the runtime's queue and interrupts the JavaScript that's currently running, so it also stops a worklet stuck in an infinite loop.
 
 ## Reference
 
 ```javascript
 import { abortWorkletRuntime, createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
 
-const workletRuntime = createWorkletRuntime({ name: 'background' });
+const workletRuntime = createWorkletRuntime({ name: 'background', abortable: true });
 
 scheduleOnRuntime(workletRuntime, () => {
   'worklet';
@@ -40,11 +40,12 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 
 ## Remarks
 
-- Only Worker Runtimes can be aborted. Passing the id of the UI Runtime throws.
+- Only Worker Runtimes created with `abortable: true` can be aborted. Passing the id of the UI Runtime or of a runtime that isn't abortable throws.
+- An abortable runtime keeps track of the [Synchronizable](/docs/memory/createSynchronizable) locks it holds.
 - Passing an id that doesn't belong to any runtime throws.
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
-- The interrupted worklet doesn't finish, so any cleanup it would do afterwards doesn't run, including `finally` blocks. A [Synchronizable](/docs/memory/createSynchronizable) that the worklet locked with `lock()`, or that it was updating with `setBlocking(updater)`, stays locked and blocks other threads that access it.
+- The interrupted worklet doesn't finish, so any cleanup it would do afterwards doesn't run, including `finally` blocks. The only exception is the `Synchronizable` locks, which are released when the runtime is aborted.
 - JavaScript can be interrupted only if it was compiled by Hermes with async break checks. Worklets that are evaluated at runtime have them. Precompiled bytecode, for example in [Bundle Mode](/docs/bundleMode/overview), might not, and a loop in such code can't be interrupted.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 
@@ -54,7 +55,7 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
   bundleMode={{
 rnRuntime: true,
 uiRuntime: false,
-workerRuntime: false,
+workerRuntime: true,
 }}
   noBundleMode={{
 rnRuntime: true,

@@ -279,7 +279,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     customQueue: object | undefined,
     enableEventLoop: boolean,
     enableLocking: boolean,
-    enableNetworking: boolean
+    enableNetworking: boolean,
+    abortable: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -288,7 +289,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       customQueue,
       enableEventLoop,
       enableLocking,
-      enableNetworking
+      enableNetworking,
+      abortable
     );
   }
 
