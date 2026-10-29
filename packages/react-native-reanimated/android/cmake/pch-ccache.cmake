@@ -14,27 +14,34 @@ if(CMAKE_SCRIPT_MODE_FILE)
     RESULT_VARIABLE result
   )
 
+  # These differ between checkouts and builds without changing what the PCH contains.
+  string(REGEX REPLACE "PCH_CCACHE_BUILD_DIR=[^\n]*|ShowColors: [^\n]*" "" info "${info}")
+
+  set(failure "")
   if(NOT result EQUAL 0)
+    set(failure "`${COMPILER} -module-file-info ${PCH}` failed")
+  else()
+    string(REGEX MATCHALL "Input file: [^\n]*" input_files "${info}")
+    foreach(input_file IN LISTS input_files)
+      string(REGEX REPLACE "^Input file: | \\[[A-Za-z, ]+\\]$" "" path "${input_file}")
+      if(NOT EXISTS "${path}")
+        set(failure "The PCH input file `${path}` wasn't found")
+        break()
+      endif()
+      file(SHA256 "${path}" digest)
+      string(APPEND info "${digest}\n")
+    endforeach()
+  endif()
+
+  if(failure)
     # Hash the .pch itself, which is what ccache does without a .sum. The build stays correct, but
     # checkouts at different paths don't share the results of the users of this PCH.
-    message(WARNING "`${COMPILER} -module-file-info ${PCH}` failed, so ccache can't share the results "
-      "of the users of this PCH between checkouts at different paths.")
+    message(WARNING "${failure}, so ccache can't share the results of the users of this PCH between "
+      "checkouts at different paths.")
     file(SHA256 "${PCH}" digest)
     file(WRITE "${PCH}.sum" "${digest}\n")
     return()
   endif()
-
-  # These differ between checkouts and builds without changing what the PCH contains.
-  string(REGEX REPLACE "PCH_CCACHE_BUILD_DIR=[^\n]*|ShowColors: [^\n]*" "" info "${info}")
-
-  string(REGEX MATCHALL "Input file: [^\n]*" input_files "${info}")
-  foreach(input_file IN LISTS input_files)
-    string(REGEX REPLACE "^Input file: | \\[[A-Za-z, ]+\\]$" "" path "${input_file}")
-    if(EXISTS "${path}")
-      file(SHA256 "${path}" digest)
-      string(APPEND info "${digest}\n")
-    endif()
-  endforeach()
 
   if(BASE_DIR)
     string(REGEX REPLACE "(.)/+$" "\\1" base_dir "${BASE_DIR}")
