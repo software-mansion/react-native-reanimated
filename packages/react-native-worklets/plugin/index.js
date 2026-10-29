@@ -511,7 +511,10 @@ var require_autoworkletization = __commonJS({
     ]);
     var configPropertiesToWorkletize = /* @__PURE__ */ new Map([
       ["createWorkletRuntime", { argIndex: 0, keys: ["initializer"] }],
-      ["createShareable", { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }],
+      [
+        "createShareable",
+        { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }
+      ],
       [
         "registerCustomSerializable",
         { argIndex: 0, keys: ["determine", "pack", "unpack"] }
