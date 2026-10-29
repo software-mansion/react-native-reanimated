@@ -1,6 +1,11 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
+import {
+  isIdentifier,
+  isSequenceExpression,
+  isStringLiteral,
+  isV8IntrinsicIdentifier,
+} from '@babel/types';
 
 import { addWorkletDirectivesToPath } from './directives';
 import { forEachWorkletizableFunction } from './findWorklet';
@@ -42,7 +47,10 @@ const reanimatedFunctionHooks = new Set([
   'runOnRuntimeAsync',
   'scheduleOnRuntime',
   'runOnRuntimeSyncWithId',
+  'runOnRuntimeAsyncWithId',
   'scheduleOnRuntimeWithId',
+  // runtime creation
+  'createWorkletRuntime',
 ]);
 
 const reanimatedFunctionArgsToWorkletize = new Map([
@@ -67,7 +75,9 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['runOnRuntimeAsync', [1]],
   ['scheduleOnRuntime', [1]],
   ['runOnRuntimeSyncWithId', [1]],
+  ['runOnRuntimeAsyncWithId', [1]],
   ['scheduleOnRuntimeWithId', [1]],
+  ['createWorkletRuntime', [1]],
   ...Array.from(gestureHandlerObjectHooks).map((name) => [name, [0]]),
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
@@ -107,12 +117,54 @@ export function handleWorkletizableCallback(
       .filter((_, index) => argIndices.includes(index));
 
     addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject);
+    if (name === 'createWorkletRuntime') {
+      addDirectivesToInitializerProperty(path.get('arguments')[0], state);
+    }
   } else if (
     !isV8IntrinsicIdentifier(callee) &&
     isGestureObjectEventCallbackMethod(callee)
   ) {
     const args = path.get('arguments');
     addDirectivesToArgs(args, state, true, true);
+  }
+}
+
+function addDirectivesToInitializerProperty(
+  config: NodePath | undefined,
+  state: WorkletsPluginPass
+): void {
+  if (!config?.isObjectExpression()) {
+    return;
+  }
+  for (const property of config.get('properties')) {
+    if (
+      !(property.isObjectMethod() || property.isObjectProperty()) ||
+      property.node.computed
+    ) {
+      continue;
+    }
+    const key = property.node.key;
+    const keyName = isIdentifier(key)
+      ? key.name
+      : isStringLiteral(key)
+        ? key.value
+        : undefined;
+    if (keyName !== 'initializer') {
+      continue;
+    }
+    if (property.isObjectMethod()) {
+      if (property.node.kind === 'method') {
+        addWorkletDirectivesToPath(property);
+      }
+    } else if (property.isObjectProperty()) {
+      forEachWorkletizableFunction(
+        property.get('value'),
+        state,
+        true,
+        false,
+        addWorkletDirectivesToPath
+      );
+    }
   }
 }
 

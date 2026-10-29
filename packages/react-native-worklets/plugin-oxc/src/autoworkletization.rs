@@ -1,14 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::AstBuilder;
-use oxc_ast::ast::{ArrowFunctionExpression, CallExpression, Expression, Function, Program};
+use oxc_ast::ast::{
+    ArrowFunctionExpression, CallExpression, Expression, Function, ObjectPropertyKind, Program,
+};
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_semantic::Scoping;
-use oxc_span::Span;
+use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
 use oxc_syntax::symbol::SymbolId;
 
-use crate::ast::{identifier_name, member_property};
+use crate::ast::{identifier_name, member_property, object_expression};
 use crate::directives::add_worklet_directives_to_function_body;
 use crate::gesture_handler_autoworkletization::{
     GESTURE_HANDLER_OBJECT_HOOKS, is_gesture_object_event_callback_method,
@@ -55,7 +57,9 @@ pub const FUNCTION_HOOKS: &[(&str, &[usize])] = &[
     ("runOnRuntimeAsync", &[1]),
     ("scheduleOnRuntime", &[1]),
     ("runOnRuntimeSyncWithId", &[1]),
+    ("runOnRuntimeAsyncWithId", &[1]),
     ("scheduleOnRuntimeWithId", &[1]),
+    ("createWorkletRuntime", &[1]),
 ];
 
 pub fn add_directives_to_known_callbacks<'a>(
@@ -170,6 +174,33 @@ impl<'d, 's> Callbacks<'d, 's> {
         }
     }
 
+    fn collect_initializer_property(&mut self, call: &CallExpression<'_>) {
+        let Some(config) = call
+            .arguments
+            .first()
+            .and_then(|arg| arg.as_expression())
+            .and_then(object_expression)
+        else {
+            return;
+        };
+        for property in &config.properties {
+            let ObjectPropertyKind::ObjectProperty(property) = property else {
+                continue;
+            };
+            if property.computed
+                || property.kind.is_accessor()
+                || property.key.static_name().as_deref() != Some("initializer")
+            {
+                continue;
+            }
+            if property.method {
+                self.sites.insert(property.value.span());
+            } else if let Some(shape) = self.definitions.describe(&property.value) {
+                self.collect(&shape, FUNCTION, true);
+            }
+        }
+    }
+
     fn collect_binding(&mut self, sid: SymbolId, kinds: Kinds, seen: &mut HashSet<SymbolId>) {
         if !seen.insert(sid) || self.definitions.hand_written.contains(&sid) {
             return;
@@ -238,6 +269,9 @@ impl<'a, 'd, 's> Visit<'a> for Callbacks<'d, 's> {
             for shape in indices.iter().filter_map(|&index| arguments(index)) {
                 self.collect(&shape, kinds, true);
             }
+        }
+        if callee_name(callee) == Some("createWorkletRuntime") {
+            self.collect_initializer_property(call);
         }
         if is_gesture_object_event_callback_method(callee) {
             for shape in (0..call.arguments.len()).filter_map(arguments) {

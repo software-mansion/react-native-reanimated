@@ -247,6 +247,98 @@ describe.each([
     });
   });
 
+  describe('autoworkletization of runtime APIs', () => {
+    function factoryCount(input: string): number {
+      const result = runPlugin(input, { bundleMode });
+      return bundleMode
+        ? result.files.length
+        : countOccurrences(result.code, 'Factory(');
+    }
+
+    test.each([
+      {
+        name: 'runOnRuntimeAsyncWithId callback',
+        input: html`<script>
+          import { runOnRuntimeAsyncWithId } from 'react-native-worklets';
+          runOnRuntimeAsyncWithId(1, () => 42);
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'createWorkletRuntime initializer arrow function',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime({ name: 'rt', initializer: () => {} });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'createWorkletRuntime initializer method',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime({ initializer() {} });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'createWorkletRuntime initializer with a string key',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime({ 'initializer': function () {} });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'createWorkletRuntime initializer referenced by name',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          const init = () => {};
+          createWorkletRuntime({ initializer: init });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'createWorkletRuntime initializer next to a spread',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          const base = { name: 'rt' };
+          createWorkletRuntime({ ...base, initializer: () => {} });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'deprecated createWorkletRuntime initializer argument',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime('rt', () => {});
+        </script>`,
+        expected: 1,
+      },
+    ])('workletizes $name', ({ input, expected }) => {
+      expect(factoryCount(input)).toBe(expected);
+    });
+
+    test.each([
+      {
+        name: 'other functions in the createWorkletRuntime config',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime({ name: 'rt', other: () => {} });
+        </script>`,
+      },
+      {
+        name: 'a computed initializer key',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          const key = 'initializer';
+          createWorkletRuntime({ [key]: () => {} });
+        </script>`,
+      },
+    ])('does not workletize $name', ({ input }) => {
+      expect(factoryCount(input)).toBe(0);
+    });
+  });
+
   describe('without worklets', () => {
     test('leaves code untouched and emits no factory', () => {
       const input = html`<script>
