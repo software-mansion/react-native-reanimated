@@ -78,7 +78,7 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only, reportSuiteFinished }) => {
+      onStart: async ({ only, reportSuiteFinished, requestReload }) => {
         const filterSet = only ? new Set(only) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
@@ -114,6 +114,7 @@ export default function AutoRunRuntimeTestsRunner({
           render: setComponent,
           onProgress: setProgress,
           onSuiteFinished: reportSuiteFinished,
+          onReloadRequested: requestReload,
         });
         if (warmUp) {
           await warmUp();

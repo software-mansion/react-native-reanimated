@@ -156,6 +156,16 @@ let crashDiagnosticsPromise = null;
 let afterSuiteChain = Promise.resolve();
 let afterSuiteRunning = false;
 let afterSuitePending = false;
+/** @type {string | null} */
+let resumeFromSuite = null;
+let reloadInProgress = false;
+const resultsBeforeReload = {
+  passed: 0,
+  failed: 0,
+  skipped: 0,
+  /** @type {string[]} */
+  failedTests: [],
+};
 
 /**
  * @param {unknown} error
@@ -529,6 +539,15 @@ wss.on('connection', (socket) => {
   });
 
   socket.on('close', () => {
+    if (reloadInProgress) {
+      reloadInProgress = false;
+      client = null;
+      console.log(
+        '[runtime-tests] device is reloading, waiting for it to reconnect'
+      );
+      armConnectTimer();
+      return;
+    }
     if (!runFinished && runStartedAt > 0) {
       console.error('');
       console.error('========================================');
@@ -571,6 +590,9 @@ function handleMessage(msg) {
       break;
     case 'suiteFinished':
       onSuiteFinished(msg);
+      break;
+    case 'reload':
+      onReload(msg);
       break;
     case 'done':
       onDone(msg);
@@ -616,12 +638,63 @@ function onHello(msg) {
     return;
   }
 
-  runStartedAt = Date.now();
+  let only = ONLY;
+  if (resumeFromSuite) {
+    only = suitesToResume(suites);
+    if (!only) {
+      return;
+    }
+    console.log(
+      `[runtime-tests] resuming after reload with: ${only.join(', ')}`
+    );
+    resumeFromSuite = null;
+  } else {
+    runStartedAt = Date.now();
+  }
   send({
     type: 'start',
-    ...(ONLY ? { only: ONLY } : {}),
+    ...(only ? { only } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
+}
+
+/**
+ * @param {{ name: string; skipByDefault?: boolean; disabled?: boolean }[]} suites
+ * @returns {string[] | null}
+ */
+function suitesToResume(suites) {
+  const selected = suites
+    .filter((suite) =>
+      ONLY ? ONLY.includes(suite.name) : !suite.skipByDefault && !suite.disabled
+    )
+    .map((suite) => suite.name);
+  const index = selected.indexOf(String(resumeFromSuite));
+  if (index === -1) {
+    console.error(
+      `[runtime-tests] cannot resume from suite '${resumeFromSuite}', it was not selected for this run.`
+    );
+    send({
+      type: 'error',
+      message: `Unknown resume suite: ${resumeFromSuite}`,
+    });
+    shutdown(1);
+    return null;
+  }
+  return selected.slice(index);
+}
+
+/** @param {DeviceMessage} msg */
+function onReload(msg) {
+  resultsBeforeReload.passed += Number(msg.passed ?? 0);
+  resultsBeforeReload.failed += Number(msg.failed ?? 0);
+  resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
+  resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
+  resumeFromSuite = String(msg.resumeFromSuite ?? '');
+  reloadInProgress = true;
+  console.log(
+    `[runtime-tests] device requested a reload, the run resumes from suite '${resumeFromSuite}'`
+  );
+  send({ type: 'reloadAccepted' });
 }
 
 /** @param {DeviceMessage} msg */
@@ -692,6 +765,13 @@ function runAfterSuiteCommand(command, suiteName) {
 
 /** @param {DeviceMessage} msg */
 function onDone(msg) {
+  msg.passed = Number(msg.passed ?? 0) + resultsBeforeReload.passed;
+  msg.failed = Number(msg.failed ?? 0) + resultsBeforeReload.failed;
+  msg.skipped = Number(msg.skipped ?? 0) + resultsBeforeReload.skipped;
+  msg.failedTests = [
+    ...resultsBeforeReload.failedTests,
+    ...(msg.failedTests ?? []),
+  ];
   const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
   console.log('');
   console.log('========================================');
