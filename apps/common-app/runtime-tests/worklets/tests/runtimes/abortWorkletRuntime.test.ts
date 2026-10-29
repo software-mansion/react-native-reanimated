@@ -7,7 +7,6 @@ import {
   runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
   runOnUI,
-  runOnUIAsync,
   scheduleOnRN,
   scheduleOnRuntime,
   UIRuntimeId,
@@ -364,13 +363,14 @@ describe('abortWorkletRuntime', () => {
     async () => {
       // Arrange
       const runtime = createWorkletRuntime({
-        name: 'abort-ui-promise',
+        name: 'abort-promise-host',
         abortable: true,
       });
+      const target = createWorkletRuntime({ name: 'abort-promise-target' });
       const release = createSynchronizable(false);
       scheduleOnRuntime(runtime, () => {
         'worklet';
-        runOnUIAsync(() => {
+        runOnRuntimeAsync(target, () => {
           'worklet';
           scheduleOnRN(onStarted);
           while (!release.getBlocking()) {
@@ -379,6 +379,7 @@ describe('abortWorkletRuntime', () => {
           return 1;
         }).catch(() => {});
       });
+
       // Act
       try {
         await waitForNotification(STARTED_NOTIFICATION);
@@ -388,7 +389,7 @@ describe('abortWorkletRuntime', () => {
       }
 
       // Assert
-      const value = await runOnUIAsync(() => {
+      const value = await runOnRuntimeAsync(target, () => {
         'worklet';
         return 42;
       });
