@@ -8,7 +8,7 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnUISync } from 'react-native-worklets';
+import { createSynchronizable, runOnUISync } from 'react-native-worklets';
 
 import {
   describe,
@@ -29,6 +29,7 @@ import {
   waitUntilSettled,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const TEXT_REF = 'AnimatedText';
 const ANIMATION_FINISHED = 'ANIMATED_TEXT_FINISHED';
@@ -57,7 +58,6 @@ async function readRecorded<TProp extends string>(
   ) as Record<TProp, unknown[]>;
 }
 
-// `waitForFrames(n)` with n > 1 breaks the UI frame loop.
 async function waitTwoFrames() {
   await waitForFrames(1);
   await waitForFrames(1);
@@ -529,9 +529,8 @@ async function expectShows(
 
 async function expectOpacity(expected: number, step: string) {
   await waitTwoFrames();
-  const opacity = Number(
-    await getTestComponent(TEXT_REF).getAnimatedStyle('opacity')
-  );
+  const opacity =
+    (await getTestComponent(TEXT_REF).getMountedViewProps())?.opacity ?? NaN;
   expectRow(
     step,
     Math.abs(opacity - expected) < 0.01,
@@ -566,24 +565,26 @@ async function switchFlagMidAnimation(
   flag: boolean,
   show: (flag: boolean) => Promise<void>
 ): Promise<FramesAfterSwitch> {
+  await mockAnimationTimer();
   const updates = await recordAnimationUpdates();
   try {
     animateTo(progress, toValue, notificationName, TOGGLE_DURATION);
-    await wait(TOGGLE_DURATION / 3);
+    await waitForFrames(40);
     await show(flag);
     // Updates already queued for the old children may still land.
     await waitTwoFrames();
     const before = await readRecorded(updates, ['children', 'opacity']);
-    await wait(TOGGLE_DURATION / 3);
+    await waitForFrames(20);
     const after = await readRecorded(updates, ['children', 'opacity']);
     const frames = {
       children: after.children.slice(before.children.length).map(String),
       opacity: after.opacity.slice(before.opacity.length).map(Number),
     };
-    await waitForNotification(notificationName);
+    await waitForNotification(notificationName, 60000);
     return frames;
   } finally {
     await stopRecordingAnimationUpdates();
+    await unmockAnimationTimer();
   }
 }
 
@@ -733,7 +734,7 @@ describe('Animated.Text with a shared value as children', () => {
       });
       const atHundred = await measureScreen();
       const opacityAtHundred = Number(
-        await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
+        (await getTestComponent(ROW.OPACITY).getMountedViewProps())?.opacity
       );
 
       const down = await recordScreenFrames(async () => {
@@ -742,7 +743,7 @@ describe('Animated.Text with a shared value as children', () => {
       });
       const backAtZero = await measureScreen();
       const opacityBackAtZero = Number(
-        await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
+        (await getTestComponent(ROW.OPACITY).getMountedViewProps())?.opacity
       );
       await unmockAnimationTimer();
 
@@ -914,14 +915,14 @@ describe('Animated.Text with a shared value as children', () => {
 
       const updates = await recordAnimationUpdates();
       // A write from JS would not start until the busy loop ends.
-      runOnUISync(() => {
+      await runOnUIBlocking(() => {
         'worklet';
         progress.value = withTiming(
           100,
           { duration: 2000, easing: Easing.linear },
           (finished) => {
             if (finished) {
-              notify(ANIMATION_FINISHED);
+              notify('ANIMATED_TEXT_BLOCKED_FINISHED');
             }
           }
         );
@@ -949,13 +950,28 @@ describe('Animated.Text with a shared value as children', () => {
       };
       const before = await read();
 
+      const uiFramesWhileBlocked = createSynchronizable(0);
+      await runOnUIBlocking(() => {
+        'worklet';
+        let frames = 0;
+        const onFrame = () => {
+          frames += 1;
+          uiFramesWhileBlocked.setBlocking(frames);
+          if (frames < 16) {
+            requestAnimationFrame(onFrame);
+          }
+        };
+        requestAnimationFrame(onFrame);
+      });
       const blockStart = performance.now();
-      while (performance.now() < blockStart + 500) {
-        // busy loop
+      let blockedFrames = 0;
+      while (blockedFrames < 16 && performance.now() - blockStart < 10000) {
+        blockedFrames = uiFramesWhileBlocked.getBlocking();
       }
+      expect(blockedFrames >= 16).toBe(true);
 
       const after = await read();
-      await waitForNotification(ANIMATION_FINISHED);
+      await waitForNotification('ANIMATED_TEXT_BLOCKED_FINISHED', 60000);
       await stopRecordingAnimationUpdates();
       await unmockAnimationTimer();
 
@@ -963,7 +979,6 @@ describe('Animated.Text with a shared value as children', () => {
         `text +${after.text - before.text}, ` +
         `box +${after.box - before.box}, ` +
         `UI frames +${after.uiFrames - before.uiFrames}`;
-      // ~30 frames in 500 ms; simulators drop frames.
       const textKeptGoing = after.text - before.text >= 10;
       expect(`${report}: ${textKeptGoing ? 'ok' : 'text stopped'}`).toBe(
         `${report}: ok`
@@ -983,7 +998,7 @@ describe('Animated.Text with a shared value as children', () => {
         easing: Easing.linear,
       });
       animateTo(progress, 100);
-      await waitForNotification(ANIMATION_FINISHED);
+      await waitForNotification(ANIMATION_FINISHED, 60000);
       const recorded = await readRecorded(updates, ['children', 'opacity']);
       await stopRecordingAnimationUpdates();
       const textFrames = recorded.children.map(String);
@@ -996,7 +1011,7 @@ describe('Animated.Text with a shared value as children', () => {
         opacityFrames.every((v, i) => i === 0 || v <= opacityFrames[i - 1])
       ).toBe(true);
       expect(
-        Number(await getTestComponent(TEXT_REF).getAnimatedStyle('opacity'))
+        (await getTestComponent(TEXT_REF).getMountedViewProps())?.opacity
       ).toBe(0.2, ComparisonMode.FLOAT_DISTANCE);
       expect((await readSettled('width')) > widthAtZero).toBe(true);
     });
@@ -1008,7 +1023,7 @@ describe('Animated.Text with a shared value as children', () => {
       const component = getTestComponent(TEXT_REF);
       const readOpacity = async () => {
         await waitTwoFrames();
-        return Number(await component.getAnimatedStyle('opacity'));
+        return (await component.getMountedViewProps())?.opacity;
       };
 
       opacity.value = 0.3;

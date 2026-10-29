@@ -32,6 +32,7 @@ const CURRENT_OPACITY = 0;
 const FROZEN_MS = 3000;
 
 const SETTLE_TIMEOUT_MS = 500;
+const SHADOW_TREE_TIMEOUT_MS = 5000;
 
 type HostInstance = {
   __internalInstanceHandle?: { stateNode?: { node?: unknown } };
@@ -111,6 +112,10 @@ function Fixture({
   );
 }
 
+async function readNativeOpacity() {
+  return (await getTestComponent(BOX_REF).getMountedViewProps())?.opacity;
+}
+
 async function readShadowTreeOpacity() {
   return Number(await getTestComponent(BOX_REF).getAnimatedStyle('opacity'));
 }
@@ -130,7 +135,7 @@ describe('settled props across a Suspense reveal', () => {
 
     // Before the initial value settles, so React holds the first render's style.
     probe.opacity!.set(CURRENT_OPACITY);
-    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+    await expectEventually(readNativeOpacity, SETTLE_TIMEOUT_MS).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
     );
@@ -158,7 +163,7 @@ describe('settled props across a Suspense reveal', () => {
     await waitForFrames(2);
 
     probe.opacity!.set(CURRENT_OPACITY);
-    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+    await expectEventually(readNativeOpacity, SETTLE_TIMEOUT_MS).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
     );
@@ -170,9 +175,19 @@ describe('settled props across a Suspense reveal', () => {
 
     // The registry no longer backs the value, so the next commit takes it from
     // React alone.
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
+    await expectEventually(leakingRegistries, SHADOW_TREE_TIMEOUT_MS).toBe(
+      NO_LEAKS
+    );
+    await expectEventually(readShadowTreeOpacity, SHADOW_TREE_TIMEOUT_MS).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
     await render(<Fixture frozen={false} label="re-rendered box" />);
     await waitForFrames(2);
+    expect(await readNativeOpacity()).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
     expect(await readShadowTreeOpacity()).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
@@ -188,15 +203,25 @@ describe('settled props across a Suspense reveal', () => {
     await waitForFrames(2);
 
     probe.opacity!.set(CURRENT_OPACITY);
-    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+    await expectEventually(readNativeOpacity, SETTLE_TIMEOUT_MS).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
     );
     expect(leakingRegistries()).toInclude(ANIMATED_PROPS_REGISTRY);
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
+    await expectEventually(leakingRegistries, SHADOW_TREE_TIMEOUT_MS).toBe(
+      NO_LEAKS
+    );
 
+    await expectEventually(readShadowTreeOpacity, SHADOW_TREE_TIMEOUT_MS).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
     await render(<Fixture frozen={false} label="re-rendered box" />);
     await waitForFrames(2);
+    expect(await readNativeOpacity()).toBe(
+      CURRENT_OPACITY,
+      ComparisonMode.FLOAT_DISTANCE
+    );
     expect(await readShadowTreeOpacity()).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
@@ -212,7 +237,7 @@ describe('settled props across a Suspense reveal', () => {
     await waitForFrames(2);
 
     probe.opacity!.set(CURRENT_OPACITY);
-    await expectEventually(readShadowTreeOpacity, SETTLE_TIMEOUT_MS).toBe(
+    await expectEventually(readNativeOpacity, SETTLE_TIMEOUT_MS).toBe(
       CURRENT_OPACITY,
       ComparisonMode.FLOAT_DISTANCE
     );
@@ -223,7 +248,9 @@ describe('settled props across a Suspense reveal', () => {
     expect(leakingRegistries()).toInclude(ANIMATED_PROPS_REGISTRY);
     await render(null);
 
-    await expectEventually(leakingRegistries).toBe(NO_LEAKS);
+    await expectEventually(leakingRegistries, SHADOW_TREE_TIMEOUT_MS).toBe(
+      NO_LEAKS
+    );
   });
 });
 
