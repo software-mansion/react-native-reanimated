@@ -10,6 +10,21 @@ function(_pch_ccache_write_digest digest)
   file(RENAME "${PCH}.sum.tmp" "${PCH}.sum")
 endfunction()
 
+# ccache can restore the .pch with the time of its original compile. When that
+# is older than the cmake_pch.hxx(.cxx) CMake wrote, ninja rebuilds the PCH and
+# all its users in the next build. ninja records the time of the .pch, so it
+# can't be changed here. The two generated files get the time of the .pch
+# instead.
+function(_pch_ccache_backdate_pch_sources)
+  string(REGEX REPLACE "\\.pch$" "" pch_header "${PCH}")
+  foreach(source IN ITEMS "${pch_header}" "${pch_header}.cxx")
+    if(NOT "${PCH}" IS_NEWER_THAN "${source}")
+      # Without a POSIX touch, the next build only rebuilds more than it needs.
+      execute_process(COMMAND touch -r "${PCH}" "${source}" ERROR_QUIET)
+    endif()
+  endforeach()
+endfunction()
+
 # Writes <PCH>.sum. The custom command added by pch_ccache_precompile_headers
 # runs this file in script mode to call it.
 function(_pch_ccache_write_sum)
@@ -81,11 +96,13 @@ function(_pch_ccache_write_sum)
 endfunction()
 
 if(CMAKE_SCRIPT_MODE_FILE)
+  _pch_ccache_backdate_pch_sources()
   _pch_ccache_write_sum()
   return()
 endif()
 
 set(PCH_CCACHE_FILE "${CMAKE_CURRENT_LIST_FILE}")
+set(PCH_CCACHE_OWNER_SOURCE "${CMAKE_CURRENT_LIST_DIR}/pch-ccache-owner.cpp")
 
 # Sets <out_var> to the ccache that compiles the sources of <target>, or to an
 # empty string.
@@ -170,11 +187,10 @@ function(pch_ccache_precompile_headers target header)
     return()
   endif()
 
-  set(owner_source "${CMAKE_CURRENT_BINARY_DIR}/${owner}.cpp")
-  if(NOT EXISTS "${owner_source}")
-    file(WRITE "${owner_source}" "")
-  endif()
-  add_library(${owner} OBJECT "${owner_source}")
+  # A checked-in source, not one written at configure time: ccache can restore
+  # its object with the time of an older compile, and ninja would then rebuild
+  # it in the next build.
+  add_library(${owner} OBJECT "${PCH_CCACHE_OWNER_SOURCE}")
   target_compile_options(${owner}
                          PRIVATE $<TARGET_PROPERTY:${target},COMPILE_OPTIONS>)
   target_compile_definitions(
