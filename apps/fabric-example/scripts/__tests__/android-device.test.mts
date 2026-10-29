@@ -11,16 +11,19 @@ type FakeOptions = {
   devices?: FakeDevice[];
   avds?: string[];
   bootsAs?: string | null;
+  bootTimeoutMs?: number;
 };
 
 function createFakeAndroid({
   devices = [],
   avds = [],
   bootsAs = null,
+  bootTimeoutMs = 5000,
 }: FakeOptions) {
   const connected = devices.map((device) => ({ ...device }));
   const booted: string[] = [];
   const queriedAvdNames: string[] = [];
+  const bootChecks: string[] = [];
   const tools = {
     listDevices: async () => connected.map((device) => device.serial),
     avdName: async (serial: string) => {
@@ -39,6 +42,7 @@ function createFakeAndroid({
       }
     },
     isBootCompleted: async (serial: string) => {
+      bootChecks.push(serial);
       const device = connected.find((d) => d.serial === serial);
       if (!device) {
         return false;
@@ -50,9 +54,9 @@ function createFakeAndroid({
     sleep: (ms: number) =>
       new Promise<void>((resolve) => setTimeout(resolve, Math.min(ms, 1))),
     log: () => {},
-    bootTimeoutMs: 100,
+    bootTimeoutMs,
   };
-  return { tools, booted, queriedAvdNames };
+  return { tools, booted, queriedAvdNames, bootChecks };
 }
 
 const OTHER_EMULATOR: FakeDevice = {
@@ -78,6 +82,23 @@ describe('resolveAndroidDevice', () => {
     );
     assert.equal(serial, 'emulator-5556');
     assert.deepEqual(fake.booted, []);
+  });
+
+  it('waits for a running emulator of the requested AVD to finish booting', async () => {
+    const fake = createFakeAndroid({
+      devices: [
+        OTHER_EMULATOR,
+        { serial: 'emulator-5556', avd: 'Mine', booted: false },
+      ],
+      avds: ['Other_Agent_AVD', 'Mine'],
+    });
+    const serial = await resolveAndroidDevice(
+      { serial: null, avd: 'Mine' },
+      fake.tools
+    );
+    assert.equal(serial, 'emulator-5556');
+    assert.deepEqual(fake.booted, []);
+    assert.deepEqual(fake.bootChecks, ['emulator-5556', 'emulator-5556']);
   });
 
   it('boots the requested AVD when only other devices are connected', async () => {
@@ -111,6 +132,7 @@ describe('resolveAndroidDevice', () => {
       devices: [OTHER_EMULATOR],
       avds: ['Other_Agent_AVD', 'Mine'],
       bootsAs: null,
+      bootTimeoutMs: 100,
     });
     await assert.rejects(
       resolveAndroidDevice({ serial: null, avd: 'Mine' }, fake.tools),
@@ -164,11 +186,13 @@ describe('parseAvdName', () => {
   it('reads the AVD name from `adb emu avd name` output', () => {
     assert.equal(parseAvdName('Pixel_9_API_36\r\nOK\r\n'), 'Pixel_9_API_36');
     assert.equal(parseAvdName('Pixel_9_API_36\nOK\n'), 'Pixel_9_API_36');
+    assert.equal(parseAvdName('KOALA_AVD\r\nOK\r\n'), 'KOALA_AVD');
   });
 
   it('returns null for empty or error output', () => {
     assert.equal(parseAvdName(''), null);
     assert.equal(parseAvdName('OK\r\n'), null);
     assert.equal(parseAvdName('KO: unknown command\r\n'), null);
+    assert.equal(parseAvdName('KO\r\n'), null);
   });
 });

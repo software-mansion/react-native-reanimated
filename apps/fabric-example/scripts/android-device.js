@@ -31,7 +31,7 @@ async function resolveAndroidDevice({ serial, avd }, tools) {
   if (avd) {
     const running = await findRunningAvd(avd, serials, tools);
     if (running) {
-      return running;
+      return waitForBoot(avd, tools);
     }
     const avds = await tools.listAvds();
     if (!avds.includes(avd)) {
@@ -84,7 +84,15 @@ async function findRunningAvd(avd, serials, tools) {
 async function bootAndWait(avd, tools) {
   tools.log(`[runtime-tests] booting emulator ${avd}`);
   tools.bootAvd(avd);
+  return waitForBoot(avd, tools);
+}
 
+/**
+ * @param {string} avd
+ * @param {AndroidTools} tools
+ * @returns {Promise<string>}
+ */
+async function waitForBoot(avd, tools) {
   const timeoutMs = tools.bootTimeoutMs ?? 300_000;
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -103,7 +111,7 @@ async function bootAndWait(avd, tools) {
  */
 function parseAvdName(output) {
   const [name] = output.split(/\r?\n/).map((line) => line.trim());
-  if (!name || name === 'OK' || name.startsWith('KO')) {
+  if (!name || name === 'OK' || /^KO(:|$)/.test(name)) {
     return null;
   }
   return name;

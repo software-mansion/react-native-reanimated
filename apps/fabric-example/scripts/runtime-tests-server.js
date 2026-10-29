@@ -1790,7 +1790,7 @@ function androidTools() {
       return stdout
         .split('\n')
         .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith('INFO'));
+        .filter((line) => line && !/^INFO\s*\|/.test(line));
     },
     bootAvd: (avd) => {
       const child = spawn(
@@ -1821,10 +1821,10 @@ async function crashDiagnosticsSerial() {
   if (androidSerial) {
     return androidSerial;
   }
-  if (SERIAL) {
-    return SERIAL;
-  }
   const serials = await listAndroidDevices().catch(() => []);
+  if (SERIAL) {
+    return serials.includes(SERIAL) ? SERIAL : null;
+  }
   if (AVD) {
     return findRunningAvd(AVD, serials, androidTools());
   }
