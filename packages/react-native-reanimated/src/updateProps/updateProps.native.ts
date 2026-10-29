@@ -68,6 +68,14 @@ type NativePropsOperation = {
   isAnimatedProps: boolean;
 };
 
+function hasAnyProp(object: object): boolean {
+  'worklet';
+  for (const _ in object) {
+    return true;
+  }
+  return false;
+}
+
 function createUpdatePropsManager() {
   'worklet';
   const nativeOperations: NativePropsOperation[] = [];
@@ -90,12 +98,10 @@ function createUpdatePropsManager() {
       // updates are a fresh object from the props builder. Animated props are
       // the updater's own object, which native rounds in place, so they are
       // copied to keep the updater's last values unchanged.
-      for (const _ in updates) {
-        return {
-          nativePropUpdates: isAnimatedProps ? { ...updates } : updates,
-        };
+      if (!hasAnyProp(updates)) {
+        return {};
       }
-      return {};
+      return { nativePropUpdates: isAnimatedProps ? { ...updates } : updates };
     }
     let nativePropUpdates: Record<string, unknown> | undefined;
     let jsPropUpdates: Record<string, unknown> | undefined;
