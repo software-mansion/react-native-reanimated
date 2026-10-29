@@ -1,6 +1,8 @@
 /* eslint-disable eslint-core/camelcase */
 'use strict';
 
+import { Component } from 'react';
+
 import type { InternalHostInstance } from '../commonTypes';
 import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
 import type { HostInstance } from './types';
@@ -92,9 +94,13 @@ export function findHostInstance(
   resolveFindHostInstance_DEPRECATED();
   /*
     The Fabric implementation of `findHostInstance_DEPRECATED` requires a React ref as an argument
-    rather than a native ref. Prefer the resolved component ref when available so components can
-    forward their ref to the host view that should be animated. Components that expose an animatable
-    ref via `getAnimatableRef` already have it resolved into `_componentRef`.
+    rather than a native ref, and it throws for anything that is not a class component instance,
+    such as a `useImperativeHandle` handle. Prefer the resolved component ref when it is a class
+    component so components can forward their ref to the host view that should be animated, and
+    use the animated component otherwise. Components that expose an animatable ref via
+    `getAnimatableRef` already have it resolved into `_componentRef`.
   */
-  return findHostInstance_DEPRECATED(componentRef ?? ref);
+  return findHostInstance_DEPRECATED(
+    componentRef instanceof Component ? componentRef : ref
+  );
 }

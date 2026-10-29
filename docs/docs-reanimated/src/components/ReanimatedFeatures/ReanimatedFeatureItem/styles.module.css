@@ -17,7 +17,12 @@
 }
 
 .featureItem h3 {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+.featureItem p {
+  margin: 0;
+  text-wrap: pretty;
 }

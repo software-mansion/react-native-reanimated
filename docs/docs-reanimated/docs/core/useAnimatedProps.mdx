@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # useAnimatedProps
 
-`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
+`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](../fundamentals/glossary.mdx#shared-value). This object is used to animate properties of third-party components.
 
-For animating style use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+For animating style use [`useAnimatedStyle`](./useAnimatedStyle.mdx) instead.
 
 ## Reference
 
@@ -57,7 +57,7 @@ An optional function or an array of functions.
 
 Sometimes when working with third-party libraries properties might be named differently on the API surface from what they really represent on the native side. Adapters make it possible to handle these cases by defining a way to convert these props before they reach the native side.
 
-Define an adapter as a [worklet](/docs/fundamentals/glossary#worklet) function and pass it directly to `useAnimatedProps`:
+Define an adapter as a [worklet](../fundamentals/glossary.mdx#worklet) function and pass it directly to `useAnimatedProps`:
 
 ```jsx
 const adapter = (props) => {
@@ -106,7 +106,7 @@ function App() {
 
 ## Returns
 
-`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](../fundamentals/glossary.mdx#animated-component) that you want to animate.
 
 ## Example
 
@@ -119,7 +119,7 @@ import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
 
 - You can share animated props between components to avoid code duplication.
 - We recommend to create adapters outside of the component's body to avoid unnecessary recalculations.
-- For animating [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components, see [Animating SVG](/docs/guides/animating-svg).
+- For animating [`react-native-svg`](https://github.com/software-mansion/react-native-svg) components, see [Animating SVG](../guides/animating-svg.mdx).
 
 ## Platform compatibility
 
