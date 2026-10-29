@@ -159,6 +159,8 @@ let afterSuitePending = false;
 /** @type {string | null} */
 let resumeFromSuite = null;
 let reloadInProgress = false;
+/** @type {Set<string>} */
+const suitesThatReloaded = new Set();
 const resultsBeforeReload = {
   passed: 0,
   failed: 0,
@@ -639,7 +641,7 @@ function onHello(msg) {
   }
 
   let only = ONLY;
-  if (resumeFromSuite) {
+  if (resumeFromSuite !== null) {
     only = suitesToResume(suites);
     if (!only) {
       return;
@@ -689,7 +691,28 @@ function onReload(msg) {
   resultsBeforeReload.failed += Number(msg.failed ?? 0);
   resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
   resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
-  resumeFromSuite = String(msg.resumeFromSuite ?? '');
+  const requestedSuite = String(msg.resumeFromSuite ?? '');
+  if (!requestedSuite) {
+    console.error(
+      '[runtime-tests] the device requested a reload without a suite to resume from.'
+    );
+    send({ type: 'error', message: 'Reload request without resumeFromSuite' });
+    shutdown(1);
+    return;
+  }
+  if (suitesThatReloaded.has(requestedSuite)) {
+    console.error(
+      `[runtime-tests] suite '${requestedSuite}' requested a second reload in this run, stopping to avoid a reload loop.`
+    );
+    send({
+      type: 'error',
+      message: `Suite ${requestedSuite} requested a second reload`,
+    });
+    shutdown(1);
+    return;
+  }
+  suitesThatReloaded.add(requestedSuite);
+  resumeFromSuite = requestedSuite;
   reloadInProgress = true;
   console.log(
     `[runtime-tests] device requested a reload, the run resumes from suite '${resumeFromSuite}'`
