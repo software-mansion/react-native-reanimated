@@ -91,4 +91,11 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/plugin/workletClasses.test');
     },
   },
+  {
+    testSuiteName: 'reload',
+    importTest: () => {
+      require('./tests/reload/oldInstanceValues.test');
+    },
+    disabled: !__DEV__,
+  },
 ];
