@@ -1,1 +1,0 @@
-/Users/bigpoppe/.claude-overlays/react-native-reanimated-2/.claude/hooks/check-package-manager.mjs
