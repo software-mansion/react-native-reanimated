@@ -139,6 +139,21 @@ function(pch_ccache_precompile_headers target header)
   target_compile_definitions(${owner} PRIVATE $<TARGET_PROPERTY:${target},COMPILE_DEFINITIONS>)
   target_include_directories(${owner} PRIVATE $<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>)
   target_link_libraries(${owner} PRIVATE $<TARGET_PROPERTY:${target},LINK_LIBRARIES>)
+  target_compile_features(${owner} PRIVATE $<TARGET_PROPERTY:${target},COMPILE_FEATURES>)
+  # REUSE_FROM needs both targets compiled with the same flags. These properties can't be read through
+  # generator expressions, so the ones set on <target> after this call aren't copied.
+  get_target_property(type ${target} TYPE)
+  if(type MATCHES "^(SHARED|MODULE)_LIBRARY$")
+    set_target_properties(${owner} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  endif()
+  foreach(property IN ITEMS POSITION_INDEPENDENT_CODE CXX_STANDARD CXX_STANDARD_REQUIRED CXX_EXTENSIONS
+                            CXX_VISIBILITY_PRESET VISIBILITY_INLINES_HIDDEN INTERPROCEDURAL_OPTIMIZATION)
+    get_property(is_set TARGET ${target} PROPERTY ${property} SET)
+    if(is_set)
+      get_target_property(value ${target} ${property})
+      set_target_properties(${owner} PROPERTIES ${property} "${value}")
+    endif()
+  endforeach()
   # Included by name, not by path, so CMake's cmake_pch.hxx is the same in every checkout and ccache can
   # share the results of the sources that use it.
   get_filename_component(header_name "${header}" NAME)
