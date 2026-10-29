@@ -25,6 +25,8 @@ def fmt(xs):
 
 
 rows = [json.loads(l) for f in sys.argv[1:] for l in open(f)]
+for r in rows:
+    r.setdefault('variant', '-')  # bench.py output has no variants
 # Averaging runs of different box counts or builds measures no single workload.
 identities = defaultdict(set)
 for r in rows:
