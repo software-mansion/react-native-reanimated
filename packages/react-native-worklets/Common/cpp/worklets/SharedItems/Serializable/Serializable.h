@@ -2,12 +2,15 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace worklets {
 
@@ -23,9 +26,50 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<facebook::jsi::Value> &
   ::operator delete(value.release());
 }
 
-void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value);
+template <typename TFn>
+void runWhileOwnerLocked(const RuntimeIdentity &owner, TFn &&fn) {
+  if (owner.isRNRuntime()) {
+    const auto rnRuntimeStatus = owner.lockRNRuntimeStatus();
+    if (rnRuntimeStatus == nullptr) {
+      std::forward<TFn>(fn)(false);
+      return;
+    }
+    rnRuntimeStatus->runWhileLocked([&fn](bool isDead) { std::forward<TFn>(fn)(!isDead); });
+    return;
+  }
 
-void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value);
+  const auto runtimeManager = owner.lockRuntimeManager();
+  if (runtimeManager == nullptr) {
+    std::forward<TFn>(fn)(false);
+    return;
+  }
+  runtimeManager->runWhileRuntimeLocked(owner.getRuntimeId(), std::forward<TFn>(fn));
+}
+
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value) {
+  if (value == nullptr) {
+    return;
+  }
+  runWhileOwnerLocked(owner, [&value](bool isAlive) {
+    if (isAlive) {
+      value.reset();
+    } else {
+      freeWithoutCallingDestructor(value);
+    }
+  });
+}
+
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value) {
+  if (value.isUndefined()) {
+    return;
+  }
+  runWhileOwnerLocked(owner, [&value](bool isAlive) {
+    if (isAlive) {
+      value.~Value();
+    }
+    new (&value) facebook::jsi::Value(facebook::jsi::Value::undefined());
+  });
+}
 
 class SerializableJSRef : public facebook::jsi::NativeState {
  private:

@@ -3,7 +3,6 @@
 #include <jsi/jsi.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
 #include <cstdint>
@@ -21,6 +20,9 @@ namespace worklets {
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
+class WorkletRuntime;
+class SerializableWorklet;
+class AsyncQueue;
 
 class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
  public:
