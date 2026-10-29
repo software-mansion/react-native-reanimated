@@ -1823,7 +1823,7 @@ async function crashDiagnosticsSerial() {
   }
   const serials = await listAndroidDevices().catch(() => []);
   if (SERIAL) {
-    return serials.includes(SERIAL) ? SERIAL : null;
+    return serials.some((serial) => serial === SERIAL) ? SERIAL : null;
   }
   if (AVD) {
     return findRunningAvd(AVD, serials, androidTools());
