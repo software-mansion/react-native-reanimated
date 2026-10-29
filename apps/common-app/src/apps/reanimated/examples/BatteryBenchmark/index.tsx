@@ -32,7 +32,7 @@ function parseUrl(url: string | null | undefined) {
   try {
     params = Object.fromEntries(
       query.split('&').map((pair) => pair.split('=').map(decodeURIComponent))
-    );
+    ) as Record<string, string | undefined>;
   } catch {
     // Malformed percent-encoding.
     return null;
