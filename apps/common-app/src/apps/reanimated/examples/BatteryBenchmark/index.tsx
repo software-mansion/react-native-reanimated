@@ -78,6 +78,11 @@ export default function BatteryBenchmarkExample() {
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    // bench.py reads this line from logcat to check what is being measured.
+    console.log(`BatteryBenchmark: scenario=${scenario} count=${count}`);
+  }, [scenario, count]);
+
   const { component: Component, ownContainer } = SCENARIOS[scenario];
   // Boxes take about a third of the area, the rest is margin.
   const size = Math.max(

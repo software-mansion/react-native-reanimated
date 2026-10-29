@@ -9,6 +9,7 @@ usage: ANDROID_SERIAL=<serial> python ab.py OUT_JSONL ROUNDS COUNT \\
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -25,7 +26,18 @@ def main():
     out, rounds, count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
     variants = [v.split('=') for v in sys.argv[4].split(',')]
     scenarios = sys.argv[5:]
+    labels = [label for label, _ in variants]
+    if len(set(labels)) != len(labels):
+        sys.exit(f'duplicate variant labels: {", ".join(labels)}')
+    bench.check_count(count)
     bench.check_scenarios(scenarios)
+    # Install from private copies, so a rebuild during the session can't
+    # change the measured APK under its recorded hash.
+    copies = {}
+    for label, apk in variants:
+        copies[label] = os.path.join(bench.TMP, f'{label}.apk')
+        shutil.copyfile(apk, copies[label])
+    variants = [(label, copies[label]) for label in labels]
     hashes = {label: sha256(apk) for label, apk in variants}
     subprocess.run(bench.ADB + ['push', os.path.join(bench.HERE, 'snap.sh'),
                                 '/data/local/tmp/snap.sh'],

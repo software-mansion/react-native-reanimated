@@ -43,7 +43,7 @@ def parse_stat(line):
 
 def snapshot():
     out = sh('sh /data/local/tmp/snap.sh')
-    snap = {'threads': {}, 'procs': {}, 'app_total': None}
+    snap = {'threads': {}, 'procs': {}, 'app_pid': None, 'app_total': None}
     section = None
     for line in out.splitlines():
         if line.startswith('### '):
@@ -60,6 +60,7 @@ def snapshot():
         elif section == 'apptotal':
             r = parse_stat(line)
             if r:
+                snap['app_pid'] = r[0]
                 snap['app_total'] = r[2]
         elif section == 'app':
             r = parse_stat(line)
@@ -80,6 +81,8 @@ def thread_group(comm):
 
 
 def diff(a, b):
+    if a['app_pid'] != b['app_pid']:
+        raise RuntimeError(f'{PKG} restarted during the measurement')
     groups = {}
     for tid, (comm, ticks) in b['threads'].items():
         before = a['threads'].get(tid, (comm, 0))[1]
@@ -153,11 +156,29 @@ def check_scenarios(scenarios):
         sys.exit(f'unknown scenarios: {", ".join(unknown)}')
 
 
+def check_count(count):
+    if count <= 0:
+        sys.exit(f'count must be positive, got {count}')
+
+
+def check_rendered(scenario, count):
+    # The screen logs what it renders. An APK without the scenario shows the
+    # empty one, so check the log instead of trusting the deep link.
+    out = subprocess.run(ADB + ['logcat', '-d', '-s', 'ReactNativeJS:*'],
+                         capture_output=True, text=True, check=True).stdout
+    shown = re.findall(r'BatteryBenchmark: scenario=(\S+) count=(\d+)', out)
+    if not shown or shown[-1] != (scenario, str(count)):
+        last = ' '.join(shown[-1]) if shown else 'nothing'
+        raise RuntimeError(f'asked for {scenario} {count}, the app shows {last}')
+
+
 def run(scenario, count):
     sh(f'am force-stop {PKG}')
     time.sleep(1)
+    subprocess.run(ADB + ['logcat', '-c'], capture_output=True)
     sh(f"am start -W -a android.intent.action.VIEW -d '{URL.format(scenario, count)}' {PKG}")
     time.sleep(SETTLE_S)
+    check_rendered(scenario, count)
     sh(f'dumpsys gfxinfo {PKG} reset')
     t_before = temps()
     a = snapshot()
@@ -185,6 +206,7 @@ def run(scenario, count):
 
 def main():
     out, count, scenarios = sys.argv[1], int(sys.argv[2]), sys.argv[3:]
+    check_count(count)
     check_scenarios(scenarios)
     subprocess.run(ADB + ['push', os.path.join(HERE, 'snap.sh'),
                           '/data/local/tmp/snap.sh'],

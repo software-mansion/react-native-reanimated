@@ -2,7 +2,7 @@
 
 Measures the energy used by the scenarios of the "Battery benchmark" example (`apps/common-app/src/apps/reanimated/examples/BatteryBenchmark`) on an Android phone.
 
-For every scenario, the harness cold-starts the app with a deep link, waits 8 seconds and records 20 seconds of:
+For every scenario, the harness cold-starts the app with a deep link, waits 8 seconds, checks in logcat that the app renders the requested scenario and count, and records 20 seconds of:
 
 - energy of every power rail (CPU clusters, GPU, display, memory) from the On-Device Power Monitor through Perfetto `android.power` (Pixel 6 or newer),
 - CPU time of every thread of the app, and of the SurfaceFlinger and composer processes,
