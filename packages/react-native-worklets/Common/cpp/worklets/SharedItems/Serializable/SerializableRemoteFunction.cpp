@@ -55,11 +55,13 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
   settled_ = true;
   if (isHostedOnRNRuntime()) {
     rnRuntimeStatus_->runWhileLocked([&](bool isDead) {
-      if (!isDead) {
-        jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-          resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
-        });
+      // NOLINTNEXTLINE(readability/braces)
+      if (isDead) [[unlikely]] {
+        return;
       }
+      jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+        resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+      });
     });
   } else {
     const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
