@@ -446,23 +446,10 @@ function clampInteger(raw, fallback, min, max) {
 
 const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
 
-const httpServer = http.createServer(handleEchoRequest);
-const wss = new WebSocketServer({ server: httpServer });
-
-httpServer.on('error', (error) => {
-  if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
-    console.error(
-      `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
-    );
-  } else {
-    console.error(`[runtime-tests] server error: ${error.message}`);
-  }
-  process.exit(1);
-});
-
-wss.on('error', (error) => {
-  console.error(`[runtime-tests] websocket error: ${error.message}`);
-});
+/** @type {http.Server | null} */
+let httpServer = null;
+/** @type {import('ws').WebSocketServer | null} */
+let wss = null;
 
 process.on('uncaughtException', (error) => {
   console.error(`[runtime-tests] uncaught exception: ${errorMessage(error)}`);
@@ -474,11 +461,10 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-httpServer.listen(PORT, HOST);
+if (!BUILD_ONLY) {
+  startServer();
+}
 
-console.log(
-  `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
-);
 if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
 }
@@ -499,7 +485,38 @@ if (!SHOULD_LAUNCH && !BUILD_ONLY) {
   armConnectTimer();
 }
 
-wss.on('connection', (socket) => {
+function startServer() {
+  const server = http.createServer(handleEchoRequest);
+  const socketServer = new WebSocketServer({ server });
+  httpServer = server;
+  wss = socketServer;
+
+  server.on('error', (error) => {
+    if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
+      console.error(
+        `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
+      );
+    } else {
+      console.error(`[runtime-tests] server error: ${error.message}`);
+    }
+    process.exit(1);
+  });
+
+  socketServer.on('error', (error) => {
+    console.error(`[runtime-tests] websocket error: ${error.message}`);
+  });
+
+  socketServer.on('connection', onConnection);
+
+  server.listen(PORT, HOST);
+
+  console.log(
+    `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
+  );
+}
+
+/** @param {import('ws').WebSocket} socket */
+function onConnection(socket) {
   if (client) {
     console.warn(
       '[runtime-tests] rejecting extra client; one already connected'
@@ -558,7 +575,7 @@ wss.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.error('[runtime-tests] socket error:', error.message);
   });
-});
+}
 
 /** @param {DeviceMessage} msg */
 function handleMessage(msg) {
@@ -1442,8 +1459,12 @@ function shutdown(code) {
 /** @param {number} code */
 async function exitAfterSuiteCommands(code) {
   await afterSuiteChain;
+  const server = httpServer;
+  if (!wss || !server) {
+    process.exit(code);
+  }
   wss.close(() => {
-    httpServer.close(() => {
+    server.close(() => {
       process.exit(code);
     });
   });
