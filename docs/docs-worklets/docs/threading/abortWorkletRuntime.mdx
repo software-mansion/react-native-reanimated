@@ -44,7 +44,7 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 - Passing an id that doesn't belong to any runtime throws.
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
-- The abort is cooperative. A worklet that's already running isn't interrupted, similar to cancelling a thread: it runs to the end and only then the runtime stops. A worklet stuck in an infinite loop keeps running, and so does its thread.
+- A worklet that's already running finishes before the runtime stops.
 - The promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 
@@ -53,7 +53,7 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 <CallTable
   bundleMode={{
 rnRuntime: true,
-uiRuntime: false,
+uiRuntime: true,
 workerRuntime: true,
 }}
   noBundleMode={{
