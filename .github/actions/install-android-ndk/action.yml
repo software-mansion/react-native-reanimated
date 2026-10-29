@@ -29,7 +29,7 @@ runs:
           echo "::error::install-android-ndk supports only Linux runners, this runner is $RUNNER_OS"
           exit 1
         fi
-        version="$(grep -oE 'ndkVersion[[:space:]]*=[[:space:]]*"[^"]+"' "$GRADLE_FILE" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/' || true)"
+        version="$(perl -0pe 's{/\*.*?\*/}{}gs; s{//[^\n]*}{}g' "$GRADLE_FILE" | grep -oE 'ndkVersion[[:space:]]*=[[:space:]]*"[^"]+"' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/' || true)"
         if [[ -z "$version" ]]; then
           echo "::error::Could not read ndkVersion from $GRADLE_FILE"
           exit 1
