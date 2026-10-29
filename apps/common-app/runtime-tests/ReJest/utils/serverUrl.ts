@@ -58,9 +58,9 @@ export function deriveWsUrl(): string {
 }
 
 /**
- * Base URL of the plain-HTTP echo endpoints served by `runtime-tests-server.js`
- * on the same port as its WebSocket harness. It never ends with a slash, so
- * callers can append a path directly.
+ * Base URL of the plain-HTTP echo endpoints served by
+ * `runtime-tests-server.mts` on the same port as its WebSocket harness. It
+ * never ends with a slash, so callers can append a path directly.
  */
 export function deriveEchoServerUrl(): string {
   const wsUrl = deriveWsUrl();

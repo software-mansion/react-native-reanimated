@@ -89,6 +89,11 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Use Node.js
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
@@ -115,7 +120,7 @@ jobs:
 
       - name: Build runtime-tests app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
+        run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
         if: inputs.bundleMode
@@ -144,7 +149,7 @@ jobs:
           case "$CONFIGURATION" in
             Debug*) EXPORT_FLAGS="--allow-debug" ;;
           esac
-          node scripts/export-runtime-tests-app.js --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
+          node --experimental-strip-types scripts/export-runtime-tests-app.mts --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
 
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -179,6 +184,11 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           persist-credentials: false
+
+      - name: Use Node.js
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
@@ -230,27 +240,27 @@ jobs:
           # Device-pick logic lives in the driver (`pick` subcommand) so it
           # is testable and reusable outside CI.
           if [ -n "$INPUT_UDID" ]; then
-            UDID=$(node scripts/runtime-tests-remote.mjs pick --udid "$INPUT_UDID")
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick --udid "$INPUT_UDID")
           else
-            UDID=$(node scripts/runtime-tests-remote.mjs pick)
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick)
           fi
 
           echo "using remote simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-          node scripts/runtime-tests-remote.mjs install --udid "$UDID" \
+          node --experimental-strip-types scripts/runtime-tests-remote.mts install --udid "$UDID" \
             --app-path dist/unpacked/FabricExample.app
 
       - name: Run ReJest self-tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library self-tests --configuration "$CONFIGURATION"
 
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          if node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}" \
+          if node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}" \
             --library self-tests --configuration "$CONFIGURATION" \
             --only "intentional failures";
           then
@@ -262,13 +272,13 @@ jobs:
       - name: Run Worklets runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library worklets --configuration "$CONFIGURATION"
 
       - name: Run Reanimated runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library reanimated --configuration "$CONFIGURATION"
 
       - name: Upload crash reports

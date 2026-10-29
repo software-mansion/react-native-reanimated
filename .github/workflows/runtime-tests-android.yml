@@ -64,6 +64,11 @@ jobs:
       - name: Install Android NDK
         uses: $/.github/actions/install-android-ndk
 
+      - name: Use Node.js
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
@@ -122,16 +127,16 @@ jobs:
           working-directory: apps/fabric-example
           script: |
             echo "::group::ReJest self-tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests
+            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests
             echo "::endgroup::"
             echo "::group::Verify CI catches failing tests"
-            if node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
+            if node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
             echo "::endgroup::"
             echo "::group::Worklets runtime tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library worklets
+            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets
             echo "::endgroup::"
             echo "::group::Reanimated runtime tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library reanimated
+            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated
             echo "::endgroup::"
 
       - name: Upload crash reports
