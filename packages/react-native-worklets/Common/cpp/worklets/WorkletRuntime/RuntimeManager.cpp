@@ -39,7 +39,11 @@ std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
   runtimes.reserve(weakRuntimes_.size());
 
   for (const auto &[id, weakRuntime] : weakRuntimes_) {
-    if (auto runtime = weakRuntime.lock(); runtime && !runtime->isAborted()) {
+    if (auto runtime = weakRuntime.lock()) {
+      // NOLINTNEXTLINE(readability/braces)
+      if (runtime->isAborted()) [[unlikely]] {
+        continue;
+      }
       runtimes.push_back(runtime);
     }
   }
