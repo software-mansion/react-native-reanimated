@@ -47,14 +47,14 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
-      const auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
+      auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.
       if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
         const bool isAnimatedProps = item.getProperty(rt, "isAnimatedProps").asBool();
         trackUpdate(shadowNode->getTag(), dynamicUpdates, isAnimatedProps, timestamp);
       }
-      addUpdatesToBatch(shadowNode->getFamilyShared(), dynamicUpdates);
+      addUpdatesToBatch(shadowNode->getFamilyShared(), std::move(dynamicUpdates));
     }
   }
 }

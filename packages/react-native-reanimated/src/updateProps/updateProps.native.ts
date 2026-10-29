@@ -68,6 +68,14 @@ type NativePropsOperation = {
   isAnimatedProps: boolean;
 };
 
+function hasAnyProp(object: object): boolean {
+  'worklet';
+  for (const _ in object) {
+    return true;
+  }
+  return false;
+}
+
 function createUpdatePropsManager() {
   'worklet';
   const nativeOperations: NativePropsOperation[] = [];
@@ -75,20 +83,43 @@ function createUpdatePropsManager() {
 
   let flushPending = false;
 
-  const processViewUpdates = (tag: number, updates: PropUpdates) =>
-    Object.entries(updates).reduce<{
-      nativePropUpdates?: PropUpdates;
-      jsPropUpdates?: PropUpdates;
-    }>((acc, [propName, value]) => {
-      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
-        acc.jsPropUpdates ??= {};
-        acc.jsPropUpdates[propName] = value;
-      } else {
-        acc.nativePropUpdates ??= {};
-        acc.nativePropUpdates[propName] = value;
+  const processViewUpdates = (
+    tag: number,
+    updates: PropUpdates,
+    isAnimatedProps: boolean
+  ): {
+    nativePropUpdates?: PropUpdates;
+    jsPropUpdates?: PropUpdates;
+  } => {
+    const jsPropNames = global._tagToJSPropNamesMapping[tag];
+    if (!jsPropNames) {
+      // Fast path for the common case of a view without JS props: hand the
+      // updates over as they are instead of copying them every frame. Style
+      // updates are a fresh object from the props builder. Animated props are
+      // the updater's own object, which native rounds in place, so they are
+      // copied to keep the updater's last values unchanged.
+      if (!hasAnyProp(updates)) {
+        return {};
       }
-      return acc;
-    }, {});
+      return { nativePropUpdates: isAnimatedProps ? { ...updates } : updates };
+    }
+    let nativePropUpdates: Record<string, unknown> | undefined;
+    let jsPropUpdates: Record<string, unknown> | undefined;
+    for (const propName in updates) {
+      if (jsPropNames[propName]) {
+        jsPropUpdates ??= {};
+        jsPropUpdates[propName] = (updates as Record<string, unknown>)[
+          propName
+        ];
+      } else {
+        nativePropUpdates ??= {};
+        nativePropUpdates[propName] = (updates as Record<string, unknown>)[
+          propName
+        ];
+      }
+    }
+    return { nativePropUpdates, jsPropUpdates };
+  };
 
   return {
     update(
@@ -100,7 +131,8 @@ function createUpdatePropsManager() {
         const viewTag = tag as number;
         const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
           viewTag,
-          updates
+          updates,
+          isAnimatedProps
         );
 
         if (nativePropUpdates) {
