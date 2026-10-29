@@ -27,10 +27,10 @@ class AsyncQueue;
 
 class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
  public:
-  // Returns only ready runtimes. A runtime stops being returned when its last owner releases it.
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
 
-  // Returns only ready runtimes. A runtime stops being returned when its last owner releases it.
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
