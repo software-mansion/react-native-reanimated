@@ -74,13 +74,18 @@ function(_pch_ccache_write_sum)
   endif()
 
   if(BASE_DIR)
-    string(REGEX REPLACE "(.)/+$" "\\1" base_dir "${BASE_DIR}")
+    string(REGEX REPLACE "/+$" "" base_dir "${BASE_DIR}")
     string(REGEX REPLACE "([][+.*()^$?|\\\\])" "\\\\\\1" base_dir_regex
                          "${base_dir}")
     # The directory itself or a path in it, followed by a space, a quote or a
     # line break. A directory whose name only starts with the same text doesn't
-    # match.
-    string(REGEX MATCHALL "${base_dir_regex}(/[^ '\n]*)?[ '\n]" paths "${info}")
+    # match. With base_dir = /, every absolute path matches.
+    set(path_in_base_dir_regex "(/[^ '\n]*)?")
+    if(base_dir STREQUAL "")
+      set(path_in_base_dir_regex "/[^ '\n]*")
+    endif()
+    string(REGEX MATCHALL "${base_dir_regex}${path_in_base_dir_regex}[ '\n]"
+                 paths "${info}")
     list(REMOVE_DUPLICATES paths)
     foreach(path IN LISTS paths)
       string(REGEX REPLACE "[ '\n]$" "" path "${path}")
