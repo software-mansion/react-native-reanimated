@@ -3,6 +3,13 @@
 # worktrees). Adapted from Expo's pch-ccache.cmake:
 # https://github.com/expo/expo/pull/50982
 
+# The owner's own source compiles with the PCH and can't wait for the .sum, so
+# it must never see a half-written one.
+function(_pch_ccache_write_digest digest)
+  file(WRITE "${PCH}.sum.tmp" "${digest}\n")
+  file(RENAME "${PCH}.sum.tmp" "${PCH}.sum")
+endfunction()
+
 # Writes <PCH>.sum. The custom command added by pch_ccache_precompile_headers
 # runs this file in script mode to call it.
 function(_pch_ccache_write_sum)
@@ -47,7 +54,7 @@ function(_pch_ccache_write_sum)
         "${failure}, so ccache can't share the results of the users of this PCH between "
         "checkouts at different paths.")
     file(SHA256 "${PCH}" digest)
-    file(WRITE "${PCH}.sum" "${digest}\n")
+    _pch_ccache_write_digest("${digest}")
     return()
   endif()
 
@@ -70,7 +77,7 @@ function(_pch_ccache_write_sum)
   endif()
 
   string(SHA256 digest "${info}")
-  file(WRITE "${PCH}.sum" "${digest}\n")
+  _pch_ccache_write_digest("${digest}")
 endfunction()
 
 if(CMAKE_SCRIPT_MODE_FILE)
