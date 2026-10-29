@@ -165,22 +165,6 @@ describe('abortWorkletRuntime', () => {
     );
   });
 
-  test('throws when the runtime id is not a non-negative integer', async () => {
-    // Arrange
-    const runtime = createWorkletRuntime({
-      name: 'abort-invalid-id',
-      abortable: true,
-    });
-
-    // Act & Assert
-    await expect(() => abortWorkletRuntime(runtime.runtimeId + 0.5)).toThrow(
-      'non-negative safe integer'
-    );
-    await expect(() => abortWorkletRuntime(-1)).toThrow(
-      'non-negative safe integer'
-    );
-  });
-
   test('throws when creating an abortable runtime with a custom queue', async () => {
     await expect(() =>
       createWorkletRuntime({ abortable: true, queue: {} })

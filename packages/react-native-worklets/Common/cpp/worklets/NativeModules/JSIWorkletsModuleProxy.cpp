@@ -31,7 +31,6 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
-#include <cmath>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -48,8 +47,6 @@ using namespace facebook;
 namespace worklets {
 
 namespace {
-
-constexpr double kMaxSafeInteger = 9007199254740991.0;
 
 inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
@@ -747,12 +744,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "abortWorkletRuntime",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        const double runtimeIdValue = at<0>(args).asNumber();
-        if (!std::isfinite(runtimeIdValue) || runtimeIdValue < 0 || runtimeIdValue > kMaxSafeInteger ||
-            std::trunc(runtimeIdValue) != runtimeIdValue) {
-          throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: runtimeId must be a non-negative safe integer.");
-        }
-        const auto runtimeId = static_cast<uint64_t>(runtimeIdValue);
+        const int runtimeId = at<0>(args).asNumber();
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
