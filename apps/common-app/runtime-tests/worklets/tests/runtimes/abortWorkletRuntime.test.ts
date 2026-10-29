@@ -62,10 +62,9 @@ describe('abortWorkletRuntime', () => {
       'worklet';
       pendingRan.setBlocking(true);
     });
-    await waitForNotification(STARTED_NOTIFICATION);
-
     // Act
     try {
+      await waitForNotification(STARTED_NOTIFICATION);
       abortWorkletRuntime(runtime.runtimeId);
     } finally {
       release.setBlocking(true);
@@ -75,6 +74,42 @@ describe('abortWorkletRuntime', () => {
     // Assert
     expect(finished.getBlocking()).toBe(true);
     expect(pendingRan.getBlocking()).toBe(false);
+  });
+
+  test('lets the running job schedule work on its own aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-reschedule',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    const finished = createSynchronizable(false);
+    const rescheduledRan = createSynchronizable(false);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
+      }
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        rescheduledRan.setBlocking(true);
+      });
+      finished.setBlocking(true);
+    });
+
+    // Act
+    try {
+      await waitForNotification(STARTED_NOTIFICATION);
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
+    await wait(200);
+
+    // Assert
+    expect(finished.getBlocking()).toBe(true);
+    expect(rescheduledRan.getBlocking()).toBe(false);
   });
 
   test('throws when scheduling work on an aborted runtime', async () => {
@@ -206,10 +241,9 @@ describe('abortWorkletRuntime', () => {
       'worklet';
       return 2;
     });
-    await waitForNotification(STARTED_NOTIFICATION);
-
     // Act
     try {
+      await waitForNotification(STARTED_NOTIFICATION);
       abortWorkletRuntime(runtime.runtimeId);
     } finally {
       release.setBlocking(true);
@@ -248,10 +282,9 @@ describe('abortWorkletRuntime', () => {
           // Wait until the test releases the job.
         }
       });
-      await waitForNotification(STARTED_NOTIFICATION);
-
       // Act
       try {
+        await waitForNotification(STARTED_NOTIFICATION);
         abortWorkletRuntime(runtime.runtimeId);
       } finally {
         release.setBlocking(true);
@@ -285,10 +318,9 @@ describe('abortWorkletRuntime', () => {
           return 1;
         }).catch(() => {});
       });
-      await waitForNotification(STARTED_NOTIFICATION);
-
       // Act
       try {
+        await waitForNotification(STARTED_NOTIFICATION);
         abortWorkletRuntime(runtime.runtimeId);
       } finally {
         release.setBlocking(true);
@@ -321,10 +353,9 @@ describe('abortWorkletRuntime', () => {
       'worklet';
       return 1;
     });
-    await waitForNotification(STARTED_NOTIFICATION);
-
     // Act
     try {
+      await waitForNotification(STARTED_NOTIFICATION);
       abortWorkletRuntime(runtime.runtimeId);
     } finally {
       release.setBlocking(true);

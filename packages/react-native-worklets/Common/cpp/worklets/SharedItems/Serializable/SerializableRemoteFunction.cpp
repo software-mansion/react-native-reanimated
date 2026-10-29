@@ -87,7 +87,7 @@ PromiseDropGuard::~PromiseDropGuard() {
             std::nullopt),
         runtimeManager_);
   } catch (...) {
-    // The host runtime was aborted and can't run the rejection.
+    // A destructor must not throw.
   }
 }
 

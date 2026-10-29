@@ -7,7 +7,7 @@ sidebar_position: 42 # Use alphabetical order
   # abortWorkletRuntime
 </Badges>
 
-`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that was created with `abortable: true`. It drops the work that's still waiting in the runtime's queue and rejects the promises of that work. The runtime's thread stops once the job that's currently running returns.
+`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) that was created with `abortable: true`. It drops the work that's still waiting in the runtime's queue and rejects the promises of that work. The runtime's thread stops once the job that's currently running returns.
 
 ## Reference
 
@@ -36,7 +36,7 @@ abortWorkletRuntime(workletRuntime.runtimeId);
 
 ### runtimeId
 
-The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to abort. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) to abort. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ## Remarks
 

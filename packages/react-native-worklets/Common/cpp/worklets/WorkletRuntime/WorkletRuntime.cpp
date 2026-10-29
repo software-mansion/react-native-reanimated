@@ -339,17 +339,13 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    std::shared_ptr<void> dropGuard) {
+    const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  if (workletRuntime->isAborted()) [[unlikely]] {
-    throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
-  }
-  workletRuntime->schedule(serializableWorklet, std::move(dropGuard));
+  workletRuntime->schedule(serializableWorklet);
 }
 
 #ifndef NDEBUG
@@ -357,17 +353,13 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack,
-    std::shared_ptr<void> dropGuard) {
+    const std::optional<std::string> &scheduleStack) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  if (workletRuntime->isAborted()) [[unlikely]] {
-    throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
-  }
-  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack, std::move(dropGuard));
+  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
 }
 #endif // NDEBUG
 
