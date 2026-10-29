@@ -19,7 +19,6 @@ function App() {
   const runtime = createWorkletRuntime({
     name: 'background',
     initializer: () => {
-      'worklet';
       console.log('Runtime initialized!');
     },
   });

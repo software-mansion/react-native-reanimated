@@ -108,7 +108,6 @@ type MyShareableHost = {
 
 const shareable = createShareable<number, MyShareableHost>(UIRuntimeId, 42, {
   hostDecorator: (shareable) => {
-    'worklet';
     shareable.myHostValue = shareable.value + 1;
     return shareable; // make sure to return the same reference after decorating
   },
@@ -140,7 +139,6 @@ const shareable = createShareable<number, object, MyShareableGuest>(
   42,
   {
     guestDecorator: (shareable) => {
-      'worklet';
       shareable.getAndIncrement = () => {
         const currentValue = shareable.getSync();
         shareable.setSync(currentValue + 1);
@@ -176,7 +174,6 @@ const shareable = createShareable<number, object, MyShareableGuest>(
   42,
   {
     guestDecorator: (shareable) => {
-      'worklet';
       Object.defineProperty(shareable, 'value', {
         get: () => shareable.getSync(),
         set: (newValue) => shareable.setSync(newValue),
