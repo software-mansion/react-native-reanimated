@@ -88,7 +88,6 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
        runtimeMutex = runtimeMutex_,
        state = timeoutsQueueState_,
        job = std::move(job)] {
-        // NOLINTNEXTLINE(readability/braces)
         if (!state->running) [[unlikely]] {
           return;
         }

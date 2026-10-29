@@ -347,7 +347,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       typename... TArgs>
     requires RuntimeJob<TCallable> || RuntimeCallable<TCallable>
   auto runSyncImpl(TCallable &&callable, TArgs &&...args) const -> decltype(auto) {
-    // NOLINTNEXTLINE(readability/braces)
     if (aborted_) [[unlikely]] {
       throw std::runtime_error("[Worklets] Cannot run code on the aborted Worklet Runtime \"" + name_ + "\".");
     }

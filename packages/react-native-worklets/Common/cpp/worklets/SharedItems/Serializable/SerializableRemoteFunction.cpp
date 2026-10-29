@@ -55,7 +55,6 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
   settled_ = true;
   if (isHostedOnRNRuntime()) {
     rnRuntimeStatus_->runWhileLocked([&](bool isDead) {
-      // NOLINTNEXTLINE(readability/braces)
       if (isDead) [[unlikely]] {
         return;
       }
@@ -65,7 +64,6 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
     });
   } else {
     const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
-    // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
       // Do nothing.

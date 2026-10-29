@@ -109,7 +109,6 @@ WorkletRuntime::~WorkletRuntime() {
 
 void WorkletRuntime::abort() {
   react_native_assert(abortable_ && "[Worklets] Tried to abort a Worklet Runtime that is not abortable.");
-  // NOLINTNEXTLINE(readability/braces)
   if (aborted_.exchange(true)) [[unlikely]] {
     return;
   }
@@ -268,7 +267,6 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 }
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
-  // NOLINTNEXTLINE(readability/braces)
   if (aborted_) [[unlikely]] {
     throw std::runtime_error("[Worklets] Cannot schedule work on the aborted Worklet Runtime \"" + name_ + "\".");
   }
@@ -285,7 +283,6 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
           return;
         }
 
-        // NOLINTNEXTLINE(readability/braces)
         if (strongThis->isAborted()) [[unlikely]] {
           return;
         }

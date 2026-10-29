@@ -83,7 +83,6 @@ AsyncQueueImpl::~AsyncQueueImpl() {
 void AsyncQueueImpl::push(std::function<void()> &&job) {
   {
     std::unique_lock<std::mutex> lock(state_->mutex);
-    // NOLINTNEXTLINE(readability/braces)
     if (!state_->running) [[unlikely]] {
       return;
     }
