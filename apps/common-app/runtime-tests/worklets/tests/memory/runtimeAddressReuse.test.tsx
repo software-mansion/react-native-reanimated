@@ -12,6 +12,11 @@ interface IReuseCarrier {
   __isReuseCarrier: true;
 }
 
+interface IPackedCarrier {
+  __isPackedCarrier: true;
+  payload: number;
+}
+
 describe('Retained values after Worker Runtime address reuse', () => {
   test('creates and collects Worker Runtimes after a custom serializable is registered', async () => {
     registerCustomSerializable({
@@ -33,6 +38,38 @@ describe('Retained values after Worker Runtime address reuse', () => {
     const completed = await runInShortLivedRuntimes(() => {
       'worklet';
       return 1;
+    });
+
+    expect(completed).toBe(ITERATIONS);
+  });
+
+  test('packs and unpacks a non-plain carrier on short-lived Worker Runtimes', async () => {
+    registerCustomSerializable({
+      name: 'runtime address reuse packed carrier',
+      determine: (value: object): value is IPackedCarrier => {
+        'worklet';
+        return (value as Record<string, unknown>).__isPackedCarrier === true;
+      },
+      pack: (value: IPackedCarrier) => {
+        'worklet';
+        return { packedPayload: value.payload + 1 };
+      },
+      unpack: (value: { packedPayload: number }) => {
+        'worklet';
+        return {
+          __isPackedCarrier: true,
+          payload: value.packedPayload + 1,
+        } as IPackedCarrier;
+      },
+    });
+
+    const carrier = Object.create(null) as IPackedCarrier;
+    carrier.__isPackedCarrier = true;
+    carrier.payload = 40;
+
+    const completed = await runInShortLivedRuntimes(() => {
+      'worklet';
+      return carrier.payload === 42 ? 1 : 0;
     });
 
     expect(completed).toBe(ITERATIONS);
