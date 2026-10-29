@@ -59,12 +59,12 @@ function Scenario() {
         scrollEventThrottle={16}
         horizontal
         style={styles.list}>
-        {[...Array(ITEM_COUNT).keys()].map((i) => (
+        {[...Array(ITEM_COUNT).keys()].map((index) => (
           <View
-            key={i}
+            key={index}
             style={[
               styles.item,
-              { backgroundColor: `hsl(${i * 36}, 50%, 50%)` },
+              { backgroundColor: `hsl(${index * 36}, 50%, 50%)` },
             ]}
           />
         ))}
