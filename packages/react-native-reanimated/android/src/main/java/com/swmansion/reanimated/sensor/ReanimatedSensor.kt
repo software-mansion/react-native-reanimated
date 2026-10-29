@@ -35,11 +35,15 @@ internal class ReanimatedSensor(
         val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY) ?: return false
         sensor = sensorManager.getDefaultSensor(sensorType.getType()) ?: return false
         listener = ReanimatedSensorListener(setter, listenerInterval.toDouble(), display, sensorType)
-        samplingPeriodUs = getSamplingPeriodUs(display)
-        sensorManager.registerListener(listener, sensor, samplingPeriodUs)
-        if (listenerInterval == -1) {
-            this.displayManager = displayManager
-            registerDisplayListener(displayManager, display)
+        // Subscribe to display changes before reading the period, so no change is missed. The lock
+        // keeps a change delivered meanwhile from being overwritten by the older period.
+        synchronized(this) {
+            if (listenerInterval == -1) {
+                this.displayManager = displayManager
+                registerDisplayListener(displayManager, display)
+            }
+            samplingPeriodUs = getSamplingPeriodUs(display)
+            sensorManager.registerListener(listener, sensor, samplingPeriodUs)
         }
         return true
     }
