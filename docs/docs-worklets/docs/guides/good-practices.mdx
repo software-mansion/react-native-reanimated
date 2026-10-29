@@ -94,14 +94,19 @@ for details.
 
 ```diff
  const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
-+const propAccessedInWorklet = obj.propAccessedInWorklet;
 
- function worklet() {
+-function worklet() {
++function worklet(propAccessedInWorklet) {
    'worklet';
 -  console.log(obj.propAccessedInWorklet);
 +  console.log(propAccessedInWorklet);
  }
+
+-scheduleOnUI(worklet);
++scheduleOnUI(worklet, obj.propAccessedInWorklet);
 ```
+
+The property is read when you call `scheduleOnUI`, so the worklet function always gets its current value.
 
 ## Use the target Runtime's event loop
 
@@ -113,7 +118,16 @@ Worker Runtimes created with the default `enableEventLoop` option provide `setTi
 frames of the native rendering layer. See [Using the event loop](../tutorials/3-using-event-loop.mdx).
 
 If you call `scheduleOnRuntime` from a timer on the React Native Runtime instead, every tick waits for the JavaScript
-thread and serializes the worklet function call again.
+thread and sends a new job to the target runtime.
+
+In both examples below, `tick` is a worklet function:
+
+```js
+function tick() {
+  'worklet';
+  // ...
+}
+```
 
 ```js title="Timer on the React Native Runtime"
 setInterval(() => {
