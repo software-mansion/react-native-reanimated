@@ -125,11 +125,15 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-reanimated',
-          lastVersion: 'current',
+          lastVersion: '4.x',
           versions: {
             current: {
-              label: '4.x',
+              label: 'Unreleased',
+              path: 'unreleased',
+              banner: 'unreleased',
+              noIndex: true,
             },
+            '4.x': { label: '4.x' },
           },
         },
         theme: {

@@ -10,6 +10,8 @@ import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
+import { unprocessObjectFit } from './common/style/processors/image';
+import { unprocessVerticalAlign } from './common/style/processors/text';
 import type { SettledUpdate } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
@@ -86,6 +88,12 @@ export function unprocessSettledUpdate({
         settledValues[key] = unprocess(settledValues[key]);
       }
     }
+  }
+  if (keysLastWrittenByAnimatedStyle.includes('resizeMode')) {
+    unprocessObjectFit(style);
+  }
+  if (keysLastWrittenByAnimatedStyle.includes('textAlignVertical')) {
+    unprocessVerticalAlign(style);
   }
 }
 
