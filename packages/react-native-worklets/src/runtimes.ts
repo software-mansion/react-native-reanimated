@@ -105,3 +105,9 @@ export function getUIRuntimeHolder(): object {
 export function getUISchedulerHolder(): object {
   throw new Error('[Worklets] `getUISchedulerHolder` is not supported on web.');
 }
+
+export function abortWorkletRuntime(runtimeId: number): void;
+
+export function abortWorkletRuntime(): never {
+  throw new Error('[Worklets] `abortWorkletRuntime` is not supported on web.');
+}

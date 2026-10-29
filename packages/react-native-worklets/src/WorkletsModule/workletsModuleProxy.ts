@@ -175,14 +175,20 @@ export interface WorkletsModuleProxy {
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
+
+  abortWorkletRuntime(runtimeId: number): void;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,

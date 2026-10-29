@@ -295,25 +295,37 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     serializableWorklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
       worklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
+  }
+
+  abortWorkletRuntime(runtimeId: number) {
+    return this.#workletsModuleProxy.abortWorkletRuntime(runtimeId);
   }
 
   runOnRuntimeSync<TValue, TReturn>(

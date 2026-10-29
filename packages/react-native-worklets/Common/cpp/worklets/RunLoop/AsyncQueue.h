@@ -37,6 +37,8 @@ class AsyncQueue : public facebook::jsi::NativeState {
    * with this token. The default implementation keeps every job.
    */
   virtual void abortPending(AbortToken /* abortToken */) {}
+
+  virtual void stop() {}
 };
 
 } // namespace worklets

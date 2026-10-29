@@ -308,6 +308,20 @@ inline void registerCustomSerializable(
   });
 }
 
+std::shared_ptr<void> makePromiseDropGuard(
+    jsi::Runtime &rt,
+    const jsi::Value &resolveValue,
+    const jsi::Value &rejectValue,
+    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+  if (!rejectValue.isObject()) {
+    return nullptr;
+  }
+  return std::make_shared<PromiseDropGuard>(
+      extractSerializableOrThrow<SerializableRemoteFunction>(rt, resolveValue),
+      extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue),
+      runtimeManager);
+}
+
 } // namespace
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
@@ -672,24 +686,28 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             enableNetworking);
       });
 
-  jsi_utils::addMethod<3>(
-      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+  jsi_utils::addMethod<5>(
+      rt,
+      obj,
+      "scheduleOnRuntime",
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+        auto dropGuard = makePromiseDropGuard(rt, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args), scheduleStack);
+        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args), scheduleStack, std::move(dropGuard));
 #else
-        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args));
+        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args), std::move(dropGuard));
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<3>(
+  jsi_utils::addMethod<5>(
       rt,
       obj,
       "scheduleOnRuntimeWithId",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
         const int runtimeId = at<0>(args).asNumber();
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
@@ -698,15 +716,33 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+        auto dropGuard = makePromiseDropGuard(rt, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        workletRuntime->scheduleWithStack(worklet, scheduleStack);
+        workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
 #else
-        workletRuntime->schedule(worklet);
+        workletRuntime->schedule(worklet, std::move(dropGuard));
 #endif // NDEBUG
+      });
+
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
+      "abortWorkletRuntime",
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const int runtimeId = at<0>(args).asNumber();
+        const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+        if (!workletRuntime) {
+          throw jsi::JSError(
+              rt, "[Worklets] abortWorkletRuntime: no worklet runtime found for id " + std::to_string(runtimeId));
+        }
+        if (workletRuntime->getRuntimeKind() != RuntimeData::RuntimeKind::Worker) {
+          throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: only Worker Runtimes can be aborted.");
+        }
+        workletRuntime->abort();
       });
 
   jsi_utils::addMethod<2>(

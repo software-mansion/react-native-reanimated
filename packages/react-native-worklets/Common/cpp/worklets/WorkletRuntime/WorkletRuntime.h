@@ -15,10 +15,13 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -72,7 +75,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion.
    */
-  void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::shared_ptr<void> dropGuard = nullptr) const;
 
   /**
    * Schedules a batch of serialized worklets to run asynchronously.
@@ -89,7 +92,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion.
    */
-  void scheduleWithStack(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
+  void scheduleWithStack(
+      std::shared_ptr<SerializableWorklet> worklet,
+      std::optional<std::string> scheduleStack,
+      std::shared_ptr<void> dropGuard = nullptr) const;
 
   /**
    * Schedules a batch of serialized worklets to run asynchronously on the
@@ -252,6 +258,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return enableLocking_;
   }
 
+  void abort();
+
+  [[nodiscard]] bool isAborted() const noexcept {
+    return aborted_;
+  }
+
+  [[nodiscard]] RuntimeData::RuntimeKind getRuntimeKind() const noexcept {
+    return runtimeKind_;
+  }
+
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
       RuntimeData::RuntimeKind runtimeKind,
@@ -326,6 +342,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       typename... TArgs>
     requires RuntimeJob<TCallable> || RuntimeCallable<TCallable>
   auto runSyncImpl(TCallable &&callable, TArgs &&...args) const -> decltype(auto) {
+    if (aborted_) {
+      throw std::runtime_error("[Worklets] Cannot run code on the aborted Worklet Runtime \"" + name_ + "\".");
+    }
     jsi::Runtime &rt = getJSIRuntime();
     if constexpr (std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>) {
       auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
@@ -417,20 +436,24 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const jsi::Function &function,
       const TScheduleStackContext &scheduleStackContext,
       TArgs &&...args) const {
-#ifndef NDEBUG
     try {
       return function.call(rt, std::forward<TArgs>(args)...);
     } catch (jsi::JSError &e) {
+      if (aborted_) {
+        throw std::runtime_error(
+            "[Worklets] The Worklet Runtime \"" + name_ + "\" was aborted while running a worklet.");
+      }
+#ifndef NDEBUG
       if constexpr (std::is_same_v<TScheduleStackContext, RequestedScheduleStack>) {
         JSLogger::handleJSError(jsScheduler_, rt, name_, e, scheduleStackContext.value);
       } else {
         JSLogger::handleJSError(jsScheduler_, rt, name_, e, std::nullopt);
       }
       return jsi::Value::undefined();
-    }
 #else
-    return function.call(rt, std::forward<TArgs>(args)...);
+      throw;
 #endif // NDEBUG
+    }
   }
 
   void bundleModeInit(
@@ -457,12 +480,14 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const bool enableNetworking_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
+  std::function<void()> interruptRuntime_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<JSScheduler> jsScheduler_;
   const RuntimeData::RuntimeKind runtimeKind_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+  std::atomic_bool aborted_{false};
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
@@ -472,13 +497,15 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue);
+    const jsi::Value &serializableWorkletValue,
+    std::shared_ptr<void> dropGuard = nullptr);
 #ifndef NDEBUG
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack);
+    const std::optional<std::string> &scheduleStack,
+    std::shared_ptr<void> dropGuard = nullptr);
 #endif // NDEBUG
 
 } // namespace worklets

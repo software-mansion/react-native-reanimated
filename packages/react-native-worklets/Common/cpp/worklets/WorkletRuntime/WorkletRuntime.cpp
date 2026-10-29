@@ -53,10 +53,16 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
   }
 };
 
-static std::shared_ptr<jsi::Runtime>
-makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    bool enableLocking,
+    bool enableMicrotaskQueue,
+    std::function<void()> &interruptRuntime) {
   auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
   auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
+  interruptRuntime = [hermes = hermesRuntime.get()] {
+    hermes->asyncTriggerTimeout();
+  };
   std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
   if (!enableLocking) {
     return jsiRuntime;
@@ -77,7 +83,7 @@ WorkletRuntime::WorkletRuntime(
       enableNetworking_(enableNetworking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
+      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_, interruptRuntime_)),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -102,6 +108,22 @@ WorkletRuntime::~WorkletRuntime() {
   if (queue_) {
     queue_->abortPending(abortToken());
     queue_.reset();
+  }
+}
+
+void WorkletRuntime::abort() {
+  if (aborted_.exchange(true)) {
+    return;
+  }
+  if (eventLoop_) {
+    eventLoop_->abortPending();
+  }
+  if (queue_) {
+    queue_->abortPending(abortToken());
+    queue_->stop();
+  }
+  if (interruptRuntime_) {
+    interruptRuntime_();
   }
 }
 
@@ -176,8 +198,8 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
-void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
-  scheduleImpl([worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) {
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::shared_ptr<void> dropGuard) const {
+  scheduleImpl([worklet = std::move(worklet), dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(worklet);
   });
 }
@@ -206,9 +228,11 @@ void WorkletRuntime::schedule(
 #ifndef NDEBUG
 void WorkletRuntime::scheduleWithStack(
     std::shared_ptr<SerializableWorklet> worklet,
-    std::optional<std::string> scheduleStack) const {
+    std::optional<std::string> scheduleStack,
+    std::shared_ptr<void> dropGuard) const {
   scheduleImpl([worklet = std::move(worklet),
-                scheduleStack = std::move(scheduleStack)](const WorkletRuntime &workletRuntime) {
+                scheduleStack = std::move(scheduleStack),
+                dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
   });
 }
@@ -249,6 +273,10 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 }
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
+  if (aborted_) {
+    throw std::runtime_error("[Worklets] Cannot schedule work on the aborted Worklet Runtime \"" + name_ + "\".");
+  }
+
   react_native_assert(
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
@@ -262,7 +290,13 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
         }
 
         auto lock = strongThis->acquireRuntimeLock();
-        job(*strongThis);
+        try {
+          job(*strongThis);
+        } catch (...) {
+          if (!strongThis->isAborted()) {
+            throw;
+          }
+        }
       },
       abortToken());
 }
@@ -309,13 +343,14 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const js
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue) {
+    const jsi::Value &serializableWorkletValue,
+    std::shared_ptr<void> dropGuard) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->schedule(serializableWorklet);
+  workletRuntime->schedule(serializableWorklet, std::move(dropGuard));
 }
 
 #ifndef NDEBUG
@@ -323,13 +358,14 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack) {
+    const std::optional<std::string> &scheduleStack,
+    std::shared_ptr<void> dropGuard) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
+  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack, std::move(dropGuard));
 }
 #endif // NDEBUG
 

@@ -6,8 +6,10 @@
 #include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace worklets {
 
@@ -64,13 +66,37 @@ class SerializableRemoteFunction : public Serializable,
     return hostRuntimeId_;
   }
 
+  [[nodiscard]] bool isSettled() const noexcept {
+    return settled_;
+  }
+
  private:
+  std::atomic_bool settled_{false};
   facebook::jsi::Runtime *hostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
   std::unique_ptr<facebook::jsi::Value> function_;
   const std::string name_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
+};
+
+class PromiseDropGuard {
+ public:
+  PromiseDropGuard(
+      std::shared_ptr<SerializableRemoteFunction> resolve,
+      std::shared_ptr<SerializableRemoteFunction> reject,
+      std::shared_ptr<RuntimeManager> runtimeManager)
+      : resolve_(std::move(resolve)), reject_(std::move(reject)), runtimeManager_(std::move(runtimeManager)) {}
+
+  ~PromiseDropGuard();
+
+  PromiseDropGuard(const PromiseDropGuard &) = delete;
+  PromiseDropGuard &operator=(const PromiseDropGuard &) = delete;
+
+ private:
+  const std::shared_ptr<SerializableRemoteFunction> resolve_;
+  const std::shared_ptr<SerializableRemoteFunction> reject_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
 };
 
 facebook::jsi::Value makeRNRuntimeSerializableRemoteFunction(

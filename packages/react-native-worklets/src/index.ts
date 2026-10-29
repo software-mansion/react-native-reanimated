@@ -80,6 +80,7 @@ export {
   RuntimeKind,
 } from './runtimeKind';
 export {
+  abortWorkletRuntime,
   createWorkletRuntime,
   getUIRuntimeHolder,
   getUISchedulerHolder,

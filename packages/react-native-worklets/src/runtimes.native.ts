@@ -465,6 +465,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
       createSerializable(() => {
@@ -486,7 +489,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -539,6 +544,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntimeWithId(
       runtimeId,
       createSerializable(() => {
@@ -560,7 +568,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -582,4 +592,8 @@ export function getUIRuntimeHolder(): object {
 
 export function getUISchedulerHolder(): object {
   return WorkletsModule.getUISchedulerHolder();
+}
+
+export function abortWorkletRuntime(runtimeId: number): void {
+  WorkletsModule.abortWorkletRuntime(runtimeId);
 }
