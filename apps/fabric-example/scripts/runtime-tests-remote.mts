@@ -5,7 +5,7 @@
 // Runs from any OS that has node + the `sim-remote` CLI (authenticated via
 // SIM_ROUTER_USERNAME / SIM_ROUTER_API_KEY) — no Xcode, no xcrun, no macOS.
 //
-// The reporting path is unchanged from local runs: runtime-tests-server.js
+// The reporting path is unchanged from local runs: runtime-tests-server.mts
 // listens on this host, and `sim-remote proxy` reverse-tunnels the sim's
 // localhost:<port> here, so the app's WebSocket dial arrives at this
 // machine. The library is selected via launchd env inside the remote sim
@@ -18,56 +18,60 @@
 // how Debug apps derive it from their Metro URL.
 //
 // Usage:
-//   node runtime-tests-remote.mjs pick    [--udid <UUID>]
-//   node runtime-tests-remote.mjs install --udid <UUID> --app-path <path/to/FabricExample.app>
-//   node runtime-tests-remote.mjs run     --udid <UUID> --library <reanimated|worklets|self-tests>
-//                                         [--configuration ReleaseRuntimeTests] [--only "<suites>"]
-//                                         [--metro-port <port>]
-//                                         [--connect-timeout <secs>] [--idle-timeout <secs>]
+//   node --experimental-strip-types runtime-tests-remote.mts pick    [--udid <UUID>]
+//   node --experimental-strip-types runtime-tests-remote.mts install --udid <UUID> --app-path <path/to/FabricExample.app>
+//   node --experimental-strip-types runtime-tests-remote.mts run     --udid <UUID> --library <reanimated|worklets|self-tests>
+//                                                                    [--configuration ReleaseRuntimeTests] [--only "<suites>"]
+//                                                                    [--metro-port <port>]
+//                                                                    [--connect-timeout <secs>] [--idle-timeout <secs>]
 //
 // `pick` prints the UDID of the best remote simulator (an explicit --udid
 // passes through; otherwise the first available iPhone, preferring booted);
 // `install` boots the sim and uploads the app (once per job);
 // `run` executes one library's suites (once per workflow step, like --launch).
 
-import { spawn, execFile, execFileSync } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
+import type { ExecFileOptions } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const scriptDir = import.meta.dirname;
 
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const projectRoot = path.resolve(scriptDir, '..');
-const SERVER_SCRIPT = path.join(scriptDir, 'runtime-tests-server.js');
+const SERVER_SCRIPT = path.join(scriptDir, 'runtime-tests-server.mts');
 const METRO_LOG = path.join(os.tmpdir(), 'metro-runtime-tests.log');
 
-/**
- * @param {string} message
- * @returns {never}
- */
-function fail(message) {
+interface SimctlDevice {
+  name: string;
+  udid: string;
+  state: string;
+  isAvailable?: boolean;
+}
+
+interface SimctlDeviceList {
+  devices: Record<string, SimctlDevice[]>;
+}
+
+function fail(message: string): never {
   console.error(`[runtime-tests-remote] ${message}`);
   process.exit(1);
 }
 
-/** @param {unknown} error */
-function errorMessage(error) {
+function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** @param {string} message */
-function log(message) {
+function log(message: string) {
   console.log(`[runtime-tests-remote] ${message}`);
 }
 
 // ── argument parsing ──
 
 const [SUBCOMMAND, ...rest] = process.argv.slice(2);
-/** @type {Record<string, string>} */
-const args = {};
+const args: Record<string, string> = {};
 for (let i = 0; i < rest.length; i++) {
   const flag = rest[i];
   if (!flag.startsWith('--') || rest[i + 1] === undefined) {
@@ -82,11 +86,7 @@ const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
 
-/**
- * @param {string} name
- * @param {string | number} value
- */
-function positiveInt(name, value) {
+function positiveInt(name: string, value: string | number) {
   const parsed = Number(value);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -105,13 +105,11 @@ const IDLE_TIMEOUT = positiveInt('idle-timeout', args['idle-timeout'] ?? 900);
 
 // ── process helpers ──
 
-/**
- * @param {string} command
- * @param {string[]} cmdArgs
- * @param {import('node:child_process').ExecFileOptions} [options]
- * @returns {Promise<{ stdout: string; stderr: string }>}
- */
-function run(command, cmdArgs, options = {}) {
+function run(
+  command: string,
+  cmdArgs: string[],
+  options: ExecFileOptions = {}
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     execFile(
       command,
@@ -132,11 +130,8 @@ function run(command, cmdArgs, options = {}) {
   });
 }
 
-/**
- * @param {string[]} cmdArgs
- * @param {import('node:child_process').ExecFileOptions} [options]
- */
-const simRemote = (cmdArgs, options) => run('sim-remote', cmdArgs, options);
+const simRemote = (cmdArgs: string[], options?: ExecFileOptions) =>
+  run('sim-remote', cmdArgs, options);
 
 function assertSimRemote() {
   try {
@@ -152,8 +147,7 @@ function assertSimRemote() {
 // errors with "tunnel already active" on re-runs — tolerate that (same
 // semantics as argent's proxyStart wrapper) so runs can blindly ensure
 // their tunnels exist.
-/** @param {number} port */
-async function ensureTunnel(port) {
+async function ensureTunnel(port: number) {
   log(`ensuring reverse tunnel for port ${port}`);
   try {
     await simRemote(['proxy', 'start', UDID, String(port)]);
@@ -166,7 +160,7 @@ async function ensureTunnel(port) {
   }
 }
 
-function metroRunning() {
+function metroRunning(): Promise<boolean> {
   return new Promise((resolve) => {
     const request = http.get(
       { host: '127.0.0.1', port: METRO_PORT, path: '/status', timeout: 2000 },
@@ -186,8 +180,7 @@ function metroRunning() {
   });
 }
 
-/** @param {number} ms */
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Start Metro on this host unless one is already serving. Mirrors the local
 // runner: --reset-cache because a Metro cache built under a different Bundle
@@ -225,7 +218,9 @@ async function pick() {
     return;
   }
   const { stdout } = await simRemote(['simctl', 'list', 'devices', '--json']);
-  const devices = Object.values(JSON.parse(stdout).devices).flat();
+  const devices = Object.values(
+    (JSON.parse(stdout) as SimctlDeviceList).devices
+  ).flat();
   const candidates = devices
     .filter((device) => device.isAvailable !== false)
     .filter((device) => device.name.startsWith('iPhone'))
@@ -291,6 +286,7 @@ async function runLibrary() {
   // Start the results collector BEFORE launching the app so the first dial
   // cannot race the listener. Server mode: no --launch, the device is ours.
   const serverArgs = [
+    '--experimental-strip-types',
     SERVER_SCRIPT,
     '--library',
     LIBRARY,
@@ -317,8 +313,7 @@ async function runLibrary() {
     env: { ...process.env, RUNTIME_TESTS_REMOTE_UDID: UDID },
   });
 
-  /** @type {('SIGINT' | 'SIGTERM')[]} */
-  const signals = ['SIGINT', 'SIGTERM'];
+  const signals: ('SIGINT' | 'SIGTERM')[] = ['SIGINT', 'SIGTERM'];
 
   for (const signal of signals) {
     process.once(signal, () => {
@@ -327,7 +322,7 @@ async function runLibrary() {
     });
   }
 
-  const serverExit = new Promise((resolve) => {
+  const serverExit = new Promise<number>((resolve) => {
     server.on('exit', (code) => resolve(code ?? 1));
   });
 
@@ -348,8 +343,11 @@ async function runLibrary() {
 
 // ── dispatch ──
 
-/** @type {Record<string, () => Promise<void>>} */
-const subcommands = { pick, install, run: runLibrary };
+const subcommands: Record<string, () => Promise<void>> = {
+  pick,
+  install,
+  run: runLibrary,
+};
 if (!subcommands[SUBCOMMAND]) {
   fail(
     `unknown subcommand: ${SUBCOMMAND ?? '(none)'} (expected pick | install | run)`
