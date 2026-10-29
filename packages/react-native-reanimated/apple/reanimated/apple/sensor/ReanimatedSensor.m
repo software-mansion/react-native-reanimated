@@ -69,13 +69,8 @@
   [_motionManager
       startGyroUpdatesToQueue:[NSOperationQueue mainQueue]
                   withHandler:^(CMGyroData *sensorData, NSError *error) {
-                    double currentTime = CACurrentMediaTime() * 1000;
-                    if (currentTime - self->_lastTimestamp < self->_interval) {
-                      return;
-                    }
                     double data[] = {sensorData.rotationRate.x, sensorData.rotationRate.y, sensorData.rotationRate.z};
                     self->_setter(data, [self getInterfaceOrientation]);
-                    self->_lastTimestamp = currentTime;
                   }];
 
   return true;
@@ -87,10 +82,6 @@
   [_motionManager startAccelerometerUpdates];
   [_motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue mainQueue]
                                        withHandler:^(CMAccelerometerData *sensorData, NSError *error) {
-                                         double currentTime = CACurrentMediaTime() * 1000;
-                                         if (currentTime - self->_lastTimestamp < self->_interval) {
-                                           return;
-                                         }
                                          double G = 9.81;
                                          // convert G to m/s^2
                                          double data[] = {
@@ -98,7 +89,6 @@
                                              sensorData.acceleration.y * G,
                                              sensorData.acceleration.z * G};
                                          self->_setter(data, [self getInterfaceOrientation]);
-                                         self->_lastTimestamp = currentTime;
                                        }];
 
   return true;
@@ -111,16 +101,11 @@
   [_motionManager
       startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                            double currentTime = CACurrentMediaTime() * 1000;
-                            if (currentTime - self->_lastTimestamp < self->_interval) {
-                              return;
-                            }
                             double G = 9.81;
                             // convert G to m/s^2
                             double data[] = {
                                 sensorData.gravity.x * G, sensorData.gravity.y * G, sensorData.gravity.z * G};
                             self->_setter(data, [self getInterfaceOrientation]);
-                            self->_lastTimestamp = currentTime;
                           }];
 
   return true;
@@ -133,14 +118,9 @@
   [_motionManager
       startMagnetometerUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMMagnetometerData *sensorData, NSError *error) {
-                            double currentTime = CACurrentMediaTime() * 1000;
-                            if (currentTime - self->_lastTimestamp < self->_interval) {
-                              return;
-                            }
                             double data[] = {
                                 sensorData.magneticField.x, sensorData.magneticField.y, sensorData.magneticField.z};
                             self->_setter(data, [self getInterfaceOrientation]);
-                            self->_lastTimestamp = currentTime;
                           }];
 
   return true;
@@ -166,10 +146,6 @@
   [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
                                                       toQueue:[NSOperationQueue mainQueue]
                                                   withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                                                    double currentTime = CACurrentMediaTime() * 1000;
-                                                    if (currentTime - self->_lastTimestamp < self->_interval) {
-                                                      return;
-                                                    }
                                                     CMAttitude *attitude = sensorData.attitude;
                                                     double data[] = {
                                                         attitude.quaternion.x,
@@ -180,7 +156,6 @@
                                                         attitude.pitch,
                                                         attitude.roll};
                                                     self->_setter(data, [self getInterfaceOrientation]);
-                                                    self->_lastTimestamp = currentTime;
                                                   }];
 
   return true;
