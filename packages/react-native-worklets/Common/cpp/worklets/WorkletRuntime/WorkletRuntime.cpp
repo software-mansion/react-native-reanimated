@@ -51,13 +51,24 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
     const std::lock_guard<std::recursive_mutex> lock(*runtimeMutex_);
     runtime_.reset();
   }
+
+  jsi::ICast *castInterface(const jsi::UUID &interfaceUUID) override {
+    if (interfaceUUID == IRuntimeIdentityProvider::uuid) {
+      return plain().castInterface(interfaceUUID);
+    }
+    return jsi::WithRuntimeDecorator<AroundLock>::castInterface(interfaceUUID);
+  }
 };
 
-static std::shared_ptr<jsi::Runtime>
-makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enableLocking, bool enableMicrotaskQueue) {
+static std::shared_ptr<jsi::Runtime> makeRuntime(
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    bool enableLocking,
+    bool enableMicrotaskQueue,
+    RuntimeIdentity identity) {
   auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(enableMicrotaskQueue).build();
   auto hermesRuntime = facebook::hermes::makeHermesRuntime(config);
-  std::shared_ptr<jsi::Runtime> jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime));
+  std::shared_ptr<jsi::Runtime> jsiRuntime =
+      std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime), std::move(identity));
   if (!enableLocking) {
     return jsiRuntime;
   }
@@ -66,6 +77,7 @@ makeRuntime(const std::shared_ptr<std::recursive_mutex> &runtimeMutex, bool enab
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
+    const std::weak_ptr<RuntimeManager> &runtimeManager,
     const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
@@ -77,7 +89,11 @@ WorkletRuntime::WorkletRuntime(
       enableNetworking_(enableNetworking),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
-      runtime_(makeRuntime(runtimeMutex_, enableLocking_, microtaskQueueEnabled_)),
+      runtime_(makeRuntime(
+          runtimeMutex_,
+          enableLocking_,
+          microtaskQueueEnabled_,
+          RuntimeIdentity::forWorkletRuntime(runtimeManager, runtimeId))),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {

@@ -47,6 +47,7 @@ concept SyncCallResult = std::is_same_v<TResult, jsi::Value> || std::is_same_v<T
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
+class RuntimeManager;
 
 class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
@@ -254,6 +255,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
+      const std::weak_ptr<RuntimeManager> &runtimeManager,
       RuntimeData::RuntimeKind runtimeKind,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
