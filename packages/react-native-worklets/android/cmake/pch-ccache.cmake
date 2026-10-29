@@ -119,7 +119,7 @@ endfunction()
 # reuses its PCH. Otherwise this is target_precompile_headers(<target> PRIVATE <header>).
 function(pch_ccache_precompile_headers target header)
   set(owner ${target}-pch)
-  # CMake's location of the PCH for the Ninja and Makefile generators.
+  # CMake's location of the PCH for single-config generators, such as the Ninja that AGP uses.
   set(pch_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${owner}.dir")
   set(pch "${pch_dir}/cmake_pch.hxx.pch")
 
