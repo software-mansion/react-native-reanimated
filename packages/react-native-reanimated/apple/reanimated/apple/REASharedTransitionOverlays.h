@@ -7,8 +7,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Keeps the view that holds the shared transition containers of a surface in a window above the window of the
-// surface, so modals presented over the surface don't cover the transition.
+// Attaches the view that holds the shared transition containers of a surface directly to the window of the surface,
+// at a zPosition above the presentation containers of modals, so modals presented over the surface don't cover the
+// transition.
 @interface REASharedTransitionOverlays : NSObject <RCTSurfacePresenterObserver>
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
