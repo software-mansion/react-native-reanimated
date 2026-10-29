@@ -1,4 +1,4 @@
-import type { Operation } from '../types';
+import type { Operation, RecordingOptions } from '../types';
 import { runOnUIBlocking } from '../utils/runOnUIBlocking';
 import { sleep, waitFor } from '../utils/waitFor';
 import { assertMockedAnimationTimestamp } from './Asserts';
@@ -7,14 +7,33 @@ import { createUpdatesContainer } from './UpdatesContainer';
 const MAX_WAIT_TIME_MS = 10000;
 
 export class AnimationUpdatesRecorder {
-  public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer();
+  private activeRecording?: ReturnType<typeof createUpdatesContainer>;
+  private recordings: Array<ReturnType<typeof createUpdatesContainer>> = [];
+  public async recordAnimationUpdates(options: RecordingOptions = {}) {
+    const updatesContainer = createUpdatesContainer(options);
+    const registerViews = updatesContainer.registerViews;
+    const saveError = updatesContainer.saveError;
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates =
       updatesContainer.pushLayoutAnimationUpdates;
 
     await runOnUIBlocking(() => {
       'worklet';
+      if (global.originalUpdateProps) {
+        throw new Error('Animation updates are already being recorded');
+      }
+      const manager = global.UpdatePropsManager;
+      // oxlint-disable-next-line typescript/unbound-method
+      const originalUpdate = manager.update;
+      global.originalUpdatePropsManagerUpdate = originalUpdate;
+      manager.update = function (descriptors, updates) {
+        try {
+          registerViews(descriptors.value);
+        } catch (error) {
+          saveError(error);
+        }
+        originalUpdate.call(manager, descriptors, updates);
+      };
       global.animationUpdatesRecordingStarted = false;
 
       const startCountingFrames = () => {
@@ -30,7 +49,11 @@ export class AnimationUpdatesRecorder {
 
       const mockedUpdateProps = (operations: Operation[]) => {
         startCountingFrames();
-        recordAnimationUpdates(operations);
+        try {
+          recordAnimationUpdates(operations);
+        } catch (error) {
+          saveError(error);
+        }
         originalUpdateProps(operations);
       };
 
@@ -43,26 +66,62 @@ export class AnimationUpdatesRecorder {
         value: Record<string, unknown>
       ) => {
         startCountingFrames();
-        recordLayoutAnimationUpdates(tag, value);
+        try {
+          recordLayoutAnimationUpdates(tag, value);
+        } catch (error) {
+          saveError(error);
+        }
         originalNotifyAboutProgress(tag, value);
       };
     });
-    return updatesContainer;
+    this.activeRecording = updatesContainer;
+    this.recordings.push(updatesContainer);
+    return {
+      getUpdates: updatesContainer.getUpdates,
+      getAllUpdates: updatesContainer.getAllUpdates,
+      getNativeSnapshots: updatesContainer.getNativeSnapshots,
+      getSnapshots: updatesContainer.getSnapshots,
+    };
   }
 
   public async stopRecordingAnimationUpdates(maxWaitTime = MAX_WAIT_TIME_MS) {
-    await runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalUpdateProps) {
-        global._updateProps = global.originalUpdateProps;
-        global.originalUpdateProps = undefined;
+    try {
+      await this.activeRecording?.finalize();
+    } finally {
+      await runOnUIBlocking(() => {
+        'worklet';
+        if (global.originalUpdateProps) {
+          global._updateProps = global.originalUpdateProps;
+          global.originalUpdateProps = undefined;
+        }
+        if (global.originalNotifyAboutProgress) {
+          global._notifyAboutProgress = global.originalNotifyAboutProgress;
+          global.originalNotifyAboutProgress = undefined;
+        }
+        if (global.originalUpdatePropsManagerUpdate) {
+          global.UpdatePropsManager.update =
+            global.originalUpdatePropsManagerUpdate;
+          global.originalUpdatePropsManagerUpdate = undefined;
+        }
+        global.animationUpdatesRecordingStarted = undefined;
+      }, maxWaitTime);
+      this.activeRecording = undefined;
+    }
+  }
+
+  public async takeUnreportedErrors() {
+    const recordings = this.recordings;
+    this.recordings = [];
+    const errors: Error[] = [];
+    for (const recording of recordings) {
+      const recorded = await recording.getUnreportedError();
+      if (recorded) {
+        const error = new Error(recorded.message);
+        error.stack = recorded.stack ?? error.stack;
+        errors.push(error);
       }
-      if (global.originalNotifyAboutProgress) {
-        global._notifyAboutProgress = global.originalNotifyAboutProgress;
-        global.originalNotifyAboutProgress = undefined;
-      }
-      global.animationUpdatesRecordingStarted = undefined;
-    }, maxWaitTime);
+    }
+    return errors;
   }
 
   public async mockAnimationTimer() {
