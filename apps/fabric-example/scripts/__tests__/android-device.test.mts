@@ -5,7 +5,12 @@ import androidDevice from '../android-device.js';
 
 const { resolveAndroidDevice, parseAvdName } = androidDevice;
 
-type FakeDevice = { serial: string; avd: string | null; booted: boolean };
+type FakeDevice = {
+  serial: string;
+  avd: string | null;
+  booted: boolean;
+  neverBoots?: boolean;
+};
 
 type FakeOptions = {
   devices?: FakeDevice[];
@@ -45,6 +50,9 @@ function createFakeAndroid({
       bootChecks.push(serial);
       const device = connected.find((d) => d.serial === serial);
       if (!device) {
+        return false;
+      }
+      if (device.neverBoots) {
         return false;
       }
       const wasBooted = device.booted;
@@ -161,6 +169,26 @@ describe('resolveAndroidDevice', () => {
     assert.deepEqual(fake.booted, []);
   });
 
+  it('returns a booted instance of the AVD when another instance never boots', async () => {
+    const fake = createFakeAndroid({
+      devices: [
+        {
+          serial: 'emulator-5554',
+          avd: 'Mine',
+          booted: false,
+          neverBoots: true,
+        },
+        { serial: 'emulator-5556', avd: 'Mine', booted: true },
+      ],
+      avds: ['Mine'],
+    });
+    assert.equal(
+      await resolveAndroidDevice({ serial: null, avd: 'Mine' }, fake.tools),
+      'emulator-5556'
+    );
+    assert.deepEqual(fake.booted, []);
+  });
+
   it('uses the first connected device when no target is given', async () => {
     const fake = createFakeAndroid({ devices: [OTHER_EMULATOR, PHONE] });
     assert.equal(
@@ -187,6 +215,8 @@ describe('parseAvdName', () => {
     assert.equal(parseAvdName('Pixel_9_API_36\r\nOK\r\n'), 'Pixel_9_API_36');
     assert.equal(parseAvdName('Pixel_9_API_36\nOK\n'), 'Pixel_9_API_36');
     assert.equal(parseAvdName('KOALA_AVD\r\nOK\r\n'), 'KOALA_AVD');
+    assert.equal(parseAvdName('KO\r\nOK\r\n'), 'KO');
+    assert.equal(parseAvdName('OK\r\nOK\r\n'), 'OK');
   });
 
   it('returns null for empty or error output', () => {

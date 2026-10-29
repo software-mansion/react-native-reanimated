@@ -96,9 +96,11 @@ async function waitForBoot(avd, tools) {
   const timeoutMs = tools.bootTimeoutMs ?? 300_000;
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const serial = await findRunningAvd(avd, await tools.listDevices(), tools);
-    if (serial && (await tools.isBootCompleted(serial))) {
-      return serial;
+    for (const serial of await tools.listDevices()) {
+      const name = await tools.avdName(serial).catch(() => null);
+      if (name === avd && (await tools.isBootCompleted(serial))) {
+        return serial;
+      }
     }
     await tools.sleep(2000);
   }
@@ -110,11 +112,14 @@ async function waitForBoot(avd, tools) {
  * @returns {string | null}
  */
 function parseAvdName(output) {
-  const [name] = output.split(/\r?\n/).map((line) => line.trim());
-  if (!name || name === 'OK' || /^KO(:|$)/.test(name)) {
+  const lines = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length < 2 || lines[lines.length - 1] !== 'OK') {
     return null;
   }
-  return name;
+  return lines[0];
 }
 
 module.exports = { resolveAndroidDevice, findRunningAvd, parseAvdName };
