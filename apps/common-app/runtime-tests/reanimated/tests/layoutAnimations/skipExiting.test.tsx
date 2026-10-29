@@ -7,22 +7,26 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  beforeEach,
   callTracker,
   describe,
   expect,
-  expectEventually,
   getTestComponent,
   getTrackerCallCount,
   isViewMountedNatively,
+  mockAnimationTimer,
   render,
   test,
   useTestRef,
-  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const EXIT_MS = 1000;
-const SKIPPED_REMOVAL_TIMEOUT_MS = EXIT_MS / 2;
+const MOCKED_FRAME_MS = 16;
+const EXIT_FRAMES = Math.ceil(EXIT_MS / MOCKED_FRAME_MS);
+const MID_EXIT_FRAMES = Math.floor(EXIT_FRAMES / 2);
+const REMOVAL_MARGIN_FRAMES = 30;
+const SKIPPED_REMOVAL_FRAMES = 5;
 const FIRST = 'skip-exiting-first';
 const SECOND = 'skip-exiting-second';
 
@@ -125,31 +129,33 @@ async function getMountedTag(name: string) {
 }
 
 async function expectExitingAnimationToRun(tag: number, tracker: Tracker) {
-  await waitForFrames(3);
+  await waitForFrames(MID_EXIT_FRAMES);
   expect(await isViewMountedNatively(tag)).toBe(true);
-  await expectEventually(() => isViewMountedNatively(tag), EXIT_MS * 3).toBe(
-    false
-  );
-  await expectEventually(() => getTrackerCallCount(tracker)).toBeCalledUI(1);
+  expect(await getTrackerCallCount(tracker)).toBeCalledUI(0);
+  await waitForFrames(EXIT_FRAMES - MID_EXIT_FRAMES + REMOVAL_MARGIN_FRAMES);
+  expect(await isViewMountedNatively(tag)).toBe(false);
+  expect(await getTrackerCallCount(tracker)).toBeCalledUI(1);
 }
 
 async function expectExitingAnimationToBeSkipped(
   tags: number[],
   trackers: Tracker[]
 ) {
+  await waitForFrames(SKIPPED_REMOVAL_FRAMES);
   for (const tag of tags) {
-    await expectEventually(
-      () => isViewMountedNatively(tag),
-      SKIPPED_REMOVAL_TIMEOUT_MS
-    ).toBe(false);
+    expect(await isViewMountedNatively(tag)).toBe(false);
   }
-  await wait(EXIT_MS * 1.5);
+  await waitForFrames(EXIT_FRAMES + REMOVAL_MARGIN_FRAMES);
   for (const tracker of trackers) {
     expect(await getTrackerCallCount(tracker)).toBeCalled(0);
   }
 }
 
 describe('LayoutAnimationConfig skipExiting', () => {
+  beforeEach(async () => {
+    await mockAnimationTimer();
+  });
+
   test('runs the exiting animation of a child without skipExiting', async () => {
     await render(<SingleChild show />);
     const tag = await getMountedTag(FIRST);
