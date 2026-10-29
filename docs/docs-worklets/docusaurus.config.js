@@ -116,9 +116,15 @@ const config = {
           sidebarCollapsed: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          lastVersion: 'current',
+          lastVersion: '0.13',
           versions: {
-            current: { label: '0.13' },
+            current: {
+              label: 'Unreleased',
+              path: 'unreleased',
+              banner: 'unreleased',
+              noIndex: true,
+            },
+            0.13: { label: '0.13', banner: 'none' },
             '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
           },
@@ -136,6 +142,7 @@ const config = {
     ({
       image: 'img/og-image.png',
       colorMode: { respectPrefersColorScheme: true },
+      docs: { sidebar: { hideable: true } },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -259,6 +266,11 @@ const config = {
             ],
             module: {
               rules: [
+                {
+                  test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
+                  enforce: 'pre',
+                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
                 {

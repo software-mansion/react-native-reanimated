@@ -12,6 +12,12 @@ export function isSerializableRef<TValue = unknown>(
   return true;
 }
 
+export function getCachedSerializable(
+  _value: object
+): SerializableRef | undefined {
+  return undefined;
+}
+
 export function createSerializable<TValue>(
   value: TValue
 ): SerializableRef<TValue> {

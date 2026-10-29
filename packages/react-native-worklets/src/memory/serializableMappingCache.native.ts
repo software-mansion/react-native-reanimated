@@ -125,4 +125,7 @@ export const serializableMappingCache = {
     }
     return entry === remoteBearingFlag ? serializableMappingFlag : entry;
   },
+  delete(serializable: object): boolean {
+    return serializableMappingEntries.delete(serializable);
+  },
 };

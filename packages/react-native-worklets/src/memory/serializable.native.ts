@@ -121,9 +121,10 @@ function cacheClone(
 /**
  * Returns the clone cached for `value`, or `undefined` when there is none or it
  * was released. Counts a hit on a clone that holds a JS function in
- * `functionsSeen`. A hit on any other clone costs no lookup beyond the entry.
+ * `functionsSeen` unless `countHit` is false. A hit on any other clone costs no
+ * lookup beyond the entry.
  */
-function getFromCache(value: object) {
+function getFromCache(value: object, countHit = true) {
   const cached = serializableMappingEntries.get(value);
   if (cached === undefined) {
     return undefined;
@@ -140,16 +141,29 @@ function getFromCache(value: object) {
   }
   if (tag === false) {
     const clone = derefRemoteBearingEntry(cached as RemoteBearingEntry);
-    if (clone !== undefined) {
+    if (clone !== undefined && countHit) {
       functionsSeen++;
     }
     return clone;
   }
   if (cached === remoteBearingFlag) {
-    functionsSeen++;
+    if (countHit) {
+      functionsSeen++;
+    }
     return value;
   }
   return cached;
+}
+
+/**
+ * The serializable cached for `value`, or `undefined` when there is none or it
+ * was released. Unlike a raw cache read, it never returns the non-owning marker
+ * or `WeakRef` that stands in for a clone holding a JS function.
+ */
+export function getCachedSerializable(
+  value: object
+): SerializableRef | undefined {
+  return getFromCache(value, false) as SerializableRef | undefined;
 }
 
 function derefRemoteBearingEntry(entry: RemoteBearingEntry) {

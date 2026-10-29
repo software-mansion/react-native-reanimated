@@ -46,15 +46,8 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
-      if (bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
-      if (onRNRuntime) {
-        checkCppVersion();
-      }
+    if (__DEV__ && onRNRuntime) {
+      checkCppVersion();
     }
     this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();

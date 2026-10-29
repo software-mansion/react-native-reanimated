@@ -33,6 +33,18 @@
   },
   "overrides": [
     {
+      "files": ["bundleMode/polyfills/*.js"],
+      "globals": {
+        "__DEV__": "readonly"
+      }
+    },
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "typescript/no-require-imports": "off"
+      }
+    },
+    {
       "files": ["src/**/*.ts", "src/**/*.tsx"],
       "rules": {
         "typescript/no-explicit-any": "error",

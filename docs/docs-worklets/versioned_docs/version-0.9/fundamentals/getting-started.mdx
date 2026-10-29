@@ -57,7 +57,7 @@ Run prebuild to update the native code in the `ios` and `android` directories.
   </TabItem>
 </Tabs>
 
-And that's it! Worklets is now configured in your Expo project.
+And that's it! The Worklets library is now configured in your Expo project.
 
 ### React Native Community CLI
 
@@ -75,16 +75,16 @@ module.exports = {
 };
 ```
 
-Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/0.9/worklets-babel-plugin/plugin-options) section.
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](../worklets-babel-plugin/options.md) section.
 
 <details>
   <summary>Why do I need this?</summary>
 
-  In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
+  In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](./glossary.mdx#worklet)) to allow them to be passed and run on the [Worklet Runtimes](./runtimeKinds.mdx#worklet-runtime)
 
   Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default.
 
-  To learn more about the plugin head onto to [Worklets babel plugin](/docs/0.9/worklets-babel-plugin/about) section.
+  To learn more about the plugin head onto to [Worklets babel plugin](../worklets-babel-plugin/about.md) section.
 </details>
 
 #### Clear Metro bundler cache (recommended)

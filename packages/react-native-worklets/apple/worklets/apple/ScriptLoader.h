@@ -6,6 +6,6 @@
 
 namespace worklets {
 
-std::shared_ptr<const ScriptBuffer> getScript(NSURL *url);
+std::shared_ptr<const ScriptBuffer> getScript(NSURL *url, NSURL *downloadedBundleFileURL);
 
 } // namespace worklets

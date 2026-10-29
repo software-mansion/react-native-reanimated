@@ -113,6 +113,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual std::optional<facebook::react::SurfaceId>
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int tag);
+  virtual void onSharedTransitionConfigured(const std::vector<Tag> & /*viewTags*/) {}
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(

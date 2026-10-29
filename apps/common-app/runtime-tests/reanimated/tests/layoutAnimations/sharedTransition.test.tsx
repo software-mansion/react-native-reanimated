@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
@@ -20,12 +21,15 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-function createTransition(finished: boolean[]) {
+function createTransition(
+  finished: boolean[],
+  transition = SharedTransition.duration(300)
+) {
   const recordEnd = (isFinished: boolean) => {
     finished.push(isFinished);
     notify('shared-transition-finished');
   };
-  return SharedTransition.duration(300).withCallback((isFinished) => {
+  return transition.withCallback((isFinished) => {
     'worklet';
     scheduleOnRN(recordEnd, isFinished);
   });
@@ -48,9 +52,11 @@ function Target({ transition }: { transition: SharedTransition }) {
 function Screens({
   showTarget,
   transition,
+  sourceTag = 'box',
 }: {
   showTarget: boolean;
   transition: SharedTransition;
+  sourceTag?: string | null;
 }) {
   const sourceRef = useTestRef('source');
   return (
@@ -58,7 +64,7 @@ function Screens({
       <SharedTransitionBoundary isActive={!showTarget}>
         <Animated.View
           ref={sourceRef}
-          sharedTransitionTag="box"
+          sharedTransitionTag={sourceTag ?? undefined}
           sharedTransitionStyle={transition}
           style={styles.source}
         />
@@ -123,6 +129,45 @@ describe('Shared element transition between boundaries', () => {
     // Cleanup restores only the target. The source stays hidden because a screen
     // transition is expected to cover it.
     await expectMountedAtLayout('source', 0);
+    await expectMountedAtLayout('target', 1);
+  });
+
+  test.each([
+    ['removed', null],
+    ['changed', 'other'],
+  ] as const)(
+    'shows the source again when its tag is ${0}',
+    async ([, sourceTag]) => {
+      const transition = createTransition([]);
+      await render(<Screens showTarget={false} transition={transition} />);
+      await waitForFrames();
+      await render(<Screens showTarget transition={transition} />);
+      await waitForNotification('shared-transition-finished');
+      await waitForFrames();
+      await expectMountedAtLayout('source', 0);
+      await expectMountedAtLayout('target', 1);
+
+      await render(
+        <Screens showTarget transition={transition} sourceTag={sourceTag} />
+      );
+      await expectMountedAtLayout('source', 1);
+    }
+  );
+
+  test('runs a transition that ends on its first frame', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.reduceMotion(ReduceMotion.Always)
+    );
+    await render(<Screens showTarget={false} transition={transition} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget transition={transition} />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
     await expectMountedAtLayout('target', 1);
   });
 });

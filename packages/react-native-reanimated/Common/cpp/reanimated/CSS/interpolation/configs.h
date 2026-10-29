@@ -7,14 +7,14 @@
 
 namespace reanimated::css {
 
-struct ResolvableValueInterpolatorConfig {
+struct RelativeValueInterpolatorConfig {
   RelativeTo relativeTo;
   std::string relativeProperty;
 
-  ResolvableValueInterpolatorConfig(RelativeTo relativeTo, std::string relativeProperty)
+  RelativeValueInterpolatorConfig(RelativeTo relativeTo, std::string relativeProperty)
       : relativeTo(relativeTo), relativeProperty(std::move(relativeProperty)) {}
 
-  ResolvableValueInterpolatorConfig() = default;
+  RelativeValueInterpolatorConfig() = default;
 };
 
 } // namespace reanimated::css

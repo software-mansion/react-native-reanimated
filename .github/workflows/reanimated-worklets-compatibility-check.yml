@@ -94,7 +94,7 @@ jobs:
 
       - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/create-rnc-cli-app
+        uses: $/.github/actions/create-rnc-cli-app
         with:
           react-native-version: ${{ matrix.reactNativeVersion }}
           reanimated-version: ${{ matrix.reanimatedVersion }}
@@ -153,7 +153,7 @@ jobs:
 
       - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/create-rnc-cli-app
+        uses: $/.github/actions/create-rnc-cli-app
         with:
           react-native-version: ${{ matrix.reactNativeVersion }}
           reanimated-version: ${{ matrix.reanimatedVersion }}
