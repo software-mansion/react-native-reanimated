@@ -288,7 +288,13 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
         }
 
         auto lock = strongThis->acquireRuntimeLock();
-        job(*strongThis);
+        try {
+          job(*strongThis);
+        } catch (...) {
+          if (!strongThis->isAborted()) {
+            throw;
+          }
+        }
       },
       abortToken());
 }

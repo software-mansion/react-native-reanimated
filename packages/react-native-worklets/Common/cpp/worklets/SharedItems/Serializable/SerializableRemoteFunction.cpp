@@ -79,12 +79,16 @@ PromiseDropGuard::~PromiseDropGuard() {
   if (resolve_->isSettled() || reject_->isSettled()) {
     return;
   }
-  reject_->resolveOrRejectPromise(
-      std::make_shared<SerializableError>(
-          "Error",
-          "[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.",
-          std::nullopt),
-      runtimeManager_);
+  try {
+    reject_->resolveOrRejectPromise(
+        std::make_shared<SerializableError>(
+            "Error",
+            "[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.",
+            std::nullopt),
+        runtimeManager_);
+  } catch (...) {
+    // The host runtime was aborted and can't run the rejection.
+  }
 }
 
 jsi::Value makeRNRuntimeSerializableRemoteFunction(

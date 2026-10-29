@@ -25,6 +25,16 @@ const STARTED_NOTIFICATION = 'STARTED_NOTIFICATION';
 const ABORTED_MESSAGE =
   '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.';
 
+const bundleModeTest = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+  ? test
+  : test.skip;
+
+const ABORTED_NOTIFICATION = 'ABORTED_NOTIFICATION';
+
+const onAborted = () => {
+  notify(ABORTED_NOTIFICATION);
+};
+
 const onStarted = () => {
   notify(STARTED_NOTIFICATION);
 };
@@ -122,8 +132,9 @@ describe('abortWorkletRuntime', () => {
     runOnUI(() => {
       'worklet';
       abortWorkletRuntime(runtimeId);
+      scheduleOnRN(onAborted);
     })();
-    await wait(200);
+    await waitForNotification(ABORTED_NOTIFICATION);
 
     // Assert
     await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
@@ -142,8 +153,9 @@ describe('abortWorkletRuntime', () => {
     scheduleOnRuntime(caller, () => {
       'worklet';
       abortWorkletRuntime(runtimeId);
+      scheduleOnRN(onAborted);
     });
-    await wait(200);
+    await waitForNotification(ABORTED_NOTIFICATION);
 
     // Assert
     await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
@@ -208,6 +220,40 @@ describe('abortWorkletRuntime', () => {
     expect(results[0]).toBe('resolved 1');
     expect(results[1]).toBe(ABORTED_MESSAGE);
   });
+
+  bundleModeTest(
+    'drops a runOnRuntimeAsync call that the aborted runtime queued on itself',
+    async () => {
+      // Arrange
+      const runtime = createWorkletRuntime({
+        name: 'abort-self-queued',
+        abortable: true,
+      });
+      const release = createSynchronizable(false);
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        runOnRuntimeAsync(runtime, () => {
+          'worklet';
+          return 1;
+        }).catch(() => {});
+        scheduleOnRN(onStarted);
+        while (!release.getBlocking()) {
+          // Wait until the test releases the job.
+        }
+      });
+      await waitForNotification(STARTED_NOTIFICATION);
+
+      // Act
+      abortWorkletRuntime(runtime.runtimeId);
+      release.setBlocking(true);
+      await wait(200);
+
+      // Assert
+      await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow(
+        'aborted'
+      );
+    }
+  );
 
   test('rejects the pending runOnRuntimeAsyncWithId call', async () => {
     // Arrange
