@@ -415,11 +415,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
-        } else if (hostIdentity.isRNRuntime()) {
-          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, hostIdentity, jsScheduler);
-        } else {
-          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostIdentity);
         }
+        return makeSerializableRemoteFunction(
+            rt, name, fun, hostIdentity, hostIdentity.isRNRuntime() ? jsScheduler : nullptr);
       });
 
   jsi_utils::addMethod<2>(
