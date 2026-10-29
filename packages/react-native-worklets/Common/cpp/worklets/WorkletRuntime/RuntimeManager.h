@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <atomic>
+#include <concepts>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -47,13 +48,13 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
   void propagateModuleUpdate(const std::string &code, const std::string &sourceUrl);
 #endif // NDEBUG
 
-  template <class Fn>
+  template <std::invocable<> Fn>
   decltype(auto) withRegistrationPaused(Fn &&fn) {
     std::unique_lock lock(registrationMutex_);
     return std::forward<Fn>(fn)();
   }
 
-  template <typename TFn>
+  template <std::invocable<bool> TFn>
   void runWhileRuntimeLocked(RuntimeData::RuntimeId runtimeId, TFn &&fn) {
     std::shared_lock lock(weakRuntimesMutex_);
     std::forward<TFn>(fn)(weakRuntimes_.contains(runtimeId));
