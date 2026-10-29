@@ -45,7 +45,19 @@ function makeRemoteFunctionOnShortLivedRuntime(index: number) {
   });
   return runOnRuntimeSync(runtime, () => {
     'worklet';
-    return () => 1;
+    const hostedFunction = () => 1;
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      return hostedFunction;
+    }
+    const createSerializableNonWorkletFunction = globalThis
+      .__workletsModuleProxy.createSerializableNonWorkletFunction as (
+      fun: () => number,
+      name: string
+    ) => () => number;
+    return createSerializableNonWorkletFunction(
+      hostedFunction,
+      'hostedFunction'
+    );
   });
 }
 
