@@ -48,29 +48,35 @@ export const prepareUIRegistry = () =>
 
           const delta = timestamp - this.previousFrameTimestamp;
 
-          this.activeFrameCallbacks.forEach((callbackId: number) => {
-            const callbackDetails = this.frameCallbackRegistry.get(callbackId)!;
+          Array.from(this.activeFrameCallbacks).forEach(
+            (callbackId: number) => {
+              if (!this.activeFrameCallbacks.has(callbackId)) {
+                return;
+              }
+              const callbackDetails =
+                this.frameCallbackRegistry.get(callbackId)!;
 
-            const { startTime } = callbackDetails;
+              const { startTime } = callbackDetails;
 
-            if (startTime === null) {
-              // First frame
-              callbackDetails.startTime = timestamp;
+              if (startTime === null) {
+                // First frame
+                callbackDetails.startTime = timestamp;
 
-              callbackDetails.callback({
-                timestamp,
-                timeSincePreviousFrame: null,
-                timeSinceFirstFrame: 0,
-              });
-            } else {
-              // Next frame
-              callbackDetails.callback({
-                timestamp,
-                timeSincePreviousFrame: delta,
-                timeSinceFirstFrame: timestamp - startTime,
-              });
+                callbackDetails.callback({
+                  timestamp,
+                  timeSincePreviousFrame: null,
+                  timeSinceFirstFrame: 0,
+                });
+              } else {
+                // Next frame
+                callbackDetails.callback({
+                  timestamp,
+                  timeSincePreviousFrame: delta,
+                  timeSinceFirstFrame: timestamp - startTime,
+                });
+              }
             }
-          });
+          );
 
           if (this.activeFrameCallbacks.size > 0) {
             this.previousFrameTimestamp = timestamp;
