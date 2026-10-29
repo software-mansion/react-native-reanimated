@@ -1,11 +1,12 @@
 """Interleaved A/B runs: in every round, installs each APK and runs the
 scenarios with bench.py. The order of APKs alternates between rounds to
-cancel out thermal drift. Already recorded runs are skipped, so an
-interrupted session can be resumed.
+cancel out thermal drift. Runs already recorded with the same count and APK
+are skipped, so an interrupted session can be resumed.
 
 usage: ANDROID_SERIAL=<serial> python ab.py OUT_JSONL ROUNDS COUNT \\
          "label=path/to.apk,label=path/to.apk" SCENARIO [SCENARIO...]
 """
+import hashlib
 import json
 import os
 import subprocess
@@ -15,10 +16,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bench  # noqa: E402
 
 
+def sha256(path):
+    with open(path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
 def main():
     out, rounds, count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
     variants = [v.split('=') for v in sys.argv[4].split(',')]
     scenarios = sys.argv[5:]
+    bench.check_scenarios(scenarios)
+    hashes = {label: sha256(apk) for label, apk in variants}
     subprocess.run(bench.ADB + ['push', os.path.join(bench.HERE, 'snap.sh'),
                                 '/data/local/tmp/snap.sh'],
                    capture_output=True, check=True)
@@ -26,11 +34,13 @@ def main():
     if os.path.exists(out):
         for line in open(out):
             d = json.loads(line)
-            done.add((d['round'], d['variant'], d['scenario']))
+            done.add((d['round'], d['variant'], d['scenario'], d['count'],
+                      d.get('apk_sha256')))
     for rnd in range(rounds):
         order = variants if rnd % 2 == 0 else list(reversed(variants))
         for label, apk in order:
-            todo = [s for s in scenarios if (rnd, label, s) not in done]
+            todo = [s for s in scenarios
+                    if (rnd, label, s, count, hashes[label]) not in done]
             if not todo:
                 continue
             subprocess.run(bench.ADB + ['install', '-r', apk],
@@ -46,6 +56,7 @@ def main():
                     r = bench.run(s, count)
                 r['variant'] = label
                 r['round'] = rnd
+                r['apk_sha256'] = hashes[label]
                 w = r['wall_s']
                 ui = sum(v for k, v in r['threads_ms'].items()
                          if k.startswith('m.fabric')) / w / 10

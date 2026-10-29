@@ -43,7 +43,7 @@ def parse_stat(line):
 
 def snapshot():
     out = sh('sh /data/local/tmp/snap.sh')
-    snap = {'threads': {}, 'procs': {}}
+    snap = {'threads': {}, 'procs': {}, 'app_total': None}
     section = None
     for line in out.splitlines():
         if line.startswith('### '):
@@ -57,6 +57,10 @@ def snapshot():
         elif section == 'stat':
             f = [int(x) for x in line.split()[1:]]
             snap['cpu_busy'] = sum(f) - f[3] - f[4]
+        elif section == 'apptotal':
+            r = parse_stat(line)
+            if r:
+                snap['app_total'] = r[2]
         elif section == 'app':
             r = parse_stat(line)
             if r:
@@ -65,6 +69,8 @@ def snapshot():
             r = parse_stat(line)
             if r:
                 snap['procs'][name] = snap['procs'].get(name, 0) + r[2]
+    if snap['app_total'] is None or not snap['threads']:
+        raise RuntimeError(f'{PKG} is not running')
     return snap
 
 
@@ -79,13 +85,13 @@ def diff(a, b):
         before = a['threads'].get(tid, (comm, 0))[1]
         g = thread_group(comm)
         groups[g] = groups.get(g, 0) + (ticks - before) * 10  # ms
-    app_total = sum(groups.values())
     procs = {k: (b['procs'].get(k, 0) - a['procs'].get(k, 0)) * 10
              for k in b['procs']}
     return {
         'wall_s': b['uptime'] - a['uptime'],
-        'app_cpu_ms': app_total,
-        'threads_ms': dict(sorted(groups.items(), key=lambda kv: -kv[1])[:12]),
+        # The process total also counts threads that exited during the window.
+        'app_cpu_ms': (b['app_total'] - a['app_total']) * 10,
+        'threads_ms': dict(sorted(groups.items(), key=lambda kv: -kv[1])),
         'procs_ms': procs,
         'system_cpu_ms': (b['cpu_busy'] - a['cpu_busy']) * 10,
     }
@@ -127,7 +133,24 @@ def rails(path):
         if dur > 0:
             res[r.name.replace('power.rails.', '')] = round(r.e / dur / 1000, 2)  # mW
     tp.close()
+    if not res:
+        raise RuntimeError(f'{path}: no power rail data, does the phone have ODPM?')
     return res
+
+
+def scenario_names():
+    # Keys of `SCENARIOS` in scenarios.tsx. The app silently shows the empty
+    # scenario for an unknown name, so a typo would measure the baseline.
+    path = os.path.join(HERE, '../../../common-app/src/apps/reanimated/'
+                        'examples/BatteryBenchmark/scenarios.tsx')
+    body = open(path).read().split('export const SCENARIOS')[1].split('\n};')[0]
+    return set(re.findall(r"^  '?([\w-]+)'?: \{", body, re.M))
+
+
+def check_scenarios(scenarios):
+    unknown = sorted(set(scenarios) - scenario_names())
+    if unknown:
+        sys.exit(f'unknown scenarios: {", ".join(unknown)}')
 
 
 def run(scenario, count):
@@ -162,6 +185,7 @@ def run(scenario, count):
 
 def main():
     out, count, scenarios = sys.argv[1], int(sys.argv[2]), sys.argv[3:]
+    check_scenarios(scenarios)
     subprocess.run(ADB + ['push', os.path.join(HERE, 'snap.sh'),
                           '/data/local/tmp/snap.sh'],
                    capture_output=True, check=True)

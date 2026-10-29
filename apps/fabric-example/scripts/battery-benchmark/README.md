@@ -5,7 +5,7 @@ Measures the energy used by the scenarios of the "Battery benchmark" example (`a
 For every scenario, the harness cold-starts the app with a deep link, waits 8 seconds and records 20 seconds of:
 
 - energy of every power rail (CPU clusters, GPU, display, memory) from the On-Device Power Monitor through Perfetto `android.power` (Pixel 6 or newer),
-- CPU time of every thread of the app, SurfaceFlinger and the composer,
+- CPU time of every thread of the app, and of the SurfaceFlinger and composer processes,
 - frames rendered (`dumpsys gfxinfo`) and temperatures (`dumpsys thermalservice`).
 
 ## Requirements

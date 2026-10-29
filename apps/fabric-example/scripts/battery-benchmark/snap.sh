@@ -2,6 +2,7 @@
 P=$(pidof com.fabricexample)
 echo "### uptime"; cat /proc/uptime
 echo "### stat"; head -1 /proc/stat
+echo "### apptotal"; [ -n "$P" ] && cat /proc/$P/stat; echo
 echo "### app $P"
 for t in /proc/$P/task/*; do cat $t/stat 2>/dev/null; echo; done
 for name in surfaceflinger system_server; do

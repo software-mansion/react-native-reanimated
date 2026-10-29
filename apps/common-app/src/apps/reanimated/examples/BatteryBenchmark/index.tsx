@@ -28,12 +28,19 @@ function parseUrl(url: string | null | undefined) {
   if (!query) {
     return null;
   }
-  const params = Object.fromEntries(
-    query.split('&').map((pair) => pair.split('=').map(decodeURIComponent))
-  ) as Record<string, string | undefined>;
+  let params: Record<string, string | undefined>;
+  try {
+    params = Object.fromEntries(
+      query.split('&').map((pair) => pair.split('=').map(decodeURIComponent))
+    );
+  } catch {
+    // Malformed percent-encoding.
+    return null;
+  }
+  const count = Number(params.count);
   return {
     scenario: params.scenario,
-    count: params.count ? Number(params.count) : undefined,
+    count: Number.isInteger(count) && count > 0 ? count : undefined,
   };
 }
 
@@ -49,7 +56,10 @@ export default function BatteryBenchmarkExample() {
       if (!parsed) {
         return;
       }
-      if (parsed.scenario && parsed.scenario in SCENARIOS) {
+      if (
+        parsed.scenario &&
+        Object.prototype.hasOwnProperty.call(SCENARIOS, parsed.scenario)
+      ) {
         setScenario(parsed.scenario);
         // Deep-linked runs are measurements: hide the picker so the screen
         // content does not depend on the scenario list.

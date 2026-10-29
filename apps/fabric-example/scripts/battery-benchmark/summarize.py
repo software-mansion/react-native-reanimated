@@ -25,6 +25,14 @@ def fmt(xs):
 
 
 rows = [json.loads(l) for f in sys.argv[1:] for l in open(f)]
+# Averaging runs of different box counts or builds measures no single workload.
+identities = defaultdict(set)
+for r in rows:
+    identities[(r['scenario'], r['variant'])].add(
+        (r['count'], r.get('apk_sha256')))
+for key, ids in identities.items():
+    if len(ids) > 1:
+        sys.exit(f'{key}: results mix counts or APKs: {sorted(ids, key=str)}')
 groups = defaultdict(lambda: defaultdict(list))
 variants = []
 for r in rows:
@@ -51,7 +59,8 @@ for s in scenarios:
         for k in keys:
             m, sd = fmt(g[k])
             cell = f'{m:.1f} ± {sd:.1f}' if k != 'cpu+gpu mW' else f'{m:.0f} ± {sd:.0f}'
-            if v != variants[0] and k in ('ui%', 'app%', 'cpu+gpu mW'):
+            if (v != variants[0] and k in ('ui%', 'app%', 'cpu+gpu mW')
+                    and base[k] and st.mean(base[k])):
                 bm = st.mean(base[k])
                 cell += f' ({(m - bm) / bm * 100:+.1f}%)'
             cells.append(cell)
