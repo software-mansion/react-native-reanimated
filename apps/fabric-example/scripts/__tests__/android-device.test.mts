@@ -189,6 +189,26 @@ describe('resolveAndroidDevice', () => {
     assert.deepEqual(fake.booted, []);
   });
 
+  it('waits for each matching instance to boot before returning one', async () => {
+    const fake = createFakeAndroid({
+      devices: [
+        { serial: 'emulator-5554', avd: 'Mine', booted: false },
+        { serial: 'emulator-5556', avd: 'Mine', booted: false },
+      ],
+      avds: ['Mine'],
+    });
+    assert.equal(
+      await resolveAndroidDevice({ serial: null, avd: 'Mine' }, fake.tools),
+      'emulator-5554'
+    );
+    assert.deepEqual(fake.booted, []);
+    assert.deepEqual(fake.bootChecks, [
+      'emulator-5554',
+      'emulator-5556',
+      'emulator-5554',
+    ]);
+  });
+
   it('uses the first connected device when no target is given', async () => {
     const fake = createFakeAndroid({ devices: [OTHER_EMULATOR, PHONE] });
     assert.equal(
