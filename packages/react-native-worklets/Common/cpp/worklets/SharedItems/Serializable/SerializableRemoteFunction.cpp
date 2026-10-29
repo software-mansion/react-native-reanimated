@@ -38,15 +38,14 @@ jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 // TODO: generalize it and merge with other scheduling methods
-void SerializableRemoteFunction::resolveOrRejectPromise(
-    const std::shared_ptr<Serializable> &resolveValue,
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+void SerializableRemoteFunction::resolveOrRejectPromise(const std::shared_ptr<Serializable> &resolveValue) {
   if (isHostedOnRNRuntime()) {
     jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
       resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
     });
   } else {
-    const auto workletRuntime = runtimeManager->getRuntime(hostIdentity_.getRuntimeId());
+    const auto runtimeManager = hostIdentity_.lockRuntimeManager();
+    const auto workletRuntime = runtimeManager ? runtimeManager->getRuntime(hostIdentity_.getRuntimeId()) : nullptr;
     // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
