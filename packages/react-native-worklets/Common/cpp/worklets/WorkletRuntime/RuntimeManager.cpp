@@ -63,7 +63,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
       runtimeId,
-      runtimeRegistry_,
+      weak_from_this(),
       RuntimeData::RuntimeKind::Worker,
       name,
       queue,
@@ -115,7 +115,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
-      runtimeRegistry_,
+      weak_from_this(),
       RuntimeData::RuntimeKind::UI,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
@@ -128,6 +128,16 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
 
 uint64_t RuntimeManager::getNextRuntimeId() {
   return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
+}
+
+void RuntimeManager::onRuntimeCreated(RuntimeData::RuntimeId runtimeId) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_.try_emplace(runtimeId);
+}
+
+void RuntimeManager::onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_.erase(runtimeId);
 }
 
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {

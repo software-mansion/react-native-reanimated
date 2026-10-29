@@ -1,11 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <memory>
 #include <string>
@@ -24,14 +23,12 @@ class SerializableRemoteFunction : public Serializable,
       const std::string &name,
       facebook::jsi::Function &&function,
       RuntimeIdentity hostIdentity,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus)
+      const std::shared_ptr<JSScheduler> &jsScheduler)
       : Serializable(ValueType::RemoteFunctionType),
         hostIdentity_(std::move(hostIdentity)),
         function_(std::make_unique<facebook::jsi::Value>(rnRuntime, std::move(function))),
         name_(name),
-        jsScheduler_(jsScheduler),
-        rnRuntimeStatus_(rnRuntimeStatus) {}
+        jsScheduler_(jsScheduler) {}
 
   /** Creates Worklet Runtime Remote Function. */
   SerializableRemoteFunction(
@@ -43,8 +40,7 @@ class SerializableRemoteFunction : public Serializable,
         hostIdentity_(std::move(hostIdentity)),
         function_(std::make_unique<facebook::jsi::Value>(workletRuntime, std::move(function))),
         name_(name),
-        jsScheduler_(nullptr),
-        rnRuntimeStatus_(nullptr) {}
+        jsScheduler_(nullptr) {}
 
   ~SerializableRemoteFunction() override;
 
@@ -58,11 +54,11 @@ class SerializableRemoteFunction : public Serializable,
   facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
   [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return hostIdentity_.runtimeId == RuntimeData::rnRuntimeId;
+    return hostIdentity_.isRNRuntime();
   }
 
   [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const noexcept {
-    return hostIdentity_.runtimeId;
+    return hostIdentity_.getRuntimeId();
   }
 
  private:
@@ -70,7 +66,6 @@ class SerializableRemoteFunction : public Serializable,
   std::unique_ptr<facebook::jsi::Value> function_;
   const std::string name_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
-  const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
 };
 
 facebook::jsi::Value makeRNRuntimeSerializableRemoteFunction(
@@ -78,8 +73,7 @@ facebook::jsi::Value makeRNRuntimeSerializableRemoteFunction(
     const std::string &name,
     const facebook::jsi::Function &function,
     const RuntimeIdentity &hostIdentity,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
+    const std::shared_ptr<JSScheduler> &jsScheduler);
 
 facebook::jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
     facebook::jsi::Runtime &workletRuntime,

@@ -17,6 +17,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/memory/hybridObjectSupport.test');
       require('./tests/memory/shareable.test');
       require('./tests/memory/runtimeAddressReuse.test');
+      require('./tests/memory/destroyedRuntimeCleanup.test');
     },
   },
   {

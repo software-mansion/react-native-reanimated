@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
@@ -23,17 +22,13 @@ namespace worklets {
  */
 class JSIWorkletsModuleProxy;
 
-class RuntimeManager {
+class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
  public:
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
 
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
-
-  [[nodiscard]] const std::shared_ptr<WorkletRuntimeRegistry> &getRuntimeRegistry() const noexcept {
-    return runtimeRegistry_;
-  }
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
@@ -56,7 +51,19 @@ class RuntimeManager {
     return std::forward<Fn>(fn)();
   }
 
+  template <typename TFn>
+  void runWhileRuntimeLocked(RuntimeData::RuntimeId runtimeId, TFn &&fn) {
+    std::shared_lock lock(weakRuntimesMutex_);
+    std::forward<TFn>(fn)(weakRuntimes_.contains(runtimeId));
+  }
+
  private:
+  friend class WorkletHermesRuntime;
+
+  void onRuntimeCreated(RuntimeData::RuntimeId runtimeId);
+
+  void onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId);
+
   uint64_t getNextRuntimeId();
 
   void registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
@@ -70,7 +77,6 @@ class RuntimeManager {
   };
 #endif // NDEBUG
 
-  const std::shared_ptr<WorkletRuntimeRegistry> runtimeRegistry_{std::make_shared<WorkletRuntimeRegistry>()};
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;

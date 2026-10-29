@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <memory>
@@ -77,7 +76,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
-    const std::shared_ptr<WorkletRuntimeRegistry> &runtimeRegistry,
+    const std::weak_ptr<RuntimeManager> &runtimeManager,
     const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
@@ -93,7 +92,7 @@ WorkletRuntime::WorkletRuntime(
           runtimeMutex_,
           enableLocking_,
           microtaskQueueEnabled_,
-          RuntimeIdentity{.registry = runtimeRegistry, .runtimeId = runtimeId})),
+          RuntimeIdentity::forWorkletRuntime(runtimeManager, runtimeId))),
       runtimeKind_(runtimeKind),
       name_(name),
       queue_(queue) {
@@ -101,8 +100,6 @@ WorkletRuntime::WorkletRuntime(
       (enableLocking || !enableEventLoop) &&
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
-  jsi::Runtime &rt = *runtime_;
-  WorkletRuntimeCollector::install(rt, runtimeRegistry, runtimeId_);
   if (enableEventLoop) {
     eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
     eventLoop_->run();

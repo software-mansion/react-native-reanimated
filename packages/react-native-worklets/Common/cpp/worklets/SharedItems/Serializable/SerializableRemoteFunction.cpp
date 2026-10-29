@@ -22,17 +22,7 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
 } // namespace
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
-  if (isHostedOnRNRuntime()) {
-    rnRuntimeStatus_->runWhileLocked([this](bool isDead) {
-      if (isDead) {
-        freeWithoutCallingDestructor(function_);
-      } else {
-        function_.reset();
-      }
-    });
-  } else {
-    cleanupRuntimeAware(hostIdentity_, function_);
-  }
+  cleanupRuntimeAware(hostIdentity_, function_);
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
@@ -56,7 +46,7 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
       resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
     });
   } else {
-    const auto workletRuntime = runtimeManager->getRuntime(hostIdentity_.runtimeId);
+    const auto workletRuntime = runtimeManager->getRuntime(hostIdentity_.getRuntimeId());
     // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
@@ -74,15 +64,13 @@ jsi::Value makeRNRuntimeSerializableRemoteFunction(
     const std::string &name,
     const jsi::Function &function,
     const RuntimeIdentity &hostIdentity,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus) {
+    const std::shared_ptr<JSScheduler> &jsScheduler) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
       rnRuntime,
       name,
       jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
       hostIdentity,
-      jsScheduler,
-      rnRuntimeStatus);
+      jsScheduler);
   return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
 }
 

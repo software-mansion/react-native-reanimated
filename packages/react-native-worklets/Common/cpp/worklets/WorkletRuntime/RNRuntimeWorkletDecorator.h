@@ -2,8 +2,8 @@
 
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
 #include <memory>
 
 using namespace facebook;
@@ -17,7 +17,7 @@ class RNRuntimeWorkletDecorator {
       jsi::Runtime &rnRuntime,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<JSLogger> &jsLogger,
-      const std::shared_ptr<WorkletRuntimeRegistry> &runtimeRegistry);
+      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
  private:

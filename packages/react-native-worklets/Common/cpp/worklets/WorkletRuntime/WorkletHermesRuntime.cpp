@@ -1,4 +1,5 @@
 #include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 
 #include <jsi/jsi.h>
@@ -55,8 +56,16 @@ WorkletHermesRuntime::WorkletHermesRuntime(
       });
   runtime_->global().setProperty(*runtime_, "evalWithSourceMap", evalWithSourceMap);
 #endif // NDEBUG
+
+  if (const auto runtimeManager = identity_.lockRuntimeManager()) {
+    runtimeManager->onRuntimeCreated(identity_.getRuntimeId());
+  }
 }
 
-WorkletHermesRuntime::~WorkletHermesRuntime() = default;
+WorkletHermesRuntime::~WorkletHermesRuntime() {
+  if (const auto runtimeManager = identity_.lockRuntimeManager()) {
+    runtimeManager->onRuntimeDestroyed(identity_.getRuntimeId());
+  }
+}
 
 } // namespace worklets

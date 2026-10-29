@@ -4,7 +4,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <atomic>
 #include <memory>

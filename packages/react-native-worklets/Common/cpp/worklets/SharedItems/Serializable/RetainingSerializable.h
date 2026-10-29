@@ -2,11 +2,11 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/WorkletsSystraceSection.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <array>
 #include <atomic>

@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <memory>
 #include <new>
@@ -23,30 +23,9 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<facebook::jsi::Value> &
   ::operator delete(value.release());
 }
 
-inline void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value) {
-  if (value == nullptr) {
-    return;
-  }
-  owner.runWhileLocked([&value](bool isAlive) {
-    if (isAlive) {
-      value.reset();
-    } else {
-      freeWithoutCallingDestructor(value);
-    }
-  });
-}
+void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value);
 
-inline void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value) {
-  if (value.isUndefined()) {
-    return;
-  }
-  owner.runWhileLocked([&value](bool isAlive) {
-    if (isAlive) {
-      value.~Value();
-    }
-    new (&value) facebook::jsi::Value(facebook::jsi::Value::undefined());
-  });
-}
+void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value);
 
 class SerializableJSRef : public facebook::jsi::NativeState {
  private:

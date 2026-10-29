@@ -105,7 +105,7 @@ void WorkletsModuleProxy::attachToRNRuntime(
       RuntimeData::rnRuntimeId);
 
   RNRuntimeWorkletDecorator::decorate(
-      rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_, runtimeManager_->getRuntimeRegistry());
+      rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_, rnRuntimeStatus_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

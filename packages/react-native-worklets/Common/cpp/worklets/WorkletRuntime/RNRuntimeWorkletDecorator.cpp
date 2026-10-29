@@ -2,7 +2,7 @@
 #include <worklets/Tools/WorkletsVersion.h>
 #include <worklets/WorkletRuntime/HermesProfiling.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <memory>
 #include <string>
@@ -14,7 +14,7 @@ void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<JSLogger> &jsLogger,
-    const std::shared_ptr<WorkletRuntimeRegistry> &runtimeRegistry) {
+    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus) {
   rnRuntime.global().setProperty(
       rnRuntime, RuntimeData::runtimeKindBindingName, static_cast<int>(RuntimeData::RuntimeKind::ReactNative));
 
@@ -27,7 +27,7 @@ void RNRuntimeWorkletDecorator::decorate(
 
   rnRuntime.global().setProperty(rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
-  WorkletRuntimeCollector::install(rnRuntime, runtimeRegistry, RuntimeData::rnRuntimeId);
+  setRNRuntimeIdentity(rnRuntime, rnRuntimeStatus);
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, jsLogger);
