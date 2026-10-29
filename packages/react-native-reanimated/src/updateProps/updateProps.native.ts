@@ -77,7 +77,8 @@ function createUpdatePropsManager() {
 
   const processViewUpdates = (
     tag: number,
-    updates: PropUpdates
+    updates: PropUpdates,
+    isAnimatedProps: boolean
   ): {
     nativePropUpdates?: PropUpdates;
     jsPropUpdates?: PropUpdates;
@@ -85,9 +86,14 @@ function createUpdatePropsManager() {
     const jsPropNames = global._tagToJSPropNamesMapping[tag];
     if (!jsPropNames) {
       // Fast path for the common case of a view without JS props: hand the
-      // updates over as they are instead of copying them every frame.
+      // updates over as they are instead of copying them every frame. Style
+      // updates are a fresh object from the props builder. Animated props are
+      // the updater's own object, which native rounds in place, so they are
+      // copied to keep the updater's last values unchanged.
       for (const _ in updates) {
-        return { nativePropUpdates: updates };
+        return {
+          nativePropUpdates: isAnimatedProps ? { ...updates } : updates,
+        };
       }
       return {};
     }
@@ -119,7 +125,8 @@ function createUpdatePropsManager() {
         const viewTag = tag as number;
         const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
           viewTag,
-          updates
+          updates,
+          isAnimatedProps
         );
 
         if (nativePropUpdates) {
