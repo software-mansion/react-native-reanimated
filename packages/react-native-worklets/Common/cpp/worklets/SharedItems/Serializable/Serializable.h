@@ -6,6 +6,7 @@
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <concepts>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -26,7 +27,7 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<facebook::jsi::Value> &
   ::operator delete(value.release());
 }
 
-template <typename TFn>
+template <std::invocable<bool> TFn>
 void runWhileOwnerLocked(const RuntimeIdentity &owner, TFn &&fn) {
   if (owner.isRNRuntime()) {
     const auto rnRuntimeStatus = owner.lockRNRuntimeStatus();
