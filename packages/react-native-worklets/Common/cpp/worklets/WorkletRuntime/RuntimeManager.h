@@ -48,10 +48,10 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
   void propagateModuleUpdate(const std::string &code, const std::string &sourceUrl);
 #endif // NDEBUG
 
-  template <std::invocable<> Fn>
-  decltype(auto) withRegistrationPaused(Fn &&fn) {
+  template <std::invocable<> TFn>
+  decltype(auto) withRegistrationPaused(TFn &&fn) {
     std::unique_lock lock(registrationMutex_);
-    return std::forward<Fn>(fn)();
+    return std::forward<TFn>(fn)();
   }
 
   template <std::invocable<bool> TFn>
