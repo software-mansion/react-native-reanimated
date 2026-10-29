@@ -1,0 +1,82 @@
+name: Install Android NDK
+description: Install the Android NDK version pinned in a Gradle file with sdkmanager, and retry failed or truncated downloads
+
+inputs:
+  gradle-file:
+    description: The Gradle file that sets ndkVersion
+    required: false
+    default: apps/fabric-example/android/build.gradle
+
+outputs:
+  version:
+    description: The installed NDK version
+    value: ${{ steps.resolve.outputs.version }}
+  path:
+    description: The installed NDK directory
+    value: ${{ steps.resolve.outputs.path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve NDK version
+      id: resolve
+      shell: bash
+      env:
+        GRADLE_FILE: ${{ inputs.gradle-file }}
+      run: |
+        set -euo pipefail
+        if [[ "$RUNNER_OS" != "Linux" ]]; then
+          echo "::error::install-android-ndk supports only Linux runners, this runner is $RUNNER_OS"
+          exit 1
+        fi
+        version="$(grep -oE 'ndkVersion[[:space:]]*=[[:space:]]*"[^"]+"' "$GRADLE_FILE" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/' || true)"
+        if [[ -z "$version" ]]; then
+          echo "::error::Could not read ndkVersion from $GRADLE_FILE"
+          exit 1
+        fi
+        sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+        if [[ -z "$sdk_root" ]]; then
+          echo "::error::Neither ANDROID_HOME nor ANDROID_SDK_ROOT is set"
+          exit 1
+        fi
+        {
+          echo "version=$version"
+          echo "sdk-root=$sdk_root"
+          echo "path=$sdk_root/ndk/$version"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Install NDK
+      shell: bash
+      env:
+        NDK_VERSION: ${{ steps.resolve.outputs.version }}
+        NDK_DIR: ${{ steps.resolve.outputs.path }}
+        SDK_ROOT: ${{ steps.resolve.outputs.sdk-root }}
+        ATTEMPTS: '3'
+        ATTEMPT_TIMEOUT_SECONDS: '600'
+        BACKOFF_SECONDS: '15'
+      run: |
+        set -euo pipefail
+        sdkmanager="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+        is_installed() {
+          [[ -f "$NDK_DIR/source.properties" ]] &&
+            [[ "$(sed -nE 's/^Pkg\.Revision[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' "$NDK_DIR/source.properties")" == "$NDK_VERSION" ]]
+        }
+        if is_installed; then
+          echo "ndk;$NDK_VERSION is already installed in $NDK_DIR"
+          exit 0
+        fi
+        printf 'y\n%.0s' $(seq 50) | "$sdkmanager" --licenses > /dev/null
+        for ((attempt = 1; attempt <= ATTEMPTS; attempt++)); do
+          echo "Installing ndk;$NDK_VERSION, attempt $attempt of $ATTEMPTS"
+          if timeout "$ATTEMPT_TIMEOUT_SECONDS" "$sdkmanager" --install "ndk;$NDK_VERSION" && is_installed; then
+            echo "Installed ndk;$NDK_VERSION in $NDK_DIR"
+            exit 0
+          fi
+          echo "::warning::Attempt $attempt of $ATTEMPTS to install ndk;$NDK_VERSION failed"
+          rm -rf "$NDK_DIR" "$SDK_ROOT/.temp" "$SDK_ROOT/.downloadIntermediates"
+          if ((attempt < ATTEMPTS)); then
+            sleep $((attempt * BACKOFF_SECONDS))
+          fi
+        done
+        echo "::error::Could not install ndk;$NDK_VERSION after $ATTEMPTS attempts"
+        exit 1

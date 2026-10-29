@@ -47,14 +47,8 @@ runs:
         cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
     - name: Install Android NDK matching the example app's pin
-      shell: bash
-      run: |
-        set -e
-        NDK_VERSION="$(grep -oE 'ndkVersion\s*=\s*"[^"]+"' apps/fabric-example/android/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')"
-        echo "installing ndk;$NDK_VERSION"
-        SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-        printf 'y\n%.0s' $(seq 50) | "$SDKMANAGER" --licenses > /dev/null
-        "$SDKMANAGER" --install "ndk;$NDK_VERSION"
+      id: ndk
+      uses: $/.github/actions/install-android-ndk
 
     - name: Generate Android compile database
       shell: bash
@@ -64,6 +58,8 @@ runs:
     - name: Lint Android
       shell: bash
       working-directory: ${{ inputs.package-dir }}
+      env:
+        ORG_GRADLE_PROJECT_ndkVersion: ${{ steps.ndk.outputs.version }}
       run: yarn lint:android
 
     - name: Lint Android (clang-tidy)
