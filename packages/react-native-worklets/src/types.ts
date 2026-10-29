@@ -127,10 +127,8 @@ type WorkletRuntimeConfigBase = {
   enableNetworking?: boolean;
   /**
    * Determines whether the runtime can be stopped with
-   * `abortWorkletRuntime`. An abortable runtime keeps track of the
-   * `Synchronizable` locks it holds so that it can release them when it is
-   * aborted. Can be enabled only with the default queue. If not specified,
-   * it defaults to `false`.
+   * `abortWorkletRuntime`. Can be enabled only with the default queue. If
+   * not specified, it defaults to `false`.
    */
   abortable?: boolean;
 };

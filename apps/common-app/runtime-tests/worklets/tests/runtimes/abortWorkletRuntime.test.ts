@@ -21,67 +21,74 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const STARTED_NOTIFICATION = 'STARTED_NOTIFICATION';
+const ABORTED_MESSAGE =
+  '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.';
 
-const bundleModeTest = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-  ? test
-  : test.skip;
+const onStarted = () => {
+  notify(STARTED_NOTIFICATION);
+};
 
 describe('abortWorkletRuntime', () => {
-  test('interrupts JavaScript that is stuck in an infinite loop', async () => {
-    // Arrange
-    const runtime = createWorkletRuntime({
-      name: 'abort-loop',
-      abortable: true,
-    });
-    const onStarted = () => {
-      notify(STARTED_NOTIFICATION);
-    };
-    scheduleOnRuntime(runtime, () => {
-      'worklet';
-      scheduleOnRN(onStarted);
-      while (true) {
-        // Spin until the runtime is aborted.
-      }
-    });
-    await waitForNotification(STARTED_NOTIFICATION);
-
-    // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    await wait(200);
-
-    // Assert
-    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
-  });
-
-  test('drops jobs that are still pending', async () => {
+  test('lets the running job finish and drops the jobs that are still pending', async () => {
     // Arrange
     const runtime = createWorkletRuntime({
       name: 'abort-pending',
       abortable: true,
     });
-    const ran = createSynchronizable(false);
-    const onStarted = () => {
-      notify(STARTED_NOTIFICATION);
-    };
+    const release = createSynchronizable(false);
+    const finished = createSynchronizable(false);
+    const pendingRan = createSynchronizable(false);
     scheduleOnRuntime(runtime, () => {
       'worklet';
       scheduleOnRN(onStarted);
-      while (true) {
-        // Spin until the runtime is aborted.
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
       }
+      finished.setBlocking(true);
     });
     scheduleOnRuntime(runtime, () => {
       'worklet';
-      ran.setBlocking(true);
+      pendingRan.setBlocking(true);
     });
     await waitForNotification(STARTED_NOTIFICATION);
 
     // Act
     abortWorkletRuntime(runtime.runtimeId);
+    release.setBlocking(true);
     await wait(200);
 
     // Assert
-    expect(ran.getBlocking()).toBe(false);
+    expect(finished.getBlocking()).toBe(true);
+    expect(pendingRan.getBlocking()).toBe(false);
+  });
+
+  test('throws when scheduling work on an aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-schedule',
+      abortable: true,
+    });
+    abortWorkletRuntime(runtime.runtimeId);
+
+    // Act & Assert
+    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
+  });
+
+  test('throws when running work synchronously on an aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-sync',
+      abortable: true,
+    });
+    abortWorkletRuntime(runtime.runtimeId);
+
+    // Act & Assert
+    await expect(() =>
+      runOnRuntimeSync(runtime, () => {
+        'worklet';
+        return 1;
+      })
+    ).toThrow('aborted');
   });
 
   test('is a no-op when the runtime is already aborted', async () => {
@@ -108,74 +115,13 @@ describe('abortWorkletRuntime', () => {
     );
   });
 
-  test('rejects the promises of running and pending runOnRuntimeAsync calls', async () => {
+  test('throws when the runtime was not created as abortable', async () => {
     // Arrange
-    const runtime = createWorkletRuntime({
-      name: 'abort-promises',
-      abortable: true,
-    });
-    const onStarted = () => {
-      notify(STARTED_NOTIFICATION);
-    };
-    const running = runOnRuntimeAsync(runtime, () => {
-      'worklet';
-      scheduleOnRN(onStarted);
-      while (true) {
-        // Spin until the runtime is aborted.
-      }
-    });
-    const pending = runOnRuntimeAsync(runtime, () => {
-      'worklet';
-      return 42;
-    });
-    await waitForNotification(STARTED_NOTIFICATION);
+    const runtime = createWorkletRuntime({ name: 'not-abortable' });
 
-    // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    const messages = await Promise.all(
-      [running, pending].map((promise) =>
-        promise.then(
-          () => 'resolved',
-          (error: Error) => error.message
-        )
-      )
-    );
-
-    // Assert
-    const abortedMessage =
-      '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.';
-    expect(messages[0]).toBe(abortedMessage);
-    expect(messages[1]).toBe(abortedMessage);
-  });
-
-  test('rejects the promise of a runOnRuntimeAsyncWithId call', async () => {
-    // Arrange
-    const runtime = createWorkletRuntime({
-      name: 'abort-promise-with-id',
-      abortable: true,
-    });
-    const onStarted = () => {
-      notify(STARTED_NOTIFICATION);
-    };
-    const running = runOnRuntimeAsyncWithId(runtime.runtimeId, () => {
-      'worklet';
-      scheduleOnRN(onStarted);
-      while (true) {
-        // Spin until the runtime is aborted.
-      }
-    });
-    await waitForNotification(STARTED_NOTIFICATION);
-
-    // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    const message = await running.then(
-      () => 'resolved',
-      (error: Error) => error.message
-    );
-
-    // Assert
-    expect(message).toBe(
-      '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.'
+    // Act & Assert
+    await expect(() => abortWorkletRuntime(runtime.runtimeId)).toThrow(
+      'abortable: true'
     );
   });
 
@@ -199,6 +145,104 @@ describe('abortWorkletRuntime', () => {
     await expect(() =>
       createWorkletRuntime({ abortable: true, queue: {} })
     ).toThrow('only with the default queue');
+  });
+
+  test('resolves the running runOnRuntimeAsync call and rejects the pending one', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-promises',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    const running = runOnRuntimeAsync(runtime, () => {
+      'worklet';
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
+      }
+      return 1;
+    });
+    const pending = runOnRuntimeAsync(runtime, () => {
+      'worklet';
+      return 2;
+    });
+    await waitForNotification(STARTED_NOTIFICATION);
+
+    // Act
+    abortWorkletRuntime(runtime.runtimeId);
+    release.setBlocking(true);
+    const results = await Promise.all(
+      [running, pending].map((promise) =>
+        promise.then(
+          (value) => `resolved ${value}`,
+          (error: Error) => error.message
+        )
+      )
+    );
+
+    // Assert
+    expect(results[0]).toBe('resolved 1');
+    expect(results[1]).toBe(ABORTED_MESSAGE);
+  });
+
+  test('rejects the pending runOnRuntimeAsyncWithId call', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-promise-with-id',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
+      }
+    });
+    const pending = runOnRuntimeAsyncWithId(runtime.runtimeId, () => {
+      'worklet';
+      return 1;
+    });
+    await waitForNotification(STARTED_NOTIFICATION);
+
+    // Act
+    abortWorkletRuntime(runtime.runtimeId);
+    release.setBlocking(true);
+    const message = await pending.then(
+      () => 'resolved',
+      (error: Error) => error.message
+    );
+
+    // Assert
+    expect(message).toBe(ABORTED_MESSAGE);
+  });
+
+  test('stops the timers of the aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-timers',
+      abortable: true,
+    });
+    const ticks = createSynchronizable(0);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      setInterval(() => {
+        ticks.setBlocking((prev) => prev + 1);
+      }, 10);
+      scheduleOnRN(onStarted);
+    });
+    await waitForNotification(STARTED_NOTIFICATION);
+    await wait(100);
+
+    // Act
+    abortWorkletRuntime(runtime.runtimeId);
+    await wait(50);
+    const ticksAfterAbort = ticks.getBlocking();
+    await wait(200);
+
+    // Assert
+    expect(ticksAfterAbort > 0).toBe(true);
+    expect(ticks.getBlocking()).toBe(ticksAfterAbort);
   });
 
   test('registers a custom serializable after a runtime was aborted', async () => {
@@ -227,80 +271,5 @@ describe('abortWorkletRuntime', () => {
         },
       })
     ).not.toThrow();
-  });
-
-  bundleModeTest(
-    'throws from runOnRuntimeSync when the runtime is aborted mid-call',
-    async () => {
-      // Arrange
-      const runtime = createWorkletRuntime({
-        name: 'abort-sync',
-        abortable: true,
-      });
-      const killer = createWorkletRuntime({ name: 'abort-sync-killer' });
-      const runtimeId = runtime.runtimeId;
-      scheduleOnRuntime(killer, () => {
-        'worklet';
-        setTimeout(() => {
-          abortWorkletRuntime(runtimeId);
-        }, 200);
-      });
-
-      // Act & Assert
-      await expect(() =>
-        runOnRuntimeSync(runtime, () => {
-          'worklet';
-          while (true) {
-            // Spin until the runtime is aborted.
-          }
-        })
-      ).toThrow('aborted');
-    }
-  );
-
-  test('throws when the runtime was not created as abortable', async () => {
-    // Arrange
-    const runtime = createWorkletRuntime({ name: 'not-abortable' });
-
-    // Act & Assert
-    await expect(() => abortWorkletRuntime(runtime.runtimeId)).toThrow(
-      'abortable: true'
-    );
-  });
-
-  test('releases the Synchronizable locks held by the aborted runtime', async () => {
-    // Arrange
-    const holder = createWorkletRuntime({
-      name: 'abort-lock-holder',
-      abortable: true,
-    });
-    const waiter = createWorkletRuntime({ name: 'abort-lock-waiter' });
-    const synchronizable = createSynchronizable(0);
-    const acquired = createSynchronizable(false);
-    const onStarted = () => {
-      notify(STARTED_NOTIFICATION);
-    };
-    scheduleOnRuntime(holder, () => {
-      'worklet';
-      synchronizable.lock();
-      scheduleOnRN(onStarted);
-      while (true) {
-        // Spin until the runtime is aborted.
-      }
-    });
-    await waitForNotification(STARTED_NOTIFICATION);
-
-    // Act
-    abortWorkletRuntime(holder.runtimeId);
-    scheduleOnRuntime(waiter, () => {
-      'worklet';
-      synchronizable.lock();
-      acquired.setBlocking(true);
-      synchronizable.unlock();
-    });
-    await wait(500);
-
-    // Assert
-    expect(acquired.getBlocking()).toBe(true);
   });
 });

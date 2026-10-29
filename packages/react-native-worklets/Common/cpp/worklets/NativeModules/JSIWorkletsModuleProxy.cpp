@@ -851,27 +851,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<1>(
-      rt,
-      obj,
-      "synchronizableLock",
-      [abortableRuntime = abortableRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+      rt, obj, "synchronizableLock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->lock();
-        if (const auto runtime = abortableRuntime.lock()) {
-          runtime->trackLock(synchronizable);
-        }
       });
 
   jsi_utils::addMethod<1>(
-      rt,
-      obj,
-      "synchronizableUnlock",
-      [abortableRuntime = abortableRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+      rt, obj, "synchronizableUnlock", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         auto synchronizable = Synchronizable::extractSynchronizableOrThrow(rt, at<0>(args));
         synchronizable->unlock();
-        if (const auto runtime = abortableRuntime.lock()) {
-          runtime->untrackLock(synchronizable);
-        }
       });
 
   jsi_utils::addMethod<5>(

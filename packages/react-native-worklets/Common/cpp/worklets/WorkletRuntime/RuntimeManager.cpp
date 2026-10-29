@@ -71,8 +71,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
       enableLocking,
       enableNetworking,
       abortable);
-  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(
-      sourceProxy, runtimeId, abortable ? workletRuntime : std::shared_ptr<WorkletRuntime>());
+  const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
 

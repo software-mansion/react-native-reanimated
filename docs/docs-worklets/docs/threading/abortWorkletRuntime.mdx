@@ -7,7 +7,7 @@ sidebar_position: 42 # Use alphabetical order
   # abortWorkletRuntime
 </Badges>
 
-`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that was created with `abortable: true`, and the thread it runs on. It drops the work that's still waiting in the runtime's queue and interrupts the JavaScript that's currently running, so it also stops a worklet stuck in an infinite loop.
+`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that was created with `abortable: true`. It drops the work that's still waiting in the runtime's queue and rejects the promises of that work. The runtime's thread stops once the job that's currently running returns.
 
 ## Reference
 
@@ -18,7 +18,7 @@ const workletRuntime = createWorkletRuntime({ name: 'background', abortable: tru
 
 scheduleOnRuntime(workletRuntime, () => {
   'worklet';
-  while (true) {}
+  // Long-running work.
 });
 
 abortWorkletRuntime(workletRuntime.runtimeId);
@@ -44,8 +44,8 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 - Passing an id that doesn't belong to any runtime throws.
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
-- The interrupted worklet doesn't finish, so any cleanup it would do afterwards doesn't run, including `finally` blocks. The only exception is the `Synchronizable` locks, which are released when the runtime is aborted.
-- JavaScript can be interrupted only if it was compiled by Hermes with async break checks. Worklets that are evaluated at runtime have them. Precompiled bytecode, for example in [Bundle Mode](../bundleMode/overview.mdx), might not, and a loop in such code can't be interrupted.
+- The abort is cooperative. A worklet that's already running isn't interrupted, similar to cancelling a thread: it runs to the end and only then the runtime stops. A worklet stuck in an infinite loop keeps running, and so does its thread.
+- The promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 
 ## Call table
