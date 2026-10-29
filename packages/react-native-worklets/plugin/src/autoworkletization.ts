@@ -82,6 +82,23 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
+const configPropertiesToWorkletize = new Map<
+  string,
+  { argIndex: number; keys: string[] | null }
+>([
+  ['createWorkletRuntime', { argIndex: 0, keys: ['initializer'] }],
+  [
+    'createShareable',
+    { argIndex: 2, keys: ['hostDecorator', 'guestDecorator'] },
+  ],
+  [
+    'registerCustomSerializable',
+    { argIndex: 0, keys: ['determine', 'pack', 'unpack'] },
+  ],
+  ['withTiming', { argIndex: 1, keys: ['easing'] }],
+  ['useHandler', { argIndex: 0, keys: null }],
+]);
+
 export function addDirectivesToKnownCallback(
   path: NodePath<WorkletizableFunction>
 ): void {
@@ -117,9 +134,6 @@ export function handleWorkletizableCallback(
       .filter((_, index) => argIndices.includes(index));
 
     addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject);
-    if (name === 'createWorkletRuntime') {
-      addDirectivesToInitializerProperty(path.get('arguments')[0], state);
-    }
   } else if (
     !isV8IntrinsicIdentifier(callee) &&
     isGestureObjectEventCallbackMethod(callee)
@@ -127,10 +141,20 @@ export function handleWorkletizableCallback(
     const args = path.get('arguments');
     addDirectivesToArgs(args, state, true, true);
   }
+
+  const configProperties = configPropertiesToWorkletize.get(name);
+  if (configProperties) {
+    addDirectivesToConfigProperties(
+      path.get('arguments')[configProperties.argIndex],
+      configProperties.keys,
+      state
+    );
+  }
 }
 
-function addDirectivesToInitializerProperty(
+function addDirectivesToConfigProperties(
   config: NodePath | undefined,
+  keys: string[] | null,
   state: WorkletsPluginPass
 ): void {
   if (!config?.isObjectExpression()) {
@@ -149,7 +173,7 @@ function addDirectivesToInitializerProperty(
       : isStringLiteral(key)
         ? key.value
         : undefined;
-    if (keyName !== 'initializer') {
+    if (keyName === undefined || (keys && !keys.includes(keyName))) {
       continue;
     }
     if (property.isObjectMethod()) {

@@ -314,6 +314,66 @@ describe.each([
         </script>`,
         expected: 1,
       },
+      {
+        name: 'createShareable decorators',
+        input: html`<script>
+          import { createShareable } from 'react-native-worklets';
+          createShareable(2, 0, {
+            hostDecorator: (shareable) => shareable,
+            guestDecorator(shareable) {
+              return shareable;
+            },
+          });
+        </script>`,
+        expected: 2,
+      },
+      {
+        name: 'registerCustomSerializable callbacks',
+        input: html`<script>
+          import { registerCustomSerializable } from 'react-native-worklets';
+          registerCustomSerializable({
+            name: 'Foo',
+            determine: (value) => 'a' in value,
+            pack: (value) => ({ a: value.a }),
+            unpack(value) {
+              return { a: value.a };
+            },
+          });
+        </script>`,
+        expected: 3,
+      },
+      {
+        name: 'withTiming custom easing',
+        input: html`<script>
+          import { withTiming } from 'react-native-reanimated';
+          withTiming(1, { duration: 300, easing: (t) => t * t });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'withTiming custom easing referenced by name',
+        input: html`<script>
+          import { withTiming } from 'react-native-reanimated';
+          const square = (t) => t * t;
+          withTiming(1, { easing: square });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'useHandler handlers',
+        input: html`<script>
+          import { useHandler } from 'react-native-reanimated';
+          const base = {};
+          useHandler({
+            ...base,
+            onScroll: (event) => event,
+            onBeginDrag(event) {
+              return event;
+            },
+          });
+        </script>`,
+        expected: 2,
+      },
     ])('workletizes $name', ({ input, expected }) => {
       expect(factoryCount(input)).toBe(expected);
     });
@@ -334,8 +394,50 @@ describe.each([
           createWorkletRuntime({ [key]: () => {} });
         </script>`,
       },
+      {
+        name: 'other functions in the createShareable config',
+        input: html`<script>
+          import { createShareable } from 'react-native-worklets';
+          createShareable(2, 0, { other: () => {} });
+        </script>`,
+      },
+      {
+        name: 'withTiming easing built by a call',
+        input: html`<script>
+          import { withTiming, Easing } from 'react-native-reanimated';
+          withTiming(1, { easing: Easing.bezier(0.25, 0.1, 0.25, 1) });
+        </script>`,
+      },
     ])('does not workletize $name', ({ input }) => {
       expect(factoryCount(input)).toBe(0);
+    });
+
+    test.each([
+      {
+        name: 'createWorkletRuntime initializer',
+        input: html`<script>
+          import { createWorkletRuntime } from 'react-native-worklets';
+          createWorkletRuntime({ other: () => 1, initializer: () => 2 });
+        </script>`,
+      },
+      {
+        name: 'createShareable hostDecorator',
+        input: html`<script>
+          import { createShareable } from 'react-native-worklets';
+          createShareable(2, 0, { other: () => 1, hostDecorator: () => 2 });
+        </script>`,
+      },
+      {
+        name: 'withTiming easing',
+        input: html`<script>
+          import { withTiming } from 'react-native-reanimated';
+          withTiming(1, { other: () => 1, easing: () => 2 });
+        </script>`,
+      },
+    ])('workletizes only the $name in the config', ({ input }) => {
+      const output = workletText(runPlugin(input, { bundleMode }), bundleMode);
+      expect(output).toContain('return 2');
+      expect(output).not.toContain('return 1');
     });
   });
 

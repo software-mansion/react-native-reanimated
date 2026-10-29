@@ -1,1 +1,1 @@
-Autoworkletize the `runOnRuntimeAsyncWithId` callback and the `createWorkletRuntime` initializer in the Babel and Oxc plugins.
+Autoworkletize worklet callbacks of `runOnRuntimeAsyncWithId`, `createWorkletRuntime`, `createShareable`, `registerCustomSerializable`, the `withTiming` `easing` option and `useHandler` in the Babel and Oxc plugins.

@@ -62,6 +62,15 @@ pub const FUNCTION_HOOKS: &[(&str, &[usize])] = &[
     ("createWorkletRuntime", &[1]),
 ];
 
+#[rustfmt::skip]
+const CONFIG_PROPERTY_HOOKS: &[(&str, usize, Option<&[&str]>)] = &[
+    ("createWorkletRuntime", 0, Some(&["initializer"])),
+    ("createShareable", 2, Some(&["hostDecorator", "guestDecorator"])),
+    ("registerCustomSerializable", 0, Some(&["determine", "pack", "unpack"])),
+    ("withTiming", 1, Some(&["easing"])),
+    ("useHandler", 0, None),
+];
+
 pub fn add_directives_to_known_callbacks<'a>(
     program: &mut Program<'a>,
     scoping: &Scoping,
@@ -174,10 +183,15 @@ impl<'d, 's> Callbacks<'d, 's> {
         }
     }
 
-    fn collect_initializer_property(&mut self, call: &CallExpression<'_>) {
+    fn collect_config_properties(
+        &mut self,
+        call: &CallExpression<'_>,
+        index: usize,
+        keys: Option<&[&str]>,
+    ) {
         let Some(config) = call
             .arguments
-            .first()
+            .get(index)
             .and_then(|arg| arg.as_expression())
             .and_then(object_expression)
         else {
@@ -187,10 +201,13 @@ impl<'d, 's> Callbacks<'d, 's> {
             let ObjectPropertyKind::ObjectProperty(property) = property else {
                 continue;
             };
-            if property.computed
-                || property.kind.is_accessor()
-                || property.key.static_name().as_deref() != Some("initializer")
-            {
+            if property.computed || property.kind.is_accessor() {
+                continue;
+            }
+            let Some(key) = property.key.static_name() else {
+                continue;
+            };
+            if keys.is_some_and(|keys| !keys.contains(&key.as_ref())) {
                 continue;
             }
             if property.method {
@@ -270,8 +287,12 @@ impl<'a, 'd, 's> Visit<'a> for Callbacks<'d, 's> {
                 self.collect(&shape, kinds, true);
             }
         }
-        if callee_name(callee) == Some("createWorkletRuntime") {
-            self.collect_initializer_property(call);
+        if let Some(&(_, index, keys)) = callee_name(callee).and_then(|name| {
+            CONFIG_PROPERTY_HOOKS
+                .iter()
+                .find(|(hook, _, _)| *hook == name)
+        }) {
+            self.collect_config_properties(call, index, keys);
         }
         if is_gesture_object_event_callback_method(callee) {
             for shape in (0..call.arguments.len()).filter_map(arguments) {

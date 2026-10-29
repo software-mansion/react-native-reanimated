@@ -509,6 +509,16 @@ var require_autoworkletization = __commonJS({
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);
+    var configPropertiesToWorkletize = /* @__PURE__ */ new Map([
+      ["createWorkletRuntime", { argIndex: 0, keys: ["initializer"] }],
+      ["createShareable", { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }],
+      [
+        "registerCustomSerializable",
+        { argIndex: 0, keys: ["determine", "pack", "unpack"] }
+      ],
+      ["withTiming", { argIndex: 1, keys: ["easing"] }],
+      ["useHandler", { argIndex: 0, keys: null }]
+    ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
         (0, directives_12.addWorkletDirectivesToPath)(path);
@@ -526,15 +536,16 @@ var require_autoworkletization = __commonJS({
         const argIndices = reanimatedFunctionArgsToWorkletize.get(name);
         const args = path.get("arguments").filter((_, index) => argIndices.includes(index));
         addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject);
-        if (name === "createWorkletRuntime") {
-          addDirectivesToInitializerProperty(path.get("arguments")[0], state);
-        }
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
         const args = path.get("arguments");
         addDirectivesToArgs(args, state, true, true);
       }
+      const configProperties = configPropertiesToWorkletize.get(name);
+      if (configProperties) {
+        addDirectivesToConfigProperties(path.get("arguments")[configProperties.argIndex], configProperties.keys, state);
+      }
     }
-    function addDirectivesToInitializerProperty(config, state) {
+    function addDirectivesToConfigProperties(config, keys, state) {
       if (!(config === null || config === void 0 ? void 0 : config.isObjectExpression())) {
         return;
       }
@@ -544,7 +555,7 @@ var require_autoworkletization = __commonJS({
         }
         const key = property.node.key;
         const keyName = (0, types_12.isIdentifier)(key) ? key.name : (0, types_12.isStringLiteral)(key) ? key.value : void 0;
-        if (keyName !== "initializer") {
+        if (keyName === void 0 || keys && !keys.includes(keyName)) {
           continue;
         }
         if (property.isObjectMethod()) {
