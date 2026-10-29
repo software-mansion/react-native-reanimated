@@ -713,10 +713,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "handlePromise",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      rt, obj, "handlePromise", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         const auto fun = at<0>(args).getObject(rt).getFunction(rt);
         // NOLINTNEXTLINE(readability/braces)
         if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
@@ -725,7 +722,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         } else {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
           auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
+          resolveOrReject->resolveOrRejectPromise(valueOrError);
         }
       });
 

@@ -12,8 +12,6 @@
 
 namespace worklets {
 
-class RuntimeManager;
-
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  public:
@@ -47,9 +45,7 @@ class SerializableRemoteFunction : public Serializable,
   SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
 
-  void resolveOrRejectPromise(
-      const std::shared_ptr<Serializable> &resolveValue,
-      const std::shared_ptr<RuntimeManager> &runtimeManager);
+  void resolveOrRejectPromise(const std::shared_ptr<Serializable> &resolveValue);
 
   facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
