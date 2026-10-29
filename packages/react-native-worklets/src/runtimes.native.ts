@@ -606,3 +606,15 @@ export function getUISchedulerHolder(): object {
 export function abortWorkletRuntime(runtimeId: number): void {
   WorkletsModule.abortWorkletRuntime(runtimeId);
 }
+
+if (!isBundleModeEnabled()) {
+  function abortWorkletRuntimeWorklet(runtimeId: number): void {
+    'worklet';
+    globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
+  }
+
+  serializableMappingCache.set(
+    abortWorkletRuntime,
+    createSerializable(abortWorkletRuntimeWorklet)
+  );
+}

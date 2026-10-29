@@ -25,10 +25,6 @@ const STARTED_NOTIFICATION = 'STARTED_NOTIFICATION';
 const ABORTED_MESSAGE =
   '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.';
 
-const bundleModeTest = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-  ? test
-  : test.skip;
-
 const onStarted = () => {
   notify(STARTED_NOTIFICATION);
 };
@@ -114,7 +110,7 @@ describe('abortWorkletRuntime', () => {
     );
   });
 
-  bundleModeTest('can be called from the UI Runtime', async () => {
+  test('can be called from the UI Runtime', async () => {
     // Arrange
     const runtime = createWorkletRuntime({
       name: 'abort-from-ui',
@@ -127,6 +123,26 @@ describe('abortWorkletRuntime', () => {
       'worklet';
       abortWorkletRuntime(runtimeId);
     })();
+    await wait(200);
+
+    // Assert
+    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
+  });
+
+  test('can be called from a Worker Runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-from-worker',
+      abortable: true,
+    });
+    const caller = createWorkletRuntime({ name: 'abort-caller' });
+    const runtimeId = runtime.runtimeId;
+
+    // Act
+    scheduleOnRuntime(caller, () => {
+      'worklet';
+      abortWorkletRuntime(runtimeId);
+    });
     await wait(200);
 
     // Assert
