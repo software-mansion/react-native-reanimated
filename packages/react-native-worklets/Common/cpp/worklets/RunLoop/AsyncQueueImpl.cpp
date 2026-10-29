@@ -77,7 +77,7 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 }
 
 AsyncQueueImpl::~AsyncQueueImpl() {
-  stop();
+  shutdown();
 }
 
 void AsyncQueueImpl::push(std::function<void()> &&job) {
@@ -100,6 +100,10 @@ void AsyncQueueImpl::abortPending(AbortToken /* abortToken */) {
 }
 
 void AsyncQueueImpl::stop() {
+  shutdown();
+}
+
+void AsyncQueueImpl::shutdown() {
   std::queue<std::function<void()>> pendingJobs;
   {
     std::unique_lock<std::mutex> lock(state_->mutex);

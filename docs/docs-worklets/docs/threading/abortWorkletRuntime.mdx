@@ -41,12 +41,11 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 ## Remarks
 
 - Only Worker Runtimes created with `abortable: true` can be aborted. Passing the id of the UI Runtime or of a runtime that isn't abortable throws.
-- An abortable runtime keeps track of the [Synchronizable](/docs/memory/createSynchronizable) locks it holds.
 - Passing an id that doesn't belong to any runtime throws.
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
 - The interrupted worklet doesn't finish, so any cleanup it would do afterwards doesn't run, including `finally` blocks. The only exception is the `Synchronizable` locks, which are released when the runtime is aborted.
-- JavaScript can be interrupted only if it was compiled by Hermes with async break checks. Worklets that are evaluated at runtime have them. Precompiled bytecode, for example in [Bundle Mode](/docs/bundleMode/overview), might not, and a loop in such code can't be interrupted.
+- JavaScript can be interrupted only if it was compiled by Hermes with async break checks. Worklets that are evaluated at runtime have them. Precompiled bytecode, for example in [Bundle Mode](../bundleMode/overview.mdx), might not, and a loop in such code can't be interrupted.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 
 ## Call table

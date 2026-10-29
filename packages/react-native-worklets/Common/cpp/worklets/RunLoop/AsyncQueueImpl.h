@@ -36,6 +36,8 @@ class AsyncQueueImpl : public AsyncQueue {
  private:
   static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
 
+  void shutdown();
+
   const std::shared_ptr<AsyncQueueState> state_;
 };
 
