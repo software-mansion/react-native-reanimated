@@ -5,7 +5,6 @@
 #include <worklets/WorkletRuntime/HermesProfiling.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 
 #include <algorithm>
 #include <memory>
@@ -48,7 +47,6 @@ void RNRuntimeWorkletDecorator::decorate(
 
   rnRuntime.global().setProperty(rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
-  WorkletRuntimeCollector::install(rnRuntime);
   setRNRuntimeIdentity(rnRuntime, rnRuntimeStatus);
 
 #ifndef NDEBUG

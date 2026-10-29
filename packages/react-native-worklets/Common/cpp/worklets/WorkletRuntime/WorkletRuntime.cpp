@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <memory>
@@ -101,8 +100,6 @@ WorkletRuntime::WorkletRuntime(
       (enableLocking || !enableEventLoop) &&
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
-  jsi::Runtime &rt = *runtime_;
-  WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
     eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
