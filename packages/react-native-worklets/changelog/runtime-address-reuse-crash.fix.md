@@ -1,1 +1,1 @@
-Fix a crash when a new Worker Runtime reuses the memory address of a destroyed runtime and reads a stale retained value.
+Fix crashes and use-after-free errors when a Worklet Runtime is created at the memory address of a destroyed one: Worklets now identify runtimes by their React Native instance and runtime id instead of their address, so values cached for a destroyed runtime, Remote Functions hosted on it and Networking callbacks are never read or released through another runtime.
