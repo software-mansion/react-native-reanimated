@@ -6,11 +6,9 @@ import com.facebook.react.uimanager.events.RCTModernEventEmitter
 
 class CopiedEvent(
     event: Event<*>,
+    val resolvedEventName: String,
 ) {
     var targetTag: Int = 0
-        private set
-
-    var eventName: String = ""
         private set
 
     var payload: WritableMap? = null
@@ -30,7 +28,6 @@ class CopiedEvent(
                     category: Int,
                 ) {
                     this@CopiedEvent.targetTag = targetTag
-                    this@CopiedEvent.eventName = eventName
                     this@CopiedEvent.payload = params!!.copy()
                 }
             },

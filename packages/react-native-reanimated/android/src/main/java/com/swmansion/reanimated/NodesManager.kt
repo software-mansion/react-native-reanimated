@@ -185,25 +185,21 @@ class NodesManager(
             }
 
             val nativeProxy = mNativeProxy ?: return
+            val eventName = resolveCustomEventName(event.eventName)
+            // Building the payload costs more than asking the registry, so an event no worklet waits for stops here.
+            if (!nativeProxy.isAnyHandlerWaitingForEvent(eventName, event.viewTag)) {
+                return
+            }
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
-                // Serializing the payload costs more than asking the registry, so an event no worklet waits for stops here.
-                if (!nativeProxy.isAnyHandlerWaitingForEvent(resolveCustomEventName(event.eventName), event.viewTag)) {
-                    return
-                }
                 // Ensure draw-pass tracking is attached before event handling; the backend reads
                 // isInDrawPass during receiveEvent.
                 mDrawPassDetector.initialize()
-                handleEvent(event)
+                handleEvent(event, eventName)
                 performOperationsRespectingDrawPass()
             } else {
-                val eventName = resolveCustomEventName(event.eventName)
-                val viewTag = event.viewTag
-                val shouldSaveEvent = nativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag)
-                if (shouldSaveEvent) {
-                    mEventQueue.offer(CopiedEvent(event))
-                }
+                mEventQueue.offer(CopiedEvent(event, eventName))
                 startUpdatingOnAnimationFrame()
             }
         } finally {
@@ -213,12 +209,15 @@ class NodesManager(
         }
     }
 
-    private fun handleEvent(event: Event<*>) {
-        mCustomEventHandler?.let(event::dispatchModern)
+    private fun handleEvent(
+        event: Event<*>,
+        eventName: String,
+    ) {
+        mCustomEventHandler?.handle(event, eventName)
     }
 
     private fun handleEvent(copiedEvent: CopiedEvent) {
-        mCustomEventHandler?.handle(copiedEvent.eventName, copiedEvent.targetTag, copiedEvent.payload)
+        mCustomEventHandler?.handle(copiedEvent.resolvedEventName, copiedEvent.targetTag, copiedEvent.payload)
     }
 
     fun registerEventHandler(handler: EventHandler) {
