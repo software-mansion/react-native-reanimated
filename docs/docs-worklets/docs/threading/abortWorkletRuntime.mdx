@@ -44,7 +44,7 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) t
 - Passing an id that doesn't belong to any runtime throws.
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
-- A worklet that's already running finishes before the runtime stops.
+- A worklet that's already running finishes before the runtime stops. Work it schedules on its own runtime is dropped instead of throwing, and work it runs synchronously on it still runs.
 - The runtime's timers and in-flight network requests are cancelled.
 - The promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.

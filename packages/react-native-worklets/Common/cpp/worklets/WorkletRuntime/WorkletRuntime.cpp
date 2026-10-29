@@ -287,11 +287,10 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
           return;
         }
 
+        auto lock = strongThis->acquireRuntimeLock();
         if (strongThis->isAborted()) [[unlikely]] {
           return;
         }
-
-        auto lock = strongThis->acquireRuntimeLock();
         job(*strongThis);
       },
       abortToken());
@@ -347,21 +346,6 @@ void scheduleOnRuntime(
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->schedule(serializableWorklet);
 }
-
-#ifndef NDEBUG
-void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack) {
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      serializableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
-}
-#endif // NDEBUG
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);

@@ -495,12 +495,5 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
-#ifndef NDEBUG
-void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack);
-#endif // NDEBUG
 
 } // namespace worklets

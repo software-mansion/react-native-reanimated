@@ -124,6 +124,67 @@ describe('abortWorkletRuntime', () => {
     await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
   });
 
+  bundleModeTest(
+    'lets the running job run work synchronously on its own aborted runtime',
+    async () => {
+      // Arrange
+      const runtime = createWorkletRuntime({
+        name: 'abort-sync-self',
+        abortable: true,
+      });
+      const release = createSynchronizable(false);
+      const syncResult = createSynchronizable(0);
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        scheduleOnRN(onStarted);
+        while (!release.getBlocking()) {
+          // Wait until the test releases the job.
+        }
+        syncResult.setBlocking(
+          runOnRuntimeSync(runtime, () => {
+            'worklet';
+            return 42;
+          })
+        );
+      });
+
+      // Act
+      try {
+        await waitForNotification(STARTED_NOTIFICATION);
+        abortWorkletRuntime(runtime.runtimeId);
+      } finally {
+        release.setBlocking(true);
+      }
+      await wait(200);
+
+      // Assert
+      expect(syncResult.getBlocking()).toBe(42);
+    }
+  );
+
+  test('rejects runOnRuntimeAsync on an aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-async-after',
+      abortable: true,
+    });
+    abortWorkletRuntime(runtime.runtimeId);
+
+    // Act
+    const message = await runOnRuntimeAsync(runtime, () => {
+      'worklet';
+      return 1;
+    }).then(
+      () => 'resolved',
+      (error: Error) => error.message
+    );
+
+    // Assert
+    expect(message).toBe(
+      '[Worklets] Cannot schedule work on an aborted Worklet Runtime.'
+    );
+  });
+
   test('throws when running work synchronously on an aborted runtime', async () => {
     // Arrange
     const runtime = createWorkletRuntime({
