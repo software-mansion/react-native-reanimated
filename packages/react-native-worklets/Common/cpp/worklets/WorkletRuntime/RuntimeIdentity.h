@@ -33,6 +33,14 @@ class RuntimeIdentity {
     return runtimeId_ == RuntimeData::rnRuntimeId;
   }
 
+  /**
+   * Two identities match when their ids are equal and their owners share the
+   * same control block. `owner_before` orders weak pointers by control block,
+   * so "neither is before the other" means the same owner. Unlike comparing
+   * `lock().get()`, this works on expired owners and never matches two dead
+   * owners, and the control block cannot be reused while this weak pointer
+   * keeps it allocated.
+   */
   [[nodiscard]] bool isSameRuntime(const RuntimeIdentity &other) const noexcept {
     return runtimeId_ == other.runtimeId_ && !owner_.owner_before(other.owner_) && !other.owner_.owner_before(owner_);
   }
