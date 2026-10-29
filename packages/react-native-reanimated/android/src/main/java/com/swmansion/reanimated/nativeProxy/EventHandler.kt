@@ -4,7 +4,7 @@ import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
-import com.facebook.react.uimanager.events.RCTModernEventEmitter
+import com.swmansion.reanimated.forEachPayload
 
 @DoNotStrip
 class EventHandler {
@@ -25,22 +25,7 @@ class EventHandler {
         event: Event<*>,
         resolvedEventName: String,
     ) {
-        event.dispatchModern(
-            object : RCTModernEventEmitter {
-                @Suppress("OVERRIDE_DEPRECATION")
-                override fun receiveEvent(
-                    surfaceId: Int,
-                    targetTag: Int,
-                    eventName: String,
-                    canCoalesceEvent: Boolean,
-                    customCoalesceKey: Int,
-                    params: WritableMap?,
-                    category: Int,
-                ) {
-                    handle(resolvedEventName, targetTag, params)
-                }
-            },
-        )
+        event.forEachPayload { targetTag, payload -> handle(resolvedEventName, targetTag, payload) }
     }
 
     internal fun handle(
