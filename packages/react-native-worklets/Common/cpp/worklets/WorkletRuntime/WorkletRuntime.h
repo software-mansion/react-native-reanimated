@@ -17,11 +17,9 @@
 
 #include <atomic>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -347,9 +345,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       typename... TArgs>
     requires RuntimeJob<TCallable> || RuntimeCallable<TCallable>
   auto runSyncImpl(TCallable &&callable, TArgs &&...args) const -> decltype(auto) {
-    if (aborted_) [[unlikely]] {
-      throw std::runtime_error("[Worklets] Cannot run code on the aborted Worklet Runtime \"" + name_ + "\".");
-    }
     jsi::Runtime &rt = getJSIRuntime();
     if constexpr (std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>) {
       auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
@@ -489,6 +484,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
   std::atomic_bool aborted_{false};
+  std::weak_ptr<Networking> networking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

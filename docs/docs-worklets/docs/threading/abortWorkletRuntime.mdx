@@ -45,6 +45,7 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) 
 - Aborting a runtime that's already aborted does nothing.
 - After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
 - A worklet that's already running finishes before the runtime stops.
+- The runtime's timers and in-flight network requests are cancelled.
 - The promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
 - On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 

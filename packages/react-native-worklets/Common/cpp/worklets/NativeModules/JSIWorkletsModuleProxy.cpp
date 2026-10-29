@@ -129,6 +129,9 @@ jsi::Value runOnRuntimeSync(
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
+  }
   auto serializedResult = workletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(worklet, scheduleStack);
   return serializedResult->toJSValue(rt);
 }
@@ -138,6 +141,9 @@ runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const 
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
+  }
   auto serializedResult = workletRuntime->runSyncSerialized(worklet);
   return serializedResult->toJSValue(rt);
 }
@@ -641,6 +647,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be executed on a worklet runtime.");
+        if (workletRuntime->isAborted()) [[unlikely]] {
+          throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
+        }
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -724,6 +733,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+        if (workletRuntime->isAborted()) [[unlikely]] {
+          throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
+        }
         std::shared_ptr<void> dropGuard;
         if (at<4>(args).isObject()) {
           dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);

@@ -7,6 +7,7 @@ import {
   runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
   runOnUI,
+  runOnUIAsync,
   scheduleOnRN,
   scheduleOnRuntime,
   UIRuntimeId,
@@ -64,8 +65,11 @@ describe('abortWorkletRuntime', () => {
     await waitForNotification(STARTED_NOTIFICATION);
 
     // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    release.setBlocking(true);
+    try {
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
     await wait(200);
 
     // Assert
@@ -205,8 +209,11 @@ describe('abortWorkletRuntime', () => {
     await waitForNotification(STARTED_NOTIFICATION);
 
     // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    release.setBlocking(true);
+    try {
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
     const results = await Promise.all(
       [running, pending].map((promise) =>
         promise.then(
@@ -222,7 +229,7 @@ describe('abortWorkletRuntime', () => {
   });
 
   bundleModeTest(
-    'drops a runOnRuntimeAsync call that the aborted runtime queued on itself',
+    'does not crash when the aborted runtime queued a runOnRuntimeAsync call on itself',
     async () => {
       // Arrange
       const runtime = createWorkletRuntime({
@@ -244,14 +251,55 @@ describe('abortWorkletRuntime', () => {
       await waitForNotification(STARTED_NOTIFICATION);
 
       // Act
-      abortWorkletRuntime(runtime.runtimeId);
-      release.setBlocking(true);
+      try {
+        abortWorkletRuntime(runtime.runtimeId);
+      } finally {
+        release.setBlocking(true);
+      }
       await wait(200);
 
       // Assert
       await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow(
         'aborted'
       );
+    }
+  );
+
+  bundleModeTest(
+    'does not crash when a promise of the aborted runtime settles on another runtime',
+    async () => {
+      // Arrange
+      const runtime = createWorkletRuntime({
+        name: 'abort-ui-promise',
+        abortable: true,
+      });
+      const release = createSynchronizable(false);
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        runOnUIAsync(() => {
+          'worklet';
+          scheduleOnRN(onStarted);
+          while (!release.getBlocking()) {
+            // Wait until the test releases the job.
+          }
+          return 1;
+        }).catch(() => {});
+      });
+      await waitForNotification(STARTED_NOTIFICATION);
+
+      // Act
+      try {
+        abortWorkletRuntime(runtime.runtimeId);
+      } finally {
+        release.setBlocking(true);
+      }
+
+      // Assert
+      const value = await runOnUIAsync(() => {
+        'worklet';
+        return 42;
+      });
+      expect(value).toBe(42);
     }
   );
 
@@ -276,8 +324,11 @@ describe('abortWorkletRuntime', () => {
     await waitForNotification(STARTED_NOTIFICATION);
 
     // Act
-    abortWorkletRuntime(runtime.runtimeId);
-    release.setBlocking(true);
+    try {
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
     const message = await pending.then(
       () => 'resolved',
       (error: Error) => error.message

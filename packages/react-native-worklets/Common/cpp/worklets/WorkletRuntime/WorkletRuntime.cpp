@@ -119,6 +119,9 @@ void WorkletRuntime::abort() {
     queue_->abortPending(abortToken());
     queue_->stop();
   }
+  if (const auto networking = networking_.lock()) {
+    networking->abortAllForRuntime(runtimeId_);
+  }
 }
 
 void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWorkletsModuleProxy) {
@@ -175,6 +178,7 @@ void WorkletRuntime::bundleModeInit(
 
   if (networking && enableNetworking_) {
     NetworkingInstaller::install(rt, networking, runtimeId_);
+    networking_ = networking;
   }
 
   ScriptLoader::loadScript(rt, script, sourceUrl);
@@ -268,7 +272,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
   if (aborted_) [[unlikely]] {
-    throw std::runtime_error("[Worklets] Cannot schedule work on the aborted Worklet Runtime \"" + name_ + "\".");
+    return;
   }
 
   react_native_assert(
@@ -288,13 +292,7 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
         }
 
         auto lock = strongThis->acquireRuntimeLock();
-        try {
-          job(*strongThis);
-        } catch (...) {
-          if (!strongThis->isAborted()) {
-            throw;
-          }
-        }
+        job(*strongThis);
       },
       abortToken());
 }
@@ -348,6 +346,9 @@ void scheduleOnRuntime(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
+  }
   workletRuntime->schedule(serializableWorklet, std::move(dropGuard));
 }
 
@@ -363,6 +364,9 @@ void scheduleOnRuntime(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
+  }
   workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack, std::move(dropGuard));
 }
 #endif // NDEBUG
