@@ -6,7 +6,8 @@ import Animated, {
   useAnimatedRef,
   useSharedValue,
 } from 'react-native-reanimated';
-import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+import type * as ReanimatedCore from 'react-native-reanimated/lib/typescript/core';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import {
   describe,
@@ -19,10 +20,11 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-const LAST_OFFSET = 'UNTAGGED_SCROLL_LAST_OFFSET';
+// The package does not export these, and its sources do not type-check outside it.
+const { registerEventHandler, unregisterEventHandler } =
+  require('react-native-reanimated/src/core') as typeof ReanimatedCore;
 
-// The emitter tag the native registry reads as "any view".
-const WITHOUT_VIEW_TAG = -1;
+const LAST_OFFSET = 'UNTAGGED_SCROLL_LAST_OFFSET';
 
 const ITEM_SIZE = 100;
 const ITEM_COUNT = 10;
@@ -43,17 +45,11 @@ function Scenario() {
   registerValue(LAST_OFFSET, lastOffset);
 
   useEffect(() => {
-    const registrationId =
-      globalThis.__reanimatedModuleProxy.registerEventHandler(
-        createSerializable((_eventTimestamp: number, event: ScrollEvent) => {
-          'worklet';
-          lastOffset.value = event.contentOffset.x;
-        }),
-        'onScroll',
-        WITHOUT_VIEW_TAG
-      );
-    return () =>
-      globalThis.__reanimatedModuleProxy.unregisterEventHandler(registrationId);
+    const registrationId = registerEventHandler((event: ScrollEvent) => {
+      'worklet';
+      lastOffset.value = event.contentOffset.x;
+    }, 'onScroll');
+    return () => unregisterEventHandler(registrationId);
   }, [lastOffset]);
 
   return (
