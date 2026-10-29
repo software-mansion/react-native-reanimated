@@ -314,10 +314,11 @@ inline void registerCustomSerializable(
 
 std::shared_ptr<void> makePromiseDropGuard(
     jsi::Runtime &rt,
+    const WorkletRuntime &workletRuntime,
     const jsi::Value &resolveValue,
     const jsi::Value &rejectValue,
     const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  if (!rejectValue.isObject()) {
+  if (!workletRuntime.isAbortable()) {
     return nullptr;
   }
   return std::make_shared<PromiseDropGuard>(
@@ -697,7 +698,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "scheduleOnRuntime",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
-        auto dropGuard = makePromiseDropGuard(rt, at<3>(args), at<4>(args), runtimeManager);
+        std::shared_ptr<void> dropGuard;
+        if (at<4>(args).isObject()) {
+          dropGuard = makePromiseDropGuard(
+              rt, *extractWorkletRuntime(rt, at<0>(args)), at<3>(args), at<4>(args), runtimeManager);
+        }
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -722,7 +727,10 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
-        auto dropGuard = makePromiseDropGuard(rt, at<3>(args), at<4>(args), runtimeManager);
+        std::shared_ptr<void> dropGuard;
+        if (at<4>(args).isObject()) {
+          dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
+        }
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
