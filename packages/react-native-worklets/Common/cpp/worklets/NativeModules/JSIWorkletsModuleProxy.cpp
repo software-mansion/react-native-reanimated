@@ -321,7 +321,7 @@ std::shared_ptr<void> makePromiseDropGuard(
     const jsi::Value &resolveValue,
     const jsi::Value &rejectValue,
     const std::shared_ptr<RuntimeManager> &runtimeManager) {
-  if (!workletRuntime.isAbortable()) {
+  if (!workletRuntime.isAbortable() || !rejectValue.isObject()) {
     return nullptr;
   }
   return std::make_shared<PromiseDropGuard>(
@@ -710,10 +710,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
           throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
         }
-        std::shared_ptr<void> dropGuard;
-        if (at<4>(args).isObject()) {
-          dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
-        }
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -741,10 +738,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
           throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
         }
-        std::shared_ptr<void> dropGuard;
-        if (at<4>(args).isObject()) {
-          dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
-        }
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
