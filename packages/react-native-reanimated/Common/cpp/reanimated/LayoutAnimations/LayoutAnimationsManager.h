@@ -67,7 +67,7 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config,
-      bool runsCallback = true);
+      std::optional<Tag> clipOfTag = std::nullopt);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);

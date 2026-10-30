@@ -407,7 +407,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     values.setProperty(uiRuntime_, "windowWidth", window.width);
     values.setProperty(uiRuntime_, "windowHeight", window.height);
     layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime_, start.tag, start.type, values, start.config, start.runsCallback);
+        uiRuntime_, start.tag, start.type, values, start.config, start.clipOfTag);
   }
   if (!layoutAnimationOperations_.empty()) {
     requestLayoutAnimationFlush_(surfaceId_);

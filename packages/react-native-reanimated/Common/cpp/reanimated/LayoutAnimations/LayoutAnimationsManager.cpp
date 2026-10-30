@@ -100,7 +100,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const LayoutAnimationType type,
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
-    const bool runsCallback) {
+    const std::optional<Tag> clipOfTag) {
   react_native_assert(config && "layout animation config is null");
   if (!config) {
     return;
@@ -111,7 +111,12 @@ void LayoutAnimationsManager::startLayoutAnimation(
   jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
   startAnimationForTag.call(
-      rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt), jsi::Value(runsCallback));
+      rt,
+      jsi::Value(tag),
+      jsi::Value(static_cast<int>(type)),
+      values,
+      config->toJSValue(rt),
+      clipOfTag ? jsi::Value(*clipOfTag) : jsi::Value::undefined());
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {

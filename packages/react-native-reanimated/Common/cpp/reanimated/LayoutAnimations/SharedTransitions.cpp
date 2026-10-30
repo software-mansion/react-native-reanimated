@@ -600,7 +600,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         parentTag = run.clip->current.tag;
         clipBefore->tag = parentTag;
         clipAfter.tag = parentTag;
-        startClipTransition(parentTag, *clipBefore, clipAfter, config);
+        startClipTransition(parentTag, containerTag, *clipBefore, clipAfter, config);
       }
 
       startSharedTransition(containerTag, before, after, parentTag, config);
@@ -656,7 +656,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         return !endsTheSame(runAnimation(node).finalView, target);
       };
       if (clipAfter && needsRestart(run.clip, *clipAfter)) {
-        startClipTransition(clipAfter->tag, runAnimation(run.clip).currentView, *clipAfter, config);
+        startClipTransition(clipAfter->tag, containerTag, runAnimation(run.clip).currentView, *clipAfter, config);
       }
       if (needsRestart(run.container, after)) {
         startSharedTransition(

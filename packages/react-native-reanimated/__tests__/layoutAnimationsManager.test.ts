@@ -184,6 +184,60 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).toHaveBeenCalledWith(7, true);
   });
 
+  test('holds the callback of a container until its clip ends', () => {
+    const callback = jest.fn();
+    const finishedConfig = (): LayoutAnimation => ({
+      ...makeConfig([])(),
+      callback,
+    });
+
+    manager.start(
+      12,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      makePendingConfig(jest.fn()),
+      11
+    );
+    manager.start(
+      11,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      finishedConfig
+    );
+    expect(callback).not.toHaveBeenCalled();
+
+    manager.stop(12);
+    expect(callback).toHaveBeenCalledWith(false);
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  test('runs the callback of a container after its clip ended', () => {
+    const containerCallback = jest.fn();
+    const clipCallback = jest.fn();
+    const withCallback = (callback: jest.Mock) => (): LayoutAnimation => ({
+      ...makeConfig([])(),
+      callback,
+    });
+
+    manager.start(
+      14,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      withCallback(clipCallback),
+      13
+    );
+    manager.start(
+      13,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      withCallback(containerCallback)
+    );
+
+    expect(clipCallback).not.toHaveBeenCalled();
+    expect(containerCallback).toHaveBeenCalledWith(true);
+    expect(containerCallback).toHaveBeenCalledTimes(1);
+  });
+
   test('reports both completions when a tag restarts before a pull', () => {
     const config = makeConfig([]);
 

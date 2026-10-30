@@ -161,6 +161,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config) const;
   void startClipTransition(
       int tag,
+      Tag containerTag,
       const ShadowView &before,
       const ShadowView &after,
       const std::shared_ptr<Serializable> &config) const;

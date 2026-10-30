@@ -1325,9 +1325,9 @@ void LayoutAnimationsProxy::startSharedTransition(
   });
 }
 
-// The clip moves with the config of its shared view, whose animation alone reports the end of the transition.
 void LayoutAnimationsProxy::startClipTransition(
     const int tag,
+    const Tag containerTag,
     const ShadowView &before,
     const ShadowView &after,
     const std::shared_ptr<Serializable> &config) const {
@@ -1338,7 +1338,7 @@ void LayoutAnimationsProxy::startClipTransition(
       .after = after,
       .parentTag = surfaceId_,
       .config = config,
-      .runsCallback = false,
+      .clipOfTag = containerTag,
   });
 }
 
