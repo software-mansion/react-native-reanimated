@@ -222,4 +222,118 @@ describe('Layout Animations', () => {
       });
     });
   });
+
+  describe('CSS animations inside an exiting view', () => {
+    const ANIMATION_DURATION = 300;
+
+    // jsdom doesn't implement the Web Animations API. Like a browser, this fake starts
+    // a CSS animation over from 0 ms when its element moves to a new parent, and doesn't
+    // return an animation that has finished.
+    class FakeCSSAnimation {
+      effect = {
+        getComputedTiming: () => ({ endTime: ANIMATION_DURATION }),
+      };
+
+      constructor(
+        public animationName: string,
+        public currentTime: number
+      ) {}
+    }
+
+    const animations = new WeakMap<
+      Element,
+      { parent: Node | null; animation: FakeCSSAnimation }
+    >();
+
+    function getAnimations(this: Element) {
+      const tracked = animations.get(this);
+      if (!tracked) {
+        return [];
+      }
+      if (tracked.parent !== this.parentNode) {
+        tracked.parent = this.parentNode;
+        tracked.animation = new FakeCSSAnimation(
+          tracked.animation.animationName,
+          0
+        );
+      }
+      return tracked.animation.currentTime < ANIMATION_DURATION
+        ? [tracked.animation]
+        : [];
+    }
+
+    const renderAndHide = (animationTime: number) => {
+      const screen = originalRender(
+        <Example exiting={FadeOut} initialVisible />
+      );
+      const box = screen.getByTestId('box1');
+      const originalParent = box.parentNode;
+      animations.set(box, {
+        parent: originalParent,
+        animation: new FakeCSSAnimation('fade', animationTime),
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
+      });
+
+      // The exiting animation moves the box into a copy of the exiting view
+      expect(box.parentNode).not.toBe(originalParent);
+      return { box, originalParent };
+    };
+
+    // Reads the animation through `getAnimations()`, which restarts it if the box
+    // moved without the time being restored. Finished animations aren't returned,
+    // so the time comes from the tracked animation.
+    const getAnimationTime = (box: HTMLElement) => {
+      box.getAnimations();
+      return animations.get(box)?.animation.currentTime;
+    };
+
+    beforeAll(() => {
+      jest.useFakeTimers();
+      Object.defineProperty(globalThis, 'CSSAnimation', {
+        value: FakeCSSAnimation,
+        configurable: true,
+      });
+      Object.defineProperty(Element.prototype, 'getAnimations', {
+        value: getAnimations,
+        configurable: true,
+      });
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+      delete (globalThis as { CSSAnimation?: unknown }).CSSAnimation;
+      delete (Element.prototype as Partial<Element>).getAnimations;
+    });
+
+    test('keeps a running animation going from where it was', () => {
+      const { box } = renderAndHide(120);
+
+      expect(getAnimationTime(box)).toBe(120);
+    });
+
+    test("doesn't replay an animation that had finished", () => {
+      const { box } = renderAndHide(ANIMATION_DURATION);
+
+      expect(getAnimationTime(box)).toBe(ANIMATION_DURATION);
+    });
+
+    test("doesn't end the exiting animation when a child's animation ends", () => {
+      const { box, originalParent } = renderAndHide(120);
+      const exitingCopy = box.parentElement;
+
+      // Animation events bubble from the child to the copy of the exiting view
+      exitingCopy?.onanimationend?.call(exitingCopy, {
+        target: box,
+      } as unknown as AnimationEvent);
+      expect(box.parentNode).toBe(exitingCopy);
+
+      exitingCopy?.onanimationend?.call(exitingCopy, {
+        target: exitingCopy,
+      } as unknown as AnimationEvent);
+      expect(box.parentNode).toBe(originalParent);
+    });
+  });
 });
