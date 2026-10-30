@@ -52,5 +52,13 @@
       "RUNTIME_TEST_FLAG": true,
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true
     }
+  },
+  "codegenConfig": {
+    "name": "RuntimeTestObserverSpec",
+    "type": "modules",
+    "jsSrcsDir": "../common-app/runtime-tests/ReJest/native",
+    "android": {
+      "javaPackageName": "com.fabricexample"
+    }
   }
 }
