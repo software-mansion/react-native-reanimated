@@ -861,6 +861,11 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   ReanimatedSystraceSection s("handleSubtreeRemoval");
 #ifdef __APPLE__
   if (holdsSourceInModal(node, transaction)) {
+    std::unordered_set<Tag> heldTags;
+    collectSubtreeTags(node, heldTags);
+    for (const auto tag : heldTags) {
+      layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+    }
     node->setExitingState(COMPLETED);
     heldModals_.push_back({node, std::chrono::steady_clock::now() + std::chrono::milliseconds(34)});
     return;
