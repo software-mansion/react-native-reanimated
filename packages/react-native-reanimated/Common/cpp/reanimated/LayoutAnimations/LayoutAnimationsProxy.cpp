@@ -1168,13 +1168,14 @@ void LayoutAnimationsProxy::cleanupAnimations(
       if (!element.run) {
         continue;
       }
+      const auto tag = element.run->container->current.tag;
       // React deletes the views of a stopped surface in its last transaction, which has no mutations for containers.
       if (transaction.surfaceDropped) {
         transaction.containersToRemove.push_back(element.run->container);
         element.run.reset();
+        cancelLayoutAnimation(tag);
         continue;
       }
-      const auto tag = element.run->container->current.tag;
       if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
         continue;
       }
