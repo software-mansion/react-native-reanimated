@@ -122,7 +122,6 @@ function StyleScreens({
   sourceColor?: string;
 }) {
   const source = useTestRef('style-source');
-  const target = useTestRef('style-target');
   return (
     <View style={styles.container}>
       {!active && (
@@ -131,26 +130,39 @@ function StyleScreens({
             ref={source}
             sharedTransitionTag="style-copy"
             sharedTransitionStyle={transition}
-            style={{ width: 60, height: 60, backgroundColor: sourceColor }}
+            style={{
+              width: 60,
+              height: 60,
+              ...(sourceColor === undefined
+                ? {}
+                : { backgroundColor: sourceColor }),
+            }}
           />
         </SharedTransitionBoundary>
       )}
       {active && (
         <SharedTransitionBoundary isActive>
-          <Animated.View
-            ref={target}
-            sharedTransitionTag="style-copy"
-            sharedTransitionStyle={transition}
-            style={{
-              marginTop: 100,
-              width: 150,
-              height: 150,
-              backgroundColor: '#2277dd',
-            }}
-          />
+          <StyleTarget transition={transition} />
         </SharedTransitionBoundary>
       )}
     </View>
+  );
+}
+
+function StyleTarget({ transition }: { transition: SharedTransition }) {
+  const target = useTestRef('style-target');
+  return (
+    <Animated.View
+      ref={target}
+      sharedTransitionTag="style-copy"
+      sharedTransitionStyle={transition}
+      style={{
+        marginTop: 100,
+        width: 150,
+        height: 150,
+        backgroundColor: '#2277dd',
+      }}
+    />
   );
 }
 
