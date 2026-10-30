@@ -1,5 +1,6 @@
 package com.fabricexample
 
+import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -12,6 +13,26 @@ import java.util.Locale
 
 class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntimeTestObserverSpec(context) {
   override fun getName() = NAME
+
+  override fun emitScreenTransitionProgress(
+    tag: Double,
+    progress: Double,
+    closing: Boolean,
+    goingForward: Boolean,
+    promise: Promise
+  ) {
+    promise.reject("E_PLATFORM", "Screen progress tests require iOS")
+  }
+
+  override fun emitScreenGestureCancel(tag: Double, promise: Promise) {
+    promise.reject("E_PLATFORM", "Screen progress tests require iOS")
+  }
+
+  override fun observeParent(tag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      promise.resolve((mountedView(tag)?.parent as? View)?.id)
+    }
+  }
 
   override fun observeTextInput(tag: Double, promise: Promise) {
     UiThreadUtil.runOnUiThread {
@@ -32,6 +53,16 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
       ))
       promise.resolve(observation)
     }
+  }
+
+  private fun mountedView(tag: Double): View? {
+    val view =
+      try {
+        UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.FABRIC)?.resolveView(tag.toInt())
+      } catch (_: IllegalViewOperationException) {
+        null
+      }
+    return view?.takeIf { it.isAttachedToWindow }
   }
 
   companion object {

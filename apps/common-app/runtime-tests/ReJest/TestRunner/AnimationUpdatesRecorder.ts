@@ -65,11 +65,12 @@ export class AnimationUpdatesRecorder {
     }, maxWaitTime);
   }
 
-  public async mockAnimationTimer() {
+  public async mockAnimationTimer(autoAdvance = true) {
     await runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.framesCount = 0;
+      global.autoAdvanceAnimationTimer = autoAdvance;
 
       if (global.originalGetAnimationTimestamp !== undefined) {
         return;
@@ -108,11 +109,21 @@ export class AnimationUpdatesRecorder {
             callback(timestamp);
             return;
           }
-          global.mockedAnimationTimestamp += 16;
+          if (global.autoAdvanceAnimationTimer) {
+            global.mockedAnimationTimestamp += 16;
+          }
           global.framesCount = (global.framesCount ?? 0) + 1;
           callback(global.mockedAnimationTimestamp);
         });
       };
+    });
+  }
+
+  public async advanceAnimationTimer(milliseconds: number) {
+    await runOnUIBlocking(() => {
+      'worklet';
+      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
+      global.mockedAnimationTimestamp += milliseconds;
     });
   }
 
@@ -134,6 +145,7 @@ export class AnimationUpdatesRecorder {
         global.originalNativeRequestAnimationFrame = undefined;
       }
       global.mockedAnimationTimestamp = undefined;
+      global.autoAdvanceAnimationTimer = undefined;
       global.framesCount = undefined;
       Object.defineProperty(global, '__frameTimestamp', {
         configurable: true,
