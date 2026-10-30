@@ -1116,6 +1116,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    releaseSharedTransitionConfigs();
     sharedElements_.clear();
 #ifdef __APPLE__
     react_native_assert(!containerOverlay_ && "The last pull of a surface deletes its overlay");
