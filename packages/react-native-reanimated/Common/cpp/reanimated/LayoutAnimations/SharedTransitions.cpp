@@ -262,6 +262,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
         auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
         run.targetEndView = after;
+        restartContentFade(run);
 
         startProgressTransition(
             run.carrier->current.tag,
@@ -286,7 +287,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
         react_native_assert(false && "Shared transition animation not found");
         continue;
       }
-      const auto &layoutAnimation = layoutAnimationIt->second;
+      auto &layoutAnimation = layoutAnimationIt->second;
+      if (const auto &contentFade = element.run->contentFade) {
+        const auto &[from, to] = contentFade->range;
+        layoutAnimation.contentOpacity = from + transition_->progress * (to - from);
+      }
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
       auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
@@ -326,7 +331,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         continue;
       }
       sources.push_back({sharedTag, element.run->source});
-      finishSharedTransition(sharedTag, element, transaction, propsParserContext);
+      finishSharedTransition(
+          sharedTag, element, transaction, propsParserContext, transition_->state == TransitionState::END);
     }
     if (transition_->state == TransitionState::END) {
       react_native_assert(!uncommittedScreenPop_ && "Previous screen pop not settled");
@@ -405,6 +411,10 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
+    if (const auto fadeIn = layoutAnimationsManager_->getSharedTransitionContentFadeIn(before.tag)) {
+      const double startOpacity = carrier == afterNode ? 0 : 1;
+      run->contentFade = ContentFade{.fadeIn = fadeIn, .range = {startOpacity, startOpacity}};
+    }
     detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
   }
   run->source = nodes[BEFORE];
@@ -587,7 +597,7 @@ bool LayoutAnimationsProxy::canDetachBeforeScreenSnapshot(
 
 void LayoutAnimationsProxy::attachCarrier(
     const SharedTag &sharedTag,
-    const SharedTransitionRun &run,
+    SharedTransitionRun &run,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
   const auto node = run.carrier;
@@ -612,6 +622,9 @@ void LayoutAnimationsProxy::attachCarrier(
   mutations.push_back(createPropsUpdate(mounted, homeView, parentTag, propsParserContext));
   if (!node->isExiting()) {
     hideInSharedElement(sharedTag, node);
+  }
+  if (run.contentFade) {
+    restoreFadedChildren(*run.contentFade, {}, hiddenViewTags(), mutations, propsParserContext);
   }
 }
 
@@ -753,7 +766,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           run.carrierStartView,
           asCarrierView(after, run.carrier, propsParserContext),
           ownCarrierView(after, run.carrier, propsParserContext).props,
-          config);
+          config,
+          restartContentFade(run));
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -790,7 +804,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       run.targetEndView = after;
       if (hasPendingLayoutAnimation(carrierTag)) {
         updateLayoutAnimationTarget(
-            carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
+            carrierTag,
+            carrierAfter,
+            ownCarrierView(after, run.carrier, propsParserContext).props,
+            config,
+            restartContentFade(run));
         continue;
       }
       if (targetChanged) {
@@ -799,7 +817,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierAnimation(run).currentView,
             carrierAfter,
             ownCarrierView(after, run.carrier, propsParserContext).props,
-            config);
+            config,
+            restartContentFade(run));
       }
     }
   }
@@ -1006,7 +1025,7 @@ void LayoutAnimationsProxy::finishEndedSharedTransitions(
       preservedTags.insert(tag);
       continue;
     }
-    finishSharedTransition(sharedTag, element, transaction, propsParserContext);
+    finishSharedTransition(sharedTag, element, transaction, propsParserContext, true);
   }
 }
 
@@ -1039,12 +1058,175 @@ void LayoutAnimationsProxy::finishSharedTransition(
     const SharedTag &sharedTag,
     SharedElement &element,
     TransactionMeta &transaction,
-    const PropsParserContext &propsParserContext) const {
-  const auto &run = *element.run;
+    const PropsParserContext &propsParserContext,
+    const bool landed) const {
+  auto &run = *element.run;
+  const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
   // A gesture-driven run leaves its source to the screen pop.
   transaction.restoreRequests.push_back({sharedTag, run.target, run.gestureDriven ? nullptr : run.source});
   attachCarrier(sharedTag, run, transaction.filteredMutations, propsParserContext);
+  if (landed && !targetGone && run.contentFade && run.carrier != run.target) {
+    fadeInTargetContent(run, transaction, propsParserContext);
+  }
   element.run.reset();
+}
+
+// MARK: Content Fade
+
+// The children fade toward the endpoint that the carrier shows: in when the carrier is the target, out otherwise.
+std::optional<ContentOpacityRange> LayoutAnimationsProxy::restartContentFade(SharedTransitionRun &run) const {
+  if (!run.contentFade) {
+    return std::nullopt;
+  }
+  run.contentFade->range = {contentOpacityOnScreen(run), run.carrier == run.target ? 1.0 : 0.0};
+  return run.contentFade->range;
+}
+
+double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &run) const {
+  const auto tag = run.carrier->current.tag;
+  std::optional<double> animated;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animated = it->second.contentOpacity;
+  } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    animated = it->second.animation.contentOpacity;
+  }
+  return animated.value_or(run.contentFade->range.from);
+}
+
+// Nested carriers, views with their own shared tag and views that a shared tag hides keep their own opacity.
+std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingChildren(
+    const std::shared_ptr<LightNode> &node,
+    const std::unordered_set<Tag> &hiddenTags) const {
+  std::vector<std::shared_ptr<LightNode>> children;
+  for (const auto &child : node->children) {
+    if (isLightNodeMapped(child) && !child->isDetached && !child->isExiting() && isViewKind(child->current) &&
+        !findSharedTag(child->current) && !hiddenTags.contains(child->current.tag)) {
+      children.push_back(child);
+    }
+  }
+  return children;
+}
+
+// A child with its own layout animation keeps the opacity of that animation. Other children keep their React
+// opacity, also when the view has the mounted props.
+ShadowView LayoutAnimationsProxy::withContentOpacity(
+    const std::shared_ptr<LightNode> &child,
+    const ShadowView &view,
+    const double contentOpacity,
+    const PropsParserContext &propsParserContext) const {
+  const auto tag = child->current.tag;
+  const bool animated =
+      hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag) || completedAnimations_.contains(tag);
+  if (!animated) {
+    resolveLightNodeProps(child);
+  }
+  const auto ownOpacity = getViewProps(animated ? view : child->current).opacity;
+  return cloneViewWithOpacity(view, ownOpacity * contentOpacity, propsParserContext);
+}
+
+void LayoutAnimationsProxy::applyContentOpacity(
+    const std::shared_ptr<LightNode> &child,
+    const double fromContentOpacity,
+    const double toContentOpacity,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto tag = child->current.tag;
+  auto mountedContentOpacity = fromContentOpacity;
+  for (auto &mutation : mutations) {
+    if ((mutation.type != ShadowViewMutation::Update && mutation.type != ShadowViewMutation::Insert) ||
+        mutation.newChildShadowView.tag != tag) {
+      continue;
+    }
+    if (mutation.type == ShadowViewMutation::Update) {
+      const auto &oldView = mutation.oldChildShadowView;
+      mutation.oldChildShadowView =
+          cloneViewWithOpacity(oldView, getViewProps(oldView).opacity * mountedContentOpacity, propsParserContext);
+    }
+    mutation.newChildShadowView =
+        withContentOpacity(child, mutation.newChildShadowView, toContentOpacity, propsParserContext);
+    // Android does not apply the props of an Insert to a view that exists or that a Create made.
+    if (mutation.type == ShadowViewMutation::Update) {
+      mountedContentOpacity = toContentOpacity;
+    }
+  }
+  if (mountedContentOpacity == toContentOpacity) {
+    return;
+  }
+  const auto &view = mountedView(child);
+  const auto parent = child->parent.lock();
+  mutations.push_back(createPropsUpdate(
+      withContentOpacity(child, view, fromContentOpacity, propsParserContext),
+      withContentOpacity(child, view, toContentOpacity, propsParserContext),
+      parent ? parent->current.tag : surfaceId_,
+      propsParserContext));
+}
+
+// Runs after all other mutations of the pull, so that React updates of the children keep the fade.
+// All restores come first, so that a child that moves to another carrier gets the fade of that carrier.
+void LayoutAnimationsProxy::composeCarrierContent(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext) const {
+  std::vector<std::pair<SharedTransitionRun *, std::vector<std::shared_ptr<LightNode>>>> fadingRuns;
+  std::optional<std::unordered_set<Tag>> hiddenTags;
+  for (auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->contentFade) {
+      continue;
+    }
+    if (!hiddenTags) {
+      hiddenTags = hiddenViewTags();
+    }
+    auto children = fadingChildren(element.run->carrier, *hiddenTags);
+    restoreFadedChildren(*element.run->contentFade, children, *hiddenTags, filteredMutations, propsParserContext);
+    fadingRuns.emplace_back(&*element.run, std::move(children));
+  }
+  for (const auto &[run, children] : fadingRuns) {
+    auto &contentFade = *run->contentFade;
+    const auto opacity = contentOpacityOnScreen(*run);
+    for (const auto &child : children) {
+      const auto tag = child->current.tag;
+      const auto shownOpacity = contentFade.fadedChildren.contains(tag) ? contentFade.mountedOpacity : 1.0;
+      applyContentOpacity(child, shownOpacity, opacity, filteredMutations, propsParserContext);
+      contentFade.fadedChildren[tag] = child;
+    }
+    contentFade.mountedOpacity = opacity;
+  }
+}
+
+// A faded child that is not in keptChildren shows its own opacity again.
+void LayoutAnimationsProxy::restoreFadedChildren(
+    ContentFade &contentFade,
+    const std::vector<std::shared_ptr<LightNode>> &keptChildren,
+    const std::unordered_set<Tag> &hiddenTags,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  std::erase_if(contentFade.fadedChildren, [&](const auto &entry) {
+    const auto &[tag, child] = entry;
+    if (std::ranges::find(keptChildren, child) != keptChildren.end()) {
+      return false;
+    }
+    if (isLightNodeMapped(child) && !hiddenTags.contains(tag)) {
+      applyContentOpacity(child, contentFade.mountedOpacity, 1, mutations, propsParserContext);
+    }
+    return true;
+  });
+}
+
+// The target shows its children at opacity 0 when it lands, and they fade in with the fade-in config.
+void LayoutAnimationsProxy::fadeInTargetContent(
+    const SharedTransitionRun &run,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  for (const auto &child : fadingChildren(run.target, hiddenViewTags())) {
+    const auto tag = child->current.tag;
+    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+      continue;
+    }
+    const auto &view = mountedView(child);
+    transaction.filteredMutations.push_back(createPropsUpdate(
+        view, cloneViewWithOpacity(view, 0, propsParserContext), run.target->current.tag, propsParserContext));
+    startEnteringAnimation(child, run.contentFade->fadeIn);
+  }
+  schedulePullOnNextFrame();
 }
 
 bool LayoutAnimationsProxy::isSharedCarrier(const Tag tag) const {

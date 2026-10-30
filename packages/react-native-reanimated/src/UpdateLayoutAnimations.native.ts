@@ -2,6 +2,7 @@
 import { createSerializable } from 'react-native-worklets';
 
 import type {
+  EntryExitAnimationFunction,
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -60,14 +61,25 @@ export const updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
-) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>
+  sharedTransitionTag?: string,
+  sharedTransitionContentFadeIn?: EntryExitAnimationFunction
+) => void = (
+  viewTag,
+  type,
+  config,
+  isUnmounting,
+  sharedTransitionTag,
+  sharedTransitionContentFadeIn
+) =>
   updateLayoutAnimationsManager.update(
     {
       viewTag,
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionContentFadeIn: sharedTransitionContentFadeIn
+        ? createSerializable(sharedTransitionContentFadeIn)
+        : undefined,
     },
     isUnmounting
   );

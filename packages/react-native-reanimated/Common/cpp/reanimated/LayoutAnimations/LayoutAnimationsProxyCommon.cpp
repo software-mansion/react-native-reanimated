@@ -8,6 +8,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -19,9 +20,26 @@
 namespace reanimated {
 
 namespace {
+constexpr auto kContentOpacity = "contentOpacity";
+
 ShadowView withProps(ShadowView view, const Props::Shared &props) {
   view.props = props;
   return view;
+}
+
+jsi::Object withoutProperty(jsi::Runtime &runtime, const jsi::Object &object, const std::string &excluded) {
+  jsi::Object copy(runtime);
+  const auto names = object.getPropertyNames(runtime);
+  for (size_t i = 0; i < names.size(runtime); i++) {
+    const auto name = names.getValueAtIndex(runtime, i).getString(runtime);
+    if (name.utf8(runtime) != excluded) {
+      copy.setProperty(
+          runtime,
+          jsi::PropNameID::forString(runtime, name),
+          object.getProperty(runtime, jsi::PropNameID::forString(runtime, name)));
+    }
+  }
+  return copy;
 }
 } // namespace
 
@@ -89,8 +107,14 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
 
   auto &layoutAnimation = layoutAnimationIt->second;
   const bool animatesOpacity = newStyle.hasProperty(uiRuntime_, "opacity");
+  const bool animatesContentOpacity = newStyle.hasProperty(uiRuntime_, kContentOpacity);
+  if (animatesContentOpacity) {
+    layoutAnimation.contentOpacity = std::clamp(newStyle.getProperty(uiRuntime_, kContentOpacity).asNumber(), 0.0, 1.0);
+  }
+  const auto viewStyle = animatesContentOpacity ? withoutProperty(uiRuntime_, newStyle, kContentOpacity)
+                                                : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
 
-  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, viewStyle));
   if (layoutAnimation.opacity && !animatesOpacity) {
     auto props = (folly::dynamic)*rawProps;
     props["opacity"] = *layoutAnimation.opacity;
@@ -103,7 +127,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, frameProps, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), animatesOpacity});
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, viewStyle), animatesOpacity});
 
   return surfaceId_;
 }
@@ -405,6 +429,12 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       auto propsDiffer = PropsDiffer(uiRuntime_, start.before, start.after);
       values = propsDiffer.computeDiff(uiRuntime_);
+      if (start.contentOpacity) {
+        values.getPropertyAsObject(uiRuntime_, "source")
+            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->from);
+        values.getPropertyAsObject(uiRuntime_, "target")
+            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->to);
+      }
     } else {
       const Snapshot current(start.before, window);
       const Snapshot target(start.after, window);
@@ -415,6 +445,9 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
         values.setProperty(uiRuntime_, "currentGlobalOriginY", current.y);
         values.setProperty(uiRuntime_, "currentWidth", current.width);
         values.setProperty(uiRuntime_, "currentHeight", current.height);
+      }
+      if (start.type == LayoutAnimationType::ENTERING && start.opacity) {
+        values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
       }
       if (start.type != LayoutAnimationType::EXITING) {
         values.setProperty(uiRuntime_, "targetOriginX", target.x);
@@ -498,7 +531,8 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const Tag tag,
     const ShadowView &finalView,
     const Props::Shared &frameProps,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const std::optional<ContentOpacityRange> contentOpacity) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
     if (pendingIt->second.type == LayoutAnimationType::PROGRESS) {
@@ -511,6 +545,9 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
       managedStart->frameProps = frameProps;
       if (config) {
         managedStart->config = config;
+      }
+      if (contentOpacity) {
+        managedStart->contentOpacity = contentOpacity;
       }
       return;
     }
