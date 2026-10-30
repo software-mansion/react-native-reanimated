@@ -71,7 +71,8 @@ void collectSubtreeTags(const std::shared_ptr<LightNode> &node, std::unordered_s
 
 // Every exiting ancestor that the removals leave without children.
 void collectDroppedAncestors(const std::shared_ptr<LightNode> &node, std::unordered_set<Tag> &removals) {
-  for (auto ancestor = node->parent.lock(); ancestor && ancestor->isExiting() && ancestor->state != ANIMATING;
+  for (auto ancestor = node->parent.lock();
+       ancestor && ancestor->isExiting() && ancestor->state != ANIMATING && !ancestor->isRetained;
        ancestor = ancestor->parent.lock()) {
     const auto tag = ancestor->current.tag;
     const auto keepsAChild = std::ranges::any_of(
@@ -211,6 +212,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
   reconcileContradictedRemovals(mutations, transaction, propsParserContext);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    const bool deletesViews = std::ranges::any_of(
+        mutations, [](const auto &mutation) { return mutation.type == ShadowViewMutation::Delete; });
+    if (deletesViews && topScreen_) {
+      collectSourceCandidates(topScreen_, transaction);
+    }
+  }
 
   if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!mutations.empty()) {
@@ -259,6 +267,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    flushSubtreeRemovals(transaction);
+    scheduleTransitionLifecycleCleanup();
+    retireOrphanedSharedTransitions();
     holdTargetEntering(transaction, propsParserContext);
   }
   for (const auto &[node, config] : transaction.entering) {
@@ -362,7 +373,7 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     }
     const auto &node = it->second;
     const auto parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
+    react_native_assert((parent || node->isRetained) && "Parent node is nullptr");
     recreatedTags.insert(tag);
     const bool isDetachedLiveNode = node->state == LIVE && node->isDetached;
     if (isDetachedLiveNode) {
@@ -373,7 +384,8 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
 #ifdef ANDROID
     recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
 #endif
-    auto update = ShadowViewMutation::UpdateMutation(mounted, recreated, parent->current.tag);
+    auto update =
+        ShadowViewMutation::UpdateMutation(mounted, recreated, node->isDetached ? surfaceId_ : parent->current.tag);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
@@ -538,7 +550,15 @@ void LayoutAnimationsProxy::updateLightTree(
         if (removedSubtreeRoots.erase(tag)) {
           react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
           const auto node = it->second;
-          handleSubtreeRemoval(node, transaction);
+          if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+            if (!transaction.surfaceDropped && defersSubtreeRemoval(node, transaction)) {
+              transaction.removedSubtrees.push_back(node);
+            } else {
+              handleSubtreeRemoval(node, transaction);
+            }
+          } else {
+            handleSubtreeRemoval(node, transaction);
+          }
         }
         staleSynchronousProps_.forget(tag);
         break;
@@ -864,6 +884,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    retainRemovedCarriers(node, transaction);
+    if (node->isRetained) {
+      return;
+    }
+  }
   const bool defersTeardown = holdsSnapshottedScreen(node);
   const SubtreeRemovalConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
@@ -878,7 +904,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
   for (const auto &root : removalRoots) {
     collectSubtreeTags(root, removals);
   }
-  attachRetainedCarriers(node, removals, transaction);
   for (const auto &root : removalRoots) {
     const auto parent = root->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
@@ -918,7 +943,7 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
   for (const auto &[tag, completedAnimation] : completedAnimations_) {
     const auto nodeIt = lightNodes_.find(tag);
     if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
-        nodeIt->second->state != COMPLETED) {
+        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
       continue;
     }
     finishedExits.push_back(nodeIt->second);
@@ -932,8 +957,8 @@ void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, Sh
   for (const auto tag : removals) {
     const auto &node = lightNodes_.at(tag);
     const auto parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-    if (!removals.contains(parent->current.tag)) {
+    react_native_assert((parent || node->isRetained) && "Parent node is nullptr");
+    if (!parent || !removals.contains(parent->current.tag)) {
       roots.push_back(node);
     }
   }
@@ -989,11 +1014,21 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     }
 #endif
 
+    if (isRetiringContent(tag)) {
+      continue;
+    }
     auto layoutAnimationIt = layoutAnimations_.find(tag);
     auto completedAnimationIt = completedAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() &&
-        (completedAnimationIt == completedAnimations_.end() || completedAnimationIt->second.shouldRemove)) {
-      continue;
+    if (layoutAnimationIt == layoutAnimations_.end()) {
+      if (completedAnimationIt == completedAnimations_.end()) {
+        continue;
+      }
+      if (completedAnimationIt->second.shouldRemove) {
+        const auto node = lightNodes_.find(tag);
+        if (node == lightNodes_.end() || !isRetainedContent(node->second)) {
+          continue;
+        }
+      }
     }
 
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
@@ -1103,6 +1138,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedElements_.clear();
+    retiringSharedTransitions_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);
     }
@@ -1174,6 +1210,21 @@ void LayoutAnimationsProxy::cleanupAnimations(
   }
 #endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    finishRetiringSharedTransitions(transaction, propsParserContext, flushStructuralMutations);
+    if (!detachedCarriers_.empty()) {
+      for (const auto &[tag, _] : completedAnimations_) {
+        const auto node = lightNodes_.find(tag);
+        if (node == lightNodes_.end()) {
+          continue;
+        }
+        const auto carrier = detachedCarrierOf(node->second);
+        if (carrier &&
+            (retiringSharedTransitions_.contains(carrier->current.tag) ||
+             hasUnqueuedCarrierFrame(carrier->current.tag))) {
+          preservedTags.insert(tag);
+        }
+      }
+    }
     finishEndedSharedTransitions(transaction, propsParserContext, flushStructuralMutations, preservedTags);
     queuePendingRestores(transaction);
     cleanupSharedTransitions(transaction, propsParserContext);
@@ -1231,11 +1282,18 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (carrierPullDeferred_ && unqueuedCarrierFrames_.empty()) {
     return true;
   }
+  if (std::ranges::any_of(retiringSharedTransitions_, [this](const auto &entry) {
+        return entry.second.element.run && !hasUnqueuedCarrierFrame(entry.first);
+      })) {
+    return true;
+  }
   const auto coveringViews = viewsHiddenByContinuingRuns();
   return std::ranges::any_of(completedAnimations_, [&](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
-    return !hasPendingLayoutAnimation(tag) &&
-        (completedAnimation.shouldRemove || isCarrierOfUncoveredRun(tag, coveringViews));
+    const auto node = lightNodes_.find(tag);
+    const bool removesContent =
+        completedAnimation.shouldRemove && (node == lightNodes_.end() || !isRetainedContent(node->second));
+    return !hasPendingLayoutAnimation(tag) && (removesContent || isCarrierOfUncoveredRun(tag, coveringViews));
   });
 }
 
@@ -1292,15 +1350,23 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // would move the attached view. The carrier stays detached until the UI thread runs a job that
 // arrives from the JS thread, because that job runs after the frames are in the queue.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
-  if (isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
+  if (detachedCarriers_.empty() || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   std::vector<Tag> tags;
   for (const auto &mutation : mutations) {
     const auto tag = mutation.newChildShadowView.tag;
-    if (mutation.type == ShadowViewMutation::Update && isSharedCarrier(tag)) {
-      tags.push_back(tag);
-      unqueuedCarrierFrames_[tag]++;
+    if (mutation.type != ShadowViewMutation::Update) {
+      continue;
+    }
+    const auto node = lightNodes_.find(tag);
+    if (node == lightNodes_.end()) {
+      continue;
+    }
+    if (const auto carrier = detachedCarrierOf(node->second)) {
+      const auto carrierTag = carrier->current.tag;
+      tags.push_back(carrierTag);
+      unqueuedCarrierFrames_[carrierTag]++;
     }
   }
   if (tags.empty()) {
