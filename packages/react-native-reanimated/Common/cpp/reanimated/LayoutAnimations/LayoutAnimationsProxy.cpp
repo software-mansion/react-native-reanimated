@@ -916,9 +916,13 @@ bool LayoutAnimationsProxy::holdsSourceInModal(
     const TransactionMeta &transaction) const {
   return std::ranges::any_of(transaction.transitionMap, [&](const auto &entry) {
     bool insideModal = false;
-    for (auto current = entry.second.nodes[BEFORE]; current; current = current->parent.lock()) {
-      insideModal = insideModal || !strcmp(current->current.componentName, "ModalHostView");
-      if (current == node) {
+    for (const auto &ancestor : entry.second.ancestors[BEFORE]) {
+      const auto ancestorIt = lightNodes_.find(ancestor.tag);
+      if (ancestorIt == lightNodes_.end()) {
+        return false;
+      }
+      insideModal = insideModal || !strcmp(ancestorIt->second->current.componentName, "ModalHostView");
+      if (ancestorIt->second == node) {
         return insideModal;
       }
     }
