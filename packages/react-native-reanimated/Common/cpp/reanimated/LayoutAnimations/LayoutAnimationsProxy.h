@@ -302,7 +302,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const Transition &transition,
       BeforeOrAfter index,
       const PropsParserContext &propsParserContext) const;
-  std::vector<std::shared_ptr<LightNode>> runNodes(const SharedTransitionRun &run) const;
   bool usesClip(const SharedTag &sharedTag, Transition &transition) const;
   const react::Rect &windowFrame() const;
   bool isRunAnimating(const SharedTransitionRun &run) const;

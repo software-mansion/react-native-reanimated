@@ -245,7 +245,10 @@ void LayoutAnimationsProxy::handleProgressTransition(
       if (!element.run || !element.run->gestureDriven) {
         continue;
       }
-      for (const auto &node : runNodes(*element.run)) {
+      for (const auto &node : {element.run->clip, element.run->container}) {
+        if (!node) {
+          continue;
+        }
         const auto tag = node->current.tag;
         if (hasPendingLayoutAnimation(tag)) {
           continue;
@@ -353,8 +356,10 @@ void LayoutAnimationsProxy::applyAncestorEffects(
     const PropsParserContext &propsParserContext) const {
   const int indexNum = static_cast<int>(index);
   overrideTransform(shadowView, transition.transform[indexNum], propsParserContext);
-  shadowView = cloneViewWithOpacity(
-      shadowView, getViewProps(shadowView).opacity * transition.ancestorOpacity[indexNum], propsParserContext);
+  if (const auto ancestorOpacity = transition.ancestorOpacity[indexNum]; ancestorOpacity != 1) {
+    shadowView =
+        cloneViewWithOpacity(shadowView, getViewProps(shadowView).opacity * ancestorOpacity, propsParserContext);
+  }
   shadowView.layoutMetrics.frame.origin -= transition.clip[indexNum].frame.origin;
 }
 
@@ -414,13 +419,6 @@ ShadowView LayoutAnimationsProxy::createClipView(
   return clipView;
 }
 
-std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::runNodes(const SharedTransitionRun &run) const {
-  if (run.clip) {
-    return {run.container, run.clip};
-  }
-  return {run.container};
-}
-
 // A run gets a clip only when it starts clipped on a side. A run that continues without a clip ignores the clipping
 // that appears later, like before clipping was supported.
 bool LayoutAnimationsProxy::usesClip(const SharedTag &sharedTag, Transition &transition) const {
@@ -441,10 +439,11 @@ const react::Rect &LayoutAnimationsProxy::windowFrame() const {
 }
 
 bool LayoutAnimationsProxy::isRunAnimating(const SharedTransitionRun &run) const {
-  return std::ranges::any_of(runNodes(run), [this](const auto &node) {
+  const auto isAnimating = [this](const std::shared_ptr<LightNode> &node) {
     const auto tag = node->current.tag;
     return hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
-  });
+  };
+  return isAnimating(run.container) || (run.clip && isAnimating(run.clip));
 }
 
 // The run keeps the record of an animation that ended until the run ends.
