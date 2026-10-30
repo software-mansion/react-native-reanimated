@@ -68,9 +68,7 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
       // Do nothing.
     } else {
-      // Deferred, because an inline run on the UI thread would drain the UI
-      // microtask queue synchronously, in the middle of the calling JS.
-      workletRuntime->scheduleDeferred([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+      workletRuntime->schedule([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
         resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
       });
     }

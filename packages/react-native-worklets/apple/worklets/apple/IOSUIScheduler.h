@@ -9,7 +9,6 @@ using namespace worklets;
 class IOSUIScheduler : public UIScheduler, public std::enable_shared_from_this<IOSUIScheduler> {
  public:
   void scheduleOnUI(std::function<void()> job) override;
-  void deferOnUI(std::function<void()> job) override;
 
  protected:
   bool queryIsOnUIThread() const override;

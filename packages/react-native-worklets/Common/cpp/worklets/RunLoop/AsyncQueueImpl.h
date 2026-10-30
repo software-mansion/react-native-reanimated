@@ -51,8 +51,6 @@ class AsyncQueueUI : public AsyncQueue {
 
   void push(std::function<void()> &&job) override;
 
-  void pushDeferred(std::function<void()> &&job, AbortToken abortToken) override;
-
  private:
   std::shared_ptr<UIScheduler> uiScheduler_;
 };

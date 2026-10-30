@@ -11,7 +11,6 @@ namespace worklets {
 class UIScheduler {
  public:
   virtual void scheduleOnUI(std::function<void()> job);
-  virtual void deferOnUI(std::function<void()> job);
   virtual void triggerUI();
   bool isOnUIThread() const;
   virtual ~UIScheduler() = default;

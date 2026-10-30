@@ -20,12 +20,7 @@ void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
     return;
   }
 
-  deferOnUI(std::move(job));
-}
-
-void IOSUIScheduler::deferOnUI(std::function<void()> job)
-{
-  UIScheduler::deferOnUI(std::move(job));
+  UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
     dispatch_async(dispatch_get_main_queue(), [weakThis = weak_from_this()] {

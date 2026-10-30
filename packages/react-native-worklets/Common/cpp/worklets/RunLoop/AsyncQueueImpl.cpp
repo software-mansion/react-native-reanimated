@@ -119,8 +119,4 @@ void AsyncQueueUI::push(std::function<void()> &&job) {
   uiScheduler_->scheduleOnUI(std::move(job));
 }
 
-void AsyncQueueUI::pushDeferred(std::function<void()> &&job, AbortToken /* abortToken */) {
-  uiScheduler_->deferOnUI(std::move(job));
-}
-
 } // namespace worklets
