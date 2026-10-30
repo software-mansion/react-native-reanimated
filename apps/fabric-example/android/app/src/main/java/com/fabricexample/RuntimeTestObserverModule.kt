@@ -15,6 +15,26 @@ import java.util.Locale
 class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntimeTestObserverSpec(context) {
   override fun getName() = NAME
 
+  override fun emitScreenTransitionProgress(
+    tag: Double,
+    progress: Double,
+    closing: Boolean,
+    goingForward: Boolean,
+    promise: Promise
+  ) {
+    promise.reject("E_PLATFORM", "Screen progress tests require iOS")
+  }
+
+  override fun emitScreenGestureCancel(tag: Double, promise: Promise) {
+    promise.reject("E_PLATFORM", "Screen progress tests require iOS")
+  }
+
+  override fun observeParent(tag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      promise.resolve((mountedView(tag)?.parent as? View)?.id)
+    }
+  }
+
   override fun observeTransform(tag: Double, promise: Promise) {
     UiThreadUtil.runOnUiThread {
       val view = mountedView(tag)

@@ -9,6 +9,9 @@ import Animated, {
 import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
+  mockAnimationTimer,
+  waitForFrames,
   callTracker,
   callTrackerFn,
   clearRenderOutput,
@@ -31,6 +34,7 @@ import {
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
+import { runOnUIBlocking } from '../../ReJest/utils/runOnUIBlocking';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
 const AnimatedComponent = () => {
@@ -208,6 +212,28 @@ describe('Wardrobe with drawers', () => {
 });
 
 describe('Tests of Test Framework', () => {
+  test('changes clock mode when the animation timer is mocked again', async () => {
+    const readClock = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        return global.mockedAnimationTimestamp;
+      });
+    await mockAnimationTimer();
+    await waitForFrames(3);
+    expect((await readClock())! > 0).toBe(true);
+    await mockAnimationTimer(false);
+    await waitForFrames(3);
+    expect(await readClock()).toBe(0);
+    await advanceAnimationTimer(100);
+    expect(await readClock()).toBe(100);
+    await mockAnimationTimer(true);
+    await waitForFrames(3);
+    expect((await readClock())! > 0).toBe(true);
+    await mockAnimationTimer(false);
+    await waitForFrames(3);
+    expect(await readClock()).toBe(0);
+  });
+
   test('Test  comparators - ✅', () => {
     expect(1).toBe(1.0);
     expect(2).not.toBe(1.0);
