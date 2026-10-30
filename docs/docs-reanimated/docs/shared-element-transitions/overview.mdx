@@ -131,6 +131,10 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 
 ## Current limitations
 
+- Both shared views must use the same native component type. For example, do not pair `Animated.View` with `Animated.Image`, or image components from different libraries. Debug builds assert when the native types differ.
+- React updates to the moving view's own props and layout appear when it returns to its parent. State changes that change those props also wait. Its children can update during the move. Synchronous UI prop updates can apply during the move.
+- If React moves or reorders the moving view itself, the transition ends and shows the target. Moving an ancestor does not end the run.
+
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
 - Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
