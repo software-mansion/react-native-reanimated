@@ -27,7 +27,6 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
-import * as fs from 'fs';
 
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
@@ -35,7 +34,6 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
-const querySuffixRE = /[?#].*$/;
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -124,18 +122,7 @@ export function buildWorkletString(
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
-  if (includeSourceMap) {
-    // Clear contents array (should be empty anyways)
-    inputMap.sourcesContent = [];
-    // Include source contents in source map, because Flipper/iframe is not
-    // allowed to read files from disk.
-    for (const sourceFile of inputMap.sources) {
-      inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile.replace(querySuffixRE, '')).toString('utf-8')
-      );
-    }
-  }
-
+  // Both branches below discard `sourcesContent`, so no source is read here.
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
