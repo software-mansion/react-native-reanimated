@@ -185,6 +185,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &oldView,
       const ShadowView &newView) const;
   void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
+  void releaseDroppedViews() const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);
