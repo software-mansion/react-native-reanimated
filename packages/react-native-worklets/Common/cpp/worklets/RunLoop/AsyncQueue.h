@@ -32,8 +32,7 @@ class AsyncQueue : public facebook::jsi::NativeState {
   }
 
   /**
-   * Like push, but never runs the job inline on the calling thread. The
-   * default implementation is push.
+   * Pushes a job that must not run inline on the calling thread.
    */
   virtual void pushDeferred(std::function<void()> &&job, AbortToken abortToken) {
     push(std::move(job), abortToken);
