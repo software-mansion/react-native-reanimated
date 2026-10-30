@@ -7,11 +7,56 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
+#include <array>
 #include <ranges>
 #include <unordered_set>
 #include <utility>
 
 namespace reanimated {
+
+#ifdef ANDROID
+namespace {
+// The style props that PropsDiffer animates.
+constexpr std::array kAnimatedStyleProps{
+    "opacity",
+    "backgroundColor",
+    "transformOrigin",
+    "boxShadow",
+    "shadowColor",
+    "shadowOffset",
+    "shadowOpacity",
+    "shadowRadius",
+    "elevation",
+    "borderRadius",
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomLeftRadius",
+    "borderBottomRightRadius",
+    "borderTopStartRadius",
+    "borderTopEndRadius",
+    "borderBottomStartRadius",
+    "borderBottomEndRadius",
+    "borderEndEndRadius",
+    "borderEndStartRadius",
+    "borderStartEndRadius",
+    "borderStartStartRadius",
+    "borderWidth",
+    "borderLeftWidth",
+    "borderRightWidth",
+    "borderTopWidth",
+    "borderBottomWidth",
+    "borderStartWidth",
+    "borderEndWidth",
+    "borderHorizontalWidth",
+    "borderVerticalWidth",
+    "borderColor",
+    "borderLeftColor",
+    "borderRightColor",
+    "borderTopColor",
+    "borderBottomColor",
+};
+} // namespace
+#endif
 
 // MARK: Shared Element Transitions
 
@@ -219,7 +264,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         startProgressTransition(
             run.carrier->current.tag,
             asCarrierView(before, run.carrier, propsParserContext),
-            asCarrierView(after, run.carrier, propsParserContext));
+            asCarrierView(after, run.carrier, propsParserContext),
+            ownCarrierView(after, run.carrier, propsParserContext).props);
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
@@ -262,7 +308,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
       auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
+                          .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), std::move(rawProps));
 #endif
 
       updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
@@ -357,7 +403,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    detachCarrier(*run, asCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
+    detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
@@ -365,9 +411,10 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   return *run;
 }
 
-// The carrier keeps its own state and event emitter, so that an image keeps its image request
-// and events go to the component that owns the view. The props of another component type are
-// not valid for the view of the carrier, so then only the frame comes from the other view.
+// The view at one end of the animation of the carrier. The carrier keeps its own state and event
+// emitter, so that an image keeps its image request and events go to the component that owns the
+// view. The props of another component type are not valid for the view of the carrier, so then
+// only the frame comes from the other view.
 ShadowView LayoutAnimationsProxy::asCarrierView(
     const ShadowView &view,
     const std::shared_ptr<LightNode> &carrier,
@@ -375,15 +422,90 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   react_native_assert(
       view.componentHandle == carrier->current.componentHandle &&
       "Shared element transitions require matching native view types");
+  if (view.componentHandle != carrier->current.componentHandle) {
+    return ownCarrierView(view, carrier, propsParserContext);
+  }
   resolveLightNodeProps(carrier);
   auto carrierView = carrier->current;
   carrierView.layoutMetrics = view.layoutMetrics;
-  if (view.componentHandle == carrier->current.componentHandle) {
-    carrierView.props = view.props;
-  } else {
-    overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
-  }
+  carrierView.props = view.props;
   return carrierView;
+}
+
+// The carrier shows its own props, so that its content, for example a video player or an image
+// source, does not change during the run. Only the frame and the animated values come from the
+// other view.
+ShadowView LayoutAnimationsProxy::ownCarrierView(
+    const ShadowView &view,
+    const std::shared_ptr<LightNode> &carrier,
+    const PropsParserContext &propsParserContext) const {
+  resolveLightNodeProps(carrier);
+  auto carrierView = carrier->current;
+  carrierView.layoutMetrics = view.layoutMetrics;
+#ifdef ANDROID
+  auto rawProps = carrierView.props->rawProps;
+  rawProps["transform"] = view.props->rawProps.getDefault("transform", nullptr);
+  carrierView.props = componentDescriptorRegistry_->at(carrierView.componentHandle)
+                          .cloneProps(propsParserContext, carrierView.props, RawProps(std::move(rawProps)));
+#else
+  overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
+#endif
+  return carrierView;
+}
+
+// The animation starts from the style of the source, so the carrier starts with that style and with its
+// own content.
+ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
+    const ShadowView &source,
+    const std::shared_ptr<LightNode> &carrier,
+    const PropsParserContext &propsParserContext) const {
+  auto startView = ownCarrierView(source, carrier, propsParserContext);
+  if (source.componentHandle != startView.componentHandle) {
+    return startView;
+  }
+#ifdef ANDROID
+  const auto &sourceRawProps = source.props->rawProps;
+  const auto &ownRawProps = startView.props->rawProps;
+  auto rawProps = ownRawProps;
+  for (const auto *name : kAnimatedStyleProps) {
+    if (sourceRawProps.count(name) > 0) {
+      rawProps[name] = sourceRawProps[name];
+    } else if (ownRawProps.count(name) > 0) {
+      rawProps[name] = nullptr;
+    }
+  }
+  startView.props = componentDescriptorRegistry_->at(startView.componentHandle)
+                        .cloneProps(propsParserContext, startView.props, RawProps(std::move(rawProps)));
+#else
+  auto props =
+      componentDescriptorRegistry_->at(startView.componentHandle).cloneProps(propsParserContext, startView.props, {});
+  auto &viewProps = *std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
+  const auto &sourceProps = getViewProps(source);
+  viewProps.opacity = sourceProps.opacity;
+  viewProps.backgroundColor = sourceProps.backgroundColor;
+  viewProps.transformOrigin = sourceProps.transformOrigin;
+  viewProps.boxShadow = sourceProps.boxShadow;
+  viewProps.shadowColor = sourceProps.shadowColor;
+  viewProps.shadowOffset = sourceProps.shadowOffset;
+  viewProps.shadowOpacity = sourceProps.shadowOpacity;
+  viewProps.shadowRadius = sourceProps.shadowRadius;
+  viewProps.borderRadii = sourceProps.borderRadii;
+  viewProps.borderColors = sourceProps.borderColors;
+  for (const auto edge :
+       {facebook::yoga::Edge::Left,
+        facebook::yoga::Edge::Top,
+        facebook::yoga::Edge::Right,
+        facebook::yoga::Edge::Bottom,
+        facebook::yoga::Edge::Start,
+        facebook::yoga::Edge::End,
+        facebook::yoga::Edge::Horizontal,
+        facebook::yoga::Edge::Vertical,
+        facebook::yoga::Edge::All}) {
+    viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
+  }
+  startView.props = props;
+#endif
+  return startView;
 }
 
 void LayoutAnimationsProxy::detachCarrier(
@@ -582,6 +704,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           run.carrier->current.tag,
           asCarrierView(before, run.carrier, propsParserContext),
           asCarrierView(after, run.carrier, propsParserContext),
+          ownCarrierView(after, run.carrier, propsParserContext).props,
           config);
     }
   } else if (!mutations.empty()) {
@@ -615,12 +738,18 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
       if (hasPendingLayoutAnimation(carrierTag)) {
-        updateLayoutAnimationTarget(carrierTag, carrierAfter, config);
+        updateLayoutAnimationTarget(
+            carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
         continue;
       }
       const auto &layoutAnimation = layoutAnimations_.at(carrierTag);
       if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
-        startSharedTransition(carrierTag, layoutAnimation.currentView, carrierAfter, config);
+        startSharedTransition(
+            carrierTag,
+            layoutAnimation.currentView,
+            carrierAfter,
+            ownCarrierView(after, run.carrier, propsParserContext).props,
+            config);
       }
     }
   }

@@ -471,8 +471,8 @@ void LayoutAnimationsProxy::updateLightTree(
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
-        // The shared transition owns the mounted props and frame of its carrier. The light
-        // node keeps the values of React, and attachCarrier mounts them.
+        // The shared transition owns the mounted props and frame of its carrier.
+        // attachCarrier mounts React props and synchronous updates from the light node.
         if (node->isDetached) {
           break;
         }
@@ -487,7 +487,7 @@ void LayoutAnimationsProxy::updateLightTree(
         if (config && shouldAnimate) {
           transaction.layout.push_back({node, config});
         } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
-          updateLayoutAnimationTarget(tag, node->current, config);
+          updateLayoutAnimationTarget(tag, node->current, nullptr, config);
         } else {
           if (const auto currentView = takeCompletedLayoutAnimationView(tag)) {
             filteredMutations.push_back(
@@ -721,8 +721,8 @@ void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNod
 #endif // ANDROID
 }
 
-// Synchronous prop updates skip pullTransaction. Animation records always take the
-// values; light nodes take them only while the dynamic flag is on.
+// Synchronous prop updates skip pullTransaction. Animation records and detached
+// carriers take the values. The dynamic flag enables updates for other light nodes.
 void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBatch, const bool trackInLightTree) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -746,7 +746,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree) {
+    if (!trackInLightTree && !node->isDetached) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }
@@ -980,9 +980,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
                                                                          : completedAnimationIt->second.animation;
     auto newView = layoutAnimation.finalView;
-    if (updateValues.newProps) {
-      newView.props = updateValues.newProps;
-    }
+    newView.props = updateValues.newProps ? updateValues.newProps : layoutAnimation.framePropsBase();
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame, layoutAnimation.frameOffset);
 
     mutations.push_back(
@@ -1424,23 +1422,29 @@ void LayoutAnimationsProxy::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
+    const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
+      .frameProps = frameProps,
       .parentTag = surfaceId_,
       .config = config,
   });
 }
 
-void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
-    const {
+void LayoutAnimationsProxy::startProgressTransition(
+    const int tag,
+    const ShadowView &before,
+    const ShadowView &after,
+    const Props::Shared &frameProps) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
+      .frameProps = frameProps,
       .parentTag = surfaceId_,
   });
 }
