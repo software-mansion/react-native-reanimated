@@ -291,7 +291,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
   if (!droppedViews_.empty()) {
-    LowPriorityExecutor::execute([views = std::exchange(droppedViews_, {})]() {});
+    // shared_ptr, because on iOS the executor copies the callable on this thread
+    LowPriorityExecutor::execute(
+        [views = std::make_shared<std::vector<ShadowView>>(std::exchange(droppedViews_, {}))]() {});
   }
 #ifdef ANDROID
   holdFramesUntilBatchIsQueued(filteredMutations);
