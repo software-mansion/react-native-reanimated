@@ -269,7 +269,7 @@ open class NativeProxy {
             val view = resolveViewOrNull(tag)
             view?.let(::endViewTransitions)
             if (view == null || batch == CarrierBatch.IN_NEXT_DISPATCH) {
-                pending.remove()
+                pendingViewTransitionReleases.remove(tag, batch)
             }
         }
     }
