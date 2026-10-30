@@ -225,6 +225,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
     updateLightTree(propsParserContext, mutations, transaction);
 
+    react_native_assert(
+        (activeBoundaryMayHaveChanged_ || findActiveBoundary(root) == topScreen_) &&
+        "Active boundary changed without setting activeBoundaryMayHaveChanged_");
     auto afterTopScreen = activeBoundaryMayHaveChanged_ ? findActiveBoundary(root) : topScreen_;
     activeBoundaryMayHaveChanged_ = false;
     topScreen_ = afterTopScreen;
