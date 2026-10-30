@@ -176,7 +176,8 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   // Only predefined animations have keyframes that the current values can be put in
   const startsFromCurrentValues =
-    interruptedAnimationValues !== undefined && animationName in Animations;
+    interruptedAnimationValues !== undefined &&
+    Object.prototype.hasOwnProperty.call(Animations, animationName);
   const initialValues = startsFromCurrentValues
     ? {
         ...(config as CustomConfig).initialValues,

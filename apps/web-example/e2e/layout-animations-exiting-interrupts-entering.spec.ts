@@ -10,7 +10,7 @@ test.describe('ExitingInterruptsEntering', () => {
     page,
   }) => {
     // This runs in the page, so the hide lands in the same frame as the opacity reading
-    const { opacityAtHide, opacitiesAfterHide } = await page.evaluate(
+    const { opacityAtHide, samplesAfterHide } = await page.evaluate(
       async () => {
         const clickButton = (label: string) =>
           Array.from(document.querySelectorAll<HTMLElement>('[role="button"]'))
@@ -36,21 +36,33 @@ test.describe('ExitingInterruptsEntering', () => {
           opacity = getOpacity();
         }
         clickButton('Hide');
+        const hideTime = performance.now();
 
-        const opacities: (number | null)[] = [];
-        for (let frame = 0; frame < 20; frame++) {
+        // Sample the first half of the 1 s exit, while the copy is still fading out
+        const samples: { elapsedMs: number; opacity: number | null }[] = [];
+        for (;;) {
           await new Promise(requestAnimationFrame);
-          opacities.push(getOpacity());
+          const elapsedMs = performance.now() - hideTime;
+          if (elapsedMs >= 500) {
+            break;
+          }
+          samples.push({ elapsedMs, opacity: getOpacity() });
         }
-        return { opacityAtHide: opacity, opacitiesAfterHide: opacities };
+        return { opacityAtHide: opacity ?? 0, samplesAfterHide: samples };
       }
     );
 
     expect(opacityAtHide).toBeGreaterThanOrEqual(0.3);
     expect(opacityAtHide).toBeLessThan(0.9);
-    expect(opacitiesAfterHide).not.toContain(null);
-    for (const opacity of opacitiesAfterHide) {
-      expect(opacity).toBeLessThanOrEqual((opacityAtHide ?? 0) + 0.05);
+    expect(samplesAfterHide.length).toBeGreaterThan(0);
+    for (const { elapsedMs, opacity } of samplesAfterHide) {
+      expect(opacity).not.toBeNull();
+      // The 1 s fade-out is linear, so it starts at the opacity at Hide and loses that much
+      // over 1 s. It shouldn't jump up first, or drop faster than that.
+      expect(opacity).toBeLessThanOrEqual(opacityAtHide + 0.02);
+      expect(opacity).toBeGreaterThanOrEqual(
+        opacityAtHide * (1 - elapsedMs / 1000) - 0.02
+      );
     }
   });
 });

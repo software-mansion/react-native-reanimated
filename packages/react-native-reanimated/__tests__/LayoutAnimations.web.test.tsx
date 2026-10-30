@@ -224,25 +224,31 @@ describe('Layout Animations', () => {
   });
 
   describe('an exiting animation that interrupts an entering animation', () => {
+    type Keyframes = Record<string, number | string>[];
+
+    const FADE_IN_KEYFRAMES: Keyframes = [
+      { offset: 0, opacity: '0' },
+      { offset: 1, opacity: '1' },
+    ];
+
     // jsdom doesn't implement the Web Animations API. Like a browser, this fake reports the
-    // entering animation of a view that's fading in as running.
+    // entering animation of a view as running until it ends.
     class FakeCSSAnimation {
       playState = 'running';
-      effect = {
-        getKeyframes: () => [
-          { offset: 0, opacity: '0' },
-          { offset: 1, opacity: '1' },
-        ],
-      };
+      effect = { getKeyframes: () => this.keyframes };
 
-      constructor(public animationName: string) {}
+      constructor(
+        public animationName: string,
+        private keyframes: Keyframes
+      ) {}
     }
 
-    const fadingInViews = new WeakSet<Element>();
+    const runningKeyframes = new WeakMap<Element, Keyframes>();
 
     function getAnimations(this: HTMLElement) {
-      return fadingInViews.has(this) && this.style.animationName
-        ? [new FakeCSSAnimation(this.style.animationName)]
+      const keyframes = runningKeyframes.get(this);
+      return keyframes && this.style.animationName
+        ? [new FakeCSSAnimation(this.style.animationName, keyframes)]
         : [];
     }
 
@@ -277,10 +283,11 @@ describe('Layout Animations', () => {
       }
     });
 
-    // Hides the view while its fade-in is at 40% opacity, or after it has ended
+    // Hides the view while its entering animation is running at 40% opacity, or after it
+    // has ended when `keyframes` is null
     const renderAndHide = (
       exiting: EntryOrExitLayoutType,
-      { isFadingIn = true } = {}
+      { keyframes = FADE_IN_KEYFRAMES }: { keyframes?: Keyframes | null } = {}
     ) => {
       const screen = originalRender(
         <Example entering={FadeIn} exiting={exiting} initialVisible />
@@ -294,8 +301,8 @@ describe('Layout Animations', () => {
       });
       expect(view.style.animationName).toBe('FadeIn');
 
-      if (isFadingIn) {
-        fadingInViews.add(view);
+      if (keyframes) {
+        runningKeyframes.set(view, keyframes);
         // A browser reports the animated opacity as the computed opacity
         view.style.opacity = '0.4';
       }
@@ -339,8 +346,21 @@ describe('Layout Animations', () => {
       expect(copy.style.animationFillMode).toBe('backwards');
     });
 
+    test("keeps the configured initial opacity when the interrupted animation doesn't animate opacity", () => {
+      const copy = renderAndHide(FadeOut.withInitialValues({ opacity: 0.5 }), {
+        keyframes: [
+          { offset: 0, transform: 'scale(0)' },
+          { offset: 1, transform: 'scale(1)' },
+        ],
+      });
+
+      expect(getKeyframesText(copy.style.animationName)).toMatch(
+        /0%\s*\{\s*opacity:\s*0\.5;/
+      );
+    });
+
     test('uses the predefined keyframes after the entering animation has ended', () => {
-      const copy = renderAndHide(FadeOut, { isFadingIn: false });
+      const copy = renderAndHide(FadeOut, { keyframes: null });
 
       expect(copy.style.animationName).toBe('FadeOut');
     });
