@@ -262,7 +262,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 #endif
   }
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    followDetachedTargets(propsParserContext);
+    followOffWindowTargets(propsParserContext);
   }
 
   for (const auto &[node, config] : transaction.entering) {
@@ -1190,7 +1190,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
         continue;
       }
       // The container lands on the target only after the target is placed.
-      if (element.run->targetDetached) {
+      if (element.run->targetOffWindow) {
         preservedTags.insert(tag);
         continue;
       }

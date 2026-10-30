@@ -220,7 +220,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
         if (!beforeNode || !afterNode) {
           continue;
         }
-        if (isDetached(beforeNode)) {
+        if (isOffWindow(beforeNode)) {
           cancelSharedTransition(sharedTag, transaction);
           transaction.restoreRequests.push_back({sharedTag, beforeNode});
           transaction.restoreRequests.push_back({sharedTag, afterNode});
@@ -357,7 +357,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
-  run->targetDetached = false;
+  run->targetOffWindow = false;
   return *run;
 }
 
@@ -404,11 +404,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-      const bool sourceDetached = isDetached(collectedTransition.nodes[BEFORE]);
-      if (sourceDetached) {
+      const bool sourceOffWindow = isOffWindow(collectedTransition.nodes[BEFORE]);
+      if (sourceOffWindow) {
         cancelSharedTransition(sharedTag, transaction);
       }
-      if (!config || sourceDetached) {
+      if (!config || sourceOffWindow) {
         for (const auto &node : collectedTransition.nodes) {
           if (node) {
             transaction.restoreRequests.push_back({sharedTag, node});
@@ -429,8 +429,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       after.tag = containerTag;
 
       startSharedTransition(containerTag, before, after, config);
-      run.targetDetached = isDetached(afterNode);
-      if (run.targetDetached) {
+      run.targetOffWindow = isOffWindow(afterNode);
+      if (run.targetOffWindow) {
         schedulePullOnNextFrame();
       }
     }
@@ -674,12 +674,12 @@ std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() con
 
 // A source that left the screen before its transition starts, e.g. a sheet dismissed by a swipe, has nothing to fly
 // from.
-bool LayoutAnimationsProxy::isDetached(const std::shared_ptr<LightNode> &node) const {
+bool LayoutAnimationsProxy::isOffWindow(const std::shared_ptr<LightNode> &node) const {
 #ifdef __APPLE__
   const auto parent = node ? node->parent.lock() : nullptr;
   return parent && nativeViewPlacement_ &&
       nativeViewPlacement_(surfaceId_, node->current.tag, parent->current.tag, false).kind ==
-      NativeViewPlacement::Kind::Detached;
+      NativeViewPlacement::Kind::OffWindow;
 #else
   return false;
 #endif
@@ -699,21 +699,21 @@ static void moveBelowAncestor(
 
 // A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
 // origin of its stack. The run follows the target once the platform places it, until the transition ends.
-void LayoutAnimationsProxy::followDetachedTargets(const PropsParserContext &propsParserContext) const {
+void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &propsParserContext) const {
   for (auto &[_, element] : sharedElements_) {
-    if (!element.run || !element.run->targetDetached) {
+    if (!element.run || !element.run->targetOffWindow) {
       continue;
     }
     auto &run = *element.run;
     const auto containerTag = run.container->current.tag;
     const bool targetMapped = isLightNodeMapped(run.target);
-    const bool targetDetached = targetMapped && isDetached(run.target);
-    if (targetDetached && (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag))) {
+    const bool targetOffWindow = targetMapped && isOffWindow(run.target);
+    if (targetOffWindow && (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag))) {
       schedulePullOnNextFrame();
       continue;
     }
-    run.targetDetached = false;
-    if (!targetMapped || targetDetached) {
+    run.targetOffWindow = false;
+    if (!targetMapped || targetOffWindow) {
       continue;
     }
     const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
