@@ -196,7 +196,6 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
-- Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
 - On iOS you can encounter some issues with the vertical positioning of transitioning views. This is due to issues with header height information propagation.
 - There are some performance bottlenecks, that stem from transforms being recalculated too eagerly.
 - We have to use a workaround for react-native-screens to not keep a snapshot of the transitioning view on the popped screen. Currently the fix is available in 3.19+ versions.
