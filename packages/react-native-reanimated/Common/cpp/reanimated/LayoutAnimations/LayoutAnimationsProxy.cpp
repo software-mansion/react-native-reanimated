@@ -388,8 +388,8 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
 #ifdef ANDROID
     recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
 #endif
-    auto update =
-        ShadowViewMutation::UpdateMutation(mounted, recreated, node->isDetached ? surfaceId_ : parent->current.tag);
+    auto update = ShadowViewMutation::UpdateMutation(
+        mounted, recreated, parent && !node->isDetached ? parent->current.tag : surfaceId_);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
