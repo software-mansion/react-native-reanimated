@@ -1099,10 +1099,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedElements_.clear();
 #ifdef __APPLE__
-    if (containerOverlay_) {
-      containerOverlay_.reset();
-      setSharedTransitionOverlay_(surfaceId_, std::nullopt);
-    }
+    react_native_assert(!containerOverlay_ && "The last pull of a surface deletes its overlay");
 #endif
     snapshottedScreens_.clear();
     transition_.reset();
