@@ -261,6 +261,30 @@ describe('Shared element transition between boundaries', () => {
     expect((await mountedTransitionViews()).length).toBe(0);
   });
 
+  test('ends on the opacity of the target ancestors', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: styles.parent,
+      targetParent: [styles.parent, styles.dimmed],
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await wait(800);
+    const views = await mountedTransitionViews();
+    expect(views.length).toBe(1);
+    expect(views[0].opacity).toBeWithinRange(0.5, 0.8);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
   test('removes the clip with the container', async () => {
     const finished: boolean[] = [];
     const transition = createTransition(
@@ -340,6 +364,7 @@ describe('Shared element transition between boundaries', () => {
       />
     );
     await waitForFrames(2);
+    const clipStartY = (await mountedTransitionViews())[1].y;
 
     await render(
       <ParentScreens
@@ -348,6 +373,11 @@ describe('Shared element transition between boundaries', () => {
         targetParent={styles.fartherClippingParent}
       />
     );
+    await wait(450);
+    const views = await mountedTransitionViews();
+    expect(views.length).toBe(2);
+    expect(views[1].y).toBeWithinRange(clipStartY + 301, clipStartY + 380);
+
     await waitForNotification('shared-transition-finished');
     await waitForFrames();
 
