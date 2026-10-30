@@ -179,6 +179,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     stop(tag: number) {
       heldCallbacks.get(tag)?.(false);
       heldCallbacks.delete(tag);
+      clipTagForContainer.delete(tag);
       const value = mutableValuesForTag.get(tag);
       if (!value) {
         return;
