@@ -59,6 +59,11 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void schedule(std::function<void(jsi::Runtime &)> job) const;
 
   /**
+   * Like schedule, but never runs the job inline on the calling thread.
+   */
+  void scheduleDeferred(std::function<void(jsi::Runtime &)> job) const;
+
+  /**
    * Schedules a jsi::Function to run asynchronously.
    *
    * The jsi::Function has to originate from this runtime, otherwise it will
@@ -332,7 +337,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Scheduled jobs must use the unlocked implementation methods.
    */
-  void scheduleImpl(ScheduledJob job) const;
+  void scheduleImpl(ScheduledJob job, bool deferred = false) const;
 
   /**
    * Assumes the caller acquired the runtime lock.

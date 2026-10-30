@@ -32,6 +32,14 @@ class AsyncQueue : public facebook::jsi::NativeState {
   }
 
   /**
+   * Like push, but never runs the job inline on the calling thread. The
+   * default implementation is push.
+   */
+  virtual void pushDeferred(std::function<void()> &&job, AbortToken abortToken) {
+    push(std::move(job), abortToken);
+  }
+
+  /**
    * Drops the jobs that are still pending, destroying them on the calling
    * thread. A queue shared between several owners drops only the jobs pushed
    * with this token. The default implementation keeps every job.
