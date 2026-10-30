@@ -118,6 +118,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       if (clipOfTag !== undefined) {
         clipTagForContainer.set(clipOfTag, tag);
       }
+      const heldClipTag = clipTagForContainer.get(tag);
+      if (heldClipTag !== undefined) {
+        heldCallbacks.delete(heldClipTag);
+      }
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 

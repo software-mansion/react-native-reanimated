@@ -211,6 +211,38 @@ describe('LayoutAnimationsManager', () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
+  test('drops a held callback when the container restarts', () => {
+    const heldCallback = jest.fn();
+    const restartCallback = jest.fn();
+
+    manager.start(
+      16,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      makePendingConfig(jest.fn()),
+      15
+    );
+    manager.start(
+      15,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      (): LayoutAnimation => ({ ...makeConfig([])(), callback: heldCallback })
+    );
+    manager.start(
+      15,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      makePendingConfig(restartCallback)
+    );
+
+    manager.stop(16);
+    expect(heldCallback).not.toHaveBeenCalled();
+    expect(restartCallback).not.toHaveBeenCalled();
+
+    manager.stop(15);
+    expect(restartCallback).toHaveBeenCalledWith(false);
+  });
+
   test('runs the callback of a container after its clip ended', () => {
     const containerCallback = jest.fn();
     const clipCallback = jest.fn();
