@@ -944,15 +944,18 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
     finishedExits.push_back(nodeIt->second);
   }
 #ifdef __APPLE__
-  std::erase_if(heldModals_, [this](const HeldModal &held) { return !isLightNodeMapped(held.node); });
   const auto now = std::chrono::steady_clock::now();
-  for (const auto &held : heldModals_) {
+  std::erase_if(heldModals_, [&](const HeldModal &held) {
+    if (!isLightNodeMapped(held.node)) {
+      return true;
+    }
     if (transaction.surfaceDropped || now >= held.removableAt) {
       finishedExits.push_back(held.node);
-    } else {
-      schedulePullOnNextFrame();
+      return true;
     }
-  }
+    schedulePullOnNextFrame();
+    return false;
+  });
 #endif
   transaction.dueRemovals = collectRemovals(finishedExits);
 }
@@ -1167,6 +1170,9 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     uncommittedScreenPop_.reset();
     visibleScreens_.clear();
   }
+#ifdef __APPLE__
+  heldModals_.clear();
+#endif
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
