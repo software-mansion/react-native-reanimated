@@ -88,11 +88,11 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
        runtimeMutex = runtimeMutex_,
        state = timeoutsQueueState_,
        job = std::move(job)] {
-        if (!state->running) [[unlikely]] {
-          return;
-        }
         if (auto runtime = weakRuntime.lock()) {
           std::unique_lock lock(*runtimeMutex);
+          if (!state->running) [[unlikely]] {
+            return;
+          }
           job(*runtime);
           runtime->drainMicrotasks();
         }
