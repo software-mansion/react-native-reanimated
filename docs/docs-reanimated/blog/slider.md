@@ -13,9 +13,9 @@ import CollapsibleCode from '@site/src/components/CollapsibleCode';
 
 We use the `useSharedValue` hook to store the offset of the slider handle, allowing for smooth animation during sliding.
 
-<CollapsibleCode src={SliderSrc} showLines={[24,24]}/>
+<CollapsibleCode src={SliderSrc} showLines={[23,24]}/>
 
-This example is done using [Pan gesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) from `react-native-gesture-handler` library. It adjusts the handle's position and width of the box accordingly to the current offset. The offset is a [shared value](/docs/fundamentals/glossary#shared-value) and is updated during the `onChange` event of the pan gesture.
+This example is done using [Pan gesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) from `react-native-gesture-handler` library. It adjusts the handle's position and width of the box accordingly to the current offset. The offset is a [shared value](/docs/fundamentals/glossary#shared-value) and is updated during the `onChange` event of the pan gesture. We compute it from the offset at the start of the drag and the total translation, clamped to the track, so the handle doesn't move until the pointer comes back from beyond the end of the track.
 
 <samp id="Slider">Slider</samp>
 
@@ -32,7 +32,7 @@ The `useAnimatedStyle` hook is used to create animated styles for both the box a
 
 <samp id="Slider">Slider</samp>
 
-<CollapsibleCode src={SliderSrc} showLines={[42,52]}/>
+<CollapsibleCode src={SliderSrc} showLines={[43,53]}/>
 
 Leveraging animated props allows us to run them on the UI thread instead of the JS thread. To prevent unnecessary re-renders when the text displaying the current width of the box changes, we used the `useAnimatedProps` hook.
 
@@ -42,4 +42,4 @@ This approach also enabled us to animate **TextInput** using [shared values](/do
 
 <samp id="Slider">Slider</samp>
 
-<CollapsibleCode src={SliderSrc} showLines={[58,63]}/>
+<CollapsibleCode src={SliderSrc} showLines={[55,60]}/>
