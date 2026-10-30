@@ -12,9 +12,21 @@ export type TextInputObservation = {
 
 export type TransformObservation = {
   translateX: number;
+  width: number;
 };
 
 export interface Spec extends TurboModule {
+  emitScreenTransitionProgress(
+    tag: CodegenTypes.Int32,
+    progress: number,
+    closing: boolean,
+    goingForward: boolean
+  ): Promise<void>;
+
+  emitScreenGestureCancel(tag: CodegenTypes.Int32): Promise<void>;
+
+  observeParent(tag: CodegenTypes.Int32): Promise<number | null>;
+
   observeTransform(
     tag: CodegenTypes.Int32
   ): Promise<TransformObservation | null>;
