@@ -85,7 +85,13 @@ open class NativeProxy {
     @Suppress("unused")
     private val mHybridData: HybridData
 
-    private val pendingViewTransitionReleases = ConcurrentHashMap<Int, Boolean>()
+    private enum class CarrierBatch {
+        NOT_QUEUED,
+        QUEUED,
+        IN_NEXT_DISPATCH,
+    }
+
+    private val pendingViewTransitionReleases = ConcurrentHashMap<Int, CarrierBatch>()
 
     @OptIn(UnstableReactNativeAPI::class)
     private val mountListener =
@@ -98,6 +104,11 @@ open class NativeProxy {
                 ifNotInvalidated(Unit) {
                     if (hasSynchronousWritesTracker()) {
                         rewriteSynchronousProps()
+                    }
+                    // A dispatch takes its items before `willMountItems`, so the dispatch that sees a queued batch
+                    // may not run it. Only a dispatch that starts after this one is known to have it.
+                    pendingViewTransitionReleases.replaceAll { _, batch ->
+                        if (batch == CarrierBatch.QUEUED) CarrierBatch.IN_NEXT_DISPATCH else batch
                     }
                 }
 
@@ -238,7 +249,7 @@ open class NativeProxy {
 
     // `react-native-screens` holds the views of a removed screen with `startViewTransition`, before the Remove of the
     // batch that moves them to the root. The hold can come after the first release, so it repeats before every mount
-    // until the batch is in the queue. A UI thread pull mounts before a posted hold can run.
+    // until the dispatch that runs the batch. A UI thread pull mounts before a posted hold can run.
     @DoNotStrip
     fun releaseViewTransitions(
         tags: IntArray,
@@ -247,17 +258,17 @@ open class NativeProxy {
         if (UiThreadUtil.isOnUiThread()) {
             tags.forEach { tag -> resolveViewOrNull(tag)?.let(::endViewTransitions) }
         } else {
-            tags.forEach { pendingViewTransitionReleases[it] = isBatchQueued }
+            tags.forEach { pendingViewTransitionReleases[it] = if (isBatchQueued) CarrierBatch.QUEUED else CarrierBatch.NOT_QUEUED }
         }
     }
 
     private fun releasePendingViewTransitions() {
         val pending = pendingViewTransitionReleases.entries.iterator()
         while (pending.hasNext()) {
-            val (tag, isBatchQueued) = pending.next()
+            val (tag, batch) = pending.next()
             val view = resolveViewOrNull(tag)
             view?.let(::endViewTransitions)
-            if (view == null || isBatchQueued) {
+            if (view == null || batch == CarrierBatch.IN_NEXT_DISPATCH) {
                 pending.remove()
             }
         }
