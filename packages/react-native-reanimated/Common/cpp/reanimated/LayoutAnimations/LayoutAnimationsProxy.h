@@ -117,6 +117,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
+  // Views the light tree replaced, often the last owners of their props. Destroyed off the UI thread.
+  mutable std::vector<ShadowView> droppedViews_;
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
   // back
   mutable std::unordered_set<Tag> snapshottedScreens_;
@@ -183,6 +185,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &oldView,
       const ShadowView &newView) const;
   void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
+  void releaseDroppedViews() const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);
