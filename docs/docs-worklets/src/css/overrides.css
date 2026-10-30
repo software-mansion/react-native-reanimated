@@ -209,3 +209,235 @@ footer .footer__bottom [class*='footer__copyright'] p {
 footer .footer__bottom [class*='footer__copyright'] p a[data-privacy-policy] {
   text-decoration: none;
 }
+
+:root {
+  --swm-code-panel: #ffffff;
+  --swm-code-panel-border: #87cce8;
+}
+
+[data-theme='dark'] {
+  --swm-code-panel: #1e2c3a;
+  --swm-code-panel-border: #3f7c99;
+}
+
+html.docs-version-current[data-theme='light'] {
+  color-scheme: light;
+}
+
+html.docs-version-current[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
+  display: none !important;
+}
+
+.docs-version-current [class*='codeBlockContent'] pre,
+.docs-version-current [class*='codeBlockContent'] code {
+  border: none;
+  background-color: var(--swm-code-panel);
+}
+
+.docs-version-current .theme-doc-sidebar-item-category-level-2 > .menu__list {
+  padding-left: 12px;
+}
+
+.docs-version-current .theme-doc-sidebar-item-link-level-1 > .menu__link {
+  font-family: var(--swm-title-font);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.docs-version-current li.theme-doc-sidebar-item-link-level-1 > a.menu__link {
+  --ifm-menu-link-padding-horizontal: 0;
+  --ifm-menu-color: var(--ifm-font-color-base);
+  margin: 8px 0;
+}
+
+@media (max-width: 996px) {
+  .docs-version-current li.theme-doc-sidebar-item-link-level-1 > a.menu__link {
+    margin: 4px 0 8px;
+  }
+}
+
+.docs-version-current
+  [class*='_wrapper_']:has(> [class*='_badge_'][class*='_deprecated_'])
+  .menu__link {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.7;
+}
+
+.docs-version-current [class*='_badge_'][class*='_deprecated_'] {
+  display: none;
+}
+
+.theme-doc-sidebar-menu .sidebar-section,
+.theme-doc-sidebar-menu .sidebar-section-divider {
+  width: 100%;
+  align-self: stretch;
+  margin: 0;
+}
+
+.theme-doc-sidebar-menu .sidebar-section > .menu__link,
+.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button {
+  display: block;
+  width: calc(100% + 8px);
+  margin: 0 0 4px -20px;
+  padding: 6px 12px 6px 20px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.theme-doc-sidebar-menu .sidebar-section > .sidebar-section-button:hover {
+  color: var(--ifm-link-color);
+}
+
+.theme-doc-sidebar-menu .menu__list-item.sidebar-section--active > a.menu__link,
+.theme-doc-sidebar-menu
+  .menu__list-item.sidebar-section--active
+  > a.menu__link:hover,
+.theme-doc-sidebar-menu .sidebar-section--active > .sidebar-section-button {
+  color: var(--ifm-link-color) !important;
+  background-color: color-mix(in srgb, var(--ifm-link-color) 14%, transparent);
+}
+
+.theme-doc-sidebar-menu .sidebar-section-divider {
+  margin: 8px 0 12px;
+}
+
+.theme-doc-sidebar-menu .sidebar-section-divider > hr {
+  display: block;
+  height: 1px;
+  margin: 0 12px 0 -20px;
+  border: none;
+  background-color: var(--ifm-color-emphasis-300);
+}
+
+@media (min-width: 997px) {
+  .docs-version-current {
+    --swm-sidebar-motion: 320ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .docs-version-current .theme-doc-sidebar-container {
+    transition: width var(--swm-sidebar-motion) !important;
+  }
+
+  .docs-version-current
+    .theme-doc-sidebar-container
+    [class*='sidebarViewport']
+    > [class*='sidebar_'] {
+    transition:
+      transform var(--swm-sidebar-motion),
+      opacity var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docSidebarContainerHidden']
+    [class*='sidebarViewport']
+    > [class*='sidebar_'] {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  .docs-version-current [class*='docMainContainer'] {
+    overflow-x: clip;
+    transition: max-width var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current [class*='docMainContainer'] > .container {
+    transition: max-width var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docMainContainer']
+    .row
+    > [class*='docItemCol'] {
+    transition:
+      max-width var(--swm-sidebar-motion),
+      flex-basis var(--swm-sidebar-motion),
+      margin-left var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docMainContainer']
+    .row
+    > .col:has(.theme-doc-toc-desktop) {
+    transition:
+      max-width var(--swm-sidebar-motion),
+      flex-basis var(--swm-sidebar-motion),
+      opacity var(--swm-sidebar-motion),
+      transform var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docMainContainerEnhanced']
+    .row
+    > .col:has(.theme-doc-toc-desktop) {
+    flex-basis: calc(25% - 95px);
+    max-width: calc(25% - 95px);
+    opacity: 0;
+    transform: translateX(150%);
+    pointer-events: none;
+  }
+
+  .docs-version-current [class*='docMainContainerEnhanced'] {
+    --swm-sim-max-width: calc(100vw - 470px);
+  }
+
+  .docs-version-current [class*='docMainContainerEnhanced'] > .container {
+    max-width: calc(var(--ifm-container-width) + 380px) !important;
+  }
+
+  .docs-version-current
+    [class*='docMainContainerEnhanced']
+    .row
+    > [class*='docItemCol'] {
+    max-width: calc(75% - 285px) !important;
+    flex-basis: calc(75% - 285px);
+    margin-left: 380px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .docs-version-current [class*='docMainContainerEnhanced'] > .container {
+    max-width: calc(var(--ifm-container-width-xl) + 380px) !important;
+  }
+}
+
+.docs-version-current :not(pre) > code {
+  vertical-align: baseline;
+  line-height: 1;
+}
+
+.docs-version-current .theme-code-block {
+  --prism-background-color: var(--swm-code-panel);
+  --ifm-code-border-radius: 0;
+  border: 2px solid var(--swm-code-panel-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.docs-version-current .theme-code-block pre,
+.docs-version-current .theme-code-block code {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: var(--ifm-font-size-base);
+  line-height: 1.45;
+}
+
+.docs-version-current .theme-code-block pre {
+  padding: 0;
+}
+
+.docs-version-current .theme-code-block [class*='codeBlockLines'] {
+  padding: 8px 17px;
+}

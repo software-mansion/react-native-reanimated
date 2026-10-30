@@ -1,5 +1,12 @@
-html {
-  scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.landingContainer ::selection {
+  color: var(--swm-navy-light-100);
+  background-color: var(--swm-purple-light-40);
 }
 
 .heroBanner {

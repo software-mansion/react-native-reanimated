@@ -213,6 +213,21 @@ describe.each([
       const result = runPlugin(input, { bundleMode });
       expect(workletText(result, bundleMode)).toMatchSnapshot();
     });
+
+    test('allows assigning to a captured variable', () => {
+      const input = html`<script>
+        let x = 0;
+        function foo() {
+          'worklet';
+          if (x > 1) {
+            x = 0;
+          }
+        }
+      </script>`;
+
+      const result = runPlugin(input, { bundleMode });
+      expect(workletText(result, bundleMode)).toMatchSnapshot();
+    });
   });
 
   describe('autoworkletization', () => {

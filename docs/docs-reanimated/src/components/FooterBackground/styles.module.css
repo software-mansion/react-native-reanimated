@@ -125,3 +125,9 @@
     margin-top: -215px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .sponsorsBackgroundStars svg * {
+    animation: none !important;
+  }
+}

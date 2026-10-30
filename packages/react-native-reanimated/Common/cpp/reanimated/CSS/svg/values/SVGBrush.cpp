@@ -31,7 +31,7 @@ bool SVGBrush::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 }
 
 bool SVGBrush::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.isBool() || value.asString() == "currentColor";
+  return value.isNumber() || value.isBool() || (value.isString() && value.asString() == "currentColor");
 }
 
 folly::dynamic SVGBrush::toDynamic() const {

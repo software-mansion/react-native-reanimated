@@ -181,6 +181,8 @@ void WorkletRuntime::bundleModeInit(
     networking_ = networking;
   }
 
+  rt.global().setProperty(rt, "_WORKLETS_SOURCE_URL", jsi::String::createFromUtf8(rt, sourceUrl));
+
   ScriptLoader::loadScript(rt, script, sourceUrl);
 }
 

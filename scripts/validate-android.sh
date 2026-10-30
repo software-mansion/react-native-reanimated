@@ -14,3 +14,8 @@ if grep -Rn android/src/main/cpp -e "^#ifndef(?! NDEBUG)"; then
     echo 'Found `#ifndef` in `android/` directory. Use `#ifdef ... #else` instead.'
     exit 1
 fi
+
+if find android/src -name '*.java' | grep .; then
+    echo 'Found Java files in `android/src/` directory. Write Android code in Kotlin instead.'
+    exit 1
+fi

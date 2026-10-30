@@ -19,12 +19,12 @@ import type {
 import type { PropsBuilderConfig } from '../../../../common';
 import {
   convertStringToNumber,
-  processColorSVG,
+  processColorOrPlatformColorSVG,
   processPercentage,
   processStrokeDashArray,
 } from '../processors';
 
-const colorAttributes = { process: processColorSVG };
+const colorAttributes = { process: processColorOrPlatformColorSVG };
 
 const colorProps: PropsBuilderConfig<ColorProps> = {
   color: colorAttributes,

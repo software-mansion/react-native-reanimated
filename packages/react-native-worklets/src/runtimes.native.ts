@@ -1,5 +1,9 @@
 'use strict';
 
+import {
+  installLazyBundleRegistrar,
+  makeLazyBundleRegistrar,
+} from './bundleMode/lazyBundles';
 import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import { addNoBundleModeGuardImplementation } from './guardImplementation';
@@ -134,6 +138,8 @@ export function createWorkletRuntime(
     );
   }
 
+  const lazyBundleRegistrar = makeLazyBundleRegistrar();
+
   return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
@@ -143,6 +149,7 @@ export function createWorkletRuntime(
         setupConsole(runtimeBoundCapturableConsole!);
       } else if (__DEV__) {
         setupConsoleForwarding(runtimeBoundCapturableConsole!);
+        installLazyBundleRegistrar(lazyBundleRegistrar);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);

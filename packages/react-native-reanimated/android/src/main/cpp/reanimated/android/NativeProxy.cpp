@@ -30,6 +30,12 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
+      strongThis_(
+          this,
+          [](NativeProxy *self) {
+            // The Java part can destroy `self` as soon as it is released, so move it out first.
+            const auto javaPart = std::move(self->javaPart_);
+          }),
       rnRuntime_(rnRuntime),
       uiRuntime_(uiRuntime),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
@@ -180,11 +186,6 @@ void NativeProxy::registerEventHandler() {
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
-  // Module might be already destroyed.
-  if (!javaPart_) {
-    return;
-  }
-
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
@@ -234,6 +235,11 @@ void NativeProxy::synchronouslyUpdateUIProps(
   jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
   jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
   method(javaPart_.get(), jArrayInt, jArrayDouble);
+}
+
+bool NativeProxy::isSensorAvailable(int sensorType) {
+  static const auto method = getJniMethod<jboolean(int)>("isSensorAvailable");
+  return method(javaPart_.get(), sensorType);
 }
 
 int NativeProxy::registerSensor(int sensorType, int interval, int, std::function<void(double[], int)> setter) {
@@ -391,6 +397,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
+  auto isSensorAvailableFunction = bindThis(&NativeProxy::isSensorAvailable);
+
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
 
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
@@ -416,6 +424,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       preserveMountedTags,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
+      isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -447,7 +456,8 @@ void NativeProxy::invalidateCpp() {
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
   reanimatedModuleProxy_.reset();
-  javaPart_ = nullptr;
+  // Releases `javaPart_`, but only after the calls in flight on other threads return.
+  strongThis_.reset();
 }
 
 } // namespace reanimated
