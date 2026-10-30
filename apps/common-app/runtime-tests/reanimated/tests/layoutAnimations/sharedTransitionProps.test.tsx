@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { runOnUIAsync } from 'react-native-worklets';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   describe,
   expect,
@@ -26,6 +27,7 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -110,6 +112,48 @@ function Screens({
   );
 }
 
+function StyleScreens({
+  active,
+  transition,
+  sourceColor,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+  sourceColor?: string;
+}) {
+  const source = useTestRef('style-source');
+  const target = useTestRef('style-target');
+  return (
+    <View style={styles.container}>
+      {!active && (
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            ref={source}
+            sharedTransitionTag="style-copy"
+            sharedTransitionStyle={transition}
+            style={{ width: 60, height: 60, backgroundColor: sourceColor }}
+          />
+        </SharedTransitionBoundary>
+      )}
+      {active && (
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            ref={target}
+            sharedTransitionTag="style-copy"
+            sharedTransitionStyle={transition}
+            style={{
+              marginTop: 100,
+              width: 150,
+              height: 150,
+              backgroundColor: '#2277dd',
+            }}
+          />
+        </SharedTransitionBoundary>
+      )}
+    </View>
+  );
+}
+
 function transitionWithNotification() {
   return SharedTransition.duration(1500).withCallback((finished) => {
     'worklet';
@@ -137,36 +181,86 @@ async function expectBlueHint() {
 }
 
 describe('Shared transition keeps the moving view props', () => {
-  test('keeps each native content label during the move and on return', async () => {
-    const transition = transitionWithNotification();
-    const color = makeMutable('red');
-    await render(
-      <Screens active={false} transition={transition} color={color} />
-    );
-    await waitForFrames();
-    await render(<Screens active transition={transition} color={color} />);
-    await expectSourceMoving();
-    expect(
-      (await getTestComponent('source').getTextInputObservation())
-        ?.accessibilityLabel
-    ).toBe('source input');
-    expect(
-      (await getTestComponent('target').getTextInputObservation())
-        ?.accessibilityLabel
-    ).toBe('target input');
+  const nativeTest = RuntimeTestObserver ? test : test.skip;
 
-    await waitForNotification('props-finished');
-    expect(
-      (await getTestComponent('source').getTextInputObservation())
-        ?.accessibilityLabel
-    ).toBe('source input');
-    expect(
-      (await getTestComponent('target').getTextInputObservation())
-        ?.accessibilityLabel
-    ).toBe('target input');
+  test.each([
+    ['copies the source color', '#dd5522'],
+    ['clears a color missing from the source', undefined],
+  ] as const)('${0} when React removes the source', async ([, sourceColor]) => {
+    const transition = SharedTransition.duration(1200)
+      .easing((progress) => {
+        'worklet';
+        return progress < 0.6 ? 0 : (progress - 0.6) / 0.4;
+      })
+      .withCallback((finished) => {
+        'worklet';
+        if (finished) notify('style-copy-finished');
+      });
+    const props = { transition, sourceColor };
+    await render(<StyleScreens {...props} active={false} />);
+    await waitForFrames();
+    const sourceTag = getTestComponent('style-source').getTag();
+    const original =
+      await getTestComponent('style-source').getMountedViewProps();
+    expect(original).not.toBe(null);
+    await render(<StyleScreens {...props} active />);
+    await waitForFrames(3);
+    const targetTag = getTestComponent('style-target').getTag();
+    const moving = await runOnUIBlocking(() => {
+      'worklet';
+      const source = global._obtainMountedViewProps(sourceTag, false);
+      return source && source.opacity > 0
+        ? source
+        : global._obtainMountedViewProps(targetTag, false);
+    });
+    expect(moving).not.toBe(null);
+    expect(moving?.width).toBe(60, ComparisonMode.PIXEL);
+    expect(moving?.backgroundColor).toBe(
+      original?.backgroundColor,
+      ComparisonMode.COLOR
+    );
+    await waitForNotification('style-copy-finished');
+    await expectEventually(
+      async () =>
+        (await getTestComponent('style-target').getMountedViewProps())
+          ?.backgroundColor
+    ).toBe('#2277dd', ComparisonMode.COLOR);
   });
 
+  nativeTest(
+    'keeps each native content label during the move and on return',
+    async () => {
+      const transition = transitionWithNotification();
+      const color = makeMutable('red');
+      await render(
+        <Screens active={false} transition={transition} color={color} />
+      );
+      await waitForFrames();
+      await render(<Screens active transition={transition} color={color} />);
+      await expectSourceMoving();
+      expect(
+        (await getTestComponent('source').getTextInputObservation())
+          ?.accessibilityLabel
+      ).toBe('source input');
+      expect(
+        (await getTestComponent('target').getTextInputObservation())
+          ?.accessibilityLabel
+      ).toBe('target input');
+
+      await waitForNotification('props-finished');
+      expect(
+        (await getTestComponent('source').getTextInputObservation())
+          ?.accessibilityLabel
+      ).toBe('source input');
+      expect(
+        (await getTestComponent('target').getTextInputObservation())
+          ?.accessibilityLabel
+      ).toBe('target input');
+    }
+  );
+
   const syncTest =
+    RuntimeTestObserver &&
     Platform.OS === 'android' &&
     getStaticFeatureFlag('ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS') &&
     !getStaticFeatureFlag('USE_ANIMATION_BACKEND')

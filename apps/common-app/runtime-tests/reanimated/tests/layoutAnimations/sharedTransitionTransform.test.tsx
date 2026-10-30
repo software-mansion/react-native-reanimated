@@ -5,6 +5,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   describe,
   expect,
@@ -134,7 +135,8 @@ async function expectTranslation(name: string, translateX: number) {
 }
 
 describe('Shared transition transform copying', () => {
-  test.each([
+  const nativeTest = RuntimeTestObserver ? test : test.skip;
+  nativeTest.each([
     ['source translation', 40, null, false],
     ['target translation', null, 30, false],
     ['identity ancestor', 40, null, true],
@@ -163,7 +165,7 @@ describe('Shared transition transform copying', () => {
     await expectTranslation('transform-target', targetX ?? 0);
   });
 
-  test.each([
+  nativeTest.each([
     ['no ancestor', false],
     ['identity ancestor', true],
   ] as const)(
@@ -192,18 +194,21 @@ describe('Shared transition transform copying', () => {
     }
   );
 
-  test('keeps the held transform when the target width changes', async () => {
-    const transition = heldTransition();
-    const props = { transition, sourceX: 40, targetX: null, ancestor: false };
-    await render(<TransformScreens {...props} active={false} />);
-    await waitForFrames();
-    await render(<TransformScreens {...props} active />);
-    await waitForFrames(3);
-    await expectTranslation('transform-source', 40);
-    await render(<TransformScreens {...props} active targetWidth={180} />);
-    await waitForFrames(3);
-    await expectTranslation('transform-source', 40);
-    await waitForNotification('transform-finished');
-    await expectTranslation('transform-target', 0);
-  });
+  nativeTest(
+    'keeps the held transform when the target width changes',
+    async () => {
+      const transition = heldTransition();
+      const props = { transition, sourceX: 40, targetX: null, ancestor: false };
+      await render(<TransformScreens {...props} active={false} />);
+      await waitForFrames();
+      await render(<TransformScreens {...props} active />);
+      await waitForFrames(3);
+      await expectTranslation('transform-source', 40);
+      await render(<TransformScreens {...props} active targetWidth={180} />);
+      await waitForFrames(3);
+      await expectTranslation('transform-source', 40);
+      await waitForNotification('transform-finished');
+      await expectTranslation('transform-target', 0);
+    }
+  );
 });

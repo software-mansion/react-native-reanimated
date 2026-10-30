@@ -45,10 +45,6 @@ constexpr std::array kAnimatedStyleProps{
     "borderRightWidth",
     "borderTopWidth",
     "borderBottomWidth",
-    "borderStartWidth",
-    "borderEndWidth",
-    "borderHorizontalWidth",
-    "borderVerticalWidth",
     "borderColor",
     "borderLeftColor",
     "borderRightColor",
@@ -496,10 +492,6 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
         facebook::yoga::Edge::Top,
         facebook::yoga::Edge::Right,
         facebook::yoga::Edge::Bottom,
-        facebook::yoga::Edge::Start,
-        facebook::yoga::Edge::End,
-        facebook::yoga::Edge::Horizontal,
-        facebook::yoga::Edge::Vertical,
         facebook::yoga::Edge::All}) {
     viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
   }
