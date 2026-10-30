@@ -29,7 +29,7 @@ RCT_EXPORT_MODULE()
       return;
     }
     CALayer *layer = view.layer.presentationLayer ?: view.layer;
-    resolve(@{@"translateX" : @(layer.transform.m41)});
+    resolve(@{@"width" : @(layer.bounds.size.width), @"translateX" : @(layer.transform.m41)});
   });
 }
 

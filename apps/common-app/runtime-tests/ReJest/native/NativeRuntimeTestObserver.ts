@@ -11,6 +11,7 @@ export type TextInputObservation = {
 };
 
 export type TransformObservation = {
+  width: number;
   translateX: number;
 };
 

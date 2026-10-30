@@ -5,7 +5,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
+import RuntimeTestObserver, {
+  type TransformObservation,
+} from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   describe,
   expect,
@@ -182,13 +184,13 @@ describe('Shared transition transform copying', () => {
       await expectTranslation('transform-source', 40);
       await render(<TransformScreens {...props} active />);
       const source = getTestComponent('transform-source');
+      const sample: { value: TransformObservation | null } = { value: null };
       await expectEventually(async () => {
-        const width = (await source.getMountedViewProps())?.width ?? 0;
-        return width > 70 && width < 140;
-      }, 3500).toBe(true);
-      await expectTranslation('transform-source', 40);
-      const width = (await source.getMountedViewProps())?.width ?? 0;
-      expect(width > 70 && width < 140).toBe(true);
+        sample.value = await source.getTransformObservation();
+        return sample.value?.width;
+      }, 3500).toBeWithinRange(70, 140);
+      expect(sample.value).not.toBe(null);
+      expect(sample.value?.translateX).toBe(40, ComparisonMode.PIXEL);
       await waitForNotification('transform-finished');
       await expectTranslation('transform-target', 40);
     }

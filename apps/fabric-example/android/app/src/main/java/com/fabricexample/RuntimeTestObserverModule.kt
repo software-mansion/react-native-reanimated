@@ -23,6 +23,7 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
         return@runOnUiThread
       }
       val observation = Arguments.createMap()
+      observation.putDouble("width", PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble())
       observation.putDouble("translateX", PixelUtil.toDIPFromPixel(view.translationX).toDouble())
       promise.resolve(observation)
     }
