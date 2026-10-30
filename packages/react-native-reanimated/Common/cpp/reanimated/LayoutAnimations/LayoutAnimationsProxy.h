@@ -111,6 +111,8 @@ struct TransactionMeta {
   std::unordered_map<Tag, Tag> staleSnapshots;
   std::unordered_set<Tag> dueRemovals;
   std::unordered_set<Tag> recreatedTags;
+  // Whatever changes a node's children or their exiting states during updateLightTree must reset its cursors.
+  std::unordered_map<Tag, IndexCursors> indexCursors;
 };
 
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
