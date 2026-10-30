@@ -5,6 +5,7 @@ import type {
   ManagedAnimatedComponent,
 } from '../src/createAnimatedComponent/commonTypes';
 import { NativeEventsManager } from '../src/createAnimatedComponent/NativeEventsManager';
+import { findHostInstance } from '../src/platform-specific/findHostInstance';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
 jest.mock('../src/WorkletEventHandler', () => ({
@@ -17,6 +18,10 @@ jest.mock('../src/WorkletEventHandler', () => ({
 jest.mock('../src/featureFlags', () => ({
   ...jest.requireActual('../src/featureFlags'),
   getStaticFeatureFlag: () => false,
+}));
+
+jest.mock('../src/platform-specific/findHostInstance', () => ({
+  findHostInstance: jest.fn(),
 }));
 
 type TestComponent = {
@@ -151,6 +156,27 @@ describe('NativeEventsManager', () => {
     expect(nextHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
     expect(addedHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
   });
+
+  test('keeps events on the host of a component without a ref', () => {
+    const { handler, manager } = setupWithoutRef();
+
+    jest.mocked(findHostInstance).mockReturnValueOnce({ __nativeTag: 1 });
+    manager.updateEvents();
+
+    expect(handler.unregisterFromEvents).not.toHaveBeenCalled();
+    expect(handler.registerForEvents).toHaveBeenCalledTimes(1);
+    expect(handler.registerForEvents).toHaveBeenCalledWith(1, 'onScroll');
+  });
+
+  test('moves events to the new host of a component without a ref', () => {
+    const { handler, manager } = setupWithoutRef();
+
+    jest.mocked(findHostInstance).mockReturnValueOnce({ __nativeTag: 2 });
+    manager.updateEvents();
+
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.registerForEvents).toHaveBeenLastCalledWith(2, 'onScroll');
+  });
 });
 
 function setup(viewTag = 1) {
@@ -168,6 +194,21 @@ function setup(viewTag = 1) {
   manager.attachEvents();
 
   return { component, handler, manager };
+}
+
+function setupWithoutRef() {
+  const handler = makeHandler();
+  const component: TestComponent = {
+    _componentRef: null,
+    props: { onScroll: { workletEventHandler: handler } },
+    getComponentViewTag: () => 1,
+  };
+  const manager = new NativeEventsManager(
+    component as unknown as ManagedAnimatedComponent
+  );
+  manager.attachEvents();
+
+  return { handler, manager };
 }
 
 function makeHandler() {
