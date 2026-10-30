@@ -14,11 +14,15 @@ For animating text style (e.g. text color, font size or text shadow), you need t
 
 ## Animating text content
 
-For animating the text content itself, you need to choose one of the approaches described below.
+For animating the text content itself, you need to choose one of the approaches described below. If your app uses an older version of Reanimated or enables the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag, use [`AnimatedTextInput`](#using-animatedtextinput) instead.
 
 ### Using `Animated.Text` <AvailableFrom version="4.8.0"/>
 
 The recommended approach is to pass a shared value as a child of the [`Animated.Text`](../core/animatedText.mdx) component. The current value is committed as the children during the first render and then the displayed text is updated directly on the UI thread, without triggering React re-renders.
+
+:::warning
+`Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag is enabled. In such case, use [`AnimatedTextInput`](#using-animatedtextinput).
+:::
 
 #### Shared value as children
 
@@ -60,21 +64,13 @@ function Counter() {
 
 Pass the shared value itself as a child. Don't read its `value` property during render, as in `<Animated.Text>{sv.value}</Animated.Text>`, because the text becomes a static snapshot that never updates.
 
-A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. A number is converted to a string automatically. However, it is recommended to manually format the value using [`Math.round()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round) function or [`.toFixed()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed) method.
-
-In particular, the animated text may be an empty string. In such case, Reanimated renders a [zero-width space character](https://en.wikipedia.org/wiki/Zero-width_space) to keep the text from collapsing. This is an implementation detail and should not affect the behavior of the component.
+A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. A number is converted to a string automatically.
 
 `Animated.Text` can also be placed inside another `Text` component or `Animated.Text` component with animated style.
 
-`Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag is enabled.
-
-:::tip
-When animating numbers, it is recommended to apply `fontVariant: ['tabular-nums']` style to the animated counter. This way each digit has the same width which makes the layout stable and reduces the perceived shakiness of the text content, resulting in better user experience.
-:::
-
 ### Using `AnimatedTextInput`
 
-Another approach is to animate the value of `TextInput` component. This approach is no longer recommended. In some cases, the contents can be incorrectly cropped resulting in showing the ellipsis instead of the last character. Also, it is prone to crashes during a reload ([link to the issue](https://github.com/software-mansion/react-native-reanimated/issues/7647)).
+Another approach is to animate the value of `TextInput` component. This approach is no longer recommended and should be used only in apps that run a Reanimated version older than 4.8.0 or enable the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag, where `Animated.Text` doesn't update shared value children. In some cases, the contents can be incorrectly cropped resulting in showing the ellipsis instead of the last character. Also, it is prone to crashes during a reload ([link to the issue](https://github.com/software-mansion/react-native-reanimated/issues/7647)).
 
 Reanimated does not expose `Animated.TextInput` on its own, so you need to create an animated component yourself using [`createAnimatedComponent`](../core/createAnimatedComponent.mdx) function:
 

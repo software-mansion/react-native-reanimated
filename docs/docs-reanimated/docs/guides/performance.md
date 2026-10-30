@@ -127,6 +127,6 @@ const pan = useMemo(
 
 When implementing text animations (e.g. animated counters), don't use React state to periodically update the counter. Instead, store the number in a shared value and pass it (or a derived value that formats it) as a child of the [`Animated.Text`](../core/animatedText.mdx) component. This way, the text is updated on the UI thread without re-rendering the component. For more details, see [Text animations](./text-animations.mdx) guide.
 
-Prefer `Animated.Text` over the older pattern of animating the `text` prop of a `TextInput` component with `useAnimatedProps`. On Android, every update of `TextInput` text goes through the text editing machinery of the platform, which in our measurements made a `TextInput` counter about 2.5 times more expensive than the same counter rendered with `Animated.Text`. This doesn't apply if your app enables the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag, because `Animated.Text` doesn't update shared value children with it.
+Prefer `Animated.Text` over the older pattern of animating the `text` prop of a `TextInput` component with `useAnimatedProps`.
 
 You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).
