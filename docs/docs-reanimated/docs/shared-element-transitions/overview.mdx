@@ -62,11 +62,13 @@ export default function SharedElementExample() {
 
 When Reanimated detects that the current top screen on the stack changes, it checks if there are components with the same `sharedTransitionTag` on the new and old top screen.
 
-If it finds two matching components, Reanimated moves one of the native views above the screen content and hides the other view. Usually the source view moves. If React removes the source in the same update, the target view moves instead. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place.
+If it finds two matching components, Reanimated moves the source native view above the screen content and hides the target view. If React removes the source, Reanimated keeps its native subtree until the transition ends. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place, and Reanimated deletes a retained source. A running transition keeps its moving view when its target changes.
 
-The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. If the source view moves, the target's children appear when the transition ends. If the target view moves, its children move with it from the start. A child with its own `sharedTransitionTag` can animate as a separate view.
+The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. Use [`fadeContent()`](#fade-content) to fade their content. The target's children appear when the transition ends. A child with its own `sharedTransitionTag` can animate as a separate view.
 
 The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Changes that React commits to the moving view's own props or layout wait until the view returns to its parent. This includes changes from React state and `useAnimatedStyle` updates that use commits. The latest values then appear at once, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can also apply during the move.
+
+When React deletes the source, the shared transition takes priority over new exiting animations in its retained subtree. An exiting animation that already runs can finish, but Reanimated keeps its native view until the shared transition ends. Native retention does not keep the React components mounted.
 
 Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
 
@@ -163,7 +165,7 @@ const transition = SharedTransition.duration(450).fadeContent({
 - The transition uses the `sharedTransitionStyle` of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
 - A child with its own `sharedTransitionTag` moves on its own path and does not fade. A child without a tag fades out and in also when it is the same on both screens, so give such a child, for example an icon, its own `sharedTransitionTag`.
-- When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
+- When React removes the source view in the same update that starts the transition, Reanimated keeps the source native view and moves it. Its children fade out during the move. The target children fade in when it lands.
 
 ## Example
 

@@ -11,6 +11,8 @@ import Animated, {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
+  mockAnimationTimer,
   callTracker,
   describe,
   expect,
@@ -21,9 +23,9 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const SOURCE_WIDTH = 60;
 const TARGET_WIDTH = 150;
@@ -209,6 +211,27 @@ function recordHighestOpacity(tag: number) {
   return highest;
 }
 
+function recordTargetDuringSourceMove(sourceTag: number, targetTag: number) {
+  const highest = makeMutable(0);
+  scheduleOnUI(() => {
+    'worklet';
+    const record = () => {
+      const source = global._obtainMountedViewProps(sourceTag, false);
+      if (!source) {
+        return;
+      }
+      if (source.width < TARGET_WIDTH - 0.5) {
+        const opacity =
+          global._obtainMountedViewProps(targetTag, false)?.opacity ?? 0;
+        highest.value = Math.max(highest.value, opacity);
+      }
+      requestAnimationFrame(record);
+    };
+    requestAnimationFrame(record);
+  });
+  return highest;
+}
+
 async function expectOpacity(name: string, opacity: number) {
   await expectEventually(async () => {
     const props = await mountedProps(name);
@@ -323,20 +346,44 @@ describe('Shared transition with fadeContent', () => {
     expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
   });
 
-  test('fades the children of the target in during the move when React removes the source', async () => {
+  test('fades retained source children out before target children fade in', async () => {
     await render(<Screens showTarget={false} removeSource />);
     await waitForFrames();
     const sourceTag = getTestComponent('source').getTag();
+    const childTag = getTestComponent('sourceChild').getTag();
+    const targetTag = getTestComponent('target').getTag();
+    const highestTargetOpacity = recordTargetDuringSourceMove(
+      sourceTag,
+      targetTag
+    );
 
     await render(<Screens showTarget removeSource />);
-    await expectMovingWithChildOpacity('target', 0.05, CHILD_OPACITY - 0.05);
-    await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
+    await expectEventually(() =>
+      runOnUIBlocking(() => {
+        'worklet';
+        const source = global._obtainMountedViewProps(sourceTag, false);
+        const child = global._obtainMountedViewProps(childTag, false);
+        return (
+          !!source &&
+          !!child &&
+          source.width > SOURCE_WIDTH + 5 &&
+          source.width < TARGET_WIDTH - 5 &&
+          child.opacity > 0.05 &&
+          child.opacity < CHILD_OPACITY - 0.05
+        );
+      })
+    ).toBe(true);
+    await expectOpacity('target', 0);
 
     await expectOpacity('target', 1);
     await expectOpacity('targetChild', CHILD_OPACITY);
+    await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
+    await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
+    expect(highestTargetOpacity.value).toBe(0);
   });
 
   test('ends the fade-out at fadeOut.end of the move', async () => {
+    await mockAnimationTimer(false);
     const earlyFadeOut = SharedTransition.duration(3000)
       .easing(Easing.linear)
       .fadeContent({ fadeOut: { end: 0.4 } });
@@ -346,6 +393,8 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
 
     await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
     await expectEventually(async () => {
       const [view, child] = await Promise.all([
         mountedProps('source'),
@@ -360,6 +409,7 @@ describe('Shared transition with fadeContent', () => {
         isBetween(child.opacity, 0.1, CHILD_OPACITY - 0.05)
       );
     }).toBe(true);
+    await advanceAnimationTimer(1500);
     await expectEventually(async () => {
       const [view, child] = await Promise.all([
         mountedProps('source'),
@@ -375,10 +425,14 @@ describe('Shared transition with fadeContent', () => {
       );
     }).toBe(true);
 
+    await advanceAnimationTimer(1200);
+    await expectOpacity('target', 1);
+    await advanceAnimationTimer(1500);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 
   test('fades the children of the target in over fadeIn.duration', async () => {
+    await mockAnimationTimer(false);
     const slowFadeIn = SharedTransition.duration(600).fadeContent({
       fadeIn: { duration: 3000 },
     });
@@ -386,14 +440,17 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
 
     await render(<Screens showTarget sharedTransition={slowFadeIn} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
     await expectOpacity('target', 1);
     // The default fade-in lasts 300 ms here.
-    await wait(1000);
+    await advanceAnimationTimer(1000);
     const child = await mountedProps('targetChild');
     expect(
       !!child && isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
     ).toBe(true);
 
+    await advanceAnimationTimer(2000);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 });
