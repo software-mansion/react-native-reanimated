@@ -15,7 +15,7 @@ import {
 import { Button, View, type ViewProps } from 'react-native';
 
 import type { EntryOrExitLayoutType } from '../src';
-import Animated, { FadeIn, FadeOut } from '../src';
+import Animated, { BounceOut, FadeIn, FadeOut } from '../src';
 
 function Example({
   initialVisible = false,
@@ -220,6 +220,129 @@ describe('Layout Animations', () => {
 
         expectSameEnteringAnimation(screen);
       });
+    });
+  });
+
+  describe('an exiting animation that interrupts an entering animation', () => {
+    // jsdom doesn't implement the Web Animations API. Like a browser, this fake reports the
+    // entering animation of a view that's fading in as running.
+    class FakeCSSAnimation {
+      playState = 'running';
+      effect = {
+        getKeyframes: () => [
+          { offset: 0, opacity: '0' },
+          { offset: 1, opacity: '1' },
+        ],
+      };
+
+      constructor(public animationName: string) {}
+    }
+
+    const fadingInViews = new WeakSet<Element>();
+
+    function getAnimations(this: HTMLElement) {
+      return fadingInViews.has(this) && this.style.animationName
+        ? [new FakeCSSAnimation(this.style.animationName)]
+        : [];
+    }
+
+    // jsdom doesn't provide `structuredClone`, which copies the keyframes of a
+    // predefined animation. Those keyframes are plain data.
+    const hasStructuredClone = typeof structuredClone !== 'undefined';
+
+    beforeAll(() => {
+      jest.useFakeTimers();
+      Object.defineProperty(globalThis, 'CSSAnimation', {
+        value: FakeCSSAnimation,
+        configurable: true,
+      });
+      Object.defineProperty(Element.prototype, 'getAnimations', {
+        value: getAnimations,
+        configurable: true,
+      });
+      if (!hasStructuredClone) {
+        Object.defineProperty(globalThis, 'structuredClone', {
+          value: (value: unknown) => JSON.parse(JSON.stringify(value)),
+          configurable: true,
+        });
+      }
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+      delete (globalThis as { CSSAnimation?: unknown }).CSSAnimation;
+      delete (Element.prototype as Partial<Element>).getAnimations;
+      if (!hasStructuredClone) {
+        delete (globalThis as { structuredClone?: unknown }).structuredClone;
+      }
+    });
+
+    // Hides the view while its fade-in is at 40% opacity, or after it has ended
+    const renderAndHide = (
+      exiting: EntryOrExitLayoutType,
+      { isFadingIn = true } = {}
+    ) => {
+      const screen = originalRender(
+        <Example entering={FadeIn} exiting={exiting} initialVisible />
+      );
+      const box = screen.getByTestId('box1');
+      const view = box.parentElement as HTMLElement;
+
+      // Entering animations are applied on the next animation frame
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+      expect(view.style.animationName).toBe('FadeIn');
+
+      if (isFadingIn) {
+        fadingInViews.add(view);
+        // A browser reports the animated opacity as the computed opacity
+        view.style.opacity = '0.4';
+      }
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
+      });
+
+      // The exiting animation runs on a copy of the view that the children move into
+      return box.parentElement as HTMLElement;
+    };
+
+    const getKeyframesText = (animationName: string) => {
+      const styleTag = document.getElementById(
+        'ReanimatedCustomWebAnimationsStyle'
+      ) as HTMLStyleElement;
+      return Array.from(styleTag.sheet?.cssRules ?? []).find(
+        (rule) => (rule as CSSKeyframesRule).name === animationName
+      )?.cssText;
+    };
+
+    test('starts from the current opacity', () => {
+      const copy = renderAndHide(FadeOut);
+
+      expect(copy.style.animationName).toMatch(/^REA-EXITING-/);
+      expect(getKeyframesText(copy.style.animationName)).toMatch(
+        /0%\s*\{\s*opacity:\s*0\.4;/
+      );
+    });
+
+    test("keeps the predefined animation's default duration", () => {
+      const copy = renderAndHide(BounceOut);
+
+      expect(copy.style.animationName).toMatch(/^REA-EXITING-/);
+      expect(copy.style.animationDuration).toBe('0.6s');
+    });
+
+    test('stays at the current opacity during its delay', () => {
+      const copy = renderAndHide(FadeOut.delay(200));
+
+      expect(copy.style.animationFillMode).toBe('backwards');
+    });
+
+    test('uses the predefined keyframes after the entering animation has ended', () => {
+      const copy = renderAndHide(FadeOut, { isFadingIn: false });
+
+      expect(copy.style.animationName).toBe('FadeOut');
     });
   });
 });
