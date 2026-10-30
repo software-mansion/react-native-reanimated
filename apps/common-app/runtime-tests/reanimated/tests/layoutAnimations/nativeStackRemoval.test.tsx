@@ -21,13 +21,13 @@ import Animated, {
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   isViewMountedNatively,
   notify,
   render,
   test,
   useTestRef,
-  wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
@@ -175,6 +175,8 @@ const sharedNavigation = createNavigationContainerRef<{
   Source: undefined;
 }>();
 const sharedTransition = SharedTransition.duration(300);
+const SHARED_STACKS_READY = 'sharedStacksReady';
+const SHARED_SOURCE_RENDERED = 'sharedSourceRendered';
 
 function SharedBox({ name }: { name: string }) {
   const ref = useTestRef(name);
@@ -198,6 +200,9 @@ function SharedTarget() {
 }
 
 function SharedSource() {
+  useEffect(() => {
+    notify(SHARED_SOURCE_RENDERED);
+  }, []);
   return <SharedBox name="source" />;
 }
 
@@ -212,7 +217,9 @@ function NestedSource() {
 function SharedStacks() {
   return (
     <View style={styles.root}>
-      <NavigationContainer ref={sharedNavigation}>
+      <NavigationContainer
+        ref={sharedNavigation}
+        onReady={() => notify(SHARED_STACKS_READY)}>
         <SharedOuter.Navigator>
           <SharedOuter.Screen name="Target" component={SharedTarget} />
           <SharedOuter.Screen
@@ -238,13 +245,26 @@ describe('Layout animations on native stack removal', () => {
   // On Android the outer and the nested screen both hold the source of the transition.
   test('moves a shared source out of a nested stack on an outer pop', async () => {
     await render(<SharedStacks />);
-    await wait(500);
+    await waitForNotification(SHARED_STACKS_READY);
     sharedNavigation.navigate('Source');
-    await wait(1000);
+    await waitForNotification(SHARED_SOURCE_RENDERED);
+    const source = getTestComponent('source');
+    const sourceTag = source.getTag();
+    await expectEventually(
+      async () => (await source.getMountedViewProps())?.opacity === 1
+    ).toBe(true);
+    const yInScreen = (await source.getMountedViewProps())?.y;
+
     sharedNavigation.goBack();
-    await wait(1000);
-    const targetTag = getTestComponent('target').getTag();
-    expect(await isViewMountedNatively(targetTag)).toBe(true);
+    // The frame is relative to the parent, so it changes when the view moves to the root.
+    await expectEventually(async () => {
+      const y = (await source.getMountedViewProps())?.y;
+      return y !== undefined && y !== yInScreen;
+    }).toBe(true);
+    await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
+    expect(
+      await isViewMountedNatively(getTestComponent('target').getTag())
+    ).toBe(true);
     await render(null);
   });
 });
