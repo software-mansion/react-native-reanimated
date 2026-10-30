@@ -464,6 +464,7 @@ void LayoutAnimationsProxy::attachCarrier(
     const PropsParserContext &propsParserContext) const {
   const auto node = run.carrier;
   const auto tag = node->current.tag;
+  react_native_assert(!hasUnqueuedCarrierFrame(tag) && "Queue carrier frames before attaching the carrier");
   const auto mounted = carrierViewOnScreen(run);
   const auto parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");

@@ -200,6 +200,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if (removesRootChildren) {
     transaction.surfaceDropped = std::exchange(surfaceToRemove_, false);
   }
+#ifdef ANDROID
+  if (deferCarrierTransaction(mutations, transaction.surfaceDropped)) {
+    return MountingTransaction{surfaceId, transactionNumber, {}, telemetry};
+  }
+#endif
   auto &filteredMutations = transaction.filteredMutations;
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
@@ -1112,6 +1117,8 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     visibleScreens_.clear();
   }
 #ifdef ANDROID
+  deferredCarrierTransactions_.clear();
+  carrierPullDeferred_ = false;
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
   unqueuedCarrierFrames_.clear();
@@ -1200,7 +1207,47 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 }
 
 #ifdef ANDROID
+// Keep each React batch intact until the root-relative carrier frames enter the mount queue.
+// Replay one batch per JS-thread pull, so its indices and tag lifetimes stay in order.
+bool LayoutAnimationsProxy::deferCarrierTransaction(ShadowViewMutationList &mutations, bool &surfaceDropped) const {
+  const bool flushStructuralMutations = shouldFlushStructuralMutations();
+  const bool changesTransition = transition_ && transition_->updated && transition_->state != TransitionState::ACTIVE;
+  if (mutations.empty() && !changesTransition && !flushStructuralMutations) {
+    return false;
+  }
+  if (flushStructuralMutations) {
+    cleanupPullScheduled_ = false;
+  }
+  if (unqueuedCarrierFrames_.empty() && deferredCarrierTransactions_.empty() && !carrierPullDeferred_) {
+    return false;
+  }
+  if (!mutations.empty()) {
+    deferredCarrierTransactions_.push_back({std::move(mutations), surfaceDropped});
+    mutations.clear();
+  }
+  surfaceDropped = false;
+  carrierPullDeferred_ = true;
+  if (unqueuedCarrierFrames_.empty() && flushStructuralMutations) {
+    if (!deferredCarrierTransactions_.empty()) {
+      auto deferred = std::move(deferredCarrierTransactions_.front());
+      deferredCarrierTransactions_.pop_front();
+      mutations = std::move(deferred.mutations);
+      surfaceDropped = deferred.surfaceDropped;
+    }
+    carrierPullDeferred_ = !deferredCarrierTransactions_.empty();
+    return false;
+  }
+  if (unqueuedCarrierFrames_.empty() && !cleanupPullScheduled_) {
+    cleanupPullScheduled_ = true;
+    scheduleCleanupPull();
+  }
+  return true;
+}
+
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
+  if (carrierPullDeferred_ && unqueuedCarrierFrames_.empty()) {
+    return true;
+  }
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
     return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedCarrier(tag));
@@ -1210,7 +1257,9 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
 void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
   if (flushedStructuralMutations) {
     cleanupPullScheduled_ = false;
-  } else if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
+  }
+  if ((!flushedStructuralMutations || carrierPullDeferred_) && hasPendingStructuralCleanup() &&
+      !cleanupPullScheduled_) {
     cleanupPullScheduled_ = true;
     scheduleCleanupPull();
   }
@@ -1255,7 +1304,7 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
   std::vector<Tag> tags;
   for (const auto &mutation : mutations) {
     const auto tag = mutation.newChildShadowView.tag;
-    if (mutation.type == ShadowViewMutation::Update && completedAnimations_.contains(tag) && isSharedCarrier(tag)) {
+    if (mutation.type == ShadowViewMutation::Update && isSharedCarrier(tag)) {
       tags.push_back(tag);
       unqueuedCarrierFrames_[tag]++;
     }
