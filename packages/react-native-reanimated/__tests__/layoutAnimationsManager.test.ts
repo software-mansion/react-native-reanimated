@@ -297,6 +297,28 @@ describe('LayoutAnimationsManager', () => {
       manager.stop(11);
     });
 
+    test('starts from a static value of the interrupted animation', () => {
+      // `withStyleAnimation` turns a static value into an animation when it starts
+      startAndRunTo40Percent(13, {
+        initialValues: { opacity: 0, transform: [{ scale: 0 }] },
+        animations: {
+          opacity: 0.5,
+          transform: [{ scale: makeLinearAnimation(1) }],
+        },
+      });
+
+      manager.start(13, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(13, {
+        opacity: 0.5,
+        transform: [{ scale: 0.4 }],
+      });
+      manager.stop(13);
+    });
+
     test('starts other animations from their initial values', () => {
       startAndRunTo40Percent(12, {
         initialValues: { opacity: 0 },
