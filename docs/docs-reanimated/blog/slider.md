@@ -15,7 +15,7 @@ We use the `useSharedValue` hook to store the offset of the slider handle, allow
 
 <CollapsibleCode src={SliderSrc} showLines={[23,24]}/>
 
-This example is done using [Pan gesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) from `react-native-gesture-handler` library. It adjusts the handle's position and width of the box accordingly to the current offset. The offset is a [shared value](/docs/fundamentals/glossary#shared-value) and is updated during the `onChange` event of the pan gesture. We compute it from the offset at the start of the drag and the total translation, clamped to the track, so the handle doesn't move until the pointer comes back from beyond the end of the track.
+This example is done using [Pan gesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) from `react-native-gesture-handler` library. It adjusts the handle's position and width of the box accordingly to the current offset. The offset is a [shared value](/docs/fundamentals/glossary#shared-value) and is updated during the `onChange` event of the pan gesture, with clamping to the bounds of the track.
 
 <samp id="Slider">Slider</samp>
 
