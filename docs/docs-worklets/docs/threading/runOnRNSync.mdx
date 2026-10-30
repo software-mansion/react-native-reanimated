@@ -6,7 +6,7 @@ sidebar_position: 42 # Use alphabetical order
   # runOnRNSync
 </Badges>
 
-`runOnRNSync` lets you run a function synchronously on the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime) from any runtime and get its return value. The calling thread waits until the JavaScript thread finishes running the function.
+`runOnRNSync` lets you run a function synchronously on the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) from any runtime and get its return value. The calling thread waits until the JavaScript thread finishes running the function.
 
 ## Reference
 
@@ -37,7 +37,7 @@ scheduleOnUI(() => {
 
 #### fun
 
-A function you want to execute on the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime). It can be a function defined on the RN Runtime, a [worklet](../fundamentals/glossary.mdx#worklet) or a host function. The same functions as in [`scheduleOnRN`](./scheduleOnRN.mdx#what-functions-can-be-passed-to-scheduleonrn) are accepted.
+A function you want to execute on the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime). It can be a function defined on the RN Runtime, a [worklet](../tutorials/0-concurrency-model.mdx#worklet-functions) or a host function. The same functions as in [`scheduleOnRN`](./scheduleOnRN.mdx#what-functions-can-be-passed-to-scheduleonrn) are accepted.
 
 #### args
 

@@ -1,0 +1,268 @@
+.phoneWrap {
+  --phone-width: 300px;
+  --phone-height: 620px;
+  --phone-bezel: 11px;
+  --phone-radius: 50px;
+  --phone-frame: var(--swm-navy);
+  --phone-frame-edge: var(--swm-light-off-navy);
+  --phone-shadow: rgba(35, 39, 54, 0.3);
+  --phone-screen: var(--swm-purple-light-40);
+  --phone-ink: var(--swm-navy-light-100);
+  --phone-ink-soft: var(--swm-navy-light-60);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  margin: 0;
+}
+
+[data-theme='dark'] .phoneWrap {
+  --phone-frame: #16192a;
+  --phone-frame-edge: var(--swm-light-off-navy);
+  --phone-shadow: rgba(22, 25, 42, 0.45);
+  --phone-screen: var(--swm-navy);
+  --phone-ink: var(--swm-off-white);
+  --phone-ink-soft: var(--swm-navy-dark-40);
+}
+
+.compact {
+  --phone-width: 272px;
+  --phone-height: 540px;
+  --phone-radius: 44px;
+}
+
+@media (max-height: 820px) and (min-width: 1024px) {
+  .phoneWrap:not(.compact) {
+    --phone-width: 262px;
+    --phone-height: 540px;
+    --phone-radius: 44px;
+  }
+}
+
+.phone {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--phone-width);
+  max-width: 100%;
+  height: var(--phone-height);
+  padding: var(--phone-bezel);
+  border-radius: var(--phone-radius);
+  background: var(--phone-frame);
+  box-shadow:
+    inset 0 0 0 1.5px var(--phone-frame-edge),
+    -14px 14px 0 var(--phone-shadow);
+  transform-origin: 50% 70%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Side buttons, so the frame reads as a device rather than a rounded box. */
+.phone::before,
+.phone::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--phone-frame);
+}
+
+.phone::before {
+  top: 22%;
+  left: -3px;
+  height: 56px;
+  box-shadow: 0 72px 0 var(--phone-frame);
+}
+
+.phone::after {
+  top: 28%;
+  right: -3px;
+  height: 84px;
+}
+
+.tilt {
+  animation: tilt 2.8s ease-in-out infinite;
+}
+
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: calc(var(--phone-radius) - var(--phone-bezel));
+  background: var(--phone-screen);
+  color: var(--phone-ink);
+  isolation: isolate;
+}
+
+.statusBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 24px 0 30px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  width: 92px;
+  height: 27px;
+  border-radius: 14px;
+  background: var(--phone-frame);
+  transform: translateX(-50%);
+}
+
+.statusIcons {
+  display: block;
+}
+
+.app {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 20px 36px;
+  animation: screenIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.appTitle {
+  margin: 0 0 4px;
+  font-family: var(--swm-title-landing-font);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--phone-ink);
+}
+
+.demo {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 -20px;
+}
+
+.demo > * {
+  flex: 1;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--phone-ink-soft);
+}
+
+.loading {
+  align-self: center;
+  margin: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--phone-ink-soft);
+  border-top-color: transparent;
+  animation: spin 0.9s linear infinite;
+  flex: 0 0 auto !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.homeIndicator {
+  position: absolute;
+  bottom: 9px;
+  left: 50%;
+  width: 36%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--phone-ink);
+  opacity: 0.85;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagerDot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: var(--swm-white-transparent-dark);
+  cursor: pointer;
+  transition:
+    width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.3s;
+}
+
+.pagerDot:hover {
+  background: var(--swm-white);
+}
+
+.pagerDotActive {
+  width: 30px;
+  background: var(--swm-white);
+}
+
+.pagerDot:focus-visible {
+  outline: 2px solid var(--swm-white);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt,
+  .loading {
+    animation: none;
+  }
+
+  .app {
+    animation-name: fadeIn;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+  }
+}

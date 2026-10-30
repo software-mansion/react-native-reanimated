@@ -1,119 +1,78 @@
-.animationsContainer {
-  color: var(--swm-white);
-  margin: 0 auto;
-  width: 60%;
-  margin: 0 auto;
-  margin-top: -8.5rem;
+.showcase {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 75%;
+  margin: -8.5rem auto 0;
 }
 
-.animationsContainer h3 {
-  color: var(--swm-white);
-  font-size: var(--swm-h2-font-size);
+@media (min-width: 1024px) {
+  .showcase {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: clamp(3.5rem, 7vw, 8rem);
+  }
 }
 
-.animationsContainer h5 {
-  color: var(--swm-white);
-  font-size: 1.25rem;
+@media (min-width: 1441px) {
+  .showcase {
+    width: 60%;
+    min-width: 1080px;
+  }
 }
 
-.animationsContainer > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-  margin-bottom: 7.5rem;
-}
-
-.animationsContainer {
+.stage {
   position: relative;
 }
 
-.dotsContainer {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 5%;
+/* The phone's demo area is full-bleed; the fling clamps to this box, so the
+ * inset keeps the square off the screen edges. */
+.gestureInset {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  padding: 0 20px;
 }
 
-.showDots {
-  opacity: 1;
+.stageSticky {
+  position: sticky;
+  top: max(calc(var(--ifm-navbar-height) + 1.5rem), calc(50vh - 350px));
+  padding: 2rem 0 2rem 14px;
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--swm-white-transparent-dark);
-  margin: 14px 0;
-  transition: all 0.3s ease-in-out;
-}
-
-.dot:hover {
-  cursor: pointer;
-  background-color: var(--swm-red-light-100);
-}
-
-.dot.active {
-  background-color: var(--swm-red-light-100);
-}
-
-[data-theme='dark'] .dot {
-  background-color: var(--swm-white-transparent-light);
-}
-
-[data-theme='dark'] .dot:hover {
-  background-color: var(--swm-purple-dark-40);
-}
-
-[data-theme='dark'] .dot.active {
-  background-color: var(--swm-purple-dark-40);
-}
-
-@media (max-width: 1440px) {
-  .animationsContainer {
-    width: 75%;
-  }
-  .dotsContainer {
-    right: 50px;
+@media (max-height: 820px) {
+  .stageSticky {
+    top: max(calc(var(--ifm-navbar-height) + 1rem), calc(50vh - 300px));
   }
 }
 
-@media (max-width: 1024px) {
-  .animationsContainer {
+.chapters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Single column: the chapters are short, so leave room for the bottom wave
+ * that AnimationsBackground pulls up over the end of the section. */
+@media (max-width: 1023px) {
+  .showcase {
     margin-top: -4rem;
+    margin-bottom: 7.5rem;
   }
-  .dotsContainer {
-    display: none;
+}
+
+@media (max-width: 390px) {
+  .showcase {
+    margin-bottom: 7rem;
   }
 }
 
 @media (max-width: 768px) {
-  .animationsContainer {
+  .showcase {
     width: 80%;
     margin-top: -1.5rem;
   }
 }
 
-@media (max-width: 390px) {
-  .animationsContainer > div:first-child {
-    margin-bottom: 7rem;
-    gap: 1.5rem;
-  }
-  .animationsContainer h3 {
-    font-size: 1.5rem;
-  }
-
-  .animationsContainer h5 {
-    font-size: 1.125rem;
-  }
-}
-
-@media (min-width: 1025px) {
-  .dotsContainer {
-    display: inline;
+@media (max-width: 420px) {
+  .showcase {
+    width: calc(100% - 2.5rem);
   }
 }
