@@ -5,11 +5,14 @@ import type {
   ProcessedColorStop,
   ProcessedDirection,
 } from './common/style/processors/backgroundImage';
+import type { ProcessedColor } from './common/style/processors/colors';
 import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
-import type { StyleProps } from './commonTypes';
+import { unprocessObjectFit } from './common/style/processors/image';
+import { unprocessVerticalAlign } from './common/style/processors/text';
+import type { SettledUpdate } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -45,13 +48,11 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates([
       ...this.viewsMap.keys(),
     ]);
-    for (const { viewTag, styleProps } of settledUpdates) {
-      if (styleProps === null) {
-        continue;
-      }
+    for (const settledUpdate of settledUpdates) {
+      const { viewTag, props, style } = settledUpdate;
       const component = this.viewsMap.get(viewTag);
-      unprocessProps(styleProps);
-      component?._syncStylePropsBackToReact(styleProps);
+      unprocessSettledUpdate(settledUpdate);
+      component?._syncStylePropsBackToReact(props, style);
     }
   },
 
@@ -70,46 +71,66 @@ export const PropsRegistryGarbageCollector = {
   },
 };
 
-export function unprocessProps(props: StyleProps) {
+export function unprocessSettledUpdate({
+  props,
+  style,
+  keysLastWrittenByAnimatedStyle,
+}: Omit<SettledUpdate, 'viewTag'>) {
   unprocessColorsInProps(props);
-  unprocessBoxShadow(props);
-  unprocessBackgroundImage(props);
-}
-
-function unprocessBoxShadow(props: StyleProps) {
-  if (Array.isArray(props.boxShadow)) {
-    // @ts-ignore props is readonly
-    props.boxShadow = props.boxShadow.map((boxShadow) => ({
-      ...boxShadow,
-      color: unprocessColor(boxShadow.color),
-    }));
-  }
-}
-
-function unprocessBackgroundImage(props: StyleProps) {
-  for (const key of [
-    'backgroundImage',
-    'experimental_backgroundImage',
-  ] as const) {
-    const value = props[key];
-    if (!Array.isArray(value)) {
+  unprocessColorsInProps(style);
+  for (const key of keysLastWrittenByAnimatedStyle) {
+    const unprocess = STYLE_BUILDER_VALUE_UNPROCESSORS[key];
+    if (!unprocess) {
       continue;
     }
-    // @ts-ignore props is readonly
-    props[key] = (value as ProcessedBackgroundImageValue[]).map(
-      (backgroundImage) => {
-        const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
-        if (backgroundImage.type === 'linear-gradient') {
-          return {
-            ...backgroundImage,
-            direction: unprocessDirection(backgroundImage.direction),
-            colorStops,
-          };
-        }
-        return { ...backgroundImage, colorStops };
+    for (const settledValues of [props, style]) {
+      if (key in settledValues) {
+        settledValues[key] = unprocess(settledValues[key]);
       }
-    );
+    }
   }
+  if (keysLastWrittenByAnimatedStyle.includes('resizeMode')) {
+    unprocessObjectFit(style);
+  }
+  if (keysLastWrittenByAnimatedStyle.includes('textAlignVertical')) {
+    unprocessVerticalAlign(style);
+  }
+}
+
+const STYLE_BUILDER_VALUE_UNPROCESSORS: Partial<
+  Record<string, (value: unknown) => unknown>
+> = {
+  boxShadow: unprocessBoxShadow,
+  backgroundImage: unprocessBackgroundImage,
+  // eslint-disable-next-line eslint-core/camelcase
+  experimental_backgroundImage: unprocessBackgroundImage,
+};
+
+function unprocessBoxShadow(value: unknown) {
+  if (!Array.isArray(value)) {
+    return value;
+  }
+  return (value as { color: ProcessedColor }[]).map((boxShadow) => ({
+    ...boxShadow,
+    color: unprocessColor(boxShadow.color),
+  }));
+}
+
+function unprocessBackgroundImage(value: unknown) {
+  if (!Array.isArray(value)) {
+    return value;
+  }
+  return (value as ProcessedBackgroundImageValue[]).map((backgroundImage) => {
+    const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
+    if (backgroundImage.type === 'linear-gradient') {
+      return {
+        ...backgroundImage,
+        direction: unprocessDirection(backgroundImage.direction),
+        colorStops,
+      };
+    }
+    return { ...backgroundImage, colorStops };
+  });
 }
 
 function unprocessDirection({ type, value }: ProcessedDirection) {

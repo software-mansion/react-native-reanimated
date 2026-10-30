@@ -188,6 +188,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations skip exiting',
+    importTest: () => {
+      require('./tests/layoutAnimations/skipExiting.test');
+    },
+  },
+  {
     testSuiteName: 'layout animations native stack removal',
     importTest: () => {
       require('./tests/layoutAnimations/nativeStackRemoval.test');
@@ -216,6 +222,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       // TODO: investigate and fix, measure returns null sometimes
       // require('./tests/advancedAPI/measure.test');
       require('./tests/advancedAPI/staticFeatureFlags.test');
+    },
+  },
+  {
+    testSuiteName: 'animated sensor',
+    importTest: () => {
+      require('./tests/advancedAPI/useAnimatedSensor.test');
     },
   },
   {

@@ -20,13 +20,13 @@ Please note that downgrading your Expo SDK version or using an older release of 
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
 
-**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
+**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](./feature-flags.md#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](./feature-flags.md#disable_commit_pausing_mechanism).
 
 ### ⚠️ Lower FPS while scrolling
 
 **Problem:** FPS drops when there are many animated components on the screen during scrolling.
 
-**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits).
+**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags.md#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags.md#use_commit_hook_only_for_react_commits).
 
 You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once).
 
@@ -34,7 +34,7 @@ You can also consider enabling `enableCppPropsIteratorSetter` feature flag as de
 
 **Problem:** When animating many components simultaneously (also across multiple screens) you might notice FPS regressions.
 
-**Solution 1:** Enable `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) static feature flags as described [here](/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
+**Solution 1:** Enable `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) static feature flags as described [here](./feature-flags.md#android_synchronously_update_ui_props) for Android and [here](./feature-flags.md#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
@@ -95,11 +95,11 @@ Animating non-layout properties (like `transform`, `opacity` or `backgroundColor
 
 Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
 
-Additionally, non-layout properties can be updated using a fast path – more details [here](/docs/guides/feature-flags#android_synchronously_update_ui_props).
+Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags.md#android_synchronously_update_ui_props).
 
 ### 💡 Memoize frame callbacks
 
-If you are using [`useFrameCallback`](/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you are using React Compiler, the frame callback should be memoized automatically.
+If you are using [`useFrameCallback`](../advanced/useFrameCallback.mdx), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you are using React Compiler, the frame callback should be memoized automatically.
 
 ```tsx
 useFrameCallback(
@@ -127,6 +127,6 @@ const pan = useMemo(
 
 When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/89db30708664ca07ce904030cc253fd0774e8ef8/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
 
-We are also working on adding support for animating text inside `Animated.Text` component using a shared value – see [PR #8595](https://github.com/software-mansion/react-native-reanimated/pull/8595).
+You can also pass the shared value directly as a child of the [`Animated.Text`](../core/animatedText.mdx) component.
 
 You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).

@@ -142,6 +142,7 @@ const config = {
     ({
       image: 'img/og-image.png',
       colorMode: { respectPrefersColorScheme: true },
+      docs: { sidebar: { hideable: true } },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -265,6 +266,11 @@ const config = {
             ],
             module: {
               rules: [
+                {
+                  test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
+                  enforce: 'pre',
+                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
                 {

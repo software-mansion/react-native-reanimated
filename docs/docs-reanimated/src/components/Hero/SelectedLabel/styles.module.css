@@ -24,6 +24,48 @@
   /* left */
 }
 
+/* While a handle is held or the label is still gliding, the dashes march
+ * clockwise like a live selection in a design tool. */
+.selection[data-active='true'] {
+  animation: marchingAnts 0.5s linear infinite;
+}
+
+@keyframes marchingAnts {
+  from {
+    background-position:
+      0 0,
+      100% 0,
+      0 100%,
+      0 0;
+  }
+  to {
+    background-position:
+      var(--swm-dash-spacing) 0,
+      100% var(--swm-dash-spacing),
+      calc(-1 * var(--swm-dash-spacing)) 100%,
+      0 calc(-1 * var(--swm-dash-spacing));
+  }
+}
+
+/* Effect layer. Letter transforms are written per frame by effects.ts. */
+.fxLayer {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection[data-active='true'] {
+    animation: none;
+  }
+}
+
+.letter {
+  display: inline-block;
+  transform-origin: 50% 70%;
+  will-change: transform;
+}
+
 .selectionContainer {
   position: relative;
   text-align: center;

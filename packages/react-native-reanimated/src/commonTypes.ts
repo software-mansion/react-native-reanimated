@@ -403,7 +403,9 @@ export type ShadowNodeWrapper = {
 
 export type SettledUpdate = {
   viewTag: number;
-  styleProps: StyleProps | null;
+  props: StyleProps;
+  style: StyleProps;
+  keysLastWrittenByAnimatedStyle: string[];
 };
 
 export enum KeyboardState {

@@ -12,6 +12,8 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -110,7 +112,17 @@ struct LightNode {
   // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
   // The full set accumulates here and becomes a `Props` only when a consumer reads the node.
   folly::dynamic accumulatedRawProps = nullptr;
+  // For each prop changed since the last fold, the props of the commit that set it last. Holding
+  // them, rather than copying their values into `accumulatedRawProps`, keeps commits cheap.
+  std::unordered_map<std::string, Props::Shared> pendingRawPropOwners;
   bool propsNeedResolve = false;
+
+  void foldPendingRawProps() {
+    for (const auto &[name, owner] : pendingRawPropOwners) {
+      accumulatedRawProps[name] = owner->rawProps.at(name);
+    }
+    pendingRawPropOwners.clear();
+  }
 #endif
   ExitingState state = ExitingState::LIVE;
   std::weak_ptr<LightNode> parent;
