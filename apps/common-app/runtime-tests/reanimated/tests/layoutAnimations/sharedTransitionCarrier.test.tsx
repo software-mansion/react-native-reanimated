@@ -1,16 +1,19 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
   FadeOut,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -19,6 +22,7 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 function Target({
   active,
@@ -105,8 +109,39 @@ function Screens({
   );
 }
 
-function transitionWithNotification() {
-  return SharedTransition.duration(1200).withCallback((finished) => {
+function RecreatedChildScreens({
+  active,
+  hidden,
+  transition,
+}: {
+  active: boolean;
+  hidden: boolean;
+  transition: SharedTransition;
+}) {
+  const source = useTestRef('source');
+  const child = useTestRef('recreatedChild');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={source}
+          sharedTransitionTag="carrier"
+          sharedTransitionStyle={transition}
+          style={[styles.source, active && { display: 'contents' }]}>
+          <Animated.View
+            ref={child}
+            exiting={FadeOut.duration(1000)}
+            style={[styles.child, hidden && { display: 'none' }]}
+          />
+        </Animated.View>
+      </SharedTransitionBoundary>
+      {active && <Target active transition={transition} opacity={1} mounted />}
+    </View>
+  );
+}
+
+function transitionWithNotification(duration = 1200) {
+  return SharedTransition.duration(duration).withCallback((finished) => {
     'worklet';
     if (finished) {
       notify('carrier-finished');
@@ -135,7 +170,71 @@ async function expectAtHome(name: string, width: number, opacity: number) {
 }
 
 describe('Shared transition moves a real native view', () => {
+  const recreateChildTest = Platform.OS === 'ios' ? test : test.skip;
+  recreateChildTest(
+    'keeps a retained carrier when React recreates its last child tag',
+    async () => {
+      await mockAnimationTimer(false);
+      const transition = transitionWithNotification(4000).easing(Easing.linear);
+      await render(
+        <RecreatedChildScreens
+          active={false}
+          hidden={false}
+          transition={transition}
+        />
+      );
+      await expectEventually(
+        async () =>
+          (await getTestComponent('source').getMountedViewProps())?.width
+      ).toBe(60, ComparisonMode.PIXEL);
+      const sourceTag = getTestComponent('source').getTag();
+      const childTag = getTestComponent('recreatedChild').getTag();
+
+      await render(
+        <RecreatedChildScreens active={false} hidden transition={transition} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(200);
+      await render(
+        <RecreatedChildScreens active hidden transition={transition} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      await expectEventually(
+        async () =>
+          (await getTestComponent('source').getMountedViewProps())?.width
+      ).toBe(71.25, ComparisonMode.PIXEL);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+      expect(
+        (await getTestComponent('target').getMountedViewProps())?.opacity
+      ).toBe(0);
+
+      await render(
+        <RecreatedChildScreens active hidden={false} transition={transition} />
+      );
+      await waitForFrames(3);
+      expect(getTestComponent('recreatedChild').getTag()).toBe(childTag);
+      expect(
+        (await getTestComponent('recreatedChild').getMountedViewProps())
+          ?.opacity
+      ).toBe(1);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+      expect(
+        (await getTestComponent('target').getMountedViewProps())?.opacity
+      ).toBe(0);
+
+      await advanceAnimationTimer(4000);
+      await waitForNotification('carrier-finished');
+      await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(
+        false
+      );
+      expect(await isViewMountedNatively(childTag)).toBe(true);
+      await expectAtHome('target', 150, 1);
+    }
+  );
+
   test('moves the source with its untagged child and keeps the target hidden', async () => {
+    await mockAnimationTimer(false);
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
@@ -143,6 +242,8 @@ describe('Shared transition moves a real native view', () => {
     const childTag = getTestComponent('sourceChild').getTag();
 
     await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
     await expectMoving('source');
     expect(getTestComponent('source').getTag()).toBe(sourceTag);
     expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
@@ -156,17 +257,28 @@ describe('Shared transition moves a real native view', () => {
     await render(
       <Screens active transition={transition} targetOpacity={0.7} />
     );
-    await waitForFrames();
+    await waitForFrames(3);
     expect(
       (await getTestComponent('target').getMountedViewProps())?.opacity
     ).toBe(0);
+    await advanceAnimationTimer(700);
+    const sourceOpacity = (
+      await getTestComponent('source').getMountedViewProps()
+    )?.opacity;
+    expect(
+      sourceOpacity !== undefined && sourceOpacity > 0.7 && sourceOpacity < 1
+    ).toBe(true);
+    expect(
+      (await getTestComponent('target').getMountedViewProps())?.opacity
+    ).toBe(0);
+    await advanceAnimationTimer(500);
     await waitForNotification('carrier-finished');
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 0.7);
     expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
   });
 
-  test('moves the target when React removes the source in the same update', async () => {
+  test('keeps the source and its children when React removes their screen', async () => {
     const transition = transitionWithNotification();
     await render(
       <Screens active={false} transition={transition} removeSource />
@@ -176,7 +288,23 @@ describe('Shared transition moves a real native view', () => {
     const childTag = getTestComponent('sourceChild').getTag();
 
     await render(<Screens active transition={transition} removeSource />);
-    await expectMoving('target');
+    await expectEventually(() =>
+      runOnUIBlocking(() => {
+        'worklet';
+        const source = global._obtainMountedViewProps(sourceTag, false);
+        const child = global._obtainMountedViewProps(childTag, false);
+        return (
+          !!source &&
+          !!child &&
+          source.opacity > 0 &&
+          source.width > 65 &&
+          source.width < 145
+        );
+      })
+    ).toBe(true);
+    expect(
+      (await getTestComponent('target').getMountedViewProps())?.opacity
+    ).toBe(0);
     const targetTag = getTestComponent('target').getTag();
     const targetChild = getTestComponent('targetChild');
     const targetChildTag = targetChild.getTag();
@@ -191,6 +319,53 @@ describe('Shared transition moves a real native view', () => {
     expect(getTestComponent('targetChild').getTag()).toBe(targetChildTag);
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
     await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
+  });
+
+  test('deletes retained content before the run ends and starts a new source', async () => {
+    const transition = SharedTransition.duration(30000);
+    await render(
+      <Screens active={false} transition={transition} removeSource />
+    );
+    await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const childTag = getTestComponent('sourceChild').getTag();
+    await render(<Screens active transition={transition} removeSource />);
+    await waitForFrames(3);
+    expect(await isViewMountedNatively(sourceTag)).toBe(true);
+    const targetTag = getTestComponent('target').getTag();
+    await render(
+      <Screens
+        active
+        transition={transition}
+        removeSource
+        targetMounted={false}
+      />
+    );
+    await expectEventually(async () => {
+      const mounted = await Promise.all(
+        [targetTag, sourceTag, childTag].map(isViewMountedNatively)
+      );
+      return mounted.every((value) => !value);
+    }, 2000).toBe(true);
+
+    const nextTransition = transitionWithNotification(4000);
+    await render(
+      <Screens key="new" active={false} transition={nextTransition} />
+    );
+    await waitForFrames();
+    const newSourceTag = getTestComponent('source').getTag();
+    expect(newSourceTag === sourceTag).toBe(false);
+    await render(<Screens key="new" active transition={nextTransition} />);
+    await expectEventually(async () => {
+      const source = await getTestComponent('source').getMountedViewProps();
+      const target = await getTestComponent('target').getMountedViewProps();
+      return !!source && source.width > 60 && !!target && target.opacity === 0;
+    }, 2000).toBe(true);
+    expect(getTestComponent('source').getTag()).toBe(newSourceTag);
+    expect(await isViewMountedNatively(sourceTag)).toBe(false);
+    await waitForNotification('carrier-finished');
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
   });
 
   for (const [kind, targetExiting] of [

@@ -7,10 +7,13 @@ import Animated, {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  isViewMountedNatively,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -83,28 +86,34 @@ function Screens({
   innerSize = 60,
   innerColor = '#ffffff',
   transitions = innerEndsFirst,
+  removeSource = false,
 }: {
   active: boolean;
   innerSize?: number;
   innerColor?: string;
   transitions?: Transitions;
+  removeSource?: boolean;
 }) {
   const inner = useTestRef('sourceInner');
+  const outer = useTestRef('sourceOuter');
   return (
     <View style={styles.container}>
-      <SharedTransitionBoundary isActive={!active}>
-        <Animated.View
-          sharedTransitionTag="outer"
-          sharedTransitionStyle={transitions.outer}
-          style={styles.sourceOuter}>
+      {!(active && removeSource) && (
+        <SharedTransitionBoundary isActive={!active}>
           <Animated.View
-            ref={inner}
-            sharedTransitionTag="inner"
-            sharedTransitionStyle={transitions.inner}
-            style={styles.sourceInner}
-          />
-        </Animated.View>
-      </SharedTransitionBoundary>
+            ref={outer}
+            sharedTransitionTag="outer"
+            sharedTransitionStyle={transitions.outer}
+            style={styles.sourceOuter}>
+            <Animated.View
+              ref={inner}
+              sharedTransitionTag="inner"
+              sharedTransitionStyle={transitions.inner}
+              style={styles.sourceInner}
+            />
+          </Animated.View>
+        </SharedTransitionBoundary>
+      )}
       {active && (
         <Target
           innerSize={innerSize}
@@ -230,6 +239,76 @@ async function opacityOf(name: string) {
 }
 
 describe('Nested shared transitions', () => {
+  test('retargets a retained inner carrier while it waits to land', async () => {
+    await render(<Screens active={false} removeSource />);
+    await waitForFrames();
+    const innerTag = getTestComponent('sourceInner').getTag();
+    await render(<Screens active removeSource />);
+    await waitForNotification('inner-finished');
+    await waitForFrames(2);
+    await render(<Screens active removeSource innerSize={90} />);
+    await expectEventually(() =>
+      runOnUIBlocking(() => {
+        'worklet';
+        const inner = global._obtainMountedViewProps(innerTag, false);
+        return (
+          !!inner && inner.width > 61 && inner.width < 89 && inner.opacity === 1
+        );
+      })
+    ).toBe(true);
+    await expectEventually(() =>
+      runOnUIBlocking(() => {
+        'worklet';
+        const width = global._obtainMountedViewProps(innerTag, false)?.width;
+        return width !== undefined && Math.abs(width - 90) < 0.5;
+      })
+    ).toBe(true);
+    expect(await opacityOf('targetOuter')).toBe(0);
+    await waitForNotification('outer-finished');
+    await expectEventually(() => isViewMountedNatively(innerTag)).toBe(false);
+    await expectEventually(() => opacityOf('targetInner')).toBe(1);
+  });
+
+  for (const [order, transitions] of [
+    ['inner first', innerEndsFirst],
+    ['outer first', outerEndsFirst],
+  ] as const) {
+    test(`keeps deleted nested carriers independent when they finish ${order}`, async () => {
+      await render(
+        <Screens active={false} transitions={transitions} removeSource />
+      );
+      await waitForFrames();
+      const innerTag = getTestComponent('sourceInner').getTag();
+      const outerTag = getTestComponent('sourceOuter').getTag();
+      await render(<Screens active transitions={transitions} removeSource />);
+      await waitForNotification(
+        order === 'inner first' ? 'inner-finished' : 'outer-finished'
+      );
+      await waitForFrames(2);
+      expect(await isViewMountedNatively(innerTag)).toBe(true);
+      expect(
+        await runOnUIBlocking(() => {
+          'worklet';
+          return global._obtainMountedViewProps(innerTag, false)?.opacity;
+        })
+      ).toBe(1);
+      if (order === 'outer first') {
+        await expectEventually(() => isViewMountedNatively(outerTag)).toBe(
+          false
+        );
+      } else {
+        expect(await isViewMountedNatively(outerTag)).toBe(true);
+      }
+      await waitForNotification(
+        order === 'inner first' ? 'outer-finished' : 'inner-finished'
+      );
+      await expectEventually(() => isViewMountedNatively(innerTag)).toBe(false);
+      await expectEventually(() => isViewMountedNatively(outerTag)).toBe(false);
+      await expectEventually(() => opacityOf('targetInner')).toBe(1);
+      await expectEventually(() => opacityOf('targetOuter')).toBe(1);
+    });
+  }
+
   test('keeps the inner view on screen until the outer transition ends', async () => {
     await render(<Screens active={false} />);
     await waitForFrames();
@@ -265,10 +344,13 @@ describe('Nested shared transitions', () => {
   });
 
   test('animates the waiting inner view to a new color of its target', async () => {
+    await mockAnimationTimer(false);
     await render(<Screens active={false} />);
     await waitForFrames();
 
     await render(<Screens active />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(2000);
     await waitForNotification('inner-finished');
     await waitForFrames(2);
     const oldColor = (
@@ -276,18 +358,21 @@ describe('Nested shared transitions', () => {
     )?.backgroundColor;
     const stopRecording = recordInnerViewProp('backgroundColor');
     await render(<Screens active innerColor="#00ff00" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     const newColor = (
       await getTestComponent('targetInner').getMountedViewProps()
     )?.backgroundColor;
-    await expectInnerViewToReach(
-      'backgroundColor',
-      (color) => color === newColor
-    );
     const colors = stopRecording();
     expect(
       colors.some((color) => color !== oldColor && color !== newColor)
     ).toBe(true);
-
+    await advanceAnimationTimer(1000);
+    await expectInnerViewToReach(
+      'backgroundColor',
+      (color) => color === newColor
+    );
+    await advanceAnimationTimer(4000);
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
   });
