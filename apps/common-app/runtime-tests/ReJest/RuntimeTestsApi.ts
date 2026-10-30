@@ -230,8 +230,16 @@ export function createTestValue<T = DefaultValue>(defaultValue: T) {
   return testRunner.createTestValue<T>(defaultValue);
 }
 
-export async function mockAnimationTimer() {
-  await animationRecorder.mockAnimationTimer();
+export async function mockAnimationTimer(autoAdvance = true) {
+  await animationRecorder.mockAnimationTimer(autoAdvance);
+}
+
+export async function advanceAnimationTimer(milliseconds: number) {
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) {
+    throw new Error('Animation time must be finite and nonnegative.');
+  }
+  await animationRecorder.advanceAnimationTimer(milliseconds);
+  await waitForFramesImpl(3);
 }
 
 export async function unmockAnimationTimer() {
