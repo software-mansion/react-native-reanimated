@@ -168,6 +168,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
+  ReleaseViewTransitionsFunction releaseViewTransitions_;
+  void releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const;
   mutable bool cleanupPullScheduled_ = false;
   // tags of JS-thread batches that are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedBatchTags_;

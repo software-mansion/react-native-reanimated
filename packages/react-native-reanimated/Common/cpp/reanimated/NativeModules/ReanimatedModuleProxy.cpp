@@ -218,6 +218,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      releaseViewTransitions_(platformDepMethodsHolder.releaseViewTransitionsFunction),
 #endif // ANDROID
       synchronousWritesTracker_(makeSynchronousWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -1394,6 +1395,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
+      releaseViewTransitions_,
       jsInvoker_,
       keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
 #endif
