@@ -1,4 +1,8 @@
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+  useIsFocused,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -6,6 +10,8 @@ import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
+  SharedTransition,
+  SharedTransitionBoundary,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -14,9 +20,14 @@ import Animated, {
 
 import {
   describe,
+  expect,
+  getTestComponent,
+  isViewMountedNatively,
   notify,
   render,
   test,
+  useTestRef,
+  wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
@@ -154,12 +165,86 @@ function SignInLoop() {
   );
 }
 
+const SharedOuter = createNativeStackNavigator<{
+  Target: undefined;
+  Source: undefined;
+}>();
+const SharedInner = createNativeStackNavigator<{ Content: undefined }>();
+const sharedNavigation = createNavigationContainerRef<{
+  Target: undefined;
+  Source: undefined;
+}>();
+const sharedTransition = SharedTransition.duration(300);
+
+function SharedBox({ name }: { name: string }) {
+  const ref = useTestRef(name);
+  const isFocused = useIsFocused();
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      <View collapsable={false} style={styles.content}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="nestedSource"
+          sharedTransitionStyle={sharedTransition}
+          style={styles.box}
+        />
+      </View>
+    </SharedTransitionBoundary>
+  );
+}
+
+function SharedTarget() {
+  return <SharedBox name="target" />;
+}
+
+function SharedSource() {
+  return <SharedBox name="source" />;
+}
+
+function NestedSource() {
+  return (
+    <SharedInner.Navigator>
+      <SharedInner.Screen name="Content" component={SharedSource} />
+    </SharedInner.Navigator>
+  );
+}
+
+function SharedStacks() {
+  return (
+    <View style={styles.root}>
+      <NavigationContainer ref={sharedNavigation}>
+        <SharedOuter.Navigator>
+          <SharedOuter.Screen name="Target" component={SharedTarget} />
+          <SharedOuter.Screen
+            name="Source"
+            component={NestedSource}
+            options={{ headerShown: false }}
+          />
+        </SharedOuter.Navigator>
+      </NavigationContainer>
+    </View>
+  );
+}
+
 describe('Layout animations on native stack removal', () => {
   // Before react-native-screens 4.27, Android crashes with "ScreenStackFragment added into a
   // non-stack container" when a screen is removed before its children.
   test('removes a screen that holds a nested stack with header buttons', async () => {
     await render(<SignInLoop />);
     await waitForNotification(SIGNED_OUT, 30_000);
+    await render(null);
+  });
+
+  // On Android the outer and the nested screen both hold the source of the transition.
+  test('moves a shared source out of a nested stack on an outer pop', async () => {
+    await render(<SharedStacks />);
+    await wait(500);
+    sharedNavigation.navigate('Source');
+    await wait(1000);
+    sharedNavigation.goBack();
+    await wait(1000);
+    const targetTag = getTestComponent('target').getTag();
+    expect(await isViewMountedNatively(targetTag)).toBe(true);
     await render(null);
   });
 });

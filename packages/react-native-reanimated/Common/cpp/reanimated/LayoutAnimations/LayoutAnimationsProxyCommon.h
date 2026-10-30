@@ -93,6 +93,7 @@ struct LayoutAnimationsProxyDependencies {
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ReleaseViewTransitionsFunction releaseViewTransitions;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
   SynchronousPropsReader readSynchronousProps;
 #endif

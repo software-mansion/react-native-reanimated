@@ -5,6 +5,10 @@ import android.graphics.Color
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewParent
+import androidx.core.view.children
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
@@ -21,6 +25,7 @@ import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
+import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
@@ -35,6 +40,7 @@ import com.swmansion.reanimated.pseudoSelectors.PseudoSelectorManager
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
@@ -79,14 +85,21 @@ open class NativeProxy {
     @Suppress("unused")
     private val mHybridData: HybridData
 
+    private val pendingViewTransitionReleases = ConcurrentHashMap<Int, Boolean>()
+
     @OptIn(UnstableReactNativeAPI::class)
     private val mountListener =
         object : UIManagerListener {
             override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
 
-            override fun willMountItems(uiManager: UIManager) = Unit
+            override fun willMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { releasePendingViewTransitions() }
 
-            override fun didMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { rewriteSynchronousProps() }
+            override fun didMountItems(uiManager: UIManager) =
+                ifNotInvalidated(Unit) {
+                    if (hasSynchronousWritesTracker()) {
+                        rewriteSynchronousProps()
+                    }
+                }
 
             override fun didDispatchMountItems(uiManager: UIManager) = Unit
 
@@ -134,10 +147,8 @@ open class NativeProxy {
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
-        if (hasSynchronousWritesTracker()) {
-            @OptIn(UnstableReactNativeAPI::class)
-            mFabricUIManager.addUIManagerEventListener(mountListener)
-        }
+        @OptIn(UnstableReactNativeAPI::class)
+        mFabricUIManager.addUIManagerEventListener(mountListener)
     }
 
     private external fun initHybrid(
@@ -223,6 +234,59 @@ open class NativeProxy {
     private fun addDevMenuOption() {
         // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
         DevMenuUtils.addDevMenuOption(mContext.get()!!) { toggleSlowAnimations() }
+    }
+
+    // `react-native-screens` holds the views of a removed screen with `startViewTransition`, before the Remove of the
+    // batch that moves them to the root. The hold can come after the first release, so it repeats before every mount
+    // until the batch is in the queue. A UI thread pull mounts before a posted hold can run.
+    @DoNotStrip
+    fun releaseViewTransitions(
+        tags: IntArray,
+        isBatchQueued: Boolean,
+    ) {
+        if (UiThreadUtil.isOnUiThread()) {
+            tags.forEach { tag -> resolveViewOrNull(tag)?.let(::endViewTransitions) }
+        } else {
+            tags.forEach { pendingViewTransitionReleases[it] = isBatchQueued }
+        }
+    }
+
+    private fun releasePendingViewTransitions() {
+        val pending = pendingViewTransitionReleases.entries.iterator()
+        while (pending.hasNext()) {
+            val (tag, isBatchQueued) = pending.next()
+            val view = resolveViewOrNull(tag)
+            view?.let(::endViewTransitions)
+            if (view == null || isBatchQueued) {
+                pending.remove()
+            }
+        }
+    }
+
+    private fun resolveViewOrNull(tag: Int): View? =
+        try {
+            mFabricUIManager.resolveView(tag)
+        } catch (_: IllegalViewOperationException) {
+            null
+        }
+
+    private fun endViewTransitions(view: View) {
+        val parent = view.parent as? ViewGroup ?: return
+        // Every screen above the view holds it once, and the holds cannot be counted.
+        val maxHolds = generateSequence<ViewParent>(parent) { it.parent }.count()
+        endViewTransitions(parent, view, maxHolds)
+    }
+
+    private fun endViewTransitions(
+        parent: ViewGroup,
+        view: View,
+        maxHolds: Int,
+    ) {
+        repeat(maxHolds) { parent.endViewTransition(view) }
+        // `ScreenStack` finishes its own transition in `endViewTransition`.
+        if (view is ReactViewGroup) {
+            view.children.forEach { endViewTransitions(view, it, maxHolds) }
+        }
     }
 
     @DoNotStrip

@@ -264,6 +264,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+  const ReleaseViewTransitionsFunction releaseViewTransitions_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 
 #ifdef ANDROID
