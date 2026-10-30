@@ -1113,11 +1113,10 @@ function formatIOSCrashReport(text) {
 }
 
 async function dumpAndroidCrashDiagnostics() {
-  const serial =
-    androidSerial ?? (await listAndroidDevices().catch(() => []))[0];
+  const serial = androidSerial ?? SERIAL;
   if (!serial) {
     console.error(
-      '[runtime-tests] no adb device available for crash diagnostics'
+      '[runtime-tests] no selected Android device for crash diagnostics'
     );
     return;
   }
