@@ -59,6 +59,14 @@ constexpr std::array kAnimatedStyleProps{
 } // namespace
 #endif
 
+namespace {
+// A fade-out ends at fadeOutEnd of the move. A fade-in lasts the whole move.
+double fadeLength(const ContentFade &contentFade) {
+  const auto &[from, to] = contentFade.range;
+  return to < from ? contentFade.options.fadeOutEnd : 1;
+}
+} // namespace
+
 // MARK: Shared Element Transitions
 
 // A boundary is active when its `isActive` prop (controlled from JS,
@@ -290,7 +298,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto &layoutAnimation = layoutAnimationIt->second;
       if (const auto &contentFade = element.run->contentFade) {
         const auto &[from, to] = contentFade->range;
-        layoutAnimation.contentOpacity = from + transition_->progress * (to - from);
+        const auto fadeProgress = std::min(1.0, transition_->progress / fadeLength(*contentFade));
+        layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
       }
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
@@ -411,9 +420,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    if (const auto fadeIn = layoutAnimationsManager_->getSharedTransitionContentFadeIn(before.tag)) {
+    if (const auto options = layoutAnimationsManager_->getSharedTransitionContentFade(before.tag)) {
       const double startOpacity = carrier == afterNode ? 0 : 1;
-      run->contentFade = ContentFade{.fadeIn = fadeIn, .range = {startOpacity, startOpacity}};
+      run->contentFade = ContentFade{.options = *options, .range = {startOpacity, startOpacity}};
     }
     detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
   }
@@ -1081,12 +1090,15 @@ void LayoutAnimationsProxy::finishSharedTransition(
 // MARK: Content Fade
 
 // The children fade toward the endpoint that the carrier shows: in when the carrier is the target, out otherwise.
+// The animation aims past the end of a fade-out that ends before the move, and the frames clamp it.
 std::optional<ContentOpacityRange> LayoutAnimationsProxy::restartContentFade(SharedTransitionRun &run) const {
   if (!run.contentFade) {
     return std::nullopt;
   }
-  run.contentFade->range = {contentOpacityOnScreen(run), run.carrier == run.target ? 1.0 : 0.0};
-  return run.contentFade->range;
+  auto &contentFade = *run.contentFade;
+  contentFade.range = {contentOpacityOnScreen(run), run.carrier == run.target ? 1.0 : 0.0};
+  const auto &[from, to] = contentFade.range;
+  return ContentOpacityRange{.from = from, .to = from + (to - from) / fadeLength(contentFade)};
 }
 
 double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &run) const {
@@ -1299,7 +1311,7 @@ void LayoutAnimationsProxy::fadeInTargetContent(
     const auto &view = mountedView(child);
     transaction.filteredMutations.push_back(createPropsUpdate(
         view, cloneViewWithOpacity(view, 0, propsParserContext), run.target->current.tag, propsParserContext));
-    startEnteringAnimation(child, run.contentFade->fadeIn);
+    startEnteringAnimation(child, run.contentFade->options.fadeIn);
   }
   schedulePullOnNextFrame();
 }

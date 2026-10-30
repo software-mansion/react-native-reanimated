@@ -430,7 +430,7 @@ export default class AnimatedComponent
       maybeBuild(sharedTransition),
       undefined,
       this.props.sharedTransitionTag,
-      sharedTransition.buildContentFadeIn()
+      sharedTransition.buildContentFade()
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;
