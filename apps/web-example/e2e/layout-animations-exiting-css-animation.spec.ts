@@ -3,6 +3,7 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 // The bar's CSS animation repeats every 2 s after a 500 ms delay
 const TIME_PAST_DELAY_MS = 1500;
 // The track's exiting animation lasts 1 s and the fade-in 300 ms
+const FADE_IN_MS = 300;
 const MID_EXIT_MS = 500;
 
 const getAnimationTime = (bar: Locator) =>
@@ -57,11 +58,33 @@ test.describe('ExitingWithCSSAnimation', () => {
   }) => {
     await hide(page);
     await expect(page.getByTestId('bar')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Show' }).click();
-    await page.getByTestId('bar').waitFor();
 
-    // Hiding during the child's 300 ms fade-in makes it end during the exiting animation
-    await hide(page);
+    // Show the track, and hide it again as soon as the child's fade-in has started,
+    // so the fade-in always ends during the exiting animation. This runs in the
+    // page, so the hide lands within a few frames of the fade-in starting.
+    const fadeInTimeAtHide = await page.evaluate(async () => {
+      const clickButton = (label: string) =>
+        Array.from(document.querySelectorAll<HTMLElement>('[role="button"]'))
+          .find((button) => button.textContent === label)
+          ?.click();
+
+      clickButton('Show');
+      for (let frame = 0; frame < 60; frame++) {
+        await new Promise(requestAnimationFrame);
+        const fadeIn = document
+          .querySelector('[data-testid="fade-in"]')
+          ?.getAnimations()[0];
+        if (fadeIn) {
+          const time = Number(fadeIn.currentTime);
+          clickButton('Hide');
+          return time;
+        }
+      }
+      return null;
+    });
+    expect(fadeInTimeAtHide).not.toBeNull();
+    expect(fadeInTimeAtHide).toBeLessThan(FADE_IN_MS);
+
     await page.waitForTimeout(MID_EXIT_MS);
 
     await expect(page.getByTestId('bar')).toHaveCount(1);

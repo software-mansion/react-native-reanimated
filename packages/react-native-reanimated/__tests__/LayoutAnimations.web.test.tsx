@@ -227,50 +227,71 @@ describe('Layout Animations', () => {
     const ANIMATION_DURATION = 300;
 
     // jsdom doesn't implement the Web Animations API. Like a browser, this fake starts
-    // a CSS animation over from 0 ms when its element moves to a new parent, and doesn't
-    // return an animation that has finished.
+    // an element's CSS animations over from 0 ms when the element moves to a new parent,
+    // and `getAnimations()` doesn't return the ones that have finished.
     class FakeCSSAnimation {
       effect = {
-        getComputedTiming: () => ({ endTime: ANIMATION_DURATION }),
+        getTiming: () => ({ duration: this.duration }),
+        getComputedTiming: () => ({ endTime: this.duration }),
       };
 
       constructor(
         public animationName: string,
-        public currentTime: number
+        public currentTime: number,
+        public duration = ANIMATION_DURATION
       ) {}
     }
 
-    const animations = new WeakMap<
+    type AnimationDeclaration = { animationName: string; duration: number };
+
+    const trackedElements = new WeakMap<
       Element,
-      { parent: Node | null; animation: FakeCSSAnimation }
+      {
+        parent: Node | null;
+        animations: FakeCSSAnimation[];
+        getDeclarations: (parent: Node | null) => AnimationDeclaration[];
+      }
     >();
 
     function getAnimations(this: Element) {
-      const tracked = animations.get(this);
+      const tracked = trackedElements.get(this);
       if (!tracked) {
         return [];
       }
       if (tracked.parent !== this.parentNode) {
         tracked.parent = this.parentNode;
-        tracked.animation = new FakeCSSAnimation(
-          tracked.animation.animationName,
-          0
-        );
+        tracked.animations = tracked
+          .getDeclarations(this.parentNode)
+          .map(
+            ({ animationName, duration }) =>
+              new FakeCSSAnimation(animationName, 0, duration)
+          );
       }
-      return tracked.animation.currentTime < ANIMATION_DURATION
-        ? [tracked.animation]
-        : [];
+      return tracked.animations.filter(
+        ({ currentTime, duration }) => currentTime < duration
+      );
     }
 
-    const renderAndHide = (animationTime: number) => {
+    // Gives the box CSS animations, then hides the exiting view. By default, the box has
+    // the same animations in the copy of the exiting view that it's moved into.
+    const renderAndHide = (
+      animations: FakeCSSAnimation[],
+      declarationsInCopy: AnimationDeclaration[] = animations
+    ) => {
       const screen = originalRender(
         <Example exiting={FadeOut} initialVisible />
       );
       const box = screen.getByTestId('box1');
       const originalParent = box.parentNode;
-      animations.set(box, {
+      // Like in a browser, `animation-name` also lists the animations that have finished
+      box.style.animationName = animations
+        .map(({ animationName }) => animationName)
+        .join(', ');
+      trackedElements.set(box, {
         parent: originalParent,
-        animation: new FakeCSSAnimation('fade', animationTime),
+        animations,
+        getDeclarations: (parent) =>
+          parent === originalParent ? animations : declarationsInCopy,
       });
 
       act(() => {
@@ -282,12 +303,14 @@ describe('Layout Animations', () => {
       return { box, originalParent };
     };
 
-    // Reads the animation through `getAnimations()`, which restarts it if the box
-    // moved without the time being restored. Finished animations aren't returned,
-    // so the time comes from the tracked animation.
-    const getAnimationTime = (box: HTMLElement) => {
+    // Reads the animations through `getAnimations()`, which restarts them if the box
+    // moved without the times being restored. Finished animations aren't returned,
+    // so the times come from the tracked animations.
+    const getAnimationTimes = (box: HTMLElement) => {
       box.getAnimations();
-      return animations.get(box)?.animation.currentTime;
+      return trackedElements
+        .get(box)
+        ?.animations.map(({ currentTime }) => currentTime);
     };
 
     beforeAll(() => {
@@ -309,19 +332,42 @@ describe('Layout Animations', () => {
     });
 
     test('keeps a running animation going from where it was', () => {
-      const { box } = renderAndHide(120);
+      const { box } = renderAndHide([new FakeCSSAnimation('fade', 120)]);
 
-      expect(getAnimationTime(box)).toBe(120);
+      expect(getAnimationTimes(box)).toEqual([120]);
     });
 
     test("doesn't replay an animation that had finished", () => {
-      const { box } = renderAndHide(ANIMATION_DURATION);
+      const { box } = renderAndHide([
+        new FakeCSSAnimation('fade', ANIMATION_DURATION),
+      ]);
 
-      expect(getAnimationTime(box)).toBe(ANIMATION_DURATION);
+      expect(getAnimationTimes(box)).toEqual([ANIMATION_DURATION]);
+    });
+
+    test('tells apart animations that have the same name', () => {
+      const { box } = renderAndHide([
+        new FakeCSSAnimation('fade', ANIMATION_DURATION),
+        new FakeCSSAnimation('fade', 120, 2 * ANIMATION_DURATION),
+      ]);
+
+      expect(getAnimationTimes(box)).toEqual([ANIMATION_DURATION, 120]);
+    });
+
+    test('plays an animation that the move started from the start', () => {
+      const fade = new FakeCSSAnimation('fade', 120);
+      // For example, a style rule whose selector only matches inside the copy
+      const pulse = { animationName: 'pulse', duration: ANIMATION_DURATION };
+
+      const { box } = renderAndHide([fade], [fade, pulse]);
+
+      expect(getAnimationTimes(box)).toEqual([120, 0]);
     });
 
     test("doesn't end the exiting animation when a child's animation ends", () => {
-      const { box, originalParent } = renderAndHide(120);
+      const { box, originalParent } = renderAndHide([
+        new FakeCSSAnimation('fade', 120),
+      ]);
       const exitingCopy = box.parentElement;
 
       // Animation events bubble from the child to the copy of the exiting view
@@ -333,6 +379,19 @@ describe('Layout Animations', () => {
       exitingCopy?.onanimationend?.call(exitingCopy, {
         target: exitingCopy,
       } as unknown as AnimationEvent);
+      expect(box.parentNode).toBe(originalParent);
+      expect(getAnimationTimes(box)).toEqual([120]);
+    });
+
+    test('moves the children back when the exiting animation is cancelled before it starts', () => {
+      const { box, originalParent } = renderAndHide([
+        new FakeCSSAnimation('fade', 120),
+      ]);
+      const exitingCopy = box.parentElement;
+
+      // For example, an ancestor becomes `display: none` during the animation's delay
+      exitingCopy?.dispatchEvent(new Event('animationcancel'));
+
       expect(box.parentNode).toBe(originalParent);
     });
   });

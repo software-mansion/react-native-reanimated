@@ -233,7 +233,7 @@ export function setElementAnimation(
     }
 
     restoreScrollPositions(originalElement, scrollPositions, element);
-    restoreCSSAnimationTimes(originalElement, cssAnimationTimes);
+    restoreCSSAnimationTimes(cssAnimationTimes);
 
     element.removedAfterAnimation = true;
     element.remove();
@@ -276,6 +276,13 @@ export function setElementAnimation(
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
+
+  // An exiting animation runs on a copy of the view that starts without an animation, so any
+  // cancel event on it is for this animation. Listening from the start also catches a cancel
+  // during the animation's delay, before its `animationstart`.
+  if (originalElement) {
+    element.addEventListener('animationcancel', animationCancelHandler);
+  }
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = (event) => {
@@ -410,8 +417,32 @@ function restoreScrollPositions(
 
 type SavedCSSAnimationTimes = Map<
   Element,
-  { animationName: string; currentTime: CSSNumberish | null }[]
+  {
+    // `getAnimations()` leaves out finished animations unless they fill forwards,
+    // so the names in the element's `animation-name` are saved too
+    animationNames: string[];
+    runningAnimations: {
+      animationName: string;
+      timing: string;
+      currentTime: CSSNumberish | null;
+    }[];
+  }
 >;
+
+function getCSSAnimations(element: Element) {
+  return element
+    .getAnimations()
+    .filter(
+      (animation): animation is CSSAnimation =>
+        animation instanceof CSSAnimation
+    );
+}
+
+// An element can have several CSS animations with the same name,
+// so they're told apart by their timing too
+function getAnimationTiming(animation: CSSAnimation) {
+  return JSON.stringify(animation.effect?.getTiming());
+}
 
 // Moving an element in the DOM restarts its CSS animations from the first keyframe,
 // so we save how far the running ones have got before the move and restore it after
@@ -424,21 +455,20 @@ function saveCSSAnimationTimes(root: Element): SavedCSSAnimationTimes {
   }
 
   const saveTimes = (node: Element) => {
-    const animations = node
-      .getAnimations()
-      .filter(
-        (animation): animation is CSSAnimation =>
-          animation instanceof CSSAnimation
-      );
+    const animationNames = getComputedStyle(node)
+      .animationName.split(',')
+      .map((name) => name.trim())
+      .filter((name) => name !== '' && name !== 'none');
 
-    if (animations.length > 0) {
-      times.set(
-        node,
-        animations.map(({ animationName, currentTime }) => ({
-          animationName,
-          currentTime,
-        }))
-      );
+    if (animationNames.length > 0) {
+      times.set(node, {
+        animationNames,
+        runningAnimations: getCSSAnimations(node).map((animation) => ({
+          animationName: animation.animationName,
+          timing: getAnimationTiming(animation),
+          currentTime: animation.currentTime,
+        })),
+      });
     }
 
     for (const child of Array.from(node.children)) {
@@ -454,48 +484,52 @@ function saveCSSAnimationTimes(root: Element): SavedCSSAnimationTimes {
   return times;
 }
 
-// `getAnimations()` leaves out finished animations unless they fill forwards, so an animation
-// without a saved time had finished before the move. It's jumped to its end instead of replaying.
-function restoreCSSAnimationTimes(
-  root: Element,
-  times: SavedCSSAnimationTimes
-) {
-  if (typeof CSSAnimation === 'undefined') {
-    return;
-  }
+function restoreCSSAnimationTimes(times: SavedCSSAnimationTimes) {
+  times.forEach(({ animationNames, runningAnimations }, node) => {
+    const unmatchedNames = [...animationNames];
+    const unrestoredAnimations = [...runningAnimations];
 
-  const restoreTimes = (node: Element) => {
-    const unrestoredTimes = [...(times.get(node) ?? [])];
-
-    for (const animation of node.getAnimations()) {
-      if (!(animation instanceof CSSAnimation)) {
-        continue;
+    const matchName = (animationName: string) => {
+      const index = unmatchedNames.indexOf(animationName);
+      if (index !== -1) {
+        unmatchedNames.splice(index, 1);
       }
+      return index !== -1;
+    };
 
-      const index = unrestoredTimes.findIndex(
-        ({ animationName }) => animationName === animation.animationName
+    const notRestoredAnimations = getCSSAnimations(node).filter((animation) => {
+      const timing = getAnimationTiming(animation);
+      const index = unrestoredAnimations.findIndex(
+        (saved) =>
+          saved.animationName === animation.animationName &&
+          saved.timing === timing
       );
 
-      if (index !== -1) {
-        animation.currentTime = unrestoredTimes[index].currentTime;
-        unrestoredTimes.splice(index, 1);
+      if (index === -1) {
+        return true;
+      }
+
+      animation.currentTime = unrestoredAnimations[index].currentTime;
+      unrestoredAnimations.splice(index, 1);
+      matchName(animation.animationName);
+      return false;
+    });
+
+    for (const animation of notRestoredAnimations) {
+      // The element didn't have this animation before the move, so the move started it.
+      // It plays from the start.
+      if (!matchName(animation.animationName)) {
         continue;
       }
 
+      // The element had this animation, but it wasn't running, so it had finished.
+      // It's jumped to its end instead of replaying.
       const endTime = animation.effect?.getComputedTiming().endTime;
       if (typeof endTime === 'number' && Number.isFinite(endTime)) {
         animation.currentTime = endTime;
       }
     }
-
-    for (const child of Array.from(node.children)) {
-      restoreTimes(child);
-    }
-  };
-
-  for (const child of Array.from(root.children)) {
-    restoreTimes(child);
-  }
+  });
 }
 
 function cleanupEnteringAnimations(element: HTMLElement) {
@@ -551,7 +585,7 @@ export function handleExitingAnimation(
   restoreScrollPositions(dummy, scrollPositions, element);
 
   // Restoring needs the moved elements to be connected, which they are once the dummy is in the DOM
-  restoreCSSAnimationTimes(dummy, cssAnimationTimes);
+  restoreCSSAnimationTimes(cssAnimationTimes);
 
   const snapshot = getSnapshotForElement(element);
 
