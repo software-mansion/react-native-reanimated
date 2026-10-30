@@ -29,7 +29,11 @@ class UISchedulerWrapper : public UIScheduler {
       job();
       return;
     }
-    UIScheduler::scheduleOnUI(job);
+    deferOnUI(std::move(job));
+  }
+
+  void deferOnUI(std::function<void()> job) override {
+    UIScheduler::deferOnUI(std::move(job));
     if (!scheduledOnUI_) {
       scheduledOnUI_ = true;
       static const auto method = androidUiScheduler_->getClass()->getMethod<void()>("scheduleTriggerOnUI");

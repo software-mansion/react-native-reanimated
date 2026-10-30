@@ -272,7 +272,15 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
   });
 }
 
-void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
+void WorkletRuntime::scheduleDeferred(std::function<void(jsi::Runtime &)> job) const {
+  scheduleImpl(
+      [job = std::move(job)](const WorkletRuntime &workletRuntime) {
+        workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
+      },
+      /* deferred */ true);
+}
+
+void WorkletRuntime::scheduleImpl(ScheduledJob job, bool deferred) const {
   if (aborted_) [[unlikely]] {
     return;
   }
@@ -282,20 +290,23 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push(
-      [job = std::move(job), weakThis = weak_from_this()] {
-        const auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
+  auto queuedJob = [job = std::move(job), weakThis = weak_from_this()] {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
 
-        auto lock = strongThis->acquireRuntimeLock();
-        if (strongThis->isAborted()) [[unlikely]] {
-          return;
-        }
-        job(*strongThis);
-      },
-      abortToken());
+    auto lock = strongThis->acquireRuntimeLock();
+    if (strongThis->isAborted()) [[unlikely]] {
+      return;
+    }
+    job(*strongThis);
+  };
+  if (deferred) {
+    queue_->pushDeferred(std::move(queuedJob), abortToken());
+  } else {
+    queue_->push(std::move(queuedJob), abortToken());
+  }
 }
 
 /* #endregion */

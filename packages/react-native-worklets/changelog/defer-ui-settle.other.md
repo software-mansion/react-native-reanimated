@@ -1,0 +1,1 @@
+Settle promises hosted on the UI Runtime through the UI queue instead of running them inline, so a settle triggered on the UI thread no longer drains the UI microtask queue in the middle of the calling JS.
