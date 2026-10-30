@@ -5,7 +5,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -20,7 +20,6 @@ import Animated, {
 
 import {
   describe,
-  expect,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
@@ -256,15 +255,17 @@ describe('Layout animations on native stack removal', () => {
     const yInScreen = (await source.getMountedViewProps())?.y;
 
     sharedNavigation.goBack();
-    // The frame is relative to the parent, so it changes when the view moves to the root.
-    await expectEventually(async () => {
-      const y = (await source.getMountedViewProps())?.y;
-      return y !== undefined && y !== yInScreen;
-    }).toBe(true);
+    // On iOS the source stays in its screen on this pop.
+    if (Platform.OS === 'android') {
+      // The frame is relative to the parent, so it changes when the view moves to the root.
+      await expectEventually(async () => {
+        const y = (await source.getMountedViewProps())?.y;
+        return y !== undefined && y !== yInScreen;
+      }).toBe(true);
+    }
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
-    expect(
-      await isViewMountedNatively(getTestComponent('target').getTag())
-    ).toBe(true);
+    const targetTag = getTestComponent('target').getTag();
+    await expectEventually(() => isViewMountedNatively(targetTag)).toBe(true);
     await render(null);
   });
 });
