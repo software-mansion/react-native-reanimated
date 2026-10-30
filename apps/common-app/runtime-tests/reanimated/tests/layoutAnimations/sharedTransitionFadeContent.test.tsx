@@ -1,13 +1,20 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  FadeIn,
+  FadeOut,
   LinearTransition,
+  makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  callTracker,
   describe,
+  expect,
   expectEventually,
+  getTrackerCallCount,
   getTestComponent,
   isViewMountedNatively,
   render,
@@ -90,6 +97,56 @@ function ScreensWithAnimatedChild({ showTarget }: { showTarget: boolean }) {
   );
 }
 
+const ENTERING_FINISHED = 'fade-content-entering-finished';
+
+const childEntering = FadeIn.duration(300).withCallback((finished) => {
+  'worklet';
+  if (finished) {
+    callTracker(ENTERING_FINISHED);
+  }
+});
+
+const longExiting = FadeOut.duration(6000);
+
+function EnteringChild({ exits }: { exits: boolean }) {
+  const ref = useTestRef('enteringChild');
+  return (
+    <Animated.View
+      ref={ref}
+      entering={childEntering}
+      exiting={exits ? longExiting : undefined}
+      style={styles.enteringChild}
+    />
+  );
+}
+
+// The target mounts a child with an entering animation in the update that starts the transition.
+function ScreensWithEnteringChild({
+  showTarget,
+  showChild = true,
+  childExits = false,
+}: {
+  showTarget: boolean;
+  showChild?: boolean;
+  childExits?: boolean;
+}) {
+  const ref = useTestRef('target');
+  return (
+    <View style={styles.container}>
+      <Endpoint name="source" active={!showTarget} style={styles.source} />
+      <SharedTransitionBoundary isActive={showTarget}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="fadeContent"
+          sharedTransitionStyle={transition}
+          style={styles.target}>
+          {showTarget && showChild && <EnteringChild exits={childExits} />}
+        </Animated.View>
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 async function mountedProps(name: string) {
   return getTestComponent(name).getMountedViewProps();
 }
@@ -116,6 +173,24 @@ async function expectMovingWithChildOpacity(
       isBetween(child.opacity, min, max)
     );
   }).toBe(true);
+}
+
+// Records the highest opacity on screen of a view on each UI frame until the view is unmounted.
+function recordHighestOpacity(tag: number) {
+  const highest = makeMutable(0);
+  scheduleOnUI(() => {
+    'worklet';
+    const record = () => {
+      const opacity = global._obtainMountedViewProps(tag, true)?.opacity;
+      if (opacity === undefined) {
+        return;
+      }
+      highest.value = Math.max(highest.value, opacity);
+      requestAnimationFrame(record);
+    };
+    requestAnimationFrame(record);
+  });
+  return highest;
 }
 
 async function expectOpacity(name: string, opacity: number) {
@@ -197,6 +272,41 @@ describe('Shared transition with fadeContent', () => {
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 
+  test('plays the entering animation of a target child when the moving view lands', async () => {
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    await expectOpacity('enteringChild', 0);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+
+    await expectOpacity('enteringChild', 1);
+    await expectEventually(() =>
+      getTrackerCallCount(ENTERING_FINISHED)
+    ).toBeCalledUI(1);
+  });
+
+  test('keeps hidden a target child that React removes while its entering animation waits', async () => {
+    await render(<ScreensWithEnteringChild showTarget={false} childExits />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget childExits />);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    const childTag = getTestComponent('enteringChild').getTag();
+    const highestChildOpacity = recordHighestOpacity(childTag);
+    await render(
+      <ScreensWithEnteringChild showTarget showChild={false} childExits />
+    );
+
+    await expectOpacity('target', 1);
+    await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
+      false
+    );
+    expect(highestChildOpacity.value).toBe(0);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+  });
+
   test('fades the children of the target in during the move when React removes the source', async () => {
     await render(<Screens showTarget={false} removeSource />);
     await waitForFrames();
@@ -230,6 +340,11 @@ const styles = StyleSheet.create({
     width: CHILD_WIDTH,
     height: 15,
     opacity: CHILD_OPACITY,
+    backgroundColor: '#ffffff',
+  },
+  enteringChild: {
+    width: 20,
+    height: 15,
     backgroundColor: '#ffffff',
   },
   wideChild: {
