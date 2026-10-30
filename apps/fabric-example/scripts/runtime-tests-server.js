@@ -537,7 +537,9 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
+          (androidSerial ?? SERIAL)
+            ? '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
+            : '[runtime-tests] The app most likely crashed — no Android device selected, so crash diagnostics are skipped (pass --serial to select one).'
         );
       } else {
         console.error(
