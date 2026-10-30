@@ -51,6 +51,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
   bool inserted = false;
+  bool sourceDrawsWithinFrame = false;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -269,6 +270,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       bool gestureDriven,
+      bool sourceDrawsWithinFrame,
       TransactionMeta &transaction) const;
   SharedTransitionRun createSharedContainer(const ShadowView &before, const ShadowView *clip) const;
   std::shared_ptr<LightNode> createSharedNode(const ShadowView &view, Tag tag, const std::shared_ptr<LightNode> &parent)
@@ -304,7 +306,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const react::Rect &windowFrame() const;
   bool isRunAnimating(const SharedTransitionRun &run) const;
   const LayoutAnimation &runAnimation(const std::shared_ptr<LightNode> &node) const;
-  void fitClipOfUnclippedSide(Transition &transition) const;
+  void fitClipOfUnclippedSide(Transition &transition, bool sourceDrawsWithinFrame) const;
   bool drawsWithinFrame(const ShadowView &view, const std::optional<Transform> &ancestorTransform) const;
   bool endsTheSame(const ShadowView &finalView, const ShadowView &target) const;
   ShadowView createClipView(

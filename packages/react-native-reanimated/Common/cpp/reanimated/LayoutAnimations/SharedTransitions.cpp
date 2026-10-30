@@ -199,7 +199,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
-        fitClipOfUnclippedSide(transition);
+        const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
+        fitClipOfUnclippedSide(transition, sourceDrawsWithinFrame);
         const bool clipped = usesClip(sharedTag, transition);
         applyAncestorEffects(before, transition, BEFORE, propsParserContext);
         applyAncestorEffects(after, transition, AFTER, propsParserContext);
@@ -217,7 +218,13 @@ void LayoutAnimationsProxy::handleProgressTransition(
           clipBefore = createClipView(transition.clip[BEFORE], before, propsParserContext);
         }
         const auto &run = startSharedTransitionRun(
-            before, clipBefore ? &*clipBefore : nullptr, sharedTag, collectedTransition.nodes, true, transaction);
+            before,
+            clipBefore ? &*clipBefore : nullptr,
+            sharedTag,
+            collectedTransition.nodes,
+            true,
+            sourceDrawsWithinFrame,
+            transaction);
         const auto containerTag = run.container->current.tag;
         before.tag = containerTag;
         after.tag = containerTag;
@@ -352,17 +359,20 @@ void LayoutAnimationsProxy::applyAncestorEffects(
 }
 
 // A side that its ancestors do not clip ends on the frame of its view, so the clip morphs with the view. The
-// clip stays the window when neither side is clipped, or when the container can draw outside the frame of the view.
-void LayoutAnimationsProxy::fitClipOfUnclippedSide(Transition &transition) const {
+// clip stays the window when neither side is clipped, or when the container can draw outside the frame of the view
+// at either end, because what it draws there stays during the transition.
+void LayoutAnimationsProxy::fitClipOfUnclippedSide(Transition &transition, const bool sourceDrawsWithinFrame) const {
+  if (!sourceDrawsWithinFrame || !drawsWithinFrame(transition.snapshot[AFTER], transition.transform[AFTER])) {
+    return;
+  }
   const auto &window = windowFrame();
   for (const int index : {BEFORE, AFTER}) {
     const int other = 1 - index;
-    const auto &view = transition.snapshot[index];
-    if (transition.clip[index].frame != window || transition.clip[other].frame == window ||
-        !drawsWithinFrame(view, transition.transform[index])) {
+    if (transition.clip[index].frame != window || transition.clip[other].frame == window) {
       continue;
     }
-    transition.clip[index] = {.frame = react::Rect::intersect(view.layoutMetrics.frame, window)};
+    const auto &frame = transition.snapshot[index].layoutMetrics.frame;
+    transition.clip[index] = {.frame = react::Rect::intersect(frame, window)};
   }
 }
 
@@ -458,6 +468,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
     const bool gestureDriven,
+    const bool sourceDrawsWithinFrame,
     TransactionMeta &transaction) const {
   auto &run = sharedElements_[sharedTag].run;
   if (run) {
@@ -479,6 +490,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
+  run->sourceDrawsWithinFrame = sourceDrawsWithinFrame;
   return *run;
 }
 
@@ -545,7 +557,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
-      fitClipOfUnclippedSide(transition);
+      const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
+      fitClipOfUnclippedSide(transition, sourceDrawsWithinFrame);
       const bool clipped = usesClip(sharedTag, transition);
       applyAncestorEffects(before, transition, BEFORE, propsParserContext);
       applyAncestorEffects(after, transition, AFTER, propsParserContext);
@@ -571,7 +584,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         clipBefore = createClipView(transition.clip[BEFORE], before, propsParserContext);
       }
       const auto &run = startSharedTransitionRun(
-          before, clipBefore ? &*clipBefore : nullptr, sharedTag, collectedTransition.nodes, false, transaction);
+          before,
+          clipBefore ? &*clipBefore : nullptr,
+          sharedTag,
+          collectedTransition.nodes,
+          false,
+          sourceDrawsWithinFrame,
+          transaction);
       const auto containerTag = run.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
@@ -617,7 +636,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (run.clip) {
         // The run keeps its source, so the clip on screen stands for the clip of the source.
         transition.clip[BEFORE].frame = viewOnScreen(run.clip).layoutMetrics.frame;
-        fitClipOfUnclippedSide(transition);
+        fitClipOfUnclippedSide(transition, run.sourceDrawsWithinFrame);
       } else {
         transition.clip[AFTER] = {.frame = windowFrame()};
       }
