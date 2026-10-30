@@ -628,20 +628,24 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         clipAfter = createClipView(transition.clip[AFTER], after, propsParserContext);
         clipAfter->tag = run.clip->current.tag;
       }
-      if (hasPendingLayoutAnimation(containerTag)) {
-        if (clipAfter) {
-          updateLayoutAnimationTarget(clipAfter->tag, *clipAfter, config);
+      const auto needsRestart = [&](const std::shared_ptr<LightNode> &node, const ShadowView &target) {
+        const auto tag = node->current.tag;
+        if (hasPendingLayoutAnimation(tag)) {
+          updateLayoutAnimationTarget(tag, target, config);
+          return false;
         }
-        updateLayoutAnimationTarget(containerTag, after, config);
-        continue;
-      }
-      if (clipAfter && !endsTheSame(runAnimation(run.clip).finalView, *clipAfter)) {
+        return !endsTheSame(runAnimation(node).finalView, target);
+      };
+      if (clipAfter && needsRestart(run.clip, *clipAfter)) {
         startClipTransition(clipAfter->tag, runAnimation(run.clip).currentView, *clipAfter, config);
       }
-      const auto &containerAnimation = runAnimation(run.container);
-      if (!endsTheSame(containerAnimation.finalView, after)) {
+      if (needsRestart(run.container, after)) {
         startSharedTransition(
-            containerTag, containerAnimation.currentView, after, clipAfter ? clipAfter->tag : surfaceId_, config);
+            containerTag,
+            runAnimation(run.container).currentView,
+            after,
+            clipAfter ? clipAfter->tag : surfaceId_,
+            config);
       }
     }
   }
