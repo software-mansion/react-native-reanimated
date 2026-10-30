@@ -6,10 +6,12 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -139,6 +141,7 @@ describe('Shared transition transform copying', () => {
     ['target translation', null, 30, false],
     ['identity ancestor', 40, null, true],
   ] as const)('${0}', async ([, sourceX, targetX, ancestor]) => {
+    await mockAnimationTimer(false);
     const transition = heldTransition();
     const props = { transition, sourceX, targetX, ancestor };
     await render(<TransformScreens {...props} active={false} />);
@@ -154,11 +157,13 @@ describe('Shared transition transform copying', () => {
     );
     await expectTranslation('transform-source', sourceX ?? 0);
 
+    await advanceAnimationTimer(2800);
     await expectEventually(
       async () => (await source.getMountedViewProps())?.width,
       3500
     ).toBe(150, ComparisonMode.PIXEL);
     await expectTranslation('transform-source', targetX ?? 0);
+    await advanceAnimationTimer(1200);
     await waitForNotification('transform-finished');
     await expectTranslation('transform-target', targetX ?? 0);
   });
@@ -169,6 +174,7 @@ describe('Shared transition transform copying', () => {
   ] as const)(
     'keeps an unanimated transform with ${0}',
     async ([, ancestor]) => {
+      await mockAnimationTimer(false);
       const props = {
         transition: layoutOnlyTransition(),
         sourceX: 40,
@@ -179,14 +185,22 @@ describe('Shared transition transform copying', () => {
       await waitForFrames();
       await expectTranslation('transform-source', 40);
       await render(<TransformScreens {...props} active />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(2200);
       const source = getTestComponent('transform-source');
+      let movingTransform: number | undefined;
       await expectEventually(async () => {
-        const width = (await source.getMountedViewProps())?.width ?? 0;
-        return width > 70 && width < 140;
+        const observation = await source.getTransformObservation();
+        if (
+          !(observation && observation.width > 70 && observation.width < 140)
+        ) {
+          return false;
+        }
+        movingTransform = observation.translateX;
+        return true;
       }, 3500).toBe(true);
-      await expectTranslation('transform-source', 40);
-      const width = (await source.getMountedViewProps())?.width ?? 0;
-      expect(width > 70 && width < 140).toBe(true);
+      expect(movingTransform).toBe(40, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(1800);
       await waitForNotification('transform-finished');
       await expectTranslation('transform-target', 40);
     }
