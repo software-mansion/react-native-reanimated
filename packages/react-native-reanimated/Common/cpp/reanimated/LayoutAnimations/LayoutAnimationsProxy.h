@@ -163,6 +163,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
+  ReleaseViewTransitionsFunction releaseViewTransitions_;
+  void releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const;
   struct DeferredCarrierTransaction {
     ShadowViewMutationList mutations;
     bool surfaceDropped;

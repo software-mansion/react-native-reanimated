@@ -113,6 +113,9 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+#ifdef ANDROID
+  releaseViewTransitions_ = dependencies.releaseViewTransitions;
+#endif
 }
 
 void LayoutAnimationsProxy::warnAboutStaleSynchronousProps(
@@ -308,6 +311,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
 #ifdef ANDROID
+  releaseViewTransitionsOfMovedCarriers(filteredMutations);
   holdFramesUntilBatchIsQueued(filteredMutations);
   keepCarriersDetachedUntilFramesAreQueued(filteredMutations);
 #endif
@@ -384,8 +388,8 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
 #ifdef ANDROID
     recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
 #endif
-    auto update =
-        ShadowViewMutation::UpdateMutation(mounted, recreated, node->isDetached ? surfaceId_ : parent->current.tag);
+    auto update = ShadowViewMutation::UpdateMutation(
+        mounted, recreated, parent && !node->isDetached ? parent->current.tag : surfaceId_);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
@@ -1315,6 +1319,46 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
     cleanupPullScheduled_ = true;
     scheduleCleanupPull();
   }
+}
+
+// The Remove of a held view keeps its parent, so the Insert into the root would fail. A hold can appear until the
+// batch mounts, so the release repeats before every mount until the batch is in the queue.
+void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
+  std::unordered_set<Tag> removedFromParents;
+  std::vector<Tag> movedToRoot;
+  [[maybe_unused]] bool removedScreen = false;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Remove) {
+      const auto tag = mutation.oldChildShadowView.tag;
+      const auto componentName = mutation.oldChildShadowView.componentName;
+      removedScreen = removedScreen || (componentName != nullptr && !std::strcmp(componentName, "RNSScreen"));
+      if (mutation.parentTag == surfaceId_) {
+        std::erase(movedToRoot, tag);
+      } else {
+        removedFromParents.insert(tag);
+      }
+    } else if (mutation.type == ShadowViewMutation::Insert && mutation.parentTag == surfaceId_) {
+      const auto tag = mutation.newChildShadowView.tag;
+      const auto nodeIt = lightNodes_.find(tag);
+      if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() && nodeIt->second->isDetached) {
+        // React Native Screens holds what is left in a screen when it mounts the Remove, which is after the release.
+        react_native_assert(!removedScreen && "A carrier must move to the root before its screen is removed");
+        movedToRoot.push_back(tag);
+      }
+    }
+  }
+  if (movedToRoot.empty()) {
+    return;
+  }
+  releaseViewTransitions_(movedToRoot, false);
+  if (isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
+    return;
+  }
+  jsInvoker_->invokeAsync([this, weakThis = weak_from_this(), tags = std::move(movedToRoot)](jsi::Runtime &) mutable {
+    if (const auto strongThis = weakThis.lock()) {
+      releaseViewTransitions_(tags, true);
+    }
+  });
 }
 
 // The push model queues the batch after the pull returns, in the same JS task. A frame that the UI thread pulls
