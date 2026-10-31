@@ -331,7 +331,8 @@ export default class AnimatedComponent
     this._animatedStyles = filteredStyles.animatedStyles;
 
     const filteredAnimatedProps = filterStyles(
-      flattenArray(props.animatedProps ?? [])
+      flattenArray(props.animatedProps ?? []),
+      props
     );
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
