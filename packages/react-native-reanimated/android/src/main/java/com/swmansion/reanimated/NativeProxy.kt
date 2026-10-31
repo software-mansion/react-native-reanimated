@@ -296,7 +296,11 @@ open class NativeProxy {
         view: View,
         maxHolds: Int,
     ) {
-        repeat(maxHolds) { parent.endViewTransition(view) }
+        try {
+            repeat(maxHolds) { parent.endViewTransition(view) }
+        } catch (e: RuntimeException) {
+            Log.e("Reanimated", "Failed to end the view transition of ${view.id} in ${parent.javaClass.name}", e)
+        }
         // `ScreenStack` finishes its own transition in `endViewTransition`.
         if (view is ReactViewGroup) {
             view.children.forEach { endViewTransitions(view, it, maxHolds) }
