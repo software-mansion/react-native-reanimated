@@ -187,8 +187,10 @@ describe('Shared transition transform copying', () => {
       const sample: { value: TransformObservation | null } = { value: null };
       await expectEventually(async () => {
         sample.value = await source.getTransformObservation();
-        return sample.value?.width;
-      }, 3500).toBeWithinRange(70, 140);
+        return (
+          !!sample.value && sample.value.width > 70 && sample.value.width < 140
+        );
+      }, 3500).toBe(true);
       expect(sample.value).not.toBe(null);
       expect(sample.value?.translateX).toBe(40, ComparisonMode.PIXEL);
       await waitForNotification('transform-finished');
