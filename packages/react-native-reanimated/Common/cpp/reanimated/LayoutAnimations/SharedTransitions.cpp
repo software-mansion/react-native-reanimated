@@ -75,7 +75,8 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
     auto &transition = collectedTransition.transition;
     auto &[snapshot, parentTag, transform] = transition;
-    auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
+    auto ancestors = collectAncestors(node, useViewsOnScreen);
+    auto newTransform = parseParentTransforms(ancestors, absolutePositions);
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
@@ -84,9 +85,17 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
     collectedTransition.nodes[indexNum] = node;
+    collectedTransition.absolutePositions[indexNum] = std::move(absolutePositions);
+    collectedTransition.ancestors[indexNum] = std::move(ancestors);
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transaction.transitions.emplace_back(*sharedTag, collectedTransition);
+      transaction.transitions.emplace_back(
+          *sharedTag,
+          CollectedTransition{
+              .transition = transition,
+              .nodes = collectedTransition.nodes,
+              .absolutePositions = std::move(collectedTransition.absolutePositions),
+              .ancestors = std::move(collectedTransition.ancestors)});
     } else if (parentTag[AFTER]) {
       transaction.restoreRequests.push_back({*sharedTag, node});
     }
@@ -158,8 +167,9 @@ void LayoutAnimationsProxy::resolveDeferredSourceScreen() const {
   if (!needsSourceScreen) {
     return;
   }
-  const auto sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
-  if (!sourceScreen || !visibleScreens_.contains(sourceScreen->current.tag) || !transition_->targetScreen ||
+  const auto sourceScreen =
+      topScreen_ && transition_->targetScreen ? findScreenInStackOf(topScreen_, transition_->targetScreen) : nullptr;
+  if (!sourceScreen || !visibleScreens_.contains(sourceScreen->current.tag) ||
       sourceScreen->current.tag == transition_->targetScreen->current.tag) {
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
@@ -185,10 +195,10 @@ void LayoutAnimationsProxy::handleProgressTransition(
   if (transition_->state == TransitionState::START) {
     const auto beforeTopScreen = topScreen_;
     const auto afterTopScreen = findBoundaryGuess(transition_->targetScreen);
-    const auto beforeScreen = beforeTopScreen ? findParentRNSScreen(beforeTopScreen) : nullptr;
     if (!transition_->sourceScreen || !transition_->targetScreen ||
         transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag || !beforeTopScreen ||
-        beforeScreen != transition_->sourceScreen || !afterTopScreen || beforeTopScreen == afterTopScreen) {
+        !isInSubtree(beforeTopScreen, transition_->sourceScreen) || !afterTopScreen ||
+        beforeTopScreen == afterTopScreen) {
       transition_->state = TransitionState::CANCELLED;
     } else {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
@@ -197,6 +207,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       hideTransitioningViews(AFTER, transaction, propsParserContext);
 
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+        adjustForNativePlacement(collectedTransition, BEFORE);
+        adjustForNativePlacement(collectedTransition, AFTER);
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
@@ -206,6 +218,12 @@ void LayoutAnimationsProxy::handleProgressTransition(
         react_native_assert(beforeNode && "Shared transition source not found");
         react_native_assert(afterNode && "Shared transition target not found");
         if (!beforeNode || !afterNode) {
+          continue;
+        }
+        if (isOffWindow(beforeNode)) {
+          cancelSharedTransition(sharedTag, transaction);
+          transaction.restoreRequests.push_back({sharedTag, beforeNode});
+          transaction.restoreRequests.push_back({sharedTag, afterNode});
           continue;
         }
         warnIfSnapshotIsStale(before, transaction);
@@ -333,23 +351,21 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     }
   }
   if (!run) {
-    run = SharedTransitionRun{.container = createSharedContainer(before)};
+    run = SharedTransitionRun{.container = createSharedContainer(before, transaction)};
     transaction.containersToInsert.push_back(sharedTag);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
+  run->targetOffWindow = false;
   return *run;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const ShadowView &before) const {
-  Tag containerTag = -1;
-  {
-    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-    containerTag = sharedTransitionManager_->nextContainerTag_;
-    sharedTransitionManager_->nextContainerTag_ += 2;
-  }
-  const auto root = lightNodes_.at(surfaceId_);
+std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(
+    const ShadowView &before,
+    TransactionMeta &transaction) const {
+  const auto containerTag = allocateContainerTag();
+  const auto parent = getOrCreateContainerParent(transaction);
   auto containerView = before;
   containerView.tag = containerTag;
   auto node = std::make_shared<LightNode>();
@@ -358,8 +374,8 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const Sh
   react_native_assert(node->current.props && "Shared container has no props");
   node->accumulatedRawProps = node->current.props->rawProps;
 #endif
-  node->parent = root;
-  root->children.push_back(node);
+  node->parent = parent;
+  parent->children.push_back(node);
   [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
   react_native_assert(inserted && "Shared container already exists");
   return node;
@@ -379,6 +395,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
 
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
+      adjustForNativePlacement(collectedTransition, BEFORE);
+      adjustForNativePlacement(collectedTransition, AFTER);
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
@@ -386,7 +404,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
-      if (!config) {
+      const bool sourceOffWindow = isOffWindow(collectedTransition.nodes[BEFORE]);
+      if (sourceOffWindow) {
+        cancelSharedTransition(sharedTag, transaction);
+      }
+      if (!config || sourceOffWindow) {
         for (const auto &node : collectedTransition.nodes) {
           if (node) {
             transaction.restoreRequests.push_back({sharedTag, node});
@@ -401,12 +423,16 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
+      auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
       const auto containerTag = run.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
 
       startSharedTransition(containerTag, before, after, config);
+      run.targetOffWindow = isOffWindow(afterNode);
+      if (run.targetOffWindow) {
+        schedulePullOnNextFrame();
+      }
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -436,6 +462,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         transaction.restoreRequests.push_back({sharedTag, run.target});
       }
       run.target = afterNode;
+      adjustForNativePlacement(collectedTransition, AFTER);
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       after.tag = containerTag;
       if (hasPendingLayoutAnimation(containerTag)) {
@@ -508,8 +535,22 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
   }
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
-  if (isClosing || isGoingForward) {
+  if (isGoingForward) {
     return {};
+  }
+  if (isClosing) {
+    const auto closingIt = lightNodes_.find(tag);
+    const auto below =
+        closingIt != lightNodes_.end() && closingIt->second ? findScreenBelow(closingIt->second) : nullptr;
+    if (!below) {
+      return {};
+    }
+    // A dismissal gesture that the user abandons reports its progress back to zero and no cancel.
+    const bool reversed = progress <= 0 && ((transition_ && transition_->progress > 0) || uncommittedScreenPop_);
+    if (reversed) {
+      return onGestureCancel(tag);
+    }
+    tag = below->current.tag;
   }
   if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
     return {};
@@ -524,7 +565,7 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     }
     std::shared_ptr<LightNode> sourceScreen;
     if (!uncommittedScreenPop_) {
-      sourceScreen = topScreen_ ? findParentRNSScreen(topScreen_) : nullptr;
+      sourceScreen = topScreen_ ? findScreenInStackOf(topScreen_, targetIt->second) : nullptr;
       if (!sourceScreen || sourceScreen->current.tag == tag || !visibleScreens_.contains(sourceScreen->current.tag)) {
         return {};
       }
@@ -631,20 +672,209 @@ std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() con
   return surfaceId_;
 }
 
-void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &rootChildCount) const {
+// A source that left the screen before its transition starts, e.g. a sheet dismissed by a swipe, has nothing to fly
+// from.
+bool LayoutAnimationsProxy::isOffWindow(const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  const auto parent = node ? node->parent.lock() : nullptr;
+  return parent && nativeViewPlacement_ &&
+      nativeViewPlacement_(surfaceId_, node->current.tag, parent->current.tag, false).kind ==
+      NativeViewPlacement::Kind::OffWindow;
+#else
+  return false;
+#endif
+}
+
+// The position of the ancestor from UIKit replaces the positions of the ancestors above it.
+static void moveBelowAncestor(
+    const AncestorOutsideReactParent &ancestor,
+    std::vector<react::Point> &absolutePositions) {
+  react_native_assert(ancestor.index < absolutePositions.size() && "Ancestor outside the absolute positions");
+  const auto shift = ancestor.position - absolutePositions[ancestor.index];
+  absolutePositions.resize(ancestor.index + 1);
+  for (auto &position : absolutePositions) {
+    position += shift;
+  }
+}
+
+// A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
+// origin of its stack. The run follows the target once the platform places it, until the transition ends.
+void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &propsParserContext) const {
+  for (auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->targetOffWindow) {
+      continue;
+    }
+    auto &run = *element.run;
+    const auto containerTag = run.container->current.tag;
+    const bool targetMapped = isLightNodeMapped(run.target);
+    const bool targetOffWindow = targetMapped && isOffWindow(run.target);
+    if (targetOffWindow && (hasPendingLayoutAnimation(containerTag) || layoutAnimations_.contains(containerTag))) {
+      schedulePullOnNextFrame();
+      continue;
+    }
+    run.targetOffWindow = false;
+    if (!targetMapped || targetOffWindow) {
+      continue;
+    }
+    const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+        run.source->current.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+    if (!config) {
+      continue;
+    }
+    resolveLightNodeProps(run.target);
+    auto after = run.target->current;
+    auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
+    const auto ancestors = collectAncestors(run.target, false);
+    if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
+      moveBelowAncestor(*ancestor, absolutePositions);
+    }
+    after.layoutMetrics.frame.origin = absolutePositions[0];
+    overrideTransform(after, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
+    after.tag = containerTag;
+    if (hasPendingLayoutAnimation(containerTag)) {
+      updateLayoutAnimationTarget(containerTag, after, config);
+      continue;
+    }
+    const LayoutAnimation *animation = nullptr;
+    if (const auto it = layoutAnimations_.find(containerTag); it != layoutAnimations_.end()) {
+      animation = &it->second;
+    } else if (const auto it = completedAnimations_.find(containerTag); it != completedAnimations_.end()) {
+      animation = &it->second.animation;
+    }
+    if (animation && animation->finalView.layoutMetrics != after.layoutMetrics) {
+      startSharedTransition(containerTag, animation->currentView, after, config);
+    }
+  }
+}
+
+Tag LayoutAnimationsProxy::allocateContainerTag() const {
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  const auto tag = sharedTransitionManager_->nextContainerTag_;
+  sharedTransitionManager_->nextContainerTag_ += 2;
+  return tag;
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy::getOrCreateContainerParent(TransactionMeta &transaction) const {
+#ifdef __APPLE__
+  if (setSharedTransitionOverlay_) {
+    if (!containerOverlay_) {
+      const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+      const auto &descriptor = componentDescriptorRegistry_->at("View");
+      ShadowView overlay;
+      overlay.componentName = descriptor.getComponentName();
+      overlay.componentHandle = descriptor.getComponentHandle();
+      overlay.surfaceId = surfaceId_;
+      overlay.tag = allocateContainerTag();
+      overlay.props =
+          descriptor.cloneProps(propsParserContext, nullptr, RawProps(folly::dynamic::object("pointerEvents", "none")));
+      overlay.layoutMetrics = lightNodes_.at(surfaceId_)->current.layoutMetrics;
+      containerOverlay_ = std::make_shared<LightNode>();
+      containerOverlay_->current = std::move(overlay);
+      transaction.createsOverlay = true;
+    }
+    return containerOverlay_;
+  }
+#endif
+  return lightNodes_.at(surfaceId_);
+}
+
+int LayoutAnimationsProxy::containerParentChildCount() const {
+#ifdef __APPLE__
+  if (setSharedTransitionOverlay_) {
+    return containerOverlay_ ? static_cast<int>(containerOverlay_->children.size()) : 0;
+  }
+#endif
+  return static_cast<int>(lightNodes_.at(surfaceId_)->children.size());
+}
+
+// The container mutations go before the other mutations of the transaction, so they index the children that the
+// container parent had at the start of the pull.
+void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int containerIndex) const {
+  if (transaction.containersToInsert.empty()) {
+    return;
+  }
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
-  filteredMutations.reserve(transaction.containersToInsert.size() * 2);
+  filteredMutations.reserve(transaction.containersToInsert.size() * 2 + 2);
+  const auto parent = getOrCreateContainerParent(transaction);
+#ifdef __APPLE__
+  if (transaction.createsOverlay) {
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(parent->current));
+    // The overlay is never inserted, and a recycled view keeps the props of its previous use until an update.
+    const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+    auto recycledView = parent->current;
+    recycledView.props =
+        componentDescriptorRegistry_->at(parent->current.componentHandle).cloneProps(propsParserContext, nullptr, {});
+    recycledView.layoutMetrics = EmptyLayoutMetrics;
+    filteredMutations.push_back(ShadowViewMutation::UpdateMutation(recycledView, parent->current, Tag{0}));
+    setSharedTransitionOverlay_(surfaceId_, parent->current.tag);
+  }
+#endif
   for (const auto &sharedTag : transaction.containersToInsert) {
     auto &run = *sharedElements_.at(sharedTag).run;
     run.inserted = true;
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(run.container->current));
     filteredMutations.push_back(
-        ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
+        ShadowViewMutation::InsertMutation(parent->current.tag, run.container->current, containerIndex++));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
+
+// A source that left the screen has nothing to fly from, which also ends the run that still flies between the views.
+void LayoutAnimationsProxy::cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const {
+  const auto elementIt = sharedElements_.find(sharedTag);
+  if (elementIt == sharedElements_.end() || !elementIt->second.run) {
+    return;
+  }
+  auto &element = elementIt->second;
+  react_native_assert(element.run->inserted && "Cancelled shared container is not inserted");
+  const auto containerTag = element.run->container->current.tag;
+  transaction.restoreRequests.push_back({sharedTag, element.run->source});
+  transaction.restoreRequests.push_back({sharedTag, element.run->target});
+  transaction.containersToRemove.push_back(element.run->container);
+  element.run.reset();
+  cancelLayoutAnimation(containerTag);
+}
+
+#ifdef __APPLE__
+// The snapshot of a removed modal shows the frame before this transaction, in which the sources of the transitions that
+// start now are still visible.
+void LayoutAnimationsProxy::hideSourcesInModalSnapshots(
+    const ShadowViewMutationList &mutations,
+    const TransactionMeta &transaction) const {
+  if (!hideInModalSnapshot_) {
+    return;
+  }
+  std::unordered_set<Tag> removedModals;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Remove &&
+        !strcmp(mutation.oldChildShadowView.componentName, "ModalHostView")) {
+      removedModals.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  if (removedModals.empty()) {
+    return;
+  }
+  std::vector<Tag> sources;
+  for (const auto &[sharedTag, collectedTransition] : transaction.transitions) {
+    const auto elementIt = sharedElements_.find(sharedTag);
+    const auto &source = collectedTransition.nodes[BEFORE];
+    if (elementIt == sharedElements_.end() || !elementIt->second.run || elementIt->second.run->source != source) {
+      continue;
+    }
+    const bool inRemovedModal = std::ranges::any_of(
+        collectedTransition.ancestors[BEFORE],
+        [&](const Ancestor &ancestor) { return removedModals.contains(ancestor.tag); });
+    if (inRemovedModal) {
+      sources.push_back(source->current.tag);
+    }
+  }
+  if (!sources.empty()) {
+    hideInModalSnapshot_(sources);
+  }
+}
+#endif
 
 void LayoutAnimationsProxy::finishSharedTransition(
     const SharedTag &sharedTag,
@@ -767,19 +997,28 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   }
 
   ReanimatedSystraceSection s2("remove shared containers");
-  const auto root = lightNodes_.at(surfaceId_);
   for (const auto &node : transaction.containersToRemove) {
-    const auto childIt = std::ranges::find(root->children, node);
-    react_native_assert(childIt != root->children.end() && "Shared container is not mounted");
-    if (childIt != root->children.end()) {
-      const auto index = static_cast<int>(std::distance(root->children.begin(), childIt));
-      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, node->current, index));
+    const auto parent = node->parent.lock();
+    const auto childIt = std::ranges::find(parent->children, node);
+    react_native_assert(childIt != parent->children.end() && "Shared container is not mounted");
+    if (childIt != parent->children.end()) {
+      const auto index = static_cast<int>(std::distance(parent->children.begin(), childIt));
+      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
       filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-      root->children.erase(childIt);
+      parent->children.erase(childIt);
     }
 
     unmapLightNode(node);
   }
+#ifdef __APPLE__
+  // The overlay is attached to its window after a mount, which misses a commit that the mount forces, such as the
+  // snapshot of a dismissed screen, so the overlay stays attached between transitions.
+  if (transaction.surfaceDropped && containerOverlay_) {
+    setSharedTransitionOverlay_(surfaceId_, std::nullopt);
+    filteredMutations.push_back(ShadowViewMutation::DeleteMutation(containerOverlay_->current));
+    containerOverlay_.reset();
+  }
+#endif
 
   std::erase_if(sharedElements_, [](const auto &entry) {
     const auto &element = entry.second;
@@ -802,20 +1041,23 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   return node->current;
 }
 
+static react::Point scrollPosition(const ShadowView &view) {
+  react::Point position;
+  if (!strcmp(view.componentName, "ScrollView")) {
+    position -= std::static_pointer_cast<const ConcreteState<ScrollViewState>>(view.state)->getData().contentOffset;
+  }
+  return position;
+}
+
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
-    react::Point viewPosition;
     const auto &componentName = currentNode->current.componentName;
     react_native_assert(componentName && "Component name is nullptr");
-    if (!strcmp(componentName, "ScrollView")) {
-      auto state = std::static_pointer_cast<const ConcreteState<ScrollViewState>>(currentNode->current.state);
-      auto data = state->getData();
-      viewPosition -= data.contentOffset;
-    }
+    react::Point viewPosition = scrollPosition(currentNode->current);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto parent = currentNode->parent.lock();
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
@@ -833,12 +1075,43 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
   return viewsAbsolutePositions;
 }
 
-std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
+// UIKit can show a view outside the view of its React parent, for example in a presented modal.
+std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOutsideReactParent(
+    const std::vector<Ancestor> &ancestors,
+    const bool settled) const {
+#ifdef __APPLE__
+  if (!nativeViewPlacement_) {
+    return std::nullopt;
+  }
+  for (size_t i = 0; i + 1 < ancestors.size(); ++i) {
+    const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
+    if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
+      return AncestorOutsideReactParent{.index = i, .position = ancestors[i].scrollPosition + placement.origin};
+    }
+  }
+#endif
+  return std::nullopt;
+}
+
+// Native views do not change during a pull.
+void LayoutAnimationsProxy::adjustForNativePlacement(
+    CollectedTransition &collectedTransition,
+    const BeforeOrAfter index) const {
+  const auto &ancestors = collectedTransition.ancestors[index];
+  const auto ancestor = findAncestorOutsideReactParent(ancestors, index == AFTER);
+  if (!ancestor) {
+    return;
+  }
+  auto &absolutePositions = collectedTransition.absolutePositions[index];
+  moveBelowAncestor(*ancestor, absolutePositions);
+  collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
+  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+}
+
+std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
     const std::shared_ptr<LightNode> &node,
-    const std::vector<react::Point> &absolutePositions,
     const bool useViewsOnScreen) const {
-  std::vector<AncestorTransform> transforms;
-  const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
+  std::vector<Ancestor> ancestors;
   auto currentNode = node;
   while (currentNode) {
     resolveLightNodeProps(currentNode);
@@ -856,16 +1129,23 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
-    transforms.push_back({props.transform, origin, viewSize});
+    ancestors.push_back(
+        {currentNode->current.tag, scrollPosition(currentNode->current), props.transform, origin, viewSize});
     currentNode = currentNode->parent.lock();
   }
+  return ancestors;
+}
 
+std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
+    const std::vector<Ancestor> &ancestors,
+    const std::vector<react::Point> &absolutePositions) const {
+  const auto &targetSize = ancestors[0].ownSize;
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
   bool parentHasTransform = false;
-  for (int i = static_cast<int>(transforms.size()) - 1; i >= 0; --i) {
-    auto &[transform, transformOrigin, ownSize] = transforms[i];
-    if (transform.operations.empty()) {
+  for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
+    const auto &ancestor = ancestors[i];
+    if (ancestor.transform.operations.empty()) {
       continue;
     } else if (i > 0) {
       parentHasTransform = true;
@@ -874,10 +1154,11 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
+    auto transformOrigin = ancestor.origin;
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
     combinedMatrix =
-        combinedMatrix * resolveTransform(targetLayoutMetrics.frame.size, ownSize, transform, transformOrigin);
+        combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {

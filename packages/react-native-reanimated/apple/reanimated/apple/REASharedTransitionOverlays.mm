@@ -1,0 +1,232 @@
+#import <reanimated/apple/REASharedTransitionOverlays.h>
+
+#if TARGET_OS_IOS
+
+#import <React/RCTAssert.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+#import <React/UIView+React.h>
+
+// The frame of the view in the coordinates of its window, without the transforms of the view and its ancestors. A
+// sheet scales the view that presents it, which must not move the overlay or the measured screens.
+static CGRect untransformedFrameInWindow(UIView *view)
+{
+  CGRect frame = {CGPointZero, view.bounds.size};
+  for (UIView *current = view; current.superview; current = current.superview) {
+    const CGPoint anchor = current.layer.anchorPoint;
+    const CGRect parentBounds = current.superview.bounds;
+    frame.origin.x += current.center.x - current.bounds.size.width * anchor.x - parentBounds.origin.x;
+    frame.origin.y += current.center.y - current.bounds.size.height * anchor.y - parentBounds.origin.y;
+  }
+  return frame;
+}
+
+// The origin of the view in the coordinates of its window, with the transforms of its ancestors but not its own. React
+// applies the transforms of the view and of its React ancestors itself. The current origin follows running animations,
+// such as the dismissal of a sheet released by a swipe.
+static CGPoint originInWindow(UIView *view, BOOL current)
+{
+  CALayer *layer = view.layer;
+  CALayer *superlayer = view.superview.layer;
+  CALayer *windowLayer = view.window.layer;
+  if (current) {
+    layer = layer.presentationLayer ?: layer;
+    superlayer = superlayer.presentationLayer ?: superlayer;
+    windowLayer = windowLayer.presentationLayer ?: windowLayer;
+  }
+  const CGPoint origin = {
+      layer.position.x - layer.bounds.size.width * layer.anchorPoint.x,
+      layer.position.y - layer.bounds.size.height * layer.anchorPoint.y};
+  return [superlayer convertPoint:origin toLayer:windowLayer];
+}
+
+// A full screen presentation removes the presenting views from the window, so the window that shows a surface is
+// then the one of the view controller presented over it.
+static UIWindow *surfaceWindow(UIView *rootView)
+{
+  if (rootView.window) {
+    return rootView.window;
+  }
+  for (UIViewController *presented = rootView.reactViewController.presentedViewController; presented;
+       presented = presented.presentedViewController) {
+    if (presented.viewIfLoaded.window) {
+      return presented.viewIfLoaded.window;
+    }
+  }
+  return nil;
+}
+
+@implementation REASharedTransitionOverlays {
+  __weak RCTSurfacePresenter *_surfacePresenter;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_overlayTags;
+  NSMapTable<UIViewController *, UIView *> *_modalSnapshots;
+}
+
+- (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
+{
+  if (self = [super init]) {
+    _surfacePresenter = surfacePresenter;
+    _overlayTags = [NSMutableDictionary new];
+    _modalSnapshots = [NSMapTable weakToStrongObjectsMapTable];
+    // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
+    // See `REAPseudoSelectorAttachQueue`.
+    [surfacePresenter addObserver:self];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [_surfacePresenter removeObserver:self];
+}
+
+- (UIView *)viewWithTag:(NSInteger)tag
+{
+  RCTComponentViewRegistry *registry = _surfacePresenter.mountingManager.componentViewRegistry;
+  return [registry findComponentViewWithTag:static_cast<facebook::react::Tag>(tag)];
+}
+
+- (void)showOverlayWithTag:(NSInteger)tag surfaceId:(NSInteger)surfaceId
+{
+  RCTAssertMainQueue();
+  _overlayTags[@(surfaceId)] = @(tag);
+}
+
+- (void)hideOverlayForSurfaceId:(NSInteger)surfaceId
+{
+  RCTAssertMainQueue();
+  NSNumber *tag = _overlayTags[@(surfaceId)];
+  if (!tag) {
+    return;
+  }
+  [_overlayTags removeObjectForKey:@(surfaceId)];
+  UIView *overlay = [self viewWithTag:tag.integerValue];
+  overlay.layer.zPosition = 0;
+  overlay.accessibilityElementsHidden = NO;
+  [overlay removeFromSuperview];
+}
+
+- (void)hideViewsInModalSnapshots:(const std::vector<facebook::react::Tag> &)tags
+{
+  RCTAssertMainQueue();
+  NSMapTable<UIViewController *, NSMutableArray<UIView *> *> *viewsByModal = [NSMapTable strongToStrongObjectsMapTable];
+  for (const auto tag : tags) {
+    UIView *view = [self viewWithTag:tag];
+    UIViewController *modal = view.reactViewController;
+    while (modal.parentViewController) {
+      modal = modal.parentViewController;
+    }
+    if (!modal.presentingViewController) {
+      continue;
+    }
+    NSMutableArray<UIView *> *views = [viewsByModal objectForKey:modal];
+    if (!views) {
+      views = [NSMutableArray new];
+      [viewsByModal setObject:views forKey:modal];
+    }
+    [views addObject:view];
+  }
+  for (UIViewController *modal in viewsByModal) {
+    NSArray<UIView *> *views = [viewsByModal objectForKey:modal];
+    NSMutableArray<NSNumber *> *alphas = [NSMutableArray new];
+    for (UIView *view in views) {
+      [alphas addObject:@(view.alpha)];
+      view.alpha = 0;
+    }
+    // Rendering the layers commits nothing, so the views are never shown hidden.
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithBounds:modal.view.bounds];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+      [modal.view.layer renderInContext:context.CGContext];
+    }];
+    [_modalSnapshots setObject:[[UIImageView alloc] initWithImage:image] forKey:modal];
+    [views enumerateObjectsUsingBlock:^(UIView *view, NSUInteger index, BOOL *) {
+      view.alpha = alphas[index].doubleValue;
+    }];
+  }
+}
+
+// React Native removes the views of a dismissed modal, so the only views left in it are its snapshot.
+- (void)replaceModalSnapshots
+{
+  for (UIViewController *modal in _modalSnapshots) {
+    if (!modal.isBeingDismissed) {
+      continue;
+    }
+    for (UIView *view in modal.view.subviews) {
+      view.hidden = YES;
+    }
+    UIView *snapshot = [_modalSnapshots objectForKey:modal];
+    snapshot.frame = modal.view.bounds;
+    [modal.view addSubview:snapshot];
+  }
+  [_modalSnapshots removeAllObjects];
+}
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+  [self replaceModalSnapshots];
+  NSNumber *tag = _overlayTags[@(rootTag)];
+  UIView *overlay = tag ? [self viewWithTag:tag.integerValue] : nil;
+  if (!overlay) {
+    return;
+  }
+  UIView *rootView = [self viewWithTag:rootTag];
+  UIWindow *window = surfaceWindow(rootView);
+  if (!window) {
+    return;
+  }
+  if (overlay.superview != window) {
+    overlay.accessibilityElementsHidden = YES;
+    // UIKit can insert a modal's presentation container after the overlay.
+    overlay.layer.zPosition = 1;
+    [window addSubview:overlay];
+  }
+  overlay.frame = untransformedFrameInWindow(rootView);
+}
+
+- (reanimated::NativeViewPlacement)placementOfViewWithTag:(NSInteger)tag
+                                                parentTag:(NSInteger)parentTag
+                                                surfaceId:(NSInteger)surfaceId
+                                                  settled:(BOOL)settled
+{
+  RCTAssertMainQueue();
+  UIView *view = [self viewWithTag:tag];
+  UIView *parent = [self viewWithTag:parentTag];
+  if (!view.window || !parent) {
+    return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
+  }
+  if ([view isDescendantOfView:parent]) {
+    return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
+  }
+  UIView *rootView = [self viewWithTag:surfaceId];
+  if (view.window != surfaceWindow(rootView)) {
+    return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
+  }
+  CGPoint viewOrigin = originInWindow(view, !settled);
+  UIViewController *presented = view.reactViewController;
+  while (presented.parentViewController) {
+    presented = presented.parentViewController;
+  }
+  // A presentation animates the presented view, so a target inside it is measured at the presentation's settled frame.
+  if (settled && presented.presentingViewController) {
+    UIPresentationController *presentationController = presented.presentationController;
+    UIView *presentedView = presentationController.presentedView;
+    UIView *containerView = presentationController.containerView;
+    if (containerView && [view isDescendantOfView:presentedView]) {
+      const CGPoint presentedOrigin = untransformedFrameInWindow(presentedView).origin;
+      const CGPoint containerOrigin = untransformedFrameInWindow(containerView).origin;
+      const CGPoint settledOrigin = presentationController.frameOfPresentedViewInContainerView.origin;
+      viewOrigin.x += containerOrigin.x - containerView.bounds.origin.x + settledOrigin.x - presentedOrigin.x;
+      viewOrigin.y += containerOrigin.y - containerView.bounds.origin.y + settledOrigin.y - presentedOrigin.y;
+    }
+  }
+  const CGPoint rootOrigin = untransformedFrameInWindow(rootView).origin;
+  return {
+      .kind = reanimated::NativeViewPlacement::Kind::OutsideReactParent,
+      .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y}};
+}
+
+@end
+
+#endif // TARGET_OS_IOS
