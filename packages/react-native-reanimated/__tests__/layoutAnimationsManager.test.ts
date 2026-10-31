@@ -194,4 +194,146 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(1, 9, false);
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(2, 9, false);
   });
+
+  describe('when an animation interrupts a running one', () => {
+    const ANIMATION_DURATION = 100;
+    const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+    let frames: FrameRequestCallback[];
+
+    // Animates linearly from the value it starts at to `toValue`
+    function makeLinearAnimation(toValue: number) {
+      let startValue = 0;
+      let startTimestamp = 0;
+      const animation: AnimationObject = {
+        current: toValue,
+        onStart(_animation, value, timestamp) {
+          startValue = value as number;
+          startTimestamp = timestamp;
+          animation.current = startValue;
+        },
+        onFrame(_animation, timestamp) {
+          const progress = Math.min(
+            (timestamp - startTimestamp) / ANIMATION_DURATION,
+            1
+          );
+          animation.current = startValue + (toValue - startValue) * progress;
+          return progress === 1;
+        },
+      };
+      // LayoutAnimation's public type describes resolved style values
+      return animation as unknown as number;
+    }
+
+    // Starts an entering animation at 100 ms, and runs it until it's 40% done. The next
+    // animation then starts at 140 ms.
+    function startAndRunTo40Percent(
+      tag: number,
+      enteringAnimation: LayoutAnimation
+    ) {
+      getAnimationTimestamp.mockReturnValueOnce(100).mockReturnValueOnce(140);
+      manager.start(
+        tag,
+        LayoutAnimationType.ENTERING,
+        {},
+        () => enteringAnimation
+      );
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      frames.splice(0).forEach((frame) => frame(140));
+    }
+
+    beforeEach(() => {
+      frames = [];
+      globalThis.requestAnimationFrame = (callback) => {
+        frames.push(callback);
+        return frames.length;
+      };
+    });
+
+    afterEach(() => {
+      globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    });
+
+    test('starts an exiting animation from the current values', () => {
+      startAndRunTo40Percent(10, {
+        initialValues: { opacity: 0 },
+        animations: { opacity: makeLinearAnimation(1) },
+      });
+
+      manager.start(10, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(10, {
+        opacity: 0.4,
+      });
+      manager.stop(10);
+    });
+
+    test('keeps the initial values that the interrupted animation does not drive', () => {
+      startAndRunTo40Percent(11, {
+        initialValues: { transform: [{ scale: 0 }] },
+        animations: { transform: [{ scale: makeLinearAnimation(1) }] },
+      });
+
+      manager.start(11, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: {
+          opacity: 1,
+          transform: [{ scale: 1 }, { translateX: 0 }],
+        },
+        animations: {
+          opacity: makeLinearAnimation(0),
+          transform: [
+            { scale: makeLinearAnimation(0) },
+            { translateX: makeLinearAnimation(100) },
+          ],
+        },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(11, {
+        opacity: 1,
+        transform: [{ scale: 0.4 }, { translateX: 0 }],
+      });
+      manager.stop(11);
+    });
+
+    test('starts from a static value of the interrupted animation', () => {
+      // `withStyleAnimation` turns a static value into an animation when it starts
+      startAndRunTo40Percent(13, {
+        initialValues: { opacity: 0, transform: [{ scale: 0 }] },
+        animations: {
+          opacity: 0.5,
+          transform: [{ scale: makeLinearAnimation(1) }],
+        },
+      });
+
+      manager.start(13, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(13, {
+        opacity: 0.5,
+        transform: [{ scale: 0.4 }],
+      });
+      manager.stop(13);
+    });
+
+    test('starts other animations from their initial values', () => {
+      startAndRunTo40Percent(12, {
+        initialValues: { opacity: 0 },
+        animations: { opacity: makeLinearAnimation(1) },
+      });
+
+      manager.start(12, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(12, {
+        opacity: 1,
+      });
+      manager.stop(12);
+    });
+  });
 });

@@ -112,9 +112,42 @@ function chooseAction(
   }
 }
 
+// An exiting animation that interrupts a running layout animation of the element, such as an
+// entering one, starts `opacity` from its current value, so the view doesn't jump. Transforms
+// still start from the exiting animation's first keyframe, because browsers report the current
+// transform as a matrix.
+function getInterruptedAnimationValues(
+  element: ReanimatedHTMLElement
+): InitialValuesStyleProps | undefined {
+  if (typeof CSSAnimation === 'undefined') {
+    return undefined;
+  }
+
+  const runningAnimation = element
+    .getAnimations()
+    .find(
+      (animation) =>
+        animation instanceof CSSAnimation &&
+        animation.animationName === element.style.animationName &&
+        animation.playState === 'running'
+    );
+  const animatesOpacity = (
+    runningAnimation?.effect as KeyframeEffect | null | undefined
+  )
+    ?.getKeyframes()
+    .some((keyframe) => 'opacity' in keyframe);
+
+  if (!animatesOpacity) {
+    return undefined;
+  }
+
+  return { opacity: Number(getComputedStyle(element).opacity) };
+}
+
 function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  animationType: LayoutAnimationType
+  animationType: LayoutAnimationType,
+  interruptedAnimationValues?: InitialValuesStyleProps
 ) {
   const config = chooseConfig(animationType, props);
   if (!config) {
@@ -126,7 +159,6 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const isCustomKeyframe = config instanceof Keyframe;
-  const hasInitialValues = (config as CustomConfig).initialValues !== undefined;
 
   let animationName;
 
@@ -142,10 +174,23 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
       .presetName;
   }
 
+  // Only predefined animations have keyframes that the current values can be put in
+  const startsFromCurrentValues =
+    interruptedAnimationValues !== undefined &&
+    Object.prototype.hasOwnProperty.call(Animations, animationName);
+  const initialValues = startsFromCurrentValues
+    ? {
+        ...(config as CustomConfig).initialValues,
+        ...interruptedAnimationValues,
+      }
+    : (config as CustomConfig).initialValues;
+  const hasInitialValues = initialValues !== undefined;
+  const presetName = animationName;
+
   if (hasInitialValues) {
     animationName = createAnimationWithInitialValues(
       animationName,
-      (config as CustomConfig).initialValues as InitialValuesStyleProps,
+      initialValues as InitialValuesStyleProps,
       animationType
     );
   }
@@ -176,8 +221,13 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   const animationConfig = getProcessedConfig(
     animationName,
     animationType,
-    config as CustomConfig
+    config as CustomConfig,
+    presetName
   );
+
+  if (startsFromCurrentValues) {
+    animationConfig.startsFromCurrentValues = true;
+  }
 
   return animationConfig;
 }
@@ -190,7 +240,13 @@ export function startWebLayoutAnimation<
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
-  const animationConfig = tryGetAnimationConfig(props, animationType);
+  const animationConfig = tryGetAnimationConfig(
+    props,
+    animationType,
+    animationType === LayoutAnimationType.EXITING
+      ? getInterruptedAnimationValues(element)
+      : undefined
+  );
 
   maybeModifyStyleForKeyframe(element, props.entering as CustomConfig);
 

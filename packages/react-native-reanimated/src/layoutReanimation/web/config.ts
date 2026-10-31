@@ -61,6 +61,8 @@ export interface AnimationConfig {
   easing: string;
   callback: AnimationCallback;
   reversed: boolean;
+  // An exiting animation that interrupts a running animation starts from its current values
+  startsFromCurrentValues?: boolean;
 }
 
 export interface EasingType {

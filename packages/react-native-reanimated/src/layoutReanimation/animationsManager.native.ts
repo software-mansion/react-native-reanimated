@@ -10,6 +10,7 @@ import type {
   LayoutAnimationValues,
   Mutable,
   SharedValue,
+  StyleProps,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
@@ -56,6 +57,39 @@ function stopObservingProgress(
   removeProgressListener(tag, sharedValue);
   global._notifyAboutEnd(tag, removeView);
   scheduleFlush();
+}
+
+// Leaves out the initial values of the properties that the running animations drive.
+// Transform entries are animated separately, so they're checked one by one.
+function omitAnimatedValues(
+  initialValues: StyleProps,
+  runningAnimations: StyleProps
+): StyleProps {
+  'worklet';
+  const result: Record<string, unknown> = {};
+
+  for (const key of Object.keys(initialValues)) {
+    const runningAnimation = runningAnimations[key];
+
+    if (runningAnimation === undefined) {
+      result[key] = initialValues[key];
+    } else if (
+      key === 'transform' &&
+      Array.isArray(initialValues.transform) &&
+      Array.isArray(runningAnimation)
+    ) {
+      result.transform = initialValues.transform.map(
+        (entry: Record<string, unknown>, index: number) =>
+          Object.fromEntries(
+            Object.entries(entry).filter(
+              ([property]) => runningAnimation[index]?.[property] === undefined
+            )
+          )
+      );
+    }
+  }
+
+  return result as StyleProps;
 }
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
@@ -128,7 +162,14 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         mutableValuesForTag.set(tag, value);
       } else {
         removeProgressListener(tag, value);
-        value._value = style.initialValues;
+        // An exiting animation that interrupts a running animation, such as an entering one,
+        // starts the properties that the running animation drives from their current values,
+        // so the view doesn't jump. `withStyleAnimation` starts a property without an initial
+        // value from the previous animation's current value.
+        value._value =
+          type === LayoutAnimationType.EXITING
+            ? omitAnimatedValues(style.initialValues, previousAnimation)
+            : style.initialValues;
       }
 
       const animation = withStyleAnimation(currentAnimation, (finished) => {
