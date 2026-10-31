@@ -111,12 +111,23 @@ This runs `build` in `common-app` and every `*-example` workspace in parallel. *
 grep 'RNReanimated (' apps/fabric-example/ios/Podfile.lock apps/tvos-example/ios/Podfile.lock
 ```
 
-If they show the new version and `git status` shows only the expected files, proceed.
+`macos-example`'s `build` script runs `toggle-bundle-mode --off` as its first command, whether or not the build later fails. That rewrites `package.json`, `yarn.lock` and the `babel.config.js` and `metro.config.js` of `fabric-example` and `tvos-example`. Revert them and reinstall:
+
+```bash
+git checkout -- package.json yarn.lock \
+  apps/fabric-example/babel.config.js apps/fabric-example/metro.config.js \
+  apps/tvos-example/babel.config.js apps/tvos-example/metro.config.js
+yarn install
+```
+
+Run step 5 before this step, not in parallel with it: `build-apps` changes `package.json` and `node_modules` while it runs.
+
+If the lockfiles show the new version and `git status` shows only the expected files, proceed.
 
 ### 7. Commit and push
 
 ```bash
-git add -A
+git add <the files listed in "Expected diff">
 git commit -m 'release(Reanimated): <version>'
 git push -u origin '@<you>/reanimated/release-<version>'
 ```
@@ -240,6 +251,7 @@ git branch -D '@<you>/reanimated/release-<version>'
 
 - [ ] Fresh worktree without `yarn install` breaks workspace scripts and the pre-commit hook.
 - [ ] `yarn build-apps` fails in `macos-example` on older stable branches — pre-existing compatibility gap, not caused by the bump; release commits ship without the macos lockfile.
+- [ ] `yarn build-apps` toggles Bundle Mode off through `macos-example` — revert the toggled files (step 6) and stage explicit paths, never `git add -A`.
 - [ ] The final diff must be exactly the files listed above; anything else means the branch or build did something unexpected.
 - [ ] `publish=false` is the workflow default, but pass it explicitly so the intent is visible in the run's inputs.
 - [ ] `gh pr edit` is broken by the projectCards GraphQL deprecation — use `gh api ... -X PATCH -f body=`.
