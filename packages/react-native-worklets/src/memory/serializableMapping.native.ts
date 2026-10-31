@@ -1,6 +1,10 @@
 'use strict';
 
-import { createSerializable, isSerializableRef } from './serializable';
+import {
+  createSerializable,
+  getCachedSerializable,
+  isSerializableRef,
+} from './serializable';
 import {
   serializableMappingCache,
   serializableMappingFlag,
@@ -18,14 +22,7 @@ export function setSerializableMapping(value: object, mapping: unknown): void {
 export function getSerializableMapping(
   value: object
 ): SerializableRef | undefined {
-  const cached = serializableMappingCache.get(value);
-  if (cached === serializableMappingFlag) {
-    return value as SerializableRef;
-  }
-  if (globalThis.WeakRef && cached instanceof WeakRef) {
-    return cached.deref();
-  }
-  return cached as SerializableRef | undefined;
+  return getCachedSerializable(value);
 }
 
 export function hasSerializableMapping(value: object): boolean {
