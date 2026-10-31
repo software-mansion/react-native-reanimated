@@ -64,6 +64,7 @@ jobs:
               - '.github/workflows/ci.yml'
               - '.github/workflows/android-validation.yml'
               - '.github/actions/android-validation/**'
+              - '.github/actions/install-android-ndk/**'
               - '.github/actions/setup-node-yarn/**'
               - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
@@ -105,6 +106,7 @@ jobs:
             example-android-build-check:
               - '.github/workflows/ci.yml'
               - '.github/workflows/example-android-build-check.yml'
+              - '.github/actions/install-android-ndk/**'
               - '.clang-tidy'
               - 'scripts/llvm-tools/**'
               - 'packages/react-native-reanimated/android/**'
@@ -177,6 +179,7 @@ jobs:
             runtime-tests-android:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-android.yml'
+              - '.github/actions/install-android-ndk/**'
               - 'apps/common-app/runtime-tests/**'
               - 'apps/fabric-example/babel.config.js'
               - 'apps/fabric-example/metro.config.js'
