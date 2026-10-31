@@ -47,6 +47,7 @@ struct ManagedLayoutAnimationStart {
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  std::optional<Tag> clipOfTag;
 };
 
 struct ProgressLayoutAnimationStart {

@@ -1159,8 +1159,17 @@ void LayoutAnimationsProxy::cleanupAnimations(
       if (!element.run) {
         continue;
       }
+      // Either animation can finish first, for example when only the clip moves. The run ends with the later one.
+      const auto &clip = element.run->clip;
       const auto tag = element.run->container->current.tag;
+      if (clip) {
+        preservedTags.insert(clip->current.tag);
+      }
       if (!completedAnimations_.contains(tag) || hasPendingLayoutAnimation(tag)) {
+        continue;
+      }
+      if (clip && (!completedAnimations_.contains(clip->current.tag) || hasPendingLayoutAnimation(clip->current.tag))) {
+        preservedTags.insert(tag);
         continue;
       }
       if (!flushStructuralMutations) {
@@ -1312,6 +1321,23 @@ void LayoutAnimationsProxy::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
+    const Tag parentTag,
+    const std::shared_ptr<Serializable> &config) const {
+  enqueueLayoutAnimation(ManagedLayoutAnimationStart{
+      .tag = tag,
+      .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
+      .before = before,
+      .after = after,
+      .parentTag = parentTag,
+      .config = config,
+  });
+}
+
+void LayoutAnimationsProxy::startClipTransition(
+    const int tag,
+    const Tag containerTag,
+    const ShadowView &before,
+    const ShadowView &after,
     const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
@@ -1320,16 +1346,20 @@ void LayoutAnimationsProxy::startSharedTransition(
       .after = after,
       .parentTag = surfaceId_,
       .config = config,
+      .clipOfTag = containerTag,
   });
 }
 
-void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
-    const {
+void LayoutAnimationsProxy::startProgressTransition(
+    const int tag,
+    const ShadowView &before,
+    const ShadowView &after,
+    const Tag parentTag) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
-      .parentTag = surfaceId_,
+      .parentTag = parentTag,
   });
 }
 

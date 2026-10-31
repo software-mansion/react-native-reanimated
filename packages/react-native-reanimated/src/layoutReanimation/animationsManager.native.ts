@@ -62,6 +62,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  // The callback of a shared transition waits for the clip of its container.
+  const clipTagForContainer = new Map<number, number>();
+  const heldCallbacks = new Map<number, (finished: boolean) => void>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -109,8 +112,16 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
        * animations.
        */
       yogaValues: Partial<LayoutAnimationValues>,
-      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      clipOfTag?: number
     ) {
+      if (clipOfTag !== undefined) {
+        clipTagForContainer.set(clipOfTag, tag);
+      }
+      const heldClipTag = clipTagForContainer.get(tag);
+      if (heldClipTag !== undefined) {
+        heldCallbacks.delete(heldClipTag);
+      }
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
@@ -138,9 +149,25 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
         }
-        if (style.callback) {
-          style.callback(finished);
+        if (clipOfTag !== undefined) {
+          if (finished) {
+            clipTagForContainer.delete(clipOfTag);
+            heldCallbacks.get(tag)?.(true);
+            heldCallbacks.delete(tag);
+          }
+          return;
         }
+        const clipTag = clipTagForContainer.get(tag);
+        if (finished && currentAnimationForTag.has(clipTag)) {
+          if (style.callback) {
+            heldCallbacks.set(clipTag as number, style.callback);
+          }
+          return;
+        }
+        if (finished) {
+          clipTagForContainer.delete(tag);
+        }
+        style.callback?.(finished);
       });
 
       startObservingProgress(tag, value, scheduleFlush);
@@ -150,6 +177,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       global.__frameTimestamp = previousFrameTimestamp;
     },
     stop(tag: number) {
+      heldCallbacks.get(tag)?.(false);
+      heldCallbacks.delete(tag);
+      clipTagForContainer.delete(tag);
       const value = mutableValuesForTag.get(tag);
       if (!value) {
         return;

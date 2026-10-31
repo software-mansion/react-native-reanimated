@@ -73,13 +73,14 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
 
     auto &collectedTransition = transaction.transitionMap[*sharedTag];
     auto &transition = collectedTransition.transition;
-    auto &[snapshot, parentTag, transform] = transition;
+    auto &[snapshot, parentTag, transform, ancestorOpacity, clip] = transition;
     auto newTransform = parseParentTransforms(node, absolutePositions, useViewsOnScreen);
     const auto &parent = node->parent.lock();
     react_native_assert(parent && "Parent node is nullptr");
 
     int indexNum = static_cast<int>(index);
     transform[indexNum] = std::move(newTransform);
+    parseAncestorOpacityAndClip(node, absolutePositions, useViewsOnScreen, ancestorOpacity[indexNum], clip[indexNum]);
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
     collectedTransition.nodes[indexNum] = node;
@@ -198,9 +199,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
-        const auto &transform = transition.transform;
-        overrideTransform(before, transform[BEFORE], propsParserContext);
-        overrideTransform(after, transform[AFTER], propsParserContext);
+        const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
+        fitClipOfUnclippedSide(transition, sourceDrawsWithinFrame);
+        const bool clipped = usesClip(sharedTag, transition);
+        applyAncestorEffects(before, transition, BEFORE, propsParserContext);
+        applyAncestorEffects(after, transition, AFTER, propsParserContext);
         const auto &[beforeNode, afterNode] = collectedTransition.nodes;
         react_native_assert(beforeNode && "Shared transition source not found");
         react_native_assert(afterNode && "Shared transition target not found");
@@ -210,12 +213,31 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
-        const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, true, transaction);
+        std::optional<ShadowView> clipBefore;
+        if (clipped) {
+          clipBefore = createClipView(transition.clip[BEFORE], before, propsParserContext);
+        }
+        const auto &run = startSharedTransitionRun(
+            before,
+            clipBefore ? &*clipBefore : nullptr,
+            sharedTag,
+            collectedTransition.nodes,
+            true,
+            sourceDrawsWithinFrame,
+            transaction);
         const auto containerTag = run.container->current.tag;
         before.tag = containerTag;
         after.tag = containerTag;
+        auto parentTag = surfaceId_;
+        if (run.clip) {
+          auto clipAfter = createClipView(transition.clip[AFTER], after, propsParserContext);
+          parentTag = run.clip->current.tag;
+          clipBefore->tag = parentTag;
+          clipAfter.tag = parentTag;
+          startProgressTransition(parentTag, *clipBefore, clipAfter, surfaceId_);
+        }
 
-        startProgressTransition(containerTag, before, after);
+        startProgressTransition(containerTag, before, after, parentTag);
       }
     }
   } else if (transition_->state == TransitionState::ACTIVE) {
@@ -223,43 +245,50 @@ void LayoutAnimationsProxy::handleProgressTransition(
       if (!element.run || !element.run->gestureDriven) {
         continue;
       }
-      const auto tag = element.run->container->current.tag;
-      if (hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      const auto layoutAnimationIt = layoutAnimations_.find(tag);
-      if (layoutAnimationIt == layoutAnimations_.end()) {
-        react_native_assert(false && "Shared transition animation not found");
-        continue;
-      }
-      const auto &layoutAnimation = layoutAnimationIt->second;
-      auto before = layoutAnimation.startView.layoutMetrics.frame;
-      auto after = layoutAnimation.finalView.layoutMetrics.frame;
-      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
-      auto y = before.origin.y + transition_->progress * (after.origin.y - before.origin.y);
-      auto width = before.size.width + transition_->progress * (after.size.width - before.size.width);
-      auto height = before.size.height + transition_->progress * (after.size.height - before.size.height);
+      for (const auto &node : {element.run->clip, element.run->container}) {
+        if (!node) {
+          continue;
+        }
+        const auto tag = node->current.tag;
+        if (hasPendingLayoutAnimation(tag)) {
+          continue;
+        }
+        const auto layoutAnimationIt = layoutAnimations_.find(tag);
+        if (layoutAnimationIt == layoutAnimations_.end()) {
+          react_native_assert(false && "Shared transition animation not found");
+          continue;
+        }
+        const auto &layoutAnimation = layoutAnimationIt->second;
+        const auto progress = transition_->progress;
+        auto before = layoutAnimation.startView.layoutMetrics.frame;
+        auto after = layoutAnimation.finalView.layoutMetrics.frame;
+        auto x = before.origin.x + progress * (after.origin.x - before.origin.x);
+        auto y = before.origin.y + progress * (after.origin.y - before.origin.y);
+        auto width = before.size.width + progress * (after.size.width - before.size.width);
+        auto height = before.size.height + progress * (after.size.height - before.size.height);
 
-      auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
-      auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
-      auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-      auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
+        auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
+        auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
 
-      // TODO (future): Support more props in progress transitions.
-      auto borderRadiusDynamic =
-          folly::dynamic::object("borderRadius", beforeRadius + transition_->progress * (afterRadius - beforeRadius));
+        // TODO (future): Support more props in progress transitions.
+        auto interpolatedProps =
+            folly::dynamic::object("borderRadius", beforeRadius + progress * (afterRadius - beforeRadius))(
+                "opacity", beforeProps->opacity + progress * (afterProps->opacity - beforeProps->opacity));
 
 #ifdef RN_SERIALIZABLE_STATE
-      // TODO (future): Support borderRadius on Android.
-      const Props::Shared newProps = nullptr;
+        // TODO (future): Support borderRadius on Android.
+        const Props::Shared newProps = nullptr;
 #else
-      auto rawProps = RawProps(std::move(borderRadiusDynamic));
+        auto rawProps = RawProps(std::move(interpolatedProps));
 
-      auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
+        auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
+                            .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
 #endif
 
-      updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
+        updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
+      }
     }
   }
 
@@ -319,11 +348,126 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
+// The container draws the view the way its ancestors draw it, inside the clip.
+void LayoutAnimationsProxy::applyAncestorEffects(
+    ShadowView &shadowView,
+    const Transition &transition,
+    const BeforeOrAfter index,
+    const PropsParserContext &propsParserContext) const {
+  const int indexNum = static_cast<int>(index);
+  overrideTransform(shadowView, transition.transform[indexNum], propsParserContext);
+  if (const auto ancestorOpacity = transition.ancestorOpacity[indexNum]; ancestorOpacity != 1) {
+    shadowView =
+        cloneViewWithOpacity(shadowView, getViewProps(shadowView).opacity * ancestorOpacity, propsParserContext);
+  }
+  shadowView.layoutMetrics.frame.origin -= transition.clip[indexNum].frame.origin;
+}
+
+// A side that its ancestors do not clip ends on the frame of its view, so the clip morphs with the view. The
+// clip stays the window when neither side is clipped, or when the container can draw outside the frame of the view
+// at either end, because what it draws there stays during the transition.
+void LayoutAnimationsProxy::fitClipOfUnclippedSide(Transition &transition, const bool sourceDrawsWithinFrame) const {
+  if (!sourceDrawsWithinFrame || !drawsWithinFrame(transition.snapshot[AFTER], transition.transform[AFTER])) {
+    return;
+  }
+  const auto &window = windowFrame();
+  for (const int index : {BEFORE, AFTER}) {
+    const int other = 1 - index;
+    if (transition.clip[index].frame != window || transition.clip[other].frame == window) {
+      continue;
+    }
+    const auto &frame = transition.snapshot[index].layoutMetrics.frame;
+    transition.clip[index] = {.frame = react::Rect::intersect(frame, window)};
+  }
+}
+
+// The container has no children, so only its transforms and decorations reach outside its frame. The transforms of the
+// ancestors can compose to the identity, for example on a screen.
+bool LayoutAnimationsProxy::drawsWithinFrame(const ShadowView &view, const std::optional<Transform> &ancestorTransform)
+    const {
+  const auto &props = getViewProps(view);
+  const auto &size = view.layoutMetrics.frame.size;
+#ifdef ANDROID
+  if (props.elevation != 0) {
+    return false;
+  }
+#endif
+  return (!ancestorTransform || ancestorTransform->matrix == Transform::Identity().matrix) &&
+      props.transform.operations.empty() && size.width > 0 && size.height > 0 && props.boxShadow.empty() &&
+      props.shadowOpacity == 0 && props.outlineWidth == 0;
+}
+
+ShadowView LayoutAnimationsProxy::createClipView(
+    const AncestorClip &clip,
+    const ShadowView &source,
+    const PropsParserContext &propsParserContext) const {
+  const auto &descriptor = componentDescriptorRegistry_->at("View");
+  ShadowView clipView;
+  clipView.componentName = descriptor.getComponentName();
+  clipView.componentHandle = descriptor.getComponentHandle();
+  clipView.surfaceId = surfaceId_;
+  clipView.traits = descriptor.getTraits();
+  // iOS mounts a view only with a view event emitter.
+  clipView.eventEmitter = source.eventEmitter;
+  clipView.layoutMetrics.frame = clip.frame;
+  clipView.layoutMetrics.pointScaleFactor = source.layoutMetrics.pointScaleFactor;
+  clipView.props = descriptor.cloneProps(
+      propsParserContext,
+      nullptr,
+      RawProps(folly::dynamic::object("overflow", "hidden")("pointerEvents", "box-none")(
+          "borderRadius", clip.borderRadius)));
+  return clipView;
+}
+
+// A run gets a clip only when it starts clipped on a side. A run that continues without a clip ignores the clipping
+// that appears later, like before clipping was supported.
+bool LayoutAnimationsProxy::usesClip(const SharedTag &sharedTag, Transition &transition) const {
+  const auto &window = windowFrame();
+  const auto elementIt = sharedElements_.find(sharedTag);
+  const auto *run = elementIt != sharedElements_.end() && elementIt->second.run ? &*elementIt->second.run : nullptr;
+  const bool clipped = run && isRunAnimating(*run)
+      ? run->clip != nullptr
+      : transition.clip[BEFORE].frame != window || transition.clip[AFTER].frame != window;
+  if (!clipped) {
+    transition.clip[BEFORE] = transition.clip[AFTER] = {.frame = window};
+  }
+  return clipped;
+}
+
+const react::Rect &LayoutAnimationsProxy::windowFrame() const {
+  return lightNodes_.at(surfaceId_)->current.layoutMetrics.frame;
+}
+
+bool LayoutAnimationsProxy::isRunAnimating(const SharedTransitionRun &run) const {
+  const auto isAnimating = [this](const std::shared_ptr<LightNode> &node) {
+    const auto tag = node->current.tag;
+    return hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
+  };
+  return isAnimating(run.container) || (run.clip && isAnimating(run.clip));
+}
+
+// The run keeps the record of an animation that ended until the run ends.
+const LayoutAnimation &LayoutAnimationsProxy::runAnimation(const std::shared_ptr<LightNode> &node) const {
+  const auto tag = node->current.tag;
+  const auto it = layoutAnimations_.find(tag);
+  return it != layoutAnimations_.end() ? it->second : completedAnimations_.at(tag).animation;
+}
+
+// Compares what applyAncestorEffects and createClipView change.
+bool LayoutAnimationsProxy::endsTheSame(const ShadowView &finalView, const ShadowView &target) const {
+  const auto &finalProps = getViewProps(finalView);
+  const auto &targetProps = getViewProps(target);
+  return finalView.layoutMetrics == target.layoutMetrics && finalProps.transform == targetProps.transform &&
+      finalProps.opacity == targetProps.opacity && finalProps.borderRadii == targetProps.borderRadii;
+}
+
 SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
+    const ShadowView *clip,
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
     const bool gestureDriven,
+    const bool sourceDrawsWithinFrame,
     TransactionMeta &transaction) const {
   auto &run = sharedElements_[sharedTag].run;
   if (run) {
@@ -331,44 +475,69 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     if (oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
       transaction.restoreRequests.push_back({sharedTag, oldTarget});
     }
-    const auto tag = run->container->current.tag;
-    if (!hasPendingLayoutAnimation(tag) && !layoutAnimations_.contains(tag)) {
-      react_native_assert(completedAnimations_.contains(tag) && "Shared container has no animation");
-      transaction.containersToRemove.push_back(run->container);
+    if (!isRunAnimating(*run)) {
+      react_native_assert(
+          completedAnimations_.contains(run->container->current.tag) && "Shared container has no animation");
+      removeRun(*run, transaction);
       run.reset();
     }
   }
   if (!run) {
-    run = SharedTransitionRun{.container = createSharedContainer(before)};
+    run = createSharedContainer(before, clip);
     transaction.containersToInsert.push_back(sharedTag);
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
+  run->sourceDrawsWithinFrame = sourceDrawsWithinFrame;
   return *run;
 }
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedContainer(const ShadowView &before) const {
+SharedTransitionRun LayoutAnimationsProxy::createSharedContainer(const ShadowView &before, const ShadowView *clip)
+    const {
   Tag containerTag = -1;
+  Tag clipTag = -1;
   {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
     containerTag = sharedTransitionManager_->nextContainerTag_;
-    sharedTransitionManager_->nextContainerTag_ += 2;
+    clipTag = containerTag + 2;
+    sharedTransitionManager_->nextContainerTag_ += 4;
   }
   const auto root = lightNodes_.at(surfaceId_);
-  auto containerView = before;
-  containerView.tag = containerTag;
+  if (!clip) {
+    return SharedTransitionRun{.container = createSharedNode(before, containerTag, root)};
+  }
+  const auto clipNode = createSharedNode(*clip, clipTag, root);
+  return SharedTransitionRun{
+      .container = createSharedNode(before, containerTag, clipNode),
+      .clip = clipNode,
+  };
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy::createSharedNode(
+    const ShadowView &view,
+    const Tag tag,
+    const std::shared_ptr<LightNode> &parent) const {
   auto node = std::make_shared<LightNode>();
-  node->current = std::move(containerView);
+  node->current = view;
+  node->current.tag = tag;
 #ifdef ANDROID
   react_native_assert(node->current.props && "Shared container has no props");
   node->accumulatedRawProps = node->current.props->rawProps;
 #endif
-  node->parent = root;
-  root->children.push_back(node);
-  [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(containerTag, node);
+  node->parent = parent;
+  parent->children.push_back(node);
+  [[maybe_unused]] const auto [_, inserted] = lightNodes_.emplace(tag, node);
   react_native_assert(inserted && "Shared container already exists");
   return node;
+}
+
+// The clip is preserved while the run lives, so its animation ends with the run.
+void LayoutAnimationsProxy::removeRun(const SharedTransitionRun &run, TransactionMeta &transaction) const {
+  transaction.containersToRemove.push_back(run.container);
+  if (run.clip) {
+    cancelLayoutAnimation(run.clip->current.tag);
+  }
 }
 
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
@@ -387,9 +556,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
-      const auto &transform = transition.transform;
-      overrideTransform(before, transform[BEFORE], propsParserContext);
-      overrideTransform(after, transform[AFTER], propsParserContext);
+      const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
+      fitClipOfUnclippedSide(transition, sourceDrawsWithinFrame);
+      const bool clipped = usesClip(sharedTag, transition);
+      applyAncestorEffects(before, transition, BEFORE, propsParserContext);
+      applyAncestorEffects(after, transition, AFTER, propsParserContext);
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
           before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
       if (!config) {
@@ -407,12 +578,31 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      const auto &run = startSharedTransitionRun(before, sharedTag, collectedTransition.nodes, false, transaction);
+      std::optional<ShadowView> clipBefore;
+      if (clipped) {
+        clipBefore = createClipView(transition.clip[BEFORE], before, propsParserContext);
+      }
+      const auto &run = startSharedTransitionRun(
+          before,
+          clipBefore ? &*clipBefore : nullptr,
+          sharedTag,
+          collectedTransition.nodes,
+          false,
+          sourceDrawsWithinFrame,
+          transaction);
       const auto containerTag = run.container->current.tag;
       before.tag = containerTag;
       after.tag = containerTag;
+      auto parentTag = surfaceId_;
+      if (run.clip) {
+        auto clipAfter = createClipView(transition.clip[AFTER], after, propsParserContext);
+        parentTag = run.clip->current.tag;
+        clipBefore->tag = parentTag;
+        clipAfter.tag = parentTag;
+        startClipTransition(parentTag, containerTag, *clipBefore, clipAfter, config);
+      }
 
-      startSharedTransition(containerTag, before, after, config);
+      startSharedTransition(containerTag, before, after, parentTag, config);
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -425,7 +615,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       auto &run = *elementIt->second.run;
       const auto containerTag = run.container->current.tag;
-      if (!hasPendingLayoutAnimation(containerTag) && !layoutAnimations_.contains(containerTag)) {
+      if (!isRunAnimating(run)) {
         continue;
       }
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
@@ -442,15 +632,38 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         transaction.restoreRequests.push_back({sharedTag, run.target});
       }
       run.target = afterNode;
-      overrideTransform(after, transition.transform[AFTER], propsParserContext);
-      after.tag = containerTag;
-      if (hasPendingLayoutAnimation(containerTag)) {
-        updateLayoutAnimationTarget(containerTag, after, config);
-        continue;
+      if (run.clip) {
+        // The run keeps its source, so the clip on screen stands for the clip of the source.
+        transition.clip[BEFORE].frame = viewOnScreen(run.clip).layoutMetrics.frame;
+        fitClipOfUnclippedSide(transition, run.sourceDrawsWithinFrame);
+      } else {
+        transition.clip[AFTER] = {.frame = windowFrame()};
       }
-      const auto &layoutAnimation = layoutAnimations_.at(containerTag);
-      if (layoutAnimation.finalView.layoutMetrics != after.layoutMetrics) {
-        startSharedTransition(containerTag, layoutAnimation.currentView, after, config);
+      applyAncestorEffects(after, transition, AFTER, propsParserContext);
+      after.tag = containerTag;
+      std::optional<ShadowView> clipAfter;
+      if (run.clip) {
+        clipAfter = createClipView(transition.clip[AFTER], after, propsParserContext);
+        clipAfter->tag = run.clip->current.tag;
+      }
+      const auto needsRestart = [&](const std::shared_ptr<LightNode> &node, const ShadowView &target) {
+        const auto tag = node->current.tag;
+        if (hasPendingLayoutAnimation(tag)) {
+          updateLayoutAnimationTarget(tag, target, config);
+          return false;
+        }
+        return !endsTheSame(runAnimation(node).finalView, target);
+      };
+      if (clipAfter && needsRestart(run.clip, *clipAfter)) {
+        startClipTransition(clipAfter->tag, containerTag, runAnimation(run.clip).currentView, *clipAfter, config);
+      }
+      if (needsRestart(run.container, after)) {
+        startSharedTransition(
+            containerTag,
+            runAnimation(run.container).currentView,
+            after,
+            clipAfter ? clipAfter->tag : surfaceId_,
+            config);
       }
     }
   }
@@ -638,13 +851,21 @@ void LayoutAnimationsProxy::insertContainers(TransactionMeta &transaction, int &
   auto &filteredMutations = transaction.filteredMutations;
   ShadowViewMutationList currentMutations;
   std::swap(currentMutations, filteredMutations);
-  filteredMutations.reserve(transaction.containersToInsert.size() * 2);
+  filteredMutations.reserve(transaction.containersToInsert.size() * 4);
   for (const auto &sharedTag : transaction.containersToInsert) {
     auto &run = *sharedElements_.at(sharedTag).run;
     run.inserted = true;
+    if (!run.clip) {
+      filteredMutations.push_back(ShadowViewMutation::CreateMutation(run.container->current));
+      filteredMutations.push_back(
+          ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
+      continue;
+    }
+    const auto &clip = run.clip->current;
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(clip));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, clip, rootChildCount++));
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(run.container->current));
-    filteredMutations.push_back(
-        ShadowViewMutation::InsertMutation(surfaceId_, run.container->current, rootChildCount++));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(clip.tag, run.container->current, 0));
   }
   filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
 }
@@ -654,7 +875,7 @@ void LayoutAnimationsProxy::finishSharedTransition(
     SharedElement &element,
     TransactionMeta &transaction) const {
   transaction.restoreRequests.push_back({sharedTag, element.run->target});
-  transaction.containersToRemove.push_back(element.run->container);
+  removeRun(*element.run, transaction);
   element.run.reset();
 }
 
@@ -771,17 +992,26 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
 
   ReanimatedSystraceSection s2("remove shared containers");
   const auto root = lightNodes_.at(surfaceId_);
-  for (const auto &node : transaction.containersToRemove) {
-    const auto childIt = std::ranges::find(root->children, node);
+  for (const auto &container : transaction.containersToRemove) {
+    const auto parent = container->parent.lock();
+    react_native_assert(parent && "Shared container has no parent");
+    // The child of the root is the clip, or the container when it has no clip.
+    const auto rootChild = parent == root ? container : parent;
+    const auto childIt = std::ranges::find(root->children, rootChild);
     react_native_assert(childIt != root->children.end() && "Shared container is not mounted");
     if (childIt != root->children.end()) {
       const auto index = static_cast<int>(std::distance(root->children.begin(), childIt));
-      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, node->current, index));
-      filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
+      if (rootChild != container) {
+        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, container->current, 0));
+        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(container->current));
+      }
+      filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, rootChild->current, index));
+      filteredMutations.push_back(ShadowViewMutation::DeleteMutation(rootChild->current));
       root->children.erase(childIt);
     }
 
-    unmapLightNode(node);
+    unmapLightNode(container);
+    unmapLightNode(rootChild);
   }
 
   std::erase_if(sharedElements_, [](const auto &entry) {
@@ -814,11 +1044,7 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     react::Point viewPosition;
     const auto &componentName = currentNode->current.componentName;
     react_native_assert(componentName && "Component name is nullptr");
-    if (!strcmp(componentName, "ScrollView")) {
-      auto state = std::static_pointer_cast<const ConcreteState<ScrollViewState>>(currentNode->current.state);
-      auto data = state->getData();
-      viewPosition -= data.contentOffset;
-    }
+    viewPosition -= scrollContentOffset(currentNode->current);
     const auto &view = useViewsOnScreen ? viewOnScreen(currentNode) : currentNode->current;
     const auto parent = currentNode->parent.lock();
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
@@ -834,6 +1060,48 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
   }
   return viewsAbsolutePositions;
+}
+
+react::Point LayoutAnimationsProxy::scrollContentOffset(const ShadowView &view) const {
+  if (strcmp(view.componentName, "ScrollView")) {
+    return {};
+  }
+  return std::static_pointer_cast<const ConcreteState<ScrollViewState>>(view.state)->getData().contentOffset;
+}
+
+// The ancestors draw the view with the product of their opacities and clip it to the frames of those that clip
+// their content. The clip takes the border radius of the outermost ancestor that narrows it and ignores the
+// transforms of the ancestors.
+void LayoutAnimationsProxy::parseAncestorOpacityAndClip(
+    const std::shared_ptr<LightNode> &node,
+    const std::vector<react::Point> &absolutePositions,
+    const bool useViewsOnScreen,
+    Float &opacity,
+    AncestorClip &clip) const {
+  opacity = 1;
+  // The window does not clip anything that is on screen, so it stands for no clip.
+  clip = {.frame = windowFrame()};
+  auto ancestor = node->parent.lock();
+  for (size_t i = 1; ancestor; ++i, ancestor = ancestor->parent.lock()) {
+    const auto &view = useViewsOnScreen ? viewOnScreen(ancestor) : ancestor->current;
+    const auto &props = getViewProps(view);
+    opacity *= props.opacity;
+    if (!props.getClipsContentToBounds()) {
+      continue;
+    }
+    // The absolute position of a scroll view is the position of its content.
+    const react::Rect frame{
+        .origin = absolutePositions[i] + scrollContentOffset(view),
+        .size = view.layoutMetrics.frame.size,
+    };
+    const auto narrowed = react::Rect::intersect(clip.frame, frame);
+    if (narrowed != clip.frame) {
+      clip = {
+          .frame = narrowed,
+          .borderRadius = props.borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value,
+      };
+    }
+  }
 }
 
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(

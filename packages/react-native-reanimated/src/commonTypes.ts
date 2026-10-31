@@ -111,7 +111,8 @@ export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
   yogaValues: Partial<LayoutAnimationValues>,
-  config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+  config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+  clipOfTag?: number
 ) => void;
 
 export type LayoutAnimationsManager = {

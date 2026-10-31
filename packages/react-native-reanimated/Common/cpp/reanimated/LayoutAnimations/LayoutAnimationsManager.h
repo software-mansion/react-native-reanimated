@@ -20,11 +20,19 @@ using namespace facebook::react;
 using namespace worklets;
 using SharedTag = std::string;
 
+// The intersection of the frames of the ancestors that clip their content, in root coordinates.
+struct AncestorClip {
+  react::Rect frame;
+  Float borderRadius = 0;
+};
+
 // [0] is before and [1] is after (best to use BeforeOrAfter enum)
 struct Transition {
   ShadowView snapshot[2];
   Tag parentTag[2] = {0, 0};
   std::optional<Transform> transform[2];
+  Float ancestorOpacity[2] = {1, 1};
+  AncestorClip clip[2];
 };
 
 struct SharedTransitionManager {
@@ -58,7 +66,8 @@ class LayoutAnimationsManager {
       const int tag,
       const LayoutAnimationType type,
       const jsi::Object &values,
-      const std::shared_ptr<Serializable> &config);
+      const std::shared_ptr<Serializable> &config,
+      std::optional<Tag> clipOfTag = std::nullopt);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
