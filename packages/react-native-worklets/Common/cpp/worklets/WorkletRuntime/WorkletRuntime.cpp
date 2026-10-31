@@ -264,7 +264,16 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
         }
 
         auto lock = strongThis->acquireRuntimeLock();
+#ifndef NDEBUG
+        try {
+          job(*strongThis);
+        } catch (jsi::JSError &error) {
+          JSLogger::handleJSError(
+              strongThis->jsScheduler_, strongThis->getJSIRuntime(), strongThis->name_, error, std::nullopt);
+        }
+#else
         job(*strongThis);
+#endif // NDEBUG
       },
       abortToken());
 }
