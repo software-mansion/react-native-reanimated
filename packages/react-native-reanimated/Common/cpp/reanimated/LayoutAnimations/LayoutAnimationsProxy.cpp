@@ -5,7 +5,6 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
@@ -1323,13 +1322,17 @@ void LayoutAnimationsProxy::startSharedTransition(
   });
 }
 
-void LayoutAnimationsProxy::startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after)
-    const {
+void LayoutAnimationsProxy::startProgressTransition(
+    const int tag,
+    const ShadowView &before,
+    const ShadowView &after,
+    const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
       .parentTag = surfaceId_,
+      .config = config,
   });
 }
 

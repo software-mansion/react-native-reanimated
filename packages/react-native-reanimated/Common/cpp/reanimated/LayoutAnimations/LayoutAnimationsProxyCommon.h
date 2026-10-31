@@ -53,6 +53,7 @@ struct ProgressLayoutAnimationStart {
   Tag tag;
   ShadowView before, after;
   Tag parentTag;
+  std::shared_ptr<Serializable> config;
 };
 
 struct LayoutAnimationCancellation {

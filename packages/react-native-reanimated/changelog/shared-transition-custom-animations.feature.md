@@ -1,0 +1,1 @@
+Restore custom shared element transitions with `SharedTransition.custom()`, `.progressAnimation()` and `.defaultTransitionType()`, including the Reanimated 3 values and the `transformMatrix` output, interpolate every changed property in iOS progress transitions, and fix the interpolation of a transform matrix rotated by exactly 90 or -90 degrees around the Y axis.

@@ -153,7 +153,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const ShadowView &after,
       const std::shared_ptr<Serializable> &config) const;
-  void startProgressTransition(int tag, const ShadowView &before, const ShadowView &after) const;
+  void startProgressTransition(
+      int tag,
+      const ShadowView &before,
+      const ShadowView &after,
+      const std::shared_ptr<Serializable> &config) const;
+  void applyProgressAnimations();
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
