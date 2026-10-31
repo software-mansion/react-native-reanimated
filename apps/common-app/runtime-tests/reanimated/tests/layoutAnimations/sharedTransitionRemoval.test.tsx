@@ -24,6 +24,7 @@ import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const transition = SharedTransition.duration(1500);
 const exit = FadeOut.duration(1500);
+const siblingExit = FadeOut.duration(400);
 const nativeStackTransition = SharedTransition.duration(10000);
 
 type ExitKind = 'none' | 'parent' | 'source';
@@ -83,7 +84,7 @@ function Screens({
             {!removeSiblings && (
               <Animated.View
                 ref={exiting}
-                exiting={exit}
+                exiting={siblingExit}
                 style={styles.sibling}
               />
             )}
