@@ -408,12 +408,15 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 
 // MARK: Light Tree
 
+// Moves Update and Create mutations into the filtered list: after this, the
+// callers only check whether `mutations` is empty.
 void LayoutAnimationsProxy::updateLightTree(
     const PropsParserContext &propsParserContext,
-    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &mutations,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("updateLightTree");
   auto &filteredMutations = transaction.filteredMutations;
+  filteredMutations.reserve(filteredMutations.size() + mutations.size());
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
@@ -424,10 +427,6 @@ void LayoutAnimationsProxy::updateLightTree(
     switch (mutation.type) {
       case ShadowViewMutation::Delete: {
         deleted.insert(mutation.oldChildShadowView.tag);
-        break;
-      }
-      case ShadowViewMutation::Update: {
-        updatedViews.insert_or_assign(mutation.newChildShadowView.tag, mutation.oldChildShadowView);
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -447,8 +446,16 @@ void LayoutAnimationsProxy::updateLightTree(
       }
     }
   }
+  // The views before their updates are read only for moved views and their ancestors.
+  if (!moved.empty()) {
+    for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
+      if (it->type == ShadowViewMutation::Update) {
+        updatedViews.insert_or_assign(it->newChildShadowView.tag, it->oldChildShadowView);
+      }
+    }
+  }
 
-  for (const auto &mutation : mutations) {
+  for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
@@ -461,6 +468,12 @@ void LayoutAnimationsProxy::updateLightTree(
         auto tag = mutation.newChildShadowView.tag;
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
+        }
+        // Without layout configs and animation records, every lookup below finds nothing, so the
+        // update goes through as it is. Checked per mutation, as an Insert can transfer a config.
+        if (!hasLayoutAnimationRecords() && !layoutAnimationsManager_->hasLayoutAnimationConfigs(LAYOUT)) {
+          filteredMutations.push_back(mutation);
+          break;
         }
         auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         if (!config) {
@@ -479,7 +492,7 @@ void LayoutAnimationsProxy::updateLightTree(
             filteredMutations.push_back(
                 ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
           } else {
-            filteredMutations.push_back(mutation);
+            filteredMutations.push_back(std::move(mutation));
           }
         }
         break;
@@ -495,7 +508,7 @@ void LayoutAnimationsProxy::updateLightTree(
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         if (!transaction.recreatedTags.contains(mutation.newChildShadowView.tag)) {
-          filteredMutations.push_back(mutation);
+          filteredMutations.push_back(std::move(mutation));
         }
         break;
       }

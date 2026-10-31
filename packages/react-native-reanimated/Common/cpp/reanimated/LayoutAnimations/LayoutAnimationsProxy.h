@@ -172,7 +172,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
-      const ShadowViewMutationList &mutations,
+      ShadowViewMutationList &mutations,
       TransactionMeta &transaction) const;
 
   std::optional<ShadowView>
