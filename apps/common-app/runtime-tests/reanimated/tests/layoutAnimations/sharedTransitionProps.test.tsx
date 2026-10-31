@@ -1,5 +1,12 @@
+import type { ComponentRef } from 'react';
 import { memo } from 'react';
-import { Platform, StyleSheet, TextInput, View } from 'react-native';
+import {
+  findNodeHandle,
+  Platform,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   getDynamicFeatureFlag,
@@ -10,6 +17,8 @@ import Animated, {
   SharedTransitionBoundary,
   useAnimatedProps,
   useAnimatedStyle,
+  useFrameCallback,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { runOnUIAsync } from 'react-native-worklets';
 
@@ -26,8 +35,8 @@ import {
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { MountedViewProps } from '../../../ReJest/types';
 import { ComparisonMode } from '../../../ReJest/types';
-import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -116,10 +125,14 @@ function StyleScreens({
   active,
   transition,
   sourceColor,
+  sourceTag,
+  sample,
 }: {
   active: boolean;
   transition: SharedTransition;
   sourceColor?: string;
+  sourceTag: number;
+  sample: SharedValue<MountedViewProps | null>;
 }) {
   const source = useTestRef('style-source');
   return (
@@ -142,18 +155,43 @@ function StyleScreens({
       )}
       {active && (
         <SharedTransitionBoundary isActive>
-          <StyleTarget transition={transition} />
+          <StyleTarget
+            transition={transition}
+            sourceTag={sourceTag}
+            sample={sample}
+          />
         </SharedTransitionBoundary>
       )}
     </View>
   );
 }
 
-function StyleTarget({ transition }: { transition: SharedTransition }) {
+function StyleTarget({
+  transition,
+  sourceTag,
+  sample,
+}: {
+  transition: SharedTransition;
+  sourceTag: number;
+  sample: SharedValue<MountedViewProps | null>;
+}) {
   const target = useTestRef('style-target');
+  const targetTag = useSharedValue(-1);
+  useFrameCallback(() => {
+    if (sample.value || targetTag.value === -1) return;
+    const targetProps = global._obtainMountedViewProps(targetTag.value, false);
+    if (!targetProps || (targetProps.opacity > 0 && targetProps.width >= 150))
+      return;
+    const sourceProps = global._obtainMountedViewProps(sourceTag, false);
+    sample.value =
+      sourceProps && sourceProps.opacity > 0 ? sourceProps : targetProps;
+  });
   return (
     <Animated.View
-      ref={target}
+      ref={(view: ComponentRef<typeof View> | null) => {
+        target.current = view;
+        targetTag.value = findNodeHandle(view) ?? -1;
+      }}
       sharedTransitionTag="style-copy"
       sharedTransitionStyle={transition}
       style={{
@@ -208,23 +246,17 @@ describe('Shared transition keeps the moving view props', () => {
         'worklet';
         if (finished) notify('style-copy-finished');
       });
-    const props = { transition, sourceColor };
-    await render(<StyleScreens {...props} active={false} />);
+    const sample = makeMutable<MountedViewProps | null>(null);
+    const props = { transition, sourceColor, sample };
+    await render(<StyleScreens {...props} sourceTag={-1} active={false} />);
     await waitForFrames();
     const sourceTag = getTestComponent('style-source').getTag();
     const original =
       await getTestComponent('style-source').getMountedViewProps();
     expect(original).not.toBe(null);
-    await render(<StyleScreens {...props} active />);
-    await waitForFrames(3);
-    const targetTag = getTestComponent('style-target').getTag();
-    const moving = await runOnUIBlocking(() => {
-      'worklet';
-      const source = global._obtainMountedViewProps(sourceTag, false);
-      return source && source.opacity > 0
-        ? source
-        : global._obtainMountedViewProps(targetTag, false);
-    });
+    await render(<StyleScreens {...props} sourceTag={sourceTag} active />);
+    await expectEventually(() => sample.value !== null).toBe(true);
+    const moving = sample.value;
     expect(moving).not.toBe(null);
     expect(moving?.width).toBe(60, ComparisonMode.PIXEL);
     expect(moving?.backgroundColor).toBe(
