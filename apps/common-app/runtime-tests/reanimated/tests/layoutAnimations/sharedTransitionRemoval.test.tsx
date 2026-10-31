@@ -1,9 +1,10 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeOut,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { Screen, ScreenStack } from 'react-native-screens';
 
 import {
   describe,
@@ -11,16 +12,19 @@ import {
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
+  notify,
   render,
   test,
   useTestRef,
   waitForFrames,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const transition = SharedTransition.duration(1500);
 const exit = FadeOut.duration(1500);
+const nativeStackTransition = SharedTransition.duration(10000);
 
 type ExitKind = 'none' | 'parent' | 'source';
 
@@ -130,7 +134,97 @@ async function expectTargetRestored() {
   }).toBe(true);
 }
 
+function NativeStack({
+  pushed,
+  prepared = false,
+  removed = false,
+}: {
+  pushed: boolean;
+  prepared?: boolean;
+  removed?: boolean;
+}) {
+  const parent = useTestRef('stack-parent');
+  const sourceScreen = useTestRef('stack-source-screen');
+  const source = useTestRef('stack-source');
+  const child = useTestRef('stack-child');
+  const target = useTestRef('stack-target');
+  const survivor = useTestRef('stack-survivor');
+  return (
+    <View style={styles.container}>
+      {!removed && (
+        <View
+          ref={parent}
+          collapsable={false}
+          style={{ flex: 1, width: prepared ? 301 : 300 }}>
+          <ScreenStack style={{ flex: 1 }}>
+            <Screen
+              ref={sourceScreen}
+              activityState={pushed ? 1 : 2}
+              onAppear={() => notify('removal-source-appeared')}
+              style={{ flex: 1 }}>
+              <SharedTransitionBoundary isActive={!pushed}>
+                <Animated.View
+                  ref={source}
+                  sharedTransitionTag="native-stack-removal"
+                  sharedTransitionStyle={nativeStackTransition}
+                  style={styles.source}>
+                  <View ref={child} collapsable={false} style={styles.child} />
+                </Animated.View>
+              </SharedTransitionBoundary>
+            </Screen>
+            {pushed && (
+              <Screen activityState={2} style={{ flex: 1 }}>
+                <SharedTransitionBoundary isActive>
+                  <Animated.View
+                    ref={target}
+                    sharedTransitionTag="native-stack-removal"
+                    sharedTransitionStyle={nativeStackTransition}
+                    style={styles.target}
+                  />
+                </SharedTransitionBoundary>
+              </Screen>
+            )}
+          </ScreenStack>
+        </View>
+      )}
+      <View ref={survivor} collapsable={false} style={styles.sibling} />
+    </View>
+  );
+}
+
 describe('Removal during a shared transition', () => {
+  const iosTest = Platform.OS === 'ios' ? test : test.skip;
+
+  iosTest(
+    'removes a snapshotted native stack while its carrier is detached',
+    async () => {
+      await render(<NativeStack pushed={false} />);
+      await waitForNotification('removal-source-appeared');
+      await render(<NativeStack pushed={false} prepared />);
+      await waitForFrames(3);
+      const tags = [
+        'stack-parent',
+        'stack-source-screen',
+        'stack-source',
+        'stack-child',
+      ].map((name) => getTestComponent(name).getTag());
+      expect(tags.every((tag) => tag > 0)).toBe(true);
+      await render(<NativeStack pushed prepared />);
+      await expectEventually(async () => {
+        const props = await readMounted(tags[2]);
+        return !!props && props.width > 60 && props.width < 140;
+      }).toBe(true);
+      expect(
+        (await getTestComponent('stack-target').getMountedViewProps())?.opacity
+      ).toBe(0);
+      await render(<NativeStack pushed prepared removed />);
+      await expectGone(tags);
+      expect(
+        (await getTestComponent('stack-survivor').getMountedViewProps())?.height
+      ).toBe(20, ComparisonMode.PIXEL);
+    }
+  );
+
   test('deletes a moving source and its children without an exit', async () => {
     const tags = await startTransition();
     await render(<Screens active removed />);
