@@ -206,6 +206,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations with a deferred LayoutAnimation removal',
+    importTest: () => {
+      require('./tests/layoutAnimations/reactNativeLayoutAnimationRemoveOrder.test');
+    },
+  },
+  {
     testSuiteName: 'keyframe animations',
     importTest: () => {
       require('./tests/layoutAnimations/keyframe/basic.test');
