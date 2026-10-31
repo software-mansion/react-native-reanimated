@@ -60,6 +60,7 @@ class LayoutAnimationsManager {
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config);
   void clearLayoutAnimationConfig(const int tag);
+  void clearSharedTransitionConfigs(const std::vector<Tag> &tags);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();

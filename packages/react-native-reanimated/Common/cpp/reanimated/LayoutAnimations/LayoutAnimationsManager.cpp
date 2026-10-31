@@ -102,6 +102,16 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   shouldAnimateExitingForTag_.erase(tag);
 }
 
+void LayoutAnimationsManager::clearSharedTransitionConfigs(const std::vector<Tag> &tags) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  for (const auto tag : tags) {
+    sharedTransitions_.erase(tag);
+    progressSharedTransitions_.erase(tag);
+    sharedTransitionManager_->tagToName_.erase(tag);
+  }
+}
+
 void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,

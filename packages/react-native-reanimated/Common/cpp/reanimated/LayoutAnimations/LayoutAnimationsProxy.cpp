@@ -283,6 +283,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     tearDown(transaction.dueRemovals, filteredMutations);
   }
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    releaseSharedTransitionConfigs();
+  }
   configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
@@ -324,6 +327,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     return;
   }
   lightNodes_.erase(it);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    unmappedTags_.push_back(node->current.tag);
+  }
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
@@ -336,6 +342,16 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   if (transition_ && (node == transition_->sourceScreen || node == transition_->targetScreen)) {
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
+  }
+}
+
+// The transitions that start in a pull read the configs of the sources that the pull deletes, so the configs of the
+// deleted views are released at the end of the pull. A tag that React created again keeps its configs.
+void LayoutAnimationsProxy::releaseSharedTransitionConfigs() const {
+  std::erase_if(unmappedTags_, [this](const Tag tag) { return lightNodes_.contains(tag); });
+  if (!unmappedTags_.empty()) {
+    layoutAnimationsManager_->clearSharedTransitionConfigs(unmappedTags_);
+    unmappedTags_.clear();
   }
 }
 
@@ -652,6 +668,9 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
       }
       case ShadowViewMutation::Delete: {
         lightNodes_.erase(mutation.oldChildShadowView.tag);
+        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+          unmappedTags_.push_back(mutation.oldChildShadowView.tag);
+        }
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -1105,6 +1124,7 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    releaseSharedTransitionConfigs();
     sharedElements_.clear();
 #ifdef __APPLE__
     react_native_assert(!containerOverlay_ && "The last pull of a surface deletes its overlay");

@@ -45,6 +45,8 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> container;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
+  // The source can be deleted while the run follows its target, which releases the configs of the source.
+  std::shared_ptr<Serializable> config;
   bool gestureDriven = false;
   bool inserted = false;
   bool targetOffWindow = false;
@@ -147,6 +149,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  mutable std::vector<Tag> unmappedTags_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
@@ -198,6 +201,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void resolveDeferredSourceScreen() const;
   bool isLightNodeMapped(const std::shared_ptr<LightNode> &node) const;
   void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
+  void releaseSharedTransitionConfigs() const;
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
@@ -293,6 +297,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      const std::shared_ptr<Serializable> &config,
       bool gestureDriven,
       TransactionMeta &transaction) const;
   std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
