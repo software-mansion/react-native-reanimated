@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
+  FadeIn,
   getDynamicFeatureFlag,
   getStaticFeatureFlag,
   makeMutable,
@@ -232,6 +233,83 @@ async function expectBlueHint() {
 
 describe('Shared transition keeps the moving view props', () => {
   const nativeTest = RuntimeTestObserver ? test : test.skip;
+  const setterTest =
+    RuntimeTestObserver && Platform.OS === 'android' ? test : test.skip;
+
+  setterTest(
+    'does not repeat the native label setter across carrier frames',
+    async () => {
+      const transition = SharedTransition.duration(4000).withCallback(
+        (finished) => {
+          'worklet';
+          if (finished) notify('setter-finished');
+        }
+      );
+      const color = makeMutable('red');
+      await render(
+        <Screens active={false} transition={transition} color={color} />
+      );
+      await render(<Screens active transition={transition} color={color} />);
+      await expectSourceMoving();
+      const source = getTestComponent('source');
+      const before = await source.getTextInputObservation();
+      expect((before?.labelSetterCalls ?? 0) > 0).toBe(true);
+      const first = await source.getMountedViewProps();
+      await waitForFrames(8);
+      const after = await source.getTextInputObservation();
+      expect(after?.labelSetterCalls).toBe(before?.labelSetterCalls);
+      expect(after?.accessibilityLabel).toBe('source input');
+      const later = await source.getMountedViewProps();
+      expect(!!first && !!later && later.width > first.width).toBe(true);
+
+      const target = getTestComponent('target');
+      const targetBefore = await target.getTextInputObservation();
+      await render(
+        <Screens
+          active
+          transition={transition}
+          color={color}
+          targetLabel="changed label"
+        />
+      );
+      await expectEventually(
+        async () => (await target.getTextInputObservation())?.accessibilityLabel
+      ).toBe('changed label');
+      const targetAfter = await target.getTextInputObservation();
+      expect(
+        (targetAfter?.labelSetterCalls ?? 0) >
+          (targetBefore?.labelSetterCalls ?? 0)
+      ).toBe(true);
+      await waitForNotification('setter-finished');
+    }
+  );
+
+  nativeTest('keeps ordinary entering content and final layout', async () => {
+    function EnteringInput() {
+      const ref = useTestRef('ordinary-entering');
+      return (
+        <AnimatedTextInput
+          ref={ref}
+          accessibilityLabel="ordinary entering"
+          editable={false}
+          entering={FadeIn.duration(500).withCallback((finished) => {
+            'worklet';
+            if (finished) notify('ordinary-entering-finished');
+          })}
+          style={{ width: 90, height: 60 }}
+        />
+      );
+    }
+    await render(<EnteringInput />);
+    await waitForNotification('ordinary-entering-finished');
+    const view = getTestComponent('ordinary-entering');
+    expect((await view.getTextInputObservation())?.accessibilityLabel).toBe(
+      'ordinary entering'
+    );
+    const props = await view.getMountedViewProps();
+    expect(props?.width).toBe(90, ComparisonMode.PIXEL);
+    expect(props?.opacity).toBe(1);
+  });
 
   test.each([
     ['copies the source color', '#dd5522'],

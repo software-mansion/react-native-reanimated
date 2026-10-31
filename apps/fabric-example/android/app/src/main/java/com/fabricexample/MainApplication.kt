@@ -22,7 +22,7 @@ class MainApplication : Application(), ReactApplication {
       packageList =
         PackageList(this).packages.apply {
           if (BuildConfig.RUNTIME_TESTS) {
-            add(RuntimeTestObserverPackage())
+            add(0, RuntimeTestObserverPackage())
           }
         },
       jsMainModulePath =

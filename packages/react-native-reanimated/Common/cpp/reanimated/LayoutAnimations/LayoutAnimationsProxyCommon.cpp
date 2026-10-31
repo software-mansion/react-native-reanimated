@@ -1,5 +1,6 @@
 #ifdef ANDROID
 #include <ReactCommon/CallInvoker.h>
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/core/DynamicPropsUtilities.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
@@ -711,9 +712,13 @@ ShadowViewMutation LayoutAnimationsProxyCommon::createPropsUpdate(
     [[maybe_unused]] const PropsParserContext &propsParserContext) const {
 #ifdef ANDROID
   auto updateView = newView;
-  auto changedProps = diffDynamicProps(oldView.props->rawProps, newView.props->rawProps);
-  updateView.props = componentDescriptorRegistry_->at(newView.componentHandle)
-                         .cloneProps(propsParserContext, newView.props, RawProps(std::move(changedProps)));
+  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    auto changedProps = diffDynamicProps(oldView.props->rawProps, newView.props->rawProps);
+    updateView.props = changedProps.empty()
+        ? oldView.props
+        : componentDescriptorRegistry_->at(newView.componentHandle)
+              .cloneProps(propsParserContext, newView.props, RawProps(std::move(changedProps)));
+  }
 #else
   const auto &updateView = newView;
 #endif
