@@ -1,0 +1,154 @@
+---
+id: good-practices
+sidebar_label: Good practices
+---
+
+# Good practices
+
+This page lists practices that keep the work of moving worklet functions and data between runtimes small.
+Most of them follow from how the Worklets library [serializes](../memory/serializable.mdx) values: it copies every
+object, array and worklet function that you send to another runtime, and caches the copy by the identity of the
+original.
+
+## Re-use your runtimes
+
+Create Worker Runtimes once, for example at app startup or in a module scope, and keep a reference to them.
+
+Every call to [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) creates a new JavaScript runtime
+together with a new thread to run it on. With [Bundle Mode](../bundleMode/overview.mdx) enabled, the new runtime
+also evaluates your whole JavaScript bundle before it can run anything.
+
+```js
+// highlight-next-line
+const workerRuntime = createWorkletRuntime({ name: 'worker' });
+
+function processInBackground(data) {
+  scheduleOnRuntime(workerRuntime, process, data);
+}
+```
+
+Don't call `createWorkletRuntime` inside a component body or inside a function that runs often.
+
+## Re-use your worklet functions
+
+Define worklet functions once, at the module level or with `useCallback`, and pass the same function to the threading
+functions every time.
+
+The Worklets library caches the serialized copy of a worklet function by the identity of the function object. On the
+target runtime, a serialized worklet function is turned into a JavaScript function once and then retained. When you
+pass the same function object again, both steps are skipped. A new function object, for example an arrow function
+created on every call or every render, is serialized and turned into a function again, together with its closure.
+
+```js
+function logValue(value) {
+  'worklet';
+  console.log(value);
+}
+
+function onPress(value) {
+  // highlight-next-line
+  scheduleOnUI(logValue, value);
+}
+```
+
+## Prefer arguments over closures
+
+Whenever possible, pass values as arguments instead of capturing them in a closure. This is related to
+[re-using your worklet functions](#re-use-your-worklet-functions): a worklet function whose closure changes has to be
+created anew, so it can't be re-used.
+
+Avoid wrapper worklet functions that only forward their closure to another worklet function:
+
+```js title="Wrapper worklet function"
+function foo(arg1, arg2) {
+  'worklet';
+  // code...
+}
+
+function schedule(arg1, arg2) {
+  // A new worklet function with a new closure on every call.
+  scheduleOnUI(() => {
+    'worklet';
+    foo(arg1, arg2);
+  });
+}
+```
+
+Pass the arguments directly instead:
+
+```js title="Arguments"
+function schedule(arg1, arg2) {
+  scheduleOnUI(foo, arg1, arg2);
+}
+```
+
+## Transfer granular objects
+
+Pass or capture only the values that a worklet function needs, not the whole object that contains them.
+
+When a worklet function uses a property of an object from its closure, the Worklets library copies the whole object,
+with all its nested values, and not only the property that you access. In development builds, it also makes the
+original object immutable after the copy. See
+[Tried to modify key of an object which has been converted to a serializable](./troubleshooting.mdx#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-serializable)
+for details.
+
+```diff
+ const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
+-function worklet() {
++function worklet(propAccessedInWorklet) {
+   'worklet';
+-  console.log(obj.propAccessedInWorklet);
++  console.log(propAccessedInWorklet);
+ }
+
+-scheduleOnUI(worklet);
++scheduleOnUI(worklet, obj.propAccessedInWorklet);
+```
+
+The property is read when you call `scheduleOnUI`, so the worklet function always gets its current value.
+
+## Use the target Runtime's event loop
+
+When a worklet function has to run repeatedly or after a delay, schedule it with the event loop of the runtime where it
+runs, not from the React Native Runtime.
+
+Worker Runtimes created with the default `enableEventLoop` option provide `setTimeout`, `setInterval`,
+`setImmediate`, `requestAnimationFrame` and `queueMicrotask`. The UI Runtime provides timers too, driven by the
+frames of the native rendering layer. See [Using the event loop](../tutorials/3-using-event-loop.mdx).
+
+If you call `scheduleOnRuntime` from a timer on the React Native Runtime instead, every tick waits for the JavaScript
+thread and sends a new job to the target runtime.
+
+In both examples below, `tick` is a worklet function:
+
+```js
+function tick() {
+  'worklet';
+  // ...
+}
+```
+
+```js title="Timer on the React Native Runtime"
+setInterval(() => {
+  scheduleOnRuntime(workerRuntime, tick);
+}, 100);
+```
+
+```js title="Timer on the Worker Runtime"
+scheduleOnRuntime(workerRuntime, () => {
+  'worklet';
+  setInterval(tick, 100);
+});
+```
+
+## Prefer async invocations
+
+Use [`scheduleOnUI`](../threading/scheduleOnUI.mdx) or [`runOnUIAsync`](../threading/runOnUIAsync.mdx) unless you
+need the result within the same synchronous flow.
+
+[`runOnUISync`](../threading/runOnUISync.mdx) and [`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) block the
+calling thread until the target runtime finishes the worklet function. While the JavaScript thread waits for the UI
+Runtime, it can't process anything else. `scheduleOnUI` also batches all calls made in the same task and sends them to
+the UI Runtime together, while a synchronous call runs on its own. See
+[Running worklet functions on the UI runtime](./running-on-the-ui-runtime.mdx) for a comparison.
