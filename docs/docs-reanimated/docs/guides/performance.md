@@ -130,3 +130,75 @@ When implementing an animated number counter, don't use React state to periodica
 You can also pass the shared value directly as a child of the [`Animated.Text`](../core/animatedText.mdx) component.
 
 You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).
+
+## Battery usage
+
+Every animation frame wakes up the CPU and the GPU, so running animations is one of the most power-hungry things an app can do. The cost grows with the number of animated components and with the amount of work done in each frame. An animation that doesn't change anything costs nothing: mounted `useAnimatedStyle` hooks whose shared values don't change, finished animations and idle components don't drain the battery.
+
+The tips below come from measuring the energy usage of the [battery benchmark example](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/common-app/src/apps/reanimated/examples/BatteryBenchmark) with the on-device power monitor of a Pixel 9a. The numbers are given for 100 animated components and are meant to show the relative cost of different approaches. Absolute values depend on the device.
+
+| Animating 100 components                                     | CPU and GPU power |
+| ------------------------------------------------------------ | ----------------: |
+| No animation                                                 |            ~80 mW |
+| `transform` with `useAnimatedStyle`, one view                |           ~250 mW |
+| `opacity` with CSS animation                                 |           ~320 mW |
+| `transform` with CSS animation                               |           ~400 mW |
+| `transform` with `useAnimatedStyle`                          |           ~480 mW |
+| `transform` with `useAnimatedStyle` and synchronous updates  |           ~290 mW |
+| `transform` of a common parent instead of 100 children       |           ~290 mW |
+| Counter with `Animated.Text`                                 |          ~1200 mW |
+| Counter with `TextInput` and `useAnimatedProps`              |          ~3000 mW |
+| `r` prop of 100 `react-native-svg` circles                   |          ~3200 mW |
+
+### 🔋 Stop animations that aren't visible
+
+Reanimated keeps running animations of components that are off-screen, covered by other views, have `opacity: 0`, or belong to a screen that is not focused. Such animations cost almost as much as visible ones. Cancel infinite animations (for example `withRepeat` with `-1` repetitions) with [`cancelAnimation`](../core/cancelAnimation.mdx) when they are not visible, or unmount the animated components.
+
+```tsx
+const rotation = useSharedValue(0);
+
+useFocusEffect(
+  useCallback(() => {
+    rotation.value = withRepeat(withTiming(360, { duration: 1000 }), -1);
+    return () => cancelAnimation(rotation); // ✅ stop the animation when the screen loses focus
+  }, [rotation])
+);
+```
+
+Prefer finite animations over infinite ones whenever the design allows it.
+
+### 🔋 Animate a common parent instead of many children
+
+If many components move together, animate their common parent rather than each of the children. In our benchmark, a single `useAnimatedStyle` on a container of 100 views used about half of the power of 100 `useAnimatedStyle` hooks driven by the same shared value. Sharing a shared value between components doesn't help, because every `useAnimatedStyle` updates its own view in every frame.
+
+### 🔋 Prefer `transform` and `opacity` and enable synchronous updates
+
+Non-layout properties like `transform` and `opacity` are cheaper to animate than layout properties like `width` or `top`. Additionally, if your animations mostly change non-layout properties, enable the [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](./feature-flags.md#android_synchronously_update_ui_props) and [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](./feature-flags.md#ios_synchronously_update_ui_props) static feature flags. In our benchmark, they reduced the power used by `transform` animations by about 40% on Android. Make sure to read about their limitations first.
+
+### 🔋 Use CSS animations for simple repeating animations
+
+[CSS animations](../css-animations/animation-name.mdx) don't run any JavaScript in each frame, so for loading indicators, pulsing effects and other simple repeating animations they used 10–40% less power than an equivalent `useAnimatedStyle` with `withRepeat`.
+
+### 🔋 Update text only when the displayed value changes
+
+Text layout is expensive. When animating a counter, format the value so that it changes only as often as needed. For example, the `Math.round` call below makes the text change only when the displayed integer changes, and Reanimated skips updates that don't change the text. In our benchmark, a counter that changed 10 times per second instead of every frame used about 70% less power.
+
+```tsx
+const label = useDerivedValue(() => `${Math.round(progress.value)}`);
+```
+
+### 🔋 Avoid animating SVG element props continuously
+
+Animating props of `react-native-svg` elements (like `r`, `cx` or `d`) redraws the whole `Svg` component in every frame. In our benchmark, it was more than 5 times as expensive as animating `transform` of the same number of views. For continuous animations, animate `transform` or `opacity` of an `Animated.View` that wraps the `Svg`, or consider using [React Native Skia](https://shopify.github.io/react-native-skia/).
+
+### 🔋 Unmount sensors when you don't need them
+
+[`useAnimatedSensor`](../device/useAnimatedSensor.mdx) keeps the sensor running as long as the component is mounted, even if nobody reads its value. Mount it only when needed and pass a larger `interval` if you don't need a reading in every frame.
+
+### 🔋 Keep the per-frame work small
+
+The work done in each frame determines how hard the CPU has to work. When the work grows, the operating system moves the UI thread to faster CPU cores, which use much more power. In our benchmark, this made the two most expensive examples above use 5 times more power than `useAnimatedStyle` while animating the same number of components. To keep the per-frame work small:
+
+- Compute values directly in `useAnimatedStyle` instead of chaining many `useDerivedValue` hooks. Every derived value is evaluated separately in each frame.
+- Don't drive animations from React state, for example with `requestAnimationFrame` and `setState`. This re-renders the component on the JavaScript thread in every frame.
+- Avoid animating too many components at once, as described [above](#-avoid-animating-too-many-components-at-once).
