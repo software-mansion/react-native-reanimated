@@ -249,16 +249,19 @@ open class NativeProxy {
 
     // `react-native-screens` holds the views of a removed screen with `startViewTransition`, before the Remove of the
     // batch that moves them to the root. The hold can come after the first release, so it repeats before every mount
-    // until the dispatch that runs the batch. A UI thread pull mounts before a posted hold can run.
+    // until the dispatch that runs the batch. A UI thread pull inside a running dispatch leaves its batch for the next one.
     @DoNotStrip
     fun releaseViewTransitions(
         tags: IntArray,
         isBatchQueued: Boolean,
     ) {
-        if (UiThreadUtil.isOnUiThread()) {
+        val isOnUiThread = UiThreadUtil.isOnUiThread()
+        tags.forEach {
+            pendingViewTransitionReleases[it] =
+                if (isBatchQueued || isOnUiThread) CarrierBatch.QUEUED else CarrierBatch.NOT_QUEUED
+        }
+        if (isOnUiThread) {
             tags.forEach { tag -> resolveViewOrNull(tag)?.let(::endViewTransitions) }
-        } else {
-            tags.forEach { pendingViewTransitionReleases[it] = if (isBatchQueued) CarrierBatch.QUEUED else CarrierBatch.NOT_QUEUED }
         }
     }
 
