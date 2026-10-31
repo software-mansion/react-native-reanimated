@@ -44,6 +44,13 @@ class CSSLoopTransition : public OperationsLoop::LoopOperation, public std::enab
       const PropertyValueDynamicDiffsMap &propertiesDiffs,
       const folly::dynamic &lastUpdateValue,
       double timestamp);
+  /// Continues a run that played elsewhere: the property takes the timeline of `timing`, not a new one.
+  folly::dynamic resume(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::string &propertyName,
+      const PropertyValueDynamicDiff &propertyDiff,
+      const TransitionTiming &timing,
+      double timestamp);
   void updateSettings(
       const PropertiesSettingsMap &changedPropertiesSettings,
       const std::vector<std::string> &removedProperties,

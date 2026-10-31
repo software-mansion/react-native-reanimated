@@ -13,12 +13,14 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
     const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
+    const std::shared_ptr<native_animation::NativeAnimationHost> &nativeAnimationHost,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
       synchronousWritesTracker_(synchronousWritesTracker),
+      nativeAnimationHost_(nativeAnimationHost),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
@@ -72,6 +74,9 @@ void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeS
   }
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSurfaceStop(surfaceId);
+  }
+  if (nativeAnimationHost_) {
+    nativeAnimationHost_->closeSurface(surfaceId);
   }
 
   auto lock = updatesRegistryManager_->lock();

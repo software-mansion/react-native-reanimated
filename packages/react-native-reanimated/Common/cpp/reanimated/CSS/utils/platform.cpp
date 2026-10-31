@@ -120,10 +120,6 @@ lerpValue(const std::array<double, N> &from, const std::array<double, N> &to, co
 
 } // namespace
 
-bool hasPlatformValueTraits(const std::string &propertyName) {
-  return traitsFor(propertyName) != nullptr;
-}
-
 std::optional<PlatformValue>
 lerpPlatformValues(const PlatformValue &from, const PlatformValue &to, const double progress) {
   return std::visit(
