@@ -24,13 +24,27 @@ class WorkletRuntimeRegistry {
   }
 
   static void unregisterRuntime(jsi::Runtime &runtime) {
-    std::lock_guard<std::shared_mutex> lock(mutex_);
-    registry_.erase(&runtime);
+    markRuntimeDead(&runtime);
   }
 
   friend class WorkletRuntimeCollector;
 
  public:
+  // Marks a runtime as dead before it is torn down. The collector host object
+  // unregisters a runtime only when it is finalized, and during teardown the
+  // runtime can finalize other host objects first. Those objects may hold
+  // cached `jsi::Value`s of the same runtime, and running their destructors
+  // then crashes. Call this before the runtime is destroyed (from its owner,
+  // or from module invalidation for the React Native runtime), so that
+  // `cleanupRuntimeAware` frees those values without calling into the runtime.
+  static void markRuntimeDead(jsi::Runtime *runtime) {
+    if (runtime == nullptr) {
+      return;
+    }
+    std::lock_guard<std::shared_mutex> lock(mutex_);
+    registry_.erase(runtime);
+  }
+
   template <typename TFn>
   static void runWhileLocked(jsi::Runtime *runtime, TFn &&fn) {
     react_native_assert(runtime != nullptr && "runtime is nullptr");

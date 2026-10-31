@@ -1,3 +1,4 @@
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
@@ -95,6 +96,7 @@ std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
 
 void WorkletsModule::invalidateCpp() {
   rnRuntimeStatus_->setDead();
+  WorkletRuntimeRegistry::markRuntimeDead(rnRuntime_);
   initializer_->invalidate();
   initializer_.reset();
   javaPart_.reset();
