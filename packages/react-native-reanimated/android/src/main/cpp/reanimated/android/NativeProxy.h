@@ -3,6 +3,7 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
@@ -20,7 +21,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace facebook::jni;
 
-class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_from_this<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_shared_from_this<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
@@ -36,6 +37,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
+  /// The reference behind `weak_from_this()`. It does not own this object, the Java part does.
+  /// It guards `javaPart_` instead: `invalidateCpp()` drops it, and `javaPart_` is released once
+  /// the functions returned by `bindThis` that are running at that moment return. The UI runtime
+  /// keeps those functions, so they can be called during and after `invalidateCpp()`.
+  /// Declared after `javaPart_`, which its deleter releases, and before `reanimatedModuleProxy_`,
+  /// whose initializer calls `bindThis`.
+  std::shared_ptr<NativeProxy> strongThis_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
@@ -94,18 +102,26 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   std::shared_ptr<css::CSSPlatformTransitionBackend> makePlatformTransitionBackend();
 
   /***
-   * Wraps a method of `NativeProxy` in a function object capturing `this`
+   * Wraps a method of `NativeProxy` in a function object holding a weak
+   * reference to `this`
    * @tparam TReturn return type of passed method
    * @tparam TParams parameter types of passed method
    * @param methodPtr pointer to method to be wrapped
-   * @return a function object with the same signature as the method, calling
-   * that method on `this`
+   * @return a function object with the same signature as the method. It calls
+   * that method on `this` while `javaPart_` is held, and returns a default
+   * value after `javaPart_` is released
    */
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(TReturn (NativeProxy::*methodPtr)(TParams...)) {
-    // It's probably safe to pass `this` as reference here...
-    return [this, methodPtr](TParams &&...args) {
-      return (this->*methodPtr)(std::forward<TParams>(args)...);
+    auto weakThis = weak_from_this();
+    // Otherwise the function would never call the method.
+    react_native_assert(!weakThis.expired() && "`bindThis` called before `strongThis_` is initialized");
+    return [weakThis = std::move(weakThis), methodPtr](TParams &&...args) -> TReturn {
+      const auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return TReturn();
+      }
+      return (strongThis.get()->*methodPtr)(std::forward<TParams>(args)...);
     };
   }
 

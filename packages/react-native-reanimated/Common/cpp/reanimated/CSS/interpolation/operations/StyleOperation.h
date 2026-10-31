@@ -17,7 +17,7 @@ template <typename TOperation>
 concept ResolvableOp = requires(TOperation operation) {
   { operation.value } -> std::convertible_to<typename std::remove_reference_t<decltype(operation.value)>>;
   requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
-}; // NOLINT(readability/braces)
+};
 
 struct StyleOperation {
   uint8_t type;

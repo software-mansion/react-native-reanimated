@@ -406,12 +406,15 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 
 // MARK: Light Tree
 
+// Moves Update and Create mutations into the filtered list: after this, the
+// callers only check whether `mutations` is empty.
 void LayoutAnimationsProxy::updateLightTree(
     const PropsParserContext &propsParserContext,
-    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &mutations,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("updateLightTree");
   auto &filteredMutations = transaction.filteredMutations;
+  filteredMutations.reserve(filteredMutations.size() + mutations.size());
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
@@ -446,7 +449,7 @@ void LayoutAnimationsProxy::updateLightTree(
     }
   }
 
-  for (const auto &mutation : mutations) {
+  for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
@@ -477,7 +480,7 @@ void LayoutAnimationsProxy::updateLightTree(
             filteredMutations.push_back(
                 ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
           } else {
-            filteredMutations.push_back(mutation);
+            filteredMutations.push_back(std::move(mutation));
           }
         }
         break;
@@ -493,7 +496,7 @@ void LayoutAnimationsProxy::updateLightTree(
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         if (!transaction.recreatedTags.contains(mutation.newChildShadowView.tag)) {
-          filteredMutations.push_back(mutation);
+          filteredMutations.push_back(std::move(mutation));
         }
         break;
       }
@@ -686,7 +689,9 @@ void LayoutAnimationsProxy::updateLightNodeProps(
   if (node->accumulatedRawProps.isNull()) {
     node->accumulatedRawProps = currentProps->rawProps;
   }
-  node->accumulatedRawProps.update(newView.props->rawProps);
+  for (const auto &[name, _] : newView.props->rawProps.items()) {
+    node->pendingRawPropOwners[name.getString()] = newView.props;
+  }
   node->propsNeedResolve = true;
 #endif // ANDROID
 }
@@ -696,6 +701,7 @@ void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNod
   if (!node->propsNeedResolve) {
     return;
   }
+  node->foldPendingRawProps();
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   node->current.props = componentDescriptorRegistry_->at(node->current.componentHandle)
                             .cloneProps(propsParserContext, node->current.props, RawProps(node->accumulatedRawProps));
@@ -739,6 +745,8 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (node->accumulatedRawProps.isNull()) {
       node->accumulatedRawProps = node->current.props->rawProps;
     }
+    // Synchronous props are newer than the props of earlier commits.
+    node->foldPendingRawProps();
     node->accumulatedRawProps.update(props);
     node->propsNeedResolve = true;
     resolveLightNodeProps(node);

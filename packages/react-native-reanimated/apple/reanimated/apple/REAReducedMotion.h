@@ -1,21 +1,19 @@
 #import <Foundation/Foundation.h>
 
-#if __has_include(<UIKit/UIAccessibility.h>)
-#import <UIKit/UIAccessibility.h>
-#endif
-
-#if __has_include(<AppKit/AppKit.h>)
+#if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
-#endif
+#else
+#import <UIKit/UIAccessibility.h>
+#endif // TARGET_OS_OSX
 
 namespace reanimated {
 
 static inline bool getIsReducedMotion() {
-#if __has_include(<UIKit/UIAccessibility.h>)
-  return UIAccessibilityIsReduceMotionEnabled();
-#else
+#if TARGET_OS_OSX
   return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif // __has_include(<UIKit/UIAccessibility.h>)
+#else
+  return UIAccessibilityIsReduceMotionEnabled();
+#endif // TARGET_OS_OSX
 }
 
 } // namespace reanimated

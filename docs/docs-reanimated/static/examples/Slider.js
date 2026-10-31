@@ -7,6 +7,7 @@ import {
   Gesture,
 } from 'react-native-gesture-handler';
 import Animated, {
+  clamp,
   useSharedValue,
   useAnimatedStyle,
   useAnimatedProps,
@@ -21,22 +22,24 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const Slider = () => {
   const textColor = useThemedTextStyle();
   const offset = useSharedValue(0);
+  const startOffset = useSharedValue(0);
   const boxWidth = useSharedValue(INITIAL_BOX_SIZE);
   const MAX_VALUE = SLIDER_WIDTH - INITIAL_BOX_SIZE;
 
-  const pan = Gesture.Pan().onChange((event) => {
-    offset.value =
-      Math.abs(offset.value) <= MAX_VALUE
-        ? offset.value + event.changeX <= 0
-          ? 0
-          : offset.value + event.changeX >= MAX_VALUE
-            ? MAX_VALUE
-            : offset.value + event.changeX
-        : offset.value;
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      startOffset.value = offset.value;
+    })
+    .onChange((event) => {
+      offset.value = clamp(
+        startOffset.value + event.translationX,
+        0,
+        MAX_VALUE
+      );
 
-    const newWidth = INITIAL_BOX_SIZE + offset.value;
-    boxWidth.value = newWidth;
-  });
+      const newWidth = INITIAL_BOX_SIZE + offset.value;
+      boxWidth.value = newWidth;
+    });
 
   const boxStyle = useAnimatedStyle(() => {
     return {
