@@ -59,7 +59,7 @@ export default function App() {
             getPathFromState: (state, options) =>
               getPathFromState(state, options).replace(/%2F/g, '/'),
             getStateFromPath: (path) => {
-              const chunks = path.split('/').filter(Boolean);
+              const chunks = path.split('?')[0].split('/').filter(Boolean);
               if (chunks.length === 0) return { routes: [] };
 
               const drawerRoute = chunks[0];
@@ -78,7 +78,7 @@ export default function App() {
                 ],
               };
             },
-            prefixes: [],
+            prefixes: ['fabricexample://'],
           }}
           onStateChange={updateNavigationState}>
           <PortalProvider>
