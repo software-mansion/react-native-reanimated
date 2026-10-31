@@ -92,6 +92,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
       return false;
     }
 #ifdef ANDROID
+    // A null value unsets the prop. The Android synchronous path can't express that (it reads every
+    // value as a number or string), so it goes through the shadow tree commit, which resets the prop.
+    if (value.isNull()) {
+      return false;
+    }
     // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
     // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
     const bool isColorProp = keyStr.find("Color") != std::string::npos;
