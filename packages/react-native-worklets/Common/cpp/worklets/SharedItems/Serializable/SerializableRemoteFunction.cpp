@@ -58,32 +58,19 @@ void SerializableRemoteFunction::resolveOrRejectPromise(const std::shared_ptr<Se
   }
 }
 
-jsi::Value makeRNRuntimeSerializableRemoteFunction(
-    jsi::Runtime &rnRuntime,
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &hostRuntime,
     const std::string &name,
     const jsi::Function &function,
     const RuntimeIdentity &hostIdentity,
     const std::shared_ptr<JSScheduler> &jsScheduler) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
-      rnRuntime,
+      hostRuntime,
       name,
-      jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
+      jsi::Value(hostRuntime, function).getObject(hostRuntime).getFunction(hostRuntime),
       hostIdentity,
       jsScheduler);
-  return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
-}
-
-jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
-    jsi::Runtime &workletRuntime,
-    const std::string &name,
-    const jsi::Function &function,
-    const RuntimeIdentity &hostIdentity) {
-  auto serializable = std::make_shared<SerializableRemoteFunction>(
-      workletRuntime,
-      name,
-      jsi::Value(workletRuntime, function).getObject(workletRuntime).getFunction(workletRuntime),
-      hostIdentity);
-  return SerializableJSRef::newNativeStateObject(workletRuntime, serializable);
+  return SerializableJSRef::newNativeStateObject(hostRuntime, serializable);
 }
 
 } // namespace worklets
