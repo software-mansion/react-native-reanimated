@@ -463,6 +463,12 @@ void LayoutAnimationsProxy::updateLightTree(
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
+        // Without layout configs and animation records, every lookup below finds nothing, so the
+        // update goes through as it is. Checked per mutation, as an Insert can transfer a config.
+        if (!hasLayoutAnimationRecords() && !layoutAnimationsManager_->hasLayoutAnimationConfigs(LAYOUT)) {
+          filteredMutations.push_back(mutation);
+          break;
+        }
         auto config = layoutAnimationsManager_->getLayoutAnimationConfig(tag, LAYOUT);
         if (!config) {
           config = getRetargetLayoutAnimationConfig(tag);

@@ -52,6 +52,7 @@ class LayoutAnimationsManager {
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
+  bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
