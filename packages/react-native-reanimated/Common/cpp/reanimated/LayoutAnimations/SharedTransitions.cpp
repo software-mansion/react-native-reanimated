@@ -836,45 +836,6 @@ void LayoutAnimationsProxy::cancelSharedTransition(const SharedTag &sharedTag, T
   cancelLayoutAnimation(containerTag);
 }
 
-#ifdef __APPLE__
-// The snapshot of a removed modal shows the frame before this transaction, in which the sources of the transitions that
-// start now are still visible.
-void LayoutAnimationsProxy::hideSourcesInModalSnapshots(
-    const ShadowViewMutationList &mutations,
-    const TransactionMeta &transaction) const {
-  if (!hideInModalSnapshot_) {
-    return;
-  }
-  std::unordered_set<Tag> removedModals;
-  for (const auto &mutation : mutations) {
-    if (mutation.type == ShadowViewMutation::Remove &&
-        !strcmp(mutation.oldChildShadowView.componentName, "ModalHostView")) {
-      removedModals.insert(mutation.oldChildShadowView.tag);
-    }
-  }
-  if (removedModals.empty()) {
-    return;
-  }
-  std::vector<Tag> sources;
-  for (const auto &[sharedTag, collectedTransition] : transaction.transitions) {
-    const auto elementIt = sharedElements_.find(sharedTag);
-    const auto &source = collectedTransition.nodes[BEFORE];
-    if (elementIt == sharedElements_.end() || !elementIt->second.run || elementIt->second.run->source != source) {
-      continue;
-    }
-    const bool inRemovedModal = std::ranges::any_of(
-        collectedTransition.ancestors[BEFORE],
-        [&](const Ancestor &ancestor) { return removedModals.contains(ancestor.tag); });
-    if (inRemovedModal) {
-      sources.push_back(source->current.tag);
-    }
-  }
-  if (!sources.empty()) {
-    hideInModalSnapshot_(sources);
-  }
-}
-#endif
-
 void LayoutAnimationsProxy::finishSharedTransition(
     const SharedTag &sharedTag,
     SharedElement &element,

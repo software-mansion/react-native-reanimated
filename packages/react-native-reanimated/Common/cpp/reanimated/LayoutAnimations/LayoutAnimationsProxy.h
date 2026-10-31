@@ -16,6 +16,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -117,6 +118,13 @@ struct CollectedTransition {
 using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
 using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransition>>;
 
+#ifdef __APPLE__
+struct HeldModal {
+  std::shared_ptr<LightNode> node;
+  std::chrono::steady_clock::time_point removableAt;
+};
+#endif
+
 struct TransactionMeta {
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
@@ -159,10 +167,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #endif
 
 #ifdef __APPLE__
+  mutable std::vector<HeldModal> heldModals_;
   ForceScreenSnapshotFunction forceScreenSnapshot_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
-  HideInModalSnapshotFunction hideInModalSnapshot_;
   // iOS presents modals above the root view, so shared containers live in a view that the platform keeps on top of
   // the window. It lives until its surface stops.
   mutable std::shared_ptr<LightNode> containerOverlay_;
@@ -303,9 +311,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> createSharedContainer(const ShadowView &before, TransactionMeta &transaction) const;
   void finishSharedTransition(const SharedTag &sharedTag, SharedElement &element, TransactionMeta &transaction) const;
   void cancelSharedTransition(const SharedTag &sharedTag, TransactionMeta &transaction) const;
-#ifdef __APPLE__
-  void hideSourcesInModalSnapshots(const ShadowViewMutationList &mutations, const TransactionMeta &transaction) const;
-#endif
   bool isSharedContainer(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
@@ -347,6 +352,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &parent,
       TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
+#ifdef __APPLE__
+  bool holdsSourceInModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
+#endif
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 

@@ -64,9 +64,6 @@ struct NativeViewPlacement {
 };
 using NativeViewPlacementFunction =
     std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;
-// React Native animates a snapshot of a modal that it removes while presented. Hides the views with the given tags in
-// that snapshot.
-using HideInModalSnapshotFunction = std::function<void(const std::vector<Tag> &tags)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
 // transforms. The background color is ARGB.
@@ -94,7 +91,6 @@ struct PlatformDepMethodsHolder {
   ReadMountedViewPropsFunction readMountedViewPropsFunction;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
   NativeViewPlacementFunction nativeViewPlacementFunction;
-  HideInModalSnapshotFunction hideInModalSnapshotFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
