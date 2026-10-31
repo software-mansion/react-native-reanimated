@@ -12,10 +12,14 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/memory/isSerializableRef.test');
       require('./tests/memory/serializableMapping.test');
       require('./tests/memory/retainingSerializable.test');
+      require('./tests/memory/retainingSerializableConcurrency.test');
       require('./tests/memory/synchronizable.test');
       require('./tests/memory/customSerializable.test');
       require('./tests/memory/hybridObjectSupport.test');
       require('./tests/memory/shareable.test');
+      require('./tests/memory/runtimeAddressReuse.test');
+      require('./tests/memory/destroyedRuntimeCleanup.test');
+      require('./tests/memory/staleRemoteFunction.test');
     },
   },
   {

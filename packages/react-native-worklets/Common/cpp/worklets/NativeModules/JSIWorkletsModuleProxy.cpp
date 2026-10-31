@@ -405,17 +405,20 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "createSerializableNonWorkletFunction",
-      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_, rnRuntimeStatus = rnRuntimeStatus_](
+      [jsScheduler = jsScheduler_,
+       hostIdentity = hostRuntimeId_ == RuntimeData::rnRuntimeId
+           ? RuntimeIdentity::forRNRuntime(rnRuntimeStatus_)
+           : RuntimeIdentity::forWorkletRuntime(runtimeManager_, hostRuntimeId_)](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto fun = at<0>(args).getObject(rt).getFunction(rt);
         const auto name = at<1>(args).isUndefined() ? "" : at<1>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
-        } else if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, jsScheduler, rnRuntimeStatus);
+        } else if (hostIdentity.isRNRuntime()) {
+          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, hostIdentity, jsScheduler);
         } else {
-          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostRuntimeId);
+          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostIdentity);
         }
       });
 
@@ -710,10 +713,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "handlePromise",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      rt, obj, "handlePromise", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         const auto fun = at<0>(args).getObject(rt).getFunction(rt);
         // NOLINTNEXTLINE(readability/braces)
         if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
@@ -722,7 +722,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         } else {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
           auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
+          resolveOrReject->resolveOrRejectPromise(valueOrError);
         }
       });
 
