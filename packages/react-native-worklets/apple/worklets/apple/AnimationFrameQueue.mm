@@ -116,7 +116,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
   timeDeltaIndex_ = (timeDeltaIndex_ + 1) % TIME_SAMPLES_AMOUNT;
   timeDeltas_[timeDeltaIndex_] = std::chrono::high_resolution_clock::now() - start;
-  if (timeDeltaIndex_ == TIME_SAMPLES_AMOUNT) {
+  if (timeDeltaIndex_ != 0) {
     // Perform this on every TIME_SAMPLES_AMOUNT-nth frame instead of each one
     return;
   }
