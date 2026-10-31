@@ -87,6 +87,7 @@ export function createWorkletRuntime(
   let enableEventLoop = true;
   let enableLocking = true;
   let enableNetworking = true;
+  let abortable = false;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -118,11 +119,18 @@ export function createWorkletRuntime(
      */
     enableNetworking =
       (nameOrConfig?.enableNetworking ?? true) && enableEventLoop;
+    abortable = nameOrConfig?.abortable ?? false;
   }
 
   const useDefaultQueue = queue === 'default';
   const customQueue =
     typeof queue === 'object' && queue !== null ? queue : undefined;
+
+  if (abortable && !useDefaultQueue) {
+    throw new Error(
+      '[Worklets] `abortable` is supported only with the default queue.'
+    );
+  }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(
@@ -152,7 +160,8 @@ export function createWorkletRuntime(
     customQueue,
     enableEventLoop,
     enableLocking,
-    enableNetworking
+    enableNetworking,
+    abortable
   );
 }
 
@@ -472,6 +481,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
       createSerializable(() => {
@@ -493,7 +505,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -546,6 +560,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntimeWithId(
       runtimeId,
       createSerializable(() => {
@@ -567,7 +584,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -589,4 +608,20 @@ export function getUIRuntimeHolder(): object {
 
 export function getUISchedulerHolder(): object {
   return WorkletsModule.getUISchedulerHolder();
+}
+
+export function abortWorkletRuntime(runtimeId: number): void {
+  WorkletsModule.abortWorkletRuntime(runtimeId);
+}
+
+if (!isBundleModeEnabled()) {
+  function abortWorkletRuntimeWorklet(runtimeId: number): void {
+    'worklet';
+    globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
+  }
+
+  serializableMappingCache.set(
+    abortWorkletRuntime,
+    createSerializable(abortWorkletRuntimeWorklet)
+  );
 }

@@ -1,11 +1,13 @@
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/SharedItems/Serializable/SerializableError.h>
 #include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <optional>
 
 using namespace facebook;
 
@@ -50,13 +52,18 @@ jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 void SerializableRemoteFunction::resolveOrRejectPromise(
     const std::shared_ptr<Serializable> &resolveValue,
     const std::shared_ptr<RuntimeManager> &runtimeManager) {
+  settled_ = true;
   if (isHostedOnRNRuntime()) {
-    jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
-      resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+    rnRuntimeStatus_->runWhileLocked([&](bool isDead) {
+      if (isDead) [[unlikely]] {
+        return;
+      }
+      jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
+        resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
+      });
     });
   } else {
     const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
-    // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
       // Do nothing.
@@ -65,6 +72,22 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
         resolver->toJSValue(rt).getObject(rt).getFunction(rt).call(rt, resolveValue->toJSValue(rt));
       });
     }
+  }
+}
+
+PromiseDropGuard::~PromiseDropGuard() {
+  if (resolve_->isSettled() || reject_->isSettled()) {
+    return;
+  }
+  try {
+    reject_->resolveOrRejectPromise(
+        std::make_shared<SerializableError>(
+            "Error",
+            "[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.",
+            std::nullopt),
+        runtimeManager_);
+  } catch (...) {
+    // A destructor must not throw.
   }
 }
 

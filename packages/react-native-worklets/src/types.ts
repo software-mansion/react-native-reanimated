@@ -125,6 +125,12 @@ type WorkletRuntimeConfigBase = {
    * Bundle Mode. If not specified, it defaults to `true`.
    */
   enableNetworking?: boolean;
+  /**
+   * Determines whether the runtime can be stopped with
+   * `abortWorkletRuntime`. Can be enabled only with the default queue. If
+   * not specified, it defaults to `false`.
+   */
+  abortable?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

@@ -1,0 +1,69 @@
+---
+title: abortWorkletRuntime
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # abortWorkletRuntime
+</Badges>
+
+`abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) that was created with `abortable: true`. It drops the work that's still waiting in the runtime's queue and rejects the promises of that work. The runtime's thread stops once the job that's currently running returns.
+
+## Reference
+
+```javascript
+import { abortWorkletRuntime, createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background', abortable: true });
+
+scheduleOnRuntime(workletRuntime, () => {
+  'worklet';
+  // Long-running work.
+});
+
+abortWorkletRuntime(workletRuntime.runtimeId);
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function abortWorkletRuntime(runtimeId: number): void;
+  ```
+</details>
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) to abort. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+## Remarks
+
+- Only Worker Runtimes created with `abortable: true` can be aborted. Passing the id of the UI Runtime or of a runtime that isn't abortable throws.
+- Passing an id that doesn't belong to any runtime throws.
+- Aborting a runtime that's already aborted does nothing.
+- After the abort, scheduling work on the runtime, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), or running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
+- A worklet that's already running finishes before the runtime stops. Work it schedules on its own runtime is dropped instead of throwing, and work it runs synchronously on it still runs.
+- The runtime's timers and in-flight network requests are cancelled.
+- The promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
+- On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
+
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>

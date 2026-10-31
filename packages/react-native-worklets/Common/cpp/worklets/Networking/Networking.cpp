@@ -223,6 +223,10 @@ uint64_t Networking::sendRequest(jsi::Runtime &rt, const jsi::Object &config, js
       std::move(requestConfig),
       std::make_shared<RequestListener>(weak_from_this(), record, serializableCallback, requestId));
 
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    backend_->abortRequest(requestId);
+  }
+
   return requestId;
 }
 

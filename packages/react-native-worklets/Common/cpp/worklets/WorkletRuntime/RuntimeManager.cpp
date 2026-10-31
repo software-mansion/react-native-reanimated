@@ -40,6 +40,9 @@ std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
 
   for (const auto &[id, weakRuntime] : weakRuntimes_) {
     if (auto runtime = weakRuntime.lock()) {
+      if (runtime->isAborted()) [[unlikely]] {
+        continue;
+      }
       runtimes.push_back(runtime);
     }
   }
@@ -58,11 +61,19 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
     bool enableLocking,
-    bool enableNetworking) {
+    bool enableNetworking,
+    bool abortable) {
   const auto runtimeId = getNextRuntimeId();
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking, enableNetworking);
+      runtimeId,
+      RuntimeData::RuntimeKind::Worker,
+      name,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking,
+      abortable);
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
