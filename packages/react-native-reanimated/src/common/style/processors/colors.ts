@@ -5,7 +5,11 @@ import type {
   OpaqueColorValue,
 } from 'react-native';
 
-import { ColorProperties, processColorInitially } from '../../../Colors';
+import {
+  ColorProperties,
+  IS_COLOR_PROPERTY,
+  processColorInitially,
+} from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import {
@@ -268,7 +272,7 @@ const processColorOrColors: ValueProcessor<
 export function processColorsInProps(props: StyleProps) {
   'worklet';
   for (const key in props) {
-    if (!ColorProperties.includes(key)) continue;
+    if (IS_COLOR_PROPERTY[key] !== true) continue;
     processStylePropInPlace(props, key, processColorOrColors);
   }
 }
