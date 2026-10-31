@@ -1326,9 +1326,12 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
+  [[maybe_unused]] bool removedScreen = false;
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Remove) {
       const auto tag = mutation.oldChildShadowView.tag;
+      const auto componentName = mutation.oldChildShadowView.componentName;
+      removedScreen = removedScreen || (componentName != nullptr && !std::strcmp(componentName, "RNSScreen"));
       if (mutation.parentTag == surfaceId_) {
         std::erase(movedToRoot, tag);
       } else {
@@ -1338,6 +1341,8 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
       const auto tag = mutation.newChildShadowView.tag;
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() && nodeIt->second->isDetached) {
+        // React Native Screens holds what is left in a screen when it mounts the Remove, which is after the release.
+        react_native_assert(!removedScreen && "A carrier must move to the root before its screen is removed");
         movedToRoot.push_back(tag);
       }
     }
