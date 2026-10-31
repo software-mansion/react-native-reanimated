@@ -23,7 +23,6 @@ async function performHeavyComputation(data: number[]) {
   const result = await runOnRuntimeAsyncWithId(
     backgroundRuntime.runtimeId,
     (numbers: number[]) => {
-      'worklet';
       return numbers.reduce((sum, n) => sum + n, 0);
     },
     data
