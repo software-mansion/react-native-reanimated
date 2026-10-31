@@ -221,9 +221,10 @@ export function setElementAnimation(
       return;
     }
 
-    // Moving elements in DOM resets their scroll positions,
+    // Moving elements in DOM resets their scroll positions and restarts their CSS animations,
     // so we save them before reparenting and restore after.
     const scrollPositions = saveScrollPositions(element);
+    const cssAnimationTimes = saveCSSAnimationTimes(element);
 
     originalElement.style.visibility = 'initial';
 
@@ -232,6 +233,7 @@ export function setElementAnimation(
     }
 
     restoreScrollPositions(originalElement, scrollPositions, element);
+    restoreCSSAnimationTimes(cssAnimationTimes);
 
     element.removedAfterAnimation = true;
     element.remove();
@@ -247,7 +249,13 @@ export function setElementAnimation(
     }
   };
 
-  element.onanimationend = () => {
+  // Animation events bubble, so the handlers below ignore events from the CSS animations of
+  // descendants. Otherwise a child's animation ending would end this animation early.
+  element.onanimationend = (event) => {
+    if (event.target !== element) {
+      return;
+    }
+
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
@@ -258,15 +266,30 @@ export function setElementAnimation(
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
-  const animationCancelHandler = () => {
+  const animationCancelHandler = (event: AnimationEvent) => {
+    if (event.target !== element) {
+      return;
+    }
+
     maybeRunCleanup();
     maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
+  // An exiting animation runs on a copy of the view that starts without an animation, so any
+  // cancel event on it is for this animation. Listening from the start also catches a cancel
+  // during the animation's delay, before its `animationstart`.
+  if (originalElement) {
+    element.addEventListener('animationcancel', animationCancelHandler);
+  }
+
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
-  element.onanimationstart = () => {
+  element.onanimationstart = (event) => {
+    if (event.target !== element) {
+      return;
+    }
+
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       _updatePropsJS({ visibility: 'initial' }, element);
     }
@@ -392,6 +415,123 @@ function restoreScrollPositions(
   }
 }
 
+type SavedCSSAnimationTimes = Map<
+  Element,
+  {
+    // `getAnimations()` leaves out finished animations unless they fill forwards,
+    // so the names in the element's `animation-name` are saved too
+    animationNames: string[];
+    runningAnimations: {
+      animationName: string;
+      timing: string;
+      currentTime: CSSNumberish | null;
+    }[];
+  }
+>;
+
+function getCSSAnimations(element: Element) {
+  return element
+    .getAnimations()
+    .filter(
+      (animation): animation is CSSAnimation =>
+        animation instanceof CSSAnimation
+    );
+}
+
+// An element can have several CSS animations with the same name,
+// so they're told apart by their timing too
+function getAnimationTiming(animation: CSSAnimation) {
+  return JSON.stringify(animation.effect?.getTiming());
+}
+
+// Moving an element in the DOM restarts its CSS animations from the first keyframe,
+// so we save how far the running ones have got before the move and restore it after
+function saveCSSAnimationTimes(root: Element): SavedCSSAnimationTimes {
+  const times: SavedCSSAnimationTimes = new Map();
+
+  // Browsers without the Web Animations API can't report or restore the progress
+  if (typeof CSSAnimation === 'undefined') {
+    return times;
+  }
+
+  const saveTimes = (node: Element) => {
+    const animationNames = getComputedStyle(node)
+      .animationName.split(',')
+      .map((name) => name.trim())
+      .filter((name) => name !== '' && name !== 'none');
+
+    if (animationNames.length > 0) {
+      times.set(node, {
+        animationNames,
+        runningAnimations: getCSSAnimations(node).map((animation) => ({
+          animationName: animation.animationName,
+          timing: getAnimationTiming(animation),
+          currentTime: animation.currentTime,
+        })),
+      });
+    }
+
+    for (const child of Array.from(node.children)) {
+      saveTimes(child);
+    }
+  };
+
+  // Only the descendants are moved, so the root's own animations don't need to be saved
+  for (const child of Array.from(root.children)) {
+    saveTimes(child);
+  }
+
+  return times;
+}
+
+function restoreCSSAnimationTimes(times: SavedCSSAnimationTimes) {
+  times.forEach(({ animationNames, runningAnimations }, node) => {
+    const unmatchedNames = [...animationNames];
+    const unrestoredAnimations = [...runningAnimations];
+
+    const matchName = (animationName: string) => {
+      const index = unmatchedNames.indexOf(animationName);
+      if (index !== -1) {
+        unmatchedNames.splice(index, 1);
+      }
+      return index !== -1;
+    };
+
+    const notRestoredAnimations = getCSSAnimations(node).filter((animation) => {
+      const timing = getAnimationTiming(animation);
+      const index = unrestoredAnimations.findIndex(
+        (saved) =>
+          saved.animationName === animation.animationName &&
+          saved.timing === timing
+      );
+
+      if (index === -1) {
+        return true;
+      }
+
+      animation.currentTime = unrestoredAnimations[index].currentTime;
+      unrestoredAnimations.splice(index, 1);
+      matchName(animation.animationName);
+      return false;
+    });
+
+    for (const animation of notRestoredAnimations) {
+      // The element didn't have this animation before the move, so the move started it.
+      // It plays from the start.
+      if (!matchName(animation.animationName)) {
+        continue;
+      }
+
+      // The element had this animation, but it wasn't running, so it had finished.
+      // It's jumped to its end instead of replaying.
+      const endTime = animation.effect?.getComputedTiming().endTime;
+      if (typeof endTime === 'number' && Number.isFinite(endTime)) {
+        animation.currentTime = endTime;
+      }
+    }
+  });
+}
+
 function cleanupEnteringAnimations(element: HTMLElement) {
   const animationName = element.style.animationName;
 
@@ -429,6 +569,8 @@ export function handleExitingAnimation(
   // This prevents entering animations from restarting when elements are moved to a new parent.
   cleanupEnteringAnimations(element);
 
+  const cssAnimationTimes = saveCSSAnimationTimes(element);
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -441,6 +583,9 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   restoreScrollPositions(dummy, scrollPositions, element);
+
+  // Restoring needs the moved elements to be connected, which they are once the dummy is in the DOM
+  restoreCSSAnimationTimes(cssAnimationTimes);
 
   const snapshot = getSnapshotForElement(element);
 

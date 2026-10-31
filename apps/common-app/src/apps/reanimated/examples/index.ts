@@ -290,6 +290,10 @@ const StrictModeComparison: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/StrictModeComparisonExample').default
   );
+const ExitingWithCSSAnimation: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingWithCSSAnimationExample').default
+  );
 const SyncBackToReactExample: React.FC = () =>
   React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
@@ -748,6 +752,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
   StrictModeComparison: {
     title: '[LA] Strict Mode Comparison',
     screen: StrictModeComparison,
+  },
+  ExitingWithCSSAnimation: {
+    title: '[LA] Exiting with CSS animation',
+    screen: ExitingWithCSSAnimation,
   },
   ListItemLayoutAnimation: {
     title: '[LA] List item layout animation',
