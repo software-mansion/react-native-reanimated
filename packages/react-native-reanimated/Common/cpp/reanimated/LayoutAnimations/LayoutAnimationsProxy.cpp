@@ -750,14 +750,14 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
+    if (!trackInLightTree) {
+      staleSynchronousProps_.record(tag, props);
+      continue;
+    }
     if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       if (isSETBoundary(node)) {
         activeBoundaryMayHaveChanged_ = true;
       }
-    }
-    if (!trackInLightTree) {
-      staleSynchronousProps_.record(tag, props);
-      continue;
     }
 
     react_native_assert(node->current.props && "LightNode has no props");
