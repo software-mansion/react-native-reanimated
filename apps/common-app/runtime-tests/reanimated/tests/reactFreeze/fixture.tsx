@@ -32,6 +32,12 @@ import {
   wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import {
+  leakingRegistries,
+  NO_LEAKS,
+} from '../../../ReJest/utils/registriesLeakCheck';
+
+export { leakingRegistries, NO_LEAKS };
 
 // The `❄️ React freeze` example screen as a runtime test, frozen by a prop
 // (`propDriven.test.tsx`) or by pushing a native stack screen
@@ -149,7 +155,6 @@ export const ALIGNED = 'aligned';
 export const IN_RANGE = 'in range';
 export const ON_TIME = 'on time';
 const ALL_STARTED = 'all started';
-export const NO_LEAKS = 'no leaks';
 
 // A freeze runs no cleanup; only a second construction reveals a teardown.
 export const SUBTREE_CONSTRUCTED = 'freezeSubtreeConstructed';
@@ -400,21 +405,6 @@ export function travelReport(before: Reading, after: Reading): string {
     )
     .join(', ')
     .concat(` in ${elapsedMs.toFixed(0)}ms (±${percent(TIMING_TOLERANCE)})`);
-}
-
-export function leakingRegistries() {
-  if (typeof global._registriesLeakCheck !== 'function') {
-    return '`_registriesLeakCheck` is missing - it is only installed in a build with IS_REANIMATED_EXAMPLE_APP';
-  }
-
-  const leaking = global
-    ._registriesLeakCheck()
-    .split('\n')
-    .filter((line) => line.includes('❌'))
-    .map((line) => line.trim())
-    .join(', ');
-
-  return leaking === '' ? NO_LEAKS : leaking;
 }
 
 export async function expectAllBoxesToFinish(
