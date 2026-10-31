@@ -406,12 +406,15 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 
 // MARK: Light Tree
 
+// Moves Update and Create mutations into the filtered list: after this, the
+// callers only check whether `mutations` is empty.
 void LayoutAnimationsProxy::updateLightTree(
     const PropsParserContext &propsParserContext,
-    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &mutations,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("updateLightTree");
   auto &filteredMutations = transaction.filteredMutations;
+  filteredMutations.reserve(filteredMutations.size() + mutations.size());
   std::unordered_set<Tag> inserted, moved, deleted;
   std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
@@ -446,7 +449,7 @@ void LayoutAnimationsProxy::updateLightTree(
     }
   }
 
-  for (const auto &mutation : mutations) {
+  for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
@@ -477,7 +480,7 @@ void LayoutAnimationsProxy::updateLightTree(
             filteredMutations.push_back(
                 ShadowViewMutation::UpdateMutation(*currentView, node->current, mutation.parentTag));
           } else {
-            filteredMutations.push_back(mutation);
+            filteredMutations.push_back(std::move(mutation));
           }
         }
         break;
@@ -493,7 +496,7 @@ void LayoutAnimationsProxy::updateLightTree(
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
         if (!transaction.recreatedTags.contains(mutation.newChildShadowView.tag)) {
-          filteredMutations.push_back(mutation);
+          filteredMutations.push_back(std::move(mutation));
         }
         break;
       }
