@@ -20,6 +20,7 @@ import type {
 import { ReduceMotion } from '../commonTypes';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
+import { IN_STYLE_UPDATER } from './initialUpdaterContext';
 import type {
   AffineMatrix,
   AffineMatrixFlat,
@@ -35,12 +36,7 @@ import {
   subtractMatrices,
 } from './transformationMatrix/matrixUtils';
 
-/**
- * This variable has to be an object, because it can't be changed for the
- * worklets if it's a primitive value. We also have to bind it to a separate
- * object to prevent from freezing it in development.
- */
-export const IN_STYLE_UPDATER = { current: false };
+export { IN_STYLE_UPDATER } from './initialUpdaterContext';
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
