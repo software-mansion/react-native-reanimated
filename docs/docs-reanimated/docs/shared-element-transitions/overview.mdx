@@ -64,9 +64,9 @@ When Reanimated detects that the current top screen on the stack changes, it che
 
 If it finds two matching components, Reanimated moves one of the native views above the screen content and hides the other view. Usually the source view moves. If React removes the source in the same update, the target view moves instead. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place.
 
-The view moves with its children. Reanimated does not match the children of the two views or add separate fades for them. If the source view moves, the target's children appear when the transition ends. If the target view moves, its children move with it from the start. A child with its own `sharedTransitionTag` can animate as a separate view.
+The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. If the source view moves, the target's children appear when the transition ends. If the target view moves, its children move with it from the start. A child with its own `sharedTransitionTag` can animate as a separate view.
 
-The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Keep the props of the shared view stable during the transition.
+The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Changes that React commits to the moving view's own props or layout wait until the view returns to its parent. This includes changes from React state and `useAnimatedStyle` updates that use commits. The latest values then appear at once, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can also apply during the move.
 
 Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
 
@@ -103,7 +103,9 @@ To reduce video glitches during the transition:
 
 On Android, use a `TextureView` for video that moves over other content, for example `surfaceType="textureView"` on the expo-video `VideoView`. It draws as part of the view hierarchy, which helps with overlapping views. It can cost more to render than a `SurfaceView` and cannot display DRM content. See the [Android `TextureView` reference](https://developer.android.com/reference/android/view/TextureView). Set the surface type before the transition; do not change it at runtime.
 
-Reanimated does not keep a video player alive. `useVideoPlayer` releases its player when the component that created it unmounts, even if the native view is still visible. Keep the player alive while any view uses it, including during shared transitions and [exiting animations](/docs/layout-animations/entering-exiting-animations/):
+Reanimated does not keep React components or their video-player hooks alive. `useVideoPlayer` releases its player when the component that created it unmounts, even if Reanimated still shows its native view. If navigation removes that component at the start of the transition, its player is released then. An iOS native back gesture or back button can keep the screen mounted until the native transition ends; a JavaScript `goBack()` removes the route from React state before the native transition ends. Do not use the visible native view as proof that its player owner is still mounted. See the [expo-video player lifetime guidance](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
+
+Keep the player alive while any view uses it, including during shared transitions and [exiting animations](/docs/layout-animations/entering-exiting-animations/):
 
 - Create the player in a component that stays mounted, for example above the navigator.
 - Or use `createVideoPlayer` and call `release()` when no view needs the player, including views still animating after React removes them. See [manual player lifetime](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
@@ -148,7 +150,7 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 ## Current limitations
 
 - Both shared views must use the same native component type. For example, do not pair `Animated.View` with `Animated.Image`, or image components from different libraries. Debug builds assert when the native types differ.
-- React updates to the moving view's own props and layout appear when it returns to its parent. State changes that change those props also wait. Its children can update during the move. Synchronous UI prop updates can apply during the move.
+- React updates to the moving view's own props and layout appear at once when it returns to its parent. Changes from React state and `useAnimatedStyle` updates that use commits also wait, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can apply during the move.
 - If React moves or reorders the moving view itself, the transition ends and shows the target. Moving an ancestor does not end the run.
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
