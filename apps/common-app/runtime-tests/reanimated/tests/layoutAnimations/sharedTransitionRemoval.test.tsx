@@ -8,11 +8,13 @@ import { Screen, ScreenStack } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -106,6 +108,7 @@ function readMounted(tag: number) {
 }
 
 async function startTransition(exitKind: ExitKind = 'none') {
+  await mockAnimationTimer(false);
   await render(<Screens active={false} exitKind={exitKind} />);
   await waitForFrames();
   const tags = {
@@ -114,6 +117,8 @@ async function startTransition(exitKind: ExitKind = 'none') {
     parent: getTestComponent('parent').getTag(),
   };
   await render(<Screens active exitKind={exitKind} />);
+  await waitForFrames(3);
+  await advanceAnimationTimer(500);
   await expectEventually(async () => {
     const props = await readMounted(tags.source);
     return (
@@ -246,6 +251,8 @@ describe('Removal during a shared transition', () => {
   test('deletes a moving source and its children without an exit', async () => {
     const tags = await startTransition();
     await render(<Screens active removed />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     await expectGone([tags.source, tags.child]);
     await expectTargetRestored();
     expect(await isViewMountedNatively(tags.parent)).toBe(true);
@@ -261,6 +268,7 @@ describe('Removal during a shared transition', () => {
       const tags = await startTransition(exitKind);
       await render(<Screens active removed exitKind={exitKind} />);
       await waitForFrames(3);
+      await advanceAnimationTimer(250);
       const source = await readMounted(tags.source);
       expect(source === null).toBe(false);
       expect(source?.opacity).toBeWithinRange(0.01, 1);
@@ -268,6 +276,7 @@ describe('Removal during a shared transition', () => {
         20,
         ComparisonMode.PIXEL
       );
+      await advanceAnimationTimer(1250);
       await expectGone([tags.source, tags.child]);
       await expectTargetRestored();
       if (exitKind === 'parent') {
@@ -286,6 +295,7 @@ describe('Removal during a shared transition', () => {
     await render(<Screens active removeSiblings />);
     await expectGone([firstTag]);
     expect(await isViewMountedNatively(exitingTag)).toBe(true);
+    await advanceAnimationTimer(1500);
     await expectGone([exitingTag]);
     await expectTargetRestored();
     expect(getTestComponent('last').getTag()).toBe(lastTag);
