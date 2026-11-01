@@ -457,6 +457,7 @@ describe('Shared transition with fadeContent', () => {
   test.each([true, false])(
     'keeps the fade policy of the first run when the navigation goes back (source fade: %p)',
     async (sourceFades) => {
+      await mockAnimationTimer(false);
       const sourceConfig = sourceFades ? linearFade : linearNoFade;
       const targetConfig = sourceFades ? linearNoFade : linearFade;
       const pair = (active: boolean) => (
@@ -469,39 +470,37 @@ describe('Shared transition with fadeContent', () => {
       await render(pair(false));
       await waitForFrames();
       await render(pair(true));
-      let forward: { width: number; childOpacity: number } | undefined;
-      await expectEventually(async () => {
-        const [source, child] = await sample(['source', 'child']);
-        if (!source || !child || !isBetween(source.width, 85, 125)) {
-          return false;
-        }
-        forward = { width: source.width, childOpacity: child.opacity };
-        return true;
-      }).toBe(true);
+      await waitForFrames(3);
+      await advanceAnimationTimer(1000);
+      const [forward, forwardChild] = await sample(['source', 'child']);
+      expect(isMoving(forward)).toBe(true);
       expect(
-        !!forward &&
+        !!forwardChild &&
           (sourceFades
-            ? forward.childOpacity < CHILD_OPACITY - 0.1
-            : Math.abs(forward.childOpacity - CHILD_OPACITY) < 0.02)
+            ? forwardChild.opacity < CHILD_OPACITY - 0.1
+            : Math.abs(forwardChild.opacity - CHILD_OPACITY) < 0.02)
       ).toBe(true);
 
       await render(pair(false));
-      await expectEventually(async () => {
-        const [source, child] = await sample(['source', 'child']);
-        return (
-          !!forward &&
-          isMoving(source) &&
-          source.width < forward.width - 0.5 &&
-          !!child &&
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      const [back, backChild] = await sample(['source', 'child']);
+      expect(isMoving(back)).toBe(true);
+      expect(!!forward && !!back && back.width < forward.width - 0.5).toBe(
+        true
+      );
+      expect(
+        !!forwardChild &&
+          !!backChild &&
           (sourceFades
             ? isBetween(
-                child.opacity,
-                forward.childOpacity + 0.02,
+                backChild.opacity,
+                forwardChild.opacity + 0.02,
                 CHILD_OPACITY - 0.01
               )
-            : Math.abs(child.opacity - CHILD_OPACITY) < 0.02)
-        );
-      }).toBe(true);
+            : Math.abs(backChild.opacity - CHILD_OPACITY) < 0.02)
+      ).toBe(true);
+      await advanceAnimationTimer(3000);
       await expectOpacity('source', 1);
       await expectOpacity('child', CHILD_OPACITY);
       await expectOpacity('target', 0);
