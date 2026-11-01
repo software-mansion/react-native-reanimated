@@ -120,6 +120,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // Set whenever the active boundary might no longer be `topScreen_`: on a structural change, a boundary's props
   // changing or a node leaving the light tree. A light node never becomes live again, so nothing else changes it.
   mutable bool activeBoundaryMayHaveChanged_ = true;
+  // Views the light tree replaced, often the last owners of their props. Destroyed off the UI thread.
+  mutable std::vector<ShadowView> droppedViews_;
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
   // back
   mutable std::unordered_set<Tag> snapshottedScreens_;
@@ -186,6 +188,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &oldView,
       const ShadowView &newView) const;
   void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
+  void releaseDroppedViews() const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);
