@@ -284,6 +284,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   cleanupAnimations(transaction, propsParserContext, flushStructuralMutations);
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    releaseUnmappedContentFadeConfigs();
+  }
+
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushStructuralMutations);
 #endif
@@ -319,6 +323,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   react_native_assert(!node->isDetached && "Remove the carrier from the root before unmapping its node");
   lightNodes_.erase(it);
   activeBoundaryMayHaveChanged_ = true;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    unmappedContentFadeTags_.insert(node->current.tag);
+  }
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
@@ -332,6 +339,15 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
   }
+}
+
+void LayoutAnimationsProxy::releaseUnmappedContentFadeConfigs() const {
+  for (const auto tag : unmappedContentFadeTags_) {
+    if (!lightNodes_.contains(tag)) {
+      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+    }
+  }
+  unmappedContentFadeTags_.clear();
 }
 
 // React re-creating a tag that the light tree still holds keeps its mounted view: the Create becomes an Update of it
@@ -704,7 +720,12 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
         break;
       }
       case ShadowViewMutation::Delete: {
-        lightNodes_.erase(mutation.oldChildShadowView.tag);
+        const auto tag = mutation.oldChildShadowView.tag;
+        if (lightNodes_.erase(tag)) {
+          if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+            unmappedContentFadeTags_.insert(tag);
+          }
+        }
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -1160,6 +1181,10 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    for (const auto &[tag, _] : lightNodes_) {
+      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+    }
+    releaseUnmappedContentFadeConfigs();
     sharedElements_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);

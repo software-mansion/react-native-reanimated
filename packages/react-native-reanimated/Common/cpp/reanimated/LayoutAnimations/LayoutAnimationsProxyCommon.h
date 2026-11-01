@@ -91,6 +91,7 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
@@ -113,7 +114,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
+        readSynchronousOpacity_(dependencies.readSynchronousOpacity)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
@@ -138,6 +140,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
+  virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
@@ -202,6 +205,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
+  const std::function<std::optional<double>(Tag)> readSynchronousOpacity_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;

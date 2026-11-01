@@ -135,7 +135,9 @@ On iOS, when the animation is triggered by a swipe gesture or the OS back button
 
 ### Fade content
 
-By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `fadeContent()` to change them in steps: the moving view keeps its own background, border and shadow, its children fade out while it moves, and when it lands the children of the target view fade in.
+<Badges version="4.8.0">
+  By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `fadeContent()` to change them in steps: the moving view keeps its own background, border and shadow, its children fade out while it moves, and when it lands the children of the target view fade in.
+</Badges>
 
 ```tsx
 const transition = SharedTransition.duration(450).fadeContent();
@@ -147,11 +149,11 @@ const transition = SharedTransition.duration(450).fadeContent();
 />;
 ```
 
-- The children fade out with the same timing or spring as the movement, so they also come back when the navigation goes back during the transition, and they follow the iOS back gesture.
-- The children of the target view fade in after the move, in half of the transition duration.
-- The transition uses the `sharedTransitionStyle` of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
+- The direct children fade out with the timing or spring of the move and follow the iOS back gesture. A spring fade stops at zero without a rebound. The target fade-in waits until the spring settles.
+- The children of the target view fade in after the move, in half of the configured transition duration. A target child with a pending or running layout animation keeps that animation instead of this fade-in.
+- A new run uses the fade settings of its source view. A reused moving view keeps the first run's fade settings, including when the new source has different settings. A reversal uses the new source's move timing, but does not enable or disable its content fade. To fade new runs in both directions, give `fadeContent()` to both views.
 - Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
-- A child with its own `sharedTransitionTag` moves on its own path and does not fade. A child without a tag fades out and in also when it is the same on both screens, so give such a child, for example an icon, its own `sharedTransitionTag`.
+- A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
 - When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
 
 ## Example

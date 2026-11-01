@@ -53,6 +53,8 @@ function createUpdateManager() {
  *   at the end of the batch, after all the non-deferred configurations (even
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
+ * @param sharedTransitionTag - The shared tag that pairs the views.
+ * @param sharedTransitionContentFadeIn - The target content fade after landing.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 

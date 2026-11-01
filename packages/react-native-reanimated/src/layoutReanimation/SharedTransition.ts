@@ -19,6 +19,7 @@ export class SharedTransition
 {
   static presetName = 'SharedTransition';
 
+  /** @internal */
   fadeContentV = false;
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
@@ -46,7 +47,7 @@ export class SharedTransition
     return this;
   }
 
-  // The children of the target view fade in after the move, in half of its duration.
+  /** @internal */
   buildContentFadeIn(): EntryExitAnimationFunction | undefined {
     if (!this.fadeContentV) {
       return undefined;
@@ -84,8 +85,17 @@ export class SharedTransition
         source: Record<string, number | string>;
         target: Record<string, number | string>;
       };
-      const animationFactory = (value: number | string) => {
-        return delayFunction(delay, animation(value, config));
+      const animationFactory = (
+        value: number | string,
+        contentOpacity = false
+      ) => {
+        return delayFunction(
+          delay,
+          animation(
+            value,
+            contentOpacity ? { ...config, overshootClamping: true } : config
+          )
+        );
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const initialValues: any = {};
@@ -117,12 +127,15 @@ export class SharedTransition
               }
             );
           } else if (key === 'transformOrigin') {
-            animations[key] = target.map(animationFactory);
+            animations[key] = target.map((value) => animationFactory(value));
           } else {
             logger.error(`Unexpected array in SharedTransition: ${key}`);
           }
         } else {
-          animations[key] = animationFactory(values.target[key]);
+          animations[key] = animationFactory(
+            values.target[key],
+            key === 'contentOpacity'
+          );
         }
       }
 

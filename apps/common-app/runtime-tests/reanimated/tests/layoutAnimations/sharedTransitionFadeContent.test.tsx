@@ -6,15 +6,29 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  afterEach,
+  beforeEach,
   describe,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
-  render,
+  render as renderRuntime,
   test,
   useTestRef,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
+import { createFadeTrace, type FadeTrace } from './sharedTransitionFadeTrace';
+
+let trace: FadeTrace;
+let assertionIndex = 0;
+
+async function render(component: Parameters<typeof renderRuntime>[0]) {
+  await trace.mark('render:requested');
+  await renderRuntime(component);
+  trace.registerRefs(['source', 'target', 'sourceChild', 'targetChild']);
+  await trace.mark('render:returned');
+}
 
 const SOURCE_WIDTH = 60;
 const TARGET_WIDTH = 150;
@@ -91,7 +105,13 @@ function ScreensWithAnimatedChild({ showTarget }: { showTarget: boolean }) {
 }
 
 async function mountedProps(name: string) {
-  return getTestComponent(name).getMountedViewProps();
+  const tag = trace.tags()[name];
+  return runOnUIBlocking(() => {
+    'worklet';
+    const view = global._obtainMountedViewProps(tag, false);
+    console.log('[11033 layout sample]', JSON.stringify({ name, tag, view }));
+    return view;
+  });
 }
 
 function isBetween(value: number, min: number, max: number) {
@@ -103,7 +123,7 @@ async function expectMovingWithChildOpacity(
   min: number,
   max: number
 ) {
-  await expectEventually(async () => {
+  await trace.assertion(`original:eventual:${++assertionIndex}`, async () => {
     const [view, child] = await Promise.all([
       mountedProps(name),
       mountedProps(`${name}Child`),
@@ -115,17 +135,22 @@ async function expectMovingWithChildOpacity(
       view.opacity > 0.99 &&
       isBetween(child.opacity, min, max)
     );
-  }).toBe(true);
+  });
 }
 
 async function expectOpacity(name: string, opacity: number) {
-  await expectEventually(async () => {
+  await trace.assertion(`original:eventual:${++assertionIndex}`, async () => {
     const props = await mountedProps(name);
     return !!props && Math.abs(props.opacity - opacity) < 0.01;
-  }).toBe(true);
+  });
 }
 
 describe('Shared transition with fadeContent', () => {
+  beforeEach(async () => {
+    assertionIndex = 0;
+    trace = await createFadeTrace();
+  });
+  afterEach(() => trace.stop());
   test('fades the children of the moving view out and keeps the view itself visible', async () => {
     await render(<Screens showTarget={false} />);
     await waitForFrames();
@@ -144,7 +169,7 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
 
     await render(<Screens showTarget />);
-    await expectEventually(async () => {
+    await trace.assertion(`original:eventual:${++assertionIndex}`, async () => {
       const [target, child] = await Promise.all([
         mountedProps('target'),
         mountedProps('targetChild'),
@@ -155,7 +180,7 @@ describe('Shared transition with fadeContent', () => {
         target.opacity > 0.99 &&
         isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
       );
-    }).toBe(true);
+    });
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 
@@ -168,12 +193,12 @@ describe('Shared transition with fadeContent', () => {
     const beforeReturn = await mountedProps('sourceChild');
 
     await render(<Screens showTarget={false} />);
-    await expectEventually(async () => {
+    await trace.assertion(`original:eventual:${++assertionIndex}`, async () => {
       const child = await mountedProps('sourceChild');
       return (
         !!beforeReturn && !!child && child.opacity > beforeReturn.opacity + 0.05
       );
-    }).toBe(true);
+    });
 
     await expectOpacity('source', 1);
     await expectOpacity('sourceChild', CHILD_OPACITY);
@@ -185,14 +210,14 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
 
     await render(<ScreensWithAnimatedChild showTarget />);
-    await expectEventually(async () => {
+    await trace.assertion(`original:eventual:${++assertionIndex}`, async () => {
       const child = await mountedProps('sourceChild');
       return (
         !!child &&
         isBetween(child.width, CHILD_WIDTH + 5, WIDE_CHILD_WIDTH - 5) &&
         isBetween(child.opacity, 0.1, CHILD_OPACITY - 0.1)
       );
-    }).toBe(true);
+    });
 
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
@@ -204,7 +229,9 @@ describe('Shared transition with fadeContent', () => {
 
     await render(<Screens showTarget removeSource />);
     await expectMovingWithChildOpacity('target', 0.05, CHILD_OPACITY - 0.05);
+    await trace.mark('original:source-delete:start');
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
+    await trace.mark('original:source-delete:end');
 
     await expectOpacity('target', 1);
     await expectOpacity('targetChild', CHILD_OPACITY);

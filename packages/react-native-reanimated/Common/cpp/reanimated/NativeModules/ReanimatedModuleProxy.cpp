@@ -1135,7 +1135,11 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   writeSynchronousPropsToViews(synchronousUpdatesBatch);
 }
 
-void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch) {
+  auto synchronousUpdatesBatch = updatesBatch;
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->composeSynchronousProps(synchronousUpdatesBatch);
+  }
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1349,6 +1353,17 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis || !shouldUseSynchronousUpdatesInPerformOperations()) {
+          return std::nullopt;
+        }
+        folly::dynamic props = folly::dynamic::object();
+        auto lock = strongThis->updatesRegistryManager_->lock();
+        strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
+        const auto opacity = props.get_ptr("opacity");
+        return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
+      },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,

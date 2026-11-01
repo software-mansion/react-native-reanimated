@@ -147,6 +147,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::vector<std::shared_ptr<LightNode>> detachedCarriers_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
@@ -223,6 +224,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void resolveDeferredSourceScreen() const;
   bool isLightNodeMapped(const std::shared_ptr<LightNode> &node) const;
   void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
+  void releaseUnmappedContentFadeConfigs() const;
 
   void updateLightTree(
       const PropsParserContext &propsParserContext,
@@ -246,6 +248,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   }
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
+  void composeSynchronousProps(UpdatesBatch &updatesBatch) const override;
 
   void reconcileContradictedRemovals(
       ShadowViewMutationList &mutations,

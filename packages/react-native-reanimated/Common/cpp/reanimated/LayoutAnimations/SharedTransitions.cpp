@@ -286,7 +286,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto &layoutAnimation = layoutAnimationIt->second;
       if (const auto &contentFade = element.run->contentFade) {
         const auto &[from, to] = contentFade->range;
-        layoutAnimation.contentOpacity = from + transition_->progress * (to - from);
+        layoutAnimation.contentOpacity = from + std::clamp(transition_->progress, 0.0, 1.0) * (to - from);
       }
       auto before = layoutAnimation.startView.layoutMetrics.frame;
       auto after = layoutAnimation.finalView.layoutMetrics.frame;
@@ -1071,22 +1071,20 @@ double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &
   return animated.value_or(run.contentFade->range.from);
 }
 
-// Nested carriers, views with their own shared tag and views that a shared tag hides keep their own opacity.
+// Nested carriers and hidden endpoints keep their own opacity.
 std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingChildren(
     const std::shared_ptr<LightNode> &node,
     const std::unordered_set<Tag> &hiddenTags) const {
   std::vector<std::shared_ptr<LightNode>> children;
   for (const auto &child : node->children) {
-    if (isLightNodeMapped(child) && !child->isDetached && !child->isExiting() && isViewKind(child->current) &&
-        !findSharedTag(child->current) && !hiddenTags.contains(child->current.tag)) {
+    if (isLightNodeMapped(child) && !child->isDetached && isViewKind(child->current) &&
+        !hiddenTags.contains(child->current.tag)) {
       children.push_back(child);
     }
   }
   return children;
 }
 
-// A child with its own layout animation keeps the opacity of that animation. Other children keep their React
-// opacity, also when the view has the mounted props.
 ShadowView LayoutAnimationsProxy::withContentOpacity(
     const std::shared_ptr<LightNode> &child,
     const ShadowView &view,
@@ -1098,8 +1096,35 @@ ShadowView LayoutAnimationsProxy::withContentOpacity(
   if (!animated) {
     resolveLightNodeProps(child);
   }
-  const auto ownOpacity = getViewProps(animated ? view : child->current).opacity;
+  const auto synchronousOpacity = !animated && readSynchronousOpacity_ ? readSynchronousOpacity_(tag) : std::nullopt;
+  const auto ownOpacity = synchronousOpacity.value_or(getViewProps(animated ? view : child->current).opacity);
   return cloneViewWithOpacity(view, ownOpacity * contentOpacity, propsParserContext);
+}
+
+void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (sharedElements_.empty()) {
+    return;
+  }
+  const auto hiddenTags = hiddenViewTags();
+  std::unordered_map<Tag, double> factors;
+  for (const auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->contentFade) {
+      continue;
+    }
+    for (const auto &child : fadingChildren(element.run->carrier, hiddenTags)) {
+      factors[child->current.tag] = element.run->contentFade->mountedOpacity;
+    }
+  }
+  for (auto &[family, props] : updatesBatch) {
+    if (family->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const auto factor = factors.find(family->getTag());
+    if (auto opacity = props.get_ptr("opacity"); factor != factors.end() && opacity && opacity->isNumber()) {
+      *opacity = opacity->asDouble() * factor->second;
+    }
+  }
 }
 
 void LayoutAnimationsProxy::applyContentOpacity(

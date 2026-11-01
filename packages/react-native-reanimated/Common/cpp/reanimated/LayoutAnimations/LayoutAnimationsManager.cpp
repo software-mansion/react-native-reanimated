@@ -120,6 +120,11 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   shouldAnimateExitingForTag_.erase(tag);
 }
 
+void LayoutAnimationsManager::clearSharedTransitionContentFadeIn(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  contentFadeIns_.erase(tag);
+}
+
 void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
