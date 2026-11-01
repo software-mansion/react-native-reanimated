@@ -162,6 +162,7 @@ const transition = SharedTransition.duration(450).fadeContent({
   fadeIn: { duration: 150 },
 });
 ```
+
 - Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
 - A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
 - When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
