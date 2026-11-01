@@ -530,14 +530,17 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('plays the entering animation of a target child when the run ends without a landing', async () => {
+    await mockAnimationTimer(false);
     await render(<ScreensWithEnteringChild showTarget={false} />);
     await waitForFrames();
 
     await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     await render(<ScreensWithEnteringChild showTarget sourceMoved />);
 
-    // The run of 3 seconds ends early, so the source is at home at once.
+    // The clock stays in the middle of the run, so only an early end of the run brings the source home.
     await expectEventually(async () => {
       const [source, target] = await sample(['source', 'target']);
       return (
@@ -546,7 +549,8 @@ describe('Shared transition with fadeContent', () => {
         Math.abs(source.width - SOURCE_WIDTH) < 0.5 &&
         target.opacity > 0.99
       );
-    }, 500).toBe(true);
+    }).toBe(true);
+    await advanceAnimationTimer(300);
     await expectOpacity('enteringChild', 1);
     await expectEnteringCallbacks(1);
   });
