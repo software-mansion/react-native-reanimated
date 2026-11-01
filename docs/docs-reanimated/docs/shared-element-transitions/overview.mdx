@@ -153,7 +153,7 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 - React updates to the moving view's own props and layout appear at once when it returns to its parent or the transition restarts. Changes from React state and `useAnimatedStyle` updates that use commits also wait, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can apply during the move.
 - If the target changes only its style during the transition, the moving view does not animate to the new style. The new style appears when the view lands.
 - React can move or reorder the moving view or its ancestors during the transition. The view goes to its new place when the transition ends.
-- If React removes the target during a timed transition while the source stays mounted, the move continues to the last target frame. When the move ends, the source returns to its own frame. The removed target stays hidden during its exit animation.
+- If React removes the target during a timed transition while the source stays mounted, the move continues to the last target frame. When the move ends, the source jumps back to its own frame. The removed target stays hidden during its exit animation.
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
 - Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
