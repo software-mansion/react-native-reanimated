@@ -13,10 +13,12 @@ import Animated, {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -449,10 +451,13 @@ describe('Nested shared transitions', () => {
   });
 
   test('animates the waiting inner view to a new color of its target', async () => {
+    await mockAnimationTimer(false);
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
 
     await render(<Screens active transitions={retargetTransitions} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(retargetInnerDuration);
     await waitForNotification('inner-finished');
     await expectInnerViewPhase('completed');
     const oldColor = (
@@ -462,6 +467,8 @@ describe('Nested shared transitions', () => {
     await render(
       <Screens active innerColor="#00ff00" transitions={retargetTransitions} />
     );
+    await waitForFrames(3);
+    await advanceAnimationTimer(retargetInnerDuration / 2);
     await expectEventually(async () => {
       return (await getTestComponent('targetInner').getMountedViewProps())
         ?.backgroundColor;
@@ -470,15 +477,18 @@ describe('Nested shared transitions', () => {
       await getTestComponent('targetInner').getMountedViewProps()
     )?.backgroundColor;
     expect(newColor !== oldColor).toBe(true);
-    await expectInnerViewToReach(
-      'backgroundColor',
-      (color) => color === newColor
-    );
     const colors = stopRecording();
     expect(
       colors.some((color) => color !== oldColor && color !== newColor)
     ).toBe(true);
-
+    await advanceAnimationTimer(retargetInnerDuration / 2);
+    await expectInnerViewToReach(
+      'backgroundColor',
+      (color) => color === newColor
+    );
+    await advanceAnimationTimer(
+      retargetOuterDuration - 2 * retargetInnerDuration
+    );
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
   });
