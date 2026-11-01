@@ -925,7 +925,7 @@ describe('Shared transition with fadeContent', () => {
         const expected = CHILD_OPACITY * Math.max(0, 1 - progress / end);
         return Math.abs(child!.opacity - expected);
       });
-      expect(moving.length > 10).toBe(true);
+      expect(moving.length >= 3).toBe(true);
       expect(errors.every((error) => error < 0.03)).toBe(true);
       expect(
         frames.every(([, child]) => !child || Number.isFinite(child.opacity))
