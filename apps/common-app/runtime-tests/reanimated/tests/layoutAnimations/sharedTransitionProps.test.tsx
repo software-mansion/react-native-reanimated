@@ -205,8 +205,8 @@ function StyleTarget({
   );
 }
 
-function transitionWithNotification() {
-  return SharedTransition.duration(1500).withCallback((finished) => {
+function transitionWithNotification(duration = 1500) {
+  return SharedTransition.duration(duration).withCallback((finished) => {
     'worklet';
     if (finished) {
       notify('props-finished');
@@ -214,13 +214,14 @@ function transitionWithNotification() {
   });
 }
 
+function isMoving(props: MountedViewProps | null) {
+  return !!props && props.opacity > 0 && props.width > 65 && props.width < 145;
+}
+
 async function expectSourceMoving() {
-  await expectEventually(async () => {
-    const props = await getTestComponent('source').getMountedViewProps();
-    return (
-      !!props && props.opacity > 0 && props.width > 65 && props.width < 145
-    );
-  }).toBe(true);
+  await expectEventually(async () =>
+    isMoving(await getTestComponent('source').getMountedViewProps())
+  ).toBe(true);
 }
 
 async function expectBlueHint() {
@@ -383,7 +384,7 @@ describe('Shared transition keeps the moving view props', () => {
   nativeTest(
     'keeps unchanged native content props while React changes the hidden target',
     async () => {
-      const transition = transitionWithNotification();
+      const transition = transitionWithNotification(4000);
       const color = makeMutable('red');
       await render(
         <Screens active={false} transition={transition} color={color} />
@@ -410,9 +411,12 @@ describe('Shared transition keeps the moving view props', () => {
         />
       );
       await waitForFrames(3);
-      expect(
-        (await getTestComponent('target').getMountedViewProps())?.opacity
-      ).toBe(0);
+      const [source, target] = await Promise.all([
+        getTestComponent('source').getMountedViewProps(),
+        getTestComponent('target').getMountedViewProps(),
+      ]);
+      expect(isMoving(source)).toBe(true);
+      expect(target?.opacity).toBe(0);
       await waitForNotification('props-finished');
       await expectEventually(
         async () =>
