@@ -285,12 +285,17 @@ describe('Shared transition moves a real native view', () => {
   });
 
   test('starts a new tag after a reversal makes the carrier the target', async () => {
+    await mockAnimationTimer(false);
     const transition = transitionWithNotification(600);
     await render(<Screens active={false} transition={transition} keepTarget />);
     await waitForFrames();
     await render(<Screens active transition={transition} keepTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
     await expectMoving('source');
     await render(<Screens active={false} transition={transition} keepTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(100);
     await expectMoving('source');
     const changedTransition = SharedTransition.duration(600).withCallback(
       (finished) => {
@@ -308,8 +313,11 @@ describe('Shared transition moves a real native view', () => {
         sharedTag="changed-carrier"
       />
     );
+    await waitForFrames(3);
+    await advanceAnimationTimer(100);
     await expectMoving('source');
-    await waitForNotification('changed-carrier-finished', 30000);
+    await advanceAnimationTimer(600);
+    await waitForNotification('changed-carrier-finished');
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
   });
