@@ -411,13 +411,15 @@ async function expectMovingWithChildOpacity(
   }).toBe(true);
 }
 
+// Records the highest target opacity while the source moves, until the source unmounts or the test stops it.
 function recordTargetDuringSourceMove(sourceTag: number, targetTag: number) {
   const highest = makeMutable(0);
+  const running = makeMutable(true);
   scheduleOnUI(() => {
     'worklet';
     const record = () => {
       const source = global._obtainMountedViewProps(sourceTag, false);
-      if (!source) {
+      if (!running.value || !source) {
         return;
       }
       if (source.width < TARGET_WIDTH - 0.5) {
@@ -429,7 +431,12 @@ function recordTargetDuringSourceMove(sourceTag: number, targetTag: number) {
     };
     requestAnimationFrame(record);
   });
-  return highest;
+  return {
+    highest,
+    stop: () => {
+      running.value = false;
+    },
+  };
 }
 
 async function expectOpacity(name: string, opacity: number) {
@@ -683,34 +690,36 @@ describe('Shared transition with fadeContent', () => {
     const sourceTag = getTestComponent('source').getTag();
     const childTag = getTestComponent('sourceChild').getTag();
     const targetTag = getTestComponent('target').getTag();
-    const highestTargetOpacity = recordTargetDuringSourceMove(
-      sourceTag,
-      targetTag
-    );
+    const recorder = recordTargetDuringSourceMove(sourceTag, targetTag);
+    try {
+      await render(<Screens showTarget removeSource />);
+      await expectEventually(() =>
+        runOnUIBlocking(() => {
+          'worklet';
+          const source = global._obtainMountedViewProps(sourceTag, false);
+          const child = global._obtainMountedViewProps(childTag, false);
+          return (
+            !!source &&
+            !!child &&
+            source.width > SOURCE_WIDTH + 5 &&
+            source.width < TARGET_WIDTH - 5 &&
+            child.opacity > 0.05 &&
+            child.opacity < CHILD_OPACITY - 0.05
+          );
+        })
+      ).toBe(true);
+      await expectOpacity('target', 0);
 
-    await render(<Screens showTarget removeSource />);
-    await expectEventually(() =>
-      runOnUIBlocking(() => {
-        'worklet';
-        const source = global._obtainMountedViewProps(sourceTag, false);
-        const child = global._obtainMountedViewProps(childTag, false);
-        return (
-          !!source &&
-          !!child &&
-          source.width > SOURCE_WIDTH + 5 &&
-          source.width < TARGET_WIDTH - 5 &&
-          child.opacity > 0.05 &&
-          child.opacity < CHILD_OPACITY - 0.05
-        );
-      })
-    ).toBe(true);
-    await expectOpacity('target', 0);
-
-    await expectOpacity('target', 1);
-    await expectOpacity('targetChild', CHILD_OPACITY);
-    await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
-    await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
-    expect(highestTargetOpacity.value).toBe(0);
+      await expectOpacity('target', 1);
+      await expectOpacity('targetChild', CHILD_OPACITY);
+      await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(
+        false
+      );
+      await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
+      expect(recorder.highest.value).toBe(0);
+    } finally {
+      recorder.stop();
+    }
   });
 
   test('keeps the content fade of a view that stays mounted after an unmount releases its pair', async () => {

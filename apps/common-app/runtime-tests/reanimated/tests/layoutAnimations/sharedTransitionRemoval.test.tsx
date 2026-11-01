@@ -403,7 +403,12 @@ describe('Removal during a shared transition', () => {
       if (exitKind === 'child') {
         expect((await readMounted(tags.child))?.opacity).toBe(1);
       }
-      await advanceAnimationTimer(1250);
+      await advanceAnimationTimer(500);
+      const later = await readMounted(tags.source);
+      expect(
+        later !== null && source !== null && later.width > source.width + 1
+      ).toBe(true);
+      await advanceAnimationTimer(750);
       await expectGone([tags.source, tags.child]);
       await expectTargetRestored();
       if (exitKind === 'parent') {

@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   advanceAnimationTimer,
   describe,
@@ -28,7 +29,7 @@ import {
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { MountedViewProps } from '../../../ReJest/types';
+import { ComparisonMode, type MountedViewProps } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 function transitionWithNotification(duration: number, name: string) {
@@ -145,6 +146,7 @@ function Screens({
 }) {
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
+  const innerWrapper = useTestRef('innerWrapper');
   return (
     <View style={styles.container}>
       {!(active && removeSource) && (
@@ -154,8 +156,11 @@ function Screens({
             sharedTransitionTag="outer"
             sharedTransitionStyle={transitions.outer}
             style={styles.sourceOuter}>
-            {/* React Native flattens the wrapper without a background, so the inner view changes its parent. */}
-            <View style={innerWrapped && styles.innerWrapper}>
+            {/* A collapsable wrapper is flattened, so the inner view changes its native parent. */}
+            <View
+              ref={innerWrapper}
+              collapsable={!innerWrapped}
+              style={innerWrapped && styles.innerWrapper}>
               <Animated.View
                 ref={inner}
                 sharedTransitionTag="inner"
@@ -477,6 +482,10 @@ describe('Nested shared transitions', () => {
     await waitForNotification('inner-finished');
     await waitForFrames(2);
     await render(<Screens active removeSource innerSize={90} />);
+    await expectEventually(
+      async () =>
+        (await getTestComponent('targetInner').getMountedViewProps())?.width
+    ).toBe(90, ComparisonMode.PIXEL);
     await waitForFrames(3);
     await advanceAnimationTimer(300);
     await expectEventually(() =>
@@ -554,14 +563,29 @@ describe('Nested shared transitions', () => {
       await render(<Screens active={false} innerWrapped={wrapped} />);
       await waitForFrames();
       const innerTag = getTestComponent('sourceInner').getTag();
+      const outerTag = getTestComponent('sourceOuter').getTag();
+      const wrapperTag = getTestComponent('innerWrapper').getTag();
+      const nativeParentOfInner = () =>
+        RuntimeTestObserver?.observeParent(innerTag) ?? null;
+      const homeParent = (isWrapped: boolean) =>
+        RuntimeTestObserver ? (isWrapped ? wrapperTag : outerTag) : null;
+      expect(await nativeParentOfInner()).toBe(homeParent(wrapped));
       await render(<Screens active innerWrapped={wrapped} />);
       await waitForFrames(3);
       await advanceAnimationTimer(600);
       await waitForNotification('inner-finished');
       await waitForFrames(2);
 
+      await RuntimeTestObserver?.startUnmountRecording();
       await render(<Screens active innerWrapped={!wrapped} />);
       await waitForFrames(3);
+      const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
+      if (unmounts) {
+        expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
+          false
+        );
+      }
+      expect(await isViewMountedNatively(wrapperTag)).toBe(!wrapped);
       expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
       const inner = await runOnUIBlocking(() => {
         'worklet';
@@ -574,6 +598,7 @@ describe('Nested shared transitions', () => {
       await advanceAnimationTimer(2400);
       await waitForNotification('outer-finished');
       await expectAllShownAtTargets();
+      expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
     }
   );
 
