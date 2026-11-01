@@ -6,6 +6,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Screen, ScreenStack } from 'react-native-screens';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   describe,
   expect,
@@ -200,7 +201,8 @@ function NativeStack({
 }
 
 describe('Removal during a shared transition', () => {
-  const iosTest = Platform.OS === 'ios' ? test : test.skip;
+  const iosTest =
+    Platform.OS === 'ios' && RuntimeTestObserver ? test : test.skip;
 
   iosTest(
     'removes a snapshotted native stack while its carrier is detached',
@@ -224,8 +226,17 @@ describe('Removal during a shared transition', () => {
       expect(
         (await getTestComponent('stack-target').getMountedViewProps())?.opacity
       ).toBe(0);
+      await RuntimeTestObserver!.startUnmountRecording();
       await render(<NativeStack pushed prepared removed />);
       await expectGone(tags);
+      // React Native Screens snapshots the screen when it is removed, so the removed root
+      // must go first.
+      const unmounts = (await RuntimeTestObserver!.takeUnmountRecording())!;
+      const [rootIndex, screenIndex, carrierIndex] = tags.map((tag) =>
+        unmounts.findIndex(({ childTag }) => childTag === tag)
+      );
+      expect(rootIndex).toBe(0);
+      expect(screenIndex > rootIndex && carrierIndex > rootIndex).toBe(true);
       expect(
         (await getTestComponent('stack-survivor').getMountedViewProps())?.height
       ).toBe(20, ComparisonMode.PIXEL);

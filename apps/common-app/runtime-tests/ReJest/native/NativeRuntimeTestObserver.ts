@@ -17,6 +17,12 @@ export type TransformObservation = {
   translateX: number;
 };
 
+/** A Remove that the iOS mounting layer applied. */
+export type UnmountObservation = {
+  parentTag: number;
+  childTag: number;
+};
+
 export interface Spec extends TurboModule {
   emitScreenTransitionProgress(
     tag: CodegenTypes.Int32,
@@ -37,6 +43,11 @@ export interface Spec extends TurboModule {
   observeTextInput(
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;
+
+  startUnmountRecording(): Promise<void>;
+
+  /** Returns the Removes since the start in mount order. Android returns null. */
+  takeUnmountRecording(): Promise<ReadonlyArray<UnmountObservation> | null>;
 }
 
 export default TurboModuleRegistry.get<Spec>('RuntimeTestObserver');

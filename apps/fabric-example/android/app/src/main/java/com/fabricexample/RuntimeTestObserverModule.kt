@@ -68,6 +68,14 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
     }
   }
 
+  override fun startUnmountRecording(promise: Promise) {
+    promise.resolve(null)
+  }
+
+  override fun takeUnmountRecording(promise: Promise) {
+    promise.resolve(null)
+  }
+
   private fun mountedView(tag: Double): View? {
     val view =
       try {
