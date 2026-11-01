@@ -28,6 +28,7 @@
 #endif // __ANDROID__
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
@@ -148,6 +149,17 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
   }
 
   return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
+}
+
+// A smaller end makes the fade-out target opacity infinite.
+constexpr double kMinFadeOutEnd = 1e-3;
+
+double fadeOutEnd(jsi::Runtime &rt, const jsi::Object &contentFade) {
+  const auto value = contentFade.getProperty(rt, "fadeOutEnd");
+  if (!value.isNumber() || !std::isfinite(value.asNumber())) {
+    return 1;
+  }
+  return std::clamp(value.asNumber(), kMinFadeOutEnd, 1.0);
 }
 
 } // namespace
@@ -509,7 +521,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
               contentFadeObject.getProperty(rt, "fadeIn"),
               "[Reanimated] Shared transition content fade-in must be an object.",
               Serializable::ValueType::ObjectType),
-          .fadeOutEnd = contentFadeObject.getProperty(rt, "fadeOutEnd").asNumber(),
+          .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
       };
     }
   }

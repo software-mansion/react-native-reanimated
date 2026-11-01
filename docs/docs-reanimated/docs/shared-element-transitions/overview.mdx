@@ -152,7 +152,11 @@ const transition = SharedTransition.duration(450).fadeContent();
 - The direct children fade out with the timing or spring of the move and follow the iOS back gesture. A spring fade stops at zero without a rebound. The target fade-in waits until the spring settles.
 - The children of the target view fade in after the move, in half of the configured transition duration. A target child with a pending or running layout animation keeps that animation instead of this fade-in. A direct child that fades and has its own [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it instead, and it replaces a layout animation of that child. A running layout animation that it replaces stops, and its callback gets `finished` set to `false`. A layout animation that has not started yet does not run, and its callback does not run. The `entering` animation waits until the view lands, also while the transition waits for a parent shared view. When the view stops being the target without a landing, for example when the navigation goes back, the animation starts at once. If React removes the child before then, the animation does not start and its callback does not run. An `entering` animation of a deeper child plays during the move, while the target view is hidden.
 - A new run uses the fade settings of its source view. A reused moving view keeps the first run's fade settings, including when the new source has different settings. A reversal uses the new source's move timing, but does not enable or disable its content fade. To fade new runs in both directions, give `fadeContent()` to both views.
-- To change the two fades, pass options. `fadeOut.end` is the part of the move, more than 0 and at most 1, at which the children reach opacity 0. When a target change keeps the children fading out, the fade-out starts from the current opacity and ends at that part of the new move. `fadeIn.duration` is the length of the fade-in in milliseconds.
+- Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
+- A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
+- When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
+
+To change the two fades, pass options to `fadeContent()`:
 
 ```tsx
 const transition = SharedTransition.duration(450).fadeContent({
@@ -163,9 +167,9 @@ const transition = SharedTransition.duration(450).fadeContent({
 });
 ```
 
-- Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
-- A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
-- When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
+- `fadeOut.end` is the point of the move progress, more than 0 and at most 1, at which the children reach opacity 0. The progress follows the easing or the spring of the move, so `end: 0.5` is the middle of the distance, but not always the middle of the time. When a target change restarts the move while the children fade out, the fade-out starts from the current opacity and ends at that part of the new move. When the navigation goes back during the move, the children fade in during the full return move, and `end` does not apply.
+- `fadeIn.duration` is the length of the fade-in after the landing, in milliseconds.
+- When the target view moves because React removed the source, its children fade in during the full move, and the two options do not apply.
 
 ## Example
 

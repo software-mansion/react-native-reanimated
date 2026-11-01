@@ -186,7 +186,7 @@ function validFadeOutEnd(end: number | undefined) {
     return end;
   }
   logger.warn(
-    `fadeContent: fadeOut.end must be more than 0 and at most 1, got ${end}. The default 1 is used.`
+    `fadeContent: fadeOut.end must be more than 0 and at most 1, got ${describeValue(end)}. The default 1 is used.`
   );
   return undefined;
 }
@@ -199,7 +199,11 @@ function validFadeInDuration(duration: number | undefined) {
     return duration;
   }
   logger.warn(
-    `fadeContent: fadeIn.duration must be a finite number of milliseconds, 0 or more, got ${duration}. The default is used.`
+    `fadeContent: fadeIn.duration must be a finite number of milliseconds, 0 or more, got ${describeValue(duration)}. The default is used.`
   );
   return undefined;
+}
+
+function describeValue(value: unknown) {
+  return typeof value === 'string' ? JSON.stringify(value) : String(value);
 }
