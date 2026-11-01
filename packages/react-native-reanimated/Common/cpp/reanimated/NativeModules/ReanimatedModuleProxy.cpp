@@ -28,7 +28,6 @@
 #endif // __ANDROID__
 
 #include <algorithm>
-#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
@@ -156,10 +155,14 @@ constexpr double kMinFadeOutEnd = 1e-3;
 
 double fadeOutEnd(jsi::Runtime &rt, const jsi::Object &contentFade) {
   const auto value = contentFade.getProperty(rt, "fadeOutEnd");
-  if (!value.isNumber() || !std::isfinite(value.asNumber())) {
+  if (!value.isNumber()) {
     return 1;
   }
-  return std::clamp(value.asNumber(), kMinFadeOutEnd, 1.0);
+  const auto end = value.asNumber();
+  if (!(end > 0 && end <= 1)) {
+    return 1;
+  }
+  return std::max(end, kMinFadeOutEnd);
 }
 
 } // namespace
