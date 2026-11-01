@@ -26,7 +26,6 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { MountedViewProps } from '../../../ReJest/types';
@@ -936,6 +935,7 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('fades the children of the target in over fadeIn.duration', async () => {
+    await mockAnimationTimer(false);
     const slowFadeIn = SharedTransition.duration(600).fadeContent({
       fadeIn: { duration: 3000 },
     });
@@ -943,14 +943,17 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
 
     await render(<Screens showTarget sharedTransition={slowFadeIn} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
     await expectOpacity('target', 1);
     // The default fade-in lasts 300 ms here.
-    await wait(1000);
+    await advanceAnimationTimer(1000);
     const child = await mountedProps('targetChild');
     expect(
       !!child && isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
     ).toBe(true);
 
+    await advanceAnimationTimer(2000);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 });
