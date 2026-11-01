@@ -130,6 +130,7 @@ function Screens({
   exitingTarget = false,
   transitions = innerEndsFirst,
   removeSource = false,
+  innerWrapped = false,
 }: {
   active: boolean;
   keepTarget?: boolean;
@@ -140,6 +141,7 @@ function Screens({
   exitingTarget?: boolean;
   transitions?: Transitions;
   removeSource?: boolean;
+  innerWrapped?: boolean;
 }) {
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
@@ -152,12 +154,15 @@ function Screens({
             sharedTransitionTag="outer"
             sharedTransitionStyle={transitions.outer}
             style={styles.sourceOuter}>
-            <Animated.View
-              ref={inner}
-              sharedTransitionTag="inner"
-              sharedTransitionStyle={transitions.inner}
-              style={styles.sourceInner}
-            />
+            {/* React Native flattens the wrapper without a background, so the inner view changes its parent. */}
+            <View style={innerWrapped && styles.innerWrapper}>
+              <Animated.View
+                ref={inner}
+                sharedTransitionTag="inner"
+                sharedTransitionStyle={transitions.inner}
+                style={styles.sourceInner}
+              />
+            </View>
           </Animated.View>
         </SharedTransitionBoundary>
       )}
@@ -542,6 +547,36 @@ describe('Nested shared transitions', () => {
     });
   }
 
+  test.each([true, false])(
+    'keeps a waiting inner view on screen when React moves it (wrapped first: %p)',
+    async (wrapped) => {
+      await mockAnimationTimer(false);
+      await render(<Screens active={false} innerWrapped={wrapped} />);
+      await waitForFrames();
+      const innerTag = getTestComponent('sourceInner').getTag();
+      await render(<Screens active innerWrapped={wrapped} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(600);
+      await waitForNotification('inner-finished');
+      await waitForFrames(2);
+
+      await render(<Screens active innerWrapped={!wrapped} />);
+      await waitForFrames(3);
+      expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
+      const inner = await runOnUIBlocking(() => {
+        'worklet';
+        return global._obtainMountedViewProps(innerTag, false);
+      });
+      expect(inner?.opacity).toBe(1);
+      expect(!!inner && Math.abs(inner.width - 60) < 0.5).toBe(true);
+      expect(await opacityOf('targetOuter')).toBe(0);
+
+      await advanceAnimationTimer(2400);
+      await waitForNotification('outer-finished');
+      await expectAllShownAtTargets();
+    }
+  );
+
   test('keeps the inner view on screen until the outer transition ends', async () => {
     await render(<Screens active={false} />);
     await waitForFrames();
@@ -713,6 +748,7 @@ const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
   sourceOuter: { width: 80, height: 80, backgroundColor: '#dd5522' },
   sourceInner: { width: 30, height: 30, backgroundColor: '#ffffff' },
+  innerWrapper: { backgroundColor: '#882211' },
   targetOuter: {
     marginTop: 100,
     marginLeft: 60,

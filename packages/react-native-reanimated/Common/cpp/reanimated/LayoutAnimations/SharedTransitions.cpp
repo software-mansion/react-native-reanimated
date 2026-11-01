@@ -399,7 +399,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     }
     const auto tag = run->carrier->current.tag;
     const bool isAnimating = hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
-    const bool carrierChangedTag = findSharedTag(run->carrier->current) != sharedTag;
+    const bool carrierChangedTag = !run->carrier->isRetained && findSharedTag(run->carrier->current) != sharedTag;
     const bool waitsToLand = completedAnimations_.contains(tag) && run->carrier->isRetained;
     if ((!isAnimating && !waitsToLand && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag) {
       react_native_assert((isAnimating || completedAnimations_.contains(tag)) && "Shared carrier has no animation");
@@ -451,8 +451,7 @@ bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, con
   if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
     return true;
   }
-  return hasCarrierAnimationEnded(run.carrier->current.tag) &&
-      isDescendantOfAny(run.target, viewsHiddenByContinuingRuns()) &&
+  return waitsForCoveringRun(run, viewsHiddenByContinuingRuns()) &&
       PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget));
 }
 
@@ -667,46 +666,34 @@ void LayoutAnimationsProxy::retainCarrierContent(const std::shared_ptr<LightNode
   }
 }
 
-bool LayoutAnimationsProxy::isRetainedContent(const std::shared_ptr<LightNode> &start) const {
-  if (detachedCarriers_.empty()) {
+bool LayoutAnimationsProxy::isRetainedContent(const std::shared_ptr<LightNode> &node) const {
+  return !detachedCarriers_.empty() && isInRetainedCarrier(node);
+}
+
+// A removed subtree waits for the shared transitions of this pull when it holds a detached carrier or a
+// tagged view of the top screen, which can become a source.
+bool LayoutAnimationsProxy::defersSubtreeRemoval(const std::shared_ptr<LightNode> &node) const {
+  if (std::ranges::any_of(detachedCarriers_, [&node](const auto &carrier) { return isInSubtree(carrier, node); })) {
+    return true;
+  }
+  if (!topScreen_) {
     return false;
   }
-  auto node = start;
-  while (node) {
-    if (node->isRetained) {
-      return true;
-    }
-    node = node->parent.lock();
-  }
-  return false;
-}
-
-void LayoutAnimationsProxy::collectSourceCandidates(
-    const std::shared_ptr<LightNode> &screen,
-    TransactionMeta &transaction) const {
   auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
-  std::vector<std::shared_ptr<LightNode>> pending{screen};
+  std::vector<std::shared_ptr<LightNode>> pending{node};
   while (!pending.empty()) {
-    auto node = std::move(pending.back());
+    const auto next = std::move(pending.back());
     pending.pop_back();
-    if (node->isExiting()) {
+    if (next->isExiting() && next->state != ExitingState::DECISION_PENDING) {
       continue;
     }
-    if (isViewKind(node->current) && sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
-      transaction.sourceCandidates.push_back(node);
+    if (isViewKind(next->current) && sharedTransitionManager_->tagToName_.contains(next->current.tag) &&
+        isInSubtree(next, topScreen_)) {
+      return true;
     }
-    pending.insert(pending.end(), node->children.begin(), node->children.end());
+    pending.insert(pending.end(), next->children.begin(), next->children.end());
   }
-}
-
-bool LayoutAnimationsProxy::defersSubtreeRemoval(
-    const std::shared_ptr<LightNode> &node,
-    const TransactionMeta &transaction) const {
-  const auto containsNode = [&node](const auto &candidate) {
-    return isInSubtree(candidate, node);
-  };
-  return std::ranges::any_of(transaction.sourceCandidates, containsNode) ||
-      std::ranges::any_of(detachedCarriers_, containsNode);
+  return false;
 }
 
 std::shared_ptr<LightNode> LayoutAnimationsProxy::detachedCarrierOf(const std::shared_ptr<LightNode> &start) const {
@@ -1175,6 +1162,12 @@ bool LayoutAnimationsProxy::hasCarrierAnimationEnded(const Tag tag) const {
   return completedAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
 }
 
+bool LayoutAnimationsProxy::waitsForCoveringRun(
+    const SharedTransitionRun &run,
+    const std::vector<std::shared_ptr<LightNode>> &coveringViews) const {
+  return hasCarrierAnimationEnded(run.carrier->current.tag) && isDescendantOfAny(run.target, coveringViews);
+}
+
 // A carrier that waits for its frames to enter the mount queue does not finish in this pull.
 bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
   return !hasCarrierAnimationEnded(carrierTag) || hasUnqueuedCarrierFrame(carrierTag);
@@ -1480,17 +1473,6 @@ void LayoutAnimationsProxy::fadeInTargetContent(
     startEnteringAnimation(child, run.contentFade->options.fadeIn, true);
   }
   schedulePullOnNextFrame();
-}
-
-bool LayoutAnimationsProxy::isSharedCarrier(const Tag tag) const {
-  if (const auto it = retiringSharedTransitions_.find(tag);
-      it != retiringSharedTransitions_.end() && it->second.element.run) {
-    return true;
-  }
-  return std::ranges::any_of(sharedElements_, [tag](const auto &entry) {
-    const auto &run = entry.second.run;
-    return run && run->carrier->current.tag == tag;
-  });
 }
 
 void LayoutAnimationsProxy::hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node)

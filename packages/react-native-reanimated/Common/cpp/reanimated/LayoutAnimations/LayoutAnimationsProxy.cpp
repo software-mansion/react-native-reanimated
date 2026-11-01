@@ -72,8 +72,10 @@ void collectSubtreeTags(const std::shared_ptr<LightNode> &node, std::unordered_s
 
 // Every exiting ancestor that the removals leave without children.
 void collectDroppedAncestors(const std::shared_ptr<LightNode> &node, std::unordered_set<Tag> &removals) {
-  for (auto ancestor = node->parent.lock();
-       ancestor && ancestor->isExiting() && ancestor->state != ANIMATING && !ancestor->isRetained;
+  if (isInRetainedCarrier(node)) {
+    return;
+  }
+  for (auto ancestor = node->parent.lock(); ancestor && ancestor->isExiting() && ancestor->state != ANIMATING;
        ancestor = ancestor->parent.lock()) {
     const auto tag = ancestor->current.tag;
     const auto keepsAChild = std::ranges::any_of(
@@ -208,13 +210,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
   reconcileContradictedRemovals(mutations, transaction, propsParserContext);
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    const bool deletesViews = std::ranges::any_of(
-        mutations, [](const auto &mutation) { return mutation.type == ShadowViewMutation::Delete; });
-    if (deletesViews && topScreen_) {
-      collectSourceCandidates(topScreen_, transaction);
-    }
-  }
 
   if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!mutations.empty()) {
@@ -403,8 +398,8 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
 #ifdef ANDROID
     recreated = resetPropsMissingFrom(recreated, mounted, propsParserContext);
 #endif
-    auto update =
-        ShadowViewMutation::UpdateMutation(mounted, recreated, node->isDetached ? surfaceId_ : parent->current.tag);
+    auto update = ShadowViewMutation::UpdateMutation(
+        mounted, recreated, node->isDetached || !parent ? surfaceId_ : parent->current.tag);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
@@ -598,7 +593,7 @@ void LayoutAnimationsProxy::updateLightTree(
           react_native_assert(it != lightNodes_.end() && "Delete mutation for an unknown node");
           const auto node = it->second;
           if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-            if (!transaction.surfaceDropped && defersSubtreeRemoval(node, transaction)) {
+            if (!transaction.surfaceDropped && defersSubtreeRemoval(node)) {
               transaction.removedSubtrees.push_back(node);
             } else {
               handleSubtreeRemoval(node, transaction);
@@ -1390,7 +1385,8 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // A UI-thread pull returns before its frames enter the mount queue, so a JS-thread pull can queue the
 // attach of a carrier before the last frame of the run. That frame is relative to the root and
 // would move the attached view. The carrier stays detached until the UI thread runs a job that
-// arrives from the JS thread, because that job runs after the frames are in the queue.
+// arrives from the JS thread, because that job runs after the frames are in the queue. The attach
+// also restores the content of the carrier, so the frames of its content keep it too.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
   if (detachedCarriers_.empty() || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
