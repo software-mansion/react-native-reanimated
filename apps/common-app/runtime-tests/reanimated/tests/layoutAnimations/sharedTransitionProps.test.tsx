@@ -25,10 +25,12 @@ import { runOnUIAsync } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -384,13 +386,16 @@ describe('Shared transition keeps the moving view props', () => {
   nativeTest(
     'keeps unchanged native content props while React changes the hidden target',
     async () => {
-      const transition = transitionWithNotification(4000);
+      await mockAnimationTimer(false);
+      const transition = transitionWithNotification();
       const color = makeMutable('red');
       await render(
         <Screens active={false} transition={transition} color={color} />
       );
       await waitForFrames();
       await render(<Screens active transition={transition} color={color} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
       await expectSourceMoving();
       await waitForFrames(3);
       expect(
@@ -417,6 +422,7 @@ describe('Shared transition keeps the moving view props', () => {
       ]);
       expect(isMoving(source)).toBe(true);
       expect(target?.opacity).toBe(0);
+      await advanceAnimationTimer(1000);
       await waitForNotification('props-finished');
       await expectEventually(
         async () =>
