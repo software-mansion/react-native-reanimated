@@ -37,6 +37,25 @@ bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewPro
         source.blurRadius == target.blurRadius && source.spreadDistance == target.spreadDistance &&
         source.color == target.color;
   };
+  const auto radiusChanged = [](const std::optional<ValueUnit> &source, const std::optional<ValueUnit> &target) {
+    return source.value_or(ValueUnit{}).value != target.value_or(ValueUnit{}).value;
+  };
+  const auto &sourceRadii = sourceProps.borderRadii;
+  const auto &targetRadii = targetProps.borderRadii;
+  if (radiusChanged(sourceRadii.all, targetRadii.all) || radiusChanged(sourceRadii.topLeft, targetRadii.topLeft) ||
+      radiusChanged(sourceRadii.topRight, targetRadii.topRight) ||
+      radiusChanged(sourceRadii.bottomLeft, targetRadii.bottomLeft) ||
+      radiusChanged(sourceRadii.bottomRight, targetRadii.bottomRight) ||
+      radiusChanged(sourceRadii.topStart, targetRadii.topStart) ||
+      radiusChanged(sourceRadii.topEnd, targetRadii.topEnd) ||
+      radiusChanged(sourceRadii.bottomStart, targetRadii.bottomStart) ||
+      radiusChanged(sourceRadii.bottomEnd, targetRadii.bottomEnd) ||
+      radiusChanged(sourceRadii.endEnd, targetRadii.endEnd) ||
+      radiusChanged(sourceRadii.endStart, targetRadii.endStart) ||
+      radiusChanged(sourceRadii.startEnd, targetRadii.startEnd) ||
+      radiusChanged(sourceRadii.startStart, targetRadii.startStart)) {
+    return true;
+  }
   const auto &sourceWidths = sourceProps.getBorderWidths();
   const auto &targetWidths = targetProps.getBorderWidths();
   const auto &sourceColors = sourceProps.borderColors;
@@ -46,12 +65,11 @@ bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewPro
       !std::ranges::equal(sourceProps.boxShadow, targetProps.boxShadow, sameAnimatedBoxShadow) ||
       sourceProps.shadowColor != targetProps.shadowColor || sourceProps.shadowOffset != targetProps.shadowOffset ||
       sourceProps.shadowOpacity != targetProps.shadowOpacity || sourceProps.shadowRadius != targetProps.shadowRadius ||
-      sourceProps.borderRadii != targetProps.borderRadii || sourceWidths.all != targetWidths.all ||
-      sourceWidths.left != targetWidths.left || sourceWidths.right != targetWidths.right ||
-      sourceWidths.top != targetWidths.top || sourceWidths.bottom != targetWidths.bottom ||
-      sourceColors.all != targetColors.all || sourceColors.left != targetColors.left ||
-      sourceColors.right != targetColors.right || sourceColors.top != targetColors.top ||
-      sourceColors.bottom != targetColors.bottom;
+      sourceWidths.all != targetWidths.all || sourceWidths.left != targetWidths.left ||
+      sourceWidths.right != targetWidths.right || sourceWidths.top != targetWidths.top ||
+      sourceWidths.bottom != targetWidths.bottom || sourceColors.all != targetColors.all ||
+      sourceColors.left != targetColors.left || sourceColors.right != targetColors.right ||
+      sourceColors.top != targetColors.top || sourceColors.bottom != targetColors.bottom;
 }
 
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {

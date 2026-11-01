@@ -1,8 +1,14 @@
-import { StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
@@ -33,20 +39,29 @@ function transitionWithNotification(duration: number, name: string) {
 type Transitions = { outer: SharedTransition; inner: SharedTransition };
 
 const innerEndsFirst: Transitions = {
-  outer: transitionWithNotification(8000, 'outer-finished'),
-  inner: transitionWithNotification(2000, 'inner-finished'),
+  outer: transitionWithNotification(3000, 'outer-finished'),
+  inner: transitionWithNotification(600, 'inner-finished'),
 };
 
 const outerEndsFirst: Transitions = {
   outer: transitionWithNotification(300, 'outer-finished'),
-  inner: transitionWithNotification(3000, 'inner-finished'),
+  inner: transitionWithNotification(1200, 'inner-finished'),
+};
+
+const retargetOuterDuration = Platform.OS === 'android' ? 8000 : 3000;
+const retargetInnerDuration = Platform.OS === 'android' ? 2000 : 600;
+const retargetTransitions: Transitions = {
+  outer: transitionWithNotification(retargetOuterDuration, 'outer-finished'),
+  inner: transitionWithNotification(retargetInnerDuration, 'inner-finished'),
 };
 
 function Target({
+  active,
   innerSize,
   innerColor,
   transitions,
 }: {
+  active: boolean;
   innerSize: number;
   innerColor: string;
   transitions: Transitions;
@@ -54,7 +69,7 @@ function Target({
   const outer = useTestRef('targetOuter');
   const inner = useTestRef('targetInner');
   return (
-    <SharedTransitionBoundary isActive>
+    <SharedTransitionBoundary isActive={active}>
       <Animated.View
         ref={outer}
         sharedTransitionTag="outer"
@@ -80,11 +95,13 @@ function Target({
 
 function Screens({
   active,
+  keepTarget = false,
   innerSize = 60,
   innerColor = '#ffffff',
   transitions = innerEndsFirst,
 }: {
   active: boolean;
+  keepTarget?: boolean;
   innerSize?: number;
   innerColor?: string;
   transitions?: Transitions;
@@ -105,13 +122,69 @@ function Screens({
           />
         </Animated.View>
       </SharedTransitionBoundary>
-      {active && (
+      {(active || keepTarget) && (
         <Target
+          active={active}
           innerSize={innerSize}
           innerColor={innerColor}
           transitions={transitions}
         />
       )}
+    </View>
+  );
+}
+
+const continuousTransition = transitionWithNotification(
+  600,
+  'continuous-finished'
+);
+
+function ContinuousTarget({ ancestor }: { ancestor: boolean }) {
+  const value = useSharedValue(0);
+  const inner = useTestRef('continuousTarget');
+  useEffect(() => {
+    value.value = withRepeat(withTiming(1, { duration: 300 }), -1, true);
+    return () => cancelAnimation(value);
+  }, [value]);
+  const targetStyle = useAnimatedStyle(() => ({
+    opacity: ancestor ? 1 : 0.6 + value.value * 0.4,
+  }));
+  const parentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: ancestor ? value.value * 20 : 0 }],
+  }));
+  return (
+    <SharedTransitionBoundary isActive>
+      <Animated.View style={parentStyle}>
+        <Animated.View
+          ref={inner}
+          sharedTransitionTag="continuous"
+          sharedTransitionStyle={continuousTransition}
+          style={[styles.targetInner, { width: 90, height: 90 }, targetStyle]}
+        />
+      </Animated.View>
+    </SharedTransitionBoundary>
+  );
+}
+
+function ContinuousScreens({
+  active,
+  ancestor,
+}: {
+  active: boolean;
+  ancestor: boolean;
+}) {
+  const source = useTestRef('continuousSource');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={source}
+          sharedTransitionTag="continuous"
+          sharedTransitionStyle={continuousTransition}
+          style={styles.sourceInner}
+        />
+      </SharedTransitionBoundary>
+      {active && <ContinuousTarget ancestor={ancestor} />}
     </View>
   );
 }
@@ -161,7 +234,9 @@ async function sampleInnerViewUntilItLands() {
 }
 
 // Records a presented prop of the waiting inner view on each UI frame while the outer target is hidden.
-function recordInnerViewProp<K extends 'width' | 'backgroundColor'>(prop: K) {
+function recordInnerViewProp<K extends 'width' | 'height' | 'backgroundColor'>(
+  prop: K
+) {
   const innerTag = getTestComponent('sourceInner').getTag();
   const outerTag = getTestComponent('targetOuter').getTag();
   const values = makeMutable<MountedViewProps[K][]>([]);
@@ -193,16 +268,54 @@ function recordInnerViewProp<K extends 'width' | 'backgroundColor'>(prop: K) {
   };
 }
 
-async function expectInnerViewToReach<K extends 'width' | 'backgroundColor'>(
-  prop: K,
-  isEnd: (value: MountedViewProps[K]) => boolean
-) {
+async function expectInnerViewPhase(phase: 'active' | 'completed') {
+  let phaseSample: Awaited<ReturnType<typeof readInnerViewState>> | undefined;
   await expectEventually(async () => {
-    const props = await getTestComponent('sourceInner').getPresentedViewProps();
-    return (
-      !!props && isEnd(props[prop]) && (await opacityOf('targetOuter')) === 0
-    );
+    const sample = await readInnerViewState();
+    const inner = sample.inner;
+    const matches =
+      !!inner &&
+      inner.opacity === 1 &&
+      sample.outerOpacity === 0 &&
+      (phase === 'active'
+        ? inner.width > 30.5 && inner.width < 59
+        : Math.abs(inner.width - 60) < 0.5 &&
+          Math.abs(inner.height - 60) < 0.5);
+    if (matches) {
+      phaseSample = sample;
+    }
+    return matches;
   }).toBe(true);
+  return phaseSample;
+}
+
+async function expectInnerViewToReach<
+  K extends 'width' | 'height' | 'backgroundColor',
+>(prop: K, isEnd: (value: MountedViewProps[K]) => boolean) {
+  let endSample: Awaited<ReturnType<typeof readInnerViewState>> | undefined;
+  await expectEventually(async () => {
+    const sample = await readInnerViewState();
+    const { inner, outerOpacity } = sample;
+    const matches = !!inner && isEnd(inner[prop]) && outerOpacity === 0;
+    if (matches) {
+      endSample = sample;
+    }
+    return matches;
+  }).toBe(true);
+  return endSample;
+}
+
+function readInnerViewState() {
+  const innerTag = getTestComponent('sourceInner').getTag();
+  const outerTag = getTestComponent('targetOuter').getTag();
+  return runOnUIBlocking(() => {
+    'worklet';
+    return {
+      timestamp: performance.now(),
+      inner: global._obtainMountedViewProps(innerTag, true),
+      outerOpacity: global._obtainMountedViewProps(outerTag, false)?.opacity,
+    };
+  });
 }
 
 function opacitiesOf(...names: string[]) {
@@ -230,6 +343,72 @@ async function opacityOf(name: string) {
 }
 
 describe('Nested shared transitions', () => {
+  for (const ancestor of [false, true]) {
+    test(`finishes while the ${ancestor ? 'ancestor transform' : 'target opacity'} repeats`, async () => {
+      await render(<ContinuousScreens active={false} ancestor={ancestor} />);
+      await waitForFrames();
+      await render(<ContinuousScreens active ancestor={ancestor} />);
+      await waitForNotification('continuous-finished', 2500);
+      await expectEventually(() => opacityOf('continuousSource')).toBe(0);
+      const target =
+        await getTestComponent('continuousTarget').getPresentedViewProps();
+      expect(!!target && target.width > 89.5 && target.height > 89.5).toBe(
+        true
+      );
+    });
+  }
+
+  test('returns a waiting carrier when the target boundary is removed', async () => {
+    await render(<Screens active={false} />);
+    await waitForFrames();
+    await render(<Screens active />);
+    await waitForNotification('inner-finished');
+    expect(await opacityOf('targetOuter')).toBe(0);
+    await render(<Screens active={false} />);
+    await expectEventually(() => opacityOf('sourceInner')).toBe(1);
+    await expectEventually(async () => {
+      const props =
+        await getTestComponent('sourceInner').getPresentedViewProps();
+      return (
+        !!props &&
+        Math.abs(props.width - 30) < 0.5 &&
+        Math.abs(props.height - 30) < 0.5
+      );
+    }).toBe(true);
+  });
+
+  test('retargets the layout of an active carrier', async () => {
+    await render(
+      <Screens keepTarget active={false} transitions={retargetTransitions} />
+    );
+    await waitForFrames();
+    await render(
+      <Screens keepTarget active transitions={retargetTransitions} />
+    );
+    await expectInnerViewPhase('active');
+    const stopRecording = recordInnerViewProp('width');
+    await render(
+      <Screens
+        keepTarget
+        active
+        innerSize={90}
+        transitions={retargetTransitions}
+      />
+    );
+    const endSample = await expectInnerViewToReach(
+      'width',
+      (width) => Math.abs(width - 90) < 0.5
+    );
+    expect(
+      !!endSample?.inner && Math.abs(endSample.inner.height - 90) < 0.5
+    ).toBe(true);
+    expect(endSample?.inner?.opacity).toBe(1);
+    const widths = stopRecording();
+    expect(widths.some((width) => width > 61 && width < 89)).toBe(true);
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
+
   test('keeps the inner view on screen until the outer transition ends', async () => {
     await render(<Screens active={false} />);
     await waitForFrames();
@@ -244,41 +423,53 @@ describe('Nested shared transitions', () => {
   });
 
   test('moves the waiting inner view when its target changes', async () => {
-    await render(<Screens active={false} />);
+    await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
 
-    await render(<Screens active />);
+    await render(<Screens active transitions={retargetTransitions} />);
     await waitForNotification('inner-finished');
-    await waitForFrames(2);
+    await expectInnerViewPhase('completed');
     const stopRecording = recordInnerViewProp('width');
-    await render(<Screens active innerSize={90} />);
-    await expectInnerViewToReach(
+    await render(
+      <Screens active innerSize={90} transitions={retargetTransitions} />
+    );
+    const endSample = await expectInnerViewToReach(
       'width',
       (width) => Math.abs(width - 90) < 0.5
     );
+    expect(
+      !!endSample?.inner && Math.abs(endSample.inner.height - 90) < 0.5
+    ).toBe(true);
+    expect(endSample?.inner?.opacity).toBe(1);
     const widths = stopRecording();
     expect(widths.some((width) => width > 61 && width < 89)).toBe(true);
-    expect(await opacityOf('sourceInner')).toBe(1);
 
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
   });
 
   test('animates the waiting inner view to a new color of its target', async () => {
-    await render(<Screens active={false} />);
+    await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
 
-    await render(<Screens active />);
+    await render(<Screens active transitions={retargetTransitions} />);
     await waitForNotification('inner-finished');
-    await waitForFrames(2);
+    await expectInnerViewPhase('completed');
     const oldColor = (
       await getTestComponent('sourceInner').getPresentedViewProps()
     )?.backgroundColor;
     const stopRecording = recordInnerViewProp('backgroundColor');
-    await render(<Screens active innerColor="#00ff00" />);
+    await render(
+      <Screens active innerColor="#00ff00" transitions={retargetTransitions} />
+    );
+    await expectEventually(async () => {
+      return (await getTestComponent('targetInner').getMountedViewProps())
+        ?.backgroundColor;
+    }).toBe('#00ff00ff');
     const newColor = (
       await getTestComponent('targetInner').getMountedViewProps()
     )?.backgroundColor;
+    expect(newColor !== oldColor).toBe(true);
     await expectInnerViewToReach(
       'backgroundColor',
       (color) => color === newColor

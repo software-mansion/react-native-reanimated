@@ -432,7 +432,11 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
 
 bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &targetView) const {
   const auto &previousView = run.targetEndView;
-  return previousView.layoutMetrics != targetView.layoutMetrics ||
+  if (previousView.layoutMetrics != targetView.layoutMetrics) {
+    return true;
+  }
+  return hasCarrierAnimationEnded(run.carrier->current.tag) &&
+      isDescendantOfAny(run.target, viewsHiddenByContinuingRuns()) &&
       PropsDiffer::hasAnimatedChanges(getViewProps(previousView), getViewProps(targetView));
 }
 
