@@ -462,13 +462,18 @@ describe('Nested shared transitions', () => {
   });
 
   test('retargets a retained inner carrier while it waits to land', async () => {
+    await mockAnimationTimer(false);
     await render(<Screens active={false} removeSource />);
     await waitForFrames();
     const innerTag = getTestComponent('sourceInner').getTag();
     await render(<Screens active removeSource />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
     await waitForNotification('inner-finished');
     await waitForFrames(2);
     await render(<Screens active removeSource innerSize={90} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
     await expectEventually(() =>
       runOnUIBlocking(() => {
         'worklet';
@@ -478,6 +483,7 @@ describe('Nested shared transitions', () => {
         );
       })
     ).toBe(true);
+    await advanceAnimationTimer(300);
     await expectEventually(() =>
       runOnUIBlocking(() => {
         'worklet';
@@ -486,16 +492,18 @@ describe('Nested shared transitions', () => {
       })
     ).toBe(true);
     expect(await opacityOf('targetOuter')).toBe(0);
+    await advanceAnimationTimer(1800);
     await waitForNotification('outer-finished');
     await expectEventually(() => isViewMountedNatively(innerTag)).toBe(false);
     await expectEventually(() => opacityOf('targetInner')).toBe(1);
   });
 
-  for (const [order, transitions] of [
-    ['inner first', innerEndsFirst],
-    ['outer first', outerEndsFirst],
+  for (const [order, transitions, firstEnd, secondEnd] of [
+    ['inner first', innerEndsFirst, 600, 3000],
+    ['outer first', outerEndsFirst, 300, 1200],
   ] as const) {
     test(`keeps deleted nested carriers independent when they finish ${order}`, async () => {
+      await mockAnimationTimer(false);
       await render(
         <Screens active={false} transitions={transitions} removeSource />
       );
@@ -503,6 +511,8 @@ describe('Nested shared transitions', () => {
       const innerTag = getTestComponent('sourceInner').getTag();
       const outerTag = getTestComponent('sourceOuter').getTag();
       await render(<Screens active transitions={transitions} removeSource />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(firstEnd);
       await waitForNotification(
         order === 'inner first' ? 'inner-finished' : 'outer-finished'
       );
@@ -521,6 +531,7 @@ describe('Nested shared transitions', () => {
       } else {
         expect(await isViewMountedNatively(outerTag)).toBe(true);
       }
+      await advanceAnimationTimer(secondEnd - firstEnd);
       await waitForNotification(
         order === 'inner first' ? 'outer-finished' : 'inner-finished'
       );
