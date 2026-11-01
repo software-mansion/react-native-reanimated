@@ -30,7 +30,7 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
 
   override fun observeParent(tag: Double, promise: Promise) {
     UiThreadUtil.runOnUiThread {
-      promise.resolve((mountedView(tag)?.parent as? View)?.id)
+      promise.resolve((mountedView(tag)?.parent as? View)?.id?.takeIf { it > 0 })
     }
   }
 

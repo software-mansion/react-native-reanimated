@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   FadeIn,
+  makeMutable,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -222,16 +224,41 @@ describe('Tests of Test Framework', () => {
     await waitForFrames(3);
     expect((await readClock())! > 0).toBe(true);
     await mockAnimationTimer(false);
+    const frozenStart = (await readClock())!;
+    expect(frozenStart > 0).toBe(true);
     await waitForFrames(3);
-    expect(await readClock()).toBe(0);
+    expect(await readClock()).toBe(frozenStart);
     await advanceAnimationTimer(100);
-    expect(await readClock()).toBe(100);
+    expect(await readClock()).toBe(frozenStart + 100);
     await mockAnimationTimer(true);
     await waitForFrames(3);
-    expect((await readClock())! > 0).toBe(true);
+    expect((await readClock())! < frozenStart).toBe(true);
     await mockAnimationTimer(false);
     await waitForFrames(3);
-    expect(await readClock()).toBe(0);
+    expect(await readClock()).toBe(frozenStart);
+  });
+
+  test('keeps a timing animation continuous when it restarts on the frozen clock', async () => {
+    await mockAnimationTimer(false);
+    const value = makeMutable(0);
+    const start = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        value.value = withTiming(100, {
+          duration: 1000,
+          easing: Easing.linear,
+        });
+      });
+    await start();
+    await advanceAnimationTimer(500);
+    await start();
+    await advanceAnimationTimer(500);
+    expect(
+      await runOnUIBlocking(() => {
+        'worklet';
+        return value.value;
+      })
+    ).toBe(100);
   });
 
   test('Test  comparators - ✅', () => {

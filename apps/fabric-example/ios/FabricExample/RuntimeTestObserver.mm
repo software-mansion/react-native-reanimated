@@ -64,7 +64,7 @@ RCT_EXPORT_MODULE()
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
-    resolve(view.window != nil && view.superview != nil ? @(view.superview.tag) : (id)kCFNull);
+    resolve(view.window != nil && view.superview.tag > 0 ? @(view.superview.tag) : (id)kCFNull);
   });
 }
 

@@ -20,6 +20,7 @@ export interface Spec extends TurboModule {
 
   emitScreenGestureCancel(tag: CodegenTypes.Int32): Promise<void>;
 
+  /** Returns null when the parent of the mounted view is not a React view. */
   observeParent(tag: CodegenTypes.Int32): Promise<number | null>;
 
   observeTextInput(

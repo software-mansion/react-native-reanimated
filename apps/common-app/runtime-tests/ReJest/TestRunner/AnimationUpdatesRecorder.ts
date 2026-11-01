@@ -5,6 +5,8 @@ import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
 const MAX_WAIT_TIME_MS = 10000;
+// Animations use a start time of 0 as unset.
+const FROZEN_CLOCK_START_MS = 1_000_000;
 
 export class AnimationUpdatesRecorder {
   public async recordAnimationUpdates() {
@@ -68,7 +70,7 @@ export class AnimationUpdatesRecorder {
   public async mockAnimationTimer(autoAdvance = true) {
     await runOnUIBlocking(() => {
       'worklet';
-      global.mockedAnimationTimestamp = 0;
+      global.mockedAnimationTimestamp = autoAdvance ? 0 : FROZEN_CLOCK_START_MS;
       global.framesCount = 0;
       global.autoAdvanceAnimationTimer = autoAdvance;
 
