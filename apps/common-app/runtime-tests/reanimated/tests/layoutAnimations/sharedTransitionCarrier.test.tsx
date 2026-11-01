@@ -6,6 +6,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   beforeEach,
   describe,
   expect,
@@ -148,13 +149,16 @@ describe('Shared transition moves a real native view', () => {
   beforeEach(mockAnimationTimer);
 
   test('moves the source with its untagged child and keeps the target hidden', async () => {
-    const transition = transitionWithNotification(600);
+    await mockAnimationTimer(false);
+    const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
     const sourceTag = getTestComponent('source').getTag();
     const childTag = getTestComponent('sourceChild').getTag();
 
     await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
     await expectMoving('source');
     expect(getTestComponent('source').getTag()).toBe(sourceTag);
     expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
@@ -168,11 +172,12 @@ describe('Shared transition moves a real native view', () => {
     await render(
       <Screens active transition={transition} targetOpacity={0.7} />
     );
-    await waitForFrames();
+    await waitForFrames(3);
     expect(
       (await getTestComponent('target').getMountedViewProps())?.opacity
     ).toBe(0);
-    await waitForNotification('carrier-finished', 30000);
+    await advanceAnimationTimer(700);
+    await waitForNotification('carrier-finished');
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 0.7);
     expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
