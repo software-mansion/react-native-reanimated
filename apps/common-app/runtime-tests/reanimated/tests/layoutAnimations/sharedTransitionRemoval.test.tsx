@@ -172,7 +172,7 @@ function NativeStack({
           <ScreenStack style={{ flex: 1 }}>
             <Screen
               ref={sourceScreen}
-              activityState={pushed ? 1 : 2}
+              activityState={2}
               onAppear={() => notify('removal-source-appeared')}
               style={{ flex: 1 }}>
               <SharedTransitionBoundary isActive={!pushed}>
