@@ -242,6 +242,7 @@ describe('Shared transition keeps the moving view props', () => {
   setterTest(
     'does not repeat the native label setter across carrier frames',
     async () => {
+      await mockAnimationTimer(false);
       const transition = SharedTransition.duration(4000).withCallback(
         (finished) => {
           'worklet';
@@ -253,12 +254,16 @@ describe('Shared transition keeps the moving view props', () => {
         <Screens active={false} transition={transition} color={color} />
       );
       await render(<Screens active transition={transition} color={color} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(1000);
       await expectSourceMoving();
       const source = getTestComponent('source');
       const before = await source.getTextInputObservation();
       expect((before?.labelSetterCalls ?? 0) > 0).toBe(true);
       const first = await source.getMountedViewProps();
-      await waitForFrames(8);
+      for (let frame = 0; frame < 8; frame++) {
+        await advanceAnimationTimer(50);
+      }
       const after = await source.getTextInputObservation();
       expect(after?.labelSetterCalls).toBe(before?.labelSetterCalls);
       expect(after?.accessibilityLabel).toBe('source input');
@@ -283,6 +288,7 @@ describe('Shared transition keeps the moving view props', () => {
         (targetAfter?.labelSetterCalls ?? 0) >
           (targetBefore?.labelSetterCalls ?? 0)
       ).toBe(true);
+      await advanceAnimationTimer(2600);
       await waitForNotification('setter-finished');
     }
   );
