@@ -201,11 +201,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if (removesRootChildren) {
     transaction.surfaceDropped = std::exchange(surfaceToRemove_, false);
   }
-#ifdef ANDROID
-  if (deferCarrierTransaction(mutations, transaction.surfaceDropped)) {
-    return MountingTransaction{surfaceId, transactionNumber, {}, telemetry};
-  }
-#endif
   auto &filteredMutations = transaction.filteredMutations;
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
 
@@ -472,7 +467,7 @@ void LayoutAnimationsProxy::updateLightTree(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    attachCarriersThatReactMoves(deleted, moved, transaction, propsParserContext);
+    attachCarriersThatReactDeletes(deleted, transaction, propsParserContext);
   }
 
   for (auto &mutation : mutations) {
@@ -574,6 +569,10 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto hostIndex = parent->hostIndex(position);
         parent->children.insert(parent->children.begin() + position, node);
         node->parent = parent;
+        if (node->isDetached) {
+          parent->detachedChildrenCount++;
+          break;
+        }
         const auto tag = mutation.newChildShadowView.tag;
         std::optional<SharedTag> sharedTag;
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -645,6 +644,10 @@ void LayoutAnimationsProxy::updateLightTree(
 
         if (!deleted.contains(tag)) {
           react_native_assert(!node->isExiting() && "Remove mutation for an exiting node");
+          if (node->isDetached) {
+            parent->extractDetachedChild(node);
+            break;
+          }
           if (moved.contains(tag)) {
             oldChains[tag] = ancestorOrigins(parent, updatedViews);
           }
@@ -1173,8 +1176,6 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     visibleScreens_.clear();
   }
 #ifdef ANDROID
-  deferredCarrierTransactions_.clear();
-  carrierPullDeferred_ = false;
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
   unqueuedCarrierFrames_.clear();
@@ -1263,47 +1264,7 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 }
 
 #ifdef ANDROID
-// Keep each React batch intact until the root-relative carrier frames enter the mount queue.
-// Replay one batch per JS-thread pull, so its indices and tag lifetimes stay in order.
-bool LayoutAnimationsProxy::deferCarrierTransaction(ShadowViewMutationList &mutations, bool &surfaceDropped) const {
-  const bool flushStructuralMutations = shouldFlushStructuralMutations();
-  const bool changesTransition = transition_ && transition_->updated && transition_->state != TransitionState::ACTIVE;
-  if (mutations.empty() && !changesTransition && !flushStructuralMutations) {
-    return false;
-  }
-  if (flushStructuralMutations) {
-    cleanupPullScheduled_ = false;
-  }
-  if (unqueuedCarrierFrames_.empty() && deferredCarrierTransactions_.empty() && !carrierPullDeferred_) {
-    return false;
-  }
-  if (!mutations.empty()) {
-    deferredCarrierTransactions_.push_back({std::move(mutations), surfaceDropped});
-    mutations.clear();
-  }
-  surfaceDropped = false;
-  carrierPullDeferred_ = true;
-  if (unqueuedCarrierFrames_.empty() && flushStructuralMutations) {
-    if (!deferredCarrierTransactions_.empty()) {
-      auto deferred = std::move(deferredCarrierTransactions_.front());
-      deferredCarrierTransactions_.pop_front();
-      mutations = std::move(deferred.mutations);
-      surfaceDropped = deferred.surfaceDropped;
-    }
-    carrierPullDeferred_ = !deferredCarrierTransactions_.empty();
-    return false;
-  }
-  if (unqueuedCarrierFrames_.empty() && !cleanupPullScheduled_) {
-    cleanupPullScheduled_ = true;
-    scheduleCleanupPull();
-  }
-  return true;
-}
-
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
-  if (carrierPullDeferred_ && unqueuedCarrierFrames_.empty()) {
-    return true;
-  }
   return std::ranges::any_of(completedAnimations_, [this](const auto &entry) {
     const auto &[tag, completedAnimation] = entry;
     return !hasPendingLayoutAnimation(tag) && (completedAnimation.shouldRemove || isSharedCarrier(tag));
@@ -1313,9 +1274,7 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
 void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
   if (flushedStructuralMutations) {
     cleanupPullScheduled_ = false;
-  }
-  if ((!flushedStructuralMutations || carrierPullDeferred_) && hasPendingStructuralCleanup() &&
-      !cleanupPullScheduled_) {
+  } else if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
     cleanupPullScheduled_ = true;
     scheduleCleanupPull();
   }

@@ -16,7 +16,6 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
-#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -140,18 +139,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
-  struct DeferredCarrierTransaction {
-    ShadowViewMutationList mutations;
-    bool surfaceDropped;
-  };
-  mutable std::deque<DeferredCarrierTransaction> deferredCarrierTransactions_;
-  mutable bool carrierPullDeferred_ = false;
   mutable bool cleanupPullScheduled_ = false;
   // tags of JS-thread batches that are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedBatchTags_;
   // carriers whose last UI-thread frames are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedCarrierFrames_;
-  bool deferCarrierTransaction(ShadowViewMutationList &mutations, bool &surfaceDropped) const;
 #endif
 
 #ifdef __APPLE__
@@ -284,9 +276,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
-  void attachCarriersThatReactMoves(
+  void attachCarriersThatReactDeletes(
       const std::unordered_set<Tag> &deleted,
-      const std::unordered_set<Tag> &moved,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;

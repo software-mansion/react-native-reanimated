@@ -245,15 +245,21 @@ describe('Shared transition moves a real native view', () => {
     await expectAtHome('source', 90, 0.4);
   });
 
-  test('ends the run when React reorders the carrier in its parent', async () => {
-    const transition = SharedTransition.duration(4000);
+  test('keeps the run when React reorders the carrier in its parent', async () => {
+    const transition = transitionWithNotification(600);
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
     await render(<Screens active transition={transition} />);
-    await expectMoving('source', 60.5);
+    await expectMoving('source');
     await render(<Screens active transition={transition} reorder />);
+    await expectMoving('source');
+    await waitForNotification('carrier-finished', 30000);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
+    expect((await getTestComponent('source').getMountedViewProps())?.y).toBe(
+      0,
+      ComparisonMode.PIXEL
+    );
   });
 
   test('keeps the run when React reorders the carrier ancestor', async () => {

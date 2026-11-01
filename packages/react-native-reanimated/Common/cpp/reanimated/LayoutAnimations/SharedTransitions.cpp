@@ -342,7 +342,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const auto tag = run->carrier->current.tag;
     const bool isAnimating = hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag);
     const bool carrierChangedTag = findSharedTag(run->carrier->current) != sharedTag;
-    if (!isAnimating || carrierChangedTag) {
+    if ((!isAnimating && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag) {
       react_native_assert((isAnimating || completedAnimations_.contains(tag)) && "Shared carrier has no animation");
       attachCarrier(sharedTag, *run, transaction.filteredMutations, propsParserContext);
       run.reset();
@@ -464,7 +464,6 @@ void LayoutAnimationsProxy::attachCarrier(
     const PropsParserContext &propsParserContext) const {
   const auto node = run.carrier;
   const auto tag = node->current.tag;
-  react_native_assert(!hasUnqueuedCarrierFrame(tag) && "Queue carrier frames before attaching the carrier");
   const auto mounted = carrierViewOnScreen(run);
   const auto parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
@@ -485,11 +484,11 @@ void LayoutAnimationsProxy::attachCarrier(
   hideInSharedElement(sharedTag, node);
 }
 
-// React moves and deletes views at the place where it rendered them, so a carrier that React
-// moves or deletes, alone or with an ancestor, returns to that place first.
-void LayoutAnimationsProxy::attachCarriersThatReactMoves(
+// React deletes views at the place where it rendered them, so a carrier that React deletes, alone
+// or with an ancestor, returns to that place first. A carrier that React moves keeps its run, and
+// the light tree follows the move.
+void LayoutAnimationsProxy::attachCarriersThatReactDeletes(
     const std::unordered_set<Tag> &deleted,
-    const std::unordered_set<Tag> &moved,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   if (detachedCarriers_.empty()) {
@@ -504,7 +503,7 @@ void LayoutAnimationsProxy::attachCarriersThatReactMoves(
     for (auto ancestor = carrier; ancestor && !isDeleted; ancestor = ancestor->parent.lock()) {
       isDeleted = deleted.contains(ancestor->current.tag);
     }
-    if (isDeleted || moved.contains(carrier->current.tag)) {
+    if (isDeleted) {
       finishSharedTransition(sharedTag, element, transaction, propsParserContext);
     }
   }

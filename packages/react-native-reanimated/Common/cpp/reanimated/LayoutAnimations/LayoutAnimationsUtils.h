@@ -186,6 +186,14 @@ struct LightNode {
     return -1;
   }
 
+  void extractDetachedChild(const std::shared_ptr<LightNode> &child) {
+    const auto position = positionOf(child);
+    react_native_assert(position != -1 && child->isDetached && "Extract a mounted carrier from its logical parent");
+    detachedChildrenCount--;
+    children.erase(children.begin() + position);
+    child->parent.reset();
+  }
+
   void clearChildren() {
     children.clear();
     exitingChildrenCount = 0;
