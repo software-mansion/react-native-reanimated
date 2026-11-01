@@ -150,8 +150,8 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
   return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
 }
 
-// A smaller end makes the fade-out target opacity infinite.
-constexpr double kMinFadeOutEnd = 1e-3;
+// A smaller end makes the fade-out target opacity too large for the animation math.
+constexpr double kMinFadeOutEnd = 1e-6;
 
 double fadeOutEnd(jsi::Runtime &rt, const jsi::Object &contentFade) {
   const auto value = contentFade.getProperty(rt, "fadeOutEnd");
