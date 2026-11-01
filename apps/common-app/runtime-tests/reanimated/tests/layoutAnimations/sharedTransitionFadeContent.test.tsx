@@ -556,15 +556,21 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('replaces the layout animation of a target child with its entering animation', async () => {
+    await mockAnimationTimer(false);
     await render(<ScreensWithEnteringChild showTarget={false} />);
     await waitForFrames();
 
     await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     await render(<ScreensWithEnteringChild showTarget childWide />);
+    await waitForFrames(3);
 
-    // The layout animation of the child takes 10 seconds.
+    // The layout animation of the child takes 10 seconds, the entering animation 300 ms.
+    await advanceAnimationTimer(1500);
     await expectOpacity('target', 1);
+    await advanceAnimationTimer(300);
     await expectEventually(async () => {
       const child = await mountedProps('enteringChild');
       return (
@@ -572,7 +578,7 @@ describe('Shared transition with fadeContent', () => {
         child.opacity > 0.99 &&
         Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5
       );
-    }, 2000).toBe(true);
+    }).toBe(true);
     await expectEnteringCallbacks(1);
   });
 
