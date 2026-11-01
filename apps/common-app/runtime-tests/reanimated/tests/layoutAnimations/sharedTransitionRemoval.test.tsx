@@ -135,6 +135,18 @@ async function expectTargetRestored() {
   }).toBe(true);
 }
 
+function NativeStackTarget() {
+  const target = useTestRef('stack-target');
+  return (
+    <Animated.View
+      ref={target}
+      sharedTransitionTag="native-stack-removal"
+      sharedTransitionStyle={nativeStackTransition}
+      style={styles.target}
+    />
+  );
+}
+
 function NativeStack({
   pushed,
   prepared = false,
@@ -148,7 +160,6 @@ function NativeStack({
   const sourceScreen = useTestRef('stack-source-screen');
   const source = useTestRef('stack-source');
   const child = useTestRef('stack-child');
-  const target = useTestRef('stack-target');
   const survivor = useTestRef('stack-survivor');
   return (
     <View style={styles.container}>
@@ -176,12 +187,7 @@ function NativeStack({
             {pushed && (
               <Screen activityState={2} style={{ flex: 1 }}>
                 <SharedTransitionBoundary isActive>
-                  <Animated.View
-                    ref={target}
-                    sharedTransitionTag="native-stack-removal"
-                    sharedTransitionStyle={nativeStackTransition}
-                    style={styles.target}
-                  />
+                  <NativeStackTarget />
                 </SharedTransitionBoundary>
               </Screen>
             )}
