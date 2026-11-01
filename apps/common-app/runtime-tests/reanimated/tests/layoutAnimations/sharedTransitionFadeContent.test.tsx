@@ -946,14 +946,16 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(600);
     await expectOpacity('target', 1);
-    // The default fade-in lasts 300 ms here.
-    await advanceAnimationTimer(1000);
-    const child = await mountedProps('targetChild');
-    expect(
-      !!child && isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
-    ).toBe(true);
+    // The fade-in eases out. The default fade-in lasts 300 ms here.
+    for (const elapsed of [1000, 2000]) {
+      await advanceAnimationTimer(1000);
+      const progress = elapsed / 3000;
+      const expected = CHILD_OPACITY * (1 - (1 - progress) ** 2);
+      const child = await mountedProps('targetChild');
+      expect(!!child && Math.abs(child.opacity - expected) < 0.02).toBe(true);
+    }
 
-    await advanceAnimationTimer(2000);
+    await advanceAnimationTimer(1000);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 });
