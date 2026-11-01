@@ -12,12 +12,14 @@ import Animated, {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   beforeEach,
   describe,
   expect,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
+  mockAnimationTimer,
   render,
   test,
   useTestRef,
@@ -364,10 +366,13 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades a child whose own opacity changes during the move', async () => {
+    await mockAnimationTimer(false);
     const childOpacity = makeMutable(CHILD_OPACITY);
     await render(<ChildrenPair active={false} childOpacity={childOpacity} />);
     await waitForFrames();
     await render(<ChildrenPair active childOpacity={childOpacity} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     await expectFadingLikeReference('child');
     childOpacity.value = CHILD_OPACITY / 2;
     await expectEventually(async () => {
@@ -384,6 +389,7 @@ describe('Shared transition with fadeContent', () => {
         Math.abs(child.opacity - reference.opacity / 2) < 0.02
       );
     }).toBe(true);
+    await advanceAnimationTimer(2000);
     await expectOpacity('target', 1);
   });
 
