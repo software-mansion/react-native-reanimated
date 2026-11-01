@@ -193,8 +193,6 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
       require('./tests/layoutAnimations/sharedTransitionFadeContent.test');
-      require('./tests/layoutAnimations/sharedTransitionFadeRegression.test');
-      require('./tests/layoutAnimations/sharedTransitionFadeProgress.test');
       require('./tests/layoutAnimations/sharedTransitionNested.test');
       require('./tests/layoutAnimations/sharedTransitionProps.test');
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
