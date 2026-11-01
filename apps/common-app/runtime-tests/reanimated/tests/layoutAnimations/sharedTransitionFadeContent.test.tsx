@@ -901,47 +901,39 @@ describe('Shared transition with fadeContent', () => {
     await expectOpacity('child', CHILD_OPACITY);
   });
 
-  test('ends the fade-out at fadeOut.end of the move', async () => {
-    const earlyFadeOut = SharedTransition.duration(3000)
-      .easing(Easing.linear)
-      .fadeContent({ fadeOut: { end: 0.4 } });
-    await render(
-      <Screens showTarget={false} sharedTransition={earlyFadeOut} />
-    );
-    await waitForFrames();
-
-    await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
-    await expectEventually(async () => {
-      const [view, child] = await Promise.all([
-        mountedProps('source'),
-        mountedProps('sourceChild'),
-      ]);
-      // A width below this is less than 20% of the move.
-      const earlyWidth = SOURCE_WIDTH + 0.2 * (TARGET_WIDTH - SOURCE_WIDTH);
-      return (
-        !!view &&
-        !!child &&
-        isBetween(view.width, SOURCE_WIDTH + 2, earlyWidth) &&
-        isBetween(child.opacity, 0.1, CHILD_OPACITY - 0.05)
+  test.each([0.4, Number.MIN_VALUE])(
+    'ends the fade-out at fadeOut.end %p of the move',
+    async (end) => {
+      const earlyFadeOut = SharedTransition.duration(3000)
+        .easing(Easing.linear)
+        .fadeContent({ fadeOut: { end } });
+      await render(
+        <Screens showTarget={false} sharedTransition={earlyFadeOut} />
       );
-    }).toBe(true);
-    await expectEventually(async () => {
-      const [view, child] = await Promise.all([
-        mountedProps('source'),
-        mountedProps('sourceChild'),
-      ]);
-      // A width above this is more than 50% of the move.
-      const midWidth = SOURCE_WIDTH + 0.5 * (TARGET_WIDTH - SOURCE_WIDTH);
-      return (
-        !!view &&
-        !!child &&
-        isBetween(view.width, midWidth, TARGET_WIDTH - 5) &&
-        child.opacity < 0.01
-      );
-    }).toBe(true);
+      await waitForFrames();
+      const recorder = recordFrames(['source', 'sourceChild']);
 
-    await expectOpacity('targetChild', CHILD_OPACITY);
-  });
+      await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+      await expectOpacity('target', 1);
+      const frames = await recorder.stop();
+      const moving = frames.filter(
+        ([source, child]) => isMoving(source) && !!child
+      );
+      const errors = moving.map(([source, child]) => {
+        const progress =
+          (source!.width - SOURCE_WIDTH) / (TARGET_WIDTH - SOURCE_WIDTH);
+        const expected = CHILD_OPACITY * Math.max(0, 1 - progress / end);
+        return Math.abs(child!.opacity - expected);
+      });
+      expect(moving.length > 10).toBe(true);
+      expect(errors.every((error) => error < 0.03)).toBe(true);
+      expect(
+        frames.every(([, child]) => !child || Number.isFinite(child.opacity))
+      ).toBe(true);
+
+      await expectOpacity('targetChild', CHILD_OPACITY);
+    }
+  );
 
   test('fades the children of the target in over fadeIn.duration', async () => {
     const slowFadeIn = SharedTransition.duration(600).fadeContent({

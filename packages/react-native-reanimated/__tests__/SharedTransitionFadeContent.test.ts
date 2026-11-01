@@ -9,6 +9,7 @@ jest.mock('../src/animation', () => ({
 }));
 
 function fadeInDuration(transition: SharedTransition) {
+  jest.mocked(withTiming).mockClear();
   transition.buildContentFade()?.fadeIn({} as EntryAnimationsValues);
   return jest.mocked(withTiming).mock.lastCall?.[1]?.duration;
 }
@@ -52,6 +53,15 @@ describe('SharedTransition.fadeContent', () => {
       expect(logger.warn).toHaveBeenCalledTimes(1);
     }
   );
+
+  test('quotes a string value in the warning', () => {
+    SharedTransition.fadeContent({
+      fadeOut: { end: '0.5' as unknown as number },
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('got "0.5".')
+    );
+  });
 
   test.each([-1, Number.POSITIVE_INFINITY, Number.NaN, '200'])(
     'warns for fadeIn.duration %p',
