@@ -36,9 +36,22 @@ const transition = SharedTransition.duration(DURATION).withCallback(
   }
 );
 
+function Target() {
+  const target = useTestRef('target');
+  return (
+    <SharedTransitionBoundary isActive>
+      <Animated.View
+        ref={target}
+        sharedTransitionTag="animated-style"
+        sharedTransitionStyle={transition}
+        style={styles.target}
+      />
+    </SharedTransitionBoundary>
+  );
+}
+
 function Screens({ active }: { active: boolean }) {
   const source = useTestRef('source');
-  const target = useTestRef('target');
   const other = useTestRef('other');
   const width = useSharedValue(50);
   useEffect(() => {
@@ -60,16 +73,7 @@ function Screens({ active }: { active: boolean }) {
           style={styles.source}
         />
       </SharedTransitionBoundary>
-      {active && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            ref={target}
-            sharedTransitionTag="animated-style"
-            sharedTransitionStyle={transition}
-            style={styles.target}
-          />
-        </SharedTransitionBoundary>
-      )}
+      {active && <Target />}
       <Animated.View ref={other} style={[styles.other, otherStyle]} />
     </View>
   );
