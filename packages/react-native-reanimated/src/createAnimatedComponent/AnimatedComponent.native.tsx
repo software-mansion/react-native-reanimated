@@ -69,6 +69,7 @@ export default class AnimatedComponent
   reanimatedID = id++;
   _sharedTransition?: SharedTransition;
   _sharedTransitionTag?: string;
+  _sharedTransitionFadeContent?: SharedTransition['fadeContentV'];
 
   constructor(
     ChildComponent: AnyComponent,
@@ -418,7 +419,8 @@ export default class AnimatedComponent
       new SharedTransition();
     if (
       this._sharedTransition === sharedTransition &&
-      this._sharedTransitionTag === this.props.sharedTransitionTag
+      this._sharedTransitionTag === this.props.sharedTransitionTag &&
+      this._sharedTransitionFadeContent === sharedTransition.fadeContentV
     ) {
       return;
     }
@@ -434,6 +436,7 @@ export default class AnimatedComponent
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;
+    this._sharedTransitionFadeContent = sharedTransition.fadeContentV;
   }
 
   // Android pulls the mounting transaction inside the React commit, so the
