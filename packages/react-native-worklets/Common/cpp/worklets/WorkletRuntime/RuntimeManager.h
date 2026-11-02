@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -32,6 +33,8 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
+
+  size_t getAliveRuntimeCount();
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,

@@ -4,14 +4,22 @@ import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
 
 const ITERATIONS = 50;
+const MAX_COLLECTION_ATTEMPTS = 20;
 const REMOTE_FUNCTION_ERROR = 'Tried to synchronously call a Remote Function';
 
 describe('Remote Function hosted on a destroyed Worker Runtime', () => {
   test('stays a Remote Function guard on a successor Worker Runtime', async () => {
     const unexpected: string[] = [];
+    await collectGarbage();
+    const baseline = getAliveRuntimeCount();
     for (let i = 0; i < ITERATIONS; i++) {
       const remoteFunctions = [makeRemoteFunctionOnShortLivedRuntime(i)];
-      await collectGarbage();
+      if (!(await waitUntilAliveRuntimeCountIs(baseline))) {
+        unexpected.push(
+          `${i}: the host Worker Runtime is still alive, ${getAliveRuntimeCount()} alive runtimes instead of ${baseline}`
+        );
+        continue;
+      }
 
       const successors = [
         createWorkletRuntime({
@@ -19,6 +27,11 @@ describe('Remote Function hosted on a destroyed Worker Runtime', () => {
           enableEventLoop: false,
         }),
       ];
+      if (getAliveRuntimeCount() !== baseline + 1) {
+        unexpected.push(
+          `${i}: ${getAliveRuntimeCount()} alive runtimes with the successor instead of ${baseline + 1}`
+        );
+      }
       const result = callOnSuccessor(successors[0], remoteFunctions[0]);
       if (
         !result.isRemoteFunction ||
@@ -31,7 +44,11 @@ describe('Remote Function hosted on a destroyed Worker Runtime', () => {
 
       remoteFunctions.length = 0;
       successors.length = 0;
-      await collectGarbage();
+      if (!(await waitUntilAliveRuntimeCountIs(baseline))) {
+        unexpected.push(
+          `${i}: the successor Worker Runtime is still alive, ${getAliveRuntimeCount()} alive runtimes instead of ${baseline}`
+        );
+      }
     }
 
     expect(unexpected.join('\n')).toBe('');
@@ -77,6 +94,22 @@ function callOnSuccessor(
       return { isRemoteFunction, message: (error as Error).message };
     }
   });
+}
+
+function getAliveRuntimeCount() {
+  const getCount = globalThis.__workletsModuleProxy
+    .getAliveRuntimeCount as () => number;
+  return getCount();
+}
+
+async function waitUntilAliveRuntimeCountIs(expected: number) {
+  for (let attempt = 0; attempt < MAX_COLLECTION_ATTEMPTS; attempt++) {
+    await collectGarbage();
+    if (getAliveRuntimeCount() === expected) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function collectGarbage() {

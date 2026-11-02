@@ -750,6 +750,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
+  jsi_utils::addMethod<0>(
+      rt, obj, "getAliveRuntimeCount", [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &) {
+        return jsi::Value(static_cast<double>(runtimeManager->getAliveRuntimeCount()));
+      });
+
   jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
     std::ostringstream stream;
     stream << std::this_thread::get_id();
