@@ -1,3 +1,4 @@
+import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -33,6 +34,26 @@ const transition = SharedTransition.duration(DURATION)
     }
   });
 
+function TaggedView({
+  name,
+  sharedTag,
+  style,
+}: {
+  name: string;
+  sharedTag: string;
+  style: StyleProp<ViewStyle>;
+}) {
+  const ref = useTestRef(name);
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag={sharedTag}
+      sharedTransitionStyle={transition}
+      style={style}
+    />
+  );
+}
+
 function RemovedSourceScreens({
   active,
   targetWidth = 150,
@@ -40,26 +61,22 @@ function RemovedSourceScreens({
   active: boolean;
   targetWidth?: number;
 }) {
-  const source = useTestRef('source');
-  const target = useTestRef('target');
   return (
     <View style={styles.container}>
       {!active && (
         <SharedTransitionBoundary isActive>
-          <Animated.View
-            ref={source}
-            sharedTransitionTag="retarget"
-            sharedTransitionStyle={transition}
+          <TaggedView
+            name="source"
+            sharedTag="retarget"
             style={styles.source}
           />
         </SharedTransitionBoundary>
       )}
       {active && (
         <SharedTransitionBoundary isActive>
-          <Animated.View
-            ref={target}
-            sharedTransitionTag="retarget"
-            sharedTransitionStyle={transition}
+          <TaggedView
+            name="target"
+            sharedTag="retarget"
             style={[styles.target, { width: targetWidth }]}
           />
         </SharedTransitionBoundary>
@@ -76,36 +93,26 @@ function RenamedCarrierScreens({
   renamed?: boolean;
 }) {
   const sourceScreen = useTestRef('sourceScreen');
-  const source = useTestRef('source');
-  const newSource = useTestRef('newSource');
-  const target = useTestRef('target');
   return (
     <View style={styles.container}>
       <SharedTransitionBoundary isActive={!active}>
         <View ref={sourceScreen} collapsable={false}>
-          <Animated.View
-            ref={source}
-            sharedTransitionTag={renamed ? 'renamed' : 'carrier'}
-            sharedTransitionStyle={transition}
+          <TaggedView
+            name="source"
+            sharedTag={renamed ? 'renamed' : 'carrier'}
             style={styles.source}
           />
           {renamed && (
-            <Animated.View
-              ref={newSource}
-              sharedTransitionTag="carrier"
-              sharedTransitionStyle={transition}
+            <TaggedView
+              name="newSource"
+              sharedTag="carrier"
               style={styles.source}
             />
           )}
         </View>
       </SharedTransitionBoundary>
       <SharedTransitionBoundary isActive={active}>
-        <Animated.View
-          ref={target}
-          sharedTransitionTag="carrier"
-          sharedTransitionStyle={transition}
-          style={styles.target}
-        />
+        <TaggedView name="target" sharedTag="carrier" style={styles.target} />
       </SharedTransitionBoundary>
     </View>
   );
