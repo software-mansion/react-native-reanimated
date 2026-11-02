@@ -33,6 +33,7 @@ function Target({
   sharedTag = 'carrier',
   mounted,
   exiting,
+  targetKey,
 }: {
   transition: SharedTransition;
   opacity: number;
@@ -40,6 +41,7 @@ function Target({
   sharedTag?: string;
   mounted: boolean;
   exiting?: FadeOut;
+  targetKey?: string;
 }) {
   const target = useTestRef('target');
   const targetChild = useTestRef('targetChild');
@@ -47,6 +49,7 @@ function Target({
     <SharedTransitionBoundary isActive={active}>
       {mounted && (
         <Animated.View
+          key={targetKey}
           ref={target}
           sharedTransitionTag={sharedTag}
           sharedTransitionStyle={transition}
@@ -74,6 +77,7 @@ function Screens({
   targetMounted = true,
   targetExiting,
   sourceMoved = false,
+  targetKey,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -89,6 +93,7 @@ function Screens({
   targetMounted?: boolean;
   targetExiting?: FadeOut;
   sourceMoved?: boolean;
+  targetKey?: string;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -129,6 +134,7 @@ function Screens({
           sharedTag={sharedTag}
           mounted={targetMounted}
           exiting={targetExiting}
+          targetKey={targetKey}
         />
       )}
     </View>
@@ -378,6 +384,30 @@ describe('Shared transition moves a real native view', () => {
     const source = await getTestComponent('source').getMountedViewProps();
     expect(source?.x).toBeWithinRange(home!.x - 0.5, home!.x + 0.5);
     expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
+  });
+
+  test('keeps a replaced target hidden until the source lands', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+    const replacedTag = getTestComponent('target').getTag();
+
+    await render(<Screens active transition={transition} targetKey="new" />);
+    await waitForFrames(3);
+    expect(getTestComponent('target').getTag()).not.toBe(replacedTag);
+    await expectMoving('source');
+    expect(
+      (await getTestComponent('target').getMountedViewProps())?.opacity
+    ).toBe(0);
+    await advanceAnimationTimer(1300);
+    await waitForNotification('carrier-finished');
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
   });
 
   test('keeps the source and its children when React removes their screen', async () => {
