@@ -108,7 +108,7 @@ function readMounted(tag: number) {
 }
 
 async function startTransition(exitKind: ExitKind = 'none') {
-  await mockAnimationTimer(false);
+  await mockAnimationTimer({ autoAdvance: false });
   await render(<Screens active={false} exitKind={exitKind} />);
   await waitForFrames();
   const tags = {

@@ -37,7 +37,7 @@ describe('Layout animation start props', () => {
   setterTest(
     'does not repeat a content setter during a layout animation',
     async () => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       await render(<Input width={60} />);
       await waitForFrames();
       const input = getTestComponent('input');
