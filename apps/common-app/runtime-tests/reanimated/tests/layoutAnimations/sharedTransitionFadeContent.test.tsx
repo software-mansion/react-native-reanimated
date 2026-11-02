@@ -935,6 +935,7 @@ describe('Shared transition with fadeContent', () => {
         frames.every(([, child]) => !child || Number.isFinite(child.opacity))
       ).toBe(true);
 
+      await advanceAnimationTimer(1500);
       await expectOpacity('targetChild', CHILD_OPACITY);
     }
   );
