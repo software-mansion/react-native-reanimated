@@ -412,7 +412,7 @@ describe('Shared transition moves a real native view', () => {
           false
         );
       }
-      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
     });
 
     test(`keeps the source moving when React moves it and removes the target ${kind} in the same update`, async () => {
@@ -459,7 +459,7 @@ describe('Shared transition moves a real native view', () => {
           false
         );
       }
-      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
     });
   }
 });
