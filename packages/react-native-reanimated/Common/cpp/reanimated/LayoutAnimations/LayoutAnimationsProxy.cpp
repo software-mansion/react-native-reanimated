@@ -896,8 +896,9 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
     const std::shared_ptr<LightNode> &parent,
     TransactionMeta &transaction) const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+  const bool defersTeardown = holdsSnapshottedScreen(node);
 #ifdef __APPLE__
-  if (holdsSourceInModal(node, transaction)) {
+  if (!defersTeardown && holdsSourceInModal(node, transaction)) {
     std::unordered_set<Tag> heldTags;
     collectSubtreeTags(node, heldTags);
     for (const auto tag : heldTags) {
@@ -908,7 +909,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
     return;
   }
 #endif
-  const bool defersTeardown = holdsSnapshottedScreen(node);
   const StartAnimationsRecursivelyConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
       .shouldAnimate = !transaction.surfaceDropped,
