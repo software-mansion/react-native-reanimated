@@ -566,9 +566,9 @@ describe('Nested shared transitions', () => {
       const outerTag = getTestComponent('sourceOuter').getTag();
       const wrapperTag = getTestComponent('innerWrapper').getTag();
       const nativeParentOfInner = () =>
-        RuntimeTestObserver?.observeParent(innerTag) ?? null;
+        RuntimeTestObserver?.observeParent(innerTag);
       const homeParent = (isWrapped: boolean) =>
-        RuntimeTestObserver ? (isWrapped ? wrapperTag : outerTag) : null;
+        isWrapped ? wrapperTag : outerTag;
       expect(await nativeParentOfInner()).toBe(homeParent(wrapped));
       await render(<Screens active innerWrapped={wrapped} />);
       await waitForFrames(3);
