@@ -903,6 +903,7 @@ describe('Shared transition with fadeContent', () => {
   test.each([0.4, Number.MIN_VALUE])(
     'ends the fade-out at fadeOut.end %p of the move',
     async (end) => {
+      await mockAnimationTimer({ autoAdvance: false });
       const earlyFadeOut = SharedTransition.duration(3000)
         .easing(Easing.linear)
         .fadeContent({ fadeOut: { end } });
@@ -910,10 +911,15 @@ describe('Shared transition with fadeContent', () => {
         <Screens showTarget={false} sharedTransition={earlyFadeOut} />
       );
       await waitForFrames();
-      const frames = await recordFrames(['source', 'sourceChild'], async () => {
-        await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
-        await expectOpacity('target', 1);
-      });
+      await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+      await waitForFrames(3);
+      const frames: Awaited<ReturnType<typeof sample>>[] = [];
+      for (let time = 250; time < 3000; time += 250) {
+        await advanceAnimationTimer(250);
+        frames.push(await sample(['source', 'sourceChild']));
+      }
+      await advanceAnimationTimer(250);
+      await expectOpacity('target', 1);
       const moving = frames.filter(
         ([source, child]) => isMoving(source) && !!child
       );
