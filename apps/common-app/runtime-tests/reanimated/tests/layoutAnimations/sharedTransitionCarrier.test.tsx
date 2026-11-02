@@ -152,6 +152,8 @@ describe('Shared transition moves a real native view', () => {
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
     const childTag = getTestComponent('sourceChild').getTag();
+    const home = await getTestComponent('source').getMountedViewProps();
+    expect(home).not.toBe(null);
 
     await render(<Screens active transition={transition} />);
     await expectMoving('source');
@@ -174,6 +176,9 @@ describe('Shared transition moves a real native view', () => {
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 0.7);
     expect(await isViewMountedNatively(childTag)).toBe(true);
+    const source = await getTestComponent('source').getMountedViewProps();
+    expect(source?.x).toBeWithinRange(home!.x - 0.5, home!.x + 0.5);
+    expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
   });
 
   test('moves the target when React removes the source in the same update', async () => {
@@ -306,7 +311,7 @@ describe('Shared transition moves a real native view', () => {
 });
 
 const styles = StyleSheet.create({
-  container: { width: 300, height: 400 },
+  container: { width: 300, height: 400, marginTop: 40, marginLeft: 30 },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: {
     marginTop: 100,
