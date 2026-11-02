@@ -197,7 +197,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - Link pages through file paths, for example `../core/useSharedValue.mdx`, not through URL paths. Then each version links to its own pages.
    - Run `yarn build` in the docs workspace. It fails on broken links.
 
-   The docs build in CI runs `scripts/validate-docs-released-versions.mts` on `main`. It fails when the newest stable release on npm (the `latest` dist-tag) or in `CHANGELOG.md` has no docs version, or when `lastVersion` does not cover it.
+   The docs build in CI runs `scripts/validate-docs-released-versions.mts` on `main`. It fails when the newest stable release on npm (the `latest` dist-tag) or the newest stable release in `CHANGELOG.md` has no docs version, or when `lastVersion` does not cover the newer of the two. A Worklets release needs a minor docs version, such as `0.13`. A major docs version, such as `0.x`, does not count for Worklets.
 
 8. Share the good news with the team.
 

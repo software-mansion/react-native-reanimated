@@ -43,24 +43,32 @@ describe('validate-docs-released-versions', () => {
     const version = { major: 0, minor: 11, patch: 3 };
 
     it('matches a minor label', () => {
-      assert.equal(coversVersion('0.11', version), true);
-      assert.equal(coversVersion('0.12', version), false);
+      for (const per of ['major', 'minor'] as const) {
+        assert.equal(coversVersion('0.11', version, per), true);
+        assert.equal(coversVersion('0.12', version, per), false);
+      }
     });
 
-    it('matches a major label', () => {
-      assert.equal(coversVersion('0.x', version), true);
-      assert.equal(coversVersion('4.x', version), false);
+    it('matches a major label when the docs have a version per major', () => {
+      assert.equal(coversVersion('0.x', version, 'major'), true);
+      assert.equal(coversVersion('4.x', version, 'major'), false);
+    });
+
+    it('never matches a major label when the docs have a version per minor', () => {
+      assert.equal(coversVersion('0.x', version, 'minor'), false);
     });
 
     it('matches a range label including both ends', () => {
-      assert.equal(coversVersion('0.10-0.12', version), true);
-      assert.equal(coversVersion('0.11-0.12', version), true);
-      assert.equal(coversVersion('0.9-0.11', version), true);
-      assert.equal(coversVersion('0.12-0.13', version), false);
+      for (const per of ['major', 'minor'] as const) {
+        assert.equal(coversVersion('0.10-0.12', version, per), true);
+        assert.equal(coversVersion('0.11-0.12', version, per), true);
+        assert.equal(coversVersion('0.9-0.11', version, per), true);
+        assert.equal(coversVersion('0.12-0.13', version, per), false);
+      }
     });
 
     it('never matches the current version', () => {
-      assert.equal(coversVersion('current', version), false);
+      assert.equal(coversVersion('current', version, 'major'), false);
     });
   });
 
@@ -87,6 +95,24 @@ describe('validate-docs-released-versions', () => {
       assert.equal(findLastVersion("  lastVersion: '0.13',\n"), '0.13');
       assert.equal(findLastVersion('lastVersion: "4.x"'), '4.x');
       assert.equal(findLastVersion('versions: {}'), undefined);
+    });
+
+    it('skips commented-out lines', () => {
+      assert.equal(
+        findLastVersion(
+          [
+            "// lastVersion: '0.12',",
+            "/* lastVersion: '0.11', */",
+            '/*',
+            " * lastVersion: '0.10',",
+            ' */',
+            "versions: {}, // lastVersion: '0.9',",
+            "  lastVersion: '0.13',",
+          ].join('\n')
+        ),
+        '0.13'
+      );
+      assert.equal(findLastVersion("// lastVersion: '0.12',"), undefined);
     });
   });
 
@@ -145,6 +171,57 @@ describe('validate-docs-released-versions', () => {
       assert.match(
         problems[0],
         /lastVersion .* is 0\.13, which does not cover it/
+      );
+    });
+
+    it('fails when the older of the changelog and npm versions has no docs version', async () => {
+      const { problems } = await run(
+        {
+          'packages/react-native-worklets/CHANGELOG.md':
+            '## 0.14.0 — 2026-11-01\n',
+          'docs/docs-worklets/versions.json': '["0.15", "0.13"]',
+          'docs/docs-worklets/docusaurus.config.js': "lastVersion: '0.15',",
+        },
+        { 'react-native-worklets': { version: '0.15.0' } }
+      );
+      assert.equal(problems.length, 1);
+      assert.match(
+        problems[0],
+        /react-native-worklets 0\.14\.0 \(packages\/react-native-worklets\/CHANGELOG\.md\) is released, but docs\/docs-worklets\/versions\.json has no docs version/
+      );
+    });
+
+    it('checks lastVersion only against the newer of the changelog and npm versions', async () => {
+      const { problems } = await run(
+        {
+          'packages/react-native-worklets/CHANGELOG.md':
+            '## 0.14.0 — 2026-11-01\n',
+          'docs/docs-worklets/versions.json': '["0.15", "0.14", "0.13"]',
+          'docs/docs-worklets/docusaurus.config.js': "lastVersion: '0.15',",
+        },
+        { 'react-native-worklets': { version: '0.15.0' } }
+      );
+      assert.deepEqual(problems, []);
+    });
+
+    it('ignores a commented-out lastVersion', async () => {
+      const { problems } = await run({
+        'docs/docs-worklets/docusaurus.config.js':
+          "// lastVersion: '0.13',\nlastVersion: 'current',",
+      });
+      assert.equal(problems.length, 1);
+      assert.match(problems[0], /lastVersion .* is current/);
+    });
+
+    it('does not accept a major docs version for a Worklets minor', async () => {
+      const { problems } = await run({
+        'docs/docs-worklets/versions.json': '["0.x"]',
+        'docs/docs-worklets/docusaurus.config.js': "lastVersion: '0.x',",
+      });
+      assert.equal(problems.length, 1);
+      assert.match(
+        problems[0],
+        /react-native-worklets 0\.13\.0 .* has no docs version/
       );
     });
 

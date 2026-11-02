@@ -7,15 +7,18 @@ export const PACKAGES = [
     name: 'react-native-reanimated',
     changelog: 'packages/react-native-reanimated/CHANGELOG.md',
     docs: 'docs/docs-reanimated',
+    docsVersionPer: 'major',
   },
   {
     name: 'react-native-worklets',
     changelog: 'packages/react-native-worklets/CHANGELOG.md',
     docs: 'docs/docs-worklets',
+    docsVersionPer: 'minor',
   },
 ] as const;
 
 export type Package = (typeof PACKAGES)[number];
+export type DocsVersionPer = Package['docsVersionPer'];
 export type Version = { major: number; minor: number; patch: number };
 export type Release = { version: Version; source: string };
 export type LatestFromNpm = { version: string } | { error: string };
@@ -110,7 +113,7 @@ export async function validate({
 
     const packageProblems = findProblems({
       pkg,
-      release,
+      releases: candidates,
       docsVersions,
       lastVersion,
     });
@@ -157,41 +160,69 @@ export function latestRelease(releases: Release[]) {
 }
 
 export function findLastVersion(config: string) {
-  return /\blastVersion:\s*['"]([^'"]+)['"]/.exec(config)?.[1];
+  for (const line of config.split('\n')) {
+    const code = line.trimStart();
+    if (
+      code.startsWith('//') ||
+      code.startsWith('/*') ||
+      code.startsWith('*')
+    ) {
+      continue;
+    }
+    const match = /\blastVersion:\s*['"]([^'"]+)['"]/.exec(code);
+    if (match && !code.slice(0, match.index).includes('//')) {
+      return match[1];
+    }
+  }
+  return undefined;
 }
 
 export function findProblems({
   pkg,
-  release,
+  releases,
   docsVersions,
   lastVersion,
 }: {
   pkg: Package;
-  release: Release;
+  releases: Release[];
   docsVersions: string[];
   lastVersion: string;
 }) {
-  const released = `${pkg.name} ${formatVersion(release.version)} (${release.source})`;
+  const covers = (label: string, version: Version) =>
+    coversVersion(label, version, pkg.docsVersionPer);
+  const describe = (release: Release) =>
+    `${pkg.name} ${formatVersion(release.version)} (${release.source})`;
 
-  if (!docsVersions.some((label) => coversVersion(label, release.version))) {
-    return [
-      `${released} is released, but ${pkg.docs}/versions.json has no docs version for it. Its docs are served only as Unreleased.`,
-    ];
+  const problems = releases
+    .filter(
+      (release) => !docsVersions.some((label) => covers(label, release.version))
+    )
+    .map(
+      (release) =>
+        `${describe(release)} is released, but ${pkg.docs}/versions.json has no docs version for it. Its docs are served only as Unreleased.`
+    );
+  if (problems.length > 0) {
+    return problems;
   }
 
-  if (!coversVersion(lastVersion, release.version)) {
+  const newest = latestRelease(releases);
+  if (newest && !covers(lastVersion, newest.version)) {
     return [
-      `${released} is released, but lastVersion in ${pkg.docs}/docusaurus.config.js is ${lastVersion}, which does not cover it.`,
+      `${describe(newest)} is released, but lastVersion in ${pkg.docs}/docusaurus.config.js is ${lastVersion}, which does not cover it.`,
     ];
   }
 
   return [];
 }
 
-export function coversVersion(label: string, version: Version) {
+export function coversVersion(
+  label: string,
+  version: Version,
+  docsVersionPer: DocsVersionPer
+) {
   const major = /^(\d+)\.x$/.exec(label);
   if (major) {
-    return Number(major[1]) === version.major;
+    return docsVersionPer === 'major' && Number(major[1]) === version.major;
   }
 
   const minor = /^(\d+)\.(\d+)$/.exec(label);

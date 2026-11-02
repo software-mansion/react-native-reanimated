@@ -253,7 +253,7 @@ Then, in `docs/docs-worklets/docusaurus.config.js`, add `'<X.Y>': { label: '<X.Y
 
 - The snapshot must document only released changes. The changelog fragments that `changelog:squash --cut` left on `main` are not in the release. Remove the docs for them from the snapshot.
 - Run `yarn build` in the docs workspace.
-- Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version have a docs version and that `lastVersion` covers them.
+- Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version each have a docs version, and that `lastVersion` covers the newer of the two.
 
 ## Confirmation checkpoints
 
