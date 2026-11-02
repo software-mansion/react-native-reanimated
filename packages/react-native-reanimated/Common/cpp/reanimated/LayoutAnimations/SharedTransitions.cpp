@@ -1275,10 +1275,14 @@ void LayoutAnimationsProxy::startHeldEntering(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   const auto &node = held.node;
-  const auto mounted = mountedView(node);
-  std::erase_if(transaction.layout, [&node](const PendingNodeAnimation &layout) { return layout.node == node; });
-  cancelLayoutAnimation(node->current.tag);
+  const auto tag = node->current.tag;
+  const bool layoutQueued = std::erase_if(transaction.layout, [&node](const PendingNodeAnimation &layout) {
+                              return layout.node == node;
+                            }) > 0;
   resolveLightNodeProps(node);
+  // A layout animation of this pull holds back the React Update, so the screen still shows the previous view.
+  const auto mounted = layoutAnimationViewOnScreen(tag).value_or(layoutQueued ? node->previous : node->current);
+  cancelLayoutAnimation(tag);
   const auto parent = node->parent.lock();
   transaction.filteredMutations.push_back(createPropsUpdate(
       mounted,
