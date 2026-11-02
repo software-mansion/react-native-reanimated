@@ -711,12 +711,13 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::detachedCarrierOf(const std::s
   return node;
 }
 
+// A live carrier that retires because of a new shared tag keeps its frames, and its attach waits for them.
 bool LayoutAnimationsProxy::isRetiringContent(const Tag tag) const {
   if (retiringSharedTransitions_.empty()) {
     return false;
   }
   const auto node = lightNodes_.find(tag);
-  if (node == lightNodes_.end()) {
+  if (node == lightNodes_.end() || !node->second->isExiting()) {
     return false;
   }
   const auto carrier = detachedCarrierOf(node->second);
