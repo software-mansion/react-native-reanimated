@@ -534,6 +534,9 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    const held = await mountedProps('enteringChild');
+    expect(!!held && held.opacity < 0.01).toBe(true);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
     await render(<ScreensWithEnteringChild showTarget={false} keepChild />);
     await waitForFrames(3);
 
