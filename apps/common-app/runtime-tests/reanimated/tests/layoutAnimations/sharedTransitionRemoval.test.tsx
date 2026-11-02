@@ -252,8 +252,8 @@ describe('Removal during a shared transition', () => {
     const tags = await startTransition();
     await render(<Screens active removed />);
     await waitForFrames(3);
-    await advanceAnimationTimer(1000);
     await expectGone([tags.source, tags.child]);
+    await advanceAnimationTimer(1000);
     await expectTargetRestored();
     expect(await isViewMountedNatively(tags.parent)).toBe(true);
     expect((await getTestComponent('last').getMountedViewProps())?.height).toBe(
@@ -295,10 +295,13 @@ describe('Removal during a shared transition', () => {
     await render(<Screens active removeSiblings />);
     await expectGone([firstTag]);
     expect(await isViewMountedNatively(exitingTag)).toBe(true);
-    await advanceAnimationTimer(1500);
+    await advanceAnimationTimer(500);
     await expectGone([exitingTag]);
+    const moving = await readMounted(tags.source);
+    expect(!!moving && moving.width > 65 && moving.width < 145).toBe(true);
+    await advanceAnimationTimer(1000);
     await expectTargetRestored();
-    expect(getTestComponent('last').getTag()).toBe(lastTag);
+    expect(await isViewMountedNatively(lastTag)).toBe(true);
     const last = await getTestComponent('last').getMountedViewProps();
     expect(last?.y).toBe(60, ComparisonMode.PIXEL);
     expect(last?.height).toBe(20, ComparisonMode.PIXEL);
