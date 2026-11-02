@@ -532,6 +532,7 @@ describe('Nested shared transitions', () => {
     await render(
       <Screens active repeatInner transitions={retargetTransitions} />
     );
+    await waitForFrames(3);
     for (let time = 0; time < retargetOuterDuration; time += 100) {
       await advanceAnimationTimer(100);
     }
