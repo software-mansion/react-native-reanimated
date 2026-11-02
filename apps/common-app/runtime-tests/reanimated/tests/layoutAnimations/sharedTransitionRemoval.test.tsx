@@ -140,8 +140,10 @@ function advanceAndWaitForUIFrames(milliseconds: number) {
       return global.framesCount ?? 0;
     });
   const deadline = performance.now() + 3000;
-  while (readFrames() < framesBefore + 3 && performance.now() < deadline) {
-    // The UI thread runs frames while the JS thread waits here.
+  while (readFrames() < framesBefore + 3) {
+    if (performance.now() > deadline) {
+      throw new Error('The UI thread ran no frames before the commit.');
+    }
   }
 }
 
@@ -374,12 +376,15 @@ describe('Removal during a shared transition', () => {
       />
     );
     await waitForFrames(3);
-    expect((await readMounted(tags.child))?.opacity).toBe(0);
+    // iOS removes the child when its exit ends. Android keeps it in the retained source.
+    const exited = await readMounted(tags.child);
+    expect(exited === null || exited.opacity === 0).toBe(true);
     expect(await isViewMountedNatively(tags.source)).toBe(true);
     expect(
       (await getTestComponent('target').getMountedViewProps())?.opacity
     ).toBe(0);
-    await advanceAnimationTimer(1200);
+    // The removal moves the target up, so the run restarts with its full duration.
+    await advanceAnimationTimer(1500);
     await expectGone([tags.source, tags.child]);
     await expectTargetRestored();
   });
