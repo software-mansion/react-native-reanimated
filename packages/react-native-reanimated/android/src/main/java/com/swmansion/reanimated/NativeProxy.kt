@@ -84,6 +84,7 @@ open class NativeProxy {
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
+    private val tracksSynchronousWrites: Boolean
 
     private enum class CarrierBatch {
         NOT_QUEUED,
@@ -102,7 +103,7 @@ open class NativeProxy {
 
             override fun didMountItems(uiManager: UIManager) =
                 ifNotInvalidated(Unit) {
-                    if (hasSynchronousWritesTracker()) {
+                    if (tracksSynchronousWrites) {
                         rewriteSynchronousProps()
                     }
                     // A dispatch takes its items before `willMountItems`, so the dispatch that sees a queued batch
@@ -155,6 +156,7 @@ open class NativeProxy {
                 callInvokerHolder,
                 mFabricUIManager,
             )
+        tracksSynchronousWrites = hasSynchronousWritesTracker()
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
