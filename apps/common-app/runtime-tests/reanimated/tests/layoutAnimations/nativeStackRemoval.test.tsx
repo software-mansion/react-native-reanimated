@@ -29,7 +29,6 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
@@ -188,6 +187,7 @@ function readMountedY(tag: number) {
 
 const SHARED_STACKS_READY = 'sharedStacksReady';
 const SHARED_SOURCE_RENDERED = 'sharedSourceRendered';
+const MIDDLE_RENDERED = 'middleRendered';
 
 function SharedBox({
   name,
@@ -223,6 +223,13 @@ function SharedSource() {
   return <SharedBox name="source" style={styles.sharedSource} />;
 }
 
+async function expectShown(name: string) {
+  const component = getTestComponent(name);
+  await expectEventually(
+    async () => (await component.getMountedViewProps())?.opacity === 1
+  ).toBe(true);
+}
+
 const PopToTop = createNativeStackNavigator<{
   Target: undefined;
   Middle: undefined;
@@ -235,6 +242,9 @@ const popToTopNavigation = createNavigationContainerRef<{
 }>();
 
 function PopToTopMiddle() {
+  useEffect(() => {
+    notify(MIDDLE_RENDERED);
+  }, []);
   return <SharedBox name="middle" style={styles.box} />;
 }
 
@@ -298,9 +308,7 @@ describe('Layout animations on native stack removal', () => {
     await waitForNotification(SHARED_SOURCE_RENDERED);
     const source = getTestComponent('source');
     const sourceTag = source.getTag();
-    await expectEventually(
-      async () => (await source.getMountedViewProps())?.opacity === 1
-    ).toBe(true);
+    await expectShown('source');
     const yInScreen = await readMountedY(sourceTag);
 
     sharedNavigation.goBack();
@@ -319,10 +327,12 @@ describe('Layout animations on native stack removal', () => {
     await render(<PopToTopStacks />);
     await waitForNotification(SHARED_STACKS_READY);
     popToTopNavigation.navigate('Middle');
-    await wait(800);
-    popToTopNavigation.navigate('Source');
-    await wait(800);
+    await waitForNotification(MIDDLE_RENDERED);
+    await expectShown('middle');
     const middleTag = getTestComponent('middle').getTag();
+    popToTopNavigation.navigate('Source');
+    await waitForNotification(SHARED_SOURCE_RENDERED);
+    await expectShown('source');
     popToTopNavigation.dispatch(StackActions.popToTop());
     await expectEventually(() => isViewMountedNatively(middleTag)).toBe(false);
     await render(null);
