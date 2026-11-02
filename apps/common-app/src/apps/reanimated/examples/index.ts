@@ -161,10 +161,6 @@ const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
   );
-const InvalidValueAccessExample: React.FC = () =>
-  React.createElement(
-    require('./InvalidValueAccessExample').default as React.FC
-  );
 const InterruptedExitingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
@@ -394,11 +390,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '🎨',
     title: 'Animated props',
     screen: AnimatedPropsExample,
-  },
-  InvalidReadWriteExample: {
-    icon: '🔒',
-    title: 'Invalid read/write during render',
-    screen: InvalidValueAccessExample,
   },
   BottomSheetExample: {
     icon: '⬆️',
