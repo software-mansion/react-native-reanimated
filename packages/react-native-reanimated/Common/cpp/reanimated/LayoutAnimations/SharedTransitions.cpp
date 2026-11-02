@@ -585,6 +585,8 @@ void LayoutAnimationsProxy::attachCarrier(
   cancelLayoutAnimation(tag);
 
   resolveLightNodeProps(node);
+  // React's Remove marks a carrier as exiting before its subtree removal runs, so a carrier can return
+  // to its parent while it exits. Then it keeps its opacity and does not go back into its shared element.
   auto homeView = node->isExiting() ? node->current : cloneViewWithoutOpacity(node->current, propsParserContext);
 #ifdef ANDROID
   homeView = resetPropsMissingFrom(homeView, mounted, propsParserContext);
