@@ -476,7 +476,10 @@ var require_autoworkletization = __commonJS({
       "runOnRuntimeAsync",
       "scheduleOnRuntime",
       "runOnRuntimeSyncWithId",
-      "scheduleOnRuntimeWithId"
+      "runOnRuntimeAsyncWithId",
+      "scheduleOnRuntimeWithId",
+      // runtime creation
+      "createWorkletRuntime"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -500,9 +503,24 @@ var require_autoworkletization = __commonJS({
       ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ["runOnRuntimeSyncWithId", [1]],
+      ["runOnRuntimeAsyncWithId", [1]],
       ["scheduleOnRuntimeWithId", [1]],
+      ["createWorkletRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
+    ]);
+    var configPropertiesToWorkletize = /* @__PURE__ */ new Map([
+      ["createWorkletRuntime", { argIndex: 0, keys: ["initializer"] }],
+      [
+        "createShareable",
+        { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }
+      ],
+      [
+        "registerCustomSerializable",
+        { argIndex: 0, keys: ["determine", "pack", "unpack"] }
+      ],
+      ["withTiming", { argIndex: 1, keys: ["easing"] }],
+      ["useHandler", { argIndex: 0, keys: null }]
     ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
@@ -524,6 +542,32 @@ var require_autoworkletization = __commonJS({
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
         const args = path.get("arguments");
         addDirectivesToArgs(args, state, true, true);
+      }
+      const configProperties = configPropertiesToWorkletize.get(name);
+      if (configProperties) {
+        addDirectivesToConfigProperties(path.get("arguments")[configProperties.argIndex], configProperties.keys, state);
+      }
+    }
+    function addDirectivesToConfigProperties(config, keys, state) {
+      if (!(config === null || config === void 0 ? void 0 : config.isObjectExpression())) {
+        return;
+      }
+      for (const property of config.get("properties")) {
+        if (!(property.isObjectMethod() || property.isObjectProperty()) || property.node.computed) {
+          continue;
+        }
+        const key = property.node.key;
+        const keyName = (0, types_12.isIdentifier)(key) ? key.name : (0, types_12.isStringLiteral)(key) ? key.value : void 0;
+        if (keyName === void 0 || keys && !keys.includes(keyName)) {
+          continue;
+        }
+        if (property.isObjectMethod()) {
+          if (property.node.kind === "method") {
+            (0, directives_12.addWorkletDirectivesToPath)(property);
+          }
+        } else if (property.isObjectProperty()) {
+          (0, findWorklet_1.forEachWorkletizableFunction)(property.get("value"), state, true, false, directives_12.addWorkletDirectivesToPath);
+        }
       }
     }
     function addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject) {
