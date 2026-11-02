@@ -403,7 +403,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('retargets the layout of an active carrier', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(
       <Screens keepTarget active={false} transitions={retargetTransitions} />
     );
@@ -455,7 +455,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('moves the waiting inner view when its target changes', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
 
@@ -488,7 +488,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('animates the waiting inner view to a color that changed during its own flight', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
     await render(<Screens active transitions={retargetTransitions} />);
@@ -526,7 +526,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('lands a waiting inner view whose target opacity repeats', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
     await render(
@@ -551,7 +551,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('animates the waiting inner view to a new color of its target', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
 
