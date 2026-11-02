@@ -513,9 +513,7 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('does not raise the child opacity again when the moving spring overshoots', async () => {
-    const spring = SharedTransition.springify(1800)
-      .dampingRatio(0.3)
-      .fadeContent();
+    const spring = SharedTransition.springify().dampingRatio(0.3).fadeContent();
     await render(<ChildrenPair active={false} sourceConfig={spring} />);
     await waitForFrames();
     const frames = await recordFrames(['source', 'child'], async () => {
