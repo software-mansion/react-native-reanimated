@@ -539,7 +539,7 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('plays the entering animation of a target child when the navigation goes back during the move', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithEnteringChild showTarget={false} />);
     await waitForFrames();
 
@@ -561,7 +561,7 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('replaces the layout animation of a target child with its entering animation', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithEnteringChild showTarget={false} />);
     await waitForFrames();
 
