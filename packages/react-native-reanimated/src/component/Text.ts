@@ -2,7 +2,7 @@
 import type { ComponentRef, ReactNode } from 'react';
 import { createElement, forwardRef } from 'react';
 import type { TextProps } from 'react-native';
-import { Text } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 import { logger } from '../common';
 import type { SharedValueDisableContravariance } from '../commonTypes';
@@ -53,9 +53,13 @@ const AnimatedTextWithRef = forwardRef<
       if (!isSharedValue(child)) {
         return child;
       }
-      if (__DEV__ && getStaticFeatureFlag('USE_ANIMATION_BACKEND')) {
+      if (
+        __DEV__ &&
+        getStaticFeatureFlag('USE_ANIMATION_BACKEND') &&
+        Platform.constants.reactNativeVersion.minor < 89
+      ) {
         logger.warnOnce(
-          'Animated.Text does not update shared value children when the `USE_ANIMATION_BACKEND` static feature flag is enabled.',
+          'Animated.Text updates shared value children with the `USE_ANIMATION_BACKEND` static feature flag only on React Native 0.89 or newer.',
           0
         );
       }
