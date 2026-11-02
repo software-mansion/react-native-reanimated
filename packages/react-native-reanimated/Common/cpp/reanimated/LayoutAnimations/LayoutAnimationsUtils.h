@@ -176,6 +176,9 @@ struct LightNode {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         react_native_assert(!children[i]->isDetached && "A detached child is attached before its removal");
+        if (children[i]->isDetached) {
+          detachedChildrenCount--;
+        }
         if (children[i]->isExiting()) {
           exitingChildrenCount--;
         }

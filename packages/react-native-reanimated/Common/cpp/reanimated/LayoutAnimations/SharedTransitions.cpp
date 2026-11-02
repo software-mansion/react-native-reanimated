@@ -68,8 +68,9 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const bool useViewsOnScreen = index == BEFORE;
     ShadowView copy;
     std::optional<Transform> newTransform;
-    if (useViewsOnScreen && node->isDetached) {
-      copy = carrierViewOnScreen(*sharedElementOfCarrier(node).second.run);
+    const auto carried = useViewsOnScreen && node->isDetached ? sharedElementOfCarrier(node) : nullptr;
+    if (carried) {
+      copy = carrierViewOnScreen(*carried->second.run);
     } else {
       copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
       const auto absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
@@ -352,9 +353,8 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const auto &[beforeNode, afterNode] = nodes;
     const auto &carrier = beforeNode->isExiting() ? afterNode : beforeNode;
     // A view carries one run. Its shared tag can change while it carries the run of the old tag.
-    if (carrier->isDetached) {
-      auto &[carriedTag, carriedElement] = sharedElementOfCarrier(carrier);
-      finishSharedTransition(carriedTag, carriedElement, transaction, propsParserContext);
+    if (const auto carried = carrier->isDetached ? sharedElementOfCarrier(carrier) : nullptr) {
+      finishSharedTransition(carried->first, carried->second, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
     detachCarrier(*run, asCarrierView(before, carrier, propsParserContext), transaction, propsParserContext);
@@ -528,14 +528,14 @@ const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransit
   return run.carrierStartView;
 }
 
-std::pair<const SharedTag, SharedElement> &LayoutAnimationsProxy::sharedElementOfCarrier(
+std::pair<const SharedTag, SharedElement> *LayoutAnimationsProxy::sharedElementOfCarrier(
     const std::shared_ptr<LightNode> &node) const {
   const auto elementIt = std::ranges::find_if(sharedElements_, [&node](const auto &entry) {
     const auto &run = entry.second.run;
     return run && run->carrier == node;
   });
   react_native_assert(elementIt != sharedElements_.end() && "The node is not a carrier");
-  return *elementIt;
+  return elementIt == sharedElements_.end() ? nullptr : &*elementIt;
 }
 
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
@@ -965,8 +965,9 @@ const ShadowView &LayoutAnimationsProxy::pathView(
     const std::shared_ptr<LightNode> &pathNode,
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
-  if (endsPathOnScreen(pathNode, node, useViewsOnScreen)) {
-    return carrierViewOnScreen(*sharedElementOfCarrier(pathNode).second.run);
+  if (const auto carried =
+          endsPathOnScreen(pathNode, node, useViewsOnScreen) ? sharedElementOfCarrier(pathNode) : nullptr) {
+    return carrierViewOnScreen(*carried->second.run);
   }
   return useViewsOnScreen ? viewOnScreen(pathNode) : pathNode->current;
 }
