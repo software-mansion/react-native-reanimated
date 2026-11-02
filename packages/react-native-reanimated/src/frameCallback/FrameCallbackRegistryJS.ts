@@ -57,7 +57,10 @@ export default class FrameCallbackRegistryJS {
 
       const delta = timestamp - this.previousFrameTimestamp;
 
-      this.activeFrameCallbacks.forEach((callbackId: number) => {
+      Array.from(this.activeFrameCallbacks).forEach((callbackId: number) => {
+        if (!this.activeFrameCallbacks.has(callbackId)) {
+          return;
+        }
         const callbackDetails = this.frameCallbackRegistry.get(callbackId)!;
         const { startTime } = callbackDetails;
 

@@ -1,0 +1,253 @@
+.sensor,
+.chat {
+  --demo-accent: var(--swm-purple-light-100);
+  --demo-surface: var(--swm-white);
+  --demo-muted: var(--swm-purple-light-60);
+}
+
+[data-theme='dark'] .sensor,
+[data-theme='dark'] .chat {
+  --demo-accent: var(--swm-purple-dark-80);
+  --demo-surface: var(--swm-light-off-navy);
+  --demo-muted: var(--swm-purple-dark-140);
+}
+
+/* Sensor: the phone frame tilts (see Phone .tilt, same 2.8s period) and the
+ * ball rolls to whichever side is lower while the level bubble floats up. */
+
+.sensor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 28px 20px 8px;
+}
+
+.level {
+  position: relative;
+  align-self: center;
+  width: 150px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--demo-surface);
+  box-shadow: inset 0 0 0 1.5px var(--demo-muted);
+}
+
+.level::before,
+.level::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 1.5px;
+  background: var(--demo-muted);
+}
+
+.level::before {
+  left: calc(50% - 16px);
+}
+
+.level::after {
+  left: calc(50% + 15px);
+}
+
+.bubble {
+  position: absolute;
+  top: 5px;
+  left: calc(50% - 12px);
+  width: 24px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--demo-accent);
+  animation: bubble 2.8s ease-in-out infinite;
+}
+
+@keyframes bubble {
+  0%,
+  100% {
+    transform: translateX(46px);
+  }
+  50% {
+    transform: translateX(-46px);
+  }
+}
+
+.floor {
+  position: relative;
+  height: 64px;
+  border-bottom: 3px solid var(--demo-muted);
+}
+
+.ball {
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - 30px);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 32% 30%,
+      var(--swm-white) 0 5px,
+      transparent 5.5px
+    ),
+    var(--demo-accent);
+  animation: roll 2.8s ease-in-out infinite;
+}
+
+@keyframes roll {
+  0%,
+  100% {
+    transform: translateX(-72px) rotate(-275deg);
+  }
+  50% {
+    transform: translateX(72px) rotate(0deg);
+  }
+}
+
+/* Keyboard: the composer rides on top of the keyboard as it slides in. */
+
+.chat {
+  position: relative;
+  height: calc(100% + 36px);
+  /* Reach the bottom edge of the screen so the keyboard slides in from it. */
+  margin-bottom: -36px;
+  overflow: hidden;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 20px 0;
+}
+
+.messageIn,
+.messageOut {
+  height: 34px;
+  border-radius: 17px;
+}
+
+.messageIn {
+  width: 72%;
+  background: var(--demo-surface);
+  border-bottom-left-radius: 6px;
+}
+
+.messageIn[data-short] {
+  width: 46%;
+}
+
+.messageOut {
+  align-self: flex-end;
+  width: 58%;
+  background: var(--demo-accent);
+  border-bottom-right-radius: 6px;
+}
+
+.composer {
+  --keyboard-height: 176px;
+
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * var(--keyboard-height));
+  left: 0;
+  animation: keyboard 4.2s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+}
+
+@keyframes keyboard {
+  0%,
+  14%,
+  88%,
+  100% {
+    transform: translateY(0);
+  }
+  30%,
+  72% {
+    transform: translateY(calc(-1 * var(--keyboard-height)));
+  }
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 14px;
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 19px;
+  background: var(--demo-surface);
+}
+
+.caret {
+  width: 2px;
+  height: 18px;
+  border-radius: 1px;
+  background: var(--demo-accent);
+  animation: caret 1.05s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.send {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--demo-accent);
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  height: var(--keyboard-height);
+  padding: 10px 6px 30px;
+  background: var(--demo-surface);
+}
+
+.keyRow {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.key {
+  width: 20px;
+  height: 26px;
+  border-radius: 5px;
+  background: var(--demo-muted);
+}
+
+.key[data-wide] {
+  width: 44px;
+}
+
+.key[data-space] {
+  width: 120px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble,
+  .ball,
+  .caret {
+    animation: none;
+  }
+
+  .composer {
+    animation: none;
+    transform: translateY(calc(-1 * var(--keyboard-height)));
+  }
+}

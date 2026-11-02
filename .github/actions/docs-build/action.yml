@@ -45,6 +45,10 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}
       run: yarn lint
+    - name: Test the Worklets docs threading simulation
+      shell: bash
+      working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}
+      run: yarn test
     - name: Build Worklets docs
       shell: bash
       working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}

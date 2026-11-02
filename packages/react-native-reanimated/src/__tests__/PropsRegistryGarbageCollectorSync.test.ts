@@ -55,11 +55,19 @@ describe('PropsRegistryGarbageCollector.syncPropsBackToReact', () => {
     const { component, syncStylePropsBackToReact } = createComponent();
     PropsRegistryGarbageCollector.registerView(VIEW_TAG, component);
     getSettledUpdates.mockReturnValue([
-      { viewTag: VIEW_TAG, styleProps: { opacity: 0 } },
+      {
+        viewTag: VIEW_TAG,
+        props: { scrollEnabled: false },
+        style: { opacity: 0 },
+        keysLastWrittenByAnimatedStyle: ['opacity'],
+      },
     ]);
 
     PropsRegistryGarbageCollector.syncPropsBackToReact();
 
-    expect(syncStylePropsBackToReact).toHaveBeenCalledWith({ opacity: 0 });
+    expect(syncStylePropsBackToReact).toHaveBeenCalledWith(
+      { scrollEnabled: false },
+      { opacity: 0 }
+    );
   });
 });

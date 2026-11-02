@@ -1,0 +1,19 @@
+.phone {
+  --phone-width: 180px;
+  --phone-border: var(--dg-border, #87cce8);
+  --phone-panel: var(--dg-panel, #ffffff);
+  --phone-screen: #ffffff;
+  flex-shrink: 0;
+}
+
+.screen {
+  padding: 0;
+  overflow: hidden;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

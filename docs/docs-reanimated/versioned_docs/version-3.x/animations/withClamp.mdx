@@ -4,8 +4,8 @@ sidebar_position: 7
 
 # withClamp
 
-`withClamp` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
-Use it with [withSpring](/docs/animations/withSpring) animation.
+`withClamp` is an [animation modifier](../fundamentals/glossary.mdx#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
+Use it with [withSpring](./withSpring.mdx) animation.
 
 import { useClampPlayground } from '@site/src/components/InteractivePlayground';
 
@@ -69,6 +69,6 @@ const clampedStyleWithDelay = useAnimatedStyle(() => {
 
 ### Returns
 
-`withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withClamp` returns an [animation object](../fundamentals/glossary.mdx#animation-object). It can be either assigned directly to a [shared value](../fundamentals/glossary.mdx#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](../core/useAnimatedStyle.mdx).
 
 <PlatformCompatibility android ios web/>
