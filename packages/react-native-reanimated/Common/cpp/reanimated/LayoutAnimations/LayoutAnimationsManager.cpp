@@ -75,6 +75,11 @@ std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
   return configIt == configs.end() ? nullptr : configIt->second;
 }
 
+bool LayoutAnimationsManager::hasLayoutAnimationConfigs(const LayoutAnimationType type) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  return !getConfigsForType(type).empty();
+}
+
 std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   const auto configIt = exitingAnimations_.find(tag);

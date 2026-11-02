@@ -13,10 +13,15 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
+type ObserverRun = {
+  readonly tag: number | null;
+  readonly cleanup: MaybeObserverCleanup;
+};
+
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
   getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
 ): AnimatedRef<TRef> {
-  const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
+  const observers = useRef<Map<AnimatedRefObserver, ObserverRun>>(
     new Map()
   ).current;
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
@@ -34,13 +39,20 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
-          observers.forEach((cleanup, observer) => {
+          observers.forEach(({ tag, cleanup }, observer) => {
+            // React calls the ref again for the same view whenever the ref passed to it changes.
+            if (tag === currentTag) {
+              return;
+            }
             // Perform the cleanup before calling the observer again.
             // This ensures that all events that were set up in the observer
             // are cleaned up before the observer sets up new events during
             // the next call.
             cleanup?.();
-            observers.set(observer, observer(currentTag));
+            observers.set(observer, {
+              tag: currentTag,
+              cleanup: observer(currentTag),
+            });
           });
         }
       }
@@ -50,11 +62,11 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
 
     fun.observe = (observer: AnimatedRefObserver) => {
       // Call observer immediately to get the initial value
-      const cleanup = observer(fun?.getTag?.() ?? null);
-      observers.set(observer, cleanup);
+      const tag = fun?.getTag?.() ?? null;
+      observers.set(observer, { tag, cleanup: observer(tag) });
 
       return () => {
-        observers.get(observer)?.();
+        observers.get(observer)?.cleanup?.();
         observers.delete(observer);
       };
     };
