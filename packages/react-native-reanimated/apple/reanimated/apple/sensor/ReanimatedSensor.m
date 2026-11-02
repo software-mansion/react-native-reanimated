@@ -193,10 +193,10 @@
 
 - (bool)shouldSkipReading:(CMLogItem *)reading
 {
-  // CoreMotion treats the update interval as a request, and handlers can wait on the main queue, so
-  // this compares the time of the readings. The tolerance keeps a reading that comes slightly early
-  // from being dropped, which would halve the rate.
-  if (reading.timestamp - _lastTimestamp < _interval * 0.9) {
+  // This compares the time of the readings, as handlers can wait on the main queue. CoreMotion rounds
+  // the update interval, for example 16.7 ms to 15 ms, and the tolerance keeps such a reading from
+  // being dropped, which would halve the rate.
+  if (reading.timestamp - _lastTimestamp < _interval * 0.75) {
     return true;
   }
   _lastTimestamp = reading.timestamp;
