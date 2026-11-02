@@ -560,6 +560,37 @@ describe('Shared transition with fadeContent', () => {
     await expectMovingWithChildOpacity('source', 0.1, 1);
   });
 
+  test('drops a queued layout change of a target child when the navigation goes back', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    // The layout change and the end of the target role are in one update, so the layout animation does not start.
+    await render(
+      <ScreensWithEnteringChild showTarget={false} keepChild childWide />
+    );
+    await waitForFrames(3);
+
+    await advanceAnimationTimer(300);
+    await expectEventually(async () => {
+      const child = await mountedProps('enteringChild');
+      return (
+        !!child &&
+        child.opacity > 0.99 &&
+        Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5
+      );
+    }).toBe(true);
+    await expectEnteringCallbacks(1);
+    await advanceAnimationTimer(500);
+    await waitForFrames(3);
+    expect(await getTrackerCallCount(LAYOUT_CANCELLED)).toBeCalledUI(0);
+    expect(await getTrackerCallCount(LAYOUT_FINISHED)).toBeCalledUI(0);
+  });
+
   test('replaces the layout animation of a target child with its entering animation', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithEnteringChild showTarget={false} />);
