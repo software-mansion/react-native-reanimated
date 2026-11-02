@@ -116,6 +116,8 @@ async function mountedWidth(name: string) {
 }
 
 describe('Shared transition carrier changes during a run', () => {
+  const observerTest = RuntimeTestObserver ? test : test.skip;
+
   test('retargets the carrier when it is the target view', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     await render(<ReversedScreens active={false} />);
@@ -151,37 +153,42 @@ describe('Shared transition carrier changes during a run', () => {
     }).toBe(true);
   });
 
-  test('returns a moving carrier whose shared tag changes and moves the new pair', async () => {
-    await mockAnimationTimer({ autoAdvance: false });
-    await render(<RenamedCarrierScreens active={false} />);
-    await waitForFrames();
+  observerTest(
+    'returns a moving carrier whose shared tag changes and moves the new pair',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(<RenamedCarrierScreens active={false} />);
+      await waitForFrames();
 
-    await render(<RenamedCarrierScreens active />);
-    await waitForFrames(3);
-    await advanceAnimationTimer(DURATION / 2);
-    expect(await mountedWidth('source')).toBe(105, ComparisonMode.PIXEL);
+      await render(<RenamedCarrierScreens active />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(DURATION / 2);
+      expect(await mountedWidth('source')).toBe(105, ComparisonMode.PIXEL);
 
-    await render(<RenamedCarrierScreens active={false} renamed />);
-    await waitForFrames(3);
-    const source = await getTestComponent('source').getMountedViewProps();
-    expect(source?.width).toBe(60, ComparisonMode.PIXEL);
-    expect(source?.opacity).toBe(1);
-    expect(
-      await RuntimeTestObserver?.observeParent(
-        getTestComponent('source').getTag()
-      )
-    ).toBe(getTestComponent('sourceScreen').getTag());
+      await render(<RenamedCarrierScreens active={false} renamed />);
+      await waitForFrames(3);
+      const source = await getTestComponent('source').getMountedViewProps();
+      expect(source?.width).toBe(60, ComparisonMode.PIXEL);
+      expect(source?.opacity).toBe(1);
+      expect(
+        await RuntimeTestObserver!.observeParent(
+          getTestComponent('source').getTag()
+        )
+      ).toBe(getTestComponent('sourceScreen').getTag());
 
-    await advanceAnimationTimer(DURATION / 2);
-    expect(await mountedWidth('target')).toBe(105, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(DURATION / 2);
+      expect(await mountedWidth('target')).toBe(105, ComparisonMode.PIXEL);
 
-    await advanceAnimationTimer(DURATION / 2);
-    await waitForNotification('carrier-finished');
-    await expectEventually(async () => {
-      const props = await getTestComponent('newSource').getMountedViewProps();
-      return !!props && props.opacity === 1 && Math.abs(props.width - 60) < 0.5;
-    }).toBe(true);
-  });
+      await advanceAnimationTimer(DURATION / 2);
+      await waitForNotification('carrier-finished');
+      await expectEventually(async () => {
+        const props = await getTestComponent('newSource').getMountedViewProps();
+        return (
+          !!props && props.opacity === 1 && Math.abs(props.width - 60) < 0.5
+        );
+      }).toBe(true);
+    }
+  );
 });
 
 const styles = StyleSheet.create({
