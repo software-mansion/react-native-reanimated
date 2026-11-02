@@ -256,9 +256,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
-        auto &run = startSharedTransitionRun(
+        const auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
-        run.targetEndView = after;
 
         startProgressTransition(
             run.carrier->current.tag,
@@ -430,14 +429,14 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   return carrierView;
 }
 
-bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &targetView) const {
-  const auto &previousView = run.targetEndView;
-  if (previousView.layoutMetrics != targetView.layoutMetrics) {
+bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
+  const auto &previousTarget = carrierAnimation(run).finalView;
+  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
     return true;
   }
   return hasCarrierAnimationEnded(run.carrier->current.tag) &&
       isDescendantOfAny(run.target, viewsHiddenByContinuingRuns()) &&
-      PropsDiffer::hasAnimatedChanges(getViewProps(previousView), getViewProps(targetView));
+      PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget));
 }
 
 // The carrier shows its own props, so that its content, for example a video player or an image
@@ -726,9 +725,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
-      auto &run = startSharedTransitionRun(
+      const auto &run = startSharedTransitionRun(
           before, sharedTag, collectedTransition.nodes, false, transaction, propsParserContext);
-      run.targetEndView = after;
 
       startSharedTransition(
           run.carrier->current.tag,
@@ -768,14 +766,12 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       run.target = afterNode;
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
-      const bool targetChanged = targetEndChanged(run, after);
-      run.targetEndView = after;
       if (hasPendingLayoutAnimation(carrierTag)) {
         updateLayoutAnimationTarget(
             carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
         continue;
       }
-      if (targetChanged) {
+      if (targetEndChanged(run, carrierAfter)) {
         startSharedTransition(
             carrierTag,
             carrierAnimation(run).currentView,

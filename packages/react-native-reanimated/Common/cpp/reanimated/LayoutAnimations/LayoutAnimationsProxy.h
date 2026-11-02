@@ -45,8 +45,6 @@ struct PendingNodeAnimation {
 struct SharedTransitionRun {
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
-  // The target view that the carrier animates to.
-  ShadowView targetEndView;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
@@ -301,7 +299,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
-  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &targetView) const;
+  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
