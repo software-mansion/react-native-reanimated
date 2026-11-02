@@ -4,10 +4,13 @@
 
 #include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <reanimated/Fabric/updates/propNameFromString.h>
+#include <reanimated/Tools/TextMetrics.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
 
+#include <algorithm>
 #include <set>
+#include <string>
 
 namespace reanimated {
 
@@ -36,6 +39,14 @@ inline bool isLayoutProp(facebook::react::PropName propName) {
   return layoutPropNames.contains(propName);
 }
 
+inline bool isLayoutPropName(const std::string &name) {
+  if (std::ranges::any_of(TEXT_METRIC_PROP_NAMES, [&](const char *metric) { return name == metric; })) {
+    return true;
+  }
+  const auto propName = propNameFromString(name);
+  return propName.has_value() && isLayoutProp(propName.value());
+}
+
 inline bool shouldSkipNonLayoutProp(facebook::react::PropName propName) {
   if (shouldFilterNonLayoutProps()) {
     return !isLayoutProp(propName);
@@ -56,8 +67,7 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 
   const auto rawPropsDynamic = animatedProps.rawProps->toDynamic();
   for (const auto &key : rawPropsDynamic.keys()) {
-    const auto propName = propNameFromString(key.asString());
-    if (propName.has_value() && isLayoutProp(propName.value())) {
+    if (isLayoutPropName(key.asString())) {
       return true;
     }
   }
@@ -67,8 +77,7 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
 
 inline bool hasLayoutProps(const folly::dynamic &props) {
   for (const auto &key : props.keys()) {
-    const auto propName = propNameFromString(key.asString());
-    if (propName.has_value() && isLayoutProp(propName.value())) {
+    if (isLayoutPropName(key.asString())) {
       return true;
     }
   }
@@ -81,9 +90,7 @@ inline bool hasLayoutProps(facebook::jsi::Runtime &rt, const facebook::jsi::Valu
   const size_t n = names.size(rt);
   for (size_t ki = 0; ki < n; ++ki) {
     facebook::jsi::Value keyVal = names.getValueAtIndex(rt, ki);
-    const auto keyStr = keyVal.asString(rt).utf8(rt);
-    const auto propName = propNameFromString(keyStr);
-    if (propName.has_value() && isLayoutProp(propName.value())) {
+    if (isLayoutPropName(keyVal.asString(rt).utf8(rt))) {
       return true;
     }
   }
