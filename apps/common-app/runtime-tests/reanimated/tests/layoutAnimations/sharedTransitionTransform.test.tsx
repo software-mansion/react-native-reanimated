@@ -223,7 +223,14 @@ describe('Shared transition transform copying', () => {
       await render(<TransformScreens {...props} active targetWidth={180} />);
       await waitForFrames(3);
       await expectTranslation('transform-source', 40);
-      await advanceAnimationTimer(4000);
+      await advanceAnimationTimer(2900);
+      await expectEventually(
+        async () =>
+          (await getTestComponent('transform-source').getMountedViewProps())
+            ?.width,
+        3500
+      ).toBe(180, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(1100);
       await waitForNotification('transform-finished');
       await expectTranslation('transform-target', 0);
     }

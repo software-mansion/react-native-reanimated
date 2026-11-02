@@ -31,13 +31,19 @@ test('the Android carrier copies exactly the style keys that PropsDiffer animate
     .split('constexpr std::array kAnimatedStyleProps{')[1]
     .split('};')[0];
   const copied = [...keys.matchAll(/"(\w+)"/g)].map(([, name]) => name);
+  const transformOriginHelper = differ
+    .split('void PropsDiffer::addTransformOriginToDiff(')[1]
+    .split('\n}')[0];
+  const animatesTransformOrigin =
+    /\baddTransformOriginToDiff\(rt,/.test(methods) &&
+    /jsiValues\.setProperty\(rt, "transformOrigin"/.test(transformOriginHelper);
   const animated = [
     ...[
       ...methods.matchAll(
         /(?:sourceValues_\.setProperty\(rt,|diffBorder\w+\([^;]*?)\s*"(\w+)"/g
       ),
     ].map(([, name]) => name),
-    'transformOrigin',
+    ...(animatesTransformOrigin ? ['transformOrigin'] : []),
   ];
   expect(sorted(copied)).toEqual(sorted(animated));
 });
