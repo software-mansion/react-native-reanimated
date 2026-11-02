@@ -22,12 +22,15 @@ type ConsoleLike = typeof console & { a: number };
 registerCustomSerializable({
   name: 'ConsoleLike',
   determine(value: object): value is ConsoleLike {
+    'worklet';
     return Object.getPrototypeOf(value) === console;
   },
   pack(value: ConsoleLike) {
+    'worklet';
     return { a: value.a }; // transfer data
   },
   unpack(value: object) {
+    'worklet';
     // recreate object with prototype
     return Object.assign(Object.create(console), value);
   },
@@ -116,14 +119,17 @@ Consider the following examples:
       registerCustomSerializable({
         name: 'ConsoleLike',
         determine(value: object): value is ConsoleLike {
+          'worklet';
           return Object.getPrototypeOf(value) === console;
         },
         pack(value: ConsoleLike) {
+          'worklet';
           // We don't need to transfer any data,
           // so we can pack it to an empty object.
           return {};
         },
         unpack(value: object) {
+          'worklet';
           // We can recreate the original object.
           return Object.create(console);
         },
