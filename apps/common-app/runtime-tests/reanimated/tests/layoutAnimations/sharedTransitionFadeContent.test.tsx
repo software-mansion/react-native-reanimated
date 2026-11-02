@@ -934,7 +934,7 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('fades the children of the target in over fadeIn.duration', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const slowFadeIn = SharedTransition.duration(600).fadeContent({
       fadeIn: { duration: 3000 },
     });
