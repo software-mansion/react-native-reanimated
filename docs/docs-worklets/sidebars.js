@@ -36,7 +36,7 @@ const sidebars = {
     {
       type: 'doc',
       id: 'worklets-plugin/about',
-      label: 'Worklets Babel plugin',
+      label: 'Worklet Syntax plugin',
     },
   ],
   api: [
@@ -74,7 +74,7 @@ const sidebars = {
     {
       type: 'doc',
       id: 'worklets-plugin/oxc',
-      label: 'OXC plugin',
+      label: 'Oxc plugin',
     },
   ],
 };
