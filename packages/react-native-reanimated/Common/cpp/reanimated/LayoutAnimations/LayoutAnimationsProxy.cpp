@@ -1396,7 +1396,8 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
 
 void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<LightNode> &node,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const bool isContentFadeIn) const {
   resolveLightNodeProps(node);
   const auto &newChildShadowView = node->current;
   const auto opacity = getViewProps(newChildShadowView).opacity;
@@ -1411,6 +1412,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       .parentTag = parent->current.tag,
       .opacity = opacity,
       .config = config,
+      .isContentFadeIn = isContentFadeIn,
   });
 }
 

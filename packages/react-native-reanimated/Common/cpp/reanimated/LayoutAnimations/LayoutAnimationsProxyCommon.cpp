@@ -447,7 +447,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
         values.setProperty(uiRuntime_, "currentWidth", current.width);
         values.setProperty(uiRuntime_, "currentHeight", current.height);
       }
-      if (start.type == LayoutAnimationType::ENTERING && start.opacity) {
+      if (start.isContentFadeIn && start.opacity) {
         values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
       }
       if (start.type != LayoutAnimationType::EXITING) {

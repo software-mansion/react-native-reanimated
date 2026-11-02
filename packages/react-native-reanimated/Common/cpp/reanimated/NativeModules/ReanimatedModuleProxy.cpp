@@ -1136,10 +1136,18 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
 }
 
 void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch) {
-  auto synchronousUpdatesBatch = updatesBatch;
-  if (layoutAnimationsProxyRegistry_) {
-    layoutAnimationsProxyRegistry_->composeSynchronousProps(synchronousUpdatesBatch);
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_) {
+      auto composedUpdatesBatch = updatesBatch;
+      layoutAnimationsProxyRegistry_->composeSynchronousProps(composedUpdatesBatch);
+      sendSynchronousPropsToViews(composedUpdatesBatch);
+      return;
+    }
   }
+  sendSynchronousPropsToViews(updatesBatch);
+}
+
+void ReanimatedModuleProxy::sendSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1353,6 +1361,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      // A proxy calls this with its mutex held, and it takes the registry lock. So code that holds the
+      // registry lock must not call into a layout animations proxy.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();
         if (!strongThis || !shouldUseSynchronousUpdatesInPerformOperations()) {

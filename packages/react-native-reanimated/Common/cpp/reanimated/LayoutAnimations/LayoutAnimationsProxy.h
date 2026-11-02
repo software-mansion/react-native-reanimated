@@ -167,8 +167,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   LayoutAnimationsProxy(SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies);
 
-  void startEnteringAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config)
-      const;
+  void startEnteringAnimation(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<Serializable> &config,
+      bool isContentFadeIn = false) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
   void startLayoutAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
   void startSharedTransition(

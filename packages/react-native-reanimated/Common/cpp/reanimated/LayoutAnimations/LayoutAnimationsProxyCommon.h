@@ -62,6 +62,8 @@ struct ManagedLayoutAnimationStart {
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
   std::optional<ContentOpacityRange> contentOpacity;
+  // A shared transition content fade-in gets the target opacity of the view.
+  bool isContentFadeIn = false;
 };
 
 struct ProgressLayoutAnimationStart {

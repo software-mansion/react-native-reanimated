@@ -1221,13 +1221,13 @@ void LayoutAnimationsProxy::fadeInTargetContent(
     const PropsParserContext &propsParserContext) const {
   for (const auto &child : fadingChildren(run.target, hiddenViewTags())) {
     const auto tag = child->current.tag;
-    if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
+    if (child->isExiting() || hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
       continue;
     }
     const auto &view = mountedView(child);
     transaction.filteredMutations.push_back(createPropsUpdate(
         view, cloneViewWithOpacity(view, 0, propsParserContext), run.target->current.tag, propsParserContext));
-    startEnteringAnimation(child, run.contentFade->fadeIn);
+    startEnteringAnimation(child, run.contentFade->fadeIn, true);
   }
   schedulePullOnNextFrame();
 }

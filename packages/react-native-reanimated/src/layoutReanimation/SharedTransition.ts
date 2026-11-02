@@ -19,7 +19,6 @@ export class SharedTransition
 {
   static presetName = 'SharedTransition';
 
-  /** @internal */
   fadeContentV = false;
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
@@ -47,7 +46,6 @@ export class SharedTransition
     return this;
   }
 
-  /** @internal */
   buildContentFadeIn(): EntryExitAnimationFunction | undefined {
     if (!this.fadeContentV) {
       return undefined;
