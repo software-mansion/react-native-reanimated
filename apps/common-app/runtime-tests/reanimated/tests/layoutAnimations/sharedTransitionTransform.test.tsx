@@ -210,6 +210,7 @@ describe('Shared transition transform copying', () => {
   nativeTest(
     'keeps the held transform when the target width changes',
     async () => {
+      await mockAnimationTimer(false);
       const transition = heldTransition();
       const props = { transition, sourceX: 40, targetX: null, ancestor: false };
       await render(<TransformScreens {...props} active={false} />);
@@ -217,9 +218,12 @@ describe('Shared transition transform copying', () => {
       await render(<TransformScreens {...props} active />);
       await waitForFrames(3);
       await expectTranslation('transform-source', 40);
+      await advanceAnimationTimer(1000);
+      await expectTranslation('transform-source', 40);
       await render(<TransformScreens {...props} active targetWidth={180} />);
       await waitForFrames(3);
       await expectTranslation('transform-source', 40);
+      await advanceAnimationTimer(4000);
       await waitForNotification('transform-finished');
       await expectTranslation('transform-target', 0);
     }
