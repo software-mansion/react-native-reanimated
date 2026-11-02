@@ -8,7 +8,7 @@ import React, {
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
-import { configure, runTests } from './RuntimeTestsApi';
+import { configure, importRuntimeTestSuite, runTests } from './RuntimeTestsApi';
 import { RenderLock } from './utils/RenderLock';
 
 export class ErrorBoundary extends React.Component<
@@ -110,7 +110,14 @@ export default function RuntimeTestsRunner({
       return;
     }
     claimSession(runnerId);
-    testSelectionCallbacks.current.forEach((callback) => callback());
+    testSelectionCallbacks.current.forEach((callback) => {
+      const testSuite = tests.find((test) => test.importTest === callback);
+      if (testSuite) {
+        importRuntimeTestSuite(testSuite.testSuiteName, callback);
+      } else {
+        callback();
+      }
+    });
     setStarted(true);
     // eslint-disable-next-line no-void
     void run();

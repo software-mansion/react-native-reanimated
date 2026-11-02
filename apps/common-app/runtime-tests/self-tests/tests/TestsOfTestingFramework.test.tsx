@@ -26,6 +26,7 @@ import {
   notify,
   Presets,
   registerValue,
+  reloadAndResume,
   render,
   test,
   createOrderConstraint,
@@ -474,6 +475,12 @@ describe('Tests of Test Framework', () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');
+    });
+
+    test('reloadAndResume from a suite with a completed test case', async () => {
+      await expect(() => reloadAndResume('self-tests')).toThrow(
+        'a test case of this suite has already completed'
+      );
     });
 
     test('useTestState', async () => {

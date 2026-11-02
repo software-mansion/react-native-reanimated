@@ -60,6 +60,7 @@ export type TestSuite = {
   buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
+  runtimeTestSuiteName?: string;
   beforeAll?: MaybeAsync<void>;
   afterAll?: MaybeAsync<void>;
   beforeEach?: MaybeAsync<void>;

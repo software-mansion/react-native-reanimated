@@ -98,18 +98,25 @@ export default function AutoRunRuntimeTestsRunner({
           throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
         }
 
-        const { configure, runTests } = require('./RuntimeTestsApi') as {
-          configure: (config: TestConfiguration) => RenderLock;
-          runTests: () => Promise<{
-            passed: number;
-            failed: number;
-            skipped: number;
-            failedTests: string[];
-            durationMs: number;
-          }>;
-        };
+        const { configure, importRuntimeTestSuite, runTests } =
+          require('./RuntimeTestsApi') as {
+            configure: (config: TestConfiguration) => RenderLock;
+            importRuntimeTestSuite: (
+              name: string,
+              importTest: () => void
+            ) => void;
+            runTests: () => Promise<{
+              passed: number;
+              failed: number;
+              skipped: number;
+              failedTests: string[];
+              durationMs: number;
+            }>;
+          };
 
-        selected.forEach((test) => test.importTest());
+        selected.forEach((test) =>
+          importRuntimeTestSuite(test.testSuiteName, test.importTest)
+        );
         renderLock = configure({
           render: setComponent,
           onProgress: setProgress,

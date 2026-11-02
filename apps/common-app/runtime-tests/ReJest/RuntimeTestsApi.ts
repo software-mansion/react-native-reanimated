@@ -170,6 +170,10 @@ export async function runTests() {
   return testRunner.runTests();
 }
 
+export function importRuntimeTestSuite(name: string, importTest: () => void) {
+  testSuiteBuilder.importRuntimeTestSuite(name, importTest);
+}
+
 export function reloadAndResume(resumeFromSuite: string) {
   return testRunner.reloadAndResume(resumeFromSuite);
 }

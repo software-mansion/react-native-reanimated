@@ -56,6 +56,7 @@ export class TestRunner {
   private _suiteFinishedHook: ((suiteName: string) => void) | null = null;
   private _reloadHook: TestConfiguration['onReloadRequested'] | null = null;
   private _progressIndex: number = 0;
+  private _runtimeTestSuitesWithCompletedCases = new Set<string>();
   private _progressTotal: number = 0;
   private _testSuiteBuilder = new TestSuiteBuilder();
 
@@ -96,6 +97,11 @@ export class TestRunner {
   }
 
   public reloadAndResume(resumeFromSuite: string): Promise<never> {
+    if (this._runtimeTestSuitesWithCompletedCases.has(resumeFromSuite)) {
+      throw new Error(
+        `[ReJest] Cannot reload and resume from suite '${resumeFromSuite}', because a test case of this suite has already completed. The resumed run restarts the suite from its first test case, so that test case would be counted twice.`
+      );
+    }
     if (!this._reloadHook) {
       throw new Error(
         '[ReJest] Reloading the app during a test needs the runtime-tests server.'
@@ -339,6 +345,11 @@ export class TestRunner {
     }
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
+    if (testSuite.runtimeTestSuiteName !== undefined) {
+      this._runtimeTestSuitesWithCompletedCases.add(
+        testSuite.runtimeTestSuiteName
+      );
+    }
   }
 
   public expect(currentValue: TestValue): Matchers {
