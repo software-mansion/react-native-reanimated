@@ -32,6 +32,18 @@ const transition = SharedTransition.duration(DURATION)
     }
   });
 
+function Target() {
+  const target = useTestRef('target');
+  return (
+    <Animated.View
+      ref={target}
+      sharedTransitionTag="removed-target"
+      sharedTransitionStyle={transition}
+      style={styles.target}
+    />
+  );
+}
+
 function Screens({
   active,
   targetMounted = true,
@@ -40,7 +52,6 @@ function Screens({
   targetMounted?: boolean;
 }) {
   const source = useTestRef('source');
-  const target = useTestRef('target');
   return (
     <View style={styles.container}>
       <SharedTransitionBoundary isActive={!active}>
@@ -53,14 +64,7 @@ function Screens({
       </SharedTransitionBoundary>
       {active && (
         <SharedTransitionBoundary isActive>
-          {targetMounted && (
-            <Animated.View
-              ref={target}
-              sharedTransitionTag="removed-target"
-              sharedTransitionStyle={transition}
-              style={styles.target}
-            />
-          )}
+          {targetMounted && <Target />}
         </SharedTransitionBoundary>
       )}
     </View>
