@@ -30,6 +30,7 @@ const bundleModeTest = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
   : test.skip;
 
 const ABORTED_NOTIFICATION = 'ABORTED_NOTIFICATION';
+const ORDER_NOTIFICATION = 'ORDER_NOTIFICATION';
 
 const onAborted = () => {
   notify(ABORTED_NOTIFICATION);
@@ -394,6 +395,58 @@ describe('abortWorkletRuntime', () => {
         return 42;
       });
       expect(value).toBe(42);
+    }
+  );
+
+  bundleModeTest(
+    'runs the UI microtasks after the UI worklet that aborted the runtime',
+    async () => {
+      // Arrange
+      const runtime = createWorkletRuntime({
+        name: 'abort-ui-order',
+        abortable: true,
+      });
+      const release = createSynchronizable(false);
+      let order = '';
+      const onOrder = (value: string) => {
+        order = value;
+        notify(ORDER_NOTIFICATION);
+      };
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        scheduleOnRN(onStarted);
+        while (!release.getBlocking()) {
+          // Wait until the test releases the job.
+        }
+      });
+
+      // Act
+      try {
+        await waitForNotification(STARTED_NOTIFICATION);
+        runOnUI(() => {
+          'worklet';
+          const events: string[] = [];
+          const record = (event: string) => {
+            events.push(event);
+            if (events.length === 3) {
+              scheduleOnRN(onOrder, events.join(', '));
+            }
+          };
+          runOnRuntimeAsync(runtime, () => {
+            'worklet';
+            return 1;
+          }).catch(() => record('h'));
+          queueMicrotask(() => record('m1'));
+          abortWorkletRuntime(runtime.runtimeId);
+          record('after abort');
+        })();
+        await waitForNotification(ORDER_NOTIFICATION);
+      } finally {
+        release.setBlocking(true);
+      }
+
+      // Assert
+      expect(order).toBe('after abort, m1, h');
     }
   );
 
