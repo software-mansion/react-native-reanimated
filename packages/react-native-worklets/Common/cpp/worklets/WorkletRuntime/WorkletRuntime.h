@@ -409,20 +409,33 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <MicrotaskCheckpoint TCheckpoint, typename TInvoker>
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
+    const bool isRootTask = !rootTaskRunning_;
+    rootTaskRunning_ = true;
     const auto checkpoint = [&]() {
+      if (!isRootTask) {
+        return;
+      }
       if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
         if (microtaskQueueEnabled_) {
           getJSIRuntime().drainMicrotasks();
         }
       }
+      rootTaskRunning_ = false;
     };
-    if constexpr (std::is_void_v<Result>) {
-      std::forward<TInvoker>(invoke)();
-      checkpoint();
-    } else {
-      Result result = std::forward<TInvoker>(invoke)();
-      checkpoint();
-      return std::forward<Result>(result);
+    try {
+      if constexpr (std::is_void_v<Result>) {
+        std::forward<TInvoker>(invoke)();
+        checkpoint();
+      } else {
+        Result result = std::forward<TInvoker>(invoke)();
+        checkpoint();
+        return std::forward<Result>(result);
+      }
+    } catch (...) {
+      if (isRootTask) {
+        rootTaskRunning_ = false;
+      }
+      throw;
     }
   }
 
@@ -484,6 +497,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
   std::atomic_bool aborted_{false};
+  mutable bool rootTaskRunning_{false};
   std::weak_ptr<Networking> networking_;
 };
 
