@@ -910,11 +910,10 @@ describe('Shared transition with fadeContent', () => {
         <Screens showTarget={false} sharedTransition={earlyFadeOut} />
       );
       await waitForFrames();
-      const recorder = recordFrames(['source', 'sourceChild']);
-
-      await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
-      await expectOpacity('target', 1);
-      const frames = await recorder.stop();
+      const frames = await recordFrames(['source', 'sourceChild'], async () => {
+        await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+        await expectOpacity('target', 1);
+      });
       const moving = frames.filter(
         ([source, child]) => isMoving(source) && !!child
       );
