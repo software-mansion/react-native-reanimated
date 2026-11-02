@@ -31,12 +31,10 @@ class AsyncQueueImpl : public AsyncQueue {
 
   void abortPending(AbortToken abortToken) override;
 
-  void stop() override;
+  void stop(AbortToken abortToken) override;
 
  private:
   static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
-
-  void shutdown();
 
   const std::shared_ptr<AsyncQueueState> state_;
 };

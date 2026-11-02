@@ -38,7 +38,7 @@ class AsyncQueue : public facebook::jsi::NativeState {
    */
   virtual void abortPending(AbortToken /* abortToken */) {}
 
-  virtual void stop() {}
+  virtual void stop(AbortToken /* abortToken */) {}
 };
 
 } // namespace worklets

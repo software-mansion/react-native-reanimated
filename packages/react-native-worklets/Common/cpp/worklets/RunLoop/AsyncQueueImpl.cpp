@@ -77,7 +77,7 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 }
 
 AsyncQueueImpl::~AsyncQueueImpl() {
-  shutdown();
+  stop(defaultToken);
 }
 
 void AsyncQueueImpl::push(std::function<void()> &&job) {
@@ -99,18 +99,13 @@ void AsyncQueueImpl::abortPending(AbortToken /* abortToken */) {
   }
 }
 
-void AsyncQueueImpl::stop() {
-  shutdown();
-}
-
-void AsyncQueueImpl::shutdown() {
-  std::queue<std::function<void()>> pendingJobs;
+void AsyncQueueImpl::stop(AbortToken abortToken) {
   {
     std::unique_lock<std::mutex> lock(state_->mutex);
     state_->running = false;
-    std::swap(pendingJobs, state_->queue);
   }
   state_->cv.notify_all();
+  abortPending(abortToken);
 }
 
 AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler) : uiScheduler_(uiScheduler) {}

@@ -116,8 +116,7 @@ void WorkletRuntime::abort() {
     eventLoop_->abortPending();
   }
   if (queue_) {
-    queue_->abortPending(abortToken());
-    queue_->stop();
+    queue_->stop(abortToken());
   }
   if (const auto networking = networking_.lock()) {
     networking->abortAllForRuntime(runtimeId_);
