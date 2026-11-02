@@ -66,6 +66,12 @@ runs:
       working-directory: ${{ inputs.package-dir }}
       run: yarn lint:android
 
+    - name: Test Reanimated Android
+      if: inputs.package-dir == 'packages/react-native-reanimated'
+      shell: bash
+      working-directory: apps/fabric-example/android
+      run: ./gradlew :react-native-reanimated:testDebugUnitTest -PreactNativeArchitectures=arm64-v8a
+
     - name: Lint Android (clang-tidy)
       shell: bash
       working-directory: ${{ inputs.package-dir }}
