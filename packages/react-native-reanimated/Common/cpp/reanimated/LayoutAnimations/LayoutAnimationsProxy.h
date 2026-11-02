@@ -170,7 +170,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #ifdef ANDROID
   ReleaseViewTransitionsFunction releaseViewTransitions_;
   void releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const;
-  bool isInRemovedScreen(const std::shared_ptr<LightNode> &node, const std::unordered_set<Tag> &removedScreens) const;
+  bool isInRemovedScreen(const std::shared_ptr<LightNode> &node, const ShadowViewMutationList &mutations) const;
   mutable bool cleanupPullScheduled_ = false;
   // tags of JS-thread batches that are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedBatchTags_;

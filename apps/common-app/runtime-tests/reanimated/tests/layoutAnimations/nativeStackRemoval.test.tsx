@@ -1,6 +1,7 @@
 import {
   createNavigationContainerRef,
   NavigationContainer,
+  StackActions,
   useIsFocused,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -28,6 +29,7 @@ import {
   render,
   test,
   useTestRef,
+  wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
@@ -221,6 +223,37 @@ function SharedSource() {
   return <SharedBox name="source" style={styles.sharedSource} />;
 }
 
+const PopToTop = createNativeStackNavigator<{
+  Target: undefined;
+  Middle: undefined;
+  Source: undefined;
+}>();
+const popToTopNavigation = createNavigationContainerRef<{
+  Target: undefined;
+  Middle: undefined;
+  Source: undefined;
+}>();
+
+function PopToTopMiddle() {
+  return <SharedBox name="middle" style={styles.box} />;
+}
+
+function PopToTopStacks() {
+  return (
+    <View style={styles.root}>
+      <NavigationContainer
+        ref={popToTopNavigation}
+        onReady={() => notify(SHARED_STACKS_READY)}>
+        <PopToTop.Navigator>
+          <PopToTop.Screen name="Target" component={SharedTarget} />
+          <PopToTop.Screen name="Middle" component={PopToTopMiddle} />
+          <PopToTop.Screen name="Source" component={SharedSource} />
+        </PopToTop.Navigator>
+      </NavigationContainer>
+    </View>
+  );
+}
+
 function NestedSource() {
   return (
     <SharedInner.Navigator>
@@ -279,6 +312,19 @@ describe('Layout animations on native stack removal', () => {
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
     const targetTag = getTestComponent('target').getTag();
     await expectEventually(() => isViewMountedNatively(targetTag)).toBe(true);
+    await render(null);
+  });
+
+  test('moves a shared source when pop to top also removes a screen without it', async () => {
+    await render(<PopToTopStacks />);
+    await waitForNotification(SHARED_STACKS_READY);
+    popToTopNavigation.navigate('Middle');
+    await wait(800);
+    popToTopNavigation.navigate('Source');
+    await wait(800);
+    const middleTag = getTestComponent('middle').getTag();
+    popToTopNavigation.dispatch(StackActions.popToTop());
+    await expectEventually(() => isViewMountedNatively(middleTag)).toBe(false);
     await render(null);
   });
 });

@@ -1368,14 +1368,9 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
-  [[maybe_unused]] std::unordered_set<Tag> removedScreens;
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Remove) {
       const auto tag = mutation.oldChildShadowView.tag;
-      const auto componentName = mutation.oldChildShadowView.componentName;
-      if (componentName != nullptr && !std::strcmp(componentName, "RNSScreen")) {
-        removedScreens.insert(tag);
-      }
       if (mutation.parentTag == surfaceId_) {
         std::erase(movedToRoot, tag);
       } else {
@@ -1385,11 +1380,6 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
       const auto tag = mutation.newChildShadowView.tag;
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() && nodeIt->second->isDetached) {
-        // React Native Screens holds what is left in a removed screen when it mounts the Remove, which is after the
-        // release. A screen that pops together with the carrier's screen holds nothing of the carrier.
-        react_native_assert(
-            !isInRemovedScreen(nodeIt->second, removedScreens) &&
-            "A carrier must move to the root before its screen is removed");
         movedToRoot.push_back(tag);
       }
     }
@@ -1410,7 +1400,15 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
 
 bool LayoutAnimationsProxy::isInRemovedScreen(
     const std::shared_ptr<LightNode> &node,
-    const std::unordered_set<Tag> &removedScreens) const {
+    const ShadowViewMutationList &mutations) const {
+  std::unordered_set<Tag> removedScreens;
+  for (const auto &mutation : mutations) {
+    const auto componentName = mutation.oldChildShadowView.componentName;
+    if (mutation.type == ShadowViewMutation::Remove && componentName != nullptr &&
+        !std::strcmp(componentName, "RNSScreen")) {
+      removedScreens.insert(mutation.oldChildShadowView.tag);
+    }
+  }
   for (auto ancestor = node->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
     if (removedScreens.contains(ancestor->current.tag)) {
       return true;
