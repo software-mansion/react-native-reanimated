@@ -244,7 +244,7 @@ describe('Shared transition moves a real native view', () => {
   recreateChildTest.each([false, true])(
     'keeps a retained carrier when React recreates its last child tag (in a container: %p)',
     async (inContainer) => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = transitionWithNotification(4000).easing(Easing.linear);
       await render(
         <RecreatedChildScreens
@@ -382,7 +382,7 @@ describe('Shared transition moves a real native view', () => {
   });
 
   test('keeps the source and its children when React removes their screen', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const transition = transitionWithNotification();
     await render(
       <Screens active={false} transition={transition} removeSource />

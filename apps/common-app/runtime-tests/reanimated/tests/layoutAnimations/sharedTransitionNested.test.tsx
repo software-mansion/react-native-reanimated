@@ -472,7 +472,7 @@ describe('Nested shared transitions', () => {
   });
 
   test('retargets a retained inner carrier while it waits to land', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} removeSource />);
     await waitForFrames();
     const innerTag = getTestComponent('sourceInner').getTag();
@@ -517,7 +517,7 @@ describe('Nested shared transitions', () => {
     ['outer first', outerEndsFirst, 300, 1200],
   ] as const) {
     test(`keeps deleted nested carriers independent when they finish ${order}`, async () => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <Screens active={false} transitions={transitions} removeSource />
       );
@@ -559,7 +559,7 @@ describe('Nested shared transitions', () => {
   test.each([true, false])(
     'keeps a waiting inner view on screen when React moves it (wrapped first: %p)',
     async (wrapped) => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       await render(<Screens active={false} innerWrapped={wrapped} />);
       await waitForFrames();
       const innerTag = getTestComponent('sourceInner').getTag();
