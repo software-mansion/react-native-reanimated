@@ -10,6 +10,7 @@
 @interface ReanimatedSensor : NSObject {
   ReanimatedSensorType _sensorType;
   double _interval;
+  double _lastTimestamp;
   int _referenceFrame;
 #if !TARGET_OS_TV && !TARGET_OS_OSX
   CMMotionManager *_motionManager;

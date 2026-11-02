@@ -69,6 +69,9 @@
   [_motionManager
       startGyroUpdatesToQueue:[NSOperationQueue mainQueue]
                   withHandler:^(CMGyroData *sensorData, NSError *error) {
+                    if ([self shouldSkipReading:sensorData]) {
+                      return;
+                    }
                     double data[] = {sensorData.rotationRate.x, sensorData.rotationRate.y, sensorData.rotationRate.z};
                     self->_setter(data, [self getInterfaceOrientation]);
                   }];
@@ -82,6 +85,9 @@
   [_motionManager startAccelerometerUpdates];
   [_motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue mainQueue]
                                        withHandler:^(CMAccelerometerData *sensorData, NSError *error) {
+                                         if ([self shouldSkipReading:sensorData]) {
+                                           return;
+                                         }
                                          double G = 9.81;
                                          // convert G to m/s^2
                                          double data[] = {
@@ -101,6 +107,9 @@
   [_motionManager
       startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
+                            if ([self shouldSkipReading:sensorData]) {
+                              return;
+                            }
                             double G = 9.81;
                             // convert G to m/s^2
                             double data[] = {
@@ -118,6 +127,9 @@
   [_motionManager
       startMagnetometerUpdatesToQueue:[NSOperationQueue mainQueue]
                           withHandler:^(CMMagnetometerData *sensorData, NSError *error) {
+                            if ([self shouldSkipReading:sensorData]) {
+                              return;
+                            }
                             double data[] = {
                                 sensorData.magneticField.x, sensorData.magneticField.y, sensorData.magneticField.z};
                             self->_setter(data, [self getInterfaceOrientation]);
@@ -146,6 +158,9 @@
   [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
                                                       toQueue:[NSOperationQueue mainQueue]
                                                   withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
+                                                    if ([self shouldSkipReading:sensorData]) {
+                                                      return;
+                                                    }
                                                     CMAttitude *attitude = sensorData.attitude;
                                                     double data[] = {
                                                         attitude.quaternion.x,
@@ -174,6 +189,18 @@
   } else if (_sensorType == ROTATION_VECTOR) {
     [_motionManager stopDeviceMotionUpdates];
   }
+}
+
+- (bool)shouldSkipReading:(CMLogItem *)reading
+{
+  // CoreMotion treats the update interval as a request, and handlers can wait on the main queue, so
+  // this compares the time of the readings. The tolerance keeps a reading that comes slightly early
+  // from being dropped, which would halve the rate.
+  if (reading.timestamp - _lastTimestamp < _interval * 0.9) {
+    return true;
+  }
+  _lastTimestamp = reading.timestamp;
+  return false;
 }
 
 - (int)getInterfaceOrientation
