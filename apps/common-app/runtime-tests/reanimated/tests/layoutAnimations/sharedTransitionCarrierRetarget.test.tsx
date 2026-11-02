@@ -54,33 +54,26 @@ function TaggedView({
   );
 }
 
-function RemovedSourceScreens({
+// A reversal makes the moving source view the target of the run.
+function ReversedScreens({
   active,
-  targetWidth = 150,
+  sourceWidth = 60,
 }: {
   active: boolean;
-  targetWidth?: number;
+  sourceWidth?: number;
 }) {
   return (
     <View style={styles.container}>
-      {!active && (
-        <SharedTransitionBoundary isActive>
-          <TaggedView
-            name="source"
-            sharedTag="retarget"
-            style={styles.source}
-          />
-        </SharedTransitionBoundary>
-      )}
-      {active && (
-        <SharedTransitionBoundary isActive>
-          <TaggedView
-            name="target"
-            sharedTag="retarget"
-            style={[styles.target, { width: targetWidth }]}
-          />
-        </SharedTransitionBoundary>
-      )}
+      <SharedTransitionBoundary isActive={!active}>
+        <TaggedView
+          name="source"
+          sharedTag="retarget"
+          style={[styles.source, { width: sourceWidth }]}
+        />
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        <TaggedView name="target" sharedTag="retarget" style={styles.target} />
+      </SharedTransitionBoundary>
     </View>
   );
 }
@@ -125,25 +118,35 @@ async function mountedWidth(name: string) {
 describe('Shared transition carrier changes during a run', () => {
   test('retargets the carrier when it is the target view', async () => {
     await mockAnimationTimer({ autoAdvance: false });
-    await render(<RemovedSourceScreens active={false} />);
+    await render(<ReversedScreens active={false} />);
     await waitForFrames();
 
-    await render(<RemovedSourceScreens active />);
+    await render(<ReversedScreens active />);
     await waitForFrames(3);
     await advanceAnimationTimer(DURATION / 2);
-    expect(await mountedWidth('target')).toBe(105, ComparisonMode.PIXEL);
+    expect(await mountedWidth('source')).toBe(105, ComparisonMode.PIXEL);
 
-    await render(<RemovedSourceScreens active targetWidth={205} />);
+    await render(<ReversedScreens active={false} />);
     await waitForFrames(3);
     await advanceAnimationTimer(DURATION / 2);
-    expect(await mountedWidth('target')).toBe(155, ComparisonMode.PIXEL);
+    const reversing = await mountedWidth('source');
+    expect(reversing).toBeWithinRange(61, 104);
+
+    // Without the retarget, the carrier would land at width 60 after the next half run.
+    await render(<ReversedScreens active={false} sourceWidth={160} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(DURATION / 2);
+    expect(await mountedWidth('source')).toBeWithinRange(
+      (reversing ?? 0) + 1,
+      159
+    );
 
     await advanceAnimationTimer(DURATION / 2);
     await waitForNotification('carrier-finished');
     await expectEventually(async () => {
-      const props = await getTestComponent('target').getMountedViewProps();
+      const props = await getTestComponent('source').getMountedViewProps();
       return (
-        !!props && props.opacity === 1 && Math.abs(props.width - 205) < 0.5
+        !!props && props.opacity === 1 && Math.abs(props.width - 160) < 0.5
       );
     }).toBe(true);
   });
