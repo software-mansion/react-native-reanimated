@@ -12,6 +12,12 @@ name: CI
 # A failed gate runs everything rather than skipping it into green.
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
   merge_group:
     branches:
       - main
@@ -30,6 +36,7 @@ permissions:
 jobs:
   changes:
     name: Changed paths
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -274,37 +281,37 @@ jobs:
   android-validation:
     name: Android validation
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.android-validation == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.android-validation == 'true') }}
     uses: $/.github/workflows/android-validation.yml
 
   apple-validation:
     name: Apple validation
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.apple-validation == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.apple-validation == 'true') }}
     uses: $/.github/workflows/apple-validation.yml
 
   check-ruby-pods-versions:
     name: Check Ruby and CocoaPods versions
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.check-ruby-pods-versions == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.check-ruby-pods-versions == 'true') }}
     uses: $/.github/workflows/check-ruby-pods-versions.yml
 
   docs-build:
     name: Docs build
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.docs-build == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.docs-build == 'true') }}
     uses: $/.github/workflows/docs-build.yml
 
   example-android-build-check:
     name: Example Android build check
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-android-build-check == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.example-android-build-check == 'true') }}
     uses: $/.github/workflows/example-android-build-check.yml
 
   example-ios-build-check:
     name: Example iOS build check
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-ios-build-check == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.example-ios-build-check == 'true') }}
     permissions:
       contents: read
       actions: write
@@ -313,13 +320,13 @@ jobs:
   example-next-build-check-and-test:
     name: Example Next build check and tests
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-next-build-check-and-test == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.example-next-build-check-and-test == 'true') }}
     uses: $/.github/workflows/example-next-build-check-and-test.yml
 
   example-typescript-check-and-lint:
     name: Example TypeScript check and lint
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
     uses: $/.github/workflows/example-typescript-check-and-lint.yml
 
   # Not a matrix: a skipped matrix job shows its `name:` unexpanded.
@@ -327,7 +334,7 @@ jobs:
   runtime-tests-android-legacy-eval:
     name: Runtime tests Android (Legacy Eval)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
@@ -336,7 +343,7 @@ jobs:
   runtime-tests-android-bundle-mode:
     name: Runtime tests Android (Bundle Mode)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-android == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: DebugRuntimeTests
@@ -345,7 +352,7 @@ jobs:
   runtime-tests-ios-legacy-eval:
     name: Runtime tests iOS (Legacy Eval)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     permissions:
       contents: read
       actions: write
@@ -360,7 +367,7 @@ jobs:
   runtime-tests-ios-bundle-mode:
     name: Runtime tests iOS (Bundle Mode)
     needs: changes
-    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result != 'success' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
+    if: ${{ !cancelled() && github.event_name != 'push' && !github.event.pull_request.head.repo.fork && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-ios-argent == 'true') }}
     permissions:
       contents: read
       actions: write
@@ -375,13 +382,13 @@ jobs:
   worklets-plugin-static-check:
     name: Worklets plugin static check
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.worklets-plugin-static-check == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.worklets-plugin-static-check == 'true') }}
     uses: $/.github/workflows/worklets-plugin-static-check.yml
 
   yarn-validation:
     name: Yarn validation
     needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.yarn-validation == 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.yarn-validation == 'true') }}
     uses: $/.github/workflows/yarn-validation.yml
 
   # The only required status. `always()`, not `!cancelled()`: a skipped
@@ -404,7 +411,7 @@ jobs:
       - runtime-tests-ios-bundle-mode
       - worklets-plugin-static-check
       - yarn-validation
-    if: ${{ always() }}
+    if: ${{ always() && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
