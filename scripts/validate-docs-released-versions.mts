@@ -205,6 +205,12 @@ export function findProblems({
     return problems;
   }
 
+  if (lastVersion !== 'current' && !docsVersions.includes(lastVersion)) {
+    return [
+      `lastVersion in ${pkg.docs}/docusaurus.config.js is ${lastVersion}, but ${pkg.docs}/versions.json has no docs version with this name.`,
+    ];
+  }
+
   const newest = latestRelease(releases);
   if (newest && !covers(lastVersion, newest.version)) {
     return [

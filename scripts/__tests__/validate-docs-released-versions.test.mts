@@ -225,6 +225,18 @@ describe('validate-docs-released-versions', () => {
       );
     });
 
+    it('fails when lastVersion is not an entry in versions.json', async () => {
+      const { problems } = await run({
+        'docs/docs-worklets/versions.json': '["0.12-0.13"]',
+        'docs/docs-worklets/docusaurus.config.js': "lastVersion: '0.13',",
+      });
+      assert.equal(problems.length, 1);
+      assert.match(
+        problems[0],
+        /lastVersion .* is 0\.13, but .* has no docs version with this name/
+      );
+    });
+
     it('fails when lastVersion is the Unreleased current version', async () => {
       const { problems } = await run({
         'docs/docs-worklets/docusaurus.config.js': "lastVersion: 'current',",
