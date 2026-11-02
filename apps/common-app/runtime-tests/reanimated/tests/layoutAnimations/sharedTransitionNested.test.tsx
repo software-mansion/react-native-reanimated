@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
+  FadeOut,
   makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
@@ -57,12 +58,15 @@ const retargetTransitions: Transitions = {
   inner: transitionWithNotification(retargetInnerDuration, 'inner-finished'),
 };
 
+const targetExiting = FadeOut.duration(1000);
+
 function Target({
   active,
   innerSize,
   innerColor,
   innerLabel,
   repeatInner,
+  exiting,
   transitions,
 }: {
   active: boolean;
@@ -70,6 +74,7 @@ function Target({
   innerColor: string;
   innerLabel?: string;
   repeatInner: boolean;
+  exiting: boolean;
   transitions: Transitions;
 }) {
   const outer = useTestRef('targetOuter');
@@ -91,11 +96,13 @@ function Target({
         ref={outer}
         sharedTransitionTag="outer"
         sharedTransitionStyle={transitions.outer}
+        exiting={exiting ? targetExiting : undefined}
         style={styles.targetOuter}>
         <Animated.View
           ref={inner}
           sharedTransitionTag="inner"
           sharedTransitionStyle={transitions.inner}
+          exiting={exiting ? targetExiting : undefined}
           accessibilityLabel={innerLabel}
           style={[
             styles.targetInner,
@@ -119,6 +126,7 @@ function Screens({
   innerColor = '#ffffff',
   innerLabel,
   repeatInner = false,
+  exitingTarget = false,
   transitions = innerEndsFirst,
 }: {
   active: boolean;
@@ -127,6 +135,7 @@ function Screens({
   innerColor?: string;
   innerLabel?: string;
   repeatInner?: boolean;
+  exitingTarget?: boolean;
   transitions?: Transitions;
 }) {
   const inner = useTestRef('sourceInner');
@@ -152,6 +161,7 @@ function Screens({
           innerColor={innerColor}
           innerLabel={innerLabel}
           repeatInner={repeatInner}
+          exiting={exitingTarget}
           transitions={transitions}
         />
       )}
@@ -380,27 +390,30 @@ describe('Nested shared transitions', () => {
       expect(!!target && target.width > 89.5 && target.height > 89.5).toBe(
         true
       );
+      expect(((await opacityOf('continuousTarget')) ?? 0) > 0).toBe(true);
     });
   }
 
-  test('returns a waiting carrier when the target boundary is removed', async () => {
-    await render(<Screens active={false} />);
-    await waitForFrames();
-    await render(<Screens active />);
-    await waitForNotification('inner-finished');
-    expect(await opacityOf('targetOuter')).toBe(0);
-    await render(<Screens active={false} />);
-    await expectEventually(() => opacityOf('sourceInner')).toBe(1);
-    await expectEventually(async () => {
-      const props =
-        await getTestComponent('sourceInner').getPresentedViewProps();
-      return (
-        !!props &&
-        Math.abs(props.width - 30) < 0.5 &&
-        Math.abs(props.height - 30) < 0.5
-      );
-    }).toBe(true);
-  });
+  for (const exitingTarget of [false, true]) {
+    test(`returns a waiting carrier when the ${exitingTarget ? 'exiting ' : ''}target boundary is removed`, async () => {
+      await render(<Screens active={false} exitingTarget={exitingTarget} />);
+      await waitForFrames();
+      await render(<Screens active exitingTarget={exitingTarget} />);
+      await waitForNotification('inner-finished');
+      expect(await opacityOf('targetOuter')).toBe(0);
+      await render(<Screens active={false} exitingTarget={exitingTarget} />);
+      await expectEventually(() => opacityOf('sourceInner')).toBe(1);
+      await expectEventually(async () => {
+        const props =
+          await getTestComponent('sourceInner').getPresentedViewProps();
+        return (
+          !!props &&
+          Math.abs(props.width - 30) < 0.5 &&
+          Math.abs(props.height - 30) < 0.5
+        );
+      }).toBe(true);
+    });
+  }
 
   test('retargets the layout of an active carrier', async () => {
     await mockAnimationTimer({ autoAdvance: false });

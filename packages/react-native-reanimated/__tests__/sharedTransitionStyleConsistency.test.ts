@@ -78,10 +78,14 @@ test('the restart check covers the typed fields and border edges that PropsDiffe
   expect(sorted(checkedFields)).toEqual(
     sorted([...animatedFields, 'transform', 'boxShadow'])
   );
-  for (const [animated, checked] of [
-    ['sourceBorderRadii', 'sourceRadii'],
-    ['sourceBorderWidths', 'sourceWidths'],
-    ['sourceBorderColors', 'sourceColors'],
+  const targetFields = [...check.matchAll(/targetProps\.(\w+)/g)].map(
+    ([, name]) => name
+  );
+  expect(sorted(targetFields)).toEqual(sorted(checkedFields));
+  for (const [animated, checked, target] of [
+    ['sourceBorderRadii', 'sourceRadii', 'targetRadii'],
+    ['sourceBorderWidths', 'sourceWidths', 'targetWidths'],
+    ['sourceBorderColors', 'sourceColors', 'targetColors'],
   ]) {
     const fields = (source: string, name: string) =>
       [...source.matchAll(new RegExp(`${name}\\.(\\w+)`, 'g'))].map(
@@ -89,6 +93,9 @@ test('the restart check covers the typed fields and border edges that PropsDiffe
       );
     expect(sorted(fields(check, checked))).toEqual(
       sorted(fields(methods, animated))
+    );
+    expect(sorted(fields(check, target))).toEqual(
+      sorted(fields(check, checked))
     );
   }
 });
