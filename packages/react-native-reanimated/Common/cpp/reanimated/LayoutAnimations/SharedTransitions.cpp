@@ -622,13 +622,15 @@ void LayoutAnimationsProxy::removeFromParent(
   const auto position = parent->positionOf(node);
   react_native_assert(position != -1 && "Removed node not found in its parent");
   if (node->isDetached) {
-    auto &[sharedTag, element] = sharedElementOfCarrier(node);
-    deferRestore({sharedTag, element.run->target});
-    rootMutations.push_back(
-        ShadowViewMutation::RemoveMutation(surfaceId_, carrierViewOnScreen(*element.run), carrierHostIndex(node)));
+    const auto carried = sharedElementOfCarrier(node);
+    const auto &carrierView = carried ? carrierViewOnScreen(*carried->second.run) : node->current;
+    rootMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId_, carrierView, carrierHostIndex(node)));
     std::erase(detachedCarriers_, node);
     node->setDetached(false);
-    element.run.reset();
+    if (carried) {
+      deferRestore({carried->first, carried->second.run->target});
+      carried->second.run.reset();
+    }
   } else {
     auto &parentMutations = parent->current.tag == surfaceId_ ? rootMutations : mutations;
     parentMutations.push_back(
