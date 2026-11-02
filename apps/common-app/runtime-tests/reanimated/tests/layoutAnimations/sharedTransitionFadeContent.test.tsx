@@ -54,7 +54,7 @@ function Endpoint({
   active: boolean;
   style: object;
   hiddenChild?: boolean;
-  siblings?: 'before' | 'after';
+  siblings?: boolean;
 }) {
   const ref = useTestRef(name);
   const childRef = useTestRef(`${name}Child`);
@@ -74,11 +74,7 @@ function Endpoint({
   ));
   return (
     <SharedTransitionBoundary isActive={active}>
-      {siblings === undefined
-        ? view
-        : siblings === 'before'
-          ? [...siblingViews, view]
-          : [view, ...siblingViews]}
+      {siblings ? [...siblingViews, view] : view}
     </SharedTransitionBoundary>
   );
 }
@@ -229,14 +225,14 @@ function ScreensWithEnteringChild({
   childExits = false,
   childWide = false,
   childTagged = false,
-  sourceMoved = false,
+  keepChild = false,
 }: {
   showTarget: boolean;
   showChild?: boolean;
   childExits?: boolean;
   childWide?: boolean;
   childTagged?: boolean;
-  sourceMoved?: boolean;
+  keepChild?: boolean;
 }) {
   const ref = useTestRef('target');
   return (
@@ -245,7 +241,7 @@ function ScreensWithEnteringChild({
         name="source"
         active={!showTarget}
         style={styles.source}
-        siblings={sourceMoved ? 'after' : 'before'}
+        siblings
       />
       <SharedTransitionBoundary isActive={showTarget}>
         <Animated.View
@@ -253,7 +249,7 @@ function ScreensWithEnteringChild({
           sharedTransitionTag="fadeContent"
           sharedTransitionStyle={transition}
           style={styles.target}>
-          {showTarget && showChild && (
+          {(showTarget || keepChild) && showChild && (
             <EnteringChild
               exits={childExits}
               wide={childWide}
@@ -529,7 +525,7 @@ describe('Shared transition with fadeContent', () => {
     }
   );
 
-  test('plays the entering animation of a target child when the run ends without a landing', async () => {
+  test('plays the entering animation of a target child when the navigation goes back during the move', async () => {
     await mockAnimationTimer(false);
     await render(<ScreensWithEnteringChild showTarget={false} />);
     await waitForFrames();
@@ -538,21 +534,14 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
-    await render(<ScreensWithEnteringChild showTarget sourceMoved />);
+    await render(<ScreensWithEnteringChild showTarget={false} keepChild />);
+    await waitForFrames(3);
 
-    // The clock stays in the middle of the run, so only an early end of the run brings the source home.
-    await expectEventually(async () => {
-      const [source, target] = await sample(['source', 'target']);
-      return (
-        !!source &&
-        !!target &&
-        Math.abs(source.width - SOURCE_WIDTH) < 0.5 &&
-        target.opacity > 0.99
-      );
-    }).toBe(true);
+    // The reversed run needs much more than 300 ms, so only the end of the target role starts the entering animation.
     await advanceAnimationTimer(300);
     await expectOpacity('enteringChild', 1);
     await expectEnteringCallbacks(1);
+    await expectMovingWithChildOpacity('source', 0.1, 1);
   });
 
   test('replaces the layout animation of a target child with its entering animation', async () => {
