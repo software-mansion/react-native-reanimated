@@ -77,7 +77,7 @@ async function sourceWidth() {
 
 describe('Shared transition with a removed target', () => {
   test('moves to the last target frame before the source jumps back', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} />);
     await waitForFrames();
 
