@@ -44,10 +44,12 @@ function Endpoint({
   name,
   active,
   style,
+  hiddenChild = false,
 }: {
   name: 'source' | 'target';
   active: boolean;
   style: object;
+  hiddenChild?: boolean;
 }) {
   const ref = useTestRef(name);
   const childRef = useTestRef(`${name}Child`);
@@ -59,8 +61,20 @@ function Endpoint({
         sharedTransitionStyle={transition}
         style={style}>
         <View ref={childRef} collapsable={false} style={styles.child} />
+        {hiddenChild && <HiddenChild name={`${name}HiddenChild`} />}
       </Animated.View>
     </SharedTransitionBoundary>
+  );
+}
+
+function HiddenChild({ name }: { name: string }) {
+  const ref = useTestRef(name);
+  return (
+    <View
+      ref={ref}
+      collapsable={false}
+      style={[styles.child, { opacity: 0 }]}
+    />
   );
 }
 
@@ -68,16 +82,23 @@ function Endpoint({
 function Screens({
   showTarget,
   removeSource = false,
+  hiddenTargetChild = false,
 }: {
   showTarget: boolean;
   removeSource?: boolean;
+  hiddenTargetChild?: boolean;
 }) {
   return (
     <View style={styles.container}>
       {!(showTarget && removeSource) && (
         <Endpoint name="source" active={!showTarget} style={styles.source} />
       )}
-      <Endpoint name="target" active={showTarget} style={styles.target} />
+      <Endpoint
+        name="target"
+        active={showTarget}
+        style={styles.target}
+        hiddenChild={hiddenTargetChild}
+      />
     </View>
   );
 }
@@ -102,6 +123,52 @@ function ScreensWithAnimatedChild({ showTarget }: { showTarget: boolean }) {
         </Animated.View>
       </SharedTransitionBoundary>
       <Endpoint name="target" active={showTarget} style={styles.target} />
+    </View>
+  );
+}
+
+const outerMove = SharedTransition.duration(3000);
+const innerFade = SharedTransition.duration(600).fadeContent();
+
+// The inner pair lands while the outer target is still hidden.
+function NestedScreens({ showTarget }: { showTarget: boolean }) {
+  const outerTarget = useTestRef('nestedOuterTarget');
+  const innerTarget = useTestRef('nestedInnerTarget');
+  const innerTargetChild = useTestRef('nestedInnerTargetChild');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!showTarget}>
+        <Animated.View
+          sharedTransitionTag="nestedFadeOuter"
+          sharedTransitionStyle={outerMove}
+          style={styles.nestedOuterSource}>
+          <Animated.View
+            sharedTransitionTag="nestedFadeInner"
+            sharedTransitionStyle={innerFade}
+            style={styles.source}>
+            <View collapsable={false} style={styles.child} />
+          </Animated.View>
+        </Animated.View>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={showTarget}>
+        <Animated.View
+          ref={outerTarget}
+          sharedTransitionTag="nestedFadeOuter"
+          sharedTransitionStyle={outerMove}
+          style={styles.target}>
+          <Animated.View
+            ref={innerTarget}
+            sharedTransitionTag="nestedFadeInner"
+            sharedTransitionStyle={innerFade}
+            style={styles.nestedInnerTarget}>
+            <View
+              ref={innerTargetChild}
+              collapsable={false}
+              style={styles.child}
+            />
+          </Animated.View>
+        </Animated.View>
+      </SharedTransitionBoundary>
     </View>
   );
 }
@@ -276,10 +343,10 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades the children of the target in after the moving view lands', async () => {
-    await render(<Screens showTarget={false} />);
+    await render(<Screens showTarget={false} hiddenTargetChild />);
     await waitForFrames();
 
-    await render(<Screens showTarget />);
+    await render(<Screens showTarget hiddenTargetChild />);
     await expectEventually(async () => {
       const [target, child] = await sample(['target', 'targetChild']);
       return (
@@ -290,6 +357,10 @@ describe('Shared transition with fadeContent', () => {
       );
     }).toBe(true);
     await expectOpacity('targetChild', CHILD_OPACITY);
+    for (let frame = 0; frame < 10; frame++) {
+      expect((await mountedProps('targetHiddenChild'))?.opacity).toBe(0);
+      await waitForFrames(1);
+    }
   });
 
   test('fades the children back in when the navigation goes back during the move', async () => {
@@ -512,6 +583,46 @@ describe('Shared transition with fadeContent', () => {
     }
   );
 
+  test('fades the nested target children in only after the outer target shows', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<NestedScreens showTarget={false} />);
+    await waitForFrames();
+
+    await render(<NestedScreens showTarget />);
+    await waitForFrames(3);
+    // The inner move ends at 600 ms, the outer move at 3000 ms.
+    await advanceAnimationTimer(1200);
+    await expectOpacity('nestedOuterTarget', 0);
+    for (let frame = 0; frame < 5; frame++) {
+      const [outerTarget, innerTarget] = await sample([
+        'nestedOuterTarget',
+        'nestedInnerTarget',
+      ]);
+      expect(outerTarget?.opacity).toBe(0);
+      expect(innerTarget?.opacity).toBe(0);
+      await waitForFrames(1);
+    }
+
+    await advanceAnimationTimer(1900);
+    await expectOpacity('nestedOuterTarget', 1);
+    await advanceAnimationTimer(150);
+    await expectEventually(async () => {
+      const [outerTarget, innerTarget, child] = await sample([
+        'nestedOuterTarget',
+        'nestedInnerTarget',
+        'nestedInnerTargetChild',
+      ]);
+      return (
+        outerTarget?.opacity === 1 &&
+        innerTarget?.opacity === 1 &&
+        !!child &&
+        isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
+      );
+    }).toBe(true);
+    await advanceAnimationTimer(300);
+    await expectOpacity('nestedInnerTargetChild', CHILD_OPACITY);
+  });
+
   test('does not raise the child opacity again when the moving spring overshoots', async () => {
     const spring = SharedTransition.springify().dampingRatio(0.3).fadeContent();
     await render(<ChildrenPair active={false} sourceConfig={spring} />);
@@ -569,6 +680,8 @@ async function recordFrames(names: string[], during: () => Promise<void>) {
 }
 
 const styles = StyleSheet.create({
+  nestedOuterSource: { width: 100, height: 100, backgroundColor: '#22aa55' },
+  nestedInnerTarget: { width: 90, height: 90, backgroundColor: '#ffcc00' },
   container: { width: 300, height: 400 },
   source: {
     width: SOURCE_WIDTH,

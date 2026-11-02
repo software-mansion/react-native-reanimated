@@ -81,6 +81,79 @@ function Screens() {
   );
 }
 
+const outerTransition = SharedTransition.duration(1200);
+
+function NestedScreens() {
+  const sourceScreen = useTestRef('nestedSourceScreen');
+  const targetScreen = useTestRef('nestedTargetScreen');
+  const outerTarget = useTestRef('nestedOuterTarget');
+  const innerSource = useTestRef('nestedInnerSource');
+  const innerSourceChild = useTestRef('nestedInnerSourceChild');
+  const innerTarget = useTestRef('nestedInnerTarget');
+  const innerTargetChild = useTestRef('nestedInnerTargetChild');
+  return (
+    <View style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        activityState={2}
+        style={styles.screen}
+        onAppear={() => notify('nested-target-appeared')}
+        onTransitionProgress={({ nativeEvent }) => {
+          if (nativeEvent.progress === 1 && !nativeEvent.closing)
+            notify('nested-target-progress-ready');
+        }}>
+        <SharedTransitionBoundary isActive={false}>
+          <Animated.View
+            ref={outerTarget}
+            sharedTransitionTag="nested-fade-outer"
+            sharedTransitionStyle={outerTransition}
+            style={styles.target}>
+            <Animated.View
+              ref={innerTarget}
+              sharedTransitionTag="nested-fade-inner"
+              sharedTransitionStyle={transition}
+              style={styles.innerTarget}>
+              <View
+                ref={innerTargetChild}
+                collapsable={false}
+                style={[styles.child, { opacity: 0.6 }]}
+              />
+            </Animated.View>
+          </Animated.View>
+        </SharedTransitionBoundary>
+      </Screen>
+      <Screen
+        ref={sourceScreen}
+        activityState={2}
+        style={styles.screen}
+        onAppear={() => notify('nested-source-appeared')}
+        onTransitionProgress={({ nativeEvent }) => {
+          if (nativeEvent.progress === 1 && !nativeEvent.closing)
+            notify('nested-source-progress-ready');
+        }}>
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            sharedTransitionTag="nested-fade-outer"
+            sharedTransitionStyle={outerTransition}
+            style={styles.outerSource}>
+            <Animated.View
+              ref={innerSource}
+              sharedTransitionTag="nested-fade-inner"
+              sharedTransitionStyle={transition}
+              style={styles.source}>
+              <View
+                ref={innerSourceChild}
+                collapsable={false}
+                style={[styles.child, { opacity: 0.8 }]}
+              />
+            </Animated.View>
+          </Animated.View>
+        </SharedTransitionBoundary>
+      </Screen>
+    </View>
+  );
+}
+
 describe('Shared transition content fade during Screen progress', () => {
   const progressTest =
     Platform.OS === 'ios' && RuntimeTestObserver ? test : test.skip;
@@ -201,6 +274,111 @@ describe('Shared transition content fade during Screen progress', () => {
   );
 });
 
+describe('Nested shared transition content fade during Screen progress', () => {
+  const progressTest =
+    Platform.OS === 'ios' && RuntimeTestObserver ? test : test.skip;
+
+  progressTest.each([['end'], ['cancel']] as const)(
+    'fades the nested target children only when the outer target shows on ${0}',
+    async ([outcome]) => {
+      await render(<NestedScreens />);
+      await waitForNotification('nested-source-appeared');
+      await waitForNotification('nested-target-appeared');
+      await waitForNotification('nested-source-progress-ready');
+      await waitForNotification('nested-target-progress-ready');
+      await waitForFrames(3);
+      const sourceScreen = getTestComponent('nestedSourceScreen').getTag();
+      const targetScreen = getTestComponent('nestedTargetScreen').getTag();
+      const innerSource = getTestComponent('nestedInnerSource').getTag();
+      const originalParent =
+        await RuntimeTestObserver!.observeParent(innerSource);
+      requireReady('nested:parent', originalParent !== null);
+      await expectOpacity('nestedInnerTargetChild', 0.6);
+
+      await RuntimeTestObserver!.emitScreenTransitionProgress(
+        targetScreen,
+        0,
+        false,
+        false
+      );
+      await expectEventually(async () => {
+        const parent = await RuntimeTestObserver!.observeParent(innerSource);
+        return parent !== null && parent !== originalParent;
+      }).toBe(true);
+      await RuntimeTestObserver!.emitScreenTransitionProgress(
+        targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectEventually(async () => {
+        const [source, child, outerTarget] = await sample([
+          'nestedInnerSource',
+          'nestedInnerSourceChild',
+          'nestedOuterTarget',
+        ]);
+        return (
+          !!source &&
+          Math.abs(source.width - 75) < 0.5 &&
+          !!child &&
+          Math.abs(child.opacity - 0.4) < 0.01 &&
+          outerTarget?.opacity === 0
+        );
+      }).toBe(true);
+
+      if (outcome === 'end') {
+        await RuntimeTestObserver!.emitScreenTransitionProgress(
+          targetScreen,
+          1,
+          false,
+          false
+        );
+        let fadingFrames = 0;
+        let fadingWhileHidden = 0;
+        for (let frame = 0; frame < 180; frame++) {
+          const [outerTarget, innerTarget, child] = await sample([
+            'nestedOuterTarget',
+            'nestedInnerTarget',
+            'nestedInnerTargetChild',
+          ]);
+          if (
+            fadingFrames > 0 &&
+            child &&
+            Math.abs(child.opacity - 0.6) < 0.01
+          ) {
+            break;
+          }
+          if (child && child.opacity > 0.01 && child.opacity < 0.58) {
+            fadingFrames++;
+            if (
+              !outerTarget ||
+              outerTarget.opacity < 0.99 ||
+              !innerTarget ||
+              innerTarget.opacity < 0.99
+            ) {
+              fadingWhileHidden++;
+            }
+          }
+          await waitForFrames(1);
+        }
+        expect(fadingFrames > 0).toBe(true);
+        expect(fadingWhileHidden).toBe(0);
+        await expectOpacity('nestedOuterTarget', 1);
+        await expectOpacity('nestedInnerTargetChild', 0.6);
+      } else {
+        await RuntimeTestObserver!.emitScreenGestureCancel(sourceScreen);
+        await expectOpacity('nestedInnerSource', 1);
+        await expectOpacity('nestedInnerSourceChild', 0.8);
+        for (let frame = 0; frame < 12; frame++) {
+          const [child] = await sample(['nestedInnerTargetChild']);
+          expect(!!child && Math.abs(child.opacity - 0.6) < 0.01).toBe(true);
+          await waitForFrames(1);
+        }
+      }
+    }
+  );
+});
+
 function requireReady(id: string, ready: boolean) {
   if (!ready) throw new Error(`[fade progress gate] ${id} failed`);
 }
@@ -243,5 +421,7 @@ const styles = StyleSheet.create({
   screen: { position: 'absolute', left: 0, top: 0, width: 300, height: 400 },
   source: { width: 60, height: 60, backgroundColor: 'red' },
   target: { width: 150, height: 150, backgroundColor: 'blue' },
+  outerSource: { width: 100, height: 100, backgroundColor: 'green' },
+  innerTarget: { width: 90, height: 90, backgroundColor: 'yellow' },
   child: { width: 20, height: 15, backgroundColor: 'white' },
 });
