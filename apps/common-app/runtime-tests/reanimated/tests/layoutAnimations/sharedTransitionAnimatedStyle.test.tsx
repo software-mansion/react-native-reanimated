@@ -57,7 +57,7 @@ function Screens({ active }: { active: boolean }) {
   const width = useSharedValue(50);
   useEffect(() => {
     if (active) {
-      width.value = withTiming(150, {
+      width.value = withTiming(170, {
         duration: DURATION,
         easing: Easing.linear,
       });
@@ -100,17 +100,17 @@ describe('Shared transition next to another animation', () => {
 
     await render(<Screens active />);
     await waitForFrames(3);
-    await advanceAnimationTimer(300);
-    const quarter = await sampleWidths(sourceTag, otherTag);
-    expect(quarter.other).toBe(75, ComparisonMode.PIXEL);
-    expect(quarter.source).toBe(82.5, ComparisonMode.PIXEL);
+    await advanceAnimationTimer(400);
+    const third = await sampleWidths(sourceTag, otherTag);
+    expect(third.other).toBe(90, ComparisonMode.PIXEL);
+    expect(third.source).toBe(90, ComparisonMode.PIXEL);
 
-    await advanceAnimationTimer(800);
+    await advanceAnimationTimer(600);
     const nearEnd = await sampleWidths(sourceTag, otherTag);
-    expect(nearEnd.other).toBe(141.67, ComparisonMode.PIXEL);
-    expect(nearEnd.source).toBe(142.5, ComparisonMode.PIXEL);
+    expect(nearEnd.other).toBe(150, ComparisonMode.PIXEL);
+    expect(nearEnd.source).toBe(135, ComparisonMode.PIXEL);
 
-    await advanceAnimationTimer(DURATION - 1100);
+    await advanceAnimationTimer(DURATION - 1000);
     await waitForNotification('carrier-finished');
     await expectEventually(async () => {
       const props = await getTestComponent('target').getMountedViewProps();
