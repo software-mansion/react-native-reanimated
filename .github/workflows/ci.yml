@@ -98,6 +98,7 @@ jobs:
               - '.github/workflows/docs-publish.yml'
               - '.github/actions/docs-build/**'
               - 'scripts/validate-docs-versions.js'
+              - 'scripts/validate-docs-released-versions.mts'
               - 'docs/docs-reanimated/**'
               - 'packages/react-native-reanimated/compatibility.json'
               - 'docs/docs-worklets/**'

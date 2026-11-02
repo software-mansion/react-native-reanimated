@@ -241,6 +241,20 @@ git worktree remove ../rwr-release-<version>
 git branch -D '@<you>/worklets/release-<version>'
 ```
 
+### 16. Cut the docs version (after a minor or major release)
+
+Skip this step for a patch release. After `<X.Y>.0` is published, open a separate PR to `main` that snapshots the `Unreleased` docs. The docs are published from `main`. Follow the docs step in `packages/react-native-reanimated/RELEASE.md`.
+
+```bash
+yarn workspace docs-worklets docusaurus docs:version <X.Y>
+```
+
+Then, in `docs/docs-worklets/docusaurus.config.js`, add `'<X.Y>': { label: '<X.Y>', banner: 'none' }` to `versions` and set `lastVersion` to `'<X.Y>'`. Reference: PR #10927, which cut `0.13`.
+
+- The snapshot must document only released changes. The changelog fragments that `changelog:squash --cut` left on `main` are not in the release. Remove the docs for them from the snapshot.
+- Run `yarn build` in the docs workspace.
+- Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version have a docs version and that `lastVersion` covers them.
+
 ## Confirmation checkpoints
 
 - Before `gh pr create` — confirm version and branch tip contents if anything looks off (e.g. unexpected commits on the stable branch).

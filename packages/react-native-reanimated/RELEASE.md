@@ -189,6 +189,16 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    `--cut` leaves the fragments that came to `main` after the stable branch was cut. They belong to the next release on `main`, also when a cherry-pick put them into `x.y.0` on the stable branch. Such an entry is then listed in both versions.
 
+8. After a minor or major release, cut a docs version. Patch releases do not need it. Open a separate pull request to `main`, because the docs are published from `main`. Until then, the released docs are served only as `Unreleased` at `/docs/unreleased/`.
+
+   - Worklets keeps one docs version for each minor. For Worklets `x.y.0`, run `yarn workspace docs-worklets docusaurus docs:version x.y`. Then, in `docs/docs-worklets/docusaurus.config.js`, add `'x.y': { label: 'x.y', banner: 'none' }` to `versions` and set `lastVersion` to `'x.y'`.
+   - Reanimated keeps one docs version for each major, for example `4.x`. For a new major, for example `5.0.0`, run `yarn workspace docs-reanimated docusaurus docs:version 5.x`, add `5.x` to `versions` in `docs/docs-reanimated/docusaurus.config.js` and set `lastVersion` to it. For a new minor, replace the snapshot of the current major: remove it from `docs/docs-reanimated/versions.json`, delete its directory in `versioned_docs/` and its file in `versioned_sidebars/`, and run `docs:version` again with the same name.
+   - The snapshot must document only released changes. The changelog fragments that the squash with `--cut` left on `main` are not in the release. Remove the docs for these changes from the snapshot. The current docs keep them.
+   - Link pages through file paths, for example `../core/useSharedValue.mdx`, not through URL paths. Then each version links to its own pages.
+   - Run `yarn build` in the docs workspace. It fails on broken links.
+
+   The docs build in CI runs `scripts/validate-docs-released-versions.mts` on `main`. It fails when the newest stable release on npm (the `latest` dist-tag) or in `CHANGELOG.md` has no docs version, or when `lastVersion` does not cover it.
+
 8. Share the good news with the team.
 
 8. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).

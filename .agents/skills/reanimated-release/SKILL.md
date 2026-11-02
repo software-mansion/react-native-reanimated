@@ -242,6 +242,22 @@ git worktree remove ../rnr-release-<version>
 git branch -D '@<you>/reanimated/release-<version>'
 ```
 
+### 16. Cut the docs version (after a minor or major release)
+
+Skip this step for a patch release. After `<X.Y>.0` is published, open a separate PR to `main` that snapshots the `Unreleased` docs. The docs are published from `main`. Follow the docs step in `packages/react-native-reanimated/RELEASE.md`.
+
+Reanimated keeps one docs version for each major, for example `4.x`. For a new minor, replace the `<major>.x` snapshot: remove it from `docs/docs-reanimated/versions.json`, delete `versioned_docs/version-<major>.x/` and `versioned_sidebars/version-<major>.x-sidebars.json`, then run:
+
+```bash
+yarn workspace docs-reanimated docusaurus docs:version <major>.x
+```
+
+For a new major, cut the new `<major>.x` version, add it to `versions` in `docs/docs-reanimated/docusaurus.config.js` and set `lastVersion` to it. Reference: PR #11048, which cut `4.x`.
+
+- The snapshot must document only released changes. The changelog fragments that `changelog:squash --cut` left on `main` are not in the release. Remove the docs for them from the snapshot.
+- Run `yarn build` in the docs workspace.
+- Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version have a docs version and that `lastVersion` covers them.
+
 ## Confirmation checkpoints
 
 - Before `gh pr create` — confirm version and branch tip contents if anything looks off (e.g. unexpected commits on the stable branch).
