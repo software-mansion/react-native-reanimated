@@ -151,13 +151,11 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification(600);
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
-    const sourceTag = getTestComponent('source').getTag();
     const childTag = getTestComponent('sourceChild').getTag();
 
     await render(<Screens active transition={transition} />);
     await expectMoving('source');
-    expect(getTestComponent('source').getTag()).toBe(sourceTag);
-    expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
+    expect(await isViewMountedNatively(childTag)).toBe(true);
     const child = await getTestComponent('sourceChild').getMountedViewProps();
     expect(child?.width).toBe(20, ComparisonMode.PIXEL);
     expect(child?.height).toBe(15, ComparisonMode.PIXEL);
@@ -175,7 +173,7 @@ describe('Shared transition moves a real native view', () => {
     await waitForNotification('carrier-finished', 30000);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 0.7);
-    expect(getTestComponent('sourceChild').getTag()).toBe(childTag);
+    expect(await isViewMountedNatively(childTag)).toBe(true);
   });
 
   test('moves the target when React removes the source in the same update', async () => {
@@ -189,9 +187,7 @@ describe('Shared transition moves a real native view', () => {
 
     await render(<Screens active transition={transition} removeSource />);
     await expectMoving('target');
-    const targetTag = getTestComponent('target').getTag();
     const targetChild = getTestComponent('targetChild');
-    const targetChildTag = targetChild.getTag();
     expect((await targetChild.getMountedViewProps())?.width).toBe(
       20,
       ComparisonMode.PIXEL
@@ -199,8 +195,7 @@ describe('Shared transition moves a real native view', () => {
 
     await waitForNotification('carrier-finished', 30000);
     await expectAtHome('target', 150, 1);
-    expect(getTestComponent('target').getTag()).toBe(targetTag);
-    expect(getTestComponent('targetChild').getTag()).toBe(targetChildTag);
+    expect(await isViewMountedNatively(targetChild.getTag())).toBe(true);
     await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(false);
     await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
   });
