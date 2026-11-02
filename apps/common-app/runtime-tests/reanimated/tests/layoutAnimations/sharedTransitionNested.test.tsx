@@ -578,14 +578,15 @@ describe('Nested shared transitions', () => {
 
       await RuntimeTestObserver?.startUnmountRecording();
       await render(<Screens active innerWrapped={!wrapped} />);
-      await waitForFrames(3);
+      await expectEventually(() => isViewMountedNatively(wrapperTag)).toBe(
+        !wrapped
+      );
       const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
       if (unmounts) {
         expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
           false
         );
       }
-      expect(await isViewMountedNatively(wrapperTag)).toBe(!wrapped);
       expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
       const inner = await runOnUIBlocking(() => {
         'worklet';

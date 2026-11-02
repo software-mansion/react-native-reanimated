@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeOut,
@@ -5,6 +6,7 @@ import Animated, {
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
 import { Screen, ScreenStack } from 'react-native-screens';
+import { runOnUISync } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -53,6 +55,7 @@ function Screens({
   removeSiblings = false,
   childRemoved = false,
   childExit = exit,
+  advanceBeforeCommit,
 }: {
   active: boolean;
   removed?: boolean;
@@ -60,6 +63,7 @@ function Screens({
   removeSiblings?: boolean;
   childRemoved?: boolean;
   childExit?: FadeOut;
+  advanceBeforeCommit?: number;
 }) {
   const parent = useTestRef('parent');
   const source = useTestRef('source');
@@ -107,8 +111,38 @@ function Screens({
         </Animated.View>
       )}
       {active && <Target />}
+      {advanceBeforeCommit !== undefined && (
+        <AdvanceBeforeCommit milliseconds={advanceBeforeCommit} />
+      )}
     </View>
   );
+}
+
+// Animations get the time and run their frames before React commits this render.
+function AdvanceBeforeCommit({ milliseconds }: { milliseconds: number }) {
+  const advanced = useRef(false);
+  if (!advanced.current) {
+    advanced.current = true;
+    advanceAndWaitForUIFrames(milliseconds);
+  }
+  return null;
+}
+
+function advanceAndWaitForUIFrames(milliseconds: number) {
+  const framesBefore = runOnUISync(() => {
+    'worklet';
+    global.mockedAnimationTimestamp! += milliseconds;
+    return global.framesCount ?? 0;
+  });
+  const readFrames = () =>
+    runOnUISync(() => {
+      'worklet';
+      return global.framesCount ?? 0;
+    });
+  const deadline = performance.now() + 3000;
+  while (readFrames() < framesBefore + 3 && performance.now() < deadline) {
+    // The UI thread runs frames while the JS thread waits here.
+  }
 }
 
 function readMounted(tag: number) {
@@ -328,6 +362,7 @@ describe('Removal during a shared transition', () => {
     await advanceAnimationTimer(200);
     const child = await readMounted(tags.child);
     expect(child !== null && child.opacity > 0 && child.opacity < 1).toBe(true);
+    // The exit ends in a UI-thread pull before the JS-thread pull that retains the source.
     await render(
       <Screens
         active
@@ -335,10 +370,10 @@ describe('Removal during a shared transition', () => {
         childRemoved
         exitKind="child"
         childExit={childExit}
+        advanceBeforeCommit={300}
       />
     );
     await waitForFrames(3);
-    await advanceAnimationTimer(300);
     expect((await readMounted(tags.child))?.opacity).toBe(0);
     expect(await isViewMountedNatively(tags.source)).toBe(true);
     expect(

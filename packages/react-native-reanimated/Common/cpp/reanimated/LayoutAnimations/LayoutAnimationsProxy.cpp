@@ -1125,7 +1125,12 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
     }
   }
 #ifdef ANDROID
-  std::erase_if(updateMap_, [this](const auto &update) { return !unqueuedBatchTags_.contains(update.first); });
+  // The next JS-thread pull can retain a due removal instead of removing it. That pull then sends the last frame.
+  std::erase_if(updateMap_, [this, &transaction](const auto &update) {
+    const auto tag = update.first;
+    const bool waitsForRemoval = transaction.dueRemovals.contains(tag) && lightNodes_.contains(tag);
+    return !unqueuedBatchTags_.contains(tag) && !waitsForRemoval;
+  });
 #else
   updateMap_.clear();
 #endif
