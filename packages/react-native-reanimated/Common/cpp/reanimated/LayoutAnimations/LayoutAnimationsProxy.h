@@ -138,6 +138,7 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
   std::unordered_set<Tag> dueRemovals;
+  std::vector<std::shared_ptr<LightNode>> modalsToHold;
   std::unordered_set<Tag> recreatedTags;
 };
 

@@ -905,7 +905,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
       layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
     }
     node->setExitingState(COMPLETED);
-    heldModals_.push_back({node, std::chrono::steady_clock::now() + std::chrono::milliseconds(34)});
+    transaction.modalsToHold.push_back(node);
     return;
   }
 #endif
@@ -982,6 +982,9 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
   }
 #ifdef __APPLE__
   const auto now = std::chrono::steady_clock::now();
+  for (auto &node : transaction.modalsToHold) {
+    heldModals_.push_back({std::move(node), now + std::chrono::milliseconds(34)});
+  }
   std::erase_if(heldModals_, [&](const HeldModal &held) {
     if (!isLightNodeMapped(held.node)) {
       return true;
