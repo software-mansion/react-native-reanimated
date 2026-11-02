@@ -223,23 +223,23 @@ describe('Tests of Test Framework', () => {
     await mockAnimationTimer();
     await waitForFrames(3);
     expect((await readClock())! > 0).toBe(true);
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const frozenStart = (await readClock())!;
     expect(frozenStart > 0).toBe(true);
     await waitForFrames(3);
     expect(await readClock()).toBe(frozenStart);
     await advanceAnimationTimer(100);
     expect(await readClock()).toBe(frozenStart + 100);
-    await mockAnimationTimer(true);
+    await mockAnimationTimer();
     await waitForFrames(3);
     expect((await readClock())! < frozenStart).toBe(true);
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await waitForFrames(3);
     expect(await readClock()).toBe(frozenStart);
   });
 
   test('keeps a timing animation continuous when it restarts on the frozen clock', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const value = makeMutable(0);
     const start = () =>
       runOnUIBlocking(() => {

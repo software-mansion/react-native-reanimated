@@ -231,12 +231,14 @@ export function createTestValue<T = DefaultValue>(defaultValue: T) {
 }
 
 /**
- * Replaces the animation clock until the test ends. With `autoAdvance`, the
- * clock starts at 0 and each frame adds 16 ms. Without it, the clock stays at a
- * nonzero start time until `advanceAnimationTimer` adds time. Each call resets
- * the clock.
+ * Replaces the animation clock until the test ends. By default, the clock
+ * starts at 0 and each frame adds 16 ms. With `autoAdvance: false`, the clock
+ * stays at a nonzero start time until `advanceAnimationTimer` adds time. Each
+ * call resets the clock.
  */
-export async function mockAnimationTimer(autoAdvance = true) {
+export async function mockAnimationTimer({
+  autoAdvance = true,
+}: { autoAdvance?: boolean } = {}) {
   await animationRecorder.mockAnimationTimer(autoAdvance);
 }
 

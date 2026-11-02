@@ -92,7 +92,7 @@ function sampleWidths(sourceTag: number, otherTag: number) {
 
 describe('Shared transition next to another animation', () => {
   test('keeps another animated view moving and ends the run on time', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} />);
     await waitForFrames();
     const sourceTag = getTestComponent('source').getTag();

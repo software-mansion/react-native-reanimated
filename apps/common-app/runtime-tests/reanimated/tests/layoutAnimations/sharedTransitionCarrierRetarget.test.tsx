@@ -124,7 +124,7 @@ async function mountedWidth(name: string) {
 
 describe('Shared transition carrier changes during a run', () => {
   test('retargets the carrier when it is the target view', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<RemovedSourceScreens active={false} />);
     await waitForFrames();
 
@@ -149,7 +149,7 @@ describe('Shared transition carrier changes during a run', () => {
   });
 
   test('returns a moving carrier whose shared tag changes and moves the new pair', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<RenamedCarrierScreens active={false} />);
     await waitForFrames();
 

@@ -149,7 +149,7 @@ describe('Shared transition moves a real native view', () => {
   beforeEach(mockAnimationTimer);
 
   test('moves the source with its untagged child and keeps the target hidden', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
@@ -285,7 +285,7 @@ describe('Shared transition moves a real native view', () => {
   });
 
   test('starts a new tag after a reversal makes the carrier the target', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const transition = transitionWithNotification(600);
     await render(<Screens active={false} transition={transition} keepTarget />);
     await waitForFrames();
