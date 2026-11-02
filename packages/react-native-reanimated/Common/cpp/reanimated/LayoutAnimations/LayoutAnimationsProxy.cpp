@@ -1368,12 +1368,14 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
-  [[maybe_unused]] bool removedScreen = false;
+  [[maybe_unused]] std::unordered_set<Tag> removedScreens;
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Remove) {
       const auto tag = mutation.oldChildShadowView.tag;
       const auto componentName = mutation.oldChildShadowView.componentName;
-      removedScreen = removedScreen || (componentName != nullptr && !std::strcmp(componentName, "RNSScreen"));
+      if (componentName != nullptr && !std::strcmp(componentName, "RNSScreen")) {
+        removedScreens.insert(tag);
+      }
       if (mutation.parentTag == surfaceId_) {
         std::erase(movedToRoot, tag);
       } else {
@@ -1383,8 +1385,11 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
       const auto tag = mutation.newChildShadowView.tag;
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() && nodeIt->second->isDetached) {
-        // React Native Screens holds what is left in a screen when it mounts the Remove, which is after the release.
-        react_native_assert(!removedScreen && "A carrier must move to the root before its screen is removed");
+        // React Native Screens holds what is left in a removed screen when it mounts the Remove, which is after the
+        // release. A screen that pops together with the carrier's screen holds nothing of the carrier.
+        react_native_assert(
+            !isInRemovedScreen(nodeIt->second, removedScreens) &&
+            "A carrier must move to the root before its screen is removed");
         movedToRoot.push_back(tag);
       }
     }
@@ -1401,6 +1406,17 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
       releaseViewTransitions_(tags, true);
     }
   });
+}
+
+bool LayoutAnimationsProxy::isInRemovedScreen(
+    const std::shared_ptr<LightNode> &node,
+    const std::unordered_set<Tag> &removedScreens) const {
+  for (auto ancestor = node->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
+    if (removedScreens.contains(ancestor->current.tag)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // The push model queues the batch after the pull returns, in the same JS task. A frame that the UI thread pulls
