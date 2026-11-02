@@ -242,7 +242,7 @@ describe('Shared transition keeps the moving view props', () => {
   setterTest(
     'does not repeat the native label setter across carrier frames',
     async () => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = SharedTransition.duration(4000).withCallback(
         (finished) => {
           'worklet';
@@ -392,7 +392,7 @@ describe('Shared transition keeps the moving view props', () => {
   nativeTest(
     'keeps unchanged native content props while React changes the hidden target',
     async () => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = transitionWithNotification();
       const color = makeMutable('red');
       await render(
