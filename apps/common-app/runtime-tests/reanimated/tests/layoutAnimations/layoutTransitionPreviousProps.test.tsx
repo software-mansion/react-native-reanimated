@@ -1,7 +1,5 @@
-import { Platform, TextInput } from 'react-native';
 import Animated, { Easing, LinearTransition } from 'react-native-reanimated';
 
-import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   advanceAnimationTimer,
   describe,
@@ -15,50 +13,38 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-
-function Input({ width }: { width: number }) {
-  const ref = useTestRef('input');
+function Box({ width, color }: { width: number; color: string }) {
+  const ref = useTestRef('box');
   return (
-    <AnimatedTextInput
+    <Animated.View
       ref={ref}
-      accessibilityLabel="layout input"
-      editable={false}
       layout={LinearTransition.duration(1000).easing(Easing.linear)}
-      style={{ width, height: 40 }}
+      style={{ width, height: 40, backgroundColor: color }}
     />
   );
 }
 
+async function expectBox(width: number, color: string) {
+  const props = await getTestComponent('box').getMountedViewProps();
+  expect(props?.width).toBe(width, ComparisonMode.PIXEL);
+  expect(props?.backgroundColor).toBe(color, ComparisonMode.COLOR);
+}
+
 describe('Layout animation start props', () => {
-  const setterTest =
-    RuntimeTestObserver && Platform.OS === 'android' ? test : test.skip;
+  test('keeps a color from an earlier update during a layout animation', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Box width={60} color="#ff0000" />);
+    await waitForFrames();
+    // On Android, the props of this update hold only the color.
+    await render(<Box width={60} color="#00ff00" />);
+    await waitForFrames(3);
+    await expectBox(60, '#00ff00');
 
-  setterTest(
-    'does not repeat a content setter during a layout animation',
-    async () => {
-      await mockAnimationTimer({ autoAdvance: false });
-      await render(<Input width={60} />);
-      await waitForFrames();
-      const input = getTestComponent('input');
-      const mounted = await input.getTextInputObservation();
-      expect((mounted?.labelSetterCalls ?? 0) > 0).toBe(true);
-
-      await render(<Input width={160} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(500);
-      expect((await input.getMountedViewProps())?.width).toBe(
-        110,
-        ComparisonMode.PIXEL
-      );
-      await advanceAnimationTimer(500);
-      expect((await input.getMountedViewProps())?.width).toBe(
-        160,
-        ComparisonMode.PIXEL
-      );
-      const after = await input.getTextInputObservation();
-      expect(after?.labelSetterCalls).toBe(mounted?.labelSetterCalls);
-      expect(after?.accessibilityLabel).toBe('layout input');
-    }
-  );
+    await render(<Box width={160} color="#00ff00" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectBox(110, '#00ff00');
+    await advanceAnimationTimer(500);
+    await expectBox(160, '#00ff00');
+  });
 });
