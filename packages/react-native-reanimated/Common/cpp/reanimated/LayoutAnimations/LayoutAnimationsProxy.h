@@ -89,6 +89,7 @@ struct RetiringSharedTransition {
   SharedElement element;
 };
 
+// The shared element of a carrier, in sharedElements_ or in retiringSharedTransitions_.
 struct SharedElementRef {
   const SharedTag &sharedTag;
   SharedElement &element;
@@ -212,6 +213,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       double toContentOpacity,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  std::vector<SharedTransitionRun *> contentFadeRuns() const;
   void composeCarrierContent(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext)
       const;
   void restoreFadedChildren(

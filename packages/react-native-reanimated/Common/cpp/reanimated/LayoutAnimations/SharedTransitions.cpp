@@ -414,6 +414,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   if (!run) {
     const auto &carrier = nodes[BEFORE];
     // A view carries one run. Its shared tag can change while it carries the run of the old tag.
+    // On Android, a frame of the old run can still be outside the mount queue here.
     if (const auto carried = carrier->isDetached ? sharedElementOfCarrier(carrier) : std::nullopt) {
       finishSharedTransition(carried->sharedTag, carried->element, transaction, propsParserContext);
     }
@@ -1274,17 +1275,15 @@ ShadowView LayoutAnimationsProxy::withContentOpacity(
 
 void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (sharedElements_.empty()) {
+  const auto runs = contentFadeRuns();
+  if (runs.empty()) {
     return;
   }
   const auto hiddenTags = hiddenViewTags();
   std::unordered_map<Tag, double> factors;
-  for (const auto &[_, element] : sharedElements_) {
-    if (!element.run || !element.run->contentFade) {
-      continue;
-    }
-    for (const auto &child : fadingChildren(element.run->carrier, hiddenTags)) {
-      factors[child->current.tag] = element.run->contentFade->mountedOpacity;
+  for (const auto *run : runs) {
+    for (const auto &child : fadingChildren(run->carrier, hiddenTags)) {
+      factors[child->current.tag] = run->contentFade->mountedOpacity;
     }
   }
   for (auto &[family, props] : updatesBatch) {
@@ -1335,6 +1334,23 @@ void LayoutAnimationsProxy::applyContentOpacity(
       propsParserContext));
 }
 
+// A retiring run keeps the fade of its children until its carrier attaches.
+std::vector<SharedTransitionRun *> LayoutAnimationsProxy::contentFadeRuns() const {
+  std::vector<SharedTransitionRun *> runs;
+  const auto addRun = [&runs](SharedElement &element) {
+    if (element.run && element.run->contentFade) {
+      runs.push_back(&*element.run);
+    }
+  };
+  for (auto &[_, element] : sharedElements_) {
+    addRun(element);
+  }
+  for (auto &[_, retiring] : retiringSharedTransitions_) {
+    addRun(retiring.element);
+  }
+  return runs;
+}
+
 // Runs after all other mutations of the pull, so that React updates of the children keep the fade.
 // All restores come first, so that a child that moves to another carrier gets the fade of that carrier.
 void LayoutAnimationsProxy::composeCarrierContent(
@@ -1342,16 +1358,13 @@ void LayoutAnimationsProxy::composeCarrierContent(
     const PropsParserContext &propsParserContext) const {
   std::vector<std::pair<SharedTransitionRun *, std::vector<std::shared_ptr<LightNode>>>> fadingRuns;
   std::optional<std::unordered_set<Tag>> hiddenTags;
-  for (auto &[_, element] : sharedElements_) {
-    if (!element.run || !element.run->contentFade) {
-      continue;
-    }
+  for (auto *run : contentFadeRuns()) {
     if (!hiddenTags) {
       hiddenTags = hiddenViewTags();
     }
-    auto children = fadingChildren(element.run->carrier, *hiddenTags);
-    restoreFadedChildren(*element.run->contentFade, children, *hiddenTags, filteredMutations, propsParserContext);
-    fadingRuns.emplace_back(&*element.run, std::move(children));
+    auto children = fadingChildren(run->carrier, *hiddenTags);
+    restoreFadedChildren(*run->contentFade, children, *hiddenTags, filteredMutations, propsParserContext);
+    fadingRuns.emplace_back(run, std::move(children));
   }
   for (const auto &[run, children] : fadingRuns) {
     auto &contentFade = *run->contentFade;
