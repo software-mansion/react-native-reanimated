@@ -23,18 +23,19 @@ import {
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const DURATION = 1200;
 
-const transition = SharedTransition.duration(DURATION).withCallback(
-  (finished) => {
+const transition = SharedTransition.duration(DURATION)
+  .easing(Easing.linear)
+  .withCallback((finished) => {
     'worklet';
     if (finished) {
       notify('carrier-finished');
     }
-  }
-);
+  });
 
 function Target() {
   const target = useTestRef('target');
@@ -89,12 +90,8 @@ function sampleWidths(sourceTag: number, otherTag: number) {
   });
 }
 
-function isNear(value: number | null, expected: number) {
-  return value !== null && Math.abs(value - expected) < 1;
-}
-
 describe('Shared transition next to another animation', () => {
-  test('keeps another animated view moving and lands at the last frame', async () => {
+  test('keeps another animated view moving and ends the run on time', async () => {
     await mockAnimationTimer(false);
     await render(<Screens active={false} />);
     await waitForFrames();
@@ -105,32 +102,24 @@ describe('Shared transition next to another animation', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(300);
     const quarter = await sampleWidths(sourceTag, otherTag);
-    await advanceAnimationTimer(300);
-    const half = await sampleWidths(sourceTag, otherTag);
+    expect(quarter.other).toBe(75, ComparisonMode.PIXEL);
+    expect(quarter.source).toBe(82.5, ComparisonMode.PIXEL);
 
-    expect(isNear(quarter.other, 75)).toBe(true);
-    expect(isNear(half.other, 100)).toBe(true);
-    expect(
-      quarter.source !== null &&
-        half.source !== null &&
-        quarter.source > 60 &&
-        half.source > quarter.source &&
-        half.source < 150
-    ).toBe(true);
+    await advanceAnimationTimer(800);
+    const nearEnd = await sampleWidths(sourceTag, otherTag);
+    expect(nearEnd.other).toBe(141.67, ComparisonMode.PIXEL);
+    expect(nearEnd.source).toBe(142.5, ComparisonMode.PIXEL);
 
-    await advanceAnimationTimer(DURATION - 600);
-    const end = await sampleWidths(sourceTag, otherTag);
-    expect(isNear(end.source, 150)).toBe(true);
-    expect(isNear(end.other, 150)).toBe(true);
-
+    await advanceAnimationTimer(DURATION - 1100);
     await waitForNotification('carrier-finished');
     await expectEventually(async () => {
       const props = await getTestComponent('target').getMountedViewProps();
-      return !!props && props.opacity === 1 && isNear(props.width, 150);
+      return (
+        !!props && props.opacity === 1 && Math.abs(props.width - 150) < 0.5
+      );
     }).toBe(true);
   });
 });
-
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
