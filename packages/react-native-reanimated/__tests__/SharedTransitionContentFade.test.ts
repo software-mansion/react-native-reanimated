@@ -43,8 +43,7 @@ describe('SharedTransition content fade builder', () => {
   });
 
   test('clamps only the content-opacity spring', () => {
-    const build = SharedTransition.duration(800)
-      .springify()
+    const build = SharedTransition.springify(800)
       .dampingRatio(0.3)
       .fadeContent()
       .build();

@@ -410,12 +410,16 @@ describe('Shared transition with fadeContent', () => {
     await render(<ChildrenPair active />);
     await expectFadingLikeReference('child');
 
-    const recorder = recordFrames(['source', 'child', 'reference']);
-    await render(<ChildrenPair active remove />);
-    await expectOpacity('target', 1);
+    const frames = await recordFrames(
+      ['source', 'child', 'reference'],
+      async () => {
+        await render(<ChildrenPair active remove />);
+        await expectOpacity('target', 1);
+      }
+    );
     // During the move the exit opacity of the child goes from 1 down to more than 0.5.
     // The child shows the exit opacity times the fade of the reference.
-    const fading = (await recorder.stop()).filter(
+    const fading = frames.filter(
       ([source, child, reference]) =>
         isMoving(source) &&
         !!child &&
@@ -436,13 +440,14 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames();
     await render(<ChildrenPair active targetWide />);
     await expectOpacity('target', 0);
-    const recorder = recordFrames(['target', 'targetChild']);
-    await expectOpacity('target', 1);
-    await expectEventually(async () => {
-      const child = await mountedProps('targetChild');
-      return !!child && Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5;
-    }).toBe(true);
-    const visible = (await recorder.stop()).filter(
+    const frames = await recordFrames(['target', 'targetChild'], async () => {
+      await expectOpacity('target', 1);
+      await expectEventually(async () => {
+        const child = await mountedProps('targetChild');
+        return !!child && Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5;
+      }).toBe(true);
+    });
+    const visible = frames.filter(
       ([target, child]) => !!target && target.opacity > 0.99 && !!child
     );
     const [landing] = visible;
@@ -508,16 +513,16 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('does not raise the child opacity again when the moving spring overshoots', async () => {
-    const spring = SharedTransition.duration(1800)
-      .springify()
+    const spring = SharedTransition.springify(1800)
       .dampingRatio(0.3)
       .fadeContent();
     await render(<ChildrenPair active={false} sourceConfig={spring} />);
     await waitForFrames();
-    const recorder = recordFrames(['source', 'child']);
-    await render(<ChildrenPair active sourceConfig={spring} />);
-    await expectOpacity('target', 1);
-    const moving = (await recorder.stop()).filter(
+    const frames = await recordFrames(['source', 'child'], async () => {
+      await render(<ChildrenPair active sourceConfig={spring} />);
+      await expectOpacity('target', 1);
+    });
+    const moving = frames.filter(
       ([source, child]) => !!source && source.opacity > 0.99 && !!child
     );
     const opacities = moving.map(([, child]) => child!.opacity);
@@ -532,8 +537,8 @@ describe('Shared transition with fadeContent', () => {
   });
 });
 
-// Records the named views on each UI frame until the test stops it.
-function recordFrames(names: string[]) {
+// Records the named views on each UI frame while `during` runs.
+async function recordFrames(names: string[], during: () => Promise<void>) {
   const viewTags = names.map(tagOf);
   const running = makeMutable(true);
   const frames = makeMutable<(ViewSample | null)[][]>([]);
@@ -552,14 +557,17 @@ function recordFrames(names: string[]) {
     };
     requestAnimationFrame(record);
   });
-  return {
-    stop: () =>
-      runOnUIBlocking(() => {
-        'worklet';
-        running.value = false;
-        return frames.value;
-      }),
-  };
+  let recorded: (ViewSample | null)[][] = [];
+  try {
+    await during();
+  } finally {
+    recorded = await runOnUIBlocking(() => {
+      'worklet';
+      running.value = false;
+      return frames.value;
+    });
+  }
+  return recorded;
 }
 
 const styles = StyleSheet.create({
