@@ -366,7 +366,7 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades a child whose own opacity changes during the move', async () => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const childOpacity = makeMutable(CHILD_OPACITY);
     await render(<ChildrenPair active={false} childOpacity={childOpacity} />);
     await waitForFrames();
@@ -462,7 +462,7 @@ describe('Shared transition with fadeContent', () => {
   test.each([true, false])(
     'keeps the fade policy of the first run when the navigation goes back (source fade: %p)',
     async (sourceFades) => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const sourceConfig = sourceFades ? linearFade : linearNoFade;
       const targetConfig = sourceFades ? linearNoFade : linearFade;
       const pair = (active: boolean) => (
