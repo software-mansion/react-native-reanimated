@@ -145,7 +145,7 @@ describe('Shared transition transform copying', () => {
     ['target translation', null, 30, false],
     ['identity ancestor', 40, null, true],
   ] as const)('${0}', async ([, sourceX, targetX, ancestor]) => {
-    await mockAnimationTimer(false);
+    await mockAnimationTimer({ autoAdvance: false });
     const transition = heldTransition();
     const props = { transition, sourceX, targetX, ancestor };
     await render(<TransformScreens {...props} active={false} />);
@@ -178,7 +178,7 @@ describe('Shared transition transform copying', () => {
   ] as const)(
     'keeps an unanimated transform with ${0}',
     async ([, ancestor]) => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const props = {
         transition: layoutOnlyTransition(),
         sourceX: 40,
@@ -210,7 +210,7 @@ describe('Shared transition transform copying', () => {
   nativeTest(
     'keeps the held transform when the target width changes',
     async () => {
-      await mockAnimationTimer(false);
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = heldTransition();
       const props = { transition, sourceX: 40, targetX: null, ancestor: false };
       await render(<TransformScreens {...props} active={false} />);
