@@ -40,6 +40,10 @@ bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewPro
   const auto radiusChanged = [](const std::optional<ValueUnit> &source, const std::optional<ValueUnit> &target) {
     return source.value_or(ValueUnit{}).value != target.value_or(ValueUnit{}).value;
   };
+  // The same compare as in diffBorderWidth: a missing width counts as 0.
+  const auto widthChanged = [](const std::optional<react::Float> &source, const std::optional<react::Float> &target) {
+    return source.value_or(0) != target.value_or(0);
+  };
   const auto &sourceRadii = sourceProps.borderRadii;
   const auto &targetRadii = targetProps.borderRadii;
   if (radiusChanged(sourceRadii.all, targetRadii.all) || radiusChanged(sourceRadii.topLeft, targetRadii.topLeft) ||
@@ -65,9 +69,9 @@ bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewPro
       !std::ranges::equal(sourceProps.boxShadow, targetProps.boxShadow, sameAnimatedBoxShadow) ||
       sourceProps.shadowColor != targetProps.shadowColor || sourceProps.shadowOffset != targetProps.shadowOffset ||
       sourceProps.shadowOpacity != targetProps.shadowOpacity || sourceProps.shadowRadius != targetProps.shadowRadius ||
-      sourceWidths.all != targetWidths.all || sourceWidths.left != targetWidths.left ||
-      sourceWidths.right != targetWidths.right || sourceWidths.top != targetWidths.top ||
-      sourceWidths.bottom != targetWidths.bottom || sourceColors.all != targetColors.all ||
+      widthChanged(sourceWidths.all, targetWidths.all) || widthChanged(sourceWidths.left, targetWidths.left) ||
+      widthChanged(sourceWidths.right, targetWidths.right) || widthChanged(sourceWidths.top, targetWidths.top) ||
+      widthChanged(sourceWidths.bottom, targetWidths.bottom) || sourceColors.all != targetColors.all ||
       sourceColors.left != targetColors.left || sourceColors.right != targetColors.right ||
       sourceColors.top != targetColors.top || sourceColors.bottom != targetColors.bottom;
 }
