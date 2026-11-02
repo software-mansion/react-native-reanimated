@@ -1,10 +1,14 @@
-import { withTiming } from '../src/animation';
+import { withSpring, withTiming } from '../src/animation';
 import { logger } from '../src/common';
-import type { EntryAnimationsValues } from '../src/commonTypes';
+import type {
+  EntryAnimationsValues,
+  LayoutAnimationValues,
+} from '../src/commonTypes';
 import { SharedTransition } from '../src/layoutReanimation';
 
 jest.mock('../src/animation', () => ({
   ...jest.requireActual('../src/animation'),
+  withSpring: jest.fn(() => ({})),
   withTiming: jest.fn(),
 }));
 
@@ -16,12 +20,23 @@ function fadeInDuration(transition: SharedTransition) {
 
 describe('SharedTransition.fadeContent', () => {
   beforeEach(() => {
-    jest.spyOn(logger, 'warn').mockImplementation();
+    jest.spyOn(logger, 'warnOnce').mockImplementation();
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  test.each([null, 'fast'])(
+    'warns and uses the defaults for the config %p',
+    (config) => {
+      const contentFade = SharedTransition.fadeContent(
+        config as unknown as undefined
+      ).buildContentFade();
+      expect(contentFade?.fadeOutEnd).toBe(1);
+      expect(logger.warnOnce).toHaveBeenCalledTimes(1);
+    }
+  );
 
   test('has no content fade without fadeContent()', () => {
     expect(SharedTransition.duration(400).buildContentFade()).toBeUndefined();
@@ -32,7 +47,7 @@ describe('SharedTransition.fadeContent', () => {
       .fadeContent()
       .buildContentFade();
     expect(contentFade?.fadeOutEnd).toBe(1);
-    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.warnOnce).not.toHaveBeenCalled();
   });
 
   test('passes a valid fadeOut.end', () => {
@@ -40,7 +55,7 @@ describe('SharedTransition.fadeContent', () => {
       fadeOut: { end: 0.4 },
     }).buildContentFade();
     expect(contentFade?.fadeOutEnd).toBe(0.4);
-    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.warnOnce).not.toHaveBeenCalled();
   });
 
   test.each([0, -1, 1.5, Number.NaN, '0.5'])(
@@ -50,7 +65,7 @@ describe('SharedTransition.fadeContent', () => {
         fadeOut: { end: end as number },
       }).buildContentFade();
       expect(contentFade?.fadeOutEnd).toBe(1);
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warnOnce).toHaveBeenCalledTimes(1);
     }
   );
 
@@ -58,8 +73,9 @@ describe('SharedTransition.fadeContent', () => {
     SharedTransition.fadeContent({
       fadeOut: { end: '0.5' as unknown as number },
     });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('got "0.5".')
+    expect(logger.warnOnce).toHaveBeenCalledWith(
+      expect.stringContaining('got "0.5".'),
+      0
     );
   });
 
@@ -69,13 +85,13 @@ describe('SharedTransition.fadeContent', () => {
       SharedTransition.fadeContent({
         fadeIn: { duration: duration as number },
       });
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warnOnce).toHaveBeenCalledTimes(1);
     }
   );
 
   test('accepts a fadeIn.duration of 0', () => {
     SharedTransition.fadeContent({ fadeIn: { duration: 0 } });
-    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.warnOnce).not.toHaveBeenCalled();
   });
 
   test('fades in over half of the transition by default', () => {
@@ -106,4 +122,58 @@ describe('SharedTransition.fadeContent', () => {
       ).toBe(200);
     }
   );
+});
+
+describe('SharedTransition content fade builder', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test.each([
+    () => SharedTransition.duration(800).fadeContent(),
+    () => SharedTransition.fadeContent().duration(800),
+  ])(
+    'keeps the builder and fade-in duration in either chain order',
+    (create) => {
+      const transition = create();
+      expect(transition).toBeInstanceOf(SharedTransition);
+      transition.buildContentFade()?.fadeIn({
+        targetOpacity: 0.4,
+      } as EntryAnimationsValues);
+      expect(withTiming).toHaveBeenCalledWith(
+        0.4,
+        expect.objectContaining({ duration: 400 })
+      );
+    }
+  );
+
+  test('uses the default spring fade-in duration', () => {
+    SharedTransition.springify()
+      .fadeContent()
+      .buildContentFade()
+      ?.fadeIn({} as EntryAnimationsValues);
+    expect(withTiming).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ duration: 250 })
+    );
+  });
+
+  test('clamps only the content-opacity spring', () => {
+    const build = SharedTransition.springify(800)
+      .dampingRatio(0.3)
+      .fadeContent()
+      .build();
+    build({
+      source: { width: 60, contentOpacity: 1 },
+      target: { width: 150, contentOpacity: 0 },
+    } as unknown as LayoutAnimationValues);
+    expect(withSpring).toHaveBeenNthCalledWith(
+      1,
+      150,
+      expect.not.objectContaining({ overshootClamping: true })
+    );
+    expect(withSpring).toHaveBeenNthCalledWith(
+      2,
+      0,
+      expect.objectContaining({ overshootClamping: true, dampingRatio: 0.3 })
+    );
+  });
 });

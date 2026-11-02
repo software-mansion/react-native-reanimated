@@ -15,14 +15,15 @@ const DEFAULT_DURATION = 500;
 
 export type FadeContentConfig = {
   /**
-   * The fade-out of the children of the moving view. `end` is the part of the
-   * move, more than 0 and at most 1, at which they reach opacity 0. Defaults to
-   * 1.
+   * The fade-out of the children of the moving view. `end` is the progress of
+   * the move, more than 0 and at most 1, at which they reach opacity 0.
+   * Defaults to 1.
    */
   fadeOut?: { end?: number };
   /**
    * The fade-in of the children of the target view after the move. `duration`
-   * is in milliseconds. Defaults to half of the transition duration.
+   * is in milliseconds. Defaults to half of the transition duration, or 250 ms
+   * when `springify()` gets no duration.
    */
   fadeIn?: { duration?: number };
 };
@@ -64,9 +65,10 @@ export class SharedTransition
   }
 
   fadeContent(config: FadeContentConfig = {}): this {
+    const { fadeOut, fadeIn } = validFadeContentConfig(config);
     this.fadeContentV = {
-      fadeOut: { end: validFadeOutEnd(config.fadeOut?.end) },
-      fadeIn: { duration: validFadeInDuration(config.fadeIn?.duration) },
+      fadeOut: { end: validFadeOutEnd(fadeOut?.end) },
+      fadeIn: { duration: validFadeInDuration(fadeIn?.duration) },
     };
     return this;
   }
@@ -181,12 +183,24 @@ export class SharedTransition
   };
 }
 
+function validFadeContentConfig(config: unknown): FadeContentConfig {
+  if (typeof config === 'object' && config !== null) {
+    return config;
+  }
+  logger.warnOnce(
+    `fadeContent: the config must be an object, got ${describeValue(config)}. The defaults are used.`,
+    0
+  );
+  return {};
+}
+
 function validFadeOutEnd(end: number | undefined) {
   if (end === undefined || (typeof end === 'number' && end > 0 && end <= 1)) {
     return end;
   }
-  logger.warn(
-    `fadeContent: fadeOut.end must be more than 0 and at most 1, got ${describeValue(end)}. The default 1 is used.`
+  logger.warnOnce(
+    `fadeContent: fadeOut.end must be more than 0 and at most 1, got ${describeValue(end)}. The default 1 is used.`,
+    0
   );
   return undefined;
 }
@@ -198,8 +212,9 @@ function validFadeInDuration(duration: number | undefined) {
   ) {
     return duration;
   }
-  logger.warn(
-    `fadeContent: fadeIn.duration must be a finite number of milliseconds, 0 or more, got ${describeValue(duration)}. The default is used.`
+  logger.warnOnce(
+    `fadeContent: fadeIn.duration must be a finite number of milliseconds, 0 or more, got ${describeValue(duration)}. The default is used.`,
+    0
   );
   return undefined;
 }
