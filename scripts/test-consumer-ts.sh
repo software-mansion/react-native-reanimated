@@ -16,10 +16,20 @@ if [ ! -f lib/typescript/index.d.ts ]; then
   exit 1
 fi
 
-ERRORS=$(yarn tsc --noEmit --pretty false --project "$FIXTURE_DIR" |
+OUTPUT=$(yarn tsc --noEmit --pretty false --project "$FIXTURE_DIR")
+STATUS=$?
+
+ERRORS=$(echo "$OUTPUT" |
   awk '/^[^ ]/ { keep = ($0 !~ /^(\.\.\/)*node_modules\//) } keep')
 
 if [ -n "$ERRORS" ]; then
   echo "$ERRORS"
   exit 1
+fi
+
+# A nonzero exit with no diagnostics means tsc itself failed (yarn error, crash).
+if [ "$STATUS" -ne 0 ] && ! echo "$OUTPUT" | grep -q 'error TS'; then
+  echo "$OUTPUT"
+  echo "tsc exited with status $STATUS without reporting diagnostics" >&2
+  exit "$STATUS"
 fi
