@@ -194,7 +194,13 @@ const childEntering = FadeIn.duration(300).withCallback((finished) => {
 });
 
 const longExiting = FadeOut.duration(6000);
-const longLayout = LinearTransition.duration(10000);
+const LAYOUT_FINISHED = 'fade-content-layout-finished';
+const LAYOUT_CANCELLED = 'fade-content-layout-cancelled';
+
+const longLayout = LinearTransition.duration(10000).withCallback((finished) => {
+  'worklet';
+  callTracker(finished ? LAYOUT_FINISHED : LAYOUT_CANCELLED);
+});
 
 function EnteringChild({
   exits,
@@ -511,12 +517,19 @@ describe('Shared transition with fadeContent', () => {
       await render(
         <ScreensWithEnteringChild showTarget childTagged={childTagged} />
       );
-      const recorder = recordFrames(['source', 'enteringChild']);
-      await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
-      expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
-
-      await expectOpacity('enteringChild', 1);
-      const moving = (await recorder.stop()).filter(
+      const frames = await recordFrames(
+        ['source', 'enteringChild'],
+        async () => {
+          await expectMovingWithChildOpacity(
+            'source',
+            0.1,
+            CHILD_OPACITY - 0.1
+          );
+          expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+          await expectOpacity('enteringChild', 1);
+        }
+      );
+      const moving = frames.filter(
         ([source, child]) => isMoving(source) && !!child
       );
       expect(moving.length > 0).toBe(true);
@@ -572,6 +585,11 @@ describe('Shared transition with fadeContent', () => {
       );
     }).toBe(true);
     await expectEnteringCallbacks(1);
+    // The running layout animation stops with `finished` set to false.
+    await expectEventually(() =>
+      getTrackerCallCount(LAYOUT_CANCELLED)
+    ).toBeCalledUI(1);
+    expect(await getTrackerCallCount(LAYOUT_FINISHED)).toBeCalledUI(0);
   });
 
   test('keeps hidden a target child that React removes while its entering animation waits', async () => {
@@ -581,16 +599,16 @@ describe('Shared transition with fadeContent', () => {
     await render(<ScreensWithEnteringChild showTarget childExits />);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     const childTag = tagOf('enteringChild');
-    const recorder = recordFrames(['enteringChild']);
-    await render(
-      <ScreensWithEnteringChild showTarget showChild={false} childExits />
-    );
-
-    await expectOpacity('target', 1);
-    await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
-      false
-    );
-    const mounted = (await recorder.stop()).filter(([child]) => !!child);
+    const frames = await recordFrames(['enteringChild'], async () => {
+      await render(
+        <ScreensWithEnteringChild showTarget showChild={false} childExits />
+      );
+      await expectOpacity('target', 1);
+      await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
+        false
+      );
+    });
+    const mounted = frames.filter(([child]) => !!child);
     expect(mounted.length > 0).toBe(true);
     expect(mounted.every(([child]) => child!.opacity < 0.01)).toBe(true);
     expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
