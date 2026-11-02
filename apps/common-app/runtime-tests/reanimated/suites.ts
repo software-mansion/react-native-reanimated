@@ -204,6 +204,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'layout animations exit frames',
+    importTest: () => {
+      require('./tests/layoutAnimations/exiting/exitFrameProps.test');
+    },
+  },
+  {
     testSuiteName: 'layout animations native stack removal',
     importTest: () => {
       require('./tests/layoutAnimations/nativeStackRemoval.test');
