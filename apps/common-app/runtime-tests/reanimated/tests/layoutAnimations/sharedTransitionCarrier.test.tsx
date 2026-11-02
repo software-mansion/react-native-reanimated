@@ -369,7 +369,7 @@ describe('Shared transition moves a real native view', () => {
     ],
   ] as const) {
     test(`shows the source at the end when React removes the target ${kind}`, async () => {
-      await mockAnimationTimer();
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = transitionWithNotification();
       await render(
         <Screens
@@ -385,6 +385,8 @@ describe('Shared transition moves a real native view', () => {
       await render(
         <Screens active transition={transition} targetExiting={targetExiting} />
       );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
       await expectMoving('source');
       const targetTag = getTestComponent('target').getTag();
 
@@ -397,9 +399,11 @@ describe('Shared transition moves a real native view', () => {
         />
       );
       await waitForFrames(3);
+      await advanceAnimationTimer(300);
       await expectMoving('source');
       await expectRemovedTarget(targetTag, !!targetExiting);
-      await waitForNotification('carrier-finished', 30000);
+      await advanceAnimationTimer(400);
+      await waitForNotification('carrier-finished');
       await expectAtHome('source', 60, 1);
       const sourceProps =
         await getTestComponent('source').getMountedViewProps();
@@ -407,7 +411,8 @@ describe('Shared transition moves a real native view', () => {
       expect(sourceProps?.y).toBe(sourceHome?.y, ComparisonMode.PIXEL);
       await expectRemovedTarget(targetTag, !!targetExiting);
       if (targetExiting) {
-        await waitForNotification('target-exited', 30000);
+        await advanceAnimationTimer(2400);
+        await waitForNotification('target-exited');
         await expectEventually(() => isViewMountedNatively(targetTag)).toBe(
           false
         );
@@ -416,7 +421,7 @@ describe('Shared transition moves a real native view', () => {
     });
 
     test(`keeps the source moving when React moves it and removes the target ${kind} in the same update`, async () => {
-      await mockAnimationTimer();
+      await mockAnimationTimer({ autoAdvance: false });
       const transition = transitionWithNotification();
       await render(
         <Screens
@@ -431,6 +436,8 @@ describe('Shared transition moves a real native view', () => {
       await render(
         <Screens active transition={transition} targetExiting={targetExiting} />
       );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
       await expectMoving('source');
       const targetTag = getTestComponent('target').getTag();
 
@@ -444,9 +451,11 @@ describe('Shared transition moves a real native view', () => {
         />
       );
       await waitForFrames(3);
+      await advanceAnimationTimer(300);
       await expectMoving('source');
       await expectRemovedTarget(targetTag, !!targetExiting);
-      await waitForNotification('carrier-finished', 30000);
+      await advanceAnimationTimer(400);
+      await waitForNotification('carrier-finished');
       await expectAtHome('source', 60, 1);
       expect((await getTestComponent('source').getMountedViewProps())?.y).toBe(
         0,
@@ -454,7 +463,8 @@ describe('Shared transition moves a real native view', () => {
       );
       await expectRemovedTarget(targetTag, !!targetExiting);
       if (targetExiting) {
-        await waitForNotification('target-exited', 30000);
+        await advanceAnimationTimer(2400);
+        await waitForNotification('target-exited');
         await expectEventually(() => isViewMountedNatively(targetTag)).toBe(
           false
         );
