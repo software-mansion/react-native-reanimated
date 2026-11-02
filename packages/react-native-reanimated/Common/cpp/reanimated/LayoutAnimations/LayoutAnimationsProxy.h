@@ -82,7 +82,8 @@ struct SharedElement {
   std::optional<SharedTransitionRun> run;
 };
 
-// A run whose source and target are both gone. It ends in the next pull that can remove views.
+// A run whose source and target are both gone, or whose carrier has a new shared tag while its frames are not in
+// the mount queue. It ends in the next pull that can remove views after those frames are queued.
 struct RetiringSharedTransition {
   SharedTag sharedTag;
   SharedElement element;
@@ -357,6 +358,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> detachedCarrierOf(const std::shared_ptr<LightNode> &node) const;
   bool isRetiringContent(Tag tag) const;
   void retireOrphanedSharedTransitions() const;
+  void retireSharedTransition(const SharedTag &sharedTag, SharedElement &element) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,

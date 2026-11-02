@@ -403,8 +403,12 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const bool waitsToLand = completedAnimations_.contains(tag) && run->carrier->isRetained;
     if ((!isAnimating && !waitsToLand && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag) {
       react_native_assert((isAnimating || completedAnimations_.contains(tag)) && "Shared carrier has no animation");
-      attachCarrier(sharedTag, *run, transaction.filteredMutations, propsParserContext);
-      run.reset();
+      if (hasUnqueuedCarrierFrame(tag)) {
+        retireSharedTransition(sharedTag, sharedElements_[sharedTag]);
+      } else {
+        attachCarrier(sharedTag, *run, transaction.filteredMutations, propsParserContext);
+        run.reset();
+      }
     }
   }
   if (!run) {
@@ -724,16 +728,19 @@ void LayoutAnimationsProxy::retireOrphanedSharedTransitions() const {
     return isLightNodeMapped(node) && !node->isExiting();
   };
   for (auto &[sharedTag, element] : sharedElements_) {
-    if (!element.run || isLive(element.run->source) || isLive(element.run->target)) {
-      continue;
+    if (element.run && !isLive(element.run->source) && !isLive(element.run->target)) {
+      retireSharedTransition(sharedTag, element);
     }
-    const auto carrierTag = element.run->carrier->current.tag;
-    const auto [it, inserted] = retiringSharedTransitions_.try_emplace(
-        carrierTag, RetiringSharedTransition{.sharedTag = sharedTag, .element = {}});
-    react_native_assert(inserted && "Carrier already has a retiring run");
-    if (inserted) {
-      it->second.element.run = std::exchange(element.run, std::nullopt);
-    }
+  }
+}
+
+void LayoutAnimationsProxy::retireSharedTransition(const SharedTag &sharedTag, SharedElement &element) const {
+  const auto carrierTag = element.run->carrier->current.tag;
+  const auto [it, inserted] = retiringSharedTransitions_.try_emplace(
+      carrierTag, RetiringSharedTransition{.sharedTag = sharedTag, .element = {}});
+  react_native_assert(inserted && "Carrier already has a retiring run");
+  if (inserted) {
+    it->second.element.run = std::exchange(element.run, std::nullopt);
   }
 }
 
