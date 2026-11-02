@@ -455,8 +455,8 @@ bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, con
   if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
     return true;
   }
-  return waitsForCoveringRun(run, viewsHiddenByContinuingRuns()) &&
-      PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget));
+  return PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
+      waitsForCoveringRun(run, viewsHiddenByContinuingRuns());
 }
 
 // The carrier shows its own props, so that its content, for example a video player or an image
