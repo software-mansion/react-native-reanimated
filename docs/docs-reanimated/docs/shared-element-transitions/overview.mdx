@@ -136,7 +136,7 @@ On iOS, when the animation is triggered by a swipe gesture or the OS back button
 ### Fade content
 
 <Badges version="4.8.0">
-  By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `fadeContent()` to change them in steps: the moving view keeps its own background, border and shadow, its children fade out while it moves, and when it lands the children of the target view fade in.
+  By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `fadeContent()` to change them in steps: the moving view stays visible and its frame and style, such as the background, border and shadow, animate to the target as without `fadeContent()`. Its children fade out while it moves, and when it lands the children of the target view fade in.
 </Badges>
 
 ```tsx
