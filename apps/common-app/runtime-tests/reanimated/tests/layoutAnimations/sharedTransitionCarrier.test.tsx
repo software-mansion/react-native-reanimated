@@ -386,6 +386,19 @@ describe('Shared transition moves a real native view', () => {
     expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
   });
 
+  test('lands in the first frame with a zero duration', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification(0);
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(16);
+    await waitForNotification('carrier-finished');
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
+  });
+
   test('keeps a replaced target hidden until the source lands', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     const transition = transitionWithNotification();

@@ -284,7 +284,7 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
       value: BaseBuilderAnimationConfig[Key],
       variableName: Key
     ) {
-      if (value) {
+      if (value !== undefined) {
         config[variableName] = value;
       }
     }

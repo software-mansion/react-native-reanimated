@@ -109,9 +109,7 @@ export class SharedTransition
 
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    if (!this.durationV) {
-      this.durationV = DEFAULT_DURATION;
-    }
+    this.durationV ??= DEFAULT_DURATION;
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
