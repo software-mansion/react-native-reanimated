@@ -27,7 +27,7 @@ describe('SharedTransition.fadeContent', () => {
     jest.restoreAllMocks();
   });
 
-  test.each([null, 'fast'])(
+  test.each([null, 'fast', []])(
     'warns and uses the defaults for the config %p',
     (config) => {
       const contentFade = SharedTransition.fadeContent(
@@ -35,6 +35,36 @@ describe('SharedTransition.fadeContent', () => {
       ).buildContentFade();
       expect(contentFade?.fadeOutEnd).toBe(1);
       expect(logger.warnOnce).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test.each(['fast', 42, [0.4]])(
+    'warns and uses the default for the fadeOut options %p',
+    (fadeOut) => {
+      const contentFade = SharedTransition.fadeContent({
+        fadeOut: fadeOut as unknown as { end: number },
+      }).buildContentFade();
+      expect(contentFade?.fadeOutEnd).toBe(1);
+      expect(logger.warnOnce).toHaveBeenCalledTimes(1);
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        expect.stringContaining('fadeOut must be an object'),
+        0
+      );
+    }
+  );
+
+  test.each(['fast', 42, [150]])(
+    'warns and uses the default for the fadeIn options %p',
+    (fadeIn) => {
+      const transition = SharedTransition.duration(400).fadeContent({
+        fadeIn: fadeIn as unknown as { duration: number },
+      });
+      expect(logger.warnOnce).toHaveBeenCalledTimes(1);
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        expect.stringContaining('fadeIn must be an object'),
+        0
+      );
+      expect(fadeInDuration(transition)).toBe(200);
     }
   );
 

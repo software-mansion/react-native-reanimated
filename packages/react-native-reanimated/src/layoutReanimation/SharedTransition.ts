@@ -16,8 +16,8 @@ const DEFAULT_DURATION = 500;
 export type FadeContentConfig = {
   /**
    * The fade-out of the children of the moving view. `end` is the progress of
-   * the move, more than 0 and at most 1, at which they reach opacity 0.
-   * Defaults to 1.
+   * the move, more than 0 and at most 1, at which they reach opacity 0. A value
+   * below 0.000001 works as 0.000001. Defaults to 1.
    */
   fadeOut?: { end?: number };
   /**
@@ -67,8 +67,10 @@ export class SharedTransition
   fadeContent(config: FadeContentConfig = {}): this {
     const { fadeOut, fadeIn } = validFadeContentConfig(config);
     this.fadeContentV = {
-      fadeOut: { end: validFadeOutEnd(fadeOut?.end) },
-      fadeIn: { duration: validFadeInDuration(fadeIn?.duration) },
+      fadeOut: { end: validFadeOutEnd(validOptions('fadeOut', fadeOut)?.end) },
+      fadeIn: {
+        duration: validFadeInDuration(validOptions('fadeIn', fadeIn)?.duration),
+      },
     };
     return this;
   }
@@ -183,8 +185,12 @@ export class SharedTransition
   };
 }
 
+function isOptionsObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function validFadeContentConfig(config: unknown): FadeContentConfig {
-  if (typeof config === 'object' && config !== null) {
+  if (isOptionsObject(config)) {
     return config;
   }
   logger.warnOnce(
@@ -192,6 +198,20 @@ function validFadeContentConfig(config: unknown): FadeContentConfig {
     0
   );
   return {};
+}
+
+function validOptions<T extends object>(
+  name: keyof FadeContentConfig,
+  options: T | undefined
+) {
+  if (options === undefined || isOptionsObject(options)) {
+    return options;
+  }
+  logger.warnOnce(
+    `fadeContent: ${name} must be an object, got ${describeValue(options)}. The defaults are used.`,
+    0
+  );
+  return undefined;
 }
 
 function validFadeOutEnd(end: number | undefined) {
@@ -220,5 +240,7 @@ function validFadeInDuration(duration: number | undefined) {
 }
 
 function describeValue(value: unknown) {
-  return typeof value === 'string' ? JSON.stringify(value) : String(value);
+  return typeof value === 'string' || Array.isArray(value)
+    ? JSON.stringify(value)
+    : String(value);
 }
