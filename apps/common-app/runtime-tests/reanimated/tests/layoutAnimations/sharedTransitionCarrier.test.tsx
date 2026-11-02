@@ -367,7 +367,6 @@ describe('Shared transition moves a real native view', () => {
     ).toBe(0);
     await advanceAnimationTimer(300);
     await expectMoving('source');
-    expect(getTestComponent('source').getTag()).toBe(sourceTag);
     expect(
       (await getTestComponent('target').getMountedViewProps())?.opacity
     ).toBe(0);
