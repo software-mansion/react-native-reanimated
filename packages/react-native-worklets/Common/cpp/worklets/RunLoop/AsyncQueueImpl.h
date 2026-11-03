@@ -19,7 +19,7 @@ struct AsyncQueueState {
   std::queue<std::function<void()>> queue;
 };
 
-class AsyncQueueImpl : public AsyncQueue {
+class AsyncQueueImpl final : public AsyncQueue {
  public:
   explicit AsyncQueueImpl(const std::string &name);
 

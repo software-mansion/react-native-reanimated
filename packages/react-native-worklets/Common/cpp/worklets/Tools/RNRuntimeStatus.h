@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+#include <mutex>
 #include <shared_mutex>
 #include <utility>
 
@@ -12,7 +14,7 @@ class RNRuntimeStatus {
     isDead_ = true;
   }
 
-  template <typename TFn>
+  template <std::invocable<bool> TFn>
   void runWhileLocked(TFn &&fn) {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     const bool isDead = isDead_;
