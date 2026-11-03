@@ -1,4 +1,4 @@
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 #include <reanimated/NativeAnimations/NativeAnimationTrace.h>
 
@@ -36,6 +36,8 @@ std::string_view toString(const TraceEventType event) {
       return "LayoutStartRefused";
     case TraceEventType::LayoutLeafCaptured:
       return "LayoutLeafCaptured";
+    case TraceEventType::LayoutMountReported:
+      return "LayoutMountReported";
   }
 }
 
@@ -201,4 +203,4 @@ std::vector<TraceEvent> TraceRecorder::take() {
 
 } // namespace reanimated::native_animation
 
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)

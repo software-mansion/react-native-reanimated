@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 #include <reanimated/NativeAnimations/NativeAnimationRequest.h>
 
@@ -36,6 +36,8 @@ enum class TraceEventType : uint8_t {
   LayoutStartRefused,
   /// A layout animation build got the value of the key of a live track at the time of its batch.
   LayoutLeafCaptured,
+  /// The mount report of the transaction ran its last host operation. Each event of the report is before it.
+  LayoutMountReported,
 };
 
 struct TraceEvent {
@@ -53,6 +55,8 @@ struct TraceEvent {
   std::optional<AnimationResult> result;
   std::optional<TrackBuildFailure> buildFailure;
   std::optional<int64_t> transactionNumber;
+  /// The origin of the timelines of the request of a received command.
+  std::optional<double> originTimestampMs;
   /// The value of the layout animation key that a capture got.
   std::optional<double> leafValue;
   /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,
@@ -87,4 +91,4 @@ class TraceRecorder {
 
 } // namespace reanimated::native_animation
 
-#endif // NDEBUG
+#endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)

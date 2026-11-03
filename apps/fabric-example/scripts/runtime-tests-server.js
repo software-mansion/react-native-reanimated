@@ -1872,7 +1872,10 @@ async function installAndLaunchAndroid(serial) {
 
   for (const port of [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
-      () => {}
+      (error) =>
+        console.warn(
+          `[runtime-tests] adb reverse of port ${port} failed: ${error.message}`
+        )
     );
   }
 
@@ -1895,6 +1898,9 @@ async function installAndLaunchAndroid(serial) {
     '--es',
     'RUNTIME_TESTS_LIBRARY',
     LIBRARY,
+    ...(IS_RELEASE
+      ? []
+      : ['--es', 'RUNTIME_TESTS_BUNDLER_HOST', `localhost:${METRO_PORT}`]),
   ]);
 }
 
