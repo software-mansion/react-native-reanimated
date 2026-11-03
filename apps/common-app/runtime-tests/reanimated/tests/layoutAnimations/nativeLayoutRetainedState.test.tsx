@@ -19,19 +19,21 @@ import {
   wait,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { NativeAnimationContainerSizes } from '../nativeAnimationObservation';
-import {
-  containerSizes,
-  pendingBuildCountOf,
-} from '../nativeAnimationObservation';
 import { collectGarbage } from '../viewSampler';
+import type { RetainedRead } from './nativeLayoutLifecycleKit';
+import {
+  differencesOf,
+  growthOf,
+  hasView,
+  readRetained,
+  sizeOf,
+} from './nativeLayoutLifecycleKit';
 import type { TraceEvent } from './nativeLayoutTestKit';
 import {
   END_LEFT,
   entryExitOf,
   FRAME_MS,
   hasNativeLayoutRoute,
-  isNoView,
   layoutOf,
   movingGeometryTest,
   sample,
@@ -198,11 +200,6 @@ const REFUSED_MOVE = layoutOf({
   originX: { duration: CYCLE_MS, reduceMotion: ReduceMotion.Always },
 });
 
-type RetainedRead = {
-  sizes: NativeAnimationContainerSizes;
-  pendingBuilds: number;
-};
-
 /** The views of the last cycle before a read. */
 type CycleViews = { commandTags: number[]; exitedTags: number[] };
 
@@ -365,22 +362,6 @@ async function waitForRemoval(tag: number) {
   );
 }
 
-const hasView = (tag: number) =>
-  sample(tag, 'Opacity').then(
-    () => true,
-    (error: unknown) => {
-      if (isNoView(error)) {
-        return false;
-      }
-      throw error;
-    }
-  );
-
-async function readRetained(): Promise<RetainedRead> {
-  const sizes = await containerSizes();
-  return { sizes, pendingBuilds: pendingBuildCountOf() };
-}
-
 /** The number of physical animations of each target of the view (I-34). */
 async function membersOf(tag: number) {
   const counts: Record<string, number> = {};
@@ -389,37 +370,6 @@ async function membersOf(tag: number) {
   }
   return counts;
 }
-
-/**
- * The sizes that grew from `before` to `after`: a size that falls keeps no
- * state.
- */
-const growthOf = (before: RetainedRead, after: RetainedRead) =>
-  differencesOf(before, after, (first, second) => second > first);
-
-function differencesOf(
-  first: RetainedRead,
-  second: RetainedRead,
-  isDifference = (firstSize: number, secondSize: number) =>
-    firstSize !== secondSize
-) {
-  const names = new Set([
-    ...Object.keys(first.sizes),
-    ...Object.keys(second.sizes),
-  ]);
-  const differences = [...names]
-    .sort()
-    .filter((name) => isDifference(sizeOf(first, name), sizeOf(second, name)))
-    .map((name) => `${name} ${sizeOf(first, name)} -> ${sizeOf(second, name)}`);
-  if (isDifference(first.pendingBuilds, second.pendingBuilds)) {
-    differences.push(
-      `pendingBuilds ${first.pendingBuilds} -> ${second.pendingBuilds}`
-    );
-  }
-  return differences.join(', ');
-}
-
-const sizeOf = ({ sizes }: RetainedRead, name: string) => sizes[name] ?? 0;
 
 const sizeChangeOf = (
   before: RetainedRead,

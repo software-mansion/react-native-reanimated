@@ -316,6 +316,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     skipByDefault: true,
   },
   {
+    testSuiteName: 'native layout lifecycle',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutLifecycle.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout stress',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutStress.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
