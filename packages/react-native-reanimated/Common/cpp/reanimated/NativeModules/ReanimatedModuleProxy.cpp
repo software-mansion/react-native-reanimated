@@ -699,6 +699,11 @@ bool ReanimatedModuleProxy::handleEvent(
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
+  // On Android this is the entry point for every event (`NodesManager` is an
+  // `EventDispatcherListener`, invoked on the UI thread before the event is
+  // sent to JS); on iOS `handleRawEvent` already did this.
+  synchronizeShadowTreeBeforeTouchIfNeeded(eventName);
+
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
@@ -736,6 +741,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
+
+  // Event listeners run on the UI thread before the event is queued for JS,
+  // so a commit here lands before JS measures anything for this touch.
+  synchronizeShadowTreeBeforeTouchIfNeeded(eventType);
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
@@ -911,7 +920,37 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
+  if (flushRegistry) {
+    // A full flush carries every registry value of every surface, including
+    // the ones written synchronously, so the shadow trees are in sync with
+    // the views again. Cleared before the commit: `commitUpdates` sets it
+    // again if it has to skip the commit of a surface.
+    hasUncommittedSynchronousProps_ = false;
+  }
   commitUpdates(propsMapBySurface);
+}
+
+void ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouchIfNeeded(const std::string &eventName) {
+  if constexpr (
+      !shouldUseSynchronousUpdatesInPerformOperations() || StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return;
+  }
+  // Event names arrive as `topTouchStart` from the platforms and as
+  // `onTouchStart` once normalized.
+  const bool isTouchStart = eventName == "topTouchStart" || eventName == "onTouchStart" ||
+      eventName == "topPointerDown" || eventName == "onPointerDown";
+  if (!isTouchStart || !hasUncommittedSynchronousProps_) {
+    return;
+  }
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronizeShadowTreeBeforeTouchIfNeeded");
+  // Pressable (and the other touchables from react-native) validate a press
+  // against the rectangle they `measure()` when the responder is granted,
+  // and `measure()` reads the shadow tree. The synchronous path leaves the
+  // tree behind the views, so commit the registry values before JS handles
+  // the touch. This is at most one commit per touch, and none at all while
+  // nothing was written synchronously since the last flush (see #10121).
+  shouldFlushRegistry_ = true;
+  performOperations();
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
@@ -1124,6 +1163,11 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
+  if (!synchronousUpdatesBatch.empty()) {
+    // New values that no commit carries yet (unlike the post-mount rewrites
+    // in `rewriteSynchronousProps`, which re-apply committed registry values).
+    hasUncommittedSynchronousProps_ = true;
+  }
   writeSynchronousPropsToViews(synchronousUpdatesBatch);
 }
 
@@ -1167,6 +1211,12 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+              // React started committing between the check in
+              // `performOperations` and this commit. Flush the registry again
+              // once React's commit is mounted (see `ReanimatedMountHook`) and
+              // keep the touch-start sync armed until then.
+              updatesRegistryManager_->pleaseCommitAfterPause();
+              hasUncommittedSynchronousProps_ = true;
               return nullptr;
             }
 
