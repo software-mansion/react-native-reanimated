@@ -36,7 +36,13 @@ import {
   waitForNotifications,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
+import { TestSummaryLogger } from '../../ReJest/TestRunner/TestSummaryLogger';
+import type { TestSuite } from '../../ReJest/types';
 import { ComparisonMode } from '../../ReJest/types';
+import {
+  applyIsolationCheck,
+  REANIMATED_ISOLATION_FAILURE,
+} from '../../ReJest/utils/isolationCheck';
 import { runOnUIBlocking } from '../../ReJest/utils/runOnUIBlocking';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
@@ -483,6 +489,38 @@ describe('Tests of Test Framework', () => {
       );
     });
 
+    test('reload summary leaves out the skipped test cases of the resumed suite', () => {
+      const logger = new TestSummaryLogger();
+      logger.countSkippedTestSuiteTests(
+        makeTestSuite('earlier', [false, false], true)
+      );
+      logger.countSkippedTestSuiteTests(
+        makeTestSuite('resumed', [true, false, true])
+      );
+      logger.countSkippedTestSuiteTests(makeTestSuite('resumed', [true], true));
+      expect(logger.getSummary().skipped).toBe(5);
+      expect(logger.getSummaryBeforeRuntimeTestSuite('resumed').skipped).toBe(
+        2
+      );
+      expect(logger.getSummaryBeforeRuntimeTestSuite('other').skipped).toBe(5);
+    });
+
+    test('isolation check adds a failure when Reanimated is forbidden but loaded', () => {
+      const summary = {
+        passed: 3,
+        failed: 1,
+        skipped: 2,
+        failedTests: ['earlier failure'],
+        durationMs: 10,
+      };
+      expect(applyIsolationCheck(summary, false)).toBe(summary);
+      const checked = applyIsolationCheck(summary, true);
+      expect(checked.failed).toBe(2);
+      expect(checked.failedTests.length).toBe(2);
+      expect(checked.failedTests[1]).toBe(REANIMATED_ISOLATION_FAILURE);
+      expect(summary.failed).toBe(1);
+    });
+
     test('useTestState', async () => {
       const [state1, setState1] = createTestValue('not_ok');
       setState1('ok');
@@ -517,3 +555,25 @@ describe('Tests of Test Framework', () => {
     });
   });
 });
+
+function makeTestSuite(
+  runtimeTestSuiteName: string,
+  skippedCases: boolean[],
+  skip = false
+): TestSuite {
+  return {
+    name: runtimeTestSuiteName,
+    buildSuite: () => {},
+    nestingLevel: 1,
+    runtimeTestSuiteName,
+    skip,
+    testCases: skippedCases.map((skipCase, index) => ({
+      name: `${runtimeTestSuiteName} ${index}`,
+      run: () => {},
+      componentsRefs: {},
+      callsRegistry: {},
+      errors: [],
+      skip: skipCase,
+    })),
+  };
+}

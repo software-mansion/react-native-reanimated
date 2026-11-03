@@ -10,6 +10,7 @@ export class TestSummaryLogger {
   private _failed: number = 0;
   private _skipped: number = 0;
   private _failedTests: Array<string> = [];
+  private _skippedByRuntimeTestSuite = new Map<string, number>();
   private _startTime: number = Date.now();
 
   public logRunningTestSuite(testSuite: TestSuite) {
@@ -42,15 +43,24 @@ export class TestSummaryLogger {
   }
 
   public countSkippedTestSuiteTests(testSuite: TestSuite) {
-    if (testSuite.skip) {
-      this._skipped += testSuite.testCases.length;
-      return;
+    const skipped = testSuite.skip
+      ? testSuite.testCases.length
+      : testSuite.testCases.filter((testCase) => testCase.skip).length;
+    this._skipped += skipped;
+    if (testSuite.runtimeTestSuiteName !== undefined) {
+      this._skippedByRuntimeTestSuite.set(
+        testSuite.runtimeTestSuiteName,
+        (this._skippedByRuntimeTestSuite.get(testSuite.runtimeTestSuiteName) ??
+          0) + skipped
+      );
     }
-    for (const testCase of testSuite.testCases) {
-      if (testCase.skip) {
-        this._skipped++;
-      }
-    }
+  }
+
+  public getSummaryBeforeRuntimeTestSuite(runtimeTestSuiteName: string) {
+    const summary = this.getSummary();
+    summary.skipped -=
+      this._skippedByRuntimeTestSuite.get(runtimeTestSuiteName) ?? 0;
+    return summary;
   }
 
   public getSummary() {

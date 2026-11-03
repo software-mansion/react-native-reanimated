@@ -107,7 +107,10 @@ export class TestRunner {
         '[ReJest] Reloading the app during a test needs the runtime-tests server.'
       );
     }
-    this._reloadHook(resumeFromSuite, this._testSummary.getSummary());
+    this._reloadHook(
+      resumeFromSuite,
+      this._testSummary.getSummaryBeforeRuntimeTestSuite(resumeFromSuite)
+    );
     return new Promise(() => {});
   }
 
