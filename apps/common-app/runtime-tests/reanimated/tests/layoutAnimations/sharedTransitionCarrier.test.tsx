@@ -79,6 +79,7 @@ function Screens({
   sourceMoved = false,
   targetKey,
   covered = false,
+  coveringScreen = 'boundary',
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -96,6 +97,7 @@ function Screens({
   sourceMoved?: boolean;
   targetKey?: string;
   covered?: boolean;
+  coveringScreen?: 'boundary' | 'view' | 'none';
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -139,10 +141,13 @@ function Screens({
           targetKey={targetKey}
         />
       )}
-      {covered && (
+      {covered && coveringScreen === 'boundary' && (
         <SharedTransitionBoundary isActive>
           <View collapsable={false} style={styles.child} />
         </SharedTransitionBoundary>
+      )}
+      {covered && coveringScreen === 'view' && (
+        <View collapsable={false} style={styles.child} />
       )}
     </View>
   );
@@ -404,6 +409,34 @@ describe('Shared transition moves a real native view', () => {
     await expectMoving('source');
 
     await render(<Screens active covered transition={transition} />);
+    await waitForFrames(3);
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
+    await advanceAnimationTimer(300);
+    await expectAtHome('source', 60, 0);
+  });
+
+  test.each([
+    ['a screen without a boundary covers the target', 'view'],
+    ['the boundary of the target turns inactive', 'none'],
+  ] as const)('ends the run when ${0}', async ([, coveringScreen]) => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+
+    await render(
+      <Screens
+        active
+        covered
+        coveringScreen={coveringScreen}
+        transition={transition}
+      />
+    );
     await waitForFrames(3);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);

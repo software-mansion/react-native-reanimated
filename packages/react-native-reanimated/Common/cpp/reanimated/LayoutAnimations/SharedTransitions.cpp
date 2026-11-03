@@ -743,8 +743,9 @@ void LayoutAnimationsProxy::retireOrphanedSharedTransitions() const {
   }
 }
 
-// The new top screen covers a target that is in another screen. Its run ends, so that its carrier does not move over
-// the new screen. A target that carries another run is at the root, above the screens.
+// The new top screen covers a target that is in another screen. Without an active boundary, it covers every target.
+// Its run ends, so that its carrier does not move over the new screen. A target that carries another run is at the
+// root, above the screens.
 void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     const std::shared_ptr<LightNode> &topScreen,
     TransactionMeta &transaction,
@@ -755,7 +756,8 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     }
     const auto &target = element.run->target;
     const bool carriesAnotherRun = target->isDetached && target != element.run->carrier;
-    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || isInSubtree(target, topScreen)) {
+    const bool onTopScreen = topScreen && isInSubtree(target, topScreen);
+    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen) {
       continue;
     }
     if (hasUnqueuedCarrierFrame(element.run->carrier->current.tag)) {
@@ -896,7 +898,11 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const PropsParserContext &propsParserContext) const {
   ReanimatedSystraceSection s1("LayoutAnimationsProxy::handleSharedTransitionsStart");
 
-  if (!beforeTopScreen || !afterTopScreen) {
+  if (!beforeTopScreen) {
+    return;
+  }
+  if (!afterTopScreen) {
+    finishCoveredSharedTransitions(nullptr, transaction, propsParserContext);
     return;
   }
 
