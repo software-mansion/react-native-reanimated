@@ -1589,6 +1589,9 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   ReanimatedSystraceSection s("LayoutAnimationsProxy::clearSurfaceState");
   LayoutAnimationsProxyCommon::clearSurfaceState();
+  for (const auto tag : lightNodes_ | std::views::keys) {
+    layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+  }
   completedExits_.clear();
   currentPull_ = {};
   pendingPulls_.clear();
