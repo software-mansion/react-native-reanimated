@@ -50,12 +50,45 @@ std::string_view toString(const LayoutAnimationType type) {
   }
 }
 
+std::string_view toString(const NativeStartRefusal refusal) {
+  switch (refusal) {
+    case NativeStartRefusal::NoMountReport:
+      return "NoMountReport";
+    case NativeStartRefusal::NotInWindow:
+      return "NotInWindow";
+    case NativeStartRefusal::NodeNotMapped:
+      return "NodeNotMapped";
+    case NativeStartRefusal::ExitStateMismatch:
+      return "ExitStateMismatch";
+    case NativeStartRefusal::FrameDrivenState:
+      return "FrameDrivenState";
+    case NativeStartRefusal::HiddenBySharedTransition:
+      return "HiddenBySharedTransition";
+    case NativeStartRefusal::BuilderThrew:
+      return "BuilderThrew";
+  }
+}
+
+std::optional<native_animation::UnsupportedTargetCause> targetCauseOf(const NativeLayoutRefusal &refusal) {
+  const auto *cause = std::get_if<native_animation::UnsupportedTargetCause>(&refusal);
+  return cause == nullptr ? std::nullopt : std::optional(*cause);
+}
+
+std::optional<std::string_view> resourceLimitOf(const NativeLayoutRefusal &refusal) {
+  const auto *cause = std::get_if<ResourceLimitCause>(&refusal);
+  if (cause == nullptr) {
+    return std::nullopt;
+  }
+  return std::ranges::find(NATIVE_LAYOUT_LIMITS, *cause, &NativeLayoutLimit::cause)->name;
+}
+
 /// The Debug trace of one mount report: the mounted first frame updates and starts of each pull when the
 /// report begins, and `LayoutMountReported` for each pull when it ends, in pull order.
 class MountReportTrace final {
  public:
   MountReportTrace(
       native_animation::TraceRecorder &trace,
+      NativeLayoutGroups *groups,
       const SurfaceId surfaceId,
       const std::vector<PullRecord> &pulls)
       : trace_(trace), surfaceId_(surfaceId) {
@@ -70,10 +103,11 @@ class MountReportTrace final {
       }
       for (const auto &operation : pull.operations) {
         if (const auto *start = std::get_if<native_animation::MountedStart>(&operation)) {
+          react_native_assert(groups && "a mounted layout start has no layout groups");
           trace_.record(
               {.event = native_animation::TraceEventType::LayoutStartMounted,
                .handle = start->request.handle,
-               .objective = 7,
+               .objective = groups->traceObjective(start->request.handle, false),
                .transactionNumber = pull.transactionNumber});
         }
       }
@@ -1159,25 +1193,41 @@ ShadowViewMutation LayoutAnimationsProxy::updateToMount(
 
 bool LayoutAnimationsProxy::admitsNativeStart(const std::shared_ptr<LightNode> &node, const LayoutAnimationType type)
     const {
-  const auto tag = node->current.tag;
-  const bool isExit = type == LayoutAnimationType::EXITING;
-  // The frame driver mounts the last update of an animation that it completed, so it takes the exit then.
-  const bool hasFrameDrivenState = layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag) ||
-      (isExit && completedAnimations_.contains(tag));
-  const bool admitsOnView = nativeLayoutGroups_ && isLightNodeMapped(node) && node->isExiting() == isExit &&
-      !hasFrameDrivenState && !hiddenViewTags_.contains(tag);
-  if (!admitsOnView) {
+  if (!nativeLayoutGroups_) {
     return false;
   }
-  if (currentPull_.mountReport) {
-    return true;
-  }
+  const auto refusal = nativeStartRefusal(node, type);
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  if (worklets::isOnUIThread(uiScheduler_)) {
-    traceStartRefused(tag, type);
+  if (refusal && worklets::isOnUIThread(uiScheduler_)) {
+    traceStartRefused(node->current.tag, type, *refusal);
   }
 #endif
-  return false;
+  return !refusal;
+}
+
+std::optional<NativeStartRefusal> LayoutAnimationsProxy::nativeStartRefusal(
+    const std::shared_ptr<LightNode> &node,
+    const LayoutAnimationType type) const {
+  const auto tag = node->current.tag;
+  const bool isExit = type == LayoutAnimationType::EXITING;
+  if (!isLightNodeMapped(node)) {
+    return NativeStartRefusal::NodeNotMapped;
+  }
+  if (node->isExiting() != isExit) {
+    return NativeStartRefusal::ExitStateMismatch;
+  }
+  // The frame driver mounts the last update of an animation that it completed, so it takes the exit then.
+  if (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag) ||
+      (isExit && completedAnimations_.contains(tag))) {
+    return NativeStartRefusal::FrameDrivenState;
+  }
+  if (hiddenViewTags_.contains(tag)) {
+    return NativeStartRefusal::HiddenBySharedTransition;
+  }
+  if (!currentPull_.mountReport) {
+    return NativeStartRefusal::NoMountReport;
+  }
+  return std::nullopt;
 }
 
 bool LayoutAnimationsProxy::admitsNativeEnteringStart(
@@ -1190,7 +1240,7 @@ bool LayoutAnimationsProxy::admitsNativeEnteringStart(
     return true;
   }
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  traceStartRefused(node->current.tag, ENTERING);
+  traceStartRefused(node->current.tag, ENTERING, NativeStartRefusal::NotInWindow);
 #endif
   return false;
 }
@@ -1218,6 +1268,9 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   }
   const auto buildSummary = buildLayoutAnimation(start);
   if (!buildSummary.isObject()) {
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+    traceStartRefused(tag, start.type, NativeStartRefusal::BuilderThrew, *start.buildId);
+#endif
     return false;
   }
   const auto buildId = *start.buildId;
@@ -1228,13 +1281,15 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
       : native_animation::EndpointPolicy::MountedModelMustMatchEndpoint;
   auto build = makeNativeLayoutTracks(
       uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_, endpointPolicy);
-  if ([[maybe_unused]] const auto *failure = std::get_if<native_animation::TrackBuildFailure>(&build)) {
+  if ([[maybe_unused]] const auto *refusal = std::get_if<NativeLayoutRefusal>(&build)) {
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
     nativeAnimationHost_->trace().record(
         {.event = native_animation::TraceEventType::LayoutBuildFailed,
          .handle = handle,
          .objective = traceObjectiveOf(start.type),
-         .buildFailure = *failure,
+         .buildFailure = failureOf(*refusal),
+         .targetCause = targetCauseOf(*refusal),
+         .resourceLimit = resourceLimitOf(*refusal),
          .transactionNumber = currentPull_.transactionNumber,
          .layoutAnimationType = toString(start.type)});
 #endif
@@ -1457,7 +1512,7 @@ void LayoutAnimationsProxy::surfaceDidMount(const std::optional<std::uint64_t> r
            pulls, [reportedMount](const PullRecord &pull) { return pull.mountReport == reportedMount; })) &&
       "a mount report took the record of a pull of another mount report");
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  const MountReportTrace reportTrace(nativeAnimationHost_->trace(), surfaceId_, pulls);
+  const MountReportTrace reportTrace(nativeAnimationHost_->trace(), nativeLayoutGroups_.get(), surfaceId_, pulls);
 #endif
   lock.unlock();
 
@@ -1485,17 +1540,24 @@ void LayoutAnimationsProxy::traceFirstFrameUpdates(const ShadowView &currentView
   });
 }
 
-void LayoutAnimationsProxy::traceStartRefused(const Tag tag, const LayoutAnimationType type) const {
+void LayoutAnimationsProxy::traceStartRefused(
+    const Tag tag,
+    const LayoutAnimationType type,
+    const NativeStartRefusal refusal,
+    const uint64_t buildId) const {
+  const bool hasNoMountedTarget =
+      refusal == NativeStartRefusal::NoMountReport || refusal == NativeStartRefusal::NotInWindow;
   nativeAnimationHost_->trace().record(
       {.event = native_animation::TraceEventType::LayoutStartRefused,
-       .handle = {surfaceId_, tag, native_animation::AnimationOwner::Layout, 0},
+       .handle = {surfaceId_, tag, native_animation::AnimationOwner::Layout, buildId},
        .objective = traceObjectiveOf(type),
-       .result =
-           native_animation::AnimationResult{
-               native_animation::AnimationOutcome::Rejected,
-               native_animation::AnimationResultReason::TargetUnavailable},
+       .result = hasNoMountedTarget ? std::optional(native_animation::AnimationResult{
+                                          native_animation::AnimationOutcome::Rejected,
+                                          native_animation::AnimationResultReason::TargetUnavailable})
+                                    : std::nullopt,
        .transactionNumber = currentPull_.transactionNumber,
-       .layoutAnimationType = toString(type)});
+       .layoutAnimationType = toString(type),
+       .layoutStartRefusal = toString(refusal)});
 }
 
 ContainerSizes LayoutAnimationsProxy::containerSizes() const {

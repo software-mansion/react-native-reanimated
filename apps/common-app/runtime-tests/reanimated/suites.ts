@@ -202,6 +202,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout diagnostics',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutDiagnostics.test');
+    },
+  },
+  {
     testSuiteName: 'native layout mount window',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutMountWindow.test');

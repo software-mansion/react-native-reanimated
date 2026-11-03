@@ -30,6 +30,19 @@ export type TraceEvent = {
   outcome?: string;
   reason?: string;
   buildFailure?: string;
+  /**
+   * The clause of an `UnsupportedTarget` failure, or the limit of a
+   * `ResourceLimit` failure.
+   */
+  buildFailureCause?: string;
+  /** The reason of a `LayoutStartRefused` event. */
+  startRefusal?: string;
+  /**
+   * The other command of a conflict: on an end of a replaced command, the
+   * command that replaces it; on an `OwnershipDenied` rejection, the active
+   * command that keeps a target.
+   */
+  conflictHandle?: CommandHandle;
   transactionNumber?: number;
   /** Of a `Received` event: the start of the timelines on the animation clock. */
   originTimestampMs?: number;
@@ -192,10 +205,25 @@ export const hasNativeLayoutRoute =
 export const isNativeLayoutRouteConfigured =
   NATIVE_ANIMATION_ROUTES.layoutRoute !== 'off';
 
-/** The events of the host since the last take. The host keeps the newest 1024. */
-export function takeTrace(): Promise<TraceEvent[]> {
+/**
+ * The events of the host since the last take. The host keeps the newest 1024. A
+ * `TrackEndIgnored` event marks a platform end that a stop or a replacement
+ * made obsolete, a race that only its own tests read: a take keeps it only with
+ * `keepsIgnoredEnds`.
+ */
+export function takeTrace({ keepsIgnoredEnds = false } = {}): Promise<
+  TraceEvent[]
+> {
   const take = testHookOf('takeNativeAnimationTrace');
-  return new Promise((resolve) => take(resolve));
+  return new Promise((resolve) =>
+    take((events) =>
+      resolve(
+        keepsIgnoredEnds
+          ? events
+          : events.filter(({ event }) => event !== 'TrackEndIgnored')
+      )
+    )
+  );
 }
 
 /** Rejects when the build has no native animation host. */
@@ -267,7 +295,7 @@ export async function nativeAnimationHostExists(): Promise<boolean> {
   );
 }
 
-const samplesView = (tag: number) =>
+export const samplesView = (tag: number) =>
   sample(tag, 'Opacity').then(
     () => true,
     (error: unknown) => {
@@ -318,9 +346,11 @@ const isRefusal = ({ event, outcome }: TraceEvent) =>
  * The route of the last start of a target of a view, from one trace take after
  * the start and the samples of the target after it. The last start is the later
  * of the last `TrackStarted` of the target and the last refusal of a start of
- * the view. A frame-driven start needs two samples whose models differ and are
- * each on the declared timeline of the frame driver: `isOnFrameDriverTimeline`
- * gets the sample and its time from the refusal. Each other evidence throws.
+ * the view, up to the last sample: a later event is of a start that the samples
+ * do not show. A frame-driven start needs two samples whose models differ and
+ * are each on the declared timeline of the frame driver:
+ * `isOnFrameDriverTimeline` gets the sample and its time from the refusal. Each
+ * other evidence throws.
  */
 export function routeOf<TSample extends TargetSample>(
   events: TraceEvent[],
@@ -332,11 +362,16 @@ export function routeOf<TSample extends TargetSample>(
   const ofView = events
     .filter((event) => event.tag === tag)
     .sort((first, second) => first.sequence - second.sequence);
+  const lastSampleMs =
+    samples.length > 0
+      ? Math.max(...samples.map(({ monotonicTimeMs }) => monotonicTimeMs))
+      : Infinity;
   const start = lastOf(
     ofView.filter(
       (event) =>
-        isRefusal(event) ||
-        (event.event === 'TrackStarted' && event.target === target)
+        event.monotonicTimeMs <= lastSampleMs &&
+        (isRefusal(event) ||
+          (event.event === 'TrackStarted' && event.target === target))
     )
   );
   if (!start) {

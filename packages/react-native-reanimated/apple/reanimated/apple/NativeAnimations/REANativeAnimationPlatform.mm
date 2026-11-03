@@ -363,32 +363,42 @@ bool hasSpring(const std::vector<TimelineSegment<Value>> &segments)
 /// A spring plays as one animation for its whole timeline. When it holds its end, Core Animation shows the
 /// spring value just before the end and not the end value.
 template <typename Value>
-bool playsTimings(const std::vector<TimelineSegment<Value>> &segments, const EndpointPolicy endpointPolicy)
+std::optional<UnsupportedTargetCause> timingsCause(
+    const std::vector<TimelineSegment<Value>> &segments,
+    const EndpointPolicy endpointPolicy)
 {
   const bool playsEachTiming = std::ranges::all_of(
       segments, [](const TimelineSegment<Value> &segment) { return playsTiming(segment.timingFromPrevious); });
-  return playsEachTiming &&
-      (!hasSpring(segments) || (segments.size() == 1 && endpointPolicy != EndpointPolicy::HoldWithoutCommit));
+  if (!playsEachTiming) {
+    return UnsupportedTargetCause::TimingKind;
+  }
+  if (hasSpring(segments) && (segments.size() != 1 || endpointPolicy == EndpointPolicy::HoldWithoutCommit)) {
+    return UnsupportedTargetCause::SpringForm;
+  }
+  return std::nullopt;
 }
 
-struct PlaysTimingsVisitor {
+struct TimingsCauseVisitor {
   EndpointPolicy endpointPolicy;
 
-  bool operator()(const ValueTimeline &timeline) const
+  std::optional<UnsupportedTargetCause> operator()(const ValueTimeline &timeline) const
   {
-    return playsTimings(timeline.segments, endpointPolicy);
+    return timingsCause(timeline.segments, endpointPolicy);
   }
-  bool operator()(const TransformTimelines &body) const
+  std::optional<UnsupportedTargetCause> operator()(const TransformTimelines &body) const
   {
-    return std::ranges::all_of(body.operations, [this](const OperationTimeline &operation) {
-      return playsTimings(operation.segments, endpointPolicy);
-    });
+    for (const auto &operation : body.operations) {
+      if (const auto cause = timingsCause(operation.segments, endpointPolicy)) {
+        return cause;
+      }
+    }
+    return std::nullopt;
   }
 };
 
-bool playsTimings(const AnimationTrack &track)
+std::optional<UnsupportedTargetCause> timingsCause(const AnimationTrack &track)
 {
-  return std::visit(PlaysTimingsVisitor{track.endpointPolicy}, track.body);
+  return std::visit(TimingsCauseVisitor{track.endpointPolicy}, track.body);
 }
 
 struct TimingFunctionVisitor {
@@ -853,36 +863,46 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     trackEndListener_ = std::move(listener);
   }
 
-  bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) override
+  std::optional<UnsupportedTargetCause> unsupportedTargetCause(
+      const AnimationTrack &track,
+      const facebook::react::ShadowView &view) override
   {
     using namespace facebook::react;
-    if (!playsTimings(track)) {
-      return false;
+    using enum UnsupportedTargetCause;
+    if (const auto cause = timingsCause(track)) {
+      return cause;
     }
     const bool isLength = track.target == AnimationTarget::Width || track.target == AnimationTarget::Height;
     if (isLength && !staysAtOrAboveZero(track)) {
-      return false;
+      return SizeBelowZero;
     }
     const bool changesSize = isSizeTarget(track.target) && changesValue(track);
     if (!view.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
-      return !changesSize;
+      return changesSize ? std::optional(NotViewKind) : std::nullopt;
     }
     const auto &viewProps = static_cast<const ViewProps &>(*view.props);
     if (track.target == AnimationTarget::Opacity) {
-      return !hasOpacityFilter(viewProps);
+      return hasOpacityFilter(viewProps) ? std::optional(OpacityFilter) : std::nullopt;
     }
     if (!changesValue(track)) {
-      return true;
+      return std::nullopt;
     }
     if (changesSize) {
-      return std::strcmp(view.componentName, ViewComponentName) == 0 &&
-          pictureFollowsBounds(viewProps, view.layoutMetrics);
+      if (std::strcmp(view.componentName, ViewComponentName) != 0) {
+        return SizeChangeOnComponent;
+      }
+      return pictureFollowsBounds(viewProps, view.layoutMetrics) ? std::nullopt : std::optional(SizeDependentPicture);
     }
-    if (track.target == AnimationTarget::Transform) {
-      return playsTransform(view.componentName) && !hasSizeDependentTransform(viewProps) &&
-          hasEdgesOfFrameDriver(track);
+    if (track.target != AnimationTarget::Transform) {
+      return std::nullopt;
     }
-    return true;
+    if (!playsTransform(view.componentName)) {
+      return TransformOnComponent;
+    }
+    if (hasSizeDependentTransform(viewProps)) {
+      return SizeDependentTransform;
+    }
+    return hasEdgesOfFrameDriver(track) ? std::nullopt : std::optional(EdgeAntialiasing);
   }
 
   bool isSurfaceRunning(const SurfaceId surfaceId) override
@@ -915,7 +935,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       return AnimationResultReason::TargetUnavailable;
     }
     for (const auto &track : request.tracks) {
-      if (!playsTimings(track)) {
+      if (timingsCause(track)) {
         return AnimationResultReason::UnsupportedRealization;
       }
       if (isSizeTarget(track.target) && changesValue(track) && !pictureFollowsBounds(view)) {

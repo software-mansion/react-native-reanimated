@@ -31,13 +31,16 @@ enum class TraceEventType : uint8_t {
   ClientEnded,
   /// Layout keeps the animation of a build frame-driven. The event gives the reason.
   LayoutBuildFailed,
-  /// Layout keeps an animation frame-driven and makes no build for the native route. The result of the event
-  /// gives the reason.
+  /// Layout keeps an animation frame-driven before it has a build summary. `layoutStartRefusal` gives the reason.
+  /// A refusal with no mounted target also has the result `Rejected` with `TargetUnavailable`.
   LayoutStartRefused,
   /// A layout animation build got the value of the key of a live track at the time of its batch.
   LayoutLeafCaptured,
   /// The mount report of the transaction ran its last host operation. Each event of the report is before it.
   LayoutMountReported,
+  /// The platform reported the end of a track that the host no longer has: a stop or a replacement removed the
+  /// track while the report was in the queue. No client gets a report.
+  TrackEndIgnored,
 };
 
 struct TraceEvent {
@@ -54,6 +57,13 @@ struct TraceEvent {
   std::optional<bool> finished;
   std::optional<AnimationResult> result;
   std::optional<TrackBuildFailure> buildFailure;
+  /// The clause of an `UnsupportedTarget` build failure.
+  std::optional<UnsupportedTargetCause> targetCause;
+  /// The name of the limit of a `ResourceLimit` build failure.
+  std::optional<std::string_view> resourceLimit;
+  /// The other command of a conflict: on an end of a replaced command, the command that replaces it; on an
+  /// `OwnershipDenied` rejection, the first active command in conflict order that keeps a target.
+  std::optional<AnimationHandle> conflictHandle;
   std::optional<int64_t> transactionNumber;
   /// The origin of the timelines of the request of a received command.
   std::optional<double> originTimestampMs;
@@ -62,6 +72,8 @@ struct TraceEvent {
   /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,
   /// or a build failure.
   std::optional<std::string_view> layoutAnimationType;
+  /// The name that the layout domain gives to the reason of a refused start.
+  std::optional<std::string_view> layoutStartRefusal;
 };
 
 std::string_view toString(TraceEventType event);
@@ -72,6 +84,7 @@ std::string_view toString(EndpointPolicy policy);
 std::string_view toString(AnimationOutcome outcome);
 std::string_view toString(AnimationResultReason reason);
 std::string_view toString(TrackBuildFailure failure);
+std::string_view toString(UnsupportedTargetCause cause);
 
 /// Development record of lifecycle facts. Each layer records its own events at the point where the fact
 /// occurs. It keeps the newest events. UI thread only.

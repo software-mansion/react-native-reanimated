@@ -109,7 +109,7 @@ function routeOf(config: Config, size: [number, number]) {
     []
   )!;
   manager.releaseBuilt(buildId);
-  if (summary.exceedsLimit) {
+  if (summary.exceededLimit !== null) {
     return 'R';
   }
   return summary.leaves.every(({ track }) => track) ? 'N' : 'T';

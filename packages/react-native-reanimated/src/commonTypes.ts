@@ -177,10 +177,10 @@ export type LayoutAnimationBuildSummary = {
   /** The start time of the animation. All starts of one batch share it. */
   originMs: number;
   /**
-   * The builder gave more animations, operations, or segments than the caller
-   * can route.
+   * The limit of the caller that the builder exceeds with its animations,
+   * operations, or segments. The caller does not route the animation.
    */
-  exceedsLimit: boolean;
+  exceededLimit: keyof NativeLayoutLimits | null;
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
   /**

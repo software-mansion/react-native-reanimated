@@ -289,7 +289,7 @@ describe('LayoutAnimationsManager', () => {
       manager.releaseBuilt(2);
 
       expect(summary).toMatchObject({
-        exceedsLimit: false,
+        exceededLimit: null,
         hasInitialOnlyKeys: true,
         needsFrameDriver: false,
         leaves: [
@@ -331,7 +331,7 @@ describe('LayoutAnimationsManager', () => {
       }));
       manager.releaseBuilt(3);
 
-      expect(summary).toMatchObject({ exceedsLimit: true, leaves: [] });
+      expect(summary).toMatchObject({ exceededLimit: 'leaves', leaves: [] });
     });
 
     test('a builder error goes to the frame-driven start and the builder does not run again', () => {
@@ -888,15 +888,15 @@ describe('LayoutAnimationsManager', () => {
       const withDefault = () => withTiming(1);
       const limitOf = (segments: number) => ({ ...LIMITS, segments });
       expect(summaryOf('opacity', 0, withDefault, limitOf(2))).toMatchObject({
-        exceedsLimit: false,
+        exceededLimit: null,
       });
       expect(summaryOf('opacity', 0, withDefault, limitOf(1))).toMatchObject({
-        exceedsLimit: true,
+        exceededLimit: 'segments',
         leaves: [],
       });
       expect(
         summaryOf('opacity', 0, () => withTiming(1, { easing: Easing.bounce }))
-      ).toMatchObject({ exceedsLimit: true, leaves: [] });
+      ).toMatchObject({ exceededLimit: 'segments', leaves: [] });
     });
 
     const timelinesOfLeaf = (
@@ -1265,10 +1265,10 @@ describe('LayoutAnimationsManager', () => {
         );
       const limitOf8 = { ...LIMITS, segments: 8 };
       const atLimit = leafOf('opacity', 1, parts(4), limitOf8);
-      expect(atLimit.exceedsLimit).toBe(false);
+      expect(atLimit.exceededLimit).toBe(null);
       expect(scalarSegmentsOf(atLimit.track)).toHaveLength(8);
       expect(leafOf('opacity', 1, parts(5), limitOf8)).toMatchObject({
-        exceedsLimit: true,
+        exceededLimit: 'segments',
         leaves: [],
       });
     });
@@ -1607,7 +1607,7 @@ describe('LayoutAnimationsManager', () => {
         ];
         const countsOf = (track: NativeLeafTrack | undefined) =>
           timelinesOf(track)!.map(({ segments }) => segments.length);
-        const REFUSED = { exceedsLimit: true, leaves: [] };
+        const REFUSED = { exceededLimit: 'segments', leaves: [] };
 
         test('four operations of 22 segments pass at a limit of 88: the count is the sum of the operation timelines', () => {
           const atLimit = leafOf(
@@ -1616,7 +1616,7 @@ describe('LayoutAnimationsManager', () => {
             fourOperations,
             limitOf(4 * BOUNCE_PIECES)
           );
-          expect(atLimit.exceedsLimit).toBe(false);
+          expect(atLimit.exceededLimit).toBe(null);
           expect(countsOf(atLimit.track)).toEqual([22, 22, 22, 22]);
         });
 
@@ -1647,7 +1647,7 @@ describe('LayoutAnimationsManager', () => {
 
         test('a sum of 64 segments passes at the limit of 64', () => {
           const atLimit = leafOf('transform', FOUR_INITIAL, atTheCap(400));
-          expect(atLimit.exceedsLimit).toBe(false);
+          expect(atLimit.exceededLimit).toBe(null);
           expect(countsOf(atLimit.track)).toEqual([
             IN_OUT_BOUNCE_PIECES,
             BOUNCE_PIECES,
@@ -1673,7 +1673,7 @@ describe('LayoutAnimationsManager', () => {
             REFUSED
           );
           const atLimit = leafOf('transform', [], () => [], limitOf(1));
-          expect(atLimit.exceedsLimit).toBe(false);
+          expect(atLimit.exceededLimit).toBe(null);
           expect(segmentCountOf(atLimit.track!)).toBe(1);
         });
 
@@ -1687,7 +1687,7 @@ describe('LayoutAnimationsManager', () => {
             withHold,
             limitOf(BOUNCE_PIECES + 3)
           );
-          expect(atLimit.exceedsLimit).toBe(false);
+          expect(atLimit.exceededLimit).toBe(null);
           expect(countsOf(atLimit.track)).toEqual([2, BOUNCE_PIECES + 1]);
         });
       });
@@ -2748,7 +2748,10 @@ describe('LayoutAnimationsManager', () => {
           []
         );
         manager.releaseBuilt(33);
-        expect(summary).toMatchObject({ exceedsLimit: true, leaves: [] });
+        expect(summary).toMatchObject({
+          exceededLimit: 'transformOperations',
+          leaves: [],
+        });
         expect(animations[0].rotate).toBe(1);
       });
 

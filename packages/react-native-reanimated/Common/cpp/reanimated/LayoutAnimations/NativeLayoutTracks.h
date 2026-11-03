@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
+#include <reanimated/LayoutAnimations/NativeLayoutLimits.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/NativeAnimations/NativeAnimationTrack.h>
 
@@ -23,6 +24,13 @@ LeafValue leafValue(native_animation::AnimationTarget target, const facebook::re
 
 /// True when the mount of `view` gives the model the end value of `track`.
 bool endsAtMountedValue(const native_animation::AnimationTrack &track, const facebook::react::ShadowView &view);
+
+/// Why layout cannot build the tracks. A refusal of a target or of a limit gives its clause.
+using NativeLayoutRefusal =
+    std::variant<native_animation::TrackBuildFailure, native_animation::UnsupportedTargetCause, ResourceLimitCause>;
+
+/// `UnsupportedTarget` for a target clause, `ResourceLimit` for a limit.
+native_animation::TrackBuildFailure failureOf(const NativeLayoutRefusal &refusal);
 
 struct NativeLayoutTracks {
   double originTimestampMs;
@@ -51,7 +59,7 @@ LiveLeafValues liveLeafValues(facebook::jsi::Runtime &rt, const facebook::jsi::O
 /// that animation. A leaf that continues a live leaf has no track: the live track plays it.
 /// `MountedModelMustMatchEndpoint` is for an animation that ends at the state of `after`. `HoldWithoutCommit`
 /// is for an animation that ends at other values, which stay on screen until the owner removes the tracks.
-std::variant<NativeLayoutTracks, native_animation::TrackBuildFailure> makeNativeLayoutTracks(
+std::variant<NativeLayoutTracks, NativeLayoutRefusal> makeNativeLayoutTracks(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &buildSummary,
     const facebook::react::ShadowView &after,

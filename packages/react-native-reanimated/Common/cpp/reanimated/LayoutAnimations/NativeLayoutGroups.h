@@ -74,7 +74,7 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   /// The tracks of the group of the view that the host plays or holds.
   std::vector<native_animation::TrackKey> members(facebook::react::Tag tag);
   /// False when the host cannot play a track of the group of `view` on that view any more
-  /// (`NativeAnimationHost::canRealize`).
+  /// (`NativeAnimationHost::unsupportedTargetCause`).
   bool canContinueOn(const facebook::react::ShadowView &view);
   /// The layout animation that a frame change of the view starts while its group plays. Null when the view
   /// has no group, or when its group plays an entering or exiting animation: a frame change of the view does
@@ -91,6 +91,8 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   NativeLayoutBuildEnds clear();
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   ContainerSizes containerSizes();
+  /// The trace objective of a command of this client. `hasResult`: the report is the result of the command.
+  uint8_t traceObjective(const native_animation::AnimationHandle &handle, bool hasResult);
 #endif
 
   void onAnimationAdmitted(const native_animation::AnimationHandle &handle) override;
@@ -134,10 +136,6 @@ class NativeLayoutGroups final : public native_animation::NativeAnimationClient 
   NativeLayoutBuildEnd stop(NativeLayoutGroupCancel removed) const;
   /// The host has one track less of the build. True when it has none left. The lock is held.
   bool releaseTrack(uint64_t buildId);
-#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  /// The trace objective of a command of this client. `hasResult`: the report is the result of the command.
-  uint8_t traceObjective(const native_animation::AnimationHandle &handle, bool hasResult);
-#endif
 
   const std::shared_ptr<native_animation::NativeAnimationHost> host_;
   const BuildEndListener onBuildsEnded_;

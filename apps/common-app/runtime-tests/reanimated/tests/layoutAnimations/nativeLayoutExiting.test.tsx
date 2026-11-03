@@ -144,6 +144,7 @@ import {
   SECOND_BOX_REF,
   SizeBox,
   styles,
+  startRefusalsOf,
   summarize,
   summarizeEnd,
   takeRows,
@@ -3244,9 +3245,9 @@ describe('native layout exiting of a view that a shared transition hides', () =>
           expect(opacity.keys).toBe(0);
         }
         expect(callbacks.length).toBe(0);
-        // A hidden view admits no native start.
         const events = (await takeTrace()).filter((event) => event.tag === tag);
-        expect(summarize(events)).toBe('');
+        expect(summarize(events)).toBe('LayoutStartRefused');
+        expect(startRefusalsOf(events)).toBe('HiddenBySharedTransition');
 
         expect(await waitForCallbacks([`${route}:true`])).toBe('');
         expect(await leaves(tag)).toBe(true);

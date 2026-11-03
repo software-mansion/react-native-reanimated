@@ -76,6 +76,37 @@ enum class TrackBuildFailure : uint8_t {
   UnsupportedContinuation,
 };
 
+/// The clause that refuses a target: the detail of `TrackBuildFailure::UnsupportedTarget`.
+enum class UnsupportedTargetCause : uint8_t {
+  /// The domain has no target for the key.
+  UnknownKey,
+  /// The track needs the props of a view, and the view has none.
+  NotViewKind,
+  TimingKind,
+  /// A spring that is not the only segment, or that holds its end.
+  SpringForm,
+  TargetKind,
+  ApiLevel,
+  /// A transform that moves with an operation that the platform does not compose in 2D.
+  NonPlanarTransform,
+  /// A width or height below 0, or no explicit start value.
+  SizeBelowZero,
+  /// A size change of a component other than `View`.
+  SizeChangeOnComponent,
+  /// A size change of a view whose picture does not follow its bounds.
+  SizeDependentPicture,
+  /// A size track that is not in one pixel of the mounted size.
+  SizeBeyondOnePixel,
+  OpacityFilter,
+  /// A transform of a component whose picture can differ from that of the frame driver.
+  TransformOnComponent,
+  SizeDependentTransform,
+  /// The edges of the frame driver change their antialiasing during the track.
+  EdgeAntialiasing,
+  Skew,
+  SingularMatrix,
+};
+
 std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track);
 
 enum class TrackPlayback : uint8_t {

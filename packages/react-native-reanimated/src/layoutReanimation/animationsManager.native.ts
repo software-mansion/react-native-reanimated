@@ -161,19 +161,23 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       >;
       const keys = Object.keys(animations);
       const { transform } = animations;
-      const refusal: LayoutAnimationBuildSummary = {
+      const refusalOf = (
+        exceededLimit: keyof NativeLayoutLimits
+      ): LayoutAnimationBuildSummary => ({
         originMs,
-        exceedsLimit: true,
+        exceededLimit,
         hasInitialOnlyKeys: false,
         needsFrameDriver: false,
         leaves: [],
-      };
-      const hasTooManyLeaves =
-        keys.length > limits.leaves ||
-        (Array.isArray(transform) &&
-          transform.length > limits.transformOperations);
-      if (hasTooManyLeaves) {
-        return refusal;
+      });
+      if (keys.length > limits.leaves) {
+        return refusalOf('leaves');
+      }
+      if (
+        Array.isArray(transform) &&
+        transform.length > limits.transformOperations
+      ) {
+        return refusalOf('transformOperations');
       }
       animatePlainLeaves(animations);
       const fitting = { fits: easingCurveFits, lever: leverOf(yogaValues) };
@@ -191,7 +195,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         0
       );
       if (segmentCount > limits.segments) {
-        return refusal;
+        return refusalOf('segments');
       }
       const relations: Record<string, LiveLeafRelation> = {};
       for (const liveLeaf of liveLeaves) {
@@ -202,7 +206,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       }
       return {
         originMs,
-        exceedsLimit: false,
+        exceededLimit: null,
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),

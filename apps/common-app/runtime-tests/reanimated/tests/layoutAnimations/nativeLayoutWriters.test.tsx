@@ -488,6 +488,17 @@ describe('native layout animations and other writers of the view', () => {
         'LayoutStartPending > LayoutStartMounted > Received > TrackEnded:Opacity:false > Ended:Interrupted:None > TrackStarted:PositionX > TrackStarted:Opacity > Admitted'
       );
       expect(layoutEvents[3].owner).toBe('CSSTransition');
+      const layoutCommand = layoutEvents.find(
+        ({ event }) => event === 'Admitted'
+      )!;
+      for (const cssEnd of layoutEvents.filter(
+        ({ owner }) => owner === 'CSSTransition'
+      )) {
+        expect(cssEnd.conflictHandle?.owner).toBe('Layout');
+        expect(cssEnd.conflictHandle?.generation).toBe(
+          layoutCommand.generation
+        );
+      }
       const layoutStart = layoutEvents[0];
       const origin = nativeOriginOf(layoutEvents, layoutStart, clock);
       const layoutAt = (timeMs: number) =>
@@ -617,6 +628,29 @@ describe('native layout animations and other writers of the view', () => {
           ? 'Received > TrackStarted:Opacity > Admitted > TrackEnded:Opacity:false > Ended:Interrupted:None'
           : 'Received > Ended:Rejected:OwnershipDenied'
       );
+      const conflictEndsOf = (of: typeof events) =>
+        of.filter(
+          ({ event, finished }) =>
+            event === 'Ended' || (event === 'TrackEnded' && finished === false)
+        );
+      const layoutCommand = layoutEvents.find(
+        ({ event }) => event === 'Admitted'
+      )!;
+      const replacementCommand = replacementCSS.find(
+        ({ event }) => event === 'Admitted'
+      );
+      const winnerOverReplaced = cssAdmittedBeforeDrain
+        ? replacementCommand!
+        : layoutCommand;
+      for (const [ends, winner] of [
+        [conflictEndsOf(replacedCSS), winnerOverReplaced],
+        [conflictEndsOf(replacementCSS), layoutCommand],
+      ] as const) {
+        for (const cssEnd of ends) {
+          expect(cssEnd.conflictHandle?.owner).toBe(winner.owner);
+          expect(cssEnd.conflictHandle?.generation).toBe(winner.generation);
+        }
+      }
       const layoutStart = layoutEvents[0];
       const layoutAt = (timeMs: number) =>
         0.9 -
@@ -664,6 +698,18 @@ describe('native layout animations and other writers of the view', () => {
           played.events.filter(({ owner }) => owner === 'CSSTransition')
         )
       ).toBe(hasNativeCSS ? 'Received > Ended:Rejected:OwnershipDenied' : '');
+      const denial = played.events.find(
+        ({ reason }) => reason === 'OwnershipDenied'
+      );
+      if (denial) {
+        const layoutCommand = played.events.find(
+          ({ event, owner }) => event === 'Admitted' && owner === 'Layout'
+        )!;
+        expect(denial.conflictHandle?.owner).toBe('Layout');
+        expect(denial.conflictHandle?.generation).toBe(
+          layoutCommand.generation
+        );
+      }
       expectGroupKeysWhilePlaying(played);
 
       await wait(CSS_DURATION);
@@ -1577,7 +1623,7 @@ describe('a native layout group whose tracks the platform removes', () => {
         `CLIPPED-CHANGE | ${clippedChange} | ${change.host} | frame updates ${change.hasFrameUpdate}`
       );
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
-        expect(change.host).toBe('');
+        expect(change.host).toBe('LayoutStartRefused');
       }
       expect(sortedCallbacks()).toBe('frame:false,native:false');
 

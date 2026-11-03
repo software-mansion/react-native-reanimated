@@ -168,6 +168,7 @@ import {
   SIZE_CELL_HEIGHT,
   playbackCountOf,
   takeTraceUntilSurfaceClosed,
+  startRefusalsOf,
   summarize,
   callbacks,
   builderCalls,
@@ -1965,11 +1966,11 @@ describe('native layout starts after the mount of the final state', () => {
       await render(<Scene left={END_LEFT} layout={move} />);
       await render(<Scene left={START_LEFT} layout={move} />);
       await wait(DURATION * 1.5);
-      expect(
-        (await takeTraceOf(tag)).filter(
-          (event) => event.event !== 'FrameUpdateMounted'
-        ).length
-      ).toBe(0);
+      const events = (await takeTraceOf(tag)).filter(
+        (event) => event.event !== 'FrameUpdateMounted'
+      );
+      expect(summarize(events)).toBe('LayoutStartRefused');
+      expect(startRefusalsOf(events)).toBe('FrameDrivenState');
       expect(callbacks.join()).toBe('spring:false,move:true');
       expect(builderCalls).toBe(2);
       const { model } = await sample(tag, 'PositionX');
@@ -2739,8 +2740,8 @@ describe('native layout size', () => {
 
   /**
    * Android refuses a Width or Height track that changes by more than one pixel
-   * (`AndroidNativeAnimationPlatform::canRealize`): the frame driver plays the
-   * whole animation on the two boxes.
+   * (`SizeBeyondOnePixel`): the frame driver plays the whole animation on the
+   * two boxes.
    */
   const sizeChangeOf = (referenceCase: ReferenceCase): ReferenceCase =>
     PLAYS_SIZE_CHANGE
@@ -5264,16 +5265,20 @@ describe('a layout builder that throws', () => {
     const callsBefore = throwerCalls();
     await render(<Scene left={END_LEFT} layout={throwingLayout} />);
     await wait(DURATION * 1.5);
+    const events = await takeTraceOf(tag);
     console.log(
       'RuntimeTestsThrowingBuilder ' +
         JSON.stringify({
           path: 'native candidate',
-          trace: summarize(await takeTraceOf(tag)),
+          trace: summarize(events),
           callbacks,
           model: (await sample(tag, 'PositionX')).model,
         })
     );
     expect(throwerCalls() - callsBefore).toBe(1);
+    expect(
+      events.find(({ event }) => event === 'LayoutStartRefused')?.startRefusal
+    ).toBe('BuilderThrew');
     await render(null);
   });
 

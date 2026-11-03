@@ -55,12 +55,31 @@ bool isViewProp(const AnimationTarget target) {
   return target == AnimationTarget::Opacity || target == AnimationTarget::Transform;
 }
 
-std::optional<AnimationTarget> leafTarget(const std::string &key, const ShadowView &after) {
+std::variant<AnimationTarget, UnsupportedTargetCause> leafTarget(const std::string &key, const ShadowView &after) {
   const auto entry = std::ranges::find_if(LEAF_KEYS, [&key](const LeafKey &leafKey) { return key == leafKey.name; });
-  if (entry == LEAF_KEYS.end() || (isViewProp(entry->target) && !isViewKind(after))) {
-    return std::nullopt;
+  if (entry == LEAF_KEYS.end()) {
+    return UnsupportedTargetCause::UnknownKey;
+  }
+  if (isViewProp(entry->target) && !isViewKind(after)) {
+    return UnsupportedTargetCause::NotViewKind;
   }
   return entry->target;
+}
+
+/// The refusal of a build summary whose animation exceeds a limit.
+std::optional<NativeLayoutRefusal> limitRefusal(jsi::Runtime &rt, const jsi::Object &buildSummary) {
+  const auto name = buildSummary.getProperty(rt, "exceededLimit");
+  if (name.isNull()) {
+    return std::nullopt;
+  }
+  const auto nameText = name.asString(rt).utf8(rt);
+  const auto limit = std::ranges::find_if(
+      NATIVE_LAYOUT_LIMITS, [&nameText](const NativeLayoutLimit &each) { return nameText == each.name; });
+  if (limit == NATIVE_LAYOUT_LIMITS.end()) {
+    react_native_assert(false && "a build summary names a limit that the native route does not have");
+    return TrackBuildFailure::ResourceLimit;
+  }
+  return limit->cause;
 }
 
 const char *leafKey(const AnimationTarget target) {
@@ -203,18 +222,19 @@ TrackBody makeValueBody(
   };
 }
 
-std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
+std::variant<AnimationTrack, NativeLayoutRefusal> makeTrack(
     jsi::Runtime &rt,
     const jsi::Object &leaf,
     const ShadowView &after,
     const NativeAnimationHost &host,
     const EndpointPolicy endpointPolicy) {
-  const auto target = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), after);
-  if (!target) {
-    return TrackBuildFailure::UnsupportedTarget;
+  const auto leafTargetOrCause = leafTarget(leaf.getProperty(rt, "key").asString(rt).utf8(rt), after);
+  if (const auto *cause = std::get_if<UnsupportedTargetCause>(&leafTargetOrCause)) {
+    return *cause;
   }
+  const auto target = std::get<AnimationTarget>(leafTargetOrCause);
   const auto initialValue = leaf.getProperty(rt, "initialValue");
-  if (!hasNativeForm(rt, initialValue, *target)) {
+  if (!hasNativeForm(rt, initialValue, target)) {
     return TrackBuildFailure::UnsupportedValue;
   }
   const auto leafTrackValue = leaf.getProperty(rt, "track");
@@ -225,12 +245,12 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
   const auto leafTrack = leafTrackValue.asObject(rt);
   auto body = leafTrack.getProperty(rt, "kind").asString(rt).utf8(rt) == "transform"
       ? makeTransformBody(rt, leafTrack)
-      : std::variant<TrackBody, TrackBuildFailure>(makeValueBody(rt, leafTrack, initialValue, *target, after));
+      : std::variant<TrackBody, TrackBuildFailure>(makeValueBody(rt, leafTrack, initialValue, target, after));
   if (const auto *failure = std::get_if<TrackBuildFailure>(&body)) {
     return *failure;
   }
   AnimationTrack track{
-      .target = *target,
+      .target = target,
       .body = std::get<TrackBody>(std::move(body)),
       .delayMs = numberOf(leafTrack.getProperty(rt, "delayMs")),
       .durationMs = numberOf(leafTrack.getProperty(rt, "durationMs")),
@@ -239,13 +259,13 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
   if (const auto failure = validateTrack(track)) {
     return *failure;
   }
-  if (!host.canRealize(track, after)) {
-    return TrackBuildFailure::UnsupportedTarget;
+  if (const auto cause = host.unsupportedTargetCause(track, after)) {
+    return *cause;
   }
   if (endpointPolicy == EndpointPolicy::HoldWithoutCommit) {
     // The host has no playback of its own for a held track with no duration.
     return track.durationMs == 0
-        ? std::variant<AnimationTrack, TrackBuildFailure>(TrackBuildFailure::UnsupportedTrackForm)
+        ? std::variant<AnimationTrack, NativeLayoutRefusal>(TrackBuildFailure::UnsupportedTrackForm)
         : track;
   }
   if (!endsAtMountedValue(track, after)) {
@@ -255,6 +275,21 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
 }
 
 } // namespace
+
+TrackBuildFailure failureOf(const NativeLayoutRefusal &refusal) {
+  struct FailureVisitor {
+    TrackBuildFailure operator()(const TrackBuildFailure failure) const {
+      return failure;
+    }
+    TrackBuildFailure operator()(UnsupportedTargetCause /*cause*/) const {
+      return TrackBuildFailure::UnsupportedTarget;
+    }
+    TrackBuildFailure operator()(ResourceLimitCause /*cause*/) const {
+      return TrackBuildFailure::ResourceLimit;
+    }
+  };
+  return std::visit(FailureVisitor{}, refusal);
+}
 
 LeafValue leafValue(const AnimationTarget target, const ShadowView &view) {
   const auto &frame = view.layoutMetrics.frame;
@@ -311,15 +346,15 @@ LiveLeafValues liveLeafValues(jsi::Runtime &rt, const jsi::Object &leafValues) {
       .transform = transform.isObject() ? std::optional(jsi::dynamicFromValue(rt, transform)) : std::nullopt};
 }
 
-std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
+std::variant<NativeLayoutTracks, NativeLayoutRefusal> makeNativeLayoutTracks(
     jsi::Runtime &rt,
     const jsi::Object &buildSummary,
     const ShadowView &after,
     const NativeAnimationHost &host,
     const EndpointPolicy endpointPolicy) {
   ReanimatedSystraceSection section("makeNativeLayoutTracks");
-  if (buildSummary.getProperty(rt, "exceedsLimit").asBool()) {
-    return TrackBuildFailure::ResourceLimit;
+  if (const auto refusal = limitRefusal(rt, buildSummary)) {
+    return *refusal;
   }
   const auto leaves = buildSummary.getProperty(rt, "leaves").asObject(rt).asArray(rt);
   const auto leafCount = leaves.size(rt);
@@ -332,8 +367,8 @@ std::variant<NativeLayoutTracks, TrackBuildFailure> makeNativeLayoutTracks(
   for (size_t index = 0; index < leafCount; ++index) {
     const auto leaf = leaves.getValueAtIndex(rt, index).asObject(rt);
     auto track = makeTrack(rt, leaf, after, host, endpointPolicy);
-    if (const auto *failure = std::get_if<TrackBuildFailure>(&track)) {
-      return *failure;
+    if (const auto *refusal = std::get_if<NativeLayoutRefusal>(&track)) {
+      return *refusal;
     }
     if (!leaf.getProperty(rt, "continuesLiveLeaf").asBool()) {
       result.tracks.push_back(std::get<AnimationTrack>(std::move(track)));

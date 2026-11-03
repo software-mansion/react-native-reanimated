@@ -95,6 +95,7 @@ import {
   sample,
   SizePair,
   styles,
+  startRefusalsOf,
   summarize,
   takeTrace,
   movingGeometryTest,
@@ -754,7 +755,10 @@ describe('native layout operation timelines and a live size track', () => {
         reads.push(await samplePair());
       }
       const transformEvents = (await takeTraceOfPair()).native;
-      expect(summarize(transformEvents.filter(isHostEvent))).toBe('');
+      expect(summarize(transformEvents.filter(isHostEvent))).toBe(
+        'LayoutStartRefused'
+      );
+      expect(startRefusalsOf(transformEvents)).toBe('FrameDrivenState');
       const models = reads.map(({ native }) => native.model.join());
       expect(new Set(models).size).toBe(reads.length);
       for (const { native, frame } of reads) {

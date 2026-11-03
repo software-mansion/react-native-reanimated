@@ -120,6 +120,7 @@ import {
   START_LEFT,
   takeTrace,
   takeTraceOf,
+  startRefusalsOf,
   summarize,
   summarizeEnd,
   SizePair,
@@ -1603,8 +1604,9 @@ describe('native layout continuity', () => {
           Math.abs((await sampleHiddenX(tag)) - centerOf(PAIR_LEFT)) <=
             LAID_OUT_TOLERANCE
         ).toBe(true);
-        // The native route makes no build for a hidden view.
-        expect(summarize(await takeTraceOf(tag))).toBe('');
+        const events = await takeTraceOf(tag);
+        expect(summarize(events)).toBe('LayoutStartRefused');
+        expect(startRefusalsOf(events)).toBe('HiddenBySharedTransition');
         routes.push({ shownX, callbackMs: callbackTimes.hidden - startMs });
         await render(null);
         await wait(100);
@@ -1808,18 +1810,21 @@ describe('native layout size continuity', () => {
 
   /**
    * The Android form: a size change of more than one pixel keeps the whole
-   * animation of the native box on the frame driver
-   * (`AndroidNativeAnimationPlatform::canRealize`), and a later commit starts
-   * nothing native on a view with frame-driven state
+   * animation of the native box on the frame driver (`SizeBeyondOnePixel`), and
+   * a later commit starts nothing native on a view with frame-driven state
    * (`LayoutAnimationsProxy::admitsNativeStart`).
    */
   function expectFrameDrivenGroup(
     { tag, events, samples }: FirstThird,
     change: SizeChange
   ) {
-    expect(summarize(events.filter(isRouteEvent))).toBe(
-      'LayoutBuildFailed:UnsupportedTarget'
-    );
+    expect(
+      summarize(
+        events
+          .filter(isRouteEvent)
+          .filter(({ event }) => event !== 'LayoutStartRefused')
+      )
+    ).toBe('LayoutBuildFailed:UnsupportedTarget');
     const route = routeOf(
       events,
       tag,
@@ -2031,7 +2036,8 @@ describe('native layout size continuity', () => {
       'a commit with the same end values during a native size group';
     if (firstThird) {
       expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
-      expect(summarize(events.filter(isRouteEvent))).toBe('');
+      expect(summarize(events.filter(isRouteEvent))).toBe('LayoutStartRefused');
+      expect(startRefusalsOf(events)).toBe('FrameDrivenState');
       expect(before.playbacks.length).toBe(0);
       expect(rows[0].playbacks.length).toBe(0);
       await expectRowsOnTwinTimeline(caseName, twin, rows);
@@ -2285,7 +2291,10 @@ describe('native layout size continuity', () => {
     if (firstThird) {
       expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
       expect(before.playbacks.length).toBe(0);
-      expect(summarize(commitEvents.filter(isRouteEvent))).toBe('');
+      expect(summarize(commitEvents.filter(isRouteEvent))).toBe(
+        'LayoutStartRefused'
+      );
+      expect(startRefusalsOf(commitEvents)).toBe('FrameDrivenState');
     } else {
       expect(before.playbacks.length).toBe(2);
       expect(summarize(commitEvents.filter(isHostEvent))).toBe(
@@ -2496,7 +2505,10 @@ describe('native layout size continuity', () => {
         await writeDuringTrack(trackLeaf, writeKey);
       if (firstThird) {
         expectFrameDrivenGroup(firstThird, firstThird.sizeChange);
-        expect(summarize(events.filter(isRouteEvent))).toBe('');
+        expect(summarize(events.filter(isRouteEvent))).toBe(
+          'LayoutStartRefused'
+        );
+        expect(startRefusalsOf(events)).toBe('FrameDrivenState');
       } else {
         expect(targetsOf(events, 'TrackStarted')).toBe(startedTrack);
         expect(
@@ -2622,7 +2634,10 @@ describe('native layout size continuity', () => {
       expect(getTestComponent(BOX_REF).getTag()).toBe(tag);
       if (firstThird) {
         expectFrameDrivenGroup(firstThird, WIDTH_CHANGE);
-        expect(summarize(events.filter(isRouteEvent))).toBe('');
+        expect(summarize(events.filter(isRouteEvent))).toBe(
+          'LayoutStartRefused'
+        );
+        expect(startRefusalsOf(events)).toBe('FrameDrivenState');
         expect(before.playbacks.length).toBe(0);
         expect(rows[0].playbacks.length).toBe(0);
       } else {

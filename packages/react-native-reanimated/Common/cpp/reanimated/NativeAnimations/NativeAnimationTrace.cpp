@@ -38,6 +38,8 @@ std::string_view toString(const TraceEventType event) {
       return "LayoutLeafCaptured";
     case TraceEventType::LayoutMountReported:
       return "LayoutMountReported";
+    case TraceEventType::TrackEndIgnored:
+      return "TrackEndIgnored";
   }
 }
 
@@ -179,6 +181,45 @@ std::string_view toString(const TrackBuildFailure failure) {
       return "EndpointMismatch";
     case TrackBuildFailure::ResourceLimit:
       return "ResourceLimit";
+  }
+}
+
+std::string_view toString(const UnsupportedTargetCause cause) {
+  switch (cause) {
+    case UnsupportedTargetCause::UnknownKey:
+      return "UnknownKey";
+    case UnsupportedTargetCause::NotViewKind:
+      return "NotViewKind";
+    case UnsupportedTargetCause::TimingKind:
+      return "TimingKind";
+    case UnsupportedTargetCause::SpringForm:
+      return "SpringForm";
+    case UnsupportedTargetCause::TargetKind:
+      return "TargetKind";
+    case UnsupportedTargetCause::ApiLevel:
+      return "ApiLevel";
+    case UnsupportedTargetCause::NonPlanarTransform:
+      return "NonPlanarTransform";
+    case UnsupportedTargetCause::SizeBelowZero:
+      return "SizeBelowZero";
+    case UnsupportedTargetCause::SizeChangeOnComponent:
+      return "SizeChangeOnComponent";
+    case UnsupportedTargetCause::SizeDependentPicture:
+      return "SizeDependentPicture";
+    case UnsupportedTargetCause::SizeBeyondOnePixel:
+      return "SizeBeyondOnePixel";
+    case UnsupportedTargetCause::OpacityFilter:
+      return "OpacityFilter";
+    case UnsupportedTargetCause::TransformOnComponent:
+      return "TransformOnComponent";
+    case UnsupportedTargetCause::SizeDependentTransform:
+      return "SizeDependentTransform";
+    case UnsupportedTargetCause::EdgeAntialiasing:
+      return "EdgeAntialiasing";
+    case UnsupportedTargetCause::Skew:
+      return "Skew";
+    case UnsupportedTargetCause::SingularMatrix:
+      return "SingularMatrix";
   }
 }
 

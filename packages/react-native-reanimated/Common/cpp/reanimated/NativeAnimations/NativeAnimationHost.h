@@ -10,6 +10,7 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -50,8 +51,10 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// together. It does not wait for the queued operations and reads no surface state. The clients get their
   /// reports later, before the reports of the queued operations.
   void runAfterMount(const std::vector<MountedOperation> &operations);
-  /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
-  bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
+  /// The static answer of the platform (`NativeAnimationPlatform::unsupportedTargetCause`). Any thread.
+  std::optional<UnsupportedTargetCause> unsupportedTargetCause(
+      const AnimationTrack &track,
+      const facebook::react::ShadowView &view) const;
   /// True when the mounted view of the tag is in a window. UI thread only.
   bool isMountedInWindow(SurfaceId surfaceId, Tag tag) const;
   /// `NativeAnimationPlatform::mountReportOfPull`. UI thread only.
@@ -105,25 +108,39 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);
   void runCloseSurface(SurfaceId surfaceId);
   void onPlatformTrackEnded(const TrackKey &key, bool finished);
+  /// The command and the active track of `key`, if the host has them.
+  std::optional<std::pair<CommandMap::iterator, std::vector<Track>::iterator>> findTrack(const TrackKey &key);
   void endTrack(const TrackKey &key, TrackEnd end, Deliveries &deliveries);
 
   std::optional<AnimationResultReason> validate(const AnimationRequest &request) const;
   std::vector<TrackKey> conflictingTracks(const AnimationRequest &request) const;
+  /// `conflictHandle` is the other command of a conflict: the command that replaces the tracks, or the active
+  /// command that keeps a target. The trace records it.
   void endWithoutAdmission(
       const AnimationHandle &handle,
       const std::weak_ptr<NativeAnimationClient> &client,
       AnimationResult result,
+      Deliveries &deliveries,
+      const AnimationHandle *conflictHandle = nullptr);
+  void releaseReplacedTracks(
+      const std::vector<TrackKey> &replacedTracks,
+      const AnimationHandle &replacement,
       Deliveries &deliveries);
-  void releaseReplacedTracks(const std::vector<TrackKey> &replacedTracks, Deliveries &deliveries);
   void
   stopCommand(CommandMap::iterator commandIt, TrackStopMode mode, AnimationOutcome outcome, Deliveries &deliveries);
-  void endCommand(const AnimationHandle &handle, Command &command, AnimationResult result, Deliveries &deliveries);
+  void endCommand(
+      const AnimationHandle &handle,
+      Command &command,
+      AnimationResult result,
+      Deliveries &deliveries,
+      const AnimationHandle *conflictHandle = nullptr);
   void reportTrackEnd(
       const std::weak_ptr<NativeAnimationClient> &client,
       Track &track,
       const TrackKey &key,
       TrackEnd end,
-      Deliveries &deliveries);
+      Deliveries &deliveries,
+      const AnimationHandle *conflictHandle = nullptr);
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   ContainerSizes ownContainerSizes();
 #endif

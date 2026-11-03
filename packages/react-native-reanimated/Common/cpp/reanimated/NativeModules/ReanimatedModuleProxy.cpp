@@ -518,6 +518,17 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.buildFailure) {
     object.setProperty(rt, "buildFailure", toJSIString(rt, *event.buildFailure));
   }
+  if (event.targetCause) {
+    object.setProperty(rt, "buildFailureCause", toJSIString(rt, *event.targetCause));
+  }
+  if (event.resourceLimit) {
+    object.setProperty(rt, "buildFailureCause", jsi::String::createFromUtf8(rt, std::string(*event.resourceLimit)));
+  }
+  if (event.conflictHandle) {
+    jsi::Object conflictHandle(rt);
+    setHandle(rt, conflictHandle, *event.conflictHandle);
+    object.setProperty(rt, "conflictHandle", conflictHandle);
+  }
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
@@ -530,6 +541,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.layoutAnimationType) {
     object.setProperty(
         rt, "layoutAnimationType", jsi::String::createFromUtf8(rt, std::string(*event.layoutAnimationType)));
+  }
+  if (event.layoutStartRefusal) {
+    object.setProperty(rt, "startRefusal", jsi::String::createFromUtf8(rt, std::string(*event.layoutStartRefusal)));
   }
   return object;
 }

@@ -5,6 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/NativeLayoutGroups.h>
+#include <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -167,6 +168,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// of its exiting animation, so no later request starts on it. A view that a shared transition hides admits
   /// no start: a native opacity track shows the view.
   bool admitsNativeStart(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
+  /// The first rule of `admitsNativeStart` that the view does not meet. The native route is on.
+  std::optional<NativeStartRefusal> nativeStartRefusal(const std::shared_ptr<LightNode> &node, LayoutAnimationType type)
+      const;
   /// The mount report of the current pull. None when the pull is not on the UI thread in the mount of its
   /// transaction. UI thread only when it has a value.
   std::optional<std::uint64_t> mountReportOfPull() const;
@@ -294,8 +298,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
-  /// The refusal of a native start of the view, with no build of the start.
-  void traceStartRefused(Tag tag, LayoutAnimationType type) const;
+  /// The refusal of a native start of the view before its build summary. `buildId` is 0 for a start with no
+  /// build.
+  void traceStartRefused(Tag tag, LayoutAnimationType type, NativeStartRefusal refusal, uint64_t buildId = 0) const;
   ContainerSizes containerSizes() const override;
 #endif
   void clearSurfaceState() const override;

@@ -105,8 +105,8 @@ const IS_APPLE = Platform.OS === 'ios';
 
 /**
  * Android refuses a Width or Height change of more than one pixel
- * (`AndroidNativeAnimationPlatform::canRealize`). Apple refuses a Width or
- * Height track that can go below 0.
+ * (`SizeBeyondOnePixel`). Apple refuses a Width or Height track that can go
+ * below 0 (`SizeBelowZero`).
  */
 export const PLAYS_SIZE_CHANGE = IS_APPLE;
 export const ONE_PIXEL = 1 / PixelRatio.get();
@@ -205,7 +205,7 @@ export const SURFACE_STOP_END_AFTER_SYNCHRONOUS_WRITE = IS_APPLE
 /**
  * Apple plays a transform only on a View, a Paragraph, or an Image
  * (`playsTransform` of `REANativeAnimationPlatform.mm`); the Android
- * `canRealize` has no rule of the component.
+ * `unsupportedTargetCause` has no rule of the component.
  */
 export const PLAYS_TRANSFORM_ON_EACH_COMPONENT = !IS_APPLE;
 /**
@@ -234,15 +234,15 @@ export const TRANSFORM_SAMPLE_CELLS: readonly number[] = IS_APPLE
 export const SHOWS_MATRIX_SHEAR = IS_APPLE;
 /**
  * Core Animation holds a held spring at its curve value, not at its end value,
- * so Apple refuses a spring segment on a held track (`playsTimings` of
+ * so Apple refuses a spring segment on a held track (`timingsCause` of
  * `REANativeAnimationPlatform.mm`): the build of a springified exit fails with
- * `UnsupportedTarget`.
+ * `UnsupportedTarget` (`SpringForm`).
  */
 export const PLAYS_HELD_SPRING = !IS_APPLE;
 /**
- * Apple plays a spring only as the one segment of its timeline (`playsTimings`
+ * Apple plays a spring only as the one segment of its timeline (`timingsCause`
  * of `REANativeAnimationPlatform.mm`): a spring operation with a hold beside it
- * makes the build fail with `UnsupportedTarget`.
+ * makes the build fail with `UnsupportedTarget` (`SpringForm`).
  */
 export const PLAYS_SPRING_WITH_HOLD = !IS_APPLE;
 
@@ -359,6 +359,13 @@ export const isHostEvent = ({ event }: TraceEvent) =>
   event !== 'ClientAdmitted' &&
   event !== 'ClientEnded' &&
   event !== 'LayoutLeafCaptured';
+
+/** The reason of each `LayoutStartRefused` event, in order. */
+export const startRefusalsOf = (events: TraceEvent[]) =>
+  events
+    .filter(({ event }) => event === 'LayoutStartRefused')
+    .map(({ startRefusal }) => startRefusal)
+    .join();
 
 export const isClientReport = ({ event }: TraceEvent) =>
   event === 'ClientAdmitted' || event === 'ClientEnded';

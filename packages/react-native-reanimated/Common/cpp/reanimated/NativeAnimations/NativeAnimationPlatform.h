@@ -66,7 +66,7 @@ struct TargetSample {
 };
 #endif
 
-/// The platform part of the host. All calls but `canRealize` are on the platform UI thread.
+/// The platform part of the host. All calls but `unsupportedTargetCause` are on the platform UI thread.
 class NativeAnimationPlatform {
  public:
   using TrackEndListener = std::function<void(const TrackKey &track, bool finished)>;
@@ -75,10 +75,12 @@ class NativeAnimationPlatform {
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
 
-  /// False when the platform cannot play the track (for example its timing kind), or when the component and the
-  /// props of `view` show that it cannot play the track on the host view. Reads no mounted state, so a client
-  /// can ask before the mount.
-  virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
+  /// The first clause that keeps the platform from playing the track (for example its timing kind), or from
+  /// playing it on the host view of `view` (its component and props). None when the platform plays it. Reads no
+  /// mounted state, so a client can ask before the mount.
+  virtual std::optional<UnsupportedTargetCause> unsupportedTargetCause(
+      const AnimationTrack &track,
+      const facebook::react::ShadowView &view) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
   /// True when the mounted view of the tag is in a window.

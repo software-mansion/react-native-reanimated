@@ -168,9 +168,9 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 
 jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLayoutLimits &limits) {
   jsi::Object object(rt);
-  object.setProperty(rt, "leaves", static_cast<double>(limits.leaves));
-  object.setProperty(rt, "transformOperations", static_cast<double>(limits.transformOperations));
-  object.setProperty(rt, "segments", static_cast<double>(limits.segments));
+  for (const auto &limit : NATIVE_LAYOUT_LIMITS) {
+    object.setProperty(rt, limit.name, static_cast<double>(limits.*limit.value));
+  }
   return object;
 }
 
