@@ -363,6 +363,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> detachedCarrierOf(const std::shared_ptr<LightNode> &node) const;
   bool isRetiringContent(Tag tag) const;
   void retireOrphanedSharedTransitions() const;
+  void finishCoveredSharedTransitions(
+      const std::shared_ptr<LightNode> &topScreen,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
   void retireSharedTransition(const SharedTag &sharedTag, SharedElement &element) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,

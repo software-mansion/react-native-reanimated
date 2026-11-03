@@ -243,6 +243,7 @@ function ScreensWithEnteringChild({
   childWide = false,
   childTagged = false,
   keepChild = false,
+  covered = false,
 }: {
   showTarget: boolean;
   showChild?: boolean;
@@ -250,6 +251,7 @@ function ScreensWithEnteringChild({
   childWide?: boolean;
   childTagged?: boolean;
   keepChild?: boolean;
+  covered?: boolean;
 }) {
   const ref = useTestRef('target');
   return (
@@ -260,7 +262,7 @@ function ScreensWithEnteringChild({
         style={styles.source}
         siblings
       />
-      <SharedTransitionBoundary isActive={showTarget}>
+      <SharedTransitionBoundary isActive={showTarget && !covered}>
         <Animated.View
           ref={ref}
           sharedTransitionTag="fadeContent"
@@ -275,6 +277,11 @@ function ScreensWithEnteringChild({
           )}
         </Animated.View>
       </SharedTransitionBoundary>
+      {covered && (
+        <SharedTransitionBoundary isActive>
+          <View collapsable={false} style={styles.child} />
+        </SharedTransitionBoundary>
+      )}
     </View>
   );
 }
@@ -648,6 +655,24 @@ describe('Shared transition with fadeContent', () => {
     await expectOpacity('enteringChild', 1);
     await expectEnteringCallbacks(1);
     await expectMovingWithChildOpacity('source', 0.1, 1);
+  });
+
+  test('plays the entering animation of a target child when a screen without the tag covers the target', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    await render(<ScreensWithEnteringChild showTarget covered />);
+    await waitForFrames(3);
+
+    await advanceAnimationTimer(300);
+    await expectOpacity('target', 1);
+    await expectOpacity('enteringChild', 1);
+    await expectEnteringCallbacks(1);
   });
 
   test('drops a queued layout change of a target child when the navigation goes back', async () => {

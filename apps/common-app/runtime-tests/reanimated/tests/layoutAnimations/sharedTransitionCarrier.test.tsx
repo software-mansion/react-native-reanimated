@@ -78,6 +78,7 @@ function Screens({
   targetExiting,
   sourceMoved = false,
   targetKey,
+  covered = false,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -94,6 +95,7 @@ function Screens({
   targetExiting?: FadeOut;
   sourceMoved?: boolean;
   targetKey?: string;
+  covered?: boolean;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -120,7 +122,7 @@ function Screens({
   return (
     <View style={styles.container}>
       {!(active && removeSource) && (
-        <SharedTransitionBoundary isActive={!active}>
+        <SharedTransitionBoundary isActive={!active && !covered}>
           {reorder || sourceMoved
             ? [children, ...siblings]
             : [...siblings, children]}
@@ -130,12 +132,17 @@ function Screens({
         <Target
           transition={transition}
           opacity={targetOpacity}
-          active={active}
+          active={active && !covered}
           sharedTag={sharedTag}
           mounted={targetMounted}
           exiting={targetExiting}
           targetKey={targetKey}
         />
+      )}
+      {covered && (
+        <SharedTransitionBoundary isActive>
+          <View collapsable={false} style={styles.child} />
+        </SharedTransitionBoundary>
       )}
     </View>
   );
@@ -384,6 +391,47 @@ describe('Shared transition moves a real native view', () => {
     const source = await getTestComponent('source').getMountedViewProps();
     expect(source?.x).toBeWithinRange(home!.x - 0.5, home!.x + 0.5);
     expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
+  });
+
+  test('ends the run when a screen without its tag covers the target', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+
+    await render(<Screens active covered transition={transition} />);
+    await waitForFrames(3);
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
+    await advanceAnimationTimer(300);
+    await expectAtHome('source', 60, 0);
+  });
+
+  test('ends a reversed run when a screen without its tag covers the target', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} keepTarget />);
+    await waitForFrames();
+    await render(<Screens active transition={transition} keepTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+    await render(<Screens active={false} transition={transition} keepTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(100);
+    await expectMoving('source');
+
+    await render(
+      <Screens active={false} covered transition={transition} keepTarget />
+    );
+    await waitForFrames(3);
+    await expectAtHome('source', 60, 1);
+    await advanceAnimationTimer(300);
+    await expectAtHome('source', 60, 1);
   });
 
   test('lands in the first frame with a zero duration', async () => {
