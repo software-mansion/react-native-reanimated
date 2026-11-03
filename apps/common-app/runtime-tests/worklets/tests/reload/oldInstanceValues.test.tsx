@@ -19,6 +19,7 @@ const SUITE_NAME = 'reload';
 const MARKER = 'created by the old React Native instance';
 const MAX_WORKER_RUNTIMES = 10000;
 const MAX_GARBAGE_COLLECTIONS = 100;
+const RUNTIMES_PER_GARBAGE_COLLECTION = 10;
 
 interface Payload {
   marker: string;
@@ -61,13 +62,13 @@ describe('Values from an old React Native instance after a reload', () => {
     expect(marker).toBe(MARKER);
   });
 
-  test('run an old cached worklet on a new Worker Runtime with the same id', () => {
+  test('run an old cached worklet on a new Worker Runtime with the same id', async () => {
     const { worklet } = getOldValues();
     const workerRuntimeId = runOnUISync(() => {
       'worklet';
       return worklet().workerRuntimeId;
     });
-    sameIdWorker = createWorkerRuntimeWithId(workerRuntimeId);
+    sameIdWorker = await createWorkerRuntimeWithId(workerRuntimeId);
     expect(sameIdWorker.runtimeId).toBe(workerRuntimeId);
     const marker = runOnRuntimeSync(sameIdWorker, () => {
       'worklet';
@@ -161,17 +162,23 @@ function getOldValues() {
   return oldValues;
 }
 
-function createWorkerRuntimeWithId(runtimeId: number) {
-  for (let i = 0; i < MAX_WORKER_RUNTIMES; i++) {
+async function createWorkerRuntimeWithId(runtimeId: number) {
+  for (let created = 1; created <= MAX_WORKER_RUNTIMES; created++) {
     const runtime = createWorkletRuntime({
-      name: `reload-same-id-${i}`,
+      name: `reload-same-id-${created}`,
       enableEventLoop: false,
     });
     if (runtime.runtimeId >= runtimeId) {
       return runtime;
     }
+    if (created % RUNTIMES_PER_GARBAGE_COLLECTION === 0) {
+      globalThis.gc?.();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
-  throw new Error(`Could not reach Worker Runtime id ${runtimeId}.`);
+  throw new Error(
+    `Could not reach Worker Runtime id ${runtimeId} of the old instance after creating ${MAX_WORKER_RUNTIMES} Worker Runtimes.`
+  );
 }
 
 async function collectGarbageUntilReleased() {
