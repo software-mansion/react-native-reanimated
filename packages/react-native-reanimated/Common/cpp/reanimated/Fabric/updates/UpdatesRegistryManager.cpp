@@ -88,7 +88,11 @@ std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals(const SurfaceId surf
     if (!shadowNodeFamily) {
       return true;
     }
-    if (shadowNodeFamily->getSurfaceId() != surfaceId || mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
+    const auto nodeSurfaceId = shadowNodeFamily->getSurfaceId();
+    if (nodeSurfaceId != surfaceId && mountedRootsRegistry_->isRunning(nodeSurfaceId)) {
+      return false;
+    }
+    if (mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
       return false;
     }
     for (auto &registry : registries_) {
