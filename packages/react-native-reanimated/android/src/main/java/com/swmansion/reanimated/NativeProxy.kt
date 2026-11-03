@@ -304,10 +304,14 @@ open class NativeProxy {
             Log.e("Reanimated", "Failed to end the view transition of ${view.id} in ${parent.javaClass.name}", e)
         }
         // `ScreenStack` finishes its own transition in `endViewTransition`.
-        if (view is ReactViewGroup) {
+        if (view is ViewGroup && !isScreenContainer(view)) {
             view.children.forEach { endViewTransitions(view, it, maxHolds) }
         }
     }
+
+    private fun isScreenContainer(view: View) =
+        generateSequence<Class<*>>(view.javaClass) { it.superclass }
+            .any { it.name == "com.swmansion.rnscreens.ScreenContainer" }
 
     @DoNotStrip
     fun attachPseudoSelector(
