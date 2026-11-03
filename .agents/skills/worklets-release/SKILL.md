@@ -252,6 +252,8 @@ yarn workspace docs-worklets docusaurus docs:version <X.Y>
 Then, in `docs/docs-worklets/docusaurus.config.js`, add `'<X.Y>': { label: '<X.Y>', banner: 'none' }` to `versions` and set `lastVersion` to `'<X.Y>'`. Reference: PR #10927, which cut `0.13`.
 
 - The snapshot must document only released changes. The changelog fragments that `changelog:squash --cut` left on `main` are not in the release. Remove the docs for them from the snapshot.
+- Move all entries of `docs/docs-worklets/pending-redirects.json` to `redirects` of `@docusaurus/plugin-client-redirects` in `docs/docs-worklets/docusaurus.config.js`, then set the file to `[]`. These redirects keep the URLs of the old latest version working. They cannot go into the config before the release, because the plugin fails the build when `to` is not a page of the latest version.
+- Run `node --experimental-strip-types scripts/validate-docs-redirects.mts` in the repository root. It fails when an old latest page has no page at the same path and no redirect, or when a redirect in the config points to a path that is not a page.
 - Run `yarn build` in the docs workspace.
 - Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version each have a docs version, and that `lastVersion` covers the newer of the two.
 
