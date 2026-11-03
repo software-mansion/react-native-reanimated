@@ -1301,7 +1301,6 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
