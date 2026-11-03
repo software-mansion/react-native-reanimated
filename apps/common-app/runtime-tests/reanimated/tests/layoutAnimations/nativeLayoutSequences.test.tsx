@@ -15,9 +15,7 @@
  * native sequence, and the 4 tests of a clip of a sequence of scalars. They compare the models of the boxes
  * with the twin or with the declared level at planned times, with their own scene.
  */
-import type { ComponentRef } from 'react';
 import React, { useEffect } from 'react';
-import type { ScrollView } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation } from 'react-native-reanimated';
 import Animated, {
@@ -59,6 +57,9 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
+  sortedCallbacks,
   BOX_REF,
   callbacks,
   callbackTimeOf,
@@ -146,7 +147,6 @@ const TARGETS: Record<Form, Target[]> = {
 };
 const MAX_PARTS = 6;
 const DEFAULT_CURVE = Easing.inOut(Easing.quad);
-const CLIPPED_OFFSET = 1500;
 // The times of the frame driver are equal to the times of its frames but for the rounding of a number.
 const SAME_TIME_MS = 0.01;
 
@@ -509,10 +509,6 @@ async function playCase(caseName: string, referenceCase: ReferenceCase) {
   return played;
 }
 
-const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
-const scrollTo = (y: number) =>
-  scrollRef.current?.scrollTo({ y, animated: false });
-
 function SequenceBox({
   refName,
   animations,
@@ -547,7 +543,7 @@ function Cells({
   place?: Place;
 }) {
   return (
-    <ClippingScrollView scrollRef={scrollRef} style={localStyles.scroll}>
+    <ClippingScrollView style={localStyles.scroll}>
       <View collapsable={false}>
         {cells.map((cell) => (
           <View key={cell.refName} collapsable={false} style={localStyles.cell}>
@@ -896,7 +892,6 @@ const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
 const isNotAfterFrameOfTwin = ({ nativeCallback, twinCallback }: Completion) =>
   nativeCallback - twinCallback < FRAME_MS / 2;
 
-const sortedCallbacks = () => [...callbacks].sort().join();
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
 
 /** The level of each target and the playback keys of a box at rest. */
@@ -1236,9 +1231,9 @@ describe('native layout sequences and a clip of their view', () => {
       });
       const { native: nativeTag } = played.tags;
       await wait(ANDROID_CLIP_AT_MS);
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await wait(ANDROID_CLIP_FOR_MS);
-      scrollTo(0);
+      scrollClippingViewTo(0);
       expect(await waitForCallbacks(2)).toBe('');
       await wait(300);
       const events = (await takeTrace()).filter(({ tag }) => tag === nativeTag);
@@ -1327,13 +1322,13 @@ describe('native layout sequences and a clip of their view', () => {
       // The view stays out of the window until the frame driver gave it a frame.
       const isFrameDriven = ({ isTorn, records, position }: Row) =>
         !isTorn && position.playbacks.length === 0 && records.nativeFrames > 0;
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       const clipped = await takeRows(
         played,
         performance.now() + TRANSFER_TIMEOUT_MS,
         isFrameDriven
       );
-      scrollTo(0);
+      scrollClippingViewTo(0);
       const rows = [
         ...clipped,
         ...(await takeRows(played, played.startMs + totalMs + 200)),

@@ -156,7 +156,7 @@ import {
   centerOf,
   curveBandOf,
   declaredBandOf,
-  drawnBandOf,
+  drawnFrameTimesOf,
   frameTimesOf,
   middleOf,
   takeTrace,
@@ -3953,7 +3953,7 @@ function expectCornersOnTimeline(
   );
   const cellsAt = declaredCellsOf(operations);
   const checked = native.map((read) => {
-    const elapsed = frameTimesOf(drawnBandOf(read.timeMs, clockOffset), origin);
+    const elapsed = drawnFrameTimesOf(read.timeMs, clockOffset, origin);
     const drawn = cornersOf(read);
     const { low } = curveBandOf(
       (elapsedMs) =>

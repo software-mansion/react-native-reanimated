@@ -71,6 +71,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  sortedCallbacks,
   BOX_REF,
   callbackOf,
   callbacks,
@@ -644,8 +645,6 @@ async function takeTraceOfPair() {
     frame: events.filter(({ tag }) => tag === tags.frame),
   };
 }
-
-const sortedCallbacks = () => callbacks.slice().sort().join();
 
 /** The tolerance of a `Transform` model of a box against its frame-driven twin. */
 const TWIN_TOLERANCE = { cells: 0.005, translation: 0.25 };

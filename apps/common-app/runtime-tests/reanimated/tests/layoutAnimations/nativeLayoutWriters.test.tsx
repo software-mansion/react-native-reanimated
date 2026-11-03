@@ -25,7 +25,6 @@ import type { TurboModule } from 'react-native';
 import {
   findNodeHandle,
   Modal,
-  ScrollView,
   StyleSheet,
   TextInput,
   TurboModuleRegistry,
@@ -63,6 +62,11 @@ import type {
   SizeBoxProps,
 } from './nativeLayoutTestKit';
 import {
+  takeTransferTrace,
+  waitUntil,
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
+  sortedCallbacks,
   Box,
   ClippingScrollView,
   BOX_REF,
@@ -332,21 +336,15 @@ function FocusableBox({ left, opacity = 1, layout }: WriterProps) {
   );
 }
 
-const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
-
 /** A scroll to `CLIPPED_OFFSET` takes the two boxes out of the window. */
 function ClippedPair(pair: PairProps) {
   return (
-    <ClippingScrollView scrollRef={scrollRef} style={styles.scroll}>
+    <ClippingScrollView style={styles.scroll}>
       <Pair {...pair} />
       <View style={styles.scrollFiller} />
     </ClippingScrollView>
   );
 }
-
-const CLIPPED_OFFSET = 1500;
-const scrollTo = (y: number) =>
-  scrollRef.current?.scrollTo({ y, animated: false });
 
 describe('native layout animations and other writers of the view', () => {
   if (!hasNativeLayoutRoute) {
@@ -407,14 +405,22 @@ describe('native layout animations and other writers of the view', () => {
         const pending = (await takeTraceOf(tag))[0];
         animatedOpacity!.value = 0.6;
         await wait(4 * FRAME_MS);
-        const rows = await sampleRows(tag, 4, LAYOUT_DURATION / 8);
+        const rows = (await sampleRows(tag, 4, LAYOUT_DURATION / 8)).map(
+          (row) => ({
+            ...row,
+            expectedPresentation: fadeInAt(pending.monotonicTimeMs, row.time),
+          })
+        );
+        console.log(
+          `RuntimeTestsWriterOpacityRows ${JSON.stringify({ usesAnimatedProps, startMs: pending.monotonicTimeMs, rows })}`
+        );
         for (const row of rows) {
           expect(row.keys).toBe(2);
           expect(isNear(row.model, 0.6)).toBe(true);
           expect(
             isNear(
               row.presentation,
-              fadeInAt(pending.monotonicTimeMs, row.time),
+              row.expectedPresentation,
               SAMPLED_OPACITY_TOLERANCE
             )
           ).toBe(true);
@@ -1090,9 +1096,6 @@ describe('a native layout group whose tracks the platform removes', () => {
     return { nativeTag, frameTag, twin, startMs };
   }
 
-  const waitUntil = ({ startMs }: Clipped, elapsedMs: number) =>
-    wait(Math.max(0, startMs + elapsedMs - performance.now()));
-
   async function readBox(tag: number) {
     const [x, y, opacity] = await Promise.all([
       sample(tag, 'PositionX'),
@@ -1123,19 +1126,6 @@ describe('a native layout group whose tracks the platform removes', () => {
     ]);
     return { native, frame: { ...frame, y: frame.y - PAIR_CELL_HEIGHT } };
   }
-
-  const isFrameUpdate = ({ event }: { event: string }) =>
-    event === 'FrameUpdateMounted';
-
-  async function takeTransferTrace({ nativeTag }: Clipped) {
-    const events = await takeTraceOf(nativeTag);
-    return {
-      host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
-      hasFrameUpdate: events.some(isFrameUpdate),
-    };
-  }
-
-  const sortedCallbacks = () => callbacks.slice().sort().join();
 
   // A delayed leaf that a new animation does not replace has no native continuation.
   const MERGED_DELAY = {
@@ -1192,9 +1182,9 @@ describe('a native layout group whose tracks the platform removes', () => {
         );
         await waitUntil(clipped, LAYOUT_DURATION / 4);
         await takeTrace();
-        scrollTo(CLIPPED_OFFSET);
+        scrollClippingViewTo(CLIPPED_OFFSET);
         await waitUntil(clipped, LAYOUT_DURATION / 2);
-        const transfer = await takeTransferTrace(clipped);
+        const transfer = await takeTransferTrace(clipped.nativeTag);
         expect(callbacks.length).toBe(0);
         const twinReads: Omit<PairRead, 'rest'>[] = [];
         if (REMOVES_TRACKS_OUT_OF_WINDOW) {
@@ -1223,7 +1213,7 @@ describe('a native layout group whose tracks the platform removes', () => {
           expect(transfer.host).toBe('');
         }
 
-        scrollTo(0);
+        scrollClippingViewTo(0);
         await wait(4 * FRAME_MS);
         await waitUntil(clipped, 0.75 * LAYOUT_DURATION);
         const shown = await readPair(clipped);
@@ -1257,7 +1247,7 @@ describe('a native layout group whose tracks the platform removes', () => {
 
         await waitUntil(clipped, opacityDuration + 400);
         if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
-          expect((await takeTransferTrace(clipped)).host).toBe(
+          expect((await takeTransferTrace(clipped.nativeTag)).host).toBe(
             'TrackEnded:Opacity:true > TrackEnded:PositionX:true > Ended:Finished:None'
           );
         }
@@ -1306,9 +1296,9 @@ describe('a native layout group whose tracks the platform removes', () => {
       await waitUntil(clipped, replacementAt + 150);
       expect(sortedCallbacks()).toBe('frame:false,native:false');
       await takeTrace();
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await waitUntil(clipped, replacementAt + 450);
-      const transfer = await takeTransferTrace(clipped);
+      const transfer = await takeTransferTrace(clipped.nativeTag);
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
         expect(transfer.host).toBe(
           'TrackEnded:PositionX:false > TrackEnded:PositionY:false > Ended:Interrupted:PlatformRemoved > Ended:Interrupted:PlatformRemoved'
@@ -1319,7 +1309,7 @@ describe('a native layout group whose tracks the platform removes', () => {
       }
       expect(callbacks.length).toBe(2);
 
-      scrollTo(0);
+      scrollClippingViewTo(0);
       await waitUntil(clipped, replacementAt + 750);
       const shown = await readPair(clipped);
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
@@ -1354,7 +1344,7 @@ describe('a native layout group whose tracks the platform removes', () => {
 
       await waitUntil(clipped, PAIR_DURATION + 400);
       if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
-        expect((await takeTransferTrace(clipped)).host).toBe(
+        expect((await takeTransferTrace(clipped.nativeTag)).host).toBe(
           'TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None > Ended:Finished:None'
         );
       }
@@ -1388,16 +1378,16 @@ describe('a native layout group whose tracks the platform removes', () => {
         { left: PAIR_LEFT, top: 0, ...layouts }
       );
       await waitUntil(clipped, newYAt);
-      const first = await takeTransferTrace(clipped);
+      const first = await takeTransferTrace(clipped.nativeTag);
       await render(
         <ClippedPair left={PAIR_LEFT} top={PAIR_TOP} {...layouts} />
       );
       await waitUntil(clipped, delayMs + 100);
-      const second = await takeTransferTrace(clipped);
-      scrollTo(CLIPPED_OFFSET);
+      const second = await takeTransferTrace(clipped.nativeTag);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await waitUntil(clipped, delayMs + 250);
-      const afterClip = await takeTransferTrace(clipped);
-      scrollTo(0);
+      const afterClip = await takeTransferTrace(clipped.nativeTag);
+      scrollClippingViewTo(0);
       console.log(
         `MERGED-DELAY | first start ${first.host} | new Y ${second.host} | clip ${afterClip.host} | callbacks ${sortedCallbacks()}`
       );
@@ -1495,9 +1485,9 @@ describe('a native layout group whose tracks the platform removes', () => {
         expect(
           routeOf(startEvents, clipped.nativeTag, 'PositionX', [playing]).kind
         ).toBe('native playing');
-        scrollTo(CLIPPED_OFFSET);
+        scrollClippingViewTo(CLIPPED_OFFSET);
         await waitUntil(clipped, SLOW_SPRING_MS / 2);
-        const transfer = await takeTransferTrace(clipped);
+        const transfer = await takeTransferTrace(clipped.nativeTag);
         expect(transfer.host).toBe(
           'TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
         );
@@ -1538,7 +1528,7 @@ describe('a native layout group whose tracks the platform removes', () => {
         expect(
           isNear(handed.native.x, handed.frame.x, POSITION_TOLERANCE)
         ).toBe(true);
-        scrollTo(0);
+        scrollClippingViewTo(0);
         expect(
           await waitForCallbacks(['frame:true', 'native:true'], SLOW_SPRING_MS)
         ).toBe('');
@@ -1570,9 +1560,9 @@ describe('a native layout group whose tracks the platform removes', () => {
       );
       await waitUntil(clipped, 0.15 * PAIR_DURATION);
       await takeTrace();
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await waitUntil(clipped, changeAt);
-      const transfer = await takeTransferTrace(clipped);
+      const transfer = await takeTransferTrace(clipped.nativeTag);
       expect(transfer.host).toBe(
         REMOVES_TRACKS_OUT_OF_WINDOW
           ? 'TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
@@ -1582,7 +1572,7 @@ describe('a native layout group whose tracks the platform removes', () => {
 
       await render(<ClippedPair left={PAIR_LEFT} {...layouts} />);
       await wait(100);
-      const change = await takeTransferTrace(clipped);
+      const change = await takeTransferTrace(clipped.nativeTag);
       console.log(
         `CLIPPED-CHANGE | ${clippedChange} | ${change.host} | frame updates ${change.hasFrameUpdate}`
       );
@@ -1591,7 +1581,7 @@ describe('a native layout group whose tracks the platform removes', () => {
       }
       expect(sortedCallbacks()).toBe('frame:false,native:false');
 
-      scrollTo(0);
+      scrollClippingViewTo(0);
       const twinReads: Omit<PairRead, 'rest'>[] = [];
       for (const fraction of [0.2, 0.5, 0.8]) {
         await waitUntil(clipped, changeAt + fraction * PAIR_DURATION);
@@ -1619,7 +1609,7 @@ describe('a native layout group whose tracks the platform removes', () => {
 
       await waitUntil(clipped, changeAt + PAIR_DURATION + 400);
       if (!REMOVES_TRACKS_OUT_OF_WINDOW) {
-        expect((await takeTransferTrace(clipped)).host).toBe(
+        expect((await takeTransferTrace(clipped.nativeTag)).host).toBe(
           'TrackEnded:PositionX:true > Ended:Finished:None'
         );
       }

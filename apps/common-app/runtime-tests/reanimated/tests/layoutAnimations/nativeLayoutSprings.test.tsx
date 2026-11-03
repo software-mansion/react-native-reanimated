@@ -45,6 +45,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  sortedCallbacks,
   amountOf,
   BOX_REF,
   callbackEmissionTimes,
@@ -971,8 +972,6 @@ function expectFrameDriven(
     ).kind
   ).toBe('frame-driven');
 }
-
-const sortedCallbacks = () => [...callbacks].sort().join();
 
 const expectCallbacks = (played: Played, expected: string[]) => {
   expect(played.missingCallbacks).toBe('');

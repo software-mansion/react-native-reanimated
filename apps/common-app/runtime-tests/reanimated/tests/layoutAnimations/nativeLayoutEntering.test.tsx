@@ -37,7 +37,6 @@ import Animated, {
   LinearTransition,
   ReduceMotion,
   SharedTransition,
-  SharedTransitionBoundary,
   SlideInLeft,
   withDelay,
   withTiming,
@@ -86,6 +85,7 @@ import {
   sampleTargets,
 } from './nativeLayoutReferencePlay';
 import type {
+  SharedPair,
   AnimationSource,
   Band,
   DeclaredKey,
@@ -99,6 +99,16 @@ import type {
   TrackReading,
 } from './nativeLayoutTestKit';
 import {
+  readTrackPair,
+  takeTraceOfPair,
+  waitUntil,
+  twoFramesOf,
+  progressOf,
+  isNear,
+  VALUE_TOLERANCE,
+  SharedScreens,
+  SharedSource,
+  sortedCallbacks,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
@@ -174,7 +184,6 @@ const MOVED_LEFT = 120;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = -80;
-const VALUE_TOLERANCE = 0.01;
 
 const OPACITY: Track = {
   sampleTarget: 'Opacity',
@@ -705,28 +714,6 @@ function frameStartOf(
   throw new Error(`The frame driver has no record of the box ${box}.`);
 }
 
-const waitUntil = ({ startMs }: Pick<Entered, 'startMs'>, elapsedMs: number) =>
-  wait(Math.max(0, startMs + elapsedMs - performance.now()));
-
-type EnteredTags = Pick<Entered, 'nativeTag' | 'frameTag'>;
-
-async function readPair({ nativeTag, frameTag }: EnteredTags, track: Track) {
-  const [native, frame] = await Promise.all([
-    readTrack(nativeTag, track),
-    readTrack(frameTag, track),
-  ]);
-  return { native, frame };
-}
-
-async function takeTraceOfPair({ nativeTag, frameTag }: EnteredTags) {
-  const events = await takeTrace();
-  const eventsOf = (tag: number) =>
-    events.filter(
-      (event) => event.tag === tag && event.event !== 'FrameUpdateMounted'
-    );
-  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
-}
-
 const startOf = (tracks: Track[]) =>
   [
     'LayoutStartPending',
@@ -753,27 +740,10 @@ const startAndEndOf = (tracks: Track[]) =>
 const pendingStartOf = (events: TraceEvent[]) =>
   events.find(({ event }) => event === 'LayoutStartPending')!;
 
-// The default easing moves by no more than two times its mean speed.
-const rangeOf = ({ from, to, easing }: Track) =>
-  Math.abs(to - from) * (easing ? 2 : 1);
-
-/** The change of the value of a track in two display frames. */
-const twoFramesOf = (track: Track, durationMs = ENTER_DURATION) =>
-  VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
-
-/** The part of the duration at which the track has the value. */
-const progressOf = ({ from, to, easing }: Track, value: number) => {
-  const progress = (value - from) / (to - from);
-  return easing ? easing.timeOf(progress) : progress;
-};
-
 const valueAt = ({ from, to, easing }: Track, progress: number) => {
   const time = Math.min(1, Math.max(0, progress));
   return from + (to - from) * (easing ? easing.curve(time) : time);
 };
-
-const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
-  Math.abs(value - expected) < tolerance;
 
 /**
  * True when the native value is on the timeline that starts at `startMs` of the
@@ -790,8 +760,6 @@ const isOnTimeline = (
     valueAt(track, (timeMs - startMs) / durationMs),
     twoFramesOf(track, durationMs)
   );
-
-const sortedCallbacks = () => callbacks.slice().sort().join();
 
 /** The members of a native opacity track on Android: one `alpha` timeline. */
 const ANDROID_OPACITY_MEMBERS = 'alpha';
@@ -900,14 +868,6 @@ const localStyles = StyleSheet.create({
     height: 100,
     backgroundColor: 'navy',
   },
-  sharedScreens: {
-    width: 300,
-    height: 220,
-  },
-  sharedTarget: {
-    marginLeft: 150,
-    marginTop: 100,
-  },
 });
 
 describe('native layout entering', () => {
@@ -921,7 +881,7 @@ describe('native layout entering', () => {
       const entered = await enter(pairOf());
       await wait(FIRST_FRAMES_MS);
       const first = await Promise.all(
-        tracks.map((track) => readPair(entered, track))
+        tracks.map((track) => readTrackPair(entered, track))
       );
       await wait(100);
       const events = await takeTraceOfPair(entered);
@@ -1112,7 +1072,7 @@ describe('native layout entering', () => {
         expect((await readTrack(entered.nativeTag, track)).keys).toBe(0);
 
         await waitUntil(entered, ENTER_DURATION + 300);
-        const end = await readPair(entered, track);
+        const end = await readTrackPair(entered, track);
         expect(isNear(end.native.model, track.to, endToleranceOf(track))).toBe(
           true
         );
@@ -1185,7 +1145,7 @@ describe('native layout entering', () => {
     const entered = await enter(customPairOf({ durationMs: 0, delayMs }));
     await waitUntil(entered, delayMs / 2);
     for (const track of customTracks) {
-      const { native, frame } = await readPair(entered, track);
+      const { native, frame } = await readTrackPair(entered, track);
       expect(isNear(native.shown, track.from, endToleranceOf(track))).toBe(
         true
       );
@@ -1200,7 +1160,7 @@ describe('native layout entering', () => {
 
     await waitUntil(entered, delayMs + 300);
     for (const track of customTracks) {
-      const { native, frame } = await readPair(entered, track);
+      const { native, frame } = await readTrackPair(entered, track);
       expect(isNear(native.shown, track.to, endToleranceOf(track))).toBe(true);
       expect(isNear(frame.model, track.to, endToleranceOf(track))).toBe(true);
       expect(native.keys).toBe(0);
@@ -1219,7 +1179,7 @@ describe('native layout entering', () => {
       `${startOf(customTracks)} > ${endOf(customTracks)}`
     );
     for (const track of customTracks) {
-      const { native, frame } = await readPair(entered, track);
+      const { native, frame } = await readTrackPair(entered, track);
       expect(isNear(native.shown, track.to, endToleranceOf(track))).toBe(true);
       expect(isNear(frame.model, track.to, endToleranceOf(track))).toBe(true);
       expect(native.keys).toBe(0);
@@ -1334,7 +1294,7 @@ describe('native layout entering in new ancestors', () => {
     if (delayMs > 0) {
       await waitUntil(entered, delayMs / 2);
       for (const track of tracks) {
-        const { native, frame } = await readPair(entered, track);
+        const { native, frame } = await readTrackPair(entered, track);
         expect(isNear(native.model, track.from, endToleranceOf(track))).toBe(
           true
         );
@@ -1350,7 +1310,7 @@ describe('native layout entering in new ancestors', () => {
 
     expect(await waitForCallbacks(['frame:true', 'native:true'])).toBe('');
     for (const track of tracks) {
-      const { native, frame } = await readPair(entered, track);
+      const { native, frame } = await readTrackPair(entered, track);
       expect(isNear(native.model, track.to, endToleranceOf(track))).toBe(true);
       expect(isNear(frame.model, track.to, endToleranceOf(track))).toBe(true);
       expect(native.keys).toBe(0);
@@ -1549,10 +1509,10 @@ describe('native layout entering and a later change of the view', () => {
         reads
       );
       expectFramesOnTimeline(['frame'], builtOf([FADE_KEY, MOVE_KEY]));
-      const opacity = await readPair(entered, OPACITY);
+      const opacity = await readTrackPair(entered, OPACITY);
       expect(isNear(opacity.native.shown, 1)).toBe(true);
       expect(isNear(opacity.frame.model, 1)).toBe(true);
-      const position = await readPair(entered, MOVE);
+      const position = await readTrackPair(entered, MOVE);
       expect(isNear(position.native.shown, MOVE.to, endToleranceOf(MOVE))).toBe(
         true
       );
@@ -1602,7 +1562,7 @@ describe('native layout entering and a later change of the view', () => {
       captures.forEach(expectCapturedStart);
       expectFramesOnTimeline(['frame'], builtOf([SLIDE_KEY, MOVE_KEY]));
 
-      const end = await readPair(entered, MOVE);
+      const end = await readTrackPair(entered, MOVE);
       expect(isNear(end.native.shown, MOVE.to, endToleranceOf(MOVE))).toBe(
         true
       );
@@ -1618,7 +1578,7 @@ describe('native layout entering and a later change of the view', () => {
   test('a frame change at 30 % of FadeIn on a view with no layout animation shows at once and keeps the entering track', async () => {
     const { entered, moved, enterEvents } = await moveAt30Percent(fadePairOf());
     await waitUntil(moved, 150);
-    const position = await readPair(entered, MOVE);
+    const position = await readTrackPair(entered, MOVE);
     expect(isNear(position.native.shown, MOVE.to, endToleranceOf(MOVE))).toBe(
       true
     );
@@ -1658,13 +1618,16 @@ describe('native layout entering and a later change of the view', () => {
       <EnteringPair {...pair} isMounted style={{ opacity: committedOpacity }} />
     );
     await waitUntil(entered, 0.8 * ENTER_DURATION);
-    const playing = await readPair(entered, OPACITY);
+    const playing = await readTrackPair(entered, OPACITY);
     expect(isNear(playing.native.model, committedOpacity)).toBe(true);
     expect(isNear(playing.native.shown, 0.8, 0.06)).toBe(true);
     expect(playing.native.keys).toBe(1);
 
     await waitUntil(entered, ENTER_DURATION + 300);
-    const { native: end, frame: twinEnd } = await readPair(entered, OPACITY);
+    const { native: end, frame: twinEnd } = await readTrackPair(
+      entered,
+      OPACITY
+    );
     expect(end.timeMs - startMs > ENTER_DURATION + 200).toBe(true);
     expect(isNear(end.shown, committedOpacity)).toBe(true);
     expect(end.keys).toBe(0);
@@ -1935,11 +1898,11 @@ describe('native layout entering and a clip of its view', () => {
       }
       const hidden = sampleFrom(played, 'Opacity', hiddenMs);
       expectOnlyFrameUpdatesAfter(played, hidden);
-      expectShowsModel(hidden, hiddenMs, twoFramesOf(OPACITY));
+      expectShowsModel(hidden, hiddenMs, twoFramesOf(OPACITY, ENTER_DURATION));
       expectShowsModel(
         sampleFrom(played, 'Opacity', shownMs),
         shownMs,
-        twoFramesOf(OPACITY)
+        twoFramesOf(OPACITY, ENTER_DURATION)
       );
       await render(null);
     });
@@ -2265,48 +2228,10 @@ function firstCommitPullOf(
 }
 
 const SHARED_SOURCE_REF = 'NativeLayoutEnteringSharedSource';
-const SHARED_TRANSITION = SharedTransition.duration(600);
-
-function SharedSource({ entering }: Pick<AnimatedViewProps, 'entering'>) {
-  const ref = useTestRef(SHARED_SOURCE_REF);
-  return (
-    <Animated.View
-      ref={ref}
-      sharedTransitionTag="native-layout-entering"
-      sharedTransitionStyle={SHARED_TRANSITION}
-      entering={entering}
-      style={styles.box}
-    />
-  );
-}
-
-/** The commit that shows the target hides the source, which stays mounted. */
-function SharedScreens({
-  entering,
-  hasSource,
-  showsTarget,
-}: Pick<AnimatedViewProps, 'entering'> & {
-  hasSource: boolean;
-  showsTarget: boolean;
-}) {
-  return (
-    <View style={localStyles.sharedScreens}>
-      <Clock />
-      <SharedTransitionBoundary isActive={!showsTarget}>
-        {hasSource && <SharedSource entering={entering} />}
-      </SharedTransitionBoundary>
-      {showsTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-entering"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[styles.box, localStyles.sharedTarget]}
-          />
-        </SharedTransitionBoundary>
-      )}
-    </View>
-  );
-}
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-entering',
+  transition: SharedTransition.duration(600),
+};
 
 describe('native layout entering of a view that a shared transition hides', () => {
   if (
@@ -2321,12 +2246,22 @@ describe('native layout entering of a view that a shared transition hides', () =
     const pair = { native, frame: recordedOf('frame', frame) };
     for (const route of ['native', 'frame'] as const) {
       const { entering } = pair[route];
+      // The commit that shows the target hides the source, which stays mounted.
       const screens = (hasSource: boolean, showsTarget: boolean) => (
         <SharedScreens
-          entering={entering}
-          hasSource={hasSource}
+          {...SHARED}
           showsTarget={showsTarget}
-        />
+          source={
+            hasSource && (
+              <SharedSource
+                {...SHARED}
+                refName={SHARED_SOURCE_REF}
+                entering={entering}
+              />
+            )
+          }>
+          <Clock />
+        </SharedScreens>
       );
       resetFrameRecords();
       await render(screens(false, false));

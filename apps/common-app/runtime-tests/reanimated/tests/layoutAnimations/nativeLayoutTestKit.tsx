@@ -25,6 +25,7 @@ import Animated, {
   makeMutable,
   ReduceMotion,
   setDynamicFeatureFlag,
+  SharedTransitionBoundary,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -269,11 +270,10 @@ export const FRAME_MS = 1000 / 60;
 export const FIRST_FRAMES_MS = 3 * FRAME_MS;
 /**
  * How late a frame callback runs after its frame time. Apple: no term. Android:
- * 21.7 ms, from the presentation reads of the phone (the off reads of the 18 ms
- * band are 19.4 to 34.1 ms old, 99 % to 32.4 ms). A direct measurement of the
- * emulator gives callback runs up to 25.7 ms after their frame time.
+ * the largest direct measurement, 25.7 ms on the emulator in a late frame
+ * callback state (8.2 to 9.2 ms on the phone).
  */
-export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 21.7;
+export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 25.7;
 /**
  * How long a presentation value stays. Apple: 15.7 to 17.7 ms in 76 intervals,
  * plus 0.3 ms. Android: a sample shows the animator value of the last frame
@@ -283,14 +283,24 @@ export const PRESENTATION_STAY_MS = IS_APPLE
   ? 18
   : FRAME_MS + FRAME_CALLBACK_LAG_MS;
 /**
- * How long a frame value can stay in the model in a late frame callback state.
- * Apple: no term. Android: one display frame, plus the largest run of a frame
- * callback after its frame time in the emulator runs of record REFMODEL-DIAG
- * step 3 (25.7 ms), plus the largest time from that run to the model value of
- * the native box in the run with that lag (2.8 ms). Single values of 11.9 to
- * 47.9 ms in the other runs of that table are not studied.
+ * How long after a frame callback run the native box has the model value.
+ * Apple: no term. Android: 2.8 ms, the largest in the emulator run with the
+ * late frame callback state (phone: up to 6.0 ms, with a lag of up to 9.2 ms).
  */
-export const LATE_CALLBACK_STAY_MS = IS_APPLE ? 0 : FRAME_MS + 25.7 + 2.8;
+const CALLBACK_TO_MODEL_MS = IS_APPLE ? 0 : 2.8;
+/**
+ * How long after its frame time a draw shows the value of that frame: a draw
+ * comes after the frame callbacks of its frame.
+ */
+export const DRAWN_FRAME_AGE_MS = FRAME_CALLBACK_LAG_MS + CALLBACK_TO_MODEL_MS;
+/**
+ * How long a frame value can stay in the model in a late frame callback state.
+ * Apple: no term. Android: the frame callback lag and the time to the model
+ * value, plus one display frame.
+ */
+export const LATE_CALLBACK_STAY_MS = IS_APPLE
+  ? 0
+  : FRAME_MS + FRAME_CALLBACK_LAG_MS + CALLBACK_TO_MODEL_MS;
 /**
  * A Fabric write in a frame callback draws from the next frame: its commit
  * mounts after the draw of its own frame (measured on Android, also with no
@@ -475,15 +485,78 @@ export async function readTrack(tag: number, { sampleTarget }: Track) {
 
 export type TrackReading = Awaited<ReturnType<typeof readTrack>>;
 
-export const isNear = (value: number, expected: number, tolerance = 0.01) =>
-  Math.abs(value - expected) < tolerance;
+/** The native box and its frame-driven twin. */
+export type PairTags = { nativeTag: number; frameTag: number };
+
+export async function readTrackPair(
+  { nativeTag, frameTag }: PairTags,
+  track: Track
+) {
+  const [native, frame] = await Promise.all([
+    readTrack(nativeTag, track),
+    readTrack(frameTag, track),
+  ]);
+  return { native, frame };
+}
+
+export type PairEvents = { native: TraceEvent[]; frame: TraceEvent[] };
+
+/** The events of the trace for each box of the pair, with no frame updates. */
+export async function takeTraceOfPair({
+  nativeTag,
+  frameTag,
+}: PairTags): Promise<PairEvents> {
+  const events = await takeTrace();
+  const eventsOf = (tag: number) =>
+    events.filter((event) => event.tag === tag && !isFrameUpdate(event));
+  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
+}
+
+export const isFrameUpdate = ({ event }: Pick<TraceEvent, 'event'>) =>
+  event === 'FrameUpdateMounted';
+
+/** The end of the native command of a view, and whether a frame updated it. */
+export async function takeTransferTrace(tag: number) {
+  const events = await takeTraceOf(tag);
+  return {
+    host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
+    hasFrameUpdate: events.some(isFrameUpdate),
+  };
+}
+
+export const waitUntil = (
+  { startMs }: { startMs: number },
+  elapsedMs: number
+) => wait(Math.max(0, startMs + elapsedMs - performance.now()));
+
+export const VALUE_TOLERANCE = 0.01;
+
+export const isNear = (
+  value: number,
+  expected: number,
+  tolerance = VALUE_TOLERANCE
+) => Math.abs(value - expected) < tolerance;
+
+// The default easing moves by no more than two times its mean speed.
+const rangeOf = ({ from, to, easing }: Track) =>
+  Math.abs(to - from) * (easing ? 2 : 1);
+
+/** The change of the value of a track in two display frames. */
+export const twoFramesOf = (track: Track, durationMs: number) =>
+  VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
+
+/** The part of the duration at which the track has the value. */
+export const progressOf = ({ from, to, easing }: Track, value: number) => {
+  const progress = (value - from) / (to - from);
+  return easing ? easing.timeOf(progress) : progress;
+};
 
 /**
  * The tolerance of `isNear` for a value at an end of a track: a position has
  * `LAID_OUT_TOLERANCE`, because Android rounds each edge to the pixel grid.
  */
 export const endToleranceOf = ({ sampleTarget }: Pick<Track, 'sampleTarget'>) =>
-  sampleTarget === 'Position' ? LAID_OUT_TOLERANCE : 0.01;
+  sampleTarget === 'Position' ? LAID_OUT_TOLERANCE : VALUE_TOLERANCE;
 
 export const linearAt =
   (from: number, to: number, startMs: number, durationMs: number) =>
@@ -1070,10 +1143,14 @@ export function curveBandOf(
 
 /**
  * The frame times from `origin` that a read in the band `read` of the sample
- * clock can show.
+ * clock can show, when a value shows for at most `ageMs` after its frame time.
  */
-export const frameTimesOf = (read: Band, origin: Band): Band => ({
-  from: read.from - PRESENTATION_STAY_MS - origin.to,
+export const frameTimesOf = (
+  read: Band,
+  origin: Band,
+  ageMs = PRESENTATION_STAY_MS
+): Band => ({
+  from: read.from - ageMs - origin.to,
   to: read.to - origin.from,
 });
 
@@ -1082,6 +1159,14 @@ export const drawnBandOf = (timeMs: number, clockOffset: Band): Band => ({
   from: timeMs + clockOffset.from,
   to: timeMs + DRAW_TIME_STEP_MS + clockOffset.to,
 });
+
+/** The frame times from `origin` that a draw at `timeMs` can show. */
+export const drawnFrameTimesOf = (
+  timeMs: number,
+  clockOffset: Band,
+  origin: Band
+): Band =>
+  frameTimesOf(drawnBandOf(timeMs, clockOffset), origin, DRAWN_FRAME_AGE_MS);
 
 /** For each band of `ShownBands`: a distance of a pair that the band gives. */
 export type PairChanges = Record<keyof ShownBands, number>;
@@ -2851,6 +2936,7 @@ export function summarize(events: TraceEvent[]) {
 }
 
 export const callbacks: string[] = [];
+export const sortedCallbacks = () => [...callbacks].sort().join();
 /** When the React Native runtime got the last callback of each name. */
 export const callbackTimes: Record<string, number> = {};
 /** When the UI runtime gave it, on the animation clock. */
@@ -3462,7 +3548,20 @@ export function Row({ left, count }: { left: number; count: number }) {
   );
 }
 
-export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+
+const clippingScrollRef: ScrollViewRef = React.createRef();
+
+/** A scroll offset that takes the start of the content out of the window. */
+export const CLIPPED_OFFSET = 1500;
+
+/** Scrolls the mounted `ClippingScrollView` to `y`, with no animation. */
+export function scrollClippingViewTo(y: number) {
+  if (!clippingScrollRef.current) {
+    throw new Error('No ClippingScrollView is mounted.');
+  }
+  clippingScrollRef.current.scrollTo({ y, animated: false });
+}
 
 /**
  * A scroll view that takes its children out of the window when they are out of
@@ -3470,19 +3569,91 @@ export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
  * no clipping, so the clipping starts only when the prop changes.
  */
 export function ClippingScrollView({
-  scrollRef,
   style,
   children,
-}: React.PropsWithChildren<{
-  scrollRef?: ScrollViewRef;
-  style?: StyleProp<ViewStyle>;
-}>) {
+}: React.PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   const [clips, setClips] = useState(false);
   useEffect(() => setClips(true), []);
   return (
-    <ScrollView ref={scrollRef} removeClippedSubviews={clips} style={style}>
+    <ScrollView
+      ref={clippingScrollRef}
+      removeClippedSubviews={clips}
+      style={style}>
       {children}
     </ScrollView>
+  );
+}
+
+type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
+
+/**
+ * The `sharedTransitionTag` and the `sharedTransitionStyle` of a source and its
+ * target.
+ */
+export type SharedPair = {
+  sharedTag: string;
+  transition: AnimatedViewProps['sharedTransitionStyle'];
+};
+
+/** A box that is a source of the shared transition of its pair. */
+export function SharedSource({
+  refName,
+  sharedTag,
+  transition,
+  entering,
+  exiting,
+}: SharedPair &
+  Pick<AnimatedViewProps, 'entering' | 'exiting'> & { refName: string }) {
+  const ref = useTestRef(refName);
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag={sharedTag}
+      sharedTransitionStyle={transition}
+      entering={entering}
+      exiting={exiting}
+      style={styles.box}
+    />
+  );
+}
+
+/**
+ * The screen of `source` and, with `showsTarget`, the screen of its shared
+ * target: the commit that shows the target starts the shared transition.
+ * `children` come before the source.
+ */
+export function SharedScreens({
+  sharedTag,
+  transition,
+  source,
+  showsTarget,
+  style,
+  targetStyle,
+  children,
+}: React.PropsWithChildren<
+  SharedPair & {
+    source: React.ReactNode;
+    showsTarget: boolean;
+    style?: StyleProp<ViewStyle>;
+    targetStyle?: StyleProp<ViewStyle>;
+  }
+>) {
+  return (
+    <View style={[styles.sharedScreens, style]}>
+      {children}
+      <SharedTransitionBoundary isActive={!showsTarget}>
+        {source}
+      </SharedTransitionBoundary>
+      {showsTarget && (
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            sharedTransitionTag={sharedTag}
+            sharedTransitionStyle={transition}
+            style={[styles.box, styles.sharedTarget, targetStyle]}
+          />
+        </SharedTransitionBoundary>
+      )}
+    </View>
   );
 }
 
@@ -3934,6 +4105,14 @@ export const styles = StyleSheet.create({
   container: {
     width: 300,
     height: 120,
+  },
+  sharedScreens: {
+    width: 300,
+    height: 220,
+  },
+  sharedTarget: {
+    marginLeft: 150,
+    marginTop: 100,
   },
   rowItem: {
     height: 2,

@@ -18,7 +18,6 @@ import Animated, {
   LinearTransition,
   makeMutable,
   SharedTransition,
-  SharedTransitionBoundary,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
@@ -63,8 +62,15 @@ import {
   valueCountOf,
 } from '../viewSampler';
 import { blockUIThread } from './nativeLayoutLoad';
-import type { BoxProps, TargetSample, TraceEvent } from './nativeLayoutTestKit';
+import type {
+  BoxProps,
+  SharedPair,
+  TargetSample,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
+  SharedScreens,
+  SharedSource,
   Box,
   BOX_REF,
   BOX_SIZE,
@@ -207,7 +213,10 @@ const FRAME_DRIVEN_FADE = layoutOf(
 
 const SHARED_ENTER_MS = 2000;
 const SHARED_SOURCE_REF = 'NativeLayoutMountWindowSharedSource';
-const SHARED_TRANSITION = SharedTransition.duration(600);
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-mount-window',
+  transition: SharedTransition.duration(600),
+};
 const SHARED_ENTERING = entryExitOf(
   { opacity: { initial: 0, to: 1, duration: SHARED_ENTER_MS } },
   { name: 'shared' }
@@ -889,11 +898,13 @@ describe('native layout mount window: the first drawn frame', () => {
 
   if (getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
     test('a hide of a view with a native opacity track by a shared transition: the first drawn frame after the mount shows the hidden state', async () => {
-      await render(<SharedScreens hasSource={false} showsTarget={false} />);
+      await render(
+        <SharedEnteringScreens hasSource={false} showsTarget={false} />
+      );
       await wait(SETTLE_MS);
       await takeTrace();
       resetCallbacks();
-      await render(<SharedScreens hasSource showsTarget={false} />);
+      await render(<SharedEnteringScreens hasSource showsTarget={false} />);
       const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
       await wait(0.3 * SHARED_ENTER_MS);
       const started = await takeTrace();
@@ -908,7 +919,7 @@ describe('native layout mount window: the first drawn frame', () => {
       let renderStartMs = 0;
       const samples = await recordDrawnValues(tag, ['opacity'], async () => {
         renderStartMs = await uptimeMs();
-        await render(<SharedScreens hasSource showsTarget />);
+        await render(<SharedEnteringScreens hasSource showsTarget />);
         await wait(SETTLE_MS);
       });
       logDrawnValues('a hide by a shared transition', samples, {
@@ -1759,21 +1770,8 @@ function DispatchTrigger({ width }: { width: number }) {
   return <View style={[styles.box, { width }]} />;
 }
 
-function SharedSource() {
-  const ref = useTestRef(SHARED_SOURCE_REF);
-  return (
-    <Animated.View
-      ref={ref}
-      sharedTransitionTag="native-layout-mount-window"
-      sharedTransitionStyle={SHARED_TRANSITION}
-      entering={SHARED_ENTERING}
-      style={styles.box}
-    />
-  );
-}
-
 /** The commit that shows the target hides the source, which stays mounted. */
-function SharedScreens({
+function SharedEnteringScreens({
   hasSource,
   showsTarget,
 }: {
@@ -1781,20 +1779,19 @@ function SharedScreens({
   showsTarget: boolean;
 }) {
   return (
-    <View style={localStyles.sharedScreens}>
-      <SharedTransitionBoundary isActive={!showsTarget}>
-        {hasSource && <SharedSource />}
-      </SharedTransitionBoundary>
-      {showsTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-mount-window"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[styles.box, localStyles.sharedTarget]}
+    <SharedScreens
+      {...SHARED}
+      showsTarget={showsTarget}
+      source={
+        hasSource && (
+          <SharedSource
+            {...SHARED}
+            refName={SHARED_SOURCE_REF}
+            entering={SHARED_ENTERING}
           />
-        </SharedTransitionBoundary>
-      )}
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -1872,13 +1869,5 @@ function FrameWriteScene({ left }: { left: number }) {
 const localStyles = StyleSheet.create({
   column: {
     width: 300,
-  },
-  sharedScreens: {
-    width: 300,
-    height: 220,
-  },
-  sharedTarget: {
-    marginLeft: 150,
-    marginTop: 100,
   },
 });

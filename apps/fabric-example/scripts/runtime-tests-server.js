@@ -95,6 +95,7 @@ const UDID = typeof args.udid === 'string' ? args.udid : null;
 const SERIAL = typeof args.serial === 'string' ? args.serial : null;
 const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
+const MOUNT_THREAD_PULL = mountThreadPullOf(args['mount-thread-pull']);
 
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -1688,11 +1689,12 @@ async function buildAndroidApp(serial) {
     .then(({ stdout }) => stdout.trim())
     .catch(() => null);
   console.log(
-    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
+    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''}, mount-thread pull ${MOUNT_THREAD_PULL})… this can take a while`
   );
   const gradleArgs = [
     `assemble${CONFIGURATION}`,
     '-PreanimatedRuntimeTestHooks=true',
+    `-PfabricExampleMountThreadPull=${MOUNT_THREAD_PULL}`,
   ];
   if (!IS_RELEASE) {
     gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
@@ -1864,6 +1866,12 @@ Build and run
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending
                             call; a failing command only logs a warning.
+  --mount-thread-pull <true|false>
+                            Android: build the app with the mount-thread pull
+                            model of React Native, which the native layout
+                            route needs. Default: the value of the static flag
+                            ANDROID_NATIVE_LAYOUT_ANIMATIONS of this app.
+                            No effect with --skip-build.
 
 Ports and timeouts
   --metro-port <port>       Default: 8081.
@@ -1873,6 +1881,26 @@ Ports and timeouts
   --idle-timeout <secs>     Give up after this much silence. Default: 600.
 
   --help                    Show this message.`);
+}
+
+/**
+ * @param {string | true | undefined} value
+ * @returns {boolean}
+ */
+function mountThreadPullOf(value) {
+  if (value === undefined) {
+    const { reanimated } = require(path.join(projectRoot, 'package.json'));
+    return (
+      reanimated?.staticFeatureFlags?.ANDROID_NATIVE_LAYOUT_ANIMATIONS === true
+    );
+  }
+  if (value !== 'true' && value !== 'false') {
+    console.error(
+      `[runtime-tests] --mount-thread-pull must be true or false (got: ${value})`
+    );
+    process.exit(1);
+  }
+  return value === 'true';
 }
 
 /**

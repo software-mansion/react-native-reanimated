@@ -37,7 +37,6 @@ import Animated, {
   getStaticFeatureFlag,
   LinearTransition,
   SharedTransition,
-  SharedTransitionBoundary,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -73,6 +72,7 @@ import type {
 } from './nativeLayoutReferencePlay';
 import { expectReference, play } from './nativeLayoutReferencePlay';
 import type {
+  SharedPair,
   Band,
   Frame,
   FramePairRow,
@@ -86,6 +86,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  SharedScreens,
   BOX_REF,
   BOX_SIZE,
   callbacks,
@@ -247,7 +248,10 @@ function logModelBound(
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
 const SHARED_PARENT_REF = 'NativeLayoutContinuitySharedParent';
-const SHARED_TRANSITION = SharedTransition.duration(PAIR_DURATION / 3);
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-continuity',
+  transition: SharedTransition.duration(PAIR_DURATION / 3),
+};
 // React Native gives no tag in this range, and each shared container takes the next even number.
 const FIRST_SHARED_CONTAINER_TAG = 10000002;
 const SHARED_CONTAINER_TAGS = 300;
@@ -287,7 +291,7 @@ type SharedScreensProps = {
   transform?: ViewStyle['transform'];
 };
 
-function SharedScreens({
+function SharedLayoutScreens({
   left,
   width = BOX_SIZE,
   height = BOX_SIZE,
@@ -301,8 +305,8 @@ function SharedScreens({
   const source = (
     <Animated.View
       ref={sourceRef}
-      sharedTransitionTag="native-layout-continuity"
-      sharedTransitionStyle={SHARED_TRANSITION}
+      sharedTransitionTag={SHARED.sharedTag}
+      sharedTransitionStyle={SHARED.transition}
       layout={movesParent ? undefined : layout}
       style={[
         styles.sharedBox,
@@ -312,26 +316,21 @@ function SharedScreens({
     />
   );
   return (
-    <View style={styles.sharedScreens}>
-      <SharedTransitionBoundary isActive={!showTarget}>
-        {movesParent ? (
+    <SharedScreens
+      {...SHARED}
+      showsTarget={showTarget}
+      style={styles.sharedScreens}
+      targetStyle={styles.sharedTarget}
+      source={
+        movesParent ? (
           <SharedParent left={left} layout={layout} transform={transform}>
             {source}
           </SharedParent>
         ) : (
           source
-        )}
-      </SharedTransitionBoundary>
-      {showTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-continuity"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[styles.sharedBox, styles.sharedTarget]}
-          />
-        </SharedTransitionBoundary>
-      )}
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -1111,18 +1110,26 @@ describe('native layout continuity', () => {
           originX: { duration: PAIR_DURATION, hasCallback },
         });
         await render(
-          <SharedScreens left={START_LEFT} showTarget={false} layout={layout} />
+          <SharedLayoutScreens
+            left={START_LEFT}
+            showTarget={false}
+            layout={layout}
+          />
         );
         await wait(50);
         const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
         await render(
-          <SharedScreens left={PAIR_LEFT} showTarget={false} layout={layout} />
+          <SharedLayoutScreens
+            left={PAIR_LEFT}
+            showTarget={false}
+            layout={layout}
+          />
         );
         await wait(PAIR_DURATION / 3);
         const source = await sample(tag, 'PositionX');
         expect(source.playbacks.length).toBe(hasCallback ? 0 : 1);
         await render(
-          <SharedScreens left={PAIR_LEFT} showTarget layout={layout} />
+          <SharedLayoutScreens left={PAIR_LEFT} showTarget layout={layout} />
         );
         await wait(2 * FRAME_MS);
         const container = await sampleSharedContainer();
@@ -1180,7 +1187,11 @@ describe('native layout continuity', () => {
           )
         );
         const screens = (frame: SharedFrame, showTarget: boolean) => (
-          <SharedScreens {...frame} showTarget={showTarget} layout={layout} />
+          <SharedLayoutScreens
+            {...frame}
+            showTarget={showTarget}
+            layout={layout}
+          />
         );
         await render(screens(SHARED_START, false));
         await wait(50);
@@ -1245,7 +1256,7 @@ describe('native layout continuity', () => {
           originX: { duration: PAIR_DURATION, hasCallback },
         });
         const screens = (left: number, showTarget: boolean) => (
-          <SharedScreens
+          <SharedLayoutScreens
             left={left}
             showTarget={showTarget}
             layout={layout}
@@ -1301,7 +1312,7 @@ describe('native layout continuity', () => {
             }
           );
           const screens = (left: number, showTarget: boolean) => (
-            <SharedScreens
+            <SharedLayoutScreens
               left={left}
               showTarget={showTarget}
               layout={layout}
@@ -1362,7 +1373,7 @@ describe('native layout continuity', () => {
       { name: 'hidden' }
     );
     const screens = (left: number, opacity: number, showTarget: boolean) => (
-      <SharedScreens
+      <SharedLayoutScreens
         left={left}
         opacity={opacity}
         showTarget={showTarget}
@@ -3036,7 +3047,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   sharedScreens: {
-    width: 300,
     height: 300,
   },
   sharedParent: {

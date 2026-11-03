@@ -17,10 +17,9 @@
  * of `native layout exiting and the stop of its tracks` in which the platform removes the tracks of the
  * pair (a Modal that goes hidden, a clip with a track of a layout animation).
  */
-import type { ComponentRef } from 'react';
 import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Dimensions, Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, Modal, StyleSheet, View } from 'react-native';
 import type {
   ComplexAnimationBuilder,
   EasingFunction,
@@ -34,7 +33,6 @@ import Animated, {
   LinearTransition,
   ReduceMotion,
   SharedTransition,
-  SharedTransitionBoundary,
   SlideOutRight,
   useAnimatedStyle,
   useSharedValue,
@@ -84,6 +82,8 @@ import {
   sampleTargets,
 } from './nativeLayoutReferencePlay';
 import type {
+  PairEvents,
+  SharedPair,
   AnimationSource,
   Band,
   Leaf,
@@ -93,6 +93,20 @@ import type {
   Track,
 } from './nativeLayoutTestKit';
 import {
+  readTrackPair,
+  takeTraceOfPair,
+  takeTransferTrace,
+  isFrameUpdate,
+  waitUntil,
+  twoFramesOf,
+  progressOf,
+  isNear,
+  VALUE_TOLERANCE,
+  SharedScreens,
+  SharedSource,
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
+  sortedCallbacks,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
@@ -103,6 +117,7 @@ import {
   ClippingScrollView,
   CURVED_EASINGS,
   describeLeaf,
+  drawnFrameTimesOf,
   expectNativeReadRows,
   FRAME_BOX_REF,
   FRAME_MS,
@@ -162,7 +177,6 @@ const MOVED_LEFT = 120;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = 80;
-const VALUE_TOLERANCE = 0.01;
 const NO_VIEW_POLL_MS = 4;
 
 const OPACITY: Track = {
@@ -516,7 +530,6 @@ function ExitingPair({
 }
 
 type Scene = Parameters<typeof render>[0];
-type PairEvents = { native: TraceEvent[]; frame: TraceEvent[] };
 
 type Exited = {
   nativeTag: number;
@@ -563,22 +576,9 @@ const exit = (pair: PairProps) =>
     <ExitingPair {...pair} isMounted={false} />
   );
 
-const waitUntil = ({ startMs }: { startMs: number }, elapsedMs: number) =>
-  wait(Math.max(0, startMs + elapsedMs - performance.now()));
-
 /** No reading when the view left. */
 const readIfMounted = (tag: number, track: Track) =>
   readTrack(tag, track).catch(() => undefined);
-
-type ExitedTags = Pick<Exited, 'nativeTag' | 'frameTag'>;
-
-async function readPair({ nativeTag, frameTag }: ExitedTags, track: Track) {
-  const [native, frame] = await Promise.all([
-    readTrack(nativeTag, track),
-    readTrack(frameTag, track),
-  ]);
-  return { native, frame };
-}
 
 const hasView = async (tag: number) =>
   (await readIfMounted(tag, OPACITY)) !== undefined;
@@ -593,18 +593,6 @@ async function leaves(tag: number, timeoutMs = 1000) {
     await wait(NO_VIEW_POLL_MS);
   }
   return true;
-}
-
-async function takeTraceOfPair({
-  nativeTag,
-  frameTag,
-}: ExitedTags): Promise<PairEvents> {
-  const events = await takeTrace();
-  const eventsOf = (tag: number) =>
-    events.filter(
-      (event) => event.tag === tag && event.event !== 'FrameUpdateMounted'
-    );
-  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
 }
 
 /**
@@ -742,23 +730,6 @@ const playedAndRemoved = (tracks: Track[]) =>
     'Ended:Cancelled:None',
   ].join(' > ');
 
-// The default easing moves by no more than two times its mean speed.
-const rangeOf = ({ from, to, easing }: Track) =>
-  Math.abs(to - from) * (easing ? 2 : 1);
-
-/** The change of the value of a track in two display frames. */
-const twoFramesOf = (track: Track, durationMs = EXIT_DURATION) =>
-  VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
-
-/** The part of the duration at which the track has the value. */
-const progressOf = ({ from, to, easing }: Track, value: number) => {
-  const progress = (value - from) / (to - from);
-  return easing ? easing.timeOf(progress) : progress;
-};
-
-const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
-  Math.abs(value - expected) < tolerance;
-
 type TargetReads = Pick<PlannedRead, 'samples'>[];
 
 /**
@@ -875,8 +846,6 @@ const heldProgressToleranceOf = (track: Track) =>
       ? endToleranceOf(track) / Math.abs(track.to - track.from)
       : 0
   );
-
-const sortedCallbacks = () => callbacks.slice().sort().join();
 
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
 
@@ -1007,7 +976,7 @@ describe('native layout exiting', () => {
         expect(summarize(started.native.filter(isHostEvent))).toBe(
           `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`
         );
-        const opacity = await readPair(exited, UNEQUAL_OPACITY);
+        const opacity = await readTrackPair(exited, UNEQUAL_OPACITY);
         expect(isNear(opacity.native.shown, CUSTOM_OPACITY)).toBe(true);
         expect(isNear(opacity.frame.model, CUSTOM_OPACITY)).toBe(true);
         expect(callbacks.length).toBe(0);
@@ -1405,7 +1374,7 @@ describe('native layout exiting and the other animations of the view', () => {
       expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
 
       reads.push(...(await readsUntil(exited.nativeTag, targets, exited, 800)));
-      const position = await readPair(exited, MOVE);
+      const position = await readTrackPair(exited, MOVE);
       expect(isNear(position.native.shown, MOVE.to, endToleranceOf(MOVE))).toBe(
         true
       );
@@ -1493,7 +1462,7 @@ describe('native layout exiting and the other animations of the view', () => {
         );
         await waitUntil(exited, exitDuration + 200);
         expect(sortedCallbacks()).toBe('frameLayout:false,nativeLayout:false');
-        const { native, frame } = await readPair(exited, exitTrack);
+        const { native, frame } = await readTrackPair(exited, exitTrack);
         expect(
           isNear(native.shown, exitTrack.to, endToleranceOf(exitTrack))
         ).toBe(true);
@@ -1654,7 +1623,7 @@ describe('native layout exiting and the other animations of the view', () => {
       exited,
       0.15 * EXIT_DURATION
     );
-    const before = await readPair(exited, MOVE);
+    const before = await readTrackPair(exited, MOVE);
     const started = await takeTraceOfPair(exited);
 
     await render(scene(false, false));
@@ -1670,7 +1639,7 @@ describe('native layout exiting and the other animations of the view', () => {
     expect(events.native.length).toBe(0);
     expect(events.frame.length).toBe(0);
     expect(callbacks.length).toBe(0);
-    const after = await readPair(exited, MOVE);
+    const after = await readTrackPair(exited, MOVE);
     expect(after.native.shown).toBe(before.native.shown);
     expect(after.frame.model).toBe(before.frame.model);
 
@@ -2070,21 +2039,15 @@ function SurfaceBox() {
   );
 }
 
-const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
-
 /** A scroll to `CLIPPED_OFFSET` takes `children` out of the window. */
 function Clipped({ children }: React.PropsWithChildren) {
   return (
-    <ClippingScrollView scrollRef={scrollRef} style={localStyles.scroll}>
+    <ClippingScrollView style={localStyles.scroll}>
       {children}
       <View style={localStyles.scrollFiller} />
     </ClippingScrollView>
   );
 }
-
-const CLIPPED_OFFSET = 1500;
-const scrollTo = (y: number) =>
-  scrollRef.current?.scrollTo({ y, animated: false });
 
 function ClippedSurfaceBox() {
   return (
@@ -2193,28 +2156,17 @@ describe('native layout exiting and the stop of its tracks', () => {
     return { pair, exited };
   }
 
-  const isFrameUpdate = ({ event }: { event: string }) =>
-    event === 'FrameUpdateMounted';
-
-  async function takeTransferTrace(tag: number) {
-    const events = (await takeTrace()).filter((event) => event.tag === tag);
-    return {
-      host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
-      hasFrameUpdate: events.some(isFrameUpdate),
-    };
-  }
-
   /**
    * The platform removed the tracks of the native box at `STOP_AT`. The frame
    * driver then plays the same build on its timeline, as it plays the twin.
    */
   async function expectFrameDriverTakesExit(exited: Exited) {
     const readModels = async () => {
-      const { native, frame } = await readPair(exited, OPACITY);
+      const { native, frame } = await readTrackPair(exited, OPACITY);
       expect(native.keys).toBe(0);
-      expect(isNear(native.model, frame.model, twoFramesOf(OPACITY))).toBe(
-        true
-      );
+      expect(
+        isNear(native.model, frame.model, twoFramesOf(OPACITY, EXIT_DURATION))
+      ).toBe(true);
       return native;
     };
 
@@ -2242,7 +2194,7 @@ describe('native layout exiting and the stop of its tracks', () => {
     await wait(300);
   }
 
-  type PairReading = Awaited<ReturnType<typeof readPair>>;
+  type PairReading = Awaited<ReturnType<typeof readTrackPair>>;
 
   /** The native box shows the model of the twin, to two display frames. */
   function expectShowsTwin(
@@ -2271,14 +2223,14 @@ describe('native layout exiting and the stop of its tracks', () => {
     expect(callbacks.length).toBe(0);
     expectShowsTwin(
       'out of the window at 0.3 of the exit',
-      await readPair(exited, OPACITY),
+      await readTrackPair(exited, OPACITY),
       OPACITY
     );
 
     await waitUntil(exited, 0.6 * EXIT_DURATION);
     expectShowsTwin(
       'out of the window at 0.6 of the exit',
-      await readPair(exited, OPACITY),
+      await readTrackPair(exited, OPACITY),
       OPACITY
     );
     expect(callbacks.length).toBe(0);
@@ -2438,13 +2390,13 @@ describe('native layout exiting and the stop of its tracks', () => {
       [opacityFrom(played, SHOWN_AT), SHOWN_AT],
     ] as const) {
       expect(
-        isNear(presentation[0], model[0], twoFramesOf(OPACITY))
+        isNear(presentation[0], model[0], twoFramesOf(OPACITY, EXIT_DURATION))
           ? ''
           : farRow(
               `presentation against the model of the same sample ${elapsedMs.toFixed(3)} ms after the origin (first row from ${fromMs} ms)`,
               presentation[0],
               model[0],
-              twoFramesOf(OPACITY)
+              twoFramesOf(OPACITY, EXIT_DURATION)
             )
       ).toBe('');
     }
@@ -2492,7 +2444,7 @@ describe('native layout exiting and the stop of its tracks', () => {
 
     for (const fromMs of [HIDDEN_AT, SHOWN_AT]) {
       const { native, frame, elapsedMs } = opacitiesFrom(played, fromMs);
-      const tolerance = twoFramesOf(OPACITY);
+      const tolerance = twoFramesOf(OPACITY, EXIT_DURATION);
       expect(
         isNear(native.presentation[0], frame.model[0], tolerance)
           ? ''
@@ -2565,7 +2517,7 @@ describe('native layout exiting and the stop of its tracks', () => {
       );
       await waitUntil(exited, 150);
       await takeTrace();
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await waitUntil(exited, 350);
       const exitCallbacks = () =>
         callbacks.filter((name) => /^(native|frame):/.test(name));
@@ -2582,9 +2534,9 @@ describe('native layout exiting and the stop of its tracks', () => {
         expect(exitCallbacks().join()).toBe('');
       }
 
-      scrollTo(0);
+      scrollClippingViewTo(0);
       await waitUntil(exited, 600);
-      const opacity = await readPair(exited, OPACITY);
+      const opacity = await readTrackPair(exited, OPACITY);
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
         expect(opacity.native.keys).toBe(0);
       }
@@ -2598,7 +2550,7 @@ describe('native layout exiting and the stop of its tracks', () => {
       expect(isNear(opacity.native.shown, 1 - 600 / exitDuration, 0.08)).toBe(
         true
       );
-      const position = await readPair(exited, MOVE);
+      const position = await readTrackPair(exited, MOVE);
       expect(
         isNear(
           position.native.shown,
@@ -2665,7 +2617,7 @@ describe('native layout exiting and the stop of its tracks', () => {
       );
       await waitUntil(exited, 150);
       await takeTrace();
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await waitUntil(exited, 400);
       const transfer = await takeTransferTrace(exited.nativeTag);
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
@@ -2808,7 +2760,7 @@ describe('native layout exiting and the stop of its tracks', () => {
       setSurfaceBoxMounted(false);
       await wait(STOP_AT);
       await takeTrace();
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
       await wait(STOP_AT);
       const transfer = await takeTransferTrace(tag);
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
@@ -2848,10 +2800,6 @@ describe('native layout exiting and the stop of its tracks', () => {
 const isBeforeRemoval = (drawMs: number, removedMs: number) =>
   drawMs < Math.floor(removedMs);
 
-// The draw of a frame comes 1.2 to 21.7 ms after its frame time (the measured frame callback lag on
-// Android), and a draw has its time in whole milliseconds. A start
-// value for Android: the first run measures it (the `RuntimeTestsHeldExit` rows and the draws of each case).
-const DRAW_AGE_MS: Band = { from: 0.2, to: 22.7 };
 const DRAWN_OPACITY_TOLERANCE = 0.001;
 const HELD_DURATIONS: LeafDurations = { opacityMs: 400, originXMs: 1200 };
 
@@ -2864,15 +2812,6 @@ const heldPairOf = () =>
   );
 
 const HELD_START = `${startOf([UNEQUAL_OPACITY, UNEQUAL_SLIDE])} > TrackEnded:Opacity:true`;
-
-/**
- * The times of the frame of a draw at `timeMs`, from an origin on the sample
- * clock.
- */
-const frameElapsedOf = (timeMs: number, origin: Band): Band => ({
-  from: timeMs - DRAW_AGE_MS.to - origin.to,
-  to: timeMs - DRAW_AGE_MS.from - origin.from,
-});
 
 /** The values that a linear track shows in the frames of `elapsed`. */
 function linearBandOf(
@@ -2931,12 +2870,16 @@ async function exitUntilRemoved(
   }
   const { exited, reads } = removal!;
   const events = (await takeTraceOfPair(exited)).native;
+  const origin = nativeOriginOf(events, pendingStartOf(events), exited.clock);
   return {
     exited,
     reads,
     draws,
     events,
-    origin: nativeOriginOf(events, pendingStartOf(events), exited.clock),
+    origin,
+    /** The frame times from the origin that a draw at `timeMs` can show. */
+    drawnElapsedOf: (timeMs: number) =>
+      drawnFrameTimesOf(timeMs, exited.clock, origin),
     removedMs: timeOfEvent(events, 'Ended:Cancelled:None'),
   };
 }
@@ -2975,11 +2918,12 @@ describe('native layout held exits', () => {
       const caseName = 'a SlideOutRight exit draws at its track value';
       const pair = SLIDE_OUT_RIGHT.pairOf();
       await mount(<ExitingPair {...pair} />);
-      const { draws, events, origin, removedMs } = await exitUntilRemoved(
-        <ExitingPair {...pair} isMounted={false} />,
-        ['PositionX'],
-        ['frame', 'drawnMatrix']
-      );
+      const { draws, events, origin, drawnElapsedOf, removedMs } =
+        await exitUntilRemoved(
+          <ExitingPair {...pair} isMounted={false} />,
+          ['PositionX'],
+          ['frame', 'drawnMatrix']
+        );
       expect(summarize(events.filter(isHostEvent))).toBe(
         `${startOf([SLIDE])} > ${playedAndRemoved([SLIDE])}`
       );
@@ -2993,7 +2937,7 @@ describe('native layout held exits', () => {
         isBeforeRemoval(timeMs, removedMs)
       );
       const off = mounted.flatMap((draw) => {
-        const elapsed = frameElapsedOf(draw.timeMs, origin);
+        const elapsed = drawnElapsedOf(draw.timeMs);
         const band = linearBandOf(
           SLIDE,
           EXIT_DURATION,
@@ -3010,7 +2954,7 @@ describe('native layout held exits', () => {
       const held = mounted.filter(({ timeMs }) => timeMs >= endedMs);
       const inPartOf = (fromMs: number, toMs: number) =>
         mounted.filter(({ timeMs }) => {
-          const elapsed = frameElapsedOf(timeMs, origin);
+          const elapsed = drawnElapsedOf(timeMs);
           return elapsed.from >= fromMs && elapsed.to <= toMs;
         }).length;
       const hasHeldFrames = removedMs - endedMs >= 2 * FRAME_MS;
@@ -3211,7 +3155,7 @@ describe('native layout held exits', () => {
     const caseName = 'a Fabric opacity write to an exiting view';
     const pair = fadePairOf();
     await mount(<StyledPair {...pair} />, 100);
-    const { draws, events, origin, removedMs } = await exitUntilRemoved(
+    const { draws, events, drawnElapsedOf, removedMs } = await exitUntilRemoved(
       <StyledPair {...pair} isMounted={false} />,
       ['Opacity'],
       ['opacity']
@@ -3220,14 +3164,13 @@ describe('native layout held exits', () => {
       `${startOf([OPACITY])} > ${playedAndRemoved([OPACITY])}`
     );
     const checked = draws!.filter(
-      ({ timeMs }) =>
-        frameElapsedOf(timeMs, origin).from >= 0 && timeMs < removedMs
+      ({ timeMs }) => drawnElapsedOf(timeMs).from >= 0 && timeMs < removedMs
     );
     const off = checked.filter(({ timeMs, values: [opacity] }) => {
       const band = linearBandOf(
         OPACITY,
         EXIT_DURATION,
-        frameElapsedOf(timeMs, origin),
+        drawnElapsedOf(timeMs),
         VALUE_TOLERANCE
       );
       return !isIn(opacity, band);
@@ -3240,41 +3183,30 @@ describe('native layout held exits', () => {
 });
 
 const SHARED_SOURCE_REF = 'NativeLayoutExitingSharedSource';
-const SHARED_TRANSITION = SharedTransition.duration(600);
-
-function SharedSource({ exiting }: Pick<AnimatedViewProps, 'exiting'>) {
-  const ref = useTestRef(SHARED_SOURCE_REF);
-  return (
-    <Animated.View
-      ref={ref}
-      sharedTransitionTag="native-layout-exiting"
-      sharedTransitionStyle={SHARED_TRANSITION}
-      exiting={exiting}
-      style={localStyles.sharedBox}
-    />
-  );
-}
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-exiting',
+  transition: SharedTransition.duration(600),
+};
 
 /** The commit that shows the target removes the source. */
-function SharedScreens({
+function SharedExitScreens({
   exiting,
   showsTarget,
 }: Pick<AnimatedViewProps, 'exiting'> & { showsTarget: boolean }) {
   return (
-    <View style={localStyles.sharedScreens}>
-      <SharedTransitionBoundary isActive={!showsTarget}>
-        {!showsTarget && <SharedSource exiting={exiting} />}
-      </SharedTransitionBoundary>
-      {showsTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-exiting"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[localStyles.sharedBox, localStyles.sharedTarget]}
+    <SharedScreens
+      {...SHARED}
+      showsTarget={showsTarget}
+      source={
+        !showsTarget && (
+          <SharedSource
+            {...SHARED}
+            refName={SHARED_SOURCE_REF}
+            exiting={exiting}
           />
-        </SharedTransitionBoundary>
-      )}
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -3295,13 +3227,15 @@ describe('native layout exiting of a view that a shared transition hides', () =>
       const pair = pairOf();
       for (const route of ['native', 'frame'] as const) {
         const { exiting } = pair[route];
-        await render(<SharedScreens exiting={exiting} showsTarget={false} />);
+        await render(
+          <SharedExitScreens exiting={exiting} showsTarget={false} />
+        );
         await wait(300);
         const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
         await takeTrace();
         callbacks.length = 0;
         const startMs = performance.now();
-        await render(<SharedScreens exiting={exiting} showsTarget />);
+        await render(<SharedExitScreens exiting={exiting} showsTarget />);
 
         for (const elapsedMs of [40, 440, 1000, 1800]) {
           await waitUntil({ startMs }, elapsedMs);
@@ -3326,19 +3260,6 @@ describe('native layout exiting of a view that a shared transition hides', () =>
 });
 
 const localStyles = StyleSheet.create({
-  sharedScreens: {
-    width: 300,
-    height: 220,
-  },
-  sharedBox: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'teal',
-  },
-  sharedTarget: {
-    marginLeft: 150,
-    marginTop: 100,
-  },
   sibling: {
     height: 40,
   },

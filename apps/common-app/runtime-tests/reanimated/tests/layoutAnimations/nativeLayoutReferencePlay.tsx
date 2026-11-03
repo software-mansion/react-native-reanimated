@@ -54,7 +54,6 @@ import type {
   PlayedTrack,
   ScalarKey,
   ScalarTrack,
-  ScrollViewRef,
   SizeBoxProps,
   TakenRow,
   TargetSample,
@@ -62,6 +61,8 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
   amountOf,
   BOX_REF,
   BOX_SIZE,
@@ -726,7 +727,7 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
         rowsBeforeClip = rows.length;
       }
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
     },
   });
   let startMs = 0;
@@ -858,7 +859,7 @@ function stepsOf(
   if (clip) {
     steps.push(
       { atMs: clip.atMs, run: run.clip },
-      { atMs: clip.backAtMs, run: () => scrollTo(0) }
+      { atMs: clip.backAtMs, run: () => scrollClippingViewTo(0) }
     );
   }
   if (write?.atMs !== undefined) {
@@ -868,15 +869,6 @@ function stepsOf(
     steps.push(checkpoint);
   }
   return steps.sort((first, second) => first.atMs - second.atMs);
-}
-
-const scrollRef: ScrollViewRef = React.createRef();
-const CLIPPED_OFFSET = 1500;
-function scrollTo(y: number) {
-  if (!scrollRef.current) {
-    throw new Error('The scene has no clipping host to scroll.');
-  }
-  scrollRef.current.scrollTo({ y, animated: false });
 }
 
 /**
@@ -2833,7 +2825,9 @@ const describeSpread = (sorted: number[]) =>
 
 /**
  * The matrix of each frame of the frame driver on `target` of the native box,
- * on the sample clock, and the mount of the first frame update of its track.
+ * on the sample clock in time order, and the mount of the first frame update of
+ * its track. The frames of two records of one leaf can overlap in time
+ * (Android).
  */
 function modelFramesOf(
   { events, frameRecords, clockOffset }: Played,
@@ -2850,10 +2844,12 @@ function modelFramesOf(
   const frames = frameCellsOf(
     frameRecords.filter(({ box }) => box === 'native'),
     target
-  ).map(({ timeMs, cells }) => ({
-    timeMs: timeMs + middleOf(clockOffset),
-    cells,
-  }));
+  )
+    .map(({ timeMs, cells }) => ({
+      timeMs: timeMs + middleOf(clockOffset),
+      cells,
+    }))
+    .sort((first, second) => first.timeMs - second.timeMs);
   if (frames.length === 0) {
     throw new Error(
       `The frame driver recorded no frame of the ${target} target of the native box.`
@@ -3121,7 +3117,10 @@ function ReferenceScene({
 }: Omit<BoxOptions, 'animations' | 'place'> & {
   animations: Record<BoxName, Animations>;
   place?: Place;
-  /** The cells are in a scroll view: `scrollTo(CLIPPED_OFFSET)` clips them. */
+  /**
+   * The cells are in a scroll view: `scrollClippingViewTo(CLIPPED_OFFSET)`
+   * clips them.
+   */
   clips: boolean;
 }) {
   const clockRef = useTestRef(CLOCK_REF);
@@ -3141,7 +3140,7 @@ function ReferenceScene({
     <View>
       <View ref={clockRef} collapsable={false} />
       {clips ? (
-        <ClippingScrollView scrollRef={scrollRef} style={clipStyles.window}>
+        <ClippingScrollView style={clipStyles.window}>
           <View collapsable={false}>{cells}</View>
           <View style={clipStyles.filler} />
         </ClippingScrollView>
