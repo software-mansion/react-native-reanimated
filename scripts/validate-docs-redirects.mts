@@ -129,6 +129,18 @@ export function validate(files: Files) {
       ...versions.filter((version) => version !== lastVersion),
       findCurrentVersionPath(config),
     ];
+    const previousVersion = versions[versions.indexOf(lastVersion) + 1];
+    const previous =
+      previousVersion === undefined
+        ? new Set<string>()
+        : listRoutes(
+            files,
+            `${docs}/versioned_docs/version-${previousVersion}`,
+            readVersionedSidebars(
+              files,
+              `${docs}/versioned_sidebars/version-${previousVersion}-sidebars.json`
+            )
+          );
 
     const siteProblems = findProblems({
       docs,
@@ -139,11 +151,32 @@ export function validate(files: Files) {
       configured,
       otherVersionPaths,
     });
+    if (previousVersion !== undefined) {
+      siteProblems.push(
+        ...findPreviousVersionProblems({
+          docs,
+          previousVersion,
+          lastVersion,
+          previous,
+          released,
+          configured,
+          otherVersionPaths,
+        })
+      );
+    }
     problems.push(...siteProblems);
 
     if (siteProblems.length === 0) {
       messages.push(
-        `${docs}: each of the ${released.size} pages of ${lastVersion} has a page at the same path in Unreleased, one of the ${pending.length} redirects in ${pendingPath} or a redirect in docusaurus.config.js to an Unreleased page. The redirects in docusaurus.config.js that point to ${lastVersion} pages point to existing pages.`
+        [
+          `${docs}: each of the ${released.size} pages of ${lastVersion} has a page at the same path in Unreleased, one of the ${pending.length} redirects in ${pendingPath} or a redirect in docusaurus.config.js to an Unreleased page.`,
+          ...(previousVersion === undefined
+            ? []
+            : [
+                `Each of the ${previous.size} pages of ${previousVersion} has a page at the same path in ${lastVersion} or a redirect in docusaurus.config.js to a ${lastVersion} page.`,
+              ]),
+          `The redirects in docusaurus.config.js that point to ${lastVersion} pages point to existing pages.`,
+        ].join(' ')
       );
     }
   }
@@ -178,7 +211,7 @@ export function findProblems({
 
   for (const redirect of pending) {
     const from = normalizeRoute(redirect.from);
-    const to = normalizeRoute(redirect.to);
+    const to = toRoute(redirect.to);
     const entry = `${pendingPath}: the redirect from ${redirect.from} to ${redirect.to}`;
 
     if (pendingFrom.has(from)) {
@@ -213,7 +246,7 @@ export function findProblems({
     }
     const configuredRedirect = configuredTo.get(route);
     if (configuredRedirect !== undefined) {
-      if (!unreleased.has(normalizeRoute(configuredRedirect))) {
+      if (!unreleased.has(toRoute(configuredRedirect))) {
         problems.push(
           `${configPath}: the redirect from ${route} points to ${configuredRedirect}, which is not a page in Unreleased. When Unreleased becomes the latest version, the redirect plugin fails the build. Point it to a page of both ${lastVersion} and Unreleased.`
         );
@@ -227,10 +260,55 @@ export function findProblems({
   }
 
   for (const redirect of configured) {
-    const to = normalizeRoute(redirect.to);
+    const to = toRoute(redirect.to);
     if (isLatestVersionRoute(to, otherVersionPaths) && !released.has(to)) {
       problems.push(
         `${configPath}: the redirect from ${redirect.from} points to ${redirect.to}, which is not a page of ${lastVersion}. Point it to a ${lastVersion} page.`
+      );
+    }
+  }
+
+  return problems;
+}
+
+export function findPreviousVersionProblems({
+  docs,
+  previousVersion,
+  lastVersion,
+  previous,
+  released,
+  configured,
+  otherVersionPaths,
+}: {
+  docs: string;
+  previousVersion: string;
+  lastVersion: string;
+  previous: Set<string>;
+  released: Set<string>;
+  configured: Redirect[];
+  otherVersionPaths: string[];
+}) {
+  const problems: string[] = [];
+  const configPath = `${docs}/docusaurus.config.js`;
+  const configuredTo = new Map(
+    configured.map((redirect) => [normalizeRoute(redirect.from), redirect.to])
+  );
+
+  for (const route of [...previous].sort()) {
+    if (released.has(route)) {
+      continue;
+    }
+    const configuredRedirect = configuredTo.get(route);
+    if (configuredRedirect === undefined) {
+      const candidates = findCandidates(route, released);
+      problems.push(
+        `${docs}: the ${previousVersion} page ${route} has no page at the same path in ${lastVersion} and no redirect in ${configPath}. This URL stopped working when ${lastVersion} became the latest version. Add {from: '${route}', to: '<new path>'} to the redirects in ${configPath}${candidates.length > 0 ? `, for example with "to" set to ${candidates.join(' or ')}` : ''}. If you have just cut the docs version, move the entries of ${docs}/${PENDING_REDIRECTS} to the redirects in ${configPath}.`
+      );
+    } else if (
+      !isLatestVersionRoute(toRoute(configuredRedirect), otherVersionPaths)
+    ) {
+      problems.push(
+        `${configPath}: the redirect from ${route} points to ${configuredRedirect}, which is not a page of ${lastVersion}. Point it to a ${lastVersion} page.`
       );
     }
   }
@@ -335,6 +413,10 @@ function findCurrentVersionPath(config: string) {
   return (
     /\bcurrent:\s*\{[^}]*\bpath:\s*['"]([^'"]+)['"]/.exec(config)?.[1] ?? 'next'
   );
+}
+
+function toRoute(path: string) {
+  return normalizeRoute(path.replace(/[?#].*$/, ''));
 }
 
 function normalizeRoute(route: string) {

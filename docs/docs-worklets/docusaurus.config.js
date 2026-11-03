@@ -217,6 +217,10 @@ const config = {
             from: '/docs/worklets-babel-plugin/plugin-options',
             to: '/docs/worklets-plugin/plugin-options',
           },
+          {
+            from: '/docs/category/worklets-babel-plugin',
+            to: '/docs/worklets-plugin/about',
+          },
         ],
       }),
     ],
@@ -269,7 +273,10 @@ const config = {
                 {
                   test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
                   enforce: 'pre',
-                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                  use: path.resolve(
+                    __dirname,
+                    'src/simulation/snippetNamesLoader.js'
+                  ),
                 },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
