@@ -29,6 +29,7 @@ if [ "$1" != -s ]; then
   echo 'error: more than one device/emulator' >&2
   exit 1
 fi
+serial=$2
 shift 2
 case "$*" in
   'logcat -b crash -d') echo 'F libc: Fatal signal 11 (SIGSEGV)' ;;
@@ -36,7 +37,10 @@ case "$*" in
   'pull -a /data/tombstones '*) mkdir -p "$4/tombstones" && echo '*** *** ***' > "$4/tombstones/tombstone_00" ;;
   'shell date +%s') date +%s ;;
   'shell getprop sys.boot_completed') [ -f "$FAKE_EMULATOR_PID" ] && echo 1 ;;
-  'emu avd name') echo Fake_AVD; echo OK ;;
+  'emu avd name')
+    avd=Fake_AVD
+    for entry in $FAKE_AVD_NAMES; do [ "\${entry%%=*}" = "$serial" ] && avd=\${entry#*=}; done
+    echo "$avd"; echo OK ;;
   'shell getprop ro.product.cpu.abi') echo arm64-v8a ;;
 esac
 `;
@@ -53,171 +57,202 @@ const FAKE_NDK_STACK = `#!/bin/sh
 echo symbolized
 `;
 
-describe('runtime-tests device selection', () => {
-  let workDir = '';
+describe(
+  'runtime-tests device selection',
+  { skip: process.platform === 'win32' },
+  () => {
+    let workDir = '';
 
-  afterEach(() => {
-    stopFakeEmulator(path.join(workDir, 'emulator.pid'));
-    fs.rmSync(workDir, { recursive: true, force: true });
-  });
-
-  it('collects server-only crash diagnostics only from --serial', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [SELECTED, HUMAN_PHONE],
-      args: ['--platform', 'android', '--serial', SELECTED],
+    afterEach(() => {
+      stopFakeEmulator(path.join(workDir, 'emulator.pid'));
+      fs.rmSync(workDir, { recursive: true, force: true });
     });
 
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(
-      result.stderr,
-      new RegExp(`collecting crash diagnostics from ${SELECTED}`)
-    );
-    assert.deepEqual(result.adbCalls, [
-      'devices',
-      `-s ${SELECTED} logcat -b crash -d`,
-      `-s ${SELECTED} logcat -b crash -d`,
-      `-s ${SELECTED} logcat -b crash -c`,
-      `-s ${SELECTED} root`,
-      `-s ${SELECTED} wait-for-device`,
-      `-s ${SELECTED} pull -a /data/tombstones ${result.tombstonesDir}`,
-      `-s ${SELECTED} shell date +%s`,
-      `-s ${SELECTED} shell rm -f /data/tombstones/*`,
-      `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
-    ]);
-    assert.match(result.stderr, /symbolized native stack trace/);
-  });
-
-  it('skips server-only crash diagnostics without --serial', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [SELECTED, HUMAN_PHONE],
-      args: ['--platform', 'android'],
-    });
-
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(
-      result.stderr,
-      /no selected Android device available for crash diagnostics/
-    );
-    assert.deepEqual(result.adbCalls, []);
-  });
-
-  it('stops when several devices are connected and none is selected', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [SELECTED, HUMAN_PHONE],
-      args: ['--platform', 'android', ...LAUNCH],
-    });
-
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(
-      result.stderr,
-      new RegExp(
-        `2 Android devices are connected \\(${SELECTED} device, ${HUMAN_PHONE} device\\), pass --serial or --avd`
-      )
-    );
-    assert.deepEqual(result.adbCalls, ['devices']);
-  });
-
-  it('counts an offline emulator when it checks for several devices', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [`${SELECTED}:offline`, HUMAN_PHONE],
-      args: ['--platform', 'android', ...LAUNCH],
-    });
-
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(
-      result.stderr,
-      new RegExp(
-        `2 Android devices are connected \\(${SELECTED} offline, ${HUMAN_PHONE} device\\)`
-      )
-    );
-    assert.deepEqual(result.adbCalls, ['devices']);
-  });
-
-  it('uses the only connected device when none is selected', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [SELECTED],
-      args: ['--platform', 'android', ...LAUNCH],
-    });
-
-    assert.equal(result.status, 1, result.stderr);
-    assert.deepEqual(result.adbCalls, [
-      'devices',
-      `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
-    ]);
-  });
-
-  it('stops when the booted emulator exits before it boots', () => {
-    workDir = createWorkDir();
-    const result = runDriver(workDir, {
-      devices: [],
-      args: ['--platform', 'android', ...LAUNCH],
-      emulatorExits: true,
-    });
-
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(
-      result.stderr,
-      /Emulator Fake_AVD exited \(1\) before it booted/
-    );
-    assert.deepEqual(result.emulatorCalls, [
-      'emulator -list-avds',
-      'emulator -avd Fake_AVD -no-snapshot-save -no-boot-anim -no-audio',
-    ]);
-    assert.ok(
-      result.adbCalls.every((call) => call === 'devices'),
-      result.adbCalls.join('\n')
-    );
-  });
-
-  it(
-    'prints only the crash reports of the selected simulator',
-    { skip: process.platform !== 'darwin' },
-    () => {
-      workDir = createWorkDir();
-      const reportsDir = path.join(
-        workDir,
-        'Library',
-        'Logs',
-        'DiagnosticReports'
-      );
-      fs.mkdirSync(reportsDir, { recursive: true });
-      writeIpsReport(reportsDir, 'FabricExample-selected.ips', 'SELECTED-UDID');
-      writeIpsReport(reportsDir, 'FabricExample-other.ips', 'OTHER-UDID');
-
-      const result = runDriver(workDir, {
-        devices: [],
-        args: ['--platform', 'ios', '--udid', 'SELECTED-UDID'],
-      });
-
-      assert.equal(result.status, 1, result.stderr);
-      assert.match(result.stderr, /crash report FabricExample-selected\.ips/);
-      assert.doesNotMatch(result.stderr, /FabricExample-other\.ips/);
-    }
-  );
-
-  it(
-    'skips server-only iOS crash reports without --udid',
-    { skip: process.platform !== 'darwin' },
-    () => {
+    it('collects server-only crash diagnostics only from --serial', () => {
       workDir = createWorkDir();
       const result = runDriver(workDir, {
-        devices: [],
-        args: ['--platform', 'ios'],
+        devices: [SELECTED, HUMAN_PHONE],
+        args: ['--platform', 'android', '--serial', SELECTED],
       });
 
       assert.equal(result.status, 1, result.stderr);
       assert.match(
         result.stderr,
-        /no selected iOS simulator for crash reports/
+        new RegExp(`collecting crash diagnostics from ${SELECTED}`)
       );
-    }
-  );
-});
+      assert.deepEqual(result.adbCalls, [
+        'devices',
+        `-s ${SELECTED} logcat -b crash -d`,
+        `-s ${SELECTED} logcat -b crash -d`,
+        `-s ${SELECTED} logcat -b crash -c`,
+        `-s ${SELECTED} root`,
+        `-s ${SELECTED} wait-for-device`,
+        `-s ${SELECTED} pull -a /data/tombstones ${result.tombstonesDir}`,
+        `-s ${SELECTED} shell date +%s`,
+        `-s ${SELECTED} shell rm -f /data/tombstones/*`,
+        `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
+      ]);
+      assert.match(result.stderr, /symbolized native stack trace/);
+    });
+
+    it('collects server-only crash diagnostics only from the --avd emulator', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: ['emulator-5554', 'emulator-5556'],
+        avdNames: { 'emulator-5556': 'Second_AVD' },
+        args: ['--platform', 'android', '--avd', 'Second_AVD'],
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        /collecting crash diagnostics from emulator-5556/
+      );
+      const deviceCalls = result.adbCalls.filter(
+        (call) => call !== 'devices' && !call.endsWith(' emu avd name')
+      );
+      assert.ok(deviceCalls.length > 0);
+      assert.ok(
+        deviceCalls.every((call) => call.startsWith('-s emulator-5556 ')),
+        deviceCalls.join('\n')
+      );
+    });
+
+    it('skips server-only crash diagnostics without --serial', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [SELECTED, HUMAN_PHONE],
+        args: ['--platform', 'android'],
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        /no selected Android device available for crash diagnostics/
+      );
+      assert.deepEqual(result.adbCalls, []);
+    });
+
+    it('stops when several devices are connected and none is selected', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [SELECTED, HUMAN_PHONE],
+        args: ['--platform', 'android', ...LAUNCH],
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        new RegExp(
+          `2 Android devices are connected \\(${SELECTED} device, ${HUMAN_PHONE} device\\), pass --serial or --avd`
+        )
+      );
+      assert.deepEqual(result.adbCalls, ['devices']);
+    });
+
+    it('counts an offline emulator when it checks for several devices', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [`${SELECTED}:offline`, HUMAN_PHONE],
+        args: ['--platform', 'android', ...LAUNCH],
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        new RegExp(
+          `2 Android devices are connected \\(${SELECTED} offline, ${HUMAN_PHONE} device\\)`
+        )
+      );
+      assert.deepEqual(result.adbCalls, ['devices']);
+    });
+
+    it('uses the only connected device when none is selected', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [SELECTED],
+        args: ['--platform', 'android', ...LAUNCH],
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.deepEqual(result.adbCalls, [
+        'devices',
+        `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
+      ]);
+    });
+
+    it('stops when the booted emulator exits before it boots', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [],
+        args: ['--platform', 'android', ...LAUNCH],
+        emulatorExits: true,
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        /Emulator Fake_AVD exited \(1\) before it booted/
+      );
+      assert.deepEqual(result.emulatorCalls, [
+        'emulator -list-avds',
+        'emulator -avd Fake_AVD -no-snapshot-save -no-boot-anim -no-audio',
+      ]);
+      assert.ok(
+        result.adbCalls.every((call) => call === 'devices'),
+        result.adbCalls.join('\n')
+      );
+    });
+
+    it(
+      'prints only the crash reports of the selected simulator',
+      { skip: process.platform !== 'darwin' },
+      () => {
+        workDir = createWorkDir();
+        const reportsDir = path.join(
+          workDir,
+          'Library',
+          'Logs',
+          'DiagnosticReports'
+        );
+        fs.mkdirSync(reportsDir, { recursive: true });
+        writeIpsReport(
+          reportsDir,
+          'FabricExample-selected.ips',
+          'SELECTED-UDID'
+        );
+        writeIpsReport(reportsDir, 'FabricExample-other.ips', 'OTHER-UDID');
+
+        const result = runDriver(workDir, {
+          devices: [],
+          args: ['--platform', 'ios', '--udid', 'SELECTED-UDID'],
+        });
+
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /crash report FabricExample-selected\.ips/);
+        assert.doesNotMatch(result.stderr, /FabricExample-other\.ips/);
+      }
+    );
+
+    it(
+      'skips server-only iOS crash reports without --udid',
+      { skip: process.platform !== 'darwin' },
+      () => {
+        workDir = createWorkDir();
+        const result = runDriver(workDir, {
+          devices: [],
+          args: ['--platform', 'ios'],
+        });
+
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(
+          result.stderr,
+          /no selected iOS simulator for crash reports/
+        );
+      }
+    );
+  }
+);
 
 function createWorkDir() {
   const dir = fs.realpathSync(
@@ -257,6 +292,7 @@ function runDriver(
     devices: string[];
     args: string[];
     emulatorExits?: boolean;
+    avdNames?: Record<string, string>;
   }
 ) {
   const log = path.join(dir, 'calls.log');
@@ -289,6 +325,9 @@ function runDriver(
           .map((device) => (device.includes(':') ? device : `${device}:device`))
           .join(' '),
         FAKE_EMULATOR_EXIT: options.emulatorExits ? '1' : '0',
+        FAKE_AVD_NAMES: Object.entries(options.avdNames ?? {})
+          .map(([serial, avd]) => `${serial}=${avd}`)
+          .join(' '),
         FAKE_EMULATOR_PID: path.join(dir, 'emulator.pid'),
       },
     }

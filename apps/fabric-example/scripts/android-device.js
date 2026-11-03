@@ -114,13 +114,13 @@ async function waitForBoot(avd, exitStatus, tools) {
   let exitedAt = null;
   while (Date.now() < deadline) {
     const status = exitStatus();
-    const { booted, starting } = await scanForAvd(avd, tools);
+    const { booted, starting, unidentified } = await scanForAvd(avd, tools);
     if (booted) {
       return booted;
     }
-    if (status !== null) {
+    if (status !== null && !starting) {
       exitedAt ??= Date.now();
-      if (!starting || Date.now() - exitedAt >= exitGraceMs) {
+      if (!unidentified || Date.now() - exitedAt >= exitGraceMs) {
         throw new Error(`Emulator ${avd} exited (${status}) before it booted`);
       }
     }
@@ -132,29 +132,31 @@ async function waitForBoot(avd, exitStatus, tools) {
 /**
  * @param {string} avd
  * @param {AndroidTools} tools
- * @returns {Promise<{ booted: string | null; starting: boolean }>}
+ * @returns {Promise<{
+ *   booted: string | null;
+ *   starting: boolean;
+ *   unidentified: boolean;
+ * }>}
  */
 async function scanForAvd(avd, tools) {
   let starting = false;
+  let unidentified = false;
   for (const device of await tools.listDevices()) {
     const ready = device.state === 'device';
     if (!ready && !device.serial.startsWith('emulator-')) {
       continue;
     }
     const name = await tools.avdName(device.serial).catch(() => null);
-    if (!ready) {
-      starting ||= name === null || name === avd;
-      continue;
-    }
     if (name !== avd) {
+      unidentified ||= !ready && name === null;
       continue;
     }
-    if (await tools.isBootCompleted(device.serial)) {
-      return { booted: device.serial, starting };
+    if (ready && (await tools.isBootCompleted(device.serial))) {
+      return { booted: device.serial, starting, unidentified };
     }
     starting = true;
   }
-  return { booted: null, starting };
+  return { booted: null, starting, unidentified };
 }
 
 /**

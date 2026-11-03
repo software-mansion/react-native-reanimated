@@ -274,6 +274,33 @@ describe('resolveAndroidDevice', () => {
     assert.deepEqual(fake.booted, []);
   });
 
+  it('waits past the exit grace for an offline instance of the AVD', async () => {
+    let sleeps = 0;
+    const fake = createFakeAndroid({
+      devices: [
+        {
+          serial: 'emulator-5554',
+          avd: 'Mine',
+          booted: false,
+          state: 'offline',
+        },
+      ],
+      avds: ['Mine'],
+      bootExitStatus: '1',
+      exitGraceMs: 0,
+      onSleep: (connected) => {
+        sleeps += 1;
+        if (sleeps === 3) {
+          connected[0].state = 'device';
+        }
+      },
+    });
+    assert.equal(
+      await resolveAndroidDevice({ serial: null, avd: 'Mine' }, fake.tools),
+      'emulator-5554'
+    );
+  });
+
   it('uses an instance of the AVD that was still offline when its duplicate exits', async () => {
     let sleeps = 0;
     const fake = createFakeAndroid({

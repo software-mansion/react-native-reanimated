@@ -545,9 +545,7 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          (androidSerial ?? SERIAL ?? AVD)
-            ? '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
-            : '[runtime-tests] The app most likely crashed — no Android device selected, so crash diagnostics are skipped (pass --serial or --avd to select one).'
+          '[runtime-tests] The app most likely crashed — see the crash diagnostics of the selected Android device below.'
         );
       } else {
         console.error(
@@ -1869,7 +1867,11 @@ async function crashDiagnosticsSerial() {
 }
 
 async function readyAndroidSerials() {
-  return readySerials(await listAndroidDevices().catch(() => []));
+  const devices = await listAndroidDevices().catch((error) => {
+    console.error(`[runtime-tests] adb devices failed: ${errorMessage(error)}`);
+    return [];
+  });
+  return readySerials(devices);
 }
 
 /** @param {string} serial */
