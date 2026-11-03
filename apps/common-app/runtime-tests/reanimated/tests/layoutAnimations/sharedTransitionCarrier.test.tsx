@@ -393,6 +393,8 @@ describe('Shared transition moves a real native view', () => {
     await waitForFrames();
     await render(<Screens active transition={transition} />);
     await waitForFrames(3);
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
     await advanceAnimationTimer(16);
     await waitForNotification('carrier-finished');
     await expectAtHome('source', 60, 0);
