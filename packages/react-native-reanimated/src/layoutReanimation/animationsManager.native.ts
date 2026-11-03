@@ -24,8 +24,8 @@ import {
   animatePlainLeaves,
   currentOfNativeLeaf,
   leverOf,
-  phaseEndsOf,
   relateToLiveLeaf,
+  replayTimesOfLeaves,
   segmentCountOf,
   summarizeNativeLeaf,
 } from './nativeLeaves';
@@ -238,7 +238,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         throw build.error;
       }
       startStyle(tag, type, build.style, build.originMs);
-      replayPhaseEnds(tag, build.style, build.originMs);
+      replayToStart(tag, build.style, build.originMs);
     },
     finishBuilt(buildId: number, finished: boolean) {
       const build = builds.get(buildId);
@@ -298,23 +298,27 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   }
 
   /**
-   * A start after the origin of its build gets the frame of each phase end that
-   * is over, as the frame driver ran it: a delay starts its animation in that
-   * frame.
+   * A start after the origin of its build gets the frames that the frame driver
+   * needs to reach the start on the timeline of the build: a delay starts its
+   * animation in the frame of its end, and a spring moves no more than 64 ms in
+   * one frame.
    */
-  function replayPhaseEnds(
+  function replayToStart(
     tag: number,
     style: LayoutAnimation,
     originMs: number
   ) {
     const animation = mutableValuesForTag.get(tag)?._animation;
-    const now = getStartTimestamp();
+    if (!animation) {
+      return;
+    }
     const leaves = Object.values(style.animations) as NativeLeaf[];
-    for (const phaseEnd of phaseEndsOf(leaves)) {
-      if (!animation || originMs + phaseEnd >= now) {
-        return;
-      }
-      animation.onFrame(animation, originMs + phaseEnd);
+    for (const replayTime of replayTimesOfLeaves(
+      leaves,
+      originMs,
+      getStartTimestamp()
+    )) {
+      animation.onFrame(animation, replayTime);
     }
   }
 

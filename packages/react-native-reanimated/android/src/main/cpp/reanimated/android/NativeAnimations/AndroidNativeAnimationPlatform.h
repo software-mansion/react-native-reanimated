@@ -25,7 +25,8 @@ inline constexpr std::array kAnimatorTimingKinds{
     AnimationTimingKind::Linear,
     AnimationTimingKind::CubicBezier,
     AnimationTimingKind::Steps,
-    AnimationTimingKind::LinearStops};
+    AnimationTimingKind::LinearStops,
+    AnimationTimingKind::Spring};
 
 /// Plays each track with one `ValueAnimator` of the Kotlin `NativeAnimationExecutor`, which writes the view
 /// property that React Native writes, or the animation matrix of the view for position and transform tracks.

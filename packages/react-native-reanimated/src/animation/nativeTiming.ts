@@ -12,6 +12,10 @@ import type {
 import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
 import { getStaticFeatureFlag } from '../featureFlags';
+import type {
+  DefaultSpringConfig,
+  SpringConfigInner,
+} from './spring/springUtils';
 import { getReduceMotionFromConfig } from './utilCommon';
 
 const DESCRIBES_NATIVE_TIMING: boolean = IS_IOS
@@ -45,6 +49,22 @@ function describeEasing(
  * on the animation, reduced motion, or a target that is not a number or a
  * string.
  */
+function nativeTargetOf(
+  toValue: AnimatableValue,
+  callback: AnimationCallback | undefined,
+  reduceMotion: ReduceMotion | undefined
+): number | string | undefined {
+  'worklet';
+  const isPlayable =
+    DESCRIBES_NATIVE_TIMING &&
+    callback === undefined &&
+    !getReduceMotionFromConfig(reduceMotion);
+  return isPlayable &&
+    (typeof toValue === 'number' || typeof toValue === 'string')
+    ? toValue
+    : undefined;
+}
+
 export function describeNativeTiming(
   toValue: AnimatableValue,
   {
@@ -58,12 +78,8 @@ export function describeNativeTiming(
   reduceMotion: ReduceMotion | undefined
 ): NativeTimingDescription | undefined {
   'worklet';
-  if (
-    !DESCRIBES_NATIVE_TIMING ||
-    callback !== undefined ||
-    (typeof toValue !== 'number' && typeof toValue !== 'string') ||
-    getReduceMotionFromConfig(reduceMotion)
-  ) {
+  const target = nativeTargetOf(toValue, callback, reduceMotion);
+  if (target === undefined) {
     return undefined;
   }
   return {
@@ -71,8 +87,42 @@ export function describeNativeTiming(
       {
         kind: 'timing',
         durationMs: duration,
-        toValue,
+        toValue: target,
         easing: describeEasing(easing),
+      },
+    ],
+  };
+}
+
+export function describeNativeSpring(
+  toValue: AnimatableValue,
+  config: DefaultSpringConfig & SpringConfigInner,
+  callback: AnimationCallback | undefined
+): NativeTimingDescription | undefined {
+  'worklet';
+  const target = nativeTargetOf(toValue, callback, config.reduceMotion);
+  if (target === undefined) {
+    return undefined;
+  }
+  const { clamp } = config;
+  return {
+    phases: [
+      {
+        kind: 'spring',
+        toValue: target,
+        config: {
+          mass: config.mass,
+          stiffness: config.stiffness,
+          damping: config.damping,
+          duration: config.duration,
+          dampingRatio: config.dampingRatio,
+          overshootClamping: config.overshootClamping,
+          energyThreshold: config.energyThreshold,
+          velocity: config.velocity,
+          clamp: clamp && { ...clamp },
+          useDuration: config.useDuration,
+          skipAnimation: config.skipAnimation,
+        },
       },
     ],
   };
@@ -102,9 +152,9 @@ export function delayNativeTiming(
 
 /**
  * The phases of the parts of a sequence in their order. Has no result when a
- * part has no description, or for reduced motion on the sequence. A sequence
- * that starts with a hold has no result: the frame driver runs the last part of
- * the sequence during that hold.
+ * part has no description or has a spring, or for reduced motion on the
+ * sequence. A sequence that starts with a hold has no result: the frame driver
+ * runs the last part of the sequence during that hold.
  */
 export function joinNativeTimings(
   animations: AnimationObject[],
@@ -120,6 +170,9 @@ export function joinNativeTimings(
       return undefined;
     }
     phases.push(...__nativeTiming.phases);
+  }
+  if (phases.some(({ kind }) => kind === 'spring')) {
+    return undefined;
   }
   return phases[0].kind === 'hold' ? undefined : { phases };
 }

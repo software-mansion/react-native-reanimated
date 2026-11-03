@@ -3,6 +3,9 @@ package com.swmansion.reanimated.nativeAnimations
 import android.animation.TimeInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.sin
 
 /**
  * The value of a track at a fraction of its animator. The animator plays linearly over the lead before the
@@ -83,8 +86,8 @@ internal class ComponentTimeline(
 
 internal data class TimingKey(
     val kind: Int,
-    val pointsX: List<Float>,
-    val pointsY: List<Float>,
+    /** The x and the y of each point of a curve, or the decay, the frequency, and the initial velocity of a spring. */
+    val parameters: List<Float>,
 )
 
 /** PathInterpolator flattens its curve on construction, so each curve is built once while a track uses it. */
@@ -110,14 +113,22 @@ internal class TimingCache {
 
     fun clear() = entries.clear()
 
-    private fun interpolatorOf(key: TimingKey): TimeInterpolator =
-        when (key.kind) {
-            TrackEncoding.TIMING_CUBIC_BEZIER -> PathInterpolator(key.pointsX[0], key.pointsY[0], key.pointsX[1], key.pointsY[1])
-            TrackEncoding.TIMING_STEPS -> StepsInterpolator(key.pointsX.toFloatArray(), key.pointsY.toFloatArray())
-            TrackEncoding.TIMING_LINEAR_STOPS -> LinearStopsInterpolator(key.pointsX.toFloatArray(), key.pointsY.toFloatArray())
+    private fun interpolatorOf(key: TimingKey): TimeInterpolator {
+        val parameters = key.parameters
+        return when (key.kind) {
+            TrackEncoding.TIMING_CUBIC_BEZIER -> PathInterpolator(parameters[0], parameters[1], parameters[2], parameters[3])
+            TrackEncoding.TIMING_STEPS -> StepsInterpolator(pointsXOf(parameters), pointsYOf(parameters))
+            TrackEncoding.TIMING_LINEAR_STOPS -> LinearStopsInterpolator(pointsXOf(parameters), pointsYOf(parameters))
+            TrackEncoding.TIMING_SPRING ->
+                SpringInterpolator(parameters[0].toDouble(), parameters[1].toDouble(), parameters[2].toDouble())
             else -> LinearInterpolator()
         }
+    }
 }
+
+private fun pointsXOf(parameters: List<Float>) = FloatArray(parameters.size / 2) { parameters[2 * it] }
+
+private fun pointsYOf(parameters: List<Float>) = FloatArray(parameters.size / 2) { parameters[2 * it + 1] }
 
 /** `steps()` and `linear()` stops are evaluated directly so steps keeps its discontinuities. */
 private class StepsInterpolator(
@@ -136,6 +147,25 @@ private class LinearStopsInterpolator(
         if (left == pointsX.size - 1) return pointsY[left]
         val slope = (pointsY[left + 1] - pointsY[left]) / (pointsX[left + 1] - pointsX[left])
         return pointsY[left] + slope * (input - pointsX[left])
+    }
+}
+
+/** The progress of `SpringTiming` in `NativeAnimationTiming.h`. */
+private class SpringInterpolator(
+    private val decay: Double,
+    private val frequency: Double,
+    private val initialVelocity: Double,
+) : TimeInterpolator {
+    override fun getInterpolation(input: Float): Float {
+        if (input >= 1f) return 1f
+        val time = input.toDouble()
+        val motion =
+            if (frequency > 0) {
+                cos(frequency * time) + (decay - initialVelocity) / frequency * sin(frequency * time)
+            } else {
+                1 + (decay - initialVelocity) * time
+            }
+        return (1 - exp(-decay * time) * motion).toFloat()
     }
 }
 

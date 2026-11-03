@@ -41,6 +41,7 @@ internal object TrackEncoding {
     const val TIMING_CUBIC_BEZIER = 1
     const val TIMING_STEPS = 2
     const val TIMING_LINEAR_STOPS = 3
+    const val TIMING_SPRING = 4
 
     const val STOP_SETTLE_TO_MODEL = 0
 
