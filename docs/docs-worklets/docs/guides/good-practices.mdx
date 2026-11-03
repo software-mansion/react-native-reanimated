@@ -142,6 +142,9 @@ scheduleOnRuntime(workerRuntime, () => {
 });
 ```
 
+For repeating timers, keep the id that `setInterval` returns and call `clearInterval` with it on the same Runtime when
+the work is complete.
+
 ## Prefer async invocations
 
 Use [`scheduleOnUI`](../threading/scheduleOnUI.mdx) or [`runOnUIAsync`](../threading/runOnUIAsync.mdx) unless you
