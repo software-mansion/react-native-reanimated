@@ -57,6 +57,7 @@ export default class AnimatedComponent
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _isFirstRender = true;
+  _initialTextChild: unknown;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
@@ -481,7 +482,12 @@ export default class AnimatedComponent
       this.ChildComponent.displayName === 'Text' &&
       isSharedValue(this.props.children)
     ) {
-      filteredProps.children = normalizeTextProp(filteredProps.children);
+      // React replaces the RawText when this string changes, and the
+      // replacement loses the text that the UI thread wrote.
+      if (this._isFirstRender) {
+        this._initialTextChild = filteredProps.children;
+      }
+      filteredProps.children = normalizeTextProp(this._initialTextChild);
     }
 
     // TODO: Remove need for this \/\/\/\/.
