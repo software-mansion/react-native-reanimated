@@ -32,6 +32,8 @@ std::string_view toString(const TraceEventType event) {
       return "ClientEnded";
     case TraceEventType::LayoutBuildFailed:
       return "LayoutBuildFailed";
+    case TraceEventType::LayoutLeafCaptured:
+      return "LayoutLeafCaptured";
   }
 }
 
@@ -162,6 +164,8 @@ std::string_view toString(const TrackBuildFailure failure) {
       return "UnsupportedTiming";
     case TrackBuildFailure::UnsupportedTrackForm:
       return "UnsupportedTrackForm";
+    case TrackBuildFailure::UnsupportedContinuation:
+      return "UnsupportedContinuation";
     case TrackBuildFailure::InvalidValue:
       return "InvalidValue";
     case TrackBuildFailure::EndpointMismatch:

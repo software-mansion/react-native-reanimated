@@ -10,12 +10,15 @@ import type {
   LayoutAnimationBuildSummary,
   LayoutAnimationsManager,
   LayoutAnimationValues,
+  LiveLayoutLeaf,
   Mutable,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
+import type { LiveLeafRelation } from './nativeLeaves';
+import { advanceNativeLeaf, relateToLiveLeaf } from './nativeLeaves';
 
 const TAG_OFFSET = 1e9;
 
@@ -71,14 +74,21 @@ type LayoutAnimationBuild = {
 function summarizeLeaf(
   key: string,
   initialValue: unknown,
-  animation: unknown
+  animation: unknown,
+  continuesLiveLeaf: boolean
 ): LayoutAnimationBuildSummary['leaves'][number] {
   'worklet';
   const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
+  if (reduceMotion || !__nativeTiming) {
+    return { key, initialValue, continuesLiveLeaf };
+  }
+  const { delaysMs, ...timing } = __nativeTiming;
+  const delayMs = delaysMs.reduce((sum, each) => sum + each, 0);
   return {
     key,
     initialValue,
-    timing: reduceMotion ? undefined : __nativeTiming,
+    continuesLiveLeaf,
+    timing: { ...timing, delayMs },
   };
 }
 
@@ -142,7 +152,8 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       buildId: number,
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
-      maxLeaves: number
+      maxLeaves: number,
+      liveLeaves: LiveLayoutLeaf[]
     ): LayoutAnimationBuildSummary | undefined {
       const originMs = getStartTimestamp();
       let style: LayoutAnimation;
@@ -160,22 +171,51 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       >;
       const keys = Object.keys(animations);
       const exceedsLimit = keys.length > maxLeaves;
+      const relations: Record<string, LiveLeafRelation> = {};
+      for (const liveLeaf of liveLeaves) {
+        relations[liveLeaf.key] = relateToLiveLeaf(
+          advanceLiveLeaf(liveLeaf, originMs),
+          animations[liveLeaf.key] as AnimationObject | undefined
+        );
+      }
       return {
         originMs,
         exceedsLimit,
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),
+        needsFrameDriver: Object.values(relations).includes('frameDriver'),
         leaves: exceedsLimit
           ? []
           : keys.map((key) =>
-              summarizeLeaf(key, initialValues[key], animations[key])
+              summarizeLeaf(
+                key,
+                initialValues[key],
+                animations[key],
+                relations[key] === 'continues'
+              )
             ),
       };
     },
-    startBuilt(tag: number, type: LayoutAnimationType, buildId: number) {
+    captureLiveLeaves(liveLeaves: LiveLayoutLeaf[]): Record<string, number> {
+      const now = getStartTimestamp();
+      const values: Record<string, number> = {};
+      for (const liveLeaf of liveLeaves) {
+        values[liveLeaf.key] = advanceLiveLeaf(liveLeaf, now).current as number;
+      }
+      return values;
+    },
+    startBuilt(
+      tag: number,
+      type: LayoutAnimationType,
+      buildId: number,
+      liveLeaves: LiveLayoutLeaf[]
+    ) {
       const build = builds.get(buildId)!;
       builds.delete(buildId);
+      if (liveLeaves.length > 0) {
+        continueLiveLeaves(tag, liveLeaves, build.originMs);
+      }
       if (!build.style) {
         throw build.error;
       }
@@ -203,6 +243,40 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       mutableValuesForTag.delete(tag);
     },
   };
+
+  /** Gives the leaf in the state that the frame driver gives it at `now`. */
+  function advanceLiveLeaf(
+    { buildId, key }: LiveLayoutLeaf,
+    now: number
+  ): AnimationObject {
+    const { style, originMs } = builds.get(buildId)!;
+    const leaf = (style!.animations as Record<string, AnimationObject>)[key];
+    const initialValue = (style!.initialValues as Record<string, number>)[key];
+    advanceNativeLeaf(leaf, initialValue, originMs, now);
+    return leaf;
+  }
+
+  /**
+   * Makes the live leaves the previous animation of the view, as if the frame
+   * driver played them until now. Nothing runs them before the next start.
+   */
+  function continueLiveLeaves(
+    tag: number,
+    liveLeaves: LiveLayoutLeaf[],
+    now: number
+  ) {
+    const animations: Record<string, AnimationObject> = {};
+    const values: Record<string, unknown> = {};
+    for (const liveLeaf of liveLeaves) {
+      const leaf = advanceLiveLeaf(liveLeaf, now);
+      animations[liveLeaf.key] = leaf;
+      values[liveLeaf.key] = leaf.current;
+    }
+    const value = makeMutableUI(values);
+    value._animation = withStyleAnimation(animations);
+    currentAnimationForTag.set(tag, animations);
+    mutableValuesForTag.set(tag, value);
+  }
 
   function getStartTimestamp(): number {
     return global.__frameTimestamp ?? getLayoutAnimationStartTimestamp();
