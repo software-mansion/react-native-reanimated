@@ -1,13 +1,16 @@
+/** @typedef {{ serial: string; state: string }} AdbDevice */
+
 /**
  * @typedef {{
- *   listDevices: () => Promise<string[]>;
+ *   listDevices: () => Promise<AdbDevice[]>;
  *   avdName: (serial: string) => Promise<string | null>;
  *   listAvds: () => Promise<string[]>;
- *   bootAvd: (avd: string) => void;
+ *   bootAvd: (avd: string) => () => string | null;
  *   isBootCompleted: (serial: string) => Promise<boolean>;
  *   sleep: (ms: number) => Promise<void>;
  *   log: (message: string) => void;
  *   bootTimeoutMs?: number;
+ *   exitGraceMs?: number;
  * }} AndroidTools
  */
 
@@ -17,7 +20,8 @@
  * @returns {Promise<string>}
  */
 async function resolveAndroidDevice({ serial, avd }, tools) {
-  const serials = await tools.listDevices();
+  const devices = await tools.listDevices();
+  const serials = readySerials(devices);
 
   if (serial) {
     if (!serials.includes(serial)) {
@@ -31,7 +35,7 @@ async function resolveAndroidDevice({ serial, avd }, tools) {
   if (avd) {
     const running = await findRunningAvd(avd, serials, tools);
     if (running) {
-      return waitForBoot(avd, tools);
+      return waitForBoot(avd, () => null, tools);
     }
     const avds = await tools.listAvds();
     if (!avds.includes(avd)) {
@@ -42,13 +46,22 @@ async function resolveAndroidDevice({ serial, avd }, tools) {
     return bootAndWait(avd, tools);
   }
 
-  if (serials.length > 0) {
-    if (serials.length > 1) {
-      tools.log(
-        `[runtime-tests] multiple Android devices connected, using ${serials[0]}`
+  if (devices.length > 1) {
+    const listed = devices
+      .map((device) => `${device.serial} ${device.state}`)
+      .join(', ');
+    throw new Error(
+      `${devices.length} Android devices are connected (${listed}), pass --serial or --avd to select one`
+    );
+  }
+  if (devices.length === 1) {
+    const [device] = devices;
+    if (device.state !== 'device') {
+      throw new Error(
+        `Android device ${device.serial} is ${device.state}, pass --serial or --avd to select a ready one`
       );
     }
-    return serials[0];
+    return device.serial;
   }
 
   const [firstAvd] = await tools.listAvds();
@@ -83,28 +96,75 @@ async function findRunningAvd(avd, serials, tools) {
  */
 async function bootAndWait(avd, tools) {
   tools.log(`[runtime-tests] booting emulator ${avd}`);
-  tools.bootAvd(avd);
-  return waitForBoot(avd, tools);
+  const exitStatus = tools.bootAvd(avd);
+  return waitForBoot(avd, exitStatus, tools);
 }
 
 /**
  * @param {string} avd
+ * @param {() => string | null} exitStatus
  * @param {AndroidTools} tools
  * @returns {Promise<string>}
  */
-async function waitForBoot(avd, tools) {
+async function waitForBoot(avd, exitStatus, tools) {
   const timeoutMs = tools.bootTimeoutMs ?? 300_000;
+  const exitGraceMs = tools.exitGraceMs ?? 60_000;
   const deadline = Date.now() + timeoutMs;
+  /** @type {number | null} */
+  let exitedAt = null;
   while (Date.now() < deadline) {
-    for (const serial of await tools.listDevices()) {
-      const name = await tools.avdName(serial).catch(() => null);
-      if (name === avd && (await tools.isBootCompleted(serial))) {
-        return serial;
+    const status = exitStatus();
+    const { booted, starting } = await scanForAvd(avd, tools);
+    if (booted) {
+      return booted;
+    }
+    if (status !== null) {
+      exitedAt ??= Date.now();
+      if (!starting || Date.now() - exitedAt >= exitGraceMs) {
+        throw new Error(`Emulator ${avd} exited (${status}) before it booted`);
       }
     }
     await tools.sleep(2000);
   }
   throw new Error(`Emulator ${avd} did not boot within ${timeoutMs / 1000}s`);
+}
+
+/**
+ * @param {string} avd
+ * @param {AndroidTools} tools
+ * @returns {Promise<{ booted: string | null; starting: boolean }>}
+ */
+async function scanForAvd(avd, tools) {
+  let starting = false;
+  for (const device of await tools.listDevices()) {
+    const ready = device.state === 'device';
+    if (!ready && !device.serial.startsWith('emulator-')) {
+      continue;
+    }
+    const name = await tools.avdName(device.serial).catch(() => null);
+    if (!ready) {
+      starting ||= name === null || name === avd;
+      continue;
+    }
+    if (name !== avd) {
+      continue;
+    }
+    if (await tools.isBootCompleted(device.serial)) {
+      return { booted: device.serial, starting };
+    }
+    starting = true;
+  }
+  return { booted: null, starting };
+}
+
+/**
+ * @param {AdbDevice[]} devices
+ * @returns {string[]}
+ */
+function readySerials(devices) {
+  return devices
+    .filter((device) => device.state === 'device')
+    .map((device) => device.serial);
 }
 
 /**
@@ -122,4 +182,9 @@ function parseAvdName(output) {
   return lines[0];
 }
 
-module.exports = { resolveAndroidDevice, findRunningAvd, parseAvdName };
+module.exports = {
+  resolveAndroidDevice,
+  findRunningAvd,
+  readySerials,
+  parseAvdName,
+};
