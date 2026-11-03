@@ -7,6 +7,12 @@ const net = require('net');
 const http = require('http');
 const { spawn, execFile } = require('child_process');
 const WebSocket = require('ws');
+const {
+  resolveAndroidDevice: resolveAndroidTarget,
+  findRunningAvd,
+  readySerials,
+  parseAvdName,
+} = require('./android-device');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
@@ -150,6 +156,8 @@ let idleTimer = null;
 let metroChild = null;
 /** @type {string | null} */
 let androidSerial = null;
+/** @type {string | null} */
+let iosUdid = null;
 /** @type {Promise<void> | null} */
 let crashDiagnosticsPromise = null;
 /** @type {Promise<void>} */
@@ -537,11 +545,11 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
+          '[runtime-tests] The app most likely crashed — see the crash diagnostics of the selected Android device below.'
         );
       } else {
         console.error(
-          '[runtime-tests] The app most likely crashed — collecting crash reports below.'
+          '[runtime-tests] The app most likely crashed — see the crash report search below.'
         );
       }
       console.error(
@@ -823,6 +831,13 @@ async function dumpIOSCrashDiagnostics() {
     }
     return;
   }
+  const udid = iosUdid ?? UDID;
+  if (!udid) {
+    console.error(
+      '[runtime-tests] no selected iOS simulator for crash reports (pass --udid to select one)'
+    );
+    return;
+  }
   const reportsDir = path.join(
     os.homedir(),
     'Library',
@@ -830,16 +845,16 @@ async function dumpIOSCrashDiagnostics() {
     'DiagnosticReports'
   );
   console.error(
-    `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
+    `[runtime-tests] looking for FabricExample crash reports of ${udid} in ${reportsDir}…`
   );
   /** @type {{ name: string; file: string; mtimeMs: number }[]} */
   let reports = [];
   for (let attempt = 0; attempt < 10; attempt++) {
     await sleep(3000);
-    reports = findFreshIOSCrashReports(reportsDir);
+    reports = findFreshIOSCrashReports(reportsDir, udid);
     if (reports.length > 0) {
       await sleep(3000);
-      reports = findFreshIOSCrashReports(reportsDir);
+      reports = findFreshIOSCrashReports(reportsDir, udid);
       break;
     }
   }
@@ -1010,9 +1025,10 @@ function printIOSCrashReports(reports) {
 
 /**
  * @param {string} reportsDir
+ * @param {string} udid
  * @returns {{ name: string; file: string; mtimeMs: number }[]}
  */
-function findFreshIOSCrashReports(reportsDir) {
+function findFreshIOSCrashReports(reportsDir, udid) {
   let names = [];
   try {
     names = fs.readdirSync(reportsDir);
@@ -1030,9 +1046,23 @@ function findFreshIOSCrashReports(reportsDir) {
       return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
     })
     .filter(
-      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+      (report) =>
+        report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000 &&
+        isCrashReportOfSimulator(report.file, udid)
     )
     .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/**
+ * @param {string} file
+ * @param {string} udid
+ * @returns {boolean}
+ */
+function isCrashReportOfSimulator(file, udid) {
+  return fs
+    .readFileSync(file, 'utf8')
+    .replaceAll('\\/', '/')
+    .includes(`/CoreSimulator/Devices/${udid}/`);
 }
 
 /**
@@ -1113,11 +1143,10 @@ function formatIOSCrashReport(text) {
 }
 
 async function dumpAndroidCrashDiagnostics() {
-  const serial =
-    androidSerial ?? (await listAndroidDevices().catch(() => []))[0];
+  const serial = await crashDiagnosticsSerial();
   if (!serial) {
     console.error(
-      '[runtime-tests] no adb device available for crash diagnostics'
+      '[runtime-tests] no selected Android device available for crash diagnostics (pass --serial or --avd to select one)'
     );
     return;
   }
@@ -1764,74 +1793,85 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** @returns {Promise<import('./android-device').AdbDevice[]>} */
 async function listAndroidDevices() {
   const { stdout } = await run(ADB, ['devices']);
   return stdout
     .split('\n')
     .slice(1)
     .map((line) => line.trim().split(/\s+/))
-    .filter((parts) => parts.length >= 2 && parts[1] === 'device')
-    .map((parts) => parts[0]);
+    .filter((parts) => parts.length >= 2)
+    .map(([serial, state]) => ({ serial, state }));
 }
 
-async function resolveAndroidDevice() {
-  const serials = await listAndroidDevices();
-
-  if (SERIAL) {
-    if (!serials.includes(SERIAL)) {
-      throw new Error(
-        `No connected Android device with serial ${SERIAL} (see \`adb devices\`)`
-      );
-    }
-    return SERIAL;
-  }
-
-  if (serials.length > 0) {
-    if (serials.length > 1) {
-      console.log(
-        `[runtime-tests] multiple Android devices connected, using ${serials[0]}`
-      );
-    }
-    return serials[0];
-  }
-
+/** @returns {import('./android-device').AndroidTools} */
+function androidTools() {
   const emulatorBin = sdkTool('emulator', 'emulator');
-  const { stdout } = await run(emulatorBin, ['-list-avds']);
-  const avds = stdout
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('INFO'));
-  const avd = AVD ?? avds[0];
-  if (!avd) {
-    throw new Error(
-      'No Android device connected and no AVDs available (see `emulator -list-avds`)'
-    );
-  }
-
-  console.log(`[runtime-tests] booting emulator ${avd}`);
-  const child = spawn(
-    emulatorBin,
-    ['-avd', avd, '-no-snapshot-save', '-no-boot-anim', '-no-audio'],
-    { detached: true, stdio: 'ignore' }
-  );
-  child.unref();
-
-  const deadline = Date.now() + 300_000;
-  while (Date.now() < deadline) {
-    const booted = await listAndroidDevices();
-    if (booted.length > 0) {
-      const { stdout: bootCompleted } = await adb(booted[0], [
+  return {
+    listDevices: listAndroidDevices,
+    avdName: async (serial) =>
+      parseAvdName((await adb(serial, ['emu', 'avd', 'name'])).stdout),
+    listAvds: async () => {
+      const { stdout } = await run(emulatorBin, ['-list-avds']);
+      return stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line && !/^INFO\s*\|/.test(line));
+    },
+    bootAvd: (avd) => {
+      const child = spawn(
+        emulatorBin,
+        ['-avd', avd, '-no-snapshot-save', '-no-boot-anim', '-no-audio'],
+        { detached: true, stdio: 'ignore' }
+      );
+      child.unref();
+      /** @type {string | null} */
+      let exitStatus = null;
+      child.on('exit', (code, signal) => {
+        exitStatus = String(code ?? signal);
+      });
+      child.on('error', (error) => {
+        exitStatus = error.message;
+      });
+      return () => exitStatus;
+    },
+    isBootCompleted: async (serial) => {
+      const { stdout } = await adb(serial, [
         'shell',
         'getprop',
         'sys.boot_completed',
       ]).catch(() => ({ stdout: '' }));
-      if (bootCompleted.trim() === '1') {
-        return booted[0];
-      }
-    }
-    await sleep(2000);
+      return stdout.trim() === '1';
+    },
+    sleep,
+    log: (message) => console.log(message),
+  };
+}
+
+function resolveAndroidDevice() {
+  return resolveAndroidTarget({ serial: SERIAL, avd: AVD }, androidTools());
+}
+
+async function crashDiagnosticsSerial() {
+  if (androidSerial) {
+    return androidSerial;
   }
-  throw new Error(`Emulator ${avd} did not boot within 300s`);
+  if (SERIAL) {
+    const serials = await readyAndroidSerials();
+    return serials.includes(SERIAL) ? SERIAL : null;
+  }
+  if (AVD) {
+    return findRunningAvd(AVD, await readyAndroidSerials(), androidTools());
+  }
+  return null;
+}
+
+async function readyAndroidSerials() {
+  const devices = await listAndroidDevices().catch((error) => {
+    console.error(`[runtime-tests] adb devices failed: ${errorMessage(error)}`);
+    return [];
+  });
+  return readySerials(devices);
 }
 
 /** @param {string} serial */
@@ -1906,12 +1946,14 @@ if (SHOULD_LAUNCH) {
     if (PLATFORM === 'android') {
       const serial = await resolveAndroidDevice();
       androidSerial = serial;
+      console.log(`[runtime-tests] using Android device ${serial}`);
       if (!SKIP_BUILD) {
         await buildAndroidApp(serial);
       }
       await installAndLaunchAndroid(serial);
     } else {
       const device = await resolveSimulator();
+      iosUdid = device.udid;
       await ensureBooted(device);
       if (!SKIP_BUILD) {
         await buildApp();
@@ -1990,8 +2032,12 @@ Target
   --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
   --simulator <name>        iOS simulator to boot. Default: iPhone 17.
   --udid <udid>             iOS simulator to reuse, instead of --simulator.
+                            Needed for crash reports in server mode on macOS.
   --serial <serial>         Android device already running (see \`adb devices\`).
-  --avd <name>              Android AVD to boot when no --serial is given.
+                            Pass --serial or --avd when more than one device
+                            is connected.
+  --avd <name>              Android AVD to use when no --serial is given.
+                            Reuses its running emulator or boots it.
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.

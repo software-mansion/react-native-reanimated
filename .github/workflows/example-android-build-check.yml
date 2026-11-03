@@ -52,6 +52,10 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install Android NDK
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/install-android-ndk
+
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'

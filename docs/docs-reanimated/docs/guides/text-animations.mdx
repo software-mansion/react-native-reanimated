@@ -1,0 +1,106 @@
+---
+id: text-animations
+title: Text animations
+sidebar_label: Text animations
+---
+
+# Text animations
+
+This guide explains how to animate text using Reanimated. In particular, it focuses on the type of text animations in which the sequence of characters changes between individual animation frames, like in a stopwatch or a digital speedometer.
+
+## Animating text style
+
+For animating text style (e.g. text color, font size or text shadow), you need to use [`useAnimatedStyle`](../core/useAnimatedStyle.mdx) hook and pass the animated styles to `Animated.Text` component just like you would do with any other animated component.
+
+## Animating text content
+
+For animating the text content itself, you need to choose one of the approaches described below. If your app uses an older version of Reanimated or enables the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag, use [`AnimatedTextInput`](#using-animatedtextinput) instead.
+
+### Using `Animated.Text` <AvailableFrom version="4.8.0"/>
+
+The recommended approach is to pass a shared value as a child of the [`Animated.Text`](../core/animatedText.mdx) component. The current value is committed as the children during the first render and then the displayed text is updated directly on the UI thread, without triggering React re-renders.
+
+:::warning
+`Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag is enabled. In such case, use [`AnimatedTextInput`](#using-animatedtextinput).
+:::
+
+#### Shared value as children
+
+You can pass a shared value directly as the children of `Animated.Text` component. Use [`useDerivedValue`](../core/useDerivedValue.mdx) hook to format the value:
+
+```tsx
+function Counter() {
+  const sv = useSharedValue(0);
+
+  // ...
+
+  const text = useDerivedValue(() => {
+    return `Current value: ${Math.round(sv.value)}`;
+  });
+
+  // highlight-next-line
+  return <Animated.Text>{text}</Animated.Text>;
+}
+```
+
+#### Static text mixed with shared values
+
+You can also mix static strings with one or more shared values in the children of `Animated.Text` component. Each shared value is updated independently whenever it changes:
+
+```tsx
+function Counter() {
+  // ...
+
+  const count = useDerivedValue(() => {
+    return String(Math.round(sv.value));
+  });
+
+  // highlight-next-line
+  return <Animated.Text>Current value: {count}</Animated.Text>;
+}
+```
+
+#### Caveats
+
+Pass the shared value itself as a child. Don't read its `value` property during render, as in `<Animated.Text>{sv.value}</Animated.Text>`, because the text becomes a static snapshot that never updates.
+
+A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. A number is converted to a string automatically.
+
+`Animated.Text` can also be placed inside another `Text` component or `Animated.Text` component with animated style.
+
+:::tip
+Use `fontVariant: ['tabular-nums']` to keep the layout stable when animating numbers.
+:::
+
+### Using `AnimatedTextInput`
+
+Another approach is to animate the value of `TextInput` component. This approach is no longer recommended and should be used only in apps that run a Reanimated version older than 4.8.0 or enable the [`USE_ANIMATION_BACKEND`](./feature-flags.md) static feature flag, where `Animated.Text` doesn't update shared value children. In some cases, the contents can be incorrectly cropped resulting in showing the ellipsis instead of the last character. Also, it is prone to crashes during a reload ([link to the issue](https://github.com/software-mansion/react-native-reanimated/issues/7647)).
+
+Reanimated does not expose `Animated.TextInput` on its own, so you need to create an animated component yourself using [`createAnimatedComponent`](../core/createAnimatedComponent.mdx) function:
+
+```tsx
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+```
+
+You need to animate both the `defaultValue` prop (for the initial render) and the `text` prop (for the consecutive animation frames) using [`useAnimatedProps`](../core/useAnimatedProps.mdx) hook:
+
+```tsx
+const animatedProps = useAnimatedProps(() => {
+  const text = `Current value: ${Math.round(sv.value)}`;
+  // highlight-next-line
+  return { text, defaultValue: text };
+});
+```
+
+Finally, you can use the `AnimatedTextInput` component with the animated props. Don't forget to set `editable` prop to `false` to disable user interactions as well as set `underlineColorAndroid` to `transparent`.
+
+```tsx
+return (
+  <AnimatedTextInput
+    // highlight-next-line
+    animatedProps={animatedProps}
+    editable={false}
+    underlineColorAndroid="transparent"
+  />
+);
+```

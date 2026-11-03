@@ -61,6 +61,9 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install Android NDK
+        uses: $/.github/actions/install-android-ndk
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
