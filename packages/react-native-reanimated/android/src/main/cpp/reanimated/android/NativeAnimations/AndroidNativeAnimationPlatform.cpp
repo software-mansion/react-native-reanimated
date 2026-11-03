@@ -21,14 +21,14 @@ namespace reanimated::native_animation {
 namespace {
 
 /// The start forms that `TrackBufferParser.kt` reads.
-enum class EncodedStart : jint {
+enum class EncodedStart : std::uint8_t {
   Value,
   CurrentVisualValue,
   VisualValueIfInterrupting,
 };
 
 /// How the executor binds a track to its view. `TrackEncoding.kt` repeats the values.
-enum class EncodedBinding : jint {
+enum class EncodedBinding : std::uint8_t {
   Writer,
   /// A track that writes no property: a size within one pixel of its end, or a constant geometry that the view holds.
   Hold,
@@ -388,7 +388,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
 class AndroidMountedAnimation final : public MountedAnimation {
  public:
   AndroidMountedAnimation(
-      alias_ref<JNativeAnimationExecutor::javaobject> executor,
+      const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
       global_ref<JView::javaobject> view,
       const AnimationRequest &request,
       const double passTimestampMs)
@@ -488,7 +488,7 @@ std::shared_ptr<AndroidNativeAnimationPlatform> AndroidNativeAnimationPlatform::
 }
 
 AndroidNativeAnimationPlatform::AndroidNativeAnimationPlatform(
-    alias_ref<JNativeAnimationExecutor::javaobject> executor,
+    const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
     std::weak_ptr<const facebook::react::UIManager> uiManager,
     GetAnimationTimestampFunction getAnimationTimestamp)
     : executor_(make_global(executor)),
@@ -556,7 +556,8 @@ MountedAnimationResolution AndroidNativeAnimationPlatform::resolve(const Animati
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   if (failingViewLookup_ == request.handle.tag) {
     failingViewLookup_.reset();
-    const auto onView = executor_->sample(request.handle.tag, static_cast<jint>(request.tracks.front().target));
+    const auto onView = JNativeAnimationTestHooks::sample(
+        executor_, request.handle.tag, static_cast<jint>(request.tracks.front().target));
     viewLookupFailure_ = onView ? toTrackKeys(onView->playbacks()) : std::vector<TrackKey>{};
     return AnimationResultReason::TargetUnavailable;
   }
@@ -612,7 +613,7 @@ void AndroidNativeAnimationPlatform::postToUIThread(std::function<void()> operat
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag, const AnimationTarget target) {
-  const auto targetSample = executor_->sample(tag, static_cast<jint>(target));
+  const auto targetSample = JNativeAnimationTestHooks::sample(executor_, tag, static_cast<jint>(target));
   if (!targetSample) {
     return std::nullopt;
   }
@@ -625,7 +626,7 @@ std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag
 }
 
 ContainerSizes AndroidNativeAnimationPlatform::containerSizes() {
-  const auto executorSizes = executor_->containerSizes();
+  const auto executorSizes = JNativeAnimationTestHooks::containerSizes(executor_);
   ContainerSizes sizes{
       {"playbacks", static_cast<std::size_t>(executorSizes->playbacks())},
       {"geometryWriters", static_cast<std::size_t>(executorSizes->geometryWriters())}};
@@ -688,7 +689,7 @@ bool AndroidNativeAnimationPlatform::playsTarget(const AnimationTrack &track) co
   }
 }
 
-bool AndroidNativeAnimationPlatform::modelEndsAt(alias_ref<JView> view, const AnimationTrack &track) const {
+bool AndroidNativeAnimationPlatform::modelEndsAt(const alias_ref<JView> &view, const AnimationTrack &track) const {
   const auto model = toDoubles(executor_->modelOf(view, static_cast<jint>(track.target)));
   if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
     return model.size() == facebook::react::Transform{}.matrix.size() &&

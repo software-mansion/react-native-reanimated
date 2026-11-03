@@ -20,7 +20,7 @@ struct JPreparation : JavaClass<JPreparation> {
 struct JPreparedPlayback : JavaClass<JPreparedPlayback, JPreparation> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/PreparedPlayback;";
 
-  void install(alias_ref<JArrayLong> replacedTracks) const {
+  void install(const alias_ref<JArrayLong> &replacedTracks) const {
     static const auto method = javaClassStatic()->getMethod<void(alias_ref<JArrayLong>)>("install");
     method(self(), replacedTracks);
   }
@@ -91,7 +91,7 @@ struct JNativeAnimationSample : JavaClass<JNativeAnimationSample> {
 struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationExecutor;";
 
-  void setCallbacks(alias_ref<NativeAnimationPlatformCallbacks::javaobject> callbacks) const {
+  void setCallbacks(const alias_ref<NativeAnimationPlatformCallbacks::javaobject> &callbacks) const {
     static const auto method =
         javaClassStatic()->getMethod<void(alias_ref<NativeAnimationPlatformCallbacks::javaobject>)>("setCallbacks");
     method(self(), callbacks);
@@ -112,7 +112,7 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
     return method(self(), surfaceId, tag) != JNI_FALSE;
   }
 
-  local_ref<JArrayDouble> modelOf(alias_ref<JView> view, const jint target) const {
+  local_ref<JArrayDouble> modelOf(const alias_ref<JView> &view, const jint target) const {
     static const auto method =
         javaClassStatic()->getMethod<JArrayDouble::javaobject(alias_ref<JView>, jint)>("modelOf");
     return method(self(), view, target);
@@ -130,16 +130,16 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
   }
 
   local_ref<JPreparation> prepare(
-      alias_ref<JView> view,
+      const alias_ref<JView> &view,
       const jint surfaceId,
       const jint tag,
       const jint owner,
       const jlong generation,
       const jdouble passTimestampMs,
       const jdouble originTimestampMs,
-      alias_ref<JArrayInt> interruptedTargets,
-      alias_ref<JArrayInt> trackInts,
-      alias_ref<JArrayDouble> trackDoubles) const {
+      const alias_ref<JArrayInt> &interruptedTargets,
+      const alias_ref<JArrayInt> &trackInts,
+      const alias_ref<JArrayDouble> &trackDoubles) const {
     static const auto method = javaClassStatic()
                                    ->getMethod<JPreparation::javaobject(
                                        alias_ref<JView>,
@@ -183,19 +183,28 @@ struct JNativeAnimationExecutor : JavaClass<JNativeAnimationExecutor> {
     static const auto method = javaClassStatic()->getMethod<void()>("requestDrain");
     method(self());
   }
+};
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
-  local_ref<JNativeAnimationSample> sample(const jint tag, const jint target) const {
-    static const auto method = javaClassStatic()->getMethod<JNativeAnimationSample::javaobject(jint, jint)>("sample");
-    return method(self(), tag, target);
+struct JNativeAnimationTestHooks : JavaClass<JNativeAnimationTestHooks> {
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationTestHooks;";
+
+  static local_ref<JNativeAnimationSample>
+  sample(const alias_ref<JNativeAnimationExecutor::javaobject> &executor, const jint tag, const jint target) {
+    static const auto method = javaClassStatic()
+                                   ->getStaticMethod<JNativeAnimationSample::javaobject(
+                                       alias_ref<JNativeAnimationExecutor::javaobject>, jint, jint)>("sample");
+    return method(javaClassStatic(), executor, tag, target);
   }
 
-  local_ref<JNativeAnimationContainerSizes> containerSizes() const {
-    static const auto method =
-        javaClassStatic()->getMethod<JNativeAnimationContainerSizes::javaobject()>("containerSizes");
-    return method(self());
+  static local_ref<JNativeAnimationContainerSizes> containerSizes(
+      const alias_ref<JNativeAnimationExecutor::javaobject> &executor) {
+    static const auto method = javaClassStatic()
+                                   ->getStaticMethod<JNativeAnimationContainerSizes::javaobject(
+                                       alias_ref<JNativeAnimationExecutor::javaobject>)>("containerSizes");
+    return method(javaClassStatic(), executor);
   }
-#endif
 };
+#endif
 
 } // namespace reanimated::native_animation

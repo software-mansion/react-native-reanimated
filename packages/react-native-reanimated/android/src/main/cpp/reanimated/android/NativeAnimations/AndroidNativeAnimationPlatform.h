@@ -76,7 +76,7 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   using Operation = std::function<void()>;
 
   AndroidNativeAnimationPlatform(
-      alias_ref<JNativeAnimationExecutor::javaobject> executor,
+      const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
       std::weak_ptr<const facebook::react::UIManager> uiManager,
       GetAnimationTimestampFunction getAnimationTimestamp);
 
@@ -84,7 +84,7 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   /// the final view.
   bool plays(const AnimationTrack &track) const;
   bool playsTarget(const AnimationTrack &track) const;
-  bool modelEndsAt(alias_ref<JView> view, const AnimationTrack &track) const;
+  bool modelEndsAt(const alias_ref<JView> &view, const AnimationTrack &track) const;
   void onTrackEnded(const TrackKey &track, bool finished);
   /// One platform pass: all operations of the pass read one time.
   void drainPostedOperations();

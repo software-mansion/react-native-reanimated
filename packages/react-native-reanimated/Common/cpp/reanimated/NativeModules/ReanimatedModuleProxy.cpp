@@ -607,7 +607,7 @@ void ReanimatedModuleProxy::nativeAnimationContainerSizes(jsi::Runtime &rt, cons
     jsInvoker_->invokeAsync([function](jsi::Runtime &rt) { function->call(rt, jsi::Value::undefined()); });
     return;
   }
-  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](ContainerSizes hostSizes) {
+  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](const ContainerSizes &hostSizes) {
     const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

@@ -9,7 +9,7 @@ namespace reanimated {
 struct NativeLayoutLimits {
   /// One leaf for each native target.
   size_t leaves{6};
-  /// For a `transform` leaf. A cap with no cost data.
+  /// For a `transform` leaf. The pixels of a track with more operations are not checked.
   size_t transformOperations{4};
   /// The sum of the segments of the tracks of one animation. A `Transform` track counts the sum of the
   /// segments of its operation timelines.

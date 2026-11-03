@@ -263,6 +263,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // The C++ test hooks are on where `NDEBUG` is off or `REANIMATED_RUNTIME_TEST_HOOKS` is on.
+    sourceSets {
+        named("debug") { java.srcDir("src/runtimeTestHooks/java") }
+        if (REANIMATED_RUNTIME_TEST_HOOKS) {
+            named("release") { java.srcDir("src/runtimeTestHooks/java") }
+        }
+    }
+
     if (IS_REANIMATED_EXAMPLE_APP) {
         apply(from = "../../../scripts/llvm-tools/android-hook.gradle.kts")
     }
