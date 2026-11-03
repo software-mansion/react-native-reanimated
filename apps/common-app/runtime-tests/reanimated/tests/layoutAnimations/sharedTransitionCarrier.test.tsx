@@ -8,6 +8,7 @@ import Animated, {
   makeMutable,
 } from 'react-native-reanimated';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   advanceAnimationTimer,
   describe,
@@ -211,6 +212,13 @@ function ChildContainer({
   );
 }
 
+function observer() {
+  if (!RuntimeTestObserver) {
+    throw new Error('RuntimeTestObserver requires a runtime-test build');
+  }
+  return RuntimeTestObserver;
+}
+
 function transitionWithNotification(duration = 1200) {
   return SharedTransition.duration(duration).withCallback((finished) => {
     'worklet';
@@ -403,15 +411,22 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
     await render(<Screens active transition={transition} />);
     await waitForFrames(3);
     await advanceAnimationTimer(500);
     await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
 
     await render(<Screens active covered transition={transition} />);
     await waitForFrames(3);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
     await advanceAnimationTimer(300);
     await expectAtHome('source', 60, 0);
   });
@@ -424,10 +439,14 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
     await render(<Screens active transition={transition} />);
     await waitForFrames(3);
     await advanceAnimationTimer(500);
     await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
 
     await render(
       <Screens
@@ -440,6 +459,9 @@ describe('Shared transition moves a real native view', () => {
     await waitForFrames(3);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
     await advanceAnimationTimer(300);
     await expectAtHome('source', 60, 0);
   });
@@ -449,6 +471,9 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} keepTarget />);
     await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
     await render(<Screens active transition={transition} keepTarget />);
     await waitForFrames(3);
     await advanceAnimationTimer(500);
@@ -457,12 +482,16 @@ describe('Shared transition moves a real native view', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(100);
     await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
 
     await render(
       <Screens active={false} covered transition={transition} keepTarget />
     );
     await waitForFrames(3);
     await expectAtHome('source', 60, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
     await advanceAnimationTimer(300);
     await expectAtHome('source', 60, 1);
   });
