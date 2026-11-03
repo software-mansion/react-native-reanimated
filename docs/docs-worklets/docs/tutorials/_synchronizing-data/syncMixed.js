@@ -13,9 +13,11 @@ export default function* main() {
   let cached = yield 0;
 
   function* onFrame(frame) {
-    yield (progress.value = frame * 25);
+    progress.value = yield frame * 25;
     yield dirty.setDirty(true);
-    if (frame < 4) requestAnimationFrame(() => onFrame(frame + 1));
+    if (frame < 4) {
+      requestAnimationFrame(() => onFrame(frame + 1));
+    }
   }
 
   function* animate() {
@@ -28,8 +30,7 @@ export default function* main() {
     return yield cached;
   }
 
-  // Read the progress on the RN Runtime once in a while
-  function* read() {
+  function* synchronize() {
     const changed = yield dirty.getDirty();
     const value = yield changed ? refresh() : cached;
     yield console.log(`progress ${value}%${changed ? '' : ' (cached)'}`);
@@ -37,5 +38,6 @@ export default function* main() {
 
   yield animate();
   yield setInterval(animate, 160);
-  yield setInterval(read, 24);
+  // Read the progress on the RN Runtime once in a while
+  yield setInterval(synchronize, 24);
 }

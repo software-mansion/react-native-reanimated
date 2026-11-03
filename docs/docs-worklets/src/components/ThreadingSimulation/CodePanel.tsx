@@ -20,6 +20,8 @@ interface CodePanelProps {
   history: LineHistory;
   tickMs: number;
   columns?: number;
+  lineNumbers?: boolean;
+  upcomingLine?: number;
 }
 
 interface CodeListProps {
@@ -31,11 +33,28 @@ interface CodeListProps {
   history: LineHistory;
   tickMs: number;
   columns: number;
+  lineNumbers: boolean;
+  upcomingLine: number;
   className?: string;
 }
 
-export default function CodePanel({ columns = 1, ...list }: CodePanelProps) {
-  return <CodeList {...list} columns={columns} />;
+const LINE_CHROME_PX = 53;
+const PLAIN_LINE_CHROME_PX = 17;
+
+export default function CodePanel({
+  columns = 1,
+  lineNumbers = true,
+  upcomingLine = -1,
+  ...list
+}: CodePanelProps) {
+  return (
+    <CodeList
+      {...list}
+      columns={columns}
+      lineNumbers={lineNumbers}
+      upcomingLine={upcomingLine}
+    />
+  );
 }
 
 function CodeList({
@@ -47,6 +66,8 @@ function CodeList({
   history,
   tickMs,
   columns,
+  lineNumbers,
+  upcomingLine,
   className,
 }: CodeListProps) {
   const blockStartOf = new Map<number, number>();
@@ -78,6 +99,14 @@ function CodeList({
     return runtimeClass(runtimes[index]);
   };
 
+  const longestLine = Math.max(
+    0,
+    ...code
+      .trimEnd()
+      .split('\n')
+      .map((text) => text.length)
+  );
+
   return (
     <Highlight code={code.trimEnd()} language="javascript" theme={prismTheme}>
       {({ tokens, getLineProps, getTokenProps }) => (
@@ -85,6 +114,7 @@ function CodeList({
           className={clsx(
             styles.codeList,
             columns > 1 && styles.codeListColumns,
+            !lineNumbers && styles.codeListPlain,
             className
           )}
           tabIndex={0}
@@ -93,6 +123,10 @@ function CodeList({
           style={
             {
               columnCount: columns > 1 ? columns : undefined,
+              columnWidth:
+                columns > 1
+                  ? `calc(${longestLine}ch + ${lineNumbers ? LINE_CHROME_PX : PLAIN_LINE_CHROME_PX}px)`
+                  : undefined,
               '--code-fade-ms': `${Math.max(100, tickMs)}ms`,
               '--code-rise-ms': `${Math.min(80, tickMs / 2)}ms`,
             } as React.CSSProperties
@@ -118,7 +152,8 @@ function CodeList({
                       styles.codeLine,
                       blockEnd !== undefined && styles.codeBlockStart,
                       inBlock && styles.codeBlockInner,
-                      inBlock && lineNumber === blockEnd && styles.codeBlockEnd
+                      inBlock && lineNumber === blockEnd && styles.codeBlockEnd,
+                      blockStart === upcomingLine && styles.codeUpcoming
                     )}>
                     {/* Keep each colour mounted so its background and edge fade together. */}
                     {runtimes.map((runtime) => {
@@ -141,9 +176,11 @@ function CodeList({
                         />
                       );
                     })}
-                    <span className={styles.lineNumber} aria-hidden="true">
-                      {lineNumber}
-                    </span>
+                    {lineNumbers && (
+                      <span className={styles.lineNumber} aria-hidden="true">
+                        {lineNumber}
+                      </span>
+                    )}
                     <span className={styles.codeText}>
                       {line.map((token, tokenIndex) => (
                         <span key={tokenIndex} {...getTokenProps({ token })} />
@@ -180,14 +217,11 @@ function chunkLines<Line extends { content: string }[]>(
     const lineNumber = index + 1;
     const blockStart = blockStartOf.get(lineNumber) ?? lineNumber;
     const isBlank = line.every((token) => token.content.trim() === '');
-    if (isBlank && blockStart === lineNumber) {
-      if (current.length > 0) {
-        chunks.push(current);
-        current = [];
-      }
-      return;
-    }
     current.push({ line, lineNumber });
+    if (isBlank && blockStart === lineNumber) {
+      chunks.push(current);
+      current = [];
+    }
   });
   if (current.length > 0) {
     chunks.push(current);

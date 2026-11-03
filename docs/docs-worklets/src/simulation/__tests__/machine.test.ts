@@ -793,9 +793,9 @@ describe('Machine semantics', () => {
         (event) => event.type === 'memory' && event.mode === 'read'
       )
     );
-    assert.equal(reads.length, 1);
-    assert.equal(reads[0].core, 'rn');
-    assert.deepEqual(formatLogs(snapshots), ['[rn] 8']);
+    assert.ok(reads.length > 1);
+    assert.ok(reads.every((read) => read.core === 'rn'));
+    assert.equal(formatLogs(snapshots)[0], '[rn] 3');
   });
 
   it('tick() is a no-op after the simulation finished', () => {

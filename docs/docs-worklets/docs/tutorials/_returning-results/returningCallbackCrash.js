@@ -10,7 +10,6 @@ export function* Component() {
   const worker = yield createWorkletRuntime({ name: 'worker' });
 
   function* task() {
-    'worklet';
     const result = yield doImportantStuff();
     yield setState(result); // This call crashes on the Worker Runtime.
   }

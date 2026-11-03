@@ -23,8 +23,11 @@ const SIMULATOR_ONLY_NAMES = new Set([
   'setNativeProps',
   'sendToUIThread',
   'nextTick',
+  'heapVariable',
 ]);
 const MAX_IMPORT_WIDTH = 80;
+const HEAP_VARIABLE_PATTERN =
+  /^(\s*)(?:const|let)\s+(\w+)\s*=\s*yield\s+heapVariable\(\s*['"][^'"]*['"]\s*,\s*(.*)\);\s*$/;
 
 export interface DisplayOptions {
   boilerplate?: boolean;
@@ -38,6 +41,10 @@ export function displaySource(
   const main = fns.get(MAIN_NAME) ?? null;
   const hidden = [...fns.values()].filter((fn) => fn.isNative || fn.isHidden);
   const rawLines = source.split('\n');
+  const variables = rawLines.flatMap((text) => {
+    const match = HEAP_VARIABLE_PATTERN.exec(text);
+    return match === null ? [] : [match[2]];
+  });
   const asyncHeaders = new Set(
     [...fns.values()]
       .filter((fn) =>
@@ -92,7 +99,11 @@ export function displaySource(
       rawToDisplayLine.push(displayLines.length);
       return;
     }
-    const transformed = transformLine(text, isInsideMain(main, line));
+    const transformed = transformLine(
+      text,
+      isInsideMain(main, line),
+      variables
+    );
     displayLines.push(
       asyncHeaders.has(line)
         ? transformed.replace(/\bfunction\b/, 'async function')
@@ -192,8 +203,15 @@ function isInsideMain(main: FnInfo | null, line: number): boolean {
   return main !== null && line > main.headerLine && line < main.endLine;
 }
 
-function transformLine(text: string, insideMain: boolean): string {
-  let result = text;
+function transformLine(
+  text: string,
+  insideMain: boolean,
+  variables: string[]
+): string {
+  let result = text.replace(HEAP_VARIABLE_PATTERN, '$1let $2 = $3;');
+  for (const name of variables) {
+    result = result.replace(new RegExp(`\\b${name}\\.value\\b`, 'g'), name);
+  }
   if (insideMain && result.startsWith('  ')) {
     result = result.slice(2);
   }

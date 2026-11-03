@@ -22,12 +22,17 @@ interface SessionOptions {
   skipTicks: number;
   bootTicks: number;
   durationTicks: number | undefined;
+  skipIdleTicks: boolean;
 }
 
-class Session {
+const MAX_SKIPPED_TICKS = 10_000;
+const MAX_FIRST_LINE_TICKS = 200;
+
+export class Session {
   machine: Machine | null = null;
   snapshots: Snapshot[] = [];
   error: string | null = null;
+  firstLine: number | null = null;
   finished = false;
   presses = 0;
   clock = 0;
@@ -53,6 +58,7 @@ class Session {
       });
       machine.skip(this.options.skipTicks);
       this.machine = machine;
+      this.firstLine = this.findFirstLine();
       this.snapshots = [machine.snapshot()];
       this.error = null;
     } catch (error) {
@@ -61,6 +67,29 @@ class Session {
       this.error = error instanceof Error ? error.message : String(error);
       this.finished = true;
     }
+  }
+
+  private findFirstLine(): number | null {
+    const probe = new Machine(loadSnippet(this.module, this.source), {
+      bundleMode: this.options.bundleMode,
+      uiRuntime: this.options.uiRuntime,
+      screen: this.options.screen,
+      bootTicks: this.options.bootTicks,
+    });
+    probe.skip(this.options.skipTicks);
+    let clock = 0;
+    for (let index = 0; index < MAX_FIRST_LINE_TICKS; index++) {
+      clock += APP_MS_PER_TICK;
+      const snapshot = probe.tick(clock);
+      const core = snapshot.cores.find((candidate) => candidate.line !== null);
+      if (core !== undefined) {
+        return core.line;
+      }
+      if (snapshot.finished) {
+        return null;
+      }
+    }
+    return null;
   }
 
   get atEnd(): boolean {
@@ -75,14 +104,32 @@ class Session {
     if (this.machine === null || this.atEnd) {
       return false;
     }
-    this.clock += APP_MS_PER_TICK;
-    const snapshot = this.machine.tick(this.clock);
+    const next = this.nextSnapshot(this.machine);
+    const snapshot = this.options.skipIdleTicks
+      ? { ...next, tick: this.snapshots.length }
+      : next;
     this.snapshots.push(snapshot);
     if (snapshot.finished) {
       this.snapshots.push(finalStep(snapshot));
       this.finished = true;
     }
     return true;
+  }
+
+  private nextSnapshot(machine: Machine): Snapshot {
+    let skipped = 0;
+    while (true) {
+      this.clock += APP_MS_PER_TICK;
+      const snapshot = machine.tick(this.clock);
+      if (
+        !this.options.skipIdleTicks ||
+        !isIdle(snapshot) ||
+        skipped >= MAX_SKIPPED_TICKS
+      ) {
+        return snapshot;
+      }
+      skipped += 1;
+    }
   }
 
   press(fn: string): void {
@@ -99,6 +146,14 @@ class Session {
       this.presses += 1;
     }
   }
+}
+
+function isIdle(snapshot: Snapshot): boolean {
+  return (
+    !snapshot.finished &&
+    snapshot.events.length === 0 &&
+    snapshot.cores.every((core) => core.status === 'idle')
+  );
 }
 
 function finalStep(last: Snapshot): Snapshot {
@@ -129,6 +184,7 @@ function finalStep(last: Snapshot): Snapshot {
 
 export interface SimulationState {
   snapshots: Snapshot[];
+  firstLine: number | null;
   displayText: string;
   rawToDisplayLine: number[];
   blockEnds: Map<number, number>;
@@ -162,7 +218,9 @@ export function useSimulation(
   enabled: boolean,
   alwaysOn: boolean,
   boilerplate: boolean,
-  suspended = false
+  suspended = false,
+  autoplay = true,
+  skipIdleTicks = false
 ): SimulationState {
   const display = useMemo(() => {
     try {
@@ -185,6 +243,7 @@ export function useSimulation(
         skipTicks,
         bootTicks,
         durationTicks,
+        skipIdleTicks,
       }),
     [
       module,
@@ -195,6 +254,7 @@ export function useSimulation(
       skipTicks,
       bootTicks,
       durationTicks,
+      skipIdleTicks,
     ]
   );
 
@@ -235,7 +295,7 @@ export function useSimulation(
 
   useEffect(() => {
     const element = containerRef.current;
-    if (!enabled || element === null || startedRef.current) {
+    if (!autoplay || !enabled || element === null || startedRef.current) {
       return;
     }
     if (typeof IntersectionObserver === 'undefined') {
@@ -255,7 +315,7 @@ export function useSimulation(
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [session, enabled]);
+  }, [session, enabled, autoplay]);
 
   const propagationMs = Math.min(PROPAGATION_MS, Math.floor(tickMs / 2));
   useEffect(() => {
@@ -343,6 +403,7 @@ export function useSimulation(
 
   return {
     snapshots: session.snapshots,
+    firstLine: session.firstLine,
     error: session.error,
     displayText: display.text,
     rawToDisplayLine: display.rawToDisplayLine,

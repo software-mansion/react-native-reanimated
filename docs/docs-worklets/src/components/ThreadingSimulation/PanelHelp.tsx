@@ -5,9 +5,15 @@ import styles from './styles.module.css';
 export default function PanelHelp({
   title,
   children,
+  hover = true,
+  className,
+  label = `About ${title}`,
 }: {
   title: string;
   children: string;
+  hover?: boolean;
+  className?: string;
+  label?: string;
 }) {
   const id = useId();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -25,37 +31,53 @@ export default function PanelHelp({
     };
   }, [open]);
 
+  const show = (anchorElement: HTMLElement) => {
+    const popover = popoverRef.current;
+    if (!popover || popover.matches(':popover-open')) return;
+    popover.showPopover();
+    const anchor = anchorElement.getBoundingClientRect();
+    const bounds = popover.getBoundingClientRect();
+    const below = anchor.bottom + 8;
+    setPosition({
+      left: Math.max(
+        16,
+        Math.min(anchor.left, window.innerWidth - bounds.width - 16)
+      ),
+      top: Math.max(
+        16,
+        below + bounds.height <= window.innerHeight - 16
+          ? below
+          : anchor.top - bounds.height - 8
+      ),
+    });
+  };
+
   return (
     <>
       <button
         type="button"
-        className={styles.panelHelp}
-        aria-label={`About ${title}`}
+        className={className ?? styles.panelHelp}
+        aria-label={label}
         aria-expanded={open}
         aria-controls={id}
+        onPointerEnter={(event) => {
+          if (hover && event.pointerType === 'mouse') {
+            show(event.currentTarget);
+          }
+        }}
+        onPointerLeave={(event) => {
+          if (hover && event.pointerType === 'mouse') {
+            popoverRef.current?.hidePopover();
+          }
+        }}
         onClick={(event) => {
           const popover = popoverRef.current;
           if (!popover) return;
-          if (popover.matches(':popover-open')) {
+          if (popover.matches(':popover-open') && !hover) {
             popover.hidePopover();
             return;
           }
-          popover.showPopover();
-          const anchor = event.currentTarget.getBoundingClientRect();
-          const bounds = popover.getBoundingClientRect();
-          const below = anchor.bottom + 8;
-          setPosition({
-            left: Math.max(
-              16,
-              Math.min(anchor.left, window.innerWidth - bounds.width - 16)
-            ),
-            top: Math.max(
-              16,
-              below + bounds.height <= window.innerHeight - 16
-                ? below
-                : anchor.top - bounds.height - 8
-            ),
-          });
+          show(event.currentTarget);
         }}>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <circle cx="10" cy="10" r="7" />

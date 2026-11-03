@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import * as crash from '../../../docs/tutorials/_returning-results/returningCallbackCrash';
 import * as direct from '../../../docs/tutorials/_returning-results/returningDirect';
+import * as firstWorkletSync from '../../../docs/tutorials/_your-first-worklet/firstWorkletSync';
 import { simulate } from '../../simulation';
 import { snippetSource } from '../../simulation/__tests__/helpers';
 import { collectConsoleEntries } from './consoleEntries';
@@ -16,6 +17,7 @@ describe('simulation console', () => {
     assert.deepEqual(collectConsoleEntries(snapshots, last.tick), [
       {
         core: 'worker:worker',
+        runtime: 'worker:worker',
         level: 'error',
         text: error.message,
         tick: last.tick,
@@ -38,10 +40,27 @@ describe('simulation console', () => {
     assert.deepEqual(collectConsoleEntries(snapshots, last.tick + 1), [
       {
         core: 'rn',
+        runtime: 'rn',
         level: 'log',
         text: '42',
         tick: last.tick,
       },
     ]);
+  });
+
+  it('reports the runtime a log runs on next to the thread that runs it', () => {
+    const snapshots = simulate(
+      firstWorkletSync,
+      snippetSource('firstWorkletSync')
+    );
+    const entries = collectConsoleEntries(snapshots, Number.MAX_SAFE_INTEGER);
+    assert.deepEqual(
+      entries.map((entry) => [entry.core, entry.runtime]),
+      [
+        ['rn', 'rn'],
+        ['rn', 'ui'],
+        ['rn', 'worker:worker'],
+      ]
+    );
   });
 });

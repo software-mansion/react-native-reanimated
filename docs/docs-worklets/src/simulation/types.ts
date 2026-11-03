@@ -67,6 +67,7 @@ export type InterceptedApi =
   | 'assertRNRuntime'
   | 'setTimeout'
   | 'setInterval'
+  | 'setImmediate'
   | 'clearInterval'
   | 'promiseThen'
   | 'globalGet'
@@ -80,9 +81,14 @@ export type InterceptedApi =
   | 'shareableRead'
   | 'shareableWrite'
   | 'shareableGetSync'
-  | 'shareableGetAsync';
+  | 'shareableGetAsync'
+  | 'createVariable';
 
-export type MemoryKind = 'serializable' | 'synchronizable' | 'shareable';
+export type MemoryKind =
+  | 'serializable'
+  | 'synchronizable'
+  | 'shareable'
+  | 'variable';
 
 export interface SharedCell {
   id: number;
@@ -93,12 +99,17 @@ export interface SharedCell {
   accessedBy: CoreId | null;
   accessTick: number;
   createdAtTick: number;
+  fixed: boolean;
+  name: string | null;
 }
 
 export interface MemorySnapshot {
   id: number;
   kind: MemoryKind;
   value: string;
+  valueType: string;
+  fixed: boolean;
+  name: string | null;
   host: CoreId | null;
   guests: CoreId[];
   accessedBy: CoreId | null;
@@ -240,7 +251,13 @@ export type SimEvent =
     }
   | { type: 'jobStart'; core: CoreId; job: string; internal: boolean }
   | { type: 'exec'; core: CoreId; line: number; text: string }
-  | { type: 'log'; core: CoreId; line: number; text: string }
+  | {
+      type: 'log';
+      core: CoreId;
+      runtime: CoreId | null;
+      line: number;
+      text: string;
+    }
   | {
       type: 'scheduled';
       core: CoreId;
@@ -255,7 +272,13 @@ export type SimEvent =
   | { type: 'screen'; core: CoreId; line: number; state: ScreenState }
   | { type: 'delivered'; core: CoreId; jobs: string[] }
   | { type: 'jobEnd'; core: CoreId; job: string; internal: boolean }
-  | { type: 'error'; core: CoreId; line: number | null; message: string };
+  | {
+      type: 'error';
+      core: CoreId;
+      runtime: CoreId | null;
+      line: number | null;
+      message: string;
+    };
 
 export type ResourceKind = 'runtime' | 'loop' | 'synchronizable';
 

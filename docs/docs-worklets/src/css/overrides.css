@@ -306,6 +306,18 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
   font-weight: 600;
 }
 
+.docs-version-current .theme-doc-sidebar-menu .sidebar-heading-link {
+  margin-bottom: 24px;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .sidebar-heading-link
+  > .menu__link {
+  color: var(--ifm-font-color-base);
+  font-weight: 600;
+}
+
 .docs-version-current .theme-doc-sidebar-menu a.menu__link[href]:hover,
 .docs-version-current
   .theme-doc-sidebar-menu
@@ -369,11 +381,17 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
 
 /* A simulation may extend outside the article, but never outside the page.
    Clip at the viewport-sized app root so sticky controls keep working. */
-#__docusaurus:has([data-simulation-fullscreen]) {
+#__docusaurus:has(
+  [data-simulation-fullscreen='true'],
+  [data-simulation-fullscreen-transition]
+) {
   overflow-x: clip;
 }
 
-html:has([data-simulation-fullscreen]) {
+html:has(
+  [data-simulation-fullscreen='true'],
+  [data-simulation-fullscreen-transition]
+) {
   scrollbar-gutter: stable;
 }
 
@@ -522,4 +540,17 @@ html:has([data-simulation-fullscreen]) {
 
 .docs-version-current .theme-code-block [class*='codeBlockLines'] {
   padding: 8px 17px;
+}
+
+@media (min-width: 768px) {
+  .theme-doc-markdown
+    [data-figure]:not([data-figure='ThreadingShowcase']):not(
+      [data-figure='ThreadingShowcase'] [data-figure]
+    ):not([data-simulation-fullscreen='true']):not(
+      [data-simulation-fullscreen-transition]
+    ) {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: calc(100% - 4rem);
+  }
 }

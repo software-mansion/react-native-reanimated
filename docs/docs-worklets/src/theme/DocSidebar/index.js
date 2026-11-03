@@ -76,16 +76,9 @@ export default function DocSidebarWrapper(props) {
     if (!hasSections) {
       return props.sidebar;
     }
-    const gettingStarted = {
-      type: 'category',
-      label: 'Getting started',
-      collapsible: false,
-      collapsed: false,
-      items: docsSidebars.gettingStarted,
-    };
     const items =
       section === 'guides'
-        ? [gettingStarted, ...docsSidebars.guides]
+        ? [...docsSidebars.gettingStarted, ...docsSidebars.guides]
         : docsSidebars.api;
 
     return [

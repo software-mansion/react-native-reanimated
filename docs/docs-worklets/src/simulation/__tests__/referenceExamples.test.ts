@@ -31,8 +31,6 @@ function runExample(name: string) {
 describe('reference examples', () => {
   for (const [name, expected] of Object.entries({
     createWorker: [],
-    nativeSchedule: ['[rn] true'],
-    nativeSerializable: ['[rn] Worker copy: 20', '[rn] RN original: 10'],
     apiCreateShareable: ['[rn] hello hello'],
     apiCreateSynchronizable: [],
     apiRegisterCustomSerializable: [
@@ -101,15 +99,25 @@ describe('reference examples', () => {
       '[rn] UI global before: undefined',
       '[rn] UI global after: 42',
     ],
-    rnTimer: [
-      '[rn] Synchronous work runs first',
-      '[rn] Timer callback on the RN Runtime',
+    uiFrames: [
+      '[ui] requestAnimationFrame 1',
+      '[ui] setImmediate',
+      '[ui] setTimeout',
+      '[ui] requestAnimationFrame 2',
     ],
-    uiFrames: ['[ui] UI frame: 1', '[ui] UI frame: 2', '[ui] UI frame: 3'],
     workerInterval: [
-      '[worker:background] Worker tick: 1',
-      '[worker:background] Worker tick: 2',
-      '[worker:background] Worker tick: 3',
+      '[worker:worker] tick: 1',
+      '[worker:worker] tick: 2',
+      '[worker:worker] tick: 3',
+      '[ui] tick: 1',
+      '[rn] tick: 1',
+      '[worker:worker] tick: 4',
+      '[ui] tick: 2',
+      '[rn] tick: 2',
+      '[ui] tick: 3',
+      '[rn] tick: 3',
+      '[ui] tick: 4',
+      '[rn] tick: 4',
     ],
   })) {
     it(`${name} produces the documented result and finishes`, () => {
@@ -118,73 +126,6 @@ describe('reference examples', () => {
       assert.equal(snapshots.at(-1)!.finished, true);
     });
   }
-
-  it('runs the native callback before the queued read and returns its value to RN', () => {
-    const snapshots = runExample('nativeSchedule');
-    const nativeFrames = snapshots.flatMap((snapshot) =>
-      snapshot.cores.filter(
-        (core) => core.nativeFrame && core.job === 'nativeWork()'
-      )
-    );
-    assert.ok(nativeFrames.length > 0);
-    assert.ok(
-      nativeFrames.every((core) => core.id === 'worker:native-example')
-    );
-    const workerJobs = snapshots.flatMap((snapshot) =>
-      snapshot.events.flatMap((event) =>
-        event.type === 'jobStart' && event.core === 'worker:native-example'
-          ? [event.job]
-          : []
-      )
-    );
-    assert.deepEqual(workerJobs, ['nativeWork()', 'readNativeResult()']);
-    assert.deepEqual(formatLogs(snapshots), ['[rn] true']);
-    assert.equal(snapshots.at(-1)!.finished, true);
-    const cores = snapshots.at(-1)!.cores;
-    assert.equal(
-      cores.find((core) => core.id === 'rn')!.globals.nativeWorkFinished,
-      undefined
-    );
-    assert.equal(
-      cores.find((core) => core.id === 'worker:native-example')!.globals
-        .nativeWorkFinished,
-      'true'
-    );
-  });
-
-  it('keeps the Serializable immutable when a native callback changes the worker copy', () => {
-    const snapshots = runExample('nativeSerializable');
-    const workerGlobals = (snapshot: (typeof snapshots)[number]) =>
-      snapshot.cores.find((core) => core.id === 'worker:native-example')
-        ?.globals;
-    const received = snapshots.find(
-      (snapshot) => workerGlobals(snapshot)?.nativeSettings === '{"volume":10}'
-    )!;
-    const changed = snapshots.find(
-      (snapshot) => workerGlobals(snapshot)?.nativeSettings === '{"volume":20}'
-    )!;
-    assert.ok(received);
-    assert.ok(changed);
-    assert.ok(changed.tick > received.tick);
-    assert.ok(
-      snapshots.some((snapshot) =>
-        snapshot.cores.some(
-          (core) =>
-            core.id === 'worker:native-example' &&
-            core.nativeFrame &&
-            core.job?.startsWith('applyNativeSettings(')
-        )
-      )
-    );
-    assert.deepEqual(
-      snapshots.at(-1)!.memory.map((cell) => [cell.kind, cell.value]),
-      [['serializable', '{"volume":10}']]
-    );
-    assert.deepEqual(formatLogs(snapshots), [
-      '[rn] Worker copy: 20',
-      '[rn] RN original: 10',
-    ]);
-  });
 
   it('initializes the new runtime on the creating thread before returning its handle', () => {
     function* initialize() {

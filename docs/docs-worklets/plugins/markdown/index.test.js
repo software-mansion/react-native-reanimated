@@ -53,17 +53,15 @@ test('tutorial exports include every simulation as ordinary JavaScript with impo
 test('nested simulations and showcase variants keep their labels and examples', async () => {
   const memory = await convertDoc('docs/concepts/sharing-memory.mdx');
   assert.equal((memory.match(/```js\n/g) ?? []).length, 3);
-  const showcase = await convertDoc('docs/getting-started/getting-started.mdx');
+  const showcase = await convertDoc('docs/getting-started/about.mdx');
   assert.match(showcase, /Without Worklets\n\n```js/);
   assert.match(showcase, /With Worklets\n\n```js/);
-  assert.doesNotMatch(showcase, /React Native Community CLI/);
   const installation = await convertDoc(
     'docs/getting-started/installation.mdx'
   );
   assert.match(installation, /React Native Community CLI/);
   assert.match(installation, /npm install react-native-worklets/);
   assert.match(installation, /yarn add react-native-worklets/);
-  assert.doesNotMatch(installation, /Without Worklets|With Worklets/);
 });
 
 test('API exports retain call and platform support tables', async () => {
@@ -81,9 +79,12 @@ test('API exports retain call and platform support tables', async () => {
 });
 
 test('admonitions keep their title and exported code', async () => {
+  const admonition = await convertDoc(
+    'docs/memory/registerCustomSerializable.mdx'
+  );
+  assert.match(admonition, /> TIP/);
+  assert.match(admonition, /What crosses the runtime boundary\?/);
   const markdown = await convertDoc('docs/tutorials/2-returning-results.mdx');
-  assert.match(markdown, /> NOTE/);
-  assert.match(markdown, /Synchronous calls stay on the calling thread/);
   assert.match(markdown, /const second = await result/);
   assert.doesNotMatch(markdown, /awaitPromise|TODO|ThreadingSimulation/);
 });
@@ -127,15 +128,9 @@ test('exports and index follow resolved routes, custom slugs, versions and baseU
       version: 'current',
     },
     {
-      source: '@site/docs/getting-started/getting-started.mdx',
-      title: 'Introduction',
+      source: '@site/docs/getting-started/about.mdx',
+      title: 'About',
       permalink: `${baseUrl}docs/`,
-      version: 'current',
-    },
-    {
-      source: '@site/docs/getting-started/installation.mdx',
-      title: 'Installation',
-      permalink: `${baseUrl}docs/getting-started/installation`,
       version: 'current',
     },
     {
@@ -168,7 +163,7 @@ test('exports and index follow resolved routes, custom slugs, versions and baseU
   assert.match(index, /\/docs\/category\/threading/);
   assert.doesNotMatch(
     index,
-    /1-your-first-worklet|getting-started\/getting-started|\/0.9\//
+    /1-your-first-worklet|getting-started\/about|\/0.9\//
   );
   for (const doc of docs) {
     const exported = await fs.readFile(

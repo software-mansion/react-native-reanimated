@@ -1,4 +1,5 @@
 .container {
+  position: relative;
   --sim-bg: var(--swm-blue-light-20);
   --sim-panel: var(--swm-code-panel);
   --sim-border: var(--swm-code-panel-border);
@@ -482,6 +483,12 @@
   color: var(--sim-muted);
   cursor: pointer;
 }
+.simulationInfo {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+}
 .panelHelp:hover,
 .panelHelp[aria-expanded='true'],
 .helpClose:hover {
@@ -712,35 +719,39 @@
 }
 .codeList {
   max-width: 100%;
-  max-height: 36rem;
-  overflow: auto;
+  overflow-x: auto;
   padding: 4px 0 12px;
   font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
   font-size: 13px;
   line-height: 1.8;
 }
+.codeUpcoming {
+  border-left-color: var(--sim-muted);
+  background: color-mix(in srgb, var(--sim-muted) 14%, transparent);
+}
+.codeListPlain .codeLine {
+  padding: 0 6px 0 8px;
+}
 .codeListColumns {
-  max-height: none;
+  font-size: 11.5px;
   column-gap: 16px;
   column-rule: 1px solid var(--sim-border);
 }
 @container code (max-width: 760px) {
   .codeListColumns {
     column-count: auto !important;
-    max-height: 36rem;
   }
 }
 .codeChunk {
   break-inside: avoid;
 }
-.codeChunk + .codeChunk {
-  margin-top: 1em;
-}
 .codeLine {
+  min-height: 1.8em;
   position: relative;
   isolation: isolate;
   display: flex;
-  min-width: 0;
+  width: max-content;
+  min-width: 100%;
   padding: 0 12px 0 0;
   border-left: 3px solid transparent;
 }
@@ -753,10 +764,8 @@
   user-select: none;
 }
 .codeText {
-  flex: 1;
-  min-width: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  flex: 1 0 auto;
+  white-space: pre;
 }
 .codeBlockStart,
 .codeBlockInner,
@@ -823,7 +832,6 @@
   min-height: 72px;
   padding: 10px 12px;
   border-color: color-mix(in srgb, var(--rt-color) 55%, var(--sim-border));
-  border-left: 3px solid var(--rt-color);
   border-radius: 0;
   background: color-mix(in srgb, var(--rt-fill) 70%, var(--sim-panel));
   transition:
@@ -918,7 +926,12 @@
   background: var(--sim-panel);
   transition: background-color 180ms ease;
 }
-.vm.boxActive .vmHeader {
+.vmHeap {
+  background: var(--sim-panel);
+  transition: background-color 180ms ease;
+}
+.vm.boxActive .vmHeader,
+.vm.boxActive .vmHeap {
   background: var(--rt-fill);
 }
 .vmOwner {
@@ -937,6 +950,7 @@
   border-top: 1px solid var(--sim-border);
 }
 .vmLoop {
+  flex: 1 0 auto;
   border-top-color: var(--rt-color);
   background: color-mix(in srgb, var(--rt-fill) 45%, var(--sim-idle-fill));
   transition: background-color 180ms ease;
@@ -991,12 +1005,13 @@
   /* Keep the row stable even when empty, overflowing, or showing exiting jobs. */
   height: 44px;
   min-height: 44px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
 .queueChip {
-  flex: 0 0 auto;
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   padding: 3px 6px;
   border: 1px solid var(--rt-color, var(--sim-border));
   border-radius: 999px;
@@ -1006,9 +1021,14 @@
   line-height: 1.5;
   white-space: nowrap;
 }
+.queueChipName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .queueChipExit {
-  /* Fade at the last position without making the next job wrap into a new row. */
-  position: absolute;
+  flex: 0 0 auto;
+  overflow: hidden;
   pointer-events: none;
   animation: queueExit 320ms ease both;
 }
@@ -1016,6 +1036,7 @@
   border-color: var(--sim-error);
 }
 .queueChipNote {
+  flex: 0 0 auto;
   margin-left: 6px;
   color: var(--sim-error);
   font-size: 10px;
@@ -1036,7 +1057,15 @@
   text-decoration: underline;
 }
 @keyframes queueExit {
+  from {
+    max-width: var(--queue-chip-width, 240px);
+  }
   to {
+    max-width: 0;
+    margin-right: -4px;
+    padding-right: 0;
+    padding-left: 0;
+    border-width: 0;
     opacity: 0;
   }
 }
@@ -1053,7 +1082,8 @@
   border-radius: 6px;
   background: var(--sim-panel);
 }
-.synchronizable {
+.synchronizable,
+.heapCell {
   border-width: 2px;
   border-radius: 0;
   animation: memoryCellEnter 360ms cubic-bezier(0.2, 0, 0, 1) both;
@@ -1072,6 +1102,26 @@
 .synchronizableActive {
   border-color: var(--rt-color);
   background: var(--rt-fill);
+}
+.synchronizable:has(.innerSerializable) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+.innerSerializable {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--rt-color, var(--sim-border));
+  background: transparent;
+}
+.valueType {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--sim-border);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 10px;
 }
 .synchronizable .cellNumber {
   /* Include the padding so single- and double-digit values use the same badge. */
@@ -1137,6 +1187,7 @@
 }
 
 .consolePanel {
+  min-width: 0;
   border: 2px solid var(--sim-border);
   border-radius: 0;
   background: var(--sim-panel);
@@ -1158,6 +1209,12 @@
 }
 .consolePanel[open] .consoleSummary::before {
   content: '−';
+}
+.consoleHeader {
+  cursor: default;
+}
+.consoleHeader::before {
+  content: none;
 }
 .consoleSummary::-webkit-details-marker {
   display: none;
@@ -1205,7 +1262,7 @@
   align-items: baseline;
   gap: 8px;
 }
-.consoleEntry > span:nth-child(2) {
+.consoleText {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -1415,8 +1472,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 180px;
-  height: 180px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   border: 3px solid var(--rt-green, #57b495);
   transform: translate(-50%, -50%) scale(0.1);
@@ -1622,26 +1679,10 @@
     opacity: 0;
   }
 }
-.connectionLegend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  color: var(--sim-muted);
-  font-size: 11px;
-}
-.connectionLegend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.legendFlow,
-.legendQueue {
-  display: inline-block;
-  width: 24px;
-  border-top: 2px solid var(--sim-muted);
-}
-.legendQueue {
-  border-top-style: dashed;
+.coreEmpty {
+  --rt-color: var(--sim-border);
+  --rt-fill: var(--sim-panel);
+  opacity: 0.5;
 }
 @media (prefers-reduced-motion: reduce) {
   .connectionPulse,

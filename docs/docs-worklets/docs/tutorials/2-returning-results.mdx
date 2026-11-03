@@ -28,21 +28,12 @@ Simplest way of returning values. [`runOnUISync`](../threading/runOnUISync.mdx) 
 [`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) functions return the result of a worklet
 function directly to the invoking Runtime:
 
-<ThreadingSimulation module={ReturningSyncSnippet} source={ReturningSyncSource}/>
-
-:::note Synchronous calls stay on the calling thread
-
-A runtime holds JavaScript code and data; a thread executes code in it. Here, `runOnUISync` and
-`runOnRuntimeSync` let the JS thread temporarily acquire the target runtime and run `foo` there,
-waiting if that runtime is busy. This gives synchronous access to that runtime's data while keeping
-the JS thread occupied, which is why the simulation shows it connected to different runtimes.
-
-:::
+<ThreadingSimulation autoplay={false} module={ReturningSyncSnippet} source={ReturningSyncSource}/>
 
 However, dispatching this calculation synchronously doesn't free the calling thread. We could
 also call `foo` directly on the RN Runtime:
 
-<ThreadingSimulation module={ReturningDirectSnippet} source={ReturningDirectSource}/>
+<ThreadingSimulation autoplay={false} module={ReturningDirectSnippet} source={ReturningDirectSource}/>
 
 Both the function and its caller execute on the JS thread and the result is immediately available.
 To let the calling thread do other work while a calculation runs on another thread, we need an
@@ -58,7 +49,7 @@ promise.
 Remember that [`scheduleOnUI`](../threading/scheduleOnUI.mdx) and
 [`scheduleOnRuntime`](../threading/scheduleOnRuntime.mdx) functions do not return a value.
 
-<ThreadingSimulation module={ReturningAsyncSnippet} source={ReturningAsyncSource}/>
+<ThreadingSimulation autoplay={false} module={ReturningAsyncSnippet} source={ReturningAsyncSource}/>
 
 The scheduling runtime is free to keep executing JavaScript code until you await the returned
 promise. In this example we dispatched the invocations on `complexTask` before awaiting - to execute
@@ -70,7 +61,7 @@ Often times, we'll want to return a value through a callback, i.e. update our ap
 based on a result of a worklet function executed on another Worklet Runtime. You might be tempted to
 write something like this:
 
-<ThreadingSimulation module={ReturningCallbackCrashSnippet} source={ReturningCallbackCrashSource}/>
+<ThreadingSimulation autoplay={false} module={ReturningCallbackCrashSnippet} source={ReturningCallbackCrashSource}/>
 
 The worker calculates `result`, but stops when it tries to call `setState(result)`.
 The state setter belongs to the RN Runtime. Passing it to the Worker Runtime gives that runtime a
@@ -81,11 +72,11 @@ The console shows the Worklets error format. The function and runtime names in y
 We have to dispatch it back on the RN Runtime with
 [`scheduleOnRN`](../threading/scheduleOnRN.mdx) function.
 
-<ThreadingSimulation module={ReturningCallbackSnippet} source={ReturningCallbackSource}/>
+<ThreadingSimulation autoplay={false} module={ReturningCallbackSnippet} source={ReturningCallbackSource}/>
 
 Alternatively, you can use a promise and `runOnRuntimeAsync` function:
 
-<ThreadingSimulation module={ReturningPromiseSnippet} source={ReturningPromiseSource}/>
+<ThreadingSimulation autoplay={false} module={ReturningPromiseSnippet} source={ReturningPromiseSource}/>
 
 {/* TODO: add a note about serialization here*/}
 

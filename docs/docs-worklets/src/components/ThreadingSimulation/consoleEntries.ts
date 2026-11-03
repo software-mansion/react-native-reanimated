@@ -2,6 +2,7 @@ import type { CoreId, Snapshot } from '@site/src/simulation';
 
 export interface ConsoleEntry {
   core: CoreId;
+  runtime: CoreId | null;
   level: 'log' | 'error';
   text: string;
   tick: number;
@@ -22,6 +23,7 @@ export function collectConsoleEntries(
       ) {
         entries.push({
           core: event.core,
+          runtime: event.runtime,
           level: event.type,
           text: event.type === 'error' ? event.message : event.text,
           tick: snapshot.tick,

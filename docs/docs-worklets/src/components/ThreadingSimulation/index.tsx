@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import React, { useId, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import type {
@@ -12,6 +12,7 @@ import CpuPanel from './CpuPanel';
 import Disclosure from './Disclosure';
 import Connections from './Connections';
 import { collectConsoleEntries } from './consoleEntries';
+import PanelHelp from './PanelHelp';
 import MemoryPanel from './MemoryPanel';
 import Panel from './Panel';
 import Phone from './Phone';
@@ -37,6 +38,9 @@ interface ThreadingSimulationProps {
   screen?: ScreenState;
   showMemory?: boolean;
   showConsole?: boolean;
+  collapsibleConsole?: boolean;
+  coreCount?: number;
+  autoplay?: boolean;
   skipTicks?: number;
   durationTicks?: number;
   collapsibleCode?: boolean;
@@ -50,9 +54,16 @@ interface ThreadingSimulationProps {
   onTickMsChange?: (tickMs: number) => void;
   cpuFooter?: React.ReactNode;
   bootTicks?: number;
+  skipIdleTicks?: boolean;
 }
 
 const DEFAULT_TICK_MS = 1000;
+const SIMULATION_INFO =
+  'This is a simple simulation of a phone with four cores. It runs on a single thread and executes the cores in a fixed order, so every run gives the same result. Real hardware is not deterministic: on a real phone, threads interleave in ways that this simulation does not show.';
+const IDLE_TICKS_INFO =
+  'When code waits for a timer, for example requestAnimationFrame, some simulations show the waiting as idle ticks, and others skip the idle ticks to stay short.';
+const SKIPS_IDLE_TICKS = 'This simulation skips idle ticks.';
+const SHOWS_IDLE_TICKS = 'This simulation shows idle ticks.';
 export const TICK_STEP_MS = 50;
 export const TICK_MIN_MS = 16;
 export const TICK_MAX_MS = 1000;
@@ -80,6 +91,9 @@ export default function ThreadingSimulation({
   screen,
   showMemory = true,
   showConsole = true,
+  collapsibleConsole = true,
+  coreCount = 4,
+  autoplay = true,
   skipTicks = 0,
   durationTicks,
   collapsibleCode = false,
@@ -93,6 +107,7 @@ export default function ThreadingSimulation({
   onTickMsChange,
   cpuFooter,
   bootTicks = 0,
+  skipIdleTicks = false,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
   const [hasOpened, setHasOpened] = useState(open);
@@ -110,7 +125,12 @@ export default function ThreadingSimulation({
   );
   const [localCodeOpen, setLocalCodeOpen] = useState(!collapsibleCode);
   const [boilerplate, setBoilerplate] = useState(false);
-  const [consoleOpen, setConsoleOpen] = useState(!alwaysOn);
+  const [consoleOpenState, setConsoleOpen] = useState(
+    !alwaysOn || !collapsibleConsole
+  );
+  const consoleOpen = consoleOpenState || !collapsibleConsole;
+  const consoleRef = useRef<HTMLDivElement | null>(null);
+  const consoleAtBottomRef = useRef(true);
   const tickMs =
     onTickMsChange === undefined
       ? localTickMs
@@ -133,12 +153,21 @@ export default function ThreadingSimulation({
     open,
     alwaysOn,
     boilerplate,
-    transitioning
+    transitioning,
+    autoplay,
+    skipIdleTicks
   );
+
+  useLayoutEffect(() => {
+    const element = consoleRef.current;
+    if (element !== null && consoleAtBottomRef.current) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [simulation.tick, consoleOpen, open]);
 
   if (simulation.error !== null) {
     return (
-      <div className={styles.container}>
+      <div data-figure="ThreadingSimulation" className={styles.container}>
         <p className={styles.error}>
           Cannot simulate this snippet: {simulation.error}
         </p>
@@ -148,6 +177,10 @@ export default function ThreadingSimulation({
   }
 
   const snapshot = simulation.snapshots[simulation.tick];
+  const firstDisplayLine =
+    simulation.firstLine === null
+      ? -1
+      : (simulation.rawToDisplayLine[simulation.firstLine] ?? -1);
   const runtimes = collectRuntimes([snapshot]);
   // Only use history up to the displayed tick: stepping back must not reveal future runtimes.
   const past = simulation.snapshots.slice(0, simulation.tick + 1);
@@ -187,6 +220,8 @@ export default function ThreadingSimulation({
       history={history}
       tickMs={tickMs}
       columns={alwaysOn ? codeColumns : 1}
+      lineNumbers={!alwaysOn}
+      upcomingLine={open && simulation.tick === 0 ? firstDisplayLine : -1}
     />
   );
   const boilerplateButton = boilerplateToggle && (
@@ -328,9 +363,11 @@ export default function ThreadingSimulation({
         ))
       ) : (
         <span>
-          {codeOpen
-            ? 'Follow the highlighted line and its matching thread colour.'
-            : 'Compare the threads and press the app button to try it.'}
+          {alwaysOn
+            ? null
+            : codeOpen
+              ? null
+              : 'Compare the threads and press the app button to try it.'}
         </span>
       )}
       <div className={styles.viewControls}>
@@ -360,16 +397,6 @@ export default function ThreadingSimulation({
       </div>
     </div>
   );
-  const legend = (
-    <div className={styles.connectionLegend} data-sim-obstacle>
-      <span>
-        <i className={styles.legendFlow} /> Thread → runtime in use
-      </span>
-      <span>
-        <i className={styles.legendQueue} /> Job queued
-      </span>
-    </div>
-  );
   const machine = (
     <div className={styles.machineArea}>
       <AnimatedGrid
@@ -381,11 +408,12 @@ export default function ThreadingSimulation({
         <Panel
           title="CPU"
           className={styles.areaThreads}
-          help="A thread executes code. A synchronous call can borrow another runtime while staying on the same thread.">
+          help="Put it simply, a thread (a core) executes code and might obtain memory resources (like JavaScript Runtimes) for the duration of the execution.">
           <CpuPanel
             runtimes={runtimes}
             cores={snapshot.cores}
             rawToDisplayLine={simulation.rawToDisplayLine}
+            coreCount={coreCount}
           />
           {cpuFooter}
         </Panel>
@@ -393,7 +421,7 @@ export default function ThreadingSimulation({
           <Panel
             title="Memory"
             className={styles.areaMemory}
-            help="A runtime holds JavaScript state. Its event loop queues work and pauses while another thread borrows the runtime. Shareable Hosts store values here; Guests refer to values on another runtime. Synchronizables live in native memory, accessible from any thread.">
+            help="JavaScript Runtimes and their Event Loops can be thought as exclusive memory resources. Event Loop is usually assigned to one thread and no other thread can obtain it. A Runtime can be obtained by other threads occasionally.">
             <MemoryPanel
               runtimes={everRuntimes.filter(
                 (runtime) =>
@@ -449,57 +477,89 @@ export default function ThreadingSimulation({
       playing={open && simulation.playing}
     />
   );
-  const consolePanel = showConsole && (
-    <details
-      className={styles.consolePanel}
-      data-sim-obstacle
-      hidden={!open}
-      open={consoleOpen}
-      onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
-      <summary className={styles.consoleSummary}>
-        <span>
-          Console <span className={styles.logCount}>{logs.length}</span>
+  const consoleLog = (
+    <div
+      ref={consoleRef}
+      className={styles.console}
+      role="region"
+      tabIndex={0}
+      aria-label="Console output"
+      onScroll={(event) => {
+        const element = event.currentTarget;
+        consoleAtBottomRef.current =
+          element.scrollHeight - element.scrollTop - element.clientHeight < 8;
+      }}>
+      {logs.length === 0 ? (
+        <span className={styles.consoleEmpty}>
+          Output appears here as the code runs.
         </span>
-        <span className={styles.consolePreview}>
-          {logs.at(-1)?.text ?? 'No output yet'}
-        </span>
-      </summary>
-      {consoleOpen && (
-        <div
-          className={styles.console}
-          role="region"
-          tabIndex={0}
-          aria-label="Console output">
-          {logs.length === 0 ? (
-            <span className={styles.consoleEmpty}>
-              Output appears here as the code runs.
+      ) : (
+        logs.map((log, index) => (
+          <div
+            key={index}
+            className={clsx(
+              styles.consoleEntry,
+              log.level === 'error' && styles.consoleError
+            )}>
+            <span className={clsx(styles.badge, runtimeClass(log.thread))}>
+              {threadName(log.thread)}
             </span>
-          ) : (
-            [...logs].reverse().map((log, index) => (
-              <div
-                key={index}
-                className={clsx(
-                  styles.consoleEntry,
-                  log.level === 'error' && styles.consoleError
-                )}>
-                <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
-                  {badgeName(log.runtime.id)}
-                </span>
-                <span>{log.text}</span>
-                <span className={styles.consoleTime}>tick {log.tick}</span>
-              </div>
-            ))
-          )}
-        </div>
+            {log.runtime !== undefined && (
+              <span className={clsx(styles.badge, runtimeClass(log.runtime))}>
+                {badgeName(log.runtime.id)} Runtime
+              </span>
+            )}
+            <span className={styles.consoleText}>{log.text}</span>
+            <span className={styles.consoleTime}>tick {log.tick}</span>
+          </div>
+        ))
       )}
-    </details>
+    </div>
   );
+  const consolePanel =
+    showConsole &&
+    (collapsibleConsole ? (
+      <details
+        className={styles.consolePanel}
+        data-sim-obstacle
+        hidden={!open}
+        open={consoleOpen}
+        onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
+        <summary className={styles.consoleSummary}>
+          <span>
+            Console <span className={styles.logCount}>{logs.length}</span>
+          </span>
+          <span className={styles.consolePreview}>
+            {logs.at(-1)?.text ?? 'No output yet'}
+          </span>
+        </summary>
+        {consoleOpen && consoleLog}
+      </details>
+    ) : (
+      <div className={styles.consolePanel} data-sim-obstacle hidden={!open}>
+        <div className={clsx(styles.consoleSummary, styles.consoleHeader)}>
+          <span>
+            Console <span className={styles.logCount}>{logs.length}</span>
+          </span>
+        </div>
+        {consoleLog}
+      </div>
+    ));
 
   return (
     <div
       ref={containerRef}
+      data-figure="ThreadingSimulation"
       className={clsx(styles.container, phone && styles.containerWithPhone)}
       data-simulation-fullscreen={expanded && open}>
+      {!alwaysOn && open && (
+        <PanelHelp
+          title="About this simulation"
+          label="About this simulation"
+          className={clsx(styles.panelHelp, styles.simulationInfo)}>
+          {`${SIMULATION_INFO} ${IDLE_TICKS_INFO} ${skipIdleTicks ? SKIPS_IDLE_TICKS : SHOWS_IDLE_TICKS}`}
+        </PanelHelp>
+      )}
       {title !== undefined && <p className={styles.title}>{title}</p>}
       <div className={styles.scene}>
         <div className={styles.sceneContent} data-sim-content>
@@ -507,7 +567,6 @@ export default function ThreadingSimulation({
             <>
               {toolbar}
               {activity}
-              {legend}
               <div className={styles.workspace}>
                 {codeOpen && codePanel}
                 {machine}
@@ -550,7 +609,6 @@ export default function ThreadingSimulation({
                 <div className={styles.simulationBody}>
                   {toolbar}
                   {activity}
-                  {legend}
                   {machine}
                 </div>
               </Disclosure>
@@ -673,7 +731,10 @@ const HISTORY_DEPTH = 3;
 function collectLogs(snapshots: Snapshot[], tick: number) {
   const runtimes = collectRuntimes(snapshots);
   return collectConsoleEntries(snapshots, tick).flatMap((entry) => {
-    const runtime = runtimes.find((candidate) => candidate.id === entry.core);
-    return runtime === undefined ? [] : [{ ...entry, runtime }];
+    const thread = runtimes.find((candidate) => candidate.id === entry.core);
+    const runtime = runtimes.find(
+      (candidate) => candidate.id === entry.runtime
+    );
+    return thread === undefined ? [] : [{ ...entry, thread, runtime }];
   });
 }

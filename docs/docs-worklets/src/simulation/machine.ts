@@ -8,7 +8,7 @@ import {
   unpackArguments,
 } from './serialization';
 import type { CustomSerializer, PackedArguments } from './serialization';
-import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
+import { APP_MS_PER_TICK, FRAME_MS, INPUT_DEADLINE_MS } from './types';
 import type {
   CoreId,
   CoreSnapshot,
@@ -281,6 +281,9 @@ export class Machine {
         id: cell.id,
         kind: cell.kind,
         value: formatValue(cell.value),
+        valueType: typeOf(cell.value),
+        fixed: cell.fixed,
+        name: cell.name,
         host: cell.host,
         guests: [...cell.guests],
         accessedBy: cell.accessTick === this.tickCount ? cell.accessedBy : null,
@@ -434,10 +437,16 @@ export class Machine {
     if (api === 'setInterval') {
       return this.addTimer(core, args[0], args[1], true);
     }
+    if (api === 'setImmediate') {
+      return this.addTimer(core, args[0], 0, false, true);
+    }
     if (api === 'clearInterval') {
       for (const candidate of this.cores) {
         candidate.timers = candidate.timers.filter(
           (timer) => timer.id !== args[0]
+        );
+        candidate.macrotasks = candidate.macrotasks.filter(
+          (job) => job.timerId !== args[0]
         );
       }
       return undefined;
@@ -479,7 +488,14 @@ export class Machine {
       return reference;
     }
     if (api === 'createSynchronizable') {
-      return this.createCell(core, 'synchronizable', null, args[0]);
+      const options = args[1] as { fixedType?: boolean } | undefined;
+      return this.createCell(
+        core,
+        'synchronizable',
+        null,
+        args[0],
+        options?.fixedType === true
+      );
     }
     if (api === 'synchronizableRead') {
       return this.readCell(core, args[0]);
@@ -503,6 +519,16 @@ export class Machine {
         );
       }
       return this.createCell(core, 'shareable', host.spec.id, args[1]);
+    }
+    if (api === 'createVariable') {
+      return this.createCell(
+        core,
+        'variable',
+        this.currentRuntime(core),
+        args[1],
+        false,
+        String(args[0])
+      );
     }
     if (api === 'shareableRead') {
       const cell = this.cell(args[0]);
@@ -612,7 +638,8 @@ export class Machine {
     core: CoreState,
     callback: unknown,
     ms: unknown,
-    repeat: boolean
+    repeat: boolean,
+    immediate = false
   ): number {
     if (typeof callback !== 'function') {
       throw new SnippetError('setTimeout expects a function');
@@ -632,13 +659,19 @@ export class Machine {
       );
     }
     const timerId = this.nextJobId++;
-    const wait = Math.max(delay, 0);
+    const runtime = this.currentRuntime(core);
+    const frameQueue = runtime === 'ui' || (runtime === 'rn' && !immediate);
+    const wait = frameQueue ? frameDelay(delay) : Math.max(delay, 0);
     core.timers.push({
       id: timerId,
       due: this.now + wait,
       callback: repeat ? (callback as () => unknown) : () => gen,
       label: this.snippet.fnInfo.get(fn)!.name,
-      interval: repeat ? Math.max(wait, APP_MS_PER_TICK) : undefined,
+      interval: repeat
+        ? frameQueue
+          ? wait
+          : Math.max(wait, APP_MS_PER_TICK)
+        : undefined,
     });
     return timerId;
   }
@@ -720,7 +753,9 @@ export class Machine {
     core: CoreState,
     kind: SharedCell['kind'],
     host: CoreId | null,
-    initial: unknown
+    initial: unknown,
+    fixed = false,
+    name: string | null = null
   ): number {
     const id = this.nextCellId++;
     const cell: SharedCell = {
@@ -732,6 +767,8 @@ export class Machine {
       accessedBy: core.spec.id,
       accessTick: this.tickCount,
       createdAtTick: this.tickCount,
+      fixed,
+      name,
     };
     this.shared.set(id, cell);
     if (kind === 'shareable') {
@@ -1669,6 +1706,7 @@ export class Machine {
       this.emit({
         type: 'log',
         core: core.spec.id,
+        runtime: this.currentRuntime(core),
         line: core.line ?? 0,
         text: formatLogArgs(args),
       });
@@ -1684,13 +1722,20 @@ export class Machine {
 
   private fail(core: CoreState, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
+    const runtime = this.currentRuntime(core);
     core.status = 'error';
     core.error =
       error instanceof RemoteFunctionError ? error.explanation : message;
     core.frames = [];
     core.currentJob = null;
     this.halted = true;
-    this.emit({ type: 'error', core: core.spec.id, line: core.line, message });
+    this.emit({
+      type: 'error',
+      core: core.spec.id,
+      runtime,
+      line: core.line,
+      message,
+    });
   }
 
   private resolveFn(api: ScheduleApi, fn: unknown): SnippetFn {
@@ -1853,4 +1898,18 @@ function mergeScreenPatch(base: ScreenState, patch: ScreenState): ScreenState {
     nativeProps[id] = { ...(nativeProps[id] ?? {}), ...props };
   }
   return { ...base, ...patch, nativeProps };
+}
+
+function typeOf(value: unknown): string {
+  if (value === null) {
+    return 'null';
+  }
+  if (Array.isArray(value)) {
+    return 'array';
+  }
+  return typeof value;
+}
+
+function frameDelay(delay: number): number {
+  return FRAME_MS * Math.max(1, Math.ceil(delay / FRAME_MS));
 }

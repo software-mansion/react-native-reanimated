@@ -12,13 +12,19 @@ interface CpuPanelProps {
   runtimes: RuntimeDescriptor[];
   cores: CoreSnapshot[];
   rawToDisplayLine: number[];
+  coreCount?: number;
 }
 
 export default function CpuPanel({
   runtimes,
   cores,
   rawToDisplayLine,
+  coreCount = 0,
 }: CpuPanelProps) {
+  const emptyCores = Array.from(
+    { length: Math.max(0, coreCount - runtimes.length) },
+    (_, index) => runtimes.length + index
+  );
   return (
     <AnimatedGrid animateResize className={styles.coreGrid}>
       {runtimes.map((runtime) => {
@@ -76,6 +82,21 @@ export default function CpuPanel({
           </div>
         );
       })}
+      {emptyCores.map((coreIndex) => (
+        <div
+          key={`empty-${coreIndex}`}
+          data-sim-obstacle
+          className={clsx(styles.box, styles.core, styles.coreEmpty)}>
+          <div className={styles.coreHeader}>
+            <span className={styles.boxTitle}>Core {coreIndex}</span>
+            <span className={styles.coreStatus}>Idle</span>
+          </div>
+          <span className={styles.boxDetail}>No thread</span>
+          <div className={styles.coreLine}>
+            <span className={styles.coreLineText}>Not used</span>
+          </div>
+        </div>
+      ))}
     </AnimatedGrid>
   );
 }

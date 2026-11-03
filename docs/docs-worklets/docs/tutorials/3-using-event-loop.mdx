@@ -8,8 +8,7 @@ import WorkerIntervalSource from '!!raw-loader!./_using-event-loop/workerInterva
 import * as UiFramesSnippet from './_using-event-loop/uiFrames';
 import UiFramesSource from '!!raw-loader!./_using-event-loop/uiFrames';
 
-import * as RnTimerSnippet from './_using-event-loop/rnTimer';
-import RnTimerSource from '!!raw-loader!./_using-event-loop/rnTimer';
+import FrameSyncDiagram from '@site/src/components/FrameSyncDiagram';
 
 # Using the event loop
 
@@ -21,14 +20,12 @@ applications of worklet functions.
 
 ## Event loops in React Native
 
-The event loops available in React Native are similar to the ones
+The event loops in React Native are similar to the ones
 [in the browser](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model).
-All
-functions to use the event loop, like `setTimeout` or `requestAnimationFrame` are available on the
-[RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) and
-[Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime), but they might behave slightly
-different
-based on the context.
+All event loop functions, like `setTimeout` or `requestAnimationFrame`, are available on the
+[RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) and on
+[Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime), but they can behave slightly
+differently depending on the context.
 
 ## RN Runtime
 
@@ -39,49 +36,64 @@ this Runtime's event loop _is not tied to the native rendering layer_ and
 [`requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)
 is polyfilled with a periodic timer.
 
-The application UI will not wait for the current iteration of the `requestAnimationFrame` queue
+React Native tries to execute the `requestAnimationFrame` queue in sync with the display's refresh rate, a technique known as [vertical synchronization](https://en.wikipedia.org/wiki/Vertical_synchronization) (vsync). With an idle JS thread, the queue runs once per native frame:
+
+<FrameSyncDiagram mode="idle"/>
+
+However, when the JS thread is busy, it cannot keep it and gets out of sync, having to skip frames then flush the queue more often to catch-up with the UI thread. The application UI will not wait for the current iteration of the `requestAnimationFrame` queue
 execution to finish when rendering a frame.
 
-<ThreadingSimulation module={RnTimerSnippet} source={RnTimerSource} tickMs={1000}/>
+<FrameSyncDiagram mode="busy"/>
 
-<ImagePlaceholder>
-  figure showing how the RN Runtime raf queue is disjointed from the native rendering layer
-</ImagePlaceholder>
-
-{/* TODO: video or something showing the discrepancy*/}
+In this recording, the RN Runtime counter on the screen sometimes skips a value, even though the timeline shows a separate queue execution for every value. The counter on the screen is drawn by the UI thread, after React Native has [committed and mounted](https://reactnative.dev/architecture/render-pipeline#phase-2-commit) the update. The UI thread draws only one frame per vsync. When the JS thread falls behind and then commits two updates within one frame, only the second one reaches the screen.
 
 ## UI Runtime
 
 Conversely to the RN Runtime, the UI Runtime's event loop is based entirely on the native rendering
-layer. All operations scheduled with i.e. `requestAnimationFrame` or `setTimeout` will block the
+layer. All operations scheduled with e.g. `requestAnimationFrame` or `setTimeout` will block the
 native render until they finish.
 
-<ImagePlaceholder>
-  figure showing how the UI Runtime raf queue it coupled with the native rendering layer
-</ImagePlaceholder>
+With a busy JS thread, the UI Runtime still gets a `requestAnimationFrame` callback for every native
+frame, and each callback receives the timestamp of its native frame. The UI Runtime callbacks and the
+native callbacks run on the same UI thread, one after the other:
+
+<FrameSyncDiagram mode="ui"/>
+
+Because the UI Runtime runs on the UI thread, its work also delays native rendering. In the
+recording below, the UI Runtime does extra work in each frame, so the UI thread draws a frame only
+about every second vsync. The JS thread is idle, and the RN Runtime still executes its
+`requestAnimationFrame` queue every vsync. Still, the screen shows the RN Runtime counter only when
+the UI thread draws a frame, so the counter skips values too:
+
+<FrameSyncDiagram mode="uibusy"/>
 
 Timers like `setImmediate`, `setTimeout`, `setInterval` on the UI Runtime actually invoke
-`requestAnimationFrame` under the hood. This means that i.e. for 60Hz devices, will be executed only
-once per 16ms, assuming no frame drops.
+`requestAnimationFrame` under the hood. This means that on a 60 Hz device, they run at most once
+per 16 ms, assuming no frame drops.
 
-Schedule the next frame from the UI Runtime callback. This example stops after three frames.
+This example calls `requestAnimationFrame`, `setImmediate`, `setTimeout` and `requestAnimationFrame`
+again on the UI Runtime. All four callbacks go to the same queue, so the `setImmediate` and
+`setTimeout` callbacks run between the two `requestAnimationFrame` callbacks, in the same frame:
 
-<ThreadingSimulation module={UiFramesSnippet} source={UiFramesSource} tickMs={500}/>
-
-For repeating timers, keep the id returned by `setInterval` and call `clearInterval` on the same Runtime when the work is complete.
+<ThreadingSimulation autoplay={false} skipIdleTicks module={UiFramesSnippet} source={UiFramesSource} tickMs={500}/>
 
 ## Worker Runtime
 
-For a Worker Runtime that runs on its dedicated thread, it's very similar to the RN Runtime. It's
+For a Worker Runtime that runs on its dedicated thread, it's very similar to the RN Runtime. Its
 `requestAnimationFrame` queue is polyfilled with a periodic timer.
 
 For advanced use cases, you can create a Worker Runtime
 [without an event loop](../threading/createWorkletRuntime.mdx#enableeventloop) and then implement it
 yourself.
 
-A worker can poll periodically without occupying the JS thread. This interval clears itself after three callbacks.
+React Native also limits timers on the RN Runtime to the display refresh rate. A `setInterval` with
+a delay of 1 ms or 4 ms fires at most once per frame. Worker Runtimes don't have this limit: their
+timers wait for the requested delay, so they can fire as often as you ask. In this example, the
+Worker Runtime, the UI Runtime and the RN Runtime run the same 4 ms interval, and each interval
+clears itself after four callbacks. The Worker Runtime's interval fires every 4 ms, so it finishes
+while the other two have fired only once. The UI Runtime and the RN Runtime fire once per frame:
 
-<ThreadingSimulation module={WorkerIntervalSnippet} source={WorkerIntervalSource} tickMs={500}/>
+<ThreadingSimulation autoplay={false} skipIdleTicks module={WorkerIntervalSnippet} source={WorkerIntervalSource} tickMs={500}/>
 
-In the next chapter we'll learn how to synchronize with data between JavaScript Runtimes using the
+In the next chapter we'll learn how to synchronize data between JavaScript Runtimes using the
 available event loop APIs.

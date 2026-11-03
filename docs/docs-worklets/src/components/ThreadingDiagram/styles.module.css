@@ -149,7 +149,7 @@
   position: absolute;
   top: calc(50% - 3px);
   left: 0;
-  width: 100%;
+  width: calc(100% - 10px);
   height: 6px;
   background-color: var(--dg-arrow);
 }
@@ -158,7 +158,7 @@
   content: '';
   position: absolute;
   top: calc(50% - 8px);
-  right: -1px;
+  right: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
   border-left: 10px solid var(--dg-arrow);
@@ -200,13 +200,13 @@
     top: 0;
     left: calc(50% - 3px);
     width: 6px;
-    height: 100%;
+    height: calc(100% - 10px);
   }
 
   .arrow::after {
     top: auto;
     right: auto;
-    bottom: -2px;
+    bottom: 0;
     left: calc(50% - 7px);
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;

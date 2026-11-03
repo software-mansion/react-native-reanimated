@@ -20,13 +20,14 @@ export default function* main() {
 
   yield scheduleOnRuntime(worker, taskDispatch);
 
-  // Only once in a while
-  function* poll() {
+  function* synchronize() {
     const syncResult = yield result.getSync();
     const asyncResult = yield result.getAsync();
     yield console.log('sync:', syncResult);
     const value = yield awaitPromise(asyncResult);
     yield console.log('async:', value);
   }
-  yield setInterval(poll, 80);
+
+  // Only once in a while
+  yield setInterval(synchronize, 80);
 }

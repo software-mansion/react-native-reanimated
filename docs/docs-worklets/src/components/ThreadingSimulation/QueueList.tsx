@@ -130,7 +130,13 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
           <span
             key={entry.job.id}
             data-queue-job={entry.job.id}
-            style={entry.exitAt !== null ? entry.position : undefined}
+            style={
+              entry.exitAt !== null && entry.position !== undefined
+                ? ({
+                    '--queue-chip-width': `${entry.position.width}px`,
+                  } as React.CSSProperties)
+                : undefined
+            }
             className={clsx(
               styles.queueChip,
               entry.job.pastDue === true && styles.queueChipPastDue,
@@ -145,10 +151,12 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
                     ? 'A job that is past due: its timer fired, or the press waited longer than a frame, while the thread was busy.'
                     : 'A job waiting for the thread to dequeue it. Jobs run in order, one at a time.'
             }>
-            {entry.job.internal
-              ? humanize(entry.job.name)
-              : `${entry.job.name}()`}
-            {entry.job.awaiting === true && ' awaits'}
+            <span className={styles.queueChipName}>
+              {entry.job.internal
+                ? humanize(entry.job.name)
+                : `${entry.job.name}()`}
+              {entry.job.awaiting === true && ' awaits'}
+            </span>
             {entry.job.pastDue === true && (
               <span className={styles.queueChipNote}>past due</span>
             )}

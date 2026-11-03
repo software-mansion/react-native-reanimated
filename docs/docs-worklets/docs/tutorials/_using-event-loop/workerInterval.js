@@ -2,24 +2,28 @@ import {
   clearInterval,
   createWorkletRuntime,
   scheduleOnRuntime,
+  scheduleOnUI,
   setInterval,
 } from '@site/src/simulation/worklets';
 
 export function* startTimer() {
-  'worklet';
   let count = yield 0;
 
-  function* poll() {
+  function* tick() {
     count = yield count + 1;
-    yield console.log('Worker tick:', count);
-    if (count === 3) clearInterval(interval);
+    yield console.log('tick:', count);
+    if (count === 4) {
+      clearInterval(interval);
+    }
     yield;
   }
 
-  const interval = yield setInterval(poll, 32);
+  const interval = yield setInterval(tick, 4);
 }
 
 export default function* main() {
-  const worker = yield createWorkletRuntime({ name: 'background' });
+  const worker = yield createWorkletRuntime();
   yield scheduleOnRuntime(worker, startTimer);
+  yield scheduleOnUI(startTimer);
+  yield startTimer();
 }

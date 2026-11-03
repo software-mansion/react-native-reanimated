@@ -96,6 +96,11 @@ const config = {
 
   themes: ['@docusaurus/theme-mermaid'],
 
+  clientModules:
+    process.env.NODE_ENV === 'development'
+      ? [require.resolve('./src/clientModules/devFigureLabels.ts')]
+      : [],
+
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
 

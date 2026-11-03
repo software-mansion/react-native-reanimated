@@ -39,9 +39,6 @@ export default function MemoryPanel({
   const nativeCells = memory.filter(
     (cell) => cell.kind === 'synchronizable' || cell.kind === 'serializable'
   );
-  const showGlobals = cores.some(
-    (core) => Object.keys(core.globals).length > 0
-  );
   const accessorOf = (cell: MemorySnapshot) =>
     cell.accessedBy === null || !settled
       ? undefined
@@ -70,6 +67,11 @@ export default function MemoryPanel({
           const error = own?.error ?? null;
           const paused =
             running && executor !== undefined && executor.id !== runtime.id;
+          const variables = memory.filter(
+            (cell) => cell.kind === 'variable' && cell.host === runtime.id
+          );
+          const heapOwner = running ? executorDescriptor : undefined;
+          const globals = Object.entries(own?.globals ?? {});
           const shareables = memory.filter(
             (cell) => cell.kind === 'shareable' && cell.host === runtime.id
           );
@@ -101,6 +103,103 @@ export default function MemoryPanel({
                     : `Owner: ${threadName(executorDescriptor)}`}
                 </span>
               </div>
+              {(globals.length > 0 ||
+                variables.length > 0 ||
+                shareables.length > 0 ||
+                guests.length > 0) && (
+                <div className={clsx(styles.vmSection, styles.vmHeap)}>
+                  <span className={styles.vmSectionTitle}>JS heap</span>
+                  <div className={styles.memoryCells}>
+                    {globals.map(([name, value]) => (
+                      <span
+                        key={`global-${name}`}
+                        data-memory-kind="global"
+                        className={clsx(
+                          styles.shareable,
+                          styles.heapCell,
+                          value.length > 12 && styles.globalCell,
+                          heapOwner !== undefined && runtimeClass(heapOwner),
+                          heapOwner !== undefined && styles.shareableActive
+                        )}
+                        data-help={`\`globalThis.${name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
+                        <span className={styles.shareableLabel}>
+                          globalThis.{name}
+                        </span>
+                        <span
+                          className={
+                            value.length > 12
+                              ? styles.globalValue
+                              : styles.cellNumber
+                          }>
+                          {value}
+                        </span>
+                      </span>
+                    ))}
+                    {variables.map((cell) => {
+                      return (
+                        <span
+                          key={`variable-${cell.id}`}
+                          data-memory-kind="variable"
+                          className={clsx(
+                            styles.shareable,
+                            styles.heapCell,
+                            heapOwner !== undefined && runtimeClass(heapOwner),
+                            heapOwner !== undefined && styles.shareableActive
+                          )}
+                          data-help={`The variable \`${cell.name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
+                          <span className={styles.shareableLabel}>
+                            {cell.name}
+                          </span>
+                          <span className={styles.cellNumber}>
+                            {cell.value}
+                          </span>
+                        </span>
+                      );
+                    })}
+                    {shareables.map((cell) => {
+                      return (
+                        <span
+                          key={`shareable-${cell.id}`}
+                          className={clsx(
+                            styles.shareable,
+                            styles.heapCell,
+                            heapOwner !== undefined && runtimeClass(heapOwner),
+                            heapOwner !== undefined && styles.shareableActive
+                          )}
+                          data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
+                          <span className={styles.shareableLabel}>
+                            Shareable Host
+                          </span>
+                          <span className={styles.cellNumber}>
+                            {cell.value}
+                          </span>
+                        </span>
+                      );
+                    })}
+                    {guests.map((cell) => {
+                      return (
+                        <span
+                          key={`guest-${cell.id}`}
+                          className={clsx(
+                            styles.shareable,
+                            styles.heapCell,
+                            styles.shareableGuest,
+                            heapOwner !== undefined && runtimeClass(heapOwner),
+                            heapOwner !== undefined && styles.shareableActive
+                          )}
+                          data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
+                          <span className={styles.shareableLabel}>
+                            Shareable Guest
+                          </span>
+                          <span className={styles.shareableHost}>
+                            {badgeName(cell.host!)}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div
                 className={clsx(
                   styles.vmSection,
@@ -123,76 +222,6 @@ export default function MemoryPanel({
                   <span className={styles.vmError}>{error}</span>
                 )}
               </div>
-              {showGlobals && (
-                <div className={styles.vmSection}>
-                  <span className={styles.vmSectionTitle}>Globals</span>
-                  <div className={styles.memoryCells}>
-                    {Object.entries(own?.globals ?? {}).map(([name, value]) => (
-                      <span
-                        key={name}
-                        className={clsx(styles.shareable, styles.globalCell)}>
-                        <span className={styles.shareableLabel}>{name}</span>
-                        <span className={styles.globalValue}>{value}</span>
-                      </span>
-                    ))}
-                    {Object.keys(own?.globals ?? {}).length === 0 && (
-                      <span className={styles.boxDetail}>
-                        No globals defined
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-              {(shareables.length > 0 || guests.length > 0) && (
-                <div className={styles.vmSection}>
-                  <span className={styles.vmSectionTitle}>Memory</span>
-                  <div className={styles.memoryCells}>
-                    {shareables.map((cell) => {
-                      const accessor = accessorOf(cell);
-                      return (
-                        <span
-                          key={`shareable-${cell.id}`}
-                          className={clsx(
-                            styles.shareable,
-                            accessor !== undefined && runtimeClass(accessor),
-                            accessor !== undefined && styles.shareableActive
-                          )}
-                          data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
-                          <span className={styles.shareableLabel}>
-                            Shareable Host
-                          </span>
-                          <span className={styles.cellNumber}>
-                            {cell.value}
-                          </span>
-                        </span>
-                      );
-                    })}
-                    {guests.map((cell) => {
-                      const accessor = accessorOf(cell);
-                      const active =
-                        accessor !== undefined && accessor.id === runtime.id;
-                      return (
-                        <span
-                          key={`guest-${cell.id}`}
-                          className={clsx(
-                            styles.shareable,
-                            styles.shareableGuest,
-                            active && runtimeClass(accessor),
-                            active && styles.shareableActive
-                          )}
-                          data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
-                          <span className={styles.shareableLabel}>
-                            Shareable Guest
-                          </span>
-                          <span className={styles.shareableHost}>
-                            {badgeName(cell.host!)}
-                          </span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
@@ -200,8 +229,7 @@ export default function MemoryPanel({
       {nativeCells.length > 0 && (
         <div className={styles.nativeRow} data-sim-layout-key="native-memory">
           <div className={styles.nativeHeader}>
-            <span className={styles.nativeLabel}>native heap</span>
-            <span className={styles.boxDetail}>Accessible from any thread</span>
+            <span className={styles.nativeLabel}>Native heap</span>
           </div>
           <div className={styles.memoryCells}>
             {nativeCells.map((cell) => {
@@ -222,11 +250,32 @@ export default function MemoryPanel({
                       : 'A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.'
                   }>
                   <span className={styles.shareableLabel}>
-                    {serializable
-                      ? 'Serializable (immutable)'
-                      : 'Synchronizable'}
+                    {serializable ? (
+                      'Serializable (immutable)'
+                    ) : (
+                      <>
+                        Synchronizable
+                        <span className={styles.valueType}>
+                          {cell.fixed ? 'fixed' : 'dynamic'}
+                        </span>
+                      </>
+                    )}
                   </span>
-                  <span className={styles.cellNumber}>{cell.value}</span>
+                  {serializable || cell.fixed ? (
+                    <span className={styles.cellNumber}>{cell.value}</span>
+                  ) : (
+                    <span
+                      className={styles.innerSerializable}
+                      data-help={`The value of a Synchronizable is stored as a Serializable, here of type ${cell.valueType}.`}>
+                      <span className={styles.shareableLabel}>
+                        Serializable
+                        <span className={styles.valueType}>
+                          {cell.valueType}
+                        </span>
+                      </span>
+                      <span className={styles.cellNumber}>{cell.value}</span>
+                    </span>
+                  )}
                 </span>
               );
             })}

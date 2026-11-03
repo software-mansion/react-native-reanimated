@@ -48,12 +48,11 @@ export default function ThreadingShowcase({
   tickMs = 100,
 }: ThreadingShowcaseProps) {
   const [enabled, setEnabled] = useState(false);
-  const [codeOpen, setCodeOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const variant = enabled ? worklets : single;
 
   return (
-    <div className={styles.showcase}>
+    <div data-figure="ThreadingShowcase" className={styles.showcase}>
       <div className={styles.bar}>
         <button
           type="button"
@@ -88,11 +87,10 @@ export default function ThreadingShowcase({
         screen={INITIAL_SCREEN}
         alwaysOn
         showControls={false}
-        collapsibleCode
         codeColumns={2}
         boilerplateToggle={false}
-        codeOpen={codeOpen}
-        onCodeOpenChange={setCodeOpen}
+        collapsibleConsole={false}
+        coreCount={4}
         fullscreen={fullscreen}
         onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}

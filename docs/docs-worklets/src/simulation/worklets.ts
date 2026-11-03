@@ -190,6 +190,10 @@ export function requestAnimationFrame(callback: () => unknown): number {
   return dispatch('setTimeout', [callback, FRAME_MS]) as number;
 }
 
+export function setImmediate(callback: () => unknown): number {
+  return dispatch('setImmediate', [callback]) as number;
+}
+
 export function setInterval(callback: () => unknown, ms = 0): number {
   return dispatch('setInterval', [callback, ms]) as number;
 }
@@ -313,6 +317,22 @@ export function createShareable<T>(
       return true;
     },
   });
+}
+
+export interface HeapVariable<T> {
+  value: T;
+}
+
+export function heapVariable<T>(name: string, initial: T): HeapVariable<T> {
+  const id = dispatch('createVariable', [name, initial]) as number;
+  return {
+    get value() {
+      return dispatch('shareableRead', [id]) as T;
+    },
+    set value(next: T) {
+      dispatch('shareableWrite', [id, next]);
+    },
+  };
 }
 
 export function readShareableValue(id: number): unknown {

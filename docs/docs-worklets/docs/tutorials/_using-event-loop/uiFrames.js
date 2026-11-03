@@ -1,22 +1,33 @@
 import {
   requestAnimationFrame,
   scheduleOnUI,
+  setImmediate,
+  setTimeout,
 } from '@site/src/simulation/worklets';
 
-export function* startFrames() {
-  'worklet';
-  let frame = yield 0;
+export function* firstFrameCallback() {
+  yield console.log('requestAnimationFrame 1');
+}
 
-  function* onFrame() {
-    frame = yield frame + 1;
-    yield console.log('UI frame:', frame);
-    if (frame < 3) requestAnimationFrame(onFrame);
-    yield;
-  }
+export function* immediateCallback() {
+  yield console.log('setImmediate');
+}
 
-  yield requestAnimationFrame(onFrame);
+export function* timeoutCallback() {
+  yield console.log('setTimeout');
+}
+
+export function* secondFrameCallback() {
+  yield console.log('requestAnimationFrame 2');
+}
+
+export function* scheduleCallbacks() {
+  yield requestAnimationFrame(firstFrameCallback);
+  yield setImmediate(immediateCallback);
+  yield setTimeout(timeoutCallback, 0);
+  yield requestAnimationFrame(secondFrameCallback);
 }
 
 export default function* main() {
-  yield scheduleOnUI(startFrames);
+  yield scheduleOnUI(scheduleCallbacks);
 }

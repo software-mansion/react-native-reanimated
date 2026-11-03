@@ -8,8 +8,12 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   gettingStarted: [
-    'getting-started/getting-started',
-    'getting-started/installation',
+    {
+      type: 'category',
+      label: 'Getting started',
+      link: { type: 'generated-index' },
+      items: ['getting-started/about', 'getting-started/installation'],
+    },
   ],
   guides: [
     {
@@ -39,7 +43,7 @@ const sidebars = {
     {
       type: 'doc',
       id: 'worklets-plugin/about',
-      label: 'Worklets Babel plugin',
+      label: 'Worklets plugin',
     },
   ],
   api: [
@@ -69,7 +73,7 @@ const sidebars = {
     {
       type: 'doc',
       id: 'worklets-plugin/oxc',
-      label: 'OXC plugin',
+      label: 'Oxc plugin',
     },
   ],
 };
