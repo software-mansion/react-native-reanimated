@@ -162,7 +162,7 @@ async function runRound(
     compareWithPrevious,
     roundStart
   );
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await Promise.resolve();
   const rnReport = unpackTogether(
     values,
     arrived,
