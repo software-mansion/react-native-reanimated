@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface REASynchronousPropsRewriter : NSObject <RCTSurfacePresenterObserver>
+@interface REAMountObserver : NSObject <RCTSurfacePresenterObserver>
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
                    reanimatedModuleProxy:

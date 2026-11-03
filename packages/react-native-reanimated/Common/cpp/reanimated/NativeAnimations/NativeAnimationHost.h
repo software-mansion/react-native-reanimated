@@ -12,6 +12,12 @@
 
 namespace reanimated::native_animation {
 
+/// A start whose view has its final state on the host view.
+struct MountedStart {
+  AnimationRequest request;
+  std::weak_ptr<NativeAnimationClient> client;
+};
+
 /// The shared playback boundary. It owns the records of active commands and tracks, resolves target
 /// conflicts, and reports results. Any thread can call it; each operation runs later on the platform UI
 /// thread in call order, with no lock of the caller held.
@@ -20,6 +26,11 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   static std::shared_ptr<NativeAnimationHost> create(std::shared_ptr<NativeAnimationPlatform> platform);
 
   void start(AnimationRequest request, std::weak_ptr<NativeAnimationClient> client);
+  /// UI thread only, in the platform report of a mount of the surface of the requests. Starts each playback
+  /// before it returns, so the mounted state and the playback reach the screen together. It does not wait for
+  /// the queued operations and reads no surface state. The clients get their reports later, before the reports
+  /// of the queued operations.
+  void startAfterMount(const std::vector<MountedStart> &starts);
   /// Stops every track that the command still owns, also after its result. Reports Cancelled when the
   /// command had no result.
   void cancel(const AnimationHandle &handle, TrackStopMode mode);
@@ -28,6 +39,11 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
 
 #ifndef NDEBUG
   void takeTrace(std::function<void(std::vector<TraceEvent>)> receiver);
+  /// UI thread only.
+  TraceRecorder &trace();
+  /// A client that records each report that it gets.
+  std::shared_ptr<NativeAnimationClient> makeTraceClient();
+  void sampleTarget(Tag tag, AnimationTarget target, std::function<void(std::optional<TargetSample>)> receiver);
 #endif
 
  private:
@@ -51,9 +67,16 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   explicit NativeAnimationHost(std::shared_ptr<NativeAnimationPlatform> platform);
 
   void enqueue(Operation operation);
+  void post(std::deque<Operation> &queue, Operation operation);
   void drain();
 
   void runStart(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client);
+  void
+  admit(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client, Deliveries &deliveries);
+#ifndef NDEBUG
+  /// Records the value on screen of each track at the first display frame after the start.
+  void traceFirstFrame(const AnimationRequest &request);
+#endif
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);
   void runCloseSurface(SurfaceId surfaceId);
   void onTrackEnded(const TrackKey &key, bool finished);
@@ -63,7 +86,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void endWithoutAdmission(
       const AnimationHandle &handle,
       const std::weak_ptr<NativeAnimationClient> &client,
-      AnimationResult result);
+      AnimationResult result,
+      Deliveries &deliveries);
   void releaseReplacedTracks(const std::vector<TrackKey> &replacedTracks, Deliveries &deliveries);
   void stopCommand(CommandMap::iterator commandIt, TrackStopMode mode, AnimationOutcome outcome);
   void endCommand(const AnimationHandle &handle, Command &command, AnimationResult result, Deliveries &deliveries);
@@ -78,6 +102,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
 
   std::mutex queueMutex_;
   std::deque<Operation> queue_;
+  /// The client reports of `startAfterMount`, in admission order. They run before `queue_`.
+  std::deque<Operation> mountedStartReports_;
 
   CommandMap commands_;
 #ifndef NDEBUG
