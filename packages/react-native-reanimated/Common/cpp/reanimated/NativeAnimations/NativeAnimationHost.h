@@ -31,6 +31,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// the queued operations and reads no surface state. The clients get their reports later, before the reports
   /// of the queued operations.
   void startAfterMount(const std::vector<MountedStart> &starts);
+  /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
+  bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
   /// Stops every track that the command still owns, also after its result. Reports Cancelled when the
   /// command had no result.
   void cancel(const AnimationHandle &handle, TrackStopMode mode);

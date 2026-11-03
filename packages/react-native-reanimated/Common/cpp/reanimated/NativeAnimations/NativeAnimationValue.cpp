@@ -22,7 +22,35 @@ struct FiniteVisitor {
   }
 };
 
+bool isClose(const double lhs, const double rhs) {
+  return std::abs(lhs - rhs) <= ENDPOINT_TOLERANCE;
+}
+
+struct SameValueVisitor {
+  bool operator()(const double lhs, const double rhs) const {
+    return isClose(lhs, rhs);
+  }
+  bool operator()(const AnimationPoint &lhs, const AnimationPoint &rhs) const {
+    return isClose(lhs.x, rhs.x) && isClose(lhs.y, rhs.y);
+  }
+  bool operator()(const AnimationSize &lhs, const AnimationSize &rhs) const {
+    return isClose(lhs.width, rhs.width) && isClose(lhs.height, rhs.height);
+  }
+  bool operator()(const AnimationColor &lhs, const AnimationColor &rhs) const {
+    return isClose(lhs.red, rhs.red) && isClose(lhs.green, rhs.green) && isClose(lhs.blue, rhs.blue) &&
+        isClose(lhs.alpha, rhs.alpha);
+  }
+  template <typename Lhs, typename Rhs>
+  bool operator()(const Lhs &, const Rhs &) const {
+    return false;
+  }
+};
+
 } // namespace
+
+bool isSameValue(const AnimationValue &lhs, const AnimationValue &rhs) {
+  return std::visit(SameValueVisitor{}, lhs, rhs);
+}
 
 bool valueMatchesTarget(const AnimationValue &value, const AnimationTarget target) {
   switch (target) {
