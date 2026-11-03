@@ -36,6 +36,7 @@ const TARGET_WIDTH = 150;
 const CHILD_OPACITY = 0.8;
 const CHILD_WIDTH = 20;
 const WIDE_CHILD_WIDTH = 50;
+const NEXT_WIDTH = 200;
 
 const transition = SharedTransition.duration(3000).fadeContent();
 const linearFade = SharedTransition.duration(3000)
@@ -273,6 +274,57 @@ function ScreensWithEnteringChild({
             />
           )}
         </Animated.View>
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+const carrierMove = SharedTransition.duration(3000).easing(Easing.linear);
+
+function EnteringCarrier() {
+  const ref = useTestRef('enteringChild');
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag="enteringCarrier"
+      sharedTransitionStyle={carrierMove}
+      entering={childEntering}
+      style={styles.enteringChild}
+    />
+  );
+}
+
+// The entering child of the target carries the next transition.
+function ScreensWithEnteringCarrier({
+  screen,
+}: {
+  screen: 'source' | 'target' | 'next';
+}) {
+  const target = useTestRef('target');
+  const next = useTestRef('next');
+  return (
+    <View style={styles.container}>
+      <Endpoint
+        name="source"
+        active={screen === 'source'}
+        style={styles.source}
+      />
+      <SharedTransitionBoundary isActive={screen === 'target'}>
+        <Animated.View
+          ref={target}
+          sharedTransitionTag="fadeContent"
+          sharedTransitionStyle={transition}
+          style={styles.target}>
+          {screen !== 'source' && <EnteringCarrier />}
+        </Animated.View>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={screen === 'next'}>
+        <Animated.View
+          ref={next}
+          sharedTransitionTag="enteringCarrier"
+          sharedTransitionStyle={carrierMove}
+          style={styles.next}
+        />
       </SharedTransitionBoundary>
     </View>
   );
@@ -684,6 +736,33 @@ describe('Shared transition with fadeContent', () => {
     expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
   });
 
+  test('moves a target child with a held entering animation when it carries the next transition', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringCarrier screen="source" />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringCarrier screen="target" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    const held = await mountedProps('enteringChild');
+    expect(!!held && held.opacity < 0.01).toBe(true);
+
+    await render(<ScreensWithEnteringCarrier screen="next" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectEventually(async () => {
+      const child = await mountedProps('enteringChild');
+      return (
+        !!child &&
+        isBetween(child.width, CHILD_WIDTH + 5, NEXT_WIDTH - 5) &&
+        child.opacity > 0.99
+      );
+    }).toBe(true);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+    expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
+  });
+
   test('fades retained source children out before target children fade in', async () => {
     await render(<Screens showTarget={false} removeSource />);
     await waitForFrames();
@@ -1077,6 +1156,14 @@ const styles = StyleSheet.create({
   },
   wideChild: {
     width: WIDE_CHILD_WIDTH,
+  },
+  next: {
+    position: 'absolute',
+    top: 260,
+    left: 50,
+    width: NEXT_WIDTH,
+    height: 120,
+    backgroundColor: '#22aa55',
   },
   enteringChild: {
     width: 20,

@@ -555,13 +555,14 @@ void LayoutAnimationsProxy::detachCarrier(
       ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
   node->setDetached(true);
   detachedCarriers_.push_back(node);
-  // The run owns the frames of its carrier, so an animation that this transaction queued for
-  // the same view does not start.
+  // The run owns the frames of its carrier, so an animation that this transaction queued or that
+  // waits for a landing for the same view does not start.
   const auto isCarrier = [&node](const PendingNodeAnimation &animation) {
     return animation.node == node;
   };
   std::erase_if(transaction.layout, isCarrier);
   std::erase_if(transaction.entering, isCarrier);
+  std::erase_if(heldEnterings_, isCarrier);
 
   forgetHiddenView(tag);
   // Android writes only the raw props of an Update, so the opacity must be in them to show
