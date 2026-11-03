@@ -38,12 +38,16 @@ type TraceEvent = {
   reason?: string;
   buildFailure?: string;
   transactionNumber?: number;
-  presentationValue?: number[];
 };
 
 type TargetSample = {
   model: number[];
   presentation: number[];
+  /**
+   * The platform key of each physical playback on the view:
+   * `reanimated.<owner>.<generation>.<target>`.
+   */
+  playbackKeys: string[];
   monotonicTimeMs: number;
 };
 
@@ -89,9 +93,7 @@ async function takeTraceOf(tag: number) {
 }
 
 const isHostEvent = ({ event }: TraceEvent) =>
-  event !== 'FirstFrameSampled' &&
-  event !== 'ClientAdmitted' &&
-  event !== 'ClientEnded';
+  event !== 'ClientAdmitted' && event !== 'ClientEnded';
 
 function sample(tag: number, target: string): Promise<TargetSample> {
   return new Promise((resolve, reject) => {
@@ -100,6 +102,9 @@ function sample(tag: number, target: string): Promise<TargetSample> {
     );
   });
 }
+
+const playbackCountOf = ({ playbackKeys }: TargetSample, generation: number) =>
+  playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
 
 function summarize(events: TraceEvent[]) {
   return events
@@ -112,8 +117,10 @@ function summarize(events: TraceEvent[]) {
 }
 
 const callbacks: string[] = [];
+const callbackTimes: Record<string, number> = {};
 function recordCallback(name: string, finished: boolean) {
   callbacks.push(`${name}:${finished}`);
+  callbackTimes[name] = performance.now();
 }
 
 let builderCalls = 0;
@@ -150,11 +157,16 @@ type Leaf = {
 type LayoutOptions = {
   name?: string;
   initialOnlyKey?: string;
+  /**
+   * The builder keeps the UI thread for this time, so the start is late on its
+   * timeline.
+   */
+  blocksForMs?: number;
 };
 
 function layoutOf(
   leaves: Partial<Record<Key, Leaf>>,
-  { name, initialOnlyKey }: LayoutOptions = {}
+  { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
 ): LayoutAnimationFunction {
   return (values) => {
     'worklet';
@@ -311,10 +323,10 @@ describe('native layout starts after the mount of the final state', () => {
     expect(events[1].transactionNumber).toBe(events[0].transactionNumber);
     expect(events[3].endpointPolicy).toBe('MountedModelMustMatchEndpoint');
 
-    const { model, presentation, monotonicTimeMs } = await sample(
-      tag,
-      'PositionX'
-    );
+    const playing = await sample(tag, 'PositionX');
+    const { model, presentation, monotonicTimeMs } = playing;
+    expect(playing.playbackKeys.length).toBe(2);
+    expect(playbackCountOf(playing, events[0].generation)).toBe(2);
     expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
     const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
@@ -326,12 +338,15 @@ describe('native layout starts after the mount of the final state', () => {
     await wait(DURATION);
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     const end = await sample(tag, 'PositionX');
+    expect(end.playbackKeys.length).toBe(0);
     expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
     await render(null);
   });
 });
+
+const PAIR_TOP = 60;
 
 const styles = StyleSheet.create({
   container: {

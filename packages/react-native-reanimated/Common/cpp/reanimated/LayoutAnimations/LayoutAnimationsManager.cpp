@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/debug/react_native_assert.h>
 
@@ -119,6 +120,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
     const size_t maxLeaves) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   return getManagerFunction(rt, "build")
       .call(
           rt,

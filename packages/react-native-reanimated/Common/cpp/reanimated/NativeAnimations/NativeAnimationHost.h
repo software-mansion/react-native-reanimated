@@ -71,13 +71,10 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   void runStart(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client);
   void
   admit(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client, Deliveries &deliveries);
-#ifndef NDEBUG
-  /// Records the value on screen of each track at the first display frame after the start.
-  void traceFirstFrame(const AnimationRequest &request);
-#endif
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);
   void runCloseSurface(SurfaceId surfaceId);
   void onTrackEnded(const TrackKey &key, bool finished);
+  void endTrack(const TrackKey &key, bool finished, Deliveries &deliveries);
 
   std::optional<AnimationResultReason> validate(const AnimationRequest &request) const;
   std::vector<TrackKey> conflictingTracks(const AnimationRequest &request) const;
