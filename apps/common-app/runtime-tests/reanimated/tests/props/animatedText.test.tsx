@@ -1105,6 +1105,7 @@ describe('Animated.Text with a shared value as children', () => {
       await render(
         <LabelAndCounterText label="a" progress={progress} version={0} />
       );
+      const widthAtZero = await readSettled('width');
       progress.value = 100;
       const widthAtHundred = await readSettled('width');
 
@@ -1119,6 +1120,7 @@ describe('Animated.Text with a shared value as children', () => {
         widthAtHundred,
         ComparisonMode.PIXEL
       );
+      expect(widthAtHundred > widthAtZero).toBe(true);
     });
 
     test('re-render during the animation does not reset the text', async () => {
