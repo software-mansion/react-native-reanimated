@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -37,22 +38,15 @@ class CSSPlatformTransitions : public css::CSSPlatformTransitionBackend {
   /// with a Kotlin writer do.
   bool canRoute(const std::string &propertyName, const css::EasingConfig &easing) const override;
 
-  bool startTransition(
-      Tag viewTag,
-      const std::string &propertyName,
-      const css::PlatformValue &fromValue,
-      const css::PlatformValue &toValue,
-      double durationMs,
-      double startTimestampMs,
-      const css::EasingConfig &easing,
-      bool persistent) override;
+  std::optional<css::CSSPlatformTransitionRunId> startTransition(const css::CSSPlatformTransitionRun &run) override;
 
-  void stopTransition(Tag viewTag, const std::string &propertyName) override;
+  void stopTransition(SurfaceId surfaceId, Tag viewTag, const std::string &propertyName) override;
 
  private:
   void replaceEasingId(Tag viewTag, const std::string &propertyName, int easingId);
 
   std::unordered_map<Tag, std::unordered_map<std::string, int>> easingIds_;
+  css::CSSPlatformTransitionRunId nextRunId_{0};
   std::shared_ptr<CSSPlatformEasings> easings_;
   AnimateFunction animate_;
   RemoveFunction remove_;
