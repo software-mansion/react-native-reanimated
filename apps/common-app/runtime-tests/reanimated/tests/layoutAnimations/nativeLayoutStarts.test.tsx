@@ -217,8 +217,8 @@ describe('native layout size', () => {
   });
 
   /**
-   * Android refuses a Width or Height track that changes
-   * (`AndroidNativeAnimationPlatform::playsTarget`): the frame driver plays the
+   * Android refuses a Width or Height track that changes by more than one pixel
+   * (`AndroidNativeAnimationPlatform::canRealize`): the frame driver plays the
    * whole animation on the two boxes.
    */
   const sizeChangeOf = (referenceCase: ReferenceCase): ReferenceCase =>

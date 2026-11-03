@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -52,5 +53,13 @@ enum class AnimationTimingKind : uint8_t {
 bool isValid(const AnimationTiming &timing);
 
 AnimationTimingKind kindOf(const AnimationTiming &timing);
+
+/// The least and the largest progress of a valid timing over its segment, with 0 and 1 in the range. A spring
+/// gives the envelope of its closed form, so its range can be wider than the values that it shows.
+std::pair<double, double> progressRangeOf(const AnimationTiming &timing);
+
+/// `progressRangeOf`, but exact for a spring with no initial velocity: such a spring does not go back past its
+/// start, and its largest progress is its first overshoot.
+std::pair<double, double> narrowProgressRangeOf(const AnimationTiming &timing);
 
 } // namespace reanimated::native_animation

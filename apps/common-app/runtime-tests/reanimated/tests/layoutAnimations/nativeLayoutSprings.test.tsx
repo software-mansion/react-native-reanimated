@@ -73,6 +73,7 @@ import {
   PAIR_TOP,
   PLAYS_HELD_SPRING,
   PLAYS_SIZE_CHANGE,
+  playsSizeChangeOf,
   PLAYS_SPRING_WITH_HOLD,
   POSITION_TOLERANCE,
   PRESENTATION_STAY_MS,
@@ -1289,61 +1290,92 @@ describe('native layout springs', () => {
     }
   );
 
+  /**
+   * The least height is `to - 0.3723 * (100 - to)`: with damping ratio 0.3 and
+   * no initial velocity, the first overshoot is 0.3723 of the change
+   * (`narrowProgressRangeOf`).
+   */
+  const playHeightSpring = (to: number) =>
+    play(
+      {
+        leaves: { height: { spring: physics(0.3, 8) } },
+        places: [
+          { ...START, height: 100 },
+          { ...START, height: to },
+        ],
+        totalMs: 4400,
+        targets: ['Height'],
+      },
+      DEFAULT_SPRING_CALLBACKS
+    );
+
+  const HEIGHT: ScalarKey = { key: 'height', tolerance: POSITION_TOLERANCE };
+
+  const expectHeightEndsAt = (played: Played, to: number) => {
+    const last = played.reads[played.reads.length - 1];
+    for (const value of [
+      last.native?.Height.presentation[0],
+      last.native?.Height.model[0],
+      last.frame?.Height.model[0],
+    ]) {
+      expect(Math.abs((value ?? NaN) - to) <= LAID_OUT_TOLERANCE).toBe(true);
+    }
+  };
+
   test(
     PLAYS_SIZE_CHANGE
-      ? 'an underdamped height spring from 100 to 0 plays natively: NATIVE PLAYING, and it ends at 0'
+      ? 'an underdamped height spring from 100 to 0 can go below 0, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0'
       : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0',
     async () => {
-      const height: ScalarKey = {
-        key: 'height',
-        tolerance: POSITION_TOLERANCE,
-      };
-      const played = await play(
-        {
-          leaves: { height: { spring: physics(0.3, 8) } },
-          places: [
-            { ...START, height: 100 },
-            { ...START, height: 0 },
-          ],
-          totalMs: 4400,
-          targets: ['Height'],
-        },
-        DEFAULT_SPRING_CALLBACKS
-      );
-      const twin = scalarTwinOf(played, height);
+      const played = await playHeightSpring(0);
+      const twin = scalarTwinOf(played, HEIGHT);
       for (const read of played.reads) {
         console.log(
           `SPRING-SIZE | native presentation ${read.native?.Height.presentation[0]}, native model ${read.native?.Height.model[0]}, twin model ${read.frame?.Height.model[0]}, twin frames ${twin.shownAt((read.native?.Height.monotonicTimeMs ?? NaN) - twin.startMs)[0]} at ${read.native?.Height.monotonicTimeMs}`
         );
       }
-      if (PLAYS_SIZE_CHANGE) {
-        expectNativePlaying(played, 'Height');
-      } else {
-        expectFrameDriven(
-          'a height spring',
-          played,
-          'Height',
-          'UnsupportedTarget',
-          twin
-        );
-      }
-      const last = played.reads[played.reads.length - 1];
-      for (const value of [
-        last.native?.Height.presentation[0],
-        last.native?.Height.model[0],
-        last.frame?.Height.model[0],
-      ]) {
-        expect(Math.abs((value ?? NaN) - 0) <= LAID_OUT_TOLERANCE).toBe(true);
-      }
+      expectFrameDriven(
+        'a height spring',
+        played,
+        'Height',
+        'UnsupportedTarget',
+        twin
+      );
+      expectHeightEndsAt(played, 0);
       expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
       await render(null);
     }
   );
 
+  for (const [to, least] of [[40, 17.7]]) {
+    test(
+      PLAYS_SIZE_CHANGE
+        ? `an underdamped height spring from 100 to ${to} stays above 0 (least ${least}), so it plays natively: NATIVE PLAYING, and it ends at ${to}`
+        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at ${to}`,
+      async () => {
+        const played = await playHeightSpring(to);
+        if (PLAYS_SIZE_CHANGE) {
+          expectNativePlaying(played, 'Height');
+        } else {
+          expectFrameDriven(
+            'a height spring that stays above 0',
+            played,
+            'Height',
+            'UnsupportedTarget',
+            scalarTwinOf(played, HEIGHT)
+          );
+        }
+        expectHeightEndsAt(played, to);
+        expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
+        await render(null);
+      }
+    );
+  }
+
   movingGeometryTest(
     PLAYS_SIZE_CHANGE
       ? 'LinearTransition.springify() with a change of the position plays natively: NATIVE PLAYING for X and Y, NATIVE IMMEDIATE for a size with no change, NATIVE PLAYING for a size that the layout rounds'
-      : 'LinearTransition.springify() with a change of the position: FRAME-DRIVEN, UnsupportedTarget for X and Y when the layout changes a size, else NATIVE PLAYING for X and Y and NATIVE IMMEDIATE for a size with no change',
+      : 'LinearTransition.springify() with a change of the position: FRAME-DRIVEN, UnsupportedTarget for X and Y when the layout changes a size by more than one pixel, else NATIVE PLAYING for X and Y, NATIVE IMMEDIATE for a size with no change, and NATIVE PLAYING for a size that the layout rounds',
     async () => {
       const played = await play(
         {
@@ -1384,10 +1416,7 @@ describe('native layout springs', () => {
       console.log(
         `SPRING-SPRINGIFY | layout values of the native box: ${JSON.stringify(layoutValues)}; ${sizeReads.join('; ')}; after TrackStarted:PositionX: last read ${sinceStartedX(xReads[xReads.length - 1]?.monotonicTimeMs)}, TrackEnded ${trackEnds.join(', ')}`
       );
-      if (
-        !PLAYS_SIZE_CHANGE &&
-        sizes.some(({ change }) => !isNear(change, 0))
-      ) {
+      if (!sizes.every(({ change }) => playsSizeChangeOf(change))) {
         for (const key of [POSITION_X, POSITION_Y]) {
           expectFrameDriven(
             'LinearTransition.springify()',
@@ -1404,7 +1433,7 @@ describe('native layout springs', () => {
       for (const target of ['PositionX', 'PositionY']) {
         expectNativePlaying(played, target);
       }
-      expect(sizes.some(({ change }) => change === 0)).toBe(true);
+      expect(sizes.some(({ change }) => isNear(change, 0))).toBe(true);
       for (const { target, change } of sizes) {
         if (change === 0) {
           const afterEnd = await sampleTargets(played.tags.native, [target]);
@@ -1414,7 +1443,6 @@ describe('native layout springs', () => {
             ]).kind
           ).toBe('native immediate');
         } else {
-          expect(Math.abs(change) <= LAID_OUT_TOLERANCE).toBe(true);
           expectNativePlaying(played, target);
         }
       }

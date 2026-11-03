@@ -115,6 +115,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
 }
 
 jsi::Object LayoutAnimationsManager::captureLiveLayoutLeaves(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::captureLiveLayoutLeaves");
   return getManagerFunction(rt, "captureLiveLeaves").call(rt, toJSValue(rt, liveLeaves)).asObject(rt);
 }
 
@@ -155,10 +156,12 @@ void LayoutAnimationsManager::finishBuiltLayoutAnimation(
     jsi::Runtime &rt,
     const uint64_t buildId,
     const bool finished) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::finishBuiltLayoutAnimation");
   getManagerFunction(rt, "finishBuilt").call(rt, jsi::Value(static_cast<double>(buildId)), jsi::Value(finished));
 }
 
 void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, const uint64_t buildId) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::releaseBuiltLayoutAnimation");
   getManagerFunction(rt, "releaseBuilt").call(rt, jsi::Value(static_cast<double>(buildId)));
 }
 
@@ -229,5 +232,25 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
+
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+ContainerSizes LayoutAnimationsManager::containerSizes() {
+  ContainerSizes sizes;
+  {
+    const std::lock_guard lock(animationsMutex_);
+    sizes = {
+        {"enteringAnimationsForNativeID", enteringAnimationsForNativeID_.size()},
+        {"sharedTransitionsForNativeID", sharedTransitionsForNativeID_.size()},
+        {"sharedTransitions", sharedTransitions_.size()},
+        {"enteringAnimations", enteringAnimations_.size()},
+        {"exitingAnimations", exitingAnimations_.size()},
+        {"layoutAnimations", layoutAnimations_.size()},
+        {"shouldAnimateExitingForTag", shouldAnimateExitingForTag_.size()}};
+  }
+  const std::lock_guard lock(pendingConfigUpdatesMutex_);
+  sizes.emplace("pendingConfigUpdates", pendingConfigUpdates_.size());
+  return sizes;
+}
+#endif
 
 } // namespace reanimated

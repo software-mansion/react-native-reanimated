@@ -98,10 +98,19 @@ export const appleSample = (tag: number, target: string) =>
 const IS_APPLE = Platform.OS === 'ios';
 
 /**
- * Android refuses a changing Width or Height
- * (`AndroidNativeAnimationPlatform::playsTarget`).
+ * Android refuses a Width or Height change of more than one pixel
+ * (`AndroidNativeAnimationPlatform::canRealize`). Apple refuses a Width or
+ * Height track that can go below 0.
  */
 export const PLAYS_SIZE_CHANGE = IS_APPLE;
+export const ONE_PIXEL = 1 / PixelRatio.get();
+/**
+ * Android plays a Width or Height change of at most one pixel and a tolerance
+ * of 0.01 (`ENDPOINT_TOLERANCE`) as a hold: the view shows the end size from
+ * the mount.
+ */
+export const playsSizeChangeOf = (change: number) =>
+  PLAYS_SIZE_CHANGE || Math.abs(change) <= ONE_PIXEL + 0.01;
 /**
  * Android refuses RotateX, RotateY, and Perspective in a moving transform
  * (`isPlanar`).
@@ -881,6 +890,15 @@ export type ShownBands = {
 export const declaredBandOf = (track: TimedTrack, readTimeMs: number): Band =>
   stayBandsOf([track], readTimeMs)[0].removalWindow;
 
+/**
+ * The frame times from `origin` that a read in the band `read` of the sample
+ * clock can show.
+ */
+export const frameTimesOf = (read: Band, origin: Band): Band => ({
+  from: read.from - PRESENTATION_STAY_MS - origin.to,
+  to: read.to - origin.from,
+});
+
 /** The band of the sample clock of a draw at `timeMs` of the draw clock. */
 export const drawnBandOf = (timeMs: number, clockOffset: Band): Band => ({
   from: timeMs + clockOffset.from,
@@ -1051,6 +1069,60 @@ export const choicesOf = <TItem,>(lists: TItem[][]) =>
   );
 
 export const uncertaintyOf = ({ from, to }: Band) => (to - from) / 2;
+
+/** The property of the shadow tree of each layout key. */
+export const LAYOUT_PROPS = {
+  originX: 'left',
+  originY: 'top',
+  width: 'width',
+  height: 'height',
+} as const;
+
+export type LayoutKey = keyof typeof LAYOUT_PROPS;
+
+export const LAYOUT_KEYS = Object.keys(LAYOUT_PROPS) as LayoutKey[];
+
+export type LaidOutValues = Record<LayoutKey, number>;
+
+/**
+ * A laid-out value is a whole number of pixels; the shadow tree gives it with
+ * float noise (measured: 49.90477 and 49.904755 for 131 px at 2.625).
+ */
+export const onPixelGrid = (value: number) =>
+  Math.round(value * PixelRatio.get()) / PixelRatio.get();
+
+export async function laidOutValuesOf(refName: string): Promise<LaidOutValues> {
+  const component = getTestComponent(refName);
+  const values: Partial<LaidOutValues> = {};
+  for (const key of LAYOUT_KEYS) {
+    values[key] = onPixelGrid(
+      Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]))
+    );
+  }
+  return values as LaidOutValues;
+}
+
+export const shadowLayoutsOf = async () => ({
+  native: await laidOutValuesOf(BOX_REF),
+  frame: await laidOutValuesOf(FRAME_BOX_REF),
+});
+
+export type BoxLayouts = Awaited<ReturnType<typeof shadowLayoutsOf>>;
+
+/**
+ * The position of the mounted parent of a box at rest: its `Position` model
+ * minus the layer position of its laid-out values.
+ */
+export async function mountOffsetOf(tag: number, refName: string) {
+  const [position, laidOut] = await Promise.all([
+    sample(tag, 'Position'),
+    laidOutValuesOf(refName),
+  ]);
+  return {
+    x: position.model[0] - layerPositionOf(laidOut.originX, laidOut.width),
+    y: position.model[1] - layerPositionOf(laidOut.originY, laidOut.height),
+  };
+}
 
 /**
  * The position of a layer on one axis for an origin and a size of its box: the
@@ -2751,8 +2823,11 @@ export type FrameRecord = {
    * it replaced, which had its end value (`onStart` of `withTiming`).
    */
   adoptedStart?: { timeMs: number; value: number | string };
-  /** Each frame that the leaf got, with the value that it wrote. */
-  frames: { timeMs: number; value: number | string }[];
+  /**
+   * Each frame that the leaf got, with the value that it wrote and the time of
+   * the animation clock when its frame function ran.
+   */
+  frames: { timeMs: number; value: number | string; ranMs: number }[];
   /**
    * The numbers of the values that the builder got: the laid-out values of the
    * view, on the pixel grid of the device.
@@ -2836,7 +2911,11 @@ export function frameRecordedOf(box: string, animation: AnimationSource) {
         const onFrame = self.onFrame;
         recordedOnFrame = (animation, frameTimeMs) => {
           const finished = onFrame(animation, frameTimeMs);
-          record.frames.push({ timeMs: frameTimeMs, value: animation.current });
+          record.frames.push({
+            timeMs: frameTimeMs,
+            value: animation.current,
+            ranMs: global._getAnimationTimestamp(),
+          });
           return finished;
         };
         self.onFrame = recordedOnFrame;
@@ -3017,7 +3096,10 @@ export const OPACITY_TOLERANCE = 0.01;
 
 export const pairLayoutsOf = (leaves: (hasCallback: boolean) => Leaves) => ({
   nativeLayout: layoutOf(leaves(false), { name: 'native' }),
-  frameLayout: layoutOf(leaves(true), { name: 'frame' }),
+  frameLayout: frameRecordedOf(
+    'frame',
+    layoutOf(leaves(true), { name: 'frame' })
+  ),
 });
 
 type PairLayoutFunctions = ReturnType<typeof pairLayoutsOf>;

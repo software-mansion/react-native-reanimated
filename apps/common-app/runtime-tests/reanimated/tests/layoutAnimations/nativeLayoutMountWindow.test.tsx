@@ -101,7 +101,7 @@ describe('native layout mount window', () => {
           await wait(DURATION + SETTLE_MS);
         }
       );
-      logDrawnValues('a start in its dispatch', samples, renderStartMs);
+      logDrawnValues('a start in its dispatch', samples, { renderStartMs });
       const events = await takeTrace();
       const ofView = events.filter((event) => event.tag === tag);
       expect(summarize(ofView.filter(isHostEvent).slice(0, 6))).toBe(
