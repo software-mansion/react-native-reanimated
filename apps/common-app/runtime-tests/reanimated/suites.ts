@@ -86,6 +86,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/props/mountedViewProps.test');
       require('./tests/props/hostReplacement.test');
       require('./tests/props/cssArrayKeyframes.test');
+      require('./tests/props/settledPropsLeak.test');
     },
   },
   {
