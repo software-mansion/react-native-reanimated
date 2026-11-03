@@ -263,13 +263,13 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     const std::shared_ptr<Serializable> &config) const {
   auto currentView = before;
   const auto activeAnimationIt = layoutAnimations_.find(tag);
-  if (type == LayoutAnimationType::ENTERING) {
-    currentView = after;
-  } else if (activeAnimationIt != layoutAnimations_.end()) {
-    currentView = activeAnimationIt->second.currentView;
-  } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
-             completedAnimationIt != completedAnimations_.end()) {
-    currentView = completedAnimationIt->second.currentView;
+  if (type != LayoutAnimationType::ENTERING) {
+    if (activeAnimationIt != layoutAnimations_.end()) {
+      currentView = activeAnimationIt->second.currentView;
+    } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
+               completedAnimationIt != completedAnimations_.end()) {
+      currentView = completedAnimationIt->second.currentView;
+    }
   }
 
   if (activeAnimationIt != layoutAnimations_.end()) {

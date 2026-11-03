@@ -1661,8 +1661,10 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     return;
   }
   // The frame driver writes the initial values after the mount of the view.
-  transaction.filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-      insertedView, cloneViewWithoutOpacity(insertedView, propsParserContext), start.parentTag));
+  auto hiddenView = cloneViewWithoutOpacity(insertedView, propsParserContext);
+  transaction.filteredMutations.push_back(
+      ShadowViewMutation::UpdateMutation(insertedView, hiddenView, start.parentTag));
+  start.before = std::move(hiddenView);
   enqueueLayoutAnimation(std::move(start));
 }
 
