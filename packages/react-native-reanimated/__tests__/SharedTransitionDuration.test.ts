@@ -18,4 +18,9 @@ describe('layout animation duration', () => {
   test('other builders keep a zero duration', () => {
     expect(FadeIn.duration(0).getAnimationAndConfig()[1].duration).toBe(0);
   });
+
+  test('builders still drop a zero spring value', () => {
+    const config = FadeIn.springify().damping(0).getAnimationAndConfig()[1];
+    expect(config).not.toHaveProperty('damping');
+  });
 });
