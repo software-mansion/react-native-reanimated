@@ -792,6 +792,7 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
     clippedRow?.row.native[targets[0]].monotonicTimeMs
   );
   const frameRecords = readFrameRecords();
+  logFrameCallbackLag(frameRecords);
   const frameChecks = frameChecksOf(
     builtKeys.flat(),
     frameRecords,
@@ -2729,6 +2730,7 @@ export const MODEL_TOLERANCE: MatrixTolerance = {
 };
 
 const MODEL_ROWS_IN_FULL = 10;
+const MODEL_READ_FRAMES = 5;
 
 /**
  * The places of the frames of statement M from the last frame at or before a
@@ -2824,10 +2826,30 @@ const describeSpread = (sorted: number[]) =>
     : `smallest ${sorted[0].toFixed(3)}, median ${sorted[Math.floor(sorted.length / 2)].toFixed(3)}, largest ${sorted[sorted.length - 1].toFixed(3)}`;
 
 /**
+ * Prints the frame callback lag of each box: the time from the frame time of
+ * each frame of the frame driver to the run of its frame function.
+ */
+function logFrameCallbackLag(frameRecords: FrameRecord[]) {
+  for (const box of BOX_NAMES) {
+    const lags = frameRecords
+      .filter((record) => record.box === box)
+      .flatMap(({ frames }) =>
+        frames.map(({ timeMs, ranMs }) => ranMs - timeMs)
+      );
+    if (lags.length > 0) {
+      console.log(
+        `FRAME-LAG | ${box} | frames ${lags.length} | frame function run after the frame time, ms: ${describeSpread(sortedOf(lags))}`
+      );
+    }
+  }
+}
+
+/**
  * The matrix of each frame of the frame driver on `target` of the native box,
  * on the sample clock in time order, and the mount of the first frame update of
  * its track. The frames of two records of one leaf can overlap in time
- * (Android).
+ * (Android); a frame time has the frame of its last record, as in
+ * `frameMatricesOf`.
  */
 function modelFramesOf(
   { events, frameRecords, clockOffset }: Played,
@@ -2849,7 +2871,10 @@ function modelFramesOf(
       timeMs: timeMs + middleOf(clockOffset),
       cells,
     }))
-    .sort((first, second) => first.timeMs - second.timeMs);
+    .sort((first, second) => first.timeMs - second.timeMs)
+    .filter(
+      ({ timeMs }, index, sorted) => sorted[index + 1]?.timeMs !== timeMs
+    );
   if (frames.length === 0) {
     throw new Error(
       `The frame driver recorded no frame of the ${target} target of the native box.`
@@ -2936,6 +2961,16 @@ function describeModelRead(
     `the frame before it: ${describeFrame(framesBefore - 2)}`,
     `first frame after the read: ${describeFrame(framesBefore)}`,
     `the frame two before the last: ${describeFrame(framesBefore - 3)}`,
+    `frames from ${MODEL_READ_FRAMES} before the last to the first after the read: ${frames
+      .slice(
+        Math.max(0, framesBefore - MODEL_READ_FRAMES - 1),
+        framesBefore + 1
+      )
+      .map(
+        ({ timeMs: frameMs, cells }) =>
+          `${(timeMs - frameMs).toFixed(3)} ms before with ${cells.join()}`
+      )
+      .join('; ')}`,
   ].join(', ');
 }
 

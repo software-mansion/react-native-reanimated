@@ -86,7 +86,7 @@
  * of a run under a load is a record of the quantities.
  */
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import {
   Easing,
@@ -154,6 +154,7 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
+  has3D,
   hasNativeLayoutRoute,
   isSameLeaf,
   isScalarTrack,
@@ -169,6 +170,8 @@ import {
   operationPairChangesAt,
   phaseStartsLateOf,
   playbackIdsOf,
+  PLAYS_3D_OPERATIONS,
+  playsSizeChangeOf,
   SAMPLED_OPACITY_TOLERANCE,
   sampleOpacity,
   sampleRows,
@@ -263,6 +266,49 @@ const LINE_WRITERS: {
   },
 ];
 
+/**
+ * The case with the route of the platform. Android refuses a moving 3D
+ * operation and a size change of more than one pixel with `UnsupportedTarget`,
+ * and the whole animation is frame-driven, as in the suites of these cases.
+ */
+function platformCaseOf(referenceCase: ReferenceCase): ReferenceCase {
+  const isRefused =
+    (!PLAYS_3D_OPERATIONS && has3D(referenceCase.operations)) ||
+    !playsSizeChangesOf(referenceCase);
+  return isRefused && !referenceCase.isFrameDriven
+    ? {
+        ...referenceCase,
+        isFrameDriven: true,
+        refusedWith: 'UnsupportedTarget',
+      }
+    : referenceCase;
+}
+
+function playsSizeChangesOf({ places }: ReferenceCase) {
+  const first = places[0];
+  const last = places[places.length - 1];
+  return (
+    !first ||
+    !last ||
+    (playsSizeChangeOf((last.width ?? 0) - (first.width ?? 0)) &&
+      playsSizeChangeOf((last.height ?? 0) - (first.height ?? 0)))
+  );
+}
+
+/**
+ * The cells of a `Transform` sample of the platform. An Android sample is the
+ * 2D matrix of the view (`modelTransformCells`, GeometryWriter.kt; measured:
+ * cell 10 is 1 in the presentation and the model of a scale), so its Z cells
+ * are the cells of the identity.
+ */
+const Z_CELLS = [2, 6, 8, 9, 10, 11, 14];
+const sampleCellsOf = (cells: number[]) =>
+  Platform.OS === 'android'
+    ? cells.map((cell, index) =>
+        Z_CELLS.includes(index) ? Number(index === 10) : cell
+      )
+    : cells;
+
 describe('native layout live clock', () => {
   if (!hasNativeLayoutRoute) {
     return;
@@ -273,7 +319,7 @@ describe('native layout live clock', () => {
     ...LIVE_CLOCK_CASES,
   })) {
     test(`${caseName}: the two boxes agree on the wall clock`, async () => {
-      const played = await play(referenceCase);
+      const played = await play(platformCaseOf(referenceCase));
       const expectIn = (
         quantity: string,
         value: number,
@@ -824,7 +870,7 @@ function twinWritesOf(played: Played, operations: PlayedTrack[]): TwinWrite[] {
     );
     return values.length < operations.length
       ? []
-      : [{ values, cells: cellsOf(values, 'rest') }];
+      : [{ values, cells: sampleCellsOf(cellsOf(values, 'rest')) }];
   });
 }
 
@@ -877,7 +923,7 @@ function cellsPairsOf(
     framesBeforeOf,
     samples
   );
-  const twinCells = cellsOf(shown.values, layer);
+  const twinCells = sampleCellsOf(cellsOf(shown.values, layer));
   const gaps = twinCells.map((cell, index) =>
     Math.abs(native.presentation[index] - cell)
   );

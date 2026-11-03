@@ -35,6 +35,7 @@ import {
   CSS_HOST_TIMING_KINDS,
   hasNativeCSSTransitions,
   nativeAnimationHostExists,
+  sample,
   takeTrace,
 } from '../nativeAnimationObservation';
 
@@ -203,9 +204,11 @@ async function expectRunOnLoop(
   if (hasHost) {
     expect(summarize(await takeTraceOf(tag))).toBe('');
   }
-  expect(
-    Number(await getTestComponent(BOX_REF).getAnimatedStyle('opacity'))
-  ).toBeWithinRange(0.21, 0.99);
+  // With synchronous props the loop writes the view and not the shadow tree.
+  const shownOpacity = hasHost
+    ? (await sample(tag, 'Opacity')).presentation[0]
+    : Number(await getTestComponent(BOX_REF).getAnimatedStyle('opacity'));
+  expect(shownOpacity).toBeWithinRange(0.21, 0.99);
 }
 
 async function expectRunOnHost(

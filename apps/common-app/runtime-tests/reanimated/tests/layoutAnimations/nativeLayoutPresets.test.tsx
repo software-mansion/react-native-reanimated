@@ -16,7 +16,7 @@
  * EntryExitTransition has no leaves of the kit.
  */
 import React, { useEffect } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, PixelRatio, StyleSheet, View } from 'react-native';
 import type {
   BaseAnimationBuilder,
   LayoutAnimation,
@@ -181,6 +181,8 @@ const DELAY = 300;
 const CELL_HEIGHT = 160;
 const REST: BoxFrame = { left: 60, top: 20, width: 50, height: 50 };
 const MOVED: BoxFrame = { left: 150, top: 60, width: 90, height: 70 };
+/** The device lays out a position on its pixel grid. */
+const laidOut = (position: number) => PixelRatio.roundToNearestPixel(position);
 const widerBy = (change: number): BoxFrame => ({
   ...REST,
   width: REST.width + change,
@@ -318,7 +320,7 @@ const ENTERING: PresetRow[] = [
   [
     SlideInUp,
     'PositionY',
-    declare({ originY: { initial: -WINDOW.height - REST.top } }),
+    declare({ originY: { initial: -WINDOW.height - laidOut(REST.top) } }),
   ],
   [SlideInDown, 'PositionY', declare({ originY: { initial: WINDOW.height } })],
   [StretchInX, 'Transform', transformOf(['scaleX', 0, 1])],
@@ -424,12 +426,12 @@ const EXITING: PresetRow[] = [
   [
     SlideOutLeft,
     'PositionX',
-    declare({ originX: { to: -WINDOW.width - REST.left } }),
+    declare({ originX: { to: -WINDOW.width - laidOut(REST.left) } }),
   ],
   [
     SlideOutUp,
     'PositionY',
-    declare({ originY: { to: -WINDOW.height - REST.top } }),
+    declare({ originY: { to: -WINDOW.height - laidOut(REST.top) } }),
   ],
   [SlideOutDown, 'PositionY', declare({ originY: { to: WINDOW.height } })],
   [StretchOutX, 'Transform', transformOf(['scaleX', 1, 0])],
@@ -622,8 +624,8 @@ const SEQUENCED = sequencedOf(['originX', 'width']);
 const SEQUENCED_IN_REVERSE = sequencedOf(['originY', 'height']);
 
 const JUMP_HEIGHT = Math.max(
-  Math.abs(MOVED.left - REST.left),
-  Math.abs(MOVED.top - REST.top)
+  Math.abs(laidOut(MOVED.left) - laidOut(REST.left)),
+  Math.abs(laidOut(MOVED.top) - laidOut(REST.top))
 );
 const JUMPING: Declare = (timing) => ({
   leaves: {
@@ -651,9 +653,12 @@ const LAYOUT: PresetRow[] = [
   [FadingTransition, `Opacity+${GEOMETRY_ROUTE}`, FADING],
   [SequencedTransition, GEOMETRY_ROUTE, SEQUENCED],
   [JumpingTransition, GEOMETRY_ROUTE, JUMPING],
+  // The size leaves come before the opacity leaf, so a platform that refuses the size change refuses them first.
   [
     EntryExitTransition,
-    'LayoutBuildFailed:UnsupportedTrackForm',
+    PLAYS_SIZE_CHANGE
+      ? 'LayoutBuildFailed:UnsupportedTrackForm'
+      : 'LayoutBuildFailed:UnsupportedTarget',
     undefined,
     timedEntryExit,
   ],
@@ -717,10 +722,10 @@ type PlatformNeeds = {
 
 /**
  * The route of a preset on the platform of the build. `makeTrack`
- * (NativeLayoutTracks.cpp) asks the platform whether it plays a track before
- * the track form check and the endpoint check of the track: a target that the
+ * (NativeLayoutTracks.cpp) checks the form of a track, then asks the platform
+ * whether it plays the track, then checks its endpoint: a target that the
  * platform does not play gives `UnsupportedTarget`, and the whole animation
- * stays on the frame driver.
+ * stays on the frame driver. The first leaf that fails ends the build.
  */
 function platformRouteOf(
   route: string,

@@ -2297,15 +2297,16 @@ export type FrameResidual = {
  * one value can come from two of them (measured on Android: a first frame of
  * -391.2380828857422 for 20.190475463867188 minus 411.4285583496094, the 32-bit
  * form of 411.42857142857144; a width of 50.28572082519531 for the laid-out
- * 50.28571319580078, two 32-bit steps).
+ * 50.28571319580078, two 32-bit steps; a translation of 3.814697265625e-6, one
+ * 32-bit step at a laid-out size near 50, for a declared translation of 0).
  */
 const FLOAT32_EPSILON = 2 ** -21;
 
 /**
  * Each frame of a record wrote the value that the frame driver gives to the
  * timeline at the time of the frame, in the unit of the timeline, after the
- * start of the record, to `tolerance` and the 32-bit precision of its largest
- * value.
+ * start of the record, to `tolerance` and the 32-bit precision of the largest
+ * value of the timeline and of the layout values of the builder.
  */
 export function expectFrameTimeline(
   check: FrameCheck,
@@ -2320,7 +2321,8 @@ export function expectFrameTimeline(
   const magnitude = Math.max(
     Math.abs(timeline.from),
     Math.abs(declaredEndOf(timeline)),
-    ...values.map(Math.abs)
+    ...values.map(Math.abs),
+    ...Object.values(record.layoutValues).map(Math.abs)
   );
   const offTimeline = record.frames.flatMap(({ timeMs, value }, frame) =>
     distances[frame] <= tolerance + magnitude * FLOAT32_EPSILON

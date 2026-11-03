@@ -19,7 +19,7 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import { hasNativeLayoutRoute, sample } from './nativeLayoutTestKit';
+import { hasNativeLayoutRoute, ONE_PIXEL, sample } from './nativeLayoutTestKit';
 
 const DURATION = 1200;
 const TRAVEL = 200;
@@ -124,9 +124,13 @@ describe('a commit from a layout animation callback', () => {
       if (hasNativeLayoutRoute) {
         const { model, playbacks } = await sample(tag, 'Position');
         expect(playbacks.length).toBe(0);
-        expect(Math.abs(model[0] - (TRAVEL / 2 + BOX_SIZE / 2)) < 0.01).toBe(
-          true
-        );
+        // The layout rounds each edge of the box to the pixel grid of the device.
+        expect(
+          Math.abs(model[0] - (TRAVEL / 2 + BOX_SIZE / 2)) <=
+            ONE_PIXEL / 2 + 0.01
+            ? ''
+            : `center X ${model[0]}, expected ${TRAVEL / 2 + BOX_SIZE / 2} to half a pixel`
+        ).toBe('');
       }
       await render(null);
     });
