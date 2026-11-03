@@ -355,15 +355,12 @@ export function findConfigRedirects(config: string): Redirect[] {
   if (!plugin) {
     return [];
   }
-  const key = /\bredirects\s*:\s*/g;
-  key.lastIndex = plugin.index;
-  const match = key.exec(config);
-  if (!match || config[match.index + match[0].length] !== '[') {
+  const start = findRedirectsValue(config, plugin.index);
+  if (start === undefined || config[start] !== '[') {
     throw new Error(
       'docusaurus.config.js must set redirects to an array literal in the options of @docusaurus/plugin-client-redirects.'
     );
   }
-  const start = match.index + match[0].length;
   const literal = config.slice(start, findClosingBracket(config, start) + 1);
   const entries = new Function(`return ${literal};`)() as {
     from: string | string[];
@@ -560,16 +557,30 @@ function listCategorySlugs(
   return slugs;
 }
 
+function findRedirectsValue(text: string, start: number) {
+  const key = /\bredirects\s*:\s*/y;
+  for (let index = start; index < text.length; index++) {
+    const skipped = skipStringOrComment(text, index);
+    if (skipped !== undefined) {
+      index = skipped;
+      continue;
+    }
+    key.lastIndex = index;
+    const match = key.exec(text);
+    if (match) {
+      return index + match[0].length;
+    }
+  }
+  return undefined;
+}
+
 function findClosingBracket(text: string, start: number) {
   let depth = 0;
   for (let index = start; index < text.length; index++) {
     const char = text[index];
-    if (char === "'" || char === '"' || char === '`') {
-      index = skipString(text, index);
-    } else if (text.startsWith('//', index)) {
-      index = text.indexOf('\n', index);
-    } else if (text.startsWith('/*', index)) {
-      index = text.indexOf('*/', index) + 1;
+    const skipped = skipStringOrComment(text, index);
+    if (skipped !== undefined) {
+      index = skipped;
     } else if (char === '[' || char === '{') {
       depth++;
     } else if (char === ']' || char === '}') {
@@ -606,6 +617,22 @@ function stripNumberPrefix(name: string) {
 function isCategoryIndex(fileName: string, sourceDirName: string) {
   const lastDir = sourceDirName.split('/').at(-1)?.toLowerCase();
   return ['index', 'readme', lastDir].includes(fileName.toLowerCase());
+}
+
+function skipStringOrComment(text: string, start: number) {
+  const char = text[start];
+  if (char === "'" || char === '"' || char === '`') {
+    return skipString(text, start);
+  }
+  if (text.startsWith('//', start)) {
+    const end = text.indexOf('\n', start);
+    return end === -1 ? text.length : end;
+  }
+  if (text.startsWith('/*', start)) {
+    const end = text.indexOf('*/', start + 2);
+    return end === -1 ? text.length : end + 1;
+  }
+  return undefined;
 }
 
 function skipString(text: string, start: number) {

@@ -304,6 +304,29 @@ describe('validate-docs-redirects', () => {
       );
     });
 
+    it('skips the redirects key in comments and strings', () => {
+      assert.deepEqual(
+        findConfigRedirects(`plugins: [['@docusaurus/plugin-client-redirects', {
+  // redirects: [],
+  /* redirects: [] */
+  id: 'redirects: []',
+  description: \`redirects: []\`,
+  redirects: [{ from: '/docs/old', to: '/docs/intro' }],
+}]]`),
+        [{ from: '/docs/old', to: '/docs/intro' }]
+      );
+    });
+
+    it('fails for an unterminated comment in the redirects', () => {
+      assert.throws(
+        () =>
+          findConfigRedirects(
+            "plugins: [['@docusaurus/plugin-client-redirects', { redirects: [ /* "
+          ),
+        /Found no end of the redirects list/
+      );
+    });
+
     it('returns nothing without the plugin', () => {
       assert.deepEqual(findConfigRedirects('module.exports = {};'), []);
     });
@@ -481,6 +504,42 @@ describe('validate-docs-redirects', () => {
       }
       const kept = run({ ...newVersion, 'docusaurus.config.js': config });
       assert.deepEqual(kept.problems, []);
+    });
+
+    it('needs a configured redirect to a page of both versions when the new version has neither end of a pending redirect', () => {
+      const pending = JSON.stringify([
+        { from: '/docs/basics/closures', to: '/docs/concepts/closures' },
+      ]);
+      const newVersion = {
+        'versioned_docs/version-2.0/concepts/_category_.json': undefined,
+        'versioned_docs/version-2.0/concepts/closures.md': undefined,
+        'docs/concepts/_category_.json': undefined,
+      };
+      const kept = runAfterRelease('', {
+        ...newVersion,
+        'pending-redirects.json': pending,
+      });
+      assert.match(
+        kept.problems.join('\n'),
+        /from \/docs\/basics\/closures .* is not a page of 2\.0/
+      );
+      assert.match(
+        kept.problems.join('\n'),
+        /the 1\.0 page \/docs\/basics\/closures has no page/
+      );
+      const moved = runAfterRelease(
+        "{ from: ['/docs/basics/closures', '/docs/category/basics'], to: '/docs/concepts/closures' },",
+        newVersion
+      );
+      assert.match(
+        moved.problems.join('\n'),
+        /points to \/docs\/concepts\/closures, which is not a page of 2\.0/
+      );
+      const redirectedToBoth = runAfterRelease(
+        "{ from: ['/docs/basics/closures', '/docs/category/basics'], to: '/docs/intro' },",
+        newVersion
+      );
+      assert.deepEqual(redirectedToBoth.problems, []);
     });
 
     it('fails when the release emptied the pending redirects without moving them to the config', () => {
