@@ -10,6 +10,7 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
+import { Easing } from '../Easing';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { defineAnimation, isValidLayoutAnimationProp } from './util';
@@ -69,6 +70,15 @@ function setPath<T>(
 interface NestedObjectEntry<T> {
   value: NestedObjectValues<T>;
   path: (string | number)[];
+}
+
+/** The animation of a style value that is no animation: the value shows at once. */
+export function withPlainValue(value: AnimatableValue): AnimationObject {
+  'worklet';
+  return withTiming(value, {
+    duration: 0,
+    easing: Easing.linear,
+  }) as AnimationObject;
 }
 
 export function withStyleAnimation(
@@ -215,10 +225,9 @@ export function withStyleAnimation(
             typeof currentEntry.value !== 'object' ||
             !currentEntry.value.onStart
           ) {
-            currentAnimation = withTiming(
-              currentEntry.value as AnimatableValue,
-              { duration: 0 }
-            ) as AnimationObject; // TODO TYPESCRIPT this temporary cast is to get rid of .d.ts file.
+            currentAnimation = withPlainValue(
+              currentEntry.value as AnimatableValue
+            );
             setPath(
               animation.styleAnimations,
               currentEntry.path,

@@ -46,6 +46,8 @@ enum class AnimationTarget : uint8_t {
   ShadowOpacity,
   ShadowRadius,
   ShadowOffset,
+  /// The style transform. Its value is an ordered operation list.
+  Transform,
 };
 
 /// Position overlaps its two axes and Size overlaps its two dimensions. Other targets overlap only themselves.
