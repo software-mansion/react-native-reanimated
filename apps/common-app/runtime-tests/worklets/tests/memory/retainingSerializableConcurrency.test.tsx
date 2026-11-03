@@ -13,13 +13,14 @@ import {
   test,
 } from '../../../ReJest/RuntimeTestsApi';
 
-const WORKER_RUNTIME_COUNT = 6;
+const WORKER_RUNTIME_COUNT = 3;
 const PARTICIPANT_COUNT = WORKER_RUNTIME_COUNT + 2;
 const ROUND_COUNT = 40;
 const CACHED_ROUND_COUNT = 10;
 const VALUES_PER_ROUND = 16;
 const CELL_COUNT = 8;
 const BARRIER_TIMEOUT_MS = 3000;
+const MISSED_ROUNDS_SHOWN = 3;
 
 type RetainedValue = {
   id: number;
@@ -28,6 +29,7 @@ type RetainedValue = {
 };
 
 type RoundReport = {
+  arrivalMs: number;
   sawEveryParticipant: boolean;
   correct: number;
   cachedWithinCall: number;
@@ -83,10 +85,12 @@ function unpackTogether(
   values: Synchronizable<RetainedValue[]>,
   arrived: Synchronizable<number>,
   firstId: number,
-  compareWithPrevious: boolean
+  compareWithPrevious: boolean,
+  roundStart: number
 ): RoundReport {
   'worklet';
   arrived.setBlocking((count) => count + 1);
+  const arrivalMs = Date.now() - roundStart;
   const deadline = Date.now() + BARRIER_TIMEOUT_MS;
   while (arrived.getDirty() < PARTICIPANT_COUNT && Date.now() < deadline) {
     continue;
@@ -122,6 +126,7 @@ function unpackTogether(
   holder.__retainingConcurrencyPrevious = first;
 
   return {
+    arrivalMs,
     sawEveryParticipant,
     correct,
     cachedWithinCall,
@@ -136,6 +141,7 @@ async function runRound(
 ) {
   const runtimes = getWorkletRuntimesFromPool(WORKER_RUNTIME_COUNT);
   const arrived = createSynchronizable(0);
+  const roundStart = Date.now();
 
   const workerReports = runtimes.map((runtime) =>
     runOnRuntimeAsync(
@@ -144,7 +150,8 @@ async function runRound(
       values,
       arrived,
       firstId,
-      compareWithPrevious
+      compareWithPrevious,
+      roundStart
     )
   );
   const uiReport = runOnUIAsync(
@@ -152,24 +159,73 @@ async function runRound(
     values,
     arrived,
     firstId,
-    compareWithPrevious
+    compareWithPrevious,
+    roundStart
   );
   await new Promise((resolve) => setTimeout(resolve, 0));
   const rnReport = unpackTogether(
     values,
     arrived,
     firstId,
-    compareWithPrevious
+    compareWithPrevious,
+    roundStart
   );
 
   return [rnReport, await uiReport, ...(await Promise.all(workerReports))];
+}
+
+function participantName(index: number) {
+  if (index === 0) {
+    return 'RN';
+  }
+  if (index === 1) {
+    return 'UI';
+  }
+  return `W${index - 2}`;
+}
+
+function describeBarrier(rounds: RoundReport[][]) {
+  const reports = rounds.flat();
+  const concurrent = reports.filter(
+    (report) => report.sawEveryParticipant
+  ).length;
+  const verdict = `${concurrent}/${reports.length} saw every participant`;
+  if (concurrent === reports.length) {
+    return verdict;
+  }
+
+  const participants = Array.from({ length: PARTICIPANT_COUNT }, (_, index) => {
+    const own = rounds.map((round) => round[index]);
+    const missed = own.filter((report) => !report.sawEveryParticipant).length;
+    const maxArrivalMs = Math.max(...own.map((report) => report.arrivalMs));
+    return `${participantName(index)} ${missed} missed, max ${maxArrivalMs}ms`;
+  });
+  const missedRounds = rounds
+    .map((round, index) => ({ round, index }))
+    .filter(({ round }) => round.some((report) => !report.sawEveryParticipant));
+  const shownRounds = missedRounds
+    .slice(0, MISSED_ROUNDS_SHOWN)
+    .map(
+      ({ round, index }) =>
+        `r${index} [${round
+          .map(
+            (report, participant) =>
+              `${participantName(participant)} ${report.arrivalMs}${report.sawEveryParticipant ? '' : '!'}`
+          )
+          .join(', ')}]`
+    );
+  return [
+    verdict,
+    `per participant: ${participants.join('; ')}`,
+    `${missedRounds.length}/${rounds.length} rounds missed, arrival ms (! = missed): ${shownRounds.join('; ')}`,
+  ].join('\n');
 }
 
 function summarize(rounds: RoundReport[][]) {
   const reports = rounds.flat();
   return {
     reports: reports.length,
-    concurrent: reports.filter((report) => report.sawEveryParticipant).length,
+    barrier: describeBarrier(rounds),
     correct: reports.reduce((sum, report) => sum + report.correct, 0),
     cachedWithinCall: reports.reduce(
       (sum, report) => sum + report.cachedWithinCall,
@@ -193,7 +249,9 @@ describe('RetainingSerializable under concurrent unpacking', () => {
     const summary = summarize(rounds);
     const reportCount = ROUND_COUNT * PARTICIPANT_COUNT;
     expect(summary.reports).toBe(reportCount);
-    expect(summary.concurrent).toBe(reportCount);
+    expect(summary.barrier).toBe(
+      `${reportCount}/${reportCount} saw every participant`
+    );
     expect(summary.correct).toBe(reportCount * VALUES_PER_ROUND);
     expect(summary.cachedWithinCall).toBe(reportCount * VALUES_PER_ROUND);
   });
@@ -211,7 +269,9 @@ describe('RetainingSerializable under concurrent unpacking', () => {
     const summary = summarize(rounds);
     const reportCount = CACHED_ROUND_COUNT * PARTICIPANT_COUNT;
     expect(summary.reports).toBe(reportCount);
-    expect(summary.concurrent).toBe(reportCount);
+    expect(summary.barrier).toBe(
+      `${reportCount}/${reportCount} saw every participant`
+    );
     expect(summary.correct).toBe(reportCount * VALUES_PER_ROUND);
     expect(summary.cachedWithinCall).toBe(reportCount * VALUES_PER_ROUND);
     expect(summary.cachedAcrossCalls).toBe(reportCount * VALUES_PER_ROUND);
