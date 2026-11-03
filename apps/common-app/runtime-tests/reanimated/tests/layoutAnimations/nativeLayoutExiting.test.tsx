@@ -87,12 +87,14 @@ import {
   frameDrivenOf,
   frameRecordedOf,
   DEFAULT_EASING,
+  endToleranceOf,
   styles,
   summarize,
   summarizeEnd,
   takeRows,
   takeTrace,
   waitForCallbacks,
+  nativeCasesOf,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -515,7 +517,7 @@ function expectFramesOnTimeline(boxes: string[], builtKeys: BuiltKey[]) {
     .filter((leaf) => declaredLeaves.includes(leaf));
   const describeLeaves = (leaves: string[]) => leaves.sort().join();
   expect(describeLeaves(recordedLeaves)).toBe(describeLeaves(declaredLeaves));
-  const frameChecks = frameChecksOf(builtKeys, records);
+  const frameChecks = frameChecksOf(builtKeys, records, true);
   expect(
     describeLeaves(
       frameChecks.map(
@@ -632,7 +634,11 @@ function expectEndHeld(
     const off = held
       .filter(
         ({ presentation }) =>
-          !isNear(progressOf(track, presentation[0]), 1, 0.001)
+          !isNear(
+            progressOf(track, presentation[0]),
+            1,
+            heldProgressToleranceOf(track)
+          )
       )
       .map(
         ({ presentation, monotonicTimeMs }) =>
@@ -653,6 +659,45 @@ function expectEndHeld(
   }
 }
 
+/**
+ * The reads whose model of a track is not the start value of the track, at most
+ * `MODEL_FAULTS` of them.
+ */
+function modelFaultsOf(reads: TargetReads, tracks: Track[]) {
+  return reads
+    .flatMap(({ samples }) =>
+      tracks
+        .filter(
+          (track) =>
+            !isNear(
+              samples[track.traceTarget].model[0],
+              track.from,
+              endToleranceOf(track)
+            )
+        )
+        .map(
+          ({ traceTarget, from }) =>
+            `${traceTarget} model ${samples[traceTarget].model[0]} at ${samples[traceTarget].monotonicTimeMs} ms, not ${from}`
+        )
+    )
+    .slice(0, MODEL_FAULTS);
+}
+
+const MODEL_FAULTS = 3;
+
+/**
+ * A held end value is at the progress 1 of its track to 0.001, and a position
+ * also to `endToleranceOf`: Android lays out the end on the pixel grid
+ * (measured: 125.14285659790039 for 125).
+ */
+const heldProgressToleranceOf = (track: Track) =>
+  Math.max(
+    0.001,
+    track.sampleTarget === 'Position'
+      ? endToleranceOf(track) / Math.abs(track.to - track.from)
+      : 0
+  );
+
 const sortedCallbacks = () => callbacks.slice().sort().join();
 
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
@@ -662,7 +707,7 @@ describe('native layout exiting', () => {
     return;
   }
 
-  for (const [caseName, exitingCase] of Object.entries(TIMELINE_CASES)) {
+  for (const [caseName, exitingCase] of nativeCasesOf(TIMELINE_CASES)) {
     const { pairOf, tracks } = exitingCase;
     test(`${caseName} plays natively from its initial value, agrees with the frame driver, and holds its end value until the view leaves`, async () => {
       const builtKeys = builtKeysOf(exitingCase);
@@ -722,11 +767,7 @@ describe('native layout exiting', () => {
         EXIT_DURATION,
         (count) => count >= tracks.length
       );
-      for (const { samples } of reads) {
-        for (const { traceTarget, from } of tracks) {
-          expect(isNear(samples[traceTarget].model[0], from)).toBe(true);
-        }
-      }
+      expect(modelFaultsOf(reads, tracks).join('; ')).toBe('');
       expectFramesOnTimeline(['frame'], builtKeys);
       await render(null);
     });

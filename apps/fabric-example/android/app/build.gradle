@@ -94,6 +94,7 @@ android {
         versionName "1.0"
         buildConfigField "boolean", "RUNTIME_TESTS", "false"
         manifestPlaceholders = [gwpAsanMode: "default"]
+        buildConfigField "boolean", "MOUNT_THREAD_PULL", (findProperty("fabricExampleMountThreadPull") ?: "false").toString()
     }
     signingConfigs {
         debug {

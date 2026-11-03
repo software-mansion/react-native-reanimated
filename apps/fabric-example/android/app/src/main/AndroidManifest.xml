@@ -25,5 +25,9 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <activity
+        android:name=".RuntimeTestsCoverActivity"
+        android:screenOrientation="portrait"
+        android:exported="false" />
     </application>
 </manifest>

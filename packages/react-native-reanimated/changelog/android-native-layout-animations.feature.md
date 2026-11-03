@@ -1,0 +1,1 @@
+Add native Layout Animations on Android behind the experimental `ANDROID_NATIVE_LAYOUT_ANIMATIONS` static flag: with the React Native pull model and accumulated raw props flags on, platform animators play opacity, position, and 2D transform tracks from the final mounted state.
