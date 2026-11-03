@@ -80,29 +80,24 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   }
 }
 
-std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals() {
+std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals(const SurfaceId surfaceId) {
   react_native_assert(isLockedByCurrentThread());
-  RemovableShadowNodes remainingShadowNodes;
   std::vector<Tag> removedTags;
-
-  for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
+  std::erase_if(removableShadowNodes_, [&](const auto &entry) {
+    const auto &[tag, shadowNodeFamily] = entry;
     if (!shadowNodeFamily) {
-      continue;
+      return true;
     }
-
-    if (mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
-      remainingShadowNodes.emplace(tag, shadowNodeFamily);
-      continue;
+    if (shadowNodeFamily->getSurfaceId() != surfaceId || mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
+      return false;
     }
-
     for (auto &registry : registries_) {
       registry->removeUnmounted(shadowNodeFamily);
     }
     staticPropsRegistry_->remove(tag);
     removedTags.push_back(tag);
-  }
-
-  removableShadowNodes_ = std::move(remainingShadowNodes);
+    return true;
+  });
   return removedTags;
 }
 

@@ -1325,8 +1325,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  // TODO: with the animation backend we still need a way to handleNodeRemovals,
-  // for now we leave this to leak the memory, a fix will come in a follow-up
+  // TODO: move node removal handling into the animation backend, so that it does not need this mount hook
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_,
       updatesRegistryManager_,
@@ -1341,6 +1340,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       updatesRegistryManager_,
       mountedRootsRegistry_,
       layoutAnimationsProxyRegistry_,
+      layoutAnimationsManager_,
       synchronousWritesTracker_);
 }
 

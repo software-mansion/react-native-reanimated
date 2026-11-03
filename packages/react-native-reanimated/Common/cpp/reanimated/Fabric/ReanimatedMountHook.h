@@ -10,6 +10,7 @@
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
 #include <memory>
+#include <vector>
 
 namespace reanimated {
 
@@ -32,6 +33,8 @@ class ReanimatedMountHook : public UIManagerMountHook {
   void shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeStamp unmountTime) noexcept override;
 
  private:
+  void releaseSharedTransitionConfigs(const std::vector<Tag> &removedTags) const;
+
   const std::shared_ptr<UIManager> uiManager_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;

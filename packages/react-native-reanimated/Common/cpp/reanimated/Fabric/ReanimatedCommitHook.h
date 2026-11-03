@@ -22,6 +22,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
       const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
       const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker);
 
   ~ReanimatedCommitHook() noexcept override;
@@ -54,6 +55,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
   std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 };
 

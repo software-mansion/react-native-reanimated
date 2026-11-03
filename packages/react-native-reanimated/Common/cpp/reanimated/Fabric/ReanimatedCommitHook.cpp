@@ -17,11 +17,13 @@ ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
     const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      layoutAnimationsManager_(layoutAnimationsManager),
       synchronousWritesTracker_(synchronousWritesTracker) {
   uiManager_->registerCommitHook(*this);
   uiManager_->getShadowTreeRegistry().enumerate([this](const ShadowTree &shadowTree, bool & /*stop*/) {
@@ -54,21 +56,28 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     proxy->shadowTreeWillCommit(newRootShadowNode->getChildren().empty());
   }
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return newRootShadowNode;
-  }
-
+  std::vector<Tag> removedTags;
   {
     auto lock = updatesRegistryManager_->lock();
     if (newRootShadowNode->getChildren().empty()) {
       // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
       mountedRootsRegistry_->remove(shadowTree.getSurfaceId());
+      removedTags = updatesRegistryManager_->handleNodeRemovals(shadowTree.getSurfaceId());
       if (synchronousWritesTracker_) {
         synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
       }
     } else {
       mountedRootsRegistry_->registerSurface(shadowTree.getSurfaceId());
     }
+  }
+
+  // The proxy of the stopping surface still maps these views, so it releases their configs when it unmaps them.
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->releaseSharedTransitionConfigs(removedTags, *layoutAnimationsManager_);
+  }
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return newRootShadowNode;
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
