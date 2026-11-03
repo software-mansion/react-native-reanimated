@@ -20,6 +20,26 @@ export const PENDING_REDIRECTS = 'pending-redirects.json';
 const ROUTE_BASE_PATH = '/docs';
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '..');
 const RELEASE_GUIDE = 'packages/react-native-reanimated/RELEASE.md';
+const YAML_ESCAPES: Record<string, string> = {
+  '0': '\0',
+  a: '\x07',
+  b: '\b',
+  t: '\t',
+  '\t': '\t',
+  n: '\n',
+  v: '\v',
+  f: '\f',
+  r: '\r',
+  e: '\x1b',
+  ' ': ' ',
+  '"': '"',
+  '/': '/',
+  '\\': '\\',
+  N: '\x85',
+  _: '\xa0',
+  L: '\u2028',
+  P: '\u2029',
+};
 
 function main() {
   const { values } = parseArgs({
@@ -123,7 +143,7 @@ export function validate(files: Files) {
 
     if (siteProblems.length === 0) {
       messages.push(
-        `${docs}: each of the ${released.size} pages of ${lastVersion} has a page at the same path in Unreleased or one of the ${pending.length} redirects in ${pendingPath}. The redirects in docusaurus.config.js that point to ${lastVersion} pages point to existing pages.`
+        `${docs}: each of the ${released.size} pages of ${lastVersion} has a page at the same path in Unreleased, one of the ${pending.length} redirects in ${pendingPath} or a redirect in docusaurus.config.js to an Unreleased page. The redirects in docusaurus.config.js that point to ${lastVersion} pages point to existing pages.`
       );
     }
   }
@@ -152,8 +172,8 @@ export function findProblems({
   const pendingPath = `${docs}/${PENDING_REDIRECTS}`;
   const configPath = `${docs}/docusaurus.config.js`;
   const pendingFrom = new Set<string>();
-  const configuredFrom = new Set(
-    configured.map((redirect) => normalizeRoute(redirect.from))
+  const configuredTo = new Map(
+    configured.map((redirect) => [normalizeRoute(redirect.from), redirect.to])
   );
 
   for (const redirect of pending) {
@@ -166,7 +186,7 @@ export function findProblems({
     }
     pendingFrom.add(from);
 
-    if (configuredFrom.has(from)) {
+    if (configuredTo.has(from)) {
       problems.push(
         `${entry} is also in the redirects in ${configPath}. Remove it from ${PENDING_REDIRECTS}.`
       );
@@ -189,6 +209,15 @@ export function findProblems({
 
   for (const route of [...released].sort()) {
     if (unreleased.has(route) || pendingFrom.has(route)) {
+      continue;
+    }
+    const configuredRedirect = configuredTo.get(route);
+    if (configuredRedirect !== undefined) {
+      if (!unreleased.has(normalizeRoute(configuredRedirect))) {
+        problems.push(
+          `${configPath}: the redirect from ${route} points to ${configuredRedirect}, which is not a page in Unreleased. When Unreleased becomes the latest version, the redirect plugin fails the build. Point it to a page of both ${lastVersion} and Unreleased.`
+        );
+      }
       continue;
     }
     const candidates = findCandidates(route, unreleased);
@@ -248,13 +277,15 @@ export function findConfigRedirects(config: string): Redirect[] {
   if (!plugin) {
     return [];
   }
-  const key = /\bredirects:\s*\[/g;
+  const key = /\bredirects\s*:\s*/g;
   key.lastIndex = plugin.index;
   const match = key.exec(config);
-  if (!match) {
-    return [];
+  if (!match || config[match.index + match[0].length] !== '[') {
+    throw new Error(
+      'docusaurus.config.js must set redirects to an array literal in the options of @docusaurus/plugin-client-redirects.'
+    );
   }
-  const start = match.index + match[0].length - 1;
+  const start = match.index + match[0].length;
   const literal = config.slice(start, findClosingBracket(config, start) + 1);
   const entries = new Function(`return ${literal};`)() as {
     from: string | string[];
@@ -508,11 +539,25 @@ function skipString(text: string, start: number) {
 }
 
 function parseYamlScalar(value: string) {
-  const quoted = /^(['"])(.*)\1\s*(#.*)?$/.exec(value);
-  if (quoted) {
-    return quoted[2];
+  const doubleQuoted = /^"((?:[^"\\]|\\.)*)"\s*(#.*)?$/.exec(value);
+  if (doubleQuoted) {
+    return decodeYamlEscapes(doubleQuoted[1]);
+  }
+  const singleQuoted = /^'((?:[^']|'')*)'\s*(#.*)?$/.exec(value);
+  if (singleQuoted) {
+    return singleQuoted[1].replace(/''/g, "'");
   }
   return value.replace(/\s+#.*$/, '').trim();
+}
+
+function decodeYamlEscapes(text: string) {
+  return text.replace(
+    /\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|.)/g,
+    (escape: string, code: string) =>
+      /^[xuU]/.test(code)
+        ? String.fromCodePoint(parseInt(code.slice(1), 16))
+        : (YAML_ESCAPES[code] ?? escape)
+  );
 }
 
 if (import.meta.filename === process.argv[1]) {
