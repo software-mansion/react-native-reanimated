@@ -39,6 +39,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
+  const LayoutAnimationsPull pull;
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
@@ -169,11 +170,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
     return {};
   }
 
-  completedAnimations_.insert_or_assign(
-      tag, CompletedLayoutAnimation{.animation = layoutAnimationIt->second, .shouldRemove = shouldRemove});
+  if (!shouldRemove) {
+    completedAnimations_.insert_or_assign(tag, std::move(layoutAnimationIt->second));
+    layoutAnimations_.erase(layoutAnimationIt);
+    return surfaceId_;
+  }
   layoutAnimations_.erase(layoutAnimationIt);
 
-  if (!shouldRemove || !nodeForTag_.contains(tag)) {
+  if (!nodeForTag_.contains(tag)) {
     return surfaceId_;
   }
 
@@ -456,13 +460,12 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);
     auto completedAnimationIt = completedAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() &&
-        (completedAnimationIt == completedAnimations_.end() || completedAnimationIt->second.shouldRemove)) {
+    if (layoutAnimationIt == layoutAnimations_.end() && completedAnimationIt == completedAnimations_.end()) {
       continue;
     }
 
-    auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
-                                                                         : completedAnimationIt->second.animation;
+    auto &layoutAnimation =
+        layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second : completedAnimationIt->second;
     auto newView = layoutAnimation.finalView;
     newView.props = updateValues.newProps;
     updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);

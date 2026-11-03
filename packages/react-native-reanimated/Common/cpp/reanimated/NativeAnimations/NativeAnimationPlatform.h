@@ -74,6 +74,8 @@ class NativeAnimationPlatform {
   virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
+  /// True when the mounted view of the tag is in a window.
+  virtual bool isInWindow(Tag tag) = 0;
   /// Finds the mounted view, converts the tracks, and checks the model endpoints. Changes no state and reads
   /// no surface state.
   virtual MountedAnimationResolution resolve(const AnimationRequest &request) = 0;

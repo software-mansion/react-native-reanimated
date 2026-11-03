@@ -135,7 +135,7 @@ class REACSSPlatformTransitionBackend final : public CSSPlatformTransitionBacken
 
   void onAnimationAdmitted(const AnimationHandle &) override {}
 
-  void onTrackEnded(const TrackKey &, bool) override {}
+  void onTrackEnded(const TrackKey &, TrackEnd) override {}
 
   void onAnimationEnded(const AnimationHandle &handle, const AnimationResult result) override
   {
