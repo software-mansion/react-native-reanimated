@@ -274,6 +274,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout matrix',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutMatrix.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout system reduce motion',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutSystemReduceMotion.test');
+    },
+  },
+  {
     testSuiteName: 'native layout live clock',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutLiveClock.test');
