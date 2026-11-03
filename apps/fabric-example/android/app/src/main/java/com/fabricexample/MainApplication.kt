@@ -46,5 +46,9 @@ class MainApplication : Application(), ReactApplication {
 
     ReactFontManager.getInstance().addCustomFont(this, "Poppins", R.font.poppins)
     ReactFontManager.getInstance().addCustomFont(this, "Ubuntu Mono", R.font.ubuntumono)
+
+    if (BuildConfig.RUNTIME_TESTS) {
+      RuntimeTestsLifecycle.registerReloadReceiver(this) { reactHost }
+    }
   }
 }

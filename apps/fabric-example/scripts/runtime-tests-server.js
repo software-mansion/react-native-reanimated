@@ -9,7 +9,7 @@ const { spawn, execFile } = require('child_process');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
-const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
+const LIBRARIES = ['reanimated', 'worklets', 'self-tests', 'lifecycle'];
 const PLATFORMS = ['ios', 'android'];
 const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
@@ -124,6 +124,22 @@ if (SANITIZER && PLATFORM !== 'ios') {
 
 if (BUILD_ONLY && PLATFORM !== 'ios') {
   console.error('[runtime-tests] --build-only is only supported on iOS');
+  process.exit(1);
+}
+
+const IS_LIFECYCLE = LIBRARY === 'lifecycle';
+
+if (IS_LIFECYCLE && PLATFORM !== 'android') {
+  console.error(
+    '[runtime-tests] --library lifecycle is only supported on Android'
+  );
+  process.exit(1);
+}
+
+if (IS_LIFECYCLE && !SHOULD_LAUNCH) {
+  console.error(
+    '[runtime-tests] --library lifecycle needs --launch, because the server relaunches the app for every scenario'
+  );
   process.exit(1);
 }
 
@@ -484,7 +500,8 @@ if (ONLY) {
 }
 
 function armConnectTimer() {
-  if (client) {
+  // Once a lifecycle run has started, it has its own timers.
+  if (client || (IS_LIFECYCLE && runStartedAt > 0)) {
     return;
   }
   connectTimer = setTimeout(() => {
@@ -500,6 +517,16 @@ if (!SHOULD_LAUNCH && !BUILD_ONLY) {
 }
 
 wss.on('connection', (socket) => {
+  if (client && IS_LIFECYCLE) {
+    // A new JS session has connected before the socket of the previous one
+    // closed.
+    client.terminate();
+    client = null;
+    lifecycle.expectingDisconnect = false;
+  }
+  if (IS_LIFECYCLE) {
+    lifecycle.clientSaidHello = false;
+  }
   if (client) {
     console.warn(
       '[runtime-tests] rejecting extra client; one already connected'
@@ -514,6 +541,9 @@ wss.on('connection', (socket) => {
   resetIdleTimer();
 
   socket.on('message', (raw) => {
+    if (IS_LIFECYCLE && client !== socket) {
+      return;
+    }
     resetIdleTimer();
     let msg;
     try {
@@ -529,6 +559,13 @@ wss.on('connection', (socket) => {
   });
 
   socket.on('close', () => {
+    if (IS_LIFECYCLE && !runFinished) {
+      if (client === socket) {
+        client = null;
+        onLifecycleDisconnect();
+      }
+      return;
+    }
     if (!runFinished && runStartedAt > 0) {
       console.error('');
       console.error('========================================');
@@ -562,6 +599,10 @@ wss.on('connection', (socket) => {
 
 /** @param {DeviceMessage} msg */
 function handleMessage(msg) {
+  if (IS_LIFECYCLE) {
+    handleLifecycleMessage(msg);
+    return;
+  }
   switch (msg.type) {
     case 'hello':
       onHello(msg);
@@ -732,6 +773,449 @@ function onError(msg) {
   }
 }
 
+/**
+ * @typedef {{ type: 'phase'; name: string } | { type: 'reload' }} LifecycleStep
+ *
+ * @typedef {{
+ *   name: string;
+ *   invalidateFirst?: string;
+ *   steps: LifecycleStep[];
+ * }} LifecycleScenario
+ */
+
+// See apps/common-app/runtime-tests/lifecycle/LifecycleApi.ts for what a
+// scenario is. The state of the run lives here, because no JS session of the
+// app survives a whole scenario.
+const LIFECYCLE_PHASE_TIMEOUT_MS = 60_000;
+const LIFECYCLE_PID_POLL_MS = 500;
+const LIFECYCLE_PID_ATTEMPTS = 5;
+const LIFECYCLE_RELOAD_ACTION = `${ANDROID_APP_ID}.RUNTIME_TESTS_RELOAD`;
+
+const lifecycle = {
+  /** @type {LifecycleScenario[] | null} */
+  scenarios: null,
+  scenarioIndex: -1,
+  stepIndex: 0,
+  // The process that the current scenario runs in, once it is known.
+  pid: '',
+  /**
+   * What the next `hello` continues with.
+   *
+   * @type {(() => Promise<void>) | null}
+   */
+  onHello: null,
+  expectingDisconnect: false,
+  // Whether the connected JS session has said `hello`.
+  clientSaidHello: false,
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  timer: null,
+  // True while no scenario runs. Only the `hello` that declares the scenarios
+  // counts then.
+  settled: true,
+  /** @type {string[]} */
+  passed: [],
+  /** @type {string[]} */
+  failed: [],
+};
+
+/**
+ * Runs a part of the controller that nothing awaits. A failing adb command ends
+ * the run.
+ *
+ * @param {Promise<void>} promise
+ */
+function lifecycleTask(promise) {
+  promise.catch((error) => {
+    printCommandFailure(error);
+    shutdown(1);
+  });
+}
+
+/**
+ * @param {number} scenarioIndex
+ * @returns {boolean} Whether that scenario is still the one that runs.
+ */
+function isCurrentLifecycleScenario(scenarioIndex) {
+  return lifecycle.scenarioIndex === scenarioIndex && !lifecycle.settled;
+}
+
+function clearLifecycleTimer() {
+  if (lifecycle.timer) {
+    clearTimeout(lifecycle.timer);
+    lifecycle.timer = null;
+  }
+}
+
+/**
+ * @param {number} timeoutMs
+ * @param {string} reason
+ * @param {boolean} collectCrashDiagnostics
+ */
+function armLifecycleTimer(timeoutMs, reason, collectCrashDiagnostics) {
+  clearLifecycleTimer();
+  lifecycle.timer = setTimeout(() => {
+    lifecycleTask(
+      failLifecycleScenario(
+        `${reason} within ${timeoutMs / 1000}s`,
+        collectCrashDiagnostics
+      )
+    );
+  }, timeoutMs);
+}
+
+async function lifecycleSerial() {
+  androidSerial ??= await resolveAndroidDevice();
+  return androidSerial;
+}
+
+/** @returns {Promise<string>} The pid of the app, or an empty string. */
+async function androidAppPid() {
+  const serial = await lifecycleSerial();
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const { stdout } = await adb(serial, ['shell', 'pidof', ANDROID_APP_ID]);
+      return stdout.trim();
+    } catch (error) {
+      const { code, stdout, stderr } =
+        /** @type {{ code?: unknown; stdout?: string; stderr?: string }} */ (
+          error
+        );
+      // `pidof` exits with 1 and prints nothing when there is no such process.
+      if (code === 1 && !stdout && !stderr) {
+        return '';
+      }
+      // Anything else is adb failing, which must not pass for a crash.
+      if (attempt === LIFECYCLE_PID_ATTEMPTS) {
+        throw error;
+      }
+      await sleep(1000);
+    }
+  }
+}
+
+/**
+ * Fails the scenario if the process of the app dies or is replaced while the
+ * server waits for `hello`. Such a process may never connect, and one that
+ * Android restarted would otherwise pass for the original.
+ *
+ * @param {() => Promise<void>} onHello The handler that waits for that `hello`.
+ * @param {string} reason
+ */
+async function watchLifecyclePidUntilHello(onHello, reason) {
+  while (lifecycle.onHello === onHello) {
+    const pid = await androidAppPid();
+    if (lifecycle.onHello !== onHello) {
+      return;
+    }
+    lifecycle.pid ||= pid;
+    if (pid !== lifecycle.pid) {
+      await failLifecycleScenario(reason, true);
+      return;
+    }
+    await sleep(LIFECYCLE_PID_POLL_MS);
+  }
+}
+
+/** @param {DeviceMessage} msg */
+function handleLifecycleMessage(msg) {
+  switch (msg.type) {
+    case 'hello':
+      onLifecycleHello(msg);
+      break;
+    case 'log':
+      onLog(msg);
+      break;
+    case 'phaseFinished':
+    case 'uncaughtError':
+      onLifecycleMessage(msg);
+      break;
+    default:
+      console.warn(`[runtime-tests] unknown message type: ${msg.type}`);
+  }
+}
+
+/** @param {DeviceMessage} msg */
+function onLifecycleHello(msg) {
+  const deviceLibrary = String(msg.library ?? '').toLowerCase();
+  if (deviceLibrary !== LIBRARY) {
+    console.error(
+      `[runtime-tests] the app is running the ${deviceLibrary || 'unknown'} entry point but this server expects ${LIBRARY}.`
+    );
+    send({ type: 'error', message: `Library mismatch: ${deviceLibrary}` });
+    shutdown(1);
+    return;
+  }
+  lifecycle.clientSaidHello = true;
+
+  if (lifecycle.scenarios === null) {
+    /** @type {LifecycleScenario[]} */
+    const declared = msg.scenarios ?? [];
+    const names = declared.map((scenario) => scenario.name);
+    const unknown = (ONLY ?? []).filter((name) => !names.includes(name));
+    // --only also sets the order.
+    const selected = ONLY
+      ? ONLY.flatMap((name) => declared.filter((s) => s.name === name))
+      : declared;
+    if (unknown.length > 0 || selected.length === 0) {
+      console.error(
+        unknown.length > 0
+          ? `[runtime-tests] unknown scenario name(s): ${unknown.join(', ')}`
+          : '[runtime-tests] there are no scenarios to run'
+      );
+      console.error(`[runtime-tests] available scenarios: ${names.join(', ')}`);
+      shutdown(1);
+      return;
+    }
+    lifecycle.scenarios = selected;
+    runStartedAt = Date.now();
+    clearTimer('idle');
+    console.log(
+      `[runtime-tests] hello from ${msg.platform} ${msg.platformVersion}, running ${lifecycle.scenarios.length} of ${declared.length} scenarios`
+    );
+    lifecycleTask(startNextLifecycleScenario());
+    return;
+  }
+
+  if (lifecycle.settled) {
+    return;
+  }
+  const resume = lifecycle.onHello;
+  lifecycle.onHello = null;
+  lifecycle.expectingDisconnect = false;
+  clearLifecycleTimer();
+  lifecycleTask(
+    resume
+      ? resume()
+      : failLifecycleScenario('the app restarted when it should not', true)
+  );
+}
+
+function onLifecycleDisconnect() {
+  if (shutdownStarted) {
+    return;
+  }
+  if (lifecycle.scenarios === null) {
+    console.error(
+      '[runtime-tests] the app disconnected before it declared its scenarios'
+    );
+    void failWithDiagnostics(1);
+    return;
+  }
+  // A session that has not said `hello` is not a part of the scenario yet. If
+  // its process is gone, the pid checks notice.
+  if (lifecycle.settled || !lifecycle.clientSaidHello) {
+    return;
+  }
+  if (lifecycle.expectingDisconnect) {
+    lifecycle.expectingDisconnect = false;
+    return;
+  }
+  lifecycleTask(
+    failLifecycleScenario('the app disconnected, it most likely crashed', true)
+  );
+}
+
+async function startNextLifecycleScenario() {
+  lifecycle.scenarioIndex++;
+  lifecycle.stepIndex = 0;
+  lifecycle.onHello = null;
+  const scenario = lifecycle.scenarios?.[lifecycle.scenarioIndex];
+  if (!scenario) {
+    await finishLifecycleRun();
+    return;
+  }
+
+  console.log('');
+  console.log(`[runtime-tests] ▶ ${scenario.name}`);
+  // Every scenario starts in a fresh process. The previous one is stopped
+  // first, so that the next `hello` can only come from the new process.
+  const serial = await lifecycleSerial();
+  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]);
+  if (client) {
+    client.terminate();
+    client = null;
+  }
+  lifecycle.settled = false;
+  lifecycle.expectingDisconnect = false;
+  lifecycle.pid = '';
+  const onHelloAfterLaunch = () => runLifecycleStep();
+  lifecycle.onHello = onHelloAfterLaunch;
+  armLifecycleTimer(
+    CONNECT_TIMEOUT_MS,
+    'the app did not connect after the launch',
+    true
+  );
+  await launchAndroidApp(serial);
+  await watchLifecyclePidUntilHello(
+    onHelloAfterLaunch,
+    'the app crashed during the launch'
+  );
+}
+
+async function runLifecycleStep() {
+  const { scenarioIndex } = lifecycle;
+  const scenario = lifecycle.scenarios?.[scenarioIndex];
+  if (!scenario || lifecycle.settled) {
+    return;
+  }
+
+  // A process that died, or that Android restarted, may still look connected.
+  const pid = await androidAppPid();
+  if (!isCurrentLifecycleScenario(scenarioIndex)) {
+    return;
+  }
+  lifecycle.pid ||= pid;
+  if (pid !== lifecycle.pid || !pid) {
+    await failLifecycleScenario(
+      pid
+        ? `the app crashed and restarted (pid ${lifecycle.pid} became ${pid})`
+        : 'the app crashed, its process is gone',
+      true
+    );
+    return;
+  }
+
+  const step = scenario.steps[lifecycle.stepIndex];
+  if (!step) {
+    lifecycle.settled = true;
+    lifecycle.passed.push(scenario.name);
+    console.log(`[runtime-tests] ✔ ${scenario.name}`);
+    await startNextLifecycleScenario();
+    return;
+  }
+
+  if (step.type === 'phase') {
+    console.log(`[runtime-tests]   phase: ${step.name}`);
+    armLifecycleTimer(
+      LIFECYCLE_PHASE_TIMEOUT_MS,
+      `the phase '${step.name}' did not finish`,
+      false
+    );
+    send({
+      type: 'runPhase',
+      scenario: scenario.name,
+      step: lifecycle.stepIndex,
+    });
+    return;
+  }
+
+  console.log('[runtime-tests]   reload');
+  lifecycle.expectingDisconnect = true;
+  const onHelloAfterReload = async () => {
+    if (isCurrentLifecycleScenario(scenarioIndex)) {
+      lifecycle.stepIndex++;
+      await runLifecycleStep();
+    }
+  };
+  lifecycle.onHello = onHelloAfterReload;
+  armLifecycleTimer(
+    CONNECT_TIMEOUT_MS,
+    'the app did not connect after the reload',
+    true
+  );
+  await adb(await lifecycleSerial(), [
+    'shell',
+    'am',
+    'broadcast',
+    '-a',
+    LIFECYCLE_RELOAD_ACTION,
+    '-p',
+    ANDROID_APP_ID,
+    ...(scenario.invalidateFirst
+      ? ['--es', 'INVALIDATE_FIRST', scenario.invalidateFirst]
+      : []),
+  ]);
+
+  await watchLifecyclePidUntilHello(
+    onHelloAfterReload,
+    'the app crashed during the reload'
+  );
+}
+
+/** @param {DeviceMessage} msg */
+function onLifecycleMessage(msg) {
+  const scenario = lifecycle.scenarios?.[lifecycle.scenarioIndex];
+  if (!scenario || lifecycle.settled) {
+    return;
+  }
+  if (msg.type === 'uncaughtError') {
+    lifecycleTask(
+      failLifecycleScenario(
+        `uncaught error: ${msg.stack ?? msg.message}`,
+        false
+      )
+    );
+    return;
+  }
+  if (msg.scenario !== scenario.name || msg.step !== lifecycle.stepIndex) {
+    return;
+  }
+  clearLifecycleTimer();
+  if (!msg.ok) {
+    lifecycleTask(
+      failLifecycleScenario(String(msg.message ?? 'the phase failed'), false)
+    );
+    return;
+  }
+  lifecycle.stepIndex++;
+  lifecycleTask(runLifecycleStep());
+}
+
+/**
+ * @param {string} reason
+ * @param {boolean} collectCrashDiagnostics
+ */
+async function failLifecycleScenario(reason, collectCrashDiagnostics) {
+  const scenario = lifecycle.scenarios?.[lifecycle.scenarioIndex];
+  if (!scenario || lifecycle.settled) {
+    return;
+  }
+  lifecycle.settled = true;
+  lifecycle.onHello = null;
+  clearLifecycleTimer();
+  lifecycle.failed.push(scenario.name);
+  console.error(`[runtime-tests] ✖ ${scenario.name}: ${reason}`);
+  if (collectCrashDiagnostics) {
+    // The diagnostics are collected once per run otherwise.
+    crashDiagnosticsPromise = null;
+    await dumpCrashDiagnostics().catch((error) => {
+      console.error(
+        `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
+      );
+    });
+  }
+  await startNextLifecycleScenario();
+}
+
+async function finishLifecycleRun() {
+  const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
+  console.log('');
+  console.log('========================================');
+  console.log(`[runtime-tests] ${LIBRARY} run finished in ${elapsed}s`);
+  console.log(
+    `[runtime-tests] passed: ${lifecycle.passed.length}, failed: ${lifecycle.failed.length}`
+  );
+  if (lifecycle.failed.length > 0) {
+    console.log('[runtime-tests] Failed scenarios:');
+    for (const name of lifecycle.failed) {
+      console.log(`  • ${name}`);
+    }
+  } else {
+    console.log('[runtime-tests] All scenarios passed!');
+  }
+  console.log('========================================');
+  exitCode = lifecycle.failed.length > 0 ? 1 : 0;
+  runFinished = true;
+  // The last scenario may have left JS running.
+  await adb(await lifecycleSerial(), [
+    'shell',
+    'am',
+    'force-stop',
+    ANDROID_APP_ID,
+  ]).catch(() => {});
+  shutdown(exitCode);
+}
+
 /** @param {Record<string, unknown>} payload */
 function send(payload) {
   if (client && client.readyState === client.OPEN) {
@@ -741,6 +1225,10 @@ function send(payload) {
 
 function resetIdleTimer() {
   clearTimer('idle');
+  // Once a lifecycle run has started, it has its own timers.
+  if (IS_LIFECYCLE && runStartedAt > 0) {
+    return;
+  }
   idleTimer = setTimeout(() => {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
@@ -1867,15 +2355,26 @@ async function installAndLaunchAndroid(serial) {
   if (!fs.existsSync(apk)) {
     throw new Error(`APK not found at ${apk} — run once without --skip-build`);
   }
+  // Android relaunches an app that is replaced while it is in the foreground,
+  // without the RUNTIME_TESTS_LIBRARY extra. That process can race the launch
+  // below, and it then runs the default library.
+  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]).catch(
+    () => {}
+  );
   console.log(`[runtime-tests] installing ${apk}`);
   await adb(serial, ['install', '-r', apk]);
+  await launchAndroidApp(serial);
+}
 
+/** @param {string} serial */
+async function launchAndroidApp(serial) {
+  // Repeated on every launch, because collecting crash diagnostics can restart
+  // adbd, which drops the forwarded ports.
   for (const port of [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
       () => {}
     );
   }
-
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
   );
@@ -1985,6 +2484,9 @@ suites and reports the results. \`yarn runtime-tests\` implies --launch;
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
+                            \`lifecycle\` runs scenarios that reload the React
+                            instance between their phases. Android only, and
+                            it needs --launch.
 
 Target
   --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
@@ -2002,7 +2504,8 @@ Build and run
   --launch                  Launch the app after installing it.
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
-                            "run loop" or "runtimes,memory".
+                            "run loop" or "runtimes,memory". For \`lifecycle\`
+                            they are scenario names and also set the order.
   --after-suite <command>   Shell command to run each time the app finishes a
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending
