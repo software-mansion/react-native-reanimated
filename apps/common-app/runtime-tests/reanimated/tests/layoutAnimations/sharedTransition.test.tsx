@@ -421,8 +421,11 @@ describe('Shared element transition between boundaries', () => {
 
     await render(<ParentScreens {...props} showTarget />);
     await waitForFrames(2);
-    expect(await mountedSourceOpacity()).toBeWithinRange(0.5, 0.9);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.45, 0.6);
     expect((await mountedClips()).length).toBe(0);
+
+    await wait(600);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.65, 0.98);
 
     await waitForNotification('shared-transition-finished');
     expect(finished).toBe([true]);
