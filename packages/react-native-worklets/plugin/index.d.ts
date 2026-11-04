@@ -3,7 +3,7 @@ export interface PluginOptions {
    * Enables the [Bundle
    * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/).
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#bundle-mode}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#bundlemode}
    *
    * - Defaults to `false`.
    */

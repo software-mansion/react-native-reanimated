@@ -79,9 +79,50 @@ const obj = {
 };
 ```
 
-### Class Methods
+#### Class Methods
 
-{/* TODO: */}
+```ts
+class Foo {
+  bar() {
+    'worklet';
+    console.log('Hello from ClassMethod');
+  }
+}
+```
+
+The plugin converts a class method with the `'worklet'` directive into a class field, so each instance gets its own copy of the worklet function. The plugin ignores the `'worklet'` directive in constructors, getters and setters. Don't add the `'worklet'` directive to static methods, because the plugin converts them into instance fields too.
+
+### \[Experimental] Worklet Classes
+
+A Worklet Class is a class that you can instantiate on a [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime). To mark a class as a Worklet Class, add the `__workletClass` property to it. The value of the property is not important, but we recommend `true`. The plugin removes this property from the class.
+
+The plugin transforms a Worklet Class with the Babel class polyfills and workletizes the result. You don't need to add the `'worklet'` directive to the methods of a Worklet Class.
+
+```ts
+class Counter {
+  __workletClass = true;
+  value = 0;
+  increment() {
+    return ++this.value;
+  }
+}
+
+scheduleOnUI(() => {
+  const counter = new Counter();
+  console.log(counter.increment()); // Logs 1
+});
+```
+
+In a [workletizable file](#experimental-workletizing-whole-files), every top-level named class is a Worklet Class. You don't need to add the `__workletClass` property there.
+
+**Pitfalls:**
+
+- Worklet Classes work only in [Legacy Eval Mode](../bundleMode/overview.mdx#legacy-eval-mode). In Bundle Mode the plugin doesn't transform them.
+- The class must be a named class declaration. The plugin doesn't transform class expressions and anonymous classes.
+- Worklet Classes don't support inheritance.
+- Worklet Classes don't support static methods and properties.
+- You can't pass class instances between Runtimes. Create the instance on the Runtime that uses it.
+- You can turn off Worklet Classes with the [`disableWorkletClasses`](./options.mdx#disableworkletclasses) option.
 
 ## Autoworkletization
 
