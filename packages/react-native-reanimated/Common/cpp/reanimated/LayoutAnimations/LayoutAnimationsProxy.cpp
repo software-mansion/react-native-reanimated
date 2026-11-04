@@ -1442,6 +1442,9 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 // The Remove of a held view keeps its parent, so the Insert into the root would fail. A hold can appear until the
 // batch mounts, so the release repeats before every mount until the batch is in the queue.
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
+  if (detachedCarriers_.empty()) {
+    return;
+  }
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
   for (const auto &mutation : mutations) {
