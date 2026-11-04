@@ -194,12 +194,19 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
       require('./tests/layoutAnimations/sharedTransitionProps.test');
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
+      require('./tests/layoutAnimations/sharedTransitionRemoval.test');
     },
   },
   {
     testSuiteName: 'layout animations skip exiting',
     importTest: () => {
       require('./tests/layoutAnimations/skipExiting.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations exit frames',
+    importTest: () => {
+      require('./tests/layoutAnimations/exiting/exitFrameProps.test');
     },
   },
   {

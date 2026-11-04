@@ -7,10 +7,26 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTViewComponentView.h>
 #import <RuntimeTestObserverSpec/RuntimeTestObserverSpec.h>
+#import <objc/runtime.h>
 #import <react/renderer/components/rnscreens/EventEmitters.h>
 #import <react/renderer/mounting/ShadowTree.h>
 #import <react/renderer/uimanager/UIManager.h>
 #include <vector>
+
+static NSMutableArray<NSDictionary *> *recordedUnmounts;
+
+// Use only for a class that implements the method itself. Otherwise the call changes the
+// method of its superclass.
+static void recordUnmountsOf(Class viewClass)
+{
+  SEL selector = @selector(unmountChildComponentView:index:);
+  Method method = class_getInstanceMethod(viewClass, selector);
+  auto original = (void (*)(UIView *, SEL, UIView *, NSInteger))method_getImplementation(method);
+  method_setImplementation(method, imp_implementationWithBlock(^(UIView *parent, UIView *child, NSInteger index) {
+                             [recordedUnmounts addObject:@{@"parentTag" : @(parent.tag), @"childTag" : @(child.tag)}];
+                             original(parent, selector, child, index);
+                           }));
+}
 
 @interface RuntimeTestObserver : NSObject <NativeRuntimeTestObserverSpec>
 @property (nonatomic, weak) RCTSurfacePresenter *surfacePresenter;
@@ -99,6 +115,28 @@ RCT_EXPORT_MODULE()
       @"placeholderTextColor" : (id)kCFNull,
       @"labelSetterCalls" : (id)kCFNull,
     });
+  });
+}
+
+- (void)startUnmountRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+      recordUnmountsOf([RCTViewComponentView class]);
+      // React Native Screens takes the snapshot of a removed screen in this override.
+      recordUnmountsOf(NSClassFromString(@"RNSScreenStackView"));
+    });
+    recordedUnmounts = [NSMutableArray new];
+    resolve(nil);
+  });
+}
+
+- (void)takeUnmountRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    resolve(recordedUnmounts ?: @[]);
+    recordedUnmounts = nil;
   });
 }
 
