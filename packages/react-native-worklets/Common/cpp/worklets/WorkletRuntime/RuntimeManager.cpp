@@ -51,6 +51,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(RuntimeData::uiRuntimeId);
 }
 
+size_t RuntimeManager::getAliveRuntimeCount() {
+  std::shared_lock lock(weakRuntimesMutex_);
+  return weakRuntimes_.size();
+}
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
