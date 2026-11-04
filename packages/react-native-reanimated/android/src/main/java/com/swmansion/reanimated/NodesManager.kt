@@ -185,6 +185,13 @@ class NodesManager(
             }
 
             val nativeProxy = mNativeProxy ?: return
+            val isOnUiThread = UiThreadUtil.isOnUiThread()
+            if (isOnUiThread) {
+                // Ensure draw-pass tracking is attached before event handling; the backend reads
+                // isInDrawPass during receiveEvent. Events no worklet waits for attach it too, because a
+                // listener attached during a draw pass misses that pass.
+                mDrawPassDetector.initialize()
+            }
             val eventName = resolveCustomEventName(event.eventName)
             // Building the payload costs more than asking the registry, so an event no worklet waits for stops here.
             if (!nativeProxy.isAnyHandlerWaitingForEvent(eventName, event.viewTag)) {
@@ -192,10 +199,7 @@ class NodesManager(
             }
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
-            if (UiThreadUtil.isOnUiThread()) {
-                // Ensure draw-pass tracking is attached before event handling; the backend reads
-                // isInDrawPass during receiveEvent.
-                mDrawPassDetector.initialize()
+            if (isOnUiThread) {
                 handleEvent(event, eventName)
                 performOperationsRespectingDrawPass()
             } else {
