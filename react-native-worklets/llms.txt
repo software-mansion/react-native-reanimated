@@ -35,6 +35,7 @@
 - [setSerializableMapping](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/setSerializableMapping)
 - [Shareable](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/shareable)
 - [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/synchronizable)
+- [abortWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/abortWorkletRuntime)
 - [callMicrotasks](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/callMicrotasks)
 - [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/createWorkletRuntime)
 - [executeOnUIRuntimeSync](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/executeOnUIRuntimeSync)
