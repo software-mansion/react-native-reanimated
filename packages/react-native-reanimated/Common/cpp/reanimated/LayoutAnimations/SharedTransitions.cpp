@@ -938,6 +938,14 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       if (run.target != afterNode) {
         transaction.restoreRequests.push_back({sharedTag, run.target});
+        if (!afterNode->isDetached) {
+          hideInSharedElement(sharedTag, afterNode);
+          transaction.filteredMutations.push_back(createPropsUpdate(
+              after,
+              cloneViewWithoutOpacity(after, propsParserContext),
+              transition.parentTag[AFTER],
+              propsParserContext));
+        }
       }
       run.target = afterNode;
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
