@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import runtimeTestsSuites from '../runtime-tests-suites.js';
-
-const { selectSuites, reloadRepeatsSuites } = runtimeTestsSuites;
+import { reloadRepeatsSuites, selectSuites } from '../runtime-tests-suites.mts';
 
 const SUITES = [
   { name: 'A' },
