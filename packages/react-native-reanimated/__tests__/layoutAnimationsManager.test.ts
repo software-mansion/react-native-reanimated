@@ -319,6 +319,36 @@ describe('LayoutAnimationsManager', () => {
       manager.stop(13);
     });
 
+    test('keeps an initial value whose parts the interrupted animation drives', () => {
+      startAndRunTo40Percent(14, {
+        initialValues: { transform: [{ matrix: [0, 0] }] },
+        animations: {
+          transform: [
+            { matrix: [makeLinearAnimation(1), makeLinearAnimation(1)] },
+          ],
+        },
+      });
+      const keepStartValue: AnimationObject = {
+        current: undefined,
+        onStart(animation, value) {
+          animation.current = value;
+        },
+        onFrame: () => false,
+      };
+
+      manager.start(14, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { transform: [{ matrix: [1, 1] }] },
+        animations: {
+          transform: [{ matrix: keepStartValue as unknown as number[] }],
+        },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(14, {
+        transform: [{ matrix: [1, 1] }],
+      });
+      manager.stop(14);
+    });
+
     test('starts other animations from their initial values', () => {
       startAndRunTo40Percent(12, {
         initialValues: { opacity: 0 },
