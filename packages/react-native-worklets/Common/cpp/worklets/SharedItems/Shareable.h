@@ -27,6 +27,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  private:
+  bool isHostRuntime(jsi::Runtime &rt) const;
   jsi::Value hostJSValue(jsi::Runtime &rt);
   jsi::Value guestJSValue(jsi::Runtime &rt);
   void initHostValue(jsi::Runtime &rt);

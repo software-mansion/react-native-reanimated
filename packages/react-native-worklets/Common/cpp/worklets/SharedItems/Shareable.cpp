@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
@@ -41,14 +42,19 @@ Shareable::~Shareable() {
 }
 
 jsi::Value Shareable::toJSValue(jsi::Runtime &rt) {
-  const auto *identity = findRuntimeIdentity(rt);
-  if (identity != nullptr && identity->isSameRuntime(hostIdentity_)) {
+  if (isHostRuntime(rt)) {
     return hostJSValue(rt);
   }
   return guestJSValue(rt);
 }
 
+bool Shareable::isHostRuntime(jsi::Runtime &rt) const {
+  const auto *identity = findRuntimeIdentity(rt);
+  return identity != nullptr && identity->isSameRuntime(hostIdentity_);
+}
+
 jsi::Value Shareable::hostJSValue(jsi::Runtime &rt) {
+  react_native_assert(isHostRuntime(rt) && "[Worklets] Shareable host value requested on a non-host runtime.");
   if (!initSynchronously_ && !hostValue_) {
     std::lock_guard lock(initializationMutex_);
     if (!hostValue_) {
@@ -67,6 +73,7 @@ jsi::Value Shareable::guestJSValue(jsi::Runtime &rt) {
 }
 
 void Shareable::initHostValue(jsi::Runtime &rt) {
+  react_native_assert(isHostRuntime(rt) && "[Worklets] Shareable host value initialized on a non-host runtime.");
   const auto shareableUnpacker = getShareableHostUnpacker(rt);
   const auto shareable = shareableUnpacker.call(rt, initial_->toJSValue(rt), decorateHost_->toJSValue(rt));
   hostValue_ = std::make_unique<jsi::Value>(rt, std::move(shareable));
