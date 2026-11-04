@@ -1859,12 +1859,14 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     react::Point viewPosition = scrollPosition(currentNode->current);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
+    auto origin = view.layoutMetrics.frame.origin;
+    // A screen below a header ends at the bottom of its stack. On Android, the frame of a new screen
+    // can also start below the header until React Native Screens sends the native frame.
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
-      const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
-      viewPosition.y += headerHeight;
+      origin.y = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
     }
-    viewPosition += view.layoutMetrics.frame.origin;
+    viewPosition += origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = endsPath ? nullptr : parent;
   }
