@@ -138,8 +138,6 @@ export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
   config: CustomConfig,
-  // A predefined animation with custom initial values runs under a generated name,
-  // but keeps the predefined animation's default duration
   presetName = animationName
 ): AnimationConfig {
   return {
@@ -203,8 +201,6 @@ export function setElementAnimation(
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
 
-    // During the delay, the element shows the animation's first keyframe. For an exiting
-    // animation that starts from the current values, that keeps the view where it was.
     if (
       (animationConfig.animationType === LayoutAnimationType.ENTERING ||
         animationConfig.startsFromCurrentValues) &&

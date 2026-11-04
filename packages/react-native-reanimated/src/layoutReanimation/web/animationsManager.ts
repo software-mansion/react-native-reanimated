@@ -112,10 +112,7 @@ function chooseAction(
   }
 }
 
-// An exiting animation that interrupts a running layout animation of the element, such as an
-// entering one, starts `opacity` from its current value, so the view doesn't jump. Transforms
-// still start from the exiting animation's first keyframe, because browsers report the current
-// transform as a matrix.
+// Browsers report the current transform only as a matrix, so only opacity continues.
 function getInterruptedAnimationValues(
   element: ReanimatedHTMLElement
 ): InitialValuesStyleProps | undefined {
@@ -174,10 +171,9 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
       .presetName;
   }
 
-  // Only predefined animations have keyframes that the current values can be put in
+  const presetName = animationName;
   const startsFromCurrentValues =
-    interruptedAnimationValues !== undefined &&
-    Object.prototype.hasOwnProperty.call(Animations, animationName);
+    interruptedAnimationValues !== undefined && animationName in Animations;
   const initialValues = startsFromCurrentValues
     ? {
         ...(config as CustomConfig).initialValues,
@@ -185,7 +181,6 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
       }
     : (config as CustomConfig).initialValues;
   const hasInitialValues = initialValues !== undefined;
-  const presetName = animationName;
 
   if (hasInitialValues) {
     animationName = createAnimationWithInitialValues(
@@ -218,18 +213,15 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
     }
   }
 
-  const animationConfig = getProcessedConfig(
-    animationName,
-    animationType,
-    config as CustomConfig,
-    presetName
-  );
-
-  if (startsFromCurrentValues) {
-    animationConfig.startsFromCurrentValues = true;
-  }
-
-  return animationConfig;
+  return {
+    ...getProcessedConfig(
+      animationName,
+      animationType,
+      config as CustomConfig,
+      presetName
+    ),
+    startsFromCurrentValues,
+  };
 }
 
 export function startWebLayoutAnimation<
