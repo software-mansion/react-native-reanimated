@@ -355,3 +355,17 @@ test('rotates the perspective direction along with the interpolated rotation', (
   expect(half[3]).toBeCloseTo(Math.sin(angle / 2) * 0.001, 10);
   expect(half[11]).toBeCloseTo(-Math.cos(angle / 2) * 0.001, 10);
 });
+
+test('interpolates a reflection as a flip', () => {
+  const flipX: AffineMatrixFlat = [
+    -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+  ];
+  const interpolation = prepareMatrixInterpolation(flatIdentityMatrix, flipX);
+  for (const progress of [0.25, 0.5, 0.75]) {
+    const scaleX = 1 - 2 * progress;
+    const expected = [scaleX, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    interpolateMatrix(progress, interpolation).forEach((value, i) =>
+      expect(value).toBeCloseTo(expected[i], 10)
+    );
+  }
+});

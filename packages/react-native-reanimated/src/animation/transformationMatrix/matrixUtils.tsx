@@ -399,7 +399,11 @@ export function decomposeMatrix(
     [0, 0, 1, 0],
     [matrix[12], matrix[13], matrix[14], 1],
   ];
-  const sx = matrix[15] * norm3d(matrix[0], matrix[4], matrix[8]);
+  // A negative x scale keeps a reflection, which a rotation cannot express.
+  const sx =
+    Math.sign(determinant3x3(matrix) || 1) *
+    matrix[15] *
+    norm3d(matrix[0], matrix[4], matrix[8]);
   const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
   const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
 
