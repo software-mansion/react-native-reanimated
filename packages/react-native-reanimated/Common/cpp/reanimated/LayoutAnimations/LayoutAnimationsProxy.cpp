@@ -114,6 +114,8 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
+  nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 #ifdef ANDROID
   releaseViewTransitions_ = dependencies.releaseViewTransitions;
@@ -269,6 +271,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    followOffWindowTargets(propsParserContext);
     flushSubtreeRemovals(transaction);
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
@@ -1236,6 +1239,9 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       carrier->setDetached(false);
     }
     detachedCarriers_.clear();
+#ifdef __APPLE__
+    react_native_assert(!carrierOverlay_ && "The last pull of a surface deletes its overlay");
+#endif
     heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
@@ -1599,7 +1605,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
       .config = config,
       .contentOpacity = contentOpacity,
   });
@@ -1616,7 +1622,7 @@ void LayoutAnimationsProxy::startProgressTransition(
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
       .config = config,
   });
 }
