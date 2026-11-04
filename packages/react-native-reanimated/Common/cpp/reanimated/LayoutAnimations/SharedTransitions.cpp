@@ -743,6 +743,29 @@ void LayoutAnimationsProxy::retireOrphanedSharedTransitions() const {
   }
 }
 
+// The new top screen covers a target that is in another screen. Its run ends, so that its carrier does not move over
+// the new screen. A target that carries another run is at the root, above the screens.
+void LayoutAnimationsProxy::finishCoveredSharedTransitions(
+    const std::shared_ptr<LightNode> &topScreen,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  for (auto &[sharedTag, element] : sharedElements_) {
+    if (!element.run) {
+      continue;
+    }
+    const auto &target = element.run->target;
+    const bool carriesAnotherRun = target->isDetached && target != element.run->carrier;
+    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || isInSubtree(target, topScreen)) {
+      continue;
+    }
+    if (hasUnqueuedCarrierFrame(element.run->carrier->current.tag)) {
+      retireSharedTransition(sharedTag, element);
+    } else {
+      finishSharedTransition(sharedTag, element, transaction, propsParserContext);
+    }
+  }
+}
+
 void LayoutAnimationsProxy::retireSharedTransition(const SharedTag &sharedTag, SharedElement &element) const {
   const auto carrierTag = element.run->carrier->current.tag;
   const auto [it, inserted] = retiringSharedTransitions_.try_emplace(
@@ -912,6 +935,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           config,
           restartContentFade(run));
     }
+    finishCoveredSharedTransitions(afterTopScreen, transaction, propsParserContext);
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
