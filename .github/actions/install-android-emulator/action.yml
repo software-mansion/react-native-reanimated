@@ -1,0 +1,77 @@
+name: Install Android Emulator
+description: Install the Android Emulator and a system image with sdkmanager, and retry failed or truncated downloads
+
+inputs:
+  api-level:
+    description: The API level of the system image
+    required: true
+  target:
+    description: The target of the system image, for example default or google_apis
+    required: false
+    default: default
+  arch:
+    description: The CPU architecture of the system image
+    required: false
+    default: x86_64
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve SDK root
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ "$RUNNER_OS" != "Linux" ]]; then
+          echo "::error::install-android-emulator supports only Linux runners, this runner is $RUNNER_OS"
+          exit 1
+        fi
+        sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+        if [[ -z "$sdk_root" ]]; then
+          echo "::error::Neither ANDROID_HOME nor ANDROID_SDK_ROOT is set"
+          exit 1
+        fi
+        echo "sdk-root=$sdk_root" >> "$GITHUB_OUTPUT"
+
+    - name: Install Android Emulator and system image
+      shell: bash
+      env:
+        SDK_ROOT: ${{ steps.resolve.outputs.sdk-root }}
+        PACKAGES: emulator system-images;android-${{ inputs.api-level }};${{ inputs.target }};${{ inputs.arch }}
+        ATTEMPTS: '3'
+        ATTEMPT_TIMEOUT_SECONDS: '600'
+        BACKOFF_SECONDS: '15'
+      run: |
+        set -euo pipefail
+        sdkmanager="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+        read -ra packages <<< "$PACKAGES"
+        package_dir() {
+          echo "$SDK_ROOT/${1//;//}"
+        }
+        all_installed() {
+          local package
+          for package in "${packages[@]}"; do
+            [[ -f "$(package_dir "$package")/package.xml" ]] || return 1
+          done
+        }
+        printf 'y\n%.0s' $(seq 50) | "$sdkmanager" --licenses > /dev/null
+        for ((attempt = 1; attempt <= ATTEMPTS; attempt++)); do
+          echo "Installing ${packages[*]}, attempt $attempt of $ATTEMPTS"
+          if timeout "$ATTEMPT_TIMEOUT_SECONDS" "$sdkmanager" --install "${packages[@]}" --channel=0 && all_installed; then
+            echo "Installed ${packages[*]}"
+            exit 0
+          fi
+          echo "::warning::Attempt $attempt of $ATTEMPTS to install ${packages[*]} failed"
+          rm -rf "$SDK_ROOT/.temp" "$SDK_ROOT/.downloadIntermediates"
+          for package in "${packages[@]}"; do
+            dir="$(package_dir "$package")"
+            if [[ -d "$dir" && ! -f "$dir/package.xml" ]]; then
+              rm -rf "$dir"
+            fi
+          done
+          if ((attempt < ATTEMPTS)); then
+            sleep $((attempt * BACKOFF_SECONDS))
+          fi
+        done
+        echo "::error::Could not install ${packages[*]} after $ATTEMPTS attempts"
+        exit 1
