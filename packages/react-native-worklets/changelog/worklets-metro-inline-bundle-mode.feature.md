@@ -1,1 +1,1 @@
-Bundle Mode emits worklet modules as `metro:inline` virtual modules and no longer needs the `metro` patch or the `.worklets` directory.
+Bundle Mode emits worklet modules as `metro:inline` virtual modules and no longer needs the SHA-1 `metro` patch or the `.worklets` directory; until a Metro release includes virtual modules, the `metro` and `metro-config` patches for 0.87.2 add them.

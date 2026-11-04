@@ -122,6 +122,8 @@ Bundle Mode isolates each worklet function in a separate module. The plugin emit
 
 This needs a Metro version that supports `metro:inline` specifiers and virtual modules ([react/metro#2037](https://github.com/react/metro/pull/2037)). `bundleModeMetroConfig` and `getBundleModeMetroConfig` enable `resolver.unstable_allowVirtualModules` for you.
 
+No released Metro includes this support yet. Until one does, apply the `metro` and `metro-config` patches for Metro 0.87.2 from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
 ## Enable fast refresh on Worklet Runtimes
 
 _This step is optional but highly recommended._
