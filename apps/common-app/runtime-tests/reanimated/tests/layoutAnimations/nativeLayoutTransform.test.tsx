@@ -558,20 +558,26 @@ describe('native layout transform', () => {
   movingGeometryTest(
     'no duration with a delay holds the start value, then the model shows',
     async () => {
-      const { events, reads, end } = await playCase(
+      const { events, rows, end } = await playCase(
         'no duration with a delay',
         transformCaseOf(
           [['scaleX', 0.5, 1]],
           { duration: 0, delays: [600] },
           {
             totalMs: 600,
+            isFrameDriven: true,
+            refusedWith: 'UnsupportedTrackForm',
             matrixTolerance: { ...REST_TOLERANCE, translation: 0.005 },
           }
         )
       );
-      expect(summarizeStart(events)).toBe(TRANSFORM_START);
-      expect(summarizeAfterStart(events)).toBe(TRANSFORM_END);
-      expectOneKeyWhilePlaying(reads);
+      expect(summarizeStart(events)).toBe(
+        'LayoutBuildFailed:UnsupportedTrackForm'
+      );
+      expect(summarizeAfterStart(events)).toBe('');
+      for (const { row } of rows) {
+        expect(row.native.Transform.playbacks.length).toBe(0);
+      }
       expect(end!.native.Transform.presentation[0]).toBe(1);
       expect(end!.frame.Transform.model[0]).toBe(1);
       await render(null);

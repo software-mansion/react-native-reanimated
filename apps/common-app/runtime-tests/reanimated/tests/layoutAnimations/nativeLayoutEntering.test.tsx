@@ -1150,12 +1150,12 @@ describe('native layout entering', () => {
         true
       );
       expect(isNear(frame.model, track.from, endToleranceOf(track))).toBe(true);
-      expect(native.keys).toBe(customTracks.length);
+      expect(native.keys).toBe(0);
     }
     expect(callbacks.length).toBe(0);
     const startEvents = await takeTraceOfPair(entered);
     expect(summarize(startEvents.native.filter(isHostEvent))).toBe(
-      startOf(customTracks)
+      'LayoutBuildFailed:UnsupportedTrackForm'
     );
 
     await waitUntil(entered, delayMs + 300);
@@ -1166,7 +1166,7 @@ describe('native layout entering', () => {
       expect(native.keys).toBe(0);
     }
     const endEvents = await takeTraceOfPair(entered);
-    expect(summarizeEnd(endEvents.native)).toBe(endOf(customTracks));
+    expect(summarizeEnd(endEvents.native)).toBe('');
     expect(sortedCallbacks()).toBe('frame:true,native:true');
     await render(null);
   });

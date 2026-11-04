@@ -121,6 +121,7 @@ import {
   takeTrace,
   takeTraceOf,
   startRefusalsOf,
+  layoutRefusalOf,
   summarize,
   summarizeEnd,
   SizePair,
@@ -1207,9 +1208,11 @@ describe('native layout continuity', () => {
           frameDistance(source.presentation, source.model) > BOX_SIZE / 2
         ).toBe(isNative);
         if (!PLAYS_SIZE_CHANGE && !hasCallback) {
-          expect(summarize((await takeTraceOf(tag)).filter(isRouteEvent))).toBe(
-            'LayoutBuildFailed:UnsupportedTarget'
+          const events = await takeTraceOf(tag);
+          expect(summarize(events.filter(isRouteEvent))).toBe(
+            'LayoutStartRefused'
           );
+          expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
         }
         await render(screens(end, true));
         await wait(2 * FRAME_MS);
@@ -1775,9 +1778,7 @@ describe('native layout size continuity', () => {
     { events, rows }: Played,
     { target }: SizeChange
   ): FirstThird {
-    const refusalMs =
-      events.find(({ event }) => event === 'LayoutBuildFailed')
-        ?.monotonicTimeMs ?? Infinity;
+    const refusalMs = layoutRefusalOf(events).monotonicTimeMs;
     const samples = rows.map(({ row }) => row.native[target]);
     return {
       tag: getTestComponent(BOX_REF).getTag(),
@@ -1816,15 +1817,17 @@ describe('native layout size continuity', () => {
    */
   function expectFrameDrivenGroup(
     { tag, events, samples }: FirstThird,
-    change: SizeChange
+    change: SizeChange,
+    laterRefusal?: 'FrameDrivenState'
   ) {
-    expect(
-      summarize(
-        events
-          .filter(isRouteEvent)
-          .filter(({ event }) => event !== 'LayoutStartRefused')
-      )
-    ).toBe('LayoutBuildFailed:UnsupportedTarget');
+    const refusals = [
+      'SizeBeyondOnePixel',
+      ...(laterRefusal ? [laterRefusal] : []),
+    ];
+    expect(summarize(events.filter(isRouteEvent))).toBe(
+      refusals.map(() => 'LayoutStartRefused').join(' > ')
+    );
+    expect(startRefusalsOf(events)).toBe(refusals.join());
     const route = routeOf(
       events,
       tag,
@@ -2010,7 +2013,11 @@ describe('native layout size continuity', () => {
     if (PLAYS_SIZE_CHANGE) {
       expectReplacement(played, 'PositionX', ['Width']);
     } else {
-      expectFrameDrivenGroup(firstThirdOf(played, WIDTH_CHANGE), WIDTH_CHANGE);
+      expectFrameDrivenGroup(
+        firstThirdOf(played, WIDTH_CHANGE),
+        WIDTH_CHANGE,
+        'FrameDrivenState'
+      );
     }
     await render(null);
   });
@@ -2024,7 +2031,11 @@ describe('native layout size continuity', () => {
     if (PLAYS_SIZE_CHANGE) {
       expectReplacement(played, 'Width', ['PositionX']);
     } else {
-      expectFrameDrivenGroup(firstThirdOf(played, WIDTH_CHANGE), WIDTH_CHANGE);
+      expectFrameDrivenGroup(
+        firstThirdOf(played, WIDTH_CHANGE),
+        WIDTH_CHANGE,
+        'FrameDrivenState'
+      );
     }
     await render(null);
   });
@@ -2404,8 +2415,13 @@ describe('native layout size continuity', () => {
     const { startEvents, commitEvents, rows, endEvents, distances, twin } =
       await changeStyleDuringAnimation(customPair, FIRST, BORDER, undefined);
     expect(summarize(startEvents.filter(isRouteEvent))).toBe(
-      'LayoutBuildFailed:UnsupportedTarget'
+      PLAYS_SIZE_CHANGE
+        ? 'LayoutBuildFailed:UnsupportedTarget'
+        : 'LayoutStartRefused'
     );
+    if (!PLAYS_SIZE_CHANGE) {
+      expect(startRefusalsOf(startEvents)).toBe('SizeBeyondOnePixel');
+    }
     expect(summarize(commitEvents.filter(isRouteEvent))).toBe('');
     expect(summarize(endEvents.filter(isRouteEvent))).toBe('');
     expect(rows.map((row) => row.playbacks.length).join()).toBe('0,0,0,0');
@@ -2511,11 +2527,18 @@ describe('native layout size continuity', () => {
         expect(startRefusalsOf(events)).toBe('FrameDrivenState');
       } else {
         expect(targetsOf(events, 'TrackStarted')).toBe(startedTrack);
-        expect(
-          events.some(
-            ({ buildFailure }) => buildFailure === 'UnsupportedContinuation'
-          )
-        ).toBe(startedTrack === '');
+        if (
+          !PLAYS_SIZE_CHANGE &&
+          (writeKey === 'width' || writeKey === 'height')
+        ) {
+          expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
+        } else {
+          expect(
+            events.some(
+              ({ buildFailure }) => buildFailure === 'UnsupportedContinuation'
+            )
+          ).toBe(startedTrack === '');
+        }
       }
       const isNative = !firstThird && startedTrack !== '';
       expect(rows[0].playbacks.length).toBe(isNative ? 1 : 0);
@@ -2574,9 +2597,15 @@ describe('native layout size continuity', () => {
       const distances = framePairDistances(rows);
       expect(before.playbacks.length).toBe(4);
       expect(targetsOf(events, 'TrackStarted')).toBe('');
-      expect(
-        events.some(({ buildFailure }) => buildFailure === 'UnsupportedTarget')
-      ).toBe(true);
+      if (PLAYS_SIZE_CHANGE) {
+        expect(
+          events.some(
+            ({ buildFailure }) => buildFailure === 'UnsupportedTarget'
+          )
+        ).toBe(true);
+      } else {
+        expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
+      }
       expect(rows[0].playbacks.length).toBe(0);
       await expectRowsOnTwinTimeline(
         `a write of width during the native tracks of ${hostName}`,

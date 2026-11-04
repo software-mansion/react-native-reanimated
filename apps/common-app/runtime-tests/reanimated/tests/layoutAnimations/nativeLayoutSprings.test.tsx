@@ -65,6 +65,8 @@ import {
   LAID_OUT_TOLERANCE,
   layerOf,
   layoutOf,
+  layoutRefusalOf,
+  layoutRefusalReason,
   middleOf,
   movingGeometryTest,
   nativeOriginOf,
@@ -928,13 +930,8 @@ function expectFrameDriven(
   failure: string,
   twin: Twin
 ) {
-  const refusal = played.events.find(
-    ({ event }) => event === 'LayoutBuildFailed'
-  );
-  expect(refusal?.buildFailure).toBe(failure);
-  if (!refusal) {
-    return;
-  }
+  const refusal = layoutRefusalOf(played.events);
+  expect(layoutRefusalReason(refusal)).toBe(failure);
   const differs = (first: number[], second: number[]) =>
     first.some(
       (value, cell) =>
@@ -1430,7 +1427,7 @@ describe('native layout springs', () => {
   test(
     PLAYS_SIZE_CHANGE
       ? 'an underdamped height spring from 100 to 0 can go below 0, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0'
-      : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0',
+      : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, SizeBeyondOnePixel, and it ends at 0',
     async () => {
       const played = await playHeightSpring(0);
       const twin = scalarTwinOf(played, HEIGHT);
@@ -1443,7 +1440,7 @@ describe('native layout springs', () => {
         'a height spring',
         played,
         'Height',
-        'UnsupportedTarget',
+        PLAYS_SIZE_CHANGE ? 'UnsupportedTarget' : 'SizeBeyondOnePixel',
         twin
       );
       expectHeightEndsAt(played, 0);
@@ -1459,7 +1456,7 @@ describe('native layout springs', () => {
     test(
       PLAYS_SIZE_CHANGE
         ? `an underdamped height spring from 100 to ${to} stays above 0 (least ${least}), so it plays natively: NATIVE PLAYING, and it ends at ${to}`
-        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at ${to}`,
+        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, SizeBeyondOnePixel, and it ends at ${to}`,
       async () => {
         const played = await playHeightSpring(to);
         if (PLAYS_SIZE_CHANGE) {
@@ -1469,7 +1466,7 @@ describe('native layout springs', () => {
             'a height spring that stays above 0',
             played,
             'Height',
-            'UnsupportedTarget',
+            'SizeBeyondOnePixel',
             scalarTwinOf(played, HEIGHT)
           );
         }
@@ -1568,7 +1565,7 @@ describe('native layout springs', () => {
             'LinearTransition.springify()',
             played,
             TARGETS[key.key],
-            'UnsupportedTarget',
+            'SizeBeyondOnePixel',
             scalarTwinOf(played, key)
           );
         }

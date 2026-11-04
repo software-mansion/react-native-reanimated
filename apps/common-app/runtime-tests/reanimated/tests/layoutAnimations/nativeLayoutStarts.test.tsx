@@ -169,6 +169,7 @@ import {
   playbackCountOf,
   takeTraceUntilSurfaceClosed,
   startRefusalsOf,
+  layoutRefusalOf,
   summarize,
   callbacks,
   builderCalls,
@@ -842,7 +843,9 @@ describe('native layout starts after the mount of the final state', () => {
     [
       'a perspective that changes',
       {},
-      'UnsupportedValue',
+      PLAYS_3D_OPERATIONS || !PLAYS_MOVING_GEOMETRY
+        ? 'UnsupportedValue'
+        : 'UnsupportedTarget',
       ...transformCase([['perspective', 300, 500], TURN]),
     ],
     [
@@ -1236,21 +1239,31 @@ describe('native layout starts after the mount of the final state', () => {
   }
 
   movingGeometryTest(
-    'position leaves play natively on a view whose size changes in the commit',
+    `position leaves on a view whose size changes in the commit ${PLAYS_SIZE_CHANGE ? 'play natively' : 'stay frame-driven: SizeBeyondOnePixel'}`,
     async () => {
       const tag = await renderBox();
       await render(<Scene left={END_LEFT} width={2 * BOX_SIZE} />);
       await wait(DURATION / 2);
-      expect(summarize((await takeTraceOf(tag)).filter(isHostEvent))).toBe(
-        NATIVE_START
+      const events = await takeTraceOf(tag);
+      expect(summarize(events.filter(isHostEvent))).toBe(
+        PLAYS_SIZE_CHANGE ? NATIVE_START : 'LayoutStartRefused'
       );
+      if (!PLAYS_SIZE_CHANGE) {
+        expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
+      }
       const { model, presentation } = await sampleFrame(tag);
       expect(model.width).toBe(2 * BOX_SIZE);
       expect(presentation.width).toBe(2 * BOX_SIZE);
       expect(presentation.x > START_LEFT).toBe(true);
       expect(presentation.x < END_LEFT).toBe(true);
       await wait(DURATION);
-      expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
+      expect(summarizeEnd(await takeTraceOf(tag))).toBe(
+        PLAYS_SIZE_CHANGE ? NATIVE_END : ''
+      );
+      const end = await sampleFrame(tag);
+      expect(
+        Math.abs(end.presentation.x - END_LEFT) <= LAID_OUT_TOLERANCE
+      ).toBe(true);
       await render(null);
     }
   );
@@ -2086,8 +2099,12 @@ describe('native layout starts with no duration', () => {
     'each negative delay wrapper counts as zero before the hold',
     async () => {
       const leaf = { duration: 0, delays: [-DURATION, DURATION] };
-      const layout = layoutOf({ originX: leaf, originY: leaf });
+      const layout = layoutOf(
+        { originX: leaf, originY: leaf },
+        { name: 'hold' }
+      );
       const tag = await renderBox({ layout });
+      const initialY = (await sample(tag, 'PositionY')).model[0];
       await render(<Scene left={END_LEFT} layout={layout} />);
       await wait(DURATION / 2);
       const held = await sample(tag, 'PositionX');
@@ -2095,8 +2112,25 @@ describe('native layout starts with no duration', () => {
         Math.abs(held.presentation[0] - centerOf(START_LEFT)) <=
           LAID_OUT_TOLERANCE
       ).toBe(true);
+      expect(callbacks.length).toBe(0);
       await wait(DURATION);
-      expect(summarizeEnd(await takeTraceOf(tag))).toBe(SORTED_START_AND_END);
+      expect(summarizeEnd(await takeTraceOf(tag))).toBe(
+        'LayoutBuildFailed:UnsupportedTrackForm'
+      );
+      for (const [target, endpoint] of [
+        ['PositionX', centerOf(END_LEFT)],
+        ['PositionY', initialY],
+      ] as const) {
+        const end = await sample(tag, target);
+        expect(end.playbacks.length).toBe(0);
+        expect(Math.abs(end.model[0] - endpoint) <= LAID_OUT_TOLERANCE).toBe(
+          true
+        );
+        expect(
+          Math.abs(end.presentation[0] - endpoint) <= LAID_OUT_TOLERANCE
+        ).toBe(true);
+      }
+      expect(callbacks.join()).toBe('hold:true');
       await render(null);
     }
   );
@@ -2381,7 +2415,9 @@ describe('a native layout start that is late on its timeline', () => {
       const events = [...started, ...(await takeTraceOf(tag))].filter(
         (event) => event.tag === tag && isHostEvent(event)
       );
-      expect(summarizeEnd(events)).toBe(SORTED_START_AND_END);
+      expect(summarizeEnd(events)).toBe(
+        'LayoutBuildFailed:UnsupportedTrackForm'
+      );
       expect(callbacks.join()).toBe('late:true');
       await render(null);
     }
@@ -2748,10 +2784,10 @@ describe('native layout size', () => {
       ? referenceCase
       : { ...referenceCase, isFrameDriven: true };
   const SIZE_FALLBACK_NAME =
-    'keeps the whole animation frame-driven: UnsupportedTarget, and the frames of the frame driver on the two boxes are on its timeline';
+    'keeps the whole animation frame-driven: SizeBeyondOnePixel, and the frames of the frame driver on the two boxes are on its timeline';
 
   /**
-   * The fallback evidence of a refused size change: the build failure, no
+   * The fallback evidence of a refused size change: the start refusal, no
    * result of a native command, and a frame-driven route of `target` with
    * models on the declared timeline at their read times. An off-curve model
    * fails the same check.
@@ -2760,9 +2796,10 @@ describe('native layout size', () => {
     const events = played.events.filter(
       ({ event }) => event !== 'FrameUpdateMounted'
     );
-    expect(summarizeStart(events)).toBe('LayoutBuildFailed:UnsupportedTarget');
+    expect(summarizeStart(events)).toBe('LayoutStartRefused');
+    expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
     expect(summarizeResults(events)).toBe('');
-    const refusal = firstEventOf(events, 'LayoutBuildFailed');
+    const refusal = layoutRefusalOf(events);
     const valueAt = declaredTargetOf(played, target);
     const isOnTimeline = (model: number[], readMs: Band) =>
       isOnFrameDriverTimeline(valueAt, refusal.monotonicTimeMs, model, readMs);
@@ -2867,17 +2904,26 @@ describe('native layout size', () => {
   });
 
   movingGeometryTest(
-    'position leaves on a view whose size changes in the commit play natively, and the native values and the frames of the frame driver are on their timelines',
+    PLAYS_SIZE_CHANGE
+      ? 'position leaves on a view whose size changes in the commit play natively, and the native values and the frames of the frame driver are on their timelines'
+      : 'position leaves on a view whose size changes in the commit stay frame-driven',
     async () => {
       const played = await playCase(
         'position leaves on a view whose size changes',
-        sizeCaseOf(
-          { leaves: { originX: LINEAR_LEAF, originY: LINEAR_LEAF } },
-          START,
-          MOVED_AND_RESIZED,
-          { alsoSampled: ['Width'] }
+        sizeChangeOf(
+          sizeCaseOf(
+            { leaves: { originX: LINEAR_LEAF, originY: LINEAR_LEAF } },
+            START,
+            MOVED_AND_RESIZED,
+            { alsoSampled: ['Width'] }
+          )
         )
       );
+      if (!PLAYS_SIZE_CHANGE) {
+        expectSizeFallback(played, 'PositionX');
+        await render(null);
+        return;
+      }
       expect(summarizeStart(played.events)).toBe(
         startOf('PositionX', 'PositionY')
       );
@@ -3342,7 +3388,7 @@ describe('native layout size', () => {
     ['a size change of a ScrollView', { host: 'ScrollView' }, WIDER],
   ];
   for (const [caseName, box, end] of sizeChangesOnTheFrameDriver) {
-    test(`${caseName} keeps the whole animation frame-driven: UnsupportedTarget`, async () => {
+    test(`${caseName} keeps the whole animation frame-driven: ${PLAYS_SIZE_CHANGE ? 'UnsupportedTarget' : 'SizeBeyondOnePixel'}`, async () => {
       const layout = linearLayout(ROUTE_DURATION);
       const tag = await mountScene(<SizeScene {...box} layout={layout} />);
       await render(<SizeScene {...box} {...end} layout={layout} />);
@@ -3350,7 +3396,14 @@ describe('native layout size', () => {
       const events = (await takeTraceOf(tag)).filter(
         (event) => event.event !== 'FrameUpdateMounted'
       );
-      expect(summarize(events)).toBe('LayoutBuildFailed:UnsupportedTarget');
+      expect(summarize(events)).toBe(
+        PLAYS_SIZE_CHANGE
+          ? 'LayoutBuildFailed:UnsupportedTarget'
+          : 'LayoutStartRefused'
+      );
+      if (!PLAYS_SIZE_CHANGE) {
+        expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
+      }
       const { model } = await sampleFrame(tag);
       const changed = end === TALLER ? 'height' : 'width';
       expect(
@@ -3600,7 +3653,8 @@ describe('native layout size', () => {
       if (route.kind !== 'frame-driven') {
         throw new Error(`The refused start reports ${route.kind}.`);
       }
-      expect(route.refusal.buildFailure).toBe('UnsupportedTarget');
+      expect(route.refusal.event).toBe('LayoutStartRefused');
+      expect(route.refusal.startRefusal).toBe('SizeBeyondOnePixel');
       await wait(durationMs);
       await render(null);
     });

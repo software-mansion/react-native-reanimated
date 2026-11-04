@@ -65,15 +65,17 @@ const transformCase = (
   { transform, ...box },
 ];
 
-/**
- * `<failure>:<cause>` of the build failure of the start, or the events when the
- * start has none.
- */
 function refusalOf(events: TraceEvent[]) {
-  const failure = events.find(({ event }) => event === 'LayoutBuildFailed');
+  const failure = events.find(
+    ({ event }) =>
+      event === 'LayoutStartRefused' || event === 'LayoutBuildFailed'
+  );
+  if (failure?.event === 'LayoutStartRefused') {
+    return `LayoutStartRefused:${failure.startRefusal}`;
+  }
   return failure
     ? `${failure.buildFailure}:${failure.buildFailureCause}`
-    : `no build failure: ${events.map(({ event }) => event).join(' > ')}`;
+    : `no layout refusal: ${events.map(({ event }) => event).join(' > ')}`;
 }
 
 /**
@@ -235,7 +237,10 @@ describe('native layout refusal causes', () => {
   }
 
   for (const [caseName, host, cause] of SIZE_REFUSALS) {
-    test(`${caseName} keeps the animation frame-driven: UnsupportedTarget:${cause}`, async () => {
+    const refusal = IS_APPLE
+      ? `UnsupportedTarget:${cause}`
+      : `LayoutStartRefused:${cause}`;
+    test(`${caseName} keeps the animation frame-driven: ${refusal}`, async () => {
       const layout = LinearTransition.duration(DURATION).easing(Easing.linear);
       const style = host === 'View' ? { borderRadius: '30%' as const } : {};
       const tag = await mountScene(
@@ -245,9 +250,7 @@ describe('native layout refusal causes', () => {
         <SizeScene host={host} style={style} {...WIDER} layout={layout} />
       );
       await wait(DURATION * 1.5);
-      expect(refusalOf(await takeTraceOf(tag))).toBe(
-        `UnsupportedTarget:${cause}`
-      );
+      expect(refusalOf(await takeTraceOf(tag))).toBe(refusal);
       await render(null);
     });
   }

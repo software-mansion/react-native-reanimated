@@ -100,6 +100,9 @@ import {
   isSameLeaf,
   isScalarTrack,
   isSpringLeaf,
+  layoutRefusalOf,
+  layoutRefusalReason,
+  playsSizeChangeOf,
   layerOf,
   layerPositionOf,
   layoutOf,
@@ -183,10 +186,7 @@ type Declaration = {
    * two boxes.
    */
   isFrameDriven?: boolean;
-  /**
-   * The failure of the `LayoutBuildFailed` event of the first build of the
-   * native box, of a case that is frame-driven.
-   */
+  /** The reason of the first layout refusal of the native box. */
   refusedWith?: string;
 };
 
@@ -292,7 +292,7 @@ export type CallbackBuilder = {
 const SIZE_CHANGE_ROUTE: Pick<Declaration, 'isFrameDriven' | 'refusedWith'> =
   PLAYS_SIZE_CHANGE
     ? {}
-    : { isFrameDriven: true, refusedWith: 'UnsupportedTarget' };
+    : { isFrameDriven: true, refusedWith: 'SizeBeyondOnePixel' };
 
 const START: Place = { left: START_LEFT, top: 0 };
 const END: Place = { left: PAIR_LEFT, top: PAIR_TOP };
@@ -1712,27 +1712,18 @@ function distanceToStep(
 const FALLBACK_PARTS = [0.3, 0.55, 0.8, 0.95];
 
 /**
- * The first build of the native box has the `LayoutBuildFailed` event with the
- * failure of the case, and the frame driver plays each key of that build that
- * moves: two reads of its target, at two of `FALLBACK_PARTS` of the time of the
- * build, have models that differ, and each model is the reference of the key at
- * a time from 5 display frames before the read to 2 after it, on the clock of
- * the refusal (`routeOf` of the events before the next build of the box). The
- * reference is the declared value of the key, or, for a key whose declared
- * value has no sample cells, the model of the frame-driven box in the same row.
- * The time of the build ends at the first commit, write, restyle, or clip after
- * it.
+ * A refused start has its declared reason and no native playback. Timed moves
+ * need two changing samples on their timeline. Jumps need frame-driver writes,
+ * samples on their held/end values, and the final value of an uninterrupted
+ * build.
  */
 function expectRefusedRoute(
   caseName: string,
   referenceCase: ReferenceCase,
-  { events, rows, mounted }: Played
+  { events, rows, mounted, end, frameChecks }: Played
 ) {
-  const refusal = events.find(({ event }) => event === 'LayoutBuildFailed');
-  expect(refusal?.buildFailure).toBe(referenceCase.refusedWith);
-  if (!refusal) {
-    return;
-  }
+  const refusal = layoutRefusalOf(events);
+  expect(layoutRefusalReason(refusal)).toBe(referenceCase.refusedWith);
   const buildMs = firstBuildMsOf(referenceCase);
   const [firstBuild] = buildsOf(referenceCase, mounted);
   const firstBuildEvents = eventsBeforeNextBuildOf(events, refusal);
@@ -1767,6 +1758,67 @@ function expectRefusedRoute(
         )
       : ({ model, twin }: { model: number[]; twin: number[] }) =>
           isNear(model, twin);
+    const sizeKey =
+      declared.operation === undefined ? declared.size?.key : undefined;
+    const sampledKeys = firstBuild
+      .map(({ declared: key }) => key)
+      .filter(
+        (key) =>
+          declaresMotion(key) &&
+          (key.target === declared.target || key.key === sizeKey)
+      );
+    const jumpsOnly = sampledKeys.every((key) =>
+      declaredTimelineOf(key.leaf, key.from, key.to, key.base).phases.every(
+        ({ move, durationMs }) => move === undefined || durationMs === 0
+      )
+    );
+    if (jumpsOnly) {
+      expect(firstBuildEvents.some(({ event }) => event === 'Admitted')).toBe(
+        false
+      );
+      for (const key of sampledKeys) {
+        const records = frameChecks.filter(
+          ({ record, replaced }) =>
+            record.box === 'native' && !replaced && isSameLeaf(record, key)
+        );
+        expect(records.length).toBe(1);
+        expect((records[0]?.record.frames.length ?? 0) > 0).toBe(true);
+      }
+      const first = readAt(FALLBACK_PARTS[0] * buildMs);
+      expect(
+        first !== undefined &&
+          first.monotonicTimeMs - refusal.monotonicTimeMs < buildMs
+      ).toBe(true);
+      const uninterrupted =
+        !referenceCase.commitTimesMs?.length &&
+        !referenceCase.restyle &&
+        !referenceCase.write &&
+        !referenceCase.clip;
+      const samples = reads.filter(
+        ({ monotonicTimeMs }) =>
+          monotonicTimeMs >= refusal.monotonicTimeMs &&
+          monotonicTimeMs - refusal.monotonicTimeMs < buildMs
+      );
+      if (uninterrupted) {
+        expect(end !== undefined).toBe(true);
+        if (end)
+          samples.push({
+            ...end.native[declared.target],
+            twin: end.frame[declared.target].model,
+          });
+      }
+      expect(samples.length > 0).toBe(true);
+      for (const sample of samples) {
+        expect(sample.playbacks.length).toBe(0);
+        expect(
+          isOnReference(
+            sample,
+            sample.monotonicTimeMs - refusal.monotonicTimeMs
+          )
+        ).toBe(true);
+      }
+      continue;
+    }
     const parts = distinctPartsOf(
       (part) => referenceAt(part * buildMs),
       cells,
@@ -1915,14 +1967,27 @@ function fallbackKeysOf(build: BuiltKey[]) {
 
 const THREE_D_KINDS = ['rotateX', 'rotateY', 'perspective'];
 
-/**
- * The case with the route of the platform. Below API 29 Android refuses each
- * position or transform track that moves
- * (`AndroidNativeAnimationPlatform::playsTarget`): the whole animation is
- * frame-driven, with `UnsupportedTarget`. A case that is frame-driven for
- * another reason stays as it is.
- */
+/** Frame size refusals come before track checks for the platform. */
 export function routedCaseOf(referenceCase: ReferenceCase): ReferenceCase {
+  const [before, after] = referenceCase.places;
+  if (
+    referenceCase.flow === 'layout' &&
+    before &&
+    after &&
+    (!playsSizeChangeOf(
+      (after.width ?? BOX_SIZE) - (before.width ?? BOX_SIZE)
+    ) ||
+      !playsSizeChangeOf(
+        (after.height ?? BOX_SIZE) - (before.height ?? BOX_SIZE)
+      ))
+  ) {
+    return {
+      ...referenceCase,
+      isFrameDriven: true,
+      refusedWith: 'SizeBeyondOnePixel',
+    };
+  }
+
   const movesGeometry = () =>
     movesGeometryOf(
       buildsOf(referenceCase)

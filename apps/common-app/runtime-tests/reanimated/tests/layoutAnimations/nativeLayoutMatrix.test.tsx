@@ -196,9 +196,17 @@ const isEvent =
 async function expectCase(caseName: string, referenceCase: ReferenceCase) {
   const played = await play(referenceCase);
   expectReference(caseName, referenceCase, played);
-  const isNative = !routedCaseOf(referenceCase).isFrameDriven;
+  const routed = routedCaseOf(referenceCase);
+  const isNative = !routed.isFrameDriven;
   expect(played.events.some(isEvent('Admitted'))).toBe(isNative);
-  expect(played.events.some(isEvent('LayoutBuildFailed'))).toBe(!isNative);
+  const isEarlySizeRefusal =
+    !isNative && routed.refusedWith === 'SizeBeyondOnePixel';
+  expect(played.events.some(isEvent('LayoutBuildFailed'))).toBe(
+    !isNative && !isEarlySizeRefusal
+  );
+  expect(played.events.some(isEvent('LayoutStartRefused'))).toBe(
+    isEarlySizeRefusal
+  );
   if (isNative && PLAYS_MOVING_GEOMETRY) {
     expectAtCommonTime(caseName, referenceCase, played);
   }

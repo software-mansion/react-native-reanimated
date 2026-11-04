@@ -367,6 +367,22 @@ export const startRefusalsOf = (events: TraceEvent[]) =>
     .map(({ startRefusal }) => startRefusal)
     .join();
 
+export function layoutRefusalOf(events: TraceEvent[]) {
+  const refusal = events.find(
+    ({ event }) =>
+      event === 'LayoutStartRefused' || event === 'LayoutBuildFailed'
+  );
+  if (!refusal) {
+    throw new Error('The trace has no layout refusal.');
+  }
+  return refusal;
+}
+
+export const layoutRefusalReason = (refusal: TraceEvent) =>
+  refusal.event === 'LayoutStartRefused'
+    ? refusal.startRefusal
+    : refusal.buildFailure;
+
 export const isClientReport = ({ event }: TraceEvent) =>
   event === 'ClientAdmitted' || event === 'ClientEnded';
 

@@ -161,6 +161,7 @@ import {
   sample,
   SizeBox,
   summarize,
+  startRefusalsOf,
   takeAtFrameDriverFrame,
   takeTrace,
   takeTraceUntil,
@@ -658,7 +659,7 @@ const LAYOUT: PresetRow[] = [
     EntryExitTransition,
     PLAYS_SIZE_CHANGE
       ? 'LayoutBuildFailed:UnsupportedTrackForm'
-      : 'LayoutBuildFailed:UnsupportedTarget',
+      : 'LayoutStartRefused',
     undefined,
     timedEntryExit,
   ],
@@ -675,6 +676,10 @@ function routeOf(events: TraceEvent[]) {
   const hostEvents = events.filter(
     (event) => isHostEvent(event) && event.event !== 'FrameUpdateMounted'
   );
+  const refusals = startRefusalsOf(hostEvents);
+  if (refusals) {
+    expect(refusals).toBe('SizeBeyondOnePixel');
+  }
   const targets = hostEvents
     .filter(({ event }) => event === 'TrackStarted')
     .map(({ target }) => target);
@@ -685,13 +690,17 @@ function routeOf(events: TraceEvent[]) {
 const TWIN_ROUTE = `LayoutBuildFailed:${NATIVE_TIMING}`;
 const isNativeRoute = (route: string) => !route.startsWith('Layout');
 const BUILD_FAILED = 'LayoutBuildFailed:';
-/** The failure of a route that is one build failure. */
 const refusalOf = (route: string) =>
-  route.startsWith(BUILD_FAILED) && !route.includes(' > ')
-    ? route.slice(BUILD_FAILED.length)
-    : undefined;
+  route === FRAME_SIZE_REFUSAL
+    ? 'SizeBeyondOnePixel'
+    : route.startsWith(BUILD_FAILED) && !route.includes(' > ')
+      ? route.slice(BUILD_FAILED.length)
+      : undefined;
 
 const REFUSED_ROUTE = 'LayoutBuildFailed:UnsupportedTarget';
+const FRAME_SIZE_REFUSAL = 'LayoutStartRefused';
+const twinRouteOf = (flow: Flow) =>
+  flow === 'layout' && !PLAYS_SIZE_CHANGE ? FRAME_SIZE_REFUSAL : TWIN_ROUTE;
 
 /**
  * The presets with a perspective and a rotation about X or Y, from their
@@ -720,13 +729,7 @@ type PlatformNeeds = {
   movesGeometry?: boolean;
 };
 
-/**
- * The route of a preset on the platform of the build. `makeTrack`
- * (NativeLayoutTracks.cpp) checks the form of a track, then asks the platform
- * whether it plays the track, then checks its endpoint: a target that the
- * platform does not play gives `UnsupportedTarget`, and the whole animation
- * stays on the frame driver. The first leaf that fails ends the build.
- */
+/** Frame size refusals come before track checks for the platform. */
 function platformRouteOf(
   route: string,
   {
@@ -737,8 +740,10 @@ function platformRouteOf(
     ),
   }: PlatformNeeds = {}
 ) {
+  if (changesSize && !PLAYS_SIZE_CHANGE) {
+    return FRAME_SIZE_REFUSAL;
+  }
   const isRefused =
-    (changesSize && !PLAYS_SIZE_CHANGE) ||
     (has3DOperations && !PLAYS_3D_OPERATIONS) ||
     (movesGeometry && !PLAYS_MOVING_GEOMETRY);
   return isRefused ? REFUSED_ROUTE : route;
@@ -750,7 +755,7 @@ function platformRouteOf(
  */
 const presetRouteOf = (PresetClass: Preset, flow: Flow, route: string) =>
   platformRouteOf(route, {
-    changesSize: flow === 'layout' && isNativeRoute(route),
+    changesSize: flow === 'layout',
     has3DOperations: THREE_D_PRESETS.includes(PresetClass),
   });
 const routeNameOf = (route: string) =>
@@ -1243,7 +1248,7 @@ async function expectAsTwin({
   });
 
   expect(played.route).toBe(route);
-  expect(played.twinRoute).toBe(TWIN_ROUTE);
+  expect(played.twinRoute).toBe(twinRouteOf(flow));
   const comparisons = played.rows.map(({ native, frame }) => {
     expect(native.Opacity.playbacks.length).toBe(0);
     return compare(native, frame);
@@ -1444,7 +1449,7 @@ describe('native layout presets with no method call', () => {
         );
         expect(played.plainRoute).toBe(route);
         expect(played.route).toBe(route);
-        expect(played.twinRoute).toBe(TWIN_ROUTE);
+        expect(played.twinRoute).toBe(twinRouteOf(flow));
         expectEndAsTwin(flow, played.end.plain, played.end.frame);
         expectEndAsTwin(flow, played.end.native, played.end.frame);
         expect([...callbacks].sort().join()).toBe('frame:true,native:true');
@@ -1486,7 +1491,7 @@ describe('native layout transitions and a width change near 250 pt', () => {
     appleRoute,
   ] of transitions) {
     const route = platformRouteOf(appleRoute, {
-      changesSize: isNativeRoute(appleRoute),
+      changesSize: true,
     });
     test(`${transitionName} over a width change of ${change} pt ${routeNameOf(route)} and ends as its frame-driven twin`, async () => {
       const played = await playScene({
@@ -1500,7 +1505,7 @@ describe('native layout transitions and a width change near 250 pt', () => {
         `PRESET-WIDE | ${transitionName} | ${change} pt | ${played.route} | builder calls ${played.builderCalls}`
       );
       expect(played.route).toBe(route);
-      expect(played.twinRoute).toBe(TWIN_ROUTE);
+      expect(played.twinRoute).toBe(twinRouteOf('layout'));
       expect(played.builderCalls).toBe('frame,native');
       expectEndAsTwin('layout', played.end.native, played.end.frame);
       expect([...callbacks].sort().join()).toBe('frame:true,native:true');
@@ -1611,7 +1616,7 @@ describe('native layout keyframes', () => {
         `KEYFRAME | ${keyframeName} | ${played.route} | builder calls ${played.builderCalls}`
       );
       expect(played.route).toBe(route);
-      expect(played.twinRoute).toBe(TWIN_ROUTE);
+      expect(played.twinRoute).toBe(twinRouteOf(flow));
       expect(played.builderCalls).toBe('frame,native');
       expectEndAsTwin(flow, played.end.native, played.end.frame);
       expect([...callbacks].sort().join()).toBe('frame:true,native:true');

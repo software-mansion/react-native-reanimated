@@ -741,11 +741,12 @@ describe('native layout operation timelines and a live size track', () => {
       await render(null);
     });
   } else {
-    test('a width change stays frame-driven with UnsupportedTarget, a later transform with two timelines on the view stays frame-driven, and the view has the model of its frame-driven twin', async () => {
+    test('a width change stays frame-driven with SizeBeyondOnePixel, a later transform with two timelines on the view stays frame-driven, and the view has the model of its frame-driven twin', async () => {
       const width = await startWidth();
       expect(summarize(width.events.native.filter(isHostEvent))).toBe(
-        'LayoutBuildFailed:UnsupportedTarget'
+        'LayoutStartRefused'
       );
+      expect(startRefusalsOf(width.events.native)).toBe('SizeBeyondOnePixel');
       expect(width.before.native.playbacks.length).toBe(0);
       const startMs = performance.now();
       await startTransform();
