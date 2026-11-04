@@ -298,7 +298,7 @@ inline void registerCustomSerializable(
     const int typeId) {
   const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
   // Prevent registering new worklet runtimes while we are updating existing ones to prevent inconsistencies.
-  runtimeManager->withRegistrationPaused([&] {
+  runtimeManager->withRuntimeReadyPaused([&] {
     memoryManager->registerCustomSerializable(data);
     for (const auto &runtime : runtimeManager->getAllRuntimes()) {
       if (runtime->isLockingEnabled()) {
