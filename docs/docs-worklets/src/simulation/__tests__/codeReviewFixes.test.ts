@@ -206,3 +206,59 @@ describe('third review round', () => {
     assert.match(output, /__simMarkLine\(4\); yield console\.log/);
   });
 });
+
+describe('fourth review round', () => {
+  it('keeps rewriting when only a nested function redeclares the name', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        function* middle() {
+          function* inner() {
+            const result = yield 1;
+          }
+          yield console.log(result.value);
+        }
+      }
+    `);
+    assert.match(displaySource(source).text, /^\s{2}console\.log\(result\);$/m);
+  });
+
+  it('does not rewrite quoted text inside a template interpolation', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        yield console.log(\`\${'result.value'} \${result.value}\`);
+      }
+    `);
+    assert.match(
+      displaySource(source).text,
+      /console\.log\(`\$\{'result\.value'\} \$\{result\}`\);/
+    );
+  });
+
+  it('ignores yield inside a regex literal on a yield line', () => {
+    const source = unindent(`
+      export default function* main() {
+        const matched = yield /yield/.test('yield');
+      }
+    `);
+    assert.doesNotThrow(() => displaySource(source));
+  });
+
+  it('does not mark a yield that continues an object property', () => {
+    const loader = require('../snippetNamesLoader.js') as (
+      source: string
+    ) => string;
+    const output = loader(
+      unindent(`
+        export default function* main() {
+          const config = {
+            value:
+              yield task(),
+          };
+        }
+      `)
+    );
+    assert.doesNotMatch(output, /__simMarkLine\(4\)/);
+  });
+});

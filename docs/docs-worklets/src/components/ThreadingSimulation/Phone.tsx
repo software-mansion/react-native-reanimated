@@ -60,7 +60,7 @@ export default function Phone({
     <PhoneFrame
       className={clsx(styles.phone, className)}
       aria-label="Phone screen"
-      data-help="The app screen. Only the UI thread draws it; other threads send patches that arrive as a draw-frame job. Pressing the button queues a job."
+      title="The app screen. Only the UI thread draws it; other threads send patches that arrive as a draw-frame job. Pressing the button queues a job."
       overlay={waves.map((waveId) => (
         <span key={waveId} className={styles.phoneWaves} aria-hidden>
           <span className={styles.phoneWaveRing} />

@@ -849,11 +849,22 @@ export class Machine {
           return { granted: false };
         }
         const previous = this.activeCore;
+        const originalLog = console.log;
         this.activeCore = core;
         setCurrentInterceptor(this);
+        console.log = (...args: unknown[]) => {
+          this.emit({
+            type: 'log',
+            core: core.spec.id,
+            runtime: this.currentRuntime(core),
+            line: core.line ?? 0,
+            text: formatLogArgs(args),
+          });
+        };
         try {
           return { granted: true, value: operation() };
         } finally {
+          console.log = originalLog;
           setCurrentInterceptor(null);
           this.activeCore = previous;
         }

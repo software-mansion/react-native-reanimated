@@ -126,7 +126,7 @@ export default function MemoryPanel({
                             heapOwner !== undefined && runtimeClass(heapOwner),
                             heapOwner !== undefined && styles.shareableActive
                           )}
-                          data-help={`\`globalThis.${name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
+                          title={`\`globalThis.${name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
                           <span className={styles.shareableLabel}>
                             globalThis.{name}
                           </span>
@@ -152,7 +152,7 @@ export default function MemoryPanel({
                                 runtimeClass(heapOwner),
                               heapOwner !== undefined && styles.shareableActive
                             )}
-                            data-help={`The variable \`${cell.name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
+                            title={`The variable \`${cell.name}\` lives in this runtime's JS heap. Only code running on this runtime can read or write it.`}>
                             <span className={styles.shareableLabel}>
                               {cell.name}
                             </span>
@@ -175,7 +175,7 @@ export default function MemoryPanel({
                                 runtimeClass(heapOwner),
                               heapOwner !== undefined && styles.shareableActive
                             )}
-                            data-help="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
+                            title="A Shareable Host: the value lives in this runtime. Only the thread holding this runtime reads or writes it directly.">
                             <span className={styles.shareableLabel}>
                               Shareable Host
                             </span>
@@ -199,7 +199,7 @@ export default function MemoryPanel({
                                 runtimeClass(heapOwner),
                               heapOwner !== undefined && styles.shareableActive
                             )}
-                            data-help={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
+                            title={`A Shareable Guest: a handle to the value hosted on the ${badgeName(cell.host!)} Runtime. This runtime reads it with getSync (borrowing the host) or getAsync (a job on the host).`}>
                             <span className={styles.shareableLabel}>
                               Shareable Guest
                             </span>
@@ -256,7 +256,7 @@ export default function MemoryPanel({
                       accessor !== undefined && runtimeClass(accessor),
                       accessor !== undefined && styles.synchronizableActive
                     )}
-                    data-help={
+                    title={
                       serializable
                         ? 'A Serializable: an immutable serialized value in native memory. Deserializing it on another runtime creates a separate JavaScript value.'
                         : 'A Synchronizable: shared memory in the native heap. Any thread reads or writes it without a cross-runtime call; the colour shows who touched it this tick.'
@@ -276,7 +276,7 @@ export default function MemoryPanel({
                                 styles.valueType,
                                 styles.lockBadge
                               )}
-                              data-help="The Synchronizable is locked. Other threads wait in getBlocking, setBlocking, setDirty and lock until the holder calls unlock.">
+                              title="The Synchronizable is locked. Other threads wait in getBlocking, setBlocking, setDirty and lock until the holder calls unlock.">
                               locked · {badgeName(cell.lockedBy)}
                             </span>
                           )}
@@ -291,7 +291,7 @@ export default function MemoryPanel({
                     ) : (
                       <span
                         className={styles.innerSerializable}
-                        data-help={`The value of a Synchronizable is stored as a Serializable, here of type ${cell.valueType}.`}>
+                        title={`The value of a Synchronizable is stored as a Serializable, here of type ${cell.valueType}.`}>
                         <span className={styles.shareableLabel}>
                           Serializable
                           <span className={styles.valueType}>

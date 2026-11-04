@@ -9,6 +9,8 @@ const WORKLET_DIRECTIVE_PATTERN = /^\s*(['"])worklet\1;\s*(?:\/\/.*)?$/;
 const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
 const YIELD_PATTERN =
   /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
+const REGEX_LITERAL_PATTERN =
+  /(^|[=(,:!&|?{};+\-*%<>~^]|\b(?:return|yield|typeof|case)\b)\s*\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/g;
 const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*(?:\/\/.*)?$/;
 
 export function scanSource(source: string): Map<string, FnInfo> {
@@ -142,5 +144,6 @@ function bracketDelta(text: string, open: string, close: string): number {
 function codeOf(text: string): string {
   return text
     .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""')
+    .replace(REGEX_LITERAL_PATTERN, '$1""')
     .replace(/\/\/.*$/, '');
 }

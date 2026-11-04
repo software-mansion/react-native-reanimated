@@ -51,7 +51,7 @@ function startsStatement(lines, index) {
   for (let previous = index - 1; previous >= 0; previous--) {
     const code = lines[previous].replace(/\/\/.*$/, '').trim();
     if (code !== '') {
-      return /[;{}:]$/.test(code);
+      return /[;{}]$/.test(code) || /^(?:case\b.*|default\s*):$/.test(code);
     }
   }
   return true;

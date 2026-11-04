@@ -57,7 +57,7 @@ export function displaySource(
         fn !== scope &&
         fn.headerLine > start &&
         fn.endLine <= end &&
-        redeclares(rawLines, fn, name)
+        redeclares(rawLines, fns, fn, name)
     );
     return [{ name, start, end, shadows }];
   });
@@ -237,7 +237,12 @@ function isInsideBody(
   return indent >= bodyIndent && !next.trimStart().startsWith('//');
 }
 
-function redeclares(rawLines: string[], fn: FnInfo, name: string): boolean {
+function redeclares(
+  rawLines: string[],
+  fns: Map<string, FnInfo>,
+  fn: FnInfo,
+  name: string
+): boolean {
   const header = rawLines[fn.headerLine - 1] ?? '';
   const params = header.slice(header.indexOf('(') + 1, header.lastIndexOf(')'));
   const binding = new RegExp(`(?<![\\w$.])${name}(?![\\w$])`);
@@ -245,9 +250,21 @@ function redeclares(rawLines: string[], fn: FnInfo, name: string): boolean {
     return true;
   }
   const declaration = new RegExp(`^\\s*(?:const|let|var)\\s+${name}(?![\\w$])`);
-  return rawLines
-    .slice(fn.headerLine, fn.endLine - 1)
-    .some((text) => declaration.test(text));
+  const nested = [...fns.values()].filter(
+    (other) =>
+      other !== fn &&
+      other.headerLine > fn.headerLine &&
+      other.endLine <= fn.endLine
+  );
+  return rawLines.some(
+    (text, index) =>
+      index + 1 > fn.headerLine &&
+      index + 1 < fn.endLine &&
+      !nested.some(
+        (other) => index + 1 >= other.headerLine && index + 1 <= other.endLine
+      ) &&
+      declaration.test(text)
+  );
 }
 
 function innermostFunction(
@@ -306,7 +323,8 @@ function replaceInCode(
         : part.startsWith('`')
           ? part.replace(
               /\$\{([^}]*)\}/g,
-              (_, inner: string) => `\${${inner.replace(pattern, replacement)}}`
+              (_, inner: string) =>
+                `\${${replaceInCode(inner, pattern, replacement)}}`
             )
           : part
     )

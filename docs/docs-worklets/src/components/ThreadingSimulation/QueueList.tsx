@@ -142,7 +142,7 @@ export default function QueueList({ pending, paused = false }: QueueListProps) {
               entry.job.pastDue === true && styles.queueChipPastDue,
               entry.exitAt !== null && styles.queueChipExit
             )}
-            data-help={
+            title={
               entry.job.timer === true
                 ? 'A pending timer. When it is due, its callback joins this queue as a job.'
                 : entry.job.awaiting === true

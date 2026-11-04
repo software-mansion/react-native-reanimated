@@ -71,6 +71,7 @@ describe('blocked Synchronizable writes', () => {
       []
     );
     assert.ok(formatLogs(snapshots).includes('[rn] counter 5'));
+    assert.ok(formatLogs(snapshots).includes('[rn] updating'));
     assert.ok(
       snapshots.some((snapshot) =>
         snapshot.cores.some(

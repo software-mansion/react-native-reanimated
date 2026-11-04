@@ -16,6 +16,9 @@ export default function* main() {
 
   yield scheduleOnUI(holdLock);
   yield console.log('waiting');
-  yield counter.setBlocking((previous) => previous + other.getDirty());
+  yield counter.setBlocking((previous) => {
+    console.log('updating');
+    return previous + other.getDirty();
+  });
   yield console.log(`counter ${counter.getDirty()}`);
 }
