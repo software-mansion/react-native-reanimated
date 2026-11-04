@@ -13,6 +13,7 @@ const {
   readySerials,
   parseAvdName,
 } = require('./android-device');
+const { selectSuites, reloadRepeatsSuites } = require('./runtime-tests-suites');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
@@ -167,8 +168,10 @@ let afterSuitePending = false;
 /** @type {string | null} */
 let resumeFromSuite = null;
 let reloadInProgress = false;
-/** @type {Set<string>} */
-const suitesThatReloaded = new Set();
+/** @type {string | null} */
+let lastResumeSuite = null;
+/** @type {string[]} */
+let selectedSuites = [];
 const resultsBeforeReload = {
   passed: 0,
   failed: 0,
@@ -648,9 +651,10 @@ function onHello(msg) {
     return;
   }
 
+  selectedSuites = selectSuites(suites, ONLY);
   let only = ONLY;
   if (resumeFromSuite !== null) {
-    only = suitesToResume(suites);
+    only = suitesToResume();
     if (!only) {
       return;
     }
@@ -668,17 +672,9 @@ function onHello(msg) {
   console.log('[runtime-tests] start sent, running tests…');
 }
 
-/**
- * @param {{ name: string; skipByDefault?: boolean; disabled?: boolean }[]} suites
- * @returns {string[] | null}
- */
-function suitesToResume(suites) {
-  const selected = suites
-    .filter((suite) =>
-      ONLY ? ONLY.includes(suite.name) : !suite.skipByDefault && !suite.disabled
-    )
-    .map((suite) => suite.name);
-  const index = selected.indexOf(String(resumeFromSuite));
+/** @returns {string[] | null} */
+function suitesToResume() {
+  const index = selectedSuites.indexOf(String(resumeFromSuite));
   if (index === -1) {
     console.error(
       `[runtime-tests] cannot resume from suite '${resumeFromSuite}', it was not selected for this run.`
@@ -690,7 +686,7 @@ function suitesToResume(suites) {
     shutdown(1);
     return null;
   }
-  return selected.slice(index);
+  return selectedSuites.slice(index);
 }
 
 /** @param {DeviceMessage} msg */
@@ -708,18 +704,18 @@ function onReload(msg) {
     shutdown(1);
     return;
   }
-  if (suitesThatReloaded.has(requestedSuite)) {
+  if (reloadRepeatsSuites(selectedSuites, lastResumeSuite, requestedSuite)) {
     console.error(
-      `[runtime-tests] suite '${requestedSuite}' requested a second reload in this run, stopping to avoid a reload loop.`
+      `[runtime-tests] the device requested a reload that resumes from suite '${requestedSuite}', but the run already resumed from suite '${lastResumeSuite}'. Suite '${requestedSuite}' already ran in this run and would report its results twice, so the run stops.`
     );
     send({
       type: 'error',
-      message: `Suite ${requestedSuite} requested a second reload`,
+      message: `Reload resumes from suite ${requestedSuite}, which is not after the previous resume suite ${lastResumeSuite}`,
     });
     shutdown(1);
     return;
   }
-  suitesThatReloaded.add(requestedSuite);
+  lastResumeSuite = requestedSuite;
   resumeFromSuite = requestedSuite;
   reloadInProgress = true;
   console.log(
