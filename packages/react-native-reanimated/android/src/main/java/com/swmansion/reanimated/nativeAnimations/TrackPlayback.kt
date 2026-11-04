@@ -15,8 +15,6 @@ internal data class TrackKey(
     val generation: Long,
     val target: Int,
 ) {
-    fun toLongs(): LongArray = longArrayOf(surfaceId.toLong(), tag.toLong(), owner.toLong(), generation, target.toLong())
-
     companion object {
         fun listOf(values: LongArray): List<TrackKey> =
             values.asList().chunked(TrackEncoding.TRACK_KEY_LENGTH).map { (surfaceId, tag, owner, generation, target) ->

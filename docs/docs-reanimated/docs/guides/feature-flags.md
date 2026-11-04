@@ -204,37 +204,67 @@ Known limitation on iOS. `backgroundColor`, `borderColor` and `borderRadius` are
 All three share that layer, so this is easiest to hit with a combination of them. A view with a visible border and the default `overflow` doesn't animate its `backgroundColor` either, even though the transition changes nothing about the border. `opacity` and the `shadow*` properties aren't affected, React Native always keeps them on the view's own layer.
 :::
 
+When a CSS transition and a native layout animation (see the two flags below) animate the same property of one view, the layout animation shows on screen. The value of the CSS transition goes to the view and shows when the layout animation ends. A CSS transition and a layout animation of two different properties, for example the `backgroundColor` and the position of the view, play together.
+
 ### `IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`
 
-This flag lets Core Animation play some layout animations on iOS. It is experimental and defaults to `false`.
+This flag lets Core Animation play layout, entering, and exiting animations on iOS. React Native first mounts the final state of the view, and Core Animation then plays the animation on the layer of the view. The flag is experimental and defaults to `false`.
 
-Core Animation plays a `layout` animation only when all these conditions are true:
+Core Animation plays an animation only when it can play the whole animation. Otherwise the whole animation runs on Reanimated's animation loop, as without the flag. No part of one animation plays on Core Animation while another part runs on the loop.
 
-- The builder returns animations only for `originX`, `originY`, and `opacity`, each with an initial value.
-- Each animation is a `withTiming`, optionally inside `withDelay`, with no callback.
-- The easing is `Easing.linear`, `Easing.ease`, or `Easing.bezier`.
-- The size of the view does not change.
+An animation can play with Core Animation when all these conditions are true:
 
-Every other layout animation runs as before. That includes each layout transition preset.
+- Its builder animates only `originX`, `originY`, `width`, `height`, `opacity`, and `transform`, and each of them has an initial value.
+- Each animation is a `withTiming`, a `withDelay`, a `withSequence` of timings that each have a duration, or a `withSpring`. A `Keyframe` counts as a sequence. A `withSpring` plays only inside the limits that Reanimated checks: a damping ratio from 0.1 to 3, a natural frequency from about 6.9 to 44.7 rad/s, a duration from 40 ms to about 9.4 s, and limits on the initial velocity and on the rest threshold. An animation with a callback on one of its parts, `withRepeat`, and `withDecay` run on the loop.
+- The easing is linear, a Bezier curve, the default easing, or an easing function that Reanimated can fit with cubic curves (for example `Easing.quad`, `Easing.sin`, `Easing.back()`, `Easing.elastic()`, `Easing.bounce`). `Easing.circle`, `Easing.steps()`, and `Easing.exp` on a change of more than 250 points run on the loop.
+- A `transform` has at most 4 operations from `translateX`, `translateY`, `scale`, `scaleX`, `scaleY`, `rotate`, `rotateZ`, `rotateX`, `rotateY`, and a `perspective` that does not change, with no percent values. Its end value is the style transform of the view. `skewX`, `skewY`, `matrix`, and `translate` run on the loop. A transform animation plays only on a `View`, a `Text`, or an `Image`.
+- A change of `width` or `height` happens on a plain `View` with no border, no outline, no shadow, no background image, no transform origin, uniform circular corners, and no filter other than `opacity`, and the size does not go below 0 during the animation. On other views a size change runs on the loop. If one of these styles comes while Core Animation plays the size, the animation continues on the loop.
+- An entering view mounts in a window, and its end values are the values of its style. A view that enters inside a new view of the same commit that is not a plain `View` (for example a `Modal` or a `ScrollView`), plays on the loop. So does a view whose nearest older ancestor, or a new ancestor of the same commit, has `removeClippedSubviews`.
+- An exiting animation has a duration.
+- Reduce motion is off. With reduce motion (the system setting or the `reduceMotion` of the animation), no Core Animation playback starts: the view gets its end values at once and the callback gets `true`.
 
-A later animation of the view (a layout animation, an exit, or a shared transition) gets the values on screen as its current values. An initial value that the builder sets stays the start value. A layout animation that starts during a Core Animation playback also plays with Core Animation when it does not need the state of the earlier one. An animation with a delay, or with the same end value and a different duration or easing, needs that state and runs as before.
+A view with 20 or more layout requests in the last second uses the animation loop for its layout changes until the rate drops. Entering and exiting animations do not use this rate check. An animation whose parts all have zero duration, with a delay on at least one part, also runs on the loop. An immediate zero-duration animation can still play natively.
 
-A write to `opacity` from a style, an animated style, or a CSS transition or animation does not show while Core Animation plays the opacity of a layout animation. The written value shows when that animation ends.
+Some examples of the built-in animations that run on the loop: `FlipIn*`, `LightSpeed*`, `EntryExitTransition`, and the rotating exit presets (`PinwheelOut`, `RollOut*`, `RotateOut*`, `ZoomOutRotate`) when they have a delay. Shared element transitions always run on the loop. With `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`, no layout animation plays with Core Animation.
+
+A later animation of the view (a layout animation, an exit, or a shared transition) gets the values on screen as its current values. An initial value that the builder sets stays the start value. A layout animation that starts while Core Animation plays the same property also plays with Core Animation when it does not need the state of the earlier animation. It needs that state when it has a delay, a sequence, or a spring for that property, or when it has the same end value with another duration or easing. Then the whole later animation runs on the loop.
+
+What differs from the loop:
+
+- A value that a style, an animated style, a CSS transition or animation, or a synchronous prop update writes during the animation goes to the view at once. While Core Animation plays that property, the screen shows the animation; the written value shows when it ends. A new `left` or `top` shows at once.
+- Core Animation plays the declared times. An animation keeps its timing while the UI thread is busy, and a `withSequence` ends, and calls its callback, up to about two frames earlier than on the loop.
+- An easing function must be a pure function of its argument. Reanimated reads it one time, when the animation starts, and uses that result for later animations with the same function.
+- After an exiting animation the view leaves about one frame after the callback.
+- The view has its final position and size from the first frame, so touches and accessibility use the final bounds while the view moves.
 
 ### `ANDROID_NATIVE_LAYOUT_ANIMATIONS`
 
-This flag lets Android play some layout animations with platform animators, on the same conditions as [`IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`](#ios_layout_animations_core_animation). It is experimental and defaults to `false`.
+This flag lets Android play layout, entering, and exiting animations with platform animators. The flag is experimental and defaults to `false`.
 
-The flag has an effect only when the app also turns on two experimental React Native feature flags: `enableMountingCoordinatorPullModelAndroid` and `enableAccumulatedUpdatesInRawPropsAndroid`. With them, the mount of each React commit happens in one step on the UI thread, and a layout animation can start in that step. Without them, every layout animation runs as before.
+The flag has an effect only when the app also turns on two experimental React Native feature flags: `enableMountingCoordinatorPullModelAndroid` and `enableAccumulatedUpdatesInRawPropsAndroid`. With them, the mount of each React commit happens in one step on the UI thread, and a layout animation can start in that step. Without them, every layout animation runs on Reanimated's animation loop, as before.
 
-These layout animations run as before on Android, also with the flag:
+The conditions of [`IOS_LAYOUT_ANIMATIONS_CORE_ANIMATION`](#ios_layout_animations_core_animation) apply, with these differences. These animations run on the loop on Android, also with the flag:
 
-- an animation that changes the width or the height of the view,
+- an animation that changes the width or the height of the view by more than one physical pixel (a change of at most one pixel plays, and the view shows its final size during the animation),
 - an animation that moves the view, or that changes its transform, on Android 9 (API level 28) or earlier,
 - an animation that moves the view or changes its transform when the transform of the view has a skew, a transform origin, or a translation in percent, or when the final transform makes the view flat (for example a scale of `0`),
-- a transform animation with `rotateX`, `rotateY`, or `perspective`, so the `Flip*` presets for example.
+- a moving transform track that contains `rotateX`, `rotateY`, or `perspective`, for example the `Flip*` presets,
+- an animation that starts in the first commit of a root view that attaches late, or of a prerendered surface.
+
+A transform animation plays on each kind of view on Android. An animation of a view that leaves the screen plays on to its end. `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` is not supported together with this flag.
 
 The view has its final position and size from the first frame, so touches and accessibility use the final bounds while the view moves.
+
+#### Known costs of the two layout flags
+
+Reanimated measured these costs on its own test scenes. Measure your app before you turn the flags on.
+
+- Energy of frequent restarts: in an earlier Pixel 9a Release run at 120 Hz, 20 views whose layout changes every 100 ms used 0.188 J more energy (95 % interval 0.046 to 0.334 J) than with the flag off. 100 views in that run used 1.26 J less. In the later 60 Hz Release run, the shifts were +0.350 J (interval -0.005 to +0.445 J) for 20 views and +0.327 J (interval +0.068 to +0.450 J) for 100 views.
+- Energy with rapid layout changes: in the later 60 Hz run, a scene with 20 views and a layout change in each frame used 0.215 J more energy (95 % interval +0.045 to +0.380 J) with the flag on. The rate check sent the animations to the loop after 19 native starts per view. This did not remove the measured energy cost.
+- Refused transforms: in that 60 Hz run, a scene with 100 moving transforms about the X and Y axes stayed on the loop. The first write came 3.918 ms later with the native layout flag on (95 % interval +1.783 to +6.401 ms). Reanimated called the builders but made no native tracks.
+- Work in the commit frame: the start of many native layout animations in one commit adds work to the frame of that commit. On a Pixel 9a (Release build, 60 Hz), 100 views added 17.3 to 20.4 ms, more than one frame. The loop also misses that frame.
+- Android drawing: with 100 or more animated views, the render thread spends more time in its draw step on the native route, most of it in a wait for a buffer. In the measured scenes the main thread saved more time than that.
+- Bundle Mode: when Bundle Mode of `react-native-worklets` is off, Reanimated takes 1.7 to 2.6 times longer to fit an easing function at the start of an animation (Pixel 9a, Release build).
 
 ### `TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`
 

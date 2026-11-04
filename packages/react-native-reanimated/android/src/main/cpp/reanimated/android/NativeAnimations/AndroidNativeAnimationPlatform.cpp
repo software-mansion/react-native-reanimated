@@ -21,14 +21,14 @@ namespace reanimated::native_animation {
 namespace {
 
 /// The start forms that `TrackBufferParser.kt` reads.
-enum class EncodedStart : jint {
+enum class EncodedStart : std::uint8_t {
   Value,
   CurrentVisualValue,
   VisualValueIfInterrupting,
 };
 
 /// How the executor binds a track to its view. `TrackEncoding.kt` repeats the values.
-enum class EncodedBinding : jint {
+enum class EncodedBinding : std::uint8_t {
   Writer,
   /// A track that writes no property: a size within one pixel of its end, or a constant geometry that the view holds.
   Hold,
@@ -70,10 +70,10 @@ static_assert(static_cast<int>(TrackStopMode::SettleToModel) == 0);
 static_assert(static_cast<int>(AnimationResultReason::UnsupportedRealization) == 4);
 static_assert(static_cast<int>(AnimationResultReason::CurrentValueUnavailable) == 5);
 
-/// Each value that `plays` admits has one component: a scalar or a packed color.
+/// Each value that `playbackCause` admits has one component: a scalar or a packed color.
 constexpr jint kValueComponentCount = 1;
 
-/// The executor writes scalars and colors only: `plays` admits no other target.
+/// The executor writes scalars and colors only: `playbackCause` admits no other target.
 struct EncodedValueVisitor {
   double operator()(const double scalar) const {
     return scalar;
@@ -331,25 +331,40 @@ facebook::react::Transform transformOfCells(const std::vector<double> &cells) {
 
 /// The rules of the final view for a geometry track that moves: React Native writes a skew into the animation
 /// matrix, the writer inverts the model matrix, and a size-dependent matrix follows the size at the mount.
-bool admitsMovingGeometry(const AnimationTrack &track, const facebook::react::ShadowView &finalView) {
+std::optional<UnsupportedTargetCause> movingGeometryCause(
+    const AnimationTrack &track,
+    const facebook::react::ShadowView &finalView) {
   using namespace facebook::react;
   if (!finalView.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
     react_native_assert(track.target != AnimationTarget::Transform && "[Reanimated] A Transform track needs ViewProps");
-    return true;
+    return std::nullopt;
   }
   const auto &viewProps = static_cast<const ViewProps &>(*finalView.props);
   const bool hasSkew = std::ranges::any_of(viewProps.transform.operations, [](const TransformOperation &operation) {
     return operation.type == TransformOperationType::Skew;
   });
   if (hasSkew) {
-    return false;
+    return UnsupportedTargetCause::Skew;
   }
   if (track.target != AnimationTarget::Transform) {
-    return true;
+    return std::nullopt;
   }
   const auto &model = viewProps.resolveTransform(finalView.layoutMetrics).matrix;
   const auto determinant = model[0] * model[5] - model[1] * model[4];
-  return std::abs(determinant) > MATRIX_CELL_TOLERANCE && !hasSizeDependentTransform(viewProps);
+  if (!(std::abs(determinant) > MATRIX_CELL_TOLERANCE)) {
+    return UnsupportedTargetCause::SingularMatrix;
+  }
+  return hasSizeDependentTransform(viewProps) ? std::optional(UnsupportedTargetCause::SizeDependentTransform)
+                                              : std::nullopt;
+}
+
+/// The pixel of the Fabric mount, which rounds the frame of `view` with its scale.
+double onePixelOf(const facebook::react::ShadowView &view) {
+  return 1 / view.layoutMetrics.pointScaleFactor;
+}
+
+bool isWithinOnePixel(const double value, const double mounted, const double onePixel) {
+  return std::abs(value - mounted) <= onePixel + ENDPOINT_TOLERANCE;
 }
 
 /// The executor writes no size: the view shows its mounted size for the whole track. The track must end at that
@@ -363,7 +378,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
   }
   const auto &frameSize = view.layoutMetrics.frame.size;
   const double mounted = track.target == AnimationTarget::Width ? frameSize.width : frameSize.height;
-  const double onePixel = 1 / view.layoutMetrics.pointScaleFactor;
+  const double onePixel = onePixelOf(view);
   if (std::abs(std::get<double>(timeline.segments.back().endValue) - mounted) > ENDPOINT_TOLERANCE) {
     return false;
   }
@@ -371,8 +386,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
   for (const auto &segment : timeline.segments) {
     const double to = std::get<double>(segment.endValue);
     const auto [leastProgress, largestProgress] = progressRangeOf(segment.timingFromPrevious);
-    if (std::abs(from - mounted) > onePixel + ENDPOINT_TOLERANCE ||
-        std::abs(to - mounted) > onePixel + ENDPOINT_TOLERANCE) {
+    if (!isWithinOnePixel(from, mounted, onePixel) || !isWithinOnePixel(to, mounted, onePixel)) {
       return false;
     }
     for (const double progress : {leastProgress, largestProgress}) {
@@ -388,7 +402,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
 class AndroidMountedAnimation final : public MountedAnimation {
  public:
   AndroidMountedAnimation(
-      alias_ref<JNativeAnimationExecutor::javaobject> executor,
+      const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
       global_ref<JView::javaobject> view,
       const AnimationRequest &request,
       const double passTimestampMs)
@@ -488,7 +502,7 @@ std::shared_ptr<AndroidNativeAnimationPlatform> AndroidNativeAnimationPlatform::
 }
 
 AndroidNativeAnimationPlatform::AndroidNativeAnimationPlatform(
-    alias_ref<JNativeAnimationExecutor::javaobject> executor,
+    const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
     std::weak_ptr<const facebook::react::UIManager> uiManager,
     GetAnimationTimestampFunction getAnimationTimestamp)
     : executor_(make_global(executor)),
@@ -524,14 +538,33 @@ void AndroidNativeAnimationPlatform::setTrackEndListener(TrackEndListener listen
   trackEndListener_ = std::move(listener);
 }
 
-bool AndroidNativeAnimationPlatform::canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) {
-  if (!plays(track)) {
-    return false;
+std::optional<UnsupportedTargetCause> AndroidNativeAnimationPlatform::unsupportedTargetCause(
+    const AnimationTrack &track,
+    const facebook::react::ShadowView &view) {
+  if (const auto cause = playbackCause(track)) {
+    return cause;
   }
   if (isSizeTarget(track.target)) {
-    return staysInOnePixelOfMountedSize(track, view);
+    return staysInOnePixelOfMountedSize(track, view) ? std::nullopt
+                                                     : std::optional(UnsupportedTargetCause::SizeBeyondOnePixel);
   }
-  return !isGeometryTarget(track.target) || !movesGeometry(track) || admitsMovingGeometry(track, view);
+  if (!isGeometryTarget(track.target) || !movesGeometry(track)) {
+    return std::nullopt;
+  }
+  return movingGeometryCause(track, view);
+}
+
+bool AndroidNativeAnimationPlatform::movesOnlyPlanarTransforms() const {
+  return apiLevel_ >= __ANDROID_API_Q__;
+}
+
+bool AndroidNativeAnimationPlatform::playsSizeChange(
+    const facebook::react::ShadowView &before,
+    const facebook::react::ShadowView &after) {
+  const auto &from = before.layoutMetrics.frame.size;
+  const auto &to = after.layoutMetrics.frame.size;
+  const double onePixel = onePixelOf(after);
+  return isWithinOnePixel(from.width, to.width, onePixel) && isWithinOnePixel(from.height, to.height, onePixel);
 }
 
 bool AndroidNativeAnimationPlatform::isSurfaceRunning(const SurfaceId surfaceId) {
@@ -550,13 +583,15 @@ std::optional<std::uint64_t> AndroidNativeAnimationPlatform::mountReportOfPull(c
 MountedAnimationResolution AndroidNativeAnimationPlatform::resolve(const AnimationRequest &request) {
   ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::resolve");
   react_native_assert(passTimestampMs_ && "[Reanimated] A start resolves outside a platform pass");
-  if (!std::ranges::all_of(request.tracks, [this](const AnimationTrack &track) { return plays(track); })) {
+  if (std::ranges::any_of(
+          request.tracks, [this](const AnimationTrack &track) { return playbackCause(track).has_value(); })) {
     return AnimationResultReason::UnsupportedRealization;
   }
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   if (failingViewLookup_ == request.handle.tag) {
     failingViewLookup_.reset();
-    const auto onView = executor_->sample(request.handle.tag, static_cast<jint>(request.tracks.front().target));
+    const auto onView = JNativeAnimationTestHooks::sample(
+        executor_, request.handle.tag, static_cast<jint>(request.tracks.front().target));
     viewLookupFailure_ = onView ? toTrackKeys(onView->playbacks()) : std::vector<TrackKey>{};
     return AnimationResultReason::TargetUnavailable;
   }
@@ -612,7 +647,7 @@ void AndroidNativeAnimationPlatform::postToUIThread(std::function<void()> operat
 
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag, const AnimationTarget target) {
-  const auto targetSample = executor_->sample(tag, static_cast<jint>(target));
+  const auto targetSample = JNativeAnimationTestHooks::sample(executor_, tag, static_cast<jint>(target));
   if (!targetSample) {
     return std::nullopt;
   }
@@ -625,7 +660,7 @@ std::optional<TargetSample> AndroidNativeAnimationPlatform::sample(const Tag tag
 }
 
 ContainerSizes AndroidNativeAnimationPlatform::containerSizes() {
-  const auto executorSizes = executor_->containerSizes();
+  const auto executorSizes = JNativeAnimationTestHooks::containerSizes(executor_);
   ContainerSizes sizes{
       {"playbacks", static_cast<std::size_t>(executorSizes->playbacks())},
       {"geometryWriters", static_cast<std::size_t>(executorSizes->geometryWriters())}};
@@ -644,7 +679,7 @@ local_ref<JArrayLong> AndroidNativeAnimationPlatform::takeViewLookupFailure() {
 }
 #endif
 
-bool AndroidNativeAnimationPlatform::plays(const AnimationTrack &track) const {
+std::optional<UnsupportedTargetCause> AndroidNativeAnimationPlatform::playbackCause(const AnimationTrack &track) const {
   const auto playsTiming = [](const AnimationTiming &timing) {
     return std::ranges::find(kAnimatorTimingKinds, kindOf(timing)) != kAnimatorTimingKinds.end();
   };
@@ -653,16 +688,17 @@ bool AndroidNativeAnimationPlatform::plays(const AnimationTrack &track) const {
       return playsTiming(segment.timingFromPrevious);
     });
   };
-  if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
-    const auto playsOperation = [&playsTimings](const OperationTimeline &operation) {
-      return playsTimings(operation.segments);
-    };
-    return std::ranges::all_of(body->operations, playsOperation) && playsTarget(track);
-  }
-  return playsTimings(std::get<ValueTimeline>(track.body).segments) && playsTarget(track);
+  const auto *body = std::get_if<TransformTimelines>(&track.body);
+  const bool playsEachTiming = body != nullptr
+      ? std::ranges::all_of(
+            body->operations,
+            [&playsTimings](const OperationTimeline &operation) { return playsTimings(operation.segments); })
+      : playsTimings(std::get<ValueTimeline>(track.body).segments);
+  return playsEachTiming ? targetCause(track) : std::optional(UnsupportedTargetCause::TimingKind);
 }
 
-bool AndroidNativeAnimationPlatform::playsTarget(const AnimationTrack &track) const {
+std::optional<UnsupportedTargetCause> AndroidNativeAnimationPlatform::targetCause(const AnimationTrack &track) const {
+  using enum UnsupportedTargetCause;
   const bool hasAnimationMatrix = apiLevel_ >= __ANDROID_API_Q__;
   switch (track.target) {
     case AnimationTarget::Opacity:
@@ -671,24 +707,30 @@ bool AndroidNativeAnimationPlatform::playsTarget(const AnimationTrack &track) co
     case AnimationTarget::BorderRadius:
     case AnimationTarget::Width:
     case AnimationTarget::Height:
-      return true;
+      return std::nullopt;
     case AnimationTarget::ShadowColor:
-      return apiLevel_ >= __ANDROID_API_P__;
+      return apiLevel_ >= __ANDROID_API_P__ ? std::nullopt : std::optional(ApiLevel);
     case AnimationTarget::PositionX:
     case AnimationTarget::PositionY:
-      return !movesGeometry(track) || hasAnimationMatrix;
+      return !movesGeometry(track) || hasAnimationMatrix ? std::nullopt : std::optional(ApiLevel);
     case AnimationTarget::Transform: {
+      if (!movesGeometry(track)) {
+        return std::nullopt;
+      }
+      if (!hasAnimationMatrix) {
+        return ApiLevel;
+      }
       const auto &operations = std::get<TransformTimelines>(track.body).operations;
       const bool isPlanarBody =
           std::ranges::all_of(operations, [](const OperationTimeline &operation) { return isPlanar(operation.kind); });
-      return !movesGeometry(track) || (hasAnimationMatrix && isPlanarBody);
+      return isPlanarBody ? std::nullopt : std::optional(NonPlanarTransform);
     }
     default:
-      return false;
+      return TargetKind;
   }
 }
 
-bool AndroidNativeAnimationPlatform::modelEndsAt(alias_ref<JView> view, const AnimationTrack &track) const {
+bool AndroidNativeAnimationPlatform::modelEndsAt(const alias_ref<JView> &view, const AnimationTrack &track) const {
   const auto model = toDoubles(executor_->modelOf(view, static_cast<jint>(track.target)));
   if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
     return model.size() == facebook::react::Transform{}.matrix.size() &&

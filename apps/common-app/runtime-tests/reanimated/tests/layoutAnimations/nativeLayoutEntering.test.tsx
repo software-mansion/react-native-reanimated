@@ -58,6 +58,9 @@ import {
 } from './nativeLayoutReferencePlay';
 import type { Leaf, TargetSample, Track } from './nativeLayoutTestKit';
 import {
+  twoFramesOf,
+  isNear,
+  VALUE_TOLERANCE,
   callbackOf,
   callbacks,
   callbackTimeOf,
@@ -96,7 +99,6 @@ const BOX_LEFT = 20;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = -80;
-const VALUE_TOLERANCE = 0.01;
 
 const OPACITY: Track = {
   sampleTarget: 'Opacity',
@@ -305,17 +307,6 @@ const startAndEndOf = (tracks: Track[]) =>
     startOf(tracks),
     'Ended:Finished:None',
   ].join(' > ');
-
-// The default easing moves by no more than two times its mean speed.
-const rangeOf = ({ from, to, easing }: Track) =>
-  Math.abs(to - from) * (easing ? 2 : 1);
-
-/** The change of the value of a track in two display frames. */
-const twoFramesOf = (track: Track, durationMs = ENTER_DURATION) =>
-  VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
-
-const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
-  Math.abs(value - expected) < tolerance;
 
 /**
  * Plays a case on the native box and on its frame-driven twin, with statements

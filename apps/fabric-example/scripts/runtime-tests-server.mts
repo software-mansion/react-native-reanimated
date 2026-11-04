@@ -2228,12 +2228,14 @@ async function buildAndroidApp(serial: string) {
   const abi = await adb(serial, ['shell', 'getprop', 'ro.product.cpu.abi'])
     .then(({ stdout }) => stdout.trim())
     .catch(() => null);
+  const mountThreadPull = mountThreadPullOf(args['mount-thread-pull']);
   console.log(
-    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
+    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''}, mount-thread pull ${mountThreadPull})… this can take a while`
   );
   const gradleArgs = [
     `assemble${CONFIGURATION}`,
     '-PreanimatedRuntimeTestHooks=true',
+    `-PfabricExampleMountThreadPull=${mountThreadPull}`,
   ];
   if (!IS_RELEASE) {
     gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
@@ -2498,6 +2500,12 @@ Build and run
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending
                             call; a failing command only logs a warning.
+  --mount-thread-pull <true|false>
+                            Android: build the app with the mount-thread pull
+                            model of React Native, which the native layout
+                            route needs. Default: the value of the static flag
+                            ANDROID_NATIVE_LAYOUT_ANIMATIONS of this app.
+                            No effect with --skip-build.
 
 Ports and timeouts
   --metro-port <port>       Default: 8081.
@@ -2513,6 +2521,24 @@ Environment
   RUNTIME_TESTS_CI_REPORT=0 On GitHub Actions the results are also reported
                             as annotations and in the job summary. Set this
                             for a run that is expected to fail.`);
+}
+
+function mountThreadPullOf(value: string | true | undefined): boolean {
+  if (value === undefined) {
+    const { reanimated } = JSON.parse(
+      fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')
+    );
+    return (
+      reanimated?.staticFeatureFlags?.ANDROID_NATIVE_LAYOUT_ANIMATIONS === true
+    );
+  }
+  if (value !== 'true' && value !== 'false') {
+    console.error(
+      `[runtime-tests] --mount-thread-pull must be true or false (got: ${value})`
+    );
+    process.exit(1);
+  }
+  return value === 'true';
 }
 
 function parseArgs(argv: string[]): Record<string, string | true> {
