@@ -1,3 +1,5 @@
+const YIELD_PATTERN =
+  /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
 const HEADER_PATTERN =
   /^\s*(?:export\s+(?:default\s+)?)?function\s*\*\s*([A-Za-z_$][\w$]*)\s*\(/;
 
@@ -34,11 +36,58 @@ module.exports = function snippetNamesLoader(source) {
   });
 
   const output = lines.map((text, index) => {
+    const marked = startsStatement(lines, index)
+      ? markYieldLine(text, index + 1)
+      : isBracelessBody(lines, index)
+        ? markBracelessYieldLine(text, index + 1)
+        : text;
     const names = insertAfter.get(index);
-    return names === undefined ? text : `${text}\n${pin(names)}`;
+    return names === undefined ? marked : `${marked}\n${pin(names)}`;
   });
   return `${output.join('\n')}\n`;
 };
+
+module.exports.YIELD_PATTERN = YIELD_PATTERN;
+
+function startsStatement(lines, index) {
+  for (let previous = index - 1; previous >= 0; previous--) {
+    const code = lines[previous].replace(/\/\/.*$/, '').trim();
+    if (code !== '') {
+      return /[;{}]$/.test(code) || /^(?:case\b.*|default\s*):$/.test(code);
+    }
+  }
+  return true;
+}
+
+function isBracelessBody(lines, index) {
+  for (let previous = index - 1; previous >= 0; previous--) {
+    const code = lines[previous].replace(/\/\/.*$/, '').trim();
+    if (code !== '') {
+      return /^(?:\}\s*)?(?:else|(?:else\s+)?(?:if|for|while)\s*\(.*\))$/.test(
+        code
+      );
+    }
+  }
+  return false;
+}
+
+function markBracelessYieldLine(text, line) {
+  const code = text.replace(/\/\/.*$/, '').trimEnd();
+  if (!YIELD_PATTERN.test(text) || !code.endsWith(';')) {
+    return text;
+  }
+  const indent = text.length - text.trimStart().length;
+  const comment = text.slice(code.length);
+  return `${text.slice(0, indent)}{ __simMarkLine(${line}); ${code.slice(indent)} }${comment}`;
+}
+
+function markYieldLine(text, line) {
+  if (!YIELD_PATTERN.test(text)) {
+    return text;
+  }
+  const indent = text.length - text.trimStart().length;
+  return `${text.slice(0, indent)}__simMarkLine(${line}); ${text.slice(indent)}`;
+}
 
 function pin(names) {
   return names

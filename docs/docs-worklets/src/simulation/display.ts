@@ -23,8 +23,13 @@ const SIMULATOR_ONLY_NAMES = new Set([
   'setNativeProps',
   'sendToUIThread',
   'nextTick',
+  'heapVariable',
 ]);
 const MAX_IMPORT_WIDTH = 80;
+const STRING_OR_COMMENT_PATTERN =
+  /('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/\/.*$)/;
+const HEAP_VARIABLE_PATTERN =
+  /^(\s*)(?:const|let)\s+(\w+)\s*=\s*yield\s+heapVariable\(\s*['"][^'"]*['"]\s*,\s*(.*)\);\s*$/;
 
 export interface DisplayOptions {
   boilerplate?: boolean;
@@ -38,6 +43,36 @@ export function displaySource(
   const main = fns.get(MAIN_NAME) ?? null;
   const hidden = [...fns.values()].filter((fn) => fn.isNative || fn.isHidden);
   const rawLines = source.split('\n');
+  const variables = rawLines.flatMap((text, index) => {
+    const match = HEAP_VARIABLE_PATTERN.exec(text);
+    if (match === null) {
+      return [];
+    }
+    const name = match[2];
+    const scope = innermostFunction(fns, index + 1);
+    const start = scope?.headerLine ?? 1;
+    const end = scope?.endLine ?? rawLines.length;
+    const shadows = shadowRanges(rawLines, fns, {
+      scope,
+      start,
+      end,
+      name,
+      declarationLine: index + 1,
+    });
+    return [{ name, start, end, shadows }];
+  });
+  const asyncHeaders = new Set(
+    [...fns.values()]
+      .filter((fn) =>
+        fn.yieldLines.some((line, index) =>
+          rawLines
+            .slice(line - 1, fn.yieldEnds[index])
+            .join('\n')
+            .includes('awaitPromise(')
+        )
+      )
+      .map((fn) => fn.headerLine)
+  );
   const displayLines: string[] = [];
   const rawToDisplayLine: number[] = [-1];
   const imports: string[] = [];
@@ -62,7 +97,7 @@ export function displaySource(
     const previousBlank =
       displayLines.length === 0 ||
       displayLines[displayLines.length - 1].trim() === '';
-    if (blank && previousBlank) {
+    if (blank && (previousBlank || isInsideBody(rawLines, index, main))) {
       rawToDisplayLine.push(-1);
       return;
     }
@@ -80,7 +115,25 @@ export function displaySource(
       rawToDisplayLine.push(displayLines.length);
       return;
     }
-    displayLines.push(transformLine(text, isInsideMain(main, line)));
+    const transformed = transformLine(
+      text,
+      isInsideMain(main, line),
+      variables
+        .filter(
+          (variable) =>
+            line >= variable.start &&
+            line <= variable.end &&
+            !variable.shadows.some(
+              (range) => line >= range.from && line <= range.to
+            )
+        )
+        .map((variable) => variable.name)
+    );
+    displayLines.push(
+      asyncHeaders.has(line)
+        ? transformed.replace(/\bfunction\b/, 'async function')
+        : transformed
+    );
     rawToDisplayLine.push(displayLines.length);
   });
 
@@ -143,7 +196,11 @@ function displayImport(statement: string, body: string): string[] {
   if (names.length === 0) {
     return [];
   }
-  const module = MODULE_NAMES[moduleKey(match[2])] ?? match[2];
+  const key = moduleKey(match[2]);
+  const reactHooks =
+    key === 'react' &&
+    names.every((name) => name === 'useState' || name === 'useEffect');
+  const module = reactHooks ? 'react' : (MODULE_NAMES[key] ?? match[2]);
   const single = `import { ${names.join(', ')} } from '${module}';`;
   if (single.length <= MAX_IMPORT_WIDTH) {
     return [single];
@@ -163,6 +220,121 @@ function isInside(fns: FnInfo[], line: number): boolean {
   return fns.some((fn) => line >= fn.headerLine && line <= fn.endLine);
 }
 
+function isInsideBody(
+  rawLines: string[],
+  blankIndex: number,
+  main: FnInfo | null
+): boolean {
+  const nextIndex = rawLines.findIndex(
+    (text, index) => index > blankIndex && text.trim() !== ''
+  );
+  if (nextIndex === -1) {
+    return false;
+  }
+  const next = rawLines[nextIndex];
+  const indent = next.length - next.trimStart().length;
+  const bodyIndent = isInsideMain(main, nextIndex + 1) ? 4 : 2;
+  return indent >= bodyIndent && !next.trimStart().startsWith('//');
+}
+
+function shadowRanges(
+  rawLines: string[],
+  fns: Map<string, FnInfo>,
+  variable: {
+    scope: FnInfo | undefined;
+    start: number;
+    end: number;
+    name: string;
+    declarationLine: number;
+  }
+): { from: number; to: number }[] {
+  const { scope, start, end, name, declarationLine } = variable;
+  const ranges: { from: number; to: number }[] = [];
+  for (const fn of fns.values()) {
+    if (
+      fn !== scope &&
+      fn.headerLine > start &&
+      fn.endLine <= end &&
+      bindsParameter(rawLines[fn.headerLine - 1] ?? '', name)
+    ) {
+      ranges.push({ from: fn.headerLine, to: fn.endLine });
+    }
+  }
+  const declaration = new RegExp(`^\\s*(const|let|var)\\s+${name}(?![\\w$])`);
+  rawLines.forEach((text, index) => {
+    const line = index + 1;
+    const match = declaration.exec(text);
+    if (match === null || line <= start || line >= end) {
+      return;
+    }
+    if (line === declarationLine) {
+      return;
+    }
+    if (match[1] === 'var') {
+      const owner = innermostFunction(fns, line);
+      ranges.push({
+        from: owner?.headerLine ?? line,
+        to: owner?.endLine ?? end,
+      });
+      return;
+    }
+    ranges.push({ from: line, to: blockEnd(rawLines, index, end) });
+  });
+  return ranges;
+}
+
+function bindsParameter(header: string, name: string): boolean {
+  const params = header.slice(header.indexOf('(') + 1, header.lastIndexOf(')'));
+  const binding = new RegExp(`(?<![\\w$.])${name}(?![\\w$])`);
+  return splitTopLevel(params, ',').some((param) =>
+    binding.test(splitTopLevel(param, '=')[0] ?? '')
+  );
+}
+
+function splitTopLevel(text: string, separator: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of text) {
+    if ('([{'.includes(char)) depth++;
+    if (')]}'.includes(char)) depth--;
+    if (char === separator && depth === 0) {
+      parts.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  parts.push(current);
+  return parts;
+}
+
+function blockEnd(rawLines: string[], index: number, fallback: number): number {
+  let depth = 0;
+  for (let line = index; line < rawLines.length; line++) {
+    const code = rawLines[line]
+      .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""')
+      .replace(/\/\/.*$/, '');
+    for (const char of code) {
+      if (char === '{') depth++;
+      if (char === '}') depth--;
+      if (depth < 0) {
+        return line + 1;
+      }
+    }
+  }
+  return fallback;
+}
+
+function innermostFunction(
+  fns: Map<string, FnInfo>,
+  line: number
+): FnInfo | undefined {
+  return [...fns.values()]
+    .filter((fn) => line >= fn.headerLine && line <= fn.endLine)
+    .sort((a, b) => b.headerLine - a.headerLine)[0];
+}
+
 function isMainBoundary(main: FnInfo | null, line: number): boolean {
   return main !== null && (line === main.headerLine || line === main.endLine);
 }
@@ -171,18 +343,100 @@ function isInsideMain(main: FnInfo | null, line: number): boolean {
   return main !== null && line > main.headerLine && line < main.endLine;
 }
 
-function transformLine(text: string, insideMain: boolean): string {
-  let result = text;
+function transformLine(
+  text: string,
+  insideMain: boolean,
+  variables: string[]
+): string {
+  let result = text.replace(HEAP_VARIABLE_PATTERN, '$1let $2 = $3;');
+  for (const name of variables) {
+    result = replaceInCode(
+      result,
+      new RegExp(`(?<![\\w$.])${name}\\.value\\b`, 'g'),
+      name
+    );
+  }
   if (insideMain && result.startsWith('  ')) {
     result = result.slice(2);
   }
   result = result.replace(/^(\s*)export\s+(?:default\s+)?/, '$1');
   result = result.replace(/\bfunction\s*\*\s*/, 'function ');
   result = result.replace(/^(\s*)yield\s+/, '$1');
+  result = result.replace(/^(\s*if\s*\()\s*yield\s+/, '$1');
   result = result.replace(/=\s*yield\s+/, '= ');
   result = result.replace(/\breturn\s+yield\s+/, 'return ');
   result = replaceAwaitCalls(result);
   return result;
+}
+
+function replaceInCode(
+  text: string,
+  pattern: RegExp,
+  replacement: string
+): string {
+  return text
+    .split(STRING_OR_COMMENT_PATTERN)
+    .map((part, index) =>
+      index % 2 === 0
+        ? part.replace(pattern, replacement)
+        : part.startsWith('`')
+          ? mapInterpolations(part, (inner) =>
+              replaceInCode(inner, pattern, replacement)
+            )
+          : part
+    )
+    .join('');
+}
+
+function mapInterpolations(
+  template: string,
+  transform: (inner: string) => string
+): string {
+  let result = '';
+  let index = 0;
+  while (index < template.length) {
+    if (template[index] === '\\') {
+      result += template.slice(index, index + 2);
+      index += 2;
+      continue;
+    }
+    if (template.startsWith('${', index)) {
+      const end = matchingBrace(template, index + 1);
+      result += `\${${transform(template.slice(index + 2, end))}}`;
+      index = end + 1;
+      continue;
+    }
+    result += template[index];
+    index++;
+  }
+  return result;
+}
+
+function matchingBrace(text: string, open: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let index = open; index < text.length; index++) {
+    const char = text[index];
+    if (quote !== null) {
+      if (char === '\\') {
+        index++;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === "'" || char === '"' || char === '`') {
+      quote = char;
+    } else if (char === '{') {
+      depth++;
+    } else if (char === '}') {
+      depth--;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return text.length;
 }
 
 function replaceAwaitCalls(text: string): string {

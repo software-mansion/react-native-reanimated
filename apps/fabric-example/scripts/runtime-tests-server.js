@@ -10,6 +10,7 @@ const WebSocket = require('ws');
 const {
   resolveAndroidDevice: resolveAndroidTarget,
   findRunningAvd,
+  readySerials,
   parseAvdName,
 } = require('./android-device');
 const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
@@ -155,12 +156,26 @@ let idleTimer = null;
 let metroChild = null;
 /** @type {string | null} */
 let androidSerial = null;
+/** @type {string | null} */
+let iosUdid = null;
 /** @type {Promise<void> | null} */
 let crashDiagnosticsPromise = null;
 /** @type {Promise<void>} */
 let afterSuiteChain = Promise.resolve();
 let afterSuiteRunning = false;
 let afterSuitePending = false;
+/** @type {string | null} */
+let resumeFromSuite = null;
+let reloadInProgress = false;
+/** @type {Set<string>} */
+const suitesThatReloaded = new Set();
+const resultsBeforeReload = {
+  passed: 0,
+  failed: 0,
+  skipped: 0,
+  /** @type {string[]} */
+  failedTests: [],
+};
 
 /**
  * @param {unknown} error
@@ -534,6 +549,15 @@ wss.on('connection', (socket) => {
   });
 
   socket.on('close', () => {
+    if (reloadInProgress) {
+      reloadInProgress = false;
+      client = null;
+      console.log(
+        '[runtime-tests] device is reloading, waiting for it to reconnect'
+      );
+      armConnectTimer();
+      return;
+    }
     if (!runFinished && runStartedAt > 0) {
       console.error('');
       console.error('========================================');
@@ -542,11 +566,11 @@ wss.on('connection', (socket) => {
       );
       if (PLATFORM === 'android') {
         console.error(
-          '[runtime-tests] The app most likely crashed — collecting crash diagnostics below.'
+          '[runtime-tests] The app most likely crashed — see the crash diagnostics of the selected Android device below.'
         );
       } else {
         console.error(
-          '[runtime-tests] The app most likely crashed — collecting crash reports below.'
+          '[runtime-tests] The app most likely crashed — see the crash report search below.'
         );
       }
       console.error(
@@ -576,6 +600,9 @@ function handleMessage(msg) {
       break;
     case 'suiteFinished':
       onSuiteFinished(msg);
+      break;
+    case 'reload':
+      onReload(msg);
       break;
     case 'done':
       onDone(msg);
@@ -621,12 +648,84 @@ function onHello(msg) {
     return;
   }
 
-  runStartedAt = Date.now();
+  let only = ONLY;
+  if (resumeFromSuite !== null) {
+    only = suitesToResume(suites);
+    if (!only) {
+      return;
+    }
+    console.log(
+      `[runtime-tests] resuming after reload with: ${only.join(', ')}`
+    );
+    resumeFromSuite = null;
+  } else {
+    runStartedAt = Date.now();
+  }
   send({
     type: 'start',
-    ...(ONLY ? { only: ONLY } : {}),
+    ...(only ? { only } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
+}
+
+/**
+ * @param {{ name: string; skipByDefault?: boolean; disabled?: boolean }[]} suites
+ * @returns {string[] | null}
+ */
+function suitesToResume(suites) {
+  const selected = suites
+    .filter((suite) =>
+      ONLY ? ONLY.includes(suite.name) : !suite.skipByDefault && !suite.disabled
+    )
+    .map((suite) => suite.name);
+  const index = selected.indexOf(String(resumeFromSuite));
+  if (index === -1) {
+    console.error(
+      `[runtime-tests] cannot resume from suite '${resumeFromSuite}', it was not selected for this run.`
+    );
+    send({
+      type: 'error',
+      message: `Unknown resume suite: ${resumeFromSuite}`,
+    });
+    shutdown(1);
+    return null;
+  }
+  return selected.slice(index);
+}
+
+/** @param {DeviceMessage} msg */
+function onReload(msg) {
+  resultsBeforeReload.passed += Number(msg.passed ?? 0);
+  resultsBeforeReload.failed += Number(msg.failed ?? 0);
+  resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
+  resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
+  const requestedSuite = String(msg.resumeFromSuite ?? '');
+  if (!requestedSuite) {
+    console.error(
+      '[runtime-tests] the device requested a reload without a suite to resume from.'
+    );
+    send({ type: 'error', message: 'Reload request without resumeFromSuite' });
+    shutdown(1);
+    return;
+  }
+  if (suitesThatReloaded.has(requestedSuite)) {
+    console.error(
+      `[runtime-tests] suite '${requestedSuite}' requested a second reload in this run, stopping to avoid a reload loop.`
+    );
+    send({
+      type: 'error',
+      message: `Suite ${requestedSuite} requested a second reload`,
+    });
+    shutdown(1);
+    return;
+  }
+  suitesThatReloaded.add(requestedSuite);
+  resumeFromSuite = requestedSuite;
+  reloadInProgress = true;
+  console.log(
+    `[runtime-tests] device requested a reload, the run resumes from suite '${resumeFromSuite}'`
+  );
+  send({ type: 'reloadAccepted' });
 }
 
 /** @param {DeviceMessage} msg */
@@ -697,6 +796,13 @@ function runAfterSuiteCommand(command, suiteName) {
 
 /** @param {DeviceMessage} msg */
 function onDone(msg) {
+  msg.passed = Number(msg.passed ?? 0) + resultsBeforeReload.passed;
+  msg.failed = Number(msg.failed ?? 0) + resultsBeforeReload.failed;
+  msg.skipped = Number(msg.skipped ?? 0) + resultsBeforeReload.skipped;
+  msg.failedTests = [
+    ...resultsBeforeReload.failedTests,
+    ...(msg.failedTests ?? []),
+  ];
   const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
   console.log('');
   console.log('========================================');
@@ -828,6 +934,13 @@ async function dumpIOSCrashDiagnostics() {
     }
     return;
   }
+  const udid = iosUdid ?? UDID;
+  if (!udid) {
+    console.error(
+      '[runtime-tests] no selected iOS simulator for crash reports (pass --udid to select one)'
+    );
+    return;
+  }
   const reportsDir = path.join(
     os.homedir(),
     'Library',
@@ -835,16 +948,16 @@ async function dumpIOSCrashDiagnostics() {
     'DiagnosticReports'
   );
   console.error(
-    `[runtime-tests] looking for FabricExample crash reports in ${reportsDir}…`
+    `[runtime-tests] looking for FabricExample crash reports of ${udid} in ${reportsDir}…`
   );
   /** @type {{ name: string; file: string; mtimeMs: number }[]} */
   let reports = [];
   for (let attempt = 0; attempt < 10; attempt++) {
     await sleep(3000);
-    reports = findFreshIOSCrashReports(reportsDir);
+    reports = findFreshIOSCrashReports(reportsDir, udid);
     if (reports.length > 0) {
       await sleep(3000);
-      reports = findFreshIOSCrashReports(reportsDir);
+      reports = findFreshIOSCrashReports(reportsDir, udid);
       break;
     }
   }
@@ -1015,9 +1128,10 @@ function printIOSCrashReports(reports) {
 
 /**
  * @param {string} reportsDir
+ * @param {string} udid
  * @returns {{ name: string; file: string; mtimeMs: number }[]}
  */
-function findFreshIOSCrashReports(reportsDir) {
+function findFreshIOSCrashReports(reportsDir, udid) {
   let names = [];
   try {
     names = fs.readdirSync(reportsDir);
@@ -1035,9 +1149,23 @@ function findFreshIOSCrashReports(reportsDir) {
       return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
     })
     .filter(
-      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+      (report) =>
+        report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000 &&
+        isCrashReportOfSimulator(report.file, udid)
     )
     .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+/**
+ * @param {string} file
+ * @param {string} udid
+ * @returns {boolean}
+ */
+function isCrashReportOfSimulator(file, udid) {
+  return fs
+    .readFileSync(file, 'utf8')
+    .replaceAll('\\/', '/')
+    .includes(`/CoreSimulator/Devices/${udid}/`);
 }
 
 /**
@@ -1121,7 +1249,7 @@ async function dumpAndroidCrashDiagnostics() {
   const serial = await crashDiagnosticsSerial();
   if (!serial) {
     console.error(
-      '[runtime-tests] no adb device available for crash diagnostics'
+      '[runtime-tests] no selected Android device available for crash diagnostics (pass --serial or --avd to select one)'
     );
     return;
   }
@@ -1768,14 +1896,15 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** @returns {Promise<import('./android-device').AdbDevice[]>} */
 async function listAndroidDevices() {
   const { stdout } = await run(ADB, ['devices']);
   return stdout
     .split('\n')
     .slice(1)
     .map((line) => line.trim().split(/\s+/))
-    .filter((parts) => parts.length >= 2 && parts[1] === 'device')
-    .map((parts) => parts[0]);
+    .filter((parts) => parts.length >= 2)
+    .map(([serial, state]) => ({ serial, state }));
 }
 
 /** @returns {import('./android-device').AndroidTools} */
@@ -1799,6 +1928,15 @@ function androidTools() {
         { detached: true, stdio: 'ignore' }
       );
       child.unref();
+      /** @type {string | null} */
+      let exitStatus = null;
+      child.on('exit', (code, signal) => {
+        exitStatus = String(code ?? signal);
+      });
+      child.on('error', (error) => {
+        exitStatus = error.message;
+      });
+      return () => exitStatus;
     },
     isBootCompleted: async (serial) => {
       const { stdout } = await adb(serial, [
@@ -1821,14 +1959,22 @@ async function crashDiagnosticsSerial() {
   if (androidSerial) {
     return androidSerial;
   }
-  const serials = await listAndroidDevices().catch(() => []);
   if (SERIAL) {
-    return serials.some((serial) => serial === SERIAL) ? SERIAL : null;
+    const serials = await readyAndroidSerials();
+    return serials.includes(SERIAL) ? SERIAL : null;
   }
   if (AVD) {
-    return findRunningAvd(AVD, serials, androidTools());
+    return findRunningAvd(AVD, await readyAndroidSerials(), androidTools());
   }
-  return serials[0] ?? null;
+  return null;
+}
+
+async function readyAndroidSerials() {
+  const devices = await listAndroidDevices().catch((error) => {
+    console.error(`[runtime-tests] adb devices failed: ${errorMessage(error)}`);
+    return [];
+  });
+  return readySerials(devices);
 }
 
 /** @param {string} serial */
@@ -1910,6 +2056,7 @@ if (SHOULD_LAUNCH) {
       await installAndLaunchAndroid(serial);
     } else {
       const device = await resolveSimulator();
+      iosUdid = device.udid;
       await ensureBooted(device);
       if (!SKIP_BUILD) {
         await buildApp();
@@ -1988,7 +2135,10 @@ Target
   --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
   --simulator <name>        iOS simulator to boot. Default: iPhone 17.
   --udid <udid>             iOS simulator to reuse, instead of --simulator.
+                            Needed for crash reports in server mode on macOS.
   --serial <serial>         Android device already running (see \`adb devices\`).
+                            Pass --serial or --avd when more than one device
+                            is connected.
   --avd <name>              Android AVD to use when no --serial is given.
                             Reuses its running emulator or boots it.
 

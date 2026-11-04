@@ -24,21 +24,12 @@ jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
 } // namespace
 
 SerializableRemoteFunction::~SerializableRemoteFunction() {
-  if (isHostedOnRNRuntime()) {
-    rnRuntimeStatus_->runWhileLocked([this](bool isDead) {
-      if (isDead) {
-        freeWithoutCallingDestructor(function_);
-      } else {
-        function_.reset();
-      }
-    });
-  } else {
-    cleanupRuntimeAware(hostRuntime_, function_);
-  }
+  cleanupRuntimeAware(hostIdentity_, function_);
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == hostRuntime_) {
+  const auto *identity = findRuntimeIdentity(rt);
+  if (identity != nullptr && identity->isSameRuntime(hostIdentity_)) {
     return jsi::Value(rt, *function_);
   } else {
     const auto name = name_.empty() ? jsi::Value::undefined() : jsi::String::createFromUtf8(rt, name_);
@@ -49,13 +40,11 @@ jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 // TODO: generalize it and merge with other scheduling methods
-void SerializableRemoteFunction::resolveOrRejectPromise(
-    const std::shared_ptr<Serializable> &resolveValue,
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+void SerializableRemoteFunction::resolveOrRejectPromise(const std::shared_ptr<Serializable> &resolveValue) {
   settled_ = true;
   if (isHostedOnRNRuntime()) {
-    rnRuntimeStatus_->runWhileLocked([&](bool isDead) {
-      if (isDead) [[unlikely]] {
+    runWhileOwnerLocked(hostIdentity_, [&](bool isAlive) {
+      if (!isAlive) [[unlikely]] {
         return;
       }
       jsScheduler_->scheduleOnJS([resolver = shared_from_this(), resolveValue](jsi::Runtime &rt) {
@@ -63,7 +52,9 @@ void SerializableRemoteFunction::resolveOrRejectPromise(
       });
     });
   } else {
-    const auto workletRuntime = runtimeManager->getRuntime(hostRuntimeId_);
+    const auto runtimeManager = hostIdentity_.lockRuntimeManager();
+    const auto workletRuntime = runtimeManager ? runtimeManager->getRuntime(hostIdentity_.getRuntimeId()) : nullptr;
+    // NOLINTNEXTLINE(readability/braces)
     if (!workletRuntime) [[unlikely]] {
       // Host runtime is dead, most likely we're the last owner of the Remote Function.
       // Do nothing.
@@ -80,43 +71,26 @@ PromiseDropGuard::~PromiseDropGuard() {
     return;
   }
   try {
-    reject_->resolveOrRejectPromise(
-        std::make_shared<SerializableError>(
-            "Error",
-            "[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.",
-            std::nullopt),
-        runtimeManager_);
+    reject_->resolveOrRejectPromise(std::make_shared<SerializableError>(
+        "Error", "[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.", std::nullopt));
   } catch (...) {
     // A destructor must not throw.
   }
 }
 
-jsi::Value makeRNRuntimeSerializableRemoteFunction(
-    jsi::Runtime &rnRuntime,
+jsi::Value makeSerializableRemoteFunction(
+    jsi::Runtime &hostRuntime,
     const std::string &name,
     const jsi::Function &function,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus) {
+    const RuntimeIdentity &hostIdentity,
+    const std::shared_ptr<JSScheduler> &jsScheduler) {
   auto serializable = std::make_shared<SerializableRemoteFunction>(
-      rnRuntime,
+      hostRuntime,
       name,
-      jsi::Value(rnRuntime, function).getObject(rnRuntime).getFunction(rnRuntime),
-      jsScheduler,
-      rnRuntimeStatus);
-  return SerializableJSRef::newNativeStateObject(rnRuntime, serializable);
-}
-
-jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
-    jsi::Runtime &workletRuntime,
-    const std::string &name,
-    const jsi::Function &function,
-    RuntimeData::RuntimeId hostRuntimeId) {
-  auto serializable = std::make_shared<SerializableRemoteFunction>(
-      workletRuntime,
-      name,
-      jsi::Value(workletRuntime, function).getObject(workletRuntime).getFunction(workletRuntime),
-      hostRuntimeId);
-  return SerializableJSRef::newNativeStateObject(workletRuntime, serializable);
+      jsi::Value(hostRuntime, function).getObject(hostRuntime).getFunction(hostRuntime),
+      hostIdentity,
+      jsScheduler);
+  return SerializableJSRef::newNativeStateObject(hostRuntime, serializable);
 }
 
 } // namespace worklets

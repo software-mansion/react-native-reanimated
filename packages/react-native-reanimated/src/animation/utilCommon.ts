@@ -53,6 +53,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   opacity: true,
   transform: true,
   backgroundColor: true,
+  contentOpacity: true,
 };
 
 type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;

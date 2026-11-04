@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiRunOnUISyncSnippet from './_examples/apiRunOnUISync';
+import ApiRunOnUISyncSource from '!!raw-loader!./_examples/apiRunOnUISync';
+
 # runOnUISync
 
 `runOnUISync` lets you run a [workletized](../worklets-plugin/about.mdx#autoworkletization) function synchronously on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
@@ -10,18 +13,7 @@ To compare it with [`scheduleOnUI`](./scheduleOnUI.mdx) and [`runOnUIAsync`](./r
 
 ## Reference
 
-```javascript
-import { runOnUISync } from 'react-native-worklets';
-
-const myFunction = (num: number): number => {
-  'worklet';
-  return num + 1;
-};
-
-const result: number = runOnUISync(myFunction, 0);
-
-console.log(result); // 1
-```
+<ThreadingSimulation module={ApiRunOnUISyncSnippet} source={ApiRunOnUISyncSource}/>
 
 <details>
   <summary>Type definitions</summary>

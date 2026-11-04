@@ -115,6 +115,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -212,6 +216,8 @@ const SynchronousPropsSETExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/SynchronousPropsExample').default
   );
+const NestedTagsExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/NestedTags').default);
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -819,6 +825,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  NestedTagsExample: {
+    title: '[SET] Nested tags',
+    screen: NestedTagsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -903,6 +918,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

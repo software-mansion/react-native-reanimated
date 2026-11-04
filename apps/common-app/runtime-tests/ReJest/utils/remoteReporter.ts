@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { DevSettings, Platform } from 'react-native';
 
 type ConsoleLevel = 'log' | 'info' | 'warn' | 'error';
 
@@ -38,11 +38,12 @@ export interface RemoteReporterOptions {
   onStart: (params: {
     only?: string[];
     reportSuiteFinished: (suiteName: string) => void;
+    requestReload: (resumeFromSuite: string, summarySoFar: RunSummary) => void;
   }) => Promise<RunSummary | void>;
 }
 
-interface StartMessage {
-  type: 'start';
+interface ServerMessage {
+  type: 'start' | 'reloadAccepted';
   only?: string[];
 }
 
@@ -235,10 +236,15 @@ export function runWithRemoteReporter({
   };
 
   ws.onmessage = (event) => {
-    let parsed: StartMessage;
+    let parsed: ServerMessage;
     try {
-      parsed = JSON.parse(event.data as string) as StartMessage;
+      parsed = JSON.parse(event.data as string) as ServerMessage;
     } catch {
+      return;
+    }
+
+    if (parsed.type === 'reloadAccepted') {
+      DevSettings.reload('runtime tests requested a reload');
       return;
     }
 
@@ -255,7 +261,14 @@ export function runWithRemoteReporter({
       safeSend({ type: 'suiteFinished', name: suiteName });
     };
 
-    onStart({ only: parsed.only, reportSuiteFinished })
+    const requestReload = (
+      resumeFromSuite: string,
+      summarySoFar: RunSummary
+    ) => {
+      safeSend({ type: 'reload', resumeFromSuite, ...summarySoFar });
+    };
+
+    onStart({ only: parsed.only, reportSuiteFinished, requestReload })
       .then((summary) => {
         const finalSummary = summary ?? {
           passed: 0,

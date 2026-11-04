@@ -1,7 +1,16 @@
-import { SnippetError } from './errors';
+import { RemoteFunctionError, SnippetError } from './errors';
 import { isGeneratorFunction, isGeneratorObject } from './loadSnippet';
-import { APP_MS_PER_TICK, INPUT_DEADLINE_MS } from './types';
+import {
+  cloneArguments,
+  CustomSerializerRegistry,
+  packArguments,
+  previewArguments,
+  unpackArguments,
+} from './serialization';
+import type { CustomSerializer, PackedArguments } from './serialization';
+import { APP_MS_PER_TICK, FRAME_MS, INPUT_DEADLINE_MS } from './types';
 import type {
+  BlockMarker,
   CoreId,
   CoreSnapshot,
   CoreSpec,
@@ -33,6 +42,7 @@ import {
 import {
   NEXT_TICK,
   isAwaitMarker,
+  isBlockMarker,
   readShareableValue,
   setCurrentInterceptor,
 } from './worklets';
@@ -75,6 +85,10 @@ export class Machine {
   private halted = false;
   private events: SimEvent[] = [];
   private activeCore: CoreState | null = null;
+  private stepExec: Extract<SimEvent, { type: 'exec' }> | null = null;
+  private stepExecFn = '';
+  private stepMarked = false;
+  private marksLines = false;
   private screen: ScreenState;
   private readonly acquired = new WeakMap<
     object,
@@ -86,8 +100,13 @@ export class Machine {
   private readonly promises = new Map<number, PromiseState>();
   private nextPromiseId = 1;
   private readonly shared = new Map<number, SharedCell>();
+  private readonly serializableReferences = new WeakMap<object, number>();
+  private readonly serializableCache = new WeakMap<object, object>();
+  private readonly customSerializers = new CustomSerializerRegistry();
+  private readonly serializedValues = new Map<number, PackedArguments>();
   private nextCellId = 1;
   private readonly readShareable: SnippetFn;
+  private readonly initializeRuntime: SnippetFn;
   private readonly uiBootTick: number;
 
   constructor(snippet: LoadedSnippet, options: SimulateOptions = {}) {
@@ -111,6 +130,31 @@ export class Machine {
       yieldEnds: [0],
       isNative: false,
       isHidden: false,
+      isWorklet: false,
+      hasLoop: false,
+    });
+    // Wait for the initializer, discard its result, and return the new handle.
+    // The hidden frame keeps this plumbing out of the displayed snippet.
+    this.initializeRuntime = function* initializeRuntime(
+      initializer: unknown,
+      handle: unknown
+    ) {
+      yield initializer;
+      return handle;
+    } as SnippetFn;
+    snippet.protoToFn.set(
+      this.initializeRuntime.prototype as object,
+      this.initializeRuntime
+    );
+    snippet.fnInfo.set(this.initializeRuntime, {
+      name: 'initializeRuntime',
+      headerLine: 0,
+      endLine: 0,
+      yieldLines: [0],
+      yieldEnds: [0],
+      isNative: false,
+      isHidden: true,
+      isWorklet: false,
       hasLoop: false,
     });
     const uiRuntime = options.uiRuntime ?? true;
@@ -243,6 +287,10 @@ export class Machine {
         id: cell.id,
         kind: cell.kind,
         value: formatValue(cell.value),
+        valueType: typeOf(cell.value),
+        fixed: cell.fixed,
+        name: cell.name,
+        lockedBy: cell.lockedBy,
         host: cell.host,
         guests: [...cell.guests],
         accessedBy: cell.accessTick === this.tickCount ? cell.accessedBy : null,
@@ -250,7 +298,12 @@ export class Machine {
   }
 
   isFinished(): boolean {
-    if (this.cores.some((core) => core.createdAtTick === this.tickCount)) {
+    if (
+      this.cores.some((core) => core.createdAtTick === this.tickCount) ||
+      [...this.shared.values()].some(
+        (cell) => cell.createdAtTick === this.tickCount
+      )
+    ) {
       return this.halted;
     }
     if (this.inputs.some((input) => input.tick > this.tickCount)) {
@@ -274,6 +327,28 @@ export class Machine {
     const core = this.activeCore;
     if (core === null) {
       throw new SnippetError(`${api} was called outside of a simulation step`);
+    }
+    if (api === 'markLine') {
+      const line = args[0] as number;
+      core.line = line;
+      if (this.stepExec !== null && this.stepExec.core === core.spec.id) {
+        this.stepExec.line = line;
+        this.stepExec.text = `L${line} in ${this.stepExecFn}`;
+        this.stepMarked = true;
+      }
+      return undefined;
+    }
+    if (api === 'assertRNRuntime') {
+      const runtime = this.currentRuntime(core);
+      if (runtime !== 'rn') {
+        throw new RemoteFunctionError(
+          String(args[0]),
+          runtime === 'ui'
+            ? 'UI'
+            : (runtime?.slice('worker:'.length) ?? 'unknown')
+        );
+      }
+      return undefined;
     }
     if (api === 'createWorkletRuntime') {
       return this.createRuntime(core, args[0]);
@@ -339,16 +414,56 @@ export class Machine {
     if (api === 'getCurrentThreadId') {
       return threadId(this.cores.indexOf(core));
     }
+    if (api === 'isWorkletFunction') {
+      const [fn] = args;
+      // Snippets skip the Babel transform. Their explicit directive models
+      // the worklet metadata, which is only available on the RN Runtime.
+      return (
+        this.currentRuntime(core) === 'rn' &&
+        this.registerFn(fn) &&
+        this.snippet.fnInfo.get(fn)!.isWorklet
+      );
+    }
+    if (api === 'getRuntimeKind') {
+      const runtime = this.currentRuntime(core);
+      if (runtime === null) {
+        throw new SnippetError('getRuntimeKind requires a JavaScript Runtime');
+      }
+      const kind = this.core(runtime).spec.kind;
+      return kind === 'rn' ? 1 : kind === 'ui' ? 2 : 3;
+    }
+    if (api === 'runtimeFromId') {
+      const target = this.cores.find(
+        (candidate) => this.runtimeIdOf(candidate) === args[0]
+      );
+      if (!target?.spec.hasRuntime || target.spec.kind === 'rn') {
+        throw new SnippetError(
+          'Expected the id of an existing Worklet Runtime'
+        );
+      }
+      return {
+        __workletRuntime: true,
+        name: target.spec.id,
+        coreId: target.spec.id,
+        runtimeId: args[0],
+      };
+    }
     if (api === 'setTimeout') {
       return this.addTimer(core, args[0], args[1], false);
     }
     if (api === 'setInterval') {
       return this.addTimer(core, args[0], args[1], true);
     }
+    if (api === 'setImmediate') {
+      return this.addTimer(core, args[0], 0, false, true);
+    }
     if (api === 'clearInterval') {
       for (const candidate of this.cores) {
         candidate.timers = candidate.timers.filter(
           (timer) => timer.id !== args[0]
+        );
+        candidate.macrotasks = candidate.macrotasks.filter(
+          (job) => job.timerId !== args[0]
         );
       }
       return undefined;
@@ -360,18 +475,92 @@ export class Machine {
       this.globalsOf(core)[String(args[0])] = args[1];
       return undefined;
     }
+    if (api === 'registerCustomSerializable') {
+      if (this.currentRuntime(core) !== 'rn') {
+        throw new SnippetError(
+          'registerCustomSerializable can be used only on React Native runtime.'
+        );
+      }
+      this.customSerializers.register(args[0] as CustomSerializer);
+      return undefined;
+    }
+    if (api === 'createSerializable') {
+      const value = args[0];
+      const object = typeof value === 'object' && value !== null ? value : null;
+      const cached =
+        object === null ? undefined : this.serializableCache.get(object);
+      if (cached !== undefined) return cached;
+      const packet = this.packArgs([value]);
+      const id = this.createCell(
+        core,
+        'serializable',
+        null,
+        previewArguments(packet)[0]
+      );
+      this.serializedValues.set(id, packet);
+      const reference = Object.freeze({ __serializableRef: true });
+      this.serializableReferences.set(reference, id);
+      this.serializableCache.set(reference, reference);
+      if (object !== null) this.serializableCache.set(object, reference);
+      return reference;
+    }
     if (api === 'createSynchronizable') {
-      return this.createCell(core, 'synchronizable', null, args[0]);
+      const options = args[1] as { fixedType?: boolean } | undefined;
+      if (options?.fixedType === true && !isFixedValue(args[0])) {
+        throw new SnippetError(
+          '[Worklets] `fixedType` requires a number or boolean initial value.'
+        );
+      }
+      return this.createCell(
+        core,
+        'synchronizable',
+        null,
+        args[0],
+        options?.fixedType === true
+      );
     }
     if (api === 'synchronizableRead') {
+      const cell = this.cell(args[0]);
+      if (args[1] === 'blocking' && this.lockedByOther(core, cell)) {
+        return this.blockOn(core, cell, () => this.readCell(core, cell.id));
+      }
       return this.readCell(core, args[0]);
+    }
+    if (api === 'synchronizableLock') {
+      const cell = this.cell(args[0]);
+      const take = () => {
+        cell.lockedBy = core.spec.id;
+        return undefined;
+      };
+      return this.lockedByOther(core, cell)
+        ? this.blockOn(core, cell, take)
+        : take();
+    }
+    if (api === 'synchronizableUnlock') {
+      const cell = this.cell(args[0]);
+      if (cell.lockedBy === core.spec.id) {
+        cell.lockedBy = null;
+      }
+      return undefined;
     }
     if (api === 'synchronizableWrite') {
       const cell = this.cell(args[0]);
+      if (this.lockedByOther(core, cell)) {
+        return this.blockOn(core, cell, () =>
+          this.intercept('synchronizableWrite', args)
+        );
+      }
       const next =
         typeof args[1] === 'function'
           ? (args[1] as (previous: unknown) => unknown)(cell.value)
           : args[1];
+      if (cell.fixed && typeof next !== typeof cell.value) {
+        throw new SnippetError(
+          typeof cell.value === 'number'
+            ? '[Worklets] Expected a number for a fixed-type Synchronizable.'
+            : '[Worklets] Expected a boolean for a fixed-type Synchronizable.'
+        );
+      }
       this.writeCell(core, cell, next);
       return undefined;
     }
@@ -385,6 +574,16 @@ export class Machine {
         );
       }
       return this.createCell(core, 'shareable', host.spec.id, args[1]);
+    }
+    if (api === 'createVariable') {
+      return this.createCell(
+        core,
+        'variable',
+        this.currentRuntime(core),
+        args[1],
+        false,
+        String(args[0])
+      );
     }
     if (api === 'shareableRead') {
       const cell = this.cell(args[0]);
@@ -478,7 +677,7 @@ export class Machine {
         );
         return;
       }
-      const job = this.createJob(fn, cloneArgs(input.args ?? []), {
+      const job = this.createJob(fn, this.cloneArgs(input.args ?? []), {
         core: core.spec.id,
         line: 0,
         api: 'sendToUIThread',
@@ -494,7 +693,8 @@ export class Machine {
     core: CoreState,
     callback: unknown,
     ms: unknown,
-    repeat: boolean
+    repeat: boolean,
+    immediate = false
   ): number {
     if (typeof callback !== 'function') {
       throw new SnippetError('setTimeout expects a function');
@@ -514,13 +714,19 @@ export class Machine {
       );
     }
     const timerId = this.nextJobId++;
-    const wait = Math.max(delay, 0);
+    const runtime = this.currentRuntime(core);
+    const frameQueue = runtime === 'ui' || (runtime === 'rn' && !immediate);
+    const wait = frameQueue ? frameDelay(delay) : Math.max(delay, 0);
     core.timers.push({
       id: timerId,
       due: this.now + wait,
       callback: repeat ? (callback as () => unknown) : () => gen,
       label: this.snippet.fnInfo.get(fn)!.name,
-      interval: repeat ? Math.max(wait, APP_MS_PER_TICK) : undefined,
+      interval: repeat
+        ? frameQueue
+          ? wait
+          : Math.max(wait, APP_MS_PER_TICK)
+        : undefined,
     });
     return timerId;
   }
@@ -537,7 +743,7 @@ export class Machine {
         while (next <= this.now) {
           next += timer.interval;
         }
-        core.timers.push({ ...timer, due: next });
+        core.timers.push({ ...timer, due: next, arms: (timer.arms ?? 0) + 1 });
         if (core.macrotasks.some((job) => job.timerId === timer.id)) {
           continue;
         }
@@ -602,24 +808,116 @@ export class Machine {
     core: CoreState,
     kind: SharedCell['kind'],
     host: CoreId | null,
-    initial: unknown
+    initial: unknown,
+    fixed = false,
+    name: string | null = null
   ): number {
     const id = this.nextCellId++;
     const cell: SharedCell = {
       id,
       kind,
-      value: cloneArgs([initial])[0],
+      value: this.cloneArgs([initial])[0],
       host,
       guests: new Set(),
       accessedBy: core.spec.id,
       accessTick: this.tickCount,
       createdAtTick: this.tickCount,
+      fixed,
+      name,
+      lockedBy: null,
     };
     this.shared.set(id, cell);
     if (kind === 'shareable') {
       this.addGuest(core, cell);
     }
     return id;
+  }
+
+  private lockedByOther(core: CoreState, cell: SharedCell): boolean {
+    return cell.lockedBy !== null && cell.lockedBy !== core.spec.id;
+  }
+
+  private blockOn(
+    core: CoreState,
+    cell: SharedCell,
+    operation: () => unknown
+  ): BlockMarker {
+    return {
+      __block: true,
+      retry: () => {
+        if (this.lockedByOther(core, cell)) {
+          return { granted: false };
+        }
+        const previous = this.activeCore;
+        const originalLog = console.log;
+        this.activeCore = core;
+        setCurrentInterceptor(this);
+        console.log = (...args: unknown[]) => {
+          this.emit({
+            type: 'log',
+            core: core.spec.id,
+            runtime: this.currentRuntime(core),
+            line: core.line ?? 0,
+            text: formatLogArgs(args),
+          });
+        };
+        try {
+          return { granted: true, value: operation() };
+        } finally {
+          console.log = originalLog;
+          setCurrentInterceptor(null);
+          this.activeCore = previous;
+        }
+      },
+    };
+  }
+
+  private cloneArgs(args: unknown[]): unknown[] {
+    return cloneArguments(args, (reference) => {
+      const id = this.serializableReferences.get(reference);
+      if (id !== undefined && this.serializedValues.get(id)?.custom.size) {
+        throw new SnippetError(
+          'Custom Serializables are currently supported only in asynchronous call arguments in the simulator.'
+        );
+      }
+      return id === undefined ? undefined : this.cell(id);
+    });
+  }
+
+  private packArgs(args: unknown[]): PackedArguments {
+    return packArguments(
+      args,
+      (reference) => {
+        const id = this.serializableReferences.get(reference);
+        return id === undefined ? undefined : this.serializedValues.get(id);
+      },
+      this.customSerializers
+    );
+  }
+
+  private createCrossRuntimeJob(
+    core: CoreState,
+    api: ScheduleApi,
+    fn: unknown,
+    args: unknown[]
+  ): Job {
+    const target = this.resolveFn(api, fn);
+    const packet = this.packArgs(args);
+    const job = this.createJob(
+      target,
+      previewArguments(packet),
+      this.origin(core, api)
+    );
+    const registry = this.customSerializers;
+    // Generator bodies are lazy: unpack runs inside the destination's execution
+    // step, with its globals, console and runtime lock, never on the sender.
+    job.gen = (function* () {
+      const values = unpackArguments(packet, (name, value) =>
+        registry.unpack(name, value)
+      );
+      return yield* target(...(values as never[]));
+    })();
+    return job;
   }
 
   private addGuest(core: CoreState, cell: SharedCell): void {
@@ -642,11 +940,11 @@ export class Machine {
       mode: 'read',
       value: formatValue(cell.value),
     });
-    return cloneArgs([cell.value])[0];
+    return this.cloneArgs([cell.value])[0];
   }
 
   private writeCell(core: CoreState, cell: SharedCell, value: unknown): void {
-    cell.value = cloneArgs([value])[0];
+    cell.value = this.cloneArgs([value])[0];
     cell.accessedBy = core.spec.id;
     cell.accessTick = this.tickCount;
     this.emit({
@@ -712,11 +1010,7 @@ export class Machine {
       value: undefined,
       callbacks: [],
     });
-    const job = this.createJob(
-      this.resolveFn(api, fn),
-      cloneArgs(args),
-      this.origin(core, api)
-    );
+    const job = this.createCrossRuntimeJob(core, api, fn, args);
     job.promiseId = id;
     core.outbox.push({ target, job });
     this.emit({
@@ -810,7 +1104,7 @@ export class Machine {
     core.resolutions.push({
       target: state.origin,
       promiseId: job.promiseId,
-      value: cloneArgs([core.returnValue])[0],
+      value: this.cloneArgs([core.returnValue])[0],
     });
   }
 
@@ -865,7 +1159,7 @@ export class Machine {
         `${api} was called but this simulation has no ${owner.spec.label}`
       );
     }
-    const gen = target(...(cloneArgs(rest) as never[]));
+    const gen = target(...(this.cloneArgs(rest) as never[]));
     this.acquired.set(gen as object, { runtime, claim: this.nextClaim++ });
     return gen;
   }
@@ -943,7 +1237,13 @@ export class Machine {
       return;
     }
     const owner = this.core(runtime);
-    if (this.holders.get(runtime) === runtime && !this.hasStartedJob(owner)) {
+    const holder = this.holders.get(runtime);
+    // A runtime created during this tick has not participated in arbitration
+    // yet. Its synchronous initializer can acquire it immediately too.
+    if (
+      (holder === undefined || holder === runtime) &&
+      !this.hasStartedJob(owner)
+    ) {
       this.holders.set(runtime, core.spec.id);
     }
   }
@@ -963,10 +1263,10 @@ export class Machine {
       throw new SnippetError('updateScreen expects an object');
     }
     if (core.spec.kind !== 'ui') {
-      core.screenPatches.push(cloneArgs([patch])[0] as ScreenState);
+      core.screenPatches.push(this.cloneArgs([patch])[0] as ScreenState);
       return;
     }
-    this.applyScreenPatch(core, cloneArgs([patch])[0] as ScreenState);
+    this.applyScreenPatch(core, this.cloneArgs([patch])[0] as ScreenState);
   }
 
   private applyScreenPatch(core: CoreState, patch: ScreenState): void {
@@ -982,9 +1282,22 @@ export class Machine {
   private createRuntime(
     core: CoreState,
     config: unknown
-  ): WorkletRuntimeHandle {
+  ): WorkletRuntimeHandle | Generator<unknown, unknown, unknown> {
     if (core.spec.kind !== 'rn' && !this.bundleMode) {
       throw new Error(CREATE_RUNTIME_GUARD_MESSAGE);
+    }
+    const initializer =
+      typeof config === 'object' && config !== null
+        ? (config as { initializer?: unknown }).initializer
+        : undefined;
+    if (
+      initializer !== undefined &&
+      (!this.registerFn(initializer) ||
+        !this.snippet.fnInfo.get(initializer)!.isWorklet)
+    ) {
+      throw new Error(
+        '[Worklets] The initializer passed to `createWorkletRuntime` is not a worklet.'
+      );
     }
     const name =
       typeof config === 'object' &&
@@ -1013,12 +1326,18 @@ export class Machine {
       runtime: id,
       name,
     });
-    return {
+    const handle: WorkletRuntimeHandle = {
       __workletRuntime: true,
       name,
       coreId: id,
       runtimeId: this.runtimeIdOf(created),
     };
+    if (initializer === undefined) {
+      return handle;
+    }
+    return this.initializeRuntime(
+      ...([this.acquireRuntime(core, id, [initializer]), handle] as never[])
+    );
   }
 
   private scheduleMicrotask(
@@ -1052,11 +1371,7 @@ export class Machine {
     fn: unknown,
     args: unknown[]
   ): void {
-    const job = this.createJob(
-      this.resolveFn(api, fn),
-      cloneArgs(args),
-      this.origin(core, api)
-    );
+    const job = this.createCrossRuntimeJob(core, api, fn, args);
     job.deadline = core.currentJob?.deadline;
     core.outbox.push({ target, job });
     this.emit({
@@ -1169,6 +1484,27 @@ export class Machine {
         return;
       }
     }
+    if (frame.blocked !== undefined) {
+      let outcome: ReturnType<BlockMarker['retry']>;
+      try {
+        outcome = frame.blocked.retry();
+      } catch (error) {
+        this.fail(core, error);
+        return;
+      }
+      if (!outcome.granted) {
+        core.waitingFor = 'Synchronizable lock';
+        core.status = 'running';
+        core.line = frame.blockedLine ?? null;
+        core.executedRuntime = this.currentRuntime(core);
+        core.executedNative = false;
+        core.executedFn = this.snippet.fnInfo.get(frame.fn)!.name;
+        return;
+      }
+      frame.lastValue = outcome.value;
+      frame.blocked = undefined;
+      frame.blockedLine = undefined;
+    }
     const info = this.snippet.fnInfo.get(frame.fn)!;
     const lineIndex = info.hasLoop
       ? Math.min(frame.yields, info.yieldLines.length - 1)
@@ -1179,20 +1515,37 @@ export class Machine {
     core.executedRuntime = this.currentRuntime(core);
     core.executedNative = info.isNative;
     core.executedFn = info.isNative || info.isHidden ? null : info.name;
-    this.emit({
+    const exec: Extract<SimEvent, { type: 'exec' }> = {
       type: 'exec',
       core: core.spec.id,
       line: core.line,
       text: hasLine
         ? `L${core.line} in ${info.name}`
         : `(empty body of ${info.name})`,
-    });
+    };
+    this.emit(exec);
+    this.stepExec = exec;
+    this.stepExecFn = info.name;
+    this.stepMarked = false;
     let result: IteratorResult<unknown, unknown>;
     try {
       result = this.step(core, frame);
     } catch (error) {
+      this.stepExec = null;
       this.fail(core, error);
       return;
+    }
+    this.stepExec = null;
+    if (this.stepMarked) {
+      this.marksLines = true;
+    }
+    const returnedEarly = this.marksLines
+      ? result.done && !this.stepMarked && hasLine
+      : result.done && hasLine && !info.hasLoop;
+    if (returnedEarly) {
+      core.line = info.endLine;
+      exec.line = info.endLine;
+      exec.text = `L${info.endLine} in ${info.name} (returned early)`;
     }
     const shownLine = core.line;
     const shownRuntime = core.executedRuntime;
@@ -1210,6 +1563,15 @@ export class Machine {
       return;
     }
     frame.yields += 1;
+    if (isBlockMarker(result.value)) {
+      frame.blocked = result.value;
+      frame.blockedLine = shownLine;
+      core.line = shownLine;
+      core.executedRuntime = shownRuntime;
+      core.executedNative = shownNative;
+      core.executedFn = shownFn;
+      return;
+    }
     if (isAwaitMarker(result.value)) {
       if (this.awaitValue(core, frame, result.value.promise)) {
         core.line = shownLine;
@@ -1486,6 +1848,7 @@ export class Machine {
       this.emit({
         type: 'log',
         core: core.spec.id,
+        runtime: this.currentRuntime(core),
         line: core.line ?? 0,
         text: formatLogArgs(args),
       });
@@ -1501,12 +1864,20 @@ export class Machine {
 
   private fail(core: CoreState, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
+    const runtime = this.currentRuntime(core);
     core.status = 'error';
-    core.error = message;
+    core.error =
+      error instanceof RemoteFunctionError ? error.explanation : message;
     core.frames = [];
     core.currentJob = null;
     this.halted = true;
-    this.emit({ type: 'error', core: core.spec.id, line: core.line, message });
+    this.emit({
+      type: 'error',
+      core: core.spec.id,
+      runtime,
+      line: core.line,
+      message,
+    });
   }
 
   private resolveFn(api: ScheduleApi, fn: unknown): SnippetFn {
@@ -1557,6 +1928,12 @@ export class Machine {
   private snapshotCore(core: CoreState): CoreSnapshot {
     return {
       id: core.spec.id,
+      globals: Object.fromEntries(
+        Object.entries(core.globals).map(([name, value]) => [
+          name,
+          formatValue(value),
+        ])
+      ),
       label: core.spec.label,
       thread: core.spec.thread,
       kind: core.spec.kind,
@@ -1574,7 +1951,8 @@ export class Machine {
       currentFn: core.status === 'running' ? core.executedFn : null,
       nativeFrame: core.status === 'running' && core.executedNative,
       status: core.status,
-      line: core.status === 'running' ? core.line : null,
+      line:
+        core.status === 'running' || core.status === 'error' ? core.line : null,
       job:
         core.currentJob?.label ??
         (core.status === 'running' ? core.finishedJob : null),
@@ -1601,7 +1979,10 @@ export class Machine {
         ...[...core.timers]
           .sort((a, b) => a.due - b.due)
           .map((timer) => ({
-            id: timer.id,
+            id:
+              timer.arms === undefined
+                ? timer.id
+                : -(pairIds(timer.id, timer.arms) + 1),
             name: timer.label,
             internal: false,
             timer: true,
@@ -1664,12 +2045,24 @@ function mergeScreenPatch(base: ScreenState, patch: ScreenState): ScreenState {
   return { ...base, ...patch, nativeProps };
 }
 
-function cloneArgs(args: unknown[]): unknown[] {
-  try {
-    return structuredClone(args);
-  } catch {
-    throw new SnippetError(
-      'arguments passed between runtimes must be serializable (structuredClone failed)'
-    );
+function typeOf(value: unknown): string {
+  if (value === null) {
+    return 'null';
   }
+  if (Array.isArray(value)) {
+    return 'array';
+  }
+  return typeof value;
+}
+
+function frameDelay(delay: number): number {
+  return FRAME_MS * Math.max(1, Math.ceil(delay / FRAME_MS));
+}
+
+function isFixedValue(value: unknown): value is number | boolean {
+  return typeof value === 'number' || typeof value === 'boolean';
+}
+
+function pairIds(first: number, second: number): number {
+  return ((first + second) * (first + second + 1)) / 2 + second;
 }

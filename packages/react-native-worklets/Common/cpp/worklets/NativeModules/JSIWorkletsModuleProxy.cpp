@@ -305,7 +305,7 @@ inline void registerCustomSerializable(
     const int typeId) {
   const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
   // Prevent registering new worklet runtimes while we are updating existing ones to prevent inconsistencies.
-  runtimeManager->withRegistrationPaused([&] {
+  runtimeManager->withRuntimeReadyPaused([&] {
     memoryManager->registerCustomSerializable(data);
     for (const auto &runtime : runtimeManager->getAllRuntimes()) {
       if (runtime->isLockingEnabled()) {
@@ -319,15 +319,13 @@ std::shared_ptr<void> makePromiseDropGuard(
     jsi::Runtime &rt,
     const WorkletRuntime &workletRuntime,
     const jsi::Value &resolveValue,
-    const jsi::Value &rejectValue,
-    const std::shared_ptr<RuntimeManager> &runtimeManager) {
+    const jsi::Value &rejectValue) {
   if (!workletRuntime.isAbortable() || !rejectValue.isObject()) {
     return nullptr;
   }
   return std::make_shared<PromiseDropGuard>(
       extractSerializableOrThrow<SerializableRemoteFunction>(rt, resolveValue),
-      extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue),
-      runtimeManager);
+      extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue));
 }
 
 } // namespace
@@ -427,18 +425,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "createSerializableNonWorkletFunction",
-      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_, rnRuntimeStatus = rnRuntimeStatus_](
+      [jsScheduler = jsScheduler_,
+       hostIdentity = hostRuntimeId_ == RuntimeData::rnRuntimeId
+           ? RuntimeIdentity::forRNRuntime(rnRuntimeStatus_)
+           : RuntimeIdentity::forWorkletRuntime(runtimeManager_, hostRuntimeId_)](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto fun = at<0>(args).getObject(rt).getFunction(rt);
         const auto name = at<1>(args).isUndefined() ? "" : at<1>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
-        } else if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, jsScheduler, rnRuntimeStatus);
-        } else {
-          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostRuntimeId);
         }
+        return makeSerializableRemoteFunction(
+            rt, name, fun, hostIdentity, hostIdentity.isRNRuntime() ? jsScheduler : nullptr);
       });
 
   jsi_utils::addMethod<2>(
@@ -700,10 +699,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<5>(
-      rt,
-      obj,
-      "scheduleOnRuntime",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
         const auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
@@ -718,7 +714,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                       workletRuntime->getRuntimeName() + "\".");
         }
 #endif // NDEBUG
-        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -754,7 +750,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                       workletRuntime->getRuntimeName() + "\".");
         }
 #endif // NDEBUG
-        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -790,10 +786,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       });
 
   jsi_utils::addMethod<2>(
-      rt,
-      obj,
-      "handlePromise",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      rt, obj, "handlePromise", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         const auto fun = at<0>(args).getObject(rt).getFunction(rt);
         if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
           // TODO: add a fast path for it in TypeScript
@@ -801,7 +794,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         } else {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
           auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
+          resolveOrReject->resolveOrRejectPromise(valueOrError);
         }
       });
 
@@ -827,6 +820,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         worklets::DynamicFeatureFlags::setFlag(
             /* name */ at<0>(args).asString(rt).utf8(rt),
             /* value */ at<1>(args).asBool());
+      });
+
+  jsi_utils::addMethod<0>(
+      rt, obj, "getAliveRuntimeCount", [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &) {
+        return jsi::Value(static_cast<double>(runtimeManager->getAliveRuntimeCount()));
       });
 
   jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {

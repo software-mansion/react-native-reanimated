@@ -2,6 +2,8 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -54,6 +56,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(RuntimeData::uiRuntimeId);
 }
 
+size_t RuntimeManager::getAliveRuntimeCount() {
+  std::shared_lock lock(weakRuntimesMutex_);
+  return weakRuntimes_.size();
+}
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
@@ -80,7 +87,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   workletRuntime->init(targetProxy);
 
 #ifndef NDEBUG
-  withRegistrationPaused([&] { loadModuleUpdates(workletRuntime); });
+  withRuntimeReadyPaused([&] { loadModuleUpdates(workletRuntime); });
 #endif // NDEBUG
 
   if (initializer) {
@@ -91,14 +98,14 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     }
   }
 
-  registerRuntime(runtimeId, workletRuntime);
+  onRuntimeReady(runtimeId, workletRuntime);
 
   return workletRuntime;
 }
 
 #ifndef NDEBUG
 void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::string &sourceUrl) {
-  std::unique_lock registrationLock(registrationMutex_);
+  std::unique_lock runtimeReadyLock(runtimeReadyMutex_);
 
   moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
 
@@ -126,7 +133,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
       uiAsyncQueue,
       /*enableEventLoop*/ false);
 
-  registerRuntime(RuntimeData::uiRuntimeId, uiRuntime);
+  onRuntimeReady(RuntimeData::uiRuntimeId, uiRuntime);
 
   return uiRuntime;
 }
@@ -145,10 +152,14 @@ void RuntimeManager::onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId) {
   weakRuntimes_.erase(runtimeId);
 }
 
-void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
-  std::unique_lock registrationLock(registrationMutex_);
+void RuntimeManager::onRuntimeReady(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  std::unique_lock runtimeReadyLock(runtimeReadyMutex_);
   std::unique_lock lock(weakRuntimesMutex_);
-  weakRuntimes_[runtimeId] = workletRuntime;
+  const auto it = weakRuntimes_.find(runtimeId);
+  react_native_assert(it != weakRuntimes_.end() && "[Worklets] onRuntimeReady called before onRuntimeCreated.");
+  if (it != weakRuntimes_.end()) {
+    it->second = workletRuntime;
+  }
 }
 
 } // namespace worklets
