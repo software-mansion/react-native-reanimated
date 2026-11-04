@@ -1407,7 +1407,7 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 #ifdef ANDROID
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (std::ranges::any_of(retiringSharedTransitions_, [this](const auto &entry) {
-        return entry.second.element.run && !hasUnqueuedCarrierFrame(entry.first);
+        return entry.second.run && !hasUnqueuedCarrierFrame(entry.first);
       })) {
     return true;
   }
