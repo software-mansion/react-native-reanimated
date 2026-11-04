@@ -16,6 +16,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <array>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -141,6 +142,13 @@ struct CollectedTransition {
 using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
 using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransition>>;
 
+#ifdef __APPLE__
+struct HeldModal {
+  std::shared_ptr<LightNode> node;
+  std::chrono::steady_clock::time_point removableAt;
+};
+#endif
+
 struct TransactionMeta {
   ShadowViewMutationList filteredMutations;
   ShadowViewMutationList teardownMutations;
@@ -156,6 +164,7 @@ struct TransactionMeta {
   std::optional<size_t> screenSnapshotRemoval;
   std::unordered_map<Tag, Tag> staleSnapshots;
   std::unordered_set<Tag> dueRemovals;
+  std::vector<std::shared_ptr<LightNode>> modalsToHold;
   std::unordered_set<Tag> recreatedTags;
 };
 
@@ -198,6 +207,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #endif
 
 #ifdef __APPLE__
+  mutable std::vector<HeldModal> heldModals_;
   ForceScreenSnapshotFunction forceScreenSnapshot_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
@@ -498,6 +508,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
+#ifdef __APPLE__
+  bool holdsSourceInModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
+#endif
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 
