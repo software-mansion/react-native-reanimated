@@ -36,7 +36,9 @@ module.exports = function snippetNamesLoader(source) {
   });
 
   const output = lines.map((text, index) => {
-    const marked = markYieldLine(text, index + 1);
+    const marked = startsStatement(lines, index)
+      ? markYieldLine(text, index + 1)
+      : text;
     const names = insertAfter.get(index);
     return names === undefined ? marked : `${marked}\n${pin(names)}`;
   });
@@ -44,6 +46,16 @@ module.exports = function snippetNamesLoader(source) {
 };
 
 module.exports.YIELD_PATTERN = YIELD_PATTERN;
+
+function startsStatement(lines, index) {
+  for (let previous = index - 1; previous >= 0; previous--) {
+    const code = lines[previous].replace(/\/\/.*$/, '').trim();
+    if (code !== '') {
+      return /[;{}:]$/.test(code);
+    }
+  }
+  return true;
+}
 
 function markYieldLine(text, line) {
   if (!YIELD_PATTERN.test(text)) {

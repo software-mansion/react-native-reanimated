@@ -74,8 +74,6 @@ const BUNDLE_MODE_GUARD_MESSAGE =
 const CREATE_RUNTIME_GUARD_MESSAGE =
   '[Worklets] createWorkletRuntime cannot be called on Worklet Runtimes outside of the Bundle Mode.';
 
-const TIMER_ARM_STRIDE = 100_000;
-
 export class Machine {
   private readonly snippet: LoadedSnippet;
   private readonly bundleMode: boolean;
@@ -852,9 +850,11 @@ export class Machine {
         }
         const previous = this.activeCore;
         this.activeCore = core;
+        setCurrentInterceptor(this);
         try {
           return { granted: true, value: operation() };
         } finally {
+          setCurrentInterceptor(null);
           this.activeCore = previous;
         }
       },
@@ -1971,7 +1971,7 @@ export class Machine {
             id:
               timer.arms === undefined
                 ? timer.id
-                : -(timer.id * TIMER_ARM_STRIDE + timer.arms),
+                : -(pairIds(timer.id, timer.arms) + 1),
             name: timer.label,
             internal: false,
             timer: true,
@@ -2050,4 +2050,8 @@ function frameDelay(delay: number): number {
 
 function isFixedValue(value: unknown): value is number | boolean {
   return typeof value === 'number' || typeof value === 'boolean';
+}
+
+function pairIds(first: number, second: number): number {
+  return ((first + second) * (first + second + 1)) / 2 + second;
 }

@@ -52,6 +52,12 @@ export function scanSource(source: string): Map<string, FnInfo> {
     }
     const current = top.info;
     if (YIELD_PATTERN.test(text)) {
+      if ((codeOf(text).match(/\byield\b/g) ?? []).length > 1) {
+        throw new SnippetError(
+          'put each yield on its own line; the simulator tracks one yield per line',
+          line
+        );
+      }
       current.yieldLines.push(line);
       current.yieldEnds.push(statementEnd(lines, index));
     }
@@ -131,4 +137,10 @@ function bracketDelta(text: string, open: string, close: string): number {
     }
   }
   return delta;
+}
+
+function codeOf(text: string): string {
+  return text
+    .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""')
+    .replace(/\/\/.*$/, '');
 }

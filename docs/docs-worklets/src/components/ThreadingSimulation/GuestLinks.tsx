@@ -17,7 +17,12 @@ export default function GuestLinks({ active }: { active: boolean }) {
     }
     let frame = 0;
     let previous = '';
+    let visible = true;
     const measure = () => {
+      if (!visible) {
+        frame = 0;
+        return;
+      }
       frame = requestAnimationFrame(measure);
       const svg = svgRef.current;
       const root = svg?.parentElement;
@@ -47,8 +52,24 @@ export default function GuestLinks({ active }: { active: boolean }) {
         setLinks(next);
       }
     };
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver(([entry]) => {
+            visible = entry?.isIntersecting ?? true;
+            if (visible && frame === 0) {
+              measure();
+            }
+          });
+    const root = svgRef.current?.parentElement;
+    if (observer && root) {
+      observer.observe(root);
+    }
     measure();
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [active]);
 
   return (

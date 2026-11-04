@@ -48,14 +48,18 @@ export function displaySource(
     if (match === null) {
       return [];
     }
+    const name = match[2];
     const scope = innermostFunction(fns, index + 1);
-    return [
-      {
-        name: match[2],
-        start: scope?.headerLine ?? 1,
-        end: scope?.endLine ?? rawLines.length,
-      },
-    ];
+    const start = scope?.headerLine ?? 1;
+    const end = scope?.endLine ?? rawLines.length;
+    const shadows = [...fns.values()].filter(
+      (fn) =>
+        fn !== scope &&
+        fn.headerLine > start &&
+        fn.endLine <= end &&
+        redeclares(rawLines, fn, name)
+    );
+    return [{ name, start, end, shadows }];
   });
   const asyncHeaders = new Set(
     [...fns.values()]
@@ -115,7 +119,14 @@ export function displaySource(
       text,
       isInsideMain(main, line),
       variables
-        .filter((variable) => line >= variable.start && line <= variable.end)
+        .filter(
+          (variable) =>
+            line >= variable.start &&
+            line <= variable.end &&
+            !variable.shadows.some(
+              (fn) => line >= fn.headerLine && line <= fn.endLine
+            )
+        )
         .map((variable) => variable.name)
     );
     displayLines.push(
@@ -226,6 +237,19 @@ function isInsideBody(
   return indent >= bodyIndent && !next.trimStart().startsWith('//');
 }
 
+function redeclares(rawLines: string[], fn: FnInfo, name: string): boolean {
+  const header = rawLines[fn.headerLine - 1] ?? '';
+  const params = header.slice(header.indexOf('(') + 1, header.lastIndexOf(')'));
+  const binding = new RegExp(`(?<![\\w$.])${name}(?![\\w$])`);
+  if (binding.test(params)) {
+    return true;
+  }
+  const declaration = new RegExp(`^\\s*(?:const|let|var)\\s+${name}(?![\\w$])`);
+  return rawLines
+    .slice(fn.headerLine, fn.endLine - 1)
+    .some((text) => declaration.test(text));
+}
+
 function innermostFunction(
   fns: Map<string, FnInfo>,
   line: number
@@ -277,7 +301,14 @@ function replaceInCode(
   return text
     .split(STRING_OR_COMMENT_PATTERN)
     .map((part, index) =>
-      index % 2 === 0 ? part.replace(pattern, replacement) : part
+      index % 2 === 0
+        ? part.replace(pattern, replacement)
+        : part.startsWith('`')
+          ? part.replace(
+              /\$\{([^}]*)\}/g,
+              (_, inner: string) => `\${${inner.replace(pattern, replacement)}}`
+            )
+          : part
     )
     .join('');
 }

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import * as syncMixedTransaction from '../../../docs/tutorials/_synchronizing-data/syncMixedTransaction';
@@ -55,5 +57,27 @@ describe('Synchronizable lock', () => {
     const logs = formatLogs(snapshots);
     assert.ok(logs.includes('[rn] progress 100%'));
     assert.ok(logs.some((log) => log.startsWith('[rn] progress 25%')));
+  });
+});
+
+describe('blocked Synchronizable writes', () => {
+  it('runs an updater that reads another Synchronizable after the lock is released', () => {
+    const path = join(__dirname, '_fixtures', 'lockedUpdater.js');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const snapshots = simulate(require(path), readFileSync(path, 'utf8'));
+    const events = snapshots.flatMap((snapshot) => snapshot.events);
+    assert.deepEqual(
+      events.filter((event) => event.type === 'error'),
+      []
+    );
+    assert.ok(formatLogs(snapshots).includes('[rn] counter 5'));
+    assert.ok(
+      snapshots.some((snapshot) =>
+        snapshot.cores.some(
+          (core) =>
+            core.id === 'rn' && core.waitingFor === 'Synchronizable lock'
+        )
+      )
+    );
   });
 });

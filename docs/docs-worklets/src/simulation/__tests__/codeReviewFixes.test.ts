@@ -163,3 +163,46 @@ describe('second review round', () => {
     assert.equal(events.filter((event) => event.type === 'error').length, 0);
   });
 });
+
+describe('third review round', () => {
+  it('does not rewrite .value in a nested function that redeclares the name', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        function* show(result) {
+          yield console.log(result.value);
+        }
+        yield console.log(\`\${result.value}\`);
+      }
+    `);
+    const { text } = displaySource(source);
+    assert.match(text, /^\s{2}console\.log\(result\.value\);$/m);
+    assert.match(text, /^console\.log\(`\$\{result\}`\);$/m);
+  });
+
+  it('rejects two yields on one line', () => {
+    const source = unindent(`
+      export default function* main() {
+        if (yield true) yield console.log('both');
+      }
+    `);
+    assert.throws(() => displaySource(source), /each yield on its own line/);
+  });
+
+  it('marks only yield lines that start a statement', () => {
+    const loader = require('../snippetNamesLoader.js') as (
+      source: string
+    ) => string;
+    const output = loader(
+      unindent(`
+        export default function* main() {
+          const value =
+            yield task();
+          yield console.log(value);
+        }
+      `)
+    );
+    assert.doesNotMatch(output, /=\s*__simMarkLine/);
+    assert.match(output, /__simMarkLine\(4\); yield console\.log/);
+  });
+});
