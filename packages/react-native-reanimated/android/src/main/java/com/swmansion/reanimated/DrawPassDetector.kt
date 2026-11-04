@@ -14,6 +14,7 @@ internal class DrawPassDetector(
     private val mHandler = Handler(Looper.getMainLooper())
     private val mClearRunnable = Runnable { mIsInDrawPass = false }
     private var mIsInDrawPass = false
+    private var mIsInvalidated = false
     private var mDecorView: View? = null
 
     private val mOnDrawListener =
@@ -23,6 +24,9 @@ internal class DrawPassDetector(
         }
 
     fun initialize() {
+        if (mIsInvalidated) {
+            return
+        }
         val activity = mContext.currentActivity ?: return
 
         val decorView = activity.window.decorView
@@ -59,6 +63,7 @@ internal class DrawPassDetector(
     }
 
     private fun invalidateOnUiThread() {
+        mIsInvalidated = true
         mDecorView?.let { view ->
             val observer = view.viewTreeObserver
             if (observer.isAlive) {

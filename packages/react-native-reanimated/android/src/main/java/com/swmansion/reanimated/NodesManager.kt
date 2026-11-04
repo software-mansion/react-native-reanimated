@@ -78,6 +78,8 @@ class NodesManager(
     fun isAnimationRunning(): Boolean = mCallbackPosted.get()
 
     fun onHostResume() {
+        // An Activity draws only after it resumes, so tracking attached here precedes any event inside its draws.
+        mDrawPassDetector.initialize()
         if (mCallbackPosted.getAndSet(false)) {
             startUpdatingOnAnimationFrame()
         }
@@ -112,7 +114,6 @@ class NodesManager(
     }
 
     internal fun performOperationsRespectingDrawPass() {
-        mDrawPassDetector.initialize()
         if (isInDrawPass()) {
             performNonLayoutOperations()
             startUpdatingOnAnimationFrame()
@@ -131,8 +132,6 @@ class NodesManager(
             if (BuildConfig.REANIMATED_PROFILING) {
                 Trace.beginSection("onAnimationFrame")
             }
-
-            mDrawPassDetector.initialize()
 
             var currentFrameTimeMs = frameTimeNanos / 1000000.0
             if (mSlowAnimationsEnabled) {
@@ -185,13 +184,6 @@ class NodesManager(
             }
 
             val nativeProxy = mNativeProxy ?: return
-            val isOnUiThread = UiThreadUtil.isOnUiThread()
-            if (isOnUiThread) {
-                // Ensure draw-pass tracking is attached before event handling; the backend reads
-                // isInDrawPass during receiveEvent. Events no worklet waits for attach it too, because a
-                // listener attached during a draw pass misses that pass.
-                mDrawPassDetector.initialize()
-            }
             val eventName = resolveCustomEventName(event.eventName)
             // Building the payload costs more than asking the registry, so an event no worklet waits for stops here.
             if (!nativeProxy.isAnyHandlerWaitingForEvent(eventName, event.viewTag)) {
@@ -199,7 +191,7 @@ class NodesManager(
             }
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
-            if (isOnUiThread) {
+            if (UiThreadUtil.isOnUiThread()) {
                 handleEvent(event, eventName)
                 performOperationsRespectingDrawPass()
             } else {
