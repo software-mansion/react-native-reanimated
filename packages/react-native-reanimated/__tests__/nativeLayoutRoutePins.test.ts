@@ -95,8 +95,8 @@ const onUIRuntime = <T>(create: () => T): T => {
 
 let lastBuildId = 7000;
 /**
- * `N`: each leaf has a track. `T`: a leaf has no fit (UnsupportedTiming). `R`:
- * ResourceLimit.
+ * `N`: each leaf has a track. `T`: a leaf has no fit (UnsupportedTiming), or
+ * each leaf jumps after a delay (UnsupportedTrackForm). `R`: ResourceLimit.
  */
 function routeOf(config: Config, size: [number, number]) {
   const buildId = ++lastBuildId;
@@ -112,7 +112,9 @@ function routeOf(config: Config, size: [number, number]) {
   if (summary.exceededLimit !== null) {
     return 'R';
   }
-  return summary.leaves.every(({ track }) => track) ? 'N' : 'T';
+  return summary.leaves.every(({ track }) => track) && !summary.jumpsAfterDelay
+    ? 'N'
+    : 'T';
 }
 
 /**

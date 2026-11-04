@@ -1,7 +1,15 @@
 import React from 'react';
 import { PixelRatio, View } from 'react-native';
-import type { EntryAnimationsValues } from 'react-native-reanimated';
-import { Easing, LinearTransition, withTiming } from 'react-native-reanimated';
+import type {
+  EntryAnimationsValues,
+  LayoutAnimationsValues,
+} from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  LinearTransition,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   describe,
@@ -9,6 +17,7 @@ import {
   getTestComponent,
   render,
   test,
+  useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import type {
@@ -207,14 +216,17 @@ describe('native layout route', () => {
     if (route.kind !== 'frame-driven') {
       throw new Error(`The refused form reports ${route.kind}.`);
     }
-    expect(route.refusal.buildFailure).toBe('UnsupportedTarget');
+    expect(refusalOf(route.refusal)).toBe(
+      PLAYS_SIZE_CHANGE ? BUILD_REFUSAL : SIZE_REFUSAL_BEFORE_BUILD
+    );
     await wait(REFUSED_DURATION);
     await render(null);
   });
 
   for (const pixels of [1, 2]) {
     const isNative = playsSizeChangeOf(pixels * ONE_PIXEL);
-    test(`a width change of ${pixels} px ${routeNameOf(isNative)} and ends at the end width`, async () => {
+    const refusal = isNative ? undefined : SIZE_REFUSAL_BEFORE_BUILD;
+    test(`a width change of ${pixels} px ${routeNameOf(refusal)} and ends at the end width`, async () => {
       const layout = LinearTransition.duration(PIXEL_DURATION).easing(
         Easing.linear
       );
@@ -227,7 +239,7 @@ describe('native layout route', () => {
       await wait(PIXEL_DURATION / 2);
       const middle = await sample(tag, 'Width');
       await wait(PIXEL_DURATION);
-      expectSizeRoute((await takeTraceOf(tag)).filter(isHostEvent), isNative);
+      expectSizeRoute((await takeTraceOf(tag)).filter(isHostEvent), refusal);
       if (isNative && !PLAYS_SIZE_CHANGE) {
         expect(isNear(middle.presentation[0], endWidth)).toBe(true);
       }
@@ -238,7 +250,7 @@ describe('native layout route', () => {
     });
   }
 
-  test(`a width sequence within 1 px of the end at each segment end, with a Bezier segment that passes 1.5 px, ${routeNameOf(PLAYS_SIZE_CHANGE)} and ends at the end width`, async () => {
+  test(`a width sequence within 1 px of the end at each segment end, with a Bezier segment that passes 1.5 px, ${routeNameOf(buildRefusalUnless(PLAYS_SIZE_CHANGE))} and ends at the end width`, async () => {
     const endWidth = PixelRatio.roundToNearestPixel(BOX_SIZE) + ONE_PIXEL;
     const layout = layoutOf({
       width: {
@@ -260,7 +272,7 @@ describe('native layout route', () => {
     await wait(PIXEL_DURATION * 1.5);
     expectSizeRoute(
       (await takeTraceOf(tag)).filter(isHostEvent),
-      PLAYS_SIZE_CHANGE
+      buildRefusalUnless(PLAYS_SIZE_CHANGE)
     );
     const end = await sample(tag, 'Width');
     expect(isNear(end.model[0], endWidth)).toBe(true);
@@ -268,7 +280,7 @@ describe('native layout route', () => {
     await render(null);
   });
 
-  test(`an entering width track from 1 pt to 1.005 pt with a Bezier that takes it below 0 ${routeNameOf(false)}`, async () => {
+  test(`an entering width track from 1 pt to 1.005 pt with a Bezier that takes it below 0 ${routeNameOf(BUILD_REFUSAL)}`, async () => {
     const width = PixelRatio.roundToNearestPixel(1);
     const entering = entryExitOf({
       width: {
@@ -283,11 +295,14 @@ describe('native layout route', () => {
     await render(<EnteringScene isMounted width={width} entering={entering} />);
     const tag = getTestComponent(BOX_REF).getTag();
     await wait(PIXEL_DURATION * 1.5);
-    expectSizeRoute((await takeTraceOf(tag)).filter(isHostEvent), false);
+    expectSizeRoute(
+      (await takeTraceOf(tag)).filter(isHostEvent),
+      BUILD_REFUSAL
+    );
     await render(null);
   });
 
-  test(`an exiting width track that ends 79 px from the mounted width ${routeNameOf(PLAYS_SIZE_CHANGE)}`, async () => {
+  test(`an exiting width track that ends 79 px from the mounted width ${routeNameOf(buildRefusalUnless(PLAYS_SIZE_CHANGE))}`, async () => {
     const width = PixelRatio.roundToNearestPixel(BOX_SIZE);
     const exiting = entryExitOf({
       width: {
@@ -306,9 +321,107 @@ describe('native layout route', () => {
     await wait(2 * PIXEL_DURATION + 300);
     expectSizeRoute(
       (await takeTraceOf(tag)).filter(isHostEvent),
-      PLAYS_SIZE_CHANGE
+      buildRefusalUnless(PLAYS_SIZE_CHANGE)
     );
     expect(await hasView(tag)).toBe(false);
+    await render(null);
+  });
+});
+
+describe('native layout route: request rate and delayed jumps', () => {
+  if (!hasNativeLayoutRoute) {
+    return;
+  }
+
+  movingGeometryTest(
+    'a layout change in each frame plays natively up to the request rate and then frame-driven',
+    async () => {
+      const tag = await mountScene(
+        <RateBox left={START_LEFT} cssDuration={RATE_LOOP_MS} />
+      );
+      const offset = await offsetOf(tag);
+      await render(<RateBox left={END_LEFT} cssDuration={RATE_LOOP_MS} />);
+      await wait(RATE_LOOP_MS + DURATION + 200);
+      const starts = (await takeTraceOf(tag)).filter(isLayoutStartOutcome);
+      const firstRateRefusal = starts.findIndex(isRateRefusal);
+      expect(starts.length >= REQUESTS_PER_SECOND).toBe(true);
+      expect(firstRateRefusal).toBe(REQUESTS_PER_SECOND - 1);
+      expect(
+        starts
+          .slice(0, firstRateRefusal)
+          .every(({ event }) => event === 'Admitted')
+      ).toBe(true);
+      expect(
+        starts.slice(firstRateRefusal).some(({ event }) => event === 'Admitted')
+      ).toBe(false);
+      await expectShownAt(tag, END_LEFT + offset);
+      await render(null);
+    }
+  );
+
+  movingGeometryTest('ten layout changes per second stay native', async () => {
+    const tag = await mountScene(<RateBox left={START_LEFT} />);
+    for (let step = 1; step <= 2 * REQUESTS_PER_SECOND; step++) {
+      await render(<RateBox left={step % 2 === 0 ? START_LEFT : END_LEFT} />);
+      await wait(100);
+    }
+    await wait(DURATION + 200);
+    const starts = (await takeTraceOf(tag)).filter(isLayoutStartOutcome);
+    expect(starts.filter(({ event }) => event === 'Admitted').length).toBe(
+      2 * REQUESTS_PER_SECOND
+    );
+    expect(starts.filter(isRateRefusal).length).toBe(0);
+    await render(null);
+  });
+
+  movingGeometryTest(
+    'the native route takes a view again after a second with no layout change',
+    async () => {
+      const tag = await mountScene(
+        <RateBox left={START_LEFT} cssDuration={RATE_LOOP_MS} />
+      );
+      await render(<RateBox left={END_LEFT} cssDuration={RATE_LOOP_MS} />);
+      await wait(RATE_LOOP_MS + DURATION + 1200);
+      const loop = (await takeTraceOf(tag)).filter(isLayoutStartOutcome);
+      expect(loop.some(isRateRefusal)).toBe(true);
+      await render(<RateBox left={START_LEFT} cssDuration={RATE_LOOP_MS} />);
+      await wait(DURATION + 200);
+      const starts = (await takeTraceOf(tag)).filter(isLayoutStartOutcome);
+      expect(starts[0]?.event).toBe('Admitted');
+      await render(null);
+    }
+  );
+
+  movingGeometryTest(
+    'a delayed jump on each leaf plays frame-driven and ends at the end frame',
+    async () => {
+      const tag = await mountScene(
+        <Scene left={START_LEFT} layout={delayedMoveOf(0)} />
+      );
+      const offset = await offsetOf(tag);
+      await render(<Scene left={END_LEFT} layout={delayedMoveOf(0)} />);
+      await wait(JUMP_DELAY_MS + 200);
+      const events = (await takeTraceOf(tag)).filter(isHostEvent);
+      expect(events.filter(isStartRefusal).map(refusalOf).join(' > ')).toBe(
+        'LayoutBuildFailed:UnsupportedTrackForm'
+      );
+      expect(events.filter(({ event }) => event === 'Admitted').length).toBe(0);
+      await expectShownAt(tag, END_LEFT + offset);
+      await render(null);
+    }
+  );
+
+  movingGeometryTest('a delayed timing of 300 ms starts natively', async () => {
+    const tag = await mountScene(
+      <Scene left={START_LEFT} layout={delayedMoveOf(JUMP_DELAY_MS)} />
+    );
+    await render(
+      <Scene left={END_LEFT} layout={delayedMoveOf(JUMP_DELAY_MS)} />
+    );
+    await wait(2 * JUMP_DELAY_MS + 4 * FRAME_MS);
+    const events = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(events.filter(isStartRefusal).length).toBe(0);
+    expect(events.filter(({ event }) => event === 'Admitted').length).toBe(1);
     await render(null);
   });
 });
@@ -427,18 +540,38 @@ function isOnPushTimeline(centerX: number, sinceStartMs: number) {
   );
 }
 
-function routeNameOf(isNative: boolean) {
-  return isNative
-    ? 'starts natively'
-    : 'stays frame-driven with UnsupportedTarget';
+const BUILD_REFUSAL = 'LayoutBuildFailed:UnsupportedTarget';
+/**
+ * Android refuses a layout change of the frame size by more than one pixel
+ * before the build.
+ */
+const SIZE_REFUSAL_BEFORE_BUILD = 'LayoutStartRefused:SizeBeyondOnePixel';
+type SizeRefusal = typeof BUILD_REFUSAL | typeof SIZE_REFUSAL_BEFORE_BUILD;
+
+const buildRefusalUnless = (isNative: boolean) =>
+  isNative ? undefined : BUILD_REFUSAL;
+
+const isStartRefusal = ({ event }: TraceEvent) =>
+  event === 'LayoutBuildFailed' || event === 'LayoutStartRefused';
+
+const refusalOf = ({ event, buildFailure, startRefusal }: TraceEvent) =>
+  `${event}:${startRefusal ?? buildFailure}`;
+
+function routeNameOf(refusal: SizeRefusal | undefined) {
+  if (refusal === undefined) {
+    return 'starts natively';
+  }
+  return `stays frame-driven with ${refusal === BUILD_REFUSAL ? 'UnsupportedTarget' : 'SizeBeyondOnePixel'}`;
 }
 
-function expectSizeRoute(events: TraceEvent[], isNative: boolean) {
-  const refusals = events.filter(({ event }) => event === 'LayoutBuildFailed');
+function expectSizeRoute(
+  events: TraceEvent[],
+  refusal: SizeRefusal | undefined
+) {
   const admitted = events.filter(({ event }) => event === 'Admitted');
-  expect(admitted.length).toBe(isNative ? 1 : 0);
-  expect(summarize(refusals)).toBe(
-    isNative ? '' : 'LayoutBuildFailed:UnsupportedTarget'
+  expect(admitted.length).toBe(refusal === undefined ? 1 : 0);
+  expect(events.filter(isStartRefusal).map(refusalOf).join(' > ')).toBe(
+    refusal ?? ''
   );
 }
 
@@ -484,4 +617,80 @@ function immediateEntering(values: EntryAnimationsValues) {
       originX: withTiming(values.targetOriginX, { duration: 0 }),
     },
   };
+}
+
+const REQUESTS_PER_SECOND = 20;
+/** A CSS transition of `marginLeft` that asks for a layout change in each frame. */
+const RATE_LOOP_MS = 1000;
+const JUMP_DELAY_MS = 300;
+const RATE_LAYOUT = LinearTransition.duration(DURATION).easing(Easing.linear);
+
+const isLayoutStartOutcome = (event: TraceEvent) =>
+  event.event === 'Admitted' || isStartRefusal(event);
+
+const isRateRefusal = ({ event, startRefusal }: TraceEvent) =>
+  event === 'LayoutStartRefused' && startRefusal === 'RequestRate';
+
+/**
+ * Each leaf of the move is a timing of `durationMs` after a delay of
+ * `JUMP_DELAY_MS`; 0 ms is a jump.
+ */
+function delayedMoveOf(durationMs: number) {
+  return (values: LayoutAnimationsValues) => {
+    'worklet';
+    return {
+      initialValues: {
+        originX: values.currentOriginX,
+        originY: values.currentOriginY,
+      },
+      animations: {
+        originX: withDelay(
+          JUMP_DELAY_MS,
+          withTiming(values.targetOriginX, { duration: durationMs })
+        ),
+        originY: withDelay(
+          JUMP_DELAY_MS,
+          withTiming(values.targetOriginY, { duration: durationMs })
+        ),
+      },
+    };
+  };
+}
+
+/** The model x of the view minus its `marginLeft`. */
+async function offsetOf(tag: number) {
+  return (await sample(tag, 'PositionX')).model[0] - START_LEFT;
+}
+
+async function expectShownAt(tag: number, x: number) {
+  const end = await sample(tag, 'PositionX');
+  expect(Math.abs(end.model[0] - x) <= POSITION_TOLERANCE).toBe(true);
+  expect(Math.abs(end.presentation[0] - x) <= POSITION_TOLERANCE).toBe(true);
+}
+
+function RateBox({
+  left,
+  cssDuration,
+}: {
+  left: number;
+  cssDuration?: number;
+}) {
+  const ref = useTestRef(BOX_REF);
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        ref={ref}
+        layout={RATE_LAYOUT}
+        style={[
+          styles.box,
+          { marginLeft: left },
+          cssDuration !== undefined && {
+            transitionProperty: 'marginLeft',
+            transitionDuration: cssDuration,
+            transitionTimingFunction: 'linear',
+          },
+        ]}
+      />
+    </View>
+  );
 }

@@ -905,6 +905,12 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return hasEdgesOfFrameDriver(track) ? std::nullopt : std::optional(EdgeAntialiasing);
   }
 
+  bool playsSizeChange(const facebook::react::ShadowView & /*before*/, const facebook::react::ShadowView & /*after*/)
+      override
+  {
+    return true;
+  }
+
   bool isSurfaceRunning(const SurfaceId surfaceId) override
   {
     RCTAssertMainQueue();

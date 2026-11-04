@@ -56,6 +56,8 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   std::optional<UnsupportedTargetCause> unsupportedTargetCause(
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) override;
+  /// The executor writes no size, so a change of the frame size plays only within one pixel.
+  bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) override;
   bool isSurfaceRunning(SurfaceId surfaceId) override;
   bool isInWindow(SurfaceId surfaceId, Tag tag) override;
   /// The number of the dispatch that runs now: its `didMountItems` reports the pull.

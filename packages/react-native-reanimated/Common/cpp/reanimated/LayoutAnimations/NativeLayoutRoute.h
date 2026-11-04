@@ -29,6 +29,10 @@ enum class NativeStartRefusal : uint8_t {
   FrameDrivenState,
   HiddenBySharedTransition,
   BuilderThrew,
+  /// The platform cannot play the change of the frame size of the view.
+  SizeBeyondOnePixel,
+  /// The view has too many layout requests in the last second (`LayoutRequestRates`).
+  RequestRate,
 };
 
 } // namespace reanimated

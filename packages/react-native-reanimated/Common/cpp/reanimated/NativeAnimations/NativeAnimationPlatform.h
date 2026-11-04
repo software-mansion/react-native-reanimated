@@ -66,7 +66,8 @@ struct TargetSample {
 };
 #endif
 
-/// The platform part of the host. All calls but `unsupportedTargetCause` are on the platform UI thread.
+/// The platform part of the host. All calls but `unsupportedTargetCause` and `playsSizeChange` are on the platform
+/// UI thread.
 class NativeAnimationPlatform {
  public:
   using TrackEndListener = std::function<void(const TrackKey &track, bool finished)>;
@@ -81,6 +82,9 @@ class NativeAnimationPlatform {
   virtual std::optional<UnsupportedTargetCause> unsupportedTargetCause(
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) = 0;
+  /// False when the platform cannot play a change of the frame size from `before` to `after`. Reads no mounted
+  /// state, so a client can ask before it builds the tracks.
+  virtual bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
   /// True when the mounted view of the tag is in a window.

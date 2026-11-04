@@ -358,7 +358,8 @@ std::variant<NativeLayoutTracks, NativeLayoutRefusal> makeNativeLayoutTracks(
   }
   const auto leaves = buildSummary.getProperty(rt, "leaves").asObject(rt).asArray(rt);
   const auto leafCount = leaves.size(rt);
-  if (leafCount == 0 || buildSummary.getProperty(rt, "hasInitialOnlyKeys").asBool()) {
+  if (leafCount == 0 || buildSummary.getProperty(rt, "hasInitialOnlyKeys").asBool() ||
+      buildSummary.getProperty(rt, "jumpsAfterDelay").asBool()) {
     return TrackBuildFailure::UnsupportedTrackForm;
   }
 

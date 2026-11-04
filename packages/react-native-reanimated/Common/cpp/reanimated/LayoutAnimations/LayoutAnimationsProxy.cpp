@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
@@ -66,6 +67,10 @@ std::string_view toString(const NativeStartRefusal refusal) {
       return "HiddenBySharedTransition";
     case NativeStartRefusal::BuilderThrew:
       return "BuilderThrew";
+    case NativeStartRefusal::SizeBeyondOnePixel:
+      return "SizeBeyondOnePixel";
+    case NativeStartRefusal::RequestRate:
+      return "RequestRate";
   }
 }
 
@@ -277,6 +282,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   currentPull_ = {};
   currentPull_.mountReport = mountReportOfPull();
+  currentPull_.startTimeMs =
+      std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch()).count();
   react_native_assert(
       std::ranges::all_of(
           pendingPulls_,
@@ -433,6 +440,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   }
   lightNodes_.erase(it);
   cancelNativeLayoutAnimation(node->current.tag);
+  layoutRequestRates_.forget(node->current.tag);
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   nativeTracksWithoutFrameUpdate_.erase(node->current.tag);
 #endif
@@ -1266,6 +1274,12 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   if (const auto completedView = takeCompletedLayoutAnimationView(tag)) {
     start.before = *completedView;
   }
+  if (!nativeAnimationHost_->playsSizeChange(start.before, start.after)) {
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+    traceStartRefused(tag, start.type, NativeStartRefusal::SizeBeyondOnePixel);
+#endif
+    return false;
+  }
   const auto buildSummary = buildLayoutAnimation(start);
   if (!buildSummary.isObject()) {
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
@@ -1607,6 +1621,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   nativeTracksWithoutFrameUpdate_.clear();
 #endif
+  layoutRequestRates_.clear();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     sharedContainers_.clear();
     snapshottedScreens_.clear();
@@ -1774,13 +1789,31 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       .parentTag = parent->current.tag,
       .config = config,
   };
-  if (admitsNativeStart(node, start.type) && startNativePlayback(start)) {
+  const bool isOverRequestRate = nativeLayoutGroups_ && recordLayoutRequest(tag) != LayoutRequestRates::Route::Native;
+  if (!isOverRequestRate && admitsNativeStart(node, start.type) && startNativePlayback(start)) {
     transaction.filteredMutations.push_back(
         ShadowViewMutation::UpdateMutation(start.before, start.after, start.parentTag));
     return;
   }
   continueOnFrameDriver(start);
   enqueueLayoutAnimation(std::move(start));
+}
+
+LayoutRequestRates::Route LayoutAnimationsProxy::recordLayoutRequest(const Tag tag) const {
+  ReanimatedSystraceSection request("LayoutAnimationsProxy::layoutRequest", "tag", tag);
+  const auto route = layoutRequestRates_.record(tag, currentPull_.startTimeMs);
+  if (route == LayoutRequestRates::Route::Native) {
+    return route;
+  }
+  if (route == LayoutRequestRates::Route::FrameDrivenFromNow) {
+    ReanimatedSystraceSection rateReached("LayoutAnimationsProxy::layoutRequestRateReached", "tag", tag);
+  }
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  if (worklets::isOnUIThread(uiScheduler_)) {
+    traceStartRefused(tag, LayoutAnimationType::LAYOUT, NativeStartRefusal::RequestRate);
+  }
+#endif
+  return route;
 }
 
 void LayoutAnimationsProxy::startSharedTransition(

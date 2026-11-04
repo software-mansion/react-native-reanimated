@@ -12,6 +12,7 @@ import type {
   LayoutAnimationValues,
   LiveLayoutLeaf,
   NativeLayoutLimits,
+  NativeLeafTrack,
   Mutable,
   SharedValue,
 } from '../commonTypes';
@@ -80,6 +81,15 @@ type LayoutAnimationBuild = {
   originMs: number;
   hasCallbackResult?: boolean;
 };
+
+function jumpsAfterDelay(tracks: (NativeLeafTrack | undefined)[]): boolean {
+  'worklet';
+  return (
+    tracks.length > 0 &&
+    tracks.every((track) => track?.durationMs === 0) &&
+    tracks.some((track) => (track?.delayMs ?? 0) > 0)
+  );
+}
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
@@ -167,6 +177,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         originMs,
         exceededLimit,
         hasInitialOnlyKeys: false,
+        jumpsAfterDelay: false,
         needsFrameDriver: false,
         leaves: [],
       });
@@ -210,6 +221,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),
+        jumpsAfterDelay: jumpsAfterDelay(summaries.map(({ track }) => track)),
         needsFrameDriver: Object.values(relations).includes('frameDriver'),
         leaves: summaries.map((summary) => ({
           ...summary,

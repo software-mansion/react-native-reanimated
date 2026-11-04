@@ -2,12 +2,14 @@ import {
   BounceIn,
   BounceInDown,
   BounceOut,
+  CurvedTransition,
   Easing,
   EntryExitTransition,
   FadeIn,
   FadingTransition,
   JumpingTransition,
   Keyframe,
+  LinearTransition,
   SequencedTransition,
   SlideInLeft,
   withDelay,
@@ -23,6 +25,7 @@ import type {
   EasingFunction,
   EntryAnimationsValues,
   LayoutAnimation,
+  LayoutAnimationValues,
   NativeLeafTrack,
   Timestamp,
 } from '../src/commonTypes';
@@ -494,6 +497,144 @@ describe('LayoutAnimationsManager', () => {
 
       expect(leavesOf(withDelayWrapper.build())?.[0].track).toBeUndefined();
       expect(leavesOf(withoutDelayWrapper.build())?.[0].track).toBeUndefined();
+    });
+  });
+
+  describe('builds of layout transitions', () => {
+    const NATIVE_LIMITS = { leaves: 6, transformOperations: 4, segments: 64 };
+    const GROW: LayoutAnimationValues = {
+      currentOriginX: 8,
+      currentOriginY: 60,
+      currentWidth: 40,
+      currentHeight: 8,
+      currentBorderRadius: 0,
+      currentGlobalOriginX: 8,
+      currentGlobalOriginY: 60,
+      targetOriginX: 72,
+      targetOriginY: 100,
+      targetWidth: 80,
+      targetHeight: 16,
+      targetBorderRadius: 0,
+      targetGlobalOriginX: 72,
+      targetGlobalOriginY: 100,
+      windowWidth: 400,
+      windowHeight: 800,
+    };
+    const MOVE_X = {
+      ...GROW,
+      targetOriginY: GROW.currentOriginY,
+      targetGlobalOriginY: GROW.currentGlobalOriginY,
+      targetWidth: GROW.currentWidth,
+      targetHeight: GROW.currentHeight,
+    };
+    let lastBuildId = 600;
+    const summaryOf = (
+      layout: (values: LayoutAnimationValues) => LayoutAnimation,
+      values = GROW,
+      limits = NATIVE_LIMITS
+    ) => {
+      const buildId = ++lastBuildId;
+      const summary = manager.build(
+        buildId,
+        values,
+        () => onUIRuntime(() => layout(values)),
+        limits,
+        []
+      )!;
+      manager.releaseBuilt(buildId);
+      return summary;
+    };
+    const startOf = (
+      summary: ReturnType<typeof summaryOf>,
+      key: 'width' | 'height'
+    ) => summary.leaves.find((leaf) => leaf.key === key)?.initialValue;
+    const delayedJump = (values: LayoutAnimationValues) => ({
+      initialValues: {
+        originX: values.currentOriginX,
+        originY: values.currentOriginY,
+      },
+      animations: {
+        originX: withDelay(
+          300,
+          withTiming(values.targetOriginX, { duration: 0 })
+        ),
+        originY: withDelay(
+          300,
+          withTiming(values.targetOriginY, { duration: 0 })
+        ),
+      },
+    });
+
+    // The Android size check before the build (`playsSizeChange`) refuses the
+    // same starts as the track check only when the size tracks start at the
+    // current size.
+    test.each([
+      ['LinearTransition', () => new LinearTransition().build()],
+      [
+        'LinearTransition.springify()',
+        () => LinearTransition.springify().build(),
+      ],
+      [
+        'LinearTransition.delay(300)',
+        () => LinearTransition.delay(300).build(),
+      ],
+      ['FadingTransition', () => new FadingTransition().build()],
+      ['JumpingTransition', () => new JumpingTransition().build()],
+      ['SequencedTransition', () => new SequencedTransition().build()],
+      [
+        'SequencedTransition.reverse()',
+        () => SequencedTransition.reverse().build(),
+      ],
+      ['CurvedTransition', () => new CurvedTransition().build()],
+      ['EntryExitTransition', () => new EntryExitTransition().build()],
+    ])(
+      '%s starts its width and height tracks at the current size',
+      (_, make) => {
+        const summary = summaryOf(make());
+
+        expect(startOf(summary, 'width')).toBe(GROW.currentWidth);
+        expect(startOf(summary, 'height')).toBe(GROW.currentHeight);
+      }
+    );
+
+    test('a delayed jump on each leaf jumps after its delay', () => {
+      expect(summaryOf(delayedJump, MOVE_X).jumpsAfterDelay).toBe(true);
+    });
+
+    test.each([
+      ['FadingTransition', () => new FadingTransition().build()],
+      [
+        'LinearTransition.springify().delay(300) with an unchanged originY',
+        () => LinearTransition.springify().delay(300).build(),
+      ],
+      [
+        'LinearTransition.delay(300).duration(0)',
+        () => LinearTransition.delay(300).duration(0).build(),
+      ],
+      ['LinearTransition', () => new LinearTransition().build()],
+      [
+        'a jump on each leaf with no delay',
+        () => (values: LayoutAnimationValues) => ({
+          initialValues: { originX: values.currentOriginX },
+          animations: {
+            originX: withTiming(values.targetOriginX, { duration: 0 }),
+          },
+        }),
+      ],
+    ])('%s does not jump after a delay', (_, make) => {
+      expect(summaryOf(make(), MOVE_X).jumpsAfterDelay).toBe(false);
+    });
+
+    test('a refusal of a limit does not jump after a delay', () => {
+      const summary = summaryOf(delayedJump, MOVE_X, {
+        ...NATIVE_LIMITS,
+        leaves: 1,
+      });
+
+      expect(summary).toMatchObject({
+        exceededLimit: 'leaves',
+        jumpsAfterDelay: false,
+      });
     });
   });
 

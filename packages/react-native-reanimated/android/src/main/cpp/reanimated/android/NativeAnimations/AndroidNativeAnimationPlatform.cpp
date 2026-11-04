@@ -358,6 +358,15 @@ std::optional<UnsupportedTargetCause> movingGeometryCause(
                                               : std::nullopt;
 }
 
+/// The pixel of the Fabric mount, which rounds the frame of `view` with its scale.
+double onePixelOf(const facebook::react::ShadowView &view) {
+  return 1 / view.layoutMetrics.pointScaleFactor;
+}
+
+bool isWithinOnePixel(const double value, const double mounted, const double onePixel) {
+  return std::abs(value - mounted) <= onePixel + ENDPOINT_TOLERANCE;
+}
+
 /// The executor writes no size: the view shows its mounted size for the whole track. The track must end at that
 /// size, start and end each segment within one pixel of it, and stay less than one and a half pixels from it, so
 /// that the frame driver would show at most one pixel more or less at each frame.
@@ -369,7 +378,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
   }
   const auto &frameSize = view.layoutMetrics.frame.size;
   const double mounted = track.target == AnimationTarget::Width ? frameSize.width : frameSize.height;
-  const double onePixel = 1 / view.layoutMetrics.pointScaleFactor;
+  const double onePixel = onePixelOf(view);
   if (std::abs(std::get<double>(timeline.segments.back().endValue) - mounted) > ENDPOINT_TOLERANCE) {
     return false;
   }
@@ -377,8 +386,7 @@ bool staysInOnePixelOfMountedSize(const AnimationTrack &track, const facebook::r
   for (const auto &segment : timeline.segments) {
     const double to = std::get<double>(segment.endValue);
     const auto [leastProgress, largestProgress] = progressRangeOf(segment.timingFromPrevious);
-    if (std::abs(from - mounted) > onePixel + ENDPOINT_TOLERANCE ||
-        std::abs(to - mounted) > onePixel + ENDPOINT_TOLERANCE) {
+    if (!isWithinOnePixel(from, mounted, onePixel) || !isWithinOnePixel(to, mounted, onePixel)) {
       return false;
     }
     for (const double progress : {leastProgress, largestProgress}) {
@@ -544,6 +552,15 @@ std::optional<UnsupportedTargetCause> AndroidNativeAnimationPlatform::unsupporte
     return std::nullopt;
   }
   return movingGeometryCause(track, view);
+}
+
+bool AndroidNativeAnimationPlatform::playsSizeChange(
+    const facebook::react::ShadowView &before,
+    const facebook::react::ShadowView &after) {
+  const auto &from = before.layoutMetrics.frame.size;
+  const auto &to = after.layoutMetrics.frame.size;
+  const double onePixel = onePixelOf(after);
+  return isWithinOnePixel(from.width, to.width, onePixel) && isWithinOnePixel(from.height, to.height, onePixel);
 }
 
 bool AndroidNativeAnimationPlatform::isSurfaceRunning(const SurfaceId surfaceId) {

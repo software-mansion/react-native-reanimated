@@ -127,6 +127,12 @@ std::optional<UnsupportedTargetCause> NativeAnimationHost::unsupportedTargetCaus
   return platform_->unsupportedTargetCause(track, view);
 }
 
+bool NativeAnimationHost::playsSizeChange(
+    const facebook::react::ShadowView &before,
+    const facebook::react::ShadowView &after) const {
+  return platform_->playsSizeChange(before, after);
+}
+
 bool NativeAnimationHost::isMountedInWindow(const SurfaceId surfaceId, const Tag tag) const {
   return platform_->isInWindow(surfaceId, tag);
 }

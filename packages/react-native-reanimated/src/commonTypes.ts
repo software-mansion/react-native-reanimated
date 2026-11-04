@@ -184,6 +184,11 @@ export type LayoutAnimationBuildSummary = {
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
   /**
+   * Each leaf jumps to its end after its delay: each track has no duration, and
+   * one has a delay. The frame driver plays it.
+   */
+  jumpsAfterDelay: boolean;
+  /**
    * The frame driver gives a result that native playback cannot repeat, because
    * of a live leaf of the view.
    */
