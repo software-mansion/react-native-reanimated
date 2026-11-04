@@ -15,6 +15,7 @@ export interface FnInfo {
   yieldEnds: number[];
   isNative: boolean;
   isHidden: boolean;
+  isWorklet: boolean;
   hasLoop: boolean;
 }
 
@@ -60,12 +61,19 @@ export type InterceptedApi =
   | 'runOnUISync'
   | 'runOnRuntimeSync'
   | 'getCurrentThreadId'
+  | 'getRuntimeKind'
+  | 'isWorkletFunction'
+  | 'runtimeFromId'
+  | 'assertRNRuntime'
   | 'setTimeout'
   | 'setInterval'
+  | 'setImmediate'
   | 'clearInterval'
   | 'promiseThen'
   | 'globalGet'
   | 'globalSet'
+  | 'createSerializable'
+  | 'registerCustomSerializable'
   | 'createSynchronizable'
   | 'synchronizableRead'
   | 'synchronizableWrite'
@@ -73,9 +81,17 @@ export type InterceptedApi =
   | 'shareableRead'
   | 'shareableWrite'
   | 'shareableGetSync'
-  | 'shareableGetAsync';
+  | 'shareableGetAsync'
+  | 'createVariable'
+  | 'markLine'
+  | 'synchronizableLock'
+  | 'synchronizableUnlock';
 
-export type MemoryKind = 'synchronizable' | 'shareable';
+export type MemoryKind =
+  | 'serializable'
+  | 'synchronizable'
+  | 'shareable'
+  | 'variable';
 
 export interface SharedCell {
   id: number;
@@ -86,21 +102,33 @@ export interface SharedCell {
   accessedBy: CoreId | null;
   accessTick: number;
   createdAtTick: number;
+  fixed: boolean;
+  name: string | null;
+  lockedBy: CoreId | null;
 }
 
 export interface MemorySnapshot {
   id: number;
   kind: MemoryKind;
   value: string;
+  valueType: string;
+  fixed: boolean;
+  name: string | null;
   host: CoreId | null;
   guests: CoreId[];
   accessedBy: CoreId | null;
+  lockedBy: CoreId | null;
 }
 
 export interface PromiseHandle {
   __simPromise: true;
   id: number;
   then: (callback: (value: unknown) => unknown) => void;
+}
+
+export interface BlockMarker {
+  __block: true;
+  retry: () => { granted: false } | { granted: true; value: unknown };
 }
 
 export interface AwaitMarker {
@@ -153,6 +181,7 @@ export interface Timer {
   callback: () => unknown;
   label: string;
   interval?: number;
+  arms?: number;
 }
 
 export interface Frame {
@@ -162,6 +191,8 @@ export interface Frame {
   lastValue: unknown;
   runtime?: CoreId;
   claim?: number;
+  blocked?: BlockMarker;
+  blockedLine?: number | null;
 }
 
 export type CoreStatus = 'idle' | 'running' | 'error';
@@ -192,6 +223,7 @@ export interface CoreState {
 
 export interface CoreSnapshot {
   id: CoreId;
+  globals: Record<string, string>;
   label: string;
   thread: string;
   kind: CoreKind;
@@ -232,7 +264,13 @@ export type SimEvent =
     }
   | { type: 'jobStart'; core: CoreId; job: string; internal: boolean }
   | { type: 'exec'; core: CoreId; line: number; text: string }
-  | { type: 'log'; core: CoreId; line: number; text: string }
+  | {
+      type: 'log';
+      core: CoreId;
+      runtime: CoreId | null;
+      line: number;
+      text: string;
+    }
   | {
       type: 'scheduled';
       core: CoreId;
@@ -247,7 +285,13 @@ export type SimEvent =
   | { type: 'screen'; core: CoreId; line: number; state: ScreenState }
   | { type: 'delivered'; core: CoreId; jobs: string[] }
   | { type: 'jobEnd'; core: CoreId; job: string; internal: boolean }
-  | { type: 'error'; core: CoreId; line: number | null; message: string };
+  | {
+      type: 'error';
+      core: CoreId;
+      runtime: CoreId | null;
+      line: number | null;
+      message: string;
+    };
 
 export type ResourceKind = 'runtime' | 'loop' | 'synchronizable';
 

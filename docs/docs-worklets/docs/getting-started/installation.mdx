@@ -1,30 +1,17 @@
 ---
-slug: /
-displayed_sidebar: guides
+sidebar_position: 2
+title: Installation
+pagination_next: tutorials/concurrency-model
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import * as ShowcaseSnippet from './_getting-started/showcase';
-import ShowcaseSource from '!!raw-loader!./_getting-started/showcase';
-import * as ShowcaseSingleSnippet from './_getting-started/showcaseSingle';
-import ShowcaseSingleSource from '!!raw-loader!./_getting-started/showcaseSingle';
 
-# Getting started
-
-## What is React Native Worklets?
-
-React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
-
-To learn more, explore our tutorials section, starting with the explanation for the [purpose](../tutorials/0-concurrency-model.mdx) of the library.
-
-<ThreadingShowcase single={{ module: ShowcaseSingleSnippet, source: ShowcaseSingleSource }} worklets={{ module: ShowcaseSnippet, source: ShowcaseSource }}/>
-
-## Installation
+# Installation
 
 Check the [compatibility table](../guides/compatibility.mdx) to find the Worklets version that supports your React Native version.
 
-### Step 1: Install the package
+## Step 1: Install the package
 
 Install `react-native-worklets` package from npm:
 
@@ -42,7 +29,7 @@ Install `react-native-worklets` package from npm:
   </TabItem>
 </Tabs>
 
-### Step 2: Configure your project
+## Step 2: Configure your project
 
 The remaining steps depend on how you build your app — pick your framework:
 
@@ -71,12 +58,12 @@ The remaining steps depend on how you build your app — pick your framework:
 
       Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-      To learn more about the plugin go to [Worklets babel plugin](../worklets-plugin/about.mdx) section.
+      To learn more about the plugin go to [Worklets plugin](../worklets-plugin/about.mdx) section.
     </details>
 
     <br/>
 
-    #### Clear Metro bundler cache (recommended)
+    ### Clear Metro bundler cache (recommended)
 
     <Tabs groupId="package-managers">
       <TabItem value="npm" label="NPM">
@@ -115,12 +102,12 @@ The remaining steps depend on how you build your app — pick your framework:
 
       In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](../tutorials/0-concurrency-model.mdx#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime)
 
-      To learn more about the plugin go to [Worklets babel plugin](../worklets-plugin/about.mdx) section.
+      To learn more about the plugin go to [Worklets plugin](../worklets-plugin/about.mdx) section.
     </details>
 
     <br/>
 
-    #### iOS
+    ### iOS
 
     While developing for iOS, make sure to install [pods](https://cocoapods.org/) first before running the app:
 
@@ -128,7 +115,7 @@ The remaining steps depend on how you build your app — pick your framework:
     cd ios && pod install && cd ..
     ```
 
-    #### Clear Metro bundler cache (recommended)
+    ### Clear Metro bundler cache (recommended)
 
     <Tabs groupId="package-managers">
       <TabItem value="npm" label="NPM">

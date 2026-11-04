@@ -1,0 +1,39 @@
+---
+title: Memory
+description: Choose how to copy values or share state between runtimes.
+slug: /category/memory
+---
+
+# Memory
+
+Copy values between runtimes or share state that more than one runtime needs to access.
+Start with [Sharing memory](../concepts/sharing-memory.mdx#choosing-between-them) to choose a memory primitive, or follow [Synchronizing data](../tutorials/4-synchronizing-data.mdx) for practical examples.
+
+## Choose a memory primitive
+
+- [`Serializable`](../memory/serializable.mdx) — Transfer a value as an independent copy. Changes to the copy do not update the original.
+- [`Synchronizable`](../memory/synchronizable.mdx) — Keep shared state in native memory so multiple runtimes can read and write it.
+- [`Shareable`](../memory/shareable.mdx) — Keep a value on a host runtime and access it from guest runtimes.
+
+## Create a value
+
+- [`createSerializable`](../memory/createSerializable.mdx) — Create an opaque reference to a serialized value. Scheduling APIs usually handle serialization for you.
+- [`createSynchronizable`](../memory/createSynchronizable.mdx) — Create a shared value in native memory.
+- [`createShareable`](../memory/createShareable.mdx) — Create a value hosted on a specific runtime.
+
+## Inspect a value
+
+- [`isSerializableRef`](../memory/isSerializableRef.mdx) — Check whether a value is a Serializable reference.
+- [`isSynchronizable`](../memory/isSynchronizable.mdx) — Check whether a value is a Synchronizable.
+
+## Customize serialization
+
+- [`registerCustomSerializable`](../memory/registerCustomSerializable.mdx) — Define how a custom type is transferred between runtimes.
+
+## Deprecated APIs
+
+These older APIs use different terminology. Follow their replacement guidance when updating existing code.
+
+- [`makeShareable`](../memory/makeShareable.mdx)
+- [`makeShareableCloneRecursive`](../memory/makeShareableCloneRecursive.mdx)
+- [`makeShareableCloneOnUIRecursive`](../memory/makeShareableCloneOnUIRecursive.mdx)
