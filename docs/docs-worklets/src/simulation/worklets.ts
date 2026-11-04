@@ -109,7 +109,8 @@ export function isBlockMarker(value: unknown): value is BlockMarker {
   return (
     typeof value === 'object' &&
     value !== null &&
-    (value as BlockMarker).__block === true
+    (value as BlockMarker).__block === true &&
+    typeof (value as BlockMarker).retry === 'function'
   );
 }
 

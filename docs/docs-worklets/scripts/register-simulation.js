@@ -11,11 +11,17 @@ require('esbuild-register/dist/node').register({
 const SITE_ROOT = path.resolve(__dirname, '..');
 const pinSnippetNames = require('../src/simulation/snippetNamesLoader.js');
 const SNIPPET_PATH = /(?:[\\/]snippets[\\/]|[\\/]_[^\\/]+[\\/])[^\\/]+\.jsx?$/;
-const originalLoadJs = Module._extensions['.js'];
-Module._extensions['.js'] = function loadSnippet(module, filename) {
-  if (!SNIPPET_PATH.test(filename)) {
-    return originalLoadJs(module, filename);
-  }
+for (const extension of ['.js', '.jsx']) {
+  const originalLoad = Module._extensions[extension];
+  Module._extensions[extension] = function loadSnippet(module, filename) {
+    if (!SNIPPET_PATH.test(filename)) {
+      return originalLoad(module, filename);
+    }
+    return compileSnippet(module, filename);
+  };
+}
+
+function compileSnippet(module, filename) {
   const { code } = transformSync(
     pinSnippetNames(readFileSync(filename, 'utf8')),
     {
@@ -27,7 +33,7 @@ Module._extensions['.js'] = function loadSnippet(module, filename) {
     }
   );
   return module._compile(code, filename);
-};
+}
 const originalResolve = Module._resolveFilename;
 Module._resolveFilename = function resolveWithSiteAlias(request, ...rest) {
   const resolved = request.startsWith('@site/')

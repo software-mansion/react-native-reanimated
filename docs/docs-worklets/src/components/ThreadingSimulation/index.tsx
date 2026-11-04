@@ -487,6 +487,7 @@ export default function ThreadingSimulation({
             className={styles.areaMemory}
             help="JavaScript Runtimes and their Event Loops can be thought as exclusive memory resources. Event Loop is usually assigned to one thread and no other thread can obtain it. A Runtime can be obtained by other threads occasionally.">
             <MemoryPanel
+              active={open}
               runtimes={everRuntimes.filter(
                 (runtime) =>
                   runtime.hasRuntime &&

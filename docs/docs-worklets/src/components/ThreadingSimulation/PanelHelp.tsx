@@ -26,11 +26,18 @@ export default function PanelHelp({
   useEffect(() => {
     if (!open) return;
     const dismiss = () => popoverRef.current?.hidePopover();
+    const dismissOnOuterScroll = (event: Event) => {
+      const popover = popoverRef.current;
+      if (popover !== null && popover.contains(event.target as Node)) {
+        return;
+      }
+      dismiss();
+    };
     window.addEventListener('resize', dismiss);
-    window.addEventListener('scroll', dismiss, true);
+    window.addEventListener('scroll', dismissOnOuterScroll, true);
     return () => {
       window.removeEventListener('resize', dismiss);
-      window.removeEventListener('scroll', dismiss, true);
+      window.removeEventListener('scroll', dismissOnOuterScroll, true);
     };
   }, [open]);
 

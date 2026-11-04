@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import * as syncMixedTransaction from '../../../docs/tutorials/_synchronizing-data/syncMixedTransaction';
-import { simulate } from '..';
+import { formatLogs, simulate } from '..';
 import { snippetSource } from './helpers';
 
 describe('Synchronizable lock', () => {
@@ -44,5 +44,16 @@ describe('Synchronizable lock', () => {
       );
       assert.equal(cell?.lockedBy, 'ui');
     }
+  });
+
+  it('writes the progress and lets the RN Runtime read every value', () => {
+    const hosted = snapshots
+      .flatMap((snapshot) => snapshot.memory)
+      .filter((cell) => cell.kind === 'shareable')
+      .map((cell) => cell.value);
+    assert.ok(hosted.includes('100'));
+    const logs = formatLogs(snapshots);
+    assert.ok(logs.includes('[rn] progress 100%'));
+    assert.ok(logs.some((log) => log.startsWith('[rn] progress 25%')));
   });
 });

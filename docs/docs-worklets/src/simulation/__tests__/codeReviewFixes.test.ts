@@ -113,3 +113,53 @@ describe('exact executed lines', () => {
     assert.equal(log?.type === 'log' ? log.line : null, 6);
   });
 });
+
+describe('second review round', () => {
+  it('rewrites heap variable accesses only inside the declaring function', () => {
+    const source = unindent(`
+      export default function* main() {
+        function* first() {
+          const result = yield heapVariable('result', 0);
+          yield console.log(result.value);
+        }
+        function* second(result) {
+          yield console.log(result.value);
+        }
+      }
+    `);
+    const { text } = displaySource(source);
+    assert.match(text, /^\s{2}console\.log\(result\);$/m);
+    assert.match(text, /^\s{2}console\.log\(result\.value\);$/m);
+  });
+
+  it('treats a yielded if header with a trailing comment as one statement', () => {
+    const source = unindent(`
+      export default function* main() {
+        if (yield true) { // check
+          yield console.log('inside');
+        }
+        yield console.log('after');
+      }
+    `);
+    const { blockEnds } = displaySource(source);
+    assert.equal([...blockEnds.keys()].includes(1), false);
+  });
+
+  it('passes plain objects with __block back to the snippet', () => {
+    function* main() {
+      const value = yield { __block: true };
+      yield console.log(String(value.__block));
+    }
+    const snapshots = simulate(
+      asModule({ default: main }),
+      unindent(`
+        export default function* main() {
+          const value = yield { __block: true };
+          yield console.log(String(value.__block));
+        }
+      `)
+    );
+    const events = snapshots.flatMap((snapshot) => snapshot.events);
+    assert.equal(events.filter((event) => event.type === 'error').length, 0);
+  });
+});

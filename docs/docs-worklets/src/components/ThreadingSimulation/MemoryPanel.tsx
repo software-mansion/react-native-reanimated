@@ -24,6 +24,7 @@ interface MemoryPanelProps {
   memory: MemorySnapshot[];
   settled: boolean;
   steady: Set<string>;
+  active: boolean;
 }
 
 export default function MemoryPanel({
@@ -34,6 +35,7 @@ export default function MemoryPanel({
   memory,
   settled,
   steady,
+  active,
 }: MemoryPanelProps) {
   const ordered = runtimes
     .filter((runtime) => present.has(runtime.id))
@@ -311,7 +313,7 @@ export default function MemoryPanel({
       </AnimatedGrid>
       {memory.some(
         (cell) => cell.kind === 'shareable' && cell.guests.length > 0
-      ) && <GuestLinks />}
+      ) && <GuestLinks active={active} />}
     </div>
   );
 }

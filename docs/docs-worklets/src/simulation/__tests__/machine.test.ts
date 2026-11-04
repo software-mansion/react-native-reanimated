@@ -160,9 +160,10 @@ describe('Machine with the docs snippets', () => {
     assert.ok(snapshots[0].screen.tree !== undefined);
     assert.ok(
       snapshots
-        .slice(1, 12)
+        .slice(1, 11)
         .every((snapshot) => core(snapshot, 'rn').line === 37)
     );
+    assert.equal(core(snapshots[11], 'rn').line, 39);
   });
 
   it('runs handlerOnUIRuntime.jsx: the JS thread acquires the UI Runtime', () => {

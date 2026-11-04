@@ -43,9 +43,19 @@ export function displaySource(
   const main = fns.get(MAIN_NAME) ?? null;
   const hidden = [...fns.values()].filter((fn) => fn.isNative || fn.isHidden);
   const rawLines = source.split('\n');
-  const variables = rawLines.flatMap((text) => {
+  const variables = rawLines.flatMap((text, index) => {
     const match = HEAP_VARIABLE_PATTERN.exec(text);
-    return match === null ? [] : [match[2]];
+    if (match === null) {
+      return [];
+    }
+    const scope = innermostFunction(fns, index + 1);
+    return [
+      {
+        name: match[2],
+        start: scope?.headerLine ?? 1,
+        end: scope?.endLine ?? rawLines.length,
+      },
+    ];
   });
   const asyncHeaders = new Set(
     [...fns.values()]
@@ -105,6 +115,8 @@ export function displaySource(
       text,
       isInsideMain(main, line),
       variables
+        .filter((variable) => line >= variable.start && line <= variable.end)
+        .map((variable) => variable.name)
     );
     displayLines.push(
       asyncHeaders.has(line)
@@ -212,6 +224,15 @@ function isInsideBody(
   const indent = next.length - next.trimStart().length;
   const bodyIndent = isInsideMain(main, nextIndex + 1) ? 4 : 2;
   return indent >= bodyIndent && !next.trimStart().startsWith('//');
+}
+
+function innermostFunction(
+  fns: Map<string, FnInfo>,
+  line: number
+): FnInfo | undefined {
+  return [...fns.values()]
+    .filter((fn) => line >= fn.headerLine && line <= fn.endLine)
+    .sort((a, b) => b.headerLine - a.headerLine)[0];
 }
 
 function isMainBoundary(main: FnInfo | null, line: number): boolean {

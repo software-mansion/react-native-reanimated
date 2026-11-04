@@ -9,7 +9,7 @@ const WORKLET_DIRECTIVE_PATTERN = /^\s*(['"])worklet\1;\s*(?:\/\/.*)?$/;
 const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
 const YIELD_PATTERN =
   /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
-const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*$/;
+const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*(?:\/\/.*)?$/;
 
 export function scanSource(source: string): Map<string, FnInfo> {
   const fns = new Map<string, FnInfo>();

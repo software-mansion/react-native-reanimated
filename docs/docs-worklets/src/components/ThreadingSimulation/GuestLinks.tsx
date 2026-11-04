@@ -7,11 +7,14 @@ interface Link {
   path: string;
 }
 
-export default function GuestLinks() {
+export default function GuestLinks({ active }: { active: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [links, setLinks] = useState<Link[]>([]);
 
   useEffect(() => {
+    if (!active) {
+      return;
+    }
     let frame = 0;
     let previous = '';
     const measure = () => {
@@ -46,7 +49,7 @@ export default function GuestLinks() {
     };
     measure();
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [active]);
 
   return (
     <svg ref={svgRef} className={styles.guestLinks} aria-hidden="true">
