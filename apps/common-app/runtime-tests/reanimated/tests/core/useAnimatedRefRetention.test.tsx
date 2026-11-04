@@ -120,7 +120,7 @@ describe('useAnimatedRef retention', () => {
     expect(alive).toBe(0);
   });
 
-  test('clears the ref on the UI runtime when its view unmounts', async () => {
+  test('clears the ref on the UI runtime when its view unmounts and sets it again on reattach', async () => {
     await render(<DetachingComponent showView />);
     await waitForFrames(5);
     const animatedRef = detachingRef!;
@@ -129,6 +129,11 @@ describe('useAnimatedRef retention', () => {
     await render(<DetachingComponent showView={false} />);
     await waitForFrames(5);
     expect(await isAttachedOnUI(animatedRef)).toBe(false);
+
+    await render(<DetachingComponent showView />);
+    await waitForFrames(5);
+    expect(detachingRef).toBe(animatedRef);
+    expect(await isAttachedOnUI(animatedRef)).toBe(true);
 
     await render(null);
   });
