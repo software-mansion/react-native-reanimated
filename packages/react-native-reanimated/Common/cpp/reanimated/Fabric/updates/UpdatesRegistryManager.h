@@ -49,7 +49,7 @@ class UpdatesRegistryManager {
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
-  void handleNodeRemovals();
+  std::vector<Tag> handleNodeRemovals();
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
 #ifdef ANDROID

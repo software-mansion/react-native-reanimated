@@ -282,7 +282,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
         const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
             before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
         auto &run = startSharedTransitionRun(
-            before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
+            before, sharedTag, collectedTransition.nodes, config, true, transaction, propsParserContext);
         restartContentFade(run);
 
         startProgressTransition(
@@ -396,6 +396,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+    const std::shared_ptr<Serializable> &config,
     const bool gestureDriven,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -434,6 +435,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
+  run->config = config;
   run->gestureDriven = gestureDriven;
   run->targetOffWindow = false;
   return *run;
@@ -997,7 +999,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
       auto &run = startSharedTransitionRun(
-          before, sharedTag, collectedTransition.nodes, false, transaction, propsParserContext);
+          before, sharedTag, collectedTransition.nodes, config, false, transaction, propsParserContext);
 
       startSharedTransition(
           run.carrier->current.tag,
@@ -1049,6 +1051,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         }
       }
       run.target = afterNode;
+      run.config = config;
       adjustForNativePlacement(collectedTransition, AFTER);
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
@@ -1226,6 +1229,18 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(int tag) {
   transition_->state = TransitionState::CANCELLED;
   transition_->updated = true;
   return surfaceId_;
+}
+
+bool LayoutAnimationsProxy::deferSharedTransitionConfigRelease(const Tag tag) {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return false;
+  }
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (!lightNodes_.contains(tag)) {
+    return false;
+  }
+  deferredSharedTransitionConfigReleases_.insert(tag);
+  return true;
 }
 
 // A change of the shared tag alone gives no host mutations, so the pull that applies the config is requested here.
@@ -1928,8 +1943,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
     if (!targetMapped || targetOffWindow) {
       continue;
     }
-    const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-        run.source->current.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+    const auto &config = run.config;
     if (!config) {
       continue;
     }

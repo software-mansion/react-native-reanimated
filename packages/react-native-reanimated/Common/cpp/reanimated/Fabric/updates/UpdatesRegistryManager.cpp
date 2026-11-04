@@ -80,9 +80,10 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   }
 }
 
-void UpdatesRegistryManager::handleNodeRemovals() {
+std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals() {
   react_native_assert(isLockedByCurrentThread());
   RemovableShadowNodes remainingShadowNodes;
+  std::vector<Tag> removedTags;
 
   for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
     if (!shadowNodeFamily) {
@@ -98,9 +99,11 @@ void UpdatesRegistryManager::handleNodeRemovals() {
       registry->removeUnmounted(shadowNodeFamily);
     }
     staticPropsRegistry_->remove(tag);
+    removedTags.push_back(tag);
   }
 
   removableShadowNodes_ = std::move(remainingShadowNodes);
+  return removedTags;
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {

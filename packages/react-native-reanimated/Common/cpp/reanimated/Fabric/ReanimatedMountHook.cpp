@@ -4,6 +4,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
+#include <vector>
 
 namespace reanimated {
 
@@ -12,12 +13,14 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
     const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
     const std::function<void()> &requestFlush)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      layoutAnimationsManager_(layoutAnimationsManager),
       synchronousWritesTracker_(synchronousWritesTracker),
       requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
@@ -44,6 +47,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
   auto reaShadowNode = std::reinterpret_pointer_cast<const ReanimatedCommitShadowNode>(rootShadowNode);
 
   const bool isReanimatedMount = reaShadowNode->hasReanimatedMountTrait();
+  std::vector<Tag> removedTags;
 
   {
     auto lock = updatesRegistryManager_->lock();
@@ -53,7 +57,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
     // animations run every mount carries the mount trait, so returning early here
     // would skip removals for the whole animation and leak unmounted nodes if the
     // tree is torn down mid-animation.
-    updatesRegistryManager_->handleNodeRemovals();
+    removedTags = updatesRegistryManager_->handleNodeRemovals();
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit
@@ -62,6 +66,15 @@ void ReanimatedMountHook::shadowTreeDidMount(
       if (updatesRegistryManager_->shouldCommitAfterPause()) {
         requestFlush_();
       }
+    }
+  }
+
+  // Outside the registry lock: a pull holds the layout animations lock while it reads synchronous props.
+  // Only after the mount: the pull that deletes a shared transition source still reads its config.
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (!removedTags.empty() && layoutAnimationsProxyRegistry_) {
+      layoutAnimationsManager_->clearSharedTransitionConfigs(
+          layoutAnimationsProxyRegistry_->sharedTransitionConfigsToRelease(removedTags));
     }
   }
 }

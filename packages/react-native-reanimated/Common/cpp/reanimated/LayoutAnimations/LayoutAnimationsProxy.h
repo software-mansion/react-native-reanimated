@@ -57,6 +57,8 @@ struct SharedTransitionRun {
   ShadowView carrierStartView;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
+  // The source can be released while the run follows its target, which releases the configs of the source.
+  std::shared_ptr<Serializable> config;
   bool gestureDriven = false;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
@@ -193,6 +195,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
+  // removed components whose views are still shown; their shared transition configs are released when they unmap
+  mutable std::unordered_set<Tag> deferredSharedTransitionConfigReleases_;
   mutable std::vector<std::pair<ShadowTreeRevision::Number, ShadowViewMutationList>> pendingTransactions_;
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
@@ -364,6 +368,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel(int tag) override;
   void onSharedTransitionConfigured(const std::vector<Tag> &viewTags) override;
+  bool deferSharedTransitionConfigRelease(Tag tag) override;
   void updateVisibleScreens(int tag, double progress, bool isClosing) const;
   void markScreenVisible(int tag) const;
   bool isUncommittedScreenPopSource(int tag) const;
@@ -450,6 +455,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &before,
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      const std::shared_ptr<Serializable> &config,
       bool gestureDriven,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
