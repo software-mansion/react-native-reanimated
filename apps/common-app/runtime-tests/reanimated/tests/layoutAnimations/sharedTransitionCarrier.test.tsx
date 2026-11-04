@@ -8,6 +8,7 @@ import Animated, {
   makeMutable,
 } from 'react-native-reanimated';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   advanceAnimationTimer,
   describe,
@@ -79,6 +80,7 @@ function Screens({
   sourceMoved = false,
   targetKey,
   covered = false,
+  coveringScreen = 'boundary',
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -96,6 +98,7 @@ function Screens({
   sourceMoved?: boolean;
   targetKey?: string;
   covered?: boolean;
+  coveringScreen?: 'boundary' | 'view' | 'none';
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -139,10 +142,13 @@ function Screens({
           targetKey={targetKey}
         />
       )}
-      {covered && (
+      {covered && coveringScreen === 'boundary' && (
         <SharedTransitionBoundary isActive>
           <View collapsable={false} style={styles.child} />
         </SharedTransitionBoundary>
+      )}
+      {covered && coveringScreen === 'view' && (
+        <View collapsable={false} style={styles.child} />
       )}
     </View>
   );
@@ -204,6 +210,13 @@ function ChildContainer({
       {children}
     </View>
   );
+}
+
+function observer() {
+  if (!RuntimeTestObserver) {
+    throw new Error('RuntimeTestObserver requires a runtime-test build');
+  }
+  return RuntimeTestObserver;
 }
 
 function transitionWithNotification(duration = 1200) {
@@ -398,15 +411,57 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} />);
     await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
     await render(<Screens active transition={transition} />);
     await waitForFrames(3);
     await advanceAnimationTimer(500);
     await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
 
     await render(<Screens active covered transition={transition} />);
     await waitForFrames(3);
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
+    await advanceAnimationTimer(300);
+    await expectAtHome('source', 60, 0);
+  });
+
+  test.each([
+    ['a screen without a boundary covers the target', 'view'],
+    ['the boundary of the target turns inactive', 'none'],
+  ] as const)('ends the run when ${0}', async ([, coveringScreen]) => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
+
+    await render(
+      <Screens
+        active
+        covered
+        coveringScreen={coveringScreen}
+        transition={transition}
+      />
+    );
+    await waitForFrames(3);
+    await expectAtHome('source', 60, 0);
+    await expectAtHome('target', 150, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
     await advanceAnimationTimer(300);
     await expectAtHome('source', 60, 0);
   });
@@ -416,6 +471,9 @@ describe('Shared transition moves a real native view', () => {
     const transition = transitionWithNotification();
     await render(<Screens active={false} transition={transition} keepTarget />);
     await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    const homeParent = await observer().observeParent(sourceTag);
+    expect(homeParent !== null).toBe(true);
     await render(<Screens active transition={transition} keepTarget />);
     await waitForFrames(3);
     await advanceAnimationTimer(500);
@@ -424,12 +482,16 @@ describe('Shared transition moves a real native view', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(100);
     await expectMoving('source');
+    expect(await observer().observeParent(sourceTag)).not.toBe(homeParent);
 
     await render(
       <Screens active={false} covered transition={transition} keepTarget />
     );
     await waitForFrames(3);
     await expectAtHome('source', 60, 1);
+    await expectEventually(() => observer().observeParent(sourceTag)).toBe(
+      homeParent
+    );
     await advanceAnimationTimer(300);
     await expectAtHome('source', 60, 1);
   });
