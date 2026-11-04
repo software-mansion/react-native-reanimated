@@ -1,1 +1,1 @@
-Stop building the payload of an Android UI-thread event and passing it to native code when no worklet waits for that event.
+Stop building the payload of an Android UI-thread event, passing it to native code and flushing UI updates synchronously when no worklet waits for that event; that flush could re-enter `FragmentManager` mid-transaction with react-native-screens.
