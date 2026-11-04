@@ -245,6 +245,7 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
 .docs-version-current
   [class*='_wrapper_']:has(> [class*='_badge_'][class*='_deprecated_'])
   .menu__link {
+  font-size: 0.8em;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
   opacity: 0.7;
@@ -548,7 +549,8 @@ html:has(
       [data-figure='ThreadingShowcase'] [data-figure]
     ):not([data-simulation-fullscreen='true']):not(
       [data-simulation-fullscreen-transition]
-    ) {
+    ),
+  .theme-doc-markdown [data-inset] {
     margin-right: auto;
     margin-left: auto;
     max-width: calc(100% - 4rem);

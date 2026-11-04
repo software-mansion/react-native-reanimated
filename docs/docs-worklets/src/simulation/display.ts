@@ -26,6 +26,8 @@ const SIMULATOR_ONLY_NAMES = new Set([
   'heapVariable',
 ]);
 const MAX_IMPORT_WIDTH = 80;
+const STRING_OR_COMMENT_PATTERN =
+  /('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/\/.*$)/;
 const HEAP_VARIABLE_PATTERN =
   /^(\s*)(?:const|let)\s+(\w+)\s*=\s*yield\s+heapVariable\(\s*['"][^'"]*['"]\s*,\s*(.*)\);\s*$/;
 
@@ -81,7 +83,7 @@ export function displaySource(
     const previousBlank =
       displayLines.length === 0 ||
       displayLines[displayLines.length - 1].trim() === '';
-    if (blank && previousBlank) {
+    if (blank && (previousBlank || isInsideBody(rawLines, index, main))) {
       rawToDisplayLine.push(-1);
       return;
     }
@@ -195,6 +197,23 @@ function isInside(fns: FnInfo[], line: number): boolean {
   return fns.some((fn) => line >= fn.headerLine && line <= fn.endLine);
 }
 
+function isInsideBody(
+  rawLines: string[],
+  blankIndex: number,
+  main: FnInfo | null
+): boolean {
+  const nextIndex = rawLines.findIndex(
+    (text, index) => index > blankIndex && text.trim() !== ''
+  );
+  if (nextIndex === -1) {
+    return false;
+  }
+  const next = rawLines[nextIndex];
+  const indent = next.length - next.trimStart().length;
+  const bodyIndent = isInsideMain(main, nextIndex + 1) ? 4 : 2;
+  return indent >= bodyIndent && !next.trimStart().startsWith('//');
+}
+
 function isMainBoundary(main: FnInfo | null, line: number): boolean {
   return main !== null && (line === main.headerLine || line === main.endLine);
 }
@@ -210,7 +229,11 @@ function transformLine(
 ): string {
   let result = text.replace(HEAP_VARIABLE_PATTERN, '$1let $2 = $3;');
   for (const name of variables) {
-    result = result.replace(new RegExp(`\\b${name}\\.value\\b`, 'g'), name);
+    result = replaceInCode(
+      result,
+      new RegExp(`(?<![\\w$.])${name}\\.value\\b`, 'g'),
+      name
+    );
   }
   if (insideMain && result.startsWith('  ')) {
     result = result.slice(2);
@@ -218,10 +241,24 @@ function transformLine(
   result = result.replace(/^(\s*)export\s+(?:default\s+)?/, '$1');
   result = result.replace(/\bfunction\s*\*\s*/, 'function ');
   result = result.replace(/^(\s*)yield\s+/, '$1');
+  result = result.replace(/^(\s*if\s*\()\s*yield\s+/, '$1');
   result = result.replace(/=\s*yield\s+/, '= ');
   result = result.replace(/\breturn\s+yield\s+/, 'return ');
   result = replaceAwaitCalls(result);
   return result;
+}
+
+function replaceInCode(
+  text: string,
+  pattern: RegExp,
+  replacement: string
+): string {
+  return text
+    .split(STRING_OR_COMMENT_PATTERN)
+    .map((part, index) =>
+      index % 2 === 0 ? part.replace(pattern, replacement) : part
+    )
+    .join('');
 }
 
 function replaceAwaitCalls(text: string): string {

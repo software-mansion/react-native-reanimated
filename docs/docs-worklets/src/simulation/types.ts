@@ -82,7 +82,10 @@ export type InterceptedApi =
   | 'shareableWrite'
   | 'shareableGetSync'
   | 'shareableGetAsync'
-  | 'createVariable';
+  | 'createVariable'
+  | 'markLine'
+  | 'synchronizableLock'
+  | 'synchronizableUnlock';
 
 export type MemoryKind =
   | 'serializable'
@@ -101,6 +104,7 @@ export interface SharedCell {
   createdAtTick: number;
   fixed: boolean;
   name: string | null;
+  lockedBy: CoreId | null;
 }
 
 export interface MemorySnapshot {
@@ -113,12 +117,18 @@ export interface MemorySnapshot {
   host: CoreId | null;
   guests: CoreId[];
   accessedBy: CoreId | null;
+  lockedBy: CoreId | null;
 }
 
 export interface PromiseHandle {
   __simPromise: true;
   id: number;
   then: (callback: (value: unknown) => unknown) => void;
+}
+
+export interface BlockMarker {
+  __block: true;
+  retry: () => { granted: false } | { granted: true; value: unknown };
 }
 
 export interface AwaitMarker {
@@ -171,6 +181,7 @@ export interface Timer {
   callback: () => unknown;
   label: string;
   interval?: number;
+  arms?: number;
 }
 
 export interface Frame {
@@ -180,6 +191,8 @@ export interface Frame {
   lastValue: unknown;
   runtime?: CoreId;
   claim?: number;
+  blocked?: BlockMarker;
+  blockedLine?: number | null;
 }
 
 export type CoreStatus = 'idle' | 'running' | 'error';

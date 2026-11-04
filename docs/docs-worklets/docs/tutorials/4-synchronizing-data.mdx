@@ -16,24 +16,26 @@ import * as SyncShareableSnippet from './_synchronizing-data/syncShareable';
 import SyncShareableSource from '!!raw-loader!./_synchronizing-data/syncShareable';
 import * as SyncMixedSnippet from './_synchronizing-data/syncMixed';
 import SyncMixedSource from '!!raw-loader!./_synchronizing-data/syncMixed';
+import * as SyncMixedSnippetTransaction from './_synchronizing-data/syncMixedTransaction';
+import SyncMixedSourceTransaction from '!!raw-loader!./_synchronizing-data/syncMixedTransaction';
 
 # Synchronizing data
 
 In the [previous chapter](./3-using-event-loop.mdx) we learned some theory about event
-loops, which we'll now put to use.
+loops.
 
-In this chapter, we'll more advanced patterns of synchronizing data between JavaScript Runtimes,
-where asynchronous returns wouldn't be sufficient.
+In this chapter, we'll put it to use and explore more advanced patterns of synchronizing data between JavaScript Runtimes,
+where [asynchronous returns we learned previously](./2-returning-results.mdx) wouldn't be sufficient.
 
 ## Getting the result of a periodic task
 
-Previous examples showed us how to return the result of a singular worklet function at the point of
+Previous examples showed us how to return the result of a single worklet function call at the point of
 its invocation. What if we had a long-running task, yielding results continuously, but we wanted to
 poll the data only occasionally?
 
 <ThreadingSimulation autoplay={false} skipIdleTicks module={SyncPeriodicSnippet} source={SyncPeriodicSource} durationTicks={12} tickMs={300}/>
 
-We'll explore how can we obtain the value of the local `result` value and pass it to the RN Runtime.
+We'll explore how we can obtain the value of the local `result` variable and pass it to the RN Runtime.
 
 ## With callbacks — anti-pattern
 
@@ -42,9 +44,8 @@ We could use the same pattern as
 
 <ThreadingSimulation autoplay={false} module={SyncCallbacksSnippet} source={SyncCallbacksSource} durationTicks={120} tickMs={300}/>
 
-**Do not do this!** This will schedule a cross-runtime call every 16ms that updates our
-`polledResult` value — even if we don't need it at the given moment. **For best multi-threading
-performance, it's best to minimize the amount of cross-thread (cross-runtime) operations.**
+**Do not do this!** This will schedule a cross-runtime call every 16 ms that updates our
+`polledResult` value — even if we don't need it at the given moment. **For the best multithreading performance, minimize the number of cross-thread (cross-runtime) operations.**
 
 ## With the global object — anti-pattern
 
@@ -60,78 +61,62 @@ anti-pattern, but please **use it as a last resort escape hatch.**
 
 ## With a Synchronizable
 
-A [Synchronizable](../memory/synchronizable.mdx) is a memory primitive in the Worklets library, that
-lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making
-cross-runtime call and is the cheapest option of synchronizing the data between Runtimes.
+A [Synchronizable](../memory/synchronizable.mdx) is a memory primitive in the Worklets library that lives outside of any Runtime's JavaScript heap. Reading it and writing to it doesn't require making a cross-runtime call and is the cheapest option for synchronizing data between Runtimes.
 
-You can find detailed documentation for Synchronizable on its
+You can find detailed documentation for the Synchronizable in its
 [API reference](../memory/synchronizable.mdx), but for the sake of this example we'll stick to its
 `getDirty`
-and `setBlocking` methods. `getDirty` method simply returns the value of the Synchronizable, without
+and `setBlocking` methods. The `getDirty` method simply returns the value of the Synchronizable, without
 waiting for any
 transactions on it to complete. It's safe to use it here as we don't care about reading the value
 mid-transaction.
-`setBlocking` method updates the value atomically, blocking other writers from modifying it until
+The `setBlocking` method updates the value atomically, blocking other writers from modifying it until
 the transaction is complete.
 
 <ThreadingSimulation autoplay={false} module={SyncSynchronizableSnippet} source={SyncSynchronizableSource} durationTicks={88} tickMs={300}/>
 
 Even though the Synchronizable was created on the RN Runtime, the value actually lives in the native
-heap and both Runtimes (threads) can access it with little overhead and without blocking one
+heap and both Runtimes (threads) can access it with little overhead and without excessively blocking one
 another.
-
-Inside, the Synchronizable stores its value as a [Serializable](../memory/serializable.mdx), here of
-type `number`. This means that a Synchronizable can hold roughly any kind of JavaScript value, not
-only numbers.
 
 For this simple case, we can even optimize our code further and use a
 [Synchronizable with a fixed type](../memory/synchronizable.mdx#synchronizable-fixed),
-which exposes `setDirty` method and is generally faster than a general
+which exposes the `setDirty` method and is generally faster than a general
 [Synchronizable with a dynamic type](../memory/synchronizable.mdx#synchronizable-dynamic)
-that we just used.
+that we just used. A fixed-type Synchronizable holds a raw value instead of a general [Serializable](../memory/serializable.mdx) on the native heap.
 
 <ThreadingSimulation autoplay={false} module={SyncSynchronizableFixedSnippet} source={SyncSynchronizableFixedSource} durationTicks={120} tickMs={300}/>
 
 This approach works best when you poll the data frequently or from multiple Runtimes at once.
 
-The downside is the fact, that every call of `setDirty` or `setBlocking` have to cross the
-JavaScript - native boundary and store the value there. This is particularly costly when it comes to
-storing non-primitive types, like objects or arrays - which require
+The downside is that every call of `setDirty` or `setBlocking` has to cross the JavaScript–native boundary and store the value there. This is particularly costly when it comes to
+storing non-primitive types, like objects or arrays, which require
 [serialization](../memory/serializable.mdx)
 on each boundary crossing.
 
 ## With a Shareable
 
-A [Shareable](../memory/shareable.mdx) is another memory primitive, but this contrary to the
-Synchronizable,
-it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called
+A [Shareable](../memory/shareable.mdx) is another memory primitive, but, contrary to the Synchronizable, it lives on a designated Runtime, called the Host Runtime. Reading it on other Runtimes, called
 Guest Runtimes,
 means accessing it on its Host Runtime, either synchronously or asynchronously. It's similar in
 principle to the [global object approach](#with-the-global-object--anti-pattern), but with a layer
 of useful
 encapsulation.
 
-To create a Shareable, we have to explicitly state the Host Runtime by its
-[Runtime ID](../concepts/runtimeKinds.mdx#worklet-runtime).
-
-```js
-const worker = createWorkletRuntime();
-const result = createShareable(worker.runtimeId, -1);
-```
-
 Shareable is an _asymmetric_ type, meaning it has a different structure on the Host Runtime and on
 Guest Runtimes. On the Host Runtime, you can access the value it holds directly as its `value`
 property. On Guest Runtimes you must use its synchronous or asynchronous methods.
 
+To create a Shareable, we have to explicitly state the Host Runtime by its
+[Runtime ID](../concepts/runtimeKinds.mdx#worklet-runtime).
+
 <ThreadingSimulation autoplay={false} module={SyncShareableSnippet} source={SyncShareableSource} durationTicks={120} tickMs={300}/>
 
-This approach works best when the Host Runtime updates the value often and the value is not a
-primitive,
-and Guest Runtimes read it only ever so often.
+This approach works best when the Host Runtime reads and updates the value often and Guest Runtimes read it only once in a while.
 
 ## Mixing Shareables with Synchronizables
 
-Shareables and Synchronizables are a powerful tool when combined. A Synchronizable can keep
+Shareables and Synchronizables are a powerful combination. A Synchronizable can keep
 information about
 the state of the Shareable, i.e. whether it has been updated, so the Guest Runtime can avoid reading
 it if it
@@ -140,20 +125,24 @@ hasn't changed.
 This is how [Reanimated Shared Values](https://docs.swmansion.com/reanimated/docs/shared-values) are
 implemented.
 
-A Shareable hosted on the UI Runtime stores the value of the animation progression. When the RN
+A Shareable hosted on the UI Runtime stores the animation progress. When the RN
 Runtime wants
-to read the value to synchronize with the UI — i.e. for component's first render — it checks a
-Synchronizable
-dirtiness flag attached to the Shared Value, to see if the UI Runtime has updated the value. If not,
+to read the value to synchronize with the UI — e.g. for a component's first render — it checks a
+Synchronizable flag, `needsSync`, attached to the Shared Value, to see if the UI Runtime has updated the value. If not,
 it returns the last
 read value, which was cached locally on the RN Runtime.
 
-If the value has been updated — the Synchronizable flag reports its dirty state — only then does the
-RN Runtime
-synchronously preempts the UI Runtime from the UI thread to read the value directly from the Host
-Runtime. All this
-flow is visualized by the simulation below.
+If the value has been updated — the `needsSync` flag is set — only then does the RN Runtime synchronously preempt the UI Runtime from the UI thread to read the value directly from the Host
+Runtime. This whole flow is visualized by the simulation below.
 
 <ThreadingSimulation autoplay={false} module={SyncMixedSnippet} source={SyncMixedSource} durationTicks={200} tickMs={300}/>
+
+You might've noticed that the RN Runtime can read the `needsSync` flag in the tiny window when the UI Runtime has already updated the Shareable value but not yet the flag, so it reuses its cached result (lines 6-7 and 24-25). This is intended, as that example didn't aim for perfect synchronization.
+
+If you want to avoid such tiny data races, you can lock the Synchronizable and perform a transaction instead. Do it only when you have to, as locking the Synchronizable like this is much more expensive than a plain `setDirty` call.
+
+<ThreadingSimulation autoplay={false} module={SyncMixedSnippetTransaction} source={SyncMixedSourceTransaction} durationTicks={200} tickMs={300}/>
+
+Note that we also had to change the `getDirty` call in the `synchronize` function to `getBlocking` — otherwise we wouldn't respect the lock and could still read the intermediate value.
 
 In a future tutorial, we'll learn how to integrate the Worklets library with C++ code.

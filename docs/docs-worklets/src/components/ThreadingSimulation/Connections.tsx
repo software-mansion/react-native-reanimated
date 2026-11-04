@@ -125,6 +125,8 @@ export default function Connections({
         rectangles.set(element, rect);
         return rect;
       };
+      const panelBodyRect = (panel: Element) =>
+        rectangle(panel.querySelector('[data-sim-panel-body]') ?? panel);
       const nodes = new Map<string, Rect>();
       const ports = new Map<string, Rect>();
       const nodePanels = new Map<string, Rect>();
@@ -146,7 +148,8 @@ export default function Connections({
           nodes.set(element.dataset.simNode!, rect);
           ports.set(element.dataset.simNode!, { ...rect, top: y, bottom: y });
           const panel = element.closest('[data-sim-panel]');
-          if (panel) nodePanels.set(element.dataset.simNode!, rectangle(panel));
+          if (panel)
+            nodePanels.set(element.dataset.simNode!, panelBodyRect(panel));
         });
       const obstacles = [
         ...nodes.values(),
@@ -156,13 +159,19 @@ export default function Connections({
       ];
       const panels = [
         ...root.querySelectorAll('[data-sim-panel], [data-sim-obstacle]'),
-      ].map(rectangle);
+      ].flatMap((element) => {
+        const body = element.querySelector('[data-sim-panel-body]');
+        const header = element.querySelector('[data-sim-header]');
+        return body && header
+          ? [rectangle(header), rectangle(body)]
+          : [rectangle(element)];
+      });
       const gap =
         parseFloat(getComputedStyle(root).getPropertyValue('--sim-rail-gap')) ||
         32;
       const code = root.querySelector('[data-sim-code-panel]');
       if (code) {
-        const codeRect = rectangle(code);
+        const codeRect = panelBodyRect(code);
         obstacles.push(codeRect);
         root
           .querySelectorAll<HTMLElement>('[data-sim-code]')

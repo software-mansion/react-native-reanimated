@@ -85,12 +85,10 @@ describe('displaySource', () => {
       unindent(`
         function Counter() {
           const [count, setCount] = useState(0);
-
           useEffect(() => {
             const interval = setInterval(() => increment(setCount), 1000);
             return () => clearInterval(interval);
           }, []);
-
           return (
             <View>
               <Text>{count}</Text>
@@ -104,15 +102,15 @@ describe('displaySource', () => {
       `)
     );
     assert.equal(rawToDisplayLine[19], 2);
-    assert.equal(rawToDisplayLine[21], 4);
-    assert.equal(rawToDisplayLine[26], 9);
-    assert.equal(rawToDisplayLine[34], 17);
+    assert.equal(rawToDisplayLine[21], 3);
+    assert.equal(rawToDisplayLine[26], 7);
+    assert.equal(rawToDisplayLine[34], 15);
     assert.equal(rawToDisplayLine[37], -1);
     assert.deepEqual(
       [...blockEnds],
       [
-        [4, 7],
-        [9, 13],
+        [3, 6],
+        [7, 11],
       ]
     );
   });

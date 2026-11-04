@@ -28,13 +28,20 @@ export default function Panel({
       className={clsx(styles.panel, className)}
       data-sim-panel
       data-sim-code-panel={codePanel || undefined}>
-      <header className={styles.panelHeader} data-sim-header>
-        <h3 className={styles.panelTitle}>{title}</h3>
-        {help !== undefined && <PanelHelp title={title}>{help}</PanelHelp>}
-        {headerActions}
-      </header>
-      <div className={styles.panelBody} data-sim-node={connectionNode}>
-        {children}
+      <div className={styles.panelInner}>
+        <header className={styles.panelHeader} data-sim-header>
+          <div className={styles.panelTab}>
+            <h3 className={styles.panelTitle}>{title}</h3>
+            {help !== undefined && <PanelHelp title={title}>{help}</PanelHelp>}
+          </div>
+          {headerActions}
+        </header>
+        <div
+          className={styles.panelBody}
+          data-sim-panel-body
+          data-sim-node={connectionNode}>
+          {children}
+        </div>
       </div>
     </section>
   );

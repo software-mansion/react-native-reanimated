@@ -2,6 +2,7 @@ import React, { useId, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import type {
+  CoreSnapshot,
   ScreenState,
   Snapshot,
   SnippetModule,
@@ -55,6 +56,7 @@ interface ThreadingSimulationProps {
   cpuFooter?: React.ReactNode;
   bootTicks?: number;
   skipIdleTicks?: boolean;
+  showPastDue?: boolean;
 }
 
 const DEFAULT_TICK_MS = 1000;
@@ -108,6 +110,7 @@ export default function ThreadingSimulation({
   cpuFooter,
   bootTicks = 0,
   skipIdleTicks = false,
+  showPastDue = true,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
   const [hasOpened, setHasOpened] = useState(open);
@@ -222,6 +225,7 @@ export default function ThreadingSimulation({
       columns={alwaysOn ? codeColumns : 1}
       lineNumbers={!alwaysOn}
       upcomingLine={open && simulation.tick === 0 ? firstDisplayLine : -1}
+      tick={simulation.tick}
     />
   );
   const boilerplateButton = boilerplateToggle && (
@@ -345,54 +349,114 @@ export default function ThreadingSimulation({
       </AnimatedGrid>
     </div>
   );
+  const activityMessage =
+    failedCore !== undefined ? (
+      <span role="alert" className={styles.error}>
+        <strong>{nameOf(failedCore.id)} stopped.</strong> {failedCore.error}
+      </span>
+    ) : transfers.length > 0 ? (
+      transfers.map((event, index) => (
+        <span key={index}>
+          <strong>{nameOf(event.core)}</strong> queued <code>{event.job}</code>{' '}
+          on <strong>{nameOf(event.target)}</strong>
+        </span>
+      ))
+    ) : (
+      <span>
+        {alwaysOn || codeOpen
+          ? null
+          : 'Compare the threads and press the app button to try it.'}
+      </span>
+    );
+  const viewControls = (
+    <div className={styles.viewControls}>
+      {collapsibleCode && (
+        <button
+          type="button"
+          className={styles.codeToggle}
+          onClick={() => setCodeOpen(!codeOpen)}
+          aria-expanded={codeOpen}>
+          {codeOpen ? 'Hide code' : 'Show code'}
+        </button>
+      )}
+      <button
+        ref={buttonRef}
+        type="button"
+        className={clsx(styles.codeToggle, styles.expandToggle)}
+        onClick={() => setFullscreen(!fullscreen)}
+        aria-pressed={fullscreen}
+        title={
+          fullscreen
+            ? 'Collapse simulation (Esc)'
+            : 'Expand to fit the simulation'
+        }>
+        <TransportIcon name={fullscreen ? 'collapse' : 'expand'} />
+        <span className={styles.expandLabel}>
+          {fullscreen ? 'Collapse' : 'Expand'}
+        </span>
+      </button>
+    </div>
+  );
   const activity = (
     <div
       className={styles.activity}
       data-sim-obstacle
       aria-label="Current scheduling activity">
-      {failedCore !== undefined ? (
-        <span role="alert" className={styles.error}>
-          <strong>{nameOf(failedCore.id)} stopped.</strong> {failedCore.error}
-        </span>
-      ) : transfers.length > 0 ? (
-        transfers.map((event, index) => (
-          <span key={index}>
-            <strong>{nameOf(event.core)}</strong> queued{' '}
-            <code>{event.job}</code> on <strong>{nameOf(event.target)}</strong>
-          </span>
-        ))
-      ) : (
-        <span>
-          {alwaysOn
-            ? null
-            : codeOpen
-              ? null
-              : 'Compare the threads and press the app button to try it.'}
-        </span>
-      )}
-      <div className={styles.viewControls}>
-        {collapsibleCode && (
-          <button
-            type="button"
-            className={styles.codeToggle}
-            onClick={() => setCodeOpen(!codeOpen)}
-            aria-expanded={codeOpen}>
-            {codeOpen ? 'Hide code' : 'Show code'}
-          </button>
-        )}
+      {activityMessage}
+      {viewControls}
+    </div>
+  );
+  const toggleOpen = () => {
+    if (open) {
+      simulation.pause();
+      setFullscreen(false);
+    }
+    setHasOpened(true);
+    setOpen(!open);
+  };
+  const chevron = (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="m4 6 4 4 4-4" />
+    </svg>
+  );
+  const disclosureToggle = (
+    <button
+      type="button"
+      className={styles.disclosureToggle}
+      data-sim-obstacle
+      onClick={toggleOpen}
+      aria-label={open ? 'Hide simulation' : 'Show simulation'}
+      aria-expanded={open}
+      aria-controls={disclosureId}>
+      <span className={styles.disclosureLabel}>
+        <strong>Simulation</strong>
+        <span>Follow this code across threads and runtimes</span>
+      </span>
+      <span className={styles.disclosureAction}>
+        {open ? 'Hide' : 'Show'}
+        {chevron}
+      </span>
+    </button>
+  );
+  const simulationBar = (
+    <div className={styles.simulationBar} data-sim-obstacle>
+      <div
+        className={styles.barActivity}
+        aria-label="Current scheduling activity">
+        {activityMessage}
+      </div>
+      <div className={styles.barRow}>
+        {toolbar}
+        {viewControls}
         <button
-          ref={buttonRef}
           type="button"
-          className={clsx(styles.codeToggle, styles.expandToggle)}
-          onClick={() => setFullscreen(!fullscreen)}
-          aria-pressed={fullscreen}
-          title={
-            fullscreen
-              ? 'Collapse simulation (Esc)'
-              : 'Expand to fit the simulation'
-          }>
-          <TransportIcon name={fullscreen ? 'collapse' : 'expand'} />
-          {fullscreen ? 'Collapse' : 'Expand'}
+          className={clsx(styles.codeToggle, styles.hideToggle)}
+          onClick={toggleOpen}
+          aria-label="Hide simulation"
+          aria-expanded
+          aria-controls={disclosureId}>
+          Hide
+          {chevron}
         </button>
       </div>
     </div>
@@ -430,7 +494,9 @@ export default function ThreadingSimulation({
               )}
               present={new Set(runtimes.map((runtime) => runtime.id))}
               allRuntimes={runtimes}
-              cores={snapshot.cores}
+              cores={
+                showPastDue ? snapshot.cores : withoutPastDue(snapshot.cores)
+              }
               memory={snapshot.memory}
               settled={simulation.settled}
               steady={steady}
@@ -516,34 +582,44 @@ export default function ThreadingSimulation({
       )}
     </div>
   );
+  const consoleHeader = (
+    <header className={styles.panelHeader} data-sim-header>
+      <div className={styles.panelTab}>
+        <h3 className={styles.panelTitle}>
+          Console <span className={styles.logCount}>{logs.length}</span>
+        </h3>
+      </div>
+    </header>
+  );
   const consolePanel =
     showConsole &&
     (collapsibleConsole ? (
-      <details
-        className={styles.consolePanel}
-        data-sim-obstacle
-        hidden={!open}
-        open={consoleOpen}
-        onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
-        <summary className={styles.consoleSummary}>
-          <span>
-            Console <span className={styles.logCount}>{logs.length}</span>
-          </span>
-          <span className={styles.consolePreview}>
-            {logs.at(-1)?.text ?? 'No output yet'}
-          </span>
-        </summary>
-        {consoleOpen && consoleLog}
-      </details>
-    ) : (
-      <div className={styles.consolePanel} data-sim-obstacle hidden={!open}>
-        <div className={clsx(styles.consoleSummary, styles.consoleHeader)}>
-          <span>
-            Console <span className={styles.logCount}>{logs.length}</span>
-          </span>
+      <section className={styles.consolePanel} data-sim-obstacle hidden={!open}>
+        <div className={styles.panelInner}>
+          {consoleHeader}
+          <details
+            className={styles.consoleBox}
+            data-sim-panel-body
+            open={consoleOpen}
+            onToggle={(event) => setConsoleOpen(event.currentTarget.open)}>
+            <summary className={styles.consoleSummary}>
+              <span className={styles.consolePreview}>
+                {logs.at(-1)?.text ?? 'No output yet'}
+              </span>
+            </summary>
+            {consoleOpen && consoleLog}
+          </details>
         </div>
-        {consoleLog}
-      </div>
+      </section>
+    ) : (
+      <section className={styles.consolePanel} data-sim-obstacle hidden={!open}>
+        <div className={styles.panelInner}>
+          {consoleHeader}
+          <div className={styles.consoleBox} data-sim-panel-body>
+            {consoleLog}
+          </div>
+        </div>
+      </section>
     ));
 
   return (
@@ -579,40 +655,16 @@ export default function ThreadingSimulation({
               className={clsx(styles.workspace, styles.disclosureWorkspace)}
               data-expanded={open}>
               {codePanel}
-              <button
-                type="button"
-                className={styles.disclosureToggle}
-                data-sim-obstacle
-                onClick={() => {
-                  if (open) {
-                    simulation.pause();
-                    setFullscreen(false);
-                  }
-                  setHasOpened(true);
-                  setOpen(!open);
-                }}
-                aria-label={open ? 'Hide simulation' : 'Show simulation'}
-                aria-expanded={open}
-                aria-controls={disclosureId}>
-                <span className={styles.disclosureLabel}>
-                  <strong>Simulation</strong>
-                  <span>Follow this code across threads and runtimes</span>
-                </span>
-                <span className={styles.disclosureAction}>
-                  {open ? 'Hide' : 'Show'}
-                  <svg viewBox="0 0 16 16" aria-hidden="true">
-                    <path d="m4 6 4 4 4-4" />
-                  </svg>
-                </span>
-              </button>
+              {!(open && expanded) && disclosureToggle}
               <Disclosure open={open} id={disclosureId}>
                 <div className={styles.simulationBody}>
-                  {toolbar}
-                  {activity}
+                  {!expanded && toolbar}
+                  {!expanded && activity}
                   {machine}
                 </div>
               </Disclosure>
               {consolePanel}
+              {open && expanded && simulationBar}
               {hasOpened && connections}
             </div>
           )}
@@ -620,6 +672,13 @@ export default function ThreadingSimulation({
       </div>
     </div>
   );
+}
+
+function withoutPastDue(cores: CoreSnapshot[]): CoreSnapshot[] {
+  return cores.map((core) => ({
+    ...core,
+    pending: core.pending.map((job) => ({ ...job, pastDue: false })),
+  }));
 }
 
 function collectRuntimes(snapshots: Snapshot[]): RuntimeDescriptor[] {

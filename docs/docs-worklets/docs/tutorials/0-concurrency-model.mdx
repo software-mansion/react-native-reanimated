@@ -20,13 +20,9 @@ A React Native app is, first and foremost, **a native app**. Like every native a
 thread — usually called the **User Interface (UI) thread** — that receives touches, lays out views
 and draws them on screen.
 
-Your JavaScript doesn't run there. At startup, the native app creates two things: a separate thread, the
-**JavaScript thread** (JS thread) and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
+Your JavaScript doesn't run there. At startup, the native app creates two things: a separate thread, the **JavaScript thread** (JS thread), and a [Hermes](https://reactnative.dev/docs/hermes) JavaScript
 Virtual Machine (JSVM), also called a **JavaScript Runtime**. We'll call this Runtime the
-[React Native Runtime](../concepts/runtimeKinds.mdx#rn-runtime). Then, it delegates the execution of
-your JavaScript Bundle to the JS thread and running its
-[event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model)
-there.
+[React Native Runtime](../concepts/runtimeKinds.mdx#rn-runtime). Then, it delegates the execution of your JavaScript Bundle and its [event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#agent_execution_model) to the JS thread.
 
 The JS thread executes all of your app's JavaScript code — your React components, your business
 logic, your event handlers. Its job is to figure out what the screen should look like and tell the
@@ -56,13 +52,11 @@ JavaScript code. After the thread finishes execution and releases it, another th
 ## Limitations
 
 Since all your app logic lives inside the JavaScript Bundle and is executed only on one thread, you
-might run into situation, when a critical UI event has to wait for the JS thread to trigger a
-respective JavaScript event handler for it, visibly lagging the app.
+might run into a situation where a critical UI event has to wait for the JS thread to trigger the respective JavaScript event handler, which makes the app visibly lag.
 
 <BusyThreadDiagram/>
 
-Similar situation would happen if animation calculations were to be done via `useState` for props state (please don't do this in real apps!) with a
-busy JS thread:
+A similar situation happens if animation calculations are done with `useState` (please don't do this in real apps!) on a busy JS thread:
 
 <SparseAnimationDiagram/>
 
@@ -73,8 +67,7 @@ the JS thread. We can't use a
 [native module](https://reactnative.dev/docs/turbo-native-modules-introduction) if we want to keep
 our logic
 purely in JavaScript code. We can't forcefully run some JavaScript code on the UI thread
-concurrently with the RN Runtime. JavaScript Runtimes are single-threaded by design and doing do
-would result in an immediate crash.
+concurrently with the RN Runtime. JavaScript Runtimes are single-threaded by design, and doing so would result in an immediate crash.
 
 This means that we have to create a new Runtime and move the event and animation logic outside the
 RN Runtime to the new Runtime.
@@ -92,8 +85,7 @@ not to delegate that work to the UI thread as it would make the app unresponsive
 preempt the UI Runtime from another thread either — that could block the UI thread from handling the
 touch event, as it has to wait for the UI Runtime to be released.
 
-What we can do is to spawn _another Runtime and a thread_. We we'll dedicate that thread to execute
-tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
+What we can do is spawn _another Runtime and a thread_. We'll dedicate that thread to executing tasks using the new Runtime. We'll call this Runtime a Worker Runtime.
 
 <WorkerRuntimeDiagram/>
 
@@ -104,16 +96,14 @@ thread, while keeping your app's logic strictly in JavaScript.
 
 There's one last bit of the puzzle missing — it's not that simple to just send some JavaScript
 functions from one Runtime to be executed on another Runtime. The single-threaded design of
-JavaScript Runtimes makes casual JavaScript functions closely tied to a given Runtime instance and
-non suitable for any kind of serialization. For that purpose we need some special functions.
+JavaScript Runtimes makes casual JavaScript functions closely tied to a given Runtime instance and not suitable for any kind of serialization. For that purpose, we need some special functions.
 
 ## Worklet functions
 
 **A worklet function** (also called just **a worklet**) is a JavaScript function that can be safely
 moved and dispatched across JavaScript Runtimes within a React Native app.
 
-To turn a casual JavaScript function into a worklet function, all you need to do is to the
-**`'worklet'` directive** at the top of your function.
+To turn a casual JavaScript function into a worklet function, all you need to do is add the **`'worklet'` directive** at the top of your function.
 
 ```javascript
 function myWorklet() {
@@ -125,6 +115,6 @@ function myWorklet() {
 Functions marked with the directive are transformed with the
 [Worklets plugin](../worklets-plugin/about.mdx), in a process we call **workletization**,
 into special entities
-that are safe to be juggled between JavaScript runtimes.
+that are safe to be juggled between JavaScript Runtimes.
 
 It's time to learn how to use these worklet functions — in the next chapter.

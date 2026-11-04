@@ -2,6 +2,7 @@ import { SnippetError } from './errors';
 import type { CustomSerializer } from './serialization';
 import type {
   AwaitMarker,
+  BlockMarker,
   InterceptedApi,
   PromiseHandle,
   WorkletRuntimeHandle,
@@ -102,6 +103,14 @@ export function runOnRuntimeAsync<Args extends unknown[]>(
 
 export function awaitPromise(promise: PromiseHandle): AwaitMarker {
   return { __await: true, promise };
+}
+
+export function isBlockMarker(value: unknown): value is BlockMarker {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as BlockMarker).__block === true
+  );
 }
 
 export function isAwaitMarker(value: unknown): value is AwaitMarker {
@@ -251,6 +260,8 @@ export interface Synchronizable<T> {
   getBlocking: () => T;
   setDirty: (value: T) => void;
   setBlocking: (value: T | ((previous: T) => T)) => void;
+  lock: () => void;
+  unlock: () => void;
 }
 
 export function createSynchronizable<T>(
@@ -263,12 +274,12 @@ export function createSynchronizable<T>(
     id,
     getDirty: () => dispatch('synchronizableRead', [id, 'dirty']) as T,
     getBlocking: () => dispatch('synchronizableRead', [id, 'blocking']) as T,
-    setDirty: (value) => {
-      dispatch('synchronizableWrite', [id, value, 'dirty']);
-    },
-    setBlocking: (value) => {
-      dispatch('synchronizableWrite', [id, value, 'blocking']);
-    },
+    setDirty: (value) =>
+      dispatch('synchronizableWrite', [id, value, 'dirty']) as void,
+    setBlocking: (value) =>
+      dispatch('synchronizableWrite', [id, value, 'blocking']) as void,
+    lock: () => dispatch('synchronizableLock', [id]) as void,
+    unlock: () => dispatch('synchronizableUnlock', [id]) as void,
   };
 }
 
@@ -338,6 +349,12 @@ export function heapVariable<T>(name: string, initial: T): HeapVariable<T> {
 export function readShareableValue(id: number): unknown {
   return dispatch('shareableRead', [id]);
 }
+
+export function markLine(line: number): void {
+  currentInterceptor?.intercept('markLine', [line]);
+}
+
+(globalThis as { __simMarkLine?: typeof markLine }).__simMarkLine = markLine;
 
 export function setCurrentInterceptor(interceptor: Interceptor | null): void {
   currentInterceptor = interceptor;

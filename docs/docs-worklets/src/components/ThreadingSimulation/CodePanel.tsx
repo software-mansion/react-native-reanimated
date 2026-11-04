@@ -22,6 +22,7 @@ interface CodePanelProps {
   columns?: number;
   lineNumbers?: boolean;
   upcomingLine?: number;
+  tick?: number;
 }
 
 interface CodeListProps {
@@ -35,6 +36,7 @@ interface CodeListProps {
   columns: number;
   lineNumbers: boolean;
   upcomingLine: number;
+  tick: number;
   className?: string;
 }
 
@@ -45,6 +47,7 @@ export default function CodePanel({
   columns = 1,
   lineNumbers = true,
   upcomingLine = -1,
+  tick = 0,
   ...list
 }: CodePanelProps) {
   return (
@@ -53,6 +56,7 @@ export default function CodePanel({
       columns={columns}
       lineNumbers={lineNumbers}
       upcomingLine={upcomingLine}
+      tick={tick}
     />
   );
 }
@@ -68,6 +72,7 @@ function CodeList({
   columns,
   lineNumbers,
   upcomingLine,
+  tick,
   className,
 }: CodeListProps) {
   const blockStartOf = new Map<number, number>();
@@ -139,6 +144,9 @@ function CodeList({
                 const executed = history.get(blockStart);
                 const inBlock = blockStart !== lineNumber;
                 const blockEnd = blockEnds.get(blockStart);
+                const blank = line.every(
+                  (token) => token.content.trim() === ''
+                );
                 return (
                   <div
                     key={lineNumber}
@@ -150,6 +158,7 @@ function CodeList({
                     }
                     className={clsx(
                       styles.codeLine,
+                      blank && styles.codeLineBlank,
                       blockEnd !== undefined && styles.codeBlockStart,
                       inBlock && styles.codeBlockInner,
                       inBlock && lineNumber === blockEnd && styles.codeBlockEnd,
@@ -176,6 +185,13 @@ function CodeList({
                         />
                       );
                     })}
+                    {active.length > 0 && !inBlock && (
+                      <span
+                        key={`flash-${tick}`}
+                        aria-hidden="true"
+                        className={clsx(styles.codeFlash, classFor(active[0]))}
+                      />
+                    )}
                     {lineNumbers && (
                       <span className={styles.lineNumber} aria-hidden="true">
                         {lineNumber}

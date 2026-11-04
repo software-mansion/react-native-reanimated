@@ -10,6 +10,7 @@ import {
 import type { CustomSerializer, PackedArguments } from './serialization';
 import { APP_MS_PER_TICK, FRAME_MS, INPUT_DEADLINE_MS } from './types';
 import type {
+  BlockMarker,
   CoreId,
   CoreSnapshot,
   CoreSpec,
@@ -41,6 +42,7 @@ import {
 import {
   NEXT_TICK,
   isAwaitMarker,
+  isBlockMarker,
   readShareableValue,
   setCurrentInterceptor,
 } from './worklets';
@@ -72,6 +74,8 @@ const BUNDLE_MODE_GUARD_MESSAGE =
 const CREATE_RUNTIME_GUARD_MESSAGE =
   '[Worklets] createWorkletRuntime cannot be called on Worklet Runtimes outside of the Bundle Mode.';
 
+const TIMER_ARM_STRIDE = 100_000;
+
 export class Machine {
   private readonly snippet: LoadedSnippet;
   private readonly bundleMode: boolean;
@@ -83,6 +87,10 @@ export class Machine {
   private halted = false;
   private events: SimEvent[] = [];
   private activeCore: CoreState | null = null;
+  private stepExec: Extract<SimEvent, { type: 'exec' }> | null = null;
+  private stepExecFn = '';
+  private stepMarked = false;
+  private marksLines = false;
   private screen: ScreenState;
   private readonly acquired = new WeakMap<
     object,
@@ -284,6 +292,7 @@ export class Machine {
         valueType: typeOf(cell.value),
         fixed: cell.fixed,
         name: cell.name,
+        lockedBy: cell.lockedBy,
         host: cell.host,
         guests: [...cell.guests],
         accessedBy: cell.accessTick === this.tickCount ? cell.accessedBy : null,
@@ -320,6 +329,16 @@ export class Machine {
     const core = this.activeCore;
     if (core === null) {
       throw new SnippetError(`${api} was called outside of a simulation step`);
+    }
+    if (api === 'markLine') {
+      const line = args[0] as number;
+      core.line = line;
+      if (this.stepExec !== null && this.stepExec.core === core.spec.id) {
+        this.stepExec.line = line;
+        this.stepExec.text = `L${line} in ${this.stepExecFn}`;
+        this.stepMarked = true;
+      }
+      return undefined;
     }
     if (api === 'assertRNRuntime') {
       const runtime = this.currentRuntime(core);
@@ -489,6 +508,11 @@ export class Machine {
     }
     if (api === 'createSynchronizable') {
       const options = args[1] as { fixedType?: boolean } | undefined;
+      if (options?.fixedType === true && !isFixedValue(args[0])) {
+        throw new SnippetError(
+          '[Worklets] `fixedType` requires a number or boolean initial value.'
+        );
+      }
       return this.createCell(
         core,
         'synchronizable',
@@ -498,14 +522,47 @@ export class Machine {
       );
     }
     if (api === 'synchronizableRead') {
+      const cell = this.cell(args[0]);
+      if (args[1] === 'blocking' && this.lockedByOther(core, cell)) {
+        return this.blockOn(core, cell, () => this.readCell(core, cell.id));
+      }
       return this.readCell(core, args[0]);
+    }
+    if (api === 'synchronizableLock') {
+      const cell = this.cell(args[0]);
+      const take = () => {
+        cell.lockedBy = core.spec.id;
+        return undefined;
+      };
+      return this.lockedByOther(core, cell)
+        ? this.blockOn(core, cell, take)
+        : take();
+    }
+    if (api === 'synchronizableUnlock') {
+      const cell = this.cell(args[0]);
+      if (cell.lockedBy === core.spec.id) {
+        cell.lockedBy = null;
+      }
+      return undefined;
     }
     if (api === 'synchronizableWrite') {
       const cell = this.cell(args[0]);
+      if (this.lockedByOther(core, cell)) {
+        return this.blockOn(core, cell, () =>
+          this.intercept('synchronizableWrite', args)
+        );
+      }
       const next =
         typeof args[1] === 'function'
           ? (args[1] as (previous: unknown) => unknown)(cell.value)
           : args[1];
+      if (cell.fixed && typeof next !== typeof cell.value) {
+        throw new SnippetError(
+          typeof cell.value === 'number'
+            ? '[Worklets] Expected a number for a fixed-type Synchronizable.'
+            : '[Worklets] Expected a boolean for a fixed-type Synchronizable.'
+        );
+      }
       this.writeCell(core, cell, next);
       return undefined;
     }
@@ -688,7 +745,7 @@ export class Machine {
         while (next <= this.now) {
           next += timer.interval;
         }
-        core.timers.push({ ...timer, due: next });
+        core.timers.push({ ...timer, due: next, arms: (timer.arms ?? 0) + 1 });
         if (core.macrotasks.some((job) => job.timerId === timer.id)) {
           continue;
         }
@@ -769,12 +826,39 @@ export class Machine {
       createdAtTick: this.tickCount,
       fixed,
       name,
+      lockedBy: null,
     };
     this.shared.set(id, cell);
     if (kind === 'shareable') {
       this.addGuest(core, cell);
     }
     return id;
+  }
+
+  private lockedByOther(core: CoreState, cell: SharedCell): boolean {
+    return cell.lockedBy !== null && cell.lockedBy !== core.spec.id;
+  }
+
+  private blockOn(
+    core: CoreState,
+    cell: SharedCell,
+    operation: () => unknown
+  ): BlockMarker {
+    return {
+      __block: true,
+      retry: () => {
+        if (this.lockedByOther(core, cell)) {
+          return { granted: false };
+        }
+        const previous = this.activeCore;
+        this.activeCore = core;
+        try {
+          return { granted: true, value: operation() };
+        } finally {
+          this.activeCore = previous;
+        }
+      },
+    };
   }
 
   private cloneArgs(args: unknown[]): unknown[] {
@@ -1389,6 +1473,27 @@ export class Machine {
         return;
       }
     }
+    if (frame.blocked !== undefined) {
+      let outcome: ReturnType<BlockMarker['retry']>;
+      try {
+        outcome = frame.blocked.retry();
+      } catch (error) {
+        this.fail(core, error);
+        return;
+      }
+      if (!outcome.granted) {
+        core.waitingFor = 'Synchronizable lock';
+        core.status = 'running';
+        core.line = frame.blockedLine ?? null;
+        core.executedRuntime = this.currentRuntime(core);
+        core.executedNative = false;
+        core.executedFn = this.snippet.fnInfo.get(frame.fn)!.name;
+        return;
+      }
+      frame.lastValue = outcome.value;
+      frame.blocked = undefined;
+      frame.blockedLine = undefined;
+    }
     const info = this.snippet.fnInfo.get(frame.fn)!;
     const lineIndex = info.hasLoop
       ? Math.min(frame.yields, info.yieldLines.length - 1)
@@ -1399,20 +1504,37 @@ export class Machine {
     core.executedRuntime = this.currentRuntime(core);
     core.executedNative = info.isNative;
     core.executedFn = info.isNative || info.isHidden ? null : info.name;
-    this.emit({
+    const exec: Extract<SimEvent, { type: 'exec' }> = {
       type: 'exec',
       core: core.spec.id,
       line: core.line,
       text: hasLine
         ? `L${core.line} in ${info.name}`
         : `(empty body of ${info.name})`,
-    });
+    };
+    this.emit(exec);
+    this.stepExec = exec;
+    this.stepExecFn = info.name;
+    this.stepMarked = false;
     let result: IteratorResult<unknown, unknown>;
     try {
       result = this.step(core, frame);
     } catch (error) {
+      this.stepExec = null;
       this.fail(core, error);
       return;
+    }
+    this.stepExec = null;
+    if (this.stepMarked) {
+      this.marksLines = true;
+    }
+    const returnedEarly = this.marksLines
+      ? result.done && !this.stepMarked && hasLine
+      : result.done && hasLine && !info.hasLoop;
+    if (returnedEarly) {
+      core.line = info.endLine;
+      exec.line = info.endLine;
+      exec.text = `L${info.endLine} in ${info.name} (returned early)`;
     }
     const shownLine = core.line;
     const shownRuntime = core.executedRuntime;
@@ -1430,6 +1552,15 @@ export class Machine {
       return;
     }
     frame.yields += 1;
+    if (isBlockMarker(result.value)) {
+      frame.blocked = result.value;
+      frame.blockedLine = shownLine;
+      core.line = shownLine;
+      core.executedRuntime = shownRuntime;
+      core.executedNative = shownNative;
+      core.executedFn = shownFn;
+      return;
+    }
     if (isAwaitMarker(result.value)) {
       if (this.awaitValue(core, frame, result.value.promise)) {
         core.line = shownLine;
@@ -1837,7 +1968,10 @@ export class Machine {
         ...[...core.timers]
           .sort((a, b) => a.due - b.due)
           .map((timer) => ({
-            id: timer.id,
+            id:
+              timer.arms === undefined
+                ? timer.id
+                : -(timer.id * TIMER_ARM_STRIDE + timer.arms),
             name: timer.label,
             internal: false,
             timer: true,
@@ -1912,4 +2046,8 @@ function typeOf(value: unknown): string {
 
 function frameDelay(delay: number): number {
   return FRAME_MS * Math.max(1, Math.ceil(delay / FRAME_MS));
+}
+
+function isFixedValue(value: unknown): value is number | boolean {
+  return typeof value === 'number' || typeof value === 'boolean';
 }

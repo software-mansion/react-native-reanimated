@@ -1,5 +1,7 @@
 const Module = require('node:module');
 const path = require('node:path');
+const { readFileSync } = require('node:fs');
+const { transformSync } = require('esbuild');
 
 require('esbuild-register/dist/node').register({
   jsxFactory: 'createElement',
@@ -9,15 +11,22 @@ require('esbuild-register/dist/node').register({
 const SITE_ROOT = path.resolve(__dirname, '..');
 const pinSnippetNames = require('../src/simulation/snippetNamesLoader.js');
 const SNIPPET_PATH = /(?:[\\/]snippets[\\/]|[\\/]_[^\\/]+[\\/])[^\\/]+\.jsx?$/;
-const originalCompile = Module.prototype._compile;
-Module.prototype._compile = function compileWithSnippetNames(
-  content,
-  filename
-) {
-  const source = SNIPPET_PATH.test(filename)
-    ? pinSnippetNames(content)
-    : content;
-  return originalCompile.call(this, source, filename);
+const originalLoadJs = Module._extensions['.js'];
+Module._extensions['.js'] = function loadSnippet(module, filename) {
+  if (!SNIPPET_PATH.test(filename)) {
+    return originalLoadJs(module, filename);
+  }
+  const { code } = transformSync(
+    pinSnippetNames(readFileSync(filename, 'utf8')),
+    {
+      format: 'cjs',
+      loader: 'jsx',
+      jsxFactory: 'createElement',
+      jsxFragment: 'Fragment',
+      sourcefile: filename,
+    }
+  );
+  return module._compile(code, filename);
 };
 const originalResolve = Module._resolveFilename;
 Module._resolveFilename = function resolveWithSiteAlias(request, ...rest) {

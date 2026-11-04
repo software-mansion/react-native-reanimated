@@ -2,6 +2,8 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 
 import styles from './styles.module.css';
 
+const HOVER_HIDE_DELAY_MS = 200;
+
 export default function PanelHelp({
   title,
   children,
@@ -17,6 +19,7 @@ export default function PanelHelp({
 }) {
   const id = useId();
   const popoverRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0 });
 
@@ -31,7 +34,24 @@ export default function PanelHelp({
     };
   }, [open]);
 
+  useEffect(() => () => cancelHide(), []);
+
+  const cancelHide = () => {
+    if (hideTimer.current !== null) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+  const scheduleHide = () => {
+    cancelHide();
+    hideTimer.current = setTimeout(() => {
+      hideTimer.current = null;
+      popoverRef.current?.hidePopover();
+    }, HOVER_HIDE_DELAY_MS);
+  };
+
   const show = (anchorElement: HTMLElement) => {
+    cancelHide();
     const popover = popoverRef.current;
     if (!popover || popover.matches(':popover-open')) return;
     popover.showPopover();
@@ -67,7 +87,7 @@ export default function PanelHelp({
         }}
         onPointerLeave={(event) => {
           if (hover && event.pointerType === 'mouse') {
-            popoverRef.current?.hidePopover();
+            scheduleHide();
           }
         }}
         onClick={(event) => {
@@ -90,6 +110,16 @@ export default function PanelHelp({
         popover="auto"
         className={styles.helpPopover}
         style={position}
+        onPointerEnter={(event) => {
+          if (hover && event.pointerType === 'mouse') {
+            cancelHide();
+          }
+        }}
+        onPointerLeave={(event) => {
+          if (hover && event.pointerType === 'mouse') {
+            scheduleHide();
+          }
+        }}
         onToggle={(event) => setOpen(event.newState === 'open')}>
         <div className={styles.helpHeading}>
           <strong>{title}</strong>

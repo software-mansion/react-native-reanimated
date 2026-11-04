@@ -31,6 +31,5 @@ export default function* main() {
     yield console.log(polledResult.value);
   }
 
-  // Only once in a while
-  yield setInterval(synchronize, 80);
+  yield setInterval(synchronize, 80); // Only once in a while
 }
