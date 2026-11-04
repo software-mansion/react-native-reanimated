@@ -3,6 +3,8 @@
 #include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <functional>
 #include <string>
 #include <utility>
@@ -200,9 +202,7 @@ uint64_t Networking::sendRequest(jsi::Runtime &rt, const jsi::Object &config, js
   }
 
   const auto *hostIdentity = findRuntimeIdentity(rt);
-  if (hostIdentity == nullptr) [[unlikely]] {
-    throw jsi::JSError(rt, "[Worklets] Cannot send a request from a runtime without a runtime identity.");
-  }
+  react_native_assert(hostIdentity != nullptr && "[Worklets] A Worklet Runtime must have a runtime identity.");
 
   const auto serializableCallback = std::make_shared<SerializableRemoteFunction>(
       rt, "workletsNetworkingCallback", std::move(callback), *hostIdentity);
