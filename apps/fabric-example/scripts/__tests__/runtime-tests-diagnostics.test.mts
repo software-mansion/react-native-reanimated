@@ -259,7 +259,11 @@ function createWorkDir() {
     fs.mkdtempSync(path.join(os.tmpdir(), 'runtime-tests-driver-'))
   );
   fs.mkdirSync(path.join(dir, 'scripts'));
-  for (const script of ['runtime-tests-server.js', 'android-device.js']) {
+  for (const script of [
+    'runtime-tests-server.js',
+    'android-device.js',
+    'runtime-tests-suites.js',
+  ]) {
     fs.copyFileSync(
       path.join(SCRIPTS, script),
       path.join(dir, 'scripts', script)
