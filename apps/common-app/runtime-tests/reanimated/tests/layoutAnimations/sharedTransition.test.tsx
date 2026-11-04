@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
@@ -23,6 +24,10 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
+
+const FIRST_CLIP_TAG = 20000002;
+const CLIP_TAG_RANGE = 4000;
 
 function createTransition(
   finished: boolean[],
@@ -122,6 +127,74 @@ function IdenticalScreens({
       </SharedTransitionBoundary>
     </View>
   );
+}
+
+type ViewStyle = ComponentProps<typeof View>['style'];
+
+function ParentScreens({
+  showTarget,
+  transition,
+  sourceParent,
+  targetParent,
+  targetChild = styles.fill,
+  overflowingChild = false,
+}: {
+  showTarget: boolean;
+  transition: SharedTransition;
+  sourceParent: ViewStyle;
+  targetParent: ViewStyle;
+  targetChild?: ViewStyle;
+  overflowingChild?: boolean;
+}) {
+  const sourceRef = useTestRef('source');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!showTarget}>
+        <View style={sourceParent}>
+          <Animated.View
+            ref={sourceRef}
+            sharedTransitionTag="box"
+            sharedTransitionStyle={transition}
+            style={styles.fill}>
+            {overflowingChild && <View style={styles.overflowing} />}
+          </Animated.View>
+        </View>
+      </SharedTransitionBoundary>
+      {showTarget && (
+        <SharedTransitionBoundary isActive>
+          <View style={targetParent}>
+            <Animated.View
+              sharedTransitionTag="box"
+              sharedTransitionStyle={transition}
+              style={targetChild}
+            />
+          </View>
+        </SharedTransitionBoundary>
+      )}
+    </View>
+  );
+}
+
+// The view that clips the moving view has no React ref. The view inside each clip follows it in tag order.
+function mountedClips() {
+  return runOnUIBlocking(() => {
+    'worklet';
+    const clips = [];
+    for (let offset = 0; offset < CLIP_TAG_RANGE; offset += 4) {
+      const props = global._obtainMountedViewProps(
+        FIRST_CLIP_TAG + offset,
+        false
+      );
+      if (props) {
+        clips.push(props);
+      }
+    }
+    return clips;
+  });
+}
+
+async function mountedSourceOpacity() {
+  return (await getTestComponent('source').getMountedViewProps())?.opacity;
 }
 
 async function expectMountedAtLayout(name: string, opacity: number) {
@@ -332,10 +405,179 @@ describe('Shared element transition between boundaries', () => {
     ).toBe(true);
     await expectMountedAtLayout('target', 1);
   });
+  test('carries the opacity of the source ancestors without a clip', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: [styles.parent, styles.dimmed],
+      targetParent: styles.parent,
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await waitForFrames(2);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.5, 0.9);
+    expect((await mountedClips()).length).toBe(0);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
+  test('ends on the opacity of the target ancestors', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: styles.parent,
+      targetParent: [styles.parent, styles.dimmed],
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await wait(800);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.5, 0.8);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
+  test('moves the source inside a clip and removes the clip at the end', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: styles.clippingParent,
+      targetParent: styles.farParent,
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await waitForFrames(2);
+    const clips = await mountedClips();
+    expect(clips.length).toBe(1);
+    expect(clips[0].width).toBeWithinRange(100, 140);
+
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+    expect(finished).toBe([true]);
+    expect((await mountedClips()).length).toBe(0);
+    await expectMountedAtLayout('source', 0);
+  });
+
+  test.each([
+    ['fits the unclipped end of the clip to a childless view', false, 100, 160],
+    [
+      'keeps the window as the unclipped end for overflowing children',
+      true,
+      200,
+      10000,
+    ],
+  ] as const)('${0}', async ([, overflowingChild, minWidth, maxWidth]) => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: styles.clippingParent,
+      targetParent: styles.farParent,
+      overflowingChild,
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await wait(500);
+    const clips = await mountedClips();
+    expect(clips.length).toBe(1);
+    expect(clips[0].width).toBeWithinRange(minWidth, maxWidth);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
+  test('retargets the clip when only its target changes', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(600)
+    );
+    const props = {
+      transition,
+      sourceParent: styles.clippingParent,
+      targetChild: styles.fill,
+    };
+    await render(
+      <ParentScreens
+        {...props}
+        showTarget={false}
+        targetParent={styles.farClippingParent}
+      />
+    );
+    await waitForFrames();
+    await render(
+      <ParentScreens
+        {...props}
+        showTarget
+        targetParent={styles.farClippingParent}
+      />
+    );
+    await waitForFrames(2);
+    const clipStartY = (await mountedClips())[0].y;
+
+    await render(
+      <ParentScreens
+        {...props}
+        showTarget
+        targetParent={styles.fartherClippingParent}
+      />
+    );
+    await wait(450);
+    const clips = await mountedClips();
+    expect(clips.length).toBe(1);
+    expect(clips[0].y).toBeWithinRange(clipStartY + 301, clipStartY + 380);
+
+    // The clip moves with the moving view, so both restart.
+    await expectEventually(() => finished).toBe([false, true]);
+    await waitForFrames();
+    expect((await mountedClips()).length).toBe(0);
+  });
 });
 
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
+  fill: { flex: 1, backgroundColor: '#dd5522' },
+  overflowing: { width: 300, height: 20, backgroundColor: '#2277dd' },
+  parent: { width: 100, height: 100 },
+  dimmed: { opacity: 0.5 },
+  farParent: { width: 150, height: 150, marginTop: 200 },
+  clippingParent: { width: 100, height: 100, overflow: 'hidden' },
+  farClippingParent: {
+    width: 100,
+    height: 100,
+    marginTop: 200,
+    overflow: 'hidden',
+  },
+  fartherClippingParent: {
+    width: 100,
+    height: 100,
+    marginTop: 280,
+    overflow: 'hidden',
+  },
   identical: {
     position: 'absolute',
     top: 20,
