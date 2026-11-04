@@ -7,6 +7,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <utility>
@@ -49,11 +50,33 @@ class SerializableRemoteFunction : public Serializable,
     return hostIdentity_.getRuntimeId();
   }
 
+  [[nodiscard]] bool isSettled() const noexcept {
+    return settled_;
+  }
+
  private:
+  std::atomic_bool settled_{false};
   const RuntimeIdentity hostIdentity_;
   std::unique_ptr<facebook::jsi::Value> function_;
   const std::string name_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
+};
+
+class PromiseDropGuard {
+ public:
+  PromiseDropGuard(
+      std::shared_ptr<SerializableRemoteFunction> resolve,
+      std::shared_ptr<SerializableRemoteFunction> reject)
+      : resolve_(std::move(resolve)), reject_(std::move(reject)) {}
+
+  ~PromiseDropGuard();
+
+  PromiseDropGuard(const PromiseDropGuard &) = delete;
+  PromiseDropGuard &operator=(const PromiseDropGuard &) = delete;
+
+ private:
+  const std::shared_ptr<SerializableRemoteFunction> resolve_;
+  const std::shared_ptr<SerializableRemoteFunction> reject_;
 };
 
 facebook::jsi::Value makeSerializableRemoteFunction(
