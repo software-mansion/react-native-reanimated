@@ -310,6 +310,20 @@ function getInitialStyle(
   return initialValues;
 }
 
+// The snapshot leaves out a border corner or side that neither view sets, so
+// it starts from the shorthand that the view renders.
+function getSourceValue(record: Record<string, unknown>, key: string) {
+  'worklet';
+  const current = record['current' + key[0].toUpperCase() + key.slice(1)];
+  if (current !== undefined || !key.startsWith('border')) {
+    return current;
+  }
+  const property = ['Radius', 'Width', 'Color'].find((suffix) =>
+    key.endsWith(suffix)
+  );
+  return property ? record['currentBorder' + property] : undefined;
+}
+
 function getCustomInitialStyle(
   values: SharedTransitionAnimationsValues,
   animations: StyleProps
@@ -319,7 +333,7 @@ function getCustomInitialStyle(
   const styles: Pick<ChangedStyle, 'key' | 'current'>[] =
     getChangedStyles(values);
   for (const key in animations) {
-    const current = record['current' + key[0].toUpperCase() + key.slice(1)];
+    const current = getSourceValue(record, key);
     if (current !== undefined && !styles.some((style) => style.key === key)) {
       styles.push({ key, current });
     }

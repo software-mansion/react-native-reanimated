@@ -145,6 +145,22 @@ describe('SharedTransition', () => {
       expect(initialValues.height).toBe(50);
     });
 
+    test('starts a border corner and side that no view sets from the shorthand', () => {
+      const { initialValues } = runLayoutAnimation(
+        SharedTransition.custom(() => {
+          'worklet';
+          return {
+            borderTopLeftRadius: withTiming(30),
+            borderLeftWidth: withTiming(2),
+            borderTopColor: withTiming('red'),
+          };
+        })
+      );
+      expect(initialValues.borderTopLeftRadius).toBe('0.000000%');
+      expect(initialValues.borderLeftWidth).toBe(0);
+      expect(initialValues.borderTopColor).toBe('rgba(0, 0, 0, 0.000000)');
+    });
+
     test('applies the reduce motion of the builder', () => {
       const matrix = withTiming(IDENTITY);
       const { animations } = runLayoutAnimation(
