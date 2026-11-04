@@ -63,6 +63,7 @@ interface TestData {
   testSuiteName: string;
   importTest: () => void;
   skipByDefault?: boolean;
+  needsRuntimeTestsServer?: boolean;
   disabled?: boolean;
 }
 
@@ -83,7 +84,7 @@ export default function RuntimeTestsRunner({
 
   useEffect(() => {
     tests.forEach((testData) => {
-      !testData.skipByDefault &&
+      isSelectedByDefault(testData) &&
         testSelectionCallbacks.current.add(testData.importTest);
     });
   }, [tests]);
@@ -157,6 +158,10 @@ export default function RuntimeTestsRunner({
   );
 }
 
+function isSelectedByDefault(testData: TestData) {
+  return !testData.skipByDefault && !testData.needsRuntimeTestsServer;
+}
+
 interface TestSelectorProps {
   tests: Array<TestData>;
   testSelectionCallbacks: React.RefObject<Set<() => void>>;
@@ -165,7 +170,7 @@ interface TestSelectorProps {
 function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   const [selectedTests, setSelectedTests] = useState<Map<string, boolean>>(
     tests.reduce((acc, testData) => {
-      acc.set(testData.testSuiteName, !testData.skipByDefault);
+      acc.set(testData.testSuiteName, isSelectedByDefault(testData));
       return acc;
     }, new Map<string, boolean>())
   );

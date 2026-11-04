@@ -96,6 +96,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/reload/oldInstanceValues.test');
     },
+    needsRuntimeTestsServer: true,
     disabled: !__DEV__,
   },
 ];
