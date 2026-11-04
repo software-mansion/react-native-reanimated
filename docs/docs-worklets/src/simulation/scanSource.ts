@@ -10,7 +10,7 @@ const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
 const YIELD_PATTERN =
   /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
 const REGEX_LITERAL_PATTERN =
-  /(^|[=(,:!&|?{};+\-*%<>~^]|\b(?:return|yield|typeof|case)\b)\s*\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/g;
+  /(^|[=(,:!&|?{}[;+\-*%<>~^]|\b(?:return|yield|typeof|case)\b)\s*\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/g;
 const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*(?:\/\/.*)?$/;
 
 export function scanSource(source: string): Map<string, FnInfo> {
@@ -142,8 +142,61 @@ function bracketDelta(text: string, open: string, close: string): number {
 }
 
 function codeOf(text: string): string {
-  return text
-    .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""')
+  return withoutStrings(text)
     .replace(REGEX_LITERAL_PATTERN, '$1""')
     .replace(/\/\/.*$/, '');
+}
+
+function withoutStrings(text: string): string {
+  let result = '';
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index];
+    if (char === "'" || char === '"') {
+      let end = index + 1;
+      while (end < text.length && text[end] !== char) {
+        end += text[end] === '\\' ? 2 : 1;
+      }
+      result += '""';
+      index = end + 1;
+      continue;
+    }
+    if (char === '`') {
+      let end = index + 1;
+      const interpolations: string[] = [];
+      while (end < text.length && text[end] !== '`') {
+        if (text[end] === '\\') {
+          end += 2;
+          continue;
+        }
+        if (text.startsWith('${', end)) {
+          const close = closingBrace(text, end + 1);
+          interpolations.push(withoutStrings(text.slice(end + 2, close)));
+          end = close + 1;
+          continue;
+        }
+        end++;
+      }
+      result += `""${interpolations.map((inner) => ` ${inner} `).join('')}`;
+      index = end + 1;
+      continue;
+    }
+    result += char;
+    index++;
+  }
+  return result;
+}
+
+function closingBrace(text: string, open: number): number {
+  let depth = 0;
+  for (let index = open; index < text.length; index++) {
+    if (text[index] === '{') depth++;
+    if (text[index] === '}') {
+      depth--;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return text.length;
 }

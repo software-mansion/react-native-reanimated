@@ -262,3 +262,82 @@ describe('fourth review round', () => {
     assert.doesNotMatch(output, /__simMarkLine\(4\)/);
   });
 });
+
+describe('fifth review round', () => {
+  it('ignores parameter default values in the shadow check', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        function* show(x = result) {
+          yield console.log(result.value);
+        }
+      }
+    `);
+    assert.match(displaySource(source).text, /^\s{2}console\.log\(result\);$/m);
+  });
+
+  it('strips a regex literal that follows an opening bracket', () => {
+    const source = unindent(`
+      export default function* main() {
+        const patterns = yield [/yield/];
+      }
+    `);
+    assert.doesNotThrow(() => displaySource(source));
+  });
+
+  it('counts a yield inside a template interpolation', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield \`\${yield 1}\`;
+      }
+    `);
+    assert.throws(() => displaySource(source), /each yield on its own line/);
+  });
+
+  it('rewrites past nested braces inside a template interpolation', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        yield console.log(\`\${({ foo: 1 }).foo + result.value}\`);
+      }
+    `);
+    assert.match(
+      displaySource(source).text,
+      /console\.log\(`\$\{\(\{ foo: 1 \}\)\.foo \+ result\}`\);/
+    );
+  });
+
+  it('limits a block-scoped redeclaration to its block', () => {
+    const source = unindent(`
+      export default function* main() {
+        const result = yield heapVariable('result', 0);
+        function* show() {
+          if (yield true) {
+            const result = yield 1;
+            yield console.log(result);
+          }
+          yield console.log(result.value);
+        }
+      }
+    `);
+    assert.doesNotMatch(displaySource(source).text, /result\.value/);
+  });
+
+  it('marks a yield in the body of an if without braces', () => {
+    const loader = require('../snippetNamesLoader.js') as (
+      source: string
+    ) => string;
+    const output = loader(
+      unindent(`
+        export default function* main() {
+          if (ready)
+            yield console.log('ready');
+        }
+      `)
+    );
+    assert.match(
+      output,
+      /\{ __simMarkLine\(3\); yield console\.log\('ready'\); \}/
+    );
+  });
+});

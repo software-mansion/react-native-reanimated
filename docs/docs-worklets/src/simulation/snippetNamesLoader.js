@@ -38,7 +38,9 @@ module.exports = function snippetNamesLoader(source) {
   const output = lines.map((text, index) => {
     const marked = startsStatement(lines, index)
       ? markYieldLine(text, index + 1)
-      : text;
+      : isBracelessBody(lines, index)
+        ? markBracelessYieldLine(text, index + 1)
+        : text;
     const names = insertAfter.get(index);
     return names === undefined ? marked : `${marked}\n${pin(names)}`;
   });
@@ -55,6 +57,28 @@ function startsStatement(lines, index) {
     }
   }
   return true;
+}
+
+function isBracelessBody(lines, index) {
+  for (let previous = index - 1; previous >= 0; previous--) {
+    const code = lines[previous].replace(/\/\/.*$/, '').trim();
+    if (code !== '') {
+      return /^(?:\}\s*)?(?:else|(?:else\s+)?(?:if|for|while)\s*\(.*\))$/.test(
+        code
+      );
+    }
+  }
+  return false;
+}
+
+function markBracelessYieldLine(text, line) {
+  const code = text.replace(/\/\/.*$/, '').trimEnd();
+  if (!YIELD_PATTERN.test(text) || !code.endsWith(';')) {
+    return text;
+  }
+  const indent = text.length - text.trimStart().length;
+  const comment = text.slice(code.length);
+  return `${text.slice(0, indent)}{ __simMarkLine(${line}); ${code.slice(indent)} }${comment}`;
 }
 
 function markYieldLine(text, line) {

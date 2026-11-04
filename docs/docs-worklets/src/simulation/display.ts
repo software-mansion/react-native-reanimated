@@ -52,13 +52,13 @@ export function displaySource(
     const scope = innermostFunction(fns, index + 1);
     const start = scope?.headerLine ?? 1;
     const end = scope?.endLine ?? rawLines.length;
-    const shadows = [...fns.values()].filter(
-      (fn) =>
-        fn !== scope &&
-        fn.headerLine > start &&
-        fn.endLine <= end &&
-        redeclares(rawLines, fns, fn, name)
-    );
+    const shadows = shadowRanges(rawLines, fns, {
+      scope,
+      start,
+      end,
+      name,
+      declarationLine: index + 1,
+    });
     return [{ name, start, end, shadows }];
   });
   const asyncHeaders = new Set(
@@ -124,7 +124,7 @@ export function displaySource(
             line >= variable.start &&
             line <= variable.end &&
             !variable.shadows.some(
-              (fn) => line >= fn.headerLine && line <= fn.endLine
+              (range) => line >= range.from && line <= range.to
             )
         )
         .map((variable) => variable.name)
@@ -237,34 +237,93 @@ function isInsideBody(
   return indent >= bodyIndent && !next.trimStart().startsWith('//');
 }
 
-function redeclares(
+function shadowRanges(
   rawLines: string[],
   fns: Map<string, FnInfo>,
-  fn: FnInfo,
-  name: string
-): boolean {
-  const header = rawLines[fn.headerLine - 1] ?? '';
+  variable: {
+    scope: FnInfo | undefined;
+    start: number;
+    end: number;
+    name: string;
+    declarationLine: number;
+  }
+): { from: number; to: number }[] {
+  const { scope, start, end, name, declarationLine } = variable;
+  const ranges: { from: number; to: number }[] = [];
+  for (const fn of fns.values()) {
+    if (
+      fn !== scope &&
+      fn.headerLine > start &&
+      fn.endLine <= end &&
+      bindsParameter(rawLines[fn.headerLine - 1] ?? '', name)
+    ) {
+      ranges.push({ from: fn.headerLine, to: fn.endLine });
+    }
+  }
+  const declaration = new RegExp(`^\\s*(const|let|var)\\s+${name}(?![\\w$])`);
+  rawLines.forEach((text, index) => {
+    const line = index + 1;
+    const match = declaration.exec(text);
+    if (match === null || line <= start || line >= end) {
+      return;
+    }
+    if (line === declarationLine) {
+      return;
+    }
+    if (match[1] === 'var') {
+      const owner = innermostFunction(fns, line);
+      ranges.push({
+        from: owner?.headerLine ?? line,
+        to: owner?.endLine ?? end,
+      });
+      return;
+    }
+    ranges.push({ from: line, to: blockEnd(rawLines, index, end) });
+  });
+  return ranges;
+}
+
+function bindsParameter(header: string, name: string): boolean {
   const params = header.slice(header.indexOf('(') + 1, header.lastIndexOf(')'));
   const binding = new RegExp(`(?<![\\w$.])${name}(?![\\w$])`);
-  if (binding.test(params)) {
-    return true;
+  return splitTopLevel(params, ',').some((param) =>
+    binding.test(splitTopLevel(param, '=')[0] ?? '')
+  );
+}
+
+function splitTopLevel(text: string, separator: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of text) {
+    if ('([{'.includes(char)) depth++;
+    if (')]}'.includes(char)) depth--;
+    if (char === separator && depth === 0) {
+      parts.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
   }
-  const declaration = new RegExp(`^\\s*(?:const|let|var)\\s+${name}(?![\\w$])`);
-  const nested = [...fns.values()].filter(
-    (other) =>
-      other !== fn &&
-      other.headerLine > fn.headerLine &&
-      other.endLine <= fn.endLine
-  );
-  return rawLines.some(
-    (text, index) =>
-      index + 1 > fn.headerLine &&
-      index + 1 < fn.endLine &&
-      !nested.some(
-        (other) => index + 1 >= other.headerLine && index + 1 <= other.endLine
-      ) &&
-      declaration.test(text)
-  );
+  parts.push(current);
+  return parts;
+}
+
+function blockEnd(rawLines: string[], index: number, fallback: number): number {
+  let depth = 0;
+  for (let line = index; line < rawLines.length; line++) {
+    const code = rawLines[line]
+      .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""')
+      .replace(/\/\/.*$/, '');
+    for (const char of code) {
+      if (char === '{') depth++;
+      if (char === '}') depth--;
+      if (depth < 0) {
+        return line + 1;
+      }
+    }
+  }
+  return fallback;
 }
 
 function innermostFunction(
@@ -321,14 +380,63 @@ function replaceInCode(
       index % 2 === 0
         ? part.replace(pattern, replacement)
         : part.startsWith('`')
-          ? part.replace(
-              /\$\{([^}]*)\}/g,
-              (_, inner: string) =>
-                `\${${replaceInCode(inner, pattern, replacement)}}`
+          ? mapInterpolations(part, (inner) =>
+              replaceInCode(inner, pattern, replacement)
             )
           : part
     )
     .join('');
+}
+
+function mapInterpolations(
+  template: string,
+  transform: (inner: string) => string
+): string {
+  let result = '';
+  let index = 0;
+  while (index < template.length) {
+    if (template[index] === '\\') {
+      result += template.slice(index, index + 2);
+      index += 2;
+      continue;
+    }
+    if (template.startsWith('${', index)) {
+      const end = matchingBrace(template, index + 1);
+      result += `\${${transform(template.slice(index + 2, end))}}`;
+      index = end + 1;
+      continue;
+    }
+    result += template[index];
+    index++;
+  }
+  return result;
+}
+
+function matchingBrace(text: string, open: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let index = open; index < text.length; index++) {
+    const char = text[index];
+    if (quote !== null) {
+      if (char === '\\') {
+        index++;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === "'" || char === '"' || char === '`') {
+      quote = char;
+    } else if (char === '{') {
+      depth++;
+    } else if (char === '}') {
+      depth--;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return text.length;
 }
 
 function replaceAwaitCalls(text: string): string {
