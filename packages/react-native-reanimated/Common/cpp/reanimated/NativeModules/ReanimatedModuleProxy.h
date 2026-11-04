@@ -208,9 +208,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
-  void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
-  void writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch);
-  void sendSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
+  void applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch);
+  void writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch);
 #ifdef ANDROID
   SynchronousPropsReader makeSynchronousPropsReader();
   folly::dynamic readSynchronousProps(Tag tag);

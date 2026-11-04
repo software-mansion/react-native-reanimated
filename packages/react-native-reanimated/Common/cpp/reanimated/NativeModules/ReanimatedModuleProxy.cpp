@@ -922,7 +922,7 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-    applySynchronousUpdates(synchronousUpdatesBatch);
+    applySynchronousUpdates(std::move(synchronousUpdatesBatch));
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1145,7 +1145,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
   return handled;
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch) {
   if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
@@ -1153,22 +1153,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
-  writeSynchronousPropsToViews(synchronousUpdatesBatch);
+  writeSynchronousPropsToViews(std::move(synchronousUpdatesBatch));
 }
 
-void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch) {
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch) {
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (layoutAnimationsProxyRegistry_) {
-      auto composedUpdatesBatch = updatesBatch;
-      layoutAnimationsProxyRegistry_->composeSynchronousProps(composedUpdatesBatch);
-      sendSynchronousPropsToViews(composedUpdatesBatch);
-      return;
+      layoutAnimationsProxyRegistry_->composeSynchronousProps(synchronousUpdatesBatch);
     }
   }
-  sendSynchronousPropsToViews(updatesBatch);
-}
-
-void ReanimatedModuleProxy::sendSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
