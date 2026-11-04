@@ -65,12 +65,20 @@ jobs:
         uses: $/.github/actions/install-android-ndk
 
       - name: Use Node.js
+        id: setup-node
         uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Toggle Bundle Mode off (Legacy Eval)
         if: ${{ !matrix.bundleMode }}

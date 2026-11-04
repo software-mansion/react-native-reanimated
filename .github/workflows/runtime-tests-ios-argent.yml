@@ -90,12 +90,20 @@ jobs:
           bundler-cache: true
 
       - name: Use Node.js
+        id: setup-node
         uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Toggle Bundle Mode off (Legacy Eval)
         if: ${{ !matrix.bundleMode }}
@@ -186,12 +194,20 @@ jobs:
           persist-credentials: false
 
       - name: Use Node.js
+        id: setup-node
         uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       # Debug legs serve JS from Metro running on this runner, so this
       # checkout's js must match the native app's bundle mode.
