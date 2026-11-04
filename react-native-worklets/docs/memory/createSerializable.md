@@ -32,7 +32,7 @@ function createSerializable<TValue>(value: TValue): SerializableRef<TValue>;
 
 The JavaScript value to be converted into a Serializable reference. It must be one of the supported types listed below.
 
-> **Note**
+> NOTE
 >
 > In development builds, the `value` argument is [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) after serialization. This prevents misconceptions that changes to the original value would update the already created Serializable.
 >

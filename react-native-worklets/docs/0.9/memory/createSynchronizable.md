@@ -1,0 +1,29 @@
+# createSynchronizable
+
+Creates a new [Synchronizable](https://docs.swmansion.com/react-native-worklets/docs/0.9/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+
+## Reference
+
+```tsx
+import { createSynchronizable } from 'react-native-worklets';
+
+const synchronizable = createSynchronizable({ a: 42 });
+```
+
+Type definitions
+
+```typescript
+function createSynchronizable<TValue>(
+  initialValue: TValue
+): Synchronizable<TValue>;
+```
+
+## Arguments
+
+### initialValue
+
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/0.9/memory/serializable) documentation.
+
+## Remarks
+
+* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/0.9/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/0.9/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.

@@ -6,6 +6,8 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 1. **Modify your Babel configuration**. [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
+Babel plugin
+
 ```javascript {2-5,13}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
@@ -24,6 +26,8 @@ module.exports = {
 };
 ```
 
+Oxc plugin
+
 ```javascript {7}
 module.exports = {
   presets: [
@@ -40,6 +44,8 @@ module.exports = {
 
 2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
+Expo
+
 ```javascript {3,10}
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
@@ -54,6 +60,8 @@ config = getBundleModeMetroConfig(config);
 
 module.exports = config;
 ```
+
+React Native Community
 
 ```javascript {6,12-16}
 const {
@@ -127,9 +135,13 @@ This patch is a temporary workaround until necessary changes are merged into Met
 
 Make sure to clear your Metro bundler's cache to ensure that all the changes are applied correctly.
 
+NPM
+
 ```bash
 npm start -- --reset-cache
 ```
+
+YARN
 
 ```bash
 yarn start --reset-cache

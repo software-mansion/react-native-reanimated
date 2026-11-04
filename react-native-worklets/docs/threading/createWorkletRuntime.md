@@ -114,3 +114,7 @@ Controls the queue used for scheduling worklet functions on this runtime. Defaul
 * In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
 
 ## Platform compatibility
+
+| Native    | Web           |
+| --------- | ------------- |
+| Supported | Not supported |

@@ -1,3 +1,5 @@
+Deprecated API.
+
 # executeOnUIRuntimeSync
 
 `executeOnUIRuntimeSync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
@@ -34,7 +36,7 @@ A reference to a function you want to execute on the UI Runtime on the current t
 
 `executeOnUIRuntimeSync` returns the return value of the worklet function.
 
-> **Info**
+> INFO
 >
 > Don't forget to call the function returned from `executeOnUIRuntimeSync`.
 

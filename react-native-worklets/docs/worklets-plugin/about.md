@@ -154,7 +154,7 @@ const handler = useAnimatedScrollHandler(handlerObject);
 
 You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
 
-This will workletize all *top-level* [JavaScript terms](#javascript-terms) and [Reanimated terms](#reanimated-terms) automatically. It can come in handy for files that contain multiple worklets.
+This will workletize all *top-level* [JavaScript terms](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#javascript-terms) and [Reanimated terms](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#reanimated-terms) automatically. It can come in handy for files that contain multiple worklets.
 
 ```ts
 // file.ts

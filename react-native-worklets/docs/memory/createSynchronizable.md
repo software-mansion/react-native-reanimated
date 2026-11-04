@@ -39,7 +39,7 @@ type SynchronizableConfig = {
 
 The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable) documentation.
 
-With the [`fixedType` option](#config) it isn't serialized and must be a `number` or a `boolean`.
+With the [`fixedType` option](https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable#config) it isn't serialized and must be a `number` or a `boolean`.
 
 ### config
 

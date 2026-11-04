@@ -145,7 +145,7 @@ option of the Worklets Babel plugin.
 ### Dropping boilerplate
 
 You can rewrite the code from the [Printing Worklet Runtime
-state](#printing-worklet-runtime-state) example without boilerplate. First,
+state](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding#printing-worklet-runtime-state) example without boilerplate. First,
 configure the Worklets Babel plugin:
 
 ```javascript

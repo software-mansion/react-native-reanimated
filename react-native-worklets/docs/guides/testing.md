@@ -16,11 +16,15 @@ You have two options for this:
 
 Depending on whether you are using TypeScript or JavaScript, apply the following mock:
 
+TypeScript
+
 ```js
 jest.mock('react-native-worklets', () =>
   require('react-native-worklets/src/mock')
 );
 ```
+
+JavaScript
 
 ```js
 jest.mock('react-native-worklets', () =>

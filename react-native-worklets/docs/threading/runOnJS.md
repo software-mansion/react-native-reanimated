@@ -1,3 +1,5 @@
+Deprecated API.
+
 # runOnJS
 
 `runOnJS` lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
@@ -33,7 +35,7 @@ A reference to a function you want to execute on the [JavaScript thread](https:/
 
 `runOnJS` returns a function that accepts arguments for the function passed as the first argument. This function can be safely executed on the UI thread.
 
-> **Info**
+> INFO
 >
 > Don't forget to call the function returned from `runOnJS`.
 

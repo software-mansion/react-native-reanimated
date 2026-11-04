@@ -1,5 +1,7 @@
 # makeShareableCloneOnUIRecursive
 
+Deprecated API.
+
 `makeShareableCloneOnUIRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than UI Runtime.
 The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`.
 To prevent misconceptions about it we freeze the original value for object-like values and for arrays.

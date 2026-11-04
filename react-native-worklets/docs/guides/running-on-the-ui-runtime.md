@@ -6,12 +6,12 @@ Use the table below to pick the one that fits your case.
 
 ## Comparison
 
-|  | [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) | [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync) | [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync) |
-| --- | --- | --- | --- |
-| **Execution** | Asynchronous | Asynchronous | Synchronous, blocks the caller until the worklet function returns |
-| **Returns** | Nothing | A `Promise` that resolves with the worklet function's return value | The worklet function's return value directly |
-| **Web support** | ✅ | ✅ | ❌ |
-| **Use when** | You want to run a worklet function on the UI Runtime and don't need its result back | You need the worklet function's result back, but don't want to block the calling thread | You need the worklet function's result immediately, within the same synchronous flow |
+|                 | [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) | [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync) | [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync) |
+| --------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Execution**   | Asynchronous                                                                                   | Asynchronous                                                                                   | Synchronous, blocks the caller until the worklet function returns                            |
+| **Returns**     | Nothing                                                                                        | A `Promise` that resolves with the worklet function's return value                             | The worklet function's return value directly                                                 |
+| **Web support** | ✅                                                                                              | ✅                                                                                              | ❌                                                                                            |
+| **Use when**    | You want to run a worklet function on the UI Runtime and don't need its result back            | You need the worklet function's result back, but don't want to block the calling thread        | You need the worklet function's result immediately, within the same synchronous flow         |
 
 The values returned by `runOnUIAsync` and `runOnUISync` have to be [serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable).
 

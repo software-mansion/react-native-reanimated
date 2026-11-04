@@ -126,14 +126,14 @@ This is a list of Babel presets that will be used when transforming worklet func
 
 ### getHBCBinary
 
-> **Caution**
+> CAUTION
 >
 > Experimental feature.
 
 Defaults to `undefined`.
 
 Returns the absolute path to the Hermes bytecode compiler (`hermesc`) binary.
-This option is part of the experimental [`hermesBytecode`](#hermesbytecode)
+This option is part of the experimental [`hermesBytecode`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#hermesbytecode)
 feature and is required when it is enabled — the plugin invokes this binary to
 compile each worklet function.
 
@@ -214,7 +214,7 @@ There is a [huge list of identifiers blocklisted by default](https://github.com/
 
 ### hermesBytecode
 
-> **Caution**
+> CAUTION
 >
 > Experimental feature.
 
@@ -229,7 +229,7 @@ This is a workaround for the [increased memory consumption of `eval` calls
 in Hermes](https://github.com/software-mansion/react-native-reanimated/issues/9650).
 
 Enabling it requires the
-[`getHBCBinary`](#gethbcbinary) option so the plugin can locate the Hermes compiler.
+[`getHBCBinary`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#gethbcbinary) option so the plugin can locate the Hermes compiler.
 
 Bytecode is only emitted for production builds.
 This option has no effect in [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
@@ -248,7 +248,7 @@ This option dictates the passed file location for a worklet function's source ma
 
 ### strictGlobal
 
-> **Note**
+> NOTE
 >
 > We highly recommend enabling this option as it will be enabled by default in the future.
 
@@ -290,7 +290,7 @@ function setOnUI() {
 }
 ```
 
-While it might seem handy to copy everything implicitly, it can lead to unexpected behavior when the captured object shouldn't be copied between runtimes. Compare this to the [globals option](#globals), which allows you to specify which global variables should not be copied to the worklet runtime at all.
+While it might seem handy to copy everything implicitly, it can lead to unexpected behavior when the captured object shouldn't be copied between runtimes. Compare this to the [globals option](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#globals), which allows you to specify which global variables should not be copied to the worklet runtime at all.
 
 `strictGlobal` takes precedence over the `globals` option.
 

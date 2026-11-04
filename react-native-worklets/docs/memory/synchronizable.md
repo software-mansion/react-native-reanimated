@@ -94,7 +94,7 @@ For non-fixed-type Synchronizables, the value provided to `setBlocking` is seria
 
 ### setDirty
 
-Available only on [Synchronizable Fixed](#synchronizable-fixed). Non-exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. It doesn't block when `setDirty` is being executed on another thread, therefore could result in a [lost update](https://en.wikipedia.org/wiki/Write%E2%80%93write_conflict). Accepts a plain value only, not a setter function.
+Available only on [Synchronizable Fixed](https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable#synchronizable-fixed). Non-exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. It doesn't block when `setDirty` is being executed on another thread, therefore could result in a [lost update](https://en.wikipedia.org/wiki/Write%E2%80%93write_conflict). Accepts a plain value only, not a setter function.
 
 ### lock
 

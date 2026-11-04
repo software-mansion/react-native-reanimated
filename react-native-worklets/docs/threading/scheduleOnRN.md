@@ -91,4 +91,13 @@ function App() {
 
 ## Call table
 
+| Mode             | RN Runtime | UI Runtime | Worker Runtime |
+| ---------------- | ---------- | ---------- | -------------- |
+| Bundle Mode      | Supported  | Supported  | Supported      |
+| Legacy Eval Mode | Supported  | Supported  | Supported      |
+
 ## Platform compatibility
+
+| Native    | Web       |
+| --------- | --------- |
+| Supported | Supported |

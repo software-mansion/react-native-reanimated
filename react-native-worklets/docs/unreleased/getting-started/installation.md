@@ -1,0 +1,107 @@
+# Installation
+
+Check the [compatibility table](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/compatibility) to find the Worklets version that supports your React Native version.
+
+## Step 1: Install the package
+
+Install `react-native-worklets` package from npm:
+
+NPM
+
+```bash
+npm install react-native-worklets
+```
+
+YARN
+
+```bash
+yarn add react-native-worklets
+```
+
+## Step 2: Configure your project
+
+The remaining steps depend on how you build your app — pick your framework:
+
+Expo
+
+Run prebuild to update the native code in the `ios` and `android` directories.
+
+NPM
+
+```bash
+npx expo prebuild
+```
+
+YARN
+
+```bash
+yarn expo prebuild
+```
+
+And that's it! The Worklets library is now configured in your Expo project.
+
+Don't I need the Worklets babel plugin?
+
+Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
+
+To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+
+### Clear Metro bundler cache (recommended)
+
+NPM
+
+```bash
+npx expo start --clear
+```
+
+YARN
+
+```bash
+yarn expo start --clear
+```
+
+React Native Community CLI
+
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
+
+```js {7}
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    'react-native-worklets/plugin',
+  ],
+};
+```
+
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options) section.
+
+Why do I need this?
+
+In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime)
+
+To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+
+### iOS
+
+While developing for iOS, make sure to install [pods](https://cocoapods.org/) first before running the app:
+
+```bash
+cd ios && pod install && cd ..
+```
+
+### Clear Metro bundler cache (recommended)
+
+NPM
+
+```bash
+npm start -- --reset-cache
+```
+
+YARN
+
+```bash
+yarn start --reset-cache
+```

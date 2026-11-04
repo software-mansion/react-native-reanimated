@@ -32,15 +32,15 @@ scheduleOnRuntime(runtime, async () => {
 });
 ```
 
-| API | Supported |
-| --- | --- |
-| `fetch`, `Headers`, `Request`, `Response` | ✅ |
-| `XMLHttpRequest` | ✅ |
-| `Blob`, `FileReader` | ✅ |
-| `AbortController`, `AbortSignal` | ✅ | |
-| `FormData` | String fields only, encoded as `multipart/form-data`. |
-| Response streaming | ❌ |
-| `WebSocket` | coming soon |
+| API                                       | Supported                                             |   |
+| ----------------------------------------- | ----------------------------------------------------- | - |
+| `fetch`, `Headers`, `Request`, `Response` | ✅                                                     |   |
+| `XMLHttpRequest`                          | ✅                                                     |   |
+| `Blob`, `FileReader`                      | ✅                                                     |   |
+| `AbortController`, `AbortSignal`          | ✅                                                     |   |
+| `FormData`                                | String fields only, encoded as `multipart/form-data`. |   |
+| Response streaming                        | ❌                                                     |   |
+| `WebSocket`                               | coming soon                                           |   |
 
 Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
 

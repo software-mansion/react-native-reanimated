@@ -10,9 +10,13 @@ React Native Worklets is a library that allows you to run JavaScript code in par
 
 Install `react-native-worklets` package from npm:
 
+NPM
+
 ```bash
 npm install react-native-worklets
 ```
+
+YARN
 
 ```bash
 yarn add react-native-worklets
@@ -22,11 +26,17 @@ yarn add react-native-worklets
 
 The remaining steps depend on how you build your app — pick your framework:
 
+Expo
+
 Run prebuild to update the native code in the `ios` and `android` directories.
+
+NPM
 
 ```bash
 npx expo prebuild
 ```
+
+YARN
 
 ```bash
 yarn expo prebuild
@@ -42,13 +52,19 @@ To learn more about the plugin go to [Worklets babel plugin](https://docs.swmans
 
 #### Clear Metro bundler cache (recommended)
 
+NPM
+
 ```bash
 npx expo start --clear
 ```
 
+YARN
+
 ```bash
 yarn expo start --clear
 ```
+
+React Native Community CLI
 
 When using [React Native Community CLI](https://github.com/react-native-community/cli), you need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
@@ -82,9 +98,13 @@ cd ios && pod install && cd ..
 
 #### Clear Metro bundler cache (recommended)
 
+NPM
+
 ```bash
 npm start -- --reset-cache
 ```
+
+YARN
 
 ```bash
 yarn start --reset-cache

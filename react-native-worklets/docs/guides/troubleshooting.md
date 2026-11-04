@@ -26,7 +26,7 @@
 
 **Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
 
-**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
 ### Mismatch between JavaScript code version and Worklets Babel plugin version
 
@@ -50,11 +50,11 @@ If this didn't help, you probably have a dependency that contains already transf
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Worklets](#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](#unknown-version-of-worklets-babel-plugin).
+See [Couldn't determine the version of the native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#unknown-version-of-worklets-babel-plugin).
 
 ### Mismatch between C++ code version and JavaScript code version
 
-See [Mismatch between JavaScript part and native part of Worklets](#mismatch-between-javascript-part-and-native-part-of-worklets) and [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+See [Mismatch between JavaScript part and native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-worklets) and [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
 ### TypeError: right operand of 'in' is not an object
 
@@ -194,7 +194,7 @@ Check [this page](https://docs.swmansion.com/react-native-worklets/docs/fundamen
 
 ### Tried to synchronously call a non-worklet function on the UI thread
 
-See [Tried to synchronously call a Remote Function](#tried-to-synchronously-call-a-remote-function).
+See [Tried to synchronously call a Remote Function](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-remote-function).
 
 ### Locally defined function passed to scheduleOnRN
 

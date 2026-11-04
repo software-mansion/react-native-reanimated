@@ -1,6 +1,6 @@
 # Compatibility table
 
-> **Info**
+> INFO
 >
 > The Worklets library isn't tested on the Legacy Architecture (Paper). We highly recommend migrating to the New Architecture (Fabric) prior to using the Worklets library.
 

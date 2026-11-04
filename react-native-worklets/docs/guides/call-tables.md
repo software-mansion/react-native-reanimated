@@ -10,6 +10,11 @@ In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bund
 
 Take [scheduleOnUI](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) as an example:
 
+| Mode             | RN Runtime | UI Runtime    | Worker Runtime |
+| ---------------- | ---------- | ------------- | -------------- |
+| Bundle Mode      | Supported  | Supported     | Supported      |
+| Legacy Eval Mode | Supported  | Not supported | Not supported  |
+
 A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
 
 ```tsx {9-11,14-16,20-22}

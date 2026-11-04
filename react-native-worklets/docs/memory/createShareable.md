@@ -1,6 +1,6 @@
 # createShareable
 
-> **Note**
+> NOTE
 >
 > This page describes the API to create the new [Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](https://docs.swmansion.com/react-native-worklets/docs/memory/makeShareable) function.
 

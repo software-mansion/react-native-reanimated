@@ -1,3 +1,5 @@
+Deprecated API.
+
 # runOnRuntime
 
 `runOnRuntime` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on a separate worklet runtime on a separate thread.
@@ -44,7 +46,7 @@ A reference to a function you want to execute on the worklet runtime passed as `
 
 `runOnRuntime` returns a function that accepts arguments for the function passed as the first argument.
 
-> **Info**
+> INFO
 >
 > Don't forget to call the function returned from `runOnRuntime`.
 

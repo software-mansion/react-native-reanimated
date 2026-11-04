@@ -1,3 +1,5 @@
+Deprecated API.
+
 # runOnUI
 
 `runOnUI` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
@@ -39,7 +41,7 @@ A reference to a function you want to execute on the [UI thread](https://docs.sw
 
 `runOnUI` returns a function that accepts arguments for the function passed as the first argument.
 
-> **Info**
+> INFO
 >
 > Don't forget to call the function returned from `runOnUI`.
 

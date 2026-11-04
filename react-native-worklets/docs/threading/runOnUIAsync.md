@@ -42,4 +42,13 @@ A reference to a function you want to execute on the UI thread. Arguments to you
 
 ## Call table
 
+| Mode             | RN Runtime | UI Runtime    | Worker Runtime |
+| ---------------- | ---------- | ------------- | -------------- |
+| Bundle Mode      | Supported  | Supported     | Supported      |
+| Legacy Eval Mode | Supported  | Not supported | Not supported  |
+
 ## Platform compatibility
+
+| Native    | Web       |
+| --------- | --------- |
+| Supported | Supported |

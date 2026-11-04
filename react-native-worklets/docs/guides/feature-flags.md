@@ -4,13 +4,13 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                          |              Type               | Added in | Removed in | Default value |
-| -------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)         | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  0.13.0   |    `false`    |
-| [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](#enable_cross_runtime_stack_traces) | [static](#static-feature-flags) |  0.9.0   |  –   |    `true`     |
+| Feature flag name                                                                                                                                   |                                                    Type                                                   | Added in | Removed in | Default value |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------: | :------: | :--------: | :-----------: |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#ios_dynamic_framerate_enabled)         | [static](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#static-feature-flags) |   0.6.0  |      –     |     `true`    |
+| [`FETCH_PREVIEW_ENABLED`](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#fetch_preview_enabled)                         | [static](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#static-feature-flags) |   0.8.0  |   0.13.0   |    `false`    |
+| [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#enable_cross_runtime_stack_traces) | [static](https://docs.swmansion.com/react-native-worklets/docs/guides/feature-flags#static-feature-flags) |   0.9.0  |      –     |     `true`    |
 
-> **Info**
+> INFO
 >
 > Feature flags available in `react-native-reanimated` are listed [on this page](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags).
 
@@ -93,7 +93,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
 
-> **Warning**
+> WARNING
 >
 > Static feature flags are not supported in environments where the Worklets library is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
 >
@@ -118,12 +118,12 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 |                                             | Static feature flags | Dynamic feature flags |
 | ------------------------------------------- | :------------------: | :-------------------: |
-| Value is known during app build             |          ✅          |          ❌           |
-| Value may change during app lifetime        |          ❌          |          ✅           |
-| Value change requires app rebuild           |          ✅          |          ❌           |
-| Can be changed via public JavaScript API    |          ❌          |          ✅           |
-| Can be changed via app's `package.json`     |          ✅          |          ❌           |
-| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
+| Value is known during app build             |           ✅          |           ❌           |
+| Value may change during app lifetime        |           ❌          |           ✅           |
+| Value change requires app rebuild           |           ✅          |           ❌           |
+| Can be changed via public JavaScript API    |           ❌          |           ✅           |
+| Can be changed via app's `package.json`     |           ✅          |           ❌           |
+| Can be changed when using Expo Go or RNRepo |           ❌          |           ✅           |
 
 ## Remarks for contributors
 

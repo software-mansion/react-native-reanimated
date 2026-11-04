@@ -1,3 +1,5 @@
+Deprecated API.
+
 # callMicrotasks
 
 `callMicrotasks` flushes the microtask queue from the UI thread.
