@@ -281,8 +281,16 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
         const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
             before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
+        const auto sharedTransitionConfig = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         auto &run = startSharedTransitionRun(
-            before, sharedTag, collectedTransition.nodes, config, true, transaction, propsParserContext);
+            before,
+            sharedTag,
+            collectedTransition.nodes,
+            config,
+            true,
+            sharedTransitionConfig ? sharedTransitionConfig->contentFade : std::nullopt,
+            transaction,
+            propsParserContext);
         restartContentFade(run);
 
         startProgressTransition(
@@ -398,6 +406,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
     const std::shared_ptr<Serializable> &config,
     const bool gestureDriven,
+    const std::optional<SharedTransitionContentFade> &contentFade,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   auto &run = sharedElements_[sharedTag].run;
@@ -428,8 +437,8 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       finishSharedTransition(carried->sharedTag, carried->element, transaction, propsParserContext);
     }
     run = SharedTransitionRun{.carrier = carrier};
-    if (const auto options = layoutAnimationsManager_->getSharedTransitionContentFade(before.tag)) {
-      run->contentFade = ContentFade{.options = *options, .range = {1, 1}};
+    if (contentFade) {
+      run->contentFade = ContentFade{.options = *contentFade, .range = {1, 1}};
     }
     detachCarrier(*run, carrierViewWithStyleOf(before, carrier, propsParserContext), transaction, propsParserContext);
   }
@@ -977,8 +986,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto &transform = transition.transform;
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
-      const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-          before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+      const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
       const bool sourceOffWindow = isOffWindow(collectedTransition.nodes[BEFORE]);
       if (sourceOffWindow) {
         endSharedTransitionOf(sharedTag, transaction, propsParserContext);
@@ -999,14 +1007,21 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
       auto &run = startSharedTransitionRun(
-          before, sharedTag, collectedTransition.nodes, config, false, transaction, propsParserContext);
+          before,
+          sharedTag,
+          collectedTransition.nodes,
+          config->animation,
+          false,
+          config->contentFade,
+          transaction,
+          propsParserContext);
 
       startSharedTransition(
           run.carrier->current.tag,
           run.carrierStartView,
           asCarrierView(after, run.carrier, propsParserContext),
           ownCarrierView(after, run.carrier, propsParserContext).props,
-          config,
+          config->animation,
           restartContentFade(run));
       run.targetOffWindow = isOffWindow(afterNode);
       if (run.targetOffWindow) {
@@ -1029,8 +1044,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           !completedAnimations_.contains(carrierTag)) {
         continue;
       }
-      const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
-          before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION);
+      const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
       if (!config) {
         continue;
       }
@@ -1051,7 +1065,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         }
       }
       run.target = afterNode;
-      run.config = config;
+      run.config = config->animation;
       adjustForNativePlacement(collectedTransition, AFTER);
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
@@ -1060,7 +1074,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierTag,
             carrierAfter,
             ownCarrierView(after, run.carrier, propsParserContext).props,
-            config,
+            config->animation,
             restartContentFade(run));
         continue;
       }
@@ -1070,7 +1084,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierAnimation(run).currentView,
             carrierAfter,
             ownCarrierView(after, run.carrier, propsParserContext).props,
-            config,
+            config->animation,
             restartContentFade(run));
       }
     }

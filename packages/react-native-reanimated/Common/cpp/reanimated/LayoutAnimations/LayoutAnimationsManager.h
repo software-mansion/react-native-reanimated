@@ -41,6 +41,11 @@ struct SharedTransitionContentFade {
   double fadeOutEnd = 1;
 };
 
+struct SharedTransitionConfig {
+  std::shared_ptr<Serializable> animation;
+  std::optional<SharedTransitionContentFade> contentFade;
+};
+
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
@@ -61,7 +66,7 @@ class LayoutAnimationsManager {
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
-  std::optional<SharedTransitionContentFade> getSharedTransitionContentFade(const int tag);
+  std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -81,10 +86,8 @@ class LayoutAnimationsManager {
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
-  std::unordered_map<int, SharedTransitionContentFade> contentFadesForNativeID_;
-  std::unordered_map<int, SharedTransitionContentFade> contentFades_;
+  std::unordered_map<int, SharedTransitionConfig> sharedTransitionsForNativeID_;
+  std::unordered_map<int, SharedTransitionConfig> sharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
@@ -95,7 +98,7 @@ class LayoutAnimationsManager {
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
   // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `progressSharedTransitions_`,
-  // `progressSharedTransitionsForNativeID_`, the content fade-ins, `enteringAnimations_`, `exitingAnimations_`,
+  // `progressSharedTransitionsForNativeID_`, `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 

@@ -459,6 +459,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       const std::shared_ptr<Serializable> &config,
       bool gestureDriven,
+      const std::optional<SharedTransitionContentFade> &contentFade,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void finishEndedSharedTransitions(
