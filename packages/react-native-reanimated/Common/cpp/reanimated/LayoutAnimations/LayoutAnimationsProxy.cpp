@@ -116,6 +116,9 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
 #endif
+#ifdef ANDROID
+  releaseViewTransitions_ = dependencies.releaseViewTransitions;
+#endif
 }
 
 void LayoutAnimationsProxy::warnAboutStaleSynchronousProps(
@@ -309,6 +312,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
   releaseDroppedViews();
 #ifdef ANDROID
+  releaseViewTransitionsOfMovedCarriers(filteredMutations);
   holdFramesUntilBatchIsQueued(filteredMutations);
   keepCarriersDetachedUntilFramesAreQueued(filteredMutations);
 #endif
@@ -1357,6 +1361,60 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
     cleanupPullScheduled_ = true;
     scheduleCleanupPull();
   }
+}
+
+// The Remove of a held view keeps its parent, so the Insert into the root would fail. A hold can appear until the
+// batch mounts, so the release repeats before every mount until the batch is in the queue.
+void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
+  std::unordered_set<Tag> removedFromParents;
+  std::vector<Tag> movedToRoot;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Remove) {
+      const auto tag = mutation.oldChildShadowView.tag;
+      if (mutation.parentTag == surfaceId_) {
+        std::erase(movedToRoot, tag);
+      } else {
+        removedFromParents.insert(tag);
+      }
+    } else if (mutation.type == ShadowViewMutation::Insert && mutation.parentTag == surfaceId_) {
+      const auto tag = mutation.newChildShadowView.tag;
+      const auto nodeIt = lightNodes_.find(tag);
+      if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() && nodeIt->second->isDetached) {
+        movedToRoot.push_back(tag);
+      }
+    }
+  }
+  if (movedToRoot.empty()) {
+    return;
+  }
+  releaseViewTransitions_(movedToRoot, false);
+  if (isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
+    return;
+  }
+  jsInvoker_->invokeAsync([this, weakThis = weak_from_this(), tags = std::move(movedToRoot)](jsi::Runtime &) mutable {
+    if (const auto strongThis = weakThis.lock()) {
+      releaseViewTransitions_(tags, true);
+    }
+  });
+}
+
+bool LayoutAnimationsProxy::isInRemovedScreen(
+    const std::shared_ptr<LightNode> &node,
+    const ShadowViewMutationList &mutations) const {
+  std::unordered_set<Tag> removedScreens;
+  for (const auto &mutation : mutations) {
+    const auto componentName = mutation.oldChildShadowView.componentName;
+    if (mutation.type == ShadowViewMutation::Remove && componentName != nullptr &&
+        !std::strcmp(componentName, "RNSScreen")) {
+      removedScreens.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  for (auto ancestor = node->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
+    if (removedScreens.contains(ancestor->current.tag)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // The push model queues the batch after the pull returns, in the same JS task. A frame that the UI thread pulls

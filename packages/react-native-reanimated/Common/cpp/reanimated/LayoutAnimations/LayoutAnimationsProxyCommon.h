@@ -96,6 +96,7 @@ struct LayoutAnimationsProxyDependencies {
   std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ReleaseViewTransitionsFunction releaseViewTransitions;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
   SynchronousPropsReader readSynchronousProps;
 #endif
