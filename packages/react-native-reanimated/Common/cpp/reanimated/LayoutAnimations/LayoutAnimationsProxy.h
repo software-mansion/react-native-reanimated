@@ -250,6 +250,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       double contentOpacity,
       const PropsParserContext &propsParserContext) const;
+  double ownOpacity(const std::shared_ptr<LightNode> &node, const ShadowView &animatedView) const;
   void applyContentOpacity(
       const std::shared_ptr<LightNode> &child,
       double fromContentOpacity,
@@ -488,6 +489,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void deferRestore(const RestoreRequest &request) const;
   void forgetHiddenView(Tag tag) const;
   std::unordered_set<Tag> hiddenViewTags() const;
+  std::unordered_set<Tag> viewTagsKeptHidden() const;
   void queuePendingRestores(TransactionMeta &transaction) const;
   bool isInSharedTransition(const std::shared_ptr<LightNode> &node) const;
 
