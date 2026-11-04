@@ -1,5 +1,9 @@
 'use strict';
 
+import {
+  installLazyBundleRegistrar,
+  makeLazyBundleRegistrar,
+} from './bundleMode/lazyBundles';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import {
   getMemorySafeCapturableConsole,
@@ -121,6 +125,8 @@ export function createWorkletRuntime(
     );
   }
 
+  const lazyBundleRegistrar = makeLazyBundleRegistrar();
+
   return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
@@ -128,6 +134,7 @@ export function createWorkletRuntime(
       setupSerializer();
       if (__DEV__) {
         setupConsoleForwarding(runtimeBoundCapturableConsole!);
+        installLazyBundleRegistrar(lazyBundleRegistrar);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);

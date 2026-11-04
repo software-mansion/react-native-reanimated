@@ -30,10 +30,10 @@ Serializable is a type of shared memory that holds an immutable value that can b
 
 <SerializableSupportedTypesTable/>
 
-If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.
+If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](./registerCustomSerializable.mdx) to define your own serialization and deserialization logic.
 
 ## Remarks
 
 - The JavaScript value of a Serializable is a reference wrapper that only holds the C++ side in its `jsi::NativeState`.
 - The prop `__nativeStateSerializableJSRef` present on the reference doesn't exist in runtime - it's only a TypeScript definition to tell you what type of value is held by the Serializable.
-- Functions that aren't worklets are serialized as references to function instances on the respective Runtime, meaning that they can't be invoked on other runtimes, only passed around.
+- Functions that aren't worklet functions are serialized as references to function instances on the respective Runtime, meaning that they can't be invoked on other runtimes, only passed around.

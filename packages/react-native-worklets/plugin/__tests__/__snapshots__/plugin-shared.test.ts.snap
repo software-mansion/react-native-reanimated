@@ -20,6 +20,22 @@ testJs1.__pluginVersion = "x.y.z";
 export default testJs1;"
 `;
 
+exports[`babel plugin core closure handling allows assigning to a captured variable 1`] = `
+"export default (function foo_testJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    if (x > 1) {
+      x = 0;
+    }
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  return foo;
+});"
+`;
+
 exports[`babel plugin core closure handling captures locally bound variables shadowing globals 1`] = `
 "export default (function f_testJs1Factory([console]) {
   const f = function () {

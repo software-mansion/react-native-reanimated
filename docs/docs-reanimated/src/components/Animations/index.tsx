@@ -1,40 +1,44 @@
-import React, { Fragment } from 'react';
-import { useState, useRef, useEffect } from 'react';
-import clsx from 'clsx';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './styles.module.css';
 
 import AnimationsBackground from '@site/src/components/Animations/AnimationsBackground';
-import AnimationsSection from '@site/src/components/Animations/AnimationsSection';
-import GyroscopeExample from '@site/src/components/ReanimatedExamples/GyroscopeExample';
+import AnimationsSection, {
+  Section,
+} from '@site/src/components/Animations/AnimationsSection';
+import Phone from '@site/src/components/Animations/Phone';
+import {
+  KeyboardDemo,
+  SensorDemo,
+} from '@site/src/components/Animations/demos';
 import SpringBasicExample from '../ReanimatedExamples/SpringBasicExample';
 import DecayBasicExample from '../ReanimatedExamples/DecayBasicExample';
 import FadeTileExample from '../ReanimatedExamples/FadeTileExample';
-import SharedElementExample from '../ReanimatedExamples/SharedElementExample';
-import KeyboardExample from '../ReanimatedExamples/KeyboardExample';
 
-const sections = [
+const sections: Section[] = [
   {
+    id: 'animations',
     title: 'Animations',
     body: 'Animate every React Native prop on iOS, Android and the Web up to 120 fps.',
     code: `function App() {
   const width = useSharedValue(100);
   const handlePress = () => {
+    // highlight-next-line
     width.value = withSpring(width.value + 50);
   };
   return <Animated.View style={{ ...styles.box, width }} />
 }`,
-    component: <SpringBasicExample />,
-    tabletComponent: <SpringBasicExample initialOffset={100} />,
-    mobileComponent: <SpringBasicExample initialOffset={35} />,
+    render: () => <SpringBasicExample initialOffset={56} />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation',
   },
   {
+    id: 'gestures',
     title: 'Gestures',
     body: 'Gesture smoothly thanks to Reanimated’s integration with React Native Gesture Handler.',
-    code: `import { Gesture, GestureDetector } from ?"react-native-gesture-handler";
- 
+    code: `import { Gesture, GestureDetector } from "react-native-gesture-handler";
+
 function App() {
+  // highlight-next-line
   const pan = Gesture.Pan();
 
   return (
@@ -43,142 +47,148 @@ function App() {
     </GestureDetector>
   );
 }`,
-    component: <DecayBasicExample />,
-    label: 'Grab and drag the square',
+    render: () => (
+      <div className={styles.gestureInset}>
+        <DecayBasicExample />
+      </div>
+    ),
+    hint: 'Grab and fling the square',
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures',
   },
   {
+    id: 'layout-animations',
     title: 'Layout animations',
     body: 'Animate views when they are added and removed from the view hierarchy. Just like that.',
     code: `function App() {
+  // highlight-next-line
   return <Animated.View entering={FadeIn} exiting={FadeOut} />;
 }`,
-    component: <FadeTileExample />,
-    mobileComponent: <FadeTileExample isMobile={true} />,
+    render: () => <FadeTileExample isMobile />,
+    hint: 'Add a few, then tap × to remove',
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations',
   },
   {
+    id: 'sensor-animations',
     title: 'Sensor-based animations',
     body: 'Connect your animations to a gyroscope or accelerometer with just one hook. It’s that easy.',
-    code: `const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
+    code: `// highlight-next-line
+const gyroscope = useAnimatedSensor(SensorType.GYROSCOPE);
 
 useDerivedValue(() => {
   const { x, y, z } = gyroscope.sensor.value;
 });`,
-    component: <GyroscopeExample />,
+    render: () => <SensorDemo />,
+    motion: 'tilt',
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor',
   },
   {
+    id: 'keyboard-animations',
     title: 'Keyboard-based animations',
     body: 'Create animations based on the device keyboard state and position.',
     code: `function App() {
+  // highlight-next-line
   const keyboard = useAnimatedKeyboard();
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -keyboard.height.value }],
-  });
+  }));
   //...
 }`,
-    component: <KeyboardExample />,
+    render: () => <KeyboardDemo />,
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard',
   },
 ];
 
-const Animations = () => {
-  const [activeSection, setActiveSection] = useState(-1);
-  const initialScrollPosition = useRef(null);
-  const containerRef = useRef(null);
+const DESKTOP_QUERY = '(min-width: 1024px)';
 
-  const scrollToElement = (id: string) => {
-    const element = document.getElementById(id);
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+// null until mounted, so neither layout's phone renders during SSR.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const containerTop = containerRef.current.getBoundingClientRect().top;
+    const query = window.matchMedia(DESKTOP_QUERY);
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
 
-      if (containerTop < 200) {
-        initialScrollPosition.current = Math.abs(containerTop);
+  return isDesktop;
+}
 
-        const currentSectionIndex = sections.findIndex((_, idx) => {
-          const sectionRef = document.getElementById(idx.toString());
-          if (sectionRef) {
-            const sectionTop = sectionRef.offsetTop;
-            const height = sectionRef.offsetHeight;
-            const sectionBottom = sectionTop + height;
-            return (
-              initialScrollPosition.current + 0.15 * height >= sectionTop &&
-              initialScrollPosition.current < sectionBottom
+const Animations = () => {
+  const [activeSection, setActiveSection] = useState(0);
+  const chapterRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const isDesktop = useIsDesktop();
+
+  useEffect(() => {
+    // A chapter becomes active when it crosses the middle band of the viewport.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(
+              Number((entry.target as HTMLElement).dataset.index)
             );
           }
-          return false;
         });
-        if (containerRef.current.getBoundingClientRect().bottom - 600 < 0) {
-          setActiveSection(-1);
-        } else {
-          setActiveSection(currentSectionIndex);
-        }
-      } else {
-        initialScrollPosition.current = null;
-        setActiveSection(-1);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+      },
+      { rootMargin: '-45% 0px -45% 0px' }
+    );
+    chapterRefs.current.forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
   }, []);
+
+  const scrollToSection = useCallback((idx: number) => {
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+    chapterRefs.current[idx]?.scrollIntoView({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  }, []);
+
+  const active = sections[activeSection];
 
   return (
     <AnimationsBackground>
-      <div className={styles.animationsContainer}>
-        {/* Copy hidden for now */}
-        {/* <div>
-          <h3>Play with the animations!</h3>
-          <h5>
-            Check out the animations and check how you can implement it to your
-            product.
-          </h5>
-        </div> */}
-        <div ref={containerRef}>
-          {sections.map((section, idx) => (
-            <Fragment key={idx}>
-              <AnimationsSection
-                title={section.title}
-                body={section.body}
-                code={section.code}
-                component={section.component}
-                label={section.label}
-                docsLink={section.docsLink}
-                mobileComponent={section.mobileComponent}
-                tabletComponent={section.tabletComponent}
-                idx={idx}
+      <div className={styles.showcase}>
+        {isDesktop && (
+          <div className={styles.stage}>
+            <div className={styles.stageSticky}>
+              <Phone
+                title={active.title}
+                hint={active.hint}
+                motion={active.motion}
+                screenKey={active.id}
+                render={active.render}
+                pager={{
+                  labels: sections.map((section) => section.title),
+                  active: activeSection,
+                  onSelect: scrollToSection,
+                }}
               />
-            </Fragment>
-          ))}
-        </div>
-        <div
-          className={clsx(
-            styles.dotsContainer,
-            activeSection !== -1 ? styles.showDots : ''
-          )}>
-          {sections.map((_, idx) => (
-            <div
-              key={idx}
-              onClick={() => scrollToElement(idx.toString())}
-              className={clsx(
-                styles.dot,
-                activeSection === idx && styles.active
-              )}
+            </div>
+          </div>
+        )}
+        <ol className={styles.chapters}>
+          {sections.map((section, idx) => (
+            <AnimationsSection
+              key={section.id}
+              ref={(el) => {
+                chapterRefs.current[idx] = el;
+              }}
+              section={section}
+              index={idx}
+              active={idx === activeSection}
+              withPhone={isDesktop === false}
             />
           ))}
-        </div>
+        </ol>
       </div>
     </AnimationsBackground>
   );

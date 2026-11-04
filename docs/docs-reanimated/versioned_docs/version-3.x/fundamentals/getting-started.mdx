@@ -14,7 +14,7 @@ The goal of the _Fundamentals_ section is to help you gain a strong foundation o
 
 React Native Reanimated is a powerful animation library built by [Software Mansion](https://swmansion.com/).
 
-With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](./glossary.mdx#ui-thread).
 
 ## Quick start
 
@@ -89,9 +89,9 @@ Add `react-native-reanimated/plugin` plugin to your `babel.config.js`.
 <details>
   <summary>Why do I need this?</summary>
 
-  In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+  In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](./glossary.mdx#worklet)) to allow them to be passed and run on the UI thread.
 
-  To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#worklets-babel-plugin) section.
+  To learn more about the plugin head onto to [Reanimated babel plugin](./glossary.mdx#reanimated-babel-plugin) section.
 </details>
 
 ### Step 3: Wrap metro config with reanimated wrapper (recommended)
@@ -116,7 +116,7 @@ module.exports = wrapWithReanimatedMetroConfig(config);
 
   Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
 
-  To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
+  To learn more about this feature, head onto to [Accurate Call Stacks](../debugging/accurate-call-stacks.mdx).
 </details>
 
 ### Step 4: Clear Metro bundler cache (recommended)
@@ -204,4 +204,4 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 Make sure to list `react-native-reanimated/plugin` last.
 
-More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
+More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](../guides/web-support.mdx) guide.

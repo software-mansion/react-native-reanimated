@@ -22,6 +22,8 @@ export interface AnimatedProps extends Record<string, unknown> {
   styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
+export type AnimatableDOMElement = HTMLElement | SVGElement;
+
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
@@ -29,7 +31,7 @@ export interface ViewInfo {
   // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
   // convention used in CSS.
   reactViewName?: string;
-  DOMElement?: HTMLElement | null;
+  DOMElement?: AnimatableDOMElement | null;
 }
 
 export interface IInlinePropManager {
@@ -131,6 +133,12 @@ export interface IAnimatedComponentInternalBase {
   _viewInfo?: ViewInfo;
 
   /**
+   * Re-resolves `getAnimatableRef()` of the wrapped component so event
+   * registration follows the host instance it currently points at.
+   */
+  _refreshComponentRef: () => void;
+
+  /**
    * Resolves the tag of the host view backing this component. Used for Layout
    * Animations, Animated Styles and event registration.
    */
@@ -152,7 +160,7 @@ export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBa
   _NativeEventsManager?: INativeEventsManager;
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
-  _syncStylePropsBackToReact: (props: StyleProps) => void;
+  _syncStylePropsBackToReact: (props: StyleProps, style: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

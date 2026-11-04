@@ -8,7 +8,7 @@ sidebar_label: 'About'
 
 ## What is Worklets Babel Plugin?
 
-The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](../fundamentals/runtimeKinds.mdx#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](../fundamentals/glossary.mdx#to-workletize).
 
 - A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -164,11 +164,11 @@ const style = scheduleOnUI((greetings: string) => {
 
 This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
-Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
+Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
 
-### Referencing worklets
+### Referencing worklet functions
 
-You can define worklets **before** they are used and the plugin will autoworkletize them too:
+You can define worklet functions **before** they are used and the plugin will autoworkletize them too:
 
 ```ts
 function foo() {
@@ -182,9 +182,9 @@ function foo() {
 const style = useAnimatedStyle(foo);
 ```
 
-### Objects aggregating worklets
+### Objects aggregating worklet functions
 
-In some APIs, like `useAnimatedScrollHandler` you can pass an object that contains worklets instead of a function:
+In some APIs, like `useAnimatedScrollHandler` you can pass an object that contains worklet functions instead of a function:
 
 ```ts
 const handlerObject = {
@@ -231,7 +231,7 @@ The plugin cannot infer whether a function is autoworkletizable or not in some c
 
 ### Imports
 
-When importing a function from another file or a module and using it as a worklet, you must manually add the `'worklet'` directive to the function:
+When importing a function from another file or a module and using it as a worklet function, you must manually add the `'worklet'` directive to the function:
 
 ```ts
 // foo.ts
@@ -270,15 +270,15 @@ const foo = someCondition
 const style = useAnimatedStyle(foo);
 ```
 
-In such cases we recommend either handling the conditional logic in the worklet itself or refactoring your code to eliminate the need for conditional worklets.
+In such cases we recommend either handling the conditional logic in the worklet function itself or refactoring your code to eliminate the need for conditional worklet functions.
 
 ## Pitfalls
 
 There are some patterns that won't work with the plugin.
 
-### Hoisting worklets
+### Hoisting worklet functions
 
-Worklets aren't hoisted. This means that you can't use worklets before they are defined:
+Worklet functions aren't hoisted. This means that you can't use worklet functions before they are defined:
 
 ```ts
 // The following line crashes,

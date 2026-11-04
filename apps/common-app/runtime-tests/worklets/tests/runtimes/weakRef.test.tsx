@@ -42,17 +42,21 @@ describe('WeakRef on Worklet Runtime', () => {
       await runOnRuntimeAsyncWithId(runtimeId, () => {
         'worklet';
         const target = {};
+        globalThis.weakRefTestTarget = target;
         globalThis.weakRefTest = new WeakRef(target);
       });
 
-      const isTargetAliveBeforeGC = await runOnRuntimeAsyncWithId(
+      const isTargetKeptDuringJob = await runOnRuntimeAsyncWithId(
         runtimeId,
         () => {
           'worklet';
-          return globalThis.weakRefTest?.deref() !== undefined;
+          const wasAlive = globalThis.weakRefTest?.deref() !== undefined;
+          delete globalThis.weakRefTestTarget;
+          globalThis.gc!();
+          return wasAlive && globalThis.weakRefTest?.deref() !== undefined;
         }
       );
-      expect(isTargetAliveBeforeGC).toBe(true);
+      expect(isTargetKeptDuringJob).toBe(true);
 
       const wasTargetCollected = await runOnRuntimeAsyncWithId(
         runtimeId,
@@ -89,4 +93,5 @@ describe('WeakRef on Worklet Runtime', () => {
 
 declare global {
   var weakRefTest: WeakRef<object> | undefined;
+  var weakRefTestTarget: object | undefined;
 }

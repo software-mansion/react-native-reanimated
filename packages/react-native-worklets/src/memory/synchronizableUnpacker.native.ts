@@ -1,6 +1,5 @@
 /* eslint-disable n/no-missing-require */
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-require-imports */
 'use strict';
 
 import {

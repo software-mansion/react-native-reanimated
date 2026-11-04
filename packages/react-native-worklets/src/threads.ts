@@ -54,6 +54,13 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   );
 }
 
+export function runOnRNSync<Args extends unknown[], ReturnValue>(
+  fun: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue {
+  return fun(...args);
+}
+
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args

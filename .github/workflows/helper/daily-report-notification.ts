@@ -3,6 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildBundleCostSection } from './bundle-cost-report.ts';
+import {
+  formatNightlyOwnerLine,
+  RUNTIME_TESTS_NIGHTLY_WORKFLOWS,
+} from './nightly-owner.ts';
 import { postToSlack } from './slack.ts';
 
 async function main(): Promise<void> {
@@ -357,6 +361,10 @@ function formatSlackMessage(
     );
   }
 
+  if (failingBadges.some(isRuntimeTestsNightly)) {
+    sections.push(formatNightlyOwnerLine(new Date()));
+  }
+
   if (nightly.kind === 'unknown') {
     sections.push(
       [
@@ -383,6 +391,12 @@ function formatSlackMessage(
   }
 
   return sections.join('\n\n');
+}
+
+function isRuntimeTestsNightly(badge: BadgeResult): boolean {
+  return RUNTIME_TESTS_NIGHTLY_WORKFLOWS.some((file) =>
+    badge.workflowUrl?.endsWith(`/${file}`)
+  );
 }
 
 const MAX_LISTED_JOBS = 5;

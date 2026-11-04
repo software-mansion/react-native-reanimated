@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # createSerializable
 
-Recursively converts JavaScript values into [Serializable](/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
+Recursively converts JavaScript values into [Serializable](./serializable.mdx) references that can be passed to different JavaScript Runtimes.
 
 The returned reference cannot be manipulated as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
 
@@ -72,7 +72,7 @@ object.a = 10; // <-- Warning: You can't mutate the object after serializing it
 
 - This function automatically detects the type of the input value and applies appropriate serialization strategies.
 - For objects and arrays, it recursively processes nested properties.
-- This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
+- This function is rarely used as in almost all cases the Worklets library handles the creation of Serializables for you.
 - This function includes cycle detection to prevent infinite recursion.
 - `jsi::NativeState` of a passed value is preserved during serialization.
 - `createSerializable` can be called from any Runtime.

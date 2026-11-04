@@ -22,7 +22,8 @@ if(${REANIMATED_PROFILING})
 endif()
 
 if(${IS_REANIMATED_EXAMPLE_APP})
-  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
+  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic\
+    -Werror=deprecated-declarations")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -78,6 +79,7 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/utils/platform/android"
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)

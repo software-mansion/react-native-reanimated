@@ -177,6 +177,10 @@ export interface LayoutAnimationBatchItem {
     | SerializableRef<ReanimatedKeyframe | LayoutAnimationFunction>
     | undefined;
   sharedTransitionTag?: string;
+  sharedTransitionContentFade?: {
+    fadeIn: SerializableRef<EntryExitAnimationFunction>;
+    fadeOutEnd: number;
+  };
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -343,7 +347,7 @@ export type SensorConfig = {
   iosReferenceFrame: IOSReferenceFrame;
 };
 
-export type AnimatedSensor<T extends Value3D | ValueRotation> = {
+export type AnimatedSensor<T extends SensorValue> = {
   sensor: SharedValue<T>;
   unregister: () => void;
   isAvailable: boolean;
@@ -380,6 +384,16 @@ export type ValueRotation = {
   interfaceOrientation: InterfaceOrientation;
 };
 
+export type SensorValueMap = {
+  [SensorType.ACCELEROMETER]: Value3D;
+  [SensorType.GYROSCOPE]: Value3D;
+  [SensorType.GRAVITY]: Value3D;
+  [SensorType.MAGNETIC_FIELD]: Value3D;
+  [SensorType.ROTATION]: ValueRotation;
+};
+
+export type SensorValue = SensorValueMap[SensorType];
+
 export enum InterfaceOrientation {
   ROTATION_0 = 0,
   ROTATION_90 = 90,
@@ -393,7 +407,9 @@ export type ShadowNodeWrapper = {
 
 export type SettledUpdate = {
   viewTag: number;
-  styleProps: StyleProps | null;
+  props: StyleProps;
+  style: StyleProps;
+  keysLastWrittenByAnimatedStyle: string[];
 };
 
 export enum KeyboardState {

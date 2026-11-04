@@ -1,20 +1,31 @@
 package com.swmansion.reanimated
 
 import android.content.ContentResolver
+import android.graphics.Color
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewParent
+import androidx.core.view.children
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.UIManager
+import com.facebook.react.bridge.UIManagerListener
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
+import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
+import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.css.CSSPlatformTransitionsManager
@@ -29,7 +40,10 @@ import com.swmansion.reanimated.pseudoSelectors.PseudoSelectorManager
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 @Suppress("KotlinJniMissingFunction")
 @OptIn(FrameworkAPI::class)
@@ -64,9 +78,45 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
+    // Guards the C++ state that invalidateCpp() destroys against calls from the UI thread.
+    private val mNativeStateLock = ReentrantReadWriteLock()
+
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
+    private val tracksSynchronousWrites: Boolean
+
+    private enum class CarrierBatch {
+        NOT_QUEUED,
+        QUEUED,
+        IN_NEXT_DISPATCH,
+    }
+
+    private val pendingViewTransitionReleases = ConcurrentHashMap<Int, CarrierBatch>()
+
+    @OptIn(UnstableReactNativeAPI::class)
+    private val mountListener =
+        object : UIManagerListener {
+            override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
+
+            override fun willMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { releasePendingViewTransitions() }
+
+            override fun didMountItems(uiManager: UIManager) =
+                ifNotInvalidated(Unit) {
+                    if (tracksSynchronousWrites) {
+                        rewriteSynchronousProps()
+                    }
+                    // A dispatch takes its items before `willMountItems`, so the dispatch that sees a queued batch
+                    // may not run it. Only a dispatch that starts after this one is known to have it.
+                    pendingViewTransitionReleases.replaceAll { _, batch ->
+                        if (batch == CarrierBatch.QUEUED) CarrierBatch.IN_NEXT_DISPATCH else batch
+                    }
+                }
+
+            override fun didDispatchMountItems(uiManager: UIManager) = Unit
+
+            override fun didScheduleMountItems(uiManager: UIManager) = Unit
+        }
 
     constructor(context: ReactApplicationContext, nodesManager: NodesManager) {
         context.assertOnJSQueueThread()
@@ -106,9 +156,12 @@ open class NativeProxy {
                 callInvokerHolder,
                 mFabricUIManager,
             )
+        tracksSynchronousWrites = hasSynchronousWritesTracker()
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
+        @OptIn(UnstableReactNativeAPI::class)
+        mFabricUIManager.addUIManagerEventListener(mountListener)
     }
 
     private external fun initHybrid(
@@ -117,31 +170,67 @@ open class NativeProxy {
         fabricUIManager: FabricUIManager,
     ): HybridData
 
-    external fun isAnyHandlerWaitingForEvent(
+    private external fun isAnyHandlerWaitingForEventCpp(
         eventName: String,
         emitterReactTag: Int,
     ): Boolean
 
-    external fun performOperations()
+    private external fun performOperationsCpp()
 
-    external fun performNonLayoutOperations()
+    private external fun performNonLayoutOperationsCpp()
+
+    private external fun hasSynchronousWritesTracker(): Boolean
+
+    private external fun rewriteSynchronousProps()
 
     external fun installJSIBindings()
 
     private external fun invalidateCpp()
 
-    external fun toggleSlowAnimationsOnUIRuntime()
+    private external fun toggleSlowAnimationsOnUIRuntime()
 
     protected fun getHybridData(): HybridData = mHybridData
+
+    // tryLock, because the UI thread may hold the UI runtime lock, which could deadlock with invalidate()
+    private inline fun <T> ifNotInvalidated(
+        fallback: T,
+        block: () -> T,
+    ): T {
+        val readLock = mNativeStateLock.readLock()
+        if (!readLock.tryLock()) {
+            return fallback
+        }
+        try {
+            if (mInvalidated.get()) {
+                return fallback
+            }
+            return block()
+        } finally {
+            readLock.unlock()
+        }
+    }
+
+    fun isAnyHandlerWaitingForEvent(
+        eventName: String,
+        emitterReactTag: Int,
+    ): Boolean = ifNotInvalidated(false) { isAnyHandlerWaitingForEventCpp(eventName, emitterReactTag) }
+
+    fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
+
+    fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
             return
         }
+        @OptIn(UnstableReactNativeAPI::class)
+        mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
-        if (mHybridData.isValid) {
-            invalidateCpp()
+        mNativeStateLock.write {
+            if (mHybridData.isValid) {
+                invalidateCpp()
+            }
         }
     }
 
@@ -152,13 +241,77 @@ open class NativeProxy {
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         cssPlatformTransitionsManager.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        toggleSlowAnimationsOnUIRuntime()
+        ifNotInvalidated(Unit) { toggleSlowAnimationsOnUIRuntime() }
     }
 
     private fun addDevMenuOption() {
         // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
         DevMenuUtils.addDevMenuOption(mContext.get()!!) { toggleSlowAnimations() }
     }
+
+    // `react-native-screens` holds the views of a removed screen with `startViewTransition`, before the Remove of the
+    // batch that moves them to the root. The hold can come after the first release, so it repeats before every mount
+    // until the dispatch that runs the batch. A UI thread pull inside a running dispatch leaves its batch for the next one.
+    @DoNotStrip
+    fun releaseViewTransitions(
+        tags: IntArray,
+        isBatchQueued: Boolean,
+    ) {
+        val isOnUiThread = UiThreadUtil.isOnUiThread()
+        tags.forEach {
+            pendingViewTransitionReleases[it] =
+                if (isBatchQueued || isOnUiThread) CarrierBatch.QUEUED else CarrierBatch.NOT_QUEUED
+        }
+        if (isOnUiThread) {
+            tags.forEach { tag -> resolveViewOrNull(tag)?.let(::endViewTransitions) }
+        }
+    }
+
+    private fun releasePendingViewTransitions() {
+        val pending = pendingViewTransitionReleases.entries.iterator()
+        while (pending.hasNext()) {
+            val (tag, batch) = pending.next()
+            val view = resolveViewOrNull(tag)
+            view?.let(::endViewTransitions)
+            if (view == null || batch == CarrierBatch.IN_NEXT_DISPATCH) {
+                pendingViewTransitionReleases.remove(tag, batch)
+            }
+        }
+    }
+
+    private fun resolveViewOrNull(tag: Int): View? =
+        try {
+            mFabricUIManager.resolveView(tag)
+        } catch (_: IllegalViewOperationException) {
+            null
+        }
+
+    private fun endViewTransitions(view: View) {
+        val parent = view.parent as? ViewGroup ?: return
+        // Every screen above the view holds it once, and the holds cannot be counted.
+        val maxHolds = generateSequence<ViewParent>(parent) { it.parent }.count()
+        endViewTransitions(parent, view, maxHolds)
+    }
+
+    private fun endViewTransitions(
+        parent: ViewGroup,
+        view: View,
+        maxHolds: Int,
+    ) {
+        try {
+            repeat(maxHolds) { parent.endViewTransition(view) }
+        } catch (e: RuntimeException) {
+            Log.e("Reanimated", "Failed to end the view transition of ${view.id} in ${parent.javaClass.name}", e)
+        }
+        // `ScreenStack` finishes its own transition in `endViewTransition`.
+        if (view is ViewGroup && !isScreenContainer(view)) {
+            view.children.forEach { endViewTransitions(view, it, maxHolds) }
+        }
+    }
+
+    private fun isScreenContainer(view: View) =
+        generateSequence<Class<*>>(view.javaClass) { it.superclass }
+            .any { it.name == "com.swmansion.rnscreens.ScreenContainer" }
 
     @DoNotStrip
     fun attachPseudoSelector(
@@ -175,8 +328,12 @@ open class NativeProxy {
 
     @DoNotStrip
     fun requestRender(callback: AnimationFrameCallback) {
+        val guardedCallback =
+            object : NodesManager.OnAnimationFrame {
+                override fun onAnimationFrame(timestampMs: Double) = ifNotInvalidated(Unit) { callback.onAnimationFrame(timestampMs) }
+            }
         UiThreadUtil.assertOnUiThread()
-        mNodesManager!!.postOnAnimation(callback)
+        mNodesManager!!.postOnAnimation(guardedCallback)
     }
 
     @DoNotStrip fun getReanimatedJavaVersion(): String = BuildConfig.REANIMATED_VERSION_JAVA
@@ -201,6 +358,30 @@ open class NativeProxy {
                     "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
             )
         }
+    }
+
+    @DoNotStrip
+    fun obtainMountedViewProps(tag: Int): DoubleArray? {
+        if (!UiThreadUtil.isOnUiThread()) {
+            return null
+        }
+        val view =
+            try {
+                mFabricUIManager.resolveView(tag)
+            } catch (e: IllegalViewOperationException) {
+                null
+            } ?: return null
+        if (!view.isAttachedToWindow) {
+            return null
+        }
+        return doubleArrayOf(
+            PixelUtil.toDIPFromPixel(view.left.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.top.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble(),
+            PixelUtil.toDIPFromPixel(view.height.toFloat()).toDouble(),
+            view.alpha.toDouble(),
+            (BackgroundStyleApplicator.getBackgroundColor(view) ?: Color.TRANSPARENT).toDouble(),
+        )
     }
 
     @DoNotStrip
@@ -250,6 +431,10 @@ open class NativeProxy {
             }.apply { isAccessible = true }
     }
 
+    private val getViewExistsMethod by lazy {
+        runCatching { mountingManager.javaClass.getMethod("getViewExists", Int::class.javaPrimitiveType) }.getOrNull()
+    }
+
     @DoNotStrip
     fun synchronouslyUpdateUIProps(
         intBuffer: IntArray,
@@ -258,9 +443,13 @@ open class NativeProxy {
         cssPlatformTransitionsManager.onPropsWrittenSynchronously()
         SynchronousPropsBufferParser.parse(intBuffer, doubleBuffer) { viewTag, props ->
             try {
+                // The props stay in the registry, and the commit hook applies them to the shadow tree.
+                if (getViewExistsMethod?.invoke(mountingManager, viewTag) == false) {
+                    return@parse
+                }
                 updatePropsSynchronouslyMethod.invoke(mountingManager, viewTag, props)
             } catch (e: Exception) {
-                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag", e)
+                Log.w("Reanimated", "synchronouslyUpdateUIProps failed for tag $viewTag: ${e.cause ?: e}")
             }
         }
     }
@@ -328,10 +517,14 @@ open class NativeProxy {
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
-        handler.mCustomEventNamesResolver = mNodesManager!!.getEventNameResolver()
         handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
+        handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)
     }
+
+    @DoNotStrip
+    fun isSensorAvailable(sensorType: Int): Boolean =
+        reanimatedSensorContainer.isSensorAvailable(ReanimatedSensorType.getInstanceById(sensorType))
 
     @DoNotStrip
     fun registerSensor(
@@ -370,12 +563,12 @@ open class NativeProxy {
     @DoNotStrip
     fun getIsReducedMotion(): Boolean {
         val mContentResolver: ContentResolver = mContext.get()!!.contentResolver
-        val rawValue =
-            Settings.Global.getString(
+        val parsedValue =
+            Settings.Global.getFloat(
                 mContentResolver,
                 Settings.Global.TRANSITION_ANIMATION_SCALE,
+                1f,
             )
-        val parsedValue = if (rawValue != null) rawValue.toFloat() else 1f
         return parsedValue == 0f
     }
 

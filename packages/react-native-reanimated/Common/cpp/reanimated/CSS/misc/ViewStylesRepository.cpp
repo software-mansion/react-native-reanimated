@@ -9,8 +9,11 @@ namespace reanimated::css {
 
 ViewStylesRepository::ViewStylesRepository(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-    const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry), animatedPropsRegistry_(animatedPropsRegistry) {}
+    const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry),
+      animatedPropsRegistry_(animatedPropsRegistry),
+      mountedRootsRegistry_(mountedRootsRegistry) {}
 
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -76,11 +79,10 @@ std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
   // deadlock) that getNewestCloneOfShadowNode takes, falling back to the passed node.
   // Mirrors RN's getShadowNodeInSubtree:
   // https://github.com/facebook/react-native/blob/v0.86.0-rc.3/packages/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp#L339
-  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
-  if (it == lastMountedRootBySurface_.end()) {
+  const auto root = mountedRootsRegistry_->get(shadowNode->getSurfaceId());
+  if (!root) {
     return shadowNode;
   }
-  const auto &root = it->second;
 
   if (ShadowNode::sameFamily(*root, *shadowNode)) {
     return root;
@@ -106,19 +108,11 @@ std::shared_ptr<const ShadowNode> ViewStylesRepository::getParentNode(
     return parentNode;
   }
 
-  const auto it = lastMountedRootBySurface_.find(shadowNode->getSurfaceId());
-  if (it == lastMountedRootBySurface_.end()) {
+  const auto root = mountedRootsRegistry_->get(shadowNode->getSurfaceId());
+  if (!root) {
     return nullptr;
   }
-  return dom::getParentNode(it->second, *shadowNode);
-}
-
-void ViewStylesRepository::setLastMountedRoot(const RootShadowNode::Shared &rootShadowNode) {
-  lastMountedRootBySurface_[rootShadowNode->getSurfaceId()] = rootShadowNode;
-}
-
-void ViewStylesRepository::removeSurface(const SurfaceId surfaceId) {
-  lastMountedRootBySurface_.erase(surfaceId);
+  return dom::getParentNode(root, *shadowNode);
 }
 
 folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {

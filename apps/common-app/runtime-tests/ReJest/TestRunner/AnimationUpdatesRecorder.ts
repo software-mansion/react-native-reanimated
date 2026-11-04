@@ -5,6 +5,8 @@ import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
 const MAX_WAIT_TIME_MS = 10000;
+// Animations use a start time of 0 as unset.
+const FROZEN_CLOCK_START_MS = 1_000_000;
 
 export class AnimationUpdatesRecorder {
   public async recordAnimationUpdates() {
@@ -65,11 +67,12 @@ export class AnimationUpdatesRecorder {
     }, maxWaitTime);
   }
 
-  public async mockAnimationTimer() {
+  public async mockAnimationTimer(autoAdvance = true) {
     await runOnUIBlocking(() => {
       'worklet';
-      global.mockedAnimationTimestamp = 0;
+      global.mockedAnimationTimestamp = autoAdvance ? 0 : FROZEN_CLOCK_START_MS;
       global.framesCount = 0;
+      global.autoAdvanceAnimationTimer = autoAdvance;
 
       if (global.originalGetAnimationTimestamp !== undefined) {
         return;
@@ -108,11 +111,21 @@ export class AnimationUpdatesRecorder {
             callback(timestamp);
             return;
           }
-          global.mockedAnimationTimestamp += 16;
+          if (global.autoAdvanceAnimationTimer) {
+            global.mockedAnimationTimestamp += 16;
+          }
           global.framesCount = (global.framesCount ?? 0) + 1;
           callback(global.mockedAnimationTimestamp);
         });
       };
+    });
+  }
+
+  public async advanceAnimationTimer(milliseconds: number) {
+    await runOnUIBlocking(() => {
+      'worklet';
+      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
+      global.mockedAnimationTimestamp += milliseconds;
     });
   }
 
@@ -134,6 +147,7 @@ export class AnimationUpdatesRecorder {
         global.originalNativeRequestAnimationFrame = undefined;
       }
       global.mockedAnimationTimestamp = undefined;
+      global.autoAdvanceAnimationTimer = undefined;
       global.framesCount = undefined;
       Object.defineProperty(global, '__frameTimestamp', {
         configurable: true,

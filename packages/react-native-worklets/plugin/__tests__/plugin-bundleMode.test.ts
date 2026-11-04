@@ -12,7 +12,7 @@ type CapturedFile = { path: string; content: string };
 
 const capturedFiles: CapturedFile[] = [];
 
-// The OXC transform writes its files from Rust, so they never reach the `fs`
+// The Oxc transform writes its files from Rust, so they never reach the `fs`
 // mock below. Its jest setup records them on `globalThis` instead.
 function nativelyEmittedFiles(): CapturedFile[] {
   return ((
@@ -412,7 +412,25 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-    test('does not rebase relative requires from non-workletizable files', () => {
+    test('rebases relative dynamic imports inside the worklet body against the worklets directory', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          return import('./helper');
+        }
+      </script>`;
+
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../some-library/file.js'
+      );
+      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(`import("../../some-library/helper")`);
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('rebases relative requires from files without import forwarding', () => {
       const input = html`<script>
         function baz() {
           'worklet';
@@ -421,10 +439,15 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = '/not-a-workletizable-package/src/file.ts';
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../not-a-workletizable-package/src/file.ts'
+      );
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/require\(["']\.\/helper["']\)/);
+      expect(files[0].content).toContain(
+        `require("../../not-a-workletizable-package/src/helper")`
+      );
       expect(files[0].content).toMatchSnapshot();
     });
   });

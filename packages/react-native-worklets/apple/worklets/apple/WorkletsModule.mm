@@ -28,11 +28,19 @@ using namespace worklets;
 
 namespace {
 
-BundleModeConfig makeBundleModeConfig(NSURL *bundleURL)
+BundleModeConfig makeBundleModeConfig(NSURL *bundleURL, NSURL *downloadedBundleFileURL)
 {
   return BundleModeConfig{
-      .script = getScript(bundleURL),
+      .script = getScript(bundleURL, downloadedBundleFileURL),
       .sourceURL = bundleURL != nil ? std::string([[bundleURL absoluteString] UTF8String]) : std::string{}};
+}
+
+NSURL *getDownloadedBundleFileURL(RCTBundleManager *bundleManager)
+{
+  if (![bundleManager respondsToSelector:NSSelectorFromString(@"downloadedBundleFileURL")]) {
+    return nil;
+  }
+  return [bundleManager valueForKey:@"downloadedBundleFileURL"];
 }
 
 } // namespace
@@ -152,8 +160,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 - (WorkletsModuleProxyInitializer::BundleModeConfigLoader)makeBundleModeConfigLoader
 {
   NSURL *bundleURL = bundleManager_.bundleURL;
-  return [bundleURL] {
-    return makeBundleModeConfig(bundleURL);
+  NSURL *downloadedBundleFileURL = getDownloadedBundleFileURL(bundleManager_);
+  return [bundleURL, downloadedBundleFileURL] {
+    return makeBundleModeConfig(bundleURL, downloadedBundleFileURL);
   };
 }
 

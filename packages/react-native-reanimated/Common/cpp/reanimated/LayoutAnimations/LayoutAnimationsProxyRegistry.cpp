@@ -87,6 +87,12 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const in
   return {};
 }
 
+void LayoutAnimationsProxyRegistry::onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const {
+  for (const auto &instance : instances()) {
+    instance->onSharedTransitionConfigured(viewTags);
+  }
+}
+
 void LayoutAnimationsProxyRegistry::flushLayoutAnimationOperations() const {
   for (const auto &instance : instances()) {
     instance->flushLayoutAnimationOperations();
@@ -98,6 +104,12 @@ void LayoutAnimationsProxyRegistry::applySynchronousProps(
     const bool trackInLightTree) {
   for (const auto &instance : instances()) {
     instance->applySynchronousProps(updatesBatch, trackInLightTree);
+  }
+}
+
+void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
+  for (const auto &instance : instances()) {
+    instance->composeSynchronousProps(updatesBatch);
   }
 }
 

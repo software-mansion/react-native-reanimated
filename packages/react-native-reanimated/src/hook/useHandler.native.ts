@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareable } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import { logger } from '../common';
@@ -52,7 +52,7 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   const state = stateRef.current;
 
   if (__DEV__) {
-    ensureWorkletHandlers(handlers);
+    ensureWorkletHandlers(handlers, isWorkletFunction);
   }
   const doDependenciesDiffer = !areWorkletHandlersEqual(
     handlers as Record<string, WorkletFunction>,

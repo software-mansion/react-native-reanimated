@@ -13,8 +13,10 @@
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 using namespace facebook;
 

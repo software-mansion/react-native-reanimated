@@ -9,8 +9,8 @@ import { processBoxShadow } from '../shadows';
 describe(processBoxShadow, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
-      test('returns undefined when input is "none"', () => {
-        expect(processBoxShadow('none')).toBeUndefined();
+      test('returns an empty list when input is "none"', () => {
+        expect(processBoxShadow('none')).toEqual([]);
       });
 
       test.each([

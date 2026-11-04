@@ -3,6 +3,7 @@
 #include <react/renderer/graphics/Transform.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -23,6 +24,56 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   diff.setProperty(runtime, "source", sourceValues_);
   diff.setProperty(runtime, "target", targetValues_);
   return diff;
+}
+
+bool PropsDiffer::hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps) {
+#ifdef ANDROID
+  if (sourceProps.elevation != targetProps.elevation) {
+    return true;
+  }
+#endif
+  const auto sameAnimatedBoxShadow = [](const BoxShadow &source, const BoxShadow &target) {
+    return source.offsetX == target.offsetX && source.offsetY == target.offsetY &&
+        source.blurRadius == target.blurRadius && source.spreadDistance == target.spreadDistance &&
+        source.color == target.color;
+  };
+  const auto radiusChanged = [](const std::optional<ValueUnit> &source, const std::optional<ValueUnit> &target) {
+    return source.value_or(ValueUnit{}).value != target.value_or(ValueUnit{}).value;
+  };
+  // The same compare as in diffBorderWidth: a missing width counts as 0.
+  const auto widthChanged = [](const std::optional<react::Float> &source, const std::optional<react::Float> &target) {
+    return source.value_or(0) != target.value_or(0);
+  };
+  const auto &sourceRadii = sourceProps.borderRadii;
+  const auto &targetRadii = targetProps.borderRadii;
+  if (radiusChanged(sourceRadii.all, targetRadii.all) || radiusChanged(sourceRadii.topLeft, targetRadii.topLeft) ||
+      radiusChanged(sourceRadii.topRight, targetRadii.topRight) ||
+      radiusChanged(sourceRadii.bottomLeft, targetRadii.bottomLeft) ||
+      radiusChanged(sourceRadii.bottomRight, targetRadii.bottomRight) ||
+      radiusChanged(sourceRadii.topStart, targetRadii.topStart) ||
+      radiusChanged(sourceRadii.topEnd, targetRadii.topEnd) ||
+      radiusChanged(sourceRadii.bottomStart, targetRadii.bottomStart) ||
+      radiusChanged(sourceRadii.bottomEnd, targetRadii.bottomEnd) ||
+      radiusChanged(sourceRadii.endEnd, targetRadii.endEnd) ||
+      radiusChanged(sourceRadii.endStart, targetRadii.endStart) ||
+      radiusChanged(sourceRadii.startEnd, targetRadii.startEnd) ||
+      radiusChanged(sourceRadii.startStart, targetRadii.startStart)) {
+    return true;
+  }
+  const auto &sourceWidths = sourceProps.getBorderWidths();
+  const auto &targetWidths = targetProps.getBorderWidths();
+  const auto &sourceColors = sourceProps.borderColors;
+  const auto &targetColors = targetProps.borderColors;
+  return sourceProps.opacity != targetProps.opacity || sourceProps.backgroundColor != targetProps.backgroundColor ||
+      sourceProps.transform != targetProps.transform || sourceProps.transformOrigin != targetProps.transformOrigin ||
+      !std::ranges::equal(sourceProps.boxShadow, targetProps.boxShadow, sameAnimatedBoxShadow) ||
+      sourceProps.shadowColor != targetProps.shadowColor || sourceProps.shadowOffset != targetProps.shadowOffset ||
+      sourceProps.shadowOpacity != targetProps.shadowOpacity || sourceProps.shadowRadius != targetProps.shadowRadius ||
+      widthChanged(sourceWidths.all, targetWidths.all) || widthChanged(sourceWidths.left, targetWidths.left) ||
+      widthChanged(sourceWidths.right, targetWidths.right) || widthChanged(sourceWidths.top, targetWidths.top) ||
+      widthChanged(sourceWidths.bottom, targetWidths.bottom) || sourceColors.all != targetColors.all ||
+      sourceColors.left != targetColors.left || sourceColors.right != targetColors.right ||
+      sourceColors.top != targetColors.top || sourceColors.bottom != targetColors.bottom;
 }
 
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {

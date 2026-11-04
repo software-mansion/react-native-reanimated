@@ -1,13 +1,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+  clampText,
+  configurationLabel,
+  detailsBlock,
+  escapeSlack,
+  extractVerdict,
+  formatUsd,
+  parseCost,
+  publishReportIssue,
+  readFile,
+  readJsonObject,
+  readScreenshots,
+  requireEnv,
+  screenshotsSection,
+  staticFeatureFlagsLabel,
+  commentFooter,
+  reportForComment,
+  summaryOfOutput,
+  writeCommentFile,
+} from './argent-cloud-report.ts';
+import type {
+  Screenshots,
+  StaticFeatureFlags,
+  Verdict,
+} from './argent-cloud-report.ts';
 import { postToSlack } from './slack.ts';
 
-const SUMMARY_LIMIT = 600;
-
 type Stage = 'plan-infeasible' | 'build-failed' | 'reproduce';
-
-type Verdict = 'REPRODUCIBLE' | 'NOT REPRODUCIBLE' | 'FALSE ISSUE' | 'BLOCKED';
 
 type Context = {
   stage: Stage;
@@ -17,6 +38,7 @@ type Context = {
   issueUrl: string;
   runUrl: string;
   failedStep: string | undefined;
+  reportUrl: string | undefined;
   plan: Plan | null;
   brief: string | null;
   output: string | null;
@@ -24,17 +46,22 @@ type Context = {
   verdict: Verdict | null;
   summary: string;
   costs: Costs;
+  screenshots: Screenshots | null;
 };
 
 type Plan = {
   feasible?: boolean;
   reason?: string;
   summary?: string;
+  analysis?: string;
+  limitations?: string | null;
   library?: string;
   reactNativeVersion?: string;
   reanimatedVersion?: string;
   workletsVersion?: string | null;
   architecture?: string;
+  configuration?: string;
+  staticFeatureFlags?: StaticFeatureFlags;
   appKind?: string;
   reproductionSteps?: string[];
   verification?: {
@@ -55,19 +82,25 @@ async function main(): Promise<void> {
     case 'report':
       writeReport(readContext());
       break;
+    case 'publish':
+      await publish(readContext());
+      break;
     case 'notify':
       await notify(readContext());
       break;
+    case 'comment':
+      writeComment(readContext());
+      break;
     default:
       throw new Error(
-        `usage: argent-cloud-issue-repro-report.ts <report|notify>, got '${command ?? ''}'`
+        `usage: argent-cloud-issue-repro-report.ts <report|publish|notify|comment>, got '${command ?? ''}'`
       );
   }
 }
 
 function readContext(): Context {
   const stage = (process.env.STAGE ?? 'reproduce') as Stage;
-  const plan = readPlan(process.env.PLAN_FILE);
+  const plan = readJsonObject<Plan>(process.env.PLAN_FILE);
   const output = readFile(process.env.OUTPUT_FILE);
   const planCost = parseCost(process.env.PLAN_COST_USD);
   const reproductionCost = parseCost(process.env.REPRO_COST_USD);
@@ -80,6 +113,7 @@ function readContext(): Context {
     issueUrl: requireEnv('ISSUE_URL'),
     runUrl: requireEnv('RUN_URL'),
     failedStep: process.env.FAILED_STEP || undefined,
+    reportUrl: process.env.REPORT_URL || undefined,
     plan,
     brief: readFile(process.env.BRIEF_FILE),
     output,
@@ -91,6 +125,10 @@ function readContext(): Context {
       reproduction: reproductionCost,
       total: planCost + reproductionCost,
     },
+    screenshots: readScreenshots(
+      process.env.SCREENSHOTS_DIR,
+      process.env.SCREENSHOTS_URL
+    ),
   };
 }
 
@@ -110,40 +148,7 @@ function summaryText(
   if (!output) {
     return 'The reproduction agent produced no output. See the run logs.';
   }
-  return clampText(extractSummary(output) ?? fallbackSummary(output));
-}
-
-function clampText(text: string): string {
-  return text.length > SUMMARY_LIMIT
-    ? `${text.slice(0, SUMMARY_LIMIT - 1)}…`
-    : text;
-}
-
-function extractVerdict(output: string): Verdict | null {
-  const firstLine = output.split('\n')[0]?.trim() ?? '';
-  const match =
-    /^#\s+(REPRODUCIBLE|NOT REPRODUCIBLE|FALSE ISSUE|BLOCKED)\s*$/.exec(
-      firstLine
-    );
-  return match ? (match[1] as Verdict) : null;
-}
-
-function extractSummary(output: string): string | null {
-  const match = /^##\s+Summary\s*\n([\s\S]*?)(?=^#{1,6}\s|(?![\s\S]))/m.exec(
-    output
-  );
-  const text = match?.[1]?.trim().replace(/\s*\n\s*/g, ' ');
-  return text || null;
-}
-
-function fallbackSummary(output: string): string {
-  const body = output.replace(/^#[^\n]*\n/, '').trim();
-  const paragraph =
-    body
-      .split(/\n\s*\n/)[0]
-      ?.replace(/\s*\n\s*/g, ' ')
-      .trim() ?? '';
-  return paragraph || 'The report has no summary section. See the full report.';
+  return clampText(summaryOfOutput(output));
 }
 
 function writeReport(context: Context): void {
@@ -168,7 +173,10 @@ function writeReport(context: Context): void {
     lines.push(`| Worklets | ${context.plan.workletsVersion ?? 'none'} |`);
     lines.push(`| Architecture | ${context.plan.architecture ?? 'unknown'} |`);
     lines.push(
-      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, Release |`
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`
+    );
+    lines.push(
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, ${configurationLabel(context.plan.configuration)} |`
     );
   }
   lines.push(`| Cost | ${costLine(context.costs)} |`, '');
@@ -177,6 +185,10 @@ function writeReport(context: Context): void {
 
   if (context.output) {
     lines.push('## Reproduction result', '', context.output, '');
+  }
+
+  if (context.screenshots) {
+    lines.push(...screenshotsSection('## Screenshots', context.screenshots));
   }
 
   if (context.plan) {
@@ -207,18 +219,19 @@ function writeReport(context: Context): void {
     if (context.plan.actualBehavior) {
       lines.push('### Actual', '', context.plan.actualBehavior, '');
     }
+    if (context.plan.limitations) {
+      lines.push('### Limitations', '', context.plan.limitations, '');
+    }
+    if (context.plan.analysis) {
+      lines.push('### Analysis', '', context.plan.analysis, '');
+    }
   }
 
   if (context.brief) {
     lines.push(
       '## Brief given to the tester',
       '',
-      '<details>',
-      '<summary>Full brief</summary>',
-      '',
-      context.brief,
-      '',
-      '</details>',
+      ...detailsBlock('Full brief', context.brief),
       ''
     );
   }
@@ -226,14 +239,10 @@ function writeReport(context: Context): void {
     lines.push(
       '## Plan JSON',
       '',
-      '<details>',
-      '<summary>plan.json</summary>',
-      '',
-      '```json',
-      JSON.stringify(context.plan, null, 2),
-      '```',
-      '',
-      '</details>',
+      ...detailsBlock(
+        'plan.json',
+        ['```json', JSON.stringify(context.plan, null, 2), '```'].join('\n')
+      ),
       ''
     );
   }
@@ -241,6 +250,54 @@ function writeReport(context: Context): void {
   fs.mkdirSync(path.dirname(reportFile), { recursive: true });
   fs.writeFileSync(reportFile, lines.join('\n'));
   console.log(`wrote ${reportFile}`);
+}
+
+function writeComment(context: Context): void {
+  const lines = [
+    '## Argent Cloud reproduction',
+    '',
+    `An AI agent tried to reproduce this issue in a small app on an iOS simulator. Verdict: **${outcomeLabel(context)}**.`,
+    '',
+    context.summary,
+    '',
+  ];
+  if (context.plan) {
+    lines.push(
+      '| | |',
+      '|---|---|',
+      `| React Native | ${context.plan.reactNativeVersion ?? 'unknown'} |`,
+      `| Reanimated | ${context.plan.reanimatedVersion ?? 'unknown'} |`,
+      `| Worklets | ${context.plan.workletsVersion ?? 'none'} |`,
+      `| Architecture | ${context.plan.architecture ?? 'unknown'} |`,
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`,
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, ${configurationLabel(context.plan.configuration)} |`,
+      ''
+    );
+  }
+  if (context.output) {
+    lines.push(
+      ...detailsBlock('Report of the agent', reportForComment(context.output)),
+      ''
+    );
+  }
+  lines.push(...commentFooter(context.runUrl), '');
+  if (context.screenshots) {
+    lines.push(
+      `The agent took ${context.screenshots.files.length} screenshot(s). They follow below in the order it took them.`,
+      ''
+    );
+  }
+  writeCommentFile(lines);
+}
+
+async function publish(context: Context): Promise<void> {
+  await publishReportIssue({
+    outcome: outcomeLabel(context),
+    label: issueLabel(context),
+    streams: context.stream
+      ? [{ name: 'Agent stream', content: context.stream }]
+      : [],
+  });
 }
 
 async function notify(context: Context): Promise<void> {
@@ -252,15 +309,14 @@ async function notify(context: Context): Promise<void> {
     lines.push(`Failed step: ${escapeSlack(context.failedStep)}`);
   }
   lines.push(`Cost: ${costLine(context.costs)}`);
+  if (context.reportUrl) {
+    lines.push(`Report: ${context.reportUrl}`);
+  }
+  if (context.screenshots?.artifactUrl) {
+    lines.push(`Screenshots: ${context.screenshots.artifactUrl}`);
+  }
   lines.push(`Issue: ${context.issueUrl}`, `Run: ${context.runUrl}`);
   await postToSlack({ text: lines.join('\n') });
-}
-
-function escapeSlack(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }
 
 function outcomeLabel(context: Context): string {
@@ -270,7 +326,10 @@ function outcomeLabel(context: Context): string {
     case 'build-failed':
       return 'build failed';
     default:
-      return context.verdict?.toLowerCase() ?? context.status;
+      return (
+        context.verdict?.toLowerCase() ??
+        (context.status === 'success' ? 'no verdict' : context.status)
+      );
   }
 }
 
@@ -291,7 +350,7 @@ function outcomeEmoji(context: Context): string {
     case 'BLOCKED':
       return '🔴';
     default:
-      return context.status === 'success' ? '🟢' : '🔴';
+      return '🔴';
   }
 }
 
@@ -307,45 +366,6 @@ function costLine(costs: Costs): string {
     parts.push(`reproduction ${formatUsd(costs.reproduction)}`);
   }
   return `${formatUsd(costs.total)} (${parts.join(', ')})`;
-}
-
-function formatUsd(value: number): string {
-  if (value > 0 && value < 0.005) {
-    return '<$0.01';
-  }
-  return `$${value.toFixed(2)}`;
-}
-
-function parseCost(value: string | undefined): number {
-  const parsed = Number.parseFloat(value ?? '');
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-}
-
-function readPlan(file: string | undefined): Plan | null {
-  const content = readFile(file);
-  if (!content) {
-    return null;
-  }
-  const parsed: unknown = JSON.parse(content);
-  return typeof parsed === 'object' && parsed !== null
-    ? (parsed as Plan)
-    : null;
-}
-
-function readFile(file: string | undefined): string | null {
-  if (!file || !fs.existsSync(file)) {
-    return null;
-  }
-  const content = fs.readFileSync(file, 'utf8').trim();
-  return content || null;
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} is required`);
-  }
-  return value;
 }
 
 main().catch((err: unknown) => {

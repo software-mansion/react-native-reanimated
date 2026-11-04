@@ -4,9 +4,9 @@ sidebar_position: 4
 
 # Customizing animations
 
-[Previous section](/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
+[Previous section](./animating-styles-and-props.mdx) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
 
-Reanimated comes with three built-in animation functions: [`withTiming`](/docs/animations/withTiming), [`withSpring`](/docs/animations/withSpring), and [`withDecay`](/docs/animations/withDecay). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](/docs/fundamentals/handling-gestures) section.
+Reanimated comes with three built-in animation functions: [`withTiming`](../animations/withTiming.mdx), [`withSpring`](../animations/withSpring.mdx), and [`withDecay`](../animations/withDecay.mdx). For now, let's focus on the first two, and we'll come back to `withDecay` in the [Handling gestures](./handling-gestures.mdx) section.
 
 It's very easy to customize the behavior of animation functions in Reanimated. You can do this by passing a `config` object to the second parameter of either `withTiming` or `withSpring` function.
 
@@ -35,7 +35,7 @@ import { useTimingPlayground } from '@site/src/components/InteractivePlayground'
 
 <InteractiveExample src={TimingEasingCompareSrc} component={TimingEasingCompare}/>
 
-Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](/docs/animations/withTiming).
+Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](../animations/withTiming.mdx).
 
 <details open>
   <summary><code>withTiming</code> interactive playground</summary>
@@ -70,7 +70,7 @@ Stiffness affects how bouncy the spring is. As an example, think about the diffe
 
 Damping describes how quickly the spring animation finishes. Higher damping means the spring will come to rest faster. In the real world, you could think about the same spring bouncing in the air and underwater. For example, a spring in a vacuum would have zero friction and thus zero damping.
 
-Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](/docs/animations/withSpring).
+Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](../animations/withSpring.mdx).
 
 ## Summary
 
@@ -82,4 +82,4 @@ In this section, we learned how to customize the `withTiming` and `withSpring` a
 
 ## What's next?
 
-In [the upcoming section](/docs/fundamentals/applying-modifiers), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers we'll allow us to create more complex and engaging animations.
+In [the upcoming section](./applying-modifiers.mdx), you'll discover how to use animation modifiers such as `withSequence` and `withRepeat`. These modifiers we'll allow us to create more complex and engaging animations.

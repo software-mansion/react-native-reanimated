@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   ios-argent:
@@ -18,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
-    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ${{ matrix.configuration }}
     secrets:
@@ -31,6 +32,6 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
-    uses: ./.github/workflows/runtime-tests-android.yml
+    uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: ${{ matrix.configuration }}

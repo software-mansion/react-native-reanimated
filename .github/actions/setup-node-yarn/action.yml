@@ -1,0 +1,49 @@
+name: Setup Node.js and Yarn cache
+description: Install Node.js and restore the Yarn package cache that save-yarn-cache persists from runs outside pull requests
+
+inputs:
+  node-version-file:
+    description: Passed to actions/setup-node
+    required: false
+    default: ''
+
+outputs:
+  cache-hit:
+    description: Whether the Yarn cache was restored from the exact key
+    value: ${{ steps.restore.outputs.cache-hit }}
+  cache-primary-key:
+    description: The exact key, pass it to save-yarn-cache
+    value: ${{ steps.key.outputs.key }}
+  cache-path:
+    description: The Yarn cache folder, pass it to save-yarn-cache
+    value: ${{ steps.key.outputs.path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Use Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      with:
+        node-version-file: ${{ inputs.node-version-file }}
+
+    - name: Compute Yarn cache key
+      id: key
+      shell: bash
+      env:
+        KEY_PREFIX: yarn-cache-${{ runner.os }}-${{ runner.arch }}-
+        LOCKFILE_HASH: ${{ hashFiles('yarn.lock') }}
+      run: |
+        {
+          echo "path=$(yarn config get cacheFolder)"
+          echo "prefix=${KEY_PREFIX}"
+          echo "key=${KEY_PREFIX}${LOCKFILE_HASH}"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Restore Yarn cache
+      id: restore
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ${{ steps.key.outputs.path }}
+        key: ${{ steps.key.outputs.key }}
+        restore-keys: |
+          ${{ steps.key.outputs.prefix }}

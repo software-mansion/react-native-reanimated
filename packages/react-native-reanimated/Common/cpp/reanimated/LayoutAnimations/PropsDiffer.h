@@ -90,12 +90,15 @@ class PropsDiffer {
   explicit PropsDiffer(jsi::Runtime &rt, const ShadowView &sourceView, const ShadowView &targetView)
       : sourceView_(sourceView),
         targetView_(targetView),
-        sourceViewProps_(static_cast<const ViewProps &>(*sourceView.props)),
-        targetViewProps_(static_cast<const ViewProps &>(*targetView.props)),
+        sourceViewProps_(getViewProps(sourceView)),
+        targetViewProps_(getViewProps(targetView)),
         sourceValues_(rt),
         targetValues_(rt) {}
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
+
+  // True when computeDiff animates a style prop between these props.
+  static bool hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps);
 };
 
 } // namespace reanimated

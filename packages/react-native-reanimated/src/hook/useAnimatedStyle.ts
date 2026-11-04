@@ -2,7 +2,7 @@
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST } from '../common';
@@ -245,12 +245,12 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         value: initialStyle,
         updater,
       },
-      remoteState: makeShareable({
+      remoteState: {
         last: initialStyle,
         animations: {},
         isAnimationCancelled: false,
         isAnimationRunning: false,
-      }),
+      },
       viewDescriptors: makeViewDescriptorsSet(),
       styleUpdaterContainer: { current: undefined },
     };

@@ -22,6 +22,6 @@ dark: useBaseUrl('/img/bundleMode-dark.png'),
 
 Bundle Mode is how worklets work - it gives worklets access to your whole JavaScript bundle, meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that third party libraries can be used in worklets without the need to patch them. It's also a performance improvement as worklets' code can benefit from all the optimizations that pre-compiled bytecode offers.
 
-<Anchor id="legacy-eval-mode" /> As of 1.0.0, Bundle Mode is the only mode of running worklets. The former Legacy Eval Mode - where each worklet was serialized as a string and evaluated individually on the Worklet Runtime - has been removed.
+<Anchor id="legacy-eval-mode"/> As of 1.0.0, Bundle Mode is the only mode of running worklets. The former Legacy Eval Mode - where each worklet was serialized as a string and evaluated individually on the Worklet Runtime - has been removed.
 
 Instructions on how to configure your app can be found [here](/docs/bundleMode/setup).

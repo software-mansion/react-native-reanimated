@@ -1,0 +1,48 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # removeSerializableMapping
+</Badges>
+
+Makes Worklets forget the mapping of an object, whether it came from [setSerializableMapping](./setSerializableMapping.mdx) or from an earlier [serialization](./serializable.mdx). The next time the object is serialized, Worklets serializes the object itself and remembers the new mapping.
+
+## Reference
+
+```typescript
+import {
+  removeSerializableMapping,
+  scheduleOnUI,
+  setSerializableMapping,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+setSerializableMapping(flag, { current: true });
+removeSerializableMapping(flag);
+
+scheduleOnUI(() => {
+  console.log(flag.current); // logs `false`
+});
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function removeSerializableMapping(value: object): void;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object whose mapping to remove. It's compared by reference.
+
+## Remarks
+
+- `removeSerializableMapping` also removes mappings that Worklets or other libraries set.
+- If `value` has no mapping, `removeSerializableMapping` does nothing.
+- Passing a [SerializableRef](./isSerializableRef.mdx) does nothing.
+- On the Web `removeSerializableMapping` does nothing.

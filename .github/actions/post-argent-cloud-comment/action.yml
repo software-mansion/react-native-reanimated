@@ -1,0 +1,63 @@
+name: Post an Argent Cloud comment
+description: Post a Markdown comment with the screenshots of a session on an issue or pull request as the ArgentCloud GitHub App. Needs the argent-cloud CLI on PATH.
+
+inputs:
+  target:
+    description: The issue or pull request, as `owner/repo#number`
+    required: true
+  comment-file:
+    description: A file with the Markdown text of the comment
+    required: true
+  screenshots:
+    description: A tar or tar.gz of images that the comment shows under the text, in the order of their paths. Skipped when empty or missing.
+    required: false
+    default: ''
+  github-token:
+    description: A token that can push to the repository of the target. The backend checks it before it posts as its own GitHub App.
+    required: true
+  sim-router-api-key:
+    description: The Argent Cloud API key
+    required: true
+  backend-ip:
+    description: The address of the Argent Cloud backend
+    required: true
+
+outputs:
+  url:
+    description: The URL of the comment
+    value: ${{ steps.post.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Post the comment
+      id: post
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        COMMENT_FILE: ${{ inputs.comment-file }}
+        SCREENSHOTS: ${{ inputs.screenshots }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        SIM_ROUTER_API_KEY: ${{ inputs.sim-router-api-key }}
+        ARGENT_BACKEND_IP: ${{ inputs.backend-ip }}
+      run: |
+        set -euo pipefail
+        if [[ ! "$TARGET" =~ ^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([0-9]+)$ ]]; then
+          echo "::error::target must be owner/repo#number, got '$TARGET'"
+          exit 1
+        fi
+        repo="${BASH_REMATCH[1]}"
+        number="${BASH_REMATCH[2]}"
+        args=(comment --comment-file "$COMMENT_FILE")
+        if [ -n "$SCREENSHOTS" ] && [ -s "$SCREENSHOTS" ]; then
+          args+=(--screenshots "$SCREENSHOTS")
+        else
+          echo "::warning::no screenshots archive, so the comment on $TARGET carries the text alone"
+        fi
+        posted="$RUNNER_TEMP/argent-cloud-comment-$number.txt"
+        argent-cloud "${args[@]}" "$TARGET" | tee "$posted"
+        url=$(grep -ioE "^https://github\.com/$repo/(issues|pull)/$number#issuecomment-[0-9]+$" "$posted" | tail -n 1 || true)
+        if [ -z "$url" ]; then
+          echo "::warning::argent-cloud posted the comment but printed no comment URL"
+        fi
+        echo "url=$url" >> "$GITHUB_OUTPUT"

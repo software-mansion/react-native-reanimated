@@ -1,5 +1,10 @@
 'use strict';
 
+import {
+  installLazyBundleLoader,
+  installLazyBundleRegistrar,
+  makeLazyBundleRegistrar,
+} from '../bundleMode/lazyBundles';
 import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
@@ -145,12 +150,14 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
+  setupSerializer();
 }
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
   if (__DEV__) {
     silenceHMRWarnings();
+    installLazyBundleLoader();
   }
 
   installNetworking();
@@ -171,10 +178,13 @@ function installRNBindingsOnUIRuntime() {
     ? getMemorySafeCapturableConsole()
     : null;
 
+  const lazyBundleRegistrar = makeLazyBundleRegistrar();
+
   runOnUISync(() => {
     'worklet';
     if (__DEV__) {
       setupConsoleForwarding(runtimeBoundCapturableConsole!);
+      installLazyBundleRegistrar(lazyBundleRegistrar);
     }
 
     setupQueueMicrotask();

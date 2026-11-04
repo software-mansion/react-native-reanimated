@@ -314,6 +314,7 @@ async function runLibrary() {
   const server = spawn('node', serverArgs, {
     cwd: projectRoot,
     stdio: 'inherit',
+    env: { ...process.env, RUNTIME_TESTS_REMOTE_UDID: UDID },
   });
 
   /** @type {('SIGINT' | 'SIGTERM')[]} */

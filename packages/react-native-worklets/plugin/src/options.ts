@@ -3,7 +3,7 @@ export interface PluginOptions {
    * This is a list of Babel plugins that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#extraplugins}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extraplugins}
    *
    * - Defaults to an empty array `[]`.
    */
@@ -13,7 +13,7 @@ export interface PluginOptions {
    * This is a list of Babel presets that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#extrapresets}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extrapresets}
    *
    * - Defaults to an empty array `[]`.
    */
@@ -21,10 +21,10 @@ export interface PluginOptions {
 
   /**
    * Configures [import
-   * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding)
+   * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding/)
    * for the Bundle Mode.
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwarding}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwarding}
    */
   importForwarding?: {
     /**
@@ -34,7 +34,7 @@ export interface PluginOptions {
      * The module name has to be an exact match — with `'my-library'` in the
      * list, an import from `'my-library/some-file'` won't be forwarded.
      *
-     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwardingmodulenames}
+     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
      * - Defaults to an empty array `[]`.
      */
@@ -51,7 +51,7 @@ export interface PluginOptions {
      * imports (like `'./utils'`) from a specific package, without affecting
      * identically-named relative imports in other packages.
      *
-     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#importforwardingrelativepaths}
+     * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths}
      *
      * - Defaults to an empty array `[]`.
      */

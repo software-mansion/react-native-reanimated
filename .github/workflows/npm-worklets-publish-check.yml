@@ -9,4 +9,4 @@ on:
 
 jobs:
   npm-worklets-publish-check:
-    uses: ./.github/workflows/npm-worklets-publish.yml
+    uses: $/.github/workflows/npm-worklets-publish.yml

@@ -10,9 +10,12 @@ describe(processFontWeight, () => {
     expect(processFontWeight(input)).toBe(expected);
   });
 
-  test('returns undefined for unsupported values', () => {
-    expect(processFontWeight('unknown')).toBeUndefined();
-  });
+  test.each(['unknown', 'toString'])(
+    'returns undefined for unsupported value %s',
+    (value) => {
+      expect(processFontWeight(value)).toBeUndefined();
+    }
+  );
 });
 
 describe(processFontVariant, () => {

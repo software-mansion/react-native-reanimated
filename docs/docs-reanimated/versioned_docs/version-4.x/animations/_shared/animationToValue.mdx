@@ -1,0 +1,16 @@
+The value on which the animation will come at rest. Supported categories:
+
+- **numbers** - number can be a either a number or a string
+- **suffixed numbers** - strings being a number with a unit, like `"5.5%"`, `"90deg"` or even `"3bananas`". Just make sure there is no space between number and suffix, also suffix should consist of basic english letters only.
+- **colors**
+  - Hexadecimal integer - e.g. `0xff1234`,
+  - RGB (Red, Green, Blue) - e.g. `"rgb(100, 50, 0)"`,
+  - RGBA (Red, Green, Blue, Alpha) - e.g. `"rgba(255, 105, 180, 0)`",
+  - RGB Hexadecimal - e.g. `"#53575E"`,
+  - HSL (Hue, Saturation, Lightness) - e.g.`"hsl(0, 50%, 50%)"`,
+  - Named colors - e.g. `"dodgerblue"`.
+- **objects** - object with properties that will be animated separately,
+- **array** - array of numbers, each value will be animated separately.
+- **transformation matrix** - an array consisting of exactly 16 numerical values is by default animated as a transformation matrix. The numbers in the matrix aren't animated separately. Instead, the array gets decomposed into 3 basic transformations - rotation, scale, and translation – which are then animated separately.
+
+Please mind, that `toValue` and the animated shared value have to share the same category (e.g. you can't animate `width` from `100px` to `50%`).

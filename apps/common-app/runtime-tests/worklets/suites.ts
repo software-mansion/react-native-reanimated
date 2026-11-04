@@ -5,13 +5,19 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'memory',
     importTest: () => {
       require('./tests/memory/createSerializable.test');
+      require('./tests/memory/createSerializableTyped.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
+      require('./tests/memory/serializableMapping.test');
       require('./tests/memory/retainingSerializable.test');
+      require('./tests/memory/retainingSerializableConcurrency.test');
       require('./tests/memory/synchronizable.test');
       require('./tests/memory/customSerializable.test');
       require('./tests/memory/hybridObjectSupport.test');
       require('./tests/memory/shareable.test');
+      require('./tests/memory/runtimeAddressReuse.test');
+      require('./tests/memory/destroyedRuntimeCleanup.test');
+      require('./tests/memory/staleRemoteFunction.test');
     },
   },
   {
@@ -23,6 +29,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
+      require('./tests/runtimes/runOnRNSync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
       require('./tests/runtimes/scheduleOnUI.test');
       require('./tests/runtimes/runOnRuntimeSync.test');
@@ -39,6 +46,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'bundle mode core',
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
+      require('./tests/runtimes/lazyImport.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.

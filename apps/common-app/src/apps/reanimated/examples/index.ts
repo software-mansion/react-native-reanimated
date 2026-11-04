@@ -13,8 +13,6 @@ const AmountExample: React.FC = () =>
   React.createElement(require('./AmountExample').default as React.FC);
 const AndroidDrawPassExample: React.FC = () =>
   React.createElement(require('./AndroidDrawPassExample').default as React.FC);
-const AnimatableRefExample: React.FC = () =>
-  React.createElement(require('./AnimatableRefExample').default as React.FC);
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorExample: React.FC = () =>
@@ -101,6 +99,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
+  );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ExitingTagReuseStressExample')
@@ -112,6 +115,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -148,8 +155,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -159,10 +164,6 @@ const Game2048Example: React.FC = () =>
 const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
-  );
-const InvalidValueAccessExample: React.FC = () =>
-  React.createElement(
-    require('./InvalidValueAccessExample').default as React.FC
   );
 const InterruptedExitingExample: React.FC = () =>
   React.createElement(
@@ -215,13 +216,11 @@ const SynchronousPropsSETExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/SynchronousPropsExample').default
   );
+const NestedTagsExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/NestedTags').default);
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
-  );
-const NonLayoutPropAndRenderExample: React.FC = () =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default as React.FC
   );
 const OverlappingBoxesExample: React.FC = () =>
   React.createElement(require('./OverlappingBoxesExample').default as React.FC);
@@ -329,13 +328,6 @@ const SHOW_CASES_AND_REGRESSIONS = 'Show Cases and Regressions';
 const REGRESSIONS = 'Regressions';
 
 const ALL_EXAMPLES: Record<string, Example> = {
-  // About
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
-
   SuspenseLayoutAnimationCrashExample: {
     icon: '💥',
     title: 'Suspense + Layout Animation Crash',
@@ -349,12 +341,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: SettledPropsLeakExample,
   },
 
-  // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
   InlineStylesAndPropsExample: {
     icon: '🎛️',
     title: 'Inline styles and props',
@@ -395,12 +381,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
   },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    section: REGRESSIONS,
-    screen: FreezeExample,
-  },
   CircularSliderExample: {
     icon: '🔘',
     title: 'Circular slider',
@@ -416,11 +396,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '🎨',
     title: 'Animated props',
     screen: AnimatedPropsExample,
-  },
-  InvalidReadWriteExample: {
-    icon: '🔒',
-    title: 'Invalid read/write during render',
-    screen: InvalidValueAccessExample,
   },
   BottomSheetExample: {
     icon: '⬆️',
@@ -493,11 +468,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-  AnimatableRefExample: {
-    icon: '⏬',
-    title: 'Animate inner component',
-    screen: AnimatableRefExample,
-  },
   AmountExample: {
     icon: '📈',
     title: 'Amount',
@@ -561,12 +531,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Layout props',
     section: REGRESSIONS,
     screen: WidthExample,
-  },
-  NonLayoutPropAndRenderExample: {
-    icon: '🎭',
-    title: 'Non-layout prop and render example',
-    section: REGRESSIONS,
-    screen: NonLayoutPropAndRenderExample,
   },
   RefExample: {
     icon: '🦑',
@@ -836,6 +800,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
   },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
 
   // Shared Element Transitions
 
@@ -851,6 +820,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   SynchronousPropsSETExample: {
     title: '[LA] Synchronous props',
     screen: SynchronousPropsSETExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  NestedTagsExample: {
+    title: '[SET] Nested tags',
+    screen: NestedTagsExample,
+    disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
       android: true,
@@ -946,6 +924,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
 } as const;
 
 /**
@@ -975,6 +962,18 @@ const LAYOUT_ANIMATION_PREFIX = '[LA]';
 const SHARED_ELEMENT_TRANSITION_PREFIX = '[SET]';
 
 export const EXAMPLES: Record<string, ExampleEntry> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+  // Empty example for test purposes
+  EmptyExample: {
+    icon: '👻',
+    title: 'Empty',
+    screen: EmptyExample,
+  },
   LayoutAnimations: {
     examples: withTitlePrefix(LAYOUT_ANIMATION_PREFIX),
     icon: '📐',

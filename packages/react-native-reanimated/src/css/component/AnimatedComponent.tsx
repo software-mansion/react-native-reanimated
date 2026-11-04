@@ -8,6 +8,7 @@ import type { AnyComponent, UnknownRecord } from '../../common';
 import { IS_JEST } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
+  AnimatableDOMElement,
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
   ViewInfo,
@@ -22,6 +23,14 @@ export type AnimatedComponentProps = UnknownRecord & {
   ref?: Ref<Component>;
   style?: StyleProp<DefaultStyle>;
 };
+
+// The element classes do not exist off the DOM (SSR, native Jest project).
+function isAnimatableDOMElement(value: unknown): value is AnimatableDOMElement {
+  return (
+    (typeof HTMLElement !== 'undefined' && value instanceof HTMLElement) ||
+    (typeof SVGElement !== 'undefined' && value instanceof SVGElement)
+  );
+}
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
@@ -40,7 +49,8 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _componentDOMRef: HTMLElement | null = null;
+  _rawComponentRef: Component | HTMLElement | null = null;
+  _componentDOMRef: AnimatableDOMElement | null = null;
   _willUnmount: boolean = false;
   _forwardedRefCleanup?: () => void;
 
@@ -62,6 +72,12 @@ export default class AnimatedComponent<
       return this._viewInfo;
     }
 
+    this._viewInfo = this._resolveViewInfo();
+
+    return this._viewInfo;
+  }
+
+  _resolveViewInfo(): ViewInfo {
     const shadowNodeWrapper: ShadowNodeWrapper | null = null;
     const reactViewName: string | undefined = undefined;
 
@@ -71,12 +87,12 @@ export default class AnimatedComponent<
     const viewTag = this._componentRef;
     const DOMElement = this._componentDOMRef;
 
-    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
+    const viewInfo: ViewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
-      this._viewInfo.DOMElement = DOMElement;
+      viewInfo.DOMElement = DOMElement;
     }
 
-    return this._viewInfo;
+    return viewInfo;
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
@@ -97,26 +113,98 @@ export default class AnimatedComponent<
     }
 
     this._forwardedRefCleanup = assignRef(forwardedRef, ref);
-    if (ref !== this._componentRef) {
-      this._componentRef = this._resolveComponentRef(ref);
-      // if ref is changed, reset viewInfo
-      this._viewInfo = undefined;
+    if (ref !== this._rawComponentRef) {
+      this._rawComponentRef = ref;
+      const resolved = this._resolveComponentRef(ref);
+
+      if (resolved !== this._componentRef) {
+        this._updateComponentRef(resolved);
+      }
     }
     this._onSetLocalRef();
   };
 
+  _refreshComponentRef() {
+    // A component exposing `getAnimatableRef` may point at a different host
+    // instance than when its ref was set (its own child may have been replaced),
+    // while React never calls `_setComponentRef` again.
+    const rawRef = this._rawComponentRef as AnimatedComponentRef | null;
+
+    if (!rawRef?.getAnimatableRef) {
+      return;
+    }
+
+    const resolved = this._resolveComponentRef(rawRef);
+
+    if (resolved !== this._componentRef) {
+      this._updateComponentRef(resolved);
+    }
+  }
+
+  _updateComponentRef(componentRef: AnimatedComponentRef | HTMLElement | null) {
+    const previousViewInfo = this._viewInfo;
+    this._componentRef = componentRef;
+
+    if (previousViewInfo === undefined) {
+      return;
+    }
+
+    // A new ref (e.g. a fresh imperative handle) may still resolve to the same host.
+    const viewInfo = this._resolveViewInfo();
+
+    if (viewInfo.viewTag === previousViewInfo.viewTag) {
+      this._viewInfo = viewInfo;
+      return;
+    }
+
+    // Release the previous host's bindings while its view info is still cached.
+    this._detachHostBindings(previousViewInfo);
+
+    this._viewInfo = viewInfo;
+
+    if (this._CSSManager) {
+      this._CSSManager.unmountCleanup();
+      this._CSSManager = this._createCSSManager();
+      this._CSSManager.update(this._cssStyle, this.props);
+    }
+
+    // Bind here as well: the ref callback may fire without an update of this component.
+    this._attachHostBindings();
+  }
+
+  _detachHostBindings(_previousViewInfo: ViewInfo) {
+    // Called with the previous host's view info right before the component is
+    // pointed at a new host. Subclasses release what they bound to that view.
+  }
+
+  _attachHostBindings() {
+    // Subclasses bind to the new host what `_detachHostBindings` released.
+  }
+
+  _createCSSManager() {
+    return new CSSManager(
+      this._getViewInfo(),
+      // `react-native-svg`'s web classes don't set `static displayName`
+      // (only the native side does), so fall back to the class `name` which
+      // matches the React `displayName` pattern used elsewhere.
+      this.ChildComponent.displayName ?? this.ChildComponent.name
+    );
+  }
+
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
-    const componentRef = ref as AnimatedComponentRef;
+    let componentRef = ref as AnimatedComponentRef | null;
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
-      return componentRef.getAnimatableRef();
+    if (componentRef?.getAnimatableRef) {
+      componentRef = componentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
-    if (componentRef && componentRef.elementRef) {
+    if (componentRef?.elementRef) {
       this._componentDOMRef = componentRef.elementRef.current;
     } else {
-      this._componentDOMRef = ref as HTMLElement;
+      this._componentDOMRef = isAnimatableDOMElement(componentRef)
+        ? componentRef
+        : null;
     }
     return componentRef;
   };
@@ -131,13 +219,7 @@ export default class AnimatedComponent<
     this._updateStyles(this.props);
 
     if (!IS_JEST) {
-      this._CSSManager ??= new CSSManager(
-        this._getViewInfo(),
-        // `react-native-svg`'s web classes don't set `static displayName`
-        // (only the native side does), so fall back to the class `name` which
-        // matches the React `displayName` pattern used elsewhere.
-        this.ChildComponent.displayName ?? this.ChildComponent.name
-      );
+      this._CSSManager ??= this._createCSSManager();
       this._CSSManager?.update(this._cssStyle, this.props);
     }
 

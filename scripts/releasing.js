@@ -59,7 +59,11 @@ function getVersion(rawArgs) {
       }).trim();
       const shortCommit = currentCommit.slice(0, 9);
 
-      newVersion = `${baseVersion}-nightly-${dateIdentifier}-${shortCommit}`;
+      const nightlyBaseVersion = currentVersion.includes('-')
+        ? baseVersion
+        : bumpPatch(baseVersion);
+
+      newVersion = `${nightlyBaseVersion}-nightly-${dateIdentifier}-${shortCommit}`;
     } else if (fresh) {
       newVersion = `${currentVersion}-${dateIdentifier}`;
     }
@@ -166,6 +170,15 @@ function processFlags({ help, rc, beta, nightly, fresh, customVersion }) {
     );
     process.exit(1);
   }
+}
+
+/**
+ * @param {string} version
+ * @returns {string}
+ */
+function bumpPatch(version) {
+  const [major, minor, patch] = version.split('.').map(Number);
+  return `${major}.${minor}.${patch + 1}`;
 }
 
 module.exports = {

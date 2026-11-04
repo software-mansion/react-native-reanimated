@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
 ```
 
 In the above example, the used shared value is not changing, hence there is no real benefit of using an animated style there.
-Check out the documentation of [`useSharedValue`](useSharedValue) to learn how shared values can be updated.
+Check out the documentation of [`useSharedValue`](/docs/2.x/api/hooks/useSharedValue) to learn how shared values can be updated.

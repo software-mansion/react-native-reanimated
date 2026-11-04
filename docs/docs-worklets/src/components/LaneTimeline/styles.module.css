@@ -1,0 +1,233 @@
+.figure {
+  --dg-bg: #e1f3fa;
+  --dg-panel: #ffffff;
+  --dg-border: #87cce8;
+  --dg-fill: #e1f3fa;
+  --dg-muted: #4b6572;
+  --dg-js: #8787e8;
+  --dg-ui: #e88789;
+  --dg-worker: #6fcfa4;
+  --dg-busy: #e8552f;
+  --dg-busy-fill: #fbeedb;
+  --dg-press: #2f6fed;
+  --dg-press-fill: #e4ecfd;
+  --dg-ui-runtime: #57b495;
+  --dg-ui-runtime-fill: #dcf5ea;
+  --dg-worker-runtime: #f0b46a;
+  --dg-worker-runtime-fill: #fbeedb;
+  margin: 0 0 1.5rem;
+  font-family: var(--ifm-font-family-base);
+  color: #000;
+}
+
+[data-theme='dark'] .figure {
+  --dg-bg: #172430;
+  --dg-panel: #1e2c3a;
+  --dg-border: #3f7c99;
+  --dg-fill: #22384a;
+  --dg-muted: #a9c1d0;
+  --dg-busy-fill: #5a3a2c;
+  --dg-press-fill: #263a63;
+  --dg-ui-runtime-fill: #244a3b;
+  --dg-worker-runtime-fill: #5a4a2c;
+  color: #f2f7fb;
+}
+
+.layout {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  padding: 24px;
+  background-color: var(--dg-bg);
+}
+
+.scene {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.lanes {
+  --playhead: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playhead {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: calc(16px + (100% - 32px) * var(--playhead));
+  width: 2px;
+  background-color: var(--dg-ui);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--dg-ui) 70%, transparent);
+  pointer-events: none;
+}
+
+.lane {
+  --dg-accent: var(--dg-border);
+  position: relative;
+  margin-top: 28px;
+  padding: 14px;
+  border: 2px solid var(--dg-border);
+  background-color: var(--dg-panel);
+}
+
+.ui {
+  --dg-accent: var(--dg-ui);
+}
+
+.js {
+  --dg-accent: var(--dg-js);
+}
+
+.worker {
+  --dg-accent: var(--dg-worker);
+}
+
+.title {
+  position: absolute;
+  bottom: 100%;
+  left: -2px;
+  padding: 2px 12px;
+  border: 2px solid var(--dg-border);
+  border-bottom: none;
+  background-color: var(--dg-panel);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.tag {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dg-muted);
+}
+
+.track {
+  position: relative;
+}
+
+.rail {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: color-mix(in srgb, var(--dg-accent) 40%, transparent);
+  transform: translateY(-50%);
+}
+
+.block {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
+  height: 30px;
+  padding: 0 6px;
+  border: 2px solid var(--dg-accent);
+  background-color: var(--dg-panel);
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: 0.66rem;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.block.tap {
+  padding: 0 4px;
+  border-color: var(--dg-press);
+  background-color: var(--dg-press-fill);
+  font-size: 0.56rem;
+}
+
+.block.handler,
+.block.ui {
+  padding: 0 3px;
+  font-size: 0.56rem;
+}
+
+.block.handler {
+  border-color: var(--dg-press);
+  background-color: var(--dg-press-fill);
+}
+
+.block.busy {
+  border-color: var(--dg-busy);
+  background-color: var(--dg-busy-fill);
+}
+
+.block.ui {
+  border-color: var(--dg-ui-runtime);
+  background-color: var(--dg-ui-runtime-fill);
+}
+
+.block.worker {
+  border-color: var(--dg-worker-runtime);
+  background-color: var(--dg-worker-runtime-fill);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendItem > dd {
+  margin: 0;
+}
+
+.swatch {
+  width: 18px;
+  height: 12px;
+  border: 2px solid var(--dg-border);
+  background-color: var(--dg-panel);
+}
+
+.swatch.handler {
+  border-color: var(--dg-press);
+  background-color: var(--dg-press-fill);
+}
+
+.swatch.busy {
+  border-color: var(--dg-busy);
+  background-color: var(--dg-busy-fill);
+}
+
+.swatch.ui {
+  border-color: var(--dg-ui-runtime);
+  background-color: var(--dg-ui-runtime-fill);
+}
+
+.swatch.worker {
+  border-color: var(--dg-worker-runtime);
+  background-color: var(--dg-worker-runtime-fill);
+}
+
+@media (max-width: 720px) {
+  .layout {
+    flex-direction: column;
+    align-items: center;
+  }
+}

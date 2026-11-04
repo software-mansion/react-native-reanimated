@@ -94,11 +94,17 @@ jobs:
 
       - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/create-rnc-cli-app
+        uses: $/.github/actions/create-rnc-cli-app
         with:
           react-native-version: ${{ matrix.reactNativeVersion }}
           reanimated-version: ${{ matrix.reanimatedVersion }}
           worklets-version: ${{ matrix.workletsVersion }}
+
+      - name: Install Android NDK
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/install-android-ndk
+        with:
+          gradle-file: ${{ env.APP_NAME }}/android/build.gradle
 
       - name: Build app (Android Debug)
         if: steps.result-cache.outputs.cache-hit != 'true'
@@ -153,7 +159,7 @@ jobs:
 
       - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/create-rnc-cli-app
+        uses: $/.github/actions/create-rnc-cli-app
         with:
           react-native-version: ${{ matrix.reactNativeVersion }}
           reanimated-version: ${{ matrix.reanimatedVersion }}

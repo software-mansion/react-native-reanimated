@@ -3,6 +3,7 @@
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -50,6 +51,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(RuntimeData::uiRuntimeId);
 }
 
+size_t RuntimeManager::getAliveRuntimeCount() {
+  std::shared_lock lock(weakRuntimesMutex_);
+  return weakRuntimes_.size();
+}
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
@@ -61,7 +67,14 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   const auto runtimeId = getNextRuntimeId();
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking, enableNetworking);
+      runtimeId,
+      weak_from_this(),
+      RuntimeData::RuntimeKind::Worker,
+      name,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking);
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
@@ -71,7 +84,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 #endif // NDEBUG
 
   if (initializer) {
-    workletRuntime->runSyncAndDiscard(initializer);
+    try {
+      workletRuntime->runSyncAndDiscard(initializer);
+    } catch (const jsi::JSError &error) {
+      throw std::runtime_error(error.getMessage());
+    }
   }
 
   registerRuntime(runtimeId, workletRuntime);
@@ -103,6 +120,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
+      weak_from_this(),
       RuntimeData::RuntimeKind::UI,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
@@ -115,6 +133,16 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
 
 uint64_t RuntimeManager::getNextRuntimeId() {
   return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
+}
+
+void RuntimeManager::onRuntimeCreated(RuntimeData::RuntimeId runtimeId) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_.try_emplace(runtimeId);
+}
+
+void RuntimeManager::onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_.erase(runtimeId);
 }
 
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {

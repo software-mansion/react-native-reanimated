@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import type { DependencyList } from './commonTypes';
@@ -57,7 +57,7 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
 
   if (isBabelPluginEnabled(handlers)) {
     if (__DEV__) {
-      ensureWorkletHandlers(handlers);
+      ensureWorkletHandlers(handlers, isWorkletFunction);
     }
     doDependenciesDiffer = !areWorkletHandlersEqual(
       handlers as Record<string, WorkletFunction>,
@@ -79,7 +79,7 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   return {
     get context() {
       if (state.context === undefined) {
-        state.context = makeShareable({} as Context);
+        state.context = {} as Context;
       }
       return state.context;
     },

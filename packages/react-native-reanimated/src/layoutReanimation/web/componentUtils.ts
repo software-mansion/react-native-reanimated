@@ -3,6 +3,7 @@
 import { logger } from '../../common';
 import { removeElementAnimation } from '../../common/web';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import type { AnimatableDOMElement } from '../../createAnimatedComponent/commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
@@ -171,7 +172,7 @@ export function maybeModifyStyleForKeyframe(
   }
 }
 
-export function saveSnapshot(element: HTMLElement) {
+export function saveSnapshot(element: AnimatableDOMElement) {
   const rect = element.getBoundingClientRect();
 
   const snapshot: ReanimatedSnapshot = {
@@ -336,8 +337,8 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig);
 }
 
-function getElementScrollValue(element: HTMLElement): ScrollOffsets {
-  let current: HTMLElement | null = element;
+function getElementScrollValue(element: AnimatableDOMElement): ScrollOffsets {
+  let current: AnimatableDOMElement | null = element;
 
   const scrollOffsets: ScrollOffsets = {
     scrollTopOffset: 0,
