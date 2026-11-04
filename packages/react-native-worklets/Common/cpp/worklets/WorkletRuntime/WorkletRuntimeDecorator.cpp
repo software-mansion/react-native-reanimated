@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <react/timing/primitives.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
@@ -27,7 +28,6 @@
 #endif
 #endif
 
-#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
@@ -48,12 +48,7 @@ static os_log_t getWorkletsInstrumentsLogHandle() {
 namespace worklets {
 
 static inline double performanceNow() {
-  // copied from JSExecutor.cpp
-  auto time = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count();
-
-  constexpr double NANOSECONDS_IN_MILLISECOND = 1000000.0;
-  return duration / NANOSECONDS_IN_MILLISECOND;
+  return facebook::react::HighResTimeStamp::now().toDOMHighResTimeStamp();
 }
 
 void WorkletRuntimeDecorator::decorate(
