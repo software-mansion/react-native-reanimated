@@ -280,7 +280,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
           transaction.restoreRequests.push_back({sharedTag, afterNode});
           continue;
         }
-        const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE], beforeNode);
+        const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
         const auto *continuingRun =
             continueSharedTransitionRun(sharedTag, collectedTransition.nodes, transaction, propsParserContext);
         const bool clipped =
@@ -467,7 +467,9 @@ bool LayoutAnimationsProxy::prepareSharedTransition(
     clip[BEFORE] = carrierClipOnScreen(*continuingRun);
   }
   fitClipOfUnclippedSide(
-      collectedTransition, continuingRun ? continuingRun->sourceDrawsWithinFrame : sourceDrawsWithinFrame);
+      collectedTransition,
+      continuingRun ? continuingRun->sourceDrawsWithinFrame : sourceDrawsWithinFrame,
+      continuingRun ? continuingRun->carrier : collectedTransition.nodes[BEFORE]);
   const auto &window = windowFrame();
   const bool clipped = continuingRun ? continuingRun->clip.has_value()
                                      : !nested && (clip[BEFORE].frame != window || clip[AFTER].frame != window);
@@ -482,13 +484,17 @@ bool LayoutAnimationsProxy::prepareSharedTransition(
 
 // A side that its ancestors do not clip ends on the frame of its view, so the clip morphs with the view. The
 // clip stays the window when neither side is clipped, or when the carrier can draw outside the frame of the view
-// at either end, because what it draws there stays during the transition.
+// at either end, because what it draws there stays during the transition. The children of the carrier can change
+// during the run.
 void LayoutAnimationsProxy::fitClipOfUnclippedSide(
     CollectedTransition &collectedTransition,
-    const bool sourceDrawsWithinFrame) const {
+    const bool sourceDrawsWithinFrame,
+    const std::shared_ptr<LightNode> &carrier) const {
   auto &transition = collectedTransition.transition;
-  if (!sourceDrawsWithinFrame ||
-      !drawsWithinFrame(transition.snapshot[AFTER], transition.transform[AFTER], collectedTransition.nodes[AFTER])) {
+  const bool childrenStayWithinFrame =
+      carrier->children.empty() || getViewProps(carrier->current).getClipsContentToBounds();
+  if (!sourceDrawsWithinFrame || !childrenStayWithinFrame ||
+      !drawsWithinFrame(transition.snapshot[AFTER], transition.transform[AFTER])) {
     return;
   }
   const auto &window = windowFrame();
@@ -502,12 +508,10 @@ void LayoutAnimationsProxy::fitClipOfUnclippedSide(
   }
 }
 
-// Only the transforms, the decorations and the children of a view reach outside its frame. The transforms of the
-// ancestors can compose to the identity, for example on a screen.
-bool LayoutAnimationsProxy::drawsWithinFrame(
-    const ShadowView &view,
-    const std::optional<Transform> &ancestorTransform,
-    const std::shared_ptr<LightNode> &node) const {
+// Apart from its children, only the transforms and the decorations of a view reach outside its frame. The transforms
+// of the ancestors can compose to the identity, for example on a screen.
+bool LayoutAnimationsProxy::drawsWithinFrame(const ShadowView &view, const std::optional<Transform> &ancestorTransform)
+    const {
   const auto &props = getViewProps(view);
   const auto &size = view.layoutMetrics.frame.size;
 #ifdef ANDROID
@@ -517,8 +521,7 @@ bool LayoutAnimationsProxy::drawsWithinFrame(
 #endif
   return (!ancestorTransform || ancestorTransform->matrix == Transform::Identity().matrix) &&
       props.transform.operations.empty() && size.width > 0 && size.height > 0 && props.boxShadow.empty() &&
-      props.shadowOpacity == 0 && props.outlineWidth == 0 &&
-      (node->children.empty() || props.getClipsContentToBounds());
+      props.shadowOpacity == 0 && props.outlineWidth == 0;
 }
 
 const react::Rect &LayoutAnimationsProxy::windowFrame() const {
@@ -1513,8 +1516,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
-      const bool sourceDrawsWithinFrame =
-          drawsWithinFrame(before, transition.transform[BEFORE], collectedTransition.nodes[BEFORE]);
+      const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE]);
       const auto *continuingRun =
           continueSharedTransitionRun(sharedTag, collectedTransition.nodes, transaction, propsParserContext);
       const bool clipped =

@@ -609,11 +609,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const Transition &transition,
       BeforeOrAfter index,
       const PropsParserContext &propsParserContext) const;
-  void fitClipOfUnclippedSide(CollectedTransition &collectedTransition, bool sourceDrawsWithinFrame) const;
-  bool drawsWithinFrame(
-      const ShadowView &view,
-      const std::optional<Transform> &ancestorTransform,
-      const std::shared_ptr<LightNode> &node) const;
+  void fitClipOfUnclippedSide(
+      CollectedTransition &collectedTransition,
+      bool sourceDrawsWithinFrame,
+      const std::shared_ptr<LightNode> &carrier) const;
+  bool drawsWithinFrame(const ShadowView &view, const std::optional<Transform> &ancestorTransform) const;
   const react::Rect &windowFrame() const;
   AncestorClip carrierClipOnScreen(const SharedTransitionRun &run) const;
   CarrierClip createCarrierClip(
