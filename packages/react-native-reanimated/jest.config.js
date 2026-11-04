@@ -68,6 +68,7 @@ const {
 const webProject = createProject({
   ...baseWebPreset,
   moduleNameMapper: webModuleNameMapper,
+  resolver: '<rootDir>/jest/resolver.js',
   setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],

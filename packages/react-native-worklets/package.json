@@ -133,8 +133,6 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
-    "!.worklets",
-    ".worklets/dummy.md",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",

@@ -50,7 +50,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 - Scheduling order: `scheduleOnUI` batches inside `queueMicrotask` (`src/threads.native.ts`). `runOnUISync`, `Synchronizable.getBlocking`/`setBlocking`, native `getViewProp` and worker-runtime writes bypass that batch. Most ordering bugs come from this.
 - Serialization: `Common/cpp/worklets/SharedItems/` and `src/memory/`. `Serializable::undefined()` is a shared singleton.
 - Runtime setup: `Common/cpp/worklets/NativeModules/WorkletsModuleProxy.cpp` creates the runtimes, decorators in `Common/cpp/worklets/WorkletRuntime/` install the globals.
-- Bundle Mode: Babel plugin option `bundleMode`, Metro helper `react-native-worklets/bundleMode`, Metro patches in `packages/react-native-worklets/bundleMode/patches/` (not published). `fabric-example` runs Bundle Mode by default. `yarn toggle-bundle-mode` (repo root) patches tracked files in `apps/` and `package.json`, so it pollutes the diff. Generated chunks live in `packages/react-native-worklets/.worklets/`. Keep `.worklets/dummy.md`.
+- Bundle Mode: Babel plugin option `bundleMode`, Metro helper `react-native-worklets/bundleMode`, `metro-runtime` patch in `packages/react-native-worklets/bundleMode/patches/` (not published). The plugin emits each worklet module as a `require("metro:inline;base64,<module>")` dependency of the file that defines it; Metro resolves it to a virtual module beside the importer (needs `resolver.unstable_allowVirtualModules`, set by `bundleModeMetroConfig`). Nothing is written to disk. Until a Metro release includes react/metro#2056, #2036 and #2037, the `metro` and `metro-config` patches in `bundleMode/patches/yarn/` (also applied through the root `package.json` resolutions) add the `virtual:` path namespace, virtual modules and `metro:inline` to Metro 0.87.2; they are those three commits cherry-picked onto the `v0.87.2` tag and transpiled like Metro's publish step. `fabric-example` runs Bundle Mode by default. `yarn toggle-bundle-mode` (repo root) patches tracked files in `apps/` and `package.json`, so it pollutes the diff.
 
 ## Where to look: reanimated
 
@@ -123,7 +123,7 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 
 1. `yarn` - a new worktree has no `node_modules`.
 1. `yarn build-packages` - fills `lib/` and rebuilds both plugins. `type:check` and `circular-dependency-check` fail without it.
-1. After merging across a version bump: `rm packages/react-native-worklets/.worklets/*.js` (keep `dummy.md`) and `yarn jest --clearCache`. Stale chunks trip the plugin version check.
+1. After merging across a version bump: `yarn jest --clearCache`.
 1. `cd apps/fabric-example/ios && bundle exec pod install` when native files changed.
 1. Metro `--reset-cache` after toggling Bundle Mode.
 

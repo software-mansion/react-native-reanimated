@@ -1,7 +1,5 @@
 'use strict';
 
-const path = require('path');
-
 const oxc = require('./index.js');
 
 // Previous steps can pass their output sourcemap
@@ -13,7 +11,6 @@ const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
 let warnedAboutIgnoredOptions = false;
-let cachedWorkletsPkgDir;
 let cachedSyntaxJsx;
 let cachedSyntaxTypescript;
 
@@ -35,8 +32,8 @@ function workletsPluginOxcBabelShim(babelApi) {
           const filename = state.filename;
           if (filename == null) {
             throw new Error(
-              '[Worklets] the Oxc transform needs a filename to name worklets ' +
-                'and to place their generated files, but Babel was given none.'
+              '[Worklets] the Oxc transform needs a filename to name worklets, ' +
+                'but Babel was given none.'
             );
           }
 
@@ -67,7 +64,6 @@ function transform(sourceText, filename, state) {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      workletsPackageDir: resolveWorkletsPkgDir(),
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -105,24 +101,6 @@ function warnAboutIgnoredOptions(options) {
       'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
       'babel.config.js instead.'
   );
-}
-
-/** @returns {string} */
-function resolveWorkletsPkgDir() {
-  if (cachedWorkletsPkgDir === undefined) {
-    try {
-      cachedWorkletsPkgDir = path.dirname(
-        require.resolve('react-native-worklets/package.json')
-      );
-    } catch (error) {
-      throw new Error(
-        "[Worklets] couldn't find the react-native-worklets package on disk, " +
-          'so the generated worklet files have nowhere to go. ' +
-          `Make sure it's installed. Cause: ${error.message}`
-      );
-    }
-  }
-  return cachedWorkletsPkgDir;
 }
 
 /**

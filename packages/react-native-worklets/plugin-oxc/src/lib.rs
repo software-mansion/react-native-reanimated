@@ -45,10 +45,7 @@ pub fn transform(
 ) -> napi::Result<TransformResult> {
     // TODO: Check if this is actually needed on windows
     let filename = filename.replace('\\', "/");
-    let mut opts = options.unwrap_or_default();
-    if let Some(dir) = opts.worklets_package_dir.take() {
-        opts.worklets_package_dir = Some(dir.replace('\\', "/"));
-    }
+    let opts = options.unwrap_or_default();
     let result = std::panic::catch_unwind(|| run(&source_text, &filename, opts));
     match result {
         Ok(Ok(value)) => Ok(value),

@@ -14,6 +14,7 @@ import {
   isImportRelative,
 } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
+import { moduleScopeReservedNames } from './types';
 
 function toClosureIdentifier(node: Identifier | JSXIdentifier): Identifier {
   return isJSXIdentifier(node) ? identifier(node.name) : cloneNode(node, true);
@@ -79,7 +80,7 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (isImport(binding)) {
+        if (isImport(binding) && !moduleScopeReservedNames.has(name)) {
           if (
             isImportRelative(binding) &&
             canForwardRelativeImport(

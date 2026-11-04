@@ -3,47 +3,14 @@ import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
+import { version as packageVersion } from '../../package.json';
+import type { PluginOptions } from '../index';
+import plugin from '../index';
+import { generatedModules, INLINE_MODULE_PREFIX } from '../jest/inlineModules';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
-type CapturedFile = { path: string; content: string };
-
-const capturedFiles: CapturedFile[] = [];
-
-// The OXC transform writes its files from Rust, so they never reach the `fs`
-// mock below. Its jest setup records them on `globalThis` instead.
-function nativelyEmittedFiles(): CapturedFile[] {
-  return ((
-    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
-  ).__WORKLETS_OXC_EMITTED__ ??= []);
-}
-
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
-  const stagedFiles = new Map<string, string>();
-  return {
-    ...actual,
-    writeFileSync: (filepath: string, content: string) => {
-      stagedFiles.set(String(filepath), String(content));
-    },
-    renameSync: (from: string, to: string) => {
-      capturedFiles.push({
-        path: String(to),
-        content: stagedFiles.get(String(from))!,
-      });
-      stagedFiles.delete(String(from));
-    },
-  };
-});
-
-// eslint-disable-next-line import/first
-import { version as packageVersion } from '../../package.json';
-// eslint-disable-next-line import/first
-import type { PluginOptions } from '../index';
-// eslint-disable-next-line import/first
-import plugin from '../index';
-
 const MOCK_LOCATION = '/dev/null';
-const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
+const REQUIRE_PREFIX = `require("${INLINE_MODULE_PREFIX}`;
 
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
@@ -67,8 +34,6 @@ function runPlugin(
   pluginOpts: PluginOptions = {},
   filename: string = MOCK_LOCATION
 ) {
-  const startIndex = capturedFiles.length;
-  const nativeStartIndex = nativelyEmittedFiles().length;
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const config = {
     filename,
@@ -80,19 +45,19 @@ function runPlugin(
   };
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
+  const code = transformed.code ?? '';
   return {
-    code: transformed.code ?? '',
-    files:
-      capturedFiles.length > startIndex
-        ? capturedFiles.slice(startIndex)
-        : nativelyEmittedFiles().slice(nativeStartIndex),
+    code,
+    files: generatedModules(code).map((module) => ({
+      path: module.specifier,
+      content: module.content,
+    })),
   };
 }
 
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    capturedFiles.length = 0;
   });
 
   describe('generally', () => {

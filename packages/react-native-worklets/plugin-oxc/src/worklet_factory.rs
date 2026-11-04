@@ -12,11 +12,10 @@ use crate::closure::get_closure;
 use crate::factory_expression::{
     body_references_name, build_closure_array, build_factory_expression,
 };
-use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
 use crate::naming::worklet_hash;
-use crate::types::State;
-use crate::worklet_file::{generate_worklet_file, write_worklet_file};
+use crate::types::{MODULE_SCOPE_RESERVED_NAMES, State};
+use crate::worklet_file::generate_worklet_module_specifier;
 use crate::worklet_string_code::build_worklet_string;
 
 pub struct WorkletInput<'a, 'b> {
@@ -72,10 +71,11 @@ pub fn make_worklet_factory<'a>(
 
     // Closure-free worklets share module scope with forwarded imports.
     if closure.closure_variables.is_empty() {
-        while closure
-            .imports
-            .iter()
-            .any(|import| import.local == names.react_name)
+        while MODULE_SCOPE_RESERVED_NAMES.contains(&names.react_name.as_str())
+            || closure
+                .imports
+                .iter()
+                .any(|import| import.local == names.react_name)
         {
             names.react_name.insert(0, '_');
         }
@@ -107,7 +107,7 @@ pub fn make_worklet_factory<'a>(
 
     let hash = worklet_hash(&body_string);
 
-    let mut factory_expr = build_factory_expression(
+    let factory_expr = build_factory_expression(
         builder,
         allocator,
         &names,
@@ -117,39 +117,21 @@ pub fn make_worklet_factory<'a>(
         state,
     );
 
-    if let Expression::FunctionExpression(func) = &mut factory_expr
-        && let Some(body) = func.body.as_mut()
-    {
-        update_relative_requires(
-            body,
-            filename,
-            state.opts.worklets_package_dir.as_deref(),
-            builder,
-        );
-    }
-    let file_content = generate_worklet_file(
+    let (specifier, module_content) = generate_worklet_module_specifier(
         builder,
         factory_expr,
         &closure.imports,
-        filename,
-        state.opts.worklets_package_dir.as_deref(),
+        &closure.closure_variables,
+        &names.react_name,
     );
-    let file_path = format!("react-native-worklets/.worklets/{hash}.js");
-
-    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref()
-        && let Err(message) = write_worklet_file(package_dir, &file_path, &file_content)
-        && state.error.is_none()
-    {
-        state.error = Some(message);
-    }
 
     let call_scope = scoping
         .scope_parent_id(input.function_scope_id)
         .unwrap_or_else(|| scoping.root_scope_id());
     let bound_closure = bind_closure_references(scoping, call_scope, &closure.closure_variables);
 
-    let factory_call = make_worklet_factory_call(builder, &file_path, &bound_closure);
-    state.emitted_files.push((file_path, file_content));
+    let factory_call = make_worklet_factory_call(builder, &specifier, &bound_closure);
+    state.emitted_files.push((specifier, module_content));
 
     FactoryOutput {
         factory_call,
@@ -186,10 +168,10 @@ fn bind_closure_references(
 
 fn make_worklet_factory_call<'a>(
     builder: AstBuilder<'a>,
-    file_path: &str,
+    specifier: &str,
     closure: &[(String, Option<ReferenceId>)],
 ) -> Expression<'a> {
-    let path_str = builder.str(file_path);
+    let path_str = builder.str(specifier);
     let require_call = builder.expression_call(
         SPAN,
         builder.expression_identifier(SPAN, "require"),

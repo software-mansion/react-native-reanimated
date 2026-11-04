@@ -9,11 +9,53 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Setup
 
-Bundle Mode is the only mode of running worklets, so every native app using `react-native-worklets` has to be configured as follows:
+To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
+
+## Configure Worklets plugin
+
+1. **Modify your Babel configuration**. [Worklets plugin](../worklets-plugin/about.mdx) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+
+<Tabs groupId="worklets-plugin" queryString>
+  <TabItem value="babel" label="Babel plugin">
+    ```javascript {2-5,13}
+    /** @type {import('react-native-worklets/plugin').PluginOptions} */
+    const workletsPluginOptions = {
+      bundleMode: true,
+      strictGlobal: true, // optional, but recommended
+    }
+
+    module.exports = {
+      presets: [
+        ... // don't add it here :)
+      ],
+      plugins: [
+        ...
+        ['react-native-worklets/plugin', workletsPluginOptions],
+      ],
+    };
+    ```
+  </TabItem>
+
+  <TabItem value="oxc" label="Oxc plugin">
+    The Oxc plugin doesn't need any options. [`bundleMode`](../worklets-plugin/options.mdx#bundlemode) and [`strictGlobal`](../worklets-plugin/options.mdx#strictglobal) are always on.
+
+    ```javascript {7}
+    module.exports = {
+      presets: [
+        ... // don't add it here :)
+      ],
+      plugins: [
+        ...
+        'react-native-worklets/plugin-oxc/babel',
+      ],
+    };
+    ```
+  </TabItem>
+</Tabs>
 
 ## Configure Metro
 
-**Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for Bundle Mode. For example:
+2. **Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
 <Tabs groupId="framework">
   <TabItem value="expo" label="Expo">
@@ -74,34 +116,17 @@ module.exports = getBundleModeMetroConfig(
 );
 ```
 
-## Enable seamless Metro bundling
+## Use a Metro with inline module support
 
-_This step is technically optional, but seamless bundling doesn't work without it._
+Bundle Mode isolates each worklet function in a separate module. The plugin emits that module inline, as a `require("metro:inline;base64,<module>")` dependency of the file that defines the worklet, and Metro resolves it to a virtual module beside that file. Nothing is written to disk and Metro caches each worklet module like any other file.
 
-If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
-
-<ThemedImage
-  sources={{
-light: useBaseUrl('/img/sha-light.png'),
-dark: useBaseUrl('/img/sha-dark.png'),
-}}
-  alt="Bundle Mode Metro error logs"
-/>
-
-This is due to the fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
-
-To fix this issue you can do one of the following:
-
-1. Reload the app and Metro a couple of times until Metro picks up all the new modules. You will have to do it each time. Not recommended.
-1. Patch `metro` package for it to synchronously index new modules created by Bundle Mode. This is the recommended approach. **This patch does not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
-
-This patch is a temporary workaround until necessary changes are merged into Metro.
+This needs a Metro version that supports `metro:inline` specifiers and virtual modules ([react/metro#2037](https://github.com/react/metro/pull/2037)). `bundleModeMetroConfig` and `getBundleModeMetroConfig` enable `resolver.unstable_allowVirtualModules` for you.
 
 ## Enable fast refresh on Worklet Runtimes
 
-_This step is technically optional, but Fast Refresh doesn't reach Worklet Runtimes without it._
+_This step is optional but highly recommended._
 
-React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
+React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function's code you will see an error "\[Worklets] Unable to resolve worklet from module ...".
 
 <ThemedImage
   sources={{
@@ -111,7 +136,7 @@ dark: useBaseUrl('/img/hot-dark.png'),
   alt="Bundle Mode Fast Refresh error logs"
 />
 
-This is due to the fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that a new worklet function with the given hash exists.
+This is due to the fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that the module holding the new worklet function exists.
 
 To fix this issue you can do one of the following:
 
@@ -138,7 +163,7 @@ Make sure to clear your Metro bundler's cache to ensure that all the changes are
   </TabItem>
 </Tabs>
 
-And that's it! You can now happily enjoy worklets! You can learn more about using Bundle Mode [here](/docs/bundleMode/usage).
+And that's it! You can now happily enjoy the Bundle Mode! You can learn more about using the Bundle Mode [here](./usage.mdx).
 
 ## Reference
 

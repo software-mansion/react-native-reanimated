@@ -1,0 +1,12 @@
+diff --git a/src/defaults/index.js b/src/defaults/index.js
+index 2a4e07808817d4ec1b9e06d3643742755307fb03..bd1eb0cec07feeda154dc3f31be2fca53d1836b5 100644
+--- a/src/defaults/index.js
++++ b/src/defaults/index.js
+@@ -62,6 +62,7 @@ const getDefaultValues = (projectRoot) => ({
+     resolveRequest: null,
+     resolverMainFields: ["browser", "main"],
+     schemeResolvers: {},
++    unstable_allowVirtualModules: false,
+     unstable_conditionNames: [],
+     unstable_conditionsByPlatform: {
+       web: ["browser"],

@@ -8,20 +8,20 @@ import {
 } from '@babel/types';
 
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
-import { generatedWorkletsDir } from './types';
 import { makeWorkletFactory } from './workletFactory';
 
 export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): CallExpression | MemberExpression {
-  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
+  const { factoryCallParamPack, workletModuleSpecifier } = makeWorkletFactory(
+    path,
+    state
+  );
 
   const workletModule = memberExpression(
     callExpression(identifier('require'), [
-      stringLiteral(
-        `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
-      ),
+      stringLiteral(workletModuleSpecifier),
     ]),
     identifier('default')
   );

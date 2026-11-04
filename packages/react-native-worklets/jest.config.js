@@ -13,6 +13,7 @@ module.exports = {
         '^react-native-worklets$': '<rootDir>/src/index',
         '^react-native-worklets/(.*)$': ['<rootDir>/src/$1', '<rootDir>/$1'],
       },
+      resolver: '<rootDir>/jest/inlineModuleResolver.js',
       transformIgnorePatterns: [],
       testMatch: ['<rootDir>/__tests__/**/*.native.test.ts'],
     },
@@ -30,6 +31,7 @@ module.exports = {
       transform: {
         '^.+\\.(js|ts|tsx)$': 'babel-jest',
       },
+      resolver: '<rootDir>/jest/inlineModuleResolver.js',
       transformIgnorePatterns: [],
       testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
       testPathIgnorePatterns: ['\\.native\\.test\\.ts$'],

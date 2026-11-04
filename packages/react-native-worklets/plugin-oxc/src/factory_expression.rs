@@ -128,7 +128,7 @@ fn build_inner_fn_decl<'a>(
     const_decl(builder, id_pat, init)
 }
 
-fn build_member_assign<'a>(
+pub fn build_member_assign<'a>(
     builder: AstBuilder<'a>,
     object_name: &str,
     member_name: &str,

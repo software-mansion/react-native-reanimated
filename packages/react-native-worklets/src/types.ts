@@ -54,6 +54,7 @@ type WorkletClosure = unknown[];
 interface WorkletProps {
   __closure?: WorkletClosure;
   __workletHash: number;
+  __moduleId?: number | string;
   /** Only in dev builds. */
   __pluginVersion?: string;
 }

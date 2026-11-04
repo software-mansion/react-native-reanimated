@@ -15,6 +15,4 @@ pub struct PluginOptions {
     pub env_name: Option<String>,
 
     pub plugin_version: Option<String>,
-
-    pub worklets_package_dir: Option<String>,
 }

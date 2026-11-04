@@ -1,0 +1,642 @@
+diff --git a/src/DeltaBundler/Graph.js b/src/DeltaBundler/Graph.js
+index f528355a8a8629d8ac4051b948eafe4a974b5859..ef3ebb9f91406879e3b92f331f04c9ba26bb2470 100644
+--- a/src/DeltaBundler/Graph.js
++++ b/src/DeltaBundler/Graph.js
+@@ -47,13 +47,32 @@ class Graph {
+       paths.filter((path) => this.dependencies.has(path)),
+     );
+     const allModifiedPaths = new Set(paths);
++    const changedVirtualSources = new Map();
+     const delta = await this._buildDelta(
+       modifiedPathsInBaseGraph,
+       internalOptions,
+-      (absolutePath) =>
+-        !this.dependencies.has(absolutePath) ||
+-        allModifiedPaths.has(absolutePath),
++      (absolutePath, virtualSource) => {
++        if (
++          !this.dependencies.has(absolutePath) ||
++          allModifiedPaths.has(absolutePath)
++        ) {
++          return true;
++        }
++        const current = this.#virtualSources.get(absolutePath);
++        if (
++          virtualSource?.type === "buffer" &&
++          current?.type === "buffer" &&
++          current.sha1 !== virtualSource.sha1
++        ) {
++          changedVirtualSources.set(absolutePath, virtualSource);
++          return true;
++        }
++        return false;
++      },
+     );
++    for (const path of changedVirtualSources.keys()) {
++      modifiedPathsInBaseGraph.add(path);
++    }
+     if (delta.errors.size > 0) {
+       for (const modified of modifiedPathsInBaseGraph) {
+         delta.baseModuleData.set(
+@@ -108,6 +127,11 @@ class Graph {
+       );
+       throw error;
+     }
++    for (const [path, virtualSource] of changedVirtualSources) {
++      if (this.dependencies.has(path)) {
++        this.#virtualSources.set(path, virtualSource);
++      }
++    }
+     const added = new Map();
+     for (const path of delta.added) {
+       added.set(path, (0, _nullthrows.default)(this.dependencies.get(path)));
+@@ -165,11 +189,14 @@ class Graph {
+       this.#virtualSources,
+       {
+         resolve: options.resolve,
+-        shouldTraverse: (dependency) => {
++        shouldTraverse: (dependency, virtualSource) => {
+           if (options.shallow || isWeakOrLazy(dependency, options)) {
+             return false;
+           }
+-          return moduleFilter == null || moduleFilter(dependency.absolutePath);
++          return (
++            moduleFilter == null ||
++            moduleFilter(dependency.absolutePath, virtualSource)
++          );
+         },
+         transform: async (absolutePath, virtualSource) => {
+           options.onDependencyAdd();
+diff --git a/src/DeltaBundler/Serializers/getAllFiles.js b/src/DeltaBundler/Serializers/getAllFiles.js
+index 025a3b4a1849a5aa29a67c439d9d373f2663df37..97cd32c55ab8fa1392b48363dc9ad28097bc4d7e 100644
+--- a/src/DeltaBundler/Serializers/getAllFiles.js
++++ b/src/DeltaBundler/Serializers/getAllFiles.js
+@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
+ });
+ exports.default = getAllFiles;
+ var _Assets = require("../../Assets");
++var _modulePath = require("../../lib/modulePath");
+ var _js = require("./helpers/js");
+ async function getAllFiles(pre, graph, options) {
+   const modules = graph.dependencies;
+@@ -16,7 +17,11 @@ async function getAllFiles(pre, graph, options) {
+     }
+   }
+   for (const module of modules.values()) {
+-    if (!(0, _js.isJsModule)(module) || !processModuleFilter(module)) {
++    if (
++      !(0, _js.isJsModule)(module) ||
++      !processModuleFilter(module) ||
++      (0, _modulePath.isVirtualModulePath)(module.path)
++    ) {
+       continue;
+     }
+     if ((0, _js.getJsOutput)(module).type === "js/module/asset") {
+diff --git a/src/DeltaBundler/Serializers/helpers/js.js b/src/DeltaBundler/Serializers/helpers/js.js
+index 3ce22e488ce7cb0450a813df4113662806cd6ab2..8ea2b035df162d4f41ea4bceab653b339f2a898a 100644
+--- a/src/DeltaBundler/Serializers/helpers/js.js
++++ b/src/DeltaBundler/Serializers/helpers/js.js
+@@ -9,6 +9,7 @@ exports.inlineModuleIdReferences = inlineModuleIdReferences;
+ exports.isJsModule = isJsModule;
+ exports.wrapModule = wrapModule;
+ var _isResolvedDependency = require("../../../lib/isResolvedDependency");
++var _modulePath = require("../../../lib/modulePath");
+ var _pathUtils = require("../../../lib/pathUtils");
+ var _invariant = _interopRequireDefault(require("invariant"));
+ var jscSafeUrl = _interopRequireWildcard(require("jsc-safe-url"));
+@@ -67,8 +68,9 @@ function wrapModule(module, options) {
+   );
+ }
+ function getModuleVerboseName(module, options) {
+-  return (0, _pathUtils.normalizePathSeparatorsToPosix)(
+-    _nodePath.default.relative(options.projectRoot, module.path),
++  return (0, _modulePath.getModuleDisplayPath)(
++    module.path,
++    options.projectRoot,
+   );
+ }
+ function getDefaultAsyncDependencyPath(dependency, options) {
+@@ -79,9 +81,12 @@ function getDefaultAsyncDependencyPath(dependency, options) {
+   const { searchParams } = new URL(jscSafeUrl.toNormalUrl(options.sourceUrl));
+   searchParams.set("modulesOnly", "true");
+   searchParams.set("runModule", "false");
++  if ((0, _modulePath.isVirtualModulePath)(dependency.absolutePath)) {
++    searchParams.set(_modulePath.VIRTUAL_MODULE_URL_PARAM, "true");
++  }
+   const bundlePath = _nodePath.default.relative(
+     options.serverRoot,
+-    dependency.absolutePath,
++    (0, _modulePath.getModuleSourcePath)(dependency.absolutePath),
+   );
+   return (
+     "/" +
+diff --git a/src/DeltaBundler/Serializers/hmrJSBundle.js b/src/DeltaBundler/Serializers/hmrJSBundle.js
+index 0bcf1dd94938253d3e26fabd082ffc115807a0c4..5ba3197712bd4820b61c5bbd5a697fcc7c20bb9c 100644
+--- a/src/DeltaBundler/Serializers/hmrJSBundle.js
++++ b/src/DeltaBundler/Serializers/hmrJSBundle.js
+@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
+   value: true,
+ });
+ exports.default = hmrJSBundle;
++var _modulePath = require("../../lib/modulePath");
+ var _js = require("./helpers/js");
+ var _debug = _interopRequireDefault(require("debug"));
+ var jscSafeUrl = _interopRequireWildcard(require("jsc-safe-url"));
+@@ -44,15 +45,16 @@ function generateModules(sourceModules, graph, options) {
+   const modules = [];
+   for (const module of sourceModules) {
+     if ((0, _js.isJsModule)(module)) {
++      const sourcePath = (0, _modulePath.getModuleSourcePath)(module.path);
+       const getPathname = (extension) => {
+         return _nodePath.default
+           .relative(
+             options.serverRoot ?? options.projectRoot,
+             _nodePath.default.join(
+-              _nodePath.default.dirname(module.path),
++              _nodePath.default.dirname(sourcePath),
+               _nodePath.default.basename(
+-                module.path,
+-                _nodePath.default.extname(module.path),
++                sourcePath,
++                _nodePath.default.extname(sourcePath),
+               ) +
+                 "." +
+                 extension,
+@@ -64,6 +66,12 @@ function generateModules(sourceModules, graph, options) {
+       };
+       const clientUrl = new URL(options.clientUrl);
+       clientUrl.searchParams.delete("excludeSource");
++      if ((0, _modulePath.isVirtualModulePath)(module.path)) {
++        clientUrl.searchParams.set(
++          _modulePath.VIRTUAL_MODULE_URL_PARAM,
++          "true",
++        );
++      }
+       clientUrl.pathname = getPathname("map");
+       const sourceMappingURL = clientUrl.toString();
+       clientUrl.pathname = getPathname("bundle");
+diff --git a/src/DeltaBundler/buildSubgraph.js b/src/DeltaBundler/buildSubgraph.js
+index fce2201089bf0390b92f05510376dab7077eff9d..904ad361f521624e88230a428a644639ec6616d5 100644
+--- a/src/DeltaBundler/buildSubgraph.js
++++ b/src/DeltaBundler/buildSubgraph.js
+@@ -6,11 +6,17 @@ Object.defineProperty(exports, "__esModule", {
+ exports.buildSubgraph = buildSubgraph;
+ var _contextModule = require("../lib/contextModule");
+ var _isResolvedDependency = require("../lib/isResolvedDependency");
++var _modulePath = require("../lib/modulePath");
+ var _nodePath = _interopRequireDefault(require("node:path"));
+ function _interopRequireDefault(e) {
+   return e && e.__esModule ? e : { default: e };
+ }
+-function resolveDependencies(parentPath, dependencies, resolve) {
++function resolveDependencies(
++  parentPath,
++  dependencies,
++  resolve,
++  virtualSourceHashes,
++) {
+   const maybeResolvedDeps = new Map();
+   const virtualSources = new Map();
+   for (const dep of dependencies) {
+@@ -41,18 +47,44 @@ function resolveDependencies(parentPath, dependencies, resolve) {
+         data: dep,
+       };
+     } else {
++      let resolution;
+       try {
+-        maybeResolvedDep = {
+-          absolutePath: resolve(parentPath, dep).filePath,
+-          data: dep,
+-        };
++        resolution = resolve(parentPath, dep);
+       } catch (error) {
+         if (dep.data.isOptional !== true) {
+           throw error;
+         }
++      }
++      if (resolution == null) {
+         maybeResolvedDep = {
+           data: dep,
+         };
++      } else {
++        if (resolution.type === "virtualModule") {
++          const { filePath, source, sha1 } = resolution;
++          const previous = virtualSourceHashes.get(filePath);
++          if (previous != null && previous.sha1 !== sha1) {
++            throw new Error(
++              `Virtual module '${filePath}' was resolved with different ` +
++                `contents from '${previous.parentPath}' and '${parentPath}'. ` +
++                "A resolver must produce the same source for the same " +
++                "virtual path.",
++            );
++          }
++          virtualSourceHashes.set(filePath, {
++            sha1,
++            parentPath,
++          });
++          virtualSources.set(key, {
++            type: "buffer",
++            source,
++            sha1,
++          });
++        }
++        maybeResolvedDep = {
++          absolutePath: resolution.filePath,
++          data: dep,
++        };
+       }
+     }
+     if (maybeResolvedDeps.has(key)) {
+@@ -75,16 +107,22 @@ async function buildSubgraph(
+   const moduleData = new Map();
+   const errors = new Map();
+   const visitedPaths = new Set();
++  const virtualSourceHashes = new Map();
+   async function visit(absolutePath, virtualSource) {
+     if (visitedPaths.has(absolutePath)) {
+       return;
+     }
+     visitedPaths.add(absolutePath);
+-    const transformResult = await transform(absolutePath, virtualSource);
++    const sourcePath =
++      virtualSource?.type === "buffer"
++        ? (0, _modulePath.getModuleSourcePath)(absolutePath)
++        : absolutePath;
++    const transformResult = await transform(sourcePath, virtualSource);
+     const resolutionResult = resolveDependencies(
+-      absolutePath,
++      sourcePath,
+       transformResult.dependencies,
+       resolve,
++      virtualSourceHashes,
+     );
+     moduleData.set(absolutePath, {
+       ...transformResult,
+@@ -92,18 +130,22 @@ async function buildSubgraph(
+     });
+     const visitPromises = [];
+     for (const dependency of resolutionResult.dependencies.values()) {
++      if (!(0, _isResolvedDependency.isResolvedDependency)(dependency)) {
++        continue;
++      }
++      const dependencyVirtualSource = resolutionResult.virtualSources.get(
++        dependency.data.data.key,
++      );
+       if (
+-        (0, _isResolvedDependency.isResolvedDependency)(dependency) &&
+-        shouldTraverse(dependency) &&
++        shouldTraverse(dependency, dependencyVirtualSource) &&
+         !visitedPaths.has(dependency.absolutePath)
+       ) {
+         visitPromises.push(
+-          visit(
+-            dependency.absolutePath,
+-            resolutionResult.virtualSources.get(dependency.data.data.key),
+-          ).catch((error) => {
+-            errors.set(dependency.absolutePath, error);
+-          }),
++          visit(dependency.absolutePath, dependencyVirtualSource).catch(
++            (error) => {
++              errors.set(dependency.absolutePath, error);
++            },
++          ),
+         );
+       }
+     }
+diff --git a/src/ModuleGraph/worker/collectDependencies.js b/src/ModuleGraph/worker/collectDependencies.js
+index cad67bbfcf204c61fa5399eeb773f649d070b6a9..c66da6ff4864e444e297acb60893ee69b667b5d8 100644
+--- a/src/ModuleGraph/worker/collectDependencies.js
++++ b/src/ModuleGraph/worker/collectDependencies.js
+@@ -533,7 +533,9 @@ const DefaultDependencyTransformer = {
+     const moduleIDExpression = createModuleIDExpression(dependency, state);
+     path.node.arguments = [moduleIDExpression];
+     if (state.keepRequireNames) {
+-      path.node.arguments.push(types.stringLiteral(dependency.name));
++      path.node.arguments.push(
++        types.stringLiteral(getDebugName(dependency.name)),
++      );
+     }
+   },
+   transformImportCall(path, dependency, state) {
+@@ -606,7 +608,21 @@ function createModuleIDExpression(dependency, state) {
+   );
+ }
+ function createModuleNameLiteral(dependency) {
+-  return types.stringLiteral(dependency.name);
++  return types.stringLiteral(getDebugName(dependency.name));
++}
++const INLINE_MODULE_PREFIX = "metro:inline";
++function getDebugName(name) {
++  if (
++    name.length > INLINE_MODULE_PREFIX.length &&
++    name.slice(0, INLINE_MODULE_PREFIX.length).toLowerCase() ===
++      INLINE_MODULE_PREFIX
++  ) {
++    const commaIndex = name.indexOf(",");
++    if (commaIndex !== -1) {
++      return name.slice(0, commaIndex + 1) + "...";
++    }
++  }
++  return name;
+ }
+ function getKeyForDependency(qualifier) {
+   const { asyncType, contextParams, isESMImport, name } = qualifier;
+diff --git a/src/Server.js b/src/Server.js
+index 72752974320a85061f4d94490eae474ded3ee823..d200ad79451ace2bad368f06272945a64b55cca0 100644
+--- a/src/Server.js
++++ b/src/Server.js
+@@ -31,6 +31,7 @@ var _formatBundlingError = _interopRequireDefault(
+   require("./lib/formatBundlingError"),
+ );
+ var _getGraphId = _interopRequireDefault(require("./lib/getGraphId"));
++var _modulePath = require("./lib/modulePath");
+ var _parseBundleOptionsFromBundleRequestUrl = _interopRequireDefault(
+   require("./lib/parseBundleOptionsFromBundleRequestUrl"),
+ );
+@@ -566,7 +567,10 @@ class Server {
+         sourceFilePath =
+           this._rootUrlMap.filePathOfUrlDecodedPathname(filePathname);
+       }
+-      if (sourceFilePath != null) {
++      if (
++        sourceFilePath != null &&
++        !(0, _modulePath.isVirtualModuleUrl)(urlObj.searchParams)
++      ) {
+         await this._processSourceRequest(sourceFilePath, res);
+       } else {
+         next();
+@@ -1434,8 +1438,14 @@ class Server {
+   }
+   _getModuleSourceUrl(module, mode) {
+     switch (mode) {
+-      case _types.SourcePathsMode.ServerUrl:
+-        return this._rootUrlMap.urlPathnameOfFilePath(module.path);
++      case _types.SourcePathsMode.ServerUrl: {
++        const pathname = this._rootUrlMap.urlPathnameOfFilePath(
++          (0, _modulePath.getModuleSourcePath)(module.path),
++        );
++        return (0, _modulePath.isVirtualModulePath)(module.path)
++          ? `${pathname}?${_modulePath.VIRTUAL_MODULE_URL_PARAM}=true`
++          : pathname;
++      }
+       case _types.SourcePathsMode.Absolute:
+         return module.path;
+     }
+diff --git a/src/lib/metroSchemeResolver.js b/src/lib/metroSchemeResolver.js
+index 9136b40d41802d6dc524908733c61b274a5e23e7..e1fff5f725313c6a1720b855ae7e31cad99e2e98 100644
+--- a/src/lib/metroSchemeResolver.js
++++ b/src/lib/metroSchemeResolver.js
+@@ -6,12 +6,20 @@ Object.defineProperty(exports, "__esModule", {
+ exports.default = void 0;
+ var _metroBabelRuntime = require("./metroBabelRuntime");
+ var _metroRuntime = require("./metroRuntime");
++var _resolveInlineModule = require("./resolveInlineModule");
+ const BABEL_RUNTIME_SPECIFIER = "babel-runtime";
+ const BABEL_RUNTIME_PACKAGE = "@babel/runtime";
+ const RUNTIME_SPECIFIER = "runtime";
+ const RUNTIME_PACKAGE = "metro-runtime";
+ var _default = (context, specifier, platform) => {
+   const { protocol, pathname } = new URL(specifier);
++  if (
++    pathname === _resolveInlineModule.INLINE_MODULE_SPECIFIER ||
++    pathname.startsWith(_resolveInlineModule.INLINE_MODULE_SPECIFIER + ";") ||
++    pathname.startsWith(_resolveInlineModule.INLINE_MODULE_SPECIFIER + ",")
++  ) {
++    return (0, _resolveInlineModule.resolveInlineModule)(context, pathname);
++  }
+   if (
+     pathname === BABEL_RUNTIME_SPECIFIER ||
+     pathname.startsWith(BABEL_RUNTIME_SPECIFIER + "/")
+diff --git a/src/lib/modulePath.js b/src/lib/modulePath.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..454818b85d7e230a0e1eb71f5ecd562c2f230f23
+--- /dev/null
++++ b/src/lib/modulePath.js
+@@ -0,0 +1,40 @@
++"use strict";
++
++Object.defineProperty(exports, "__esModule", {
++  value: true,
++});
++exports.VIRTUAL_MODULE_URL_PARAM = void 0;
++exports.deriveVirtualModulePath = deriveVirtualModulePath;
++exports.getModuleDisplayPath = getModuleDisplayPath;
++exports.getModuleSourcePath = getModuleSourcePath;
++exports.isVirtualModulePath = isVirtualModulePath;
++exports.isVirtualModuleUrl = isVirtualModuleUrl;
++var _pathUtils = require("./pathUtils");
++var _nodePath = _interopRequireDefault(require("node:path"));
++function _interopRequireDefault(e) {
++  return e && e.__esModule ? e : { default: e };
++}
++const VIRTUAL_MODULE_NAMESPACE = "virtual:";
++const VIRTUAL_MODULE_URL_PARAM = (exports.VIRTUAL_MODULE_URL_PARAM = "virtual");
++function deriveVirtualModulePath(virtualPath) {
++  return VIRTUAL_MODULE_NAMESPACE + virtualPath;
++}
++function isVirtualModulePath(modulePath) {
++  return modulePath.startsWith(VIRTUAL_MODULE_NAMESPACE);
++}
++function getModuleSourcePath(modulePath) {
++  return isVirtualModulePath(modulePath)
++    ? modulePath.slice(VIRTUAL_MODULE_NAMESPACE.length)
++    : modulePath;
++}
++function getModuleDisplayPath(modulePath, rootDir) {
++  const relativePath = (0, _pathUtils.normalizePathSeparatorsToPosix)(
++    _nodePath.default.relative(rootDir, getModuleSourcePath(modulePath)),
++  );
++  return isVirtualModulePath(modulePath)
++    ? VIRTUAL_MODULE_NAMESPACE + relativePath
++    : relativePath;
++}
++function isVirtualModuleUrl(searchParams) {
++  return searchParams.has(VIRTUAL_MODULE_URL_PARAM);
++}
+diff --git a/src/lib/parseBundleOptionsFromBundleRequestUrl.js b/src/lib/parseBundleOptionsFromBundleRequestUrl.js
+index 15cdde4c0e347b68cb5fd891b35746b3bab50855..d3366bec63b3cc3571b9732e2daf1a73a05f2af6 100644
+--- a/src/lib/parseBundleOptionsFromBundleRequestUrl.js
++++ b/src/lib/parseBundleOptionsFromBundleRequestUrl.js
+@@ -8,6 +8,7 @@ var _parsePlatformFilePath = _interopRequireDefault(
+   require("../node-haste/lib/parsePlatformFilePath"),
+ );
+ var _types = require("../shared/types");
++var _modulePath = require("./modulePath");
+ var _parseCustomResolverOptions = _interopRequireDefault(
+   require("./parseCustomResolverOptions"),
+ );
+@@ -79,6 +80,11 @@ function parseBundleOptionsFromBundleRequestUrl(
+     search,
+     hash,
+   } = new URL(rawNonJscSafeUrlEncodedUrl, RESOLVE_BASE_URL);
++  if ((0, _modulePath.isVirtualModuleUrl)(searchParams)) {
++    throw new Error("Virtual modules cannot be requested by URL yet.", {
++      cause: rawNonJscSafeUrlEncodedUrl,
++    });
++  }
+   const isRelativeProtocol = rawNonJscSafeUrlEncodedUrl.startsWith("//");
+   const protocolPart = isRelativeProtocol ? "//" : _tempProtocol + "//";
+   const isNoProtocol = !isRelativeProtocol && protocolPart === RESOLVE_BASE_URL;
+diff --git a/src/lib/resolveInlineModule.js b/src/lib/resolveInlineModule.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9ee46bf4a3a2465a388e73e90a51dfee6fcd2df4
+--- /dev/null
++++ b/src/lib/resolveInlineModule.js
+@@ -0,0 +1,47 @@
++"use strict";
++
++Object.defineProperty(exports, "__esModule", {
++  value: true,
++});
++exports.INLINE_MODULE_SPECIFIER = void 0;
++exports.resolveInlineModule = resolveInlineModule;
++var _nodeCrypto = _interopRequireDefault(require("node:crypto"));
++var _nodePath = _interopRequireDefault(require("node:path"));
++function _interopRequireDefault(e) {
++  return e && e.__esModule ? e : { default: e };
++}
++const INLINE_MODULE_SPECIFIER = (exports.INLINE_MODULE_SPECIFIER = "inline");
++const INLINE_MODULE_HASH_LENGTH = 16;
++function resolveInlineModule(context, pathname) {
++  const commaIndex = pathname.indexOf(",");
++  if (commaIndex === -1) {
++    throw new Error(`Malformed inline module specifier: metro:${pathname}`);
++  }
++  const parameters = pathname
++    .slice(INLINE_MODULE_SPECIFIER.length, commaIndex)
++    .split(";")
++    .map((part) => part.trim().toLowerCase())
++    .filter((part) => part !== "");
++  const payload = pathname.slice(commaIndex + 1);
++  for (const parameter of parameters) {
++    if (parameter !== "base64") {
++      throw new Error(
++        `Unsupported parameter '${parameter}' in inline module specifier: metro:${pathname}`,
++      );
++    }
++  }
++  const source = parameters.includes("base64")
++    ? Buffer.from(payload, "base64").toString("utf8")
++    : decodeURIComponent(payload);
++  const { dir, name, ext } = _nodePath.default.parse(context.originModulePath);
++  const hash = _nodeCrypto.default
++    .createHash("sha1")
++    .update(source)
++    .digest("hex")
++    .slice(0, INLINE_MODULE_HASH_LENGTH);
++  return {
++    type: "virtualModule",
++    virtualPath: _nodePath.default.join(dir, `${name}.inline-${hash}${ext}`),
++    source,
++  };
++}
+diff --git a/src/lib/transformHelpers.js b/src/lib/transformHelpers.js
+index cf100f30bd7a5a4d117bb4de772e7c0e96d6788a..45b316db165bda47daea42c0a2619b31daa1137b 100644
+--- a/src/lib/transformHelpers.js
++++ b/src/lib/transformHelpers.js
+@@ -121,7 +121,9 @@ async function getTransformFn(
+   const assetExts = new Set(config.resolver.assetExts);
+   return async (modulePath, virtualSource) => {
+     let fileBuffer;
+-    if (virtualSource?.type === "requireContext") {
++    if (virtualSource?.type === "buffer") {
++      fileBuffer = virtualSource.source;
++    } else if (virtualSource?.type === "requireContext") {
+       const { requireContext } = virtualSource;
+       const graph = await bundler.getDependencyGraph();
+       const files = Array.from(
+diff --git a/src/node-haste/DependencyGraph/ModuleResolution.js b/src/node-haste/DependencyGraph/ModuleResolution.js
+index d7553ef49113e0775956c2a9759627aedd3cece2..b686987db94b9b84f13ea0c5011291333943f8fc 100644
+--- a/src/node-haste/DependencyGraph/ModuleResolution.js
++++ b/src/node-haste/DependencyGraph/ModuleResolution.js
+@@ -4,12 +4,14 @@ Object.defineProperty(exports, "__esModule", {
+   value: true,
+ });
+ exports.UnableToResolveError = exports.ModuleResolver = void 0;
++var _modulePath = require("../../lib/modulePath");
+ var _codeFrame = require("@babel/code-frame");
+ var _invariant = _interopRequireDefault(require("invariant"));
+ var Resolver = _interopRequireWildcard(require("metro-resolver"));
+ var _createDefaultContext = _interopRequireDefault(
+   require("metro-resolver/private/createDefaultContext"),
+ );
++var _nodeCrypto = _interopRequireDefault(require("node:crypto"));
+ var _nodeFs = _interopRequireDefault(require("node:fs"));
+ var _nodePath = _interopRequireDefault(require("node:path"));
+ var _nodeUtil = _interopRequireDefault(require("node:util"));
+@@ -211,7 +213,31 @@ class ModuleResolver {
+       case "empty":
+         return this._getEmptyModule();
+       case "virtualModule":
+-        throw new Error("Virtual modules are not yet implemented.");
++        if (!this._options.unstable_allowVirtualModules) {
++          throw new Error(
++            "Virtual modules are not enabled. Set " +
++              "`resolver.unstable_allowVirtualModules` to `true` in your " +
++              "Metro config to enable them.",
++          );
++        }
++        const { virtualPath } = resolution;
++        (0, _invariant.default)(
++          virtualPath != null,
++          "Virtual modules without a virtualPath are not yet supported.",
++        );
++        const source =
++          typeof resolution.source === "string"
++            ? Buffer.from(resolution.source, "utf8")
++            : resolution.source;
++        return {
++          type: "virtualModule",
++          filePath: (0, _modulePath.deriveVirtualModulePath)(virtualPath),
++          source,
++          sha1: _nodeCrypto.default
++            .createHash("sha1")
++            .update(source)
++            .digest("hex"),
++        };
+       default:
+         resolution.type;
+         throw new Error("invalid type");
+diff --git a/src/node-haste/DependencyGraph/createModuleResolver.js b/src/node-haste/DependencyGraph/createModuleResolver.js
+index 4f90b2a637855215809412d02e2950aaa288a2e2..dd396316b7d17304b8bb81045db49a966d84cdfe 100644
+--- a/src/node-haste/DependencyGraph/createModuleResolver.js
++++ b/src/node-haste/DependencyGraph/createModuleResolver.js
+@@ -72,6 +72,7 @@ function createModuleResolver({ config, fileSystem, hasteMap, packageCache }) {
+       ...config.resolver.schemeResolvers,
+     },
+     sourceExts: config.resolver.sourceExts,
++    unstable_allowVirtualModules: config.resolver.unstable_allowVirtualModules,
+     unstable_conditionNames: config.resolver.unstable_conditionNames,
+     unstable_conditionsByPlatform:
+       config.resolver.unstable_conditionsByPlatform,
+diff --git a/src/node-haste/DependencyGraph.js b/src/node-haste/DependencyGraph.js
+index f3dd684fa4f43d4f37468f70203af45c84c93ca2..f2115dedd4f72d6b093828e100f6b7045b9085cc 100644
+--- a/src/node-haste/DependencyGraph.js
++++ b/src/node-haste/DependencyGraph.js
+@@ -222,9 +222,9 @@ class DependencyGraph extends _nodeEvents.default {
+       mapByResolverOptions,
+       resolverOptionsKey,
+     );
+-    const mapByTarget = getOrCreateMap(mapByOrigin, originKey);
+-    const mapByPlatform = getOrCreateMap(mapByTarget, targetKey);
+-    let resolution = mapByPlatform.get(platformKey);
++    let resolution =
++      mapByOrigin.get(originKey)?.get(targetKey)?.get(platformKey) ??
++      mapByOrigin.get(originModulePath)?.get(targetKey)?.get(platformKey);
+     if (!resolution) {
+       try {
+         resolution = this._moduleResolver.resolveDependency(
+@@ -251,7 +251,12 @@ class DependencyGraph extends _nodeEvents.default {
+         throw error;
+       }
+     }
+-    mapByPlatform.set(platformKey, resolution);
++    const memoOriginKey =
++      resolution.type === "virtualModule" ? originModulePath : originKey;
++    getOrCreateMap(getOrCreateMap(mapByOrigin, memoOriginKey), targetKey).set(
++      platformKey,
++      resolution,
++    );
+     return resolution;
+   }
+   doesFileExist = (filePath) => {
