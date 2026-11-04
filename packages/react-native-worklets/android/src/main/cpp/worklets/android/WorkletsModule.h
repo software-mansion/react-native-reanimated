@@ -72,6 +72,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   static RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame(
       const jni::global_ref<jhybridobject> &javaPart);
 
+  static RuntimeBindings::GetCurrentFrameTimestamp getCurrentFrameTimestamp(
+      const jni::global_ref<jhybridobject> &javaPart);
+
   std::function<bool()> getIsOnJSQueueThread();
 
   friend HybridBase;

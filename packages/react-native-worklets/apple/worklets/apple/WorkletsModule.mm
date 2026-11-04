@@ -17,6 +17,7 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
+#import <limits>
 #import <memory>
 #import <string>
 
@@ -175,6 +176,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
+      // iOS publishes the frame timestamp through FrameTimestampScope for the
+      // duration of the display-link callback. Outside it there is no frame in
+      // progress; CADisplayLink's last targetTimestamp must not be reused.
+      .getCurrentFrameTimestamp = []() -> double { return std::numeric_limits<double>::quiet_NaN(); },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});
 }

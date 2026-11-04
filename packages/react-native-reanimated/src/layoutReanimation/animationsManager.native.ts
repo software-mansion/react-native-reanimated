@@ -144,10 +144,18 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       });
 
       startObservingProgress(tag, value, scheduleFlush);
-      const previousFrameTimestamp = global.__frameTimestamp;
-      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
+      // `__frameTimestamp` may be a live reading of the frame in progress rather
+      // than a value this batch owns. Writing that reading back would pin it
+      // after the frame ends, and an animation started in the gap would look
+      // partly elapsed. Only fill the gap when the frame is not providing one.
+      const hadFrameTimestamp = global.__frameTimestamp !== undefined;
+      if (!hadFrameTimestamp) {
+        global.__frameTimestamp = getLayoutAnimationStartTimestamp();
+      }
       value.value = animation;
-      global.__frameTimestamp = previousFrameTimestamp;
+      if (!hadFrameTimestamp) {
+        global.__frameTimestamp = undefined;
+      }
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
