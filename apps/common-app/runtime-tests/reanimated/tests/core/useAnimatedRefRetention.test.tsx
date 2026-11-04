@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
+import type { AnimatedRef } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
   useAnimatedRef,
@@ -79,6 +80,31 @@ async function collectBothRuntimes() {
   }
 }
 
+let detachingRef: AnimatedRef<Animated.View> | undefined;
+
+// The owner stays mounted while its child view comes and goes, so the ref
+// itself remains reachable from the test and from worklets.
+function DetachingComponent({ showView }: { showView: boolean }) {
+  const animatedRef = useAnimatedRef<Animated.View>();
+  detachingRef = animatedRef;
+  return (
+    <View>
+      {showView ? (
+        <Animated.View ref={animatedRef} style={{ width: 10, height: 10 }} />
+      ) : null}
+    </View>
+  );
+}
+
+function isAttachedOnUI(animatedRef: AnimatedRef<Animated.View>) {
+  return runOnRuntimeAsyncWithId(UIRuntimeId, () => {
+    'worklet';
+    // On the UI runtime the ref resolves to a shareable holding the view's
+    // shadow node wrapper, or null once the view is detached.
+    return (animatedRef as unknown as { value: unknown }).value !== null;
+  });
+}
+
 describe('useAnimatedRef retention', () => {
   test('does not keep an unmounted component alive through a scheduled callback', async () => {
     expect(typeof globalThis.gc).toBe('function');
@@ -92,5 +118,18 @@ describe('useAnimatedRef retention', () => {
 
     const alive = sentinels.filter((ref) => ref.deref() !== undefined).length;
     expect(alive).toBe(0);
+  });
+
+  test('clears the ref on the UI runtime when its view unmounts', async () => {
+    await render(<DetachingComponent showView />);
+    await waitForFrames(5);
+    const animatedRef = detachingRef!;
+    expect(await isAttachedOnUI(animatedRef)).toBe(true);
+
+    await render(<DetachingComponent showView={false} />);
+    await waitForFrames(5);
+    expect(await isAttachedOnUI(animatedRef)).toBe(false);
+
+    await render(null);
   });
 });
