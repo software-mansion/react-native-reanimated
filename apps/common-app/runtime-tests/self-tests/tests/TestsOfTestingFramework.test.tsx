@@ -485,7 +485,7 @@ describe('Tests of Test Framework', () => {
 
     test('reloadAndResume from a suite with a completed test case', async () => {
       await expect(() => reloadAndResume('self-tests')).toThrow(
-        'a test case of this suite has already completed'
+        'test case(s) of this suite already finished'
       );
     });
 
