@@ -32,6 +32,12 @@ struct ContentOpacityRange {
   double to;
 };
 
+// The clip of a shared transition carrier moves with the carrier.
+struct AncestorClipRange {
+  AncestorClip from;
+  AncestorClip to;
+};
+
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
@@ -42,6 +48,7 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
+  std::optional<AncestorClip> clip;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -71,6 +78,7 @@ struct ManagedLayoutAnimationStart {
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
   std::optional<ContentOpacityRange> contentOpacity;
+  std::optional<AncestorClipRange> clip;
   // A shared transition content fade-in gets the target opacity of the view.
   bool isContentFadeIn = false;
 };
@@ -183,7 +191,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &finalView,
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config = nullptr,
-      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt,
+      std::optional<AncestorClipRange> clip = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;

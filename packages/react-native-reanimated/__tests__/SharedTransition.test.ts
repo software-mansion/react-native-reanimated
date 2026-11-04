@@ -371,6 +371,45 @@ describe('SharedTransition with fadeContent', () => {
   });
 });
 
+describe('SharedTransition with a clip', () => {
+  const CLIPPED_VALUES = {
+    ...VALUES,
+    currentClipOriginX: 0,
+    targetClipOriginX: 40,
+    currentClipWidth: 100,
+    targetClipWidth: 200,
+  } as unknown as SharedTransitionAnimationsValues;
+  const clippedLayoutValues =
+    CLIPPED_VALUES as unknown as LayoutAnimationsValues;
+
+  test('moves the clip when a custom animation leaves it out', () => {
+    const { initialValues, animations } = SharedTransition.custom((values) => {
+      'worklet';
+      return { width: withTiming(values.targetWidth) };
+    }).build()(clippedLayoutValues);
+    expect(initialValues.clipOriginX).toBe(0);
+    expect(animations).toHaveProperty('clipOriginX');
+    expect(animations).toHaveProperty('clipWidth');
+  });
+
+  test('keeps the clip animation of a custom animation', () => {
+    const clipWidth = withTiming(150);
+    const { animations } = SharedTransition.custom(() => {
+      'worklet';
+      return { clipWidth };
+    }).build()(clippedLayoutValues);
+    expect(animations.clipWidth.toValue).toBe(150);
+  });
+
+  test('interpolates the clip of a custom progress animation', () => {
+    const style = SharedTransition.progressAnimation(() => {
+      'worklet';
+      return { opacity: 0.5 };
+    }).getProgressAnimation()(CLIPPED_VALUES, 0.25);
+    expect(style).toEqual({ opacity: 0.5, clipOriginX: 10, clipWidth: 125 });
+  });
+});
+
 describe('SharedTransition singular matrices', () => {
   const collapsed = IDENTITY.map((value, i) =>
     i === 0 || i === 5 ? 0 : value
