@@ -301,12 +301,15 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
         { variableName: 'stiffness', value: stiffness },
         { variableName: 'overshootClamping', value: overshootClamping },
         { variableName: 'energyThreshold', value: energyThreshold },
-        { variableName: 'duration', value: duration },
         { variableName: 'rotate', value: rotate },
       ] as const
     ).forEach(({ value, variableName }) =>
       maybeSetConfigValue(value, variableName)
     );
+
+    if (duration !== undefined) {
+      config.duration = duration;
+    }
 
     return [animation, config];
   }

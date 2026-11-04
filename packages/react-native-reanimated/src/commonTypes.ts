@@ -177,6 +177,10 @@ export interface LayoutAnimationBatchItem {
     | SerializableRef<ReanimatedKeyframe | LayoutAnimationFunction>
     | undefined;
   sharedTransitionTag?: string;
+  sharedTransitionContentFade?: {
+    fadeIn: SerializableRef<EntryExitAnimationFunction>;
+    fadeOutEnd: number;
+  };
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;

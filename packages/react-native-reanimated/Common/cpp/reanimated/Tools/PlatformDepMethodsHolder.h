@@ -51,6 +51,7 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
+using ReleaseViewTransitionsFunction = std::function<void(std::vector<int> &tags, bool isBatchQueued)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
@@ -73,6 +74,7 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ReleaseViewTransitionsFunction releaseViewTransitionsFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;

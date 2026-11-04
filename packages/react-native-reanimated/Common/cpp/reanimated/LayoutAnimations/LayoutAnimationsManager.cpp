@@ -9,6 +9,19 @@
 
 namespace reanimated {
 
+namespace {
+void setOrErase(
+    std::unordered_map<int, SharedTransitionContentFade> &contentFades,
+    const int tag,
+    const std::optional<SharedTransitionContentFade> &contentFade) {
+  if (contentFade) {
+    contentFades.insert_or_assign(tag, *contentFade);
+  } else {
+    contentFades.erase(tag);
+  }
+}
+} // namespace
+
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   const std::lock_guard<std::mutex> lock(pendingConfigUpdatesMutex_);
   pendingConfigUpdates_.insert(pendingConfigUpdates_.end(), layoutAnimationsBatch.begin(), layoutAnimationsBatch.end());
@@ -26,7 +39,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
   }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : configUpdates) {
-    const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag, contentFade] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
@@ -35,6 +48,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
       sharedTransitionsForNativeID_[tag] = config;
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      setOrErase(contentFadesForNativeID_, tag, contentFade);
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
@@ -45,6 +59,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_[tag] = config;
         sharedTransitionManager_->tagToName_[tag] = sharedTag;
       }
+      setOrErase(contentFades_, tag, config ? contentFade : std::nullopt);
       continue;
     }
     if (config == nullptr) {
@@ -75,6 +90,17 @@ std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
   return configIt == configs.end() ? nullptr : configIt->second;
 }
 
+bool LayoutAnimationsManager::hasLayoutAnimationConfigs(const LayoutAnimationType type) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  return !getConfigsForType(type).empty();
+}
+
+std::optional<SharedTransitionContentFade> LayoutAnimationsManager::getSharedTransitionContentFade(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  const auto it = contentFades_.find(tag);
+  return it == contentFades_.end() ? std::nullopt : std::optional(it->second);
+}
+
 std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   const auto configIt = exitingAnimations_.find(tag);
@@ -92,6 +118,11 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
   shouldAnimateExitingForTag_.erase(tag);
+}
+
+void LayoutAnimationsManager::clearSharedTransitionContentFade(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  contentFades_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -133,8 +164,14 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   if (sharedTransitionConfig) {
     sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
     sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
+    const auto contentFadeIt = contentFadesForNativeID_.find(nativeId);
+    setOrErase(
+        contentFades_,
+        tag,
+        contentFadeIt == contentFadesForNativeID_.end() ? std::nullopt : std::optional(contentFadeIt->second));
   }
   sharedTransitionsForNativeID_.erase(nativeId);
+  contentFadesForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);
 }
 

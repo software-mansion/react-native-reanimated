@@ -3,7 +3,6 @@ import {
   createWorkletRuntime,
   scheduleOnRuntime,
   setInterval,
-  setTimeout,
 } from '@site/src/simulation/worklets';
 
 export default function* main() {
@@ -23,9 +22,9 @@ export default function* main() {
 
   yield scheduleOnRuntime(worker, taskDispatch);
 
-  // Only once in a while
-  function* poll() {
+  function* synchronize() {
     yield console.log(result.getDirty());
   }
-  yield setTimeout(poll, 160);
+
+  yield setInterval(synchronize, 80); // Only once in a while
 }

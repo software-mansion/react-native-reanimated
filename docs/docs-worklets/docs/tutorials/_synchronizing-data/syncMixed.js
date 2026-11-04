@@ -9,33 +9,34 @@ import {
 
 export default function* main() {
   const progress = yield createShareable(UIRuntimeId, 0);
-  const dirty = yield createSynchronizable(false);
+  const needsSync = yield createSynchronizable(false, { fixedType: true });
   let cached = yield 0;
 
   function* onFrame(frame) {
     progress.value = yield frame * 25;
-    yield dirty.setDirty(true);
-    if (frame < 4) requestAnimationFrame(() => onFrame(frame + 1));
+    yield needsSync.setDirty(true);
+    if (yield frame < 4) {
+      yield requestAnimationFrame(() => onFrame(frame + 1));
+    }
   }
 
-  function* animate() {
+  function* restartAnimation() {
     yield scheduleOnUI(onFrame, 0);
   }
 
   function* refresh() {
     cached = yield progress.getSync();
-    yield dirty.setDirty(false);
+    yield needsSync.setDirty(false);
     return yield cached;
   }
 
-  // Read the progress on the RN Runtime once in a while
-  function* read() {
-    const changed = yield dirty.getDirty();
+  function* synchronize() {
+    const changed = yield needsSync.getDirty();
     const value = yield changed ? refresh() : cached;
     yield console.log(`progress ${value}%${changed ? '' : ' (cached)'}`);
   }
 
-  yield animate();
-  yield setInterval(animate, 160);
-  yield setInterval(read, 24);
+  yield restartAnimation();
+  yield setInterval(restartAnimation, 160);
+  yield setInterval(synchronize, 24); // Read the progress on the RN Runtime once in a while
 }

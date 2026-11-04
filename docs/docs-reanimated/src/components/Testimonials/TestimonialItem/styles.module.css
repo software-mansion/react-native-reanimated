@@ -1,4 +1,5 @@
 .testimonialItem {
+  color: var(--ifm-font-color-base);
   background-color: var(--swm-red-light-20);
   box-shadow: -12px 12px 0px var(--swm-red-light-100);
   padding: 1.5em;
@@ -18,6 +19,7 @@
   }
 }
 .testimonialItem:hover {
+  color: var(--ifm-font-color-base);
   text-decoration: none;
   background-color: var(--swm-red-light-40);
   box-shadow: -12px 12px 0px var(--swm-red-light-100);
@@ -32,6 +34,16 @@
 
 .testimonialBody {
   margin: 0;
+  text-wrap: pretty;
+}
+
+.testimonialItem:focus-visible {
+  outline: 2px solid var(--swm-red-light-100);
+  outline-offset: 4px;
+}
+
+[data-theme='dark'] .testimonialItem:focus-visible {
+  outline-color: var(--swm-off-white);
 }
 
 .quoteIcon {
@@ -104,10 +116,4 @@
   font-size: 14px;
   color: var(--swm-navy-light-60);
   text-transform: uppercase;
-}
-
-@media (max-width: 420px) {
-  .featureTitle {
-    font-size: 20px;
-  }
 }

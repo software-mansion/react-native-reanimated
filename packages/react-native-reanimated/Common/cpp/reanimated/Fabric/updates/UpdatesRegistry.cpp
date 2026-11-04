@@ -215,6 +215,10 @@ void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNo
   updatesBatch_.emplace_back(shadowNodeFamily, props);
 }
 
+void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic &&props) {
+  updatesBatch_.emplace_back(shadowNodeFamily, std::move(props));
+}
+
 std::unordered_set<Tag> UpdatesRegistry::getPendingTags() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   std::unordered_set<Tag> pendingTags;

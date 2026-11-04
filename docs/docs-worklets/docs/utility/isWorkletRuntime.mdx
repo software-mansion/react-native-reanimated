@@ -3,6 +3,9 @@ sidebar_position: 42 # Use alphabetical order
 title: isWorkletRuntime
 ---
 
+import * as ApiIsWorkletRuntimeSnippet from './_examples/apiIsWorkletRuntime';
+import ApiIsWorkletRuntimeSource from '!!raw-loader!./_examples/apiIsWorkletRuntime';
+
 <Badges version="0.8.0">
   # isWorkletRuntime
 </Badges>
@@ -11,27 +14,7 @@ Checks if the current runtime is a [Worklet Runtime](../concepts/runtimeKinds.md
 
 ## Reference
 
-```typescript
-import {
-  isWorkletRuntime,
-  scheduleOnUI,
-  scheduleOnRuntime,
-  createWorkletRuntime,
-} from 'react-native-worklets';
-
-console.log(isWorkletRuntime()); // false
-
-scheduleOnUI(() => {
-  // highlight-next-line
-  console.log(isWorkletRuntime()); // true
-});
-
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  // highlight-next-line
-  console.log(isWorkletRuntime()); // true
-});
-```
+<ThreadingSimulation module={ApiIsWorkletRuntimeSnippet} source={ApiIsWorkletRuntimeSource}/>
 
 <details>
   <summary>Type definitions</summary>

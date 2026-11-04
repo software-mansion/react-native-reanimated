@@ -2,6 +2,8 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -51,6 +53,11 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(RuntimeData::uiRuntimeId);
 }
 
+size_t RuntimeManager::getAliveRuntimeCount() {
+  std::shared_lock lock(weakRuntimesMutex_);
+  return weakRuntimes_.size();
+}
+
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
     const std::string &name,
@@ -62,13 +69,20 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   const auto runtimeId = getNextRuntimeId();
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId, RuntimeData::RuntimeKind::Worker, name, queue, enableEventLoop, enableLocking, enableNetworking);
+      runtimeId,
+      weak_from_this(),
+      RuntimeData::RuntimeKind::Worker,
+      name,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking);
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);
 
 #ifndef NDEBUG
-  withRegistrationPaused([&] { loadModuleUpdates(workletRuntime); });
+  withRuntimeReadyPaused([&] { loadModuleUpdates(workletRuntime); });
 #endif // NDEBUG
 
   if (initializer) {
@@ -79,14 +93,14 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     }
   }
 
-  registerRuntime(runtimeId, workletRuntime);
+  onRuntimeReady(runtimeId, workletRuntime);
 
   return workletRuntime;
 }
 
 #ifndef NDEBUG
 void RuntimeManager::propagateModuleUpdate(const std::string &code, const std::string &sourceUrl) {
-  std::unique_lock registrationLock(registrationMutex_);
+  std::unique_lock runtimeReadyLock(runtimeReadyMutex_);
 
   moduleUpdates_.push_back(ModuleUpdate{.sourceUrl = sourceUrl, .code = code});
 
@@ -108,12 +122,13 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       RuntimeData::uiRuntimeId,
+      weak_from_this(),
       RuntimeData::RuntimeKind::UI,
       RuntimeData::uiRuntimeName,
       uiAsyncQueue,
       /*enableEventLoop*/ false);
 
-  registerRuntime(RuntimeData::uiRuntimeId, uiRuntime);
+  onRuntimeReady(RuntimeData::uiRuntimeId, uiRuntime);
 
   return uiRuntime;
 }
@@ -122,10 +137,24 @@ uint64_t RuntimeManager::getNextRuntimeId() {
   return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
 }
 
-void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
-  std::unique_lock registrationLock(registrationMutex_);
+void RuntimeManager::onRuntimeCreated(RuntimeData::RuntimeId runtimeId) {
   std::unique_lock lock(weakRuntimesMutex_);
-  weakRuntimes_[runtimeId] = workletRuntime;
+  weakRuntimes_.try_emplace(runtimeId);
+}
+
+void RuntimeManager::onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_.erase(runtimeId);
+}
+
+void RuntimeManager::onRuntimeReady(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  std::unique_lock runtimeReadyLock(runtimeReadyMutex_);
+  std::unique_lock lock(weakRuntimesMutex_);
+  const auto it = weakRuntimes_.find(runtimeId);
+  react_native_assert(it != weakRuntimes_.end() && "[Worklets] onRuntimeReady called before onRuntimeCreated.");
+  if (it != weakRuntimes_.end()) {
+    it->second = workletRuntime;
+  }
 }
 
 } // namespace worklets

@@ -13,8 +13,6 @@ const AmountExample: React.FC = () =>
   React.createElement(require('./AmountExample').default as React.FC);
 const AndroidDrawPassExample: React.FC = () =>
   React.createElement(require('./AndroidDrawPassExample').default as React.FC);
-const AnimatableRefExample: React.FC = () =>
-  React.createElement(require('./AnimatableRefExample').default as React.FC);
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorExample: React.FC = () =>
@@ -117,6 +115,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -162,10 +164,6 @@ const Game2048Example: React.FC = () =>
 const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
-  );
-const InvalidValueAccessExample: React.FC = () =>
-  React.createElement(
-    require('./InvalidValueAccessExample').default as React.FC
   );
 const InterruptedExitingExample: React.FC = () =>
   React.createElement(
@@ -218,6 +216,8 @@ const SynchronousPropsSETExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/SynchronousPropsExample').default
   );
+const NestedTagsExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/NestedTags').default);
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -397,11 +397,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Animated props',
     screen: AnimatedPropsExample,
   },
-  InvalidReadWriteExample: {
-    icon: '🔒',
-    title: 'Invalid read/write during render',
-    screen: InvalidValueAccessExample,
-  },
   BottomSheetExample: {
     icon: '⬆️',
     title: 'Bottom sheet',
@@ -473,11 +468,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-  AnimatableRefExample: {
-    icon: '⏬',
-    title: 'Animate inner component',
-    screen: AnimatableRefExample,
-  },
   AmountExample: {
     icon: '📈',
     title: 'Amount',
@@ -835,6 +825,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  NestedTagsExample: {
+    title: '[SET] Nested tags',
+    screen: NestedTagsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -919,6 +918,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

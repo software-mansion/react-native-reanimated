@@ -16,7 +16,11 @@ interface Props extends PropsWithChildren {
 
 const TestimonialItem = ({ author, company, image, link, children }: Props) => {
   return (
-    <a href={link} target="_blank" className={styles.testimonialItem}>
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.testimonialItem}>
       <QuoteIcon
         className={styles.quoteIcon}
         color={

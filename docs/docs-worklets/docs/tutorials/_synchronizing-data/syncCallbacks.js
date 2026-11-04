@@ -1,25 +1,25 @@
 import {
   createWorkletRuntime,
+  heapVariable,
   scheduleOnRN,
   scheduleOnRuntime,
   setInterval,
-  setTimeout,
 } from '@site/src/simulation/worklets';
 
 export default function* main() {
   const worker = yield createWorkletRuntime();
 
-  let polledResult = yield -1;
+  const polledResult = yield heapVariable('polledResult', -1);
   function* pollResult(value) {
-    polledResult = yield value;
+    polledResult.value = yield value;
   }
 
   function* taskDispatch() {
-    let result = yield -1;
+    const result = yield heapVariable('result', -1);
 
     function* task() {
-      yield result++;
-      yield scheduleOnRN(pollResult, result);
+      yield result.value++;
+      yield scheduleOnRN(pollResult, result.value);
     }
 
     yield setInterval(task, 16);
@@ -27,9 +27,9 @@ export default function* main() {
 
   yield scheduleOnRuntime(worker, taskDispatch);
 
-  // Only once in a while
-  function* poll() {
-    yield console.log(polledResult);
+  function* synchronize() {
+    yield console.log(polledResult.value);
   }
-  yield setTimeout(poll, 160);
+
+  yield setInterval(synchronize, 80); // Only once in a while
 }
