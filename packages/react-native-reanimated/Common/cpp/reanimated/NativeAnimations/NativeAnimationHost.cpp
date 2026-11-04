@@ -127,6 +127,10 @@ std::optional<UnsupportedTargetCause> NativeAnimationHost::unsupportedTargetCaus
   return platform_->unsupportedTargetCause(track, view);
 }
 
+bool NativeAnimationHost::movesOnlyPlanarTransforms() const {
+  return platform_->movesOnlyPlanarTransforms();
+}
+
 bool NativeAnimationHost::playsSizeChange(
     const facebook::react::ShadowView &before,
     const facebook::react::ShadowView &after) const {

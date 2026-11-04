@@ -32,6 +32,10 @@ using NativeLayoutRefusal =
 /// `UnsupportedTarget` for a target clause, `ResourceLimit` for a limit.
 native_animation::TrackBuildFailure failureOf(const NativeLayoutRefusal &refusal);
 
+std::optional<NativeLayoutRefusal> nativeLayoutSummaryRefusal(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &buildSummary);
+
 struct NativeLayoutTracks {
   double originTimestampMs;
   std::vector<native_animation::AnimationTrack> tracks;

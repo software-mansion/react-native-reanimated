@@ -56,6 +56,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) const;
   /// The static answer of the platform (`NativeAnimationPlatform::playsSizeChange`). Any thread.
+  bool movesOnlyPlanarTransforms() const;
+
   bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) const;
   /// True when the mounted view of the tag is in a window. UI thread only.
   bool isMountedInWindow(SurfaceId surfaceId, Tag tag) const;

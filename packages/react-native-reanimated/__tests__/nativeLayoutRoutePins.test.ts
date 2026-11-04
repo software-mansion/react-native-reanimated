@@ -21,6 +21,7 @@ initializeLayoutAnimationsManager();
 const manager = globalThis.LayoutAnimationsManager;
 
 const LIMITS = { leaves: 6, transformOperations: 4, segments: 64 };
+const PLATFORM_RULES = { movesOnlyPlanarTransforms: false };
 const SIZES: [number, number][] = [
   [50, 50],
   [100, 60],
@@ -106,9 +107,13 @@ function routeOf(config: Config, size: [number, number]) {
     values,
     () => onUIRuntime(() => config(values)),
     LIMITS,
+    PLATFORM_RULES,
     []
   )!;
   manager.releaseBuilt(buildId);
+  if (summary.refusedTarget !== null) {
+    return 'T';
+  }
   if (summary.exceededLimit !== null) {
     return 'R';
   }

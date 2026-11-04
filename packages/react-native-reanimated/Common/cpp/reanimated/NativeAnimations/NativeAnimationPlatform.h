@@ -82,6 +82,8 @@ class NativeAnimationPlatform {
   virtual std::optional<UnsupportedTargetCause> unsupportedTargetCause(
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) = 0;
+  virtual bool movesOnlyPlanarTransforms() const = 0;
+
   /// False when the platform cannot play a change of the frame size from `before` to `after`. Reads no mounted
   /// state, so a client can ask before it builds the tracks.
   virtual bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) = 0;

@@ -98,6 +98,7 @@ function makePendingConfig(callback: jest.Mock) {
 }
 
 const LIMITS = { leaves: 3, transformOperations: 4, segments: 8 };
+const PLATFORM_RULES = { movesOnlyPlanarTransforms: false };
 
 const linearPhase = (toValue: number | string, durationMs: number) => ({
   kind: 'timing',
@@ -253,9 +254,123 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(1, 9, false);
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(2, 9, false);
   });
+  describe('platform transform rules before native fitting', () => {
+    let buildId = 8100;
+    const summaryOf = (
+      kind: string,
+      initial: number | string,
+      target: number | string,
+      movesOnlyPlanarTransforms = true,
+      easing: EasingFunction = Easing.linear,
+      reduceMotion = ReduceMotion.Never
+    ) => {
+      const config = jest.fn(
+        () =>
+          ({
+            initialValues: { originX: 0, transform: [{ [kind]: initial }] },
+            animations: {
+              originX: withTiming(40, { duration: 300 }),
+              transform: [
+                {
+                  [kind]: withTiming(target, {
+                    duration: 300,
+                    easing,
+                    reduceMotion,
+                  }),
+                },
+              ],
+            },
+          }) as LayoutAnimation
+      );
+      const id = ++buildId;
+      const summary = manager.build(
+        id,
+        {},
+        () => onUIRuntime(config),
+        LIMITS,
+        { movesOnlyPlanarTransforms },
+        []
+      )!;
+      manager.releaseBuilt(id);
+      return { summary, config };
+    };
+
+    test.each([
+      ['rotateX', '0deg', '45deg'],
+      ['rotateY', '0rad', '1rad'],
+      ['perspective', 500, 800],
+    ] as const)(
+      '%s refuses before the easing runs and calls the builder once',
+      (kind, initial, target) => {
+        const easing = jest.fn((t: number) => t * t);
+        const { summary, config } = summaryOf(
+          kind,
+          initial,
+          target,
+          true,
+          easing
+        );
+        expect(summary).toMatchObject({
+          exceededLimit: null,
+          refusedTarget: 'NonPlanarTransform',
+          leaves: [],
+        });
+        expect(easing).not.toHaveBeenCalled();
+        expect(config).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    test.each(['rotateX', 'rotateY', 'perspective'])(
+      'a constant %s next to a moving position keeps its tracks',
+      (kind) => {
+        const value = kind === 'perspective' ? 500 : '0deg';
+        const { summary } = summaryOf(kind, value, value);
+        expect(summary.refusedTarget).toBeNull();
+        expect(summary.leaves.map(({ track }) => track?.kind)).toEqual([
+          'scalar',
+          'transform',
+        ]);
+      }
+    );
+
+    test('a platform that plays 3D transforms keeps the moving track', () => {
+      const { summary } = summaryOf('rotateX', '0deg', '45deg', false);
+      expect(summary.refusedTarget).toBeNull();
+      expect(summary.leaves[1].track?.kind).toBe('transform');
+    });
+
+    test('a reduced-motion transform takes no early platform refusal', () => {
+      const { summary } = summaryOf(
+        'rotateX',
+        '0deg',
+        '45deg',
+        true,
+        Easing.linear,
+        ReduceMotion.Always
+      );
+      expect(summary.refusedTarget).toBeNull();
+    });
+
+    test('an angle with another unit keeps the late value check', () => {
+      const { summary } = summaryOf('rotateX', '0deg', '0rad');
+      expect(summary.refusedTarget).toBeNull();
+      expect(summary.leaves[1].track).toBeUndefined();
+    });
+
+    test('a perspective change below the native length tolerance takes no early refusal', () => {
+      const { summary } = summaryOf('perspective', 500, 500.005);
+      expect(summary.refusedTarget).toBeNull();
+    });
+
+    test('a change below the native operation tolerance takes no early refusal', () => {
+      const { summary } = summaryOf('rotateX', '0rad', '0.00005rad');
+      expect(summary.refusedTarget).toBeNull();
+    });
+  });
+
   describe('builds', () => {
     const summaryOf = (buildId: number, config: () => LayoutAnimation) =>
-      manager.build(buildId, {}, config, LIMITS, []);
+      manager.build(buildId, {}, config, LIMITS, PLATFORM_RULES, []);
 
     test('the builder runs one time for a build and its frame-driven start', () => {
       const startTimestamps: number[] = [];
@@ -424,6 +539,7 @@ describe('LayoutAnimationsManager', () => {
         VALUES,
         () => onUIRuntime(() => entering(VALUES)),
         LIMITS,
+        PLATFORM_RULES,
         []
       );
       manager.releaseBuilt(buildId);
@@ -539,6 +655,7 @@ describe('LayoutAnimationsManager', () => {
         values,
         () => onUIRuntime(() => layout(values)),
         limits,
+        PLATFORM_RULES,
         []
       )!;
       manager.releaseBuilt(buildId);
@@ -667,6 +784,7 @@ describe('LayoutAnimationsManager', () => {
         VALUES,
         () => onUIRuntime(() => animation(VALUES)),
         { leaves: 6, transformOperations: 8, segments: 64 },
+        PLATFORM_RULES,
         []
       );
       manager.releaseBuilt(buildId);
@@ -873,6 +991,7 @@ describe('LayoutAnimationsManager', () => {
             animations: { [key]: onUIRuntime(create) },
           }) as LayoutAnimation,
         limits,
+        PLATFORM_RULES,
         []
       );
       manager.releaseBuilt(buildId);
@@ -1217,6 +1336,7 @@ describe('LayoutAnimationsManager', () => {
             animations: { [key]: onUIRuntime(create) },
           }) as LayoutAnimation,
         limits,
+        PLATFORM_RULES,
         []
       );
       manager.releaseBuilt(buildId);
@@ -1980,6 +2100,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originX: 0 }, { originX: timing(100, 400) }),
         LIMITS,
+        PLATFORM_RULES,
         []
       );
       startBatchAt(1100);
@@ -2001,6 +2122,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originX: 25 }, { originX: timing(50, 400) }),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.releaseBuilt(22);
@@ -2019,6 +2141,7 @@ describe('LayoutAnimationsManager', () => {
           { originX: timing(100, 400), originY: timing(40, 400) }
         ),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.releaseBuilt(22);
@@ -2037,6 +2160,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originX: 25 }, { originX: timing(100, 200) }),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.releaseBuilt(22);
@@ -2050,6 +2174,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originY: 0 }, { originY: timing(40, 100) }, callback),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -2071,6 +2196,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originX: 25 }, { originX: timing(100, 200) }),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -2089,6 +2215,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originX: 25 }, { originX: delayed }),
         LIMITS,
+        PLATFORM_RULES,
         [X]
       );
       manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 22, [X]);
@@ -2112,6 +2239,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originY: 0 }, { originY: delayed }),
         LIMITS,
+        PLATFORM_RULES,
         []
       );
       startBatchAt(3000);
@@ -2154,7 +2282,7 @@ describe('LayoutAnimationsManager', () => {
         (_, handOverMs) => {
           const firstFrame = Math.floor(handOverMs / FRAME_MS) + 1;
           startBatchAt(ORIGIN);
-          manager.build(30, {}, springConfig(), LIMITS, []);
+          manager.build(30, {}, springConfig(), LIMITS, PLATFORM_RULES, []);
           manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 30, []);
           for (let frame = 1; frame < firstFrame; frame++) {
             runFrame(ORIGIN + frame * FRAME_MS);
@@ -2163,7 +2291,7 @@ describe('LayoutAnimationsManager', () => {
           manager.stop(TAG);
 
           startBatchAt(ORIGIN);
-          manager.build(31, {}, springConfig(), LIMITS, []);
+          manager.build(31, {}, springConfig(), LIMITS, PLATFORM_RULES, []);
           startBatchAt(ORIGIN + handOverMs);
           manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, 31, []);
           const handedOver = valuesAt(framesFrom(firstFrame));
@@ -2189,6 +2317,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         configOf({ originY: 0 }, { originY: repeat }),
         LIMITS,
+        PLATFORM_RULES,
         []
       );
       startBatchAt(2400);
@@ -2209,7 +2338,14 @@ describe('LayoutAnimationsManager', () => {
       test('the build gives it the animation of the frame driver, and its track has no duration', () => {
         const config = plainConfig()();
         startBatchAt(2000);
-        const summary = manager.build(24, {}, () => config, LIMITS, [])!;
+        const summary = manager.build(
+          24,
+          {},
+          () => config,
+          LIMITS,
+          PLATFORM_RULES,
+          []
+        )!;
         manager.releaseBuilt(24);
         expect(summary.leaves[1]).toEqual({
           key: 'originY',
@@ -2235,6 +2371,7 @@ describe('LayoutAnimationsManager', () => {
           {},
           configOf({ originY: 5 }, { originY: '30%' }),
           LIMITS,
+          PLATFORM_RULES,
           []
         )!;
         manager.releaseBuilt(24);
@@ -2253,7 +2390,14 @@ describe('LayoutAnimationsManager', () => {
         const callback = jest.fn();
         const twinCallback = jest.fn();
         startBatchAt(2000);
-        manager.build(24, {}, plainConfig(callback), LIMITS, []);
+        manager.build(
+          24,
+          {},
+          plainConfig(callback),
+          LIMITS,
+          PLATFORM_RULES,
+          []
+        );
         manager.startBuilt(TAG, LayoutAnimationType.ENTERING, 24, []);
         manager.start(
           TWIN_TAG,
@@ -2297,6 +2441,7 @@ describe('LayoutAnimationsManager', () => {
           {},
           configOf({ originY: 0 }, { originY: sequence(lastEnd) }, callback),
           LIMITS,
+          PLATFORM_RULES,
           []
         );
         if (captureTime !== undefined) {
@@ -2379,9 +2524,23 @@ describe('LayoutAnimationsManager', () => {
       /** The sequence as a native track until the new build. */
       const mergeLive = (mergeTime: number) => {
         startBatchAt(2000);
-        manager.build(S.buildId, {}, sequenceConfig(), LIMITS, []);
+        manager.build(
+          S.buildId,
+          {},
+          sequenceConfig(),
+          LIMITS,
+          PLATFORM_RULES,
+          []
+        );
         startBatchAt(2000 + mergeTime);
-        const summary = manager.build(NEXT, {}, nextConfig(), LIMITS, [S]);
+        const summary = manager.build(
+          NEXT,
+          {},
+          nextConfig(),
+          LIMITS,
+          PLATFORM_RULES,
+          [S]
+        );
         manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, NEXT, [S]);
         manager.releaseBuilt(S.buildId);
         return { summary, atMerge: shown() };
@@ -2389,13 +2548,20 @@ describe('LayoutAnimationsManager', () => {
       /** The sequence on the frame driver from its start. */
       const mergeFrameDriven = (mergeTime: number) => {
         startBatchAt(2000);
-        manager.build(S.buildId, {}, sequenceConfig(), LIMITS, []);
+        manager.build(
+          S.buildId,
+          {},
+          sequenceConfig(),
+          LIMITS,
+          PLATFORM_RULES,
+          []
+        );
         manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, S.buildId, []);
         [200, mergeTime]
           .filter((frame) => frame <= mergeTime)
           .forEach((frame) => runFrame(2000 + frame));
         startBatchAt(2000 + mergeTime);
-        manager.build(NEXT, {}, nextConfig(), LIMITS, []);
+        manager.build(NEXT, {}, nextConfig(), LIMITS, PLATFORM_RULES, []);
         manager.startBuilt(TAG, LayoutAnimationType.LAYOUT, NEXT, []);
         return { atMerge: shown() };
       };
@@ -2441,8 +2607,8 @@ describe('LayoutAnimationsManager', () => {
         }
       );
       const segmentsOf = (buildId: number) =>
-        manager.build(buildId, {}, config, LIMITS, [])!.leaves[0].track!
-          .segments;
+        manager.build(buildId, {}, config, LIMITS, PLATFORM_RULES, [])!
+          .leaves[0].track!.segments;
       startBatchAt(2000);
       const atBuild = segmentsOf(24);
       expect(atBuild).toHaveLength(1);
@@ -2492,6 +2658,7 @@ describe('LayoutAnimationsManager', () => {
           {},
           config,
           { leaves: 6, transformOperations: 4, segments: 8 },
+          PLATFORM_RULES,
           live
         )!;
         manager.releaseBuilt(33);
@@ -2886,6 +3053,7 @@ describe('LayoutAnimationsManager', () => {
           {},
           transformOf(animations, animations),
           { leaves: 6, transformOperations: 4 },
+          PLATFORM_RULES,
           []
         );
         manager.releaseBuilt(33);
@@ -2937,7 +3105,14 @@ describe('LayoutAnimationsManager', () => {
         const DEGREES: [unknown, number | string] = ['0deg', '90deg'];
         const buildLive = (rotate = NUMBERS) => {
           startBatchAt(1000);
-          manager.build(T.buildId, {}, liveConfig(rotate), LIMITS, []);
+          manager.build(
+            T.buildId,
+            {},
+            liveConfig(rotate),
+            LIMITS,
+            PLATFORM_RULES,
+            []
+          );
           startBatchAt(1100);
         };
 
@@ -3101,7 +3276,9 @@ describe('LayoutAnimationsManager', () => {
 
               buildLive(rotate);
               const transferred = framesOf(() => {
-                manager.build(34, {}, next(rotate), LIMITS, [T]);
+                manager.build(34, {}, next(rotate), LIMITS, PLATFORM_RULES, [
+                  T,
+                ]);
                 manager.startBuilt(FRAME_TAG, LayoutAnimationType.LAYOUT, 34, [
                   T,
                 ]);

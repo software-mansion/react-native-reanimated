@@ -12,6 +12,7 @@ import type {
   LayoutAnimationValues,
   LiveLayoutLeaf,
   NativeLayoutLimits,
+  NativeLayoutPlatformRules,
   NativeLeafTrack,
   Mutable,
   SharedValue,
@@ -24,6 +25,7 @@ import {
   advanceNativeLeaf,
   animatePlainLeaves,
   currentOfNativeLeaf,
+  hasMovingNonPlanarTransform,
   leverOf,
   relateToLiveLeaf,
   replayTimesOfLeaves,
@@ -153,6 +155,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
       limits: NativeLayoutLimits,
+      platformRules: NativeLayoutPlatformRules,
       liveLeaves: LiveLayoutLeaf[]
     ): LayoutAnimationBuildSummary | undefined {
       const originMs = getStartTimestamp();
@@ -172,10 +175,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       const keys = Object.keys(animations);
       const { transform } = animations;
       const refusalOf = (
-        exceededLimit: keyof NativeLayoutLimits
+        exceededLimit: keyof NativeLayoutLimits | null,
+        refusedTarget: LayoutAnimationBuildSummary['refusedTarget'] = null
       ): LayoutAnimationBuildSummary => ({
         originMs,
         exceededLimit,
+        refusedTarget,
         hasInitialOnlyKeys: false,
         jumpsAfterDelay: false,
         needsFrameDriver: false,
@@ -189,6 +194,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         transform.length > limits.transformOperations
       ) {
         return refusalOf('transformOperations');
+      }
+      if (
+        platformRules.movesOnlyPlanarTransforms &&
+        hasMovingNonPlanarTransform(initialValues.transform, transform)
+      ) {
+        return refusalOf(null, 'NonPlanarTransform');
       }
       animatePlainLeaves(animations);
       const fitting = { fits: easingCurveFits, lever: leverOf(yogaValues) };
@@ -218,6 +229,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       return {
         originMs,
         exceededLimit: null,
+        refusedTarget: null,
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),

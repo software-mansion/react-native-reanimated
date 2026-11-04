@@ -56,6 +56,7 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   std::optional<UnsupportedTargetCause> unsupportedTargetCause(
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) override;
+  bool movesOnlyPlanarTransforms() const override;
   /// The executor writes no size, so a change of the frame size plays only within one pixel.
   bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) override;
   bool isSurfaceRunning(SurfaceId surfaceId) override;

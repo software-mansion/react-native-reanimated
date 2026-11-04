@@ -346,6 +346,23 @@ LiveLeafValues liveLeafValues(jsi::Runtime &rt, const jsi::Object &leafValues) {
       .transform = transform.isObject() ? std::optional(jsi::dynamicFromValue(rt, transform)) : std::nullopt};
 }
 
+std::optional<NativeLayoutRefusal> nativeLayoutSummaryRefusal(jsi::Runtime &rt, const jsi::Object &buildSummary) {
+  if (const auto refusal = limitRefusal(rt, buildSummary)) {
+    return refusal;
+  }
+  const auto refusedTarget = buildSummary.getProperty(rt, "refusedTarget");
+  if (!refusedTarget.isNull()) {
+    react_native_assert(refusedTarget.asString(rt).utf8(rt) == "NonPlanarTransform");
+    return UnsupportedTargetCause::NonPlanarTransform;
+  }
+  if (buildSummary.getProperty(rt, "leaves").asObject(rt).asArray(rt).size(rt) == 0 ||
+      buildSummary.getProperty(rt, "hasInitialOnlyKeys").asBool() ||
+      buildSummary.getProperty(rt, "jumpsAfterDelay").asBool()) {
+    return TrackBuildFailure::UnsupportedTrackForm;
+  }
+  return std::nullopt;
+}
+
 std::variant<NativeLayoutTracks, NativeLayoutRefusal> makeNativeLayoutTracks(
     jsi::Runtime &rt,
     const jsi::Object &buildSummary,
@@ -353,15 +370,8 @@ std::variant<NativeLayoutTracks, NativeLayoutRefusal> makeNativeLayoutTracks(
     const NativeAnimationHost &host,
     const EndpointPolicy endpointPolicy) {
   ReanimatedSystraceSection section("makeNativeLayoutTracks");
-  if (const auto refusal = limitRefusal(rt, buildSummary)) {
-    return *refusal;
-  }
   const auto leaves = buildSummary.getProperty(rt, "leaves").asObject(rt).asArray(rt);
   const auto leafCount = leaves.size(rt);
-  if (leafCount == 0 || buildSummary.getProperty(rt, "hasInitialOnlyKeys").asBool() ||
-      buildSummary.getProperty(rt, "jumpsAfterDelay").asBool()) {
-    return TrackBuildFailure::UnsupportedTrackForm;
-  }
 
   NativeLayoutTracks result{buildSummary.getProperty(rt, "originMs").asNumber(), {}};
   result.tracks.reserve(leafCount);

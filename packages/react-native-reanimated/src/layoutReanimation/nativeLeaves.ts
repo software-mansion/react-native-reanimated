@@ -149,6 +149,8 @@ export const SPRING_GATE_MARGIN = 1e-9;
 type SpringGate = keyof typeof SPRING_GATES;
 
 const PROGRESS_TOLERANCE = 0.001;
+const OPERATION_TOLERANCE = 0.0001;
+const LENGTH_OPERATION_TOLERANCE = 0.01;
 const POINTS_TOLERANCE = 0.25;
 const KEYS_IN_POINTS = [
   'originX',
@@ -709,6 +711,43 @@ function operationTimelineOf(start: number, phases: ScalarPhase[]): Timeline {
     phase.kind === 'timing' &&
     phase.durationMs === 0;
   return isAtRest ? { start: phase.toValue, delayMs: 0, phases: [] } : timeline;
+}
+
+export function hasMovingNonPlanarTransform(
+  initialValue: unknown,
+  leaf: unknown
+): boolean {
+  'worklet';
+  if (!Array.isArray(leaf)) {
+    return false;
+  }
+  return leaf.some((operation, index) => {
+    const kinds = Object.keys(operation ?? {});
+    const kind = kinds[0];
+    if (
+      kinds.length !== 1 ||
+      !['rotateX', 'rotateY', 'perspective'].includes(kind)
+    ) {
+      return false;
+    }
+    const initial = (initialValue as Record<string, unknown>[] | undefined)?.[
+      index
+    ]?.[kind];
+    const start = operationScalarOf(kind, initial, initial);
+    const phases =
+      start && operationPhasesOf(kind, start, initial, operation[kind]);
+    if (!start || !phases?.length) {
+      return false;
+    }
+    const timeline = operationTimelineOf(nativeScalarOf(start), phases);
+    const tolerance =
+      kind === 'perspective' ? LENGTH_OPERATION_TOLERANCE : OPERATION_TOLERANCE;
+    return timeline.phases.some(
+      (phase) =>
+        phase.kind !== 'hold' &&
+        Math.abs(phase.toValue - timeline.start) > tolerance
+    );
+  });
 }
 
 /**

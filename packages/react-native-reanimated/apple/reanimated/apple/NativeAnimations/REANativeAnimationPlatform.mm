@@ -905,6 +905,11 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return hasEdgesOfFrameDriver(track) ? std::nullopt : std::optional(EdgeAntialiasing);
   }
 
+  bool movesOnlyPlanarTransforms() const override
+  {
+    return false;
+  }
+
   bool playsSizeChange(const facebook::react::ShadowView & /*before*/, const facebook::react::ShadowView & /*after*/)
       override
   {

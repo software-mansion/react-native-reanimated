@@ -1293,8 +1293,11 @@ bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &sta
   const auto endpointPolicy = start.type == LayoutAnimationType::EXITING
       ? native_animation::EndpointPolicy::HoldWithoutCommit
       : native_animation::EndpointPolicy::MountedModelMustMatchEndpoint;
-  auto build = makeNativeLayoutTracks(
-      uiRuntime_, buildSummary.asObject(uiRuntime_), start.after, *nativeAnimationHost_, endpointPolicy);
+  const auto summary = buildSummary.asObject(uiRuntime_);
+  const auto summaryRefusal = nativeLayoutSummaryRefusal(uiRuntime_, summary);
+  auto build = summaryRefusal
+      ? std::variant<NativeLayoutTracks, NativeLayoutRefusal>(*summaryRefusal)
+      : makeNativeLayoutTracks(uiRuntime_, summary, start.after, *nativeAnimationHost_, endpointPolicy);
   if ([[maybe_unused]] const auto *refusal = std::get_if<NativeLayoutRefusal>(&build)) {
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
     nativeAnimationHost_->trace().record(
@@ -1359,6 +1362,7 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
       layoutAnimationValues(start.type, capturedView, start.after, window_),
       start.config,
       NativeLayoutLimits{},
+      NativeLayoutPlatformRules{nativeAnimationHost_->movesOnlyPlanarTransforms()},
       start.liveLeaves);
 }
 

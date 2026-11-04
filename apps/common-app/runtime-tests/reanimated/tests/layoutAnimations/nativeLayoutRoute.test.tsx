@@ -48,6 +48,7 @@ import {
   NATIVE_ANIMATION_TEST_HOOKS,
   ONE_PIXEL,
   PLAYS_SIZE_CHANGE,
+  PLAYS_3D_OPERATIONS,
   playsSizeChangeOf,
   POSITION_TOLERANCE,
   readFrameRecords,
@@ -326,6 +327,45 @@ describe('native layout route', () => {
     expect(await hasView(tag)).toBe(false);
     await render(null);
   });
+});
+
+describe('native layout route: platform transform rules', () => {
+  if (!hasNativeLayoutRoute) {
+    return;
+  }
+
+  movingGeometryTest(
+    'a moving rotateX reports its platform route and ends at the end frame',
+    async () => {
+      const layout = layoutOf(
+        { originX: {} },
+        {
+          transform: { operations: [['rotateX', '45deg', '0deg']] },
+        }
+      );
+      const tag = await mountScene(<Scene left={START_LEFT} layout={layout} />);
+      const offset = await offsetOf(tag);
+      await render(<Scene left={END_LEFT} layout={layout} />);
+      await wait(DURATION + 200);
+      const events = (await takeTraceOf(tag)).filter(isHostEvent);
+      if (PLAYS_3D_OPERATIONS) {
+        expect(events.filter(({ event }) => event === 'Admitted').length).toBe(
+          1
+        );
+        expect(events.filter(isStartRefusal).length).toBe(0);
+      } else {
+        const refusals = events.filter(isStartRefusal);
+        expect(refusals.length).toBe(1);
+        expect(refusals[0].buildFailure).toBe('UnsupportedTarget');
+        expect(refusals[0].buildFailureCause).toBe('NonPlanarTransform');
+        expect(events.filter(({ event }) => event === 'Admitted').length).toBe(
+          0
+        );
+      }
+      await expectShownAt(tag, END_LEFT + offset);
+      await render(null);
+    }
+  );
 });
 
 describe('native layout route: request rate and delayed jumps', () => {

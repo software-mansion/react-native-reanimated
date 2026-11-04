@@ -122,6 +122,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
     const NativeLayoutLimits &limits,
+    const NativeLayoutPlatformRules &platformRules,
     const LiveLayoutLeaves &liveLeaves) {
   ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   return getManagerFunction(rt, "build")
@@ -131,6 +132,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
           values,
           config->toJSValue(rt),
           toJSValue(rt, limits),
+          toJSValue(rt, platformRules),
           toJSValue(rt, liveLeaves));
 }
 
@@ -171,6 +173,12 @@ jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLay
   for (const auto &limit : NATIVE_LAYOUT_LIMITS) {
     object.setProperty(rt, limit.name, static_cast<double>(limits.*limit.value));
   }
+  return object;
+}
+
+jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLayoutPlatformRules &platformRules) {
+  jsi::Object object(rt);
+  object.setProperty(rt, "movesOnlyPlanarTransforms", platformRules.movesOnlyPlanarTransforms);
   return object;
 }
 

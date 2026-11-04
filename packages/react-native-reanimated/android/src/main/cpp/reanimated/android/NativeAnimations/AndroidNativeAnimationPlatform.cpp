@@ -554,6 +554,10 @@ std::optional<UnsupportedTargetCause> AndroidNativeAnimationPlatform::unsupporte
   return movingGeometryCause(track, view);
 }
 
+bool AndroidNativeAnimationPlatform::movesOnlyPlanarTransforms() const {
+  return apiLevel_ >= __ANDROID_API_Q__;
+}
+
 bool AndroidNativeAnimationPlatform::playsSizeChange(
     const facebook::react::ShadowView &before,
     const facebook::react::ShadowView &after) {
