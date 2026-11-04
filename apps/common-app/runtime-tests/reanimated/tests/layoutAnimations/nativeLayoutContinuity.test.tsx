@@ -30,12 +30,9 @@
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import type { LayoutAnimationFunction } from 'react-native-reanimated';
-import Animated, {
-  SharedTransition,
-  SharedTransitionBoundary,
-} from 'react-native-reanimated';
+import Animated, { SharedTransition } from 'react-native-reanimated';
 
 import {
   describe,
@@ -46,12 +43,14 @@ import {
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import type {
+  SharedPair,
   Leaves,
   PairProps,
   TargetSample,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  SharedScreens,
   BOX_REF,
   BOX_SIZE,
   callbacks,
@@ -123,7 +122,10 @@ function logModelBound(
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
 const SHARED_PARENT_REF = 'NativeLayoutContinuitySharedParent';
-const SHARED_TRANSITION = SharedTransition.duration(PAIR_DURATION / 3);
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-continuity',
+  transition: SharedTransition.duration(PAIR_DURATION / 3),
+};
 
 function SharedParent({
   left,
@@ -160,7 +162,7 @@ type SharedScreensProps = {
   transform?: ViewStyle['transform'];
 };
 
-function SharedScreens({
+function SharedLayoutScreens({
   left,
   width = BOX_SIZE,
   height = BOX_SIZE,
@@ -174,8 +176,8 @@ function SharedScreens({
   const source = (
     <Animated.View
       ref={sourceRef}
-      sharedTransitionTag="native-layout-continuity"
-      sharedTransitionStyle={SHARED_TRANSITION}
+      sharedTransitionTag={SHARED.sharedTag}
+      sharedTransitionStyle={SHARED.transition}
       layout={movesParent ? undefined : layout}
       style={[
         styles.sharedBox,
@@ -185,26 +187,21 @@ function SharedScreens({
     />
   );
   return (
-    <View style={styles.sharedScreens}>
-      <SharedTransitionBoundary isActive={!showTarget}>
-        {movesParent ? (
+    <SharedScreens
+      {...SHARED}
+      showsTarget={showTarget}
+      style={styles.sharedScreens}
+      targetStyle={styles.sharedTarget}
+      source={
+        movesParent ? (
           <SharedParent left={left} layout={layout} transform={transform}>
             {source}
           </SharedParent>
         ) : (
           source
-        )}
-      </SharedTransitionBoundary>
-      {showTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-continuity"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[styles.sharedBox, styles.sharedTarget]}
-          />
-        </SharedTransitionBoundary>
-      )}
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -426,7 +423,7 @@ describe('native layout continuity', () => {
       { name: 'hidden' }
     );
     const screens = (left: number, opacity: number, showTarget: boolean) => (
-      <SharedScreens
+      <SharedLayoutScreens
         left={left}
         opacity={opacity}
         showTarget={showTarget}
@@ -455,7 +452,6 @@ describe('native layout continuity', () => {
 
 const styles = StyleSheet.create({
   sharedScreens: {
-    width: 300,
     height: 300,
   },
   sharedParent: {

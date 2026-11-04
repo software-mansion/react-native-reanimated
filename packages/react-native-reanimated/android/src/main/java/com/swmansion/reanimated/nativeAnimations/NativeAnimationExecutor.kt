@@ -38,6 +38,8 @@ internal class NativeAnimationExecutor(
 
     private val playbacks = HashMap<TrackKey, TrackPlayback>()
     private val geometryWriters = WeakHashMap<View, GeometryWriter>()
+    internal val playbackRecords: Collection<TrackPlayback> get() = playbacks.values
+    internal val viewGeometryWriters: Map<View, GeometryWriter> get() = geometryWriters
     private val timingCache = TimingCache()
     private val reconciler = PreDrawReconciler(::onPreDraw)
 
@@ -206,29 +208,6 @@ internal class NativeAnimationExecutor(
         mainHandler.sendMessage(Message.obtain(mainHandler, drainRunnable).apply { isAsynchronous = true })
     }
 
-    @DoNotStrip
-    fun sample(
-        tag: Int,
-        target: Int,
-    ): NativeAnimationSample? {
-        UiThreadUtil.assertOnUiThread()
-        val view = viewOf(tag) ?: return null
-        val onView = playbacks.values.filter { it.view.get() === view }
-        val member = onView.firstOrNull { it.key.target == target }
-        return NativeAnimationSample(
-            model = modelOf(view, target),
-            presentation = presentationOf(view, target),
-            playbacks = onView.flatMap { it.key.toLongs().asList() }.toLongArray(),
-            members = member?.let(::membersOf) ?: emptyArray(),
-        )
-    }
-
-    @DoNotStrip
-    fun containerSizes(): NativeAnimationContainerSizes {
-        UiThreadUtil.assertOnUiThread()
-        return NativeAnimationContainerSizes(playbacks = playbacks.size, geometryWriters = geometryWriters.size)
-    }
-
     /** Fabric wrote props to the views: in a mount, or in a synchronous props update. */
     fun markFabricWrite() {
         UiThreadUtil.assertOnUiThread()
@@ -336,45 +315,12 @@ internal class NativeAnimationExecutor(
             (playback.binding as? OpacityBinding)?.takeIf { playback.view.get() === view }
         }
 
-    private fun presentationOf(
-        view: View,
-        target: Int,
-    ): DoubleArray {
-        val model = mountedGeometryModelOf(view, target, density)
-        val writer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) geometryWriters[view] else null
-        return when {
-            model == null -> trackWriterFor(target)?.let { it.readVisual(view)?.let(it::sampleComponentsOf) } ?: DoubleArray(0)
-            writer == null -> model
-            target == TrackEncoding.TARGET_TRANSFORM -> writer.transformCells() ?: model
-            target == TrackEncoding.TARGET_POSITION_X || target == TrackEncoding.TARGET_POSITION_Y ->
-                doubleArrayOf(model[0] + writer.offsetPoints(target))
-            target == TrackEncoding.TARGET_POSITION ->
-                doubleArrayOf(
-                    model[0] + writer.offsetPoints(TrackEncoding.TARGET_POSITION_X),
-                    model[1] + writer.offsetPoints(TrackEncoding.TARGET_POSITION_Y),
-                )
-            else -> model
-        }
-    }
-
-    private fun membersOf(playback: TrackPlayback): Array<NativeAnimationMember> =
-        playback.timeline.components
-            .mapIndexed { index, component ->
-                val values = component.values.map(playback.binding::sampleComponentsOf)
-                NativeAnimationMember(
-                    property = playback.binding.memberProperty(index),
-                    componentCount = values.first().size,
-                    values = values.flatMap { it.asList() }.toDoubleArray(),
-                    keyTimes = doubleArrayOf(0.0, *component.endOffsets),
-                )
-            }.toTypedArray()
-
     private fun isGeometryTarget(target: Int) =
         target == TrackEncoding.TARGET_POSITION_X ||
             target == TrackEncoding.TARGET_POSITION_Y ||
             target == TrackEncoding.TARGET_TRANSFORM
 
-    private fun viewOf(tag: Int): View? =
+    internal fun viewOf(tag: Int): View? =
         try {
             fabricUIManager.resolveView(tag)
         } catch (e: IllegalViewOperationException) {

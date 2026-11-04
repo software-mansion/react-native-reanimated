@@ -102,7 +102,7 @@ bool NativeLayoutGroups::canContinueOn(const facebook::react::ShadowView &view) 
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(view.tag);
   return groupIt == groups_.end() || std::ranges::all_of(groupIt->second.members, [&](const Member &member) {
-           return host_->canRealize(member.track, view);
+           return !host_->unsupportedTargetCause(member.track, view);
          });
 }
 

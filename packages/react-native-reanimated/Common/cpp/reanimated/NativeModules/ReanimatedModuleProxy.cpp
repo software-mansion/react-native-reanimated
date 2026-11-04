@@ -578,6 +578,17 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.buildFailure) {
     object.setProperty(rt, "buildFailure", toJSIString(rt, *event.buildFailure));
   }
+  if (event.targetCause) {
+    object.setProperty(rt, "buildFailureCause", toJSIString(rt, *event.targetCause));
+  }
+  if (event.resourceLimit) {
+    object.setProperty(rt, "buildFailureCause", jsi::String::createFromUtf8(rt, std::string(*event.resourceLimit)));
+  }
+  if (event.conflictHandle) {
+    jsi::Object conflictHandle(rt);
+    setHandle(rt, conflictHandle, *event.conflictHandle);
+    object.setProperty(rt, "conflictHandle", conflictHandle);
+  }
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
@@ -590,6 +601,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.layoutAnimationType) {
     object.setProperty(
         rt, "layoutAnimationType", jsi::String::createFromUtf8(rt, std::string(*event.layoutAnimationType)));
+  }
+  if (event.layoutStartRefusal) {
+    object.setProperty(rt, "startRefusal", jsi::String::createFromUtf8(rt, std::string(*event.layoutStartRefusal)));
   }
   return object;
 }
@@ -667,7 +681,7 @@ void ReanimatedModuleProxy::nativeAnimationContainerSizes(jsi::Runtime &rt, cons
     jsInvoker_->invokeAsync([function](jsi::Runtime &rt) { function->call(rt, jsi::Value::undefined()); });
     return;
   }
-  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](ContainerSizes hostSizes) {
+  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](const ContainerSizes &hostSizes) {
     const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
