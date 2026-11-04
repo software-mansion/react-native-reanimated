@@ -169,6 +169,7 @@ export type ValueWrapper<T> = { value: T | DefaultValue };
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
+  var autoAdvanceAnimationTimer: boolean | undefined;
   var framesCount: number | undefined;
   var originalRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)

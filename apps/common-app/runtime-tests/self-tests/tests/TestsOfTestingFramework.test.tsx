@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   FadeIn,
+  makeMutable,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -9,6 +11,9 @@ import Animated, {
 import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
+  mockAnimationTimer,
+  waitForFrames,
   callTracker,
   callTrackerFn,
   clearRenderOutput,
@@ -31,6 +36,7 @@ import {
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
+import { runOnUIBlocking } from '../../ReJest/utils/runOnUIBlocking';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
 const AnimatedComponent = () => {
@@ -208,6 +214,53 @@ describe('Wardrobe with drawers', () => {
 });
 
 describe('Tests of Test Framework', () => {
+  test('changes clock mode when the animation timer is mocked again', async () => {
+    const readClock = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        return global.mockedAnimationTimestamp;
+      });
+    await mockAnimationTimer();
+    await waitForFrames(3);
+    expect((await readClock())! > 0).toBe(true);
+    await mockAnimationTimer({ autoAdvance: false });
+    const frozenStart = (await readClock())!;
+    expect(frozenStart > 0).toBe(true);
+    await waitForFrames(3);
+    expect(await readClock()).toBe(frozenStart);
+    await advanceAnimationTimer(100);
+    expect(await readClock()).toBe(frozenStart + 100);
+    await mockAnimationTimer();
+    await waitForFrames(3);
+    expect((await readClock())! < frozenStart).toBe(true);
+    await mockAnimationTimer({ autoAdvance: false });
+    await waitForFrames(3);
+    expect(await readClock()).toBe(frozenStart);
+  });
+
+  test('keeps a timing animation continuous when it restarts on the frozen clock', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const value = makeMutable(0);
+    const start = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        value.value = withTiming(100, {
+          duration: 1000,
+          easing: Easing.linear,
+        });
+      });
+    await start();
+    await advanceAnimationTimer(500);
+    await start();
+    await advanceAnimationTimer(500);
+    expect(
+      await runOnUIBlocking(() => {
+        'worklet';
+        return value.value;
+      })
+    ).toBe(100);
+  });
+
   test('Test  comparators - ✅', () => {
     expect(1).toBe(1.0);
     expect(2).not.toBe(1.0);

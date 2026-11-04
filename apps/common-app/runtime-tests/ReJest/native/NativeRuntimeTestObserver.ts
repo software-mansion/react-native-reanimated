@@ -11,6 +11,18 @@ export type TextInputObservation = {
 };
 
 export interface Spec extends TurboModule {
+  emitScreenTransitionProgress(
+    tag: CodegenTypes.Int32,
+    progress: number,
+    closing: boolean,
+    goingForward: boolean
+  ): Promise<void>;
+
+  emitScreenGestureCancel(tag: CodegenTypes.Int32): Promise<void>;
+
+  /** Returns null when the parent of the mounted view is not a React view. */
+  observeParent(tag: CodegenTypes.Int32): Promise<number | null>;
+
   observeTextInput(
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;
