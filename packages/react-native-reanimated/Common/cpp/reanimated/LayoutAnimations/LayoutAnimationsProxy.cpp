@@ -347,7 +347,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
 void LayoutAnimationsProxy::releaseUnmappedContentFadeConfigs() const {
   for (const auto tag : unmappedContentFadeTags_) {
     if (!lightNodes_.contains(tag)) {
-      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+      layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
   }
   unmappedContentFadeTags_.clear();
@@ -1185,7 +1185,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     for (const auto &[tag, _] : lightNodes_) {
-      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+      layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
     sharedElements_.clear();

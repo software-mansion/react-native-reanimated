@@ -150,6 +150,21 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
   return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
 }
 
+// A smaller end makes the fade-out target opacity too large for the animation math.
+constexpr double kMinFadeOutEnd = 1e-6;
+
+double fadeOutEnd(jsi::Runtime &rt, const jsi::Object &contentFade) {
+  const auto value = contentFade.getProperty(rt, "fadeOutEnd");
+  if (!value.isNumber()) {
+    return 1;
+  }
+  const auto end = value.asNumber();
+  if (!(end > 0 && end <= 1)) {
+    return 1;
+  }
+  return std::max(end, kMinFadeOutEnd);
+}
+
 } // namespace
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
@@ -501,13 +516,16 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
-    if (const auto contentFadeIn = item.getProperty(rt, "sharedTransitionContentFadeIn");
-        !contentFadeIn.isUndefined()) {
-      batchItem.sharedTransitionContentFadeIn = extractSerializable(
-          rt,
-          contentFadeIn,
-          "[Reanimated] Shared transition content fade-in must be an object.",
-          Serializable::ValueType::ObjectType);
+    if (const auto contentFade = item.getProperty(rt, "sharedTransitionContentFade"); contentFade.isObject()) {
+      const auto contentFadeObject = contentFade.asObject(rt);
+      batchItem.sharedTransitionContentFade = SharedTransitionContentFade{
+          .fadeIn = extractSerializable(
+              rt,
+              contentFadeObject.getProperty(rt, "fadeIn"),
+              "[Reanimated] Shared transition content fade-in must be an object.",
+              Serializable::ValueType::ObjectType),
+          .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
+      };
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);

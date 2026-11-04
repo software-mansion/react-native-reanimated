@@ -48,12 +48,14 @@ function Endpoint({
   active,
   style,
   hiddenChild = false,
+  sharedTransition = transition,
   siblings,
 }: {
   name: 'source' | 'target';
   active: boolean;
   style: object;
   hiddenChild?: boolean;
+  sharedTransition?: SharedTransition;
   siblings?: boolean;
 }) {
   const ref = useTestRef(name);
@@ -63,7 +65,7 @@ function Endpoint({
       key="endpoint"
       ref={ref}
       sharedTransitionTag="fadeContent"
-      sharedTransitionStyle={transition}
+      sharedTransitionStyle={sharedTransition}
       style={style}>
       <View ref={childRef} collapsable={false} style={styles.child} />
       {hiddenChild && <HiddenChild name={`${name}HiddenChild`} />}
@@ -95,21 +97,29 @@ function Screens({
   showTarget,
   removeSource = false,
   hiddenTargetChild = false,
+  sharedTransition = transition,
 }: {
   showTarget: boolean;
   removeSource?: boolean;
   hiddenTargetChild?: boolean;
+  sharedTransition?: SharedTransition;
 }) {
   return (
     <View style={styles.container}>
       {!(showTarget && removeSource) && (
-        <Endpoint name="source" active={!showTarget} style={styles.source} />
+        <Endpoint
+          name="source"
+          active={!showTarget}
+          style={styles.source}
+          sharedTransition={sharedTransition}
+        />
       )}
       <Endpoint
         name="target"
         active={showTarget}
         style={styles.target}
         hiddenChild={hiddenTargetChild}
+        sharedTransition={sharedTransition}
       />
     </View>
   );
@@ -888,6 +898,71 @@ describe('Shared transition with fadeContent', () => {
     expect(zero >= 0 && opacities.length - zero > 3).toBe(true);
     expect(opacities.slice(zero).every((opacity) => opacity < 0.01)).toBe(true);
     await expectOpacity('child', CHILD_OPACITY);
+  });
+
+  test.each([0.4, Number.MIN_VALUE])(
+    'ends the fade-out at fadeOut.end %p of the move',
+    async (end) => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const earlyFadeOut = SharedTransition.duration(3000)
+        .easing(Easing.linear)
+        .fadeContent({ fadeOut: { end } });
+      await render(
+        <Screens showTarget={false} sharedTransition={earlyFadeOut} />
+      );
+      await waitForFrames();
+      await render(<Screens showTarget sharedTransition={earlyFadeOut} />);
+      await waitForFrames(3);
+      const frames: Awaited<ReturnType<typeof sample>>[] = [];
+      for (let time = 250; time < 3000; time += 250) {
+        await advanceAnimationTimer(250);
+        frames.push(await sample(['source', 'sourceChild']));
+      }
+      await advanceAnimationTimer(250);
+      await expectOpacity('target', 1);
+      const moving = frames.filter(
+        ([source, child]) => isMoving(source) && !!child
+      );
+      const errors = moving.map(([source, child]) => {
+        const progress =
+          (source!.width - SOURCE_WIDTH) / (TARGET_WIDTH - SOURCE_WIDTH);
+        const expected = CHILD_OPACITY * Math.max(0, 1 - progress / end);
+        return Math.abs(child!.opacity - expected);
+      });
+      expect(moving.length >= 3).toBe(true);
+      expect(errors.every((error) => error < 0.03)).toBe(true);
+      expect(
+        frames.every(([, child]) => !child || Number.isFinite(child.opacity))
+      ).toBe(true);
+
+      await advanceAnimationTimer(1500);
+      await expectOpacity('targetChild', CHILD_OPACITY);
+    }
+  );
+
+  test('fades the children of the target in over fadeIn.duration', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const slowFadeIn = SharedTransition.duration(600).fadeContent({
+      fadeIn: { duration: 3000 },
+    });
+    await render(<Screens showTarget={false} sharedTransition={slowFadeIn} />);
+    await waitForFrames();
+
+    await render(<Screens showTarget sharedTransition={slowFadeIn} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
+    await expectOpacity('target', 1);
+    // The fade-in eases out. The default fade-in lasts 300 ms here.
+    for (const elapsed of [1000, 2000]) {
+      await advanceAnimationTimer(1000);
+      const progress = elapsed / 3000;
+      const expected = CHILD_OPACITY * (1 - (1 - progress) ** 2);
+      const child = await mountedProps('targetChild');
+      expect(!!child && Math.abs(child.opacity - expected) < 0.02).toBe(true);
+    }
+
+    await advanceAnimationTimer(1000);
+    await expectOpacity('targetChild', CHILD_OPACITY);
   });
 });
 

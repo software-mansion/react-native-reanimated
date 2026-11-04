@@ -156,6 +156,21 @@ const transition = SharedTransition.duration(450).fadeContent();
 - A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
 - When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
 
+To change the two fades, pass options to `fadeContent()`:
+
+```tsx
+const transition = SharedTransition.duration(450).fadeContent({
+  // highlight-next-line
+  fadeOut: { end: 0.5 },
+  // highlight-next-line
+  fadeIn: { duration: 150 },
+});
+```
+
+- `fadeOut.end` is the point of the move progress, more than 0 and at most 1, at which the children reach opacity 0. A value below 0.000001 works as 0.000001. The progress follows the easing or the spring of the move, so `end: 0.5` is the middle of the distance, but not always the middle of the time. When a target change restarts the move while the children fade out, the fade-out starts from the current opacity and ends at that part of the new move. When the navigation goes back during the move, the children fade in during the full return move, and `end` does not apply.
+- `fadeIn.duration` is the length of the fade-in after the landing, in milliseconds. Without it, the fade-in takes half of the transition duration. `springify()` without a duration sets the transition duration back to the default 500 ms, so then the fade-in takes 250 ms. Pass the duration to `springify(duration)`.
+- When the target view moves because React removed the source, its children fade in during the full move, and the two options do not apply.
+
 ## Example
 
 import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
