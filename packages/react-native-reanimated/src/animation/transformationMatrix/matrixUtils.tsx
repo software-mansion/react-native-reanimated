@@ -399,13 +399,21 @@ export function decomposeMatrix(
     [0, 0, 1, 0],
     [matrix[12], matrix[13], matrix[14], 1],
   ];
-  // A negative x scale keeps a reflection, which a rotation cannot express.
-  const sx =
-    Math.sign(determinant3x3(matrix) || 1) *
-    matrix[15] *
-    norm3d(matrix[0], matrix[4], matrix[8]);
-  const sy = matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]);
-  const sz = matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]);
+  const scales = [
+    matrix[15] * norm3d(matrix[0], matrix[4], matrix[8]),
+    matrix[15] * norm3d(matrix[1], matrix[5], matrix[9]),
+    matrix[15] * norm3d(matrix[2], matrix[6], matrix[10]),
+  ];
+  // A rotation cannot express a reflection, so the most reversed axis keeps it
+  // as a negative scale.
+  if (determinant3x3(matrix) < 0) {
+    const diagonal = [matrix[0], matrix[5], matrix[10]].map(
+      (value, axis) => value / scales[axis]
+    );
+    const axis = diagonal.indexOf(Math.min(...diagonal));
+    scales[axis] = -scales[axis];
+  }
+  const [sx, sy, sz] = scales;
 
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const scaleMatrix: AffineMatrix = [
