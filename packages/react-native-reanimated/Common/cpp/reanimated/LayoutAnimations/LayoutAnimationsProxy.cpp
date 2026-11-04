@@ -284,11 +284,16 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   cleanupAnimations(transaction, propsParserContext, flushStructuralMutations);
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    releaseUnmappedContentFadeConfigs();
+  }
+
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushStructuralMutations);
 #endif
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    composeCarrierContent(filteredMutations, propsParserContext);
     keepTransitioningViewsHidden(filteredMutations, propsParserContext);
   }
 
@@ -318,6 +323,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   react_native_assert(!node->isDetached && "Remove the carrier from the root before unmapping its node");
   lightNodes_.erase(it);
   activeBoundaryMayHaveChanged_ = true;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    unmappedContentFadeTags_.insert(node->current.tag);
+  }
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
@@ -331,6 +339,15 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     transition_->state = TransitionState::CANCELLED;
     transition_->updated = true;
   }
+}
+
+void LayoutAnimationsProxy::releaseUnmappedContentFadeConfigs() const {
+  for (const auto tag : unmappedContentFadeTags_) {
+    if (!lightNodes_.contains(tag)) {
+      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+    }
+  }
+  unmappedContentFadeTags_.clear();
 }
 
 // React re-creating a tag that the light tree still holds keeps its mounted view: the Create becomes an Update of it
@@ -703,7 +720,12 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
         break;
       }
       case ShadowViewMutation::Delete: {
-        lightNodes_.erase(mutation.oldChildShadowView.tag);
+        const auto tag = mutation.oldChildShadowView.tag;
+        if (lightNodes_.erase(tag)) {
+          if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+            unmappedContentFadeTags_.insert(tag);
+          }
+        }
         break;
       }
       case ShadowViewMutation::Insert: {
@@ -1159,6 +1181,10 @@ void LayoutAnimationsProxy::shadowTreeWillCommit(const bool isSurfaceRemoval) {
 void LayoutAnimationsProxy::clearSurfaceState() const {
   LayoutAnimationsProxyCommon::clearSurfaceState();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    for (const auto &[tag, _] : lightNodes_) {
+      layoutAnimationsManager_->clearSharedTransitionContentFadeIn(tag);
+    }
+    releaseUnmappedContentFadeConfigs();
     sharedElements_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);
@@ -1370,7 +1396,8 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
 
 void LayoutAnimationsProxy::startEnteringAnimation(
     const std::shared_ptr<LightNode> &node,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const bool isContentFadeIn) const {
   resolveLightNodeProps(node);
   const auto &newChildShadowView = node->current;
   const auto opacity = getViewProps(newChildShadowView).opacity;
@@ -1385,6 +1412,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       .parentTag = parent->current.tag,
       .opacity = opacity,
       .config = config,
+      .isContentFadeIn = isContentFadeIn,
   });
 }
 
@@ -1431,7 +1459,8 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const std::optional<ContentOpacityRange> contentOpacity) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
@@ -1440,6 +1469,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .frameProps = frameProps,
       .parentTag = surfaceId_,
       .config = config,
+      .contentOpacity = contentOpacity,
   });
 }
 

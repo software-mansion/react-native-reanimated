@@ -1,5 +1,6 @@
 'use strict';
 import type {
+  EntryExitAnimationFunction,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
@@ -26,7 +27,8 @@ export const updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
+  sharedTransitionTag?: string,
+  sharedTransitionContentFadeIn?: EntryExitAnimationFunction
 ) => void = () => {
   // no-op
 };

@@ -501,6 +501,14 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
+    if (const auto contentFadeIn = item.getProperty(rt, "sharedTransitionContentFadeIn");
+        !contentFadeIn.isUndefined()) {
+      batchItem.sharedTransitionContentFadeIn = extractSerializable(
+          rt,
+          contentFadeIn,
+          "[Reanimated] Shared transition content fade-in must be an object.",
+          Serializable::ValueType::ObjectType);
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -1127,7 +1135,19 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   writeSynchronousPropsToViews(synchronousUpdatesBatch);
 }
 
-void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch) {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_) {
+      auto composedUpdatesBatch = updatesBatch;
+      layoutAnimationsProxyRegistry_->composeSynchronousProps(composedUpdatesBatch);
+      sendSynchronousPropsToViews(composedUpdatesBatch);
+      return;
+    }
+  }
+  sendSynchronousPropsToViews(updatesBatch);
+}
+
+void ReanimatedModuleProxy::sendSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1341,6 +1361,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      // A proxy calls this with its mutex held, and it takes the registry lock. So code that holds the
+      // registry lock must not call into a layout animations proxy.
+      [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis || !shouldUseSynchronousUpdatesInPerformOperations()) {
+          return std::nullopt;
+        }
+        folly::dynamic props = folly::dynamic::object();
+        auto lock = strongThis->updatesRegistryManager_->lock();
+        strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
+        const auto opacity = props.get_ptr("opacity");
+        return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
+      },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
       jsInvoker_,

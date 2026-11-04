@@ -28,6 +28,7 @@ class LayoutAnimationsProxyRegistry {
   void onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const;
   void flushLayoutAnimationOperations() const;
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
+  void composeSynchronousProps(UpdatesBatch &updatesBatch) const;
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;

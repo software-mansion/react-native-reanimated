@@ -2,6 +2,7 @@
 import { createSerializable } from 'react-native-worklets';
 
 import type {
+  EntryExitAnimationFunction,
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -52,6 +53,8 @@ function createUpdateManager() {
  *   at the end of the batch, after all the non-deferred configurations (even
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
+ * @param sharedTransitionTag - The shared tag that pairs the views.
+ * @param sharedTransitionContentFadeIn - The target content fade after landing.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 
@@ -60,14 +63,25 @@ export const updateLayoutAnimations: (
   type: LayoutAnimationType,
   config?: ReanimatedKeyframe | LayoutAnimationFunction,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
-) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>
+  sharedTransitionTag?: string,
+  sharedTransitionContentFadeIn?: EntryExitAnimationFunction
+) => void = (
+  viewTag,
+  type,
+  config,
+  isUnmounting,
+  sharedTransitionTag,
+  sharedTransitionContentFadeIn
+) =>
   updateLayoutAnimationsManager.update(
     {
       viewTag,
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionContentFadeIn: sharedTransitionContentFadeIn
+        ? createSerializable(sharedTransitionContentFadeIn)
+        : undefined,
     },
     isUnmounting
   );

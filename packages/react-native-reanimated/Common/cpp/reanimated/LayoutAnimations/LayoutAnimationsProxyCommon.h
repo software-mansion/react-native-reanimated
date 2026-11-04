@@ -25,6 +25,12 @@
 
 namespace reanimated {
 
+// The opacity of the children of a shared transition carrier, as a factor of their own opacity.
+struct ContentOpacityRange {
+  double from;
+  double to;
+};
+
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
@@ -34,6 +40,7 @@ struct LayoutAnimation {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
+  std::optional<double> contentOpacity;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -54,6 +61,9 @@ struct ManagedLayoutAnimationStart {
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  std::optional<ContentOpacityRange> contentOpacity;
+  // A shared transition content fade-in gets the target opacity of the view.
+  bool isContentFadeIn = false;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -83,6 +93,7 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
@@ -105,7 +116,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
+        readSynchronousOpacity_(dependencies.readSynchronousOpacity)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
@@ -130,6 +142,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
+  virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
@@ -151,7 +164,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const ShadowView &finalView,
       const Props::Shared &frameProps,
-      const std::shared_ptr<Serializable> &config = nullptr) const;
+      const std::shared_ptr<Serializable> &config = nullptr,
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
@@ -193,6 +207,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
+  const std::function<std::optional<double>(Tag)> readSynchronousOpacity_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
