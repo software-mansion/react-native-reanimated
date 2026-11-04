@@ -9,9 +9,8 @@ sidebar_position: 42 # Use alphabetical order
 
 `abortWorkletRuntime` stops a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) that was created with `abortable: true`.
 
-- A worklet that's already running finishes before the runtime stops.
-- Work that's still waiting in the runtime's queue is dropped, and the promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) calls reject.
-- The runtime's timers and in-flight network requests are cancelled.
+- Currently running task (i.e. a worklet function scheduled with `scheduleOnRuntime`) finishes before the runtime stops.
+- Work that's still waiting in the runtime's queue is dropped, and the promises of dropped [runOnRuntimeAsync](/docs/threading/runOnRuntimeAsync) jobs are rejected. The runtime's timers and in-flight network requests are cancelled.
 - Work scheduled on the runtime after the abort, for example with [scheduleOnRuntime](/docs/threading/scheduleOnRuntime), is dropped. In development builds, Worklets logs a warning. Running work on it synchronously, for example with [runOnRuntimeSync](/docs/threading/runOnRuntimeSync), throws.
 
 ## Reference
@@ -53,7 +52,6 @@ The id of the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) t
 ## Remarks
 
 - Passing the id of the UI Runtime or of a runtime that isn't abortable throws.
-- On the Web `abortWorkletRuntime` throws, because Worker Runtimes aren't supported there.
 
 ## Call table
 
