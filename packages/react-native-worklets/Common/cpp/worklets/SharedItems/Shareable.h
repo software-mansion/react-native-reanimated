@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -15,6 +16,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
 
   Shareable(
       const std::shared_ptr<WorkletRuntime> &hostRuntime,
+      RuntimeIdentity hostIdentity,
       const std::shared_ptr<Serializable> &initial,
       const bool initSynchronously,
       const std::shared_ptr<Serializable> &decorateHost,
@@ -25,13 +27,11 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  private:
-  jsi::Value hostJSValue();
+  jsi::Value hostJSValue(jsi::Runtime &rt);
   jsi::Value guestJSValue(jsi::Runtime &rt);
-  void initHostValue();
+  void initHostValue(jsi::Runtime &rt);
 
-  const std::weak_ptr<WorkletRuntime> weakHostRuntime_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
-  jsi::Runtime &hostJSIRuntime_;
+  const RuntimeIdentity hostIdentity_;
   std::shared_ptr<Serializable> initial_;
   const bool initSynchronously_;
   std::mutex initializationMutex_;

@@ -1,6 +1,7 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Shareable.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -19,64 +20,56 @@ jsi::Function Shareable::getShareableGuestUnpacker(jsi::Runtime &rt) {
 
 Shareable::Shareable(
     const std::shared_ptr<WorkletRuntime> &hostRuntime,
+    RuntimeIdentity hostIdentity,
     const std::shared_ptr<Serializable> &initial,
     const bool initSynchronously,
     const std::shared_ptr<Serializable> &decorateHost,
     const std::shared_ptr<Serializable> &decorateGuest)
     : Serializable(ValueType::ShareableType),
-      weakHostRuntime_(hostRuntime),
-      hostRuntimeId_(hostRuntime->getRuntimeId()),
-      hostJSIRuntime_(hostRuntime->getJSIRuntime()),
+      hostIdentity_(std::move(hostIdentity)),
       initial_(initial),
       initSynchronously_(initSynchronously),
       decorateHost_(decorateHost),
       decorateGuest_(decorateGuest) {
   if (initSynchronously) {
-    hostRuntime->runSync([this](jsi::Runtime &rt) { initHostValue(); });
+    hostRuntime->runSync([this](jsi::Runtime &rt) { initHostValue(rt); });
   }
 }
 
 Shareable::~Shareable() {
-  if (hostValue_) {
-    const auto strongHostRuntime = weakHostRuntime_.lock();
-    if (strongHostRuntime) {
-      hostValue_.reset();
-    } else {
-      freeWithoutCallingDestructor(hostValue_);
-    }
-  }
+  cleanupRuntimeAware(hostIdentity_, hostValue_);
 }
 
 jsi::Value Shareable::toJSValue(jsi::Runtime &rt) {
-  if (&rt == &hostJSIRuntime_) {
-    return hostJSValue();
-  } else {
-    return guestJSValue(rt);
+  const auto *identity = findRuntimeIdentity(rt);
+  if (identity != nullptr && identity->isSameRuntime(hostIdentity_)) {
+    return hostJSValue(rt);
   }
+  return guestJSValue(rt);
 }
 
-jsi::Value Shareable::hostJSValue() {
+jsi::Value Shareable::hostJSValue(jsi::Runtime &rt) {
   if (!initSynchronously_ && !hostValue_) {
     std::lock_guard lock(initializationMutex_);
     if (!hostValue_) {
-      initHostValue();
+      initHostValue(rt);
     }
   }
 
-  return jsi::Value(hostJSIRuntime_, *hostValue_);
+  return jsi::Value(rt, *hostValue_);
 }
 
 jsi::Value Shareable::guestJSValue(jsi::Runtime &rt) {
   const auto shareableUnpacker = getShareableGuestUnpacker(rt);
   const auto ref = SerializableJSRef::newNativeStateObject(rt, shared_from_this());
-  return shareableUnpacker.call(rt, static_cast<double>(hostRuntimeId_), ref, decorateGuest_->toJSValue(rt));
+  return shareableUnpacker.call(
+      rt, static_cast<double>(hostIdentity_.getRuntimeId()), ref, decorateGuest_->toJSValue(rt));
 }
 
-void Shareable::initHostValue() {
-  const auto shareableUnpacker = getShareableHostUnpacker(hostJSIRuntime_);
-  const auto shareable = shareableUnpacker.call(
-      hostJSIRuntime_, initial_->toJSValue(hostJSIRuntime_), decorateHost_->toJSValue(hostJSIRuntime_));
-  hostValue_ = std::make_unique<jsi::Value>(hostJSIRuntime_, std::move(shareable));
+void Shareable::initHostValue(jsi::Runtime &rt) {
+  const auto shareableUnpacker = getShareableHostUnpacker(rt);
+  const auto shareable = shareableUnpacker.call(rt, initial_->toJSValue(rt), decorateHost_->toJSValue(rt));
+  hostValue_ = std::make_unique<jsi::Value>(rt, std::move(shareable));
   initial_.reset();
   decorateHost_.reset();
 }

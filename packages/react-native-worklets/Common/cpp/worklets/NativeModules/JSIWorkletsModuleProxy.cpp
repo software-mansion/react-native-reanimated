@@ -828,8 +828,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto initSynchronously = at<2>(args).asBool();
         const auto decorateHost = extractSerializableOrThrow(rt, at<3>(args));
         const auto decorateGuest = extractSerializableOrThrow(rt, at<4>(args));
-        const auto shareable =
-            std::make_shared<Shareable>(hostRuntime, initial, initSynchronously, decorateHost, decorateGuest);
+        const auto shareable = std::make_shared<Shareable>(
+            hostRuntime,
+            RuntimeIdentity::forWorkletRuntime(runtimeManager, hostRuntime->getRuntimeId()),
+            initial,
+            initSynchronously,
+            decorateHost,
+            decorateGuest);
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 
