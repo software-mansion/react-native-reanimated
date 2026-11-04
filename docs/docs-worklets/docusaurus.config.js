@@ -96,6 +96,11 @@ const config = {
 
   themes: ['@docusaurus/theme-mermaid'],
 
+  clientModules:
+    process.env.NODE_ENV === 'development'
+      ? [require.resolve('./src/clientModules/devFigureLabels.ts')]
+      : [],
+
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
 
@@ -132,10 +137,7 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
-    [
-      require.resolve('@swmansion/t-rex-ui/preset'),
-      { collapsibleSidebar: true },
-    ],
+    [require.resolve('./plugins/preset'), { collapsibleSidebar: true }],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -191,10 +193,11 @@ const config = {
         appId: 'EXKV34DSZ0',
         apiKey: 'b0df4e45a4bec8a2f79aa77da07b56bd',
         indexName: 'react-native-worklets',
-        contextualSearch: false,
+        contextualSearch: true,
       },
     }),
   plugins: [
+    require.resolve('./plugins/search'),
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
       process.env.NODE_ENV === 'production' && [
@@ -269,7 +272,10 @@ const config = {
                 {
                   test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
                   enforce: 'pre',
-                  use: path.resolve(__dirname, 'src/simulation/snippetNamesLoader.js'),
+                  use: path.resolve(
+                    __dirname,
+                    'src/simulation/snippetNamesLoader.js'
+                  ),
                 },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },

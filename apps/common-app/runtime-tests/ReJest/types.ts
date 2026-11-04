@@ -60,6 +60,7 @@ export type TestSuite = {
   buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
+  runtimeTestSuiteName?: string;
   beforeAll?: MaybeAsync<void>;
   afterAll?: MaybeAsync<void>;
   beforeEach?: MaybeAsync<void>;
@@ -156,6 +157,18 @@ export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
   onSuiteFinished?: (suiteName: string) => void;
+  onReloadRequested?: (
+    resumeFromSuite: string,
+    summarySoFar: TestRunSummary
+  ) => void;
+};
+
+export type TestRunSummary = {
+  passed: number;
+  failed: number;
+  skipped: number;
+  failedTests: string[];
+  durationMs: number;
 };
 
 export type Mismatch = {
@@ -169,6 +182,7 @@ export type ValueWrapper<T> = { value: T | DefaultValue };
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
+  var autoAdvanceAnimationTimer: boolean | undefined;
   var framesCount: number | undefined;
   var originalRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)
@@ -196,6 +210,9 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var __stashSerializableForReload: (value: unknown) => void;
+  var __takeSerializablesStashedForReload: () => object[];
+  var __countLiveSerializablesTakenAfterReload: () => number;
   var _obtainMountedViewProps: (
     tag: number,
     presented: boolean

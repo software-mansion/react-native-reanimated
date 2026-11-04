@@ -3,6 +3,9 @@ title: runOnRuntimeSyncWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiRunOnRuntimeSyncWithIdSnippet from './_examples/apiRunOnRuntimeSyncWithId';
+import ApiRunOnRuntimeSyncWithIdSource from '!!raw-loader!./_examples/apiRunOnRuntimeSyncWithId';
+
 <Badges version="0.8.0">
   # runOnRuntimeSyncWithId
 </Badges>
@@ -11,18 +14,7 @@ sidebar_position: 42 # Use alphabetical order
 
 ## Reference
 
-```javascript
-import { runOnRuntimeSyncWithId, createWorkletRuntime } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
-  'worklet';
-  return 2 + 2;
-}); // This will block the RN Runtime until the worklet is finished
-
-console.log(result); // 4
-```
+<ThreadingSimulation module={ApiRunOnRuntimeSyncWithIdSnippet} source={ApiRunOnRuntimeSyncWithIdSource}/>
 
 <details>
   <summary>Type definitions</summary>

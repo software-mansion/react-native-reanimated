@@ -54,7 +54,9 @@ export class TestRunner {
   private _workletRuntimePool = new WorkletRuntimePool();
   private _progressHook: ((progress: TestProgress) => void) | null = null;
   private _suiteFinishedHook: ((suiteName: string) => void) | null = null;
+  private _reloadHook: TestConfiguration['onReloadRequested'] | null = null;
   private _progressIndex: number = 0;
+  private _runtimeTestSuitesWithCompletedCases = new Set<string>();
   private _progressTotal: number = 0;
   private _testSuiteBuilder = new TestSuiteBuilder();
 
@@ -90,7 +92,26 @@ export class TestRunner {
     this._renderHook = config.render;
     this._progressHook = config.onProgress ?? null;
     this._suiteFinishedHook = config.onSuiteFinished ?? null;
+    this._reloadHook = config.onReloadRequested ?? null;
     return this._renderLock;
+  }
+
+  public reloadAndResume(resumeFromSuite: string): Promise<never> {
+    if (this._runtimeTestSuitesWithCompletedCases.has(resumeFromSuite)) {
+      throw new Error(
+        `[ReJest] Cannot reload and resume from suite '${resumeFromSuite}', because a test case of this suite has already completed. The resumed run restarts the suite from its first test case, so that test case would be counted twice.`
+      );
+    }
+    if (!this._reloadHook) {
+      throw new Error(
+        '[ReJest] Reloading the app during a test needs the runtime-tests server.'
+      );
+    }
+    this._reloadHook(
+      resumeFromSuite,
+      this._testSummary.getSummaryBeforeRuntimeTestSuite(resumeFromSuite)
+    );
+    return new Promise(() => {});
   }
 
   public createTestValue<T = DefaultValue>(
@@ -327,6 +348,11 @@ export class TestRunner {
     }
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
+    if (testSuite.runtimeTestSuiteName !== undefined) {
+      this._runtimeTestSuitesWithCompletedCases.add(
+        testSuite.runtimeTestSuiteName
+      );
+    }
   }
 
   public expect(currentValue: TestValue): Matchers {

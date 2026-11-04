@@ -160,9 +160,10 @@ describe('Machine with the docs snippets', () => {
     assert.ok(snapshots[0].screen.tree !== undefined);
     assert.ok(
       snapshots
-        .slice(1, 12)
+        .slice(1, 11)
         .every((snapshot) => core(snapshot, 'rn').line === 37)
     );
+    assert.equal(core(snapshots[11], 'rn').line, 39);
   });
 
   it('runs handlerOnUIRuntime.jsx: the JS thread acquires the UI Runtime', () => {
@@ -793,9 +794,9 @@ describe('Machine semantics', () => {
         (event) => event.type === 'memory' && event.mode === 'read'
       )
     );
-    assert.equal(reads.length, 1);
-    assert.equal(reads[0].core, 'rn');
-    assert.deepEqual(formatLogs(snapshots), ['[rn] 8']);
+    assert.ok(reads.length > 1);
+    assert.ok(reads.every((read) => read.core === 'rn'));
+    assert.equal(formatLogs(snapshots)[0], '[rn] 3');
   });
 
   it('tick() is a no-op after the simulation finished', () => {

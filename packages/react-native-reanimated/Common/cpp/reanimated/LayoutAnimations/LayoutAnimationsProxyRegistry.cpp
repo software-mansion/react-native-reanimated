@@ -107,6 +107,12 @@ void LayoutAnimationsProxyRegistry::applySynchronousProps(
   }
 }
 
+void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
+  for (const auto &instance : instances()) {
+    instance->composeSynchronousProps(updatesBatch);
+  }
+}
+
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;

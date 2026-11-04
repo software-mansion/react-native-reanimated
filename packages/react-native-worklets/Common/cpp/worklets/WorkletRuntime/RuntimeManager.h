@@ -3,9 +3,10 @@
 #include <jsi/jsi.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
+#include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -21,14 +22,21 @@ namespace worklets {
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
+class WorkletRuntime;
+class SerializableWorklet;
+class AsyncQueue;
 
-class RuntimeManager {
+class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
  public:
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
 
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
+
+  size_t getAliveRuntimeCount();
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
@@ -45,16 +53,28 @@ class RuntimeManager {
   void propagateModuleUpdate(const std::string &code, const std::string &sourceUrl);
 #endif // NDEBUG
 
-  template <class Fn>
-  decltype(auto) withRegistrationPaused(Fn &&fn) {
-    std::unique_lock lock(registrationMutex_);
-    return std::forward<Fn>(fn)();
+  template <std::invocable<> TFn>
+  decltype(auto) withRuntimeReadyPaused(TFn &&fn) {
+    std::unique_lock lock(runtimeReadyMutex_);
+    return std::forward<TFn>(fn)();
+  }
+
+  template <std::invocable<bool> TFn>
+  void runWhileRuntimeLocked(RuntimeData::RuntimeId runtimeId, TFn &&fn) {
+    std::shared_lock lock(weakRuntimesMutex_);
+    std::forward<TFn>(fn)(weakRuntimes_.contains(runtimeId));
   }
 
  private:
+  friend class WorkletHermesRuntime;
+
+  void onRuntimeCreated(RuntimeData::RuntimeId runtimeId);
+
+  void onRuntimeDestroyed(RuntimeData::RuntimeId runtimeId);
+
   uint64_t getNextRuntimeId();
 
-  void registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
+  void onRuntimeReady(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
 #ifndef NDEBUG
   void loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &workletRuntime);
@@ -68,7 +88,7 @@ class RuntimeManager {
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
-  std::mutex registrationMutex_;
+  std::mutex runtimeReadyMutex_;
 #ifndef NDEBUG
   std::vector<ModuleUpdate> moduleUpdates_;
 #endif // NDEBUG

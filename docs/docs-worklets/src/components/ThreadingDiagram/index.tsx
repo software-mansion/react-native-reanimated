@@ -6,7 +6,10 @@ import styles from './styles.module.css';
 
 export default function ThreadingDiagram() {
   return (
-    <figure className={styles.figure} aria-label="React Native threading model">
+    <figure
+      data-figure="ThreadingDiagram"
+      className={styles.figure}
+      aria-label="React Native threading model">
       <div className={styles.scene}>
         <section className={clsx(styles.panel, styles.js)}>
           <span className={styles.title}>JS thread</span>

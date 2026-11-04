@@ -474,6 +474,17 @@ function LayoutAnimationsTest() {
     // `SharedTransition` so it remains assignable to `sharedTransitionStyle`.
     const sharedTransition = SharedTransition.springify(400).dampingRatio(1);
 
+    // `fadeContent` keeps the `SharedTransition` type in both chain orders.
+    const fadeContentTransition = SharedTransition.fadeContent().duration(400);
+    const springFadeContentTransition =
+      SharedTransition.springify(400).fadeContent();
+    const fadeContentWithOptions = SharedTransition.fadeContent({
+      fadeOut: { end: 0.5 },
+      fadeIn: { duration: 200 },
+    }).springify();
+    // @ts-expect-error `fadeOut.end` is a number.
+    SharedTransition.fadeContent({ fadeOut: { end: '50%' } });
+
     // `withInitialValues` / `withTargetValues` (defined on
     // `ComplexAnimationBuilder`) must survive a static modifier chain.
     const sharedTransitionWithOverrides = SharedTransition.springify(400)
@@ -494,6 +505,18 @@ function LayoutAnimationsTest() {
         <Animated.View
           sharedTransitionTag="tag"
           sharedTransitionStyle={sharedTransitionWithOverrides}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={fadeContentTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={springFadeContentTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={fadeContentWithOptions}
         />
       </View>
     );
