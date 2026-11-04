@@ -57,7 +57,6 @@ constexpr std::array kAnimatedStyleProps{
 #endif
 
 namespace {
-// A fade-out ends at fadeOutEnd of the move. A fade-in lasts the whole move.
 double fadeLength(const ContentFade &contentFade) {
   const auto &[from, to] = contentFade.range;
   return to < from ? contentFade.options.fadeOutEnd : 1;
@@ -399,7 +398,6 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
-// A new run moves its source. A continuing run keeps the view that already moves.
 SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
     const SharedTag &sharedTag,
@@ -501,8 +499,6 @@ ShadowView LayoutAnimationsProxy::ownCarrierView(
   return carrierView;
 }
 
-// The animation starts from the style of the source, so the carrier starts with that style and with its
-// own content.
 ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
     const ShadowView &source,
     const std::shared_ptr<LightNode> &carrier,
@@ -702,12 +698,11 @@ bool LayoutAnimationsProxy::isRetainedContent(const std::shared_ptr<LightNode> &
   return !detachedCarriers_.empty() && isInRetainedCarrier(node);
 }
 
-// A removed subtree waits for the shared transitions of this pull when it holds a detached carrier or a
-// tagged view of the top screen, which can become a source.
 bool LayoutAnimationsProxy::defersSubtreeRemoval(const std::shared_ptr<LightNode> &node) const {
   if (std::ranges::any_of(detachedCarriers_, [&node](const auto &carrier) { return isInSubtree(carrier, node); })) {
     return true;
   }
+  // A tagged view of the top screen can become the source of a run in this pull.
   if (!topScreen_) {
     return false;
   }
@@ -763,9 +758,6 @@ void LayoutAnimationsProxy::retireOrphanedSharedTransitions() const {
   }
 }
 
-// The new top screen covers a target that is in another screen. Without an active boundary, it covers every target.
-// Its run ends, so that its carrier does not move over the new screen. A target that carries another run is at the
-// root, above the screens.
 void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     const std::shared_ptr<LightNode> &topScreen,
     TransactionMeta &transaction,
@@ -775,7 +767,9 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
       continue;
     }
     const auto &target = element.run->target;
+    // A target that carries another run is at the root, above the screens.
     const bool carriesAnotherRun = target->isDetached && target != element.run->carrier;
+    // Without an active boundary, the new screen covers every target.
     const bool onTopScreen = topScreen && isInSubtree(target, topScreen);
     if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen) {
       continue;
@@ -1348,7 +1342,6 @@ bool LayoutAnimationsProxy::waitsForCoveringRun(
   return hasCarrierAnimationEnded(run.carrier->current.tag) && isDescendantOfAny(run.target, coveringViews);
 }
 
-// A carrier that waits for its frames to enter the mount queue does not finish in this pull.
 bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
   return !hasCarrierAnimationEnded(carrierTag) || hasUnqueuedCarrierFrame(carrierTag);
 }
@@ -1393,7 +1386,6 @@ void LayoutAnimationsProxy::finishSharedTransition(
 
 // MARK: Content Fade
 
-// The children fade toward the endpoint that the carrier shows: in when the carrier is the target, out otherwise.
 // The animation aims past the end of a fade-out that ends before the move, and the frames clamp it.
 std::optional<ContentOpacityRange> LayoutAnimationsProxy::restartContentFade(SharedTransitionRun &run) const {
   if (!run.contentFade) {
@@ -1416,7 +1408,6 @@ double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &
   return animated.value_or(run.contentFade->range.from);
 }
 
-// Nested carriers and hidden endpoints keep their own opacity.
 std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingChildren(
     const std::shared_ptr<LightNode> &node,
     const std::unordered_set<Tag> &hiddenTags) const {
@@ -1552,7 +1543,6 @@ void LayoutAnimationsProxy::composeCarrierContent(
   }
 }
 
-// A faded child that is not in keptChildren shows its own opacity again.
 void LayoutAnimationsProxy::restoreFadedChildren(
     ContentFade &contentFade,
     const std::vector<std::shared_ptr<LightNode>> &keptChildren,
@@ -1571,9 +1561,6 @@ void LayoutAnimationsProxy::restoreFadedChildren(
   });
 }
 
-// An entering animation of a fading target child waits until the child stops being fading target content: when
-// the run lands, or without a landing, for example on a reversal. It also waits while the run waits for a parent
-// shared view. A child that React removes before then stays hidden until it is gone, and its animation does not start.
 void LayoutAnimationsProxy::holdTargetEntering(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -1585,6 +1572,7 @@ void LayoutAnimationsProxy::holdTargetEntering(
     if (!isLightNodeMapped(held.node)) {
       return true;
     }
+    // A removed child stays hidden until it is gone, and its entering animation does not start.
     if (held.node->isExiting() || targetContent.contains(held.node)) {
       return false;
     }
@@ -1641,8 +1629,6 @@ void LayoutAnimationsProxy::startHeldEntering(
   startEnteringAnimation(node, held.config);
 }
 
-// The target shows its children at opacity 0 when it lands. A child with a held entering animation plays it,
-// the other children fade in with the fade-in config. An exiting child with a held entering animation stays hidden.
 void LayoutAnimationsProxy::fadeInTargetContent(
     const SharedTransitionRun &run,
     TransactionMeta &transaction,
