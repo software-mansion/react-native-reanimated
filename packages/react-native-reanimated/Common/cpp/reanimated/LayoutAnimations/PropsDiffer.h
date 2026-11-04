@@ -96,6 +96,9 @@ class PropsDiffer {
         targetValues_(rt) {}
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
+
+  // True when computeDiff animates a style prop between these props.
+  static bool hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps);
 };
 
 } // namespace reanimated

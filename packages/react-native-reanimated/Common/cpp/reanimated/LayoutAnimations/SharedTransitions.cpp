@@ -4,6 +4,7 @@
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
@@ -428,6 +429,16 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   return carrierView;
 }
 
+bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
+  const auto &previousTarget = carrierAnimation(run).finalView;
+  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
+    return true;
+  }
+  return hasCarrierAnimationEnded(run.carrier->current.tag) &&
+      isDescendantOfAny(run.target, viewsHiddenByContinuingRuns()) &&
+      PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget));
+}
+
 // The carrier shows its own props, so that its content, for example a video player or an image
 // source, does not change during the run. Only the frame and the animated values come from the
 // other view.
@@ -648,6 +659,15 @@ int LayoutAnimationsProxy::carrierHostIndex(const std::shared_ptr<LightNode> &no
   return rootChildCount + static_cast<int>(std::distance(detachedCarriers_.begin(), carrierIt));
 }
 
+// A run that ended keeps the record of its carrier until the run finishes.
+const LayoutAnimation &LayoutAnimationsProxy::carrierAnimation(const SharedTransitionRun &run) const {
+  const auto tag = run.carrier->current.tag;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    return it->second;
+  }
+  return completedAnimations_.at(tag).animation;
+}
+
 const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransitionRun &run) const {
   const auto tag = run.carrier->current.tag;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
@@ -726,7 +746,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       auto &run = *elementIt->second.run;
       const auto carrierTag = run.carrier->current.tag;
-      if (!hasPendingLayoutAnimation(carrierTag) && !layoutAnimations_.contains(carrierTag)) {
+      if (!hasPendingLayoutAnimation(carrierTag) && !layoutAnimations_.contains(carrierTag) &&
+          !completedAnimations_.contains(carrierTag)) {
         continue;
       }
       const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
@@ -750,11 +771,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, config);
         continue;
       }
-      const auto &layoutAnimation = layoutAnimations_.at(carrierTag);
-      if (layoutAnimation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
+      if (targetEndChanged(run, carrierAfter)) {
         startSharedTransition(
             carrierTag,
-            layoutAnimation.currentView,
+            carrierAnimation(run).currentView,
             carrierAfter,
             ownCarrierView(after, run.carrier, propsParserContext).props,
             config);
@@ -942,6 +962,55 @@ std::optional<SurfaceId> LayoutAnimationsProxy::cancelUncommittedScreenPop() con
   }
   uncommittedScreenPop_->cancelled = true;
   return surfaceId_;
+}
+
+// A view in a hidden view does not show. When the target of a run is in a view that a continuing run hides,
+// the carrier stays on screen until that run ends, because the target cannot show before then.
+void LayoutAnimationsProxy::finishEndedSharedTransitions(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext,
+    const bool flushStructuralMutations,
+    std::unordered_set<Tag> &preservedTags) const {
+  const auto coveringViews = viewsHiddenByContinuingRuns();
+  for (auto &[sharedTag, element] : sharedElements_) {
+    if (!element.run) {
+      continue;
+    }
+    const auto tag = element.run->carrier->current.tag;
+    if (!hasCarrierAnimationEnded(tag)) {
+      continue;
+    }
+    if (!flushStructuralMutations || runContinues(tag) || isDescendantOfAny(element.run->target, coveringViews)) {
+      preservedTags.insert(tag);
+      continue;
+    }
+    finishSharedTransition(sharedTag, element, transaction, propsParserContext);
+  }
+}
+
+bool LayoutAnimationsProxy::hasCarrierAnimationEnded(const Tag tag) const {
+  return completedAnimations_.contains(tag) && !hasPendingLayoutAnimation(tag);
+}
+
+// A carrier that waits for its frames to enter the mount queue does not finish in this pull.
+bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
+  return !hasCarrierAnimationEnded(carrierTag) || hasUnqueuedCarrierFrame(carrierTag);
+}
+
+std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::viewsHiddenByContinuingRuns() const {
+  std::vector<std::shared_ptr<LightNode>> views;
+  for (const auto &[_, element] : sharedElements_) {
+    if (!element.run) {
+      continue;
+    }
+    if (!runContinues(element.run->carrier->current.tag)) {
+      continue;
+    }
+    for (const auto &hiddenView : element.hiddenViews) {
+      views.push_back(hiddenView.node);
+    }
+  }
+  return views;
 }
 
 void LayoutAnimationsProxy::finishSharedTransition(

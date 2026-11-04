@@ -65,6 +65,41 @@ test('the iOS carrier copies the typed fields and border edges that PropsDiffer 
   expect(sorted(edges)).toEqual(sorted(widths));
 });
 
+test('the restart check covers the typed fields and border edges that PropsDiffer animates', () => {
+  const check = differ
+    .split('bool PropsDiffer::hasAnimatedChanges(')[1]
+    .split('\nvoid PropsDiffer::diffFrame')[0];
+  const animatedFields = [...methods.matchAll(/sourceViewProps_\.(\w+)/g)].map(
+    ([, name]) => name
+  );
+  const checkedFields = [...check.matchAll(/sourceProps\.(\w+)/g)].map(
+    ([, name]) => name
+  );
+  expect(sorted(checkedFields)).toEqual(
+    sorted([...animatedFields, 'transform', 'boxShadow'])
+  );
+  const targetFields = [...check.matchAll(/targetProps\.(\w+)/g)].map(
+    ([, name]) => name
+  );
+  expect(sorted(targetFields)).toEqual(sorted(checkedFields));
+  for (const [animated, checked, target] of [
+    ['sourceBorderRadii', 'sourceRadii', 'targetRadii'],
+    ['sourceBorderWidths', 'sourceWidths', 'targetWidths'],
+    ['sourceBorderColors', 'sourceColors', 'targetColors'],
+  ]) {
+    const fields = (source: string, name: string) =>
+      [...source.matchAll(new RegExp(`${name}\\.(\\w+)`, 'g'))].map(
+        ([, field]) => field
+      );
+    expect(sorted(fields(check, checked))).toEqual(
+      sorted(fields(methods, animated))
+    );
+    expect(sorted(fields(check, target))).toEqual(
+      sorted(fields(check, checked))
+    );
+  }
+});
+
 function sorted(values: Iterable<string>) {
   return [...new Set(values)].sort();
 }

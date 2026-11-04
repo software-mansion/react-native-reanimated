@@ -234,6 +234,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void cleanupSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
   bool hasPendingStructuralCleanup() const;
+  bool isCarrierOfUncoveredRun(Tag tag, const std::vector<std::shared_ptr<LightNode>> &coveringViews) const;
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
@@ -291,12 +292,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
+  const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   std::pair<const SharedTag, SharedElement> *sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
   ShadowView asCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
+  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
@@ -321,6 +324,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       bool gestureDriven,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
+  void finishEndedSharedTransitions(
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext,
+      bool flushStructuralMutations,
+      std::unordered_set<Tag> &preservedTags) const;
+  bool hasCarrierAnimationEnded(Tag tag) const;
+  bool runContinues(Tag carrierTag) const;
+  std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
       const SharedTag &sharedTag,
       SharedElement &element,
