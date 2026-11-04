@@ -67,11 +67,11 @@ The remaining steps depend on how you build your app — pick your framework:
     And that's it! The Worklets library is now configured in your Expo project.
 
     <details>
-      <summary>Don't I need the Worklets babel plugin?</summary>
+      <summary>Don't I need the Worklet Syntax Babel plugin?</summary>
 
-      Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
+      Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklet Syntax Babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-      To learn more about the plugin go to [Worklets babel plugin](../worklets-plugin/about.mdx) section.
+      To learn more about the plugin go to [Worklet Syntax plugin](../worklets-plugin/about.mdx) section.
     </details>
 
     <br/>
@@ -108,14 +108,14 @@ The remaining steps depend on how you build your app — pick your framework:
     };
     ```
 
-    Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](../worklets-plugin/options.mdx) section.
+    The Worklet Syntax Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklet Syntax Babel plugin](../worklets-plugin/options.mdx) section.
 
     <details>
       <summary>Why do I need this?</summary>
 
-      In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](../tutorials/0-concurrency-model.mdx#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime)
+      In short, the Worklet Syntax plugin automatically converts special JavaScript functions (called [worklet functions](../tutorials/0-concurrency-model.mdx#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime)
 
-      To learn more about the plugin go to [Worklets babel plugin](../worklets-plugin/about.mdx) section.
+      To learn more about the plugin go to [Worklet Syntax plugin](../worklets-plugin/about.mdx) section.
     </details>
 
     <br/>
