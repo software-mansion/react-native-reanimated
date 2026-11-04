@@ -573,8 +573,7 @@ void LayoutAnimationsProxy::detachCarrier(
   ShadowViewMutationList mutations;
   mutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
-  node->setDetached(true);
-  detachedCarriers_.push_back(node);
+  addDetachedCarrier(node);
   // The run owns the frames of its carrier, so an animation that this transaction queued or that
   // waits for a landing for the same view does not start.
   const auto isCarrier = [&node](const PendingNodeAnimation &animation) {
@@ -645,8 +644,7 @@ void LayoutAnimationsProxy::attachCarrier(
   const auto parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   mutations.push_back(ShadowViewMutation::RemoveMutation(carrierHostTag(), mounted, carrierHostIndex(node)));
-  std::erase(detachedCarriers_, node);
-  node->setDetached(false);
+  removeDetachedCarrier(node);
   cancelLayoutAnimation(tag);
 
   resolveLightNodeProps(node);
@@ -848,8 +846,7 @@ void LayoutAnimationsProxy::removeFromParent(
     const auto carried = sharedElementOfCarrier(node);
     const auto &carrierView = carried ? carrierViewOnScreen(*carried->element.run) : node->current;
     rootMutations.push_back(ShadowViewMutation::RemoveMutation(carrierHostTag(), carrierView, carrierHostIndex(node)));
-    std::erase(detachedCarriers_, node);
-    node->setDetached(false);
+    removeDetachedCarrier(node);
     if (carried) {
       deferRestore({carried->sharedTag, carried->element.run->target});
       carried->element.run.reset();
@@ -865,6 +862,16 @@ void LayoutAnimationsProxy::removeFromParent(
     parent->removeChild(node);
   }
   cancelLayoutAnimation(node->current.tag);
+}
+
+void LayoutAnimationsProxy::addDetachedCarrier(const std::shared_ptr<LightNode> &node) const {
+  node->setDetached(true);
+  detachedCarriers_.push_back(node);
+}
+
+void LayoutAnimationsProxy::removeDetachedCarrier(const std::shared_ptr<LightNode> &node) const {
+  std::erase(detachedCarriers_, node);
+  node->setDetached(false);
 }
 
 // Detached carriers follow the children of the root, or live in the overlay on iOS.

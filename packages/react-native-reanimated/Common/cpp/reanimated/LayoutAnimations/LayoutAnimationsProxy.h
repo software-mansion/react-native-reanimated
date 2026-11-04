@@ -419,6 +419,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       ShadowViewMutationList &mutations,
       ShadowViewMutationList &rootMutations) const;
+  void addDetachedCarrier(const std::shared_ptr<LightNode> &node) const;
+  void removeDetachedCarrier(const std::shared_ptr<LightNode> &node) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   Tag carrierHostTag() const;
   void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
