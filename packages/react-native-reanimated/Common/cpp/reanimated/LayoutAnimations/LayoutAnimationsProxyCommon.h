@@ -43,6 +43,12 @@ struct SentFrame {
 };
 #endif
 
+// The clip of a shared transition carrier moves with the carrier.
+struct AncestorClipRange {
+  AncestorClip from;
+  AncestorClip to;
+};
+
 struct LayoutAnimation {
   // On Android, the props of currentView can hold only the props that the last frame changed. Read currentView with
   // LayoutAnimationsProxyCommon::currentViewOf.
@@ -60,6 +66,7 @@ struct LayoutAnimation {
 #ifdef ANDROID
   std::optional<SentFrame> sentFrame;
 #endif
+  std::optional<AncestorClip> clip;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -89,6 +96,7 @@ struct ManagedLayoutAnimationStart {
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
   std::optional<ContentOpacityRange> contentOpacity;
+  std::optional<AncestorClipRange> clip;
   // A shared transition content fade-in gets the target opacity of the view.
   bool isContentFadeIn = false;
 };
@@ -205,7 +213,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &finalView,
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config = nullptr,
-      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt,
+      std::optional<AncestorClipRange> clip = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;

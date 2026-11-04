@@ -81,8 +81,17 @@ enum class SharedTransitionLifecycle : std::uint8_t {
   FINISHED,
 };
 
+// Clips the carrier like the ancestors of the shared views do. The content inside the clip cancels its offset, so the
+// carrier keeps the frames of its host.
+struct CarrierClip {
+  ShadowView view;
+  ShadowView content;
+  AncestorClipRange range;
+};
+
 // The carrier is the view that the run animates, moved from its parent to the carrier layer of its layout root for the
 // time of the run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
+// When an ancestor of either end clips the view, a carrier in a carrier layer moves inside a clip.
 struct SharedTransitionRun {
   // The run reports this callback once, when it ends. It gets true only when the run lands.
   std::shared_ptr<Serializable> callback;
@@ -109,6 +118,8 @@ struct SharedTransitionRun {
   std::optional<bool> targetPlacedNatively;
   std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
+  std::optional<CarrierClip> clip;
+  bool sourceDrawsWithinFrame = false;
 
   bool holdsStart() const {
     return targetOffWindow && !followsTarget;
@@ -188,6 +199,9 @@ struct Ancestor {
   Transform transform;
   TransformOrigin origin;
   react::Size ownSize;
+  Float opacity = 1;
+  bool clipsContent = false;
+  Float borderRadius = 0;
   // The rotation, scale and skew of the native views between the node and its React parent.
   std::optional<Transform> nativeTransform;
 };
@@ -342,7 +356,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &after,
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config,
-      std::optional<ContentOpacityRange> contentOpacity) const;
+      std::optional<ContentOpacityRange> contentOpacity,
+      std::optional<AncestorClipRange> clip = std::nullopt) const;
   std::optional<ContentOpacityRange> restartContentFade(SharedTransitionRun &run) const;
   double contentOpacityOnScreen(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> fadingChildren(
@@ -599,6 +614,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   Tag carrierHostTag(const std::shared_ptr<LightNode> &node) const;
+  void insertCarrierIntoHost(const SharedTransitionRun &run, const ShadowView &view, ShadowViewMutationList &mutations)
+      const;
+  void removeCarrierFromHost(
+      const SharedTransitionRun &run,
+      const ShadowView &mounted,
+      ShadowViewMutationList &mutations) const;
   void ensureCarrierLayer(
       const std::shared_ptr<LightNode> &host,
       ShadowViewMutationList &mutations,
@@ -615,11 +636,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
-  ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
   ShadowView targetOnScreen(
       const SharedTransitionRun &run,
       const PropsParserContext &propsParserContext,
-      bool &placedNatively) const;
+      AncestorClip *clip = nullptr) const;
+  ShadowView targetOnScreen(
+      const SharedTransitionRun &run,
+      const PropsParserContext &propsParserContext,
+      bool &placedNatively,
+      AncestorClip *clip = nullptr) const;
+  AncestorClip fitTargetClip(const SharedTransitionRun &run, const ShadowView &target, const AncestorClip &clip) const;
+  bool followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const;
   void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
@@ -656,8 +683,15 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
 
+  SharedTransitionRun *continueSharedTransitionRun(
+      const SharedTag &sharedTag,
+      const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
   SharedTransitionRun &startSharedTransitionRun(
       const ShadowView &before,
+      const AncestorClip *clip,
+      bool sourceDrawsWithinFrame,
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       const std::shared_ptr<Serializable> &config,
@@ -666,6 +700,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::shared_ptr<Serializable> callback,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
+  bool prepareSharedTransition(
+      CollectedTransition &collectedTransition,
+      const SharedTransitionRun *continuingRun,
+      bool sourceDrawsWithinFrame,
+      const PropsParserContext &propsParserContext) const;
+  std::optional<AncestorClipRange> moveClipTo(SharedTransitionRun &run, const AncestorClip &clip) const;
   void finishEndedSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -724,6 +764,35 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowView &shadowView,
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
+  void applyAncestorEffects(
+      ShadowView &shadowView,
+      const Transition &transition,
+      BeforeOrAfter index,
+      const PropsParserContext &propsParserContext) const;
+  void fitClipOfUnclippedSide(CollectedTransition &collectedTransition, bool sourceDrawsWithinFrame) const;
+  bool drawsWithinFrame(
+      const ShadowView &view,
+      const std::optional<Transform> &ancestorTransform,
+      const std::shared_ptr<LightNode> &node) const;
+  const react::Rect &windowFrame() const;
+  AncestorClip carrierClipOnScreen(const SharedTransitionRun &run) const;
+  CarrierClip createCarrierClip(
+      const AncestorClip &clip,
+      const ShadowView &source,
+      const PropsParserContext &propsParserContext) const;
+  CarrierClip
+  clipAt(const CarrierClip &carrierClip, const AncestorClip &clip, const PropsParserContext &propsParserContext) const;
+  AncestorClip interpolateClip(const AncestorClipRange &range, double progress) const;
+  void updateCarrierClip(
+      Tag carrierTag,
+      const LayoutAnimation &animation,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  void parseAncestorOpacityAndClip(
+      const std::vector<Ancestor> &ancestors,
+      const std::vector<react::Point> &absolutePositions,
+      Float &opacity,
+      AncestorClip &clip) const;
 
   std::optional<Transform> parseParentTransforms(
       const std::vector<Ancestor> &ancestors,

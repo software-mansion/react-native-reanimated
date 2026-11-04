@@ -219,25 +219,28 @@ void LayoutAnimationsProxy::collectSharedElement(
   std::optional<Transform> newTransform;
   std::vector<react::Point> absolutePositions;
   std::vector<Ancestor> ancestors;
+  auto &collectedTransition = transaction.transitionMap[sharedTag];
+  auto &transition = collectedTransition.transition;
+  auto &[snapshot, parentTag, transform, ancestorOpacity, clip] = transition;
+  int indexNum = static_cast<int>(index);
   const auto *carried =
       useViewsOnScreen && node->placement() == CarrierPlacement::AT_ROOT ? runOfCarrier(node) : nullptr;
   if (carried) {
     copy = carrierViewOnScreen(*carried);
+    ancestorOpacity[indexNum] = 1;
+    clip[indexNum] = carrierClipOnScreen(*carried);
   } else {
     copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
     absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
     ancestors = collectAncestors(node, useViewsOnScreen);
     newTransform = parseParentTransforms(ancestors, absolutePositions);
+    parseAncestorOpacityAndClip(ancestors, absolutePositions, ancestorOpacity[indexNum], clip[indexNum]);
   }
 
-  auto &collectedTransition = transaction.transitionMap[sharedTag];
-  auto &transition = collectedTransition.transition;
-  auto &[snapshot, parentTag, transform] = transition;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
 
-  int indexNum = static_cast<int>(index);
   transform[indexNum] = std::move(newTransform);
   snapshot[indexNum] = copy;
   parentTag[indexNum] = parent->current.tag;
@@ -400,15 +403,17 @@ void LayoutAnimationsProxy::handleProgressTransition(
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
-        const auto &transform = transition.transform;
-        overrideTransform(before, transform[BEFORE], propsParserContext);
-        overrideTransform(after, transform[AFTER], propsParserContext);
         const auto &[beforeNode, afterNode] = collectedTransition.nodes;
         react_native_assert(beforeNode && "Shared transition source not found");
         react_native_assert(afterNode && "Shared transition target not found");
         if (!beforeNode || !afterNode) {
           continue;
         }
+        const bool sourceDrawsWithinFrame = drawsWithinFrame(before, transition.transform[BEFORE], beforeNode);
+        const auto *continuingRun =
+            continueSharedTransitionRun(sharedTag, collectedTransition.nodes, transaction, propsParserContext);
+        const bool clipped =
+            prepareSharedTransition(collectedTransition, continuingRun, sourceDrawsWithinFrame, propsParserContext);
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
@@ -417,6 +422,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         const auto sharedTransitionConfig = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         auto &run = startSharedTransitionRun(
             before,
+            clipped ? &transition.clip[BEFORE] : nullptr,
+            sourceDrawsWithinFrame,
             sharedTag,
             collectedTransition.nodes,
             config,
@@ -426,6 +433,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
             transaction,
             propsParserContext);
         restartContentFade(run);
+        moveClipTo(run, transition.clip[AFTER]);
 
         const auto target = targetInCarrierSpace(run, after, propsParserContext);
         startProgressTransition(
@@ -494,6 +502,9 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
       const auto &[from, to] = contentFade->range;
       const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
       layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
+    }
+    if (const auto &clip = run.clip) {
+      layoutAnimation.clip = interpolateClip(clip->range, transition_->progress);
     }
     react_native_assert(layoutAnimation.config && "Progress shared transition without a progress animation");
     if (!layoutAnimation.config) {
@@ -654,14 +665,22 @@ bool LayoutAnimationsProxy::followSharedTransitionTarget(
     return false;
   }
   bool placedNatively = false;
+  AncestorClip clip;
   const auto target =
-      targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively), propsParserContext);
+      targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively, &clip), propsParserContext);
   run.targetPlacedNatively = placedNatively;
+  const bool clipMoved = run.clip && run.clip->range.to != clip;
+  if (clipMoved) {
+    run.clip->range.to = clip;
+  }
   const auto &finalView = animation->finalView;
   if (finalView.layoutMetrics == target.layoutMetrics &&
       getViewProps(finalView).transform == getViewProps(target).transform &&
       getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin) {
-    return false;
+    if (clipMoved && animation->geometryProgress) {
+      writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
+    }
+    return clipMoved;
   }
   animation->finalView = withGeometryOf(finalView, target, propsParserContext);
   if (animation->geometryProgress) {
@@ -783,14 +802,211 @@ std::optional<SharedTransitionConfig> LayoutAnimationsProxy::configOfSource(cons
   return layoutAnimationsManager_->getSharedTransitionConfig(source->current.tag);
 }
 
-SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
-    const ShadowView &before,
+// The carrier draws the view the way its ancestors draw it.
+void LayoutAnimationsProxy::applyAncestorEffects(
+    ShadowView &shadowView,
+    const Transition &transition,
+    const BeforeOrAfter index,
+    const PropsParserContext &propsParserContext) const {
+  const int indexNum = static_cast<int>(index);
+  overrideTransform(shadowView, transition.transform[indexNum], propsParserContext);
+  if (const auto ancestorOpacity = transition.ancestorOpacity[indexNum]; ancestorOpacity != 1) {
+    shadowView =
+        cloneViewWithOpacity(shadowView, getViewProps(shadowView).opacity * ancestorOpacity, propsParserContext);
+  }
+}
+
+// Returns whether the carrier moves inside a clip. A new run gets a clip when an end is clipped. A continuing run
+// keeps its clip, which then stands for the clip of the source, or keeps having none and ignores the clipping that
+// appears later. A nested carrier stays inside its ancestors, which draw it.
+bool LayoutAnimationsProxy::prepareSharedTransition(
+    CollectedTransition &collectedTransition,
+    const SharedTransitionRun *continuingRun,
+    const bool sourceDrawsWithinFrame,
+    const PropsParserContext &propsParserContext) const {
+  auto &transition = collectedTransition.transition;
+  auto &clip = transition.clip;
+  const auto &[source, target] = collectedTransition.nodes;
+  const bool nested =
+      continuingRun ? continuingRun->carrier->placement() == CarrierPlacement::NESTED : keepsNesting(source, target);
+  if (nested) {
+    transition.ancestorOpacity[BEFORE] = transition.ancestorOpacity[AFTER] = 1;
+  }
+  if (continuingRun && continuingRun->clip) {
+    clip[BEFORE] = carrierClipOnScreen(*continuingRun);
+  }
+  fitClipOfUnclippedSide(
+      collectedTransition, continuingRun ? continuingRun->sourceDrawsWithinFrame : sourceDrawsWithinFrame);
+  const auto &window = windowFrame();
+  const bool clipped = continuingRun ? continuingRun->clip.has_value()
+                                     : !nested && (clip[BEFORE].frame != window || clip[AFTER].frame != window);
+  if (!clipped) {
+    clip[BEFORE] = clip[AFTER] = {.frame = window};
+  }
+  auto &[before, after] = transition.snapshot;
+  applyAncestorEffects(before, transition, BEFORE, propsParserContext);
+  applyAncestorEffects(after, transition, AFTER, propsParserContext);
+  return clipped;
+}
+
+// A side that its ancestors do not clip ends on the frame of its view, so the clip morphs with the view. The
+// clip stays the window when neither side is clipped, or when the carrier can draw outside the frame of the view
+// at either end, because what it draws there stays during the transition.
+void LayoutAnimationsProxy::fitClipOfUnclippedSide(
+    CollectedTransition &collectedTransition,
+    const bool sourceDrawsWithinFrame) const {
+  auto &transition = collectedTransition.transition;
+  if (!sourceDrawsWithinFrame ||
+      !drawsWithinFrame(transition.snapshot[AFTER], transition.transform[AFTER], collectedTransition.nodes[AFTER])) {
+    return;
+  }
+  const auto &window = windowFrame();
+  for (const int index : {BEFORE, AFTER}) {
+    const int other = 1 - index;
+    if (transition.clip[index].frame != window || transition.clip[other].frame == window) {
+      continue;
+    }
+    const auto &frame = transition.snapshot[index].layoutMetrics.frame;
+    transition.clip[index] = {.frame = react::Rect::intersect(frame, window)};
+  }
+}
+
+// Only the transforms, the decorations and the children of a view reach outside its frame. The transforms of the
+// ancestors can compose to the identity, for example on a screen.
+bool LayoutAnimationsProxy::drawsWithinFrame(
+    const ShadowView &view,
+    const std::optional<Transform> &ancestorTransform,
+    const std::shared_ptr<LightNode> &node) const {
+  const auto &props = getViewProps(view);
+  const auto &size = view.layoutMetrics.frame.size;
+#ifdef ANDROID
+  if (props.elevation != 0) {
+    return false;
+  }
+#endif
+  return (!ancestorTransform || ancestorTransform->matrix == Transform::Identity().matrix) &&
+      props.transform.operations.empty() && size.width > 0 && size.height > 0 && props.boxShadow.empty() &&
+      props.shadowOpacity == 0 && props.outlineWidth == 0 &&
+      (node->children.empty() || props.getClipsContentToBounds());
+}
+
+const react::Rect &LayoutAnimationsProxy::windowFrame() const {
+  return lightNodes_.at(surfaceId_)->current.layoutMetrics.frame;
+}
+
+// The window stands for the clip of a run without one.
+AncestorClip LayoutAnimationsProxy::carrierClipOnScreen(const SharedTransitionRun &run) const {
+  if (!run.clip) {
+    return {.frame = windowFrame()};
+  }
+  const auto &view = run.clip->view;
+  return {
+      .frame = view.layoutMetrics.frame,
+      .borderRadius = getViewProps(view).borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value,
+  };
+}
+
+CarrierClip LayoutAnimationsProxy::createCarrierClip(
+    const AncestorClip &clip,
+    const ShadowView &source,
+    const PropsParserContext &propsParserContext) const {
+  const auto &descriptor = componentDescriptorRegistry_->at("View");
+  ShadowView view;
+  view.componentName = descriptor.getComponentName();
+  view.componentHandle = descriptor.getComponentHandle();
+  view.surfaceId = surfaceId_;
+  view.traits = descriptor.getTraits();
+  // iOS mounts a view only with a view event emitter.
+  view.eventEmitter = source.eventEmitter;
+  view.layoutMetrics.pointScaleFactor = source.layoutMetrics.pointScaleFactor;
+  auto content = view;
+  {
+    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+    view.tag = sharedTransitionManager_->nextClipTag_;
+    content.tag = view.tag + 2;
+    sharedTransitionManager_->nextClipTag_ -= 10;
+  }
+  content.layoutMetrics.frame.size = windowFrame().size;
+  content.props =
+      descriptor.cloneProps(propsParserContext, nullptr, RawProps(folly::dynamic::object("pointerEvents", "box-none")));
+  return clipAt({.view = view, .content = content}, clip, propsParserContext);
+}
+
+// The content sits at the origin of the host, so the frames of the carrier do not depend on the clip.
+CarrierClip LayoutAnimationsProxy::clipAt(
+    const CarrierClip &carrierClip,
+    const AncestorClip &clip,
+    const PropsParserContext &propsParserContext) const {
+  auto moved = carrierClip;
+  moved.view.layoutMetrics.frame = clip.frame;
+  moved.content.layoutMetrics.frame.origin = -clip.frame.origin;
+  if (!moved.view.props ||
+      getViewProps(moved.view).borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value != clip.borderRadius) {
+    moved.view.props = componentDescriptorRegistry_->at("View").cloneProps(
+        propsParserContext,
+        nullptr,
+        RawProps(folly::dynamic::object("overflow", "hidden")("pointerEvents", "box-none")(
+            "borderRadius", clip.borderRadius)));
+  }
+  return moved;
+}
+
+// The clip moves from where it is on screen. A run without a clip has no clip range.
+std::optional<AncestorClipRange> LayoutAnimationsProxy::moveClipTo(SharedTransitionRun &run, const AncestorClip &clip)
+    const {
+  if (!run.clip) {
+    return std::nullopt;
+  }
+  run.clip->range = {.from = carrierClipOnScreen(run), .to = clip};
+  return run.clip->range;
+}
+
+AncestorClip LayoutAnimationsProxy::interpolateClip(const AncestorClipRange &range, const double progress) const {
+  const auto &[from, to] = range;
+  const auto interpolate = [progress](const Float start, const Float end) {
+    return static_cast<Float>(start + progress * (end - start));
+  };
+  return {
+      .frame =
+          {.origin =
+               {interpolate(from.frame.origin.x, to.frame.origin.x),
+                interpolate(from.frame.origin.y, to.frame.origin.y)},
+           .size =
+               {std::max<Float>(interpolate(from.frame.size.width, to.frame.size.width), 0),
+                std::max<Float>(interpolate(from.frame.size.height, to.frame.size.height), 0)}},
+      .borderRadius = std::max<Float>(interpolate(from.borderRadius, to.borderRadius), 0),
+  };
+}
+
+// A built-in transition moves the clip with the geometry of the carrier, so the clip follows a target that moves.
+void LayoutAnimationsProxy::updateCarrierClip(
+    const Tag carrierTag,
+    const LayoutAnimation &animation,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto nodeIt = lightNodes_.find(carrierTag);
+  auto *run = nodeIt != lightNodes_.end() && nodeIt->second->placement() == CarrierPlacement::AT_ROOT
+      ? runOfCarrier(nodeIt->second)
+      : nullptr;
+  if (!run || !run->clip) {
+    return;
+  }
+  const auto clip =
+      animation.geometryProgress ? interpolateClip(run->clip->range, *animation.geometryProgress) : *animation.clip;
+  if (carrierClipOnScreen(*run) == clip) {
+    return;
+  }
+  auto &mounted = *run->clip;
+  auto moved = clipAt(mounted, clip, propsParserContext);
+  mutations.push_back(createPropsUpdate(mounted.view, moved.view, carrierHostTag(nodeIt->second), propsParserContext));
+  mutations.push_back(ShadowViewMutation::UpdateMutation(mounted.content, moved.content, mounted.view.tag));
+  mounted = std::move(moved);
+}
+
+// A continuing run keeps the view that already moves. The run that it replaces returns its carrier first.
+SharedTransitionRun *LayoutAnimationsProxy::continueSharedTransitionRun(
     const SharedTag &sharedTag,
     const std::array<std::shared_ptr<LightNode>, 2> &nodes,
-    const std::shared_ptr<Serializable> &config,
-    const SharedTransitionDriver driver,
-    const std::optional<SharedTransitionContentFade> &contentFade,
-    std::shared_ptr<Serializable> callback,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   auto *run = activeSharedTransitionRun(sharedTag);
@@ -823,6 +1039,23 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
       run = nullptr;
     }
   }
+  return run;
+}
+
+// A new run moves its source, inside a new clip when clip is given.
+SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
+    const ShadowView &before,
+    const AncestorClip *clip,
+    const bool sourceDrawsWithinFrame,
+    const SharedTag &sharedTag,
+    const std::array<std::shared_ptr<LightNode>, 2> &nodes,
+    const std::shared_ptr<Serializable> &config,
+    const SharedTransitionDriver driver,
+    const std::optional<SharedTransitionContentFade> &contentFade,
+    std::shared_ptr<Serializable> callback,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  auto *run = activeSharedTransitionRun(sharedTag);
   if (!run) {
     const auto &carrier = nodes[BEFORE];
     // A view carries one run. Its shared tag can change while it carries the run of the old tag.
@@ -833,8 +1066,14 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     react_native_assert(!carrier->isCarrier() && "A view carries one run");
     react_native_assert(!activeSharedTransitionRun(sharedTag) && "Shared tag already has an active run");
     run = &sharedTransitionRuns_
-               .insert_or_assign(carrier->current.tag, SharedTransitionRun{.sharedTag = sharedTag, .carrier = carrier})
+               .insert_or_assign(
+                   carrier->current.tag,
+                   SharedTransitionRun{
+                       .sharedTag = sharedTag, .carrier = carrier, .sourceDrawsWithinFrame = sourceDrawsWithinFrame})
                .first->second;
+    if (clip) {
+      run->clip = createCarrierClip(*clip, before, propsParserContext);
+    }
     if (contentFade) {
       run->contentFade = ContentFade{.options = *contentFade, .range = {1, 1}};
     }
@@ -1013,9 +1252,8 @@ void LayoutAnimationsProxy::detachCarrier(
     mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, parent->current.tag));
   } else {
     ensureCarrierLayer(carrierPlacements_.hostOf(node), mutations, propsParserContext);
-    mutations.push_back(
-        ShadowViewMutation::InsertMutation(carrierHostTag(node), run.carrierStartView, carrierHostIndex(node)));
-    mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, carrierHostTag(node)));
+    insertCarrierIntoHost(run, run.carrierStartView, mutations);
+    mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, carrierParentTag(node)));
   }
 
   auto &filteredMutations = transaction.filteredMutations;
@@ -1067,7 +1305,7 @@ void LayoutAnimationsProxy::attachCarrier(
   react_native_assert(parent && "Parent node is nullptr");
   const bool detached = node->placement() == CarrierPlacement::AT_ROOT;
   if (detached) {
-    mutations.push_back(ShadowViewMutation::RemoveMutation(carrierHostTag(node), mounted, carrierHostIndex(node)));
+    removeCarrierFromHost(run, mounted, mutations);
   }
   carrierPlacements_.attach(node);
   cancelLayoutAnimation(tag);
@@ -1304,9 +1542,11 @@ ShadowView LayoutAnimationsProxy::movedCarrierTarget(const Tag tag, const react:
   return target;
 }
 
+// A clipped carrier is the child of the content of its clip, which takes its place in the host.
 Tag LayoutAnimationsProxy::carrierParentTag(const std::shared_ptr<LightNode> &carrier) const {
   if (carrier->placement() == CarrierPlacement::AT_ROOT) {
-    return carrierHostTag(carrier);
+    const auto *run = carrier->isCarrier() ? runOfCarrier(carrier) : nullptr;
+    return run && run->clip ? run->clip->content.tag : carrierHostTag(carrier);
   }
   const auto parent = carrier->parent.lock();
   react_native_assert(parent && "A carrier that is not at the root has a parent");
@@ -1519,9 +1759,12 @@ void LayoutAnimationsProxy::removeFromParent(
     deferRestore({carried->sharedTag, carried->target});
   }
   if (node->placement() == CarrierPlacement::AT_ROOT) {
-    const auto &carrierView = carried ? carrierViewOnScreen(*carried) : node->current;
-    rootMutations.push_back(
-        ShadowViewMutation::RemoveMutation(carrierHostTag(node), carrierView, carrierHostIndex(node)));
+    if (carried) {
+      removeCarrierFromHost(*carried, carrierViewOnScreen(*carried), rootMutations);
+    } else {
+      rootMutations.push_back(
+          ShadowViewMutation::RemoveMutation(carrierHostTag(node), node->current, carrierHostIndex(node)));
+    }
   } else {
     const auto position = parent->positionOf(node);
     react_native_assert(position != -1 && "Removed node not found in its parent");
@@ -1546,6 +1789,44 @@ int LayoutAnimationsProxy::carrierHostIndex(const std::shared_ptr<LightNode> &no
 
 Tag LayoutAnimationsProxy::carrierHostTag(const std::shared_ptr<LightNode> &node) const {
   return carrierLayers_.at(carrierPlacements_.hostOf(node)).tag;
+}
+
+void LayoutAnimationsProxy::insertCarrierIntoHost(
+    const SharedTransitionRun &run,
+    const ShadowView &view,
+    ShadowViewMutationList &mutations) const {
+  const auto &node = run.carrier;
+  const auto host = carrierHostTag(node);
+  const auto index = carrierHostIndex(node);
+  if (!run.clip) {
+    mutations.push_back(ShadowViewMutation::InsertMutation(host, view, index));
+    return;
+  }
+  const auto &[clip, content, _] = *run.clip;
+  mutations.push_back(ShadowViewMutation::CreateMutation(clip));
+  mutations.push_back(ShadowViewMutation::InsertMutation(host, clip, index));
+  mutations.push_back(ShadowViewMutation::CreateMutation(content));
+  mutations.push_back(ShadowViewMutation::InsertMutation(clip.tag, content, 0));
+  mutations.push_back(ShadowViewMutation::InsertMutation(content.tag, view, 0));
+}
+
+void LayoutAnimationsProxy::removeCarrierFromHost(
+    const SharedTransitionRun &run,
+    const ShadowView &mounted,
+    ShadowViewMutationList &mutations) const {
+  const auto &node = run.carrier;
+  const auto host = carrierHostTag(node);
+  const auto index = carrierHostIndex(node);
+  if (!run.clip) {
+    mutations.push_back(ShadowViewMutation::RemoveMutation(host, mounted, index));
+    return;
+  }
+  const auto &[clip, content, _] = *run.clip;
+  mutations.push_back(ShadowViewMutation::RemoveMutation(content.tag, mounted, 0));
+  mutations.push_back(ShadowViewMutation::RemoveMutation(clip.tag, content, 0));
+  mutations.push_back(ShadowViewMutation::DeleteMutation(content));
+  mutations.push_back(ShadowViewMutation::RemoveMutation(host, clip, index));
+  mutations.push_back(ShadowViewMutation::DeleteMutation(clip));
 }
 
 // The layer is the last child of its layout root, so React's indices of the other children do not change. On iOS,
@@ -1711,19 +1992,24 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
-      const auto &transform = transition.transform;
-      overrideTransform(before, transform[BEFORE], propsParserContext);
-      overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
       const auto &afterNode = collectedTransition.nodes[AFTER];
       react_native_assert(afterNode && "Shared transition target not found");
       if (!afterNode) {
         continue;
       }
+      const bool sourceDrawsWithinFrame =
+          drawsWithinFrame(before, transition.transform[BEFORE], collectedTransition.nodes[BEFORE]);
+      const auto *continuingRun =
+          continueSharedTransitionRun(sharedTag, collectedTransition.nodes, transaction, propsParserContext);
+      const bool clipped =
+          prepareSharedTransition(collectedTransition, continuingRun, sourceDrawsWithinFrame, propsParserContext);
       warnIfSnapshotIsStale(before, transaction);
       warnIfSnapshotIsStale(after, transaction);
       auto &run = startSharedTransitionRun(
           before,
+          clipped ? &transition.clip[BEFORE] : nullptr,
+          sourceDrawsWithinFrame,
           sharedTag,
           collectedTransition.nodes,
           config->animation,
@@ -1743,7 +2029,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           asCarrierView(target, run.carrier, propsParserContext),
           ownCarrierView(target, run.carrier, propsParserContext).props,
           config->animation,
-          restartContentFade(run));
+          restartContentFade(run),
+          moveClipTo(run, transition.clip[AFTER]));
     }
     finishCoveredSharedTransitions(afterTopScreen, transaction, propsParserContext);
   } else if (!mutations.empty()) {
@@ -1820,9 +2107,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (leavesMovingParent) {
         moveNestedCarrierToRoot(run, transaction.filteredMutations, propsParserContext);
       }
-      overrideTransform(after, transition.transform[AFTER], propsParserContext);
+      prepareSharedTransition(collectedTransition, &run, run.sourceDrawsWithinFrame, propsParserContext);
       const auto target = targetInCarrierSpace(run, after, propsParserContext);
       const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
+      const auto &clipAfter = transition.clip[AFTER];
       if (phase == LayoutAnimationPhase::QUEUED) {
         run.followsTarget = run.configFollowsTarget;
         updateLayoutAnimationTarget(
@@ -1830,10 +2118,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierAfter,
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
-            restartContentFade(run));
+            restartContentFade(run),
+            moveClipTo(run, clipAfter));
       } else if (!targetChanged && !leavesMovingParent && followsWithoutRestart(run, carrierAfter)) {
         followSharedTransitionTarget(run, propsParserContext);
-      } else if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter)) {
+      } else if (
+          (leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter) ||
+          !followsClipTarget(run, clipAfter)) {
         run.followsTarget = followsTarget;
         startSharedTransition(
             run.carrier,
@@ -1841,7 +2132,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             carrierAfter,
             ownCarrierView(target, run.carrier, propsParserContext).props,
             animation,
-            restartContentFade(run));
+            restartContentFade(run),
+            moveClipTo(run, clipAfter));
       }
     }
   }
@@ -2885,9 +3177,10 @@ void LayoutAnimationsProxy::adjustForNativePlacement(
   if (!placement.placed) {
     return;
   }
-  collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
-  collectedTransition.transition.transform[index] =
-      parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent);
+  auto &transition = collectedTransition.transition;
+  transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
+  transition.transform[index] = parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent);
+  parseAncestorOpacityAndClip(ancestors, absolutePositions, transition.ancestorOpacity[index], transition.clip[index]);
 }
 
 // A run that starts detaches its carrier, which ends the native placement search of the paths below it.
@@ -2951,18 +3244,20 @@ void LayoutAnimationsProxy::endSharedTransitionOf(
   }
 }
 
-// The target in the space of the root, with the transforms of its ancestors.
+// The target in the space of the root, with the transforms and the opacity of its ancestors, and their clip.
 ShadowView LayoutAnimationsProxy::targetOnScreen(
     const SharedTransitionRun &run,
-    const PropsParserContext &propsParserContext) const {
+    const PropsParserContext &propsParserContext,
+    AncestorClip *clip) const {
   bool placedNatively = false;
-  return targetOnScreen(run, propsParserContext, placedNatively);
+  return targetOnScreen(run, propsParserContext, placedNatively, clip);
 }
 
 ShadowView LayoutAnimationsProxy::targetOnScreen(
     const SharedTransitionRun &run,
     const PropsParserContext &propsParserContext,
-    bool &placedNatively) const {
+    bool &placedNatively,
+    AncestorClip *clip) const {
   resolveLightNodeProps(run.target);
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
@@ -2972,7 +3267,42 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   target.layoutMetrics.frame.origin = absolutePositions[0];
   overrideTransform(
       target, parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent), propsParserContext);
+  Float ancestorOpacity = 1;
+  AncestorClip ancestorClip;
+  parseAncestorOpacityAndClip(ancestors, absolutePositions, ancestorOpacity, ancestorClip);
+  if (ancestorOpacity != 1) {
+    target = cloneViewWithOpacity(target, getViewProps(target).opacity * ancestorOpacity, propsParserContext);
+  }
+  if (clip) {
+    *clip = fitTargetClip(run, target, ancestorClip);
+  }
   return target;
+}
+
+// A run that fitted its unclipped target to the frame of the view keeps fitting it to that frame.
+AncestorClip LayoutAnimationsProxy::fitTargetClip(
+    const SharedTransitionRun &run,
+    const ShadowView &target,
+    const AncestorClip &clip) const {
+  const auto &window = windowFrame();
+  if (run.clip && clip.frame == window && run.clip->range.to.frame != window) {
+    return {.frame = react::Rect::intersect(target.layoutMetrics.frame, window)};
+  }
+  return clip;
+}
+
+// A built-in transition moves the clip with its geometry, so the clip takes a new target without a restart.
+bool LayoutAnimationsProxy::followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const {
+  if (!run.clip || run.clip->range.to == clip) {
+    return true;
+  }
+  auto *animation = liveGeometryAnimation(run);
+  if (!animation || !animation->geometryProgress) {
+    return false;
+  }
+  run.clip->range.to = clip;
+  writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
+  return true;
 }
 
 // A held start does not start, and a run does not land, until the target boundary joins the window. A run that
@@ -3012,12 +3342,14 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     if (!config) {
       continue;
     }
-    const auto target = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext), propsParserContext);
+    AncestorClip clip;
+    const auto target = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, &clip), propsParserContext);
     const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
     const auto frameProps = ownCarrierView(target, run.carrier, propsParserContext).props;
     if (hasPendingLayoutAnimation(carrierTag)) {
       run.followsTarget = run.configFollowsTarget;
-      updateLayoutAnimationTarget(carrierTag, carrierAfter, frameProps, config, restartContentFade(run));
+      updateLayoutAnimationTarget(
+          carrierTag, carrierAfter, frameProps, config, restartContentFade(run), moveClipTo(run, clip));
       continue;
     }
     if (run.followsTarget) {
@@ -3029,10 +3361,17 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     }
     const auto &animation = carrierAnimation(run);
     if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics ||
-        getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform) {
+        getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform ||
+        !followsClipTarget(run, clip)) {
       run.followsTarget = run.configFollowsTarget;
       startSharedTransition(
-          run.carrier, carrierViewOnScreen(run), carrierAfter, frameProps, config, restartContentFade(run));
+          run.carrier,
+          carrierViewOnScreen(run),
+          carrierAfter,
+          frameProps,
+          config,
+          restartContentFade(run),
+          moveClipTo(run, clip));
     }
   }
 }
@@ -3085,11 +3424,58 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
     ancestors.push_back(
-        {currentNode->current.tag, scrollPosition(currentNode, node), props.transform, origin, viewSize});
+        {currentNode->current.tag,
+         scrollPosition(currentNode, node),
+         props.transform,
+         origin,
+         viewSize,
+         props.opacity,
+         props.getClipsContentToBounds(),
+         props.borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value});
     const auto parent = currentNode->parent.lock();
     currentNode = endsPath || (parent && isLayoutRoot(parent)) ? nullptr : parent;
   }
   return ancestors;
+}
+
+// The ancestors draw the view with the product of their opacities and clip it to the frames of those that clip their
+// content. The clip takes the border radius of the outermost ancestor that narrows it and ignores the transforms of the
+// ancestors. Like the transforms, it covers the path up to the view that the platform shows the view in. A path that
+// ends at a carrier at the root ends inside the clip of its run.
+void LayoutAnimationsProxy::parseAncestorOpacityAndClip(
+    const std::vector<Ancestor> &ancestors,
+    const std::vector<react::Point> &absolutePositions,
+    Float &opacity,
+    AncestorClip &clip) const {
+  opacity = 1;
+  // The window does not clip anything that is on screen, so it stands for no clip.
+  clip = {.frame = windowFrame()};
+  const auto narrowClip = [&clip](const react::Rect &frame, const Float borderRadius) {
+    const auto narrowed = react::Rect::intersect(clip.frame, frame);
+    if (narrowed != clip.frame) {
+      clip = {.frame = narrowed, .borderRadius = borderRadius};
+    }
+  };
+  for (size_t i = 1; i < absolutePositions.size(); ++i) {
+    const auto &ancestor = ancestors[i];
+    opacity *= ancestor.opacity;
+    if (ancestor.clipsContent) {
+      // The absolute position of a scroll view is the position of its content.
+      narrowClip(
+          {.origin = absolutePositions[i] - ancestor.scrollPosition, .size = ancestor.ownSize}, ancestor.borderRadius);
+    }
+  }
+  if (absolutePositions.size() != ancestors.size()) {
+    return;
+  }
+  const auto pathEnd = lightNodes_.find(ancestors.back().tag);
+  if (pathEnd == lightNodes_.end() || pathEnd->second->placement() != CarrierPlacement::AT_ROOT) {
+    return;
+  }
+  if (const auto *carried = pathEnd->second->isCarrier() ? runOfCarrier(pathEnd->second) : nullptr) {
+    const auto carrierClip = carrierClipOnScreen(*carried);
+    narrowClip(carrierClip.frame, carrierClip.borderRadius);
+  }
 }
 
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
