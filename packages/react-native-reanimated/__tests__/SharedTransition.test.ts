@@ -399,7 +399,9 @@ describe('SharedTransition singular matrices', () => {
 
 describe('SharedTransition perspective', () => {
   test('preserves perspective at intermediate progress and at the target', () => {
-    const target = IDENTITY.map((value, i) => (i === 11 ? -0.002 : value));
+    const target = IDENTITY.map((value, i) =>
+      i === 3 || i === 7 || i === 11 ? -0.002 : value
+    );
     const values = {
       ...VALUES,
       currentTransform: { matrix: IDENTITY },
@@ -411,7 +413,9 @@ describe('SharedTransition perspective', () => {
         progress
       );
       const [{ matrix }] = style.transform as [{ matrix: number[] }];
-      expect(matrix[11]).toBeCloseTo(-0.002 * progress, 10);
+      for (const i of [3, 7, 11]) {
+        expect(matrix[i]).toBeCloseTo(-0.002 * progress, 10);
+      }
     }
   });
 });
