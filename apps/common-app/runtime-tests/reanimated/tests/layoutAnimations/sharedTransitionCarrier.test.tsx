@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  FadeOut,
   SharedTransition,
   SharedTransitionBoundary,
   makeMutable,
@@ -22,29 +23,37 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 function Target({
   transition,
   opacity,
   active,
   sharedTag,
+  mounted,
+  exiting,
 }: {
   transition: SharedTransition;
   opacity: number;
   active: boolean;
   sharedTag: string;
+  mounted: boolean;
+  exiting?: FadeOut;
 }) {
   const target = useTestRef('target');
   const targetChild = useTestRef('targetChild');
   return (
     <SharedTransitionBoundary isActive={active}>
-      <Animated.View
-        ref={target}
-        sharedTransitionTag={sharedTag}
-        sharedTransitionStyle={transition}
-        style={[styles.target, { opacity }]}>
-        <View ref={targetChild} collapsable={false} style={styles.child} />
-      </Animated.View>
+      {mounted && (
+        <Animated.View
+          ref={target}
+          sharedTransitionTag={sharedTag}
+          sharedTransitionStyle={transition}
+          exiting={exiting}
+          style={[styles.target, { opacity }]}>
+          <View ref={targetChild} collapsable={false} style={styles.child} />
+        </Animated.View>
+      )}
     </SharedTransitionBoundary>
   );
 }
@@ -60,6 +69,10 @@ function Screens({
   keepTarget = false,
   reorder = false,
   moveAncestor = false,
+  targetScreen = active || keepTarget,
+  targetMounted = true,
+  targetExiting,
+  sourceMoved = false,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -71,6 +84,10 @@ function Screens({
   keepTarget?: boolean;
   reorder?: boolean;
   moveAncestor?: boolean;
+  targetScreen?: boolean;
+  targetMounted?: boolean;
+  targetExiting?: FadeOut;
+  sourceMoved?: boolean;
 }) {
   const source = useTestRef('source');
   const sourceChild = useTestRef('sourceChild');
@@ -98,15 +115,19 @@ function Screens({
     <View style={styles.container}>
       {!(active && removeSource) && (
         <SharedTransitionBoundary isActive={!active}>
-          {reorder ? [children, ...siblings] : [...siblings, children]}
+          {reorder || sourceMoved
+            ? [children, ...siblings]
+            : [...siblings, children]}
         </SharedTransitionBoundary>
       )}
-      {(active || keepTarget) && (
+      {targetScreen && (
         <Target
           transition={transition}
           opacity={targetOpacity}
           active={active}
           sharedTag={sharedTag}
+          mounted={targetMounted}
+          exiting={targetExiting}
         />
       )}
     </View>
@@ -143,6 +164,19 @@ async function expectAtHome(name: string, width: number, opacity: number) {
       Math.abs(props.opacity - opacity) < 0.01
     );
   }).toBe(true);
+}
+
+async function expectRemovedTarget(tag: number, exiting: boolean) {
+  const props = await runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, true);
+  });
+  if (exiting) {
+    expect(props !== null).toBe(true);
+    expect(props?.opacity).toBe(0);
+  } else {
+    expect(props).toBe(null);
+  }
 }
 
 describe('Shared transition moves a real native view', () => {
@@ -321,6 +355,123 @@ describe('Shared transition moves a real native view', () => {
     await expectAtHome('source', 60, 0);
     await expectAtHome('target', 150, 1);
   });
+
+  for (const [kind, targetExiting] of [
+    ['without an exit', undefined],
+    [
+      'with an exit that outlasts the run',
+      FadeOut.duration(3000).withCallback((finished) => {
+        'worklet';
+        if (finished) {
+          notify('target-exited');
+        }
+      }),
+    ],
+  ] as const) {
+    test(`shows the source at the end when React removes the target ${kind}`, async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const transition = transitionWithNotification();
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      const sourceHome = await getTestComponent('source').getMountedViewProps();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <Screens active transition={transition} targetExiting={targetExiting} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      await expectMoving('source');
+      const targetTag = getTestComponent('target').getTag();
+
+      await render(
+        <Screens
+          active
+          transition={transition}
+          targetMounted={false}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      await expectMoving('source');
+      await expectRemovedTarget(targetTag, !!targetExiting);
+      await advanceAnimationTimer(400);
+      await waitForNotification('carrier-finished');
+      await expectAtHome('source', 60, 1);
+      const sourceProps =
+        await getTestComponent('source').getMountedViewProps();
+      expect(sourceProps?.x).toBe(sourceHome?.x, ComparisonMode.PIXEL);
+      expect(sourceProps?.y).toBe(sourceHome?.y, ComparisonMode.PIXEL);
+      await expectRemovedTarget(targetTag, !!targetExiting);
+      if (targetExiting) {
+        await advanceAnimationTimer(2400);
+        await waitForNotification('target-exited');
+        await expectEventually(() => isViewMountedNatively(targetTag)).toBe(
+          false
+        );
+      }
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+    });
+
+    test(`keeps the source moving when React moves it and removes the target ${kind} in the same update`, async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const transition = transitionWithNotification();
+      await render(
+        <Screens
+          active={false}
+          transition={transition}
+          targetExiting={targetExiting}
+        />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <Screens active transition={transition} targetExiting={targetExiting} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      await expectMoving('source');
+      const targetTag = getTestComponent('target').getTag();
+
+      await render(
+        <Screens
+          active
+          transition={transition}
+          targetMounted={false}
+          targetExiting={targetExiting}
+          sourceMoved
+        />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      await expectMoving('source');
+      await expectRemovedTarget(targetTag, !!targetExiting);
+      await advanceAnimationTimer(400);
+      await waitForNotification('carrier-finished');
+      await expectAtHome('source', 60, 1);
+      expect((await getTestComponent('source').getMountedViewProps())?.y).toBe(
+        0,
+        ComparisonMode.PIXEL
+      );
+      await expectRemovedTarget(targetTag, !!targetExiting);
+      if (targetExiting) {
+        await advanceAnimationTimer(2400);
+        await waitForNotification('target-exited');
+        await expectEventually(() => isViewMountedNatively(targetTag)).toBe(
+          false
+        );
+      }
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+    });
+  }
 });
 
 const styles = StyleSheet.create({
