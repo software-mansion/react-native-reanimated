@@ -130,6 +130,8 @@ struct LightNode {
   int exitingChildrenCount = 0;
   // A shared transition carrier is mounted under the root, not under its parent.
   bool isDetached = false;
+  // A carrier that React deleted. It and its content stay mounted until its run ends.
+  bool isRetained = false;
   int detachedChildrenCount = 0;
 
   bool isExiting() const {
@@ -193,6 +195,9 @@ struct LightNode {
     const auto position = positionOf(child);
     react_native_assert(position != -1 && child->isDetached && "Extract a mounted carrier from its logical parent");
     detachedChildrenCount--;
+    if (child->isExiting()) {
+      exitingChildrenCount--;
+    }
     children.erase(children.begin() + position);
     child->parent.reset();
   }
@@ -315,6 +320,15 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
 static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
   for (; node; node = node->parent.lock()) {
     if (node == root) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static inline bool isInRetainedCarrier(std::shared_ptr<LightNode> node) {
+  for (; node; node = node->parent.lock()) {
+    if (node->isRetained) {
       return true;
     }
   }

@@ -40,8 +40,6 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
-// The carrier is the view that the run animates. It is the source or the target view,
-// moved from its parent to the root for the time of the run.
 // The children of the carrier fade with the progress of the run. When the carrier lands, the children
 // of the target fade in.
 struct ContentFade {
@@ -51,6 +49,8 @@ struct ContentFade {
   std::unordered_map<Tag, std::shared_ptr<LightNode>> fadedChildren;
 };
 
+// The carrier is the view that the run animates, moved from its parent to the root for the time of the
+// run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
@@ -80,6 +80,19 @@ struct HiddenView {
 struct SharedElement {
   std::vector<HiddenView> hiddenViews;
   std::optional<SharedTransitionRun> run;
+};
+
+// A run whose source and target are both gone, or whose carrier has a new shared tag while its frames are not in
+// the mount queue. It ends in the next pull that can remove views after those frames are queued.
+struct RetiringSharedTransition {
+  SharedTag sharedTag;
+  SharedElement element;
+};
+
+// The shared element of a carrier, in sharedElements_ or in retiringSharedTransitions_.
+struct SharedElementRef {
+  const SharedTag &sharedTag;
+  SharedElement &element;
 };
 
 // One in-flight back gesture. Created on the first progress event, destroyed
@@ -118,6 +131,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> layout;
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
+  std::vector<std::shared_ptr<LightNode>> removedSubtrees;
   std::vector<RestoreRequest> restoreRequests;
   // the place in filteredMutations of the first Remove of a screen that React Native Screens snapshots
   std::optional<size_t> screenSnapshotRemoval;
@@ -143,6 +157,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // of a back transition.
   mutable std::unordered_set<Tag> visibleScreens_;
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
+  mutable std::unordered_map<Tag, RetiringSharedTransition> retiringSharedTransitions_;
   // the detached carriers in their host order under the root, after the children of the root
   mutable std::vector<std::shared_ptr<LightNode>> detachedCarriers_;
   // Entering animations of target children that wait until their run lands.
@@ -198,6 +213,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       double toContentOpacity,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  std::vector<SharedTransitionRun *> contentFadeRuns() const;
   void composeCarrierContent(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext)
       const;
   void restoreFadedChildren(
@@ -335,10 +351,20 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
-  void attachRetainedCarriers(
-      const std::shared_ptr<LightNode> &node,
-      const std::unordered_set<Tag> &removals,
-      TransactionMeta &transaction) const;
+  void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
+  void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
+  bool isRetainedContent(const std::shared_ptr<LightNode> &node) const;
+  bool defersSubtreeRemoval(const std::shared_ptr<LightNode> &node) const;
+  void flushSubtreeRemovals(TransactionMeta &transaction) const;
+  void scheduleTransitionLifecycleCleanup() const;
+  std::shared_ptr<LightNode> detachedCarrierOf(const std::shared_ptr<LightNode> &node) const;
+  bool isRetiringContent(Tag tag) const;
+  void retireOrphanedSharedTransitions() const;
+  void retireSharedTransition(const SharedTag &sharedTag, SharedElement &element) const;
+  void finishRetiringSharedTransitions(
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext,
+      bool flushStructuralMutations) const;
   void removeFromParent(
       const std::shared_ptr<LightNode> &node,
       ShadowViewMutationList &mutations,
@@ -346,7 +372,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
-  std::pair<const SharedTag, SharedElement> *sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
+  std::optional<SharedElementRef> sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
   ShadowView asCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
@@ -382,6 +408,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       bool flushStructuralMutations,
       std::unordered_set<Tag> &preservedTags) const;
   bool hasCarrierAnimationEnded(Tag tag) const;
+  bool waitsForCoveringRun(const SharedTransitionRun &run, const std::vector<std::shared_ptr<LightNode>> &coveringViews)
+      const;
   bool runContinues(Tag carrierTag) const;
   std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
@@ -390,7 +418,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool landed = false) const;
-  bool isSharedCarrier(Tag tag) const;
   bool hasUnqueuedCarrierFrame(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;

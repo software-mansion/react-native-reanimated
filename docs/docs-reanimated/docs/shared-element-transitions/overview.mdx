@@ -62,11 +62,13 @@ export default function SharedElementExample() {
 
 When Reanimated detects that the current top screen on the stack changes, it checks if there are components with the same `sharedTransitionTag` on the new and old top screen.
 
-If it finds two matching components, Reanimated moves one of the native views above the screen content and hides the other view. Usually the source view moves. If React removes the source in the same update, the target view moves instead. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place.
+If it finds two matching components, Reanimated moves the source native view above the screen content and hides the target view. If React removes the source, Reanimated keeps its native subtree until the transition ends. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place, and Reanimated deletes a retained source. A running transition keeps its moving view when its target changes.
 
-The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. Use [`fadeContent()`](#fade-content) to fade their content. If the source view moves, the target's children appear when the transition ends. If the target view moves, its children move with it from the start. A child with its own `sharedTransitionTag` can animate as a separate view.
+The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. Use [`fadeContent()`](#fade-content) to fade their content. The target's children appear when the transition ends. A child with its own `sharedTransitionTag` can animate as a separate view.
 
 The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Changes that React commits to the moving view's own props or layout wait until the view returns to its parent or the transition restarts. This includes changes from React state and `useAnimatedStyle` updates that use commits. The latest values then appear at once, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can also apply during the move.
+
+When React deletes the source, the shared transition takes priority over new exiting animations in its retained subtree. An exiting animation that already runs can finish, but Reanimated keeps its native view until the shared transition ends. Native retention does not keep the React components mounted.
 
 Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](../animations/withTiming.mdx) animation function.
 
@@ -154,7 +156,7 @@ const transition = SharedTransition.duration(450).fadeContent();
 - A new run uses the fade settings of its source view. A reused moving view keeps the first run's fade settings, including when the new source has different settings. A reversal uses the new source's move timing, but does not enable or disable its content fade. To fade new runs in both directions, give `fadeContent()` to both views.
 - Only the direct children of the shared views fade. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
 - A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
-- When React removes the source view in the same update that starts the transition, the target view moves instead, and its children fade in while it moves. On Android this is the case for back navigation.
+- When React removes the source view in the same update that starts the transition, Reanimated keeps the source native view and moves it. Its children fade out during the move. The target children fade in when it lands.
 
 To change the two fades, pass options to `fadeContent()`:
 
@@ -169,7 +171,6 @@ const transition = SharedTransition.duration(450).fadeContent({
 
 - `fadeOut.end` is the point of the move progress, more than 0 and at most 1, at which the children reach opacity 0. A value below 0.000001 works as 0.000001. The progress follows the easing or the spring of the move, so `end: 0.5` is the middle of the distance, but not always the middle of the time. When a target change restarts the move while the children fade out, the fade-out starts from the current opacity and ends at that part of the new move. When the navigation goes back during the move, the children fade in during the full return move, and `end` does not apply.
 - `fadeIn.duration` is the length of the fade-in after the landing, in milliseconds. Without it, the fade-in takes half of the transition duration. `springify()` without a duration sets the transition duration back to the default 500 ms, so then the fade-in takes 250 ms. Pass the duration to `springify(duration)`.
-- When the target view moves because React removed the source, its children fade in during the full move, and the two options do not apply.
 
 ## Example
 
@@ -195,6 +196,7 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 - A nested shared view that lands before its parent waits at its target until the parent lands. If its target changes its style during the nested view's own move, the waiting view animates to that style only when its target gets another update. Otherwise the new style appears when the parent lands. If the layout of its target changes while it waits, it moves again with its full duration.
 - If the layout of the target changes just as the moving view lands, the view can move again to the new layout with the full duration.
 - If React removes the target during a timed transition while the source stays mounted, the move continues to the last target frame. When the move ends, the source jumps back to its own frame. The removed target stays hidden during its exit animation. If the same update makes the source screen active again, for example a JavaScript `goBack()`, the transition reverses instead and the view moves back to the source.
+- On Android, a moving view that gets a new `sharedTransitionTag` and is the source of a new transition in the same update returns to its parent and moves again at once. A content fade frame of the old transition can then arrive late and leave a child faded until the next update of that child.
 - Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
 - The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
 - Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
