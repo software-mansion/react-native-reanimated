@@ -352,7 +352,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
-  void attachCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
+  void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
 #endif
 
   void hideTransitioningViews(

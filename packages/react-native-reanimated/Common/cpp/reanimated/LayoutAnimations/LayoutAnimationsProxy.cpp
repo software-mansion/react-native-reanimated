@@ -1559,13 +1559,13 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     }
     scheduleOnUI(uiScheduler_, [this, weakThis, tags]() {
       if (const auto strongThis = weakThis.lock()) {
-        attachCarriersOfQueuedFrames(tags);
+        releaseCarriersOfQueuedFrames(tags);
       }
     });
   });
 }
 
-void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
+void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   for (const auto tag : tags) {
     const auto it = unqueuedCarrierFrames_.find(tag);
@@ -1573,10 +1573,7 @@ void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> 
       unqueuedCarrierFrames_.erase(it);
     }
   }
-  if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
-    cleanupPullScheduled_ = true;
-    scheduleCleanupPull();
-  }
+  maybeScheduleCleanupPull(false);
 }
 
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
