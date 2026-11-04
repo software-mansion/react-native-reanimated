@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
+  FadeIn,
   FadeOut,
   LinearTransition,
   makeMutable,
@@ -14,10 +15,12 @@ import { scheduleOnUI } from 'react-native-worklets';
 import {
   advanceAnimationTimer,
   beforeEach,
+  callTracker,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  getTrackerCallCount,
   isViewMountedNatively,
   mockAnimationTimer,
   render,
@@ -45,24 +48,33 @@ function Endpoint({
   active,
   style,
   hiddenChild = false,
+  siblings,
 }: {
   name: 'source' | 'target';
   active: boolean;
   style: object;
   hiddenChild?: boolean;
+  siblings?: boolean;
 }) {
   const ref = useTestRef(name);
   const childRef = useTestRef(`${name}Child`);
+  const view = (
+    <Animated.View
+      key="endpoint"
+      ref={ref}
+      sharedTransitionTag="fadeContent"
+      sharedTransitionStyle={transition}
+      style={style}>
+      <View ref={childRef} collapsable={false} style={styles.child} />
+      {hiddenChild && <HiddenChild name={`${name}HiddenChild`} />}
+    </Animated.View>
+  );
+  const siblingViews = ['sibling-1', 'sibling-2'].map((key) => (
+    <View key={key} collapsable={false} style={styles.child} />
+  ));
   return (
     <SharedTransitionBoundary isActive={active}>
-      <Animated.View
-        ref={ref}
-        sharedTransitionTag="fadeContent"
-        sharedTransitionStyle={transition}
-        style={style}>
-        <View ref={childRef} collapsable={false} style={styles.child} />
-        {hiddenChild && <HiddenChild name={`${name}HiddenChild`} />}
-      </Animated.View>
+      {siblings ? [...siblingViews, view] : view}
     </SharedTransitionBoundary>
   );
 }
@@ -171,6 +183,96 @@ function NestedScreens({ showTarget }: { showTarget: boolean }) {
       </SharedTransitionBoundary>
     </View>
   );
+}
+
+const ENTERING_FINISHED = 'fade-content-entering-finished';
+const ENTERING_CANCELLED = 'fade-content-entering-cancelled';
+
+const childEntering = FadeIn.duration(300).withCallback((finished) => {
+  'worklet';
+  callTracker(finished ? ENTERING_FINISHED : ENTERING_CANCELLED);
+});
+
+const longExiting = FadeOut.duration(6000);
+const LAYOUT_FINISHED = 'fade-content-layout-finished';
+const LAYOUT_CANCELLED = 'fade-content-layout-cancelled';
+
+const longLayout = LinearTransition.duration(10000).withCallback((finished) => {
+  'worklet';
+  callTracker(finished ? LAYOUT_FINISHED : LAYOUT_CANCELLED);
+});
+
+function EnteringChild({
+  exits,
+  wide,
+  tagged,
+}: {
+  exits: boolean;
+  wide: boolean;
+  tagged: boolean;
+}) {
+  const ref = useTestRef('enteringChild');
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag={tagged ? 'unmatched-entering-child' : undefined}
+      entering={childEntering}
+      exiting={exits ? longExiting : undefined}
+      layout={longLayout}
+      style={[styles.enteringChild, wide && styles.wideChild]}
+    />
+  );
+}
+
+// The target mounts a child with an entering animation in the update that starts the transition.
+function ScreensWithEnteringChild({
+  showTarget,
+  showChild = true,
+  childExits = false,
+  childWide = false,
+  childTagged = false,
+  keepChild = false,
+}: {
+  showTarget: boolean;
+  showChild?: boolean;
+  childExits?: boolean;
+  childWide?: boolean;
+  childTagged?: boolean;
+  keepChild?: boolean;
+}) {
+  const ref = useTestRef('target');
+  return (
+    <View style={styles.container}>
+      <Endpoint
+        name="source"
+        active={!showTarget}
+        style={styles.source}
+        siblings
+      />
+      <SharedTransitionBoundary isActive={showTarget}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="fadeContent"
+          sharedTransitionStyle={transition}
+          style={styles.target}>
+          {(showTarget || keepChild) && showChild && (
+            <EnteringChild
+              exits={childExits}
+              wide={childWide}
+              tagged={childTagged}
+            />
+          )}
+        </Animated.View>
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+async function expectEnteringCallbacks(finished: number) {
+  await expectEventually(() =>
+    getTrackerCallCount(ENTERING_FINISHED)
+  ).toBeCalledUI(finished);
+  expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
 }
 
 // Children with an animated opacity, a layout animation and an exit.
@@ -399,6 +501,149 @@ describe('Shared transition with fadeContent', () => {
     }).toBe(true);
 
     await expectOpacity('targetChild', CHILD_OPACITY);
+  });
+
+  test.each([false, true])(
+    'plays the entering animation of a target child when the moving view lands (unmatched tag: %p)',
+    async (childTagged) => {
+      await render(
+        <ScreensWithEnteringChild
+          showTarget={false}
+          childTagged={childTagged}
+        />
+      );
+      await waitForFrames();
+
+      await render(
+        <ScreensWithEnteringChild showTarget childTagged={childTagged} />
+      );
+      const frames = await recordFrames(
+        ['source', 'enteringChild'],
+        async () => {
+          await expectMovingWithChildOpacity(
+            'source',
+            0.1,
+            CHILD_OPACITY - 0.1
+          );
+          expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+          await expectOpacity('enteringChild', 1);
+        }
+      );
+      const moving = frames.filter(
+        ([source, child]) => isMoving(source) && !!child
+      );
+      expect(moving.length > 0).toBe(true);
+      expect(moving.every(([, child]) => child!.opacity < 0.01)).toBe(true);
+      await expectEnteringCallbacks(1);
+    }
+  );
+
+  test('plays the entering animation of a target child when the navigation goes back during the move', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    const held = await mountedProps('enteringChild');
+    expect(!!held && held.opacity < 0.01).toBe(true);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+    await render(<ScreensWithEnteringChild showTarget={false} keepChild />);
+    await waitForFrames(3);
+
+    // The reversed run needs much more than 300 ms, so only the end of the target role starts the entering animation.
+    await advanceAnimationTimer(300);
+    await expectOpacity('enteringChild', 1);
+    await expectEnteringCallbacks(1);
+    await expectMovingWithChildOpacity('source', 0.1, 1);
+  });
+
+  test('drops a queued layout change of a target child when the navigation goes back', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    // The layout change and the end of the target role are in one update, so the layout animation does not start.
+    await render(
+      <ScreensWithEnteringChild showTarget={false} keepChild childWide />
+    );
+    await waitForFrames(3);
+
+    await advanceAnimationTimer(300);
+    await expectEventually(async () => {
+      const child = await mountedProps('enteringChild');
+      return (
+        !!child &&
+        child.opacity > 0.99 &&
+        Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5
+      );
+    }).toBe(true);
+    await expectEnteringCallbacks(1);
+    await advanceAnimationTimer(500);
+    await waitForFrames(3);
+    expect(await getTrackerCallCount(LAYOUT_CANCELLED)).toBeCalledUI(0);
+    expect(await getTrackerCallCount(LAYOUT_FINISHED)).toBeCalledUI(0);
+  });
+
+  test('replaces the layout animation of a target child with its entering animation', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    await render(<ScreensWithEnteringChild showTarget childWide />);
+    await waitForFrames(3);
+
+    // The layout animation of the child takes 10 seconds, the entering animation 300 ms.
+    await advanceAnimationTimer(1500);
+    await expectOpacity('target', 1);
+    await advanceAnimationTimer(300);
+    await expectEventually(async () => {
+      const child = await mountedProps('enteringChild');
+      return (
+        !!child &&
+        child.opacity > 0.99 &&
+        Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5
+      );
+    }).toBe(true);
+    await expectEnteringCallbacks(1);
+    // The running layout animation stops with `finished` set to false.
+    await expectEventually(() =>
+      getTrackerCallCount(LAYOUT_CANCELLED)
+    ).toBeCalledUI(1);
+    expect(await getTrackerCallCount(LAYOUT_FINISHED)).toBeCalledUI(0);
+  });
+
+  test('keeps hidden a target child that React removes while its entering animation waits', async () => {
+    await render(<ScreensWithEnteringChild showTarget={false} childExits />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget childExits />);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    const childTag = tagOf('enteringChild');
+    const frames = await recordFrames(['enteringChild'], async () => {
+      await render(
+        <ScreensWithEnteringChild showTarget showChild={false} childExits />
+      );
+      await expectOpacity('target', 1);
+      await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
+        false
+      );
+    });
+    const mounted = frames.filter(([child]) => !!child);
+    expect(mounted.length > 0).toBe(true);
+    expect(mounted.every(([child]) => child!.opacity < 0.01)).toBe(true);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+    expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
   });
 
   test('fades the children of the target in during the move when React removes the source', async () => {
@@ -704,5 +949,10 @@ const styles = StyleSheet.create({
   },
   wideChild: {
     width: WIDE_CHILD_WIDTH,
+  },
+  enteringChild: {
+    width: 20,
+    height: 15,
+    backgroundColor: '#ffffff',
   },
 });

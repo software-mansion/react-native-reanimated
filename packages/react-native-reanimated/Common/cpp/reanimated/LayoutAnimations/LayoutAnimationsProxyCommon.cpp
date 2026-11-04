@@ -624,6 +624,25 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::takeCompletedLayoutAnimat
   return currentView;
 }
 
+// A started animation shows its current frame. A queued start still shows the view that it starts from.
+std::optional<ShadowView> LayoutAnimationsProxyCommon::layoutAnimationViewOnScreen(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
+    return animationIt->second.currentView;
+  }
+  if (const auto completedAnimationIt = completedAnimations_.find(tag);
+      completedAnimationIt != completedAnimations_.end()) {
+    return completedAnimationIt->second.animation.currentView;
+  }
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
+    if (const auto *managedStart =
+            std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[pendingIt->second.operationIndex])) {
+      return managedStart->before;
+    }
+  }
+  return std::nullopt;
+}
+
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);

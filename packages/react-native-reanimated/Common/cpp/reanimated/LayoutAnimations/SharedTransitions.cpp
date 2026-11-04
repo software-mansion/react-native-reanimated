@@ -9,6 +9,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <ranges>
 #include <unordered_set>
 #include <utility>
@@ -832,11 +833,15 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 // later Update or Insert for the same view carries full opacity and would show
 // the view again. Force opacity 0 on every outgoing Update and Insert for a
 // hidden view until the restore in cleanupSharedTransitions removes it from
-// its shared element.
+// its shared element. A child with a held entering animation also stays at
+// opacity 0 until the animation starts.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
-  const auto hiddenTags = hiddenViewTags();
+  auto hiddenTags = hiddenViewTags();
+  for (const auto &held : heldEnterings_) {
+    hiddenTags.insert(held.node->current.tag);
+  }
   if (hiddenTags.empty()) {
     return;
   }
@@ -1047,6 +1052,9 @@ void LayoutAnimationsProxy::finishSharedTransition(
     fadeInTargetContent(run, transaction, propsParserContext);
   }
   element.run.reset();
+  if (!heldEnterings_.empty()) {
+    schedulePullOnNextFrame();
+  }
 }
 
 // MARK: Content Fade
@@ -1214,12 +1222,92 @@ void LayoutAnimationsProxy::restoreFadedChildren(
   });
 }
 
-// The target shows its children at opacity 0 when it lands, and they fade in with the fade-in config.
+// An entering animation of a fading target child waits until the child stops being fading target content: when
+// the run lands, or without a landing, for example on a reversal. It also waits while the run waits for a parent
+// shared view. A child that React removes before then stays hidden until it is gone, and its animation does not start.
+void LayoutAnimationsProxy::holdTargetEntering(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  if (heldEnterings_.empty() && transaction.entering.empty()) {
+    return;
+  }
+  const auto targetContent = fadingTargetContent();
+  std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
+    if (!isLightNodeMapped(held.node)) {
+      return true;
+    }
+    if (held.node->isExiting() || targetContent.contains(held.node)) {
+      return false;
+    }
+    startHeldEntering(held, transaction, propsParserContext);
+    return true;
+  });
+  std::erase_if(transaction.entering, [&](const PendingNodeAnimation &entering) {
+    if (!targetContent.contains(entering.node)) {
+      return false;
+    }
+    heldEnterings_.push_back(entering);
+    return true;
+  });
+}
+
+std::unordered_set<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingTargetContent() const {
+  std::unordered_set<std::shared_ptr<LightNode>> content;
+  std::optional<std::unordered_set<Tag>> hiddenTags;
+  for (const auto &[_, element] : sharedElements_) {
+    const auto &run = element.run;
+    if (!run || !run->contentFade || run->carrier == run->target) {
+      continue;
+    }
+    if (!hiddenTags) {
+      hiddenTags = hiddenViewTags();
+    }
+    std::ranges::copy(fadingChildren(run->target, *hiddenTags), std::inserter(content, content.end()));
+  }
+  return content;
+}
+
+// The entering animation replaces a layout animation of the child, which jumps to its final layout at opacity 0.
+// The Update comes after the React mutations of the pull, so the child stays at opacity 0 until the first frame of
+// its entering animation.
+void LayoutAnimationsProxy::startHeldEntering(
+    const PendingNodeAnimation &held,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  const auto &node = held.node;
+  const auto tag = node->current.tag;
+  const bool layoutQueued = std::erase_if(transaction.layout, [&node](const PendingNodeAnimation &layout) {
+                              return layout.node == node;
+                            }) > 0;
+  resolveLightNodeProps(node);
+  // A layout animation of this pull holds back the React Update, so the screen still shows the previous view.
+  const auto mounted = layoutAnimationViewOnScreen(tag).value_or(layoutQueued ? node->previous : node->current);
+  cancelLayoutAnimation(tag);
+  const auto parent = node->parent.lock();
+  transaction.filteredMutations.push_back(createPropsUpdate(
+      mounted,
+      cloneViewWithOpacity(node->current, 0, propsParserContext),
+      parent ? parent->current.tag : surfaceId_,
+      propsParserContext));
+  startEnteringAnimation(node, held.config);
+}
+
+// The target shows its children at opacity 0 when it lands. A child with a held entering animation plays it,
+// the other children fade in with the fade-in config. An exiting child with a held entering animation stays hidden.
 void LayoutAnimationsProxy::fadeInTargetContent(
     const SharedTransitionRun &run,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   for (const auto &child : fadingChildren(run.target, hiddenViewTags())) {
+    if (const auto heldIt =
+            std::ranges::find_if(heldEnterings_, [&child](const auto &held) { return held.node == child; });
+        heldIt != heldEnterings_.end()) {
+      if (!child->isExiting()) {
+        startHeldEntering(*heldIt, transaction, propsParserContext);
+        heldEnterings_.erase(heldIt);
+      }
+      continue;
+    }
     const auto tag = child->current.tag;
     if (child->isExiting() || hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag)) {
       continue;
