@@ -99,7 +99,7 @@ Determines whether the [networking API](../bundleMode/usage.mdx#running-network-
   ##### `abortable`
 </Badges>
 
-Determines whether the Runtime can be stopped with [abortWorkletRuntime](./abortWorkletRuntime.mdx). Can be enabled only with the default queue. Defaults to `false`.
+Determines whether the Runtime can be stopped with [abortWorkletRuntime](./abortWorkletRuntime.mdx). With a custom queue, the Runtime's pending jobs are dropped only if the queue implements `AsyncQueue::stop`. Defaults to `false`.
 
 <Badges version="0.12.0">
   ##### `enableLocking`

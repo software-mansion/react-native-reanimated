@@ -707,9 +707,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+#ifndef NDEBUG
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
-          throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
+          rt.global()
+              .getPropertyAsObject(rt, "console")
+              .getPropertyAsFunction(rt, "warn")
+              .call(
+                  rt,
+                  "[Worklets] Dropped work scheduled on the aborted Worklet Runtime \"" +
+                      workletRuntime->getRuntimeName() + "\".");
         }
+#endif // NDEBUG
         auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
@@ -735,9 +743,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+#ifndef NDEBUG
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
-          throw jsi::JSError(rt, "[Worklets] Cannot schedule work on an aborted Worklet Runtime.");
+          rt.global()
+              .getPropertyAsObject(rt, "console")
+              .getPropertyAsFunction(rt, "warn")
+              .call(
+                  rt,
+                  "[Worklets] Dropped work scheduled on the aborted Worklet Runtime \"" +
+                      workletRuntime->getRuntimeName() + "\".");
         }
+#endif // NDEBUG
         auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args), runtimeManager);
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
@@ -758,8 +774,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const int runtimeId = at<0>(args).asNumber();
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
-          throw jsi::JSError(
-              rt, "[Worklets] abortWorkletRuntime: no worklet runtime found for id " + std::to_string(runtimeId));
+          return jsi::Value(false);
         }
         if (workletRuntime->getRuntimeKind() != RuntimeData::RuntimeKind::Worker) {
           throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: only Worker Runtimes can be aborted.");
@@ -771,6 +786,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                   "\" was not created with `abortable: true`.");
         }
         workletRuntime->abort();
+        return jsi::Value(true);
       });
 
   jsi_utils::addMethod<2>(

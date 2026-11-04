@@ -126,12 +126,6 @@ export function createWorkletRuntime(
   const customQueue =
     typeof queue === 'object' && queue !== null ? queue : undefined;
 
-  if (abortable && !useDefaultQueue) {
-    throw new Error(
-      '[Worklets] `abortable` is supported only with the default queue.'
-    );
-  }
-
   if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new Error(
       '[Worklets] The initializer passed to `createWorkletRuntime` is not a worklet.'
@@ -610,14 +604,14 @@ export function getUISchedulerHolder(): object {
   return WorkletsModule.getUISchedulerHolder();
 }
 
-export function abortWorkletRuntime(runtimeId: number): void {
-  WorkletsModule.abortWorkletRuntime(runtimeId);
+export function abortWorkletRuntime(runtimeId: number): boolean {
+  return WorkletsModule.abortWorkletRuntime(runtimeId);
 }
 
 if (!isBundleModeEnabled()) {
-  function abortWorkletRuntimeWorklet(runtimeId: number): void {
+  function abortWorkletRuntimeWorklet(runtimeId: number): boolean {
     'worklet';
-    globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
+    return globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
   }
 
   serializableMappingCache.set(

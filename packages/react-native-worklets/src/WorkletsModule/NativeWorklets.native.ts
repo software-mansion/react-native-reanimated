@@ -319,7 +319,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  abortWorkletRuntime(runtimeId: number) {
+  abortWorkletRuntime(runtimeId: number): boolean {
     return this.#workletsModuleProxy.abortWorkletRuntime(runtimeId);
   }
 

@@ -189,7 +189,7 @@ export interface WorkletsModuleProxy {
     reject?: SerializableRef
   ): void;
 
-  abortWorkletRuntime(runtimeId: number): void;
+  abortWorkletRuntime(runtimeId: number): boolean;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,

@@ -127,8 +127,9 @@ type WorkletRuntimeConfigBase = {
   enableNetworking?: boolean;
   /**
    * Determines whether the runtime can be stopped with
-   * `abortWorkletRuntime`. Can be enabled only with the default queue. If
-   * not specified, it defaults to `false`.
+   * `abortWorkletRuntime`. A custom queue drops the runtime's pending jobs
+   * only if it implements `AsyncQueue::stop`. If not specified, it defaults to
+   * `false`.
    */
   abortable?: boolean;
 };

@@ -112,16 +112,33 @@ describe('abortWorkletRuntime', () => {
     expect(rescheduledRan.getBlocking()).toBe(false);
   });
 
-  test('throws when scheduling work on an aborted runtime', async () => {
+  test('drops work scheduled on an aborted runtime', async () => {
     // Arrange
     const runtime = createWorkletRuntime({
       name: 'abort-schedule',
       abortable: true,
     });
+    const ran = createSynchronizable(false);
     abortWorkletRuntime(runtime.runtimeId);
 
-    // Act & Assert
-    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
+    const schedule = () =>
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        ran.setBlocking(true);
+      });
+
+    // Act
+    if (__DEV__) {
+      await expect(schedule).toThrow(
+        'Dropped work scheduled on the aborted Worklet Runtime "abort-schedule"'
+      );
+    } else {
+      await expect(schedule).not.toThrow();
+    }
+    await wait(200);
+
+    // Assert
+    expect(ran.getBlocking()).toBe(false);
   });
 
   bundleModeTest(
@@ -180,9 +197,7 @@ describe('abortWorkletRuntime', () => {
     );
 
     // Assert
-    expect(message).toBe(
-      '[Worklets] Cannot schedule work on an aborted Worklet Runtime.'
-    );
+    expect(message).toBe(ABORTED_MESSAGE);
   });
 
   test('throws when running work synchronously on an aborted runtime', async () => {
@@ -202,16 +217,20 @@ describe('abortWorkletRuntime', () => {
     ).toThrow('aborted');
   });
 
-  test('is a no-op when the runtime is already aborted', async () => {
+  test('returns true when the runtime is aborted, also for the second time', () => {
     // Arrange
     const runtime = createWorkletRuntime({
       name: 'abort-twice',
       abortable: true,
     });
-    abortWorkletRuntime(runtime.runtimeId);
 
-    // Act & Assert
-    await expect(() => abortWorkletRuntime(runtime.runtimeId)).not.toThrow();
+    // Act
+    const first = abortWorkletRuntime(runtime.runtimeId);
+    const second = abortWorkletRuntime(runtime.runtimeId);
+
+    // Assert
+    expect(first).toBe(true);
+    expect(second).toBe(true);
   });
 
   test('throws when aborting the UI Runtime', async () => {
@@ -237,7 +256,12 @@ describe('abortWorkletRuntime', () => {
     await waitForNotification(ABORTED_NOTIFICATION);
 
     // Assert
-    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
+    await expect(() =>
+      runOnRuntimeSync(runtime, () => {
+        'worklet';
+        return 1;
+      })
+    ).toThrow('aborted');
   });
 
   test('can be called from a Worker Runtime', async () => {
@@ -258,13 +282,16 @@ describe('abortWorkletRuntime', () => {
     await waitForNotification(ABORTED_NOTIFICATION);
 
     // Assert
-    await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow('aborted');
+    await expect(() =>
+      runOnRuntimeSync(runtime, () => {
+        'worklet';
+        return 1;
+      })
+    ).toThrow('aborted');
   });
 
-  test('throws when the runtime does not exist', async () => {
-    await expect(() => abortWorkletRuntime(987654)).toThrow(
-      'no worklet runtime found'
-    );
+  test('returns false when the runtime does not exist', () => {
+    expect(abortWorkletRuntime(987654)).toBe(false);
   });
 
   test('throws when the runtime was not created as abortable', async () => {
@@ -275,12 +302,6 @@ describe('abortWorkletRuntime', () => {
     await expect(() => abortWorkletRuntime(runtime.runtimeId)).toThrow(
       'abortable: true'
     );
-  });
-
-  test('throws when creating an abortable runtime with a custom queue', async () => {
-    await expect(() =>
-      createWorkletRuntime({ abortable: true, queue: {} })
-    ).toThrow('only with the default queue');
   });
 
   test('resolves the running runOnRuntimeAsync call and rejects the pending one', async () => {
@@ -353,9 +374,12 @@ describe('abortWorkletRuntime', () => {
       await wait(200);
 
       // Assert
-      await expect(() => scheduleOnRuntime(runtime, () => {})).toThrow(
-        'aborted'
-      );
+      await expect(() =>
+        runOnRuntimeSync(runtime, () => {
+          'worklet';
+          return 1;
+        })
+      ).toThrow('aborted');
     }
   );
 
