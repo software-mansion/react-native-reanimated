@@ -245,6 +245,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
 
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
+  // A start that waits keeps its place in the queue, and its animation time does not run yet.
+  virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
+    return false;
+  }
+  std::deque<LayoutAnimationOperation> takeDeferredLayoutAnimationStarts(
+      std::deque<LayoutAnimationOperation> &operations) const;
+  void requeueLayoutAnimationStarts(std::deque<LayoutAnimationOperation> starts) const;
   void flushLayoutAnimationOperationsLocked() const;
   std::optional<PreparedLayoutAnimationOperation> takeNextLayoutAnimationOperation(
       std::deque<LayoutAnimationOperation> &operations) const;
