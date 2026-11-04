@@ -58,6 +58,9 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
       }
       val observation = Arguments.createMap()
       observation.putString("accessibilityLabel", view.contentDescription?.toString())
+      val setterCalls = RuntimeTestTextInputManager.labelSetterCalls(view)
+      if (setterCalls == null) observation.putNull("labelSetterCalls")
+      else observation.putInt("labelSetterCalls", setterCalls)
       observation.putString("placeholderTextColor", String.format(
         Locale.ROOT, "#%06x%02x", view.currentHintTextColor and 0xffffff, view.currentHintTextColor ushr 24
       ))

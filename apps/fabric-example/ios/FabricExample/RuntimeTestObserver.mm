@@ -97,6 +97,7 @@ RCT_EXPORT_MODULE()
     resolve(@{
       @"accessibilityLabel" : element.accessibilityLabel ?: (id)kCFNull,
       @"placeholderTextColor" : (id)kCFNull,
+      @"labelSetterCalls" : (id)kCFNull,
     });
   });
 }
