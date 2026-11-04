@@ -2682,7 +2682,8 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
          viewSize,
          props.opacity,
          props.getClipsContentToBounds(),
-         props.borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value});
+         props.borderRadii.all.value_or(ValueUnit(0, UnitType::Point))
+             .resolve(std::min(viewSize.width, viewSize.height))});
     currentNode = endsPath ? nullptr : currentNode->parent.lock();
   }
   return ancestors;
