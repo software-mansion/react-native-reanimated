@@ -163,8 +163,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       int tag,
       const ShadowView &before,
       const ShadowView &after,
+      const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config) const;
-  void startProgressTransition(int tag, const ShadowView &before, const ShadowView &after) const;
+  void startProgressTransition(
+      int tag,
+      const ShadowView &before,
+      const ShadowView &after,
+      const Props::Shared &frameProps) const;
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
@@ -285,6 +290,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::pair<const SharedTag, SharedElement> *sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
   ShadowView asCarrierView(
       const ShadowView &view,
+      const std::shared_ptr<LightNode> &carrier,
+      const PropsParserContext &propsParserContext) const;
+  ShadowView ownCarrierView(
+      const ShadowView &view,
+      const std::shared_ptr<LightNode> &carrier,
+      const PropsParserContext &propsParserContext) const;
+  ShadowView carrierViewWithStyleOf(
+      const ShadowView &source,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
   bool endsPathOnScreen(

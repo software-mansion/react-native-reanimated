@@ -6,6 +6,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.uimanager.IllegalViewOperationException
+import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.react.views.textinput.ReactEditText
@@ -34,15 +35,24 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
     }
   }
 
+  override fun observeTransform(tag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val view = mountedView(tag)
+      if (view == null) {
+        promise.resolve(null)
+        return@runOnUiThread
+      }
+      val observation = Arguments.createMap()
+      observation.putDouble("width", PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble())
+      observation.putDouble("translateX", PixelUtil.toDIPFromPixel(view.translationX).toDouble())
+      promise.resolve(observation)
+    }
+  }
+
   override fun observeTextInput(tag: Double, promise: Promise) {
     UiThreadUtil.runOnUiThread {
-      val view =
-        try {
-          UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.FABRIC)?.resolveView(tag.toInt())
-        } catch (_: IllegalViewOperationException) {
-          null
-        }
-      if (view !is ReactEditText || !view.isAttachedToWindow) {
+      val view = mountedView(tag)
+      if (view !is ReactEditText) {
         promise.resolve(null)
         return@runOnUiThread
       }

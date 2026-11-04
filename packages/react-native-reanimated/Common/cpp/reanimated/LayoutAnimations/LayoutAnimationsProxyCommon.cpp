@@ -17,6 +17,13 @@
 
 namespace reanimated {
 
+namespace {
+ShadowView withProps(ShadowView view, const Props::Shared &props) {
+  view.props = props;
+  return view;
+}
+} // namespace
+
 #ifdef ANDROID
 namespace {
 const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
@@ -89,12 +96,12 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     rawProps = std::make_shared<RawProps>(std::move(props));
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  const auto &frameProps = layoutAnimation.framePropsBase();
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = std::make_shared<RawProps>(
-      folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
+  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(frameProps->rawProps, (folly::dynamic)*rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                      .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
+                      .cloneProps(propsParserContext, frameProps, std::move(*rawProps));
   updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), animatesOpacity});
 
   return surfaceId_;
@@ -124,10 +131,8 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ManagedLayoutAnimationS
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
       pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type == type) {
     auto &pending = std::get<ManagedLayoutAnimationStart>(layoutAnimationOperations_[pendingIt->second.operationIndex]);
-    pending.after = start.after;
-    pending.parentTag = start.parentTag;
-    pending.opacity = start.opacity;
-    pending.config = start.config;
+    start.before = std::move(pending.before);
+    pending = std::move(start);
     return;
   }
   layoutAnimationOperations_.push_back(std::move(start));
@@ -219,6 +224,9 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
               }
               start.before.props = mergeSynchronousProps(start.before, props);
               start.after.props = mergeSynchronousProps(start.after, props);
+              if (start.frameProps) {
+                start.frameProps = mergeSynchronousProps(withProps(start.after, start.frameProps), props);
+              }
               if constexpr (std::is_same_v<Start, ManagedLayoutAnimationStart>) {
                 if (propsIncludeOpacity && start.opacity) {
                   start.opacity = getViewProps(start.after).opacity;
@@ -242,6 +250,9 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
   }
   animation->finalView.props = mergeSynchronousProps(animation->finalView, props);
   animation->currentView.props = mergeSynchronousProps(animation->currentView, props);
+  if (animation->frameProps) {
+    animation->frameProps = mergeSynchronousProps(withProps(animation->finalView, animation->frameProps), props);
+  }
   if (propsIncludeOpacity && animation->opacity) {
     animation->opacity = getViewProps(animation->finalView).opacity;
   }
@@ -256,6 +267,7 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
     const Tag tag,
     const ShadowView &before,
     const ShadowView &after,
+    const Props::Shared &frameProps,
     const Tag parentTag,
     const std::optional<double> opacity,
     const LayoutAnimationType type,
@@ -288,6 +300,7 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
           .finalView = after,
           .currentView = currentView,
           .startView = currentView,
+          .frameProps = frameProps,
           .parentTag = parentTag,
           .opacity = opacity,
           .type = type,
@@ -309,6 +322,7 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         managedStart->tag,
         managedStart->before,
         managedStart->after,
+        managedStart->frameProps,
         managedStart->parentTag,
         managedStart->opacity,
         managedStart->type,
@@ -331,6 +345,7 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         tag,
         progressStart->before,
         progressStart->after,
+        progressStart->frameProps,
         progressStart->parentTag,
         std::nullopt,
         LayoutAnimationType::PROGRESS,
@@ -481,6 +496,7 @@ bool LayoutAnimationsProxyCommon::hasPendingLayoutAnimation(const Tag tag) const
 void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const Tag tag,
     const ShadowView &finalView,
+    const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
@@ -491,6 +507,7 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
       managedStart->after = finalView;
+      managedStart->frameProps = frameProps;
       if (config) {
         managedStart->config = config;
       }
@@ -500,6 +517,7 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
   }
   if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
     animationIt->second.finalView = finalView;
+    animationIt->second.frameProps = frameProps;
     return;
   }
   react_native_assert(false && "Layout animation not found");
