@@ -117,9 +117,6 @@ export class NativeEventsManager implements INativeEventsManager {
       When a component is updated, a child could potentially change and have a different
       view tag. This can occur with a GestureDetector component.
     */
-    if (!componentAnimatedRef) {
-      return -1;
-    }
     return (
       findHostInstance(this.#managedComponent)?.__nativeTag ??
       findNodeHandle(componentAnimatedRef) ??

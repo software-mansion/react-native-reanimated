@@ -5,6 +5,7 @@ import type {
   ManagedAnimatedComponent,
 } from '../src/createAnimatedComponent/commonTypes';
 import { NativeEventsManager } from '../src/createAnimatedComponent/NativeEventsManager';
+import { findHostInstance } from '../src/platform-specific/findHostInstance';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
 jest.mock('../src/WorkletEventHandler', () => ({
@@ -19,6 +20,10 @@ jest.mock('../src/featureFlags', () => ({
   getStaticFeatureFlag: () => false,
 }));
 
+jest.mock('../src/platform-specific/findHostInstance', () => ({
+  findHostInstance: jest.fn(),
+}));
+
 type TestComponent = {
   _componentRef: { __nativeTag: number } | null;
   props: AnimatedComponentProps<InitialComponentProps>;
@@ -26,6 +31,10 @@ type TestComponent = {
 };
 
 describe('NativeEventsManager', () => {
+  beforeEach(() => {
+    jest.mocked(findHostInstance).mockReset();
+  });
+
   test('moves events from the host-binding callback without an outer update', () => {
     const { component, handler, manager } = setup();
     component._componentRef = { __nativeTag: 2 };
@@ -151,6 +160,29 @@ describe('NativeEventsManager', () => {
     expect(nextHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
     expect(addedHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
   });
+
+  test('keeps events on the host of a component without a ref', () => {
+    const { component, handler, manager } = setupWithoutRef();
+
+    jest.mocked(findHostInstance).mockReturnValueOnce({ __nativeTag: 1 });
+    manager.updateEvents();
+
+    expect(findHostInstance).toHaveBeenCalledWith(component);
+    expect(handler.unregisterFromEvents).not.toHaveBeenCalled();
+    expect(handler.registerForEvents).toHaveBeenCalledTimes(1);
+    expect(handler.registerForEvents).toHaveBeenCalledWith(1, 'onScroll');
+  });
+
+  test('moves events to the new host of a component without a ref', () => {
+    const { component, handler, manager } = setupWithoutRef();
+
+    jest.mocked(findHostInstance).mockReturnValueOnce({ __nativeTag: 2 });
+    manager.updateEvents();
+
+    expect(findHostInstance).toHaveBeenCalledWith(component);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.registerForEvents).toHaveBeenLastCalledWith(2, 'onScroll');
+  });
 });
 
 function setup(viewTag = 1) {
@@ -161,6 +193,21 @@ function setup(viewTag = 1) {
     getComponentViewTag() {
       return this._componentRef?.__nativeTag ?? -1;
     },
+  };
+  const manager = new NativeEventsManager(
+    component as unknown as ManagedAnimatedComponent
+  );
+  manager.attachEvents();
+
+  return { component, handler, manager };
+}
+
+function setupWithoutRef() {
+  const handler = makeHandler();
+  const component: TestComponent = {
+    _componentRef: null,
+    props: { onScroll: { workletEventHandler: handler } },
+    getComponentViewTag: () => 1,
   };
   const manager = new NativeEventsManager(
     component as unknown as ManagedAnimatedComponent
