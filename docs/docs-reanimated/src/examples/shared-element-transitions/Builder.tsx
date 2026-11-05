@@ -92,7 +92,7 @@ export default function Builder({ width }: { width?: number }) {
   const [duration, setDuration] = useState(500);
   const [easing, setEasing] = useState<EasingName>('default');
   const [springDuration, setSpringDuration] = useState(500);
-  const [dampingRatio, setDampingRatio] = useState(0.5);
+  const [dampingRatio, setDampingRatio] = useState(0.75);
   const moveDuration = kind === 'timing' ? duration : springDuration;
   const stack = useScreenStack(moveDuration / PUSH_DURATION);
   const flight = useFlight();

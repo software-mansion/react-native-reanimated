@@ -20,7 +20,7 @@ By default, the shared view moves together with its own children, and the childr
 
 ## Children with their own tag
 
-A child with its own matching `sharedTransitionTag` moves from its place in the old view to its place in the new view. It does not fade with its parent, also with `fadeContent()`.
+A child with its own matching `sharedTransitionTag` moves from its place in the old view to its place in the new view. It does not fade with its parent, also with `fadeContent()`. To see the difference, toggle the **Icon has its own tag** switch in the demo above.
 
 ```tsx
 <Animated.View sharedTransitionTag="card" sharedTransitionStyle={transition}>

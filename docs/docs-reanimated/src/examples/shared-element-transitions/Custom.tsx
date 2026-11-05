@@ -72,7 +72,7 @@ const VARIANTS: Record<
   bouncyArc: {
     animations: {
       x: timing(ARC_DURATION, Easing.linear),
-      y: spring(ARC_DURATION, 0.45),
+      y: spring(ARC_DURATION, 0.55),
       width: arcPart,
       height: arcPart,
       style: arcPart,
@@ -87,7 +87,7 @@ const VARIANTS: Record<
     }),
     originY: withSpring(values.targetOriginY, {
       ...config,
-      dampingRatio: 0.45,
+      dampingRatio: 0.55,
     }),
     width: withTiming(values.targetWidth, config),
     height: withTiming(values.targetHeight, config),
