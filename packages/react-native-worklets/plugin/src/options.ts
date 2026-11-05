@@ -32,7 +32,7 @@ export interface PluginOptions {
 
   /**
    * Disables [Worklet Classes
-   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/#experimental-worklet-classes).
+   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/#deprecated-worklet-classes).
    * You might need to disable this feature when using [Custom
    * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/).
    *

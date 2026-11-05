@@ -92,7 +92,9 @@ class Foo {
 
 The plugin converts a class method with the `'worklet'` directive into a class field, so each instance gets its own copy of the worklet function. The plugin ignores the `'worklet'` directive in constructors, getters and setters. Don't add the `'worklet'` directive to static methods, because the plugin converts them into instance fields too. The method name must be a plain identifier. The build fails for a worklet method with a string or numeric name, such as `'increment'() {}`.
 
-### \[Experimental] Worklet Classes
+### \[Deprecated] Worklet Classes
+
+Worklet Classes are deprecated. Don't use them in new code.
 
 A Worklet Class is a class that you can instantiate on a [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime). To mark a class as a Worklet Class, add the `__workletClass` property to it. The value of the property is not important, but we recommend `true`. The plugin removes this property from the class.
 
