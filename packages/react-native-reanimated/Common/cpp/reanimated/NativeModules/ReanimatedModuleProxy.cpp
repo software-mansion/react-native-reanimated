@@ -79,6 +79,15 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
+// An Android draw pass writes props synchronously also when the static flag is off.
+constexpr bool hasSynchronousPropsWrites() {
+#ifdef ANDROID
+  return true;
+#else
+  return shouldUseSynchronousUpdatesInPerformOperations();
+#endif
+}
+
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
@@ -1385,7 +1394,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();
-        if (!strongThis || !shouldUseSynchronousUpdatesInPerformOperations()) {
+        if (!strongThis || !hasSynchronousPropsWrites()) {
           return std::nullopt;
         }
         auto lock = strongThis->updatesRegistryManager_->lock();
