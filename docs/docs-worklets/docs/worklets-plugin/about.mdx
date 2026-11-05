@@ -90,7 +90,7 @@ class Foo {
 }
 ```
 
-The plugin converts a class method with the `'worklet'` directive into a class field, so each instance gets its own copy of the worklet function. The plugin ignores the `'worklet'` directive in constructors, getters and setters. Don't add the `'worklet'` directive to static methods, because the plugin converts them into instance fields too.
+The plugin converts a class method with the `'worklet'` directive into a class field, so each instance gets its own copy of the worklet function. The plugin ignores the `'worklet'` directive in constructors, getters and setters. Don't add the `'worklet'` directive to static methods, because the plugin converts them into instance fields too. The method name must be a plain identifier. The build fails for a worklet method with a string or numeric name, such as `'increment'() {}`.
 
 ### \[Experimental] Worklet Classes
 
