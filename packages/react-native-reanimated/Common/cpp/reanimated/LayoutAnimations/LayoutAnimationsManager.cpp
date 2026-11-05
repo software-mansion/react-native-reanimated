@@ -156,21 +156,30 @@ bool LayoutAnimationsManager::callLayoutAnimationsManager(
     jsi::Runtime &rt,
     const char *methodName,
     const std::function<void(jsi::Runtime &, const jsi::Function &)> &call) {
+  return runGuardedOnUIRuntime(rt, methodName, [&](jsi::Runtime &runtime) {
+    const auto method = runtime.global()
+                            .getPropertyAsObject(runtime, "global")
+                            .getPropertyAsObject(runtime, "LayoutAnimationsManager")
+                            .getPropertyAsFunction(runtime, methodName);
+    call(runtime, method);
+  });
+}
+
+bool LayoutAnimationsManager::runGuardedOnUIRuntime(
+    jsi::Runtime &rt,
+    const char *name,
+    const std::function<void(jsi::Runtime &)> &call) {
   const auto uiRuntime = worklets::getWeakRuntimeFromJSIRuntime(rt).lock();
   if (!uiRuntime) {
     return false;
   }
   bool completed = false;
-  const auto method = rt.global()
-                          .getPropertyAsObject(rt, "global")
-                          .getPropertyAsObject(rt, "LayoutAnimationsManager")
-                          .getPropertyAsFunction(rt, methodName);
   const auto guardedCall = jsi::Function::createFromHostFunction(
       rt,
-      jsi::PropNameID::forAscii(rt, methodName),
+      jsi::PropNameID::forAscii(rt, name),
       0,
       [&](jsi::Runtime &runtime, const jsi::Value &, const jsi::Value *, size_t) {
-        call(runtime, method);
+        call(runtime);
         completed = true;
         return jsi::Value::undefined();
       });

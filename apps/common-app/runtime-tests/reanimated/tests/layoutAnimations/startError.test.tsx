@@ -4,7 +4,11 @@ import type {
   EntryOrExitLayoutType,
   LayoutAnimation,
 } from 'react-native-reanimated';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+} from 'react-native-reanimated';
 
 import {
   describe,
@@ -19,6 +23,7 @@ import {
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const START_ERROR = 'layout animation start throws on purpose';
@@ -66,6 +71,24 @@ function Box({
   );
 }
 
+function LayoutBox({ wide }: { wide: boolean }) {
+  const ref = useTestRef('layoutBox');
+  return (
+    <Animated.View
+      ref={ref}
+      layout={LinearTransition.duration(100)}
+      style={wide ? styles.wideBox : styles.box}
+    />
+  );
+}
+
+function readMountedProps(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, true);
+  });
+}
+
 function readFrameTimestampOnUI() {
   return runOnUIBlocking(() => {
     'worklet';
@@ -103,7 +126,25 @@ if (__DEV__) {
       } finally {
         await restoreLayoutAnimationStart();
       }
-      expect(typeof getTestComponent('box').getTag()).toBe('number');
+      const tag = getTestComponent('box').getTag();
+      expect((await readMountedProps(tag))?.opacity).toBe(1);
+      await render(null);
+    });
+
+    test('shows the final frame and props of a layout change', async () => {
+      await render(<LayoutBox wide={false} />);
+      await waitForFrames(3);
+      const tag = getTestComponent('layoutBox').getTag();
+      await throwFromLayoutAnimationStart();
+      try {
+        await render(<LayoutBox wide />);
+        await waitForFrames(5);
+      } finally {
+        await restoreLayoutAnimationStart();
+      }
+      const props = await readMountedProps(tag);
+      expect(props?.width).toBe(WIDE_WIDTH);
+      expect(props?.backgroundColor).toBe(WIDE_COLOR, ComparisonMode.COLOR);
       await render(null);
     });
 
@@ -136,6 +177,10 @@ if (__DEV__) {
   });
 }
 
+const WIDE_WIDTH = 200;
+const WIDE_COLOR = '#dd2222';
+
 const styles = StyleSheet.create({
   box: { width: 100, height: 100, backgroundColor: '#2277dd' },
+  wideBox: { width: WIDE_WIDTH, height: 100, backgroundColor: WIDE_COLOR },
 });

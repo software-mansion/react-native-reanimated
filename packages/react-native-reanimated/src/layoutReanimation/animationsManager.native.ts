@@ -107,9 +107,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     }
     // native already made its cleanup, so we just do cleanup here on JS side
     value.removeListener(tag + TAG_OFFSET);
-    cancelAnimation(value);
-    currentAnimationForTag.delete(tag);
-    mutableValuesForTag.delete(tag);
+    try {
+      cancelAnimation(value);
+    } finally {
+      currentAnimationForTag.delete(tag);
+      mutableValuesForTag.delete(tag);
+    }
   };
 
   return {
@@ -174,7 +177,11 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           global.__frameTimestamp = previousFrameTimestamp;
         }
       } catch (error) {
-        stop(tag);
+        try {
+          stop(tag);
+        } catch {
+          throw error;
+        }
         throw error;
       }
     },

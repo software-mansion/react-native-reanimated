@@ -777,7 +777,11 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     auto &animation = completedAnimation.animation;
     auto finalView = animation.currentView;
     if (needsFinalFrameReconciliation(animation.type)) {
-      finalView.layoutMetrics = animation.finalView.layoutMetrics;
+      if (animation.currentView == animation.startView) {
+        finalView = animation.finalView;
+      } else {
+        finalView.layoutMetrics = animation.finalView.layoutMetrics;
+      }
     }
     if (!completedAnimation.shouldRemove && animation.opacity) {
 #ifdef ANDROID
