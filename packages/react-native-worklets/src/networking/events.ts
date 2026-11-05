@@ -127,7 +127,7 @@ export class EventTargetLite {
       return;
     }
     const registration: Registration = {
-      listener: (event) => this.handlers.get(type)?.(event),
+      listener: (event) => this.handlers.get(type)?.call(this, event),
       once: false,
       removed: false,
     };

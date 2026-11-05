@@ -469,6 +469,17 @@ describe('WebSocket event semantics', () => {
     expect(calls).toBe(1);
   });
 
+  it('calls the handler with the socket as this', () => {
+    const socket = connected();
+    let receiver: unknown;
+    socket.onmessage = function (this: unknown) {
+      receiver = this;
+    };
+    lastSocket().emit('message', { text: 'a' });
+
+    expect(receiver).toBe(socket);
+  });
+
   it('clears the handler when set to null', () => {
     const socket = connected();
     let calls = 0;

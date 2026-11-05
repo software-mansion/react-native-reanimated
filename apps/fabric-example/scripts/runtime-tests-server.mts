@@ -507,8 +507,8 @@ const echoWss = new WebSocketServer({
 
 /**
  * The reporter and the `/echo/ws` endpoint share one port, so the upgrade is
- * routed by path. Anything that isn't the echo endpoint belongs to the
- * reporter, which is how the app has always dialed in.
+ * routed by path. The reporter dials `/`, which is how the app has always
+ * connected. Any other path is dropped.
  */
 httpServer.on('upgrade', (request, socket, head) => {
   let pathname;
