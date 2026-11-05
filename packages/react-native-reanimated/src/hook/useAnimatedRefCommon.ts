@@ -66,11 +66,27 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
         wrapperRef.current = null;
         fun.getTag = () => null;
         fun.current = null;
+        if (observers.size) {
+          queueMicrotask(cleanUpObserversIfDetached);
+        }
         onDetach?.();
       }
 
       return wrapperRef.current;
     });
+
+    const cleanUpObserversIfDetached = () => {
+      if (fun.current !== null) {
+        return;
+      }
+      observers.forEach(({ tag, cleanup }, observer) => {
+        if (tag === null) {
+          return;
+        }
+        cleanup?.();
+        observers.set(observer, { tag: null, cleanup: undefined });
+      });
+    };
 
     fun.observe = (observer: AnimatedRefObserver) => {
       // Call observer immediately to get the initial value
@@ -84,6 +100,7 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
     };
 
     fun.current = null;
+    fun.getTag = () => null;
     resultRef.current = fun;
   }
 
