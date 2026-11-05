@@ -168,6 +168,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations entering',
     importTest: () => {
       require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+      require('./tests/layoutAnimations/startError.test');
     },
   },
   {

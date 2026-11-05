@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -82,6 +83,10 @@ class LayoutAnimationsManager {
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:
+  static void callLayoutAnimationsManager(
+      jsi::Runtime &rt,
+      const char *methodName,
+      const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;

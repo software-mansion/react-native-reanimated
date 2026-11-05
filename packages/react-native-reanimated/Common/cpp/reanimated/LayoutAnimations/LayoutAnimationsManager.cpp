@@ -2,6 +2,7 @@
 
 #include <react/debug/react_native_assert.h>
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -140,20 +141,38 @@ void LayoutAnimationsManager::startLayoutAnimation(
   if (!config) {
     return;
   }
-  // TODO: cache the following!!
-  jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function startAnimationForTag =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
-  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
+  const auto configValue = config->toJSValue(rt);
+  callLayoutAnimationsManager(rt, "start", [&](jsi::Runtime &runtime, const jsi::Function &start) {
+    start.call(runtime, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configValue);
+  });
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
-  jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function cancelLayoutAnimation =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
-  cancelLayoutAnimation.call(rt, jsi::Value(tag));
+  callLayoutAnimationsManager(
+      rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
+}
+
+void LayoutAnimationsManager::callLayoutAnimationsManager(
+    jsi::Runtime &rt,
+    const char *methodName,
+    const std::function<void(jsi::Runtime &, const jsi::Function &)> &call) {
+  const auto uiRuntime = worklets::getWeakRuntimeFromJSIRuntime(rt).lock();
+  if (!uiRuntime) {
+    return;
+  }
+  const auto method = rt.global()
+                          .getPropertyAsObject(rt, "global")
+                          .getPropertyAsObject(rt, "LayoutAnimationsManager")
+                          .getPropertyAsFunction(rt, methodName);
+  const auto guardedCall = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, methodName),
+      0,
+      [&](jsi::Runtime &runtime, const jsi::Value &, const jsi::Value *, size_t) {
+        call(runtime, method);
+        return jsi::Value::undefined();
+      });
+  worklets::runSyncOnRuntime(uiRuntime, guardedCall);
 }
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
