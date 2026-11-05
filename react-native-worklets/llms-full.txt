@@ -6109,7 +6109,39 @@ const obj = {
 };
 ```
 
-### Class Methods
+### \[Deprecated] Worklet Classes
+
+Worklet Classes are deprecated. Don't use them in new code.
+
+A Worklet Class is a class that you can instantiate on a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime). To mark a class as a Worklet Class, add the `__workletClass` property to it. The value of the property is not important, but we recommend `true`. The plugin removes this property from the class.
+
+The plugin transforms a Worklet Class with the Babel class polyfills and workletizes the result. You don't need to add the `'worklet'` directive to the methods of a Worklet Class.
+
+```ts
+class Counter {
+  __workletClass = true;
+  value = 0;
+  increment() {
+    return ++this.value;
+  }
+}
+
+scheduleOnUI(() => {
+  const counter = new Counter();
+  console.log(counter.increment()); // Logs 1
+});
+```
+
+In a [workletizable file](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#experimental-workletizing-whole-files), every top-level named class is a Worklet Class. You don't need to add the `__workletClass` property there.
+
+**Pitfalls:**
+
+* Worklet Classes work only in [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode#legacy-eval-mode). In Bundle Mode the plugin doesn't transform them.
+* The class must be a named class declaration. The plugin doesn't transform class expressions and anonymous classes.
+* Worklet Classes don't support inheritance.
+* Worklet Classes don't support static methods and properties.
+* You can't pass class instances between Runtimes. Create the instance on the Runtime that uses it.
+* You can turn off Worklet Classes with the [`disableWorkletClasses`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disableworkletclasses) option.
 
 ## Autoworkletization
 
@@ -6400,7 +6432,7 @@ This option turns off the source map generation for worklet functions. Mostly us
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#class-methods).
+support](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#deprecated-worklet-classes).
 You might need to disable this feature when using [Custom
 Serializables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/registerCustomSerializable).
 

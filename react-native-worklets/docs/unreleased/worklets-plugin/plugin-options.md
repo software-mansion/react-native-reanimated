@@ -108,7 +108,7 @@ This option turns off the source map generation for worklet functions. Mostly us
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#class-methods).
+support](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#deprecated-worklet-classes).
 You might need to disable this feature when using [Custom
 Serializables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/registerCustomSerializable).
 
