@@ -17,7 +17,7 @@ const transition = SharedTransition.duration(800).easing(
   Easing.out(Easing.exp)
 );
 // Or a spring:
-// const transition = SharedTransition.springify(500).dampingRatio(0.75);
+// const transition = SharedTransition.springify(650).dampingRatio(0.85);
 
 function LibraryScreen({
   navigation,

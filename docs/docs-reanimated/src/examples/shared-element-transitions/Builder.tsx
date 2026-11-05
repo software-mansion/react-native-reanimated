@@ -24,7 +24,6 @@ import { PLACES, Scenery } from './kit/Scenery';
 import {
   HEADER_BOTTOM,
   NavHeader,
-  PUSH_DURATION,
   StackScreens,
   useScreenStack,
 } from './kit/Stack';
@@ -91,10 +90,9 @@ export default function Builder({ width }: { width?: number }) {
   const [kind, setKind] = useState<Kind>('timing');
   const [duration, setDuration] = useState(500);
   const [easing, setEasing] = useState<EasingName>('default');
-  const [springDuration, setSpringDuration] = useState(500);
-  const [dampingRatio, setDampingRatio] = useState(0.75);
-  const moveDuration = kind === 'timing' ? duration : springDuration;
-  const stack = useScreenStack(moveDuration / PUSH_DURATION);
+  const [springDuration, setSpringDuration] = useState(650);
+  const [dampingRatio, setDampingRatio] = useState(0.85);
+  const stack = useScreenStack();
   const flight = useFlight();
   const busy = flight.pairs.length > 0;
 

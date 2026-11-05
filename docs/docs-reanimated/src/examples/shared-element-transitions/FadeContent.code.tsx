@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#f6a04d',
   },
-  cardIcon: { fontSize: 24, color: 'white' },
+  cardIcon: { fontSize: 64, color: 'white', transform: [{ scale: 0.375 }] },
   icon: { fontSize: 64, color: 'white' },
   headline: { fontSize: 32, fontWeight: '800', color: 'white' },
 });

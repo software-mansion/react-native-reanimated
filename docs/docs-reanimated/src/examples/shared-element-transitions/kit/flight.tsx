@@ -20,6 +20,7 @@ export interface Box {
   height: number;
   borderRadius?: number;
   backgroundColor?: string;
+  scale?: number;
 }
 
 export interface SharedPair {
@@ -254,6 +255,7 @@ function Flyer({ pair, channels, fadeOutEnd, progressStyle }: FlyerProps) {
         fromColor === toColor
           ? fromColor
           : interpolateColor(s, [0, 1], [fromColor, toColor]),
+      transform: [{ scale: lerp(from.scale ?? 1, to.scale ?? 1, s) }],
     };
     return progressStyle
       ? { ...frame, ...progressStyle(pair, channels.x.value) }

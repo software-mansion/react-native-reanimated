@@ -112,13 +112,15 @@ function iconTag(item: Item) {
 
 function cardIconBox(index: number, item: Item): Box {
   const card = cardBox(index, item);
+  const shrink = (HEADER_ICON.size - CARD_ICON.size) / 2;
   return {
-    x: card.x + CARD_ICON.inset,
-    y: card.y + (CARD_HEIGHT - CARD_ICON.size) / 2,
-    width: CARD_ICON.size,
-    height: CARD_ICON.size,
-    borderRadius: CARD_ICON.size / 2,
+    x: card.x + CARD_ICON.inset - shrink,
+    y: card.y + (CARD_HEIGHT - CARD_ICON.size) / 2 - shrink,
+    width: HEADER_ICON.size,
+    height: HEADER_ICON.size,
+    borderRadius: HEADER_ICON.size / 2,
     backgroundColor: ICON_BACKGROUND,
+    scale: CARD_ICON.size / HEADER_ICON.size,
   };
 }
 
@@ -191,7 +193,7 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       {
         from: cardIconBox(index, ITEMS[index]),
         to: headerIconBox(ITEMS[index]),
-        content: <IconGlyph item={ITEMS[index]} size="card" />,
+        content: <IconGlyph item={ITEMS[index]} size="header" />,
       },
       detailsFadeKey(ITEMS[index])
     );
@@ -237,7 +239,7 @@ export default function FadeContentDemo({ width }: { width?: number }) {
               <TaggedIcon
                 box={offset(cardIconBox(index, listItem), box)}
                 hidden={flight.isFlying(iconTag(listItem))}>
-                <IconGlyph item={listItem} size="card" />
+                <IconGlyph item={listItem} size="header" />
               </TaggedIcon>
             )}
           </Pressable>
@@ -561,6 +563,7 @@ function frame(box: Box) {
     height: box.height,
     borderRadius: box.borderRadius,
     backgroundColor: box.backgroundColor,
+    transform: [{ scale: box.scale ?? 1 }],
   };
 }
 
