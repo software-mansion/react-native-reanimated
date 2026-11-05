@@ -25,6 +25,7 @@ import type {
   RunSummary,
   ServerMessage,
   SuiteFinishedMessage,
+  TestFailure,
 } from '../../common-app/runtime-tests/ReJest/utils/remoteProtocol.ts';
 import {
   findRunningAvd,
@@ -156,6 +157,14 @@ const UDID = typeof args.udid === 'string' ? args.udid : null;
 const SERIAL = typeof args.serial === 'string' ? args.serial : null;
 const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
+const CI_REPORT = process.env.RUNTIME_TESTS_CI_REPORT !== '0';
+const GITHUB_ACTIONS = CI_REPORT && process.env.GITHUB_ACTIONS === 'true';
+const GITHUB_STEP_SUMMARY = CI_REPORT
+  ? (process.env.GITHUB_STEP_SUMMARY ?? '')
+  : '';
+const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})`;
+const MAX_ANNOTATIONS = 10;
+const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
 
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -218,6 +227,7 @@ const resultsBeforeReload: Omit<RunSummary, 'durationMs'> = {
   failed: 0,
   skipped: 0,
   failedTests: [],
+  failures: [],
 };
 
 function errorMessage(error: unknown): string {
@@ -522,11 +532,11 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-httpServer.listen(PORT, HOST);
-
-console.log(
-  `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
-);
+httpServer.listen(PORT, HOST, () => {
+  console.log(
+    `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
+  );
+});
 if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
 }
@@ -538,6 +548,11 @@ function armConnectTimer() {
   connectTimer = setTimeout(() => {
     console.error(
       `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No device connected within ${CONNECT_TIMEOUT_MS / 1000}s. See the crash diagnostics in the log.`
     );
     void failWithDiagnostics(1);
   }, CONNECT_TIMEOUT_MS);
@@ -605,6 +620,11 @@ wss.on('connection', (socket) => {
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
       console.error('========================================');
+      githubAnnotation(
+        'error',
+        RUN_LABEL,
+        'The app disconnected mid-run without sending `done`, most likely it crashed. See the crash diagnostics in the log.'
+      );
       void failWithDiagnostics(exitCode);
       return;
     }
@@ -715,6 +735,7 @@ function onReload(msg: Partial<ReloadMessage>) {
   resultsBeforeReload.failed += Number(msg.failed ?? 0);
   resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
   resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
+  resultsBeforeReload.failures.push(...collectFailures(msg));
   const requestedSuite = String(msg.resumeFromSuite ?? '');
   if (!requestedSuite) {
     console.error(
@@ -810,6 +831,7 @@ function onDone(msg: Partial<DoneMessage>) {
   msg.passed = Number(msg.passed ?? 0) + resultsBeforeReload.passed;
   msg.failed = Number(msg.failed ?? 0) + resultsBeforeReload.failed;
   msg.skipped = Number(msg.skipped ?? 0) + resultsBeforeReload.skipped;
+  const failures = [...resultsBeforeReload.failures, ...collectFailures(msg)];
   msg.failedTests = [
     ...resultsBeforeReload.failedTests,
     ...(msg.failedTests ?? []),
@@ -823,13 +845,17 @@ function onDone(msg: Partial<DoneMessage>) {
   );
   if (Number(msg.failed) > 0) {
     console.log('[runtime-tests] Failed tests:');
-    for (const name of msg.failedTests ?? []) {
-      console.log(`  • ${name}`);
+    for (const failure of failures) {
+      console.log(`  • ${failureTitle(failure)}`);
+      for (const error of failure.errors) {
+        console.log(`      ${firstLine(error)}`);
+      }
     }
   } else {
     console.log('[runtime-tests] All tests passed!');
   }
   console.log('========================================');
+  reportRunToGitHub(msg, failures);
   exitCode = Number(msg.failed) > 0 ? 1 : 0;
   runFinished = true;
   if (client) {
@@ -839,11 +865,155 @@ function onDone(msg: Partial<DoneMessage>) {
   }
 }
 
+function collectFailures(msg: Partial<RunSummary>): TestFailure[] {
+  if (Array.isArray(msg.failures)) {
+    return msg.failures.map((failure) => ({
+      suite: String(failure.suite ?? ''),
+      name: String(failure.name ?? ''),
+      errors: Array.isArray(failure.errors) ? failure.errors.map(String) : [],
+    }));
+  }
+  const names = Array.isArray(msg.failedTests) ? msg.failedTests : [];
+  return names.map((name) => ({ suite: '', name: String(name), errors: [] }));
+}
+
+function failureTitle(failure: TestFailure): string {
+  return failure.suite ? `${failure.suite} › ${failure.name}` : failure.name;
+}
+
+function firstLine(text: string): string {
+  return stripAnsi(text).split('\n')[0].trim();
+}
+
+function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+}
+
+function reportRunToGitHub(msg: Partial<RunSummary>, failures: TestFailure[]) {
+  const counts = `${msg.failed} failed, ${msg.passed} passed, ${msg.skipped} skipped`;
+  const annotated = failures.slice(
+    0,
+    failures.length > MAX_ANNOTATIONS ? MAX_ANNOTATIONS - 1 : MAX_ANNOTATIONS
+  );
+  for (const failure of annotated) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      [failureTitle(failure), ...failure.errors.map(firstLine)].join('\n')
+    );
+  }
+  if (annotated.length < failures.length) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `${failures.length - annotated.length} more failed test(s), see the job summary`
+    );
+  }
+
+  if (failures.length === 0) {
+    appendGitHubStepSummary(`### ✅ ${RUN_LABEL}: ${counts}`, []);
+    return;
+  }
+  appendGitHubStepSummary(
+    `### ❌ ${RUN_LABEL}: ${counts}`,
+    failures.map(failureSummarySection)
+  );
+}
+
+function failureSummarySection(failure: TestFailure): string {
+  const lines = [`- **${failureTitle(failure)}**`];
+  if (failure.errors.length > 0) {
+    const text = failure.errors
+      .map((error) => stripAnsi(error).trimEnd())
+      .join('\n');
+    const fence = '`'.repeat(Math.max(3, longestBacktickRun(text) + 1));
+    lines.push('', `  ${fence}`);
+    for (const line of text.split('\n')) {
+      lines.push(`  ${line}`);
+    }
+    lines.push(`  ${fence}`, '');
+  }
+  return lines.join('\n');
+}
+
+function longestBacktickRun(text: string): number {
+  let longest = 0;
+  for (const run of text.match(/`+/g) ?? []) {
+    longest = Math.max(longest, run.length);
+  }
+  return longest;
+}
+
+function githubAnnotation(
+  level: 'error' | 'warning',
+  title: string,
+  message: string
+) {
+  if (!GITHUB_ACTIONS) {
+    return;
+  }
+  const escapeData = (value: string) =>
+    value.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  const escapeProperty = (value: string) =>
+    escapeData(value).replace(/:/g, '%3A').replace(/,/g, '%2C');
+  console.log(
+    `::${level} title=${escapeProperty(title)}::${escapeData(message)}`
+  );
+}
+
+function appendGitHubStepSummary(heading: string, sections: string[]) {
+  if (!GITHUB_STEP_SUMMARY) {
+    return;
+  }
+  try {
+    const room = STEP_SUMMARY_LIMIT_BYTES - stepSummarySize();
+    const parts = sections.length > 0 ? [heading, ''] : [heading];
+    let bytes = Buffer.byteLength(`${parts.join('\n')}\n\n`);
+    for (const [index, section] of sections.entries()) {
+      const note = `_${sections.length - index} more failed test(s) not shown, see the log._`;
+      const sectionBytes = Buffer.byteLength(`\n${section}`);
+      const noteBytes = Buffer.byteLength(`\n${note}`);
+      if (bytes + sectionBytes + noteBytes > room) {
+        parts.push(note);
+        bytes += noteBytes;
+        break;
+      }
+      parts.push(section);
+      bytes += sectionBytes;
+    }
+    if (bytes > room) {
+      console.warn(
+        '[runtime-tests] the job summary is full, the result of this run is only in the log'
+      );
+      return;
+    }
+    fs.appendFileSync(GITHUB_STEP_SUMMARY, `${parts.join('\n')}\n\n`);
+  } catch (error) {
+    console.warn(
+      `[runtime-tests] could not write the job summary: ${errorMessage(error)}`
+    );
+  }
+}
+
+function stepSummarySize(): number {
+  try {
+    return fs.statSync(GITHUB_STEP_SUMMARY).size;
+  } catch {
+    return 0;
+  }
+}
+
 function onError(msg: Partial<ErrorMessage>) {
   console.error(`[runtime-tests] device reported error: ${msg.message}`);
   if (msg.stack) {
     console.error(msg.stack);
   }
+  githubAnnotation(
+    'error',
+    RUN_LABEL,
+    `The app reported an error instead of finishing the run: ${msg.message}`
+  );
   exitCode = 1;
   runFinished = true;
   if (client) {
@@ -864,6 +1034,11 @@ function resetIdleTimer() {
   idleTimer = setTimeout(() => {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No traffic from the app for ${IDLE_TIMEOUT_MS / 1000}s, the run is stuck. See the crash diagnostics in the log.`
     );
     void failWithDiagnostics(1);
   }, IDLE_TIMEOUT_MS);
@@ -2070,7 +2245,12 @@ Ports and timeouts
   --connect-timeout <secs>  Wait for the app to connect. Default: 600.
   --idle-timeout <secs>     Give up after this much silence. Default: 600.
 
-  --help                    Show this message.`);
+  --help                    Show this message.
+
+Environment
+  RUNTIME_TESTS_CI_REPORT=0 On GitHub Actions the results are also reported
+                            as annotations and in the job summary. Set this
+                            for a run that is expected to fail.`);
 }
 
 function parseArgs(argv: string[]): Record<string, string | true> {

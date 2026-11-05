@@ -6,11 +6,18 @@ export interface DeclaredSuite {
   disabled: boolean;
 }
 
+export interface TestFailure {
+  suite: string;
+  name: string;
+  errors: string[];
+}
+
 export interface RunSummary {
   passed: number;
   failed: number;
   skipped: number;
   failedTests: string[];
+  failures: TestFailure[];
   durationMs: number;
 }
 

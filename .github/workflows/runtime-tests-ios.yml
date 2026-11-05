@@ -139,7 +139,7 @@ jobs:
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          if node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
+          if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           --only "intentional failures";
           then echo "A failing suite did not fail the runner" && exit 1;

@@ -260,6 +260,7 @@ export class TestRunner {
   }
 
   private async runTestSuite(testSuite: TestSuite) {
+    this._testSummary.enterTestSuite(testSuite);
     this._testSummary.countSkippedTestSuiteTests(testSuite);
 
     if (testSuite.skip) {

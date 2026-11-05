@@ -7,6 +7,7 @@ import type {
   DoneMessage,
   ErrorMessage,
   RunSummary,
+  TestFailure,
   ServerMessage,
 } from './remoteProtocol';
 
@@ -264,6 +265,7 @@ export function runWithRemoteReporter({
           failed: 0,
           skipped: 0,
           failedTests: [] as string[],
+          failures: [] as TestFailure[],
           durationMs: 0,
         };
         sendFinalEnvelope({ type: 'done', ...finalSummary });
