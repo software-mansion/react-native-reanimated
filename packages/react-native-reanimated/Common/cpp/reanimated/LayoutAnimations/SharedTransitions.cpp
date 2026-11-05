@@ -2,7 +2,6 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
-#include <react/renderer/components/view/ViewProps.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
@@ -1462,8 +1461,7 @@ void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) 
       props.erase("opacity");
     } else if (const auto factor = factors.find(tag);
                factor != factors.end() && (opacity->isNumber() || opacity->isNull())) {
-      // A null opacity resets the view to the default opacity.
-      const double ownOpacity = opacity->isNull() ? facebook::react::ViewProps{}.opacity : opacity->asDouble();
+      const double ownOpacity = opacity->isNull() ? defaultViewOpacity() : opacity->asDouble();
       *opacity = ownOpacity * factor->second;
     }
   }

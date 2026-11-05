@@ -2,7 +2,6 @@
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <react/featureflags/ReactNativeFeatureFlags.h>
-#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/RawProps.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -16,6 +15,7 @@
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -1389,7 +1389,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
         strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
         const auto opacity = props.get_ptr("opacity");
         if (opacity && opacity->isNull()) {
-          return facebook::react::ViewProps{}.opacity;
+          return defaultViewOpacity();
         }
         return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
       },
