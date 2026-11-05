@@ -471,13 +471,11 @@ describe('WebSocket event semantics', () => {
 
   it('calls the handler with the socket as this', () => {
     const socket = connected();
-    let receiver: unknown;
-    socket.onmessage = function (this: unknown) {
-      receiver = this;
-    };
+    const handler = jest.fn(function () {});
+    socket.onmessage = handler;
     lastSocket().emit('message', { text: 'a' });
 
-    expect(receiver).toBe(socket);
+    expect(handler.mock.contexts[0]).toBe(socket);
   });
 
   it('clears the handler when set to null', () => {
