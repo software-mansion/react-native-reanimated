@@ -114,6 +114,8 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
+  nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 #ifdef ANDROID
   releaseViewTransitions_ = dependencies.releaseViewTransitions;
@@ -245,10 +247,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
       // shared element, the issue should be gone with the new stack
-      // implementation
-      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+      // implementation. A modal can hold a nested stack, so the popped screen
+      // is the first one with a screen below it.
+      for (auto screen = findParentRNSScreen(afterTopScreen); screen; screen = findParentRNSScreen(screen)) {
         if (forceScreenSnapshot_(screen->current.tag)) {
           snapshottedScreens_.insert(screen->current.tag);
+        }
+        if (findScreenBelow(screen)) {
+          break;
         }
       }
 #endif
@@ -265,6 +271,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    followOffWindowTargets(propsParserContext);
     flushSubtreeRemovals(transaction);
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
@@ -1237,6 +1244,9 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       carrier->setDetached(false);
     }
     detachedCarriers_.clear();
+#ifdef __APPLE__
+    react_native_assert(!carrierOverlay_ && "The last pull of a surface deletes its overlay");
+#endif
     heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
@@ -1600,7 +1610,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
       .config = config,
       .contentOpacity = contentOpacity,
   });
@@ -1617,7 +1627,7 @@ void LayoutAnimationsProxy::startProgressTransition(
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
       .config = config,
   });
 }

@@ -58,6 +58,7 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> target;
   bool gestureDriven = false;
   std::optional<ContentFade> contentFade;
+  bool targetOffWindow = false;
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -114,9 +115,27 @@ struct UncommittedScreenPop {
   bool cancelled = false;
 };
 
+// A node on the path from a shared element up to the root, as it was when the element was collected.
+struct Ancestor {
+  Tag tag;
+  react::Point scrollPosition;
+  Transform transform;
+  TransformOrigin origin;
+  react::Size ownSize;
+};
+
+// The first ancestor, from the view up, that the platform shows outside the view of its React parent, and its position
+// in the absolute positions of the path.
+struct AncestorOutsideReactParent {
+  size_t index;
+  react::Point position;
+};
+
 struct CollectedTransition {
   Transition transition;
   std::array<std::shared_ptr<LightNode>, 2> nodes;
+  std::array<std::vector<react::Point>, 2> absolutePositions;
+  std::array<std::vector<Ancestor>, 2> ancestors;
 };
 
 using CollectedTransitionMap = std::unordered_map<SharedTag, CollectedTransition>;
@@ -182,6 +201,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  NativeViewPlacementFunction nativeViewPlacement_;
+  // iOS presents modals above the root view, so detached carriers live in a view that the platform keeps on top of the
+  // window. It lives until its surface stops.
+  mutable std::shared_ptr<LightNode> carrierOverlay_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
@@ -381,6 +405,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
+  Tag carrierHostTag() const;
+  void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
+  bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
+  void endSharedTransitionOf(
+      const SharedTag &sharedTag,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+  void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   std::optional<SharedElementRef> sharedElementOfCarrier(const std::shared_ptr<LightNode> &node) const;
@@ -443,6 +475,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
       bool useViewsOnScreen) const;
+  std::vector<Ancestor> collectAncestors(const std::shared_ptr<LightNode> &node, bool useViewsOnScreen) const;
+  std::optional<AncestorOutsideReactParent> findAncestorOutsideReactParent(
+      const std::vector<Ancestor> &ancestors,
+      bool settled) const;
+  void adjustForNativePlacement(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   void overrideTransform(
@@ -450,16 +487,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
 
-  struct AncestorTransform {
-    Transform transform;
-    TransformOrigin origin;
-    react::Size ownSize;
-  };
-
   std::optional<Transform> parseParentTransforms(
-      const std::shared_ptr<LightNode> &node,
-      const std::vector<react::Point> &absolutePositions,
-      bool useViewsOnScreen) const;
+      const std::vector<Ancestor> &ancestors,
+      const std::vector<react::Point> &absolutePositions) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,

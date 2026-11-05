@@ -31,6 +31,8 @@ struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
+  // Above the tags of React's views.
+  Tag nextOverlayTag_{10000002};
 };
 
 // The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.
