@@ -108,12 +108,27 @@ export class WebSocket extends EventTargetLite {
     assertDistinctProtocols(protocolList);
     this.requestedProtocols = protocolList;
 
+    let constructing = true;
+    const deferred: SocketEvent[] = [];
     this.socketId = globalThis.__workletsNetworking!.connectWebSocket(
       { url: parsed, protocols: protocolList, headers: [] },
       (type: string, payload: unknown) => {
-        this.handleEvent({ type, payload } as SocketEvent);
+        const event = { type, payload } as SocketEvent;
+        if (constructing) {
+          deferred.push(event);
+          return;
+        }
+        this.handleEvent(event);
       }
     );
+    constructing = false;
+    if (deferred.length > 0) {
+      queueMicrotask(() => {
+        for (const event of deferred) {
+          this.handleEvent(event);
+        }
+      });
+    }
   }
 
   send(data: string | ArrayBuffer | ArrayBufferView | Blob) {

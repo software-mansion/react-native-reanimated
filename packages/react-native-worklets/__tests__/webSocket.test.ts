@@ -154,6 +154,26 @@ describe('WebSocket lifecycle', () => {
     expect(received.wasClean).toBe(true);
   });
 
+  it('defers events that arrive before the constructor returns', async () => {
+    const networking = globalThis.__workletsNetworking!;
+    networking.connectWebSocket = (config, onEvent) => {
+      const socketId = nextSocketId++;
+      openedSockets.push({ socketId, config, emit: onEvent });
+      onEvent('error', { message: 'refused' });
+      onEvent('close', { code: 1006, reason: '', wasClean: false });
+      return socketId;
+    };
+    const socket = new WebSocket('ws://example.com/socket');
+    const order: string[] = [];
+    socket.onerror = () => order.push('error');
+    socket.onclose = () => order.push('close');
+
+    expect(order).toEqual([]);
+    await Promise.resolve();
+    expect(order).toEqual(['error', 'close']);
+    expect(socket.readyState).toBe(WebSocket.CLOSED);
+  });
+
   it('reports an abnormal close as not clean', () => {
     const socket = connected();
     let wasClean: boolean | undefined;
