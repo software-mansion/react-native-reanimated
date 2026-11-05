@@ -82,6 +82,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
   std::unordered_map<int, SharedTransitionContentFade> contentFadesForNativeID_;
   std::unordered_map<int, SharedTransitionContentFade> contentFades_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitions_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
@@ -89,8 +91,9 @@ class LayoutAnimationsManager {
   std::mutex pendingConfigUpdatesMutex_;
   std::vector<LayoutAnimationConfig> pendingConfigUpdates_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimationsForNativeID_`,
-  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, the content fade-ins, `enteringAnimations_`,
-  // `exitingAnimations_`, `layoutAnimations_` and `shouldAnimateExitingForTag_`.
+  // `sharedTransitionsForNativeID_`, `sharedTransitions_`, `progressSharedTransitions_`,
+  // `progressSharedTransitionsForNativeID_`, the content fade-ins, `enteringAnimations_`, `exitingAnimations_`,
+  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated

@@ -5,7 +5,9 @@ import type {
 import {
   addMatrices,
   decomposeMatrix,
+  decomposeMatrixIntoMatricesAndAngles,
   flatten,
+  interpolateMatrix,
   isAffineMatrix,
   isAffineMatrixFlat,
   multiplyMatrices,
@@ -213,5 +215,18 @@ describe('Matrix util functions', () => {
         )
       ).forEach((v, i) => expect(v).toBeCloseTo(m2[i]));
     });
+
+    test.each([Math.PI / 2, -Math.PI / 2])(
+      'keeps a rotation by %f around Y in the angles',
+      (ry) => {
+        const identity = decomposeMatrixIntoMatricesAndAngles(identityMatrix);
+        const angles = { ...identity, rx: 0.4, ry, rz: 0.7 };
+        const matrix = interpolateMatrix(0, angles, angles);
+        const decomposition = decomposeMatrixIntoMatricesAndAngles(matrix);
+        interpolateMatrix(0, decomposition, decomposition).forEach((v, i) =>
+          expect(v).toBeCloseTo(matrix[i])
+        );
+      }
+    );
   });
 });

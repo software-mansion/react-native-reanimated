@@ -4,7 +4,10 @@ import type {
   LayoutAnimationType,
 } from './commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
-import type { SharedTransitionContentFade } from './layoutReanimation/SharedTransition';
+import type {
+  ProgressSharedTransitionAnimation,
+  SharedTransitionContentFade,
+} from './layoutReanimation/SharedTransition';
 
 /**
  * Lets you update the current configuration of the layout animation or shared
@@ -25,7 +28,10 @@ import type { SharedTransitionContentFade } from './layoutReanimation/SharedTran
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: ReanimatedKeyframe | LayoutAnimationFunction,
+  config?:
+    | ReanimatedKeyframe
+    | LayoutAnimationFunction
+    | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
   sharedTransitionContentFade?: SharedTransitionContentFade

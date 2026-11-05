@@ -4,7 +4,7 @@
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
@@ -18,7 +18,7 @@ namespace reanimated {
 
 #ifdef ANDROID
 namespace {
-// The style props that PropsDiffer animates.
+// The style props that SharedTransitionValuesFactory animates.
 constexpr std::array kAnimatedStyleProps{
     "opacity",
     "backgroundColor",
@@ -265,6 +265,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
         warnIfSnapshotIsStale(before, transaction);
         warnIfSnapshotIsStale(after, transaction);
 
+        const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
+            before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
         auto &run = startSharedTransitionRun(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
         restartContentFade(run);
@@ -273,58 +275,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
             run.carrier->current.tag,
             run.carrierStartView,
             asCarrierView(after, run.carrier, propsParserContext),
-            ownCarrierView(after, run.carrier, propsParserContext).props);
+            ownCarrierView(after, run.carrier, propsParserContext).props,
+            config);
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
       hideTransitioningViews(AFTER, transaction, propsParserContext);
-    }
-  } else if (transition_->state == TransitionState::ACTIVE) {
-    for (const auto &[_, element] : sharedElements_) {
-      if (!element.run || !element.run->gestureDriven) {
-        continue;
-      }
-      const auto tag = element.run->carrier->current.tag;
-      if (hasPendingLayoutAnimation(tag)) {
-        continue;
-      }
-      const auto layoutAnimationIt = layoutAnimations_.find(tag);
-      if (layoutAnimationIt == layoutAnimations_.end()) {
-        react_native_assert(false && "Shared transition animation not found");
-        continue;
-      }
-      auto &layoutAnimation = layoutAnimationIt->second;
-      if (const auto &contentFade = element.run->contentFade) {
-        const auto &[from, to] = contentFade->range;
-        const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
-        layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
-      }
-      auto before = layoutAnimation.startView.layoutMetrics.frame;
-      auto after = layoutAnimation.finalView.layoutMetrics.frame;
-      auto x = before.origin.x + transition_->progress * (after.origin.x - before.origin.x);
-      auto y = before.origin.y + transition_->progress * (after.origin.y - before.origin.y);
-      auto width = before.size.width + transition_->progress * (after.size.width - before.size.width);
-      auto height = before.size.height + transition_->progress * (after.size.height - before.size.height);
-
-      auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView.props);
-      auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView.props);
-      auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-      auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
-
-      // TODO (future): Support more props in progress transitions.
-      auto borderRadiusDynamic =
-          folly::dynamic::object("borderRadius", beforeRadius + transition_->progress * (afterRadius - beforeRadius));
-
-#ifdef RN_SERIALIZABLE_STATE
-      // TODO (future): Support borderRadius on Android.
-      const Props::Shared newProps = nullptr;
-#else
-      auto rawProps = RawProps(std::move(borderRadiusDynamic));
-
-      auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
-                          .cloneProps(propsParserContext, layoutAnimation.framePropsBase(), std::move(rawProps));
-#endif
-
-      updateMap_.insert_or_assign(tag, UpdateValues{newProps, {x, y, width, height}});
     }
   }
 
@@ -355,6 +310,45 @@ void LayoutAnimationsProxy::handleProgressTransition(
       }
     }
     transition_.reset();
+  }
+}
+
+// Called from onTransitionProgress on the UI thread. pullTransaction can run off the UI thread, so it must not call
+// worklets.
+void LayoutAnimationsProxy::applyProgressAnimations() {
+  for (const auto &[_, element] : sharedElements_) {
+    if (!element.run || !element.run->gestureDriven) {
+      continue;
+    }
+    const auto tag = element.run->carrier->current.tag;
+    if (hasPendingLayoutAnimation(tag)) {
+      continue;
+    }
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
+    if (layoutAnimationIt == layoutAnimations_.end() ||
+        layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
+    auto &layoutAnimation = layoutAnimationIt->second;
+    if (const auto &contentFade = element.run->contentFade) {
+      const auto &[from, to] = contentFade->range;
+      const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
+      layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
+    }
+    react_native_assert(layoutAnimation.config && "Progress shared transition without a progress animation");
+    if (!layoutAnimation.config) {
+      continue;
+    }
+    auto values =
+        SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
+    values.setProperty(uiRuntime_, "windowWidth", window_.width);
+    values.setProperty(uiRuntime_, "windowHeight", window_.height);
+    const auto progressAnimation =
+        layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_).asFunction(uiRuntime_);
+    const auto style = progressAnimation.call(uiRuntime_, values, transition_->progress);
+    if (style.isObject()) {
+      progressLayoutAnimation(tag, style.asObject(uiRuntime_));
+    }
   }
 }
 
@@ -456,7 +450,7 @@ bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, con
   if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
     return true;
   }
-  return PropsDiffer::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
+  return SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
       waitsForCoveringRun(run, viewsHiddenByContinuingRuns());
 }
 
@@ -1100,6 +1094,9 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     transition_->state = TransitionState::END;
   }
   transition_->updated = true;
+  if (transition_->state == TransitionState::ACTIVE) {
+    applyProgressAnimations();
+  }
   return surfaceId_;
 }
 

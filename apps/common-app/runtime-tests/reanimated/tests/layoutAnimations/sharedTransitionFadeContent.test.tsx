@@ -8,7 +8,9 @@ import Animated, {
   makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
+  SharedTransitionType,
   useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
@@ -43,6 +45,23 @@ const linearFade = SharedTransition.duration(3000)
   .easing(Easing.linear)
   .fadeContent();
 const linearNoFade = SharedTransition.duration(3000).easing(Easing.linear);
+const customFade = SharedTransition.custom((values) => {
+  'worklet';
+  return { width: withTiming(values.targetWidth, { duration: 3000 }) };
+})
+  .duration(3000)
+  .fadeContent();
+const progressFade = SharedTransition.duration(3000)
+  .progressAnimation((values, progress) => {
+    'worklet';
+    return {
+      width:
+        values.currentWidth +
+        progress * (values.targetWidth - values.currentWidth),
+    };
+  })
+  .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
+  .fadeContent();
 
 function Endpoint({
   name,
@@ -540,6 +559,25 @@ describe('Shared transition with fadeContent', () => {
     await expectOpacity('source', 0);
     await expectOpacity('sourceChild', CHILD_OPACITY);
   });
+
+  test.each([
+    { animation: 'a custom animation', sharedTransition: customFade },
+    {
+      animation: 'a custom progress animation',
+      sharedTransition: progressFade,
+    },
+  ])(
+    'fades the children of the moving view out with ${animation} that leaves the content opacity out',
+    async ({ sharedTransition }) => {
+      await render(
+        <Screens showTarget={false} sharedTransition={sharedTransition} />
+      );
+      await waitForFrames();
+
+      await render(<Screens showTarget sharedTransition={sharedTransition} />);
+      await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    }
+  );
 
   test('fades the children of the target in after the moving view lands', async () => {
     await render(<Screens showTarget={false} hiddenTargetChild />);

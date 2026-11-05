@@ -7,7 +7,7 @@
 #include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>
 #include <cstring>
@@ -170,7 +170,9 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ProgressLayoutAnimation
   const auto tag = start.tag;
   layoutAnimationOperations_.push_back(std::move(start));
   pendingLayoutAnimations_.try_emplace(
-      tag, PendingLayoutAnimation{LayoutAnimationType::PROGRESS, layoutAnimationOperations_.size() - 1});
+      tag,
+      PendingLayoutAnimation{
+          LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS, layoutAnimationOperations_.size() - 1});
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const {
@@ -362,8 +364,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
     const auto tag = progressStart->tag;
     const auto activeAnimationIt = layoutAnimations_.find(tag);
     if (activeAnimationIt != layoutAnimations_.end() &&
-        activeAnimationIt->second.type != LayoutAnimationType::PROGRESS) {
-      activeAnimationIt->second.type = LayoutAnimationType::PROGRESS;
+        activeAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      activeAnimationIt->second.type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
       operations.push_front(std::move(operation));
       return LayoutAnimationStop{tag};
     }
@@ -374,8 +376,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         progressStart->frameProps,
         progressStart->parentTag,
         std::nullopt,
-        LayoutAnimationType::PROGRESS,
-        nullptr);
+        LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS,
+        progressStart->config);
     return std::monostate{};
   }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);
@@ -428,13 +430,10 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
 
     jsi::Object values(uiRuntime_);
     if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
-      auto propsDiffer = PropsDiffer(uiRuntime_, start.before, start.after);
-      values = propsDiffer.computeDiff(uiRuntime_);
+      values = SharedTransitionValuesFactory(uiRuntime_).create(start.before, start.after);
       if (start.contentOpacity) {
-        values.getPropertyAsObject(uiRuntime_, "source")
-            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->from);
-        values.getPropertyAsObject(uiRuntime_, "target")
-            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->to);
+        values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
+        values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
       }
     } else {
       const Snapshot current(start.before, window);
@@ -480,7 +479,7 @@ void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {
   auto shouldStopManager = false;
 
   if (const auto layoutAnimationIt = layoutAnimations_.find(tag); layoutAnimationIt != layoutAnimations_.end()) {
-    shouldStopManager = layoutAnimationIt->second.type != LayoutAnimationType::PROGRESS;
+    shouldStopManager = layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
     updateMap_.erase(tag);
     layoutAnimations_.erase(layoutAnimationIt);
   } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
@@ -506,7 +505,7 @@ void LayoutAnimationsProxyCommon::cancelAllLayoutAnimations() const {
       }
     }
     for (const auto &[tag, animation] : layoutAnimations_) {
-      if (animation.type != LayoutAnimationType::PROGRESS && stoppedTags.insert(tag).second) {
+      if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS && stoppedTags.insert(tag).second) {
         stops.push_back(tag);
       }
     }
@@ -536,7 +535,7 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const std::optional<ContentOpacityRange> contentOpacity) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
-    if (pendingIt->second.type == LayoutAnimationType::PROGRESS) {
+    if (pendingIt->second.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
       return;
     }
     const auto operationIndex = pendingIt->second.operationIndex;
@@ -647,8 +646,8 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(c
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   std::optional<ShadowView> pendingCurrentView;
-  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
-      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type != LayoutAnimationType::PROGRESS) {
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end() &&
+      pendingIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
     const auto operationIndex = pendingIt->second.operationIndex;
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {
