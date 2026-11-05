@@ -470,7 +470,77 @@ function clampInteger(raw, fallback, min, max) {
 const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
 
 const httpServer = http.createServer(handleEchoRequest);
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({ noServer: true });
+/**
+ * `handleProtocols` cannot reject a client: `ws` only calls it when the client
+ * offered something, and a falsy return just omits the response header.
+ */
+const echoWss = new WebSocketServer({
+  noServer: true,
+  handleProtocols: (protocols) => (protocols.has('chat') ? 'chat' : false),
+});
+
+/**
+ * The reporter and the `/echo/ws` endpoint share one port, so the upgrade is
+ * routed by path. Anything that isn't the echo endpoint belongs to the
+ * reporter, which is how the app has always dialed in.
+ */
+httpServer.on('upgrade', (request, socket, head) => {
+  let pathname;
+  try {
+    pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
+  } catch {
+    // `new URL` throws on targets such as `////`, which would otherwise reach
+    // the uncaughtException handler and take the whole run down.
+    socket.destroy();
+    return;
+  }
+  const target = pathname === '/echo/ws' ? echoWss : wss;
+  if (pathname !== '/echo/ws' && pathname !== '/') {
+    socket.destroy();
+    return;
+  }
+  target.handleUpgrade(request, socket, head, (client) => {
+    target.emit('connection', client, request);
+  });
+});
+
+/**
+ * Echoes every frame back, preserving whether it was text or binary. `ws` runs
+ * the closing handshake itself, echoing whatever code the client sent.
+ */
+echoWss.on('connection', (socket, request) => {
+  // Registered first: a socket error on any branch below would otherwise be an
+  // unhandled 'error' event, which exits the whole run.
+  socket.on('error', () => {});
+  const options = new URL(request.url ?? '/', 'http://localhost').searchParams;
+  const closeWith = options.get('close');
+  if (closeWith !== null) {
+    const code = Number(closeWith);
+    const reason = options.get('reason') ?? '';
+    const sendable =
+      Number.isInteger(code) &&
+      (code === 1000 || (code >= 3000 && code <= 4999));
+    if (!sendable || Buffer.byteLength(reason) > 123) {
+      socket.close(1000, '');
+      return;
+    }
+    socket.close(code, reason);
+    return;
+  }
+  if (options.get('invalidUtf8') !== null) {
+    // 'a', a lone 0xFF, 'b' - must reach JS as 'a\uFFFDb'.
+    socket.send(Buffer.from([0x61, 0xff, 0x62]), { binary: false });
+  }
+  socket.on('message', (data, isBinary) => {
+    socket.send(data, { binary: isBinary });
+  });
+  socket.on('close', () => {});
+});
+
+echoWss.on('error', (error) => {
+  console.error(`[runtime-tests] echo websocket error: ${error.message}`);
+});
 
 httpServer.on('error', (error) => {
   if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {

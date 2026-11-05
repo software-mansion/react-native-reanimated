@@ -136,6 +136,19 @@ declare global {
         ): number;
         abortRequest(requestId: number): void;
         decodeText(buffer: ArrayBuffer, encoding?: string): string;
+        connectWebSocket(
+          config: {
+            url: string;
+            protocols: string[];
+            headers: Array<[string, string]>;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        sendWebSocketMessage(
+          socketId: number,
+          message: string | ArrayBuffer
+        ): void;
+        closeWebSocket(socketId: number, code: number, reason: string): void;
       }
     | undefined;
   interface NodeRequire {

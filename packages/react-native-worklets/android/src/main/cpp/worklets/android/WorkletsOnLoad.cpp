@@ -5,6 +5,7 @@
 #include <worklets/android/JScriptBufferWrapper.h>
 #include <worklets/android/WorkletsModule.h>
 #include <worklets/android/networking/JNetworkRequestListener.h>
+#include <worklets/android/networking/JWebSocketListener.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
   return facebook::jni::initialize(vm, [] {
@@ -13,5 +14,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     worklets::AnimationFrameCallback::registerNatives();
     worklets::JScriptBufferWrapper::registerNatives();
     worklets::JNetworkRequestListener::registerNatives();
+    worklets::JWebSocketListener::registerNatives();
   });
 }
