@@ -218,10 +218,10 @@ function BusyScreens({ active }: { active: boolean }) {
   );
 }
 
-function readMountedWidth(tag: number) {
+function readPresentedWidth(tag: number) {
   return runOnUIBlocking(() => {
     'worklet';
-    return global._obtainMountedViewProps(tag, false)?.width;
+    return global._obtainMountedViewProps(tag, true)?.width;
   });
 }
 
@@ -233,7 +233,7 @@ describe('Shared transition that starts while the JS thread is busy', () => {
 
     await render(<BusyScreens active />);
     await expectEventually(async () => {
-      const width = await readMountedWidth(sourceTag);
+      const width = await readPresentedWidth(sourceTag);
       return (
         width !== undefined &&
         width > SOURCE_WIDTH + 5 &&
