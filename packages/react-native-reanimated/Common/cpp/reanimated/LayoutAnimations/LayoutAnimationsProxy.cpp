@@ -1465,7 +1465,10 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // arrives from the JS thread, because that job runs after the frames are in the queue. The attach
 // also restores the content of the carrier, so the frames of its content keep it too.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
-  if (detachedCarriers_.empty() || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
+  const bool hasCarriers = !detachedCarriers_.empty() || std::ranges::any_of(sharedElements_, [](const auto &entry) {
+    return entry.second.run && entry.second.run->carrier->isNestedCarrier;
+  });
+  if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   std::vector<Tag> tags;
