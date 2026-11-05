@@ -186,6 +186,7 @@ jobs:
             runtime-tests-android:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-android.yml'
+              - '.github/actions/install-android-emulator/**'
               - '.github/actions/install-android-ndk/**'
               - 'apps/common-app/runtime-tests/**'
               - 'apps/fabric-example/babel.config.js'

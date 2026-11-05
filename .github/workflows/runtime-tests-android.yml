@@ -91,6 +91,12 @@ jobs:
             ~/.android/adb*
           key: avd-34-x86_64
 
+      - name: Install Android Emulator
+        uses: $/.github/actions/install-android-emulator
+        with:
+          api-level: 34
+          arch: x86_64
+
       - name: Create AVD and generate a boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
