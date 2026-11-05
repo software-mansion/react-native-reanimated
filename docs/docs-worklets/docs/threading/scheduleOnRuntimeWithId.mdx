@@ -3,6 +3,9 @@ title: scheduleOnRuntimeWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiScheduleOnRuntimeWithIdSnippet from './_examples/apiScheduleOnRuntimeWithId';
+import ApiScheduleOnRuntimeWithIdSource from '!!raw-loader!./_examples/apiScheduleOnRuntimeWithId';
+
 <Badges version="0.8.0">
   # scheduleOnRuntimeWithId
 </Badges>
@@ -11,15 +14,7 @@ sidebar_position: 42 # Use alphabetical order
 
 ## Reference
 
-```javascript
-import { scheduleOnRuntimeWithId, createWorkletRuntime } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
-```
+<ThreadingSimulation module={ApiScheduleOnRuntimeWithIdSnippet} source={ApiScheduleOnRuntimeWithIdSource}/>
 
 <details>
   <summary>Type definitions</summary>
@@ -37,19 +32,19 @@ scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
 
 ### runtimeId
 
-The id of the [Worklet Runtime](../fundamentals/runtimeKinds.mdx#worklet-runtime) to schedule the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime) to schedule the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](../fundamentals/runtimeKinds.mdx#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](../fundamentals/runtimeKinds.mdx#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime).
 
 ## Remarks
 
-- The worklet is scheduled on the Worker Runtime's [Async
+- The worklet function is scheduled on the Worker Runtime's [Async
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
 - You can target the UI Runtime by passing [UIRuntimeId](./uiRuntimeId.mdx) as the runtime id.
 

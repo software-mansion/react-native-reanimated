@@ -125,6 +125,13 @@ type WorkletRuntimeConfigBase = {
    * Bundle Mode. If not specified, it defaults to `true`.
    */
   enableNetworking?: boolean;
+  /**
+   * Determines whether the runtime can be stopped with
+   * `abortWorkletRuntime`. A custom queue drops the runtime's pending jobs
+   * only if it implements `AsyncQueue::stop`. If not specified, it defaults to
+   * `false`.
+   */
+  abortable?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

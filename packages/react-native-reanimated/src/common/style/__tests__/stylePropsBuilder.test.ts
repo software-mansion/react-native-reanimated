@@ -256,6 +256,19 @@ describe('stylePropsBuilder', () => {
     });
   });
 
+  describe('discrete props', () => {
+    test.each([
+      ['borderCurve', 'continuous', { borderCurve: 'continuous' }],
+      ['writingDirection', 'rtl', { writingDirection: 'rtl' }],
+      ['verticalAlign', 'middle', { textAlignVertical: 'center' }],
+      ['verticalAlign', 'top', { textAlignVertical: 'top' }],
+      ['objectFit', 'fill', { resizeMode: 'stretch' }],
+      ['objectFit', 'cover', { resizeMode: 'cover' }],
+    ])('%s: %s', (property, value, expected) => {
+      expect(stylePropsBuilder.build({ [property]: value })).toEqual(expected);
+    });
+  });
+
   test.each([
     ['drop-shadow(0 0 4px notacolor)', 'notacolor'],
     ['drop-shadow(2em 4em)', '4em'],

@@ -5,6 +5,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDecay,
+  withSequence,
+  withSpring,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -31,11 +33,14 @@ export default function DecayBasicExample() {
     })
     .onFinalize((event) => {
       // highlight-start
-      offset.value = withDecay({
-        velocity: event.velocityX,
-        rubberBandEffect: true,
-        clamp: [-(width.value / 2) + SIZE / 2, width.value / 2 - SIZE / 2],
-      });
+      offset.value = withSequence(
+        withDecay({
+          velocity: event.velocityX,
+          rubberBandEffect: true,
+          clamp: [-(width.value / 2) + SIZE / 2, width.value / 2 - SIZE / 2],
+        }),
+        withSpring(0)
+      );
       // highlight-end
     });
 

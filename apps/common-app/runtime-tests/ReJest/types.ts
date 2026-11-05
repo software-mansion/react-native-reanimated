@@ -10,14 +10,11 @@ import type {
   LayoutAnimationStartFunction,
   StyleProps,
 } from 'react-native-reanimated';
+import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
 
 export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
-};
-
-type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
 };
 
 export type TrackerCallCount = {
@@ -63,6 +60,7 @@ export type TestSuite = {
   buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
+  runtimeTestSuiteName?: string;
   beforeAll?: MaybeAsync<void>;
   afterAll?: MaybeAsync<void>;
   beforeEach?: MaybeAsync<void>;
@@ -133,6 +131,7 @@ export interface Operation {
   shadowNodeWrapper?: ShadowNodeWrapper;
   name: string;
   updates: OperationUpdate;
+  isAnimatedProps: boolean;
 }
 
 export type TestValue =
@@ -158,6 +157,18 @@ export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
   onSuiteFinished?: (suiteName: string) => void;
+  onReloadRequested?: (
+    resumeFromSuite: string,
+    summarySoFar: TestRunSummary
+  ) => void;
+};
+
+export type TestRunSummary = {
+  passed: number;
+  failed: number;
+  skipped: number;
+  failedTests: string[];
+  durationMs: number;
 };
 
 export type Mismatch = {
@@ -171,6 +182,7 @@ export type ValueWrapper<T> = { value: T | DefaultValue };
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;
+  var autoAdvanceAnimationTimer: boolean | undefined;
   var framesCount: number | undefined;
   var originalRequestAnimationFrame:
     | ((callback: (timestamp: number) => void) => void)
@@ -191,12 +203,16 @@ declare global {
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _registriesLeakCheck: () => string;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var __stashSerializableForReload: (value: unknown) => void;
+  var __takeSerializablesStashedForReload: () => object[];
+  var __countLiveSerializablesTakenAfterReload: () => number;
   var _obtainMountedViewProps: (
     tag: number,
     presented: boolean

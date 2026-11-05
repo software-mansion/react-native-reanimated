@@ -390,7 +390,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           filteredMutations.push_back(mutation);
           continue;
         } else if (!shouldAnimate) {
-          updateLayoutAnimationTarget(tag, mutation.newChildShadowView, layoutConfig);
+          updateLayoutAnimationTarget(tag, mutation.newChildShadowView, nullptr, layoutConfig);
           continue;
         }
 

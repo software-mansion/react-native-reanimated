@@ -5,6 +5,10 @@
   --swm-logo-title-width: 120px;
 }
 
+:root.docs-version-current {
+  --doc-sidebar-width: 280px !important;
+}
+
 table {
   display: table;
   width: 100%;
@@ -208,4 +212,347 @@ footer .footer__bottom [class*='footer__copyright'] p {
 
 footer .footer__bottom [class*='footer__copyright'] p a[data-privacy-policy] {
   text-decoration: none;
+}
+
+:root {
+  --swm-code-panel: #ffffff;
+  --swm-code-panel-border: #87cce8;
+}
+
+[data-theme='dark'] {
+  --swm-code-panel: #1e2c3a;
+  --swm-code-panel-border: #3f7c99;
+}
+
+html.docs-version-current[data-theme='light'] {
+  color-scheme: light;
+}
+
+html.docs-version-current[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
+  display: none !important;
+}
+
+.docs-version-current [class*='codeBlockContent'] pre,
+.docs-version-current [class*='codeBlockContent'] code {
+  border: none;
+  background-color: var(--swm-code-panel);
+}
+
+.docs-version-current
+  [class*='_wrapper_']:has(> [class*='_badge_'][class*='_deprecated_'])
+  .menu__link {
+  font-size: 0.8em;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.7;
+}
+
+.docs-version-current [class*='_badge_'][class*='_deprecated_'] {
+  display: none;
+}
+
+.docs-version-current .menu:has(> .theme-doc-sidebar-menu) {
+  padding: 12px 16px 24px;
+}
+
+.docs-version-current .navbar-sidebar__items {
+  padding-left: 0;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list {
+  margin: 0;
+  padding-left: 0;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list-item {
+  width: 100%;
+  margin: 0;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .theme-doc-sidebar-item-category-level-1 {
+  margin-bottom: 24px;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__link {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: none;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 22px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .menu__list-item-collapsible {
+  margin-bottom: 4px;
+  background: none;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .menu__list-item-collapsible
+  > .menu__link {
+  color: var(--ifm-font-color-base);
+  font-weight: 600;
+}
+
+.docs-version-current .theme-doc-sidebar-menu .sidebar-heading-link {
+  margin-bottom: 24px;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  .sidebar-heading-link
+  > .menu__link {
+  color: var(--ifm-font-color-base);
+  font-weight: 600;
+}
+
+.docs-version-current .theme-doc-sidebar-menu a.menu__link[href]:hover,
+.docs-version-current
+  .theme-doc-sidebar-menu
+  a.menu__link[aria-current='page'] {
+  color: var(--ifm-link-color);
+}
+
+.docs-version-current
+  .theme-doc-sidebar-menu
+  a.menu__link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateY(-50%);
+}
+
+.theme-doc-sidebar-menu .sidebar-sections {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.sidebar-sections > div {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.sidebar-sections button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ifm-color-content-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.sidebar-sections button:hover,
+.sidebar-sections button[aria-pressed='true'] {
+  color: var(--ifm-link-color);
+}
+
+.sidebar-sections button[aria-pressed='true'] {
+  border-bottom-color: currentColor;
+}
+
+.sidebar-sections button:focus-visible,
+.docs-version-current .theme-doc-sidebar-menu a:focus-visible {
+  outline: 2px solid var(--ifm-link-color);
+  outline-offset: 2px;
+}
+
+/* A simulation may extend outside the article, but never outside the page.
+   Clip at the viewport-sized app root so sticky controls keep working. */
+#__docusaurus:has(
+  [data-simulation-fullscreen='true'],
+  [data-simulation-fullscreen-transition]
+) {
+  overflow-x: clip;
+}
+
+html:has(
+  [data-simulation-fullscreen='true'],
+  [data-simulation-fullscreen-transition]
+) {
+  scrollbar-gutter: stable;
+}
+
+.docs-version-current [class*='docMainContainer'] .row > [class*='docItemCol'] {
+  position: relative;
+  left: 0;
+  transition: left 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (min-width: 997px) {
+  .docs-version-current {
+    --swm-sidebar-motion: 320ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .docs-version-current .theme-doc-sidebar-container {
+    transition:
+      width var(--swm-sidebar-motion),
+      opacity 180ms ease,
+      visibility 0s !important;
+  }
+
+  .docs-version-current
+    .theme-doc-sidebar-container
+    [class*='sidebarViewport']
+    > [class*='sidebar_'] {
+    transition:
+      transform var(--swm-sidebar-motion),
+      opacity var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docSidebarContainerHidden']
+    [class*='sidebarViewport']
+    > [class*='sidebar_'] {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  .docs-version-current [class*='docMainContainer'] {
+    overflow-x: clip;
+    transition: max-width var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current [class*='docMainContainer'] > .container {
+    transition: max-width var(--swm-sidebar-motion);
+  }
+
+  .docs-version-current
+    [class*='docMainContainer']
+    .row
+    > [class*='docItemCol'] {
+    transition:
+      max-width var(--swm-sidebar-motion),
+      flex-basis var(--swm-sidebar-motion),
+      margin-left var(--swm-sidebar-motion),
+      left 300ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .docs-version-current
+    [class*='docMainContainer']
+    .row
+    > .col:has(.theme-doc-toc-desktop) {
+    transition:
+      max-width var(--swm-sidebar-motion),
+      flex-basis var(--swm-sidebar-motion),
+      opacity var(--swm-sidebar-motion),
+      transform var(--swm-sidebar-motion),
+      visibility 0s;
+  }
+}
+
+/* Preserve paragraph widths while centering the reading column. The active
+   simulation also claims the space reserved for both navigation panels. */
+:root:has([data-simulation-fullscreen='true'])
+  [class*='docMainContainer']
+  .row
+  > [class*='docItemCol'] {
+  left: var(--sim-article-shift, 0px);
+}
+
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  .theme-doc-sidebar-container,
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  [class*='docMainContainer']
+  .row
+  > .col:has(.theme-doc-toc-desktop) {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    visibility 0s 180ms !important;
+}
+
+:root:has(
+    [data-simulation-fullscreen='true'],
+    [data-simulation-fullscreen-transition]
+  )
+  [class*='docMainContainer'] {
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:has([data-simulation-fullscreen])
+    [class*='docMainContainer']
+    .row
+    > [class*='docItemCol'],
+  :root:has([data-simulation-fullscreen]) .theme-doc-sidebar-container,
+  :root:has([data-simulation-fullscreen])
+    [class*='docMainContainer']
+    .row
+    > .col:has(.theme-doc-toc-desktop) {
+    transition: none !important;
+  }
+}
+
+.docs-version-current :not(pre) > code {
+  vertical-align: baseline;
+  line-height: 1;
+}
+
+.docs-version-current .theme-code-block {
+  --prism-background-color: var(--swm-code-panel);
+  --ifm-code-border-radius: 0;
+  border: 2px solid var(--swm-code-panel-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.docs-version-current .theme-code-block pre,
+.docs-version-current .theme-code-block code {
+  font-family: var(--swm-code-font, var(--ifm-font-family-monospace));
+  font-size: var(--ifm-font-size-base);
+  line-height: 1.45;
+}
+
+.docs-version-current .theme-code-block pre {
+  padding: 0;
+}
+
+.docs-version-current .theme-code-block [class*='codeBlockLines'] {
+  padding: 8px 17px;
+}
+
+@media (min-width: 768px) {
+  .theme-doc-markdown
+    [data-figure]:not([data-figure='ThreadingShowcase']):not(
+      [data-figure='ThreadingShowcase'] [data-figure]
+    ):not([data-simulation-fullscreen='true']):not(
+      [data-simulation-fullscreen-transition]
+    ),
+  .theme-doc-markdown [data-inset] {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: calc(100% - 4rem);
+  }
 }

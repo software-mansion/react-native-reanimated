@@ -1,0 +1,67 @@
+.frame {
+  --phone-width: 180px;
+  --phone-pad: calc(var(--phone-width) * 0.044);
+  --phone-radius: calc(var(--phone-width) * 0.144);
+  --phone-camera-size: calc(var(--phone-width) * 0.044);
+  --phone-camera-top: calc(var(--phone-width) * 0.09);
+  --phone-speaker-bottom: calc(var(--phone-width) * 0.078);
+  --phone-speaker-center: calc(
+    var(--phone-pad) + var(--phone-speaker-bottom) + 5px
+  );
+  --phone-camera: #3f7c99;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--phone-width);
+  aspect-ratio: 70.8 / 150.5;
+  padding: var(--phone-pad);
+  border: 3px solid var(--phone-border, #87cce8);
+  border-radius: var(--phone-radius);
+  background-color: var(--phone-panel, #ffffff);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--phone-border, #87cce8) 40%, transparent);
+  transition: border-color 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.camera {
+  position: absolute;
+  z-index: 1;
+  top: var(--phone-camera-top);
+  left: 50%;
+  width: var(--phone-camera-size);
+  height: var(--phone-camera-size);
+  border-radius: 50%;
+  background-color: var(--phone-camera);
+  transform: translateX(-50%);
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: calc(var(--phone-width) * 0.2) var(--phone-pad)
+    calc(var(--phone-width) * 0.17);
+  border-radius: calc(var(--phone-radius) - var(--phone-pad));
+  background-color: var(--phone-screen, #e1f3fa);
+}
+
+.speaker {
+  position: absolute;
+  bottom: calc(var(--phone-pad) + var(--phone-speaker-bottom));
+  left: 50%;
+  display: flex;
+  gap: 3px;
+  transform: translateX(-50%);
+}
+
+.speaker > span {
+  width: 4px;
+  height: 10px;
+  border-radius: 2px;
+  background-color: var(--phone-camera);
+}

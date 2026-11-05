@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   FadeIn,
+  makeMutable,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -9,6 +11,9 @@ import Animated, {
 import { scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
+  mockAnimationTimer,
+  waitForFrames,
   callTracker,
   callTrackerFn,
   clearRenderOutput,
@@ -21,6 +26,7 @@ import {
   notify,
   Presets,
   registerValue,
+  reloadAndResume,
   render,
   test,
   createOrderConstraint,
@@ -30,7 +36,14 @@ import {
   waitForNotifications,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
+import { TestSummaryLogger } from '../../ReJest/TestRunner/TestSummaryLogger';
+import type { TestSuite } from '../../ReJest/types';
 import { ComparisonMode } from '../../ReJest/types';
+import {
+  applyIsolationCheck,
+  REANIMATED_ISOLATION_FAILURE,
+} from '../../ReJest/utils/isolationCheck';
+import { runOnUIBlocking } from '../../ReJest/utils/runOnUIBlocking';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
 const AnimatedComponent = () => {
@@ -208,6 +221,53 @@ describe('Wardrobe with drawers', () => {
 });
 
 describe('Tests of Test Framework', () => {
+  test('changes clock mode when the animation timer is mocked again', async () => {
+    const readClock = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        return global.mockedAnimationTimestamp;
+      });
+    await mockAnimationTimer();
+    await waitForFrames(3);
+    expect((await readClock())! > 0).toBe(true);
+    await mockAnimationTimer({ autoAdvance: false });
+    const frozenStart = (await readClock())!;
+    expect(frozenStart > 0).toBe(true);
+    await waitForFrames(3);
+    expect(await readClock()).toBe(frozenStart);
+    await advanceAnimationTimer(100);
+    expect(await readClock()).toBe(frozenStart + 100);
+    await mockAnimationTimer();
+    await waitForFrames(3);
+    expect((await readClock())! < frozenStart).toBe(true);
+    await mockAnimationTimer({ autoAdvance: false });
+    await waitForFrames(3);
+    expect(await readClock()).toBe(frozenStart);
+  });
+
+  test('keeps a timing animation continuous when it restarts on the frozen clock', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const value = makeMutable(0);
+    const start = () =>
+      runOnUIBlocking(() => {
+        'worklet';
+        value.value = withTiming(100, {
+          duration: 1000,
+          easing: Easing.linear,
+        });
+      });
+    await start();
+    await advanceAnimationTimer(500);
+    await start();
+    await advanceAnimationTimer(500);
+    expect(
+      await runOnUIBlocking(() => {
+        'worklet';
+        return value.value;
+      })
+    ).toBe(100);
+  });
+
   test('Test  comparators - ✅', () => {
     expect(1).toBe(1.0);
     expect(2).not.toBe(1.0);
@@ -423,6 +483,44 @@ describe('Tests of Test Framework', () => {
       }).toThrow('OH, YES!');
     });
 
+    test('reloadAndResume from a suite with a completed test case', async () => {
+      await expect(() => reloadAndResume('self-tests')).toThrow(
+        'test case(s) of this suite already finished'
+      );
+    });
+
+    test('reload summary leaves out the skipped test cases of the resumed suite', () => {
+      const logger = new TestSummaryLogger();
+      logger.countSkippedTestSuiteTests(
+        makeTestSuite('earlier', [false, false], true)
+      );
+      logger.countSkippedTestSuiteTests(
+        makeTestSuite('resumed', [true, false, true])
+      );
+      logger.countSkippedTestSuiteTests(makeTestSuite('resumed', [true], true));
+      expect(logger.getSummary().skipped).toBe(5);
+      expect(logger.getSummaryBeforeRuntimeTestSuite('resumed').skipped).toBe(
+        2
+      );
+      expect(logger.getSummaryBeforeRuntimeTestSuite('other').skipped).toBe(5);
+    });
+
+    test('isolation check adds a failure when Reanimated is forbidden but loaded', () => {
+      const summary = {
+        passed: 3,
+        failed: 1,
+        skipped: 2,
+        failedTests: ['earlier failure'],
+        durationMs: 10,
+      };
+      expect(applyIsolationCheck(summary, false)).toBe(summary);
+      const checked = applyIsolationCheck(summary, true);
+      expect(checked.failed).toBe(2);
+      expect(checked.failedTests.length).toBe(2);
+      expect(checked.failedTests[1]).toBe(REANIMATED_ISOLATION_FAILURE);
+      expect(summary.failed).toBe(1);
+    });
+
     test('useTestState', async () => {
       const [state1, setState1] = createTestValue('not_ok');
       setState1('ok');
@@ -457,3 +555,25 @@ describe('Tests of Test Framework', () => {
     });
   });
 });
+
+function makeTestSuite(
+  runtimeTestSuiteName: string,
+  skippedCases: boolean[],
+  skip = false
+): TestSuite {
+  return {
+    name: runtimeTestSuiteName,
+    buildSuite: () => {},
+    nestingLevel: 1,
+    runtimeTestSuiteName,
+    skip,
+    testCases: skippedCases.map((skipCase, index) => ({
+      name: `${runtimeTestSuiteName} ${index}`,
+      run: () => {},
+      componentsRefs: {},
+      callsRegistry: {},
+      errors: [],
+      skip: skipCase,
+    })),
+  };
+}

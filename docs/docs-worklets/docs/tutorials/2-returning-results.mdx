@@ -1,0 +1,79 @@
+---
+sidebar_position: 20
+---
+
+import * as ReturningSyncSnippet from './_returning-results/returningSync';
+import ReturningSyncSource from '!!raw-loader!./_returning-results/returningSync';
+import * as ReturningDirectSnippet from './_returning-results/returningDirect';
+import ReturningDirectSource from '!!raw-loader!./_returning-results/returningDirect';
+import * as ReturningAsyncSnippet from './_returning-results/returningAsync';
+import ReturningAsyncSource from '!!raw-loader!./_returning-results/returningAsync';
+import * as ReturningCallbackCrashSnippet from './_returning-results/returningCallbackCrash';
+import ReturningCallbackCrashSource from '!!raw-loader!./_returning-results/returningCallbackCrash';
+import * as ReturningCallbackSnippet from './_returning-results/returningCallback';
+import ReturningCallbackSource from '!!raw-loader!./_returning-results/returningCallback';
+import * as ReturningPromiseSnippet from './_returning-results/returningPromise';
+import ReturningPromiseSource from '!!raw-loader!./_returning-results/returningPromise';
+
+# Returning results
+
+In the [previous chapter](./1-your-first-worklet.mdx) we dispatched some console logs to
+other Runtimes. However, logging itself is not particularly useful.
+
+In this chapter we'll learn how to obtain execution results from dispatched worklet functions.
+
+## Synchronously
+
+This is the simplest way of returning values. [`runOnUISync`](../threading/runOnUISync.mdx) and
+[`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) functions return the result of a worklet
+function directly to the invoking Runtime:
+
+<ThreadingSimulation autoplay={false} module={ReturningSyncSnippet} source={ReturningSyncSource}/>
+
+However, dispatching this calculation synchronously doesn't free the calling thread. We could
+also call `foo` directly on the RN Runtime:
+
+<ThreadingSimulation autoplay={false} module={ReturningDirectSnippet} source={ReturningDirectSource}/>
+
+Both the function and its caller execute on the JS thread and the result is immediately available.
+To let the calling thread do other work while a calculation runs on another thread, we need an
+asynchronous call. We'll explore when synchronous calls are useful in future sections.
+
+## Asynchronously
+
+For asynchronous returns, e.g. results of complex calculations, you can use
+[`runOnUIAsync`](../threading/runOnUIAsync.mdx) and
+[`runOnRuntimeAsync`](../threading/runOnRuntimeAsync.mdx) functions. They return an awaitable
+promise.
+
+Remember that [`scheduleOnUI`](../threading/scheduleOnUI.mdx) and
+[`scheduleOnRuntime`](../threading/scheduleOnRuntime.mdx) functions do not return a value.
+
+<ThreadingSimulation autoplay={false} module={ReturningAsyncSnippet} source={ReturningAsyncSource}/>
+
+The scheduling Runtime is free to keep executing JavaScript code until you await the returned
+promise. In this example we dispatched the invocations of `complexTask` before awaiting, to execute them concurrently. While the RN Runtime awaits, its thread is free to run other tasks.
+
+## With callbacks
+
+Often, we'll want to return a value through a callback, e.g. to update our app's React state based on the result of a worklet function executed on another Worklet Runtime. You might be tempted to
+write something like this:
+
+<ThreadingSimulation autoplay={false} module={ReturningCallbackCrashSnippet} source={ReturningCallbackCrashSource}/>
+
+The worker calculates `result`, but stops when it tries to call `setState(result)`.
+The state setter belongs to the RN Runtime. Passing it to the Worker Runtime gives that Runtime a reference to the callback, not a function it can invoke directly.
+
+The console shows the Worklets error format. The function and Runtime names in your app may differ.
+
+We have to dispatch it back to the RN Runtime with the [`scheduleOnRN`](../threading/scheduleOnRN.mdx) function.
+
+<ThreadingSimulation autoplay={false} module={ReturningCallbackSnippet} source={ReturningCallbackSource}/>
+
+Alternatively, you can use a promise and the `runOnRuntimeAsync` function:
+
+<ThreadingSimulation autoplay={false} module={ReturningPromiseSnippet} source={ReturningPromiseSource}/>
+
+{/* TODO: add a note about serialization here*/}
+
+Now that we know how to return values, in the next chapter we'll learn how to use a Worklet Runtime's event loop.

@@ -3,39 +3,38 @@ title: registerCustomSerializable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as CustomSerializableSnippet from './_examples/apiRegisterCustomSerializable';
+import CustomSerializableSource from '!!raw-loader!./_examples/apiRegisterCustomSerializable';
+
 <Badges version="0.7.0">
   # registerCustomSerializable
 </Badges>
 
-`registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](./serializable.mdx) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
+`registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. The Worklets library can't handle such objects by default to convert into [Serializables](./serializable.mdx) hence you need to register them as **Custom Serializables**. This way you can tell the Worklets library how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
 
 List of supported types for Serialization can be found [here](./serializable.mdx#supported-types).
 
 ## Reference
 
-```typescript
-const obj = { a: 42 };
-Object.setPrototypeOf(obj, console); // because why not
+This example transfers a `Point` with a custom prototype to a Worker Runtime. Its `x` and `y`
+coordinates are ordinary data, but its `length()` method belongs to the prototype.
 
-type ConsoleLike = typeof console;
+Register the serializer on the RN Runtime before passing the point to another runtime.
+`scheduleOnRuntime` then handles the transfer automatically:
 
-registerCustomSerializable({
-  name: 'ConsoleLike',
-  determine(value: object): value is ConsoleLike {
-    'worklet';
-    return Object.getPrototypeOf(value) === console;
-  },
-  pack(value: ConsoleLike) {
-    'worklet';
-    return { a: value.a }; // transfer data
-  },
-  unpack(value: object) {
-    'worklet';
-    // recreate object with prototype
-    return Object.create(console, value);
-  },
-});
-```
+1. `determine` recognizes the point on RN.
+1. `pack` runs on RN and returns just `{ x, y }`.
+1. `unpack` runs on the worker and creates a new point with its own prototype and `length()` method.
+
+<ThreadingSimulation module={CustomSerializableSnippet} source={CustomSerializableSource}/>
+
+:::tip What crosses the runtime boundary?
+
+The packed coordinates cross the boundary. The original object and its prototype stay on RN.
+`unpack` uses `createPoint` to reconstruct the object on the worker, where `point.length()` returns `5`.
+The console identifies the runtime running each callback. You don't call `pack` or `unpack` yourself.
+
+:::
 
 <details>
   <summary>Type definitions</summary>
@@ -66,9 +65,9 @@ Available properties:
 | Name      | Type                                 | Description                                                                                                                                                                                                                                                                                              |
 | --------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                    |
-| determine | `(value: object) => value is TValue` | A [worklet](../fundamentals/glossary.mdx#worklet) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                        |
-| pack      | `(value: TValue) => TPacked`         | A [worklet](../fundamentals/glossary.mdx#worklet) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](./serializable.mdx). The function must return a [supported type for Serialization](./serializable.mdx#supported-types). |
-| unpack    | `(value: TPacked) => TValue`         | A [worklet](../fundamentals/glossary.mdx#worklet) that unpacks the packed value, after it's been deserialized from it's packed form, back into the JavaScript value of type `TValue`.                                                                                                                     |
+| determine | `(value: object) => value is TValue` | A [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                        |
+| pack      | `(value: TValue) => TPacked`         | A [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](./serializable.mdx). The function must return a [supported type for Serialization](./serializable.mdx#supported-types). |
+| unpack    | `(value: TPacked) => TValue`         | A [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) that unpacks the packed value, after it's been deserialized from its packed form, back into the JavaScript value of type `TValue`.                                                                                                                     |
 
 ## Motivation
 
@@ -165,5 +164,5 @@ Consider the following examples:
 ## Remarks
 
 - To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](../worklets-plugin/options.mdx#disableworkletclasses) option in Worklets Babel plugin configuration.
-- Custom Serializables are global and shared between all [Worklet Runtimes](../fundamentals/runtimeKinds.mdx#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
-- You can use `registerCustomSerializable` only on the [RN Runtime](../fundamentals/runtimeKinds.mdx#rn-runtime).
+- Custom Serializables are global and shared between all [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
+- You can use `registerCustomSerializable` only on the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime).

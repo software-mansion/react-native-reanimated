@@ -81,7 +81,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props);
 
-  void collectProps(PropsMap &propsMap);
+  void collectProps(PropsMap &propsMap) const;
   UpdatesBatch getPendingUpdates();
 
  protected:
@@ -98,6 +98,10 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic &&props);
+
+  /// Assumes the caller already locked the registry.
+  std::unordered_set<Tag> getPendingTags() const;
 
   /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;

@@ -69,6 +69,7 @@ export default class AnimatedComponent
   reanimatedID = id++;
   _sharedTransition?: SharedTransition;
   _sharedTransitionTag?: string;
+  _sharedTransitionFadeContent?: SharedTransition['fadeContentV'];
 
   constructor(
     ChildComponent: AnyComponent,
@@ -152,39 +153,14 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(settledUpdates: StyleProps) {
+  _syncStylePropsBackToReact(props: StyleProps, style: StyleProps) {
     if (!FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       return;
     }
-    // Settled updates arrive as one bag with no style-vs-props origin, so
-    // partition them by the keys of attached animated props — only values
-    // from `useAnimatedProps` or shared values passed as inline top-level
-    // props may be passed as top-level props, all the other ones are
-    // style-only.
-    const animatedPropsKeys = new Set([
-      ...this._animatedProps.flatMap((animatedProp) =>
-        Object.keys(animatedProp.initial?.value ?? {})
-      ),
-      ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
-    ]);
-    if (animatedPropsKeys.size === 0) {
-      this.setState((state) => ({
-        settledStyle: { ...state.settledStyle, ...settledUpdates },
-      }));
-      return;
-    }
-    this.setState((state) => {
-      const settledProps = { ...state.settledProps };
-      const settledStyle = { ...state.settledStyle };
-      for (const key in settledUpdates) {
-        if (animatedPropsKeys.has(key)) {
-          settledProps[key] = settledUpdates[key];
-        } else {
-          settledStyle[key] = settledUpdates[key];
-        }
-      }
-      return { settledProps, settledStyle };
-    });
+    this.setState((state) => ({
+      settledProps: { ...state.settledProps, ...props },
+      settledStyle: { ...state.settledStyle, ...style },
+    }));
     // TODO(future): revert changes when animated styles are detached
   }
 
@@ -443,7 +419,8 @@ export default class AnimatedComponent
       new SharedTransition();
     if (
       this._sharedTransition === sharedTransition &&
-      this._sharedTransitionTag === this.props.sharedTransitionTag
+      this._sharedTransitionTag === this.props.sharedTransitionTag &&
+      this._sharedTransitionFadeContent === sharedTransition.fadeContentV
     ) {
       return;
     }
@@ -454,10 +431,12 @@ export default class AnimatedComponent
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
       maybeBuild(sharedTransition),
       undefined,
-      this.props.sharedTransitionTag
+      this.props.sharedTransitionTag,
+      sharedTransition.buildContentFade?.()
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;
+    this._sharedTransitionFadeContent = sharedTransition.fadeContentV;
   }
 
   // Android pulls the mounting transaction inside the React commit, so the

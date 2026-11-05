@@ -169,20 +169,27 @@ export interface WorkletsModuleProxy {
     customQueue: object | undefined,
     enableEventLoop: boolean,
     enableLocking: boolean,
-    enableNetworking: boolean
+    enableNetworking: boolean,
+    abortable: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
+
+  abortWorkletRuntime(runtimeId: number): boolean;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
@@ -239,6 +246,12 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  /**
+   * Test-only. Returns the number of Worklet Runtimes that are not destroyed
+   * yet.
+   */
+  getAliveRuntimeCount(): number;
 
   getCurrentThreadId(): string;
 

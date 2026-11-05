@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # Worklets
 
-Worklets are short-running JavaScript functions that can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
+Worklets are short-running JavaScript functions that can run on the [UI thread](../fundamentals/glossary.mdx#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
 
 You can create your own worklets using the `'worklet';` directive at the top of a function.
 
@@ -17,7 +17,7 @@ function myWorklet() {
 }
 ```
 
-The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/3.19.5/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/3.19.5/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](../fundamentals/glossary.mdx#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -32,7 +32,7 @@ function App() {
 }
 ```
 
-Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](../fundamentals/glossary.mdx#javascript-thread).
 
 You can use [`runOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI) to manually schedule worklet execution on the UI thread:
 
@@ -109,7 +109,7 @@ function someWorklet() {
 }
 ```
 
-To pass data between UI and JS thread we use [shared values](/docs/fundamentals/glossary#shared-value).
+To pass data between UI and JS thread we use [shared values](../fundamentals/glossary.mdx#shared-value).
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -143,7 +143,7 @@ function App() {
 }
 ```
 
-Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
+Functions passed to `runOnJS` must be defined in the [JavaScript thread](../fundamentals/glossary.mdx#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](../fundamentals/glossary.mdx#ui-thread):
 
 ```javascript
 function App() {

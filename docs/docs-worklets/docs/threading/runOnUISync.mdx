@@ -2,26 +2,18 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiRunOnUISyncSnippet from './_examples/apiRunOnUISync';
+import ApiRunOnUISyncSource from '!!raw-loader!./_examples/apiRunOnUISync';
+
 # runOnUISync
 
-`runOnUISync` lets you run a [workletized](../fundamentals/glossary.mdx#to-workletize) function synchronously on the [UI Runtime](../fundamentals/runtimeKinds.mdx#ui-runtime).
+`runOnUISync` lets you run a [workletized](../worklets-plugin/about.mdx#autoworkletization) function synchronously on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
-To compare it with [`scheduleOnUI`](./scheduleOnUI.mdx) and [`runOnUIAsync`](./runOnUIAsync.mdx), see [Running worklets on the UI runtime](../guides/running-on-the-ui-runtime.mdx).
+To compare it with [`scheduleOnUI`](./scheduleOnUI.mdx) and [`runOnUIAsync`](./runOnUIAsync.mdx), see [Running worklet functions on the UI runtime](../guides/running-on-the-ui-runtime.mdx).
 
 ## Reference
 
-```javascript
-import { runOnUISync } from 'react-native-worklets';
-
-const myFunction = (num: number): number => {
-  'worklet';
-  return num + 1;
-};
-
-const result: number = runOnUISync(myFunction, 0);
-
-console.log(result); // 1
-```
+<ThreadingSimulation module={ApiRunOnUISyncSnippet} source={ApiRunOnUISyncSource}/>
 
 <details>
   <summary>Type definitions</summary>
@@ -38,7 +30,7 @@ console.log(result); // 1
 
 #### worklet
 
-A function you want to execute on the [UI Runtime](../fundamentals/runtimeKinds.mdx#ui-runtime).
+A function you want to execute on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
 #### args
 
@@ -50,7 +42,7 @@ Arguments to pass to the function.
 
 ## Remarks
 
-- The callback passed as the argument is automatically [workletized](../fundamentals/glossary.mdx#to-workletize) and ready to be run on the [UI Runtime](../fundamentals/runtimeKinds.mdx#ui-runtime).
+- The callback passed as the argument is automatically [workletized](../worklets-plugin/about.mdx#autoworkletization) and ready to be run on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
 ## Call table
 

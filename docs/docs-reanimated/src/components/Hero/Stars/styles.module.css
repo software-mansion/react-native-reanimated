@@ -51,3 +51,9 @@
     opacity: 1;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .stars svg * {
+    animation: none !important;
+  }
+}

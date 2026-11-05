@@ -3,6 +3,8 @@
 #include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
+#include <react/debug/react_native_assert.h>
+
 #include <functional>
 #include <string>
 #include <utility>
@@ -199,8 +201,11 @@ uint64_t Networking::sendRequest(jsi::Runtime &rt, const jsi::Object &config, js
     throw jsi::JSError(rt, "[Worklets] Cannot send a request from a dying Worklet Runtime.");
   }
 
+  const auto *hostIdentity = findRuntimeIdentity(rt);
+  react_native_assert(hostIdentity != nullptr && "[Worklets] A Worklet Runtime must have a runtime identity.");
+
   const auto serializableCallback = std::make_shared<SerializableRemoteFunction>(
-      rt, "workletsNetworkingCallback", std::move(callback), workletRuntime->getRuntimeId());
+      rt, "workletsNetworkingCallback", std::move(callback), *hostIdentity);
 
   RequestConfig requestConfig{
       .method = config.getProperty(rt, "method").asString(rt).utf8(rt),
@@ -222,6 +227,10 @@ uint64_t Networking::sendRequest(jsi::Runtime &rt, const jsi::Object &config, js
       requestId,
       std::move(requestConfig),
       std::make_shared<RequestListener>(weak_from_this(), record, serializableCallback, requestId));
+
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    backend_->abortRequest(requestId);
+  }
 
   return requestId;
 }

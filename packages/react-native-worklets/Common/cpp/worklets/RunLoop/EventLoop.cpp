@@ -84,9 +84,15 @@ void EventLoop::run() {
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
   queue_->push(
-      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, runtimeMutex = runtimeMutex_, job = std::move(job)] {
+      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_},
+       runtimeMutex = runtimeMutex_,
+       state = timeoutsQueueState_,
+       job = std::move(job)] {
         if (auto runtime = weakRuntime.lock()) {
           std::unique_lock lock(*runtimeMutex);
+          if (!state->running) [[unlikely]] {
+            return;
+          }
           job(*runtime);
           runtime->drainMicrotasks();
         }
