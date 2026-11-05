@@ -10,9 +10,10 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
-  RemoteBearingEntry,
-  RemoteBearingEntryKind,
-  remoteBearingFlag,
+  RemoteFunctionBearingEntry,
+  remoteFunctionBearingFlag,
+} from './remoteFunctionBearingEntry';
+import {
   serializableMappingCache,
   serializableMappingEntries,
   serializableMappingFlag,
@@ -67,21 +68,25 @@ function isTurboModuleLike(object: object): object is Record<string, unknown> {
 /**
  * How many times `createSerializable` has returned a clone that holds a JS
  * function: a remote function, new or cached, or a cache hit whose entry is
- * tagged as one (`remoteBearingFlag` or a `RemoteBearingEntry`). A container
- * holds a JS function exactly when this changed while its children were cloned,
- * so a subtree without one costs a read before and a comparison after, and
- * nothing per child. It only grows, apart from the resets around the user's
- * `determine` and `pack`, so a throw caught in the middle of a traversal cannot
- * hide a function seen before it.
+ * tagged as one (`remoteFunctionBearingFlag` or a
+ * `RemoteFunctionBearingEntry`). A container holds a JS function exactly when
+ * this changed while its children were cloned, so a subtree without one costs a
+ * read before and a comparison after, and nothing per child. It only grows,
+ * apart from the resets around the user's `determine` and `pack`, so a throw
+ * caught in the middle of a traversal cannot hide a function seen before it.
  */
 let functionsSeen = 0;
 
-function markIfRemoteBearing<TClone extends object>(
+function markRemoteFunctionBearing(clone: object): void {
+  serializableMappingEntries.set(clone, remoteFunctionBearingFlag);
+}
+
+function markIfRemoteFunctionBearing<TClone extends object>(
   clone: TClone,
   holdsFunction: boolean
 ): TClone {
   if (holdsFunction) {
-    serializableMappingEntries.set(clone, remoteBearingFlag);
+    markRemoteFunctionBearing(clone);
   }
   return clone;
 }
@@ -101,17 +106,11 @@ function cacheClone(
   shouldPersistRemote: boolean
 ) {
   if (holdsFunction) {
-    const entry = shouldPersistRemote
-      ? new RemoteBearingEntry(clone, RemoteBearingEntryKind.Strong)
-      : new RemoteBearingEntry(
-          WorkletsModule.makeWeakSerializableRef(clone),
-          RemoteBearingEntryKind.Marker
-        );
-    if (!shouldPersistRemote && globalThis.WeakRef) {
-      entry.wrapper = new WeakRef(clone);
-    }
-    serializableMappingEntries.set(value, entry);
-    serializableMappingEntries.set(clone, remoteBearingFlag);
+    serializableMappingEntries.set(
+      value,
+      RemoteFunctionBearingEntry.forClone(clone, shouldPersistRemote)
+    );
+    markRemoteFunctionBearing(clone);
     return;
   }
   serializableMappingEntries.set(value, clone);
@@ -136,17 +135,19 @@ function getFromCache(value: object, countHit = true) {
   const tag = (cached as { __serializableRef?: unknown }).__serializableRef;
   if (tag === true) {
     // A serializable stored as is holds no JS function, because one that does
-    // is stored in a `RemoteBearingEntry`.
+    // is stored in a `RemoteFunctionBearingEntry`.
     return cached;
   }
   if (tag === false) {
-    const clone = derefRemoteBearingEntry(cached as RemoteBearingEntry);
+    const clone = (cached as RemoteFunctionBearingEntry).deref(
+      markRemoteFunctionBearing
+    );
     if (clone !== undefined && countHit) {
       functionsSeen++;
     }
     return clone;
   }
-  if (cached === remoteBearingFlag) {
+  if (cached === remoteFunctionBearingFlag) {
     if (countHit) {
       functionsSeen++;
     }
@@ -164,30 +165,6 @@ export function getCachedSerializable(
   value: object
 ): SerializableRef | undefined {
   return getFromCache(value, false) as SerializableRef | undefined;
-}
-
-function derefRemoteBearingEntry(entry: RemoteBearingEntry) {
-  if (entry.kind === RemoteBearingEntryKind.Marker) {
-    // A clone returned before owns the native serializable while it lives.
-    const wrapper = entry.wrapper?.deref();
-    if (wrapper !== undefined) {
-      return wrapper;
-    }
-    const live = WorkletsModule.derefWeakSerializableRef(entry.ref);
-    if (live !== undefined) {
-      serializableMappingEntries.set(live, remoteBearingFlag);
-      if (globalThis.WeakRef) {
-        entry.wrapper = new WeakRef(live);
-      }
-    }
-    // When the clone was released, the caller serializes `value` again and
-    // `cacheClone` replaces the entry.
-    return live;
-  }
-  if (entry.kind === RemoteBearingEntryKind.WeakRef) {
-    return (entry.ref as WeakRef<object>).deref();
-  }
-  return entry.ref;
 }
 
 const VALID_ARRAY_VIEWS_NAMES = [
@@ -763,10 +740,10 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
     // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
     serializableMappingEntries.set(
       fun,
-      new RemoteBearingEntry(new WeakRef(clone), RemoteBearingEntryKind.WeakRef)
+      RemoteFunctionBearingEntry.forRemoteFunction(clone)
     );
   }
-  serializableMappingEntries.set(clone, remoteBearingFlag);
+  markRemoteFunctionBearing(clone);
   freezeObjectInDev(fun);
 
   return clone;
@@ -862,7 +839,7 @@ function cloneTurboModuleLike<TValue extends object>(
     clonedProps,
     proto
   ) as SerializableRef<TValue>;
-  return markIfRemoteBearing(clone, functionsSeen !== seen);
+  return markIfRemoteFunctionBearing(clone, functionsSeen !== seen);
 }
 
 function clonePlainJSObject<TValue extends object>(
@@ -1022,7 +999,7 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
     ? withPathSegment('.pack()', () => createSerializable(packedData))
     : createSerializable(packedData);
 
-  return markIfRemoteBearing(
+  return markIfRemoteFunctionBearing(
     WorkletsModule.createCustomSerializable(
       serialized,
       typeId
