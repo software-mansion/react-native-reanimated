@@ -110,6 +110,9 @@ class ScriptBufferWrapper(
                     if (!tmpFile.renameTo(outputFile)) {
                         throw IOException("Couldn't rename $tmpFile to $outputFile")
                     }
+                } catch (e: SocketTimeoutException) {
+                    tmpFile.delete()
+                    throw RuntimeException("[Worklets] Timed out reading the worklets bundle from URL $url.\n", e)
                 } catch (e: IOException) {
                     tmpFile.delete()
                     throw RuntimeException(
