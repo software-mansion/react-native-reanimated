@@ -6,7 +6,7 @@ const generate = require('@babel/generator').default;
 const HASH_NUMBER = String.raw`0x[0-9a-fA-F]+|\d+e\+?\d+|\d+`;
 
 const HASH = new RegExp(
-  String.raw`\.worklets\/(\d+)\.js|__workletHash = (${HASH_NUMBER})|_worklet_(\d+)_init_data`
+  String.raw`metro:inline;base64,|__workletHash = (${HASH_NUMBER})|_worklet_(\d+)_init_data`
 );
 
 let idByHash = new Map();
@@ -36,12 +36,15 @@ function normalizeSnapshot(code) {
 }
 
 function renumber(code) {
-  return code.replace(new RegExp(HASH, 'g'), (match, path, field, initData) => {
-    const hash = canonicalize(path ?? field ?? initData);
+  return code.replace(new RegExp(HASH, 'g'), (match, field, initData) => {
+    if (field === undefined && initData === undefined) {
+      return match;
+    }
+    const hash = canonicalize(field ?? initData);
     if (!idByHash.has(hash)) {
       idByHash.set(hash, idByHash.size + 1);
     }
-    return match.replace(path ?? field ?? initData, idByHash.get(hash));
+    return match.replace(field ?? initData, idByHash.get(hash));
   });
 }
 

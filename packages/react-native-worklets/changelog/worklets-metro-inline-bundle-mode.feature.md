@@ -1,0 +1,1 @@
+Bundle Mode emits worklet modules as `metro:inline` virtual modules when Metro reports `supportsInlineModules` to Babel plugins and keeps writing them to `.worklets` otherwise; the `metro` and `metro-config` patches for 0.87.2 add the Metro side until a release includes it.

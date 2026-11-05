@@ -32,10 +32,14 @@ import { strict as assert } from 'assert';
 import { basename } from 'path';
 
 import { getClosure } from './closure';
-import { generateWorkletFile } from './generate';
+import {
+  generateWorkletFile,
+  generateWorkletModuleSpecifier,
+} from './generate';
 import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
+import { moduleScopeReservedNames } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
@@ -49,6 +53,7 @@ export function makeWorkletFactory(
 ): {
   factoryCallParamPack: ArrayExpression;
   workletHash: number;
+  workletModuleSpecifier: string;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
@@ -106,7 +111,10 @@ export function makeWorkletFactory(
         (binding) => binding.identifier.name
       )
     );
-    while (importedNames.has(reactName)) {
+    while (
+      importedNames.has(reactName) ||
+      moduleScopeReservedNames.has(reactName)
+    ) {
       reactName = `_${reactName}`;
     }
   }
@@ -199,17 +207,26 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  updateRelativeRequires(factory, state);
+  let workletModuleSpecifier: string;
+  if (state.inlineModules) {
+    workletModuleSpecifier = generateWorkletModuleSpecifier(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      state
+    );
+  } else {
+    updateRelativeRequires(factory, state);
+    workletModuleSpecifier = generateWorkletFile(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      workletHash,
+      state
+    );
+  }
 
-  generateWorkletFile(
-    moduleBindingsToImport,
-    relativeBindingsToImport,
-    factory,
-    workletHash,
-    state
-  );
-
-  return { factoryCallParamPack, workletHash };
+  return { factoryCallParamPack, workletHash, workletModuleSpecifier };
 }
 
 function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {

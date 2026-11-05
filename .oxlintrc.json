@@ -23,7 +23,6 @@
     "**/lib/**",
     "**/.next/**",
     "**/macos/**",
-    "**/.worklets/**",
     "docs/**"
   ],
   "rules": {

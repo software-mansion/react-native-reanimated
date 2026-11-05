@@ -4,50 +4,20 @@ import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
-type CapturedFile = { path: string; content: string };
-
-const capturedFiles: CapturedFile[] = [];
-
-// The Oxc transform writes its files from Rust, so they never reach the `fs`
-// mock below. Its jest setup records them on `globalThis` instead.
-function nativelyEmittedFiles(): CapturedFile[] {
-  return ((
-    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
-  ).__WORKLETS_OXC_EMITTED__ ??= []);
-}
-
-function emittedFiles(): CapturedFile[] {
-  return capturedFiles.length > 0 ? [...capturedFiles] : nativelyEmittedFiles();
-}
-
-jest.mock('fs', () => {
-  const actual: object = jest.requireActual('fs');
-  const stagedFiles = new Map<string, string>();
-  return {
-    ...actual,
-    writeFileSync: (filepath: string, content: string) => {
-      stagedFiles.set(String(filepath), String(content));
-    },
-    renameSync: (from: string, to: string) => {
-      capturedFiles.push({
-        path: String(to),
-        content: stagedFiles.get(String(from))!,
-      });
-      stagedFiles.delete(String(from));
-    },
-  };
-});
-
-// eslint-disable-next-line import/first
 import type { PluginOptions } from '../index';
-// eslint-disable-next-line import/first
 import plugin from '../index';
+import {
+  generatedModules,
+  redactGeneratedModules,
+} from '../jest/inlineModules';
 
 const MOCK_LOCATION = 'test.js';
 
+type GeneratedModule = { specifier: string; content: string };
+
 type RunResult = {
   code: string;
-  files: CapturedFile[];
+  modules: GeneratedModule[];
 };
 
 function runPlugin(
@@ -55,11 +25,10 @@ function runPlugin(
   pluginOpts: PluginOptions = {},
   transformOpts: TransformOptions = {}
 ): RunResult {
-  capturedFiles.length = 0;
-  nativelyEmittedFiles().length = 0;
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
     filename: MOCK_LOCATION,
+    caller: { name: 'test', supportsInlineModules: true },
     compact: false,
     babelrc: false,
     configFile: false,
@@ -67,18 +36,17 @@ function runPlugin(
     plugins: [...(transformOpts.plugins ?? []), [plugin, pluginOpts]],
   });
   assert(transformed);
-  return { code: transformed.code ?? '', files: emittedFiles() };
+  const code = transformed.code ?? '';
+  return { code, modules: generatedModules(code) };
 }
 
 function workletText(result: RunResult): string {
-  return result.files.map((f) => f.content).join('\n');
+  return result.modules.map((m) => m.content).join('\n');
 }
 
 describe('babel plugin core', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    capturedFiles.length = 0;
-    nativelyEmittedFiles().length = 0;
   });
 
   describe('worklet shapes', () => {
@@ -134,9 +102,9 @@ describe('babel plugin core', () => {
 
     test.each(cases)('workletizes $name', ({ input }) => {
       const result = runPlugin(input);
-      expect(result.files).toHaveLength(1);
-      expect(result.code).toMatchSnapshot();
-      expect(result.files[0].content).toMatchSnapshot();
+      expect(result.modules).toHaveLength(1);
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
+      expect(result.modules[0].content).toMatchSnapshot();
     });
   });
 
@@ -222,15 +190,15 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runPlugin(input);
-      expect(result.code).toMatchSnapshot();
-      expect(result.files[0].content).toMatchSnapshot();
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
+      expect(result.modules[0].content).toMatchSnapshot();
     });
   });
 
   describe('autoworkletization of runtime APIs', () => {
     function factoryCount(input: string): number {
       const result = runPlugin(input);
-      return result.files.length;
+      return result.modules.length;
     }
 
     test.each([
@@ -428,8 +396,8 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runPlugin(input);
-      expect(result.files).toHaveLength(0);
-      expect(result.code).toMatchSnapshot();
+      expect(result.modules).toHaveLength(0);
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
     });
   });
 
@@ -474,7 +442,7 @@ describe('babel plugin core', () => {
       );
 
       const notOutlinedFunction = '.map(() => null);';
-      const output = result.files[0].content;
+      const output = result.modules[0].content;
 
       expect(output).toMatch(notOutlinedFunction);
       expect(output).toMatchSnapshot();

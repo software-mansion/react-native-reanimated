@@ -1,0 +1,12 @@
+diff --git a/src/index.js b/src/index.js
+index 87daf27557a9ae827981334cb9d785a025458788..0adbb4c9613a13a51e681ea8e407dd9486413c7b 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -467,6 +467,7 @@ function getBabelTransformArgs(
+             _metroBabelRuntime.getMetroBabelRuntimeVersion)(),
+           }
+         : null),
++      supportsInlineModules: config.unstable_supportsInlineModules === true,
+       enableBabelRCLookup: config.enableBabelRCLookup,
+       enableBabelRuntime: config.enableBabelRuntime,
+       globalPrefix: config.globalPrefix,

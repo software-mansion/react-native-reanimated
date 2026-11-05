@@ -1,0 +1,12 @@
+diff --git a/src/index.js b/src/index.js
+index cdcb8d1b9592f84cbbcccffce0ff8dcd0674aa62..ea5c452c952cdf4529861761240ebf78111b8b83 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -33,6 +33,7 @@ function transform(opts) {
+               enableBabelRuntime: options.babelRuntimeVersion,
+             }
+           : null),
++        supportsInlineModules: options.supportsInlineModules,
+       },
+       cloneInputAst: false,
+       code: false,

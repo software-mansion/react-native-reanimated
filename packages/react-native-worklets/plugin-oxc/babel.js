@@ -22,6 +22,9 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
+  const inlineModules = babelApi.caller(
+    (caller) => caller?.supportsInlineModules === true
+  );
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -35,12 +38,17 @@ function workletsPluginOxcBabelShim(babelApi) {
           const filename = state.filename;
           if (filename == null) {
             throw new Error(
-              '[Worklets] the Oxc transform needs a filename to name worklets ' +
-                'and to place their generated files, but Babel was given none.'
+              '[Worklets] the Oxc transform needs a filename to name worklets, ' +
+                'but Babel was given none.'
             );
           }
 
-          const result = transform(state.file.code, filename, state);
+          const result = transform(
+            state.file.code,
+            filename,
+            state,
+            inlineModules
+          );
           if (!result.changed) {
             return;
           }
@@ -61,13 +69,14 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state) {
+function transform(sourceText, filename, state, inlineModules) {
   warnAboutIgnoredOptions(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      workletsPackageDir: resolveWorkletsPkgDir(),
+      inlineModules,
+      workletsPackageDir: inlineModules ? undefined : resolveWorkletsPkgDir(),
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -82,6 +91,16 @@ function transform(sourceText, filename, state) {
     }
     throw error;
   }
+}
+
+/** @returns {string} */
+function resolveWorkletsPkgDir() {
+  if (cachedWorkletsPkgDir === undefined) {
+    cachedWorkletsPkgDir = path.dirname(
+      require.resolve('react-native-worklets/package.json')
+    );
+  }
+  return cachedWorkletsPkgDir;
 }
 
 /**
@@ -105,24 +124,6 @@ function warnAboutIgnoredOptions(options) {
       'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
       'babel.config.js instead.'
   );
-}
-
-/** @returns {string} */
-function resolveWorkletsPkgDir() {
-  if (cachedWorkletsPkgDir === undefined) {
-    try {
-      cachedWorkletsPkgDir = path.dirname(
-        require.resolve('react-native-worklets/package.json')
-      );
-    } catch (error) {
-      throw new Error(
-        "[Worklets] couldn't find the react-native-worklets package on disk, " +
-          'so the generated worklet files have nowhere to go. ' +
-          `Make sure it's installed. Cause: ${error.message}`
-      );
-    }
-  }
-  return cachedWorkletsPkgDir;
 }
 
 /**

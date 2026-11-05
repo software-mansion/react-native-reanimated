@@ -1,5 +1,5 @@
 import { type NodePath, traverse } from '@babel/core';
-import { type Binding } from '@babel/traverse';
+import type { Binding } from '@babel/traverse';
 import {
   type FunctionExpression,
   type ImportDeclaration,
@@ -33,6 +33,7 @@ export function updateRelativeRequires(
     },
   });
 }
+
 export function isImport(binding: Binding): boolean {
   return (
     binding.kind === 'module' &&

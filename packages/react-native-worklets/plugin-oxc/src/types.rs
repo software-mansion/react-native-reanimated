@@ -11,6 +11,8 @@ const DEFAULT_FORWARDABLE_MODULE_NAMES: &[&str] = &[
 
 const DEFAULT_FORWARDABLE_RELATIVE_PATHS: &[&str] = &["react-native-worklets"];
 
+pub const MODULE_SCOPE_RESERVED_NAMES: [&str; 4] = ["module", "exports", "require", "global"];
+
 #[derive(Debug, Clone)]
 pub enum ImportShape {
     Default,

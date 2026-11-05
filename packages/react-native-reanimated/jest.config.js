@@ -1,5 +1,6 @@
 // @ts-expect-error - jest-expo/config doesn't have type declarations
 const { getWebPreset } = require('jest-expo/config');
+const rnJestPreset = require('@react-native/jest-preset');
 
 const sharedSetupFiles = ['<rootDir>/jest/setup.js'];
 const sharedSetupFilesAfterEnv = ['@testing-library/jest-native/extend-expect'];
@@ -35,6 +36,13 @@ const createReactNativeProject = (config = {}) =>
     preset: '@react-native/jest-preset',
     testEnvironment: 'node',
     resolver: '<rootDir>/jest/resolver.js',
+    transform: {
+      ...rnJestPreset.transform,
+      '^.+\\.(js|ts|tsx)$': [
+        'babel-jest',
+        { caller: { supportsInlineModules: true } },
+      ],
+    },
     transformIgnorePatterns: [
       'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
     ],
@@ -68,6 +76,23 @@ const {
 const webProject = createProject({
   ...baseWebPreset,
   moduleNameMapper: webModuleNameMapper,
+  resolver: '<rootDir>/jest/resolver.js',
+  transform: Object.fromEntries(
+    Object.entries(baseWebPreset.transform).map(([pattern, transformer]) =>
+      Array.isArray(transformer) && transformer[0] === 'babel-jest'
+        ? [
+            pattern,
+            [
+              'babel-jest',
+              {
+                ...transformer[1],
+                caller: { ...transformer[1].caller, supportsInlineModules: true },
+              },
+            ],
+          ]
+        : [pattern, transformer]
+    )
+  ),
   setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],

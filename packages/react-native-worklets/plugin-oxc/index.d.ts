@@ -10,6 +10,7 @@ export interface PluginOptions {
 export interface TransformOptions extends PluginOptions {
   envName?: string;
   pluginVersion?: string;
+  inlineModules?: boolean;
   workletsPackageDir?: string;
 }
 

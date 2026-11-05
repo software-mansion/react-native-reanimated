@@ -12,7 +12,7 @@ use oxc_syntax::symbol::SymbolId;
 
 use crate::ast::assignment_identifier;
 use crate::imports::{can_forward_module_import, can_forward_relative_import};
-use crate::types::{ImportInfo, ImportShape, State};
+use crate::types::{ImportInfo, ImportShape, MODULE_SCOPE_RESERVED_NAMES, State};
 use crate::worklet_factory::WorkletInput;
 
 #[derive(Debug, Default)]
@@ -82,7 +82,8 @@ pub fn get_closure<'a>(
                 is_rel && can_forward_relative_import(filename, &state.forwardable_relative_paths);
             let lib_workletizable =
                 !is_rel && can_forward_module_import(source, &state.forwardable_module_names);
-            if allowed_for_rel || lib_workletizable {
+            let forwardable_name = !MODULE_SCOPE_RESERVED_NAMES.contains(&r.name.as_str());
+            if (allowed_for_rel || lib_workletizable) && forwardable_name {
                 result.imports.push(info.clone());
                 seen.insert(r.name);
                 continue;

@@ -3,49 +3,155 @@ use std::path::Path;
 use oxc_allocator::TakeIn;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
-use oxc_ast::ast::{Expression, Statement};
+use oxc_ast::ast::{Expression, Statement, VariableDeclarationKind};
 use oxc_span::SPAN;
 
+use crate::ast::identifier_binding_pattern;
+use crate::factory_expression::build_member_assign;
 use crate::imports::create_import_path;
 
+pub const WORKLET_MODULE_DIRECTIVE: &str = "worklet-module";
+
+pub const INLINE_MODULE_SPECIFIER_PREFIX: &str = "metro:inline;base64,";
+const WORKLET_MODULE_ID_BINDING: &str = "__workletModuleId";
 const GENERATED_WORKLETS_DIR: &str = ".worklets";
+
+pub struct RebaseTarget<'b> {
+    pub filename: &'b str,
+    pub worklets_package_dir: Option<&'b str>,
+}
+
+pub fn generate_worklet_module_specifier<'a>(
+    builder: AstBuilder<'a>,
+    factory: Expression<'a>,
+    imports: &[crate::types::ImportInfo],
+    closure_variables: &[String],
+    react_name: &str,
+) -> (String, String) {
+    let code = build_worklet_module(
+        builder,
+        factory,
+        imports,
+        closure_variables,
+        react_name,
+        None,
+    );
+    let specifier = format!(
+        "{INLINE_MODULE_SPECIFIER_PREFIX}{}",
+        base64_encode(code.as_bytes())
+    );
+    (specifier, code)
+}
 
 pub fn generate_worklet_file<'a>(
     builder: AstBuilder<'a>,
+    factory: Expression<'a>,
+    imports: &[crate::types::ImportInfo],
+    closure_variables: &[String],
+    react_name: &str,
+    worklet_hash: u64,
+    rebase: RebaseTarget<'_>,
+) -> Result<(String, String), String> {
+    let code = build_worklet_module(
+        builder,
+        factory,
+        imports,
+        closure_variables,
+        react_name,
+        Some(&rebase),
+    );
+    let file_path = format!("react-native-worklets/{GENERATED_WORKLETS_DIR}/{worklet_hash}.js");
+    if let Some(package_dir) = rebase.worklets_package_dir {
+        write_worklet_file(package_dir, &file_path, &code)?;
+    }
+    Ok((file_path, code))
+}
+
+fn build_worklet_module<'a>(
+    builder: AstBuilder<'a>,
     mut factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
-    filename: &str,
-    worklets_package_dir: Option<&str>,
+    closure_variables: &[String],
+    react_name: &str,
+    rebase: Option<&RebaseTarget<'_>>,
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
 
-    let mut body = builder.vec_with_capacity(imports.len() + 1);
-    for info in imports {
-        let is_rel = info.source.starts_with('.');
-        if matches!(info.shape, crate::types::ImportShape::Default) && is_rel {
-            continue;
-        }
-        let mut rebased = info.clone();
-        if rebased.source.starts_with('.')
-            && let Some(p) = create_import_path(filename, &rebased.source, worklets_package_dir)
-        {
-            rebased.source = p;
-        }
-        body.push(build_import_declaration(builder, &rebased));
-    }
-    if let Expression::FunctionExpression(function) = &mut factory
-        && function.params.items.is_empty()
+    let mut module_id_binding = WORKLET_MODULE_ID_BINDING.to_string();
+    while module_id_binding == react_name
+        || closure_variables
+            .iter()
+            .any(|name| *name == module_id_binding)
+        || imports.iter().any(|info| info.local == module_id_binding)
     {
+        module_id_binding = format!("_{module_id_binding}");
+    }
+
+    let mut body = builder.vec_with_capacity(imports.len() + 3);
+    for info in imports {
+        let mut info = info.clone();
+        if let Some(target) = rebase
+            && info.source.starts_with('.')
+            && let Some(rebased) =
+                create_import_path(target.filename, &info.source, target.worklets_package_dir)
+        {
+            info.source = rebased;
+        }
+        body.push(build_import_declaration(builder, &info));
+    }
+    let binding_atom = builder.ident(&module_id_binding);
+    let read_module_id = builder.variable_declarator(
+        SPAN,
+        VariableDeclarationKind::Const,
+        identifier_binding_pattern(builder, &module_id_binding),
+        NONE,
+        Some(Expression::from(builder.member_expression_static(
+            SPAN,
+            builder.expression_identifier(SPAN, "module"),
+            builder.identifier_name(SPAN, "id"),
+            false,
+        ))),
+        false,
+    );
+    body.push(Statement::VariableDeclaration(
+        builder.alloc_variable_declaration(
+            SPAN,
+            VariableDeclarationKind::Const,
+            builder.vec1(read_module_id),
+            false,
+        ),
+    ));
+    let record_module_id = build_member_assign(
+        builder,
+        react_name,
+        "__moduleId",
+        builder.expression_identifier(SPAN, binding_atom),
+    );
+    if let Expression::FunctionExpression(function) = &mut factory {
+        let has_closure = !function.params.items.is_empty();
         let statements = &mut function.body.as_mut().unwrap().statements;
-        let Some(Statement::ReturnStatement(mut returned)) = statements.pop() else {
-            unreachable!("a worklet factory must return its worklet");
-        };
-        body.extend(statements.take_in(builder));
-        factory = returned.argument.take().unwrap();
+        if !has_closure {
+            let Some(Statement::ReturnStatement(mut returned)) = statements.pop() else {
+                unreachable!("a worklet factory must return its worklet");
+            };
+            body.extend(statements.take_in(builder));
+            body.push(record_module_id);
+            factory = returned.argument.take().unwrap();
+        } else {
+            let return_index = statements.len() - 1;
+            statements.insert(return_index, record_module_id);
+        }
     }
     let export =
         builder.alloc_export_default_declaration(SPAN, ExportDefaultDeclarationKind::from(factory));
     body.push(Statement::ExportDefaultDeclaration(export));
+
+    let directive_str = builder.str(WORKLET_MODULE_DIRECTIVE);
+    let directive = builder.directive(
+        SPAN,
+        builder.string_literal(SPAN, directive_str, None),
+        directive_str,
+    );
 
     let program = builder.program(
         SPAN,
@@ -53,17 +159,31 @@ pub fn generate_worklet_file<'a>(
         "",
         builder.vec(),
         None,
-        builder.vec(),
+        builder.vec1(directive),
         body,
     );
     let printed = oxc_codegen::Codegen::new()
         .with_options(oxc_codegen::CodegenOptions::default())
         .build(&program);
 
-    if std::env::var("WORKLETS_WRITE_ORIGIN").is_ok() {
-        return format!("// __workletOrigin: {filename}\n{}", printed.code);
-    }
     printed.code
+}
+
+fn write_worklet_file(
+    worklets_package_dir: &str,
+    file_path: &str,
+    content: &str,
+) -> Result<(), String> {
+    let dir = Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
+    let name = file_path.rsplit('/').next().unwrap_or(file_path);
+    let path = dir.join(name);
+    let temporary = dir.join(format!("{name}.{}.tmp", std::process::id()));
+    std::fs::write(&temporary, content)
+        .map_err(|error| format!("could not write {}: {error}", temporary.display()))?;
+    std::fs::rename(&temporary, &path)
+        .map_err(|error| format!("could not write {}: {error}", path.display()))
 }
 
 fn build_import_declaration<'a>(
@@ -109,16 +229,45 @@ fn build_import_declaration<'a>(
     Statement::ImportDeclaration(decl)
 }
 
-pub fn write_worklet_file(
-    worklets_package_dir: &str,
-    file_path: &str,
-    content: &str,
-) -> Result<(), String> {
-    let dir = Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
-    std::fs::create_dir_all(&dir)
-        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
-    let name = file_path.rsplit('/').next().unwrap_or(file_path);
-    let path = dir.join(name);
-    std::fs::write(&path, content)
-        .map_err(|error| format!("could not write {}: {error}", path.display()))
+const BASE64_ALPHABET: &[u8; 64] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+fn base64_encode(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = chunk.get(1).copied().unwrap_or(0) as u32;
+        let b2 = chunk.get(2).copied().unwrap_or(0) as u32;
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(BASE64_ALPHABET[(triple >> 18) as usize & 63] as char);
+        out.push(BASE64_ALPHABET[(triple >> 12) as usize & 63] as char);
+        out.push(if chunk.len() > 1 {
+            BASE64_ALPHABET[(triple >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            BASE64_ALPHABET[triple as usize & 63] as char
+        } else {
+            '='
+        });
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::base64_encode;
+
+    #[test]
+    fn encodes_like_the_standard_alphabet_with_padding() {
+        assert_eq!(base64_encode(b""), "");
+        assert_eq!(base64_encode(b"f"), "Zg==");
+        assert_eq!(base64_encode(b"fo"), "Zm8=");
+        assert_eq!(base64_encode(b"foo"), "Zm9v");
+        assert_eq!(
+            base64_encode(b"export default 1"),
+            "ZXhwb3J0IGRlZmF1bHQgMQ=="
+        );
+    }
 }
