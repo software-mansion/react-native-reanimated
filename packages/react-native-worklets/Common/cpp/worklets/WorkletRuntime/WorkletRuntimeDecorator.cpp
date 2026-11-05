@@ -1,5 +1,4 @@
 #include <jsi/jsi.h>
-#include <react/timing/primitives.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
@@ -21,6 +20,7 @@
 #endif
 
 #if defined(__APPLE__)
+#include <mach/mach_time.h>
 #include <os/trace_base.h>
 #if OS_LOG_TARGET_HAS_10_15_FEATURES
 #include <os/log.h>
@@ -28,6 +28,8 @@
 #endif
 #endif
 
+#include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -47,8 +49,23 @@ static os_log_t getWorkletsInstrumentsLogHandle() {
 
 namespace worklets {
 
+#ifdef __APPLE__
+static double getMachTimebaseConversionFactor() {
+  mach_timebase_info_data_t info;
+  mach_timebase_info(&info);
+  return static_cast<double>(info.numer) / info.denom;
+}
+#endif
+
 static inline double performanceNow() {
-  return facebook::react::HighResTimeStamp::now().toDOMHighResTimeStamp();
+#ifdef __APPLE__
+  static const double conversionFactor = getMachTimebaseConversionFactor();
+  const auto nanoseconds = static_cast<int64_t>(static_cast<double>(mach_absolute_time()) * conversionFactor);
+#else
+  const auto nanoseconds =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+#endif
+  return std::chrono::duration<double, std::milli>(std::chrono::nanoseconds(nanoseconds)).count();
 }
 
 void WorkletRuntimeDecorator::decorate(
