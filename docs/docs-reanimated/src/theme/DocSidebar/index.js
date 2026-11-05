@@ -1,5 +1,6 @@
 import React from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import { DocSidebar } from '@swmansion/t-rex-ui';
 
 export default function DocSidebarWrapper(props) {
@@ -14,7 +15,10 @@ export default function DocSidebarWrapper(props) {
   };
 
   const newItems = [];
-  const experimentalItems = ['shared-element-transitions/overview'];
+  const isNextVersion = useDocsVersion().version === 'current';
+  const experimentalItems = isNextVersion
+    ? []
+    : ['shared-element-transitions/overview'];
   const deprecatedItems = ['device/useAnimatedKeyboard'];
   const unreleasedItems = [];
 
