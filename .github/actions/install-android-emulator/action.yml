@@ -54,10 +54,10 @@ runs:
             [[ -f "$(package_dir "$package")/package.xml" ]] || return 1
           done
         }
-        printf 'y\n%.0s' $(seq 50) | "$sdkmanager" --licenses > /dev/null
         for ((attempt = 1; attempt <= ATTEMPTS; attempt++)); do
           echo "Installing ${packages[*]}, attempt $attempt of $ATTEMPTS"
-          if timeout "$ATTEMPT_TIMEOUT_SECONDS" "$sdkmanager" --install "${packages[@]}" --channel=0 && all_installed; then
+          if printf 'y\n%.0s' $(seq 50) | timeout "$ATTEMPT_TIMEOUT_SECONDS" "$sdkmanager" --licenses > /dev/null &&
+            timeout "$ATTEMPT_TIMEOUT_SECONDS" "$sdkmanager" --install "${packages[@]}" --channel=0 && all_installed; then
             echo "Installed ${packages[*]}"
             exit 0
           fi
