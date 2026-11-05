@@ -735,6 +735,7 @@ describe('Shared transition with fadeContent', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(300);
     await expectEnteringCallbacks(1);
+    await expectOpacity('enteringChild', 0.5);
   });
 
   test('plays the entering animation of a target child when a screen without the tag covers the target', async () => {
