@@ -22,6 +22,12 @@ describe('layout animation duration', () => {
     );
   });
 
+  test('SharedTransition spring with dampingRatio and a physics value defaults to 500 ms', () => {
+    expect(
+      builtDuration(SharedTransition.springify().mass(2).dampingRatio(0.5))
+    ).toBe(500);
+  });
+
   test('SharedTransition physics-based spring has no default duration', () => {
     const transition = SharedTransition.springify().damping(15).stiffness(150);
     expect(builtDuration(transition)).toBeUndefined();
