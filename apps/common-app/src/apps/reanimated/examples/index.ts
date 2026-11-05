@@ -169,6 +169,11 @@ const InterruptedExitingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
   );
+const ExitingInterruptsEnteringExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingInterruptsEnteringExample')
+      .default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -714,6 +719,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
   InterruptedExiting: {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
+  },
+  ExitingInterruptsEntering: {
+    title: '[LA] Exiting animation interrupting entering',
+    screen: ExitingInterruptsEnteringExample,
   },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
