@@ -1,6 +1,14 @@
 import { DevSettings, Platform } from 'react-native';
 
-type ConsoleLevel = 'log' | 'info' | 'warn' | 'error';
+import type {
+  ConsoleLevel,
+  DeclaredSuite,
+  DeviceMessage,
+  DoneMessage,
+  ErrorMessage,
+  RunSummary,
+  ServerMessage,
+} from './remoteProtocol';
 
 const CONSOLE_LEVELS: ConsoleLevel[] = ['log', 'info', 'warn', 'error'];
 
@@ -16,20 +24,6 @@ function shouldSuppress(args: unknown[]): boolean {
   return SUPPRESSED_LOG_PATTERNS.some((pattern) => pattern.test(first));
 }
 
-interface DeclaredSuite {
-  name: string;
-  skipByDefault: boolean;
-  disabled: boolean;
-}
-
-interface RunSummary {
-  passed: number;
-  failed: number;
-  skipped: number;
-  failedTests: string[];
-  durationMs: number;
-}
-
 export interface RemoteReporterOptions {
   wsUrl: string;
   library: string;
@@ -40,11 +34,6 @@ export interface RemoteReporterOptions {
     reportSuiteFinished: (suiteName: string) => void;
     requestReload: (resumeFromSuite: string, summarySoFar: RunSummary) => void;
   }) => Promise<RunSummary | void>;
-}
-
-interface ServerMessage {
-  type: 'start' | 'reloadAccepted';
-  only?: string[];
 }
 
 interface ErrorUtilsGlobal {
@@ -108,7 +97,7 @@ export function runWithRemoteReporter({
   const nativeLog = console.log.bind(console);
   const nativeWarn = console.warn.bind(console);
 
-  const safeSend = (payload: unknown) => {
+  const safeSend = (payload: DeviceMessage) => {
     if (ws.readyState === 1) {
       try {
         ws.send(JSON.stringify(payload));
@@ -183,7 +172,7 @@ export function runWithRemoteReporter({
     }
   };
 
-  const sendFinalEnvelope = (envelope: Record<string, unknown>) => {
+  const sendFinalEnvelope = (envelope: DoneMessage | ErrorMessage) => {
     if (runFinishedEnvelopeSent) {
       return;
     }

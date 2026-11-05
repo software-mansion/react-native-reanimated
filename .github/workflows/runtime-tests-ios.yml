@@ -123,13 +123,13 @@ jobs:
       - name: Build app (sanitizer)
         if: ${{ inputs.sanitizer }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
+        run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
 
       - name: Run ReJest self-tests (builds the app)
         id: self-tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library self-tests
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
           --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Report ccache statistics
@@ -139,7 +139,7 @@ jobs:
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          if node scripts/runtime-tests-server.js --launch --library self-tests
+          if node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           --only "intentional failures";
           then echo "A failing suite did not fail the runner" && exit 1;
@@ -148,13 +148,13 @@ jobs:
       - name: Run Worklets runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library worklets
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library worklets
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Run Reanimated runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library reanimated
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library reanimated
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Upload crash reports

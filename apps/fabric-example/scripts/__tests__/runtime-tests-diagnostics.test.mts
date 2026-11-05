@@ -260,15 +260,16 @@ function createWorkDir() {
   );
   fs.mkdirSync(path.join(dir, 'scripts'));
   for (const script of [
-    'runtime-tests-server.js',
-    'android-device.js',
-    'runtime-tests-suites.js',
+    'runtime-tests-server.mts',
+    'android-device.mts',
+    'runtime-tests-suites.mts',
   ]) {
     fs.copyFileSync(
       path.join(SCRIPTS, script),
       path.join(dir, 'scripts', script)
     );
   }
+  fs.symlinkSync(NODE_MODULES, path.join(dir, 'node_modules'), 'dir');
   writeExecutable(path.join(dir, 'bin', 'adb'), FAKE_ADB);
   writeExecutable(path.join(dir, 'bin', 'emulator'), FAKE_EMULATOR);
   writeExecutable(path.join(dir, 'ndk', 'ndk-stack'), FAKE_NDK_STACK);
@@ -304,7 +305,8 @@ function runDriver(
   const result = spawnSync(
     process.execPath,
     [
-      path.join(dir, 'scripts', 'runtime-tests-server.js'),
+      '--experimental-strip-types',
+      path.join(dir, 'scripts', 'runtime-tests-server.mts'),
       '--library',
       'self-tests',
       '--host',
@@ -321,7 +323,6 @@ function runDriver(
       env: {
         PATH: `${path.join(dir, 'bin')}:${process.env.PATH}`,
         HOME: dir,
-        NODE_PATH: NODE_MODULES,
         ANDROID_HOME: androidHome,
         ANDROID_NDK_HOME: path.join(dir, 'ndk'),
         FAKE_LOG: log,
