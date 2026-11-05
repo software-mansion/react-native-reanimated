@@ -100,6 +100,18 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     });
   };
 
+  const stop = (tag: number) => {
+    const value = mutableValuesForTag.get(tag);
+    if (!value) {
+      return;
+    }
+    // native already made its cleanup, so we just do cleanup here on JS side
+    value.removeListener(tag + TAG_OFFSET);
+    cancelAnimation(value);
+    currentAnimationForTag.delete(tag);
+    mutableValuesForTag.delete(tag);
+  };
+
   return {
     start(
       tag: number,
@@ -150,20 +162,16 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       startObservingProgress(tag, value, scheduleFlush);
       const previousFrameTimestamp = global.__frameTimestamp;
       global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
-      value.value = animation;
-      global.__frameTimestamp = previousFrameTimestamp;
-    },
-    stop(tag: number) {
-      const value = mutableValuesForTag.get(tag);
-      if (!value) {
-        return;
+      try {
+        value.value = animation;
+      } catch (error) {
+        stop(tag);
+        throw error;
+      } finally {
+        global.__frameTimestamp = previousFrameTimestamp;
       }
-      // native already made its cleanup, so we just do cleanup here on JS side
-      value.removeListener(tag + TAG_OFFSET);
-      cancelAnimation(value);
-      currentAnimationForTag.delete(tag);
-      mutableValuesForTag.delete(tag);
     },
+    stop,
   };
 }
 
