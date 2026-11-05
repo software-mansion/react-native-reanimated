@@ -68,6 +68,15 @@ static inline double performanceNow() {
   return std::chrono::duration<double, std::milli>(std::chrono::nanoseconds(nanoseconds)).count();
 }
 
+static inline double getTimerTimestamp() {
+#ifdef __APPLE__
+  const auto time = std::chrono::system_clock::now().time_since_epoch();
+#else
+  const auto time = std::chrono::steady_clock::now().time_since_epoch();
+#endif
+  return std::chrono::duration<double, std::milli>(time).count();
+}
+
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const RuntimeData::RuntimeKind runtimeKind,
@@ -214,6 +223,9 @@ void WorkletRuntimeDecorator::decorate(
             return jsi::Value(performanceNow());
           }));
   rt.global().setProperty(rt, "performance", performance);
+
+  jsi_utils::installJsiFunction(
+      rt, "_getTimerTimestamp", [](jsi::Runtime &rt) { return jsi::Value(getTimerTimestamp()); });
 
   rt.global().setProperty(
       rt,

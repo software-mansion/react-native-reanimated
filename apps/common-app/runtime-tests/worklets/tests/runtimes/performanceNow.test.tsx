@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { runOnRuntimeSync, runOnUISync } from 'react-native-worklets';
 
 import {
@@ -32,3 +33,22 @@ describe('performance.now', () => {
     expect(workerNow).toBeWithinRange(rnBefore, rnAfter);
   });
 });
+
+describe('UI Runtime timer clock', () => {
+  test('uses the clock of React Native timers on this platform', () => {
+    const readRNClock =
+      Platform.OS === 'android' ? () => performance.now() : () => Date.now();
+    const rnBefore = Math.floor(readRNClock());
+    const timerNow = runOnUISync(() => {
+      'worklet';
+      return globalThis._getTimerTimestamp();
+    });
+    const rnAfter = Math.floor(readRNClock()) + 1;
+
+    expect(timerNow).toBeWithinRange(rnBefore, rnAfter);
+  });
+});
+
+declare global {
+  var _getTimerTimestamp: () => number;
+}
