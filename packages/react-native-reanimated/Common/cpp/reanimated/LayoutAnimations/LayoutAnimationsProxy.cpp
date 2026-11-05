@@ -462,7 +462,6 @@ void LayoutAnimationsProxy::updateLightTree(
   auto &filteredMutations = transaction.filteredMutations;
   filteredMutations.reserve(filteredMutations.size() + mutations.size());
   std::unordered_set<Tag> inserted, moved, deleted;
-  std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
   std::unordered_set<Tag> removedSubtreeRoots;
@@ -614,9 +613,11 @@ void LayoutAnimationsProxy::updateLightTree(
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node->state == LIVE && "React inserts a view whose removal is withheld");
         auto &parent = lightNodes_[mutation.parentTag];
-        const auto position = parent->toPositionForInsert(mutation.index, indexCursors[mutation.parentTag]);
+        auto &cursors = transaction.indexCursors[mutation.parentTag];
+        const auto position = parent->toPositionForInsert(mutation.index, cursors);
         const auto hostIndex = parent->hostIndex(position);
         parent->children.insert(parent->children.begin() + position, node);
+        cursors.remove = {};
         node->parent = parent;
         if (node->isDetached) {
           parent->detachedChildrenCount++;
@@ -688,8 +689,10 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
         react_native_assert(parent && "Remove mutation from an unknown parent");
-        const auto position = parent->toPositionForRemove(mutation.index, indexCursors[parentTag]);
+        auto &cursors = transaction.indexCursors[parentTag];
+        const auto position = parent->toPositionForRemove(mutation.index, cursors);
         const auto hostIndex = parent->hostIndex(position);
+        cursors.insert = {};
         react_native_assert(
             position < static_cast<int>(parent->children.size()) &&
             parent->children[position]->current.tag == mutation.oldChildShadowView.tag &&
@@ -1000,6 +1003,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
         defersTeardown ? transaction.teardownMutations : transaction.filteredMutations,
         transaction.filteredMutations,
         removeBeforeChildren);
+    transaction.indexCursors.erase(parent->current.tag);
   }
 }
 
@@ -1166,6 +1170,7 @@ bool LayoutAnimationsProxy::planSubtreeRemoval(
     SubtreeRemovalConfig config,
     std::vector<std::shared_ptr<LightNode>> &removals) const {
   react_native_assert(node->state == DECISION_PENDING && "Subtree removal of a view that React does not delete");
+  transaction.indexCursors.erase(node->current.tag);
   auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop] = config;
   if (isRNSScreenOrStack(node)) {
     isScreenPop = true;
