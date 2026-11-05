@@ -1407,7 +1407,7 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 #ifdef ANDROID
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (std::ranges::any_of(retiringSharedTransitions_, [this](const auto &entry) {
-        return entry.second.element.run && !hasUnqueuedCarrierFrame(entry.first);
+        return entry.second.run && !hasUnqueuedCarrierFrame(entry.first);
       })) {
     return true;
   }
@@ -1442,6 +1442,9 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 // The Remove of a held view keeps its parent, so the Insert into the root would fail. A hold can appear until the
 // batch mounts, so the release repeats before every mount until the batch is in the queue.
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
+  if (detachedCarriers_.empty()) {
+    return;
+  }
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
   for (const auto &mutation : mutations) {
@@ -1556,13 +1559,13 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     }
     scheduleOnUI(uiScheduler_, [this, weakThis, tags]() {
       if (const auto strongThis = weakThis.lock()) {
-        attachCarriersOfQueuedFrames(tags);
+        releaseCarriersOfQueuedFrames(tags);
       }
     });
   });
 }
 
-void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
+void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   for (const auto tag : tags) {
     const auto it = unqueuedCarrierFrames_.find(tag);
@@ -1570,10 +1573,7 @@ void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> 
       unqueuedCarrierFrames_.erase(it);
     }
   }
-  if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
-    cleanupPullScheduled_ = true;
-    scheduleCleanupPull();
-  }
+  maybeScheduleCleanupPull(false);
 }
 
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
