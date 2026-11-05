@@ -14,17 +14,13 @@ export async function startTunnelWithRetries(
 ) {
   const attempts = delaysMs.length + 1;
 
+  await operations.stop().catch(() => {});
   for (let attempt = 1; ; attempt++) {
     try {
       await operations.start();
       return;
     } catch (error) {
       const message = errorMessage(error);
-
-      if (isTunnelAlreadyActive(message)) {
-        operations.log(`tunnel already active on port ${port}`);
-        return;
-      }
 
       if (attempt >= attempts || !isTransientTunnelError(message)) {
         throw error;
@@ -38,10 +34,6 @@ export async function startTunnelWithRetries(
       await operations.sleep(delay);
     }
   }
-}
-
-export function isTunnelAlreadyActive(message: string) {
-  return /already/i.test(message);
 }
 
 export function isTransientTunnelError(message: string) {
@@ -60,4 +52,14 @@ const TRANSIENT_TUNNEL_ERROR_PATTERNS = [
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+export function describeCommandFailure(
+  command: string,
+  cmdArgs: string[],
+  failure: { killed?: boolean; stderr: string; message: string }
+) {
+  const output = String(failure.stderr || failure.message).trim();
+  const timedOut = failure.killed ? 'timed out; ' : '';
+  return `${command} ${cmdArgs.join(' ')} failed: ${timedOut}${output}`;
 }

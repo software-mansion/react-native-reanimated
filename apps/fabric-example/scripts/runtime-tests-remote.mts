@@ -37,7 +37,10 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 
-import { startTunnelWithRetries } from './runtime-tests-tunnel.mts';
+import {
+  describeCommandFailure,
+  startTunnelWithRetries,
+} from './runtime-tests-tunnel.mts';
 
 const scriptDir = import.meta.dirname;
 
@@ -121,7 +124,11 @@ function run(
         if (error) {
           reject(
             new Error(
-              `${command} ${cmdArgs.join(' ')} failed: ${String(stderr || error.message).trim()}`
+              describeCommandFailure(command, cmdArgs, {
+                killed: error.killed,
+                stderr: String(stderr),
+                message: error.message,
+              })
             )
           );
         } else {

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  describeCommandFailure,
   isTransientTunnelError,
   startTunnelWithRetries,
   TUNNEL_RETRY_DELAYS_MS,
@@ -49,6 +50,7 @@ describe('startTunnelWithRetries', () => {
     await startTunnelWithRetries(8082, calls.operations);
 
     assert.deepEqual(calls.events, [
+      'stop',
       'start',
       'stop',
       'sleep 5000',
@@ -89,16 +91,50 @@ describe('startTunnelWithRetries', () => {
       /unknown simulator/
     );
 
-    assert.deepEqual(calls.events, ['start']);
+    assert.deepEqual(calls.events, ['stop', 'start']);
   });
 
-  it('accepts a tunnel that is already active', async () => {
-    const calls = fakeOperations(['error: tunnel already active']);
+  it('fails on errors that only mention "already"', async () => {
+    for (const message of [
+      'error: port already in use',
+      'error: another sim-remote daemon is already running for this session',
+    ]) {
+      const calls = fakeOperations([message]);
+
+      await assert.rejects(
+        startTunnelWithRetries(8082, calls.operations),
+        (error: Error) => error.message === message
+      );
+
+      assert.deepEqual(calls.events, ['stop', 'start'], message);
+    }
+  });
+
+  it('stops a tunnel left from an earlier run before the first start', async () => {
+    const calls = fakeOperations([]);
 
     await startTunnelWithRetries(8082, calls.operations);
 
-    assert.deepEqual(calls.events, ['start']);
-    assert.deepEqual(calls.logs, ['tunnel already active on port 8082']);
+    assert.deepEqual(calls.events, ['stop', 'start']);
+  });
+
+  it('retries a command that was killed by its timeout', async () => {
+    const timedOut = describeCommandFailure(
+      'sim-remote',
+      ['reverse', 'start', 'UDID', '8082'],
+      { killed: true, stderr: '', message: 'Command failed: sim-remote' }
+    );
+    const calls = fakeOperations([timedOut]);
+
+    await startTunnelWithRetries(8082, calls.operations);
+
+    assert.deepEqual(calls.events, [
+      'stop',
+      'start',
+      'stop',
+      'sleep 5000',
+      'start',
+    ]);
   });
 
   it('ignores errors from stopping the half-created tunnel', async () => {
@@ -108,7 +144,13 @@ describe('startTunnelWithRetries', () => {
 
     await startTunnelWithRetries(8082, calls.operations);
 
-    assert.deepEqual(calls.events, ['start', 'stop', 'sleep 5000', 'start']);
+    assert.deepEqual(calls.events, [
+      'stop',
+      'start',
+      'stop',
+      'sleep 5000',
+      'start',
+    ]);
   });
 });
 
@@ -144,3 +186,33 @@ function fakeOperations(
 
   return { events, logs, operations };
 }
+
+describe('describeCommandFailure', () => {
+  it('marks a command killed by its timeout as timed out', () => {
+    const message = describeCommandFailure(
+      'sim-remote',
+      ['reverse', 'start', 'UDID', '8082'],
+      { killed: true, stderr: '', message: 'Command failed: sim-remote' }
+    );
+
+    assert.equal(
+      message,
+      'sim-remote reverse start UDID 8082 failed: timed out; Command failed: sim-remote'
+    );
+    assert.equal(isTransientTunnelError(message), true);
+  });
+
+  it('keeps the output of a command that failed on its own', () => {
+    const message = describeCommandFailure(
+      'sim-remote',
+      ['reverse', 'start', 'UDID', '8082'],
+      { killed: false, stderr: 'error: unknown simulator UDID\n', message: 'x' }
+    );
+
+    assert.equal(
+      message,
+      'sim-remote reverse start UDID 8082 failed: error: unknown simulator UDID'
+    );
+    assert.equal(isTransientTunnelError(message), false);
+  });
+});
