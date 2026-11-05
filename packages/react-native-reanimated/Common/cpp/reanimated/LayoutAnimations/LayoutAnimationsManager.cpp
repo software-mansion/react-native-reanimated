@@ -131,7 +131,7 @@ void LayoutAnimationsManager::clearSharedTransitionConfigs(const std::vector<Tag
   }
 }
 
-void LayoutAnimationsManager::startLayoutAnimation(
+bool LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
@@ -139,10 +139,10 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const std::shared_ptr<Serializable> &config) {
   react_native_assert(config && "layout animation config is null");
   if (!config) {
-    return;
+    return false;
   }
   const auto configValue = config->toJSValue(rt);
-  callLayoutAnimationsManager(rt, "start", [&](jsi::Runtime &runtime, const jsi::Function &start) {
+  return callLayoutAnimationsManager(rt, "start", [&](jsi::Runtime &runtime, const jsi::Function &start) {
     start.call(runtime, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, configValue);
   });
 }
@@ -152,14 +152,15 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
       rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
 }
 
-void LayoutAnimationsManager::callLayoutAnimationsManager(
+bool LayoutAnimationsManager::callLayoutAnimationsManager(
     jsi::Runtime &rt,
     const char *methodName,
     const std::function<void(jsi::Runtime &, const jsi::Function &)> &call) {
   const auto uiRuntime = worklets::getWeakRuntimeFromJSIRuntime(rt).lock();
   if (!uiRuntime) {
-    return;
+    return false;
   }
+  bool completed = false;
   const auto method = rt.global()
                           .getPropertyAsObject(rt, "global")
                           .getPropertyAsObject(rt, "LayoutAnimationsManager")
@@ -170,9 +171,11 @@ void LayoutAnimationsManager::callLayoutAnimationsManager(
       0,
       [&](jsi::Runtime &runtime, const jsi::Value &, const jsi::Value *, size_t) {
         call(runtime, method);
+        completed = true;
         return jsi::Value::undefined();
       });
   worklets::runSyncOnRuntime(uiRuntime, guardedCall);
+  return completed;
 }
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {

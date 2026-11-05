@@ -417,6 +417,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
   pendingLayoutAnimations_.clear();
   reconcileLayoutAnimationOperations(operations);
   auto deferredStarts = takeDeferredLayoutAnimationStarts(operations);
+  bool hasFailedStart = false;
   for (auto operation = takeNextLayoutAnimationOperation(operations); operation;
        operation = takeNextLayoutAnimationOperation(operations)) {
     if (const auto *stop = std::get_if<LayoutAnimationStop>(&*operation)) {
@@ -462,11 +463,14 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     }
     values.setProperty(uiRuntime_, "windowWidth", window.width);
     values.setProperty(uiRuntime_, "windowHeight", window.height);
-    layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, start.tag, start.type, values, start.config);
+    if (!layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, start.tag, start.type, values, start.config)) {
+      endLayoutAnimation(start.tag, start.type == LayoutAnimationType::EXITING);
+      hasFailedStart = true;
+    }
   }
   const bool hasNewOperations = !layoutAnimationOperations_.empty();
   requeueLayoutAnimationStarts(std::move(deferredStarts));
-  if (hasNewOperations) {
+  if (hasNewOperations || hasFailedStart) {
     requestLayoutAnimationFlush_(surfaceId_);
   }
 }

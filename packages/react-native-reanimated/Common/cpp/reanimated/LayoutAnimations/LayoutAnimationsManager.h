@@ -69,7 +69,7 @@ class LayoutAnimationsManager {
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
   std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
-  void startLayoutAnimation(
+  bool startLayoutAnimation(
       jsi::Runtime &rt,
       const int tag,
       const LayoutAnimationType type,
@@ -83,7 +83,7 @@ class LayoutAnimationsManager {
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:
-  static void callLayoutAnimationsManager(
+  static bool callLayoutAnimationsManager(
       jsi::Runtime &rt,
       const char *methodName,
       const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
