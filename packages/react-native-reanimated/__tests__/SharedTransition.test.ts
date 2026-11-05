@@ -370,3 +370,52 @@ describe('SharedTransition with fadeContent', () => {
     ]);
   });
 });
+
+describe('SharedTransition singular matrices', () => {
+  const collapsed = IDENTITY.map((value, i) =>
+    i === 0 || i === 5 ? 0 : value
+  );
+  test.each([
+    [IDENTITY, collapsed],
+    [collapsed, IDENTITY],
+  ])('progress interpolates a zero scale %#', (from, to) => {
+    const values = {
+      ...VALUES,
+      currentTransform: { matrix: from },
+      targetTransform: { matrix: to },
+    };
+    for (const progress of [0, 0.5, 1]) {
+      const style = new SharedTransition().getProgressAnimation()(
+        values,
+        progress
+      );
+      const [{ matrix }] = style.transform as [{ matrix: number[] }];
+      matrix.forEach((value, i) =>
+        expect(value).toBeCloseTo(from[i] + progress * (to[i] - from[i]), 10)
+      );
+    }
+  });
+});
+
+describe('SharedTransition perspective', () => {
+  test('preserves perspective at intermediate progress and at the target', () => {
+    const target = IDENTITY.map((value, i) =>
+      i === 3 || i === 7 || i === 11 ? -0.002 : value
+    );
+    const values = {
+      ...VALUES,
+      currentTransform: { matrix: IDENTITY },
+      targetTransform: { matrix: target },
+    };
+    for (const progress of [0, 0.25, 0.5, 1]) {
+      const style = new SharedTransition().getProgressAnimation()(
+        values,
+        progress
+      );
+      const [{ matrix }] = style.transform as [{ matrix: number[] }];
+      for (const i of [3, 7, 11]) {
+        expect(matrix[i]).toBeCloseTo(-0.002 * progress, 10);
+      }
+    }
+  });
+});
