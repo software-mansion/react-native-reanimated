@@ -60,6 +60,54 @@ describeFn('WebSocket (live)', () => {
   );
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket echoes a frame sent from onopen 20 times in a row, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = `ws_onopen_send_repeat_done_${runtimeKind}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const socketUrl = SOCKET_URL;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const runs = 20;
+        const run = (index: number) => {
+          if (index === runs) {
+            setFlag('ok', notification);
+            return;
+          }
+          const message = `onopen-${index}`;
+          const socket = new globalThis.WebSocket(socketUrl);
+          let echoed = false;
+          socket.onerror = () =>
+            setFlag(`socket errored in run ${index}`, notification);
+          socket.onopen = () => socket.send(message);
+          socket.onmessage = (event: { data: string | ArrayBuffer }) => {
+            if (event.data !== message) {
+              setFlag(
+                `wrong echo in run ${index}: ${String(event.data)}`,
+                notification
+              );
+              return;
+            }
+            echoed = true;
+            socket.close();
+          };
+          socket.onclose = () => {
+            if (!echoed) {
+              setFlag(`no echo in run ${index}`, notification);
+              return;
+            }
+            run(index + 1);
+          };
+        };
+        run(0);
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'WebSocket echoes a binary frame, runtime: **%s**',
     async (runtimeKind) => {
       const notification = `ws_binary_done_${runtimeKind}`;
