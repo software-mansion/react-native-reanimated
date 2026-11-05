@@ -31,6 +31,7 @@ type EventListenerOptions = {
 type Registration = {
   listener: NetworkingEventListener;
   once: boolean;
+  removed: boolean;
 };
 
 export class EventTargetLite {
@@ -43,6 +44,9 @@ export class EventTargetLite {
     listener: NetworkingEventListener,
     options?: EventListenerOptions | boolean
   ) {
+    if (typeof listener !== 'function') {
+      return;
+    }
     const resolved =
       typeof options === 'object' && options !== null ? options : {};
     if (resolved.signal?.aborted === true) {
@@ -56,19 +60,34 @@ export class EventTargetLite {
     if (listeners.some((entry) => entry.listener === listener)) {
       return;
     }
-    listeners.push({ listener, once: resolved.once === true });
+    const registration: Registration = {
+      listener,
+      once: resolved.once === true,
+      removed: false,
+    };
+    listeners.push(registration);
     resolved.signal?.addEventListener('abort', () => {
-      this.removeEventListener(type, listener);
+      this.removeRegistration(type, registration);
     });
   }
 
   removeEventListener(type: string, listener: NetworkingEventListener) {
+    const registration = this.eventListeners
+      .get(type)
+      ?.find((entry) => entry.listener === listener);
+    if (registration !== undefined) {
+      this.removeRegistration(type, registration);
+    }
+  }
+
+  private removeRegistration(type: string, registration: Registration) {
     const listeners = this.eventListeners.get(type);
     if (listeners === undefined) {
       return;
     }
-    const index = listeners.findIndex((entry) => entry.listener === listener);
+    const index = listeners.indexOf(registration);
     if (index !== -1) {
+      registration.removed = true;
       listeners.splice(index, 1);
     }
   }
@@ -89,7 +108,7 @@ export class EventTargetLite {
     if (next === null) {
       this.handlers.delete(type);
       if (existing !== undefined) {
-        this.removeEventListener(type, existing.listener);
+        this.removeRegistration(type, existing);
         this.handlerRegistrations.delete(type);
       }
       return;
@@ -101,6 +120,7 @@ export class EventTargetLite {
     const registration: Registration = {
       listener: (event) => this.handlers.get(type)?.(event),
       once: false,
+      removed: false,
     };
     this.handlerRegistrations.set(type, registration);
     let listeners = this.eventListeners.get(type);
@@ -144,8 +164,11 @@ export class EventTargetLite {
       return;
     }
     for (const entry of Array.from(listeners)) {
+      if (entry.removed) {
+        continue;
+      }
       if (entry.once) {
-        this.removeEventListener(type, entry.listener);
+        this.removeRegistration(type, entry);
       }
       this.invokeListener(entry.listener, event);
     }

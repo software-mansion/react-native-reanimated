@@ -77,10 +77,20 @@ export class WebSocket extends EventTargetLite {
   readyState: number = CONNECTING;
   protocol = '';
   extensions = '';
-  binaryType: 'arraybuffer' | 'blob' = 'blob';
   bufferedAmount = 0;
 
   private socketId: number | undefined;
+  private binaryTypeValue: 'arraybuffer' | 'blob' = 'blob';
+
+  get binaryType(): 'arraybuffer' | 'blob' {
+    return this.binaryTypeValue;
+  }
+
+  set binaryType(value: 'arraybuffer' | 'blob') {
+    if (value === 'blob' || value === 'arraybuffer') {
+      this.binaryTypeValue = value;
+    }
+  }
 
   constructor(url: string, protocols?: string | string[]) {
     super();
@@ -267,32 +277,40 @@ export class WebSocket extends EventTargetLite {
 function canonicalize(scheme: string, rest: string): string {
   const withoutSlashes = rest.replace(/^\/\//, '');
   const end = withoutSlashes.search(/[/?]/);
-  let authority = end === -1 ? withoutSlashes : withoutSlashes.slice(0, end);
+  const authority = end === -1 ? withoutSlashes : withoutSlashes.slice(0, end);
   const remainder = end === -1 ? '' : withoutSlashes.slice(end);
   // The path comes before the query, so an empty path still serializes as `/`.
   const suffix = remainder.startsWith('?') ? `/${remainder}` : remainder || '/';
 
-  const portAt = authority.lastIndexOf(':');
-  const bracketAt = authority.lastIndexOf(']');
+  // Only the host is lowercased; userinfo and the query keep their case.
+  const userinfoAt = authority.lastIndexOf('@');
+  const userinfo =
+    userinfoAt === -1 ? '' : `${authority.slice(0, userinfoAt + 1)}`;
+  let host = authority.slice(userinfoAt + 1);
+  let portSuffix = '';
+  const portAt = host.lastIndexOf(':');
+  const bracketAt = host.lastIndexOf(']');
   if (portAt > bracketAt) {
-    const port = authority.slice(portAt + 1);
+    const port = host.slice(portAt + 1);
+    if (!/^[0-9]*$/.test(port)) {
+      throw new DOMException(
+        `[Worklets] Failed to construct 'WebSocket': the URL has an invalid port.`,
+        'SyntaxError'
+      );
+    }
     const defaultPort = scheme === 'wss' ? '443' : '80';
-    if (port !== '' && Number(port) === Number(defaultPort)) {
-      authority = authority.slice(0, portAt);
+    host = host.slice(0, portAt);
+    if (port === '' || Number(port) !== Number(defaultPort)) {
+      portSuffix = `:${port}`;
     }
   }
-  if (authority === '') {
+  if (host === '') {
     throw new DOMException(
       `[Worklets] Failed to construct 'WebSocket': the URL has no host.`,
       'SyntaxError'
     );
   }
-  // Only the host is lowercased; userinfo and the query keep their case.
-  const userinfoAt = authority.lastIndexOf('@');
-  const userinfo =
-    userinfoAt === -1 ? '' : `${authority.slice(0, userinfoAt + 1)}`;
-  const host = authority.slice(userinfoAt + 1).toLowerCase();
-  return `${scheme}://${userinfo}${host}${suffix}`;
+  return `${scheme}://${userinfo}${host.toLowerCase()}${portSuffix}${suffix}`;
 }
 
 /** https://url.spec.whatwg.org/#origin - ws and wss are their own origin scheme. */
@@ -349,13 +367,12 @@ function assertDistinctProtocols(protocols: string[]) {
         'SyntaxError'
       );
     }
-    const lowerCased = protocol.toLowerCase();
-    if (seen.has(lowerCased)) {
+    if (seen.has(protocol)) {
       throw new DOMException(
         `[Worklets] Failed to construct 'WebSocket': the subprotocol '${protocol}' is repeated.`,
         'SyntaxError'
       );
     }
-    seen.add(lowerCased);
+    seen.add(protocol);
   }
 }

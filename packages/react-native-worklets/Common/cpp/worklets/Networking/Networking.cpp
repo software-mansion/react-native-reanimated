@@ -446,6 +446,10 @@ uint64_t Networking::connectWebSocket(jsi::Runtime &rt, const jsi::Object &confi
       std::move(socketConfig),
       std::make_shared<SocketListener>(weak_from_this(), record, serializableCallback, socketId));
 
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    backend_->closeWebSocket(socketId, static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived), "");
+  }
+
   return socketId;
 }
 

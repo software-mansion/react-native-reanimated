@@ -21,6 +21,7 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import okio.ForwardingSink
 import okio.buffer
+import okio.utf8Size
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.nio.charset.Charset
@@ -144,6 +145,7 @@ class Networking {
                     if (mSettledSocketIds.contains(socketId)) null else socket
                 }
             if (stored == null) {
+                mSettledIds.remove(socketId)
                 mSettledSocketIds.remove(socketId)
                 socket.cancel()
             }
@@ -233,10 +235,9 @@ class Networking {
             /**
              * OkHttp exposes no incoming message limit, so it has already
              * buffered this message: the check cannot prevent the first
-             * allocation, only stop a peer from repeating it. `length` is UTF-16
-             * units, which bounds the UTF-8 byte count from below by design.
+             * allocation, only stop a peer from repeating it.
              */
-            if (text.length > MAX_MESSAGE_BYTES) {
+            if (text.utf8Size() > MAX_MESSAGE_BYTES) {
                 webSocket.close(MESSAGE_TOO_BIG, "")
                 return
             }

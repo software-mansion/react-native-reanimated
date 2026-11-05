@@ -106,10 +106,15 @@ describe('WebSocket construction', () => {
     expect(() => new WebSocket('ws://example.com', '')).toThrow(
       'is not a valid subprotocol'
     );
-    expect(() => new WebSocket('ws://example.com', ['chat', 'CHAT'])).toThrow(
+    expect(() => new WebSocket('ws://example.com', ['chat', 'chat'])).toThrow(
       'is repeated'
     );
     expect(openedSockets).toHaveLength(0);
+  });
+
+  it('compares subprotocols case-sensitively', () => {
+    new WebSocket('ws://example.com', ['chat', 'CHAT']);
+    expect(lastSocket().config.protocols).toEqual(['chat', 'CHAT']);
   });
 
   it('starts in the CONNECTING state', () => {
@@ -204,6 +209,23 @@ describe('WebSocket messages', () => {
 
     expect(data).toBeInstanceOf(ArrayBuffer);
     expect(utf8Decode(new Uint8Array(data as ArrayBuffer))).toBe('hi');
+  });
+
+  it('ignores a binaryType that is not blob or arraybuffer', () => {
+    const socket = connected();
+    socket.binaryType = 'arraybuffer';
+    socket.binaryType = 'text' as unknown as 'blob';
+    expect(socket.binaryType).toBe('arraybuffer');
+    socket.binaryType = 'blob';
+    socket.binaryType = undefined as unknown as 'blob';
+    expect(socket.binaryType).toBe('blob');
+
+    let data: unknown;
+    socket.onmessage = (event) => {
+      data = event.data;
+    };
+    lastSocket().emit('message', { binary: toArrayBuffer(utf8Encode('hi')) });
+    expect(data).toBeInstanceOf(Blob);
   });
 
   it('ignores a message that arrives before the open', () => {
@@ -352,9 +374,9 @@ describe('WebSocket error types', () => {
     expect(nameOf(() => new WebSocket('ws://example.com/a#frag'))).toBe(
       'SyntaxError'
     );
-    expect(nameOf(() => new WebSocket('ws://example.com', 'bad protocol'))).toBe(
-      'SyntaxError'
-    );
+    expect(
+      nameOf(() => new WebSocket('ws://example.com', 'bad protocol'))
+    ).toBe('SyntaxError');
     expect(nameOf(() => new WebSocket('ws://example.com').send('x'))).toBe(
       'InvalidStateError'
     );
@@ -454,6 +476,63 @@ describe('WebSocket event semantics', () => {
     expect(calls).toBe(1);
   });
 
+  it('ignores a listener that is not a function', () => {
+    const socket = connected();
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    socket.addEventListener(
+      'message',
+      null as unknown as Parameters<typeof socket.addEventListener>[1]
+    );
+    lastSocket().emit('message', { text: 'a' });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('removes only the registration of the signal that aborts', () => {
+    const socket = connected();
+    const first = new AbortController();
+    const second = new AbortController();
+    let calls = 0;
+    const listener = () => calls++;
+    socket.addEventListener('message', listener, { signal: first.signal });
+    socket.removeEventListener('message', listener);
+    socket.addEventListener('message', listener, { signal: second.signal });
+    first.abort();
+    lastSocket().emit('message', { text: 'a' });
+
+    expect(calls).toBe(1);
+  });
+
+  it('skips a listener that an earlier listener removes during dispatch', () => {
+    const socket = connected();
+    const order: string[] = [];
+    const second = () => order.push('second');
+    socket.addEventListener('message', () => {
+      order.push('first');
+      socket.removeEventListener('message', second);
+    });
+    socket.addEventListener('message', second);
+    lastSocket().emit('message', { text: 'a' });
+
+    expect(order).toEqual(['first']);
+  });
+
+  it('skips a listener removed and added again during dispatch', () => {
+    const socket = connected();
+    const order: string[] = [];
+    const second = () => order.push('second');
+    socket.addEventListener('message', () => {
+      order.push('first');
+      socket.removeEventListener('message', second);
+      socket.addEventListener('message', second);
+    });
+    socket.addEventListener('message', second);
+    lastSocket().emit('message', { text: 'a' });
+
+    expect(order).toEqual(['first']);
+  });
+
   it('gives a message event an origin and a lastEventId', () => {
     const socket = connected('wss://example.com:443/chat');
     let event: { origin?: string; lastEventId?: string } = {};
@@ -483,6 +562,44 @@ describe('WebSocket url and protocol negotiation', () => {
 
   it('rejects a url with no host', () => {
     expect(() => new WebSocket('ws:///x')).toThrow('has no host');
+  });
+
+  it('rejects a url with an empty host after the userinfo', () => {
+    for (const url of [
+      'ws://user@/socket',
+      'ws://user@:80/',
+      'ws://user@:8080/',
+      'ws://:8080/',
+    ]) {
+      expect(() => new WebSocket(url)).toThrow(
+        expect.objectContaining({ name: 'SyntaxError' })
+      );
+    }
+    expect(openedSockets).toHaveLength(0);
+  });
+
+  it('rejects a port that is not made of ASCII digits', () => {
+    for (const url of [
+      'ws://example.com:0x50/',
+      'ws://example.com:+80/',
+      'ws://example.com:8e1/',
+      'ws://example.com:0b1010000/',
+      'ws://example.com:0x51/',
+    ]) {
+      expect(() => new WebSocket(url)).toThrow(
+        expect.objectContaining({ name: 'SyntaxError' })
+      );
+    }
+    expect(openedSockets).toHaveLength(0);
+  });
+
+  it('keeps userinfo with a password and a port', () => {
+    expect(new WebSocket('ws://User:Pass@EXAMPLE.com:8080/x').url).toBe(
+      'ws://User:Pass@example.com:8080/x'
+    );
+    expect(new WebSocket('ws://user:pass@example.com:80/x').url).toBe(
+      'ws://user:pass@example.com/x'
+    );
   });
 
   it('reports the negotiated extensions', () => {
@@ -619,8 +736,6 @@ describe('WebSocket regressions', () => {
     expect(() => atLimit.close(4999)).not.toThrow();
 
     const reasonAtLimit = connected();
-    expect(() =>
-      reasonAtLimit.close(1000, `${'é'.repeat(61)}a`)
-    ).not.toThrow();
+    expect(() => reasonAtLimit.close(1000, `${'é'.repeat(61)}a`)).not.toThrow();
   });
 });

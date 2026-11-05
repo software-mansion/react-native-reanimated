@@ -187,7 +187,7 @@ void NetworkingInstaller::install(
           return;
         }
         const auto code = args[1].asNumber();
-        if (!std::isfinite(code) || std::trunc(code) != code) {
+        if (!std::isfinite(code) || std::trunc(code) != code || code < 1000 || code > 4999) {
           return;
         }
         /**
