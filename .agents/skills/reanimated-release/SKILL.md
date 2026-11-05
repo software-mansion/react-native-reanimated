@@ -242,6 +242,24 @@ git worktree remove ../rnr-release-<version>
 git branch -D '@<you>/reanimated/release-<version>'
 ```
 
+### 16. Cut the docs version (after a minor or major release)
+
+Skip this step for a patch release. After `<X.Y>.0` is published, open a separate PR to `main` that snapshots the `Unreleased` docs. The docs are published from `main`. Follow the docs step in `packages/react-native-reanimated/RELEASE.md`.
+
+Reanimated keeps one docs version for each major, for example `4.x`. For a new minor, replace the `<major>.x` snapshot: remove it from `docs/docs-reanimated/versions.json`, delete `versioned_docs/version-<major>.x/` and `versioned_sidebars/version-<major>.x-sidebars.json`, then run:
+
+```bash
+yarn workspace docs-reanimated docusaurus docs:version <major>.x
+```
+
+For a new major, cut the new `<major>.x` version, add it to `versions` in `docs/docs-reanimated/docusaurus.config.js` and set `lastVersion` to it. Reference: PR #11048, which cut `4.x`.
+
+- The snapshot must document only released changes. The changelog fragments that `changelog:squash --cut` left on `main` are not in the release. Remove the docs for them from the snapshot.
+- Move each entry of `docs/docs-reanimated/pending-redirects.json` whose `to` is a page of the new snapshot to `redirects` of `@docusaurus/plugin-client-redirects` in `docs/docs-reanimated/docusaurus.config.js`, and remove it from the file. These redirects keep the URLs of the old latest version working. When its `to` is not a page of the new snapshot, for example because you removed the docs of an unreleased change from the snapshot, the new snapshot must have the page at its `from`. Restore the released version of that page in the snapshot and keep the entry in the file. It moves at the next docs version. If you cannot restore that page, remove the entry from the file and add a redirect from its `from` to a page of both the new snapshot and `Unreleased` to the config. A redirect cannot go into the config while its `to` is not a page of the latest version, because the plugin fails the build.
+- Run `node --experimental-strip-types scripts/validate-docs-redirects.mts` in the repository root. It fails when an old latest page has no page at the same path and no redirect, when an entry of `pending-redirects.json` starts at a path that is not a page of the new snapshot, when a redirect in the config points to a path that is not a page, or when a page of the docs version before the new snapshot has no page at the same path in the new snapshot and no redirect in the config. The last check fails when you remove an entry from `pending-redirects.json` but do not add it to the config.
+- Run `yarn build` in the docs workspace.
+- Until this PR is merged, the docs build in CI fails for changes to `main`. `scripts/validate-docs-released-versions.mts` checks that the npm `latest` version and the newest `CHANGELOG.md` version each have a docs version, and that `lastVersion` covers the newer of the two.
+
 ## Confirmation checkpoints
 
 - Before `gh pr create` — confirm version and branch tip contents if anything looks off (e.g. unexpected commits on the stable branch).
