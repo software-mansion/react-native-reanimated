@@ -20,7 +20,7 @@ interface NetworkingEvent {
 
 export type NetworkingEventListener = (event: NetworkingEvent) => void;
 
-export type EventListenerOptions = {
+type EventListenerOptions = {
   once?: boolean;
   signal?: {
     aborted: boolean;
