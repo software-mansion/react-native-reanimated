@@ -1803,7 +1803,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
 
 // MARK: Position Calculation
 
-// A running layout animation keeps the frame that is on screen in its own record.
+// A running or queued layout animation keeps the frame that is on screen in its own record.
 // The light node holds the committed layout, which the animation has not reached yet.
 // The record of a detached carrier is relative to the root, so its place under its parent
 // is the committed layout.
@@ -1817,6 +1817,9 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
     return it->second.animation.currentView;
+  }
+  if (const auto *queued = queuedLayoutStartView(tag)) {
+    return *queued;
   }
   return node->current;
 }
@@ -1859,12 +1862,14 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     react::Point viewPosition = scrollPosition(currentNode->current);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
+    auto origin = view.layoutMetrics.frame.origin;
+    // A screen below a header ends at the bottom of its stack. On Android, the frame of a new screen
+    // can also start below the header until React Native Screens sends the native frame.
     if (parent && !strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parentView = useViewsOnScreen ? viewOnScreen(parent) : parent->current;
-      const float headerHeight = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
-      viewPosition.y += headerHeight;
+      origin.y = parentView.layoutMetrics.frame.size.height - view.layoutMetrics.frame.size.height;
     }
-    viewPosition += view.layoutMetrics.frame.origin;
+    viewPosition += origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = endsPath ? nullptr : parent;
   }

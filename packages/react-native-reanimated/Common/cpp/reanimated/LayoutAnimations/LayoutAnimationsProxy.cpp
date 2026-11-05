@@ -1576,6 +1576,12 @@ void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag>
   maybeScheduleCleanupPull(false);
 }
 
+// An animation does not start while its frames cannot mount, so that its time does not run out before its
+// first frame shows.
+bool LayoutAnimationsProxy::defersLayoutAnimationStart(const Tag tag) const {
+  return unqueuedBatchTags_.contains(tag);
+}
+
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   bool hasHeldFrame = false;
@@ -1589,7 +1595,7 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
     }
     const auto completedIt = completedAnimations_.find(tag);
     const auto waitsForCleanup = completedIt != completedAnimations_.end() && !completedIt->second.shouldRemove;
-    hasHeldFrame = hasHeldFrame || updateMap_.contains(tag) || waitsForCleanup;
+    hasHeldFrame = hasHeldFrame || updateMap_.contains(tag) || waitsForCleanup || hasPendingLayoutAnimation(tag);
   }
   if (hasHeldFrame) {
     schedulePullOnNextFrame();

@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -415,6 +416,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
   auto operations = std::exchange(layoutAnimationOperations_, std::deque<LayoutAnimationOperation>{});
   pendingLayoutAnimations_.clear();
   reconcileLayoutAnimationOperations(operations);
+  auto deferredStarts = takeDeferredLayoutAnimationStarts(operations);
   for (auto operation = takeNextLayoutAnimationOperation(operations); operation;
        operation = takeNextLayoutAnimationOperation(operations)) {
     if (const auto *stop = std::get_if<LayoutAnimationStop>(&*operation)) {
@@ -462,8 +464,47 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     values.setProperty(uiRuntime_, "windowHeight", window.height);
     layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, start.tag, start.type, values, start.config);
   }
-  if (!layoutAnimationOperations_.empty()) {
+  const bool hasNewOperations = !layoutAnimationOperations_.empty();
+  requeueLayoutAnimationStarts(std::move(deferredStarts));
+  if (hasNewOperations) {
     requestLayoutAnimationFlush_(surfaceId_);
+  }
+}
+
+std::deque<LayoutAnimationOperation> LayoutAnimationsProxyCommon::takeDeferredLayoutAnimationStarts(
+    std::deque<LayoutAnimationOperation> &operations) const {
+  std::deque<LayoutAnimationOperation> deferred;
+  std::deque<LayoutAnimationOperation> ready;
+  for (auto &operation : operations) {
+    const auto *start = std::get_if<ManagedLayoutAnimationStart>(&operation);
+    (start && defersLayoutAnimationStart(start->tag) ? deferred : ready).push_back(std::move(operation));
+  }
+  operations = std::move(ready);
+  return deferred;
+}
+
+// The deferred starts go before the operations that were queued during the flush, because they are older.
+void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<LayoutAnimationOperation> starts) const {
+  if (starts.empty()) {
+    return;
+  }
+  std::ranges::move(layoutAnimationOperations_, std::back_inserter(starts));
+  layoutAnimationOperations_ = std::move(starts);
+  pendingLayoutAnimations_.clear();
+  for (size_t index = 0; index < layoutAnimationOperations_.size(); index++) {
+    std::visit(
+        [&](const auto &operation) {
+          using Operation = std::decay_t<decltype(operation)>;
+          if constexpr (std::is_same_v<Operation, ManagedLayoutAnimationStart>) {
+            pendingLayoutAnimations_.insert_or_assign(operation.tag, PendingLayoutAnimation{operation.type, index});
+          } else if constexpr (std::is_same_v<Operation, ProgressLayoutAnimationStart>) {
+            pendingLayoutAnimations_.try_emplace(
+                operation.tag, PendingLayoutAnimation{LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS, index});
+          } else {
+            pendingLayoutAnimations_.erase(operation.tag);
+          }
+        },
+        layoutAnimationOperations_[index]);
   }
 }
 
@@ -640,6 +681,19 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::layoutAnimationViewOnScre
     }
   }
   return std::nullopt;
+}
+
+// A queued layout animation start holds back the React Update, so the screen still shows the view that it starts
+// from.
+const ShadowView *LayoutAnimationsProxyCommon::queuedLayoutStartView(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto pendingIt = pendingLayoutAnimations_.find(tag);
+  if (pendingIt == pendingLayoutAnimations_.end() || pendingIt->second.type != LayoutAnimationType::LAYOUT) {
+    return nullptr;
+  }
+  const auto *start =
+      std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[pendingIt->second.operationIndex]);
+  return start ? &start->before : nullptr;
 }
 
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)

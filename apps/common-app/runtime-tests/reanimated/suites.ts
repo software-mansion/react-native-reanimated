@@ -203,6 +203,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
+      require('./tests/layoutAnimations/sharedTransitionStart.test');
     },
   },
   {

@@ -352,6 +352,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
+  bool defersLayoutAnimationStart(Tag tag) const override;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
   void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
 #endif
