@@ -634,7 +634,8 @@ void LayoutAnimationsProxy::updateLightTree(
         if (moved.contains(tag)) {
           const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
           node->previous.layoutMetrics.frame.origin += offset;
-          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, node->current, offset)) {
+          const auto finalView = node->isNestedCarrier ? movedCarrierTarget(tag, offset) : node->current;
+          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, finalView, offset)) {
             filteredMutations.push_back(
                 ShadowViewMutation::InsertMutation(mutation.parentTag, *currentView, hostIndex));
           } else if (const auto updatedViewIt = updatedViews.find(tag); updatedViewIt != updatedViews.end() &&
@@ -1024,12 +1025,18 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
   for (const auto &[tag, completedAnimation] : completedAnimations_) {
     const auto nodeIt = lightNodes_.find(tag);
     if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
-        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
+        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second) || holdsNestedCarrier(nodeIt->second)) {
       continue;
     }
     finishedExits.push_back(nodeIt->second);
   }
   transaction.dueRemovals = collectRemovals(finishedExits);
+}
+
+void LayoutAnimationsProxy::tearDownWithDroppedAncestors(
+    const std::shared_ptr<LightNode> &node,
+    ShadowViewMutationList &mutations) const {
+  tearDown(collectRemovals({node}), mutations);
 }
 
 void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const {
@@ -1166,6 +1173,10 @@ bool LayoutAnimationsProxy::planSubtreeRemoval(
     SubtreeRemovalConfig config,
     std::vector<std::shared_ptr<LightNode>> &removals) const {
   react_native_assert(node->state == DECISION_PENDING && "Subtree removal of a view that React does not delete");
+  if (node->isNestedCarrier && !transaction.surfaceDropped) {
+    retainCarrierContent(node);
+    return true;
+  }
   auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop] = config;
   if (isRNSScreenOrStack(node)) {
     isScreenPop = true;
@@ -1227,6 +1238,11 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    for (const auto &[_, element] : sharedElements_) {
+      if (element.run) {
+        element.run->carrier->isNestedCarrier = false;
+      }
+    }
     sharedElements_.clear();
     retiringSharedTransitions_.clear();
     for (const auto &carrier : detachedCarriers_) {
@@ -1465,10 +1481,12 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     if (node == lightNodes_.end()) {
       continue;
     }
-    if (const auto carrier = detachedCarrierOf(node->second)) {
-      const auto carrierTag = carrier->current.tag;
-      tags.push_back(carrierTag);
-      unqueuedCarrierFrames_[carrierTag]++;
+    for (auto carrier = node->second; carrier; carrier = carrier->parent.lock()) {
+      if (carrier->isCarrier()) {
+        const auto carrierTag = carrier->current.tag;
+        tags.push_back(carrierTag);
+        unqueuedCarrierFrames_[carrierTag]++;
+      }
     }
   }
   if (tags.empty()) {

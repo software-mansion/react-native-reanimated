@@ -363,6 +363,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void scheduleTransitionLifecycleCleanup() const;
   std::shared_ptr<LightNode> detachedCarrierOf(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> carrierAncestorOf(const std::shared_ptr<LightNode> &node) const;
+  bool isCarriedBy(const std::shared_ptr<LightNode> &carrier, const std::shared_ptr<LightNode> &ancestor) const;
+  bool holdsNestedCarrier(const std::shared_ptr<LightNode> &node) const;
+  ShadowView movedCarrierTarget(Tag tag, react::Point offset) const;
+  ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
+  react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;
   Tag carrierParentTag(const std::shared_ptr<LightNode> &carrier) const;
   ShadowView targetInCarrierSpace(const SharedTransitionRun &run, const ShadowView &target) const;
   react::Point positionIn(
@@ -482,6 +487,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
+  void tearDownWithDroppedAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &mutations) const;
 
   void addOngoingAnimations(TransactionMeta &transaction) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;

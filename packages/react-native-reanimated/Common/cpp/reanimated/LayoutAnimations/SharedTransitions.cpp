@@ -433,7 +433,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const bool nested = ancestor && isInSubtree(nodes[AFTER], sharedElementOfCarrier(ancestor)->element.run->target);
     detachCarrier(
         *run,
-        carrierViewWithStyleOf(nested ? mountedView(carrier) : before, carrier, propsParserContext),
+        carrierViewWithStyleOf(nested ? inParentSpace(before, carrier) : before, carrier, propsParserContext),
         nested,
         transaction,
         propsParserContext);
@@ -640,6 +640,13 @@ void LayoutAnimationsProxy::attachCarrier(
     endAnimationsRecursively(node, mutations, mutations);
     return;
   }
+  // React deleted a nested carrier during the run. It and the removed views above it stay until the run ends.
+  if (node->isNestedCarrier && node->state == ExitingState::WAITING) {
+    node->isNestedCarrier = false;
+    cancelLayoutAnimation(node->current.tag);
+    tearDownWithDroppedAncestors(node, mutations);
+    return;
+  }
   const auto tag = node->current.tag;
   const auto mounted = carrierViewOnScreen(run);
   const auto parent = node->parent.lock();
@@ -755,6 +762,37 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::carrierAncestorOf(const std::s
   return ancestor;
 }
 
+// A detached carrier moves on its own, so the carriers below it are not carried by the carriers above it.
+bool LayoutAnimationsProxy::isCarriedBy(
+    const std::shared_ptr<LightNode> &carrier,
+    const std::shared_ptr<LightNode> &ancestor) const {
+  for (auto node = carrierAncestorOf(carrier); node; node = node->isDetached ? nullptr : carrierAncestorOf(node)) {
+    if (node == ancestor) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool LayoutAnimationsProxy::holdsNestedCarrier(const std::shared_ptr<LightNode> &node) const {
+  return std::ranges::any_of(sharedElements_, [&node](const auto &entry) {
+    const auto &run = entry.second.run;
+    return run && run->carrier->isNestedCarrier && isInSubtree(run->carrier, node);
+  });
+}
+
+// The parent of a moved nested carrier is elsewhere in the carrier that moves it, so its target shifts by the offset.
+ShadowView LayoutAnimationsProxy::movedCarrierTarget(const Tag tag, const react::Point offset) const {
+  auto target = lightNodes_.at(tag)->current;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    target = it->second.finalView;
+  } else if (const auto completedIt = completedAnimations_.find(tag); completedIt != completedAnimations_.end()) {
+    target = completedIt->second.animation.finalView;
+  }
+  target.layoutMetrics.frame.origin += offset;
+  return target;
+}
+
 Tag LayoutAnimationsProxy::carrierParentTag(const std::shared_ptr<LightNode> &carrier) const {
   return carrier->isDetached ? surfaceId_ : carrier->parent.lock()->current.tag;
 }
@@ -777,6 +815,23 @@ ShadowView LayoutAnimationsProxy::targetInCarrierSpace(const SharedTransitionRun
   view.layoutMetrics.frame.origin =
       positionIn(run.target, ancestorTarget, false) - positionIn(run.carrier->parent.lock(), ancestor, true);
   return view;
+}
+
+// The view on screen with its own props, in the space of its parent. The snapshot is relative to the root and may
+// be from before an attach in this pull, which returned the carrier to its committed layout.
+ShadowView LayoutAnimationsProxy::inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node)
+    const {
+  auto view = mountedView(node);
+  view.layoutMetrics = snapshot.layoutMetrics;
+  view.layoutMetrics.frame.origin = snapshot.layoutMetrics.frame.origin - originOnScreen(node->parent.lock());
+  return view;
+}
+
+react::Point LayoutAnimationsProxy::originOnScreen(const std::shared_ptr<LightNode> &node) const {
+  if (const auto carried = node->isDetached ? sharedElementOfCarrier(node) : std::nullopt) {
+    return carrierViewOnScreen(*carried->element.run).layoutMetrics.frame.origin;
+  }
+  return getAbsolutePositionsForRootPathView(node, true)[0];
 }
 
 react::Point LayoutAnimationsProxy::positionIn(
@@ -830,8 +885,8 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     const auto &target = element.run->target;
     const bool carriesAnotherRun = target->isCarrier() && target != element.run->carrier;
     const bool onTopScreen = topScreen && isInSubtree(target, topScreen);
-    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen ||
-        element.run->carrier->isNestedCarrier) {
+    const bool movesWithAncestor = element.run->carrier->isNestedCarrier && carrierAncestorOf(element.run->carrier);
+    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen || movesWithAncestor) {
       continue;
     }
     if (hasUnqueuedCarrierFrame(element.run->carrier->current.tag)) {
@@ -1307,14 +1362,15 @@ bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
   return !hasCarrierAnimationEnded(carrierTag) || hasUnqueuedCarrierFrame(carrierTag);
 }
 
-// Nested carriers land with the carrier that moves them, when the last run of the group ends.
+// Nested carriers land with the carrier that moves them, when the last run of the group ends. A nested carrier
+// that React moved out of every moving carrier lands on its own.
 bool LayoutAnimationsProxy::landsWithOtherRuns(const SharedTransitionRun &run) const {
   if (run.carrier->isNestedCarrier) {
-    return true;
+    return carrierAncestorOf(run.carrier) != nullptr;
   }
   return std::ranges::any_of(sharedElements_, [&](const auto &entry) {
     const auto &nestedRun = entry.second.run;
-    return nestedRun && nestedRun->carrier->isNestedCarrier && isInSubtree(nestedRun->carrier, run.carrier) &&
+    return nestedRun && nestedRun->carrier->isNestedCarrier && isCarriedBy(nestedRun->carrier, run.carrier) &&
         runContinues(nestedRun->carrier->current.tag);
   });
 }
@@ -1364,7 +1420,7 @@ void LayoutAnimationsProxy::finishNestedSharedTransitions(
     const bool landed) const {
   for (auto &[sharedTag, element] : sharedElements_) {
     const auto &run = element.run;
-    if (run && run->carrier != carrier && run->carrier->isNestedCarrier && isInSubtree(run->carrier, carrier)) {
+    if (run && run->carrier->isNestedCarrier && isCarriedBy(run->carrier, carrier)) {
       finishSharedTransition(sharedTag, element, transaction, propsParserContext, landed);
     }
   }
@@ -1395,14 +1451,31 @@ double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &
   return animated.value_or(run.contentFade->range.from);
 }
 
-// Nested carriers and hidden endpoints keep their own opacity.
+// Nested carriers and hidden endpoints keep their own opacity, so the children that hold them do not fade.
 std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingChildren(
     const std::shared_ptr<LightNode> &node,
     const std::unordered_set<Tag> &hiddenTags) const {
+  std::unordered_set<Tag> holdingChildren;
+  const auto keepChildHolding = [&](const std::shared_ptr<LightNode> &view) {
+    for (auto child = view, parent = view->parent.lock(); parent; child = parent, parent = parent->parent.lock()) {
+      if (parent == node) {
+        holdingChildren.insert(child->current.tag);
+        return;
+      }
+    }
+  };
+  for (const auto &[_, element] : sharedElements_) {
+    if (element.run && element.run->carrier->isNestedCarrier) {
+      keepChildHolding(element.run->carrier);
+    }
+    for (const auto &hiddenView : element.hiddenViews) {
+      keepChildHolding(hiddenView.node);
+    }
+  }
   std::vector<std::shared_ptr<LightNode>> children;
   for (const auto &child : node->children) {
-    if (isLightNodeMapped(child) && !child->isCarrier() && isViewKind(child->current) &&
-        !hiddenTags.contains(child->current.tag)) {
+    if (isLightNodeMapped(child) && !child->isDetached && isViewKind(child->current) &&
+        !hiddenTags.contains(child->current.tag) && !holdingChildren.contains(child->current.tag)) {
       children.push_back(child);
     }
   }
