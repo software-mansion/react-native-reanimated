@@ -170,7 +170,9 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
     animation.startView.layoutMetrics.frame.origin += offset;
-    animation.frameOffset += offset;
+    if (animation.type != LayoutAnimationType::PROGRESS) {
+      animation.frameOffset += offset;
+    }
     animation.finalView = newView;
     return animation.currentView;
   }
@@ -179,7 +181,9 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     auto &animation = completedAnimationIt->second.animation;
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
-    animation.frameOffset += offset;
+    if (animation.type != LayoutAnimationType::PROGRESS) {
+      animation.frameOffset += offset;
+    }
     animation.finalView = newView;
     return animation.currentView;
   }

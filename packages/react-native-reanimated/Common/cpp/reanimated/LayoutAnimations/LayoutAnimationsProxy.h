@@ -365,6 +365,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> carrierAncestorOf(const std::shared_ptr<LightNode> &node) const;
   bool isCarriedBy(const std::shared_ptr<LightNode> &carrier, const std::shared_ptr<LightNode> &ancestor) const;
   bool holdsNestedCarrier(const std::shared_ptr<LightNode> &node) const;
+  bool keepsNesting(const std::shared_ptr<LightNode> &carrier, const std::shared_ptr<LightNode> &target) const;
+  void moveNestedCarrierToRoot(SharedTransitionRun &run, ShadowViewMutationList &mutations) const;
   ShadowView movedCarrierTarget(Tag tag, react::Point offset) const;
   ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
   react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;

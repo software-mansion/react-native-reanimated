@@ -428,9 +428,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     if (const auto options = layoutAnimationsManager_->getSharedTransitionContentFade(before.tag)) {
       run->contentFade = ContentFade{.options = *options, .range = {1, 1}};
     }
-    // A carrier in a moving carrier whose target holds its target moves with that carrier.
-    const auto ancestor = carrierAncestorOf(carrier);
-    const bool nested = ancestor && isInSubtree(nodes[AFTER], sharedElementOfCarrier(ancestor)->element.run->target);
+    const bool nested = keepsNesting(carrier, nodes[AFTER]);
     detachCarrier(
         *run,
         carrierViewWithStyleOf(nested ? inParentSpace(before, carrier) : before, carrier, propsParserContext),
@@ -441,6 +439,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->gestureDriven = gestureDriven;
+  if (run->carrier->isNestedCarrier && !keepsNesting(run->carrier, run->target)) {
+    moveNestedCarrierToRoot(*run, transaction.filteredMutations);
+  }
   return *run;
 }
 
@@ -772,6 +773,33 @@ bool LayoutAnimationsProxy::isCarriedBy(
     }
   }
   return false;
+}
+
+// A carrier moves with the moving carrier above it while the target of that carrier holds its target.
+bool LayoutAnimationsProxy::keepsNesting(
+    const std::shared_ptr<LightNode> &carrier,
+    const std::shared_ptr<LightNode> &target) const {
+  const auto ancestor = carrierAncestorOf(carrier);
+  return ancestor && isInSubtree(target, sharedElementOfCarrier(ancestor)->element.run->target);
+}
+
+// The carrier keeps its frame on screen, and its animation continues in the space of the root.
+void LayoutAnimationsProxy::moveNestedCarrierToRoot(SharedTransitionRun &run, ShadowViewMutationList &mutations) const {
+  const auto &node = run.carrier;
+  const auto tag = node->current.tag;
+  const auto parent = node->parent.lock();
+  const auto offset = originOnScreen(parent);
+  const auto mounted = carrierViewOnScreen(run);
+  mutations.push_back(
+      ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
+  node->isNestedCarrier = false;
+  node->setDetached(true);
+  detachedCarriers_.push_back(node);
+  run.carrierStartView.layoutMetrics.frame.origin += offset;
+  auto view = mounted;
+  view.layoutMetrics.frame.origin += offset;
+  view = reparentLayoutAnimation(tag, surfaceId_, movedCarrierTarget(tag, offset), offset).value_or(view);
+  mutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, view, carrierHostIndex(node)));
 }
 
 bool LayoutAnimationsProxy::holdsNestedCarrier(const std::shared_ptr<LightNode> &node) const {
@@ -1112,6 +1140,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         }
       }
       run.target = afterNode;
+      if (run.carrier->isNestedCarrier && !keepsNesting(run.carrier, run.target)) {
+        moveNestedCarrierToRoot(run, transaction.filteredMutations);
+      }
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
       const auto target = targetInCarrierSpace(run, after);
       const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
