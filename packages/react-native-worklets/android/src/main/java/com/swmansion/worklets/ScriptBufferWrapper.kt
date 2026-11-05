@@ -12,6 +12,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
@@ -93,14 +94,16 @@ class ScriptBufferWrapper(
                 val statusCode =
                     try {
                         connection.responseCode
+                    } catch (e: SocketTimeoutException) {
+                        throw RuntimeException("[Worklets] Timed out waiting for the development server.\n", e)
                     } catch (e: IOException) {
                         throw RuntimeException("[Worklets] Could not connect to development server.\n", e)
                     }
                 if (statusCode != 200) {
                     throw RuntimeException(serverErrorMessage(url, statusCode, connection))
                 }
+                val tmpFile = File(outputFile.path + ".tmp")
                 try {
-                    val tmpFile = File(outputFile.path + ".tmp")
                     connection.inputStream.use { input ->
                         tmpFile.outputStream().use { output -> input.copyTo(output) }
                     }
@@ -108,6 +111,7 @@ class ScriptBufferWrapper(
                         throw IOException("Couldn't rename $tmpFile to $outputFile")
                     }
                 } catch (e: IOException) {
+                    tmpFile.delete()
                     throw RuntimeException(
                         "[Worklets] Failed to store worklets bundle from URL $url: ${e.message}",
                         e,
@@ -123,7 +127,14 @@ class ScriptBufferWrapper(
             statusCode: Int,
             connection: HttpURLConnection,
         ): String {
-            val body = connection.errorStream?.use { String(it.readBytes(), StandardCharsets.UTF_8) }
+            val body =
+                try {
+                    connection.errorStream?.use { String(it.readBytes(), StandardCharsets.UTF_8) }
+                } catch (e: IOException) {
+                    return "[Worklets] The development server returned response error code: $statusCode\n\n" +
+                        "URL: $url\n\n" +
+                        "Body could not be read: ${e.message}"
+                }
             val metroMessage = parseMetroError(body)
             if (metroMessage != null) {
                 return "[Worklets] $metroMessage"
