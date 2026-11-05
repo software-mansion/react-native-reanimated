@@ -365,7 +365,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void keepTransitioningViewsHidden(
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext) const;
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void startSurface(
       const facebook::react::ShadowTree &shadowTree,
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate) override;

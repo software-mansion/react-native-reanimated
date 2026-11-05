@@ -143,7 +143,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
     return false;
   }
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
+  virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const = 0;
   virtual void startSurface(
       const facebook::react::ShadowTree &shadowTree,
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
