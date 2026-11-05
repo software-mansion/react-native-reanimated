@@ -410,6 +410,11 @@ static inline const ViewProps &getViewProps(const ShadowView &view) {
   return static_cast<const ViewProps &>(*view.props);
 }
 
+static inline double defaultViewOpacity() {
+  static const double opacity = ViewProps{}.opacity;
+  return opacity;
+}
+
 // Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and
 // creates one tag loses the created view.
 static inline bool deletesCreatedTag(const ShadowViewMutationList &mutations) {

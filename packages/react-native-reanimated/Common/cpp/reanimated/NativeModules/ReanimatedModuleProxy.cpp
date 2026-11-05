@@ -15,6 +15,7 @@
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -1387,6 +1388,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
         auto lock = strongThis->updatesRegistryManager_->lock();
         strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
         const auto opacity = props.get_ptr("opacity");
+        if (opacity && opacity->isNull()) {
+          return defaultViewOpacity();
+        }
         return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
       },
 #ifdef ANDROID

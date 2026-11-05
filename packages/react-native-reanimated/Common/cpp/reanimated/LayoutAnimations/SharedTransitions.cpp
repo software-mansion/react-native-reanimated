@@ -1122,15 +1122,11 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 // later Update or Insert for the same view carries full opacity and would show
 // the view again. Force opacity 0 on every outgoing Update and Insert for a
 // hidden view until the restore in cleanupSharedTransitions removes it from
-// its shared element. A child with a held entering animation also stays at
-// opacity 0 until the animation starts.
+// its shared element.
 void LayoutAnimationsProxy::keepTransitioningViewsHidden(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
-  auto hiddenTags = hiddenViewTags();
-  for (const auto &held : heldEnterings_) {
-    hiddenTags.insert(held.node->current.tag);
-  }
+  const auto hiddenTags = viewTagsKeptHidden();
   if (hiddenTags.empty()) {
     return;
   }
@@ -1426,39 +1422,50 @@ ShadowView LayoutAnimationsProxy::withContentOpacity(
     const ShadowView &view,
     const double contentOpacity,
     const PropsParserContext &propsParserContext) const {
-  const auto tag = child->current.tag;
-  const bool animated =
-      hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag) || completedAnimations_.contains(tag);
-  if (!animated) {
-    resolveLightNodeProps(child);
-  }
-  const auto synchronousOpacity = !animated && readSynchronousOpacity_ ? readSynchronousOpacity_(tag) : std::nullopt;
-  const auto ownOpacity = synchronousOpacity.value_or(getViewProps(animated ? view : child->current).opacity);
-  return cloneViewWithOpacity(view, ownOpacity * contentOpacity, propsParserContext);
+  return cloneViewWithOpacity(view, ownOpacity(child, view) * contentOpacity, propsParserContext);
 }
 
+// The light tree does not take synchronous writes, so a view without a layout animation gets its newest
+// opacity from them.
+double LayoutAnimationsProxy::ownOpacity(const std::shared_ptr<LightNode> &node, const ShadowView &animatedView) const {
+  const auto tag = node->current.tag;
+  if (hasPendingLayoutAnimation(tag) || layoutAnimations_.contains(tag) || completedAnimations_.contains(tag)) {
+    return getViewProps(animatedView).opacity;
+  }
+  resolveLightNodeProps(node);
+  const auto synchronousOpacity = readSynchronousOpacity_ ? readSynchronousOpacity_(tag) : std::nullopt;
+  return synchronousOpacity.value_or(getViewProps(node->current).opacity);
+}
+
+// Synchronous writes skip pullTransaction. Only pull mutations change the opacity of a hidden view, because a pull
+// can hide a carrier before the mutations that move it mount. A child of a fading carrier gets the content opacity.
 void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto runs = contentFadeRuns();
-  if (runs.empty()) {
-    return;
-  }
-  const auto hiddenTags = hiddenViewTags();
+  const auto hiddenTags = viewTagsKeptHidden();
   std::unordered_map<Tag, double> factors;
-  for (const auto *run : runs) {
+  for (const auto *run : contentFadeRuns()) {
     for (const auto &child : fadingChildren(run->carrier, hiddenTags)) {
       factors[child->current.tag] = run->contentFade->mountedOpacity;
     }
   }
+  if (hiddenTags.empty() && factors.empty()) {
+    return;
+  }
   for (auto &[family, props] : updatesBatch) {
-    if (family->getSurfaceId() != surfaceId_) {
+    auto opacity = props.get_ptr("opacity");
+    if (family->getSurfaceId() != surfaceId_ || !opacity) {
       continue;
     }
-    const auto factor = factors.find(family->getTag());
-    if (auto opacity = props.get_ptr("opacity"); factor != factors.end() && opacity && opacity->isNumber()) {
-      *opacity = opacity->asDouble() * factor->second;
+    const auto tag = family->getTag();
+    if (hiddenTags.contains(tag)) {
+      props.erase("opacity");
+    } else if (const auto factor = factors.find(tag);
+               factor != factors.end() && (opacity->isNumber() || opacity->isNull())) {
+      const double ownOpacity = opacity->isNull() ? defaultViewOpacity() : opacity->asDouble();
+      *opacity = ownOpacity * factor->second;
     }
   }
+  std::erase_if(updatesBatch, [](const auto &update) { return update.second.empty(); });
 }
 
 void LayoutAnimationsProxy::applyContentOpacity(
@@ -1711,6 +1718,15 @@ std::unordered_set<Tag> LayoutAnimationsProxy::hiddenViewTags() const {
   return tags;
 }
 
+// A child with a held entering animation also stays at opacity 0 until the animation starts.
+std::unordered_set<Tag> LayoutAnimationsProxy::viewTagsKeptHidden() const {
+  auto tags = hiddenViewTags();
+  for (const auto &held : heldEnterings_) {
+    tags.insert(held.node->current.tag);
+  }
+  return tags;
+}
+
 void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) const {
   if (sharedElements_.empty()) {
     return;
@@ -1761,7 +1777,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (!parent) {
       continue;
     }
-    const auto opacity = getViewProps(view).opacity;
+    const auto opacity = ownOpacity(node, view);
     filteredMutations.push_back(createPropsUpdate(
         cloneViewWithoutOpacity(view, propsParserContext),
         cloneViewWithOpacity(view, opacity, propsParserContext),

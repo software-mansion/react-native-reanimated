@@ -12,7 +12,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnUI } from 'react-native-worklets';
+import { runOnUIAsync, scheduleOnUI } from 'react-native-worklets';
 
 import {
   advanceAnimationTimer,
@@ -236,12 +236,17 @@ function EnteringChild({
   exits,
   wide,
   tagged,
+  opacity,
 }: {
   exits: boolean;
   wide: boolean;
   tagged: boolean;
+  opacity?: SharedValue<number>;
 }) {
   const ref = useTestRef('enteringChild');
+  const animatedStyle = useAnimatedStyle(() =>
+    opacity ? { opacity: opacity.value } : {}
+  );
   return (
     <Animated.View
       ref={ref}
@@ -249,7 +254,7 @@ function EnteringChild({
       entering={childEntering}
       exiting={exits ? longExiting : undefined}
       layout={longLayout}
-      style={[styles.enteringChild, wide && styles.wideChild]}
+      style={[styles.enteringChild, wide && styles.wideChild, animatedStyle]}
     />
   );
 }
@@ -263,6 +268,7 @@ function ScreensWithEnteringChild({
   childTagged = false,
   keepChild = false,
   covered = false,
+  childOpacity,
 }: {
   showTarget: boolean;
   showChild?: boolean;
@@ -271,6 +277,7 @@ function ScreensWithEnteringChild({
   childTagged?: boolean;
   keepChild?: boolean;
   covered?: boolean;
+  childOpacity?: SharedValue<number>;
 }) {
   const ref = useTestRef('target');
   return (
@@ -292,6 +299,7 @@ function ScreensWithEnteringChild({
               exits={childExits}
               wide={childWide}
               tagged={childTagged}
+              opacity={childOpacity}
             />
           )}
         </Animated.View>
@@ -381,7 +389,7 @@ function ChildrenPair({
   insert?: boolean;
   remove?: boolean;
   targetWide?: boolean;
-  childOpacity?: SharedValue<number>;
+  childOpacity?: SharedValue<number | null>;
 }) {
   const source = useTestRef('source');
   const target = useTestRef('target');
@@ -422,11 +430,12 @@ function Child({
   name: string;
   tagged?: boolean;
   wide?: boolean;
-  opacity?: SharedValue<number>;
+  opacity?: SharedValue<number | null>;
 }) {
   const ref = useTestRef(name);
+  // null resets the opacity to its default value
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity?.value ?? CHILD_OPACITY,
+    opacity: opacity ? (opacity.value as number) : CHILD_OPACITY,
   }));
   return (
     <Animated.View
@@ -695,6 +704,40 @@ describe('Shared transition with fadeContent', () => {
     await expectMovingWithChildOpacity('source', 0.1, 1);
   });
 
+  test('keeps a target child with a held entering animation hidden when its opacity changes', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const childOpacity = makeMutable(1);
+    await render(
+      <ScreensWithEnteringChild
+        showTarget={false}
+        childOpacity={childOpacity}
+      />
+    );
+    await waitForFrames();
+
+    await render(
+      <ScreensWithEnteringChild showTarget childOpacity={childOpacity} />
+    );
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    await runOnUIAsync(() => {
+      childOpacity.value = 0.5;
+    });
+    for (let frame = 0; frame < 6; frame++) {
+      await waitForFrames();
+      const held = await mountedProps('enteringChild');
+      expect(!!held && held.opacity < 0.01).toBe(true);
+    }
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+
+    await advanceAnimationTimer(2000);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
+    await expectEnteringCallbacks(1);
+    await expectOpacity('enteringChild', 0.5);
+  });
+
   test('plays the entering animation of a target child when a screen without the tag covers the target', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithEnteringChild showTarget={false} />);
@@ -886,33 +929,39 @@ describe('Shared transition with fadeContent', () => {
     await expectOpacity('child', CHILD_OPACITY);
   });
 
-  test('fades a child whose own opacity changes during the move', async () => {
-    await mockAnimationTimer({ autoAdvance: false });
-    const childOpacity = makeMutable(CHILD_OPACITY);
-    await render(<ChildrenPair active={false} childOpacity={childOpacity} />);
-    await waitForFrames();
-    await render(<ChildrenPair active childOpacity={childOpacity} />);
-    await waitForFrames(3);
-    await advanceAnimationTimer(1000);
-    await expectFadingLikeReference('child');
-    childOpacity.value = CHILD_OPACITY / 2;
-    await expectEventually(async () => {
-      const [source, child, reference] = await sample([
-        'source',
-        'child',
-        'reference',
-      ]);
-      return (
-        isMoving(source) &&
-        !!child &&
-        !!reference &&
-        isBetween(reference.opacity, 0.05, CHILD_OPACITY - 0.05) &&
-        Math.abs(child.opacity - reference.opacity / 2) < 0.02
-      );
-    }).toBe(true);
-    await advanceAnimationTimer(2000);
-    await expectOpacity('target', 1);
-  });
+  test.each([
+    [CHILD_OPACITY / 2, 0.5],
+    [null, 1 / CHILD_OPACITY],
+  ] as const)(
+    'fades a child whose own opacity changes to %p during the move',
+    async ([opacity, ratio]) => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const childOpacity = makeMutable<number | null>(CHILD_OPACITY);
+      await render(<ChildrenPair active={false} childOpacity={childOpacity} />);
+      await waitForFrames();
+      await render(<ChildrenPair active childOpacity={childOpacity} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(1000);
+      await expectFadingLikeReference('child');
+      childOpacity.value = opacity;
+      await expectEventually(async () => {
+        const [source, child, reference] = await sample([
+          'source',
+          'child',
+          'reference',
+        ]);
+        return (
+          isMoving(source) &&
+          !!child &&
+          !!reference &&
+          isBetween(reference.opacity, 0.05, CHILD_OPACITY - 0.05) &&
+          Math.abs(child.opacity - reference.opacity * ratio) < 0.02
+        );
+      }).toBe(true);
+      await advanceAnimationTimer(2000);
+      await expectOpacity('target', 1);
+    }
+  );
 
   test('fades a child inserted into the moving view', async () => {
     await render(<ChildrenPair active={false} />);
