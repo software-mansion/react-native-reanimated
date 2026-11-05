@@ -269,7 +269,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
             before, sharedTag, collectedTransition.nodes, true, transaction, propsParserContext);
         restartContentFade(run);
 
-        const auto target = targetInCarrierSpace(run, after);
+        const auto target = targetInCarrierSpace(run, after, propsParserContext);
         startProgressTransition(
             run.carrier,
             run.carrierStartView,
@@ -826,8 +826,11 @@ Tag LayoutAnimationsProxy::carrierParentTag(const std::shared_ptr<LightNode> &ca
 }
 
 // The parent of a nested carrier keeps its place in the carrier that moves it, which ends at its own target.
-// So the nested carrier ends where its target is in that target, with the transforms of its own target only.
-ShadowView LayoutAnimationsProxy::targetInCarrierSpace(const SharedTransitionRun &run, const ShadowView &target) const {
+// So the nested carrier ends where its target is in that target, with the transforms below that target.
+ShadowView LayoutAnimationsProxy::targetInCarrierSpace(
+    const SharedTransitionRun &run,
+    const ShadowView &target,
+    const PropsParserContext &propsParserContext) const {
   if (!run.carrier->isNestedCarrier) {
     return target;
   }
@@ -842,6 +845,8 @@ ShadowView LayoutAnimationsProxy::targetInCarrierSpace(const SharedTransitionRun
   view.props = run.target->current.props;
   view.layoutMetrics.frame.origin =
       positionIn(run.target, ancestorTarget, false) - positionIn(run.carrier->parent.lock(), ancestor, true);
+  const auto positions = getAbsolutePositionsForRootPathView(run.target, false);
+  overrideTransform(view, parseParentTransforms(run.target, positions, false, ancestorTarget), propsParserContext);
   return view;
 }
 
@@ -1093,7 +1098,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       auto &run = startSharedTransitionRun(
           before, sharedTag, collectedTransition.nodes, false, transaction, propsParserContext);
 
-      const auto target = targetInCarrierSpace(run, after);
+      const auto target = targetInCarrierSpace(run, after, propsParserContext);
       startSharedTransition(
           run.carrier,
           run.carrierStartView,
@@ -1144,7 +1149,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         moveNestedCarrierToRoot(run, transaction.filteredMutations);
       }
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
-      const auto target = targetInCarrierSpace(run, after);
+      const auto target = targetInCarrierSpace(run, after, propsParserContext);
       const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
       if (hasPendingLayoutAnimation(carrierTag)) {
         updateLayoutAnimationTarget(
@@ -1949,10 +1954,12 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
   return viewsAbsolutePositions;
 }
 
+// The transforms of the ancestors up to stopAt, which is excluded.
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::shared_ptr<LightNode> &node,
     const std::vector<react::Point> &absolutePositions,
-    const bool useViewsOnScreen) const {
+    const bool useViewsOnScreen,
+    const std::shared_ptr<LightNode> &stopAt) const {
   std::vector<AncestorTransform> transforms;
   const auto &targetLayoutMetrics = (useViewsOnScreen ? viewOnScreen(node) : node->current).layoutMetrics;
   auto currentNode = node;
@@ -1975,6 +1982,9 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     }
     transforms.push_back({props.transform, origin, viewSize});
     currentNode = endsPath ? nullptr : currentNode->parent.lock();
+    if (currentNode == stopAt) {
+      currentNode = nullptr;
+    }
   }
 
   const auto &targetViewPosition = absolutePositions[0];

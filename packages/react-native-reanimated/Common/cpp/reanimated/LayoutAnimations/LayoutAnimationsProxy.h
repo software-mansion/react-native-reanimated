@@ -371,7 +371,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
   react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;
   Tag carrierParentTag(const std::shared_ptr<LightNode> &carrier) const;
-  ShadowView targetInCarrierSpace(const SharedTransitionRun &run, const ShadowView &target) const;
+  ShadowView targetInCarrierSpace(
+      const SharedTransitionRun &run,
+      const ShadowView &target,
+      const PropsParserContext &propsParserContext) const;
   react::Point positionIn(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &ancestor,
@@ -476,7 +479,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<Transform> parseParentTransforms(
       const std::shared_ptr<LightNode> &node,
       const std::vector<react::Point> &absolutePositions,
-      bool useViewsOnScreen) const;
+      bool useViewsOnScreen,
+      const std::shared_ptr<LightNode> &stopAt = nullptr) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,
