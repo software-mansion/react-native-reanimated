@@ -29,16 +29,21 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
 #endif
 
 #if RUNTIME_TESTS
-    let moduleName = "FabricExampleRuntimeTests"
-#else
-    let moduleName = "FabricExample"
-#endif
-
+    let initialProperties = ProcessInfo.processInfo.environment["RUNTIME_TESTS_WS_URL"]
+      .map { ["wsUrl": $0] as [AnyHashable: Any] }
     reactNativeFactory?.startReactNative(
-      withModuleName: moduleName,
+      withModuleName: "FabricExampleRuntimeTests",
+      in: window,
+      initialProperties: initialProperties,
+      connectionOptions: connectionOptions
+    )
+#else
+    reactNativeFactory?.startReactNative(
+      withModuleName: "FabricExample",
       in: window,
       connectionOptions: connectionOptions
     )
+#endif
   }
 
   func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

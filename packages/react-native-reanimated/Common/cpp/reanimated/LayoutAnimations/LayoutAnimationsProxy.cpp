@@ -6,7 +6,6 @@
 #include <react/utils/LowPriorityExecutor.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <worklets/Compat/StableApi.h>
@@ -115,6 +114,8 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
+  nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 #ifdef ANDROID
   releaseViewTransitions_ = dependencies.releaseViewTransitions;
@@ -246,10 +247,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
       // shared element, the issue should be gone with the new stack
-      // implementation
-      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+      // implementation. A modal can hold a nested stack, so the popped screen
+      // is the first one with a screen below it.
+      for (auto screen = findParentRNSScreen(afterTopScreen); screen; screen = findParentRNSScreen(screen)) {
         if (forceScreenSnapshot_(screen->current.tag)) {
           snapshottedScreens_.insert(screen->current.tag);
+        }
+        if (findScreenBelow(screen)) {
+          break;
         }
       }
 #endif
@@ -266,6 +271,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    followOffWindowTargets(propsParserContext);
     flushSubtreeRemovals(transaction);
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
@@ -338,6 +344,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   activeBoundaryMayHaveChanged_ = true;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     unmappedContentFadeTags_.insert(node->current.tag);
+    if (deferredSharedTransitionConfigReleases_.erase(node->current.tag)) {
+      layoutAnimationsManager_->clearSharedTransitionConfigs({node->current.tag});
+    }
   }
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
@@ -975,6 +984,18 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     }
   }
   const bool defersTeardown = holdsSnapshottedScreen(node);
+#ifdef __APPLE__
+  if (!defersTeardown && holdsSourceInModal(node, transaction)) {
+    std::unordered_set<Tag> heldTags;
+    collectSubtreeTags(node, heldTags);
+    for (const auto tag : heldTags) {
+      layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+    }
+    node->setExitingState(COMPLETED);
+    transaction.modalsToHold.push_back(node);
+    return;
+  }
+#endif
   const SubtreeRemovalConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
       .shouldAnimate = !transaction.surfaceDropped,
@@ -1021,6 +1042,30 @@ bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::s
   return false;
 }
 
+#ifdef __APPLE__
+// React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
+// mount by up to two frames. A modal that holds the source of a transition stays mounted until 34 ms, two frames of a
+// 60 Hz display, after the mount that hides the source.
+bool LayoutAnimationsProxy::holdsSourceInModal(
+    const std::shared_ptr<LightNode> &node,
+    const TransactionMeta &transaction) const {
+  return std::ranges::any_of(transaction.transitionMap, [&](const auto &entry) {
+    bool insideModal = false;
+    for (const auto &ancestor : entry.second.ancestors[BEFORE]) {
+      const auto ancestorIt = lightNodes_.find(ancestor.tag);
+      if (ancestorIt == lightNodes_.end()) {
+        return false;
+      }
+      insideModal = insideModal || !strcmp(ancestorIt->second->current.componentName, "ModalHostView");
+      if (ancestorIt->second == node) {
+        return insideModal;
+      }
+    }
+    return false;
+  });
+}
+#endif
+
 // A UI-thread pull on Android must not update the views that the next flushing pull removes, because
 // Android can mount that JS-thread pull first.
 void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) const {
@@ -1033,6 +1078,23 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
     }
     finishedExits.push_back(nodeIt->second);
   }
+#ifdef __APPLE__
+  const auto now = std::chrono::steady_clock::now();
+  for (auto &node : transaction.modalsToHold) {
+    heldModals_.push_back({std::move(node), now + std::chrono::milliseconds(34)});
+  }
+  std::erase_if(heldModals_, [&](const HeldModal &held) {
+    if (!isLightNodeMapped(held.node)) {
+      return true;
+    }
+    if (transaction.surfaceDropped || now >= held.removableAt) {
+      finishedExits.push_back(held.node);
+      return true;
+    }
+    schedulePullOnNextFrame();
+    return false;
+  });
+#endif
   transaction.dueRemovals = collectRemovals(finishedExits);
 }
 
@@ -1232,18 +1294,27 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(
+        deferredSharedTransitionConfigReleases_.begin(), deferredSharedTransitionConfigReleases_.end()));
+    deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     retiringSharedTransitions_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);
     }
     detachedCarriers_.clear();
+#ifdef __APPLE__
+    react_native_assert(!carrierOverlay_ && "The last pull of a surface deletes its overlay");
+#endif
     heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
     uncommittedScreenPop_.reset();
     visibleScreens_.clear();
   }
+#ifdef __APPLE__
+  heldModals_.clear();
+#endif
 #ifdef ANDROID
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
@@ -1336,7 +1407,7 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 #ifdef ANDROID
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (std::ranges::any_of(retiringSharedTransitions_, [this](const auto &entry) {
-        return entry.second.element.run && !hasUnqueuedCarrierFrame(entry.first);
+        return entry.second.run && !hasUnqueuedCarrierFrame(entry.first);
       })) {
     return true;
   }
@@ -1371,6 +1442,9 @@ void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructura
 // The Remove of a held view keeps its parent, so the Insert into the root would fail. A hold can appear until the
 // batch mounts, so the release repeats before every mount until the batch is in the queue.
 void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const {
+  if (detachedCarriers_.empty()) {
+    return;
+  }
   std::unordered_set<Tag> removedFromParents;
   std::vector<Tag> movedToRoot;
   for (const auto &mutation : mutations) {
@@ -1485,13 +1559,13 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     }
     scheduleOnUI(uiScheduler_, [this, weakThis, tags]() {
       if (const auto strongThis = weakThis.lock()) {
-        attachCarriersOfQueuedFrames(tags);
+        releaseCarriersOfQueuedFrames(tags);
       }
     });
   });
 }
 
-void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
+void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   for (const auto tag : tags) {
     const auto it = unqueuedCarrierFrames_.find(tag);
@@ -1499,10 +1573,13 @@ void LayoutAnimationsProxy::attachCarriersOfQueuedFrames(const std::vector<Tag> 
       unqueuedCarrierFrames_.erase(it);
     }
   }
-  if (hasPendingStructuralCleanup() && !cleanupPullScheduled_) {
-    cleanupPullScheduled_ = true;
-    scheduleCleanupPull();
-  }
+  maybeScheduleCleanupPull(false);
+}
+
+// An animation does not start while its frames cannot mount, so that its time does not run out before its
+// first frame shows.
+bool LayoutAnimationsProxy::defersLayoutAnimationStart(const Tag tag) const {
+  return unqueuedBatchTags_.contains(tag);
 }
 
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
@@ -1518,7 +1595,7 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
     }
     const auto completedIt = completedAnimations_.find(tag);
     const auto waitsForCleanup = completedIt != completedAnimations_.end() && !completedIt->second.shouldRemove;
-    hasHeldFrame = hasHeldFrame || updateMap_.contains(tag) || waitsForCleanup;
+    hasHeldFrame = hasHeldFrame || updateMap_.contains(tag) || waitsForCleanup || hasPendingLayoutAnimation(tag);
   }
   if (hasHeldFrame) {
     schedulePullOnNextFrame();
@@ -1601,7 +1678,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
       .config = config,
       .contentOpacity = contentOpacity,
   });
@@ -1611,13 +1688,15 @@ void LayoutAnimationsProxy::startProgressTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
-    const Props::Shared &frameProps) const {
+    const Props::Shared &frameProps,
+    const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
       .tag = tag,
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierHostTag(),
+      .config = config,
   });
 }
 

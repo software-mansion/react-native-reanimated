@@ -4,25 +4,25 @@
 // hand-off between a build job and a test job (see runtime-tests-ios-remote.yml).
 //
 // Build the app first:
-//   node scripts/runtime-tests-server.js --build-only --configuration ReleaseRuntimeTests
+//   node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration ReleaseRuntimeTests
 // Then export it:
-//   node scripts/export-runtime-tests-app.js --configuration ReleaseRuntimeTests --out dist/FabricExample.app.zip
+//   node --experimental-strip-types scripts/export-runtime-tests-app.mts --configuration ReleaseRuntimeTests --out dist/FabricExample.app.zip
 //
 // Only Release* configurations embed the three runtime-tests JS bundles and run
 // without Metro; a Debug artifact is refused unless --allow-debug is passed,
 // because it would silently depend on a Metro server wherever it is installed.
 
-const path = require('path');
-const fs = require('fs');
-const { execFile } = require('child_process');
+import { execFile } from 'node:child_process';
+import type { ExecFileOptions } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
 
-/** @type {Record<string, string | true>} */
-const args = {};
+const args: Record<string, string | true> = {};
 const BOOLEAN_FLAGS = new Set(['print-path', 'allow-debug', 'help']);
 
 for (let i = 2; i < process.argv.length; i++) {
@@ -48,7 +48,7 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 
 if (args.help) {
-  console.log(`Usage: node scripts/export-runtime-tests-app.js [options]
+  console.log(`Usage: node --experimental-strip-types scripts/export-runtime-tests-app.mts [options]
 
 Options:
   --configuration <cfg>  Build configuration to export (default: ReleaseRuntimeTests)
@@ -71,22 +71,16 @@ const OUT = path.resolve(
     : path.join('dist', `FabricExample-${CONFIGURATION}.app.zip`)
 );
 
-/**
- * @param {string} message
- * @returns {never}
- */
-function fail(message) {
+function fail(message: string): never {
   console.error(`[export-app] ${message}`);
   process.exit(1);
 }
 
-/**
- * @param {string} command
- * @param {string[]} argv
- * @param {import('child_process').ExecFileOptions} [options]
- * @returns {Promise<{ stdout: string; stderr: string }>}
- */
-function run(command, argv, options = {}) {
+function run(
+  command: string,
+  argv: string[],
+  options: ExecFileOptions = {}
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     execFile(
       command,
@@ -103,7 +97,7 @@ function run(command, argv, options = {}) {
   });
 }
 
-// Mirrors appPath() in runtime-tests-server.js: the scheme is always
+// Mirrors appPath() in runtime-tests-server.mts: the scheme is always
 // DebugRuntimeTests; the configuration alone selects Debug/Release output.
 async function resolveAppPath() {
   const { stdout } = await run(
@@ -129,8 +123,9 @@ async function resolveAppPath() {
     fail(`xcodebuild -showBuildSettings returned no JSON payload`);
   }
 
-  /** @type {{ buildSettings?: Record<string, string> }[]} */
-  const entries = JSON.parse(stdout.slice(jsonStart));
+  const entries: { buildSettings?: Record<string, string> }[] = JSON.parse(
+    stdout.slice(jsonStart)
+  );
 
   const entry =
     entries.find(
@@ -147,12 +142,11 @@ async function resolveAppPath() {
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
 }
 
-/** @param {string} app */
-function assertExportable(app) {
+function assertExportable(app: string) {
   if (!fs.existsSync(app)) {
     fail(
       `no built app at ${app}\n` +
-        `[export-app] build it first: node scripts/runtime-tests-server.js --build-only --configuration ${CONFIGURATION}`
+        `[export-app] build it first: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration ${CONFIGURATION}`
     );
   }
 

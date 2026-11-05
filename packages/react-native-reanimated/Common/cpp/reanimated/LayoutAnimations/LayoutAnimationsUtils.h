@@ -322,6 +322,32 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
   return current;
 }
 
+static inline std::shared_ptr<LightNode> findScreenBelow(const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  if (!stack) {
+    return nullptr;
+  }
+  const auto screenIt = std::ranges::find(stack->children, screen);
+  for (auto below = std::make_reverse_iterator(screenIt); below != stack->children.rend(); ++below) {
+    if (isRNSScreen(*below)) {
+      return *below;
+    }
+  }
+  return nullptr;
+}
+
+static inline std::shared_ptr<LightNode> findScreenInStackOf(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  for (auto current = findParentRNSScreen(node); current; current = findParentRNSScreen(current)) {
+    if (current->parent.lock() == stack) {
+      return current;
+    }
+  }
+  return nullptr;
+}
+
 static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
   for (; node; node = node->parent.lock()) {
     if (node == root) {
@@ -382,6 +408,11 @@ static inline bool isViewKind(const ShadowView &view) {
 static inline const ViewProps &getViewProps(const ShadowView &view) {
   react_native_assert(isViewKind(view) && "Only ViewKind views have ViewProps");
   return static_cast<const ViewProps &>(*view.props);
+}
+
+static inline double defaultViewOpacity() {
+  static const double opacity = ViewProps{}.opacity;
+  return opacity;
 }
 
 // Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and

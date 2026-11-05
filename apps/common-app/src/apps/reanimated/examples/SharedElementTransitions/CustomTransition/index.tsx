@@ -1,0 +1,146 @@
+import type { ParamListBase } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import Animated from 'react-native-reanimated';
+
+import { withSharedTransitionBoundary } from '../withSharedTransitionBoundary';
+import {
+  BackgroundColorSourceSection,
+  BackgroundColorTargetRoute,
+  BackgroundColorTargetScreen,
+} from './BackgroundColor';
+import {
+  BasicSourceSection,
+  BasicTargetRoute,
+  BasicTargetScreen,
+} from './BasicCustom';
+import {
+  BorderRadiusSourceSection,
+  BorderRadiusTargetRoute,
+  BorderRadiusTargetScreen,
+} from './BorderRadius';
+import {
+  GlobalOriginSourceSection,
+  GlobalOriginTargetRoute,
+  GlobalOriginTargetScreen,
+  OriginTargetRoute,
+  OriginTargetScreen,
+} from './GlobalOrigin';
+import {
+  OpacitySourceSection,
+  OpacityTargetRoute,
+  OpacityTargetScreen,
+} from './Opacity';
+import {
+  ProgressSourceSection,
+  ProgressTargetRoute,
+  ProgressTargetScreen,
+  ProgressTypeSourceSection,
+  ProgressTypeTargetRoute,
+  ProgressTypeTargetScreen,
+} from './ProgressAnimation';
+import { styles } from './styles';
+import {
+  TransformSourceSection,
+  TransformTargetRoute,
+  TransformTargetScreen,
+} from './Transform';
+import {
+  TransformMatrixSourceSection,
+  TransformMatrixTargetRoute,
+  TransformMatrixTargetScreen,
+} from './TransformMatrix';
+import {
+  WindowSourceSection,
+  WindowTargetRoute,
+  WindowTargetScreen,
+} from './Window';
+
+function MenuContent({ navigation }: NativeStackScreenProps<ParamListBase>) {
+  const navigate = (route: string) => navigation.navigate(route);
+  return (
+    <Animated.ScrollView style={styles.flexOne}>
+      <BasicSourceSection navigate={navigate} />
+      <ProgressSourceSection navigate={navigate} />
+      <ProgressTypeSourceSection navigate={navigate} />
+      <BorderRadiusSourceSection navigate={navigate} />
+      <GlobalOriginSourceSection navigate={navigate} />
+      <BackgroundColorSourceSection navigate={navigate} />
+      <OpacitySourceSection navigate={navigate} />
+      <TransformSourceSection navigate={navigate} />
+      <TransformMatrixSourceSection navigate={navigate} />
+      <WindowSourceSection navigate={navigate} />
+    </Animated.ScrollView>
+  );
+}
+
+const Menu = withSharedTransitionBoundary(MenuContent);
+
+export default function CustomTransitionExample() {
+  const Stack = createNativeStackNavigator();
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Menu"
+        component={Menu}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BasicTargetRoute}
+        component={BasicTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ProgressTargetRoute}
+        component={ProgressTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ProgressTypeTargetRoute}
+        component={ProgressTypeTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BorderRadiusTargetRoute}
+        component={BorderRadiusTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={GlobalOriginTargetRoute}
+        component={GlobalOriginTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={OriginTargetRoute}
+        component={OriginTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BackgroundColorTargetRoute}
+        component={BackgroundColorTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={OpacityTargetRoute}
+        component={OpacityTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={TransformTargetRoute}
+        component={TransformTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={TransformMatrixTargetRoute}
+        component={TransformMatrixTargetScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={WindowTargetRoute}
+        component={WindowTargetScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}

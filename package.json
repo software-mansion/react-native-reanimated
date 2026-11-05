@@ -37,7 +37,8 @@
     "lint:root": "oxlint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn run --top-level oxfmt --check --ignore-path .prettiereslintignore .",
     "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
     "test:scripts": "node --experimental-strip-types --test scripts/__tests__/*.test.mts scripts/changelog/__tests__/*.test.mts apps/fabric-example/scripts/__tests__/*.test.mts",
-    "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
+    "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh",
+    "type:check:scripts": "tsc --noEmit -p scripts && tsc --noEmit -p apps/fabric-example/scripts"
   },
   "devDependencies": {
     "@babel/core": "7.29.6",

@@ -7,10 +7,11 @@
 #include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
-#include <reanimated/LayoutAnimations/PropsDiffer.h>
+#include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -170,7 +171,9 @@ void LayoutAnimationsProxyCommon::enqueueLayoutAnimation(ProgressLayoutAnimation
   const auto tag = start.tag;
   layoutAnimationOperations_.push_back(std::move(start));
   pendingLayoutAnimations_.try_emplace(
-      tag, PendingLayoutAnimation{LayoutAnimationType::PROGRESS, layoutAnimationOperations_.size() - 1});
+      tag,
+      PendingLayoutAnimation{
+          LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS, layoutAnimationOperations_.size() - 1});
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const {
@@ -362,8 +365,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
     const auto tag = progressStart->tag;
     const auto activeAnimationIt = layoutAnimations_.find(tag);
     if (activeAnimationIt != layoutAnimations_.end() &&
-        activeAnimationIt->second.type != LayoutAnimationType::PROGRESS) {
-      activeAnimationIt->second.type = LayoutAnimationType::PROGRESS;
+        activeAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      activeAnimationIt->second.type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
       operations.push_front(std::move(operation));
       return LayoutAnimationStop{tag};
     }
@@ -374,8 +377,8 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         progressStart->frameProps,
         progressStart->parentTag,
         std::nullopt,
-        LayoutAnimationType::PROGRESS,
-        nullptr);
+        LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS,
+        progressStart->config);
     return std::monostate{};
   }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);
@@ -413,6 +416,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
   auto operations = std::exchange(layoutAnimationOperations_, std::deque<LayoutAnimationOperation>{});
   pendingLayoutAnimations_.clear();
   reconcileLayoutAnimationOperations(operations);
+  auto deferredStarts = takeDeferredLayoutAnimationStarts(operations);
   for (auto operation = takeNextLayoutAnimationOperation(operations); operation;
        operation = takeNextLayoutAnimationOperation(operations)) {
     if (const auto *stop = std::get_if<LayoutAnimationStop>(&*operation)) {
@@ -428,13 +432,10 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
 
     jsi::Object values(uiRuntime_);
     if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
-      auto propsDiffer = PropsDiffer(uiRuntime_, start.before, start.after);
-      values = propsDiffer.computeDiff(uiRuntime_);
+      values = SharedTransitionValuesFactory(uiRuntime_).create(start.before, start.after);
       if (start.contentOpacity) {
-        values.getPropertyAsObject(uiRuntime_, "source")
-            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->from);
-        values.getPropertyAsObject(uiRuntime_, "target")
-            .setProperty(uiRuntime_, kContentOpacity, start.contentOpacity->to);
+        values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
+        values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
       }
     } else {
       const Snapshot current(start.before, window);
@@ -463,8 +464,47 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     values.setProperty(uiRuntime_, "windowHeight", window.height);
     layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, start.tag, start.type, values, start.config);
   }
-  if (!layoutAnimationOperations_.empty()) {
+  const bool hasNewOperations = !layoutAnimationOperations_.empty();
+  requeueLayoutAnimationStarts(std::move(deferredStarts));
+  if (hasNewOperations) {
     requestLayoutAnimationFlush_(surfaceId_);
+  }
+}
+
+std::deque<LayoutAnimationOperation> LayoutAnimationsProxyCommon::takeDeferredLayoutAnimationStarts(
+    std::deque<LayoutAnimationOperation> &operations) const {
+  std::deque<LayoutAnimationOperation> deferred;
+  std::deque<LayoutAnimationOperation> ready;
+  for (auto &operation : operations) {
+    const auto *start = std::get_if<ManagedLayoutAnimationStart>(&operation);
+    (start && defersLayoutAnimationStart(start->tag) ? deferred : ready).push_back(std::move(operation));
+  }
+  operations = std::move(ready);
+  return deferred;
+}
+
+// The deferred starts go before the operations that were queued during the flush, because they are older.
+void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<LayoutAnimationOperation> starts) const {
+  if (starts.empty()) {
+    return;
+  }
+  std::ranges::move(layoutAnimationOperations_, std::back_inserter(starts));
+  layoutAnimationOperations_ = std::move(starts);
+  pendingLayoutAnimations_.clear();
+  for (size_t index = 0; index < layoutAnimationOperations_.size(); index++) {
+    std::visit(
+        [&](const auto &operation) {
+          using Operation = std::decay_t<decltype(operation)>;
+          if constexpr (std::is_same_v<Operation, ManagedLayoutAnimationStart>) {
+            pendingLayoutAnimations_.insert_or_assign(operation.tag, PendingLayoutAnimation{operation.type, index});
+          } else if constexpr (std::is_same_v<Operation, ProgressLayoutAnimationStart>) {
+            pendingLayoutAnimations_.try_emplace(
+                operation.tag, PendingLayoutAnimation{LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS, index});
+          } else {
+            pendingLayoutAnimations_.erase(operation.tag);
+          }
+        },
+        layoutAnimationOperations_[index]);
   }
 }
 
@@ -480,7 +520,7 @@ void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {
   auto shouldStopManager = false;
 
   if (const auto layoutAnimationIt = layoutAnimations_.find(tag); layoutAnimationIt != layoutAnimations_.end()) {
-    shouldStopManager = layoutAnimationIt->second.type != LayoutAnimationType::PROGRESS;
+    shouldStopManager = layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
     updateMap_.erase(tag);
     layoutAnimations_.erase(layoutAnimationIt);
   } else if (const auto completedAnimationIt = completedAnimations_.find(tag);
@@ -506,7 +546,7 @@ void LayoutAnimationsProxyCommon::cancelAllLayoutAnimations() const {
       }
     }
     for (const auto &[tag, animation] : layoutAnimations_) {
-      if (animation.type != LayoutAnimationType::PROGRESS && stoppedTags.insert(tag).second) {
+      if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS && stoppedTags.insert(tag).second) {
         stops.push_back(tag);
       }
     }
@@ -536,7 +576,7 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const std::optional<ContentOpacityRange> contentOpacity) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
-    if (pendingIt->second.type == LayoutAnimationType::PROGRESS) {
+    if (pendingIt->second.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
       return;
     }
     const auto operationIndex = pendingIt->second.operationIndex;
@@ -643,12 +683,25 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::layoutAnimationViewOnScre
   return std::nullopt;
 }
 
+// A queued layout animation start holds back the React Update, so the screen still shows the view that it starts
+// from.
+const ShadowView *LayoutAnimationsProxyCommon::queuedLayoutStartView(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto pendingIt = pendingLayoutAnimations_.find(tag);
+  if (pendingIt == pendingLayoutAnimations_.end() || pendingIt->second.type != LayoutAnimationType::LAYOUT) {
+    return nullptr;
+  }
+  const auto *start =
+      std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[pendingIt->second.operationIndex]);
+  return start ? &start->before : nullptr;
+}
+
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   std::optional<ShadowView> pendingCurrentView;
-  if (const auto pendingIt = pendingLayoutAnimations_.find(tag);
-      pendingIt != pendingLayoutAnimations_.end() && pendingIt->second.type != LayoutAnimationType::PROGRESS) {
+  if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end() &&
+      pendingIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
     const auto operationIndex = pendingIt->second.operationIndex;
     react_native_assert(operationIndex < layoutAnimationOperations_.size());
     if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[operationIndex])) {

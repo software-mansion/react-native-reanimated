@@ -220,6 +220,10 @@ const config = {
             from: '/docs/worklets-babel-plugin/plugin-options',
             to: '/docs/worklets-plugin/plugin-options',
           },
+          {
+            from: '/docs/category/worklets-babel-plugin',
+            to: '/docs/worklets-plugin/about',
+          },
         ],
       }),
     ],
