@@ -1418,9 +1418,15 @@ void LayoutAnimationsProxy::finishNestedSharedTransitions(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext,
     const bool landed) const {
-  for (auto &[sharedTag, element] : sharedElements_) {
+  std::vector<SharedTag> nestedTags;
+  for (const auto &[sharedTag, element] : sharedElements_) {
     const auto &run = element.run;
     if (run && run->carrier->isNestedCarrier && isCarriedBy(run->carrier, carrier)) {
+      nestedTags.push_back(sharedTag);
+    }
+  }
+  for (const auto &sharedTag : nestedTags) {
+    if (auto &element = sharedElements_.at(sharedTag); element.run) {
       finishSharedTransition(sharedTag, element, transaction, propsParserContext, landed);
     }
   }
