@@ -344,6 +344,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   activeBoundaryMayHaveChanged_ = true;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     unmappedContentFadeTags_.insert(node->current.tag);
+    if (deferredSharedTransitionConfigReleases_.erase(node->current.tag)) {
+      layoutAnimationsManager_->clearSharedTransitionConfigs({node->current.tag});
+    }
   }
   forgetHiddenView(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
@@ -1291,6 +1294,9 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(
+        deferredSharedTransitionConfigReleases_.begin(), deferredSharedTransitionConfigReleases_.end()));
+    deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     retiringSharedTransitions_.clear();
     for (const auto &carrier : detachedCarriers_) {

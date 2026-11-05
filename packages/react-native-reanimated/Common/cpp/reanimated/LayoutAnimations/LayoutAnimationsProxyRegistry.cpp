@@ -3,7 +3,9 @@
 
 #include <react/renderer/mounting/ShadowTree.h>
 
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 
@@ -85,6 +87,19 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const in
     }
   }
   return {};
+}
+
+std::vector<Tag> LayoutAnimationsProxyRegistry::sharedTransitionConfigsToRelease(
+    const std::vector<Tag> &removedTags) const {
+  const auto proxies = instances();
+  std::vector<Tag> released;
+  for (const auto tag : removedTags) {
+    if (std::ranges::none_of(
+            proxies, [tag](const auto &proxy) { return proxy->deferSharedTransitionConfigRelease(tag); })) {
+      released.push_back(tag);
+    }
+  }
+  return released;
 }
 
 void LayoutAnimationsProxyRegistry::onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const {

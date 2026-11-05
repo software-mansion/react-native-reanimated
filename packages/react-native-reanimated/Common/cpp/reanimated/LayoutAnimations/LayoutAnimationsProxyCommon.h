@@ -138,6 +138,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int tag);
   virtual void onSharedTransitionConfigured(const std::vector<Tag> & /*viewTags*/) {}
+  // Keeps the shared transition config of a removed component while its view is still shown, e.g. while it exits.
+  virtual bool deferSharedTransitionConfigRelease(Tag /*tag*/) {
+    return false;
+  }
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(

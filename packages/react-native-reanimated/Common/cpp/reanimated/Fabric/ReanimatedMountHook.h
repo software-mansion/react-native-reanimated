@@ -4,6 +4,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/SynchronousWritesTracker.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
@@ -21,6 +22,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
       const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
       const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
       const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker,
       const std::function<void()> &requestFlush);
   ~ReanimatedMountHook() noexcept override;
@@ -34,6 +36,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
   const std::shared_ptr<LayoutAnimationsProxyRegistry> layoutAnimationsProxyRegistry_;
+  const std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
   const std::function<void()> requestFlush_;
 };

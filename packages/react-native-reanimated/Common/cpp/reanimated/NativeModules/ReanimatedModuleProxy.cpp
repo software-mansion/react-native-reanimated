@@ -1333,6 +1333,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       updatesRegistryManager_,
       mountedRootsRegistry_,
       layoutAnimationsProxyRegistry_,
+      layoutAnimationsManager_,
       synchronousWritesTracker_,
       request);
 
