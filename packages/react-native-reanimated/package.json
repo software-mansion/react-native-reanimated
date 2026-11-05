@@ -165,6 +165,12 @@
     "./src/initializers.native.ts",
     "./lib/module/initializers.native.js",
     "./src/index.ts",
-    "./lib/module/index.js"
+    "./lib/module/index.js",
+    "./src/ReanimatedModule/reanimatedModuleInstance.native.ts",
+    "./lib/module/ReanimatedModule/reanimatedModuleInstance.native.js",
+    "./src/featureFlags/index.ts",
+    "./lib/module/featureFlags/index.js",
+    "./src/createAnimatedComponent/AnimatedComponent.tsx",
+    "./lib/module/createAnimatedComponent/AnimatedComponent.js"
   ]
 }
