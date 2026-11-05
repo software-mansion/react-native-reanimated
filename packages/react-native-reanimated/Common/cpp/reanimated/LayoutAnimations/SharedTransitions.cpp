@@ -1493,34 +1493,45 @@ double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &
   return animated.value_or(run.contentFade->range.from);
 }
 
-// Nested carriers and hidden endpoints keep their own opacity, so the children that hold them do not fade.
+// Nested carriers and hidden endpoints keep their own opacity. A view that holds one does not fade, its other
+// children do.
 std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::fadingChildren(
     const std::shared_ptr<LightNode> &node,
     const std::unordered_set<Tag> &hiddenTags) const {
-  std::unordered_set<Tag> holdingChildren;
-  const auto keepChildHolding = [&](const std::shared_ptr<LightNode> &view) {
-    for (auto child = view, parent = view->parent.lock(); parent; child = parent, parent = parent->parent.lock()) {
-      if (parent == node) {
-        holdingChildren.insert(child->current.tag);
+  std::unordered_set<Tag> holdingViews;
+  const auto keepPathHolding = [&](const std::shared_ptr<LightNode> &view) {
+    std::vector<Tag> path;
+    for (auto pathNode = view->parent.lock(); pathNode; pathNode = pathNode->parent.lock()) {
+      if (pathNode == node) {
+        holdingViews.insert(path.begin(), path.end());
         return;
       }
+      path.push_back(pathNode->current.tag);
     }
   };
   for (const auto &[_, element] : sharedElements_) {
     if (element.run && element.run->carrier->isNestedCarrier) {
-      keepChildHolding(element.run->carrier);
+      keepPathHolding(element.run->carrier);
     }
     for (const auto &hiddenView : element.hiddenViews) {
-      keepChildHolding(hiddenView.node);
+      keepPathHolding(hiddenView.node);
     }
   }
   std::vector<std::shared_ptr<LightNode>> children;
-  for (const auto &child : node->children) {
-    if (isLightNodeMapped(child) && !child->isDetached && isViewKind(child->current) &&
-        !hiddenTags.contains(child->current.tag) && !holdingChildren.contains(child->current.tag)) {
-      children.push_back(child);
+  const auto collect = [&](const auto &self, const std::shared_ptr<LightNode> &parent) -> void {
+    for (const auto &child : parent->children) {
+      const auto tag = child->current.tag;
+      if (!isLightNodeMapped(child) || child->isCarrier() || !isViewKind(child->current) || hiddenTags.contains(tag)) {
+        continue;
+      }
+      if (holdingViews.contains(tag)) {
+        self(self, child);
+      } else {
+        children.push_back(child);
+      }
     }
-  }
+  };
+  collect(collect, node);
   return children;
 }
 
@@ -1757,7 +1768,10 @@ void LayoutAnimationsProxy::fadeInTargetContent(
     }
     const auto &view = mountedView(child);
     transaction.filteredMutations.push_back(createPropsUpdate(
-        view, cloneViewWithOpacity(view, 0, propsParserContext), run.target->current.tag, propsParserContext));
+        view,
+        cloneViewWithOpacity(view, 0, propsParserContext),
+        child->parent.lock()->current.tag,
+        propsParserContext));
     startEnteringAnimation(child, run.contentFade->options.fadeIn, true);
   }
   schedulePullOnNextFrame();
