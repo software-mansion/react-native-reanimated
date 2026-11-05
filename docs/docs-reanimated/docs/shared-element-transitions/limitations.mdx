@@ -1,0 +1,49 @@
+---
+sidebar_position: 8
+title: Limitations and troubleshooting
+sidebar_label: Limitations and troubleshooting
+---
+
+# Limitations and troubleshooting
+
+## The view does not move
+
+Check these points:
+
+- Both views have the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag), and each tag shows only once on a screen.
+- Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`.
+- Each screen is in a [`SharedTransitionBoundary`](./shared-transition-boundary.mdx), and `isActive` changes from the old screen to the new screen when you navigate.
+- No boundary that is always active is around the boundaries of your screens.
+- The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
+
+## Updates during the transition
+
+- Changes that React makes to the props or the layout of the moving view itself wait until the transition ends. Then they show at once, which can look like a jump. This includes changes from React state and from `useAnimatedStyle` updates that go through React. The children of the moving view can update during the move.
+- If the target view changes only its style during the transition, the moving view does not animate to the new style. The new style shows when the transition ends.
+- If the target view moves or changes its size during the transition, the moving view goes to the new place. If this happens just as the transition ends, the view can move again with the full duration.
+- If React removes the target view during the transition and the source view stays, the view moves to the last place of the target. Then the source view shows in its own place at once. If the same update makes the source screen active again, for example `navigation.goBack()`, the view moves back to the source.
+- A shared view inside another shared view waits for its parent. If its own transition ends first, it stays at its target until the transition of the parent ends.
+
+## Known issues
+
+- On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that flies to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
+- On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
+- During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
+- `SharedTransition.custom()` together with `fadeContent()` fades in the children of the target view, but the children of the moving view do not fade out.
+
+## Videos and media
+
+The moving view keeps its own content, for example an image or a video player. To reduce video glitches:
+
+- On iOS, give the same video player to the video views on both screens. Then the playback continues without a jump.
+- On Android, expo-video cannot show one player in two mounted views. Use a separate player on each screen. The two players can be at different positions, so the video can jump when the target shows. See the [expo-video guide](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
+- On Android, use a `TextureView` for a video that moves over other content, for example `surfaceType="textureView"` on the expo-video `VideoView`. A `TextureView` draws as a part of the view hierarchy, so it moves and overlaps like other views. It can cost more to draw and cannot show DRM content. Set the surface type before the transition, and do not change it during the transition. See the [Android `TextureView` reference](https://developer.android.com/reference/android/view/TextureView).
+
+Reanimated keeps the native view on screen during the transition, but not the React component that owns it. `useVideoPlayer` releases its player when the component that created it unmounts, also when the view still shows. For example, `navigation.goBack()` and the Android back button remove the screen from React at once, before the transition ends. To keep the player alive:
+
+- Create the player in a component that stays mounted, for example above the navigator.
+- Or create it with `createVideoPlayer` and call `release()` when no view needs it any more.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

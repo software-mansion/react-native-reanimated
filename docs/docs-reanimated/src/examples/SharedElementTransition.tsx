@@ -1,8 +1,12 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  SharedTransitionBoundary,
+} from 'react-native-reanimated';
 
 type StackParamList = {
   Home: undefined;
@@ -131,14 +135,31 @@ function DetailsScreen({
   );
 }
 
+function withSharedTransitionBoundary<P extends object>(
+  Screen: React.ComponentType<P>
+) {
+  return function ScreenWithBoundary(props: P) {
+    const isFocused = useIsFocused();
+
+    return (
+      <SharedTransitionBoundary isActive={isFocused}>
+        <Screen {...props} />
+      </SharedTransitionBoundary>
+    );
+  };
+}
+
+const Home = withSharedTransitionBoundary(HomeScreen);
+const Details = withSharedTransitionBoundary(DetailsScreen);
+
 export default function GalleryExample() {
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Details" component={DetailsScreen} />
+      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen name="Details" component={Details} />
     </Stack.Navigator>
   );
 }
