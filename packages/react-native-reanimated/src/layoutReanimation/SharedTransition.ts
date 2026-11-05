@@ -299,6 +299,19 @@ function withProcessedBoxShadow(style: StyleProps): StyleProps {
   return processed;
 }
 
+// Only `fadeContent()` adds the content opacity to the values.
+function getContentOpacityChange(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  const record = values as unknown as Record<string, unknown>;
+  const current = record.currentContentOpacity;
+  const target = record.targetContentOpacity;
+  return typeof current === 'number' &&
+    typeof target === 'number' &&
+    current !== target
+    ? { current, target }
+    : undefined;
+}
+
 function getInitialStyle(
   styles: Pick<ChangedStyle, 'key' | 'current'>[]
 ): StyleProps {
@@ -561,6 +574,13 @@ export class SharedTransition
     const delay = this.getDelay();
     const customAnimationFactory = this.customAnimationFactory;
     const progressAnimation = this.getStyleProgressAnimation();
+    const fadeContentOpacity = (target: number) => {
+      'worklet';
+      return delayFunction(
+        delay,
+        animation(target, { ...config, overshootClamping: true })
+      );
+    };
 
     if (this.transitionType === SharedTransitionType.PROGRESS_ANIMATION) {
       return (layoutAnimationValues) => {
@@ -589,11 +609,18 @@ export class SharedTransition
         const animations = withTransformMatrixAsTransform(
           customAnimationFactory(values)
         );
+        const delayedAnimations = mapAnimations(animations, (customAnimation) =>
+          delayFunction(delay, customAnimation)
+        ) as StyleProps;
+        const contentOpacity = getContentOpacityChange(values);
+        if (contentOpacity && animations.contentOpacity === undefined) {
+          delayedAnimations.contentOpacity = fadeContentOpacity(
+            contentOpacity.target
+          );
+        }
         return {
           initialValues: getCustomInitialStyle(values, animations),
-          animations: mapAnimations(animations, (customAnimation) =>
-            delayFunction(delay, customAnimation)
-          ) as StyleProps,
+          animations: delayedAnimations,
           callback,
         };
       };
@@ -621,10 +648,7 @@ export class SharedTransition
       const animations: Record<string, unknown> = {};
       for (const { key, target } of changed) {
         if (key === 'contentOpacity') {
-          animations[key] = delayFunction(
-            delay,
-            animation(target, { ...config, overshootClamping: true })
-          );
+          animations[key] = fadeContentOpacity(target as number);
           continue;
         }
         animations[key] =
@@ -653,10 +677,20 @@ export class SharedTransition
       this.progressAnimationFactory ?? defaultProgressAnimation;
     return (values, progress) => {
       'worklet';
+      let style = progressAnimation(values, progress);
+      const contentOpacity = getContentOpacityChange(values);
+      if (contentOpacity && style.contentOpacity === undefined) {
+        style = {
+          ...style,
+          contentOpacity: interpolateValue(
+            progress,
+            contentOpacity.current,
+            contentOpacity.target
+          ),
+        };
+      }
       // Animated styles process only the colors of individually animated shadows.
-      return withProcessedBoxShadow(
-        withTransformMatrixAsTransform(progressAnimation(values, progress))
-      );
+      return withProcessedBoxShadow(withTransformMatrixAsTransform(style));
     };
   }
 

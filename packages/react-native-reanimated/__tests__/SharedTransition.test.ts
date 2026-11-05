@@ -315,3 +315,58 @@ describe('SharedTransition', () => {
     });
   });
 });
+
+describe('SharedTransition with fadeContent', () => {
+  const FADING_VALUES = {
+    ...VALUES,
+    currentContentOpacity: 1,
+    targetContentOpacity: 0,
+  } as unknown as SharedTransitionAnimationsValues;
+  const fadingLayoutValues = FADING_VALUES as unknown as LayoutAnimationsValues;
+
+  test('fades the content out when a custom animation leaves it out', () => {
+    const { initialValues, animations } = SharedTransition.custom((values) => {
+      'worklet';
+      return { width: withTiming(values.targetWidth) };
+    })
+      .fadeContent()
+      .build()(fadingLayoutValues);
+    expect(initialValues.contentOpacity).toBe(1);
+    expect(animations).toHaveProperty('contentOpacity');
+  });
+
+  test('keeps the content opacity animation of a custom animation', () => {
+    const contentOpacity = withTiming(0.5);
+    const { animations } = SharedTransition.custom(() => {
+      'worklet';
+      return { contentOpacity };
+    })
+      .fadeContent()
+      .build()(fadingLayoutValues);
+    expect(animations.contentOpacity.toValue).toBe(0.5);
+  });
+
+  test('interpolates the content opacity of a custom progress animation', () => {
+    const style = SharedTransition.progressAnimation(() => {
+      'worklet';
+      return { opacity: 0.5 };
+    }).getProgressAnimation()(FADING_VALUES, 0.25);
+    expect(style).toEqual({ opacity: 0.5, contentOpacity: 0.75 });
+  });
+
+  test('drives the content opacity in PROGRESS_ANIMATION', () => {
+    const { initialValues, animations } = SharedTransition.progressAnimation(
+      () => {
+        'worklet';
+        return { opacity: 0.5 };
+      }
+    )
+      .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
+      .build()(fadingLayoutValues);
+    expect(initialValues.contentOpacity).toBe(1);
+    expect(Object.keys(animations).sort()).toEqual([
+      'contentOpacity',
+      'opacity',
+    ]);
+  });
+});
