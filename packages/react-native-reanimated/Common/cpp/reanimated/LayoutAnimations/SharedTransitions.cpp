@@ -641,13 +641,6 @@ void LayoutAnimationsProxy::attachCarrier(
     endAnimationsRecursively(node, mutations, mutations);
     return;
   }
-  // React deleted a nested carrier during the run. It and the removed views above it stay until the run ends.
-  if (node->isNestedCarrier && node->state == ExitingState::WAITING) {
-    node->isNestedCarrier = false;
-    cancelLayoutAnimation(node->current.tag);
-    tearDownWithDroppedAncestors(node, mutations);
-    return;
-  }
   const auto tag = node->current.tag;
   const auto mounted = carrierViewOnScreen(run);
   const auto parent = node->parent.lock();
@@ -802,14 +795,21 @@ void LayoutAnimationsProxy::moveNestedCarrierToRoot(SharedTransitionRun &run, Sh
   mutations.push_back(ShadowViewMutation::InsertMutation(surfaceId_, view, carrierHostIndex(node)));
 }
 
-bool LayoutAnimationsProxy::holdsNestedCarrier(const std::shared_ptr<LightNode> &node) const {
-  return std::ranges::any_of(sharedElements_, [&node](const auto &entry) {
-    const auto &run = entry.second.run;
-    return run && run->carrier->isNestedCarrier && isInSubtree(run->carrier, node);
-  });
+// React removes a view between a nested carrier and the carrier that moves it, so the nested carrier moves on from
+// the root, where the removal keeps it.
+void LayoutAnimationsProxy::moveNestedCarriersOutOf(
+    const std::shared_ptr<LightNode> &node,
+    TransactionMeta &transaction) const {
+  for (auto &[_, element] : sharedElements_) {
+    auto &run = element.run;
+    if (run && run->carrier->isNestedCarrier && isLinkedInSubtree(run->carrier, node) &&
+        !isInSubtree(carrierAncestorOf(run->carrier), node)) {
+      moveNestedCarrierToRoot(*run, transaction.filteredMutations);
+    }
+  }
 }
 
-// The parent of a moved nested carrier is elsewhere in the carrier that moves it, so its target shifts by the offset.
+// A carrier that changes its frame space keeps its target, shifted by the offset between the spaces.
 ShadowView LayoutAnimationsProxy::movedCarrierTarget(const Tag tag, const react::Point offset) const {
   auto target = lightNodes_.at(tag)->current;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
