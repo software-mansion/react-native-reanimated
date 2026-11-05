@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('path');
+
 const oxc = require('./index.js');
 
 // Previous steps can pass their output sourcemap
@@ -11,6 +13,7 @@ const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
 let warnedAboutIgnoredOptions = false;
+let cachedWorkletsPkgDir;
 let cachedSyntaxJsx;
 let cachedSyntaxTypescript;
 
@@ -19,6 +22,9 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
+  const inlineModules = babelApi.caller(
+    (caller) => caller?.supportsInlineModules === true
+  );
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -37,7 +43,12 @@ function workletsPluginOxcBabelShim(babelApi) {
             );
           }
 
-          const result = transform(state.file.code, filename, state);
+          const result = transform(
+            state.file.code,
+            filename,
+            state,
+            inlineModules
+          );
           if (!result.changed) {
             return;
           }
@@ -58,12 +69,14 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state) {
+function transform(sourceText, filename, state, inlineModules) {
   warnAboutIgnoredOptions(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
+      inlineModules,
+      workletsPackageDir: inlineModules ? undefined : resolveWorkletsPkgDir(),
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -78,6 +91,16 @@ function transform(sourceText, filename, state) {
     }
     throw error;
   }
+}
+
+/** @returns {string} */
+function resolveWorkletsPkgDir() {
+  if (cachedWorkletsPkgDir === undefined) {
+    cachedWorkletsPkgDir = path.dirname(
+      require.resolve('react-native-worklets/package.json')
+    );
+  }
+  return cachedWorkletsPkgDir;
 }
 
 /**

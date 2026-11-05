@@ -25,10 +25,13 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import assert from 'assert';
-import { dirname } from 'path';
+import { renameSync, writeFileSync } from 'fs';
+import { dirname, resolve } from 'path';
 
+import { createImportPathLiteral } from './imports';
 import type { WorkletsPluginPass } from './types';
 import {
+  generatedWorkletsDir,
   inlineModuleSpecifierPrefix,
   workletModuleDirective,
   workletModuleIdBinding,
@@ -40,6 +43,50 @@ export function generateWorkletModuleSpecifier(
   factory: FunctionExpression,
   state: WorkletsPluginPass
 ): string {
+  const code = generateWorkletModule(
+    moduleBindingsToImport,
+    relativeBindingsToImport,
+    factory,
+    state,
+    false
+  );
+  return (
+    inlineModuleSpecifierPrefix + Buffer.from(code, 'utf8').toString('base64')
+  );
+}
+
+export function generateWorkletFile(
+  moduleBindingsToImport: Set<Binding>,
+  relativeBindingsToImport: Set<Binding>,
+  factory: FunctionExpression,
+  workletHash: number,
+  state: WorkletsPluginPass
+): string {
+  const code = generateWorkletModule(
+    moduleBindingsToImport,
+    relativeBindingsToImport,
+    factory,
+    state,
+    true
+  );
+  const filesDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    generatedWorkletsDir
+  );
+  const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
+  const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
+  writeFileSync(temporaryFilePath, code);
+  renameSync(temporaryFilePath, dedicatedFilePath);
+  return `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`;
+}
+
+function generateWorkletModule(
+  moduleBindingsToImport: Set<Binding>,
+  relativeBindingsToImport: Set<Binding>,
+  factory: FunctionExpression,
+  state: WorkletsPluginPass,
+  rebaseRelativeImports: boolean
+): string {
   const imports = [...moduleBindingsToImport, ...relativeBindingsToImport]
     .filter(
       (binding) =>
@@ -47,15 +94,16 @@ export function generateWorkletModuleSpecifier(
           binding.path.isImportDefaultSpecifier()) &&
         binding.path.parentPath.isImportDeclaration()
     )
-    .map((binding) =>
-      importDeclaration(
+    .map((binding) => {
+      const source = (binding.path.parentPath as NodePath<ImportDeclaration>)
+        .node.source.value;
+      return importDeclaration(
         [cloneNode(binding.path.node as ImportSpecifier, true)],
-        stringLiteral(
-          (binding.path.parentPath as NodePath<ImportDeclaration>).node.source
-            .value
-        )
-      )
-    );
+        rebaseRelativeImports && source.startsWith('.')
+          ? createImportPathLiteral(source, state)
+          : stringLiteral(source)
+      );
+    });
 
   const statements = [...factory.body.body];
   const returnedWorklet = statements.pop();
@@ -125,10 +173,7 @@ export function generateWorkletModuleSpecifier(
 
   assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
 
-  return (
-    inlineModuleSpecifierPrefix +
-    Buffer.from(transformedProg, 'utf8').toString('base64')
-  );
+  return transformedProg;
 }
 
 function resolvePresetTypescript(): string {

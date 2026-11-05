@@ -32,7 +32,11 @@ import { strict as assert } from 'assert';
 import { basename } from 'path';
 
 import { getClosure } from './closure';
-import { generateWorkletModuleSpecifier } from './generate';
+import {
+  generateWorkletFile,
+  generateWorkletModuleSpecifier,
+} from './generate';
+import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { moduleScopeReservedNames } from './types';
@@ -203,12 +207,24 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  const workletModuleSpecifier = generateWorkletModuleSpecifier(
-    moduleBindingsToImport,
-    relativeBindingsToImport,
-    factory,
-    state
-  );
+  let workletModuleSpecifier: string;
+  if (state.inlineModules) {
+    workletModuleSpecifier = generateWorkletModuleSpecifier(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      state
+    );
+  } else {
+    updateRelativeRequires(factory, state);
+    workletModuleSpecifier = generateWorkletFile(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      workletHash,
+      state
+    );
+  }
 
   return { factoryCallParamPack, workletHash, workletModuleSpecifier };
 }

@@ -12,10 +12,11 @@ use crate::closure::get_closure;
 use crate::factory_expression::{
     body_references_name, build_closure_array, build_factory_expression,
 };
+use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
 use crate::naming::worklet_hash;
 use crate::types::{MODULE_SCOPE_RESERVED_NAMES, State};
-use crate::worklet_file::generate_worklet_module_specifier;
+use crate::worklet_file::{RebaseTarget, generate_worklet_file, generate_worklet_module_specifier};
 use crate::worklet_string_code::build_worklet_string;
 
 pub struct WorkletInput<'a, 'b> {
@@ -107,7 +108,7 @@ pub fn make_worklet_factory<'a>(
 
     let hash = worklet_hash(&body_string);
 
-    let factory_expr = build_factory_expression(
+    let mut factory_expr = build_factory_expression(
         builder,
         allocator,
         &names,
@@ -117,13 +118,46 @@ pub fn make_worklet_factory<'a>(
         state,
     );
 
-    let (specifier, module_content) = generate_worklet_module_specifier(
-        builder,
-        factory_expr,
-        &closure.imports,
-        &closure.closure_variables,
-        &names.react_name,
-    );
+    let (specifier, module_content) = if state.opts.inline_modules == Some(true) {
+        generate_worklet_module_specifier(
+            builder,
+            factory_expr,
+            &closure.imports,
+            &closure.closure_variables,
+            &names.react_name,
+        )
+    } else {
+        if let Expression::FunctionExpression(func) = &mut factory_expr
+            && let Some(body) = func.body.as_mut()
+        {
+            update_relative_requires(
+                body,
+                filename,
+                state.opts.worklets_package_dir.as_deref(),
+                builder,
+            );
+        }
+        match generate_worklet_file(
+            builder,
+            factory_expr,
+            &closure.imports,
+            &closure.closure_variables,
+            &names.react_name,
+            hash,
+            RebaseTarget {
+                filename,
+                worklets_package_dir: state.opts.worklets_package_dir.as_deref(),
+            },
+        ) {
+            Ok(generated) => generated,
+            Err(message) => {
+                if state.error.is_none() {
+                    state.error = Some(message);
+                }
+                (String::new(), String::new())
+            }
+        }
+    };
 
     let call_scope = scoping
         .scope_parent_id(input.function_scope_id)

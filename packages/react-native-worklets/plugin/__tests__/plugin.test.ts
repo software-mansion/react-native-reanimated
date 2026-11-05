@@ -37,6 +37,7 @@ function runPlugin(
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const config = {
     filename,
+    caller: { name: 'test', supportsInlineModules: true },
     compact: false,
     babelrc: false,
     configFile: false,

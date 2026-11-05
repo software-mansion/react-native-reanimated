@@ -1,0 +1,12 @@
+diff --git a/src/index.js b/src/index.js
+index a830c9cd1072eb8e116465db680ad2a2377bc14d..4bd9944e6c6809ffe7e3f5243c8032f16d61883b 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -200,6 +200,7 @@ const transform /*: BabelTransformer['transform'] */ = ({
+       // $FlowFixMe[prop-missing] Remove suppression after next Metro release
+       inlinePlatform: options.inlinePlatform,
+       unstable_transformProfile: options.unstable_transformProfile,
++      supportsInlineModules: options.supportsInlineModules,
+     },
+     ast: true,
+ 

@@ -68,7 +68,7 @@ var require_types = __commonJS({
   "lib/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.moduleScopeReservedNames = exports2.workletModuleIdBinding = exports2.inlineModuleSpecifierPrefix = exports2.workletModuleDirective = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    exports2.moduleScopeReservedNames = exports2.workletModuleIdBinding = exports2.inlineModuleSpecifierPrefix = exports2.workletModuleDirective = exports2.generatedWorkletsDir = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
     exports2.isWorkletizableFunctionPath = isWorkletizableFunctionPath;
     exports2.isWorkletizableFunctionNode = isWorkletizableFunctionNode;
     exports2.isWorkletizableObjectPath = isWorkletizableObjectPath;
@@ -88,6 +88,7 @@ var require_types = __commonJS({
     function isWorkletizableObjectNode(node) {
       return (0, types_12.isObjectExpression)(node);
     }
+    exports2.generatedWorkletsDir = ".worklets";
     exports2.workletModuleDirective = "worklet-module";
     exports2.inlineModuleSpecifierPrefix = "metro:inline;base64,";
     exports2.workletModuleIdBinding = "__workletModuleId";
@@ -594,12 +595,13 @@ var require_globals = __commonJS({
     exports2.isGeneratedWorkletModule = isGeneratedWorkletModule;
     var assert_1 = require("assert");
     var types_12 = require_types();
-    function initializeState(state) {
+    function initializeState(state, inlineModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletModule(state.file);
       if (state.skipFile) {
         return;
       }
+      state.inlineModules = inlineModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
@@ -666,11 +668,31 @@ var require_imports = __commonJS({
   "lib/imports.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.updateRelativeRequires = updateRelativeRequires;
     exports2.isImport = isImport;
     exports2.isImportRelative = isImportRelative;
     exports2.canForwardModuleImport = canForwardModuleImport;
     exports2.canForwardRelativeImport = canForwardRelativeImport;
+    exports2.createImportPathLiteral = createImportPathLiteral;
+    var core_1 = require("@babel/core");
+    var types_12 = require("@babel/types");
     var path_1 = require("path");
+    var types_2 = require_types();
+    function updateRelativeRequires(node, state) {
+      (0, core_1.traverse)(node, {
+        noScope: true,
+        CallExpression(nodePath) {
+          const specifier = nodePath.get("arguments")[0];
+          if (!(specifier === null || specifier === void 0 ? void 0 : specifier.isStringLiteral()) || !specifier.node.value.startsWith(".")) {
+            return;
+          }
+          const callee = nodePath.get("callee");
+          if (callee.isImport() || callee.isIdentifier({ name: "require" })) {
+            specifier.replaceWith(createImportPathLiteral(specifier.node.value, state));
+          }
+        }
+      });
+    }
     function isImport(binding) {
       return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
     }
@@ -696,6 +718,12 @@ var require_imports = __commonJS({
         }
       }
       return false;
+    }
+    function createImportPathLiteral(originalPath, state) {
+      const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+      const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
+      const relativePath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
+      return (0, types_12.stringLiteral)(path_1.sep === "/" ? relativePath : relativePath.split(path_1.sep).join("/"));
     }
   }
 });
@@ -784,14 +812,33 @@ var require_generate = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.generateWorkletModuleSpecifier = generateWorkletModuleSpecifier;
+    exports2.generateWorkletFile = generateWorkletFile;
     var core_1 = require("@babel/core");
     var types_12 = require("@babel/types");
     var assert_1 = __importDefault(require("assert"));
+    var fs_1 = require("fs");
     var path_1 = require("path");
+    var imports_1 = require_imports();
     var types_2 = require_types();
     function generateWorkletModuleSpecifier(moduleBindingsToImport, relativeBindingsToImport, factory, state) {
+      const code = generateWorkletModule(moduleBindingsToImport, relativeBindingsToImport, factory, state, false);
+      return types_2.inlineModuleSpecifierPrefix + Buffer.from(code, "utf8").toString("base64");
+    }
+    function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
+      const code = generateWorkletModule(moduleBindingsToImport, relativeBindingsToImport, factory, state, true);
+      const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+      const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
+      (0, fs_1.writeFileSync)(temporaryFilePath, code);
+      (0, fs_1.renameSync)(temporaryFilePath, dedicatedFilePath);
+      return `react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`;
+    }
+    function generateWorkletModule(moduleBindingsToImport, relativeBindingsToImport, factory, state, rebaseRelativeImports) {
       var _a;
-      const imports = [...moduleBindingsToImport, ...relativeBindingsToImport].filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const imports = [...moduleBindingsToImport, ...relativeBindingsToImport].filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => {
+        const source = binding.path.parentPath.node.source.value;
+        return (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], rebaseRelativeImports && source.startsWith(".") ? (0, imports_1.createImportPathLiteral)(source, state) : (0, types_12.stringLiteral)(source));
+      });
       const statements = [...factory.body.body];
       const returnedWorklet = statements.pop();
       (0, assert_1.default)((0, types_12.isReturnStatement)(returnedWorklet) && (0, types_12.isIdentifier)(returnedWorklet.argument));
@@ -830,7 +877,7 @@ var require_generate = __commonJS({
         comments: false
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
-      return types_2.inlineModuleSpecifierPrefix + Buffer.from(transformedProg, "utf8").toString("base64");
+      return transformedProg;
     }
     function resolvePresetTypescript() {
       try {
@@ -996,6 +1043,7 @@ var require_workletFactory = __commonJS({
     var path_1 = require("path");
     var closure_1 = require_closure();
     var generate_1 = require_generate();
+    var imports_1 = require_imports();
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -1052,7 +1100,13 @@ var require_workletFactory = __commonJS({
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
-      const workletModuleSpecifier = (0, generate_1.generateWorkletModuleSpecifier)(moduleBindingsToImport, relativeBindingsToImport, factory, state);
+      let workletModuleSpecifier;
+      if (state.inlineModules) {
+        workletModuleSpecifier = (0, generate_1.generateWorkletModuleSpecifier)(moduleBindingsToImport, relativeBindingsToImport, factory, state);
+      } else {
+        (0, imports_1.updateRelativeRequires)(factory, state);
+        workletModuleSpecifier = (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
+      }
       return { factoryCallParamPack, workletHash, workletModuleSpecifier };
     }
     function stripWorkletDirectives(fun) {
@@ -1210,7 +1264,8 @@ var directives_1 = require_directives();
 var globals_1 = require_globals();
 var types_1 = require_types();
 var workletSubstitution_1 = require_workletSubstitution();
-module.exports = function WorkletsBabelPlugin() {
+module.exports = function WorkletsBabelPlugin(api) {
+  const inlineModules = api.caller((caller) => (caller === null || caller === void 0 ? void 0 : caller.supportsInlineModules) === true);
   function runWithTaggedExceptions(state, fun) {
     if (state.skipFile) {
       return;
@@ -1228,7 +1283,7 @@ module.exports = function WorkletsBabelPlugin() {
     name: "worklets",
     pre() {
       runWithTaggedExceptions(this, () => {
-        (0, globals_1.initializeState)(this);
+        (0, globals_1.initializeState)(this, inlineModules);
         this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },

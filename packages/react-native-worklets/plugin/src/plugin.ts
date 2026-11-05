@@ -1,4 +1,4 @@
-import type { NodePath, PluginItem, Visitor } from '@babel/core';
+import type { ConfigAPI, NodePath, PluginItem, Visitor } from '@babel/core';
 import type { CallExpression, Directive } from '@babel/types';
 
 import {
@@ -11,7 +11,13 @@ import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
-module.exports = function WorkletsBabelPlugin(): PluginItem {
+module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
+  const inlineModules = api.caller(
+    (caller) =>
+      (caller as { supportsInlineModules?: boolean } | undefined)
+        ?.supportsInlineModules === true
+  );
+
   function runWithTaggedExceptions(state: WorkletsPluginPass, fun: () => void) {
     if (state.skipFile) {
       return;
@@ -31,7 +37,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
 
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
-        initializeState(this);
+        initializeState(this, inlineModules);
         /**
          * We run the micro-plugin in the `pre` step of the whole pipeline to
          * add all 'worklet' directives before React Compiler kicks in.

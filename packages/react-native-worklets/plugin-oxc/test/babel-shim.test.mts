@@ -21,6 +21,7 @@ test(
         `function foo(x) { 'worklet'; return x + 1; }`,
         {
           filename: 'test.js',
+          caller: { name: 'test', supportsInlineModules: true },
           babelrc: false,
           configFile: false,
           plugins: [shim],

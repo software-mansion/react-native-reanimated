@@ -2,11 +2,15 @@
 
 These patches are part of the standard `react-native-worklets` setup. Bundle Mode - the only mode of running worklets as of 1.0.0 - uses a bunch of APIs which aren't yet available in the React Native ecosystem, so you need to apply several patches.
 
-Worklet modules are `metro:inline` dependencies of the file that defines them, which Metro resolves to virtual modules anchored at that file. Metro gains this in [react/metro#2056](https://github.com/react/metro/pull/2056), [react/metro#2036](https://github.com/react/metro/pull/2036) and [react/metro#2037](https://github.com/react/metro/pull/2037); until a release includes them, the `metro` and `metro-config` patches add those three commits to Metro 0.87.2. `bundleModeMetroConfig` sets the required `resolver.unstable_allowVirtualModules`.
+The plugins emit each worklet module in one of two ways, chosen by the `supportsInlineModules` flag that Metro passes to Babel plugins through the caller data:
+
+- With a Metro that supports `metro:inline` specifiers (react/metro#2056, #2036 and #2037, not released yet), the worklet module is a `metro:inline` dependency of the file that defines it and Metro resolves it to a virtual module anchored at that file. Nothing is written to disk. Until a release includes those commits, the `metro`, `metro-config`, `metro-babel-transformer` and `metro-transform-worker` patches add them to Metro 0.87.2, and the `@react-native/metro-babel-transformer` patch forwards the flag to Babel plugins. `bundleModeMetroConfig` sets `resolver.unstable_allowVirtualModules` when it detects such a Metro.
+- With any other Metro, the plugins write each worklet module into `react-native-worklets/.worklets/<hash>.js`. Metro does not index those files in time, so the `metro` patch for your Metro version (the `getOrComputeSha1` hunk) is needed for seamless bundling.
 
 ## What to patch
 
-- `metro` and `metro-config` - virtual modules and `metro:inline` specifiers, which Bundle Mode worklet modules use.
+- `metro`, `metro-config`, `metro-babel-transformer`, `metro-transform-worker` and `@react-native/metro-babel-transformer` (0.87.2 / React Native 0.88 only) - virtual modules and `metro:inline` specifiers.
+- `metro` (other versions) - synchronous indexing of the written worklet modules.
 - `metro-runtime` - enables Fast Refresh support in Bundle Mode.
 
 ## Patching instructions

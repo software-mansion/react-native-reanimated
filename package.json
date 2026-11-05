@@ -82,7 +82,7 @@
   },
   "resolutions": {
     "metro": "patch:metro@npm%3A0.87.2#~/.yarn/patches/metro-npm-0.87.2-a87bad3a07.patch",
-    "metro-babel-transformer": "0.87.2",
+    "metro-babel-transformer": "patch:metro-babel-transformer@npm%3A0.87.2#~/.yarn/patches/metro-babel-transformer-npm-0.87.2-inline.patch",
     "metro-cache": "0.87.2",
     "metro-cache-key": "0.87.2",
     "metro-config": "patch:metro-config@npm%3A0.87.2#~/.yarn/patches/metro-config-npm-0.87.2-f26296d67b.patch",
@@ -94,6 +94,7 @@
     "metro-source-map": "0.87.2",
     "metro-symbolicate": "0.87.2",
     "metro-transform-plugins": "0.87.2",
-    "metro-transform-worker": "0.87.2"
+    "metro-transform-worker": "patch:metro-transform-worker@npm%3A0.87.2#~/.yarn/patches/metro-transform-worker-npm-0.87.2-inline.patch",
+    "@react-native/metro-babel-transformer": "patch:@react-native/metro-babel-transformer@npm%3A0.88.0#~/.yarn/patches/@react-native-metro-babel-transformer-npm-0.88.0-inline.patch"
   }
 }

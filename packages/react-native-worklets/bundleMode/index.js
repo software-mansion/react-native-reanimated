@@ -1,5 +1,6 @@
 const path = require('path');
 
+const workletsPackageParentDir = path.resolve(__dirname, '../..');
 const prepareBundleModePolyfillPath = path.join(
   __dirname,
   'polyfills',
@@ -7,6 +8,7 @@ const prepareBundleModePolyfillPath = path.join(
 );
 
 const workletsPackageName = 'react-native-worklets';
+const workletsDirPath = path.posix.join(workletsPackageName, '.worklets');
 const workletsSrcEntryPath = path.posix.join(
   workletsPackageName,
   'src',
@@ -19,9 +21,31 @@ const workletsLibEntryPath = path.posix.join(
   'index.js'
 );
 
-const bundleModeResolverConfig = {
-  unstable_allowVirtualModules: true,
-};
+function bundleModeResolveRequest(
+  /** @type {any} */ context,
+  /** @type {string} */ moduleName,
+  /** @type {any} */ platform,
+  /** @type {any} */ userConfigResolveRequest
+) {
+  if (moduleName.startsWith(workletsDirPath)) {
+    const fullModuleName = path.join(workletsPackageParentDir, moduleName);
+    return { type: 'sourceFile', filePath: fullModuleName };
+  }
+  return (userConfigResolveRequest || context.resolveRequest)(
+    context,
+    moduleName,
+    platform
+  );
+}
+
+function metroSupportsVirtualModules() {
+  try {
+    require.resolve('metro/private/lib/resolveInlineModule');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** Use in React Native Community projects. */
 const bundleModeMetroConfig = {
@@ -29,7 +53,22 @@ const bundleModeMetroConfig = {
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
     polyfillModuleNames: [prepareBundleModePolyfillPath],
   },
-  resolver: bundleModeResolverConfig,
+  resolver: {
+    ...(metroSupportsVirtualModules()
+      ? { unstable_allowVirtualModules: true }
+      : {}),
+    resolveRequest: (
+      /** @type {any} */ context,
+      /** @type {string} */ moduleName,
+      /** @type {any} */ platform
+    ) => {
+      if (moduleName.startsWith(workletsDirPath)) {
+        const fullModuleName = path.join(workletsPackageParentDir, moduleName);
+        return { type: 'sourceFile', filePath: fullModuleName };
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
+  },
 };
 
 // eslint-disable-next-line jsdoc/require-param, jsdoc/require-returns
@@ -40,7 +79,22 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
     ...(config.serializer.polyfillModuleNames ?? []),
     prepareBundleModePolyfillPath,
   ];
-  config.resolver = { ...config.resolver, ...bundleModeResolverConfig };
+
+  if (metroSupportsVirtualModules()) {
+    config.resolver.unstable_allowVirtualModules = true;
+  }
+  const currentResolveRequest = config?.resolver?.resolveRequest;
+  config.resolver.resolveRequest = (
+    /** @type {any} */ context,
+    /** @type {string} */ moduleName,
+    /** @type {any} */ platform
+  ) =>
+    bundleModeResolveRequest(
+      context,
+      moduleName,
+      platform,
+      currentResolveRequest
+    );
 
   return config;
 }
@@ -53,14 +107,20 @@ function bundleModeCreateModuleIdFactory() {
     if (idFileMap.has(moduleName)) {
       return idFileMap.get(moduleName);
     }
-    if (
-      moduleName.includes(workletsPackageName) &&
-      (moduleName.endsWith(workletsSrcEntryPath) ||
-        moduleName.endsWith(workletsLibEntryPath))
-    ) {
-      const entryPointId = -2;
-      idFileMap.set(moduleName, entryPointId);
-      return entryPointId;
+    if (moduleName.includes(workletsPackageName)) {
+      if (
+        moduleName.endsWith(workletsSrcEntryPath) ||
+        moduleName.endsWith(workletsLibEntryPath)
+      ) {
+        const entryPointId = -2;
+        idFileMap.set(moduleName, entryPointId);
+        return entryPointId;
+      } else if (moduleName.includes(workletsDirPath)) {
+        const base = path.basename(moduleName, '.js');
+        const id = Number(base);
+        idFileMap.set(moduleName, id);
+        return id;
+      }
     }
     idFileMap.set(moduleName, nextId++);
     return idFileMap.get(moduleName);

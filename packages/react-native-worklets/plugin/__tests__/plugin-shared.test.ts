@@ -28,6 +28,7 @@ function runPlugin(
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
     filename: MOCK_LOCATION,
+    caller: { name: 'test', supportsInlineModules: true },
     compact: false,
     babelrc: false,
     configFile: false,

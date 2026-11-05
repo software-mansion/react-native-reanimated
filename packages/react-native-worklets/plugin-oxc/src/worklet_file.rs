@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use oxc_allocator::TakeIn;
 use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
@@ -6,19 +8,73 @@ use oxc_span::SPAN;
 
 use crate::ast::identifier_binding_pattern;
 use crate::factory_expression::build_member_assign;
+use crate::imports::create_import_path;
 
 pub const WORKLET_MODULE_DIRECTIVE: &str = "worklet-module";
 
 pub const INLINE_MODULE_SPECIFIER_PREFIX: &str = "metro:inline;base64,";
 const WORKLET_MODULE_ID_BINDING: &str = "__workletModuleId";
+const GENERATED_WORKLETS_DIR: &str = ".worklets";
+
+pub struct RebaseTarget<'b> {
+    pub filename: &'b str,
+    pub worklets_package_dir: Option<&'b str>,
+}
 
 pub fn generate_worklet_module_specifier<'a>(
+    builder: AstBuilder<'a>,
+    factory: Expression<'a>,
+    imports: &[crate::types::ImportInfo],
+    closure_variables: &[String],
+    react_name: &str,
+) -> (String, String) {
+    let code = build_worklet_module(
+        builder,
+        factory,
+        imports,
+        closure_variables,
+        react_name,
+        None,
+    );
+    let specifier = format!(
+        "{INLINE_MODULE_SPECIFIER_PREFIX}{}",
+        base64_encode(code.as_bytes())
+    );
+    (specifier, code)
+}
+
+pub fn generate_worklet_file<'a>(
+    builder: AstBuilder<'a>,
+    factory: Expression<'a>,
+    imports: &[crate::types::ImportInfo],
+    closure_variables: &[String],
+    react_name: &str,
+    worklet_hash: u64,
+    rebase: RebaseTarget<'_>,
+) -> Result<(String, String), String> {
+    let code = build_worklet_module(
+        builder,
+        factory,
+        imports,
+        closure_variables,
+        react_name,
+        Some(&rebase),
+    );
+    let file_path = format!("react-native-worklets/{GENERATED_WORKLETS_DIR}/{worklet_hash}.js");
+    if let Some(package_dir) = rebase.worklets_package_dir {
+        write_worklet_file(package_dir, &file_path, &code)?;
+    }
+    Ok((file_path, code))
+}
+
+fn build_worklet_module<'a>(
     builder: AstBuilder<'a>,
     mut factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
     closure_variables: &[String],
     react_name: &str,
-) -> (String, String) {
+    rebase: Option<&RebaseTarget<'_>>,
+) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
 
     let mut module_id_binding = WORKLET_MODULE_ID_BINDING.to_string();
@@ -33,7 +89,15 @@ pub fn generate_worklet_module_specifier<'a>(
 
     let mut body = builder.vec_with_capacity(imports.len() + 3);
     for info in imports {
-        body.push(build_import_declaration(builder, info));
+        let mut info = info.clone();
+        if let Some(target) = rebase
+            && info.source.starts_with('.')
+            && let Some(rebased) =
+                create_import_path(target.filename, &info.source, target.worklets_package_dir)
+        {
+            info.source = rebased;
+        }
+        body.push(build_import_declaration(builder, &info));
     }
     let binding_atom = builder.ident(&module_id_binding);
     let read_module_id = builder.variable_declarator(
@@ -102,11 +166,24 @@ pub fn generate_worklet_module_specifier<'a>(
         .with_options(oxc_codegen::CodegenOptions::default())
         .build(&program);
 
-    let specifier = format!(
-        "{INLINE_MODULE_SPECIFIER_PREFIX}{}",
-        base64_encode(printed.code.as_bytes())
-    );
-    (specifier, printed.code)
+    printed.code
+}
+
+fn write_worklet_file(
+    worklets_package_dir: &str,
+    file_path: &str,
+    content: &str,
+) -> Result<(), String> {
+    let dir = Path::new(worklets_package_dir).join(GENERATED_WORKLETS_DIR);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
+    let name = file_path.rsplit('/').next().unwrap_or(file_path);
+    let path = dir.join(name);
+    let temporary = dir.join(format!("{name}.{}.tmp", std::process::id()));
+    std::fs::write(&temporary, content)
+        .map_err(|error| format!("could not write {}: {error}", temporary.display()))?;
+    std::fs::rename(&temporary, &path)
+        .map_err(|error| format!("could not write {}: {error}", path.display()))
 }
 
 fn build_import_declaration<'a>(

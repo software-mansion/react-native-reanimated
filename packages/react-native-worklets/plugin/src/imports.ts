@@ -1,7 +1,38 @@
-import type { NodePath } from '@babel/core';
+import { type NodePath, traverse } from '@babel/core';
 import type { Binding } from '@babel/traverse';
-import type { ImportDeclaration } from '@babel/types';
-import { posix, sep } from 'path';
+import {
+  type FunctionExpression,
+  type ImportDeclaration,
+  type StringLiteral,
+  stringLiteral,
+} from '@babel/types';
+import { dirname, posix, relative, resolve, sep } from 'path';
+
+import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
+
+export function updateRelativeRequires(
+  node: FunctionExpression,
+  state: WorkletsPluginPass
+): void {
+  traverse(node, {
+    noScope: true,
+    CallExpression(nodePath) {
+      const specifier = nodePath.get('arguments')[0];
+      if (
+        !specifier?.isStringLiteral() ||
+        !specifier.node.value.startsWith('.')
+      ) {
+        return;
+      }
+      const callee = nodePath.get('callee');
+      if (callee.isImport() || callee.isIdentifier({ name: 'require' })) {
+        specifier.replaceWith(
+          createImportPathLiteral(specifier.node.value, state)
+        );
+      }
+    },
+  });
+}
 
 export function isImport(binding: Binding): boolean {
   return (
@@ -62,4 +93,20 @@ function matchesFilenameSegment(
     }
   }
   return false;
+}
+
+export function createImportPathLiteral(
+  originalPath: string,
+  state: WorkletsPluginPass
+): StringLiteral {
+  const generatedWorkletsDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    generatedWorkletsDir
+  );
+
+  const resolved = resolve(dirname(state.file.opts.filename!), originalPath);
+  const relativePath = relative(generatedWorkletsDirPath, resolved);
+  return stringLiteral(
+    sep === '/' ? relativePath : relativePath.split(sep).join('/')
+  );
 }

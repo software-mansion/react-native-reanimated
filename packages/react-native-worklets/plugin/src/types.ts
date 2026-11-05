@@ -26,6 +26,7 @@ export interface WorkletsPluginPass {
   workletNumber: number;
   skipFile: boolean;
   importForwarding: InitializedImportForwarding;
+  inlineModules: boolean;
 }
 
 export type WorkletizableFunction =
@@ -74,6 +75,8 @@ export function isWorkletizableObjectNode(
 ): node is WorkletizableObject {
   return isObjectExpression(node);
 }
+
+export const generatedWorkletsDir = '.worklets';
 
 export const workletModuleDirective = 'worklet-module';
 

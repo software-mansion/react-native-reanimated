@@ -3,11 +3,15 @@ import { strict as assert } from 'assert';
 
 import { type WorkletsPluginPass, workletModuleDirective } from './types';
 
-export function initializeState(state: WorkletsPluginPass) {
+export function initializeState(
+  state: WorkletsPluginPass,
+  inlineModules: boolean
+) {
   state.skipFile = isGeneratedWorkletModule(state.file);
   if (state.skipFile) {
     return;
   }
+  state.inlineModules = inlineModules;
   state.workletNumber = 1;
 
   const userImportForwarding = state.opts.importForwarding;
