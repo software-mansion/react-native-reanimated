@@ -147,6 +147,10 @@ jobs:
             node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated
             echo "::endgroup::"
 
+      - name: Show disk usage
+        if: always()
+        run: df -h /
+
       - name: Upload crash reports
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
