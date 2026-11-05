@@ -205,6 +205,4 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 8. Share the good news with the team.
 
-8. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).
-
 **Congratulations on releasing a new version of Reanimated!**
