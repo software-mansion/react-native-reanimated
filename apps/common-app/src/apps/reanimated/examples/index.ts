@@ -843,8 +843,8 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: NestedZOrderExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // the nested shared view covers the label during the flight
-      android: false, // the nested shared view covers the label during the flight
+      ios: true,
+      android: true,
     },
   },
   NestedStacksExample: {

@@ -521,7 +521,7 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto tag = mutation.newChildShadowView.tag;
         // Without layout configs and animation records, every lookup below finds nothing, so the
         // update goes through as it is. Checked per mutation, as an Insert can transfer a config.
-        const bool mayAnimate = !node->isDetached &&
+        const bool mayAnimate = !node->isCarrier() &&
             (hasLayoutAnimationRecords() || layoutAnimationsManager_->hasLayoutAnimationConfigs(LAYOUT));
         std::shared_ptr<Serializable> config;
         auto shouldAnimate = false;
@@ -546,7 +546,7 @@ void LayoutAnimationsProxy::updateLightTree(
         }
         // The shared transition owns the mounted props and frame of its carrier.
         // attachCarrier mounts React props and synchronous updates from the light node.
-        if (node->isDetached) {
+        if (node->isCarrier()) {
           break;
         }
         if (!mayAnimate) {
@@ -845,7 +845,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree && !node->isDetached) {
+    if (!trackInLightTree && !node->isCarrier()) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }
@@ -1350,7 +1350,8 @@ bool LayoutAnimationsProxy::isCarrierOfUncoveredRun(
     const std::vector<std::shared_ptr<LightNode>> &coveringViews) const {
   return std::ranges::any_of(sharedElements_, [&](const auto &entry) {
     const auto &run = entry.second.run;
-    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews);
+    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews) &&
+        !landsWithOtherRuns(*run);
   });
 }
 
@@ -1584,35 +1585,35 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 }
 
 void LayoutAnimationsProxy::startSharedTransition(
-    const int tag,
+    const std::shared_ptr<LightNode> &carrier,
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
     const std::optional<ContentOpacityRange> contentOpacity) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
-      .tag = tag,
+      .tag = carrier->current.tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierParentTag(carrier),
       .config = config,
       .contentOpacity = contentOpacity,
   });
 }
 
 void LayoutAnimationsProxy::startProgressTransition(
-    const int tag,
+    const std::shared_ptr<LightNode> &carrier,
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
-      .tag = tag,
+      .tag = carrier->current.tag,
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = surfaceId_,
+      .parentTag = carrierParentTag(carrier),
   });
 }
 
