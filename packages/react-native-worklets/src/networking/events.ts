@@ -22,16 +22,20 @@ export type NetworkingEventListener = (event: NetworkingEvent) => void;
 
 type EventListenerOptions = {
   once?: boolean;
-  signal?: {
-    aborted: boolean;
-    addEventListener(type: string, listener: () => void): void;
-  };
+  signal?: AbortSignalLite;
+};
+
+type AbortSignalLite = {
+  aborted: boolean;
+  addEventListener(type: string, listener: () => void): void;
+  removeEventListener?(type: string, listener: () => void): void;
 };
 
 type Registration = {
   listener: NetworkingEventListener;
   once: boolean;
   removed: boolean;
+  detachAbort?: () => void;
 };
 
 export class EventTargetLite {
@@ -66,9 +70,13 @@ export class EventTargetLite {
       removed: false,
     };
     listeners.push(registration);
-    resolved.signal?.addEventListener('abort', () => {
-      this.removeRegistration(type, registration);
-    });
+    const signal = resolved.signal;
+    if (signal !== undefined) {
+      const onAbort = () => this.removeRegistration(type, registration);
+      signal.addEventListener('abort', onAbort);
+      registration.detachAbort = () =>
+        signal.removeEventListener?.('abort', onAbort);
+    }
   }
 
   removeEventListener(type: string, listener: NetworkingEventListener) {
@@ -89,6 +97,7 @@ export class EventTargetLite {
     if (index !== -1) {
       registration.removed = true;
       listeners.splice(index, 1);
+      registration.detachAbort?.();
     }
   }
 

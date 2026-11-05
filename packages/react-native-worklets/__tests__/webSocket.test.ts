@@ -5,7 +5,11 @@ import { WebSocket } from '../src/networking/WebSocket';
 
 type OpenedSocket = {
   socketId: number;
-  config: { url: string; protocols: string[]; headers: Array<[string, string]> };
+  config: {
+    url: string;
+    protocols: string[];
+    headers: Array<[string, string]>;
+  };
   emit: (type: string, payload: unknown) => void;
 };
 
@@ -489,6 +493,29 @@ describe('WebSocket event semantics', () => {
     errorSpy.mockRestore();
   });
 
+  it('detaches its abort listener when the listener is removed', () => {
+    const socket = connected();
+    const abortListeners = new Set<() => void>();
+    const signal = {
+      aborted: false,
+      addEventListener: (_type: string, listener: () => void) => {
+        abortListeners.add(listener);
+      },
+      removeEventListener: (_type: string, listener: () => void) => {
+        abortListeners.delete(listener);
+      },
+    };
+    const listener = () => {};
+    socket.addEventListener('message', listener, { signal });
+    expect(abortListeners.size).toBe(1);
+    socket.removeEventListener('message', listener);
+    expect(abortListeners.size).toBe(0);
+
+    socket.addEventListener('message', listener, { signal, once: true });
+    lastSocket().emit('message', { text: 'a' });
+    expect(abortListeners.size).toBe(0);
+  });
+
   it('removes only the registration of the signal that aborts', () => {
     const socket = connected();
     const first = new AbortController();
@@ -591,6 +618,23 @@ describe('WebSocket url and protocol negotiation', () => {
       );
     }
     expect(openedSockets).toHaveLength(0);
+  });
+
+  it('drops an empty port', () => {
+    expect(new WebSocket('ws://example.com:/x').url).toBe('ws://example.com/x');
+    expect(new WebSocket('ws://example.com:').url).toBe('ws://example.com/');
+  });
+
+  it('rejects a port above 65535', () => {
+    for (const url of ['ws://example.com:65536/', 'ws://example.com:99999/']) {
+      expect(() => new WebSocket(url)).toThrow(
+        expect.objectContaining({ name: 'SyntaxError' })
+      );
+    }
+    expect(openedSockets).toHaveLength(0);
+    expect(new WebSocket('ws://example.com:65535/').url).toBe(
+      'ws://example.com:65535/'
+    );
   });
 
   it('keeps userinfo with a password and a port', () => {

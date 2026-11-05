@@ -298,9 +298,15 @@ function canonicalize(scheme: string, rest: string): string {
         'SyntaxError'
       );
     }
-    const defaultPort = scheme === 'wss' ? '443' : '80';
+    if (port !== '' && Number(port) > 65535) {
+      throw new DOMException(
+        `[Worklets] Failed to construct 'WebSocket': the URL has a port above 65535.`,
+        'SyntaxError'
+      );
+    }
+    const defaultPort = scheme === 'wss' ? 443 : 80;
     host = host.slice(0, portAt);
-    if (port === '' || Number(port) !== Number(defaultPort)) {
+    if (port !== '' && Number(port) !== defaultPort) {
       portSuffix = `:${port}`;
     }
   }
