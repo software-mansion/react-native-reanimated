@@ -22,7 +22,7 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking).
+Worklet Runtimes come with a standalone networking module. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking).
 
 ```tsx
 const runtime = createWorkletRuntime({ name: 'worker' });
@@ -45,6 +45,18 @@ scheduleOnRuntime(runtime, async () => {
 | `WebSocket` | coming soon |
 
 Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+
+## Loading lazy chunks in Worklets
+
+In development, Metro splits code behind `import()` into lazy chunks. A worklet function can `import()` such a module too: the Worklet Runtime fetches the chunk from Metro and evaluates it, like the RN Runtime does.
+
+```tsx
+scheduleOnUI(async () => {
+  'worklet';
+  const { heavyComputation } = await import('./heavyComputation');
+  console.log(heavyComputation());
+});
+```
 
 ## Reference
 

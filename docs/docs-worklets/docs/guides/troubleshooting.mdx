@@ -66,13 +66,25 @@ See [Mismatch between JavaScript part and native part of Worklets](#mismatch-bet
 
 **Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
+**Solution:** Upgrade to Worklets 1.0 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ### Cannot read property 'createSerializableString' of undefined
 
 **Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
+**Solution:** Upgrade to Worklets 1.0 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
+
+### Failed to get the SHA-1 for a file in react-native-worklets/.worklets
+
+**Problem:** Your Metro has no support for inline modules, so the Worklets plugin writes each worklet module into `react-native-worklets/.worklets` while Metro bundles, and Metro cannot index the new files in time.
+
+**Solution:** Apply the `metro` patch for your Metro version, or use a Metro with inline module support together with its patches. See [Let Metro see the worklet modules](../bundleMode/setup.mdx#let-metro-see-the-worklet-modules).
+
+### Unable to resolve worklet from module
+
+**Problem:** A worklet function changed and Fast Refresh updated the RN Runtime, but the Worklet Runtime did not receive the new worklet module.
+
+**Solution:** Apply the `metro-runtime` patch, see [Enable fast refresh on Worklet Runtimes](../bundleMode/setup.mdx#enable-fast-refresh-on-worklet-runtimes), or reload the app.
 
 ## Warnings
 

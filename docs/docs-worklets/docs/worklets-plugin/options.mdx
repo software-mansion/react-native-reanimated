@@ -9,26 +9,15 @@ sidebar_label: 'Babel plugin options'
 
 import CodeBlock from '@theme/CodeBlock';
 
-Our plugin offers several optional functionalities that you may need to employ advanced APIs:
+The plugin needs no options to work. The ones it offers let you run third party code inside worklet functions and extend the transform it applies to them:
 
 <details>
   <summary>Type definitions</summary>
 
   ```typescript
   interface PluginOptions {
-    bundleMode?: boolean;
-    disableInlineStylesWarning?: boolean;
-    disableSourceMaps?: boolean;
-    disableWorkletClasses?: boolean;
     extraPlugins?: string[];
     extraPresets?: string[];
-    getHBCBinary?: () => string;
-    globals?: string[];
-    hermesBytecode?: boolean;
-    omitNativeOnlyData?: boolean;
-    relativeSourceLocation?: boolean;
-    strictGlobal?: boolean;
-    substituteWebPlatformChecks?: boolean;
     importForwarding?: {
       moduleNames?: string[];
       relativePaths?: string[];
@@ -43,13 +32,10 @@ Using this is straightforward for Babel plugins; you just need to pass an object
 
 Here's an example:
 
-```js {13-16}
+```js {10-13}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  bundleMode: true,
-  disableInlineStylesWarning: true,
-  globals: ['myObjectOnUI'],
-  substituteWebPlatformChecks: true,
+  importForwarding: { moduleNames: ['my-library'] },
 }
 
 module.exports = {

@@ -9,36 +9,30 @@ import ThemedImage from '@theme/ThemedImage';
 
 # Setup
 
-To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
+Bundle Mode is the only mode of running worklets, so every native app using `react-native-worklets` has to be configured as follows:
 
 ## Configure Worklets plugin
 
-1. **Modify your Babel configuration**. [Worklets plugin](../worklets-plugin/about.mdx) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+1. **Add the Worklets plugin to your Babel configuration**. The [Worklets plugin](../worklets-plugin/about.mdx) extracts each worklet function into a module that Worklet Runtimes load from your bundle.
 
 <Tabs groupId="worklets-plugin" queryString>
   <TabItem value="babel" label="Babel plugin">
-    ```javascript {2-5,13}
-    /** @type {import('react-native-worklets/plugin').PluginOptions} */
-    const workletsPluginOptions = {
-      bundleMode: true,
-      strictGlobal: true, // optional, but recommended
-    }
-
+    ```javascript {7}
     module.exports = {
       presets: [
         ... // don't add it here :)
       ],
       plugins: [
         ...
-        ['react-native-worklets/plugin', workletsPluginOptions],
+        'react-native-worklets/plugin',
       ],
     };
     ```
+
+    The plugin needs no options. See [Options](../worklets-plugin/options.mdx) for what you can configure.
   </TabItem>
 
   <TabItem value="oxc" label="Oxc plugin">
-    The Oxc plugin doesn't need any options. [`bundleMode`](../worklets-plugin/options.mdx#bundlemode) and [`strictGlobal`](../worklets-plugin/options.mdx#strictglobal) are always on.
-
     ```javascript {7}
     module.exports = {
       presets: [
@@ -50,12 +44,14 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
       ],
     };
     ```
+
+    The Oxc plugin needs no options either. See the [Oxc plugin](../worklets-plugin/oxc.mdx) page.
   </TabItem>
 </Tabs>
 
 ## Configure Metro
 
-2. **Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
+2. **Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle and to resolve the worklet modules the plugin emits. In your `metro.config.js` file, apply the config required for Bundle Mode. For example:
 
 <Tabs groupId="framework">
   <TabItem value="expo" label="Expo">
@@ -116,13 +112,29 @@ module.exports = getBundleModeMetroConfig(
 );
 ```
 
-## Use a Metro with inline module support
+## Let Metro see the worklet modules
 
-Bundle Mode isolates each worklet function in a separate module. The plugin emits that module inline, as a `require("metro:inline;base64,<module>")` dependency of the file that defines the worklet, and Metro resolves it to a virtual module beside that file. Nothing is written to disk and Metro caches each worklet module like any other file.
+The plugin emits each worklet module in one of two ways, depending on the Metro version it runs under. Metro tells the plugin which one it supports through the `supportsInlineModules` Babel caller flag.
 
-This needs a Metro version that supports `metro:inline` specifiers and virtual modules ([react/metro#2037](https://github.com/react/metro/pull/2037)). `bundleModeMetroConfig` and `getBundleModeMetroConfig` enable `resolver.unstable_allowVirtualModules` for you.
+### Metro with inline modules
 
-No released Metro includes this support yet. Until one does, apply the `metro` and `metro-config` patches for Metro 0.87.2 from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+A Metro that supports `metro:inline` specifiers and virtual modules ([react/metro#2037](https://github.com/react/metro/pull/2037)) receives each worklet module inline, as a `require("metro:inline;base64,<module>")` dependency of the file that defines the worklet, and resolves it to a virtual module beside that file. Nothing is written to disk and Metro caches each worklet module like any other file. `bundleModeMetroConfig` and `getBundleModeMetroConfig` enable `resolver.unstable_allowVirtualModules` for you when they detect such a Metro.
+
+No released Metro includes this support yet. Until one does, apply the `metro`, `metro-config`, `metro-babel-transformer`, `metro-transform-worker` and `@react-native/metro-babel-transformer` patches for Metro 0.87.2 and React Native 0.88 from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
+### Other Metro versions
+
+With any other Metro, the plugin writes each worklet module into `react-native-worklets/.worklets/<hash>.js` while it transforms your code. Metro does not index files created mid-build in time, so without a patch you will see "Failed to get the SHA-1 for ..." errors:
+
+<ThemedImage
+  sources={{
+light: useBaseUrl('/img/sha-light.png'),
+dark: useBaseUrl('/img/sha-dark.png'),
+}}
+  alt="Bundle Mode Metro error logs"
+/>
+
+Apply the `metro` patch for your Metro version from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches). **This patch does not require building React Native from source**.
 
 ## Enable fast refresh on Worklet Runtimes
 
@@ -165,7 +177,7 @@ Make sure to clear your Metro bundler's cache to ensure that all the changes are
   </TabItem>
 </Tabs>
 
-And that's it! You can now happily enjoy the Bundle Mode! You can learn more about using the Bundle Mode [here](./usage.mdx).
+And that's it! You can now happily enjoy worklets! You can learn more about using Bundle Mode [here](./usage.mdx).
 
 ## Reference
 

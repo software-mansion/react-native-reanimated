@@ -10,7 +10,7 @@ sidebar_label: 'Oxc plugin'
 </Badges>
 
 :::note
-The Oxc plugin is a port of the [Worklets Babel plugin](./about.mdx) to Rust, built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](../bundleMode/overview.mdx) is supported.
+The Oxc plugin is a port of the [Worklets Babel plugin](./about.mdx) to Rust, built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Once it matures, it will become the default.
 :::
 
 ## Setup
@@ -21,8 +21,8 @@ For setup instructions, refer to the [Bundle Mode setup](../bundleMode/setup.mdx
 
 The Oxc plugin accepts the [`importForwarding`](./options.mdx#importforwarding) option and it works the same way as in the Babel plugin.
 
-[`bundleMode`](./options.mdx#bundlemode) and [`strictGlobal`](./options.mdx#strictglobal) are always on and cannot be turned off. The remaining options of the Babel plugin are ignored.
+[`extraPlugins`](./options.mdx#extraplugins) and [`extraPresets`](./options.mdx#extrapresets) are accepted for compatibility with the Babel plugin, but ignored: the Oxc transform cannot run Babel plugins. Compose them around the Worklets plugin in `babel.config.js` instead.
 
 ## Notes
 
-Being a port, the Oxc plugin might not cover every edge case that the Babel plugin does. If you find a difference in behavior, please let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/).
+Being a port, the Oxc plugin might not cover every edge case that the Babel plugin does. If you find a difference in behavior, please let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/issues).
