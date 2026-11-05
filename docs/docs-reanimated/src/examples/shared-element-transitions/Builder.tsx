@@ -24,6 +24,7 @@ import { PLACES, Scenery } from './kit/Scenery';
 import {
   HEADER_BOTTOM,
   NavHeader,
+  PUSH_DURATION,
   StackScreens,
   useScreenStack,
 } from './kit/Stack';
@@ -92,7 +93,8 @@ export default function Builder({ width }: { width?: number }) {
   const [easing, setEasing] = useState<EasingName>('default');
   const [springDuration, setSpringDuration] = useState(500);
   const [dampingRatio, setDampingRatio] = useState(0.5);
-  const stack = useScreenStack();
+  const moveDuration = kind === 'timing' ? duration : springDuration;
+  const stack = useScreenStack(moveDuration / PUSH_DURATION);
   const flight = useFlight();
   const busy = flight.pairs.length > 0;
 
@@ -217,6 +219,7 @@ export default function Builder({ width }: { width?: number }) {
           />
           <Control label="easing">
             <Dropdown
+              label="easing"
               value={easing}
               options={EASING_OPTIONS}
               onChange={setEasing}

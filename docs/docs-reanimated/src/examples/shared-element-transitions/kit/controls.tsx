@@ -13,7 +13,7 @@ import {
 
 import { useDemoTheme } from './theme';
 
-const WIDE_LAYOUT = 600;
+const WIDE_LAYOUT = 648;
 
 interface DemoLayoutProps {
   width?: number;
@@ -85,6 +85,7 @@ export function Toggle({ label, value, onChange, disabled }: ToggleProps) {
         color="secondary"
         checked={value}
         disabled={disabled}
+        slotProps={{ input: { 'aria-label': label } }}
         onChange={(event) => onChange(event.target.checked)}
       />
     </View>
@@ -155,16 +156,18 @@ export function TabBar<T extends string>({
 }
 
 export function Dropdown<T extends string>({
+  label,
   value,
   options,
   onChange,
-}: OptionsProps<T>) {
+}: OptionsProps<T> & { label: string }) {
   const theme = useDemoTheme();
   return (
     <Select
       fullWidth
       size="small"
       value={value}
+      inputProps={{ 'aria-label': label }}
       onChange={(event) => onChange(event.target.value as T)}
       sx={{ ...dropdownStyling, fontFamily: theme.mono }}>
       {options.map((option) => (
@@ -209,6 +212,7 @@ export function SliderControl({
         step={step}
         value={value}
         disabled={disabled}
+        aria-label={label}
         onChange={(_, next) => onChange(next as number)}
         sx={sliderStyling}
       />
@@ -295,10 +299,12 @@ export function PanelRow({
 }
 
 export function PanelSwitch({
+  label,
   value,
   onChange,
   disabled,
 }: {
+  label: string;
   value: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
@@ -309,12 +315,14 @@ export function PanelSwitch({
       color="secondary"
       checked={value}
       disabled={disabled}
+      slotProps={{ input: { 'aria-label': label } }}
       onChange={(event) => onChange(event.target.checked)}
     />
   );
 }
 
 export function PanelSlider({
+  label,
   value,
   min,
   max,
@@ -322,6 +330,7 @@ export function PanelSlider({
   onChange,
   disabled,
 }: {
+  label: string;
   value: number;
   min: number;
   max: number;
@@ -337,6 +346,7 @@ export function PanelSlider({
       step={step}
       value={value}
       disabled={disabled}
+      aria-label={label}
       onChange={(_, next) => onChange(next as number)}
       sx={sliderStyling}
     />

@@ -173,11 +173,17 @@ export default function Custom({ width }: { width?: number }) {
   };
 
   const open = () => {
+    if (busy || stack.top !== 'first') {
+      return;
+    }
     fly(SOURCE, TARGET);
     stack.push();
   };
 
   const back = () => {
+    if (busy || stack.top !== 'second') {
+      return;
+    }
     fly(TARGET, SOURCE);
     stack.pop();
   };

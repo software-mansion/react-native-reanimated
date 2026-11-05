@@ -9,6 +9,8 @@ import { useDemoTheme } from './theme';
 const HEIGHT = 120;
 const MIN_PROGRESS = -0.25;
 const MAX_PROGRESS = 1.35;
+const RANGE_MARGIN = 0.1;
+const FRAME_MS = 1000 / 60;
 
 interface Sample {
   time: number;
@@ -31,8 +33,11 @@ export function ProgressChart({
   const lastTime = samples.length ? samples[samples.length - 1].time : 0;
   const domain = Math.max(expectedDuration, lastTime, 1);
   const toX = (time: number) => (time / domain) * (width - 2) + 1;
+  const values = samples.map((sample) => sample.progress);
+  const low = Math.min(MIN_PROGRESS, ...values.map((v) => v - RANGE_MARGIN));
+  const high = Math.max(MAX_PROGRESS, ...values.map((v) => v + RANGE_MARGIN));
   const toY = (value: number) =>
-    HEIGHT - ((value - MIN_PROGRESS) / (MAX_PROGRESS - MIN_PROGRESS)) * HEIGHT;
+    HEIGHT - ((value - low) / (high - low)) * HEIGHT;
   const points = samples
     .map(
       (sample) =>
@@ -86,9 +91,18 @@ function useProgressTrace(progress: SharedValue<number>) {
 
   const record = (value: number) => {
     const now = performance.now();
-    if (value === 0 || start.current === 0) {
+    if (value === 0) {
       start.current = now;
-      setSamples([{ time: 0, progress: value }]);
+      setSamples([{ time: 0, progress: 0 }]);
+      return;
+    }
+    // The first move starts from 0 without a change, so it gets no 0 sample.
+    if (start.current === 0) {
+      start.current = now - FRAME_MS;
+      setSamples([
+        { time: 0, progress: 0 },
+        { time: FRAME_MS, progress: value },
+      ]);
       return;
     }
     const time = now - start.current;

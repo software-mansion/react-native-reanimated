@@ -125,7 +125,7 @@ export default function Progress({ width }: { width?: number }) {
   );
 
   const beginSwipe = () => {
-    if (swiping.current || !onDetails) {
+    if (swiping.current || !onDetails || busy) {
       return;
     }
     swiping.current = true;
@@ -171,7 +171,7 @@ export default function Progress({ width }: { width?: number }) {
   };
 
   const back = () => {
-    if (busy) {
+    if (busy || stack.top !== 'second') {
       return;
     }
     setSwipeDriven(false);
@@ -191,6 +191,9 @@ export default function Progress({ width }: { width?: number }) {
   };
 
   const open = (index: number) => {
+    if (busy || stack.top !== 'first') {
+      return;
+    }
     setSelected(index);
     setProgress(0);
     setSwipeDriven(false);
@@ -221,10 +224,12 @@ export default function Progress({ width }: { width?: number }) {
         Math.min(1, Math.max(0, event.translationX / SCREEN_WIDTH))
       );
     })
-    .onEnd((event) => {
+    .onEnd((event, success) => {
       scheduleOnRN(
         release,
-        Math.min(1, Math.max(0, event.translationX / SCREEN_WIDTH))
+        success
+          ? Math.min(1, Math.max(0, event.translationX / SCREEN_WIDTH))
+          : 0
       );
     });
 
@@ -313,7 +318,7 @@ export default function Progress({ width }: { width?: number }) {
       ? 'Released past the middle: the transition finished.'
       : outcome === 'cancelled'
         ? 'Released before the middle: the photo went back.'
-        : 'Release before 0.5 to cancel, after 0.5 to finish.';
+        : 'Release before 0.5 to cancel, after 0.5 to finish. With the keyboard, press Enter to release.';
   const swipeSlider = (
     <Slider
       size="small"
@@ -323,7 +328,17 @@ export default function Progress({ width }: { width?: number }) {
       value={swipeProgress}
       disabled={!onDetails || (busy && !swiping.current)}
       onChange={(_, value) => scrub(value as number)}
-      onChangeCommitted={(_, value) => release(value as number)}
+      onChangeCommitted={(event, value) => {
+        if (event.type !== 'keydown') {
+          release(value as number);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          release(progress);
+        }
+      }}
+      onBlur={() => release(progress)}
       marks={[{ value: 0.5 }]}
       sx={sliderStyling}
     />

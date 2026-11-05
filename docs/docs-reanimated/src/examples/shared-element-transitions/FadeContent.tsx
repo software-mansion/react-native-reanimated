@@ -179,6 +179,9 @@ export default function FadeContentDemo({ width }: { width?: number }) {
   };
 
   const open = (index: number) => {
+    if (busy || stack.top !== 'first') {
+      return;
+    }
     setSelected(index);
     fly(
       cardBox(index, ITEMS[index]),
@@ -196,6 +199,9 @@ export default function FadeContentDemo({ width }: { width?: number }) {
   };
 
   const back = () => {
+    if (busy || stack.top !== 'second') {
+      return;
+    }
     fly(
       headerBox(item),
       cardBox(selected, item),
@@ -296,16 +302,27 @@ export default function FadeContentDemo({ width }: { width?: number }) {
     <>
       <PanelRow
         title="Icon has its own tag"
-        accessory={<PanelSwitch value={iconHasTag} onChange={setIconHasTag} />}
+        accessory={
+          <PanelSwitch
+            label="Icon has its own tag"
+            value={iconHasTag}
+            onChange={setIconHasTag}
+          />
+        }
       />
       <PanelRow
         title="fadeContent()"
         accessory={
-          <PanelSwitch value={fadeContent} onChange={setFadeContent} />
+          <PanelSwitch
+            label="fadeContent()"
+            value={fadeContent}
+            onChange={setFadeContent}
+          />
         }
       />
       <PanelRow title="fadeOut.end" hint={fadeOutEnd.toFixed(2)}>
         <PanelSlider
+          label="fadeOut.end"
           value={fadeOutEnd}
           min={0.1}
           max={1}
@@ -316,6 +333,7 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       </PanelRow>
       <PanelRow title="fadeIn.duration" hint={`${fadeInDuration} ms`}>
         <PanelSlider
+          label="fadeIn.duration"
           value={fadeInDuration}
           min={0}
           max={1000}
@@ -327,7 +345,13 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       <PanelRow
         title="Slow motion"
         hint={`×${SLOW_MOTION}`}
-        accessory={<PanelSwitch value={slowMotion} onChange={setSlowMotion} />}
+        accessory={
+          <PanelSwitch
+            label="Slow motion"
+            value={slowMotion}
+            onChange={setSlowMotion}
+          />
+        }
       />
     </>
   );
@@ -430,8 +454,9 @@ function Timeline({
   fadeInDuration,
 }: TimelineProps) {
   const theme = useDemoTheme();
+  const [width, setWidth] = useState(TIMELINE_WIDTH);
   const total = DEFAULT_DURATION + 1000;
-  const toX = (time: number) => (time / total) * TIMELINE_WIDTH;
+  const toX = (time: number) => (time / total) * width;
   const moveEnd = toX(DEFAULT_DURATION);
   const fadeOutX = fadeContent
     ? toX(DEFAULT_DURATION * timeOfProgress(fadeOutEnd))
@@ -440,7 +465,7 @@ function Timeline({
 
   const playhead = useAnimatedStyle(() => ({
     opacity: clock.value > 0 && clock.value < total ? 1 : 0,
-    transform: [{ translateX: (clock.value / total) * TIMELINE_WIDTH }],
+    transform: [{ translateX: (clock.value / total) * width }],
   }));
 
   const lanes = [
@@ -450,8 +475,10 @@ function Timeline({
   ];
 
   return (
-    <View style={styles.timeline}>
-      <Svg width={TIMELINE_WIDTH} height={3 * (LANE_HEIGHT + 18)}>
+    <View
+      style={styles.timeline}
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      <Svg width={width} height={3 * (LANE_HEIGHT + 18)}>
         <Defs>
           <LinearGradient id="out" x1="0" x2="1" y1="0" y2="0">
             <Stop offset="0" stopColor={theme.accent} stopOpacity={1} />
@@ -471,7 +498,7 @@ function Timeline({
             key={lane.label}
             x={0}
             y={lane.y * (LANE_HEIGHT + 18) + 14}
-            width={TIMELINE_WIDTH}
+            width={width}
             height={LANE_HEIGHT}
             rx={4}
             fill={theme.line}
@@ -643,7 +670,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   timeline: {
-    width: TIMELINE_WIDTH,
+    width: '100%',
+    maxWidth: TIMELINE_WIDTH,
   },
   laneLabel: {
     position: 'absolute',

@@ -112,7 +112,12 @@ export function NavHeader({
   const minimal = backButtonDisplayMode === 'minimal';
   return (
     <View style={styles.header}>
-      <Pressable onPress={onBack} style={styles.back} hitSlop={8}>
+      <Pressable
+        onPress={onBack}
+        style={styles.back}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Back">
         <Text
           style={[
             minimal ? styles.backChevron : styles.backText,

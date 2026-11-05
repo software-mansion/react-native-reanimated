@@ -20,19 +20,22 @@ Shared Element Transitions move a view from one screen to another. When you navi
 ## Your first shared element transition
 
 ```tsx
+import { Pressable } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-function ListScreen() {
+function ListScreen({ navigation }) {
   return (
-    <Animated.View
-      // highlight-next-line
-      sharedTransitionTag="photo"
-      style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
-    />
+    <Pressable onPress={() => navigation.navigate('Details')}>
+      <Animated.View
+        // highlight-next-line
+        sharedTransitionTag="photo"
+        style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
+      />
+    </Pressable>
   );
 }
 

@@ -81,12 +81,18 @@ export default function StyleDemo({ width }: { width?: number }) {
   };
 
   const open = () => {
+    if (busy || stack.top !== 'first') {
+      return;
+    }
     setUsedStyleOf('A');
     fly(SOURCE, TARGET, styleA);
     stack.push();
   };
 
   const back = () => {
+    if (busy || stack.top !== 'second') {
+      return;
+    }
     setUsedStyleOf('B');
     fly(TARGET, SOURCE, styleB);
     stack.pop();

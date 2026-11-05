@@ -77,13 +77,16 @@ export default function Overview({ width }: { width?: number }) {
   };
 
   const open = (index: number) => {
+    if (busy || stack.top !== 'first') {
+      return;
+    }
     setSelected(index);
     fly(cardBox(index, PLACES[index]), heroBox(PLACES[index]), PLACES[index]);
     stack.push();
   };
 
   const back = () => {
-    if (busy) {
+    if (busy || stack.top !== 'second') {
       return;
     }
     fly(heroBox(place), cardBox(selected, place), place);

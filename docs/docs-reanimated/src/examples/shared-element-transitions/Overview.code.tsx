@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { NavigationContainer, useIsFocused } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -8,16 +8,23 @@ import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 type StackParamList = { List: undefined; Details: { color: string } };
 
 const Stack = createNativeStackNavigator<StackParamList>();
-const COLORS = ['#b58df1', '#87cce8', '#ffa3a1', '#b1dfd0'];
+const COLORS = [
+  { name: 'Purple', color: '#b58df1' },
+  { name: 'Blue', color: '#87cce8' },
+  { name: 'Pink', color: '#ffa3a1' },
+  { name: 'Mint', color: '#b1dfd0' },
+];
 
 function ListScreen({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'List'>) {
   return (
-    <View style={styles.grid}>
-      {COLORS.map((color) => (
+    <ScrollView contentContainerStyle={styles.grid}>
+      {COLORS.map(({ name, color }) => (
         <Pressable
           key={color}
+          accessibilityRole="button"
+          accessibilityLabel={name}
           onPress={() => navigation.navigate('Details', { color })}>
           <Animated.View
             sharedTransitionTag={color}
@@ -25,7 +32,7 @@ function ListScreen({
           />
         </Pressable>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
