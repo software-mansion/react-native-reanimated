@@ -320,7 +320,7 @@ std::shared_ptr<void> makePromiseDropGuard(
 }
 
 RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
-  const auto runtimeId = value.asNumber();
+  const auto runtimeId = value.getNumber();
   react_native_assert(std::isfinite(runtimeId) && "[Worklets] Runtime id must be a finite number.");
   react_native_assert(std::trunc(runtimeId) == runtimeId && "[Worklets] Runtime id must be an integer.");
   react_native_assert(runtimeId >= 0 && "[Worklets] Runtime id must not be negative.");
