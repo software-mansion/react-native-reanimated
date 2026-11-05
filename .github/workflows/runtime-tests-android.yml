@@ -134,18 +134,10 @@ jobs:
           disable-animations: false
           working-directory: apps/fabric-example
           script: |
-            echo "::group::ReJest self-tests"
-            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests
-            echo "::endgroup::"
-            echo "::group::Verify CI catches failing tests"
-            if node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
-            echo "::endgroup::"
-            echo "::group::Worklets runtime tests"
-            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets
-            echo "::endgroup::"
-            echo "::group::Reanimated runtime tests"
-            node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated
-            echo "::endgroup::"
+            echo "::group::ReJest self-tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Verify CI catches failing tests"; if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner"; status=1; else echo "Failing tests correctly failed the runner"; status=0; fi; echo "::endgroup::"; exit $status
+            echo "::group::Worklets runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Reanimated runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated; status=$?; echo "::endgroup::"; exit $status
 
       - name: Upload crash reports
         if: failure()

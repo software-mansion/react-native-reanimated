@@ -276,7 +276,7 @@ jobs:
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          if node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}" \
+          if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}" \
             --library self-tests --configuration "$CONFIGURATION" \
             --only "intentional failures";
           then

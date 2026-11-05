@@ -14,6 +14,10 @@ export function applyIsolationCheck(
     ...summary,
     failed: summary.failed + 1,
     failedTests: [...summary.failedTests, REANIMATED_ISOLATION_FAILURE],
+    failures: [
+      ...summary.failures,
+      { suite: '', name: REANIMATED_ISOLATION_FAILURE, errors: [] },
+    ],
   };
 }
 
