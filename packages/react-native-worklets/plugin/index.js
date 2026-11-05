@@ -549,7 +549,8 @@ var require_bundleMode = __commonJS({
       (0, path_1.join)(WORKLETS_SRC_DIR, "index.ts"),
       (0, path_1.join)(WORKLETS_SRC_DIR, "debug", "bundleMode.native.ts"),
       (0, path_1.join)(WORKLETS_LIB_DIR, "index.js"),
-      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js")
+      (0, path_1.join)(WORKLETS_LIB_DIR, "debug", "bundleMode.native.js"),
+      (0, path_1.join)(WORKLETS_PACKAGE, "bundleMode", "polyfills", "prepareBundleMode.js")
     ];
     function toggleBundleMode(path, state) {
       if (!state.opts.bundleMode || !togglePaths.some((togglePath) => {
