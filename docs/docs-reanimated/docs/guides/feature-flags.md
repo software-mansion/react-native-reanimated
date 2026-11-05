@@ -132,7 +132,7 @@ This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_leg
 
 When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue. The legacy proxy has no light tree, so [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations) has no effect with it.
 
-This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously. Since `ENABLE_SHARED_ELEMENT_TRANSITIONS` is enabled by default, you need to explicitly disable it in your app's `package.json` when enabling `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`.
+This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously. From Reanimated 4.8.0, `ENABLE_SHARED_ELEMENT_TRANSITIONS` is enabled by default, so you need to explicitly disable it in your app's `package.json` when enabling `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`.
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
