@@ -95,7 +95,6 @@ const transition = SharedTransition.duration(450).fadeContent({
 - A direct child of the target view with an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. Deeper children play their entering animations during the move.
 - The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - If the user goes back during the move, the children fade in again while the view returns.
-- With your own [`progressAnimation()`](./progress-transitions.mdx#progressanimation-) and `SharedTransitionType.PROGRESS_ANIMATION`, the children of the moving view fade out only during the iOS back navigation. In other transitions, only the fade-in works. The default progress animation fades them out in all transitions.
 - With `.springify()`, the fade-in starts when the spring stops. Pass the duration to `springify(duration)`, because the default fade-in length comes from it.
 
 ## Platform compatibility

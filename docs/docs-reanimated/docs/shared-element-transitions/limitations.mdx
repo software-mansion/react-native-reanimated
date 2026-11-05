@@ -31,7 +31,6 @@ Check these points:
 - On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that flies to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
 - On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
 - During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
-- With your own `progressAnimation()` and `SharedTransitionType.PROGRESS_ANIMATION`, `fadeContent()` fades out the children of the moving view only during the iOS back navigation. In other transitions, only the fade-in works.
 
 ## Videos and media
 
