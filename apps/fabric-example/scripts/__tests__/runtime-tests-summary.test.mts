@@ -280,6 +280,26 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.doesNotMatch(appended, /test 4/);
   });
 
+  it('skips the job summary when the file is already full', async () => {
+    workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runtime-tests-summary-'));
+    const summaryFile = path.join(workDir, 'summary.md');
+    const full = 'x'.repeat(1024 * 1024 - 20);
+    fs.writeFileSync(summaryFile, full);
+    const result = await runServerWithDevice(summaryFile, {
+      type: 'done',
+      passed: 0,
+      failed: 1,
+      skipped: 0,
+      failedTests: ['fails'],
+      failures: [{ suite: 'suite', name: 'fails', errors: [] }],
+      durationMs: 10,
+    });
+
+    assert.equal(fs.readFileSync(summaryFile, 'utf8'), full);
+    assert.match(result.stderr, /the job summary is full/);
+    assert.match(result.annotations, /suite › fails$/);
+  });
+
   it('annotates a device error', async () => {
     workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runtime-tests-summary-'));
     const summaryFile = path.join(workDir, 'summary.md');

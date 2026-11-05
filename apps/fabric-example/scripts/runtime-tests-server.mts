@@ -967,16 +967,26 @@ function appendGitHubStepSummary(heading: string, sections: string[]) {
     return;
   }
   try {
+    const room = STEP_SUMMARY_LIMIT_BYTES - stepSummarySize();
     const parts = sections.length > 0 ? [heading, ''] : [heading];
-    let bytes = stepSummarySize() + Buffer.byteLength(`${heading}\n\n`);
+    let bytes = Buffer.byteLength(`${parts.join('\n')}\n\n`);
     for (const [index, section] of sections.entries()) {
       const note = `_${sections.length - index} more failed test(s) not shown, see the log._`;
-      bytes += Buffer.byteLength(`\n${section}`);
-      if (bytes + Buffer.byteLength(`\n${note}`) > STEP_SUMMARY_LIMIT_BYTES) {
+      const sectionBytes = Buffer.byteLength(`\n${section}`);
+      const noteBytes = Buffer.byteLength(`\n${note}`);
+      if (bytes + sectionBytes + noteBytes > room) {
         parts.push(note);
+        bytes += noteBytes;
         break;
       }
       parts.push(section);
+      bytes += sectionBytes;
+    }
+    if (bytes > room) {
+      console.warn(
+        '[runtime-tests] the job summary is full, the result of this run is only in the log'
+      );
+      return;
     }
     fs.appendFileSync(GITHUB_STEP_SUMMARY, `${parts.join('\n')}\n\n`);
   } catch (error) {
