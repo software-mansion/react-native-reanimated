@@ -4,16 +4,18 @@ title: Shared transition props
 sidebar_label: Shared transition props
 ---
 
-import Tag from '@site/src/examples/shared-element-transitions/Tag';
-import TagSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Tag.code';
 import Style from '@site/src/examples/shared-element-transitions/Style';
 import StyleSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Style.code';
 
-# Shared transition props
+<Badges version="4.8.0">
+  # Shared transition props
+</Badges>
 
 Every animated component accepts two props for Shared Element Transitions. `sharedTransitionTag` selects the views that take part in a transition. `sharedTransitionStyle` selects how they move.
 
 ## `sharedTransitionTag`
+
+A string that pairs this view with a view on another screen. When the active [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary) changes, Reanimated looks for a view with the same tag in the old boundary and in the new boundary. If it finds both, it moves the old view to the place of the new view.
 
 ### Reference
 
@@ -43,12 +45,6 @@ function Thumbnail({ id }) {
   ```
 </details>
 
-A string that pairs this view with a view on another screen. When the active [`SharedTransitionBoundary`](./shared-transition-boundary.mdx) changes, Reanimated looks for a view with the same tag in the old boundary and in the new boundary. If it finds both, it moves the old view to the place of the new view.
-
-### Example
-
-<InteractiveExample src={TagSrc} component={Tag} larger/>
-
 ### Remarks
 
 - Use a tag only once on a screen. To animate more views at the same time, give each of them a different tag. For a list, build the tag from the item key, for example `` `photo-${item.id}` ``.
@@ -58,6 +54,8 @@ A string that pairs this view with a view on another screen. When the active [`S
 - A view and its child can both have a tag. Then each of them moves to its own match.
 
 ## `sharedTransitionStyle`
+
+A [`SharedTransition`](./shared-transition.mdx) builder that sets how the view moves. Without this prop, the view uses the default transition: a 500 ms [`withTiming`](../animations/withTiming.mdx) animation.
 
 ### Reference
 
@@ -89,8 +87,6 @@ function Thumbnail() {
   ```
 </details>
 
-A [`SharedTransition`](./shared-transition.mdx) builder that sets how the view moves. Without this prop, the view uses the default transition: a 500 ms [`withTiming`](../animations/withTiming.mdx) animation.
-
 ### Example
 
 <InteractiveExample src={StyleSrc} component={Style} larger/>
@@ -100,7 +96,7 @@ A [`SharedTransition`](./shared-transition.mdx) builder that sets how the view m
 - A transition uses the `sharedTransitionStyle` of the view that it starts from. When you navigate forward, it uses the style of the view on the old screen. When you go back, it uses the style of the view on the screen that closes. To get the same transition in both directions, give the same builder to both views.
 - Create the builder once, outside of the component, or memoize it. A new builder on each render configures the transition again.
 - If you remove only `sharedTransitionStyle`, the view keeps the last builder that it had. To stop the transition, remove `sharedTransitionTag`.
-- To change how the view moves, see [`SharedTransition`](./shared-transition.mdx), [Fading content](./fade-content.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx).
+- To change how the view moves, see [`SharedTransition`](./shared-transition.mdx), [Children of shared views](./children-of-shared-views.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx).
 
 ## Platform compatibility
 

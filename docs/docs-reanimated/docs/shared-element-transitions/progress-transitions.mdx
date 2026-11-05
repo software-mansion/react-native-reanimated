@@ -7,7 +7,9 @@ sidebar_label: Progress-based transitions
 import Progress from '@site/src/examples/shared-element-transitions/Progress';
 import ProgressSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Progress.code';
 
-# Progress-based transitions
+<Badges version="4.8.0">
+  # Progress-based transitions
+</Badges>
 
 On iOS, the user can go back with a swipe from the edge of the screen. During this swipe, the shared view does not run an animation of its own. It follows the progress of the swipe, from 0 to 1. If the user cancels the swipe, the view goes back to its start position. The same applies when the user closes a sheet with a swipe. When the user taps the native back button, the view follows the progress of the screen change.
 
@@ -94,7 +96,6 @@ const transition = SharedTransition.duration(800)
 ## Remarks
 
 - The callback must have the `'worklet'` directive.
-- To type a worklet that you define outside of the builder, use the `ProgressSharedTransitionAnimation` type.
 - With `PROGRESS_ANIMATION`, the same worklet sets the look of the transition in both cases: when the user swipes and when the builder runs it. Use it when you want the two to look the same.
 
 ## Platform compatibility

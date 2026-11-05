@@ -7,7 +7,9 @@ sidebar_label: SharedTransition
 import Builder from '@site/src/examples/shared-element-transitions/Builder';
 import BuilderSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Builder.code';
 
-# SharedTransition
+<Badges version="4.8.0">
+  # SharedTransition
+</Badges>
 
 `SharedTransition` is a builder that sets how a shared view moves. Pass it to the [`sharedTransitionStyle`](./shared-transition-props.mdx#sharedtransitionstyle) prop. Without modifiers, the view moves with a 500 ms [`withTiming`](../animations/withTiming.mdx) animation.
 
@@ -90,7 +92,7 @@ SharedTransition.duration(400)
 
 ### Shared transition modifiers <Optional/>
 
-- [`.fadeContent(config?)`](./fade-content.mdx) fades the children of the view during the transition.
+- [`.fadeContent(config?)`](./children-of-shared-views.mdx#fadecontent) fades the children of the view during the transition.
 - [`SharedTransition.custom(animation)`](./custom-animations.mdx) uses your own animation worklet.
 - [`.progressAnimation(animation)` and `.defaultTransitionType(type)`](./progress-transitions.mdx) set the transition that follows the progress of the screen change.
 

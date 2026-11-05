@@ -1,21 +1,40 @@
 ---
 sidebar_position: 5
-title: Fading content
-sidebar_label: Fading content
+title: Children of shared views
+sidebar_label: Children of shared views
 ---
 
 import FadeContent from '@site/src/examples/shared-element-transitions/FadeContent';
 import FadeContentSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/FadeContent.code';
 
-# Fading content
+<Badges version="4.8.0">
+  # Children of shared views
+</Badges>
 
-<Badges version="4.8.0">`fadeContent()` changes the children of a shared view in steps.</Badges>
+By default, the shared view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. You can change this in two ways, also together:
 
-By default, the view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. With `fadeContent()`, the children of the moving view fade out while it moves, and the children of the target view fade in when the transition ends. The view itself stays visible, and its frame and style animate as usual.
+- Give a child its [own `sharedTransitionTag`](#children-with-their-own-tag) when the same child is on both screens, for example an icon. The child then moves to its own match, as a separate shared view.
+- Use [`fadeContent()`](#fadecontent) for the other children. The children of the moving view fade out while it moves, and the children of the target view fade in when the transition ends. The view itself stays visible, and its frame and style animate as usual.
 
 <InteractiveExample src={FadeContentSrc} component={FadeContent} larger/>
 
-## Reference
+## Children with their own tag
+
+A child with its own matching `sharedTransitionTag` moves from its place in the old view to its place in the new view. It does not fade with its parent, also with `fadeContent()`.
+
+```tsx
+<Animated.View sharedTransitionTag="card" sharedTransitionStyle={transition}>
+  // highlight-next-line
+  <Animated.Text sharedTransitionTag="card-icon">☀</Animated.Text>
+  <Text>Sun</Text>
+</Animated.View>
+```
+
+Give the child the same tag on both screens, and use the same native component on both screens, as for any [shared view](./shared-transition-props.mdx#sharedtransitiontag).
+
+## `fadeContent()`
+
+### Reference
 
 ```tsx
 import Animated, { SharedTransition } from 'react-native-reanimated';
@@ -73,11 +92,10 @@ const transition = SharedTransition.duration(450).fadeContent({
 
 - Only the direct children of the shared views fade. A child that fills the view, for example a background image, fades like the other children.
 - A shared view without children, for example a shared `Image`, has nothing to fade.
-- A direct child with its own matching `sharedTransitionTag` moves on its own and does not fade with its parent. Use this for children that are on both screens, for example an icon.
 - A direct child of the target view with an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. Deeper children play their entering animations during the move.
 - The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - If the user goes back during the move, the children fade in again while the view returns.
-- With [`SharedTransition.custom()`](./custom-animations.mdx), only the fade-in works. The children of the moving view do not fade out.
+- With your own [`progressAnimation()`](./progress-transitions.mdx#progressanimation-) and `SharedTransitionType.PROGRESS_ANIMATION`, the children of the moving view fade out only during the iOS back navigation. In other transitions, only the fade-in works. The default progress animation fades them out in all transitions.
 - With `.springify()`, the fade-in starts when the spring stops. Pass the duration to `springify(duration)`, because the default fade-in length comes from it.
 
 ## Platform compatibility

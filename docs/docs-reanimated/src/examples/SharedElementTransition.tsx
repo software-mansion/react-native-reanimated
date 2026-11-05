@@ -135,31 +135,27 @@ function DetailsScreen({
   );
 }
 
-function withSharedTransitionBoundary<P extends object>(
-  Screen: React.ComponentType<P>
-) {
-  return function ScreenWithBoundary(props: P) {
-    const isFocused = useIsFocused();
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
 
-    return (
-      <SharedTransitionBoundary isActive={isFocused}>
-        <Screen {...props} />
-      </SharedTransitionBoundary>
-    );
-  };
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
 }
-
-const Home = withSharedTransitionBoundary(HomeScreen);
-const Details = withSharedTransitionBoundary(DetailsScreen);
 
 export default function GalleryExample() {
   return (
     <Stack.Navigator
+      screenLayout={({ children }) => (
+        <ScreenBoundary>{children}</ScreenBoundary>
+      )}
       screenOptions={{
         headerShown: false,
       }}>
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="Details" component={Details} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
     </Stack.Navigator>
   );
 }

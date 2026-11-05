@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Slider, Switch, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  MenuItem,
+  Select,
+  Slider,
+  Switch,
+  Tab,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import { useDemoTheme } from './theme';
 
@@ -88,6 +97,7 @@ interface SegmentedProps<T extends string> {
   options: readonly { value: T; label: string }[];
   onChange: (value: NoInfer<T>) => void;
   disabled?: boolean;
+  fullWidth?: boolean;
 }
 
 export function Segmented<T extends string>({
@@ -96,10 +106,12 @@ export function Segmented<T extends string>({
   options,
   onChange,
   disabled,
+  fullWidth,
 }: SegmentedProps<T>) {
   const group = (
     <ToggleButtonGroup
       exclusive
+      fullWidth={fullWidth}
       size="small"
       color="secondary"
       value={value}
@@ -114,6 +126,57 @@ export function Segmented<T extends string>({
     </ToggleButtonGroup>
   );
   return label ? <Control label={label}>{group}</Control> : group;
+}
+
+interface OptionsProps<T extends string> {
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: NoInfer<T>) => void;
+}
+
+export function TabBar<T extends string>({
+  value,
+  options,
+  onChange,
+}: OptionsProps<T>) {
+  return (
+    <Tabs
+      variant="fullWidth"
+      textColor="secondary"
+      indicatorColor="secondary"
+      value={value}
+      onChange={(_, next: T) => onChange(next)}
+      sx={tabBarStyling}>
+      {options.map((option) => (
+        <Tab key={option.value} value={option.value} label={option.label} />
+      ))}
+    </Tabs>
+  );
+}
+
+export function Dropdown<T extends string>({
+  value,
+  options,
+  onChange,
+}: OptionsProps<T>) {
+  const theme = useDemoTheme();
+  return (
+    <Select
+      fullWidth
+      size="small"
+      value={value}
+      onChange={(event) => onChange(event.target.value as T)}
+      sx={{ ...dropdownStyling, fontFamily: theme.mono }}>
+      {options.map((option) => (
+        <MenuItem
+          key={option.value}
+          value={option.value}
+          sx={{ fontFamily: theme.mono, fontSize: 13 }}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </Select>
+  );
 }
 
 interface SliderControlProps {
@@ -174,10 +237,116 @@ export function CodeLine({ children }: { children: string }) {
   );
 }
 
-export function Caption({ children }: { children: React.ReactNode }) {
+export function Panel({ children }: { children: React.ReactNode }) {
+  const theme = useDemoTheme();
+  const rows = React.Children.toArray(children).filter(Boolean);
+  return (
+    <View style={[styles.panel, { borderColor: theme.line }]}>
+      {rows.map((row, index) => (
+        <React.Fragment key={index}>
+          {index > 0 && (
+            <View style={[styles.divider, { backgroundColor: theme.line }]} />
+          )}
+          {row}
+        </React.Fragment>
+      ))}
+    </View>
+  );
+}
+
+interface PanelRowProps {
+  title: string;
+  hint?: string;
+  active?: boolean;
+  accessory?: React.ReactNode;
+  children?: React.ReactNode;
+}
+
+export function PanelRow({
+  title,
+  hint,
+  active,
+  accessory,
+  children,
+}: PanelRowProps) {
   const theme = useDemoTheme();
   return (
-    <Text style={[styles.caption, { color: theme.subtle }]}>{children}</Text>
+    <View style={styles.panelRow}>
+      <View style={styles.panelRowHeader}>
+        <View style={styles.panelRowLabel}>
+          <Text
+            style={[
+              styles.panelRowTitle,
+              { color: active ? theme.accent : theme.text },
+            ]}>
+            {title}
+          </Text>
+          {hint !== undefined && (
+            <Text style={[styles.panelRowHint, { color: theme.subtle }]}>
+              {hint}
+            </Text>
+          )}
+        </View>
+        {accessory}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+export function PanelSwitch({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: boolean;
+  onChange: (value: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Switch
+      size="small"
+      color="secondary"
+      checked={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.checked)}
+    />
+  );
+}
+
+export function PanelSlider({
+  value,
+  min,
+  max,
+  step = 1,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Slider
+      size="small"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      disabled={disabled}
+      onChange={(_, next) => onChange(next as number)}
+      sx={sliderStyling}
+    />
+  );
+}
+
+export function PanelNote({ children }: { children: React.ReactNode }) {
+  const theme = useDemoTheme();
+  return (
+    <Text style={[styles.panelNote, { color: theme.subtle }]}>{children}</Text>
   );
 }
 
@@ -192,6 +361,26 @@ const segmentedStyling = {
     color: 'text.secondary',
     borderColor: 'var(--swm-border)',
     borderRadius: 0,
+  },
+};
+
+const tabBarStyling = {
+  minHeight: 38,
+  borderBottom: 1,
+  borderColor: 'var(--swm-border)',
+  '& .MuiTab-root': {
+    minHeight: 38,
+    textTransform: 'none',
+    fontSize: 14,
+    color: 'text.secondary',
+  },
+};
+
+const dropdownStyling = {
+  fontSize: 13,
+  color: 'text.primary',
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--swm-border)',
   },
 };
 
@@ -272,8 +461,42 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
   },
-  caption: {
-    fontSize: 13,
-    textAlign: 'center',
+  panel: {
+    padding: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+  divider: {
+    height: 1,
+  },
+  panelRow: {
+    gap: 8,
+  },
+  panelRowHeader: {
+    minHeight: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  panelRowLabel: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    columnGap: 8,
+  },
+  panelRowTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  panelRowHint: {
+    fontSize: 12,
+    fontVariant: ['tabular-nums'],
+  },
+  panelNote: {
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: OUTER_RADIUS,
     boxShadow: '0px 18px 40px rgba(0, 16, 64, 0.22)',
+    userSelect: 'none',
   },
   screen: {
     flex: 1,

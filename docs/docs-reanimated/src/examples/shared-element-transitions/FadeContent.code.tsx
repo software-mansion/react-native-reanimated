@@ -29,6 +29,9 @@ function TodayScreen({
           sharedTransitionTag="sun"
           sharedTransitionStyle={transition}
           style={styles.card}>
+          <Animated.Text sharedTransitionTag="sun-icon" style={styles.cardIcon}>
+            ☀
+          </Animated.Text>
           <Text style={styles.title}>Sun</Text>
           <Text style={styles.subtitle}>Clear sky all day</Text>
         </Animated.View>
@@ -46,7 +49,9 @@ function DetailsScreen() {
         sharedTransitionTag="sun"
         sharedTransitionStyle={transition}
         style={styles.header}>
-        <Text style={styles.icon}>☀</Text>
+        <Animated.Text sharedTransitionTag="sun-icon" style={styles.icon}>
+          ☀
+        </Animated.Text>
         <Text style={styles.headline}>Sun</Text>
       </Animated.View>
     </SharedTransitionBoundary>
@@ -79,6 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#f6a04d',
   },
+  cardIcon: { fontSize: 24, color: 'white' },
   icon: { fontSize: 64, color: 'white' },
   headline: { fontSize: 32, fontWeight: '800', color: 'white' },
 });

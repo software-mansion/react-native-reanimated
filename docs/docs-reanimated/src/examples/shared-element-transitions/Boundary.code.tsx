@@ -11,7 +11,7 @@ function HomeScreen() {
 
   return (
     <SharedTransitionBoundary isActive={isFocused}>
-      <Text>Hi, Ada</Text>
+      <Text>Hi, Andrew</Text>
       <Animated.View sharedTransitionTag="avatar" style={styles.smallAvatar} />
     </SharedTransitionBoundary>
   );
@@ -23,7 +23,7 @@ function ProfileScreen() {
   return (
     <SharedTransitionBoundary isActive={isFocused}>
       <Animated.View sharedTransitionTag="avatar" style={styles.largeAvatar} />
-      <Text>Ada Lovelace</Text>
+      <Text>Andrew Gdynasty</Text>
     </SharedTransitionBoundary>
   );
 }

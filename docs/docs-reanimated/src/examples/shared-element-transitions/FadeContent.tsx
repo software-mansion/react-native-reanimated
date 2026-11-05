@@ -11,10 +11,11 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import {
   CodeLine,
-  Control,
   DemoLayout,
-  SliderControl,
-  Toggle,
+  Panel,
+  PanelRow,
+  PanelSlider,
+  PanelSwitch,
 } from './kit/controls';
 import {
   Box,
@@ -26,13 +27,21 @@ import {
   useFlight,
 } from './kit/flight';
 import { Phone, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from './kit/Phone';
-import { StackScreens, useScreenStack } from './kit/Stack';
+import {
+  HEADER_BOTTOM,
+  NavHeader,
+  StackScreens,
+  useScreenStack,
+} from './kit/Stack';
 import { useDemoTheme } from './kit/theme';
 
 const SLOW_MOTION = 3;
+const ICON_BACKGROUND = 'rgba(255, 255, 255, 0.3)';
 const LIST_TOP = STATUS_BAR_HEIGHT + 58;
 const CARD_HEIGHT = 66;
-const HEADER_HEIGHT = 220;
+const HEADER_HEIGHT = 200;
+const CARD_ICON = { inset: 14, size: 38 };
+const HEADER_ICON = { top: 30, size: 66 };
 
 const ITEMS = [
   {
@@ -80,12 +89,48 @@ function cardBox(index: number, item: Item): Box {
 
 function headerBox(item: Item): Box {
   return {
-    x: 0,
-    y: 0,
-    width: SCREEN_WIDTH,
+    x: 14,
+    y: HEADER_BOTTOM + 8,
+    width: SCREEN_WIDTH - 28,
     height: HEADER_HEIGHT,
-    borderRadius: 0,
+    borderRadius: 24,
     backgroundColor: item.color,
+  };
+}
+
+function listFadeKey(item: Item) {
+  return `list-${item.id}`;
+}
+
+function detailsFadeKey(item: Item) {
+  return `details-${item.id}`;
+}
+
+function iconTag(item: Item) {
+  return `${item.id}-icon`;
+}
+
+function cardIconBox(index: number, item: Item): Box {
+  const card = cardBox(index, item);
+  return {
+    x: card.x + CARD_ICON.inset,
+    y: card.y + (CARD_HEIGHT - CARD_ICON.size) / 2,
+    width: CARD_ICON.size,
+    height: CARD_ICON.size,
+    borderRadius: CARD_ICON.size / 2,
+    backgroundColor: ICON_BACKGROUND,
+  };
+}
+
+function headerIconBox(item: Item): Box {
+  const header = headerBox(item);
+  return {
+    x: header.x + (header.width - HEADER_ICON.size) / 2,
+    y: header.y + HEADER_ICON.top,
+    width: HEADER_ICON.size,
+    height: HEADER_ICON.size,
+    borderRadius: HEADER_ICON.size / 2,
+    backgroundColor: ICON_BACKGROUND,
   };
 }
 
@@ -95,6 +140,7 @@ export default function FadeContentDemo({ width }: { width?: number }) {
   const [fadeOutEnd, setFadeOutEnd] = useState(1);
   const [fadeInDuration, setFadeInDuration] = useState(DEFAULT_DURATION / 2);
   const [slowMotion, setSlowMotion] = useState(true);
+  const [iconHasTag, setIconHasTag] = useState(false);
   const [selected, setSelected] = useState(0);
   const factor = slowMotion ? SLOW_MOTION : 1;
   const stack = useScreenStack(factor);
@@ -107,7 +153,9 @@ export default function FadeContentDemo({ width }: { width?: number }) {
     from: Box,
     to: Box,
     flyingItem: Item,
-    content: React.ReactNode
+    content: React.ReactNode,
+    icon: { from: Box; to: Box; content: React.ReactNode },
+    fadeTarget: string
   ) => {
     const total = DEFAULT_DURATION + (fadeContent ? fadeInDuration : 0);
     clock.value = 0;
@@ -116,11 +164,17 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       easing: Easing.linear,
     });
     flight.start({
-      pairs: [{ tag: flyingItem.id, from, to, content }],
+      pairs: [
+        { tag: flyingItem.id, from, to, content },
+        ...(iconHasTag
+          ? [{ tag: iconTag(flyingItem), ...icon, fades: false }]
+          : []),
+      ],
       animations: allChannels(timing(DEFAULT_DURATION * factor)),
       fadeContent: fadeContent
         ? { fadeOutEnd, fadeInDuration: fadeInDuration * factor }
         : null,
+      fadeTarget,
     });
   };
 
@@ -130,7 +184,13 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       cardBox(index, ITEMS[index]),
       headerBox(ITEMS[index]),
       ITEMS[index],
-      <CardContent item={ITEMS[index]} />
+      <CardContent item={ITEMS[index]} iconHasTag={iconHasTag} />,
+      {
+        from: cardIconBox(index, ITEMS[index]),
+        to: headerIconBox(ITEMS[index]),
+        content: <IconGlyph item={ITEMS[index]} size="card" />,
+      },
+      detailsFadeKey(ITEMS[index])
     );
     stack.push();
   };
@@ -140,7 +200,13 @@ export default function FadeContentDemo({ width }: { width?: number }) {
       headerBox(item),
       cardBox(selected, item),
       item,
-      <HeaderContent item={item} onBack={() => {}} />
+      <HeaderContent item={item} iconHasTag={iconHasTag} />,
+      {
+        from: headerIconBox(item),
+        to: cardIconBox(selected, item),
+        content: <IconGlyph item={item} size="header" />,
+      },
+      listFadeKey(item)
     );
     stack.pop();
   };
@@ -158,9 +224,16 @@ export default function FadeContentDemo({ width }: { width?: number }) {
             disabled={busy}
             onPress={() => open(index)}
             style={[styles.card, frame(box), hidden(listItem.id)]}>
-            <SharedContent flight={flight} tag={listItem.id}>
-              <CardContent item={listItem} />
+            <SharedContent flight={flight} fadeKey={listFadeKey(listItem)}>
+              <CardContent item={listItem} iconHasTag={iconHasTag} />
             </SharedContent>
+            {iconHasTag && (
+              <TaggedIcon
+                box={offset(cardIconBox(index, listItem), box)}
+                hidden={flight.isFlying(iconTag(listItem))}>
+                <IconGlyph item={listItem} size="card" />
+              </TaggedIcon>
+            )}
           </Pressable>
         );
       })}
@@ -169,10 +242,22 @@ export default function FadeContentDemo({ width }: { width?: number }) {
 
   const details = (
     <View style={styles.fill}>
+      <NavHeader
+        title={item.name}
+        onBack={busy ? () => {} : back}
+        backButtonDisplayMode="minimal"
+      />
       <View style={[styles.card, frame(headerBox(item)), hidden(item.id)]}>
-        <SharedContent flight={flight} tag={item.id}>
-          <HeaderContent item={item} onBack={busy ? () => {} : back} />
+        <SharedContent flight={flight} fadeKey={detailsFadeKey(item)}>
+          <HeaderContent item={item} iconHasTag={iconHasTag} />
         </SharedContent>
+        {iconHasTag && (
+          <TaggedIcon
+            box={offset(headerIconBox(item), headerBox(item))}
+            hidden={flight.isFlying(iconTag(item))}>
+            <IconGlyph item={item} size="header" />
+          </TaggedIcon>
+        )}
       </View>
       <View style={styles.body}>
         {[1, 0.85, 0.95, 0.5].map((lineWidth, index) => (
@@ -189,7 +274,7 @@ export default function FadeContentDemo({ width }: { width?: number }) {
   );
 
   const phone = (
-    <Phone statusBarTint={stack.top === 'second' ? 'light' : 'auto'}>
+    <Phone>
       <StackScreens stack={stack} first={list} second={details} />
       <FlightLayer flight={flight} />
     </Phone>
@@ -199,56 +284,72 @@ export default function FadeContentDemo({ width }: { width?: number }) {
     ? `SharedTransition.fadeContent({\n  fadeOut: { end: ${fadeOutEnd} },\n  fadeIn: { duration: ${fadeInDuration} },\n})`
     : 'SharedTransition';
 
+  const timeline = (
+    <Timeline
+      clock={clock}
+      fadeContent={fadeContent}
+      fadeOutEnd={fadeOutEnd}
+      fadeInDuration={fadeInDuration}
+    />
+  );
+  const fadeSettings = (
+    <>
+      <PanelRow
+        title="Icon has its own tag"
+        accessory={<PanelSwitch value={iconHasTag} onChange={setIconHasTag} />}
+      />
+      <PanelRow
+        title="fadeContent()"
+        accessory={
+          <PanelSwitch value={fadeContent} onChange={setFadeContent} />
+        }
+      />
+      <PanelRow title="fadeOut.end" hint={fadeOutEnd.toFixed(2)}>
+        <PanelSlider
+          value={fadeOutEnd}
+          min={0.1}
+          max={1}
+          step={0.05}
+          onChange={setFadeOutEnd}
+          disabled={!fadeContent}
+        />
+      </PanelRow>
+      <PanelRow title="fadeIn.duration" hint={`${fadeInDuration} ms`}>
+        <PanelSlider
+          value={fadeInDuration}
+          min={0}
+          max={1000}
+          step={50}
+          onChange={setFadeInDuration}
+          disabled={!fadeContent}
+        />
+      </PanelRow>
+      <PanelRow
+        title="Slow motion"
+        hint={`×${SLOW_MOTION}`}
+        accessory={<PanelSwitch value={slowMotion} onChange={setSlowMotion} />}
+      />
+    </>
+  );
+
   return (
     <DemoLayout width={width} phone={phone}>
-      <Toggle
-        label="fadeContent()"
-        value={fadeContent}
-        onChange={setFadeContent}
-      />
-      <SliderControl
-        label="fadeOut.end"
-        value={fadeOutEnd}
-        min={0.1}
-        max={1}
-        step={0.05}
-        format={(value) => value.toFixed(2)}
-        onChange={setFadeOutEnd}
-        disabled={!fadeContent}
-      />
-      <SliderControl
-        label="fadeIn.duration"
-        value={fadeInDuration}
-        min={0}
-        max={1000}
-        step={50}
-        format={(value) => `${value} ms`}
-        onChange={setFadeInDuration}
-        disabled={!fadeContent}
-      />
-      <Toggle
-        label={`Slow motion (×${SLOW_MOTION})`}
-        value={slowMotion}
-        onChange={setSlowMotion}
-      />
-      <CodeLine>{code}</CodeLine>
-      <Control label="What you see">
-        <Timeline
-          clock={clock}
-          fadeContent={fadeContent}
-          fadeOutEnd={fadeOutEnd}
-          fadeInDuration={fadeInDuration}
-        />
-      </Control>
+      <Panel>
+        {fadeSettings}
+        <PanelRow title="Code">
+          <CodeLine>{code}</CodeLine>
+        </PanelRow>
+        <PanelRow title="What you see">{timeline}</PanelRow>
+      </Panel>
     </DemoLayout>
   );
 }
 
-function CardContent({ item }: { item: Item }) {
+function CardContent({ item, iconHasTag }: ContentProps) {
   return (
     <View style={styles.cardContent}>
-      <View style={styles.cardIcon}>
-        <Text style={styles.cardIconText}>{item.icon}</Text>
+      <View style={[styles.cardIcon, iconHasTag && styles.placeholder]}>
+        <IconGlyph item={item} size="card" />
       </View>
       <View>
         <Text style={styles.cardName}>{item.name}</Text>
@@ -258,14 +359,16 @@ function CardContent({ item }: { item: Item }) {
   );
 }
 
-function HeaderContent({ item, onBack }: { item: Item; onBack: () => void }) {
+interface ContentProps {
+  item: Item;
+  iconHasTag: boolean;
+}
+
+function HeaderContent({ item, iconHasTag }: ContentProps) {
   return (
     <View style={styles.headerContent}>
-      <Pressable onPress={onBack} style={styles.back} hitSlop={8}>
-        <Text style={styles.backText}>‹ Back</Text>
-      </Pressable>
-      <View style={styles.headerIcon}>
-        <Text style={styles.headerIconText}>{item.icon}</Text>
+      <View style={[styles.headerIcon, iconHasTag && styles.placeholder]}>
+        <IconGlyph item={item} size="header" />
       </View>
       <Text style={styles.headerName}>{item.name}</Text>
       <View style={styles.chips}>
@@ -277,6 +380,37 @@ function HeaderContent({ item, onBack }: { item: Item; onBack: () => void }) {
       </View>
     </View>
   );
+}
+
+function IconGlyph({ item, size }: { item: Item; size: 'card' | 'header' }) {
+  return (
+    <View style={styles.glyph}>
+      <Text
+        style={size === 'card' ? styles.cardIconText : styles.headerIconText}>
+        {item.icon}
+      </Text>
+    </View>
+  );
+}
+
+function TaggedIcon({
+  box,
+  hidden,
+  children,
+}: {
+  box: Box;
+  hidden: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={[styles.taggedIcon, frame(box), { opacity: hidden ? 0 : 1 }]}>
+      {children}
+    </View>
+  );
+}
+
+function offset(box: Box, parent: Box): Box {
+  return { ...box, x: box.x - parent.x, y: box.y - parent.y };
 }
 
 const TIMELINE_WIDTH = 300;
@@ -432,7 +566,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: ICON_BACKGROUND,
   },
   cardIconText: {
     fontSize: 20,
@@ -450,19 +584,20 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: STATUS_BAR_HEIGHT,
+    paddingTop: HEADER_ICON.top,
     gap: 6,
   },
-  back: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT + 8,
-    left: 12,
+  placeholder: {
+    opacity: 0,
   },
-  backText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#ffffff',
+  glyph: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taggedIcon: {
+    position: 'absolute',
+    overflow: 'hidden',
   },
   headerIcon: {
     width: 66,
@@ -470,7 +605,7 @@ const styles = StyleSheet.create({
     borderRadius: 33,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: ICON_BACKGROUND,
   },
   headerIconText: {
     fontSize: 36,
@@ -498,7 +633,7 @@ const styles = StyleSheet.create({
   },
   body: {
     position: 'absolute',
-    top: HEADER_HEIGHT + 18,
+    top: HEADER_BOTTOM + 8 + HEADER_HEIGHT + 18,
     left: 16,
     right: 16,
     gap: 9,

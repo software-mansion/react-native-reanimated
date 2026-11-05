@@ -27,6 +27,7 @@ export interface SharedPair {
   from: Box;
   to: Box;
   content?: React.ReactNode;
+  fades?: boolean;
 }
 
 export interface FadeContent {
@@ -92,7 +93,7 @@ export interface Flight {
   pairs: SharedPair[];
   channels: Record<Channel, SharedValue<number>>;
   contentIn: SharedValue<number>;
-  landedTag: string | null;
+  fadingTarget: SharedValue<string | null>;
   fadeContent: FadeContent | null;
   isFlying: (tag: string) => boolean;
   start: (options: StartOptions) => void;
@@ -108,6 +109,7 @@ interface StartOptions {
   pairs: SharedPair[];
   animations: FlightAnimations;
   fadeContent?: FadeContent | null;
+  fadeTarget?: string;
   onLand?: () => void;
 }
 
@@ -119,8 +121,8 @@ export function useFlight(): Flight {
   const style = useSharedValue(0);
   const channels = { x, y, width, height, style };
   const contentIn = useSharedValue(1);
+  const fadingTarget = useSharedValue<string | null>(null);
   const [pairs, setPairs] = useState<SharedPair[]>([]);
-  const [landedTag, setLandedTag] = useState<string | null>(null);
   const [fadeContent, setFadeContent] = useState<FadeContent | null>(null);
   const generation = useRef(0);
 
@@ -142,18 +144,13 @@ export function useFlight(): Flight {
     });
   };
 
-  const land = (landedPairs: SharedPair[], fade: FadeContent | null) => {
-    const tag = landedPairs[0]?.tag ?? null;
-    if (fade) {
-      contentIn.value = 0;
-      contentIn.value = withTiming(1, {
-        duration: fade.fadeInDuration,
-        easing: FADE_IN_EASING,
-      });
-    } else {
-      contentIn.value = 1;
-    }
-    setLandedTag(tag);
+  const land = (fade: FadeContent | null) => {
+    contentIn.value = fade
+      ? withTiming(1, {
+          duration: fade.fadeInDuration,
+          easing: FADE_IN_EASING,
+        })
+      : 1;
     setPairs([]);
   };
 
@@ -163,7 +160,8 @@ export function useFlight(): Flight {
       channels[channel].value = 0;
     });
     setFadeContent(null);
-    setLandedTag(null);
+    fadingTarget.value = null;
+    contentIn.value = 1;
     setPairs(newPairs);
   };
 
@@ -171,28 +169,32 @@ export function useFlight(): Flight {
     pairs,
     channels,
     contentIn,
-    landedTag,
+    fadingTarget,
     fadeContent,
     isFlying: (tag) => pairs.some((pair) => pair.tag === tag),
     start: ({
       pairs: newPairs,
       animations,
       fadeContent: fade = null,
+      fadeTarget = null,
       onLand,
     }) => {
       begin(newPairs);
       setFadeContent(fade);
+      if (fade && fadeTarget !== null) {
+        fadingTarget.value = fadeTarget;
+        contentIn.value = 0;
+      }
       animateChannels(1, animations, () => {
-        land(newPairs, fade);
+        land(fade);
         onLand?.();
       });
     },
     begin,
     release: (toValue, animations, onSettle) => {
-      const releasedPairs = pairs;
       animateChannels(toValue, animations, () => {
         if (toValue === 1) {
-          land(releasedPairs, null);
+          land(null);
         } else {
           setPairs([]);
         }
@@ -215,7 +217,9 @@ export function FlightLayer({ flight, progressStyle }: FlightLayerProps) {
           key={pair.tag}
           pair={pair}
           channels={flight.channels}
-          fadeOutEnd={flight.fadeContent?.fadeOutEnd}
+          fadeOutEnd={
+            pair.fades === false ? undefined : flight.fadeContent?.fadeOutEnd
+          }
           progressStyle={progressStyle}
         />
       ))}
@@ -275,20 +279,19 @@ function Flyer({ pair, channels, fadeOutEnd, progressStyle }: FlyerProps) {
 
 interface SharedContentProps {
   flight: Flight;
-  tag: string;
+  fadeKey: string;
   children: React.ReactNode;
   style?: ViewStyle;
 }
 
 export function SharedContent({
   flight,
-  tag,
+  fadeKey,
   children,
   style,
 }: SharedContentProps) {
-  const landed = flight.landedTag === tag;
   const fadeStyle = useAnimatedStyle(() => ({
-    opacity: landed ? flight.contentIn.value : 1,
+    opacity: flight.fadingTarget.value === fadeKey ? flight.contentIn.value : 1,
   }));
   return (
     <Animated.View style={[styles.fill, style, fadeStyle]}>

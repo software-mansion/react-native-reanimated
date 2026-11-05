@@ -100,14 +100,26 @@ export function StackScreens({ stack, first, second }: StackScreensProps) {
 interface NavHeaderProps {
   title: string;
   onBack: () => void;
+  backButtonDisplayMode?: 'default' | 'minimal';
 }
 
-export function NavHeader({ title, onBack }: NavHeaderProps) {
+export function NavHeader({
+  title,
+  onBack,
+  backButtonDisplayMode = 'default',
+}: NavHeaderProps) {
   const theme = useDemoTheme();
+  const minimal = backButtonDisplayMode === 'minimal';
   return (
     <View style={styles.header}>
       <Pressable onPress={onBack} style={styles.back} hitSlop={8}>
-        <Text style={[styles.backText, { color: theme.accent }]}>‹ Back</Text>
+        <Text
+          style={[
+            minimal ? styles.backChevron : styles.backText,
+            { color: theme.accent },
+          ]}>
+          {minimal ? '‹' : '‹ Back'}
+        </Text>
       </Pressable>
       <Text style={[styles.headerTitle, { color: theme.text }]}>{title}</Text>
     </View>
@@ -155,6 +167,11 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  backChevron: {
+    marginTop: -4,
+    fontSize: 26,
+    fontWeight: '400',
   },
   headerTitle: {
     fontSize: 13,

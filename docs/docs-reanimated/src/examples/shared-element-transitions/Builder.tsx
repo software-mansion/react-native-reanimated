@@ -6,8 +6,9 @@ import {
   CodeLine,
   Control,
   DemoLayout,
-  Segmented,
+  Dropdown,
   SliderControl,
+  TabBar,
 } from './kit/controls';
 import {
   Box,
@@ -202,7 +203,7 @@ export default function Builder({ width }: { width?: number }) {
 
   return (
     <DemoLayout width={width} phone={phone}>
-      <Segmented value={kind} options={KIND_OPTIONS} onChange={setKind} />
+      <TabBar value={kind} options={KIND_OPTIONS} onChange={setKind} />
       {kind === 'timing' ? (
         <>
           <SliderControl
@@ -215,7 +216,7 @@ export default function Builder({ width }: { width?: number }) {
             onChange={setDuration}
           />
           <Control label="easing">
-            <Segmented
+            <Dropdown
               value={easing}
               options={EASING_OPTIONS}
               onChange={setEasing}

@@ -7,9 +7,9 @@ sidebar_label: Custom animations
 import Custom from '@site/src/examples/shared-element-transitions/Custom';
 import CustomSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Custom.code';
 
-# Custom animations
-
-<Badges version="4.8.0">`SharedTransition.custom()` lets you write the transition yourself.</Badges>
+<Badges version="4.8.0">
+  # Custom animations
+</Badges>
 
 Use a custom animation when the [`SharedTransition`](./shared-transition.mdx) modifiers are not sufficient, for example for a curved path or a different timing for each property. You write a worklet that gets the values of the two views and returns an animation for each style property.
 
@@ -89,8 +89,6 @@ The worklet returns the animations directly. This is different from [custom layo
 | `currentElevation`, `targetElevation`         | The elevation, on Android only.                                                                       |
 | `windowWidth`, `windowHeight`                 | The size of the window.                                                                               |
 
-For code from Reanimated 3, `currentGlobalOriginX`, `currentGlobalOriginY` and `currentTransformMatrix` (and their `target` values) are also available. `currentGlobalOriginX` and `currentGlobalOriginY` have the same values as `currentOriginX` and `currentOriginY`. `currentTransformMatrix` has the same values as `currentTransform.matrix`.
-
 ## Example
 
 To move the view on a curve, give the two axes different curves:
@@ -123,26 +121,9 @@ const transition = SharedTransition.custom((values) => {
 });
 ```
 
-To type a worklet that you define outside of the builder, use the `CustomSharedTransitionAnimation` type:
-
-```tsx
-import {
-  SharedTransition,
-  withSpring,
-  type CustomSharedTransitionAnimation,
-} from 'react-native-reanimated';
-
-const animation: CustomSharedTransitionAnimation = (values) => {
-  'worklet';
-  return { width: withSpring(values.targetWidth) };
-};
-
-const transition = SharedTransition.custom(animation);
-```
-
 ## Remarks
 
-- The callback must have the `'worklet'` directive. Reanimated does not add it for you, also when you define the callback inline.
+- The callback must have the `'worklet'` directive.
 - Reanimated does not animate the properties that you do not return. Such a property keeps the value of the source view until the transition ends.
 - Animate the transform as a whole, with `transform: [{ matrix }]`. Separate transform operations, for example `transform: [{ scale: withTiming(2) }]`, are not supported.
 - The worklet controls the timing of each animation. The `.delay()` and `.withCallback()` modifiers of the builder still apply, for example `SharedTransition.custom(animation).delay(100)`.

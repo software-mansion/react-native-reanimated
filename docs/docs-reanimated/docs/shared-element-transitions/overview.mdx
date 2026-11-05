@@ -9,47 +9,63 @@ import Overview from '@site/src/examples/shared-element-transitions/Overview';
 import OverviewSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Overview.code';
 import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
 
-# Shared Element Transitions
-
-<Badges version="4.8.0">Shared Element Transitions are stable and need no setup.</Badges>
+<Badges version="4.8.0">
+  # Shared Element Transitions
+</Badges>
 
 Shared Element Transitions move a view from one screen to another. When you navigate, a view on the old screen moves to the position of the matching view on the new screen. Its size and style change during the transition.
 
 <InteractiveExample src={OverviewSrc} component={Overview} larger/>
 
-## Reference
+## Your first shared element transition
 
 ```tsx
 import { useIsFocused } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 
-function ListScreen() {
-  const isFocused = useIsFocused();
+const Stack = createNativeStackNavigator();
 
+function ListScreen() {
   return (
-    // highlight-next-line
-    <SharedTransitionBoundary isActive={isFocused}>
-      <Animated.View
-        // highlight-next-line
-        sharedTransitionTag="photo"
-        style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
-      />
-    </SharedTransitionBoundary>
+    <Animated.View
+      // highlight-next-line
+      sharedTransitionTag="photo"
+      style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
+    />
   );
 }
 
 function DetailsScreen() {
+  return (
+    <Animated.View
+      // highlight-next-line
+      sharedTransitionTag="photo"
+      style={{ width: '100%', height: 300, backgroundColor: '#b58df1' }}
+    />
+  );
+}
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
   const isFocused = useIsFocused();
 
   return (
     // highlight-next-line
     <SharedTransitionBoundary isActive={isFocused}>
-      <Animated.View
-        // highlight-next-line
-        sharedTransitionTag="photo"
-        style={{ width: '100%', height: 300, backgroundColor: '#b58df1' }}
-      />
+      {children}
+      // highlight-next-line
     </SharedTransitionBoundary>
+  );
+}
+
+function App() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="List" component={ListScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
   );
 }
 ```
@@ -57,7 +73,7 @@ function DetailsScreen() {
 To make a shared element transition:
 
 1. Give the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag) to an animated component on each screen.
-1. Wrap the content of each screen in a [`SharedTransitionBoundary`](./shared-transition-boundary.mdx). Set `isActive` to `true` on the screen that the user sees.
+1. Wrap each screen in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary). Set `isActive` to `true` on the screen that the user sees. In the example, the [`screenLayout`](https://reactnavigation.org/docs/navigator/#screen-layout) prop of the navigator wraps all of its screens. For other ways to wrap screens, see [Usage with navigation](./screens-and-boundaries.mdx#usage-with-navigation).
 
 When the active boundary changes, Reanimated finds the views with the same tag in the old and the new boundary and runs the transition between them.
 
@@ -71,9 +87,10 @@ By default, the transition is a 500 ms [`withTiming`](../animations/withTiming.m
 - `opacity` and `backgroundColor`,
 - `borderRadius`, `borderWidth` and `borderColor`, also per side and per corner,
 - `transform` and `transformOrigin`,
-- `boxShadow`, the `shadow*` properties and, on Android, `elevation`.
+- `boxShadow` and the `shadow*` properties,
+- on Android, `elevation`.
 
-The view moves together with its children. To change the children in steps, use [`fadeContent()`](./fade-content.mdx).
+The view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. To fade the old children out and the new children in, use [`fadeContent()`](./children-of-shared-views.mdx#fadecontent).
 
 ## Example
 
@@ -85,14 +102,14 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 }}
 />
 
-<CollapsibleCode src={SharedElementSrc} showLines={[138, 165]}/>
+<CollapsibleCode src={SharedElementSrc} showLines={[138, 161]}/>
 
 ## What's next
 
 - [Shared transition props](./shared-transition-props.mdx) - how views find their match and which transition they use.
-- [`SharedTransitionBoundary`](./shared-transition-boundary.mdx) - how to set up screens in stacks, tabs, nested navigators and modals.
+- [Screens and boundaries](./screens-and-boundaries.mdx) - how to set up screens in stacks, tabs, nested navigators and modals.
 - [`SharedTransition`](./shared-transition.mdx) - how to change the duration, the easing, or to use a spring.
-- [Fading content](./fade-content.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx) - for more control.
+- [Children of shared views](./children-of-shared-views.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx) - for more control.
 - [Limitations and troubleshooting](./limitations.mdx) - what to know before you release your app.
 
 ## Platform compatibility

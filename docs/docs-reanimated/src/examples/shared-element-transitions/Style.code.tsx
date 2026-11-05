@@ -12,11 +12,9 @@ type StackParamList = { A: undefined; B: undefined };
 
 const Stack = createNativeStackNavigator<StackParamList>();
 
-// Used when you go from A to B.
 const springy = SharedTransition.springify();
-// Used when you go back from B to A. On iOS, the native back navigation
-// controls the progress instead.
 const slow = SharedTransition.duration(1200);
+const bouncy = SharedTransition.springify(700).dampingRatio(0.35);
 
 function ScreenA({ navigation }: NativeStackScreenProps<StackParamList, 'A'>) {
   const isFocused = useIsFocused();

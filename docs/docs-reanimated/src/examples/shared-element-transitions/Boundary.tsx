@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
-  Caption,
   CodeLine,
-  Control,
   DemoLayout,
+  Panel,
+  PanelNote,
+  PanelRow,
   Segmented,
 } from './kit/controls';
 import { Box, FlightLayer, allChannels, timing, useFlight } from './kit/flight';
@@ -82,7 +83,7 @@ export default function BoundaryDemo({ width }: { width?: number }) {
 
   const home = (
     <View style={[styles.screen, { backgroundColor: theme.screen }]}>
-      <Text style={[styles.greeting, { color: theme.text }]}>Hi, Ada</Text>
+      <Text style={[styles.greeting, { color: theme.text }]}>Hi, Andrew</Text>
       <Text style={[styles.subtle, { color: theme.subtle }]}>
         3 new messages
       </Text>
@@ -122,7 +123,7 @@ export default function BoundaryDemo({ width }: { width?: number }) {
     <View style={[styles.screen, { backgroundColor: theme.screen }]}>
       {avatar('profile')}
       <Text style={[styles.profileName, { color: theme.text }]}>
-        Ada Lovelace
+        Andrew Gdynasty
       </Text>
       <Text style={[styles.profileRole, { color: theme.subtle }]}>
         Analytical Engine team
@@ -183,24 +184,31 @@ export default function BoundaryDemo({ width }: { width?: number }) {
     </Phone>
   );
 
+  const profileCode = `<SharedTransitionBoundary isActive={${profileActive === 'focused' ? 'isFocused' : 'false'}}>`;
+  const resultText =
+    profileActive === 'focused'
+      ? 'The boundary of the tab that you open becomes active, so the avatar flies between the tabs.'
+      : 'The Profile boundary is never active. The tabs change without a shared transition.';
+
   return (
     <DemoLayout width={width} phone={phone}>
-      <Caption>Switch the tabs at the bottom of the phone.</Caption>
-      <Control label="isActive of the Profile boundary">
-        <Segmented
-          value={profileActive}
-          options={ACTIVE_OPTIONS}
-          onChange={setProfileActive}
-        />
-        <CodeLine>
-          {`<SharedTransitionBoundary isActive={${profileActive === 'focused' ? 'isFocused' : 'false'}}>`}
-        </CodeLine>
-      </Control>
-      <Caption>
-        {profileActive === 'focused'
-          ? 'The boundary of the tab that you open becomes active, so the avatar flies between the tabs.'
-          : 'The Profile boundary is never active. The tabs change without a shared transition.'}
-      </Caption>
+      <Panel>
+        <PanelRow title="Home tab" hint="isActive">
+          <CodeLine>
+            {'<SharedTransitionBoundary isActive={isFocused}>'}
+          </CodeLine>
+        </PanelRow>
+        <PanelRow title="Profile tab" hint="isActive">
+          <Segmented
+            fullWidth
+            value={profileActive}
+            options={ACTIVE_OPTIONS}
+            onChange={setProfileActive}
+          />
+          <CodeLine>{profileCode}</CodeLine>
+        </PanelRow>
+        <PanelNote>{resultText}</PanelNote>
+      </Panel>
     </DemoLayout>
   );
 }

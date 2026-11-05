@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Caption, Control, DemoLayout, Segmented } from './kit/controls';
+import { DemoLayout, Panel, PanelRow, Segmented } from './kit/controls';
 import {
   Box,
   ChannelAnimation,
@@ -148,16 +148,30 @@ export default function StyleDemo({ width }: { width?: number }) {
 
   return (
     <DemoLayout width={width} phone={phone}>
-      <Caption>
-        Each screen sets its own sharedTransitionStyle. The transition uses the
-        style of the screen that you leave.
-      </Caption>
-      <Control label="Screen A (used to go forward)">
-        <Segmented value={styleA} options={OPTIONS} onChange={setStyleA} />
-      </Control>
-      <Control label="Screen B (used to go back)">
-        <Segmented value={styleB} options={OPTIONS} onChange={setStyleB} />
-      </Control>
+      <Panel>
+        <PanelRow
+          title="A → B"
+          hint="style of Screen A"
+          active={busy && usedStyleOf === 'A'}>
+          <Segmented
+            fullWidth
+            value={styleA}
+            options={OPTIONS}
+            onChange={setStyleA}
+          />
+        </PanelRow>
+        <PanelRow
+          title="B → A"
+          hint="style of Screen B"
+          active={busy && usedStyleOf === 'B'}>
+          <Segmented
+            fullWidth
+            value={styleB}
+            options={OPTIONS}
+            onChange={setStyleB}
+          />
+        </PanelRow>
+      </Panel>
     </DemoLayout>
   );
 }

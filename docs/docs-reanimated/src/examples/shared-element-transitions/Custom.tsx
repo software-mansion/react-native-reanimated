@@ -4,13 +4,7 @@ import { Easing, useAnimatedReaction } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Polyline } from 'react-native-svg';
 
-import {
-  Caption,
-  CodeLine,
-  DemoLayout,
-  Segmented,
-  Toggle,
-} from './kit/controls';
+import { CodeLine, DemoLayout, Panel, PanelRow, Toggle } from './kit/controls';
 import {
   Box,
   Flight,
@@ -125,6 +119,13 @@ const VARIANTS: Record<
   };
 })`,
   },
+};
+
+const DESCRIPTIONS: Record<Variant, string> = {
+  default: 'the default timing',
+  arc: 'x is linear, y eases out',
+  bouncyArc: 'y uses a spring',
+  moveThenResize: 'the resize waits 250 ms',
 };
 
 const OPTIONS = [
@@ -252,13 +253,21 @@ export default function Custom({ width }: { width?: number }) {
       width={width}
       phone={phone}
       footer={<CodeLine>{VARIANTS[variant].code}</CodeLine>}>
-      <Caption>
-        Tap the round photo. Each option returns its own animations from
-        SharedTransition.custom().
-      </Caption>
-      <Segmented value={variant} options={OPTIONS} onChange={setVariant} />
+      <Panel>
+        {OPTIONS.map((option) => (
+          <Pressable
+            key={option.value}
+            onPress={() => setVariant(option.value)}>
+            <PanelRow
+              title={option.label}
+              hint={DESCRIPTIONS[option.value]}
+              active={option.value === variant}
+            />
+          </Pressable>
+        ))}
+      </Panel>
       <Toggle
-        label="Show the path of the center"
+        label="Show path of the center"
         value={showPath}
         onChange={setShowPath}
       />

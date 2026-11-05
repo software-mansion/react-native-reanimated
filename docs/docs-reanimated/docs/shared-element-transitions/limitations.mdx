@@ -4,7 +4,9 @@ title: Limitations and troubleshooting
 sidebar_label: Limitations and troubleshooting
 ---
 
-# Limitations and troubleshooting
+<Badges version="4.8.0">
+  # Limitations and troubleshooting
+</Badges>
 
 ## The view does not move
 
@@ -12,7 +14,7 @@ Check these points:
 
 - Both views have the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag), and each tag shows only once on a screen.
 - Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`.
-- Each screen is in a [`SharedTransitionBoundary`](./shared-transition-boundary.mdx), and `isActive` changes from the old screen to the new screen when you navigate.
+- Each screen is in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
 - No boundary that is always active is around the boundaries of your screens.
 - The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
 
@@ -29,7 +31,7 @@ Check these points:
 - On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that flies to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
 - On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
 - During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
-- `SharedTransition.custom()` together with `fadeContent()` fades in the children of the target view, but the children of the moving view do not fade out.
+- With your own `progressAnimation()` and `SharedTransitionType.PROGRESS_ANIMATION`, `fadeContent()` fades out the children of the moving view only during the iOS back navigation. In other transitions, only the fade-in works.
 
 ## Videos and media
 
@@ -43,7 +45,3 @@ Reanimated keeps the native view on screen during the transition, but not the Re
 
 - Create the player in a component that stays mounted, for example above the navigator.
 - Or create it with `createVideoPlayer` and call `release()` when no view needs it any more.
-
-## Platform compatibility
-
-<PlatformCompatibility android ios/>

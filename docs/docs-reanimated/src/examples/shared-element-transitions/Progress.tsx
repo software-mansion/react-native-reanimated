@@ -10,10 +10,11 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { Slider } from '@mui/material';
 
 import {
-  Caption,
   CodeLine,
-  Control,
   DemoLayout,
+  Panel,
+  PanelNote,
+  PanelRow,
   Segmented,
 } from './kit/controls';
 import {
@@ -40,8 +41,8 @@ import { useDemoTheme } from './kit/theme';
 type Mode = 'linear' | 'custom';
 
 const MODE_OPTIONS = [
-  { value: 'linear', label: 'Linear (default)' },
-  { value: 'custom', label: 'progressAnimation()' },
+  { value: 'linear', label: 'Default' },
+  { value: 'custom', label: 'Custom: round in the middle' },
 ] as const;
 
 const CODE: Record<Mode, string> = {
@@ -116,11 +117,11 @@ export default function Progress({ width }: { width?: number }) {
   useAnimatedReaction(
     () => flight.channels.x.value,
     (value) => {
-      if (busy) {
+      if (busy && swipeDriven) {
         scheduleOnRN(setProgress, Math.min(1, Math.max(0, value)));
       }
     },
-    [busy]
+    [busy, swipeDriven]
   );
 
   const beginSwipe = () => {
@@ -191,6 +192,7 @@ export default function Progress({ width }: { width?: number }) {
 
   const open = (index: number) => {
     setSelected(index);
+    setProgress(0);
     setSwipeDriven(false);
     setOutcome(null);
     flight.start({
@@ -303,36 +305,50 @@ export default function Progress({ width }: { width?: number }) {
     </Phone>
   );
 
+  const swipeProgress = busy && swipeDriven ? progress : 0;
+  const progressHint =
+    onDetails || busy ? swipeProgress.toFixed(2) : 'open a photo first';
+  const outcomeText =
+    outcome === 'finished'
+      ? 'Released past the middle: the transition finished.'
+      : outcome === 'cancelled'
+        ? 'Released before the middle: the photo went back.'
+        : 'Release before 0.5 to cancel, after 0.5 to finish.';
+  const swipeSlider = (
+    <Slider
+      size="small"
+      min={0}
+      max={1}
+      step={0.01}
+      value={swipeProgress}
+      disabled={!onDetails || (busy && !swiping.current)}
+      onChange={(_, value) => scrub(value as number)}
+      onChangeCommitted={(_, value) => release(value as number)}
+      marks={[{ value: 0.5 }]}
+      sx={sliderStyling}
+    />
+  );
+
   return (
     <GestureHandlerRootView>
       <DemoLayout
         width={width}
         phone={phone}
         footer={<CodeLine>{CODE[mode]}</CodeLine>}>
-        <Control
-          label="Back swipe progress"
-          hint={onDetails || busy ? progress.toFixed(2) : 'open a photo first'}>
-          <Slider
-            size="small"
-            min={0}
-            max={1}
-            step={0.01}
-            value={onDetails || busy ? progress : 0}
-            disabled={!onDetails || (busy && !swiping.current)}
-            onChange={(_, value) => scrub(value as number)}
-            onChangeCommitted={(_, value) => release(value as number)}
-            marks={[{ value: 0.5 }]}
-            sx={sliderStyling}
-          />
-        </Control>
-        <Caption>
-          {outcome === 'finished'
-            ? 'Released past the middle: the transition finished.'
-            : outcome === 'cancelled'
-              ? 'Released before the middle: the photo went back.'
-              : 'Release before 0.5 to cancel, after 0.5 to finish.'}
-        </Caption>
-        <Segmented value={mode} options={MODE_OPTIONS} onChange={setMode} />
+        <Panel>
+          <PanelRow title="Back swipe" hint={progressHint}>
+            {swipeSlider}
+            <PanelNote>{outcomeText}</PanelNote>
+          </PanelRow>
+          <PanelRow title="During the back swipe">
+            <Segmented
+              fullWidth
+              value={mode}
+              options={MODE_OPTIONS}
+              onChange={setMode}
+            />
+          </PanelRow>
+        </Panel>
       </DemoLayout>
     </GestureHandlerRootView>
   );
@@ -347,6 +363,9 @@ const sliderStyling = {
   '& .MuiSlider-mark': {
     height: 10,
     width: 2,
+  },
+  '& .MuiSlider-thumb, & .MuiSlider-track': {
+    transition: 'none',
   },
 };
 

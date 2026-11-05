@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Caption, DemoLayout, Toggle } from './kit/controls';
+import { DemoLayout, Toggle } from './kit/controls';
 import {
   Box,
   FlightLayer,
@@ -12,7 +12,12 @@ import {
 } from './kit/flight';
 import { Phone, SCREEN_WIDTH, STATUS_BAR_HEIGHT } from './kit/Phone';
 import { PLACES, Place, Scenery } from './kit/Scenery';
-import { StackScreens, useScreenStack } from './kit/Stack';
+import {
+  HEADER_BOTTOM,
+  NavHeader,
+  StackScreens,
+  useScreenStack,
+} from './kit/Stack';
 import { useDemoTheme } from './kit/theme';
 
 const SLOW_MOTION = 4;
@@ -22,7 +27,7 @@ const PADDING = 14;
 const CARD_WIDTH = (SCREEN_WIDTH - 2 * PADDING - GAP) / 2;
 const CARD_HEIGHT = 112;
 const ROW_PITCH = CARD_HEIGHT + 46;
-const HERO_HEIGHT = 236;
+const HERO_HEIGHT = 200;
 
 function cardBox(index: number, place: Place): Box {
   return {
@@ -38,7 +43,7 @@ function cardBox(index: number, place: Place): Box {
 function heroBox(place: Place): Box {
   return {
     x: 0,
-    y: 0,
+    y: HEADER_BOTTOM,
     width: SCREEN_WIDTH,
     height: HERO_HEIGHT,
     borderRadius: 0,
@@ -49,7 +54,7 @@ function heroBox(place: Place): Box {
 export default function Overview({ width }: { width?: number }) {
   const theme = useDemoTheme();
   const [slowMotion, setSlowMotion] = useState(false);
-  const [showFrames, setShowFrames] = useState(true);
+  const [showFrames, setShowFrames] = useState(false);
   const [selected, setSelected] = useState(0);
   const factor = slowMotion ? SLOW_MOTION : 1;
   const stack = useScreenStack(factor);
@@ -78,6 +83,9 @@ export default function Overview({ width }: { width?: number }) {
   };
 
   const back = () => {
+    if (busy) {
+      return;
+    }
     fly(heroBox(place), cardBox(selected, place), place);
     stack.pop();
   };
@@ -120,17 +128,15 @@ export default function Overview({ width }: { width?: number }) {
 
   const details = (
     <View style={styles.fill}>
+      <NavHeader
+        title={place.name}
+        onBack={back}
+        backButtonDisplayMode="minimal"
+      />
       <View
         style={[styles.hero, { backgroundColor: place.sky }, hidden(place.id)]}>
         <Scenery place={place} />
       </View>
-      <Pressable
-        disabled={busy}
-        onPress={back}
-        style={styles.backButton}
-        hitSlop={8}>
-        <Text style={styles.backIcon}>‹</Text>
-      </Pressable>
       <View style={styles.detailsBody}>
         <Text style={[styles.detailsName, { color: theme.text }]}>
           {place.name}
@@ -155,7 +161,7 @@ export default function Overview({ width }: { width?: number }) {
   );
 
   const phone = (
-    <Phone statusBarTint={stack.top === 'second' ? 'light' : 'auto'}>
+    <Phone>
       <StackScreens stack={stack} first={list} second={details} />
       <FlightLayer flight={flight} />
       {showFrames && flyingPair && (
@@ -177,20 +183,35 @@ export default function Overview({ width }: { width?: number }) {
   );
 
   return (
-    <DemoLayout width={width} phone={phone}>
-      <Caption>
-        One view moves from its frame on the old screen to its frame on the new
-        screen.
-      </Caption>
-      <Toggle label="Slow motion" value={slowMotion} onChange={setSlowMotion} />
-      <Toggle label="Show frames" value={showFrames} onChange={setShowFrames} />
-    </DemoLayout>
+    <DemoLayout
+      width={width}
+      phone={phone}
+      footer={
+        <View style={styles.chips}>
+          <Toggle
+            label="Slow motion"
+            value={slowMotion}
+            onChange={setSlowMotion}
+          />
+          <Toggle
+            label="Show frames"
+            value={showFrames}
+            onChange={setShowFrames}
+          />
+        </View>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
   fill: {
     flex: 1,
+  },
+  chips: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 32,
   },
   title: {
     position: 'absolute',
@@ -226,26 +247,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   hero: {
+    marginTop: HEADER_BOTTOM,
     width: SCREEN_WIDTH,
     height: HERO_HEIGHT,
     overflow: 'hidden',
-  },
-  backButton: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT + 6,
-    left: 12,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-  },
-  backIcon: {
-    marginTop: -3,
-    fontSize: 22,
-    fontWeight: '500',
-    color: '#001a72',
   },
   detailsBody: {
     flex: 1,
