@@ -14,6 +14,7 @@ LayoutAnimationsProxyRegistry::LayoutAnimationsProxyRegistry(LayoutAnimationsPro
 
 std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::registerSurface(
     const facebook::react::ShadowTree &shadowTree) {
+  assertUpdatesRegistryUnlocked();
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   const auto surfaceId = shadowTree.getSurfaceId();
   const auto existing = instances_.find(surfaceId);
@@ -28,6 +29,7 @@ std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::regi
 }
 
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {
+  assertUpdatesRegistryUnlocked();
   std::shared_ptr<LayoutAnimationsProxyCommon> instance;
   {
     const std::lock_guard<std::mutex> lock(instancesMutex_);
@@ -129,6 +131,7 @@ void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &update
 }
 
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
+  assertUpdatesRegistryUnlocked();
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;
   instances.reserve(instances_.size());

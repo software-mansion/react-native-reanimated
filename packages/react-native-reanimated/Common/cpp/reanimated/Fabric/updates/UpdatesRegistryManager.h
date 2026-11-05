@@ -52,6 +52,7 @@ class UpdatesRegistryManager {
   std::vector<Tag> handleNodeRemovals();
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
+  const folly::dynamic *findRegistryProp(Tag viewTag, const char *propName) const;
 #ifdef ANDROID
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target, PropNamePredicate isIncluded);
 #endif

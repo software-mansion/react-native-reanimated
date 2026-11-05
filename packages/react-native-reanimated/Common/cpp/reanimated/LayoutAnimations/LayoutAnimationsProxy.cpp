@@ -200,6 +200,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("pullTransaction");
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
+  assertUpdatesRegistryUnlocked();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {

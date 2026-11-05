@@ -278,4 +278,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   mutable std::unordered_map<Tag, PendingLayoutAnimation> pendingLayoutAnimations_;
 };
 
+// A proxy reads the updates registry with the proxy mutex held, so a thread that holds the registry lock must not
+// enter a proxy.
+void assertUpdatesRegistryUnlocked();
+
 } // namespace reanimated

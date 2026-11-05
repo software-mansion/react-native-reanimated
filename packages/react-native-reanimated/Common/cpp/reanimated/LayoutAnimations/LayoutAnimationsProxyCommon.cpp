@@ -6,6 +6,7 @@
 #endif
 #include <folly/dynamic.h>
 #include <react/debug/react_native_assert.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
@@ -20,6 +21,12 @@
 #include <variant>
 
 namespace reanimated {
+
+void assertUpdatesRegistryUnlocked() {
+  react_native_assert(
+      !UpdatesRegistryManager::isLockedByCurrentThread() &&
+      "A layout animations proxy was entered with the registry lock held");
+}
 
 namespace {
 constexpr auto kContentOpacity = "contentOpacity";

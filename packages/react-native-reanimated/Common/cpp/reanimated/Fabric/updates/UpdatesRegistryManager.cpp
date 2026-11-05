@@ -122,6 +122,16 @@ void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynami
   }
 }
 
+const folly::dynamic *UpdatesRegistryManager::findRegistryProp(const Tag viewTag, const char *propName) const {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto registry = registries_.rbegin(); registry != registries_.rend(); ++registry) {
+    if (const auto value = (*registry)->findProp(viewTag, propName)) {
+      return value;
+    }
+  }
+  return nullptr;
+}
+
 #ifdef ANDROID
 
 void UpdatesRegistryManager::mergeRegistryProps(
