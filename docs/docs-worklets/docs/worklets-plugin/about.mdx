@@ -9,9 +9,9 @@ sidebar_label: 'Worklets Babel plugin'
 
 ## What is the Worklets plugin?
 
-The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](#autoworkletization).
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime). It looks for functions marked with a `'worklet';` directive and extracts each of them into a module that every runtime can load from your bundle, so the same function can run on the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) and on Worklet Runtimes. We call this process [workletization](#autoworkletization).
 
-The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](./oxc.mdx), a faster Rust port that supports [Bundle Mode](../bundleMode/overview.mdx) only. Everything on this page applies to both.
+The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](./oxc.mdx), a faster Rust port. Everything on this page applies to both.
 
 - A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -79,10 +79,6 @@ const obj = {
 };
 ```
 
-### Class Methods
-
-{/* TODO: */}
-
 ## Autoworkletization
 
 To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
@@ -133,31 +129,6 @@ const handlerObject = {
 };
 
 const handler = useAnimatedScrollHandler(handlerObject);
-```
-
-### \[Experimental] Workletizing whole files
-
-You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
-
-This will workletize all _top-level_ [JavaScript terms](#javascript-terms) automatically. It can come in handy for files that contain multiple worklet functions.
-
-```ts
-// file.ts
-'worklet';
-
-function foo() {
-  // Function 'foo' will be autoworkletized.
-  return { width: 100 };
-}
-
-function bar() {
-  // Function 'bar' will be autoworkletized.
-  function foobar() {
-    // Function 'foobar' won't since it's not defined in top-level scope.
-    console.log("I'm not a worklet");
-  }
-  return { width: 100 };
-}
 ```
 
 ## Limits of autoworkletization

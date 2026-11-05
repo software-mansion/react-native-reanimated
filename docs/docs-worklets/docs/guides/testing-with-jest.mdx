@@ -54,3 +54,9 @@ module.exports = {
   resolver: 'react-native-worklets/jest/resolver',
 };
 ```
+
+## Worklet modules in Jest
+
+The Worklets plugin runs under Jest too. Without a bundler it writes each worklet module into `react-native-worklets/.worklets/<hash>.js`, which Jest resolves like any other file of the package, so no extra setup is needed.
+
+If you pass `caller: { supportsInlineModules: true }` to `babel-jest`, the plugin emits the modules inline instead, as it does under a Metro with inline module support. Use `react-native-worklets/jest/resolver` then: it writes those modules to a `.jest-inline-modules` directory next to your `jest.config.js` so that Jest can load them. Add that directory to your `.gitignore`.
