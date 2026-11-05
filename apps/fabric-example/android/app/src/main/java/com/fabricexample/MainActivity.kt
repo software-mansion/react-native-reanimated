@@ -22,7 +22,16 @@ class MainActivity : ReactActivity() {
    * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
-      DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+      object : DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled) {
+        override fun getLaunchOptions(): Bundle? =
+            if (BuildConfig.RUNTIME_TESTS) {
+              this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {
+                Bundle().apply { putString("wsUrl", it) }
+              }
+            } else {
+              null
+            }
+      }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()

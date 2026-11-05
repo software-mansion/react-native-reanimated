@@ -32,10 +32,23 @@ function deriveServerHostPort(): { host: string; port: number } {
   return { host, port };
 }
 
+interface WsUrlOverrideHolder {
+  __RUNTIME_TESTS_WS_URL__?: string;
+}
+
+/**
+ * Takes precedence over the URL derived from the Metro script URL. The driver
+ * passes it to the app at launch, so a Release app reports to the driver's
+ * `--port` instead of its default.
+ */
+export function setWsUrlOverride(url: string): void {
+  // eslint-disable-next-line no-underscore-dangle
+  (globalThis as WsUrlOverrideHolder).__RUNTIME_TESTS_WS_URL__ = url;
+}
+
 export function deriveWsUrl(): string {
   // eslint-disable-next-line no-underscore-dangle
-  const override = (globalThis as { __RUNTIME_TESTS_WS_URL__?: string })
-    .__RUNTIME_TESTS_WS_URL__;
+  const override = (globalThis as WsUrlOverrideHolder).__RUNTIME_TESTS_WS_URL__;
   if (override) {
     return stripTrailingSlash(override);
   }

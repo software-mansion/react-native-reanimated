@@ -82,6 +82,7 @@ const CONFIGURATION =
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
+const WS_URL = `ws://127.0.0.1:${PORT}`;
 const ONLY =
   typeof args.only === 'string'
     ? args.only
@@ -1845,12 +1846,13 @@ async function installAndLaunch(udid) {
     fs.mkdirSync(SANITIZER_REPORT_DIR, { recursive: true });
   }
   console.log(
-    `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
+    `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
   await run('xcrun', ['simctl', 'launch', udid, BUNDLE_ID], {
     env: {
       ...process.env,
       SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
+      SIMCTL_CHILD_RUNTIME_TESTS_WS_URL: WS_URL,
       ...(SANITIZER ? SANITIZERS[SANITIZER].launchEnv : {}),
     },
   });
@@ -2016,7 +2018,7 @@ async function installAndLaunchAndroid(serial) {
   }
 
   console.log(
-    `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}`
+    `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
   await adb(serial, [
     'shell',
@@ -2034,6 +2036,9 @@ async function installAndLaunchAndroid(serial) {
     '--es',
     'RUNTIME_TESTS_LIBRARY',
     LIBRARY,
+    '--es',
+    'RUNTIME_TESTS_WS_URL',
+    WS_URL,
   ]);
 }
 
@@ -2156,7 +2161,8 @@ Build and run
 Ports and timeouts
   --metro-port <port>       Default: 8081.
   --port <port>             Reporting WebSocket. Default: --metro-port + 1,
-                            or 8082 for Release builds.
+                            or 8082 for Release builds. Passed to the app at
+                            launch as RUNTIME_TESTS_WS_URL.
   --connect-timeout <secs>  Wait for the app to connect. Default: 600.
   --idle-timeout <secs>     Give up after this much silence. Default: 600.
 
