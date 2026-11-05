@@ -218,6 +218,10 @@ const SynchronousPropsSETExample: React.FC = () =>
   );
 const NestedTagsExample: React.FC = () =>
   React.createElement(require('./SharedElementTransitions/NestedTags').default);
+const NestedZOrderExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/NestedZOrder').default
+  );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -832,6 +836,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
     shouldWork: {
       ios: true,
       android: true,
+    },
+  },
+  NestedZOrderExample: {
+    title: '[SET] Nested z-order',
+    screen: NestedZOrderExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: false, // the nested shared view covers the label during the flight
+      android: false, // the nested shared view covers the label during the flight
     },
   },
   NestedStacksExample: {
