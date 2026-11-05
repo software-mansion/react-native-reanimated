@@ -24,11 +24,11 @@ For convenience we moved this cache to a separate file so it doesn't scare us wi
 /**
  * Like `serializableMappingFlag`, for a clone whose subtree holds a JS
  * (non-worklet) function. Such a clone owns, through C++, a remote function
- * that holds the JS function strongly. Once the clone reaches another runtime,
- * its copy there is retained for as long as the clone lives. If the cache owned
- * the clone, a JS function whose closure reaches the cache key (for example a
- * `runOnJS` callback that captures the worklet calling it) would close a cycle
- * across both runtimes that no garbage collector can see, and leak everything
+ * that holds the JS function strongly, as a root the garbage collector cannot
+ * trace through. If the cache owned the clone, a JS function whose closure
+ * reaches the cache key (for example a `runOnJS` callback that captures the
+ * worklet calling it) would close a cycle that no garbage collector can see,
+ * even if the clone never leaves the React Native runtime, and leak everything
  * the closure reaches. So the cache holds such a clone through a
  * `RemoteBearingEntry`, and only owns it when it is persisted.
  */

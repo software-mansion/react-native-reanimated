@@ -32,7 +32,7 @@ async function collectBothRuntimes() {
   }
 }
 
-describe('Worklet and callback cycle across runtimes', () => {
+describe('Worklet and callback cycle', () => {
   test('is collected after the worklet ran on the UI runtime', async () => {
     expect(typeof globalThis.gc).toBe('function');
     const sentinels: WeakRef<object>[] = [];
@@ -57,6 +57,37 @@ describe('Worklet and callback cycle across runtimes', () => {
       await runOnRuntimeAsyncWithId(UIRuntimeId, makeWorklet());
     }
     await collectBothRuntimes();
+
+    const alive = sentinels.filter((ref) => ref.deref() !== undefined).length;
+    expect(alive).toBe(0);
+  });
+
+  test('is collected when the clone never reaches the UI runtime', async () => {
+    expect(typeof globalThis.gc).toBe('function');
+    const sentinels: WeakRef<object>[] = [];
+
+    // The same shape, serialized but never sent: the cycle closes within the
+    // React Native runtime, through the clone's native state.
+    const makeWorklet = () => {
+      const sentinel = {};
+      sentinels.push(new WeakRef(sentinel));
+      const scope: { worklet?: () => void } = {};
+      const callback = () => [sentinel, scope.worklet];
+      const worklet = () => {
+        'worklet';
+        scheduleOnRN(callback);
+      };
+      scope.worklet = worklet;
+      return worklet;
+    };
+
+    for (let i = 0; i < CYCLES; i++) {
+      createSerializable(makeWorklet());
+    }
+    for (let round = 0; round < 4; round++) {
+      globalThis.gc!();
+      await wait(100);
+    }
 
     const alive = sentinels.filter((ref) => ref.deref() !== undefined).length;
     expect(alive).toBe(0);

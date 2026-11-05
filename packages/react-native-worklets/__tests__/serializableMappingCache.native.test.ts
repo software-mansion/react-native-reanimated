@@ -1,7 +1,7 @@
 // `serializableMappingCache` must not own a clone whose subtree holds a JS
 // (non-worklet) function. Such a clone owns a remote function that holds the
 // JS function strongly, so a function whose closure reaches the cache key
-// would close a cycle across runtimes that no GC can collect. These clones are
+// would close a cycle that no GC can collect. These clones are
 // cached through a non-owning marker instead. The tests drive
 // `createSerializable` against a fake native module that models the marker's
 // `weak_ptr` with a set of live ids. Like the C++ constructors, the fake also
