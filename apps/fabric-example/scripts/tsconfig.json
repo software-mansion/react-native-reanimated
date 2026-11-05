@@ -15,5 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["*.mts"]
+  "include": ["*.mts", "__tests__/*.mts"]
 }
