@@ -1803,7 +1803,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
 
 // MARK: Position Calculation
 
-// A running layout animation keeps the frame that is on screen in its own record.
+// A running or queued layout animation keeps the frame that is on screen in its own record.
 // The light node holds the committed layout, which the animation has not reached yet.
 // The record of a detached carrier is relative to the root, so its place under its parent
 // is the committed layout.
@@ -1817,6 +1817,9 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
     return it->second.animation.currentView;
+  }
+  if (const auto *queued = queuedLayoutStartView(tag)) {
+    return *queued;
   }
   return node->current;
 }

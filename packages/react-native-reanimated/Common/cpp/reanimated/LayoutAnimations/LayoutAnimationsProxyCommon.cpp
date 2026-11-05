@@ -683,6 +683,19 @@ std::optional<ShadowView> LayoutAnimationsProxyCommon::layoutAnimationViewOnScre
   return std::nullopt;
 }
 
+// A queued layout animation start holds back the React Update, so the screen still shows the view that it starts
+// from.
+const ShadowView *LayoutAnimationsProxyCommon::queuedLayoutStartView(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto pendingIt = pendingLayoutAnimations_.find(tag);
+  if (pendingIt == pendingLayoutAnimations_.end() || pendingIt->second.type != LayoutAnimationType::LAYOUT) {
+    return nullptr;
+  }
+  const auto *start =
+      std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[pendingIt->second.operationIndex]);
+  return start ? &start->before : nullptr;
+}
+
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
     const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);

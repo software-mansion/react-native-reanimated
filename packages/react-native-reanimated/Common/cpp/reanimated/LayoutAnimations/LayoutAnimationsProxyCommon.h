@@ -178,6 +178,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
   std::optional<ShadowView> layoutAnimationViewOnScreen(Tag tag) const;
+  const ShadowView *queuedLayoutStartView(Tag tag) const;
   std::optional<ShadowView> reparentLayoutAnimation(Tag tag, Tag parentTag) const;
   std::optional<ShadowView>
   reparentPendingLayoutAnimations(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
