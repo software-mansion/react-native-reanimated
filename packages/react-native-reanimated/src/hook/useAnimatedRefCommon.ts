@@ -56,8 +56,10 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
             });
           });
         }
-      } else {
+      } else if (ref === null) {
         // React calls a callback ref with null when the element unmounts.
+        // Calling the ref with no argument only reads the wrapper, so it must
+        // not detach.
         // Drop the instance so that this ref, which the owner's closures often
         // keep reachable, does not retain the unmounted component and
         // everything its props reach.

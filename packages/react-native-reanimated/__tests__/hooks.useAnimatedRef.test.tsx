@@ -48,4 +48,24 @@ describe('useAnimatedRef', () => {
     // Then
     expect(animatedRef?.current).not.toBeNull();
   });
+
+  test('reading the ref by calling it with no argument does not detach it', () => {
+    // Given
+    let animatedRef: AnimatedRef<Animated.View> | undefined;
+
+    function TestComponent() {
+      animatedRef = useAnimatedRef<Animated.View>();
+      return <Animated.View ref={animatedRef} />;
+    }
+
+    render(<TestComponent />);
+    const instance = animatedRef?.current;
+    expect(instance).not.toBeNull();
+
+    // When
+    animatedRef?.();
+
+    // Then
+    expect(animatedRef?.current).toBe(instance);
+  });
 });
