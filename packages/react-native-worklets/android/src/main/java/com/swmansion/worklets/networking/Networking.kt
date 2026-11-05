@@ -27,6 +27,7 @@ import java.io.InterruptedIOException
 import java.nio.charset.Charset
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class Networking {
@@ -123,6 +124,7 @@ class Networking {
         listener: WebSocketListener,
     ) {
         val socketId = socketIdAsDouble.toLong()
+        val storeAttempted = CountDownLatch(1)
         try {
             val requestBuilder = Request.Builder().url(url)
             for (i in headerNames.indices) {
@@ -132,7 +134,7 @@ class Networking {
                 requestBuilder.addHeader("Sec-WebSocket-Protocol", protocols.joinToString(", "))
             }
             mListeners[socketId] = listener
-            val socket = mClient.newWebSocket(requestBuilder.build(), SocketListener(socketId, listener))
+            val socket = mClient.newWebSocket(requestBuilder.build(), SocketListener(socketId, listener, storeAttempted))
 
             /**
              * OkHttp can fail a socket before `newWebSocket` returns, and can also
@@ -157,6 +159,8 @@ class Networking {
             mNoStatusSocketIds.remove(socketId)
             listener.onError(e.message ?: e.javaClass.simpleName)
             listener.onClose(ABNORMAL_CLOSURE, "", false)
+        } finally {
+            storeAttempted.countDown()
         }
     }
 
@@ -217,11 +221,13 @@ class Networking {
     private inner class SocketListener(
         private val socketId: Long,
         private val listener: WebSocketListener,
+        private val storeAttempted: CountDownLatch,
     ) : okhttp3.WebSocketListener() {
         override fun onOpen(
             webSocket: WebSocket,
             response: Response,
         ) {
+            storeAttempted.await()
             listener.onOpen(
                 response.header("Sec-WebSocket-Protocol") ?: "",
                 response.header("Sec-WebSocket-Extensions") ?: "",
