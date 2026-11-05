@@ -248,10 +248,10 @@ export interface WorkletsModuleProxy {
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
   /**
-   * Test-only. Returns the number of Worklet Runtimes that are not destroyed
-   * yet.
+   * Test-only. Returns `true` until the Worklet Runtime with the given id is
+   * destroyed.
    */
-  getAliveRuntimeCount(): number;
+  isRuntimeAlive(runtimeId: number): boolean;
 
   getCurrentThreadId(): string;
 
