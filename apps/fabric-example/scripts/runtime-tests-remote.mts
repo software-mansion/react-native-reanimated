@@ -6,7 +6,7 @@
 // SIM_ROUTER_USERNAME / SIM_ROUTER_API_KEY) — no Xcode, no xcrun, no macOS.
 //
 // The reporting path is unchanged from local runs: runtime-tests-server.mts
-// listens on this host, and `sim-remote proxy` reverse-tunnels the sim's
+// listens on this host, and `sim-remote reverse` tunnels the sim's
 // localhost:<port> here, so the app's WebSocket dial arrives at this
 // machine. The library is selected via launchd env inside the remote sim
 // (`sim-remote setenv`), the remote analogue of SIMCTL_CHILD_*.
@@ -36,6 +36,8 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+
+import { startTunnelWithRetries } from './runtime-tests-tunnel.mts';
 
 const scriptDir = import.meta.dirname;
 
@@ -143,21 +145,14 @@ function assertSimRemote() {
 
 // ── tunnels and Metro ──
 
-// Reverse tunnel: the sim's localhost:<port> -> this host. `proxy start`
-// errors with "tunnel already active" on re-runs — tolerate that (same
-// semantics as argent's proxyStart wrapper) so runs can blindly ensure
-// their tunnels exist.
 async function ensureTunnel(port: number) {
   log(`ensuring reverse tunnel for port ${port}`);
-  try {
-    await simRemote(['proxy', 'start', UDID, String(port)]);
-  } catch (error) {
-    if (/already/i.test(errorMessage(error))) {
-      log(`tunnel already active on port ${port}`);
-      return;
-    }
-    throw error;
-  }
+  await startTunnelWithRetries(port, {
+    start: () => simRemote(['reverse', 'start', UDID, String(port)]),
+    stop: () => simRemote(['reverse', 'stop', UDID, String(port)]),
+    sleep,
+    log,
+  });
 }
 
 function metroRunning(): Promise<boolean> {

@@ -314,8 +314,8 @@ jobs:
 
           if command -v sim-remote >/dev/null; then
             if [ -n "$UDID" ]; then
-              sim-remote proxy stop "$UDID" 8082 || true
-              sim-remote proxy stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
+              sim-remote reverse stop "$UDID" 8082 || true
+              sim-remote reverse stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
               sim-remote simctl shutdown "$UDID" || true
             fi
 
