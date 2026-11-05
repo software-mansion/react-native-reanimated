@@ -516,7 +516,7 @@ describe('Nested shared transitions', () => {
     ['inner first', innerEndsFirst, 600, 3000],
     ['outer first', outerEndsFirst, 300, 1200],
   ] as const) {
-    test(`keeps deleted nested carriers independent when they finish ${order}`, async () => {
+    test(`keeps deleted nested carriers until both finish when the ${order.replace(' first', '')} one ends first`, async () => {
       await mockAnimationTimer({ autoAdvance: false });
       await render(
         <Screens active={false} transitions={transitions} removeSource />
@@ -538,13 +538,7 @@ describe('Nested shared transitions', () => {
           return global._obtainMountedViewProps(innerTag, false)?.opacity;
         })
       ).toBe(1);
-      if (order === 'outer first') {
-        await expectEventually(() => isViewMountedNatively(outerTag)).toBe(
-          false
-        );
-      } else {
-        expect(await isViewMountedNatively(outerTag)).toBe(true);
-      }
+      expect(await isViewMountedNatively(outerTag)).toBe(true);
       await advanceAnimationTimer(secondEnd - firstEnd);
       await waitForNotification(
         order === 'inner first' ? 'outer-finished' : 'inner-finished'
@@ -557,7 +551,7 @@ describe('Nested shared transitions', () => {
   }
 
   test.each([true, false])(
-    'keeps a waiting inner view on screen when React moves it (wrapped first: %p)',
+    'moves a waiting inner view with React (wrapped first: %p)',
     async (wrapped) => {
       await mockAnimationTimer({ autoAdvance: false });
       await render(<Screens active={false} innerWrapped={wrapped} />);
@@ -576,17 +570,11 @@ describe('Nested shared transitions', () => {
       await waitForNotification('inner-finished');
       await waitForFrames(2);
 
-      await RuntimeTestObserver?.startUnmountRecording();
       await render(<Screens active innerWrapped={!wrapped} />);
       await expectEventually(() => isViewMountedNatively(wrapperTag)).toBe(
         !wrapped
       );
-      const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
-      if (unmounts) {
-        expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
-          false
-        );
-      }
+      expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
       expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
       const inner = await runOnUIBlocking(() => {
         'worklet';
@@ -602,6 +590,29 @@ describe('Nested shared transitions', () => {
       expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
     }
   );
+
+  test('keeps the inner view in its parent during the flight', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} />);
+    await waitForFrames();
+    const innerTag = getTestComponent('sourceInner').getTag();
+    const homeParent = await RuntimeTestObserver?.observeParent(innerTag);
+    await RuntimeTestObserver?.startUnmountRecording();
+    await render(<Screens active />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
+    await waitForFrames(2);
+    expect(await RuntimeTestObserver?.observeParent(innerTag)).toBe(homeParent);
+    const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
+    if (unmounts) {
+      expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
+        false
+      );
+    }
+    await advanceAnimationTimer(2700);
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
 
   test('keeps the inner view on screen until the outer transition ends', async () => {
     await render(<Screens active={false} />);
