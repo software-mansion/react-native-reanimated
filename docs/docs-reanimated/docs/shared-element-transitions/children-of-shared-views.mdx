@@ -95,7 +95,8 @@ const transition = SharedTransition.duration(450).fadeContent({
 - A direct child of the target view with an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. Deeper children play their entering animations during the move.
 - The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - If the user goes back during the move, the children fade in again while the view returns.
-- With `.springify()`, the fade-in starts when the spring stops. Pass the duration to `springify(duration)`, because the default fade-in length comes from it.
+- With `.springify()`, the fade-in starts when the spring stops. By default, the fade-in takes half of the spring duration: half of `springify(duration)`, or 250 ms without a duration. To change it without changing the spring, set `fadeIn.duration`.
+- With [`SharedTransition.custom()`](./custom-animations.mdx), the children fade with the duration, easing or spring of the builder, not with the timing of your worklet. To fade them over the whole move, give the builder the same timing, for example `SharedTransition.custom(animation).duration(800).fadeContent()`.
 
 ## Platform compatibility
 
