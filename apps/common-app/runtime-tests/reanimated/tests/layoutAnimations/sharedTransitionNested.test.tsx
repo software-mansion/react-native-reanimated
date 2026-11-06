@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   FadeOut,
@@ -622,9 +622,10 @@ describe('Nested shared transitions', () => {
     await advanceAnimationTimer(300);
     await waitForFrames(2);
     expect(await RuntimeTestObserver?.observeParent(innerTag)).toBe(homeParent);
-    const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
-    if (unmounts) {
-      expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
+    if (Platform.OS === 'ios') {
+      const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
+      expect(!!unmounts).toBe(true);
+      expect(!!unmounts?.some(({ childTag }) => childTag === innerTag)).toBe(
         false
       );
     }
