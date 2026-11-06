@@ -132,7 +132,9 @@ const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
   typeof args.configuration === 'string'
     ? args.configuration
-    : 'DebugRuntimeTests';
+    : PLATFORM === 'ios'
+      ? 'Debug'
+      : 'DebugRuntimeTests';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
@@ -1866,7 +1868,7 @@ function xcodebuildArgs(udid: string | null) {
     '-workspace',
     'FabricExample.xcworkspace',
     '-scheme',
-    'DebugRuntimeTests',
+    'Debug FabricExample',
     '-configuration',
     CONFIGURATION,
     ...(udid
@@ -2218,8 +2220,9 @@ Target
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
-                            Default: DebugRuntimeTests. Release builds embed
-                            the bundle and run without Metro.
+                            Default: Debug on iOS, DebugRuntimeTests on
+                            Android. ReleaseRuntimeTests embeds the bundles
+                            and runs without Metro.
   --skip-build              Reuse the installed app. Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.

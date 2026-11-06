@@ -140,7 +140,7 @@ jobs:
       # fan-out saves. Bundle Mode, because the Legacy Eval legs run
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
-        if: inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
+        if: inputs.bundleMode && env.CONFIGURATION == 'Debug'
         uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
