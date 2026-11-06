@@ -1,0 +1,103 @@
+---
+sidebar_position: 2
+title: Shared transition props
+sidebar_label: Shared transition props
+---
+
+import Style from '@site/src/examples/shared-element-transitions/Style';
+import StyleSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Style.code';
+
+<Badges version="4.8.0">
+  # Shared transition props
+</Badges>
+
+Every animated component accepts two props for Shared Element Transitions. `sharedTransitionTag` selects the views that take part in a transition. `sharedTransitionStyle` selects how they move.
+
+## `sharedTransitionTag`
+
+A string that pairs this view with a view on another screen. When the active [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary) changes, Reanimated looks for a view with the same tag in the old boundary and in the new boundary. If it finds both, it moves the old view to the place of the new view.
+
+### Reference
+
+```tsx
+import Animated from 'react-native-reanimated';
+
+function Thumbnail({ id }) {
+  return (
+    <Animated.Image
+      // highlight-next-line
+      sharedTransitionTag={`photo-${id}`}
+      source={{ uri: `https://picsum.photos/id/${id}/200` }}
+      style={{ width: 80, height: 80 }}
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  interface AnimatedProps {
+    sharedTransitionTag?: string;
+    // ...
+  }
+  ```
+</details>
+
+### Remarks
+
+- Use a tag only once on a screen. To animate more views at the same time, give each of them a different tag. For a list, build the tag from the item key, for example `` `photo-${item.id}` ``.
+- Use the same native component on both screens, for example `Animated.View` and `Animated.View`, or `Animated.Image` and `Animated.Image`. Do not pair an `Animated.View` with an `Animated.Image`, or image components from two different libraries.
+- You can change the tag at any time. The next transition uses the new tag.
+- To turn off the transition for a view, remove the tag or set it to an empty string.
+- A view and its child can both have a tag. Then each of them moves to its own match.
+
+## `sharedTransitionStyle`
+
+A [`SharedTransition`](./shared-transition.mdx) builder that sets how the view moves. Without this prop, the view uses the default transition: a 500 ms [`withTiming`](../animations/withTiming.mdx) animation.
+
+### Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(800);
+
+function Thumbnail() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      // highlight-next-line
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  interface AnimatedProps {
+    sharedTransitionStyle?: SharedTransition;
+    // ...
+  }
+  ```
+</details>
+
+### Example
+
+<InteractiveExample src={StyleSrc} component={Style} larger/>
+
+### Remarks
+
+- A transition uses the `sharedTransitionStyle` of the view that it starts from. When you navigate forward, it uses the style of the view on the old screen. When you go back, it uses the style of the view on the screen that closes. To get the same transition in both directions, give the same builder to both views.
+- Create the builder once, outside of the component, or memoize it. A new builder on each render configures the transition again.
+- If you remove only `sharedTransitionStyle`, the view keeps the last builder that it had. To stop the transition, remove `sharedTransitionTag`.
+- To change how the view moves, see [`SharedTransition`](./shared-transition.mdx), [Children of shared views](./children-of-shared-views.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx).
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

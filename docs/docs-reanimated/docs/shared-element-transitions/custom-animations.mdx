@@ -1,0 +1,133 @@
+---
+sidebar_position: 6
+title: Custom animations
+sidebar_label: Custom animations
+---
+
+import Custom from '@site/src/examples/shared-element-transitions/Custom';
+import CustomSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Custom.code';
+
+<Badges version="4.8.0">
+  # Custom animations
+</Badges>
+
+Use a custom animation when the [`SharedTransition`](./shared-transition.mdx) modifiers are not sufficient, for example for a curved path or a different timing for each property. You write a worklet that gets the values of the two views and returns an animation for each style property.
+
+<InteractiveExample src={CustomSrc} component={Custom} larger/>
+
+## Reference
+
+```tsx
+import Animated, {
+  SharedTransition,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+
+// highlight-start
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    originX: withTiming(values.targetOriginX, { duration: 600 }),
+    originY: withSpring(values.targetOriginY),
+    width: withTiming(values.targetWidth, { duration: 600 }),
+    height: withTiming(values.targetHeight, { duration: 600 }),
+  };
+});
+// highlight-end
+
+function Photo() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type CustomSharedTransitionAnimation = (
+    values: SharedTransitionAnimationsValues
+  ) => StyleProps;
+
+  class SharedTransition {
+    static custom(animation: CustomSharedTransitionAnimation): SharedTransition;
+    // ...
+  }
+  ```
+</details>
+
+### Arguments
+
+#### `animation`
+
+A worklet that gets `values` and returns an object with an animation, for example from [`withTiming`](../animations/withTiming.mdx) or [`withSpring`](../animations/withSpring.mdx), for each style property that you want to animate.
+
+The worklet returns the animations directly. This is different from [custom layout animations](../layout-animations/custom-animations.mdx), which return `{ initialValues, animations }`. Every animation starts from the value of the source view.
+
+`values` has the values of the source view with the `current` prefix, the values of the target view with the `target` prefix, and the size of the window:
+
+| Value                                         | Description                                                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `currentOriginX`, `targetOriginX`             | The x coordinate of the top-left corner, in window coordinates.                                       |
+| `currentOriginY`, `targetOriginY`             | The y coordinate of the top-left corner, in window coordinates.                                       |
+| `currentWidth`, `targetWidth`                 | The width of the view.                                                                                |
+| `currentHeight`, `targetHeight`               | The height of the view.                                                                               |
+| `currentOpacity`, `targetOpacity`             | The opacity of the view.                                                                              |
+| `currentBackgroundColor`, `targetBackgroundColor` | The background color.                                                                             |
+| `currentBorderRadius`, `targetBorderRadius`   | The border radius. Per-corner values, for example `currentBorderTopLeftRadius`, show when one of the views sets them. |
+| `currentBorderWidth`, `targetBorderWidth`     | The border width. Per-side values, for example `currentBorderLeftWidth`, show when one of the views sets them. |
+| `currentBorderColor`, `targetBorderColor`     | The border color. Per-side values, for example `currentBorderLeftColor`, show when one of the views sets them. |
+| `currentTransform`, `targetTransform`         | The transform as `{ matrix }`, a flat 4×4 matrix.                                                     |
+| `currentTransformOrigin`, `targetTransformOrigin` | The transform origin as `[x, y, z]`.                                                              |
+| `currentBoxShadow`, `targetBoxShadow`         | The box shadows.                                                                                      |
+| `currentShadowColor`, `currentShadowOffset`, `currentShadowOpacity`, `currentShadowRadius` and the `target` values | The `shadow*` properties.                       |
+| `currentElevation`, `targetElevation`         | The elevation, on Android only.                                                                       |
+| `windowWidth`, `windowHeight`                 | The size of the window.                                                                               |
+
+## Example
+
+To move the view on a curve, give the two axes different curves:
+
+```tsx
+const arc = SharedTransition.custom((values) => {
+  'worklet';
+  const config = { duration: 600 };
+  return {
+    // highlight-next-line
+    originX: withTiming(values.targetOriginX, { ...config, easing: Easing.out(Easing.quad) }),
+    // highlight-next-line
+    originY: withTiming(values.targetOriginY, { ...config, easing: Easing.in(Easing.quad) }),
+    width: withTiming(values.targetWidth, config),
+    height: withTiming(values.targetHeight, config),
+    borderRadius: withTiming(values.targetBorderRadius, config),
+  };
+});
+```
+
+To animate the transform, animate the whole matrix:
+
+```tsx
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    // highlight-next-line
+    transform: [{ matrix: withTiming(values.targetTransform.matrix) }],
+  };
+});
+```
+
+## Remarks
+
+- The callback must have the `'worklet'` directive.
+- Reanimated does not animate the properties that you do not return. Such a property keeps the value of the source view until the transition ends.
+- Animate the transform as a whole, with `transform: [{ matrix }]`. Separate transform operations, for example `transform: [{ scale: withTiming(2) }]`, are not supported.
+- The worklet controls the timing of each animation. The `.delay()` and `.withCallback()` modifiers of the builder still apply, for example `SharedTransition.custom(animation).delay(100)`.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

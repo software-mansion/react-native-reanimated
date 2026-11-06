@@ -1,0 +1,105 @@
+---
+sidebar_position: 5
+title: Children of shared views
+sidebar_label: Children of shared views
+---
+
+import FadeContent from '@site/src/examples/shared-element-transitions/FadeContent';
+import FadeContentSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/FadeContent.code';
+
+<Badges version="4.8.0">
+  # Children of shared views
+</Badges>
+
+By default, the shared view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. You can change this in two ways, also together:
+
+- Give a child its [own `sharedTransitionTag`](#children-with-their-own-tag) when the same child is on both screens, for example an icon. The child then moves to its own match, as a separate shared view.
+- Use [`fadeContent()`](#fadecontent) for the other children. The children of the moving view fade out while it moves, and the children of the target view fade in when the transition ends. The view itself stays visible, and its frame and style animate as usual.
+
+<InteractiveExample src={FadeContentSrc} component={FadeContent} larger/>
+
+## Children with their own tag
+
+A child with its own matching `sharedTransitionTag` moves from its place in the old view to its place in the new view. It does not fade with its parent, also with `fadeContent()`. To see the difference, toggle the **Icon has its own tag** switch in the demo above.
+
+```tsx
+<Animated.View sharedTransitionTag="card" sharedTransitionStyle={transition}>
+  // highlight-next-line
+  <Animated.Text sharedTransitionTag="card-icon">☀</Animated.Text>
+  <Text>Sun</Text>
+</Animated.View>
+```
+
+Give the child the same tag on both screens, and use the same native component on both screens, as for any [shared view](./shared-transition-props.mdx#sharedtransitiontag).
+
+The moving view keeps its own content, so a different `fontSize` on the two screens changes at once when the transition ends. To change the size of a child smoothly, give it the same `fontSize` on both screens and scale it with `transform`, which animates.
+
+## `fadeContent()`
+
+### Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(450).fadeContent();
+
+function Card() {
+  return (
+    <Animated.View
+      sharedTransitionTag="card"
+      sharedTransitionStyle={transition}>
+      <Text>Florence</Text>
+    </Animated.View>
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type FadeContentConfig = {
+    fadeOut?: { end?: number };
+    fadeIn?: { duration?: number };
+  };
+
+  class SharedTransition {
+    static fadeContent(config?: FadeContentConfig): SharedTransition;
+    fadeContent(config?: FadeContentConfig): this;
+    // ...
+  }
+  ```
+</details>
+
+### Arguments
+
+#### `config` <Optional/>
+
+An object with two optional fields:
+
+- `fadeOut.end` - the point of the move, more than 0 and at most 1, where the children reach opacity 0. For example, with `0.5` the children are gone in the middle of the move. The point follows the easing or the spring of the move. Defaults to `1`.
+- `fadeIn.duration` - the length of the fade-in after the transition ends, in milliseconds. Defaults to half of the transition duration.
+
+```tsx
+const transition = SharedTransition.duration(450).fadeContent({
+  // highlight-next-line
+  fadeOut: { end: 0.5 },
+  // highlight-next-line
+  fadeIn: { duration: 150 },
+});
+```
+
+## Remarks
+
+- Only the direct children of the shared views fade. A child that fills the view, for example a background image, fades like the other children.
+- A shared view without children, for example a shared `Image`, has nothing to fade.
+- A direct child of the target view with an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. Deeper children play their entering animations during the move.
+- The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
+- If the user goes back during the move, the children fade in again while the view returns.
+- With `.springify()`, the fade-in starts when the spring stops. By default, the fade-in takes half of the spring duration: half of `springify(duration)`, or 250 ms without a duration. To change it without changing the spring, set `fadeIn.duration`.
+- With [`SharedTransition.custom()`](./custom-animations.mdx), the children fade with the duration, easing or spring of the builder, not with the timing of your worklet. To fade them over the whole move, give the builder the same timing, for example `SharedTransition.custom(animation).duration(800).fadeContent()`.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

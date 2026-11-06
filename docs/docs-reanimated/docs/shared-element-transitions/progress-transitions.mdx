@@ -1,0 +1,105 @@
+---
+sidebar_position: 7
+title: Progress-based transitions
+sidebar_label: Progress-based transitions
+---
+
+import Progress from '@site/src/examples/shared-element-transitions/Progress';
+import ProgressSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Progress.code';
+
+<Badges version="4.8.0">
+  # Progress-based transitions
+</Badges>
+
+On iOS, the user can go back with a swipe from the edge of the screen. During this swipe, the shared view does not run an animation of its own. It follows the progress of the swipe, from 0 to 1. If the user cancels the swipe, the view goes back to its start position. The same applies when the user closes a sheet with a swipe. When the user taps the native back button, the view follows the progress of the screen change.
+
+By default, Reanimated interpolates every property that is different on the two views in a straight line. You can change this with a progress animation.
+
+<InteractiveExample src={ProgressSrc} component={Progress} larger/>
+
+## Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-start
+const transition = SharedTransition.progressAnimation((values, progress) => {
+  'worklet';
+  const lerp = (from: number, to: number) => from + (to - from) * progress;
+  return {
+    originX: lerp(values.currentOriginX, values.targetOriginX),
+    originY: lerp(values.currentOriginY, values.targetOriginY),
+    width: lerp(values.currentWidth, values.targetWidth),
+    height: lerp(values.currentHeight, values.targetHeight),
+    // round in the middle of the move
+    borderRadius: 16 + 48 * Math.sin(progress * Math.PI),
+  };
+});
+// highlight-end
+
+function Photo() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  type ProgressSharedTransitionAnimation = (
+    values: SharedTransitionAnimationsValues,
+    progress: number
+  ) => StyleProps;
+
+  enum SharedTransitionType {
+    ANIMATION = 'animation',
+    PROGRESS_ANIMATION = 'progressAnimation',
+  }
+
+  class SharedTransition {
+    static progressAnimation(animation: ProgressSharedTransitionAnimation): SharedTransition;
+    progressAnimation(animation: ProgressSharedTransitionAnimation): this;
+    static defaultTransitionType(type: SharedTransitionType): SharedTransition;
+    defaultTransitionType(type: SharedTransitionType): this;
+    // ...
+  }
+  ```
+</details>
+
+## Modifiers
+
+### `progressAnimation` <Optional/>
+
+A worklet that gets the same [`values`](./custom-animations.mdx#arguments) as a custom animation and the `progress`, from 0 to 1. It returns the style of the view at this progress: plain values, not animations. Reanimated does not animate the properties that you do not return.
+
+### `defaultTransitionType` <Optional/>
+
+Selects which animation a transition uses when it does not follow a gesture:
+
+- `SharedTransitionType.ANIMATION` - the default. The transition uses the normal animation of the builder: the timing or spring, or the [custom animation](./custom-animations.mdx). Only the iOS back navigation uses the progress animation.
+- `SharedTransitionType.PROGRESS_ANIMATION` - every transition uses the progress animation. During the iOS back navigation, the screen change controls the progress. In all other cases, the builder controls it: for example, with `.duration(800)` the progress goes from 0 to 1 in 800 ms, and with `.springify()` it follows a spring.
+
+```tsx
+import { SharedTransition, SharedTransitionType } from 'react-native-reanimated';
+
+const transition = SharedTransition.duration(800)
+  .progressAnimation(myProgressAnimation)
+  // highlight-next-line
+  .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION);
+```
+
+## Remarks
+
+- The callback must have the `'worklet'` directive.
+- With `PROGRESS_ANIMATION`, the same worklet sets the look of the transition in both cases: when the user swipes and when the builder runs it. Use it when you want the two to look the same.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>
+
+On Android, transitions do not follow the back gesture. After a back gesture, the transition runs with the builder: a normal animation, or a progress animation with `SharedTransitionType.PROGRESS_ANIMATION`.

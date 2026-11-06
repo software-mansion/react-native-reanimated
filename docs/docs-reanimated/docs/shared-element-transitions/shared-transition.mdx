@@ -1,0 +1,106 @@
+---
+sidebar_position: 4
+title: SharedTransition
+sidebar_label: SharedTransition
+---
+
+import Builder from '@site/src/examples/shared-element-transitions/Builder';
+import BuilderSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Builder.code';
+
+<Badges version="4.8.0">
+  # SharedTransition
+</Badges>
+
+`SharedTransition` is a builder that sets how a shared view moves. Pass it to the [`sharedTransitionStyle`](./shared-transition-props.mdx#sharedtransitionstyle) prop. Without modifiers, the view moves with a 500 ms [`withTiming`](../animations/withTiming.mdx) animation.
+
+<InteractiveExample src={BuilderSrc} component={Builder} larger/>
+
+## Reference
+
+```tsx
+import Animated, { SharedTransition, Easing } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(400).easing(Easing.out(Easing.cubic));
+
+function Photo() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      // highlight-next-line
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+## Modifiers
+
+### Easing <Optional/>
+
+Easing modifiers use the [`withTiming`](../animations/withTiming.mdx) function.
+
+```javascript
+SharedTransition.duration(400).easing(Easing.out(Easing.cubic));
+```
+
+- `.easing(easingFunction: EasingFunction)` sets the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
+
+:::note
+The `.easing(...)` modifier has no effect when you use `.springify()`.
+:::
+
+### Spring-based <Optional/>
+
+Spring-based modifiers use the [`withSpring`](../animations/withSpring.mdx) function. As in the `withSpring` config, a spring is duration-based (`duration` and `dampingRatio`) or physics-based (`mass`, `damping` and `stiffness`).
+
+```javascript
+// duration-based
+SharedTransition.springify(600).dampingRatio(0.7);
+
+// physics-based
+SharedTransition.springify().damping(15).stiffness(150);
+```
+
+- `.springify(duration?: number)` uses a spring for the transition. The optional argument sets the perceptual duration of the spring in milliseconds. The spring stops after about 1.5 times this value. Defaults to `500`.
+- `.dampingRatio(value: number)` sets how damped the spring is. Value `1` means that the spring is critically damped, and value `>1` means that the spring is overdamped. Defaults to `1`.
+- `.damping(value: number)` sets how quickly the spring stops. Higher damping means that the spring stops faster. Defaults to `120`.
+- `.mass(value: number)` is the weight of the spring. A lower value makes the animation faster. Defaults to `4`.
+- `.stiffness(value: number)` sets the stiffness of the spring. Defaults to `900`.
+- `.overshootClamping(value: boolean)` sets whether the spring can go past its target. Defaults to `false`.
+- `.energyThreshold(value: number)` sets the relative energy below which the spring stops. Defaults to `6e-9`.
+
+:::info
+If you set `damping`, `mass` or `stiffness` without a duration and without `dampingRatio`, the spring is physics-based. In all other cases, the spring uses a duration, which is 500 ms by default.
+:::
+
+### Common <Optional/>
+
+```javascript
+SharedTransition.duration(400)
+  .delay(100)
+  .reduceMotion(ReduceMotion.System)
+  .withCallback((finished) => {
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+- `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
+- `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
+- `.reduceMotion(reduceMotion: ReduceMotion)` sets how the animation responds to the reduced motion [accessibility](../guides/accessibility.mdx) setting of the device.
+- `.withCallback(callback: (finished: boolean) => void)` sets a function that runs when the animation ends. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
+
+### Shared transition modifiers <Optional/>
+
+- [`.fadeContent(config?)`](./children-of-shared-views.mdx#fadecontent) fades the children of the view during the transition.
+- [`SharedTransition.custom(animation)`](./custom-animations.mdx) uses your own animation worklet.
+- [`.progressAnimation(animation)` and `.defaultTransitionType(type)`](./progress-transitions.mdx) set the transition that follows the progress of the screen change.
+
+## Remarks
+
+- `.springify()` sets the duration again. Call `.springify(duration)` with the duration that you want, not `.duration(...)` before `.springify()`.
+- The transition uses the builder of the view that it starts from. See [`sharedTransitionStyle`](./shared-transition-props.mdx#sharedtransitionstyle).
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>
