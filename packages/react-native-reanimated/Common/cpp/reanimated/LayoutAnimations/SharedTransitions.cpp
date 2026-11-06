@@ -792,7 +792,8 @@ bool LayoutAnimationsProxy::keepsNesting(
     const std::shared_ptr<LightNode> &carrier,
     const std::shared_ptr<LightNode> &target) const {
   const auto ancestor = carrierAncestorOf(carrier);
-  return ancestor && isInSubtree(target, runOfCarrier(ancestor)->run->target);
+  const auto carried = ancestor ? runOfCarrier(ancestor) : std::nullopt;
+  return carried && isInSubtree(target, carried->run->target);
 }
 
 // The carrier keeps its frame on screen, and its animation continues in the space of the root.
@@ -858,11 +859,12 @@ ShadowView LayoutAnimationsProxy::targetInCarrierSpace(
     return target;
   }
   const auto ancestor = carrierAncestorOf(run.carrier);
-  react_native_assert(ancestor && "A nested carrier moves in a carrier");
-  if (!ancestor) {
+  const auto carried = ancestor ? runOfCarrier(ancestor) : std::nullopt;
+  react_native_assert(carried && "A nested carrier moves in a carrier");
+  if (!carried) {
     return target;
   }
-  const auto &ancestorTarget = runOfCarrier(ancestor)->run->target;
+  const auto &ancestorTarget = carried->run->target;
   resolveLightNodeProps(run.target);
   auto view = target;
   view.props = run.target->current.props;
