@@ -2,6 +2,7 @@
 #include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
@@ -849,6 +850,20 @@ Tag LayoutAnimationsProxy::carrierParentTag(const std::shared_ptr<LightNode> &ca
   return carrier->isDetached ? carrierHostTag() : carrier->parent.lock()->current.tag;
 }
 
+static std::optional<Transform> invertedTransform(const Transform &transform) {
+  css::TransformMatrix3D::MatrixArray values{};
+  std::ranges::copy(transform.matrix, values.begin());
+  css::TransformMatrix3D matrix(values);
+  if (!matrix.invert()) {
+    return std::nullopt;
+  }
+  Transform inverted;
+  for (size_t i = 0; i < inverted.matrix.size(); ++i) {
+    inverted.matrix[i] = static_cast<Float>(matrix[i]);
+  }
+  return inverted;
+}
+
 // The parent of a nested carrier keeps its place in the carrier that moves it, which ends at its own target.
 // So the nested carrier ends where its target is in that target, with the transforms below that target.
 ShadowView LayoutAnimationsProxy::targetInCarrierSpace(
@@ -874,8 +889,37 @@ ShadowView LayoutAnimationsProxy::targetInCarrierSpace(
   auto positions = getAbsolutePositionsForRootPathView(run.target, false);
   const auto depth = std::ranges::find(ancestors, ancestorTarget->current.tag, &Ancestor::tag) - ancestors.begin();
   positions.resize(std::min(positions.size(), static_cast<size_t>(depth)));
-  overrideTransform(view, parseParentTransforms(ancestors, positions), propsParserContext);
+  auto transform = parseParentTransforms(ancestors, positions);
+  if (const auto above = transformsAboveNestedCarrier(run.carrier, ancestor, view)) {
+    const auto &own = ancestors[0];
+    const auto below = transform.value_or(resolveTransform(own.ownSize, own.ownSize, own.transform, own.origin));
+    if (const auto inverse = invertedTransform(*above)) {
+      transform = Transform::FromTransformOperation(
+          react::TransformOperation(TransformOperationType::Arbitrary), {}, *inverse * below);
+    }
+  }
+  overrideTransform(view, transform, propsParserContext);
   return view;
+}
+
+// The views between a nested carrier and the carrier that moves it keep their transforms during the flight. The view
+// is the frame of the nested carrier in its parent.
+std::optional<Transform> LayoutAnimationsProxy::transformsAboveNestedCarrier(
+    const std::shared_ptr<LightNode> &carrier,
+    const std::shared_ptr<LightNode> &ancestor,
+    const ShadowView &view) const {
+  const auto parent = carrier->parent.lock();
+  auto ancestors = collectAncestors(parent, true);
+  auto positions = getAbsolutePositionsForRootPathView(parent, true);
+  const auto depth = std::ranges::find(ancestors, ancestor->current.tag, &Ancestor::tag) - ancestors.begin();
+  positions.resize(std::min(positions.size(), static_cast<size_t>(depth)));
+  if (positions.empty()) {
+    return std::nullopt;
+  }
+  const auto &frame = view.layoutMetrics.frame;
+  ancestors.insert(ancestors.begin(), Ancestor{.tag = carrier->current.tag, .ownSize = frame.size});
+  positions.insert(positions.begin(), positions[0] + frame.origin);
+  return parseParentTransforms(ancestors, positions);
 }
 
 // The view on screen with its own props, in the space of its parent. The snapshot is relative to the root and may

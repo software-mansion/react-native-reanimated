@@ -70,6 +70,7 @@ function Target({
   repeatInner,
   exiting,
   transitions,
+  wrapperTranslateX,
 }: {
   active: boolean;
   innerSize: number;
@@ -78,6 +79,7 @@ function Target({
   repeatInner: boolean;
   exiting: boolean;
   transitions: Transitions;
+  wrapperTranslateX: number;
 }) {
   const outer = useTestRef('targetOuter');
   const inner = useTestRef('targetInner');
@@ -92,6 +94,24 @@ function Target({
   const innerStyle = useAnimatedStyle(() =>
     repeatInner ? { opacity: 0.6 + repeat.value * 0.4 } : {}
   );
+  const innerView = (
+    <Animated.View
+      ref={inner}
+      sharedTransitionTag="inner"
+      sharedTransitionStyle={transitions.inner}
+      exiting={exiting ? targetExiting : undefined}
+      accessibilityLabel={innerLabel}
+      style={[
+        styles.targetInner,
+        {
+          width: innerSize,
+          height: innerSize,
+          backgroundColor: innerColor,
+        },
+        innerStyle,
+      ]}
+    />
+  );
   return (
     <SharedTransitionBoundary isActive={active}>
       <Animated.View
@@ -100,22 +120,13 @@ function Target({
         sharedTransitionStyle={transitions.outer}
         exiting={exiting ? targetExiting : undefined}
         style={styles.targetOuter}>
-        <Animated.View
-          ref={inner}
-          sharedTransitionTag="inner"
-          sharedTransitionStyle={transitions.inner}
-          exiting={exiting ? targetExiting : undefined}
-          accessibilityLabel={innerLabel}
-          style={[
-            styles.targetInner,
-            {
-              width: innerSize,
-              height: innerSize,
-              backgroundColor: innerColor,
-            },
-            innerStyle,
-          ]}
-        />
+        {wrapperTranslateX ? (
+          <View style={{ transform: [{ translateX: wrapperTranslateX }] }}>
+            {innerView}
+          </View>
+        ) : (
+          innerView
+        )}
       </Animated.View>
     </SharedTransitionBoundary>
   );
@@ -132,6 +143,7 @@ function Screens({
   transitions = innerEndsFirst,
   removeSource = false,
   innerWrapped = false,
+  wrapperTranslateX = 0,
 }: {
   active: boolean;
   keepTarget?: boolean;
@@ -143,6 +155,7 @@ function Screens({
   transitions?: Transitions;
   removeSource?: boolean;
   innerWrapped?: boolean;
+  wrapperTranslateX?: number;
 }) {
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
@@ -159,8 +172,13 @@ function Screens({
             {/* A collapsable wrapper is flattened, so the inner view changes its native parent. */}
             <View
               ref={innerWrapper}
-              collapsable={!innerWrapped}
-              style={innerWrapped && styles.innerWrapper}>
+              collapsable={!innerWrapped && !wrapperTranslateX}
+              style={[
+                innerWrapped && styles.innerWrapper,
+                !!wrapperTranslateX && {
+                  transform: [{ translateX: wrapperTranslateX }],
+                },
+              ]}>
               <Animated.View
                 ref={inner}
                 sharedTransitionTag="inner"
@@ -180,6 +198,7 @@ function Screens({
           repeatInner={repeatInner}
           exiting={exitingTarget}
           transitions={transitions}
+          wrapperTranslateX={wrapperTranslateX}
         />
       )}
     </View>
@@ -610,6 +629,23 @@ describe('Nested shared transitions', () => {
       );
     }
     await advanceAnimationTimer(2700);
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
+
+  test('applies the transform of a wrapper around the inner view once', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} wrapperTranslateX={30} />);
+    await waitForFrames();
+    const innerTag = getTestComponent('sourceInner').getTag();
+    await render(<Screens active wrapperTranslateX={30} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
+    await waitForNotification('inner-finished');
+    await waitForFrames(2);
+    const transform = await RuntimeTestObserver?.observeTransform(innerTag);
+    expect(!!transform && Math.abs(transform.translateX) < 0.5).toBe(true);
+    await advanceAnimationTimer(2400);
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
   });

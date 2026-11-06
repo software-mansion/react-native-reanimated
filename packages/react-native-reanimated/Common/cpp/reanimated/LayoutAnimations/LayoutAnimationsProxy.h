@@ -423,6 +423,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTransitionRun &run,
       const ShadowView &target,
       const PropsParserContext &propsParserContext) const;
+  std::optional<Transform> transformsAboveNestedCarrier(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &ancestor,
+      const ShadowView &view) const;
   react::Point positionIn(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<LightNode> &ancestor,
