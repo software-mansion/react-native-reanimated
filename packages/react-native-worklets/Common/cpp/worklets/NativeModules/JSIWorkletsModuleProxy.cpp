@@ -811,9 +811,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
-  jsi_utils::addMethod<0>(
-      rt, obj, "getAliveRuntimeCount", [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &) {
-        return jsi::Value(static_cast<double>(runtimeManager->getAliveRuntimeCount()));
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
+      "isRuntimeAlive",
+      [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto runtimeId = static_cast<RuntimeData::RuntimeId>(at<0>(args).asNumber());
+        return jsi::Value(runtimeManager->isRuntimeAlive(runtimeId));
       });
 
   jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
