@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
@@ -38,7 +39,19 @@ function BackgroundColorBox({
 }) {
   const ref = useTestRef(BOX);
   const animatedStyle = useAnimatedStyle(() => ({
-    backgroundColor: backgroundColor.get(),
+    backgroundColor: backgroundColor.get() as string,
+  }));
+  return <Animated.View ref={ref} style={[styles.box, animatedStyle]} />;
+}
+
+function TransformBox({
+  transform,
+}: {
+  transform: SharedValue<ViewStyle['transform'] | null>;
+}) {
+  const ref = useTestRef(BOX);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: transform.get() as ViewStyle['transform'],
   }));
   return <Animated.View ref={ref} style={[styles.box, animatedStyle]} />;
 }
@@ -57,6 +70,25 @@ const synchronousPropsTest =
 // With the default React Native flags, a null that goes to the commit also resets the view. Only
 // `enablePropsUpdateReconciliationAndroid` or `enableAccumulatedUpdatesInRawPropsAndroid` show the difference.
 describe('Synchronous props set to null', () => {
+  synchronousPropsTest('reset transform to the default', async () => {
+    const transform = makeMutable<ViewStyle['transform'] | null>(null);
+    await render(<TransformBox transform={transform} />);
+    await waitForFrames();
+    const component = getTestComponent(BOX);
+
+    for (let cycle = 0; cycle < 2; cycle++) {
+      transform.set([{ translateX: 25 }]);
+      await expectEventually(
+        async () => (await component.getTransformObservation())?.translateX
+      ).toBe(25, ComparisonMode.FLOAT);
+
+      transform.set(null);
+      await expectEventually(
+        async () => (await component.getTransformObservation())?.translateX
+      ).toBe(0, ComparisonMode.FLOAT);
+    }
+  });
+
   synchronousPropsTest('reset opacity to the default', async () => {
     const opacity = makeMutable<number | null>(null);
     await render(<OpacityBox opacity={opacity} />);
