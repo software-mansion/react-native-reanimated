@@ -1,5 +1,5 @@
 'use strict';
-import { defineAnimation, withTiming } from '../animation';
+import { defineAnimation, withSpring, withTiming } from '../animation';
 import type { AffineMatrixFlat } from '../animation/transformationMatrix/matrixUtils';
 import {
   interpolateMatrix,
@@ -566,7 +566,9 @@ export class SharedTransition
 
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    this.durationV ??= DEFAULT_DURATION;
+    if (!this.isPhysicsBasedSpring()) {
+      this.durationV ??= DEFAULT_DURATION;
+    }
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
@@ -669,6 +671,15 @@ export class SharedTransition
       };
     };
   };
+
+  // `withSpring` uses `duration` and `dampingRatio` in place of `damping`, `mass` and `stiffness`.
+  private isPhysicsBasedSpring() {
+    return (
+      this.type === withSpring &&
+      !this.dampingRatioV &&
+      !!(this.dampingV || this.massV || this.stiffnessV)
+    );
+  }
 
   private getStyleProgressAnimation(): ProgressSharedTransitionAnimation {
     const progressAnimation =
