@@ -14,10 +14,10 @@ import {
 import { ComparisonMode } from '../../../ReJest/types';
 import {
   ALIGNED,
-  alignmentReport,
   CSS_TRANSITION_FADE_REF,
   DEMO_DURATION_MS,
   describeSharedCases,
+  driftReport,
   expectAllBoxesToFinish,
   isAttached,
   leakingRegistries,
@@ -85,7 +85,7 @@ describe('react-freeze *prop-driven only*', () => {
       await waitForFrames(2);
 
       const current = await readBoxes();
-      expect(alignmentReport(current)).toBe(ALIGNED);
+      expect(driftReport(previous, current)).toBe(ALIGNED);
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }

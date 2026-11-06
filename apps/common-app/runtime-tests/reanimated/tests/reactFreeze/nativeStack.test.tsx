@@ -9,8 +9,8 @@ import {
 import {
   ALIGNED,
   ALIGNMENT_WATCH_MS,
-  alignmentReport,
   describeSharedCases,
+  driftReport,
   expectAllBoxesToFinish,
   expectSwitchToSurvive,
   FREEZE_MS,
@@ -86,7 +86,7 @@ describe('react-freeze *under a native stack only*', () => {
       await navigatorDriver.thaw();
 
       const current = await readBoxes();
-      expect(alignmentReport(current)).toBe(ALIGNED);
+      expect(driftReport(previous, current)).toBe(ALIGNED);
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }
