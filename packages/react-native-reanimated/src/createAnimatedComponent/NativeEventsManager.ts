@@ -39,8 +39,7 @@ export class NativeEventsManager implements INativeEventsManager {
     });
   }
 
-  public updateEvents() {
-    const prevProps = this.#registeredProps;
+  public updateEvents(prevProps = this.#registeredProps) {
     this.#registeredProps = this.#managedComponent.props;
     const computedEventTag = this.getEventViewTag(true);
     // If the event view tag changes, we need to completely re-mount all events

@@ -1,6 +1,7 @@
 import AnimatedComponent from '../src/createAnimatedComponent/AnimatedComponent.native';
 import type {
   AnimatedComponentProps,
+  INativeEventsManager,
   InitialComponentProps,
   ManagedAnimatedComponent,
 } from '../src/createAnimatedComponent/commonTypes';
@@ -95,6 +96,36 @@ describe('NativeEventsManager', () => {
     manager.updateEvents();
     expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(1);
   });
+
+  test.each([1, 2])(
+    'uses supplied previous props with host tag %s',
+    (viewTag) => {
+      const { component, handler, manager } = setup();
+      const previousProps = { ...component.props };
+      const nextHandler = makeHandler();
+      const eventsManager: INativeEventsManager = manager;
+
+      component.props.onScroll = { workletEventHandler: nextHandler };
+      component._componentRef = { __nativeTag: viewTag };
+      eventsManager.updateEvents(previousProps);
+      eventsManager.updateEvents();
+
+      expect(handler.unregisterFromEvents).toHaveBeenCalledTimes(1);
+      expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+      expect(nextHandler.registerForEvents).toHaveBeenCalledTimes(1);
+      if (viewTag === 1) {
+        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(viewTag);
+      } else {
+        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(
+          viewTag,
+          'onScroll'
+        );
+      }
+
+      eventsManager.detachEvents();
+      expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(viewTag);
+    }
+  );
 
   test('detaches registered handlers if props change before unmount', () => {
     const { component, handler, manager } = setup();
