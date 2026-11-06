@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -51,16 +52,31 @@ struct ContentFade {
   std::unordered_map<Tag, std::shared_ptr<LightNode>> fadedChildren;
 };
 
+// The time of the animation moves the carrier, or the progress of a back gesture moves it.
+enum class SharedTransitionDriver : std::uint8_t {
+  TIME,
+  GESTURE,
+};
+
+// A retiring run has no reason to continue, but the frames of its carrier are not in the mount queue yet. It ends in
+// the first pull that can remove views after those frames are queued.
+enum class SharedTransitionLifecycle : std::uint8_t {
+  ACTIVE,
+  RETIRING,
+};
+
 // The carrier is the view that the run animates, moved from its parent to the root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
+  SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
   // The source can be released while the run follows its target, which releases the configs of the source.
   std::shared_ptr<Serializable> config;
-  bool gestureDriven = false;
+  SharedTransitionDriver driver = SharedTransitionDriver::TIME;
+  SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
 };
@@ -95,20 +111,6 @@ struct HiddenView {
 // and only while its node is mapped.
 struct SharedElement {
   std::vector<HiddenView> hiddenViews;
-  std::optional<SharedTransitionRun> run;
-};
-
-// A run whose source and target are both gone, or whose carrier has a new shared tag while its frames are not in
-// the mount queue. It ends in the next pull that can remove views after those frames are queued.
-struct RetiringSharedTransition {
-  SharedTag sharedTag;
-  std::optional<SharedTransitionRun> run;
-};
-
-// The run of a carrier, in sharedElements_ or in retiringSharedTransitions_.
-struct CarrierRun {
-  const SharedTag &sharedTag;
-  std::optional<SharedTransitionRun> &run;
 };
 
 // One in-flight back gesture. Created on the first progress event, destroyed
@@ -201,7 +203,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // of a back transition.
   mutable std::unordered_set<Tag> visibleScreens_;
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
-  mutable std::unordered_map<Tag, RetiringSharedTransition> retiringSharedTransitions_;
+  // The runs by the tag of their carrier. A view carries one run, and a shared tag has one active run.
+  mutable std::unordered_map<Tag, SharedTransitionRun> sharedTransitionRuns_;
   // the detached carriers in their host order under the root, after the children of the root
   mutable std::vector<std::shared_ptr<LightNode>> detachedCarriers_;
   // Entering animations of target children that wait until their run lands.
@@ -408,7 +411,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
   void attachCarrier(
-      const SharedTag &sharedTag,
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
@@ -450,7 +452,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &topScreen,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
-  void retireSharedTransition(const SharedTag &sharedTag, std::optional<SharedTransitionRun> &run) const;
+  void retireSharedTransition(SharedTransitionRun &run) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -473,7 +475,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
-  std::optional<CarrierRun> runOfCarrier(const std::shared_ptr<LightNode> &node) const;
+  SharedTransitionRun *runOfCarrier(const std::shared_ptr<LightNode> &node) const;
+  SharedTransitionRun *findRunOfCarrier(const std::shared_ptr<LightNode> &node) const;
+  SharedTransitionRun *activeSharedTransitionRun(const SharedTag &sharedTag) const;
+  SharedTransitionRun *sharedTransitionRun(Tag carrierTag, SharedTransitionLifecycle lifecycle) const;
+  std::vector<Tag> carrierTagsOfRuns(SharedTransitionLifecycle lifecycle) const;
+  // A loop over this view must not change the lifecycle of a run.
+  auto activeSharedTransitionRuns() const {
+    return sharedTransitionRuns_ | std::views::values | std::views::filter([](const SharedTransitionRun &run) {
+             return run.lifecycle == SharedTransitionLifecycle::ACTIVE;
+           });
+  }
   ShadowView asCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
@@ -501,7 +513,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       const std::array<std::shared_ptr<LightNode>, 2> &nodes,
       const std::shared_ptr<Serializable> &config,
-      bool gestureDriven,
+      SharedTransitionDriver driver,
       const std::optional<SharedTransitionContentFade> &contentFade,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
@@ -520,8 +532,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool landsWithOtherRuns(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
-      const SharedTag &sharedTag,
-      std::optional<SharedTransitionRun> &run,
+      SharedTransitionRun &registeredRun,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool landed = false) const;
