@@ -10,6 +10,7 @@ internal object SynchronousPropsBufferParser {
     private const val CMD_START_OF_TRANSFORM = 2
     private const val CMD_END_OF_TRANSFORM = 3
     private const val CMD_END_OF_VIEW = 4
+    private const val CMD_UNSET_PROP = 5
 
     private const val CMD_OPACITY = 10
     private const val CMD_ELEVATION = 11
@@ -100,6 +101,7 @@ internal object SynchronousPropsBufferParser {
             CMD_OUTLINE_COLOR -> "outlineColor"
             CMD_OUTLINE_OFFSET -> "outlineOffset"
             CMD_OUTLINE_WIDTH -> "outlineWidth"
+            CMD_START_OF_TRANSFORM -> "transform"
             else -> throw RuntimeException("Unknown command: $command")
         }
 
@@ -137,6 +139,8 @@ internal object SynchronousPropsBufferParser {
                     viewTag = intIterator.nextInt()
                     props = JavaOnlyMap()
                 }
+
+                CMD_UNSET_PROP -> props.putNull(commandToString(intIterator.nextInt()))
 
                 CMD_OPACITY,
                 CMD_ELEVATION,
