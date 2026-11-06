@@ -5,11 +5,12 @@ import type {
   ProcessedColorStop,
   ProcessedDirection,
 } from './common/style/processors/backgroundImage';
+import type { ProcessedColor } from './common/style/processors/colors';
 import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
-import type { SettledUpdate, StyleProps } from './commonTypes';
+import type { SettledUpdate } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -71,31 +72,47 @@ export const PropsRegistryGarbageCollector = {
 export function unprocessSettledUpdate({
   props,
   style,
-}: Pick<SettledUpdate, 'props' | 'style'>) {
+  keysLastWrittenByAnimatedStyle,
+}: Omit<SettledUpdate, 'viewTag'>) {
   unprocessColorsInProps(props);
   unprocessColorsInProps(style);
-  unprocessBoxShadow(style);
-  unprocessBackgroundImage(style);
-}
-
-function unprocessBoxShadow(props: StyleProps) {
-  if (Array.isArray(props.boxShadow)) {
-    // @ts-ignore props is readonly
-    props.boxShadow = props.boxShadow.map((boxShadow) => ({
-      ...boxShadow,
-      color: unprocessColor(boxShadow.color),
-    }));
+  for (const key of keysLastWrittenByAnimatedStyle) {
+    const unprocess = STYLE_BUILDER_VALUE_UNPROCESSORS[key];
+    if (!unprocess) {
+      continue;
+    }
+    for (const settledValues of [props, style]) {
+      if (key in settledValues) {
+        settledValues[key] = unprocess(settledValues[key]);
+      }
+    }
   }
 }
 
-function unprocessBackgroundImage(props: StyleProps) {
-  if (!Array.isArray(props.backgroundImage)) {
-    return;
+const STYLE_BUILDER_VALUE_UNPROCESSORS: Partial<
+  Record<string, (value: unknown) => unknown>
+> = {
+  boxShadow: unprocessBoxShadow,
+  backgroundImage: unprocessBackgroundImage,
+  // eslint-disable-next-line camelcase
+  experimental_backgroundImage: unprocessBackgroundImage,
+};
+
+function unprocessBoxShadow(value: unknown) {
+  if (!Array.isArray(value)) {
+    return value;
   }
-  // @ts-ignore props is readonly
-  props.backgroundImage = (
-    props.backgroundImage as ProcessedBackgroundImageValue[]
-  ).map((backgroundImage) => {
+  return (value as { color: ProcessedColor }[]).map((boxShadow) => ({
+    ...boxShadow,
+    color: unprocessColor(boxShadow.color),
+  }));
+}
+
+function unprocessBackgroundImage(value: unknown) {
+  if (!Array.isArray(value)) {
+    return value;
+  }
+  return (value as ProcessedBackgroundImageValue[]).map((backgroundImage) => {
     const colorStops = backgroundImage.colorStops.map(unprocessColorStop);
     if (backgroundImage.type === 'linear-gradient') {
       return {
