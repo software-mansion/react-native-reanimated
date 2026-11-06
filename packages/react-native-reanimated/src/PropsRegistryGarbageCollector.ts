@@ -9,7 +9,7 @@ import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
-import type { StyleProps } from './commonTypes';
+import type { SettledUpdate, StyleProps } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -45,13 +45,11 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates([
       ...this.viewsMap.keys(),
     ]);
-    for (const { viewTag, styleProps } of settledUpdates) {
-      if (styleProps === null) {
-        continue;
-      }
+    for (const settledUpdate of settledUpdates) {
+      const { viewTag, props, style } = settledUpdate;
       const component = this.viewsMap.get(viewTag);
-      unprocessProps(styleProps);
-      component?._syncStylePropsBackToReact(styleProps);
+      unprocessSettledUpdate(settledUpdate);
+      component?._syncStylePropsBackToReact(props, style);
     }
   },
 
@@ -70,10 +68,14 @@ export const PropsRegistryGarbageCollector = {
   },
 };
 
-export function unprocessProps(props: StyleProps) {
+export function unprocessSettledUpdate({
+  props,
+  style,
+}: Pick<SettledUpdate, 'props' | 'style'>) {
   unprocessColorsInProps(props);
-  unprocessBoxShadow(props);
-  unprocessBackgroundImage(props);
+  unprocessColorsInProps(style);
+  unprocessBoxShadow(style);
+  unprocessBackgroundImage(style);
 }
 
 function unprocessBoxShadow(props: StyleProps) {
