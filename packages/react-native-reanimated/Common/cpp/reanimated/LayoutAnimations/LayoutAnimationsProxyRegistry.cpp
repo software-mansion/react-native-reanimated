@@ -89,8 +89,16 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const in
   return {};
 }
 
-std::vector<Tag> LayoutAnimationsProxyRegistry::sharedTransitionConfigsToRelease(
-    const std::vector<Tag> &removedTags) const {
+// Called outside the updates registry lock: a pull holds the layout animations lock while it reads synchronous props.
+void LayoutAnimationsProxyRegistry::releaseSharedTransitionConfigs(
+    const std::vector<Tag> &removedTags,
+    LayoutAnimationsManager &layoutAnimationsManager) const {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return;
+  }
+  if (removedTags.empty()) {
+    return;
+  }
   const auto proxies = instances();
   std::vector<Tag> released;
   for (const auto tag : removedTags) {
@@ -99,7 +107,7 @@ std::vector<Tag> LayoutAnimationsProxyRegistry::sharedTransitionConfigsToRelease
       released.push_back(tag);
     }
   }
-  return released;
+  layoutAnimationsManager.clearSharedTransitionConfigs(released);
 }
 
 void LayoutAnimationsProxyRegistry::onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const {
