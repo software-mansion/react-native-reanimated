@@ -117,6 +117,7 @@ let package = Package(
             dependencies: reactHeaders,
             path: ".",
             sources: ["Common/cpp/worklets", "apple/worklets"],
+            resources: [.copy("apple/PrivacyInfo.xcprivacy")],
             publicHeadersPath: "Common/cpp",
             cSettings: [
                 .headerSearchPath("."),
