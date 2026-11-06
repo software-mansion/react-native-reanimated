@@ -97,7 +97,7 @@ export interface ReanimatedModuleProxy {
 
   unregisterCSSTransition(viewTag: number): void;
 
-  getSettledUpdates(): SettledUpdate[];
+  getSettledUpdates(registeredViewTags: number[]): SettledUpdate[];
 
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
