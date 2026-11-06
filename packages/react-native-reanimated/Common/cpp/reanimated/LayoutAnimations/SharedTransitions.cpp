@@ -797,7 +797,8 @@ bool LayoutAnimationsProxy::keepsNesting(
   return carried && isInSubtree(target, carried->run->target);
 }
 
-// The carrier keeps its frame on screen, and its animation continues in the space of the root.
+// The carrier keeps its frame on screen, and its animation continues in the space of the root to its target there.
+// A gesture interpolates between the ends of the run, so the start follows the parent to where it was at the start.
 void LayoutAnimationsProxy::moveNestedCarrierToRoot(
     SharedTransitionRun &run,
     ShadowViewMutationList &mutations,
@@ -806,17 +807,36 @@ void LayoutAnimationsProxy::moveNestedCarrierToRoot(
   const auto tag = node->current.tag;
   const auto parent = node->parent.lock();
   const auto offset = originOnScreen(parent);
+  const auto startOffset = run.gestureDriven ? offset - carriedDistance(node) : offset;
   const auto mounted = carrierViewOnScreen(run);
   mutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
   node->isNestedCarrier = false;
   addDetachedCarrier(node);
-  run.carrierStartView.layoutMetrics.frame.origin += offset;
+  run.carrierStartView.layoutMetrics.frame.origin += startOffset;
   auto view = mounted;
   view.layoutMetrics.frame.origin += offset;
-  view = reparentLayoutAnimation(tag, carrierHostTag(), movedCarrierTarget(tag, offset), offset).value_or(view);
+  const auto target = asCarrierView(targetOnScreen(run, propsParserContext), node, propsParserContext);
+  view = reparentLayoutAnimation(tag, carrierHostTag(), target, offset).value_or(view);
+  if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
+    animationIt->second.startView.layoutMetrics.frame.origin += startOffset - offset;
+  }
   ensureCarrierOverlay(mutations, propsParserContext);
   mutations.push_back(ShadowViewMutation::InsertMutation(carrierHostTag(), view, carrierHostIndex(node)));
+}
+
+// How far the carriers that move a nested carrier moved it since their runs started.
+react::Point LayoutAnimationsProxy::carriedDistance(const std::shared_ptr<LightNode> &carrier) const {
+  react::Point distance{};
+  for (auto node = carrierAncestorOf(carrier); node; node = node->isDetached ? nullptr : carrierAncestorOf(node)) {
+    const auto carried = runOfCarrier(node);
+    if (!carried) {
+      break;
+    }
+    const auto &animation = carrierAnimation(*carried->run);
+    distance += animation.currentView.layoutMetrics.frame.origin - animation.startView.layoutMetrics.frame.origin;
+  }
+  return distance;
 }
 
 // React removes a view between a nested carrier and the carrier that moves it, so the nested carrier moves on from
@@ -2254,6 +2274,22 @@ void LayoutAnimationsProxy::endSharedTransitionOf(
   }
 }
 
+// The target in the space of the root, with the transforms of its ancestors.
+ShadowView LayoutAnimationsProxy::targetOnScreen(
+    const SharedTransitionRun &run,
+    const PropsParserContext &propsParserContext) const {
+  resolveLightNodeProps(run.target);
+  auto target = run.target->current;
+  auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
+  const auto ancestors = collectAncestors(run.target, false);
+  if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
+    moveBelowAncestor(*ancestor, absolutePositions);
+  }
+  target.layoutMetrics.frame.origin = absolutePositions[0];
+  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
+  return target;
+}
+
 // A target that is not mounted or presented yet is measured in the shadow tree, which places a presented screen at the
 // origin of its stack. The run follows the target once the platform places it, until the transition ends.
 void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &propsParserContext) const {
@@ -2277,16 +2313,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
     if (!config) {
       continue;
     }
-    resolveLightNodeProps(run.target);
-    auto after = run.target->current;
-    auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
-    const auto ancestors = collectAncestors(run.target, false);
-    if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
-      moveBelowAncestor(*ancestor, absolutePositions);
-    }
-    after.layoutMetrics.frame.origin = absolutePositions[0];
-    overrideTransform(after, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
-    const auto target = targetInCarrierSpace(run, after, propsParserContext);
+    const auto target = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext), propsParserContext);
     const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
     const auto frameProps = ownCarrierView(target, run.carrier, propsParserContext).props;
     if (hasPendingLayoutAnimation(carrierTag)) {

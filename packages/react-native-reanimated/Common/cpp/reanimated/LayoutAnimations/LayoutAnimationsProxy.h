@@ -415,6 +415,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  react::Point carriedDistance(const std::shared_ptr<LightNode> &carrier) const;
   ShadowView movedCarrierTarget(Tag tag, react::Point offset) const;
   ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
   react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;
@@ -456,6 +457,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
+  ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
   void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
