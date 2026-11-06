@@ -68,6 +68,8 @@ The content of the screen. `SharedTransitionBoundary` does not change the layout
 
 One boundary should contain all shared views of its screen, so wrap whole screens, not single views. Set `isActive` to `true` only while the screen is focused.
 
+Use `@react-navigation/core` 7.16.0 or newer, which `@react-navigation/native` 7.1.32 and newer require. In older versions, `useIsFocused()` changes one update after a screen is removed, so on Android the transition back to the previous screen sometimes does not run.
+
 You can wrap screens in three ways:
 
 - **All screens of a navigator**, with `screenLayout`. Use it when the screens of the navigator are normal screens, not other navigators.
