@@ -103,10 +103,6 @@ declare global {
 const SHARED_ELEMENT_TRANSITION = 4 as LayoutAnimationType;
 
 type SharedTransitionStart = { sourceY: number; targetY: number };
-type SharedTransitionValues = {
-  source: { globalOriginY: number };
-  target: { globalOriginY: number };
-};
 
 // Records the source and target that each shared transition start gets, in root coordinates.
 async function recordSharedTransitionStarts() {
@@ -117,11 +113,12 @@ async function recordSharedTransitionStarts() {
     global.LayoutAnimationsManager = {
       start: (tag, type, values, config) => {
         if (type === SHARED_ELEMENT_TRANSITION) {
-          const { source, target } =
-            values as unknown as SharedTransitionValues;
           starts.value = [
             ...starts.value,
-            { sourceY: source.globalOriginY, targetY: target.globalOriginY },
+            {
+              sourceY: values.currentGlobalOriginY ?? NaN,
+              targetY: values.targetGlobalOriginY ?? NaN,
+            },
           ];
         }
         original.start(tag, type, values, config);
