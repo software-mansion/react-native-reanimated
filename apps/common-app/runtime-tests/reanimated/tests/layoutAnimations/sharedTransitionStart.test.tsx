@@ -7,12 +7,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useLayoutEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Platform, StyleSheet, View } from 'react-native';
-import type { LayoutAnimationType } from 'react-native-reanimated';
+import type { AnimatedRef, LayoutAnimationType } from 'react-native-reanimated';
 import Animated, {
   Easing,
   makeMutable,
+  measure,
   SharedTransition,
   SharedTransitionBoundary,
+  useAnimatedRef,
 } from 'react-native-reanimated';
 
 import {
@@ -46,6 +48,8 @@ type Routes = { First: undefined; Second: undefined; Third: undefined };
 const Stack = createNativeStackNavigator<Routes>();
 const navigation = createNavigationContainerRef<Routes>();
 
+const boxRefs: Record<string, AnimatedRef<Animated.View>> = {};
+
 function StackBox({
   name,
   style,
@@ -53,7 +57,8 @@ function StackBox({
   name: string;
   style: StyleProp<ViewStyle>;
 }) {
-  const ref = useTestRef(name);
+  const ref = useAnimatedRef<Animated.View>();
+  boxRefs[name] = ref;
   const isFocused = useIsFocused();
   return (
     <SharedTransitionBoundary isActive={isFocused}>
@@ -104,6 +109,13 @@ const SHARED_ELEMENT_TRANSITION = 4 as LayoutAnimationType;
 
 type SharedTransitionStart = { sourceY: number; targetY: number };
 
+function measureWindowY(ref: AnimatedRef<Animated.View>) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return measure(ref)?.pageY ?? NaN;
+  });
+}
+
 // Records the source and target that each shared transition start gets, in root coordinates.
 async function recordSharedTransitionStarts() {
   const starts = makeMutable<SharedTransitionStart[]>([]);
@@ -144,23 +156,32 @@ describe('Shared transition to a new native stack screen', () => {
     await render(<StackWithHeader />);
     await waitForNotification(STACK_READY);
     await waitForFrames(10);
+    const firstWindowY = await measureWindowY(boxRefs.first);
     const { starts, stop } = await recordSharedTransitionStarts();
     try {
       navigation.navigate('Second');
       await waitForNotification(FORWARD_FINISHED);
       await waitForFrames(10);
+      const secondWindowY = await measureWindowY(boxRefs.second);
       const forwardStarts = starts.value.length;
+      expect(forwardStarts).toBeWithinRange(1, 100);
+      const rootOffset = firstWindowY - starts.value[0].sourceY;
+      const secondY = secondWindowY - rootOffset;
+      expect(secondY).toBeWithinRange(1, 10000);
       navigation.navigate('Third');
       await expectEventually(() => starts.value.length > forwardStarts).toBe(
         true
       );
-      const settledSource = starts.value[forwardStarts].sourceY;
+      expect(starts.value[forwardStarts].sourceY).toBeWithinRange(
+        secondY - 1,
+        secondY + 1
+      );
       // On iOS, a later start of the push corrects the target of its first start.
       const forwardTargets = starts.value
         .slice(Platform.OS === 'ios' ? forwardStarts - 1 : 0, forwardStarts)
         .map(({ targetY }) => targetY);
       for (const targetY of forwardTargets) {
-        expect(targetY).toBeWithinRange(settledSource - 1, settledSource + 1);
+        expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
       }
     } finally {
       await stop();
