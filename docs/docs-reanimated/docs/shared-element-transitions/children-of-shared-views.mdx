@@ -94,7 +94,7 @@ const transition = SharedTransition.duration(450).fadeContent({
 
 - The direct children of the shared views fade. A nested shared view keeps its own opacity. When a direct child holds a nested shared view, that child keeps its opacity and its other children fade instead, down to the nested shared view. A child that fills the view, for example a background image, fades like the other children.
 - A shared view without children, for example a shared `Image`, has nothing to fade.
-- A direct child of the target view with an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. Deeper children play their entering animations during the move.
+- A child of the target view that fades and has an [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it after the transition ends, in place of the fade-in. These are the direct children and, on the path down to a nested shared view, the other children at each level. Other deeper children play their entering animations during the move.
 - The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
 - If the user goes back during the move, the children fade in again while the view returns.
 - With `.springify()`, the fade-in starts when the spring stops. By default, the fade-in takes half of the spring duration: half of `springify(duration)`, or 250 ms without a duration. To change it without changing the spring, set `fadeIn.duration`.
