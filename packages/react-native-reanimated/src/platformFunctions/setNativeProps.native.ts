@@ -45,7 +45,9 @@ function setNativePropsNative(
   const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI)
     .value as ShadowNodeWrapper;
   processColorsInProps(updates);
-  global._updateProps!([{ shadowNodeWrapper, updates }]);
+  global._updateProps!([
+    { shadowNodeWrapper, updates, isAnimatedProps: false },
+  ]);
 }
 
 function setNativePropsJest() {
