@@ -354,7 +354,7 @@ jobs:
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
-      configuration: DebugRuntimeTests
+      configuration: Debug
       bundleMode: false
 
   runtime-tests-android-bundle-mode:
@@ -363,7 +363,7 @@ jobs:
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
-      configuration: DebugRuntimeTests
+      configuration: Debug
       bundleMode: true
 
   runtime-tests-ios-legacy-eval:
