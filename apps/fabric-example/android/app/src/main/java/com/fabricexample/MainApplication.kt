@@ -13,7 +13,7 @@ import com.facebook.react.common.ReleaseLevel
 class MainApplication : Application(), ReactApplication {
 
   companion object {
-    var runtimeTestsLibrary: String = "reanimated"
+    var runtimeTestsLibrary: String? = if (BuildConfig.RUNTIME_TESTS) "reanimated" else null
   }
 
   override val reactHost: ReactHost by lazy {
@@ -21,22 +21,13 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          if (BuildConfig.RUNTIME_TESTS) {
+          if (runtimeTestsLibrary != null) {
             add(0, RuntimeTestObserverPackage())
           }
         },
-      jsMainModulePath =
-        if (BuildConfig.RUNTIME_TESTS) {
-          "index.runtimeTests.$runtimeTestsLibrary"
-        } else {
-          "index"
-        },
+      jsMainModulePath = runtimeTestsLibrary?.let { "index.runtimeTests.$it" } ?: "index",
       jsBundleAssetPath =
-        if (BuildConfig.RUNTIME_TESTS) {
-          "main.runtimeTests.$runtimeTestsLibrary.jsbundle"
-        } else {
-          "index.android.bundle"
-        },
+        runtimeTestsLibrary?.let { "main.runtimeTests.$it.jsbundle" } ?: "index.android.bundle",
     )
   }
 

@@ -130,11 +130,7 @@ const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
-  typeof args.configuration === 'string'
-    ? args.configuration
-    : PLATFORM === 'ios'
-      ? 'Debug'
-      : 'DebugRuntimeTests';
+  typeof args.configuration === 'string' ? args.configuration : 'Debug';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
@@ -2226,9 +2222,8 @@ Target
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
-                            Default: Debug on iOS, DebugRuntimeTests on
-                            Android. ReleaseRuntimeTests embeds the bundles
-                            and runs without Metro.
+                            Default: Debug. ReleaseRuntimeTests embeds the
+                            bundles and runs without Metro.
   --skip-build              Reuse the installed app. Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.
