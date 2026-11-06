@@ -17,6 +17,7 @@ import type {
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
+export { isViewMountedNatively } from './utils/nativeViewHierarchy';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
