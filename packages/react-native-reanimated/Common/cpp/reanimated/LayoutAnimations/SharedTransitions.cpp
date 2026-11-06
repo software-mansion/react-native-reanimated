@@ -2689,6 +2689,17 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
   return ancestors;
 }
 
+// Frames that do not overlap meet in an empty rect on the edge of `frame` that faces `other`.
+static react::Rect intersectAtEdge(const react::Rect &frame, const react::Rect &other) {
+  const auto x = std::max(frame.origin.x, other.origin.x);
+  const auto y = std::max(frame.origin.y, other.origin.y);
+  return {
+      .origin = {.x = std::min(x, frame.getMaxX()), .y = std::min(y, frame.getMaxY())},
+      .size = {
+          .width = std::max<Float>(0, std::min(frame.getMaxX(), other.getMaxX()) - x),
+          .height = std::max<Float>(0, std::min(frame.getMaxY(), other.getMaxY()) - y)}};
+}
+
 // The ancestors draw the view with the product of their opacities and clip it to the frames of those that clip their
 // content. The clip takes the border radius of the outermost ancestor that narrows it and ignores the transforms of the
 // ancestors. Like the transforms, it covers the path up to the view that the platform shows the view in. A path that
@@ -2702,7 +2713,7 @@ void LayoutAnimationsProxy::parseAncestorOpacityAndClip(
   // The window does not clip anything that is on screen, so it stands for no clip.
   clip = {.frame = windowFrame()};
   const auto narrowClip = [&clip](const react::Rect &frame, const Float borderRadius) {
-    const auto narrowed = react::Rect::intersect(clip.frame, frame);
+    const auto narrowed = intersectAtEdge(frame, clip.frame);
     if (narrowed != clip.frame) {
       clip = {.frame = narrowed, .borderRadius = borderRadius};
     }
