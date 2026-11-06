@@ -29,6 +29,8 @@ const NOTIFICATION_NAME = 'SYNC_BACK_ANIMATION_FINISHED';
 // 500 ms is for the React render after setState and for a slow emulator.
 // If you change one of the two constants, change this value.
 const SYNC_BACK_DELAY_MS = 2000;
+// The value settles and stays settled for 2000 ms while no timer can run.
+const JS_THREAD_STALL_MS = 3000;
 
 type Gradient = Exclude<
   NonNullable<ViewStyle['backgroundImage']>,
@@ -152,7 +154,32 @@ describe('sync of settled props back to React', () => {
       check(received.value as ViewStyle);
     }
   );
+
+  test('React receives a settled value after the JS thread was busy for longer than the settle threshold', async () => {
+    const [received, setReceived] = createTestValue<ViewStyle>({});
+    const getStyle = (progress: number): ViewStyle => {
+      'worklet';
+      return { opacity: progress };
+    };
+
+    await render(
+      <SyncBackComponent getStyle={getStyle} onStyle={setReceived} />
+    );
+    await waitForNotification(NOTIFICATION_NAME);
+    blockJSThread(JS_THREAD_STALL_MS);
+    await wait(SYNC_BACK_DELAY_MS);
+
+    expect((received.value as ViewStyle).opacity).toBe(1);
+  });
 });
+
+function blockJSThread(durationMs: number) {
+  const end = performance.now() + durationMs;
+  let now = performance.now();
+  while (now < end) {
+    now = performance.now();
+  }
+}
 
 const styles = StyleSheet.create({
   container: {
