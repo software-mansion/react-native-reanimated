@@ -13,6 +13,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -46,6 +47,14 @@ struct LayoutAnimation {
   const Props::Shared &framePropsBase() const {
     return frameProps ? frameProps : finalView.props;
   }
+};
+
+// A queued start replaces a running or ended animation of the same view, so QUEUED comes first.
+enum class LayoutAnimationPhase : std::uint8_t {
+  NONE,
+  QUEUED,
+  RUNNING,
+  ENDED,
 };
 
 struct CompletedLayoutAnimation {
@@ -168,6 +177,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;
+  LayoutAnimationPhase layoutAnimationPhase(Tag tag) const;
   void updateLayoutAnimationTarget(
       Tag tag,
       const ShadowView &finalView,
