@@ -98,7 +98,7 @@ function run(
 }
 
 // Mirrors appPath() in runtime-tests-server.mts: the scheme is always
-// DebugRuntimeTests; the configuration alone selects Debug/Release output.
+// Debug FabricExample; the configuration alone selects Debug/Release output.
 async function resolveAppPath() {
   const { stdout } = await run(
     'xcodebuild',
@@ -106,7 +106,7 @@ async function resolveAppPath() {
       '-workspace',
       'FabricExample.xcworkspace',
       '-scheme',
-      'DebugRuntimeTests',
+      'Debug FabricExample',
       '-configuration',
       CONFIGURATION,
       '-destination',

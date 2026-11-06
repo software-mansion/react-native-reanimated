@@ -51,14 +51,14 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(
       result.annotations,
       [
-        '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::withTiming › mocked timer › reports a mismatch%0AExpected 0 received 5',
-        '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::threads › throws in a worklet%0A[uncaught] Error: Value is null, expected an Object',
+        '::error title=self-tests runtime tests on ios (Debug)::withTiming › mocked timer › reports a mismatch%0AExpected 0 received 5',
+        '::error title=self-tests runtime tests on ios (Debug)::threads › throws in a worklet%0A[uncaught] Error: Value is null, expected an Object',
       ].join('\n')
     );
     assert.equal(
       fs.readFileSync(summaryFile, 'utf8'),
       [
-        '### ❌ self-tests runtime tests on ios (DebugRuntimeTests): 2 failed, 2 passed, 1 skipped',
+        '### ❌ self-tests runtime tests on ios (Debug): 2 failed, 2 passed, 1 skipped',
         '',
         '- **withTiming › mocked timer › reports a mismatch**',
         '',
@@ -105,11 +105,11 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(annotations.length, 10);
     assert.equal(
       annotations[8],
-      '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::suite › test 8'
+      '::error title=self-tests runtime tests on ios (Debug)::suite › test 8'
     );
     assert.equal(
       annotations[9],
-      '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::3 more failed test(s), see the job summary'
+      '::error title=self-tests runtime tests on ios (Debug)::3 more failed test(s), see the job summary'
     );
     assert.equal(
       (fs.readFileSync(summaryFile, 'utf8').match(/^- \*\*suite › /gm) ?? [])
@@ -135,7 +135,7 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(result.annotations, '');
     assert.equal(
       fs.readFileSync(summaryFile, 'utf8'),
-      '### ✅ self-tests runtime tests on ios (DebugRuntimeTests): 0 failed, 3 passed, 1 skipped\n\n'
+      '### ✅ self-tests runtime tests on ios (Debug): 0 failed, 3 passed, 1 skipped\n\n'
     );
   });
 
@@ -197,8 +197,8 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(
       result.annotations,
       [
-        '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::before reload',
-        '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::after reload',
+        '::error title=self-tests runtime tests on ios (Debug)::before reload',
+        '::error title=self-tests runtime tests on ios (Debug)::after reload',
       ].join('\n')
     );
     assert.match(
@@ -229,7 +229,7 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(
       fs.readFileSync(summaryFile, 'utf8'),
       [
-        '### ❌ self-tests runtime tests on ios (DebugRuntimeTests): 1 failed, 0 passed, 0 skipped',
+        '### ❌ self-tests runtime tests on ios (Debug): 1 failed, 0 passed, 0 skipped',
         '',
         '- **markdown › prints fences**',
         '',
@@ -311,7 +311,7 @@ describe('runtime-tests GitHub failure summary', () => {
     assert.equal(result.status, 1);
     assert.equal(
       result.annotations,
-      '::error title=self-tests runtime tests on ios (DebugRuntimeTests)::The app reported an error instead of finishing the run: Unknown test suites: nope'
+      '::error title=self-tests runtime tests on ios (Debug)::The app reported an error instead of finishing the run: Unknown test suites: nope'
     );
     assert.equal(fs.existsSync(summaryFile), false);
   });
