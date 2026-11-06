@@ -49,6 +49,14 @@ const ChangeThemeSharedExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ChangeTheme').default
   );
+const CustomTransitionExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CustomTransition').default as React.FC
+  );
+const ModalPresentationsExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalPresentations').default as React.FC
+  );
 const ChatHeadsExample: React.FC = () =>
   React.createElement(require('./ChatHeadsExample').default as React.FC);
 const ChessExample: React.FC = () =>
@@ -168,6 +176,11 @@ const HabitsExample: React.FC = () =>
 const InterruptedExitingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
+  );
+const ExitingInterruptsEnteringExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingInterruptsEnteringExample')
+      .default as React.FC
   );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
@@ -719,6 +732,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
+  ExitingInterruptsEntering: {
+    title: '[LA] Exiting animation interrupting entering',
+    screen: ExitingInterruptsEnteringExample,
+  },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
     screen: LayoutAnimationBatchSyncExample,
@@ -900,6 +917,16 @@ const ALL_EXAMPLES: Record<string, Example> = {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
       android: true,
     },
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom Transition',
+    screen: CustomTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  ModalPresentationsExample: {
+    title: '[SET] Modal presentations',
+    screen: ModalPresentationsExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',

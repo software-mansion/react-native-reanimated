@@ -18,6 +18,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/memory/hybridObjectSupport.test');
       require('./tests/memory/shareable.test');
       require('./tests/memory/runtimeAddressReuse.test');
+      require('./tests/memory/shareableHostReuse.test');
       require('./tests/memory/destroyedRuntimeCleanup.test');
       require('./tests/memory/staleRemoteFunction.test');
     },
@@ -28,6 +29,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       __DEV__ && require('./tests/runtimes/errorTraces.test');
       __DEV__ && require('./tests/runtimes/loggingFromWorkletRuntime.test');
       require('./tests/runtimes/createWorkletRuntime.test');
+      require('./tests/runtimes/abortWorkletRuntime.test');
       require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');

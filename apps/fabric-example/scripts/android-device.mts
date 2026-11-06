@@ -1,25 +1,30 @@
-/** @typedef {{ serial: string; state: string }} AdbDevice */
+export interface AdbDevice {
+  serial: string;
+  state: string;
+}
 
-/**
- * @typedef {{
- *   listDevices: () => Promise<AdbDevice[]>;
- *   avdName: (serial: string) => Promise<string | null>;
- *   listAvds: () => Promise<string[]>;
- *   bootAvd: (avd: string) => () => string | null;
- *   isBootCompleted: (serial: string) => Promise<boolean>;
- *   sleep: (ms: number) => Promise<void>;
- *   log: (message: string) => void;
- *   bootTimeoutMs?: number;
- *   exitGraceMs?: number;
- * }} AndroidTools
- */
+export interface AndroidTools {
+  listDevices: () => Promise<AdbDevice[]>;
+  avdName: (serial: string) => Promise<string | null>;
+  listAvds: () => Promise<string[]>;
+  bootAvd: (avd: string) => () => string | null;
+  isBootCompleted: (serial: string) => Promise<boolean>;
+  sleep: (ms: number) => Promise<void>;
+  log: (message: string) => void;
+  bootTimeoutMs?: number;
+  exitGraceMs?: number;
+}
 
-/**
- * @param {{ serial: string | null; avd: string | null }} target
- * @param {AndroidTools} tools
- * @returns {Promise<string>}
- */
-async function resolveAndroidDevice({ serial, avd }, tools) {
+interface AvdScan {
+  booted: string | null;
+  starting: boolean;
+  unidentified: boolean;
+}
+
+export async function resolveAndroidDevice(
+  { serial, avd }: { serial: string | null; avd: string | null },
+  tools: AndroidTools
+): Promise<string> {
   const devices = await tools.listDevices();
   const serials = readySerials(devices);
 
@@ -73,13 +78,11 @@ async function resolveAndroidDevice({ serial, avd }, tools) {
   return bootAndWait(firstAvd, tools);
 }
 
-/**
- * @param {string} avd
- * @param {string[]} serials
- * @param {AndroidTools} tools
- * @returns {Promise<string | null>}
- */
-async function findRunningAvd(avd, serials, tools) {
+export async function findRunningAvd(
+  avd: string,
+  serials: string[],
+  tools: AndroidTools
+): Promise<string | null> {
   for (const serial of serials) {
     const name = await tools.avdName(serial).catch(() => null);
     if (name === avd) {
@@ -89,29 +92,21 @@ async function findRunningAvd(avd, serials, tools) {
   return null;
 }
 
-/**
- * @param {string} avd
- * @param {AndroidTools} tools
- * @returns {Promise<string>}
- */
-async function bootAndWait(avd, tools) {
+async function bootAndWait(avd: string, tools: AndroidTools): Promise<string> {
   tools.log(`[runtime-tests] booting emulator ${avd}`);
   const exitStatus = tools.bootAvd(avd);
   return waitForBoot(avd, exitStatus, tools);
 }
 
-/**
- * @param {string} avd
- * @param {() => string | null} exitStatus
- * @param {AndroidTools} tools
- * @returns {Promise<string>}
- */
-async function waitForBoot(avd, exitStatus, tools) {
+async function waitForBoot(
+  avd: string,
+  exitStatus: () => string | null,
+  tools: AndroidTools
+): Promise<string> {
   const timeoutMs = tools.bootTimeoutMs ?? 300_000;
   const exitGraceMs = tools.exitGraceMs ?? 60_000;
   const deadline = Date.now() + timeoutMs;
-  /** @type {number | null} */
-  let exitedAt = null;
+  let exitedAt: number | null = null;
   while (Date.now() < deadline) {
     const status = exitStatus();
     const { booted, starting, unidentified } = await scanForAvd(avd, tools);
@@ -129,16 +124,7 @@ async function waitForBoot(avd, exitStatus, tools) {
   throw new Error(`Emulator ${avd} did not boot within ${timeoutMs / 1000}s`);
 }
 
-/**
- * @param {string} avd
- * @param {AndroidTools} tools
- * @returns {Promise<{
- *   booted: string | null;
- *   starting: boolean;
- *   unidentified: boolean;
- * }>}
- */
-async function scanForAvd(avd, tools) {
+async function scanForAvd(avd: string, tools: AndroidTools): Promise<AvdScan> {
   let starting = false;
   let unidentified = false;
   for (const device of await tools.listDevices()) {
@@ -159,21 +145,13 @@ async function scanForAvd(avd, tools) {
   return { booted: null, starting, unidentified };
 }
 
-/**
- * @param {AdbDevice[]} devices
- * @returns {string[]}
- */
-function readySerials(devices) {
+export function readySerials(devices: AdbDevice[]): string[] {
   return devices
     .filter((device) => device.state === 'device')
     .map((device) => device.serial);
 }
 
-/**
- * @param {string} output
- * @returns {string | null}
- */
-function parseAvdName(output) {
+export function parseAvdName(output: string): string | null {
   const lines = output
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -183,10 +161,3 @@ function parseAvdName(output) {
   }
   return lines[0];
 }
-
-module.exports = {
-  resolveAndroidDevice,
-  findRunningAvd,
-  readySerials,
-  parseAvdName,
-};

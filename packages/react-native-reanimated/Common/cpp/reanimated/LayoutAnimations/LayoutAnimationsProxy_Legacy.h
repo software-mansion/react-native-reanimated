@@ -123,7 +123,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
       const ShadowViewMutation &mutation,
       const std::shared_ptr<Serializable> &config) const;
 
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void reconcileContradictedRemovals(ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;

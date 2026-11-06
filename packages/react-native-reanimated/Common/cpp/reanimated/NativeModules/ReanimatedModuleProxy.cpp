@@ -15,6 +15,7 @@
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -92,6 +93,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
       return false;
     }
 #ifdef ANDROID
+    // A null value unsets the prop. The Android synchronous path can't express that (it reads every
+    // value as a number or string), so it goes through the shadow tree commit, which resets the prop.
+    if (value.isNull()) {
+      return false;
+    }
     // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
     // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
     const bool isColorProp = keyStr.find("Color") != std::string::npos;
@@ -186,6 +192,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
+      setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
+      nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
@@ -920,7 +928,7 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-    applySynchronousUpdates(synchronousUpdatesBatch);
+    applySynchronousUpdates(std::move(synchronousUpdatesBatch));
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1143,7 +1151,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
   return handled;
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch) {
   if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
@@ -1151,22 +1159,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
-  writeSynchronousPropsToViews(synchronousUpdatesBatch);
+  writeSynchronousPropsToViews(std::move(synchronousUpdatesBatch));
 }
 
-void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &updatesBatch) {
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch) {
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (layoutAnimationsProxyRegistry_) {
-      auto composedUpdatesBatch = updatesBatch;
-      layoutAnimationsProxyRegistry_->composeSynchronousProps(composedUpdatesBatch);
-      sendSynchronousPropsToViews(composedUpdatesBatch);
-      return;
+      layoutAnimationsProxyRegistry_->composeSynchronousProps(synchronousUpdatesBatch);
     }
   }
-  sendSynchronousPropsToViews(updatesBatch);
-}
-
-void ReanimatedModuleProxy::sendSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1331,6 +1332,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       updatesRegistryManager_,
       mountedRootsRegistry_,
       layoutAnimationsProxyRegistry_,
+      layoutAnimationsManager_,
       synchronousWritesTracker_,
       request);
 
@@ -1391,6 +1393,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
         auto lock = strongThis->updatesRegistryManager_->lock();
         strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
         const auto opacity = props.get_ptr("opacity");
+        if (opacity && opacity->isNull()) {
+          return defaultViewOpacity();
+        }
         return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
       },
 #ifdef ANDROID
@@ -1402,6 +1407,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 #ifdef __APPLE__
       forceScreenSnapshot_,
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
+      setSharedTransitionOverlay_,
+      nativeViewPlacement_,
 #endif
   };
 

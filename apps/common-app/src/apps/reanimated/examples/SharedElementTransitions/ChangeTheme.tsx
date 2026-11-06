@@ -13,6 +13,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Layout,
   SharedTransition,
+  SharedTransitionType,
   withSpring,
 } from 'react-native-reanimated';
 
@@ -32,55 +33,54 @@ function getTheme(theme: boolean, disabled: boolean) {
   const style = theme
     ? { backgroundColor: 'purple' }
     : { backgroundColor: 'pink' };
-  // const config = { duration: 1300 };
-  // const customTransition = SharedTransition.custom((values) => {
-  //   'worklet';
-  //   return {
-  //     width: withSpring(values.targetWidth, config),
-  //     height: withSpring(values.targetHeight, config),
-  //     originX: withSpring(values.targetOriginX, config),
-  //     originY: withSpring(values.targetOriginY, config),
-  //     borderRadius: withSpring(values.targetBorderRadius, config),
-  //   };
-  // })
-  //   .progressAnimation((values, progress) => {
-  //     'worklet';
-  //     const getValue = (
-  //       progress: number,
-  //       target: number,
-  //       current: number
-  //     ): number => {
-  //       return (
-  //         (2 * progress * progress - progress) * (target - current) + current
-  //       );
-  //     };
-  //     return {
-  //       width: getValue(progress, values.targetWidth, values.currentWidth),
-  //       height: getValue(progress, values.targetHeight, values.currentHeight),
-  //       originX: getValue(
-  //         progress,
-  //         values.targetOriginX,
-  //         values.currentOriginX
-  //       ),
-  //       originY: getValue(
-  //         progress,
-  //         values.targetOriginY,
-  //         values.currentOriginY
-  //       ),
-  //       borderRadius: getValue(
-  //         progress,
-  //         values.targetBorderRadius,
-  //         values.currentBorderRadius
-  //       ),
-  //     };
-  //   })
-  //   .defaultTransitionType(SharedTransitionType.ANIMATION);
-  const transition = undefined;
-  // const transition = disabled
-  //   ? undefined
-  //   : theme
-  //     ? customTransition
-  //     : new SharedTransition();
+  const config = { duration: 1300 };
+  const customTransition = SharedTransition.custom((values) => {
+    'worklet';
+    return {
+      width: withSpring(values.targetWidth, config),
+      height: withSpring(values.targetHeight, config),
+      originX: withSpring(values.targetOriginX, config),
+      originY: withSpring(values.targetOriginY, config),
+      borderRadius: withSpring(values.targetBorderRadius, config),
+    };
+  })
+    .progressAnimation((values, progress) => {
+      'worklet';
+      const getValue = (
+        progress: number,
+        target: number,
+        current: number
+      ): number => {
+        return (
+          (2 * progress * progress - progress) * (target - current) + current
+        );
+      };
+      return {
+        width: getValue(progress, values.targetWidth, values.currentWidth),
+        height: getValue(progress, values.targetHeight, values.currentHeight),
+        originX: getValue(
+          progress,
+          values.targetOriginX,
+          values.currentOriginX
+        ),
+        originY: getValue(
+          progress,
+          values.targetOriginY,
+          values.currentOriginY
+        ),
+        borderRadius: getValue(
+          progress,
+          values.targetBorderRadius as number,
+          values.currentBorderRadius as number
+        ),
+      };
+    })
+    .defaultTransitionType(SharedTransitionType.ANIMATION);
+  const transition = disabled
+    ? undefined
+    : theme
+      ? customTransition
+      : SharedTransition.duration(500);
 
   return { style, transition };
 }

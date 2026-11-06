@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 
+import { LayoutAnimationType } from '../src/commonTypes';
 import AnimatedComponent from '../src/createAnimatedComponent/AnimatedComponent';
 import { SharedTransition } from '../src/layoutReanimation';
 import { updateLayoutAnimations } from '../src/UpdateLayoutAnimations';
@@ -18,6 +19,16 @@ jest.mock('../src/UpdateLayoutAnimations', () => ({
   updateLayoutAnimations: jest.fn(),
 }));
 
+function sharedTransitionRegistrations() {
+  return jest
+    .mocked(updateLayoutAnimations)
+    .mock.calls.filter(
+      ([, type]) =>
+        type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION ||
+        type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+    );
+}
+
 function mountWith(sharedTransitionStyle: SharedTransition) {
   return new AnimatedComponent(
     View,
@@ -32,7 +43,7 @@ describe('Shared transition registration', () => {
   test('does not register the same transition again', () => {
     const component = mountWith(SharedTransition.duration(400));
     component._configureSharedTransition(true);
-    expect(updateLayoutAnimations).toHaveBeenCalledTimes(1);
+    expect(sharedTransitionRegistrations()).toHaveLength(1);
   });
 
   test('registers again when fadeContent() changes the same transition', () => {
@@ -40,9 +51,8 @@ describe('Shared transition registration', () => {
     const component = mountWith(transition);
     transition.fadeContent();
     component._configureSharedTransition(true);
-    expect(updateLayoutAnimations).toHaveBeenCalledTimes(2);
-    expect(jest.mocked(updateLayoutAnimations).mock.lastCall?.[5]).toEqual(
-      expect.anything()
-    );
+    const registrations = sharedTransitionRegistrations();
+    expect(registrations).toHaveLength(2);
+    expect(registrations.at(-1)?.[5]).toEqual(expect.anything());
   });
 });

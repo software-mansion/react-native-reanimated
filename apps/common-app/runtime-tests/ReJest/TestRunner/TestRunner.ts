@@ -99,7 +99,7 @@ export class TestRunner {
   public reloadAndResume(resumeFromSuite: string): Promise<never> {
     if (this._runtimeTestSuitesWithCompletedCases.has(resumeFromSuite)) {
       throw new Error(
-        `[ReJest] Cannot reload and resume from suite '${resumeFromSuite}', because a test case of this suite has already completed. The resumed run restarts the suite from its first test case, so that test case would be counted twice.`
+        `[ReJest] Cannot reload and resume from suite '${resumeFromSuite}': test case(s) of this suite already finished. The resumed run would run them again and report them twice. Call reloadAndResume before any test case of the suite finishes.`
       );
     }
     if (!this._reloadHook) {
@@ -260,6 +260,7 @@ export class TestRunner {
   }
 
   private async runTestSuite(testSuite: TestSuite) {
+    this._testSummary.enterTestSuite(testSuite);
     this._testSummary.countSkippedTestSuiteTests(testSuite);
 
     if (testSuite.skip) {

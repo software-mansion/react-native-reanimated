@@ -9,9 +9,9 @@
     "start": "react-native start",
     "format": "yarn run --top-level oxfmt .",
     "lint": "yarn run --top-level oxlint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
-    "type:check": "tsc --noEmit",
-    "runtime-tests": "node ./scripts/runtime-tests-server.js --launch",
-    "runtime-tests:server": "node ./scripts/runtime-tests-server.js"
+    "type:check": "tsc --noEmit && tsc --noEmit --project scripts/tsconfig.json",
+    "runtime-tests": "node --experimental-strip-types ./scripts/runtime-tests-server.mts --launch",
+    "runtime-tests:server": "node --experimental-strip-types ./scripts/runtime-tests-server.mts"
   },
   "dependencies": {
     "common-app": "workspace:*",

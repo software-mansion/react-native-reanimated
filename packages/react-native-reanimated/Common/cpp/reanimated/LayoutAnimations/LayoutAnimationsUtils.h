@@ -210,7 +210,8 @@ struct LightNode {
 
   // A new child goes after the exiting children at its shadow position. The differ sends a
   // parent's Removes in descending order and its Inserts in ascending order, so the cursors
-  // resume the previous scan; a query out of order falls back to a full scan. Order source:
+  // resume the previous scan; a query out of order falls back to a full scan. A change of the
+  // children outside that sequence must reset the cursors. Order source:
   // https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/mounting/Differentiator.cpp#L1328-L1357
   int toPositionForRemove(const int shadowIndex, IndexCursors &cursors) const {
     validateExitingChildrenCount(cursors);
@@ -225,6 +226,8 @@ struct LightNode {
       int liveChildrenBelow = cursor.shadowIndex;
       for (int hostIndex = cursor.hostIndex - 1; hostIndex >= 0; hostIndex--) {
         if (!children[hostIndex]->isExiting() && --liveChildrenBelow == shadowIndex) {
+          react_native_assert(
+              hostIndex == scanToHostIndex(shadowIndex, 0, 0) && "A stale index cursor gave a wrong host index");
           cursor = {shadowIndex, hostIndex};
           return hostIndex;
         }
@@ -247,6 +250,8 @@ struct LightNode {
     int hostIndex = 0;
     if (cursor.hostIndex != -1 && shadowIndex > cursor.shadowIndex) {
       hostIndex = scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
+      react_native_assert(
+          hostIndex == scanToHostIndex(shadowIndex, 0, 0) && "A stale index cursor gave a wrong host index");
     } else {
       hostIndex = scanToHostIndex(shadowIndex, 0, 0);
     }
@@ -323,6 +328,32 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
   return current;
 }
 
+static inline std::shared_ptr<LightNode> findScreenBelow(const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  if (!stack) {
+    return nullptr;
+  }
+  const auto screenIt = std::ranges::find(stack->children, screen);
+  for (auto below = std::make_reverse_iterator(screenIt); below != stack->children.rend(); ++below) {
+    if (isRNSScreen(*below)) {
+      return *below;
+    }
+  }
+  return nullptr;
+}
+
+static inline std::shared_ptr<LightNode> findScreenInStackOf(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  for (auto current = findParentRNSScreen(node); current; current = findParentRNSScreen(current)) {
+    if (current->parent.lock() == stack) {
+      return current;
+    }
+  }
+  return nullptr;
+}
+
 static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
   for (; node; node = node->parent.lock()) {
     if (node == root) {
@@ -393,6 +424,11 @@ static inline bool isViewKind(const ShadowView &view) {
 static inline const ViewProps &getViewProps(const ShadowView &view) {
   react_native_assert(isViewKind(view) && "Only ViewKind views have ViewProps");
   return static_cast<const ViewProps &>(*view.props);
+}
+
+static inline double defaultViewOpacity() {
+  static const double opacity = ViewProps{}.opacity;
+  return opacity;
 }
 
 // Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and

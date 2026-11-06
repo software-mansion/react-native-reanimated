@@ -485,7 +485,7 @@ describe('Tests of Test Framework', () => {
 
     test('reloadAndResume from a suite with a completed test case', async () => {
       await expect(() => reloadAndResume('self-tests')).toThrow(
-        'a test case of this suite has already completed'
+        'test case(s) of this suite already finished'
       );
     });
 
@@ -511,6 +511,7 @@ describe('Tests of Test Framework', () => {
         failed: 1,
         skipped: 2,
         failedTests: ['earlier failure'],
+        failures: [{ suite: 'suite', name: 'earlier failure', errors: [] }],
         durationMs: 10,
       };
       expect(applyIsolationCheck(summary, false)).toBe(summary);
@@ -518,7 +519,10 @@ describe('Tests of Test Framework', () => {
       expect(checked.failed).toBe(2);
       expect(checked.failedTests.length).toBe(2);
       expect(checked.failedTests[1]).toBe(REANIMATED_ISOLATION_FAILURE);
+      expect(checked.failures.length).toBe(2);
+      expect(checked.failures[1].name).toBe(REANIMATED_ISOLATION_FAILURE);
       expect(summary.failed).toBe(1);
+      expect(summary.failures.length).toBe(1);
     });
 
     test('useTestState', async () => {

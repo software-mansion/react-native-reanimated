@@ -2,6 +2,8 @@ import {
   createWorkletRuntime,
   registerCustomSerializable,
   runOnRuntimeSync,
+  scheduleOnRN,
+  scheduleOnRuntime,
 } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
@@ -14,6 +16,11 @@ interface IReuseCarrier {
 
 interface IPackedCarrier {
   __isPackedCarrier: true;
+  payload: number;
+}
+
+interface IScheduledCarrier {
+  __isScheduledCarrier: true;
   payload: number;
 }
 
@@ -90,6 +97,38 @@ describe('Retained values after Worker Runtime address reuse', () => {
 
     expect(completed).toBe(ITERATIONS);
   });
+
+  test('schedules a custom serializable on short-lived Worker Runtimes', async () => {
+    registerCustomSerializable({
+      name: 'runtime address reuse scheduled carrier',
+      determine: (value: object): value is IScheduledCarrier => {
+        'worklet';
+        return (value as Record<string, unknown>).__isScheduledCarrier === true;
+      },
+      pack: (value: IScheduledCarrier) => {
+        'worklet';
+        return { packedPayload: value.payload + 1 };
+      },
+      unpack: (value: { packedPayload: number }) => {
+        'worklet';
+        return {
+          __isScheduledCarrier: true,
+          payload: value.packedPayload + 1,
+        } as IScheduledCarrier;
+      },
+    });
+
+    const carrier = Object.create(null) as IScheduledCarrier;
+    carrier.__isScheduledCarrier = true;
+    carrier.payload = 40;
+
+    const completed = await scheduleInShortLivedRuntimes(() => {
+      'worklet';
+      return carrier.payload === 42 ? 1 : 0;
+    });
+
+    expect(completed).toBe(ITERATIONS);
+  });
 });
 
 async function runInShortLivedRuntimes(work: () => number) {
@@ -100,6 +139,28 @@ async function runInShortLivedRuntimes(work: () => number) {
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
   return completed;
+}
+
+async function scheduleInShortLivedRuntimes(work: () => number) {
+  let completed = 0;
+  for (let i = 0; i < ITERATIONS; i++) {
+    completed += await scheduleOnce(work, i);
+    globalThis.gc?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return completed;
+}
+
+function scheduleOnce(work: () => number, index: number) {
+  const runtime = createWorkletRuntime({
+    name: `address-reuse-scheduled-${index}`,
+  });
+  return new Promise<number>((resolve) => {
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(resolve, work());
+    });
+  });
 }
 
 function runOnce(work: () => number, index: number) {

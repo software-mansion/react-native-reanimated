@@ -64,8 +64,21 @@ jobs:
       - name: Install Android NDK
         uses: $/.github/actions/install-android-ndk
 
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Toggle Bundle Mode off (Legacy Eval)
         if: ${{ !matrix.bundleMode }}
@@ -91,6 +104,12 @@ jobs:
             ~/.android/adb*
           key: avd-34-x86_64
 
+      - name: Install Android Emulator
+        uses: $/.github/actions/install-android-emulator
+        with:
+          api-level: 34
+          arch: x86_64
+
       - name: Create AVD and generate a boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
@@ -115,18 +134,14 @@ jobs:
           disable-animations: false
           working-directory: apps/fabric-example
           script: |
-            echo "::group::ReJest self-tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests
-            echo "::endgroup::"
-            echo "::group::Verify CI catches failing tests"
-            if node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
-            echo "::endgroup::"
-            echo "::group::Worklets runtime tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library worklets
-            echo "::endgroup::"
-            echo "::group::Reanimated runtime tests"
-            node scripts/runtime-tests-server.js $RUNTIME_TESTS_ARGS --library reanimated
-            echo "::endgroup::"
+            echo "::group::ReJest self-tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Verify CI catches failing tests"; if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner"; status=1; else echo "Failing tests correctly failed the runner"; status=0; fi; echo "::endgroup::"; exit $status
+            echo "::group::Worklets runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Reanimated runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated; status=$?; echo "::endgroup::"; exit $status
+
+      - name: Show disk usage
+        if: always()
+        run: df -h /
 
       - name: Upload crash reports
         if: failure()

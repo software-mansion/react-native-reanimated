@@ -25,6 +25,7 @@ globalThis._getAnimationTimestamp = () => performance.now();
 globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
 
 const WorkletAPI = {
+  abortWorkletRuntime: NOOP,
   callMicrotasks: NOOP,
   createSerializable: ID,
   createSerializableArray: ID,

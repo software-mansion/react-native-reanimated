@@ -12,6 +12,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
@@ -71,6 +72,7 @@ class ScriptBufferWrapper(
     companion object {
         private const val DEV_BUNDLE_FILE_NAME = "WorkletsDevBundle.js"
         private const val CONNECT_TIMEOUT_MS = 5_000
+        private const val READ_TIMEOUT_MS = 60_000
 
         private fun reactNativeDownloadedBundleFile(context: Context): File? {
             val reactApplication = context.applicationContext as? ReactApplication ?: return null
@@ -87,25 +89,32 @@ class ScriptBufferWrapper(
         ) {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.connectTimeout = CONNECT_TIMEOUT_MS
+            connection.readTimeout = READ_TIMEOUT_MS
             try {
                 val statusCode =
                     try {
                         connection.responseCode
+                    } catch (e: SocketTimeoutException) {
+                        throw RuntimeException("[Worklets] Timed out waiting for the development server.\n", e)
                     } catch (e: IOException) {
                         throw RuntimeException("[Worklets] Could not connect to development server.\n", e)
                     }
                 if (statusCode != 200) {
                     throw RuntimeException(serverErrorMessage(url, statusCode, connection))
                 }
+                val tmpFile = File(outputFile.path + ".tmp")
                 try {
-                    val tmpFile = File(outputFile.path + ".tmp")
                     connection.inputStream.use { input ->
                         tmpFile.outputStream().use { output -> input.copyTo(output) }
                     }
                     if (!tmpFile.renameTo(outputFile)) {
                         throw IOException("Couldn't rename $tmpFile to $outputFile")
                     }
+                } catch (e: SocketTimeoutException) {
+                    tmpFile.delete()
+                    throw RuntimeException("[Worklets] Timed out reading the worklets bundle from URL $url.\n", e)
                 } catch (e: IOException) {
+                    tmpFile.delete()
                     throw RuntimeException(
                         "[Worklets] Failed to store worklets bundle from URL $url: ${e.message}",
                         e,
@@ -121,7 +130,14 @@ class ScriptBufferWrapper(
             statusCode: Int,
             connection: HttpURLConnection,
         ): String {
-            val body = connection.errorStream?.use { String(it.readBytes(), StandardCharsets.UTF_8) }
+            val body =
+                try {
+                    connection.errorStream?.use { String(it.readBytes(), StandardCharsets.UTF_8) }
+                } catch (e: IOException) {
+                    return "[Worklets] The development server returned response error code: $statusCode\n\n" +
+                        "URL: $url\n\n" +
+                        "Body could not be read: ${e.message}"
+                }
             val metroMessage = parseMetroError(body)
             if (metroMessage != null) {
                 return "[Worklets] $metroMessage"
