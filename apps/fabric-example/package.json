@@ -16,7 +16,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.3.0",
-    "react-native": "0.88.0-rc.1",
+    "react-native": "0.88.0-rc.2",
     "react-native-screens": "4.27.0"
   },
   "devDependencies": {
