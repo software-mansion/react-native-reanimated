@@ -25,14 +25,27 @@
 
 namespace reanimated {
 
+// The opacity of the children of a shared transition carrier, as a factor of their own opacity.
+struct ContentOpacityRange {
+  double from;
+  double to;
+};
+
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
+  // The props that each frame starts from. When it is null, the frames start from the props of finalView.
+  Props::Shared frameProps;
   Tag parentTag;
   std::optional<double> opacity;
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
+  std::optional<double> contentOpacity;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
+
+  const Props::Shared &framePropsBase() const {
+    return frameProps ? frameProps : finalView.props;
+  }
 };
 
 struct CompletedLayoutAnimation {
@@ -44,15 +57,21 @@ struct ManagedLayoutAnimationStart {
   Tag tag;
   LayoutAnimationType type;
   ShadowView before, after;
+  Props::Shared frameProps;
   Tag parentTag;
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
+  std::optional<ContentOpacityRange> contentOpacity;
+  // A shared transition content fade-in gets the target opacity of the view.
+  bool isContentFadeIn = false;
 };
 
 struct ProgressLayoutAnimationStart {
   Tag tag;
   ShadowView before, after;
+  Props::Shared frameProps;
   Tag parentTag;
+  std::shared_ptr<Serializable> config;
 };
 
 struct LayoutAnimationCancellation {
@@ -75,14 +94,18 @@ struct LayoutAnimationsProxyDependencies {
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ReleaseViewTransitionsFunction releaseViewTransitions;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
   SynchronousPropsReader readSynchronousProps;
 #endif
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;
   ReadMountedViewPropsFunction readMountedViewProps;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
+  NativeViewPlacementFunction nativeViewPlacement;
 #endif
 };
 
@@ -97,7 +120,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         uiRuntime_(dependencies.uiRuntime),
         uiScheduler_(dependencies.uiScheduler),
         uiManager_(dependencies.uiManager),
-        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush)
+        requestLayoutAnimationFlush_(dependencies.requestLayoutAnimationFlush),
+        readSynchronousOpacity_(dependencies.readSynchronousOpacity)
 #ifdef ANDROID
         ,
         preserveMountedTags_(dependencies.filterUnmountedTagsFunction),
@@ -114,6 +138,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   virtual std::optional<facebook::react::SurfaceId> onGestureCancel(int tag);
   virtual void onSharedTransitionConfigured(const std::vector<Tag> & /*viewTags*/) {}
+  // Keeps the shared transition config of a removed component while its view is still shown, e.g. while it exits.
+  virtual bool deferSharedTransitionConfigRelease(Tag /*tag*/) {
+    return false;
+  }
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) = 0;
   virtual void startSurface(
@@ -122,6 +150,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
+  virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;
@@ -142,10 +171,14 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void updateLayoutAnimationTarget(
       Tag tag,
       const ShadowView &finalView,
-      const std::shared_ptr<Serializable> &config = nullptr) const;
+      const Props::Shared &frameProps,
+      const std::shared_ptr<Serializable> &config = nullptr,
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
+  std::optional<ShadowView> layoutAnimationViewOnScreen(Tag tag) const;
+  const ShadowView *queuedLayoutStartView(Tag tag) const;
   std::optional<ShadowView> reparentLayoutAnimation(Tag tag, Tag parentTag) const;
   std::optional<ShadowView>
   reparentPendingLayoutAnimations(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
@@ -159,6 +192,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   ShadowView cloneViewWithOpacity(
       const ShadowView &shadowView,
       double opacity,
+      const PropsParserContext &propsParserContext) const;
+  ShadowViewMutation createPropsUpdate(
+      const ShadowView &oldView,
+      const ShadowView &newView,
+      Tag parentTag,
       const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
   void scheduleCleanupPull() const;
@@ -179,6 +217,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush_;
+  const std::function<std::optional<double>(Tag)> readSynchronousOpacity_;
 #ifdef ANDROID
   PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker_;
@@ -207,6 +246,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
 
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
+  // A start that waits keeps its place in the queue, and its animation time does not run yet.
+  virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
+    return false;
+  }
+  std::deque<LayoutAnimationOperation> takeDeferredLayoutAnimationStarts(
+      std::deque<LayoutAnimationOperation> &operations) const;
+  void requeueLayoutAnimationStarts(std::deque<LayoutAnimationOperation> starts) const;
   void flushLayoutAnimationOperationsLocked() const;
   std::optional<PreparedLayoutAnimationOperation> takeNextLayoutAnimationOperation(
       std::deque<LayoutAnimationOperation> &operations) const;
@@ -214,6 +260,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       Tag tag,
       const ShadowView &before,
       const ShadowView &after,
+      const Props::Shared &frameProps,
       Tag parentTag,
       std::optional<double> opacity,
       LayoutAnimationType type,

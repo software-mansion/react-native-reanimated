@@ -31,6 +31,8 @@ class AsyncQueueImpl final : public AsyncQueue {
 
   void abortPending(AbortToken abortToken) override;
 
+  void stop(AbortToken abortToken) override;
+
  private:
   static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
 

@@ -272,7 +272,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     customQueue: object | undefined,
     enableEventLoop: boolean,
     enableLocking: boolean,
-    enableNetworking: boolean
+    enableNetworking: boolean,
+    abortable: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -281,32 +282,45 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       customQueue,
       enableEventLoop,
       enableLocking,
-      enableNetworking
+      enableNetworking,
+      abortable
     );
   }
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     serializableWorklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
       worklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
+  }
+
+  abortWorkletRuntime(runtimeId: number): boolean {
+    return this.#workletsModuleProxy.abortWorkletRuntime(runtimeId);
   }
 
   runOnRuntimeSync<TValue, TReturn>(
@@ -408,6 +422,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   setDynamicFeatureFlag(name: string, value: boolean) {
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
+  }
+
+  getAliveRuntimeCount(): number {
+    return this.#workletsModuleProxy.getAliveRuntimeCount();
   }
 
   getCurrentThreadId(): string {

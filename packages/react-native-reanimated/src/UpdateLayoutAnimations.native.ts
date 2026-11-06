@@ -9,6 +9,10 @@ import type {
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type {
+  ProgressSharedTransitionAnimation,
+  SharedTransitionContentFade,
+} from './layoutReanimation/SharedTransition';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -52,22 +56,41 @@ function createUpdateManager() {
  *   at the end of the batch, after all the non-deferred configurations (even
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
+ * @param sharedTransitionTag - The shared tag that pairs the views.
+ * @param sharedTransitionContentFade - The content fade settings of the run.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: ReanimatedKeyframe | LayoutAnimationFunction,
+  config?:
+    | ReanimatedKeyframe
+    | LayoutAnimationFunction
+    | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
-  sharedTransitionTag?: string
-) => void = (viewTag, type, config, isUnmounting, sharedTransitionTag) =>
+  sharedTransitionTag?: string,
+  sharedTransitionContentFade?: SharedTransitionContentFade
+) => void = (
+  viewTag,
+  type,
+  config,
+  isUnmounting,
+  sharedTransitionTag,
+  sharedTransitionContentFade
+) =>
   updateLayoutAnimationsManager.update(
     {
       viewTag,
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionContentFade: sharedTransitionContentFade
+        ? {
+            fadeIn: createSerializable(sharedTransitionContentFade.fadeIn),
+            fadeOutEnd: sharedTransitionContentFade.fadeOutEnd,
+          }
+        : undefined,
     },
     isUnmounting
   );

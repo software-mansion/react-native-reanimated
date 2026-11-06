@@ -1,4 +1,4 @@
-import type { TestCase, TestSuite } from '../types';
+import type { TestCase, TestFailure, TestSuite } from '../types';
 import {
   color,
   EMPTY_LOG_PLACEHOLDER,
@@ -10,7 +10,15 @@ export class TestSummaryLogger {
   private _failed: number = 0;
   private _skipped: number = 0;
   private _failedTests: Array<string> = [];
+  private _failures: Array<TestFailure> = [];
+  private _suitePath: Array<string> = [];
+  private _skippedByRuntimeTestSuite = new Map<string, number>();
   private _startTime: number = Date.now();
+
+  public enterTestSuite(testSuite: TestSuite) {
+    this._suitePath.length = Math.max(testSuite.nestingLevel - 1, 0);
+    this._suitePath.push(testSuite.name);
+  }
 
   public logRunningTestSuite(testSuite: TestSuite) {
     console.log(
@@ -23,6 +31,11 @@ export class TestSummaryLogger {
     if (testCase.errors.length > 0) {
       this._failed++;
       this._failedTests.push(testCase.name);
+      this._failures.push({
+        suite: this._suitePath.join(' › '),
+        name: testCase.name,
+        errors: [...testCase.errors],
+      });
       mark = color('✖', 'red');
     } else {
       this._passed++;
@@ -42,15 +55,24 @@ export class TestSummaryLogger {
   }
 
   public countSkippedTestSuiteTests(testSuite: TestSuite) {
-    if (testSuite.skip) {
-      this._skipped += testSuite.testCases.length;
-      return;
+    const skipped = testSuite.skip
+      ? testSuite.testCases.length
+      : testSuite.testCases.filter((testCase) => testCase.skip).length;
+    this._skipped += skipped;
+    if (testSuite.runtimeTestSuiteName !== undefined) {
+      this._skippedByRuntimeTestSuite.set(
+        testSuite.runtimeTestSuiteName,
+        (this._skippedByRuntimeTestSuite.get(testSuite.runtimeTestSuiteName) ??
+          0) + skipped
+      );
     }
-    for (const testCase of testSuite.testCases) {
-      if (testCase.skip) {
-        this._skipped++;
-      }
-    }
+  }
+
+  public getSummaryBeforeRuntimeTestSuite(runtimeTestSuiteName: string) {
+    const summary = this.getSummary();
+    summary.skipped -=
+      this._skippedByRuntimeTestSuite.get(runtimeTestSuiteName) ?? 0;
+    return summary;
   }
 
   public getSummary() {
@@ -59,6 +81,10 @@ export class TestSummaryLogger {
       failed: this._failed,
       skipped: this._skipped,
       failedTests: [...this._failedTests],
+      failures: this._failures.map((failure) => ({
+        ...failure,
+        errors: [...failure.errors],
+      })),
       durationMs: Date.now() - this._startTime,
     };
   }

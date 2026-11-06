@@ -15,6 +15,7 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -73,7 +74,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion.
    */
-  void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
+  void schedule(std::shared_ptr<SerializableWorklet> worklet, std::shared_ptr<void> dropGuard = nullptr) const;
 
   /**
    * Schedules a batch of serialized worklets to run asynchronously.
@@ -90,7 +91,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Runs a single microtask checkpoint on completion.
    */
-  void scheduleWithStack(std::shared_ptr<SerializableWorklet> worklet, std::optional<std::string> scheduleStack) const;
+  void scheduleWithStack(
+      std::shared_ptr<SerializableWorklet> worklet,
+      std::optional<std::string> scheduleStack,
+      std::shared_ptr<void> dropGuard = nullptr) const;
 
   /**
    * Schedules a batch of serialized worklets to run asynchronously on the
@@ -253,6 +257,20 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return enableLocking_;
   }
 
+  void abort();
+
+  [[nodiscard]] bool isAbortable() const noexcept {
+    return abortable_;
+  }
+
+  [[nodiscard]] bool isAborted() const noexcept {
+    return aborted_;
+  }
+
+  [[nodiscard]] RuntimeData::RuntimeKind getRuntimeKind() const noexcept {
+    return runtimeKind_;
+  }
+
   explicit WorkletRuntime(
       RuntimeData::RuntimeId runtimeId,
       const std::weak_ptr<RuntimeManager> &runtimeManager,
@@ -261,7 +279,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
       bool enableLocking = true,
-      bool enableNetworking = true);
+      bool enableNetworking = true,
+      bool abortable = false);
 
   ~WorkletRuntime() override;
 
@@ -392,20 +411,33 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <MicrotaskCheckpoint TCheckpoint, typename TInvoker>
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
+    const bool isRootTask = !rootTaskRunning_;
+    rootTaskRunning_ = true;
     const auto checkpoint = [&]() {
+      if (!isRootTask) {
+        return;
+      }
       if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
         if (microtaskQueueEnabled_) {
           getJSIRuntime().drainMicrotasks();
         }
       }
+      rootTaskRunning_ = false;
     };
-    if constexpr (std::is_void_v<Result>) {
-      std::forward<TInvoker>(invoke)();
-      checkpoint();
-    } else {
-      Result result = std::forward<TInvoker>(invoke)();
-      checkpoint();
-      return std::forward<Result>(result);
+    try {
+      if constexpr (std::is_void_v<Result>) {
+        std::forward<TInvoker>(invoke)();
+        checkpoint();
+      } else {
+        Result result = std::forward<TInvoker>(invoke)();
+        checkpoint();
+        return std::forward<Result>(result);
+      }
+    } catch (...) {
+      if (isRootTask) {
+        rootTaskRunning_ = false;
+      }
+      throw;
     }
   }
 
@@ -457,6 +489,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const RuntimeData::RuntimeId runtimeId_;
   const bool enableLocking_;
   const bool enableNetworking_;
+  const bool abortable_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;
@@ -465,6 +498,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+  std::atomic_bool aborted_{false};
+  mutable bool rootTaskRunning_{false};
+  std::weak_ptr<Networking> networking_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
@@ -475,12 +511,5 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
-#ifndef NDEBUG
-void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack);
-#endif // NDEBUG
 
 } // namespace worklets

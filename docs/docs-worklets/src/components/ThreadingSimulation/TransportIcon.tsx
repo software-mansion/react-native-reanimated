@@ -6,9 +6,27 @@ export type TransportIconName =
   | 'step'
   | 'play'
   | 'pause'
-  | 'loop';
+  | 'loop'
+  | 'expand'
+  | 'collapse';
 
 const PATHS: Record<TransportIconName, React.ReactNode> = {
+  expand: (
+    <path
+      d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    />
+  ),
+  collapse: (
+    <path
+      d="M2 6h4V2m4 0v4h4M6 14v-4H2m8 4v-4h4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    />
+  ),
   reset: (
     <>
       <rect x="2" y="3" width="2" height="10" />

@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -27,11 +28,15 @@ class AsyncQueue;
 
 class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
  public:
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
 
+  /** Returns only ready runtimes. A runtime stops being returned when its last owner releases it. */
   std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
+
+  size_t getAliveRuntimeCount();
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,
@@ -40,7 +45,8 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true,
       bool enableLocking = true,
-      bool enableNetworking = true);
+      bool enableNetworking = true,
+      bool abortable = false);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 
@@ -49,8 +55,8 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
 #endif // NDEBUG
 
   template <std::invocable<> TFn>
-  decltype(auto) withRegistrationPaused(TFn &&fn) {
-    std::unique_lock lock(registrationMutex_);
+  decltype(auto) withRuntimeReadyPaused(TFn &&fn) {
+    std::unique_lock lock(runtimeReadyMutex_);
     return std::forward<TFn>(fn)();
   }
 
@@ -69,7 +75,7 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
 
   uint64_t getNextRuntimeId();
 
-  void registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
+  void onRuntimeReady(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
 #ifndef NDEBUG
   void loadModuleUpdates(const std::shared_ptr<WorkletRuntime> &workletRuntime);
@@ -83,7 +89,7 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
-  std::mutex registrationMutex_;
+  std::mutex runtimeReadyMutex_;
 #ifndef NDEBUG
   std::vector<ModuleUpdate> moduleUpdates_;
 #endif // NDEBUG

@@ -1,0 +1,1 @@
+Keep a view that a shared element transition hides, or a target child whose entering animation waits, at opacity 0 when its animated opacity is written synchronously, and show the newest opacity of the hidden view when the transition ends.

@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <memory>
@@ -83,10 +82,12 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
     bool enableLocking,
-    bool enableNetworking)
+    bool enableNetworking,
+    bool abortable)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
+      abortable_(abortable),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(
@@ -101,8 +102,6 @@ WorkletRuntime::WorkletRuntime(
       (enableLocking || !enableEventLoop) &&
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
-  jsi::Runtime &rt = *runtime_;
-  WorkletRuntimeCollector::install(rt);
   if (enableEventLoop) {
     eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
     eventLoop_->run();
@@ -118,6 +117,22 @@ WorkletRuntime::~WorkletRuntime() {
   if (queue_) {
     queue_->abortPending(abortToken());
     queue_.reset();
+  }
+}
+
+void WorkletRuntime::abort() {
+  react_native_assert(abortable_ && "[Worklets] Tried to abort a Worklet Runtime that is not abortable.");
+  if (aborted_.exchange(true)) [[unlikely]] {
+    return;
+  }
+  if (eventLoop_) {
+    eventLoop_->abortPending();
+  }
+  if (queue_) {
+    queue_->stop(abortToken());
+  }
+  if (const auto networking = networking_.lock()) {
+    networking->abortAllForRuntime(runtimeId_);
   }
 }
 
@@ -175,6 +190,7 @@ void WorkletRuntime::bundleModeInit(
 
   if (networking && enableNetworking_) {
     NetworkingInstaller::install(rt, networking, runtimeId_);
+    networking_ = networking;
   }
 
   rt.global().setProperty(rt, "_WORKLETS_SOURCE_URL", jsi::String::createFromUtf8(rt, sourceUrl));
@@ -194,8 +210,8 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
-void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
-  scheduleImpl([worklet = std::move(worklet)](const WorkletRuntime &workletRuntime) {
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std::shared_ptr<void> dropGuard) const {
+  scheduleImpl([worklet = std::move(worklet), dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(worklet);
   });
 }
@@ -224,9 +240,11 @@ void WorkletRuntime::schedule(
 #ifndef NDEBUG
 void WorkletRuntime::scheduleWithStack(
     std::shared_ptr<SerializableWorklet> worklet,
-    std::optional<std::string> scheduleStack) const {
+    std::optional<std::string> scheduleStack,
+    std::shared_ptr<void> dropGuard) const {
   scheduleImpl([worklet = std::move(worklet),
-                scheduleStack = std::move(scheduleStack)](const WorkletRuntime &workletRuntime) {
+                scheduleStack = std::move(scheduleStack),
+                dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
   });
 }
@@ -267,6 +285,10 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 }
 
 void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
+  if (aborted_) [[unlikely]] {
+    return;
+  }
+
   react_native_assert(
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
@@ -280,6 +302,9 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
         }
 
         auto lock = strongThis->acquireRuntimeLock();
+        if (strongThis->isAborted()) [[unlikely]] {
+          return;
+        }
         job(*strongThis);
       },
       abortToken());
@@ -335,21 +360,6 @@ void scheduleOnRuntime(
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->schedule(serializableWorklet);
 }
-
-#ifndef NDEBUG
-void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack) {
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      serializableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->scheduleWithStack(serializableWorklet, scheduleStack);
-}
-#endif // NDEBUG
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);

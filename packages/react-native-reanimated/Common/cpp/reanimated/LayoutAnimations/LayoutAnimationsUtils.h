@@ -128,6 +128,11 @@ struct LightNode {
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
+  // A shared transition carrier is mounted under the root, not under its parent.
+  bool isDetached = false;
+  // A carrier that React deleted. It and its content stay mounted until its run ends.
+  bool isRetained = false;
+  int detachedChildrenCount = 0;
 
   bool isExiting() const {
     return state != ExitingState::LIVE;
@@ -145,9 +150,37 @@ struct LightNode {
     }
   }
 
+  // `children` holds the children that React renders and the exiting ones. The host
+  // parent holds all of them but the detached ones.
+  int hostIndex(const int position) const {
+    if (detachedChildrenCount == 0) {
+      return position;
+    }
+    const auto detachedBefore = std::count_if(
+        children.begin(), children.begin() + position, [](const auto &child) { return child->isDetached; });
+    return position - static_cast<int>(detachedBefore);
+  }
+
+  int positionOf(const std::shared_ptr<LightNode> &child) const {
+    const auto it = std::ranges::find(children, child);
+    return it == children.end() ? -1 : static_cast<int>(std::distance(children.begin(), it));
+  }
+
+  void setDetached(const bool detached) {
+    react_native_assert(isDetached != detached && "The light node is already in this state");
+    isDetached = detached;
+    if (const auto parentNode = parent.lock()) {
+      parentNode->detachedChildrenCount += detached ? 1 : -1;
+    }
+  }
+
   int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
+        react_native_assert(!children[i]->isDetached && "Remove the carrier from the root before unlinking its node");
+        if (children[i]->isDetached) {
+          detachedChildrenCount--;
+        }
         if (children[i]->isExiting()) {
           exitingChildrenCount--;
         }
@@ -158,16 +191,23 @@ struct LightNode {
     return -1;
   }
 
-  void clearChildren() {
-    children.clear();
-    exitingChildrenCount = 0;
+  void extractDetachedChild(const std::shared_ptr<LightNode> &child) {
+    const auto position = positionOf(child);
+    react_native_assert(position != -1 && child->isDetached && "Extract a mounted carrier from its logical parent");
+    detachedChildrenCount--;
+    if (child->isExiting()) {
+      exitingChildrenCount--;
+    }
+    children.erase(children.begin() + position);
+    child->parent.reset();
   }
 
   // A new child goes after the exiting children at its shadow position. The differ sends a
   // parent's Removes in descending order and its Inserts in ascending order, so the cursors
-  // resume the previous scan; a query out of order falls back to a full scan. Order source:
+  // resume the previous scan; a query out of order falls back to a full scan. A change of the
+  // children outside that sequence must reset the cursors. Order source:
   // https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/mounting/Differentiator.cpp#L1328-L1357
-  int toHostIndexForRemove(const int shadowIndex, IndexCursors &cursors) const {
+  int toPositionForRemove(const int shadowIndex, IndexCursors &cursors) const {
     validateExitingChildrenCount(cursors);
     react_native_assert(
         shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
@@ -180,6 +220,8 @@ struct LightNode {
       int liveChildrenBelow = cursor.shadowIndex;
       for (int hostIndex = cursor.hostIndex - 1; hostIndex >= 0; hostIndex--) {
         if (!children[hostIndex]->isExiting() && --liveChildrenBelow == shadowIndex) {
+          react_native_assert(
+              hostIndex == scanToHostIndex(shadowIndex, 0, 0) && "A stale index cursor gave a wrong host index");
           cursor = {shadowIndex, hostIndex};
           return hostIndex;
         }
@@ -190,7 +232,7 @@ struct LightNode {
     return hostIndex;
   }
 
-  int toHostIndexForInsert(const int shadowIndex, IndexCursors &cursors) const {
+  int toPositionForInsert(const int shadowIndex, IndexCursors &cursors) const {
     validateExitingChildrenCount(cursors);
     react_native_assert(
         shadowIndex >= 0 && shadowIndex <= static_cast<int>(children.size()) - exitingChildrenCount &&
@@ -202,6 +244,8 @@ struct LightNode {
     int hostIndex = 0;
     if (cursor.hostIndex != -1 && shadowIndex > cursor.shadowIndex) {
       hostIndex = scanToHostIndex(shadowIndex, cursor.hostIndex + 1, cursor.shadowIndex + 1);
+      react_native_assert(
+          hostIndex == scanToHostIndex(shadowIndex, 0, 0) && "A stale index cursor gave a wrong host index");
     } else {
       hostIndex = scanToHostIndex(shadowIndex, 0, 0);
     }
@@ -278,6 +322,32 @@ static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_p
   return current;
 }
 
+static inline std::shared_ptr<LightNode> findScreenBelow(const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  if (!stack) {
+    return nullptr;
+  }
+  const auto screenIt = std::ranges::find(stack->children, screen);
+  for (auto below = std::make_reverse_iterator(screenIt); below != stack->children.rend(); ++below) {
+    if (isRNSScreen(*below)) {
+      return *below;
+    }
+  }
+  return nullptr;
+}
+
+static inline std::shared_ptr<LightNode> findScreenInStackOf(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &screen) {
+  const auto stack = screen->parent.lock();
+  for (auto current = findParentRNSScreen(node); current; current = findParentRNSScreen(current)) {
+    if (current->parent.lock() == stack) {
+      return current;
+    }
+  }
+  return nullptr;
+}
+
 static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::shared_ptr<LightNode> &root) {
   for (; node; node = node->parent.lock()) {
     if (node == root) {
@@ -285,6 +355,22 @@ static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::share
     }
   }
   return false;
+}
+
+static inline bool isInRetainedCarrier(std::shared_ptr<LightNode> node) {
+  for (; node; node = node->parent.lock()) {
+    if (node->isRetained) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static inline bool isDescendantOfAny(
+    const std::shared_ptr<LightNode> &node,
+    const std::vector<std::shared_ptr<LightNode>> &views) {
+  const auto parent = node->parent.lock();
+  return std::ranges::any_of(views, [&parent](const auto &view) { return isInSubtree(parent, view); });
 }
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
@@ -322,6 +408,11 @@ static inline bool isViewKind(const ShadowView &view) {
 static inline const ViewProps &getViewProps(const ShadowView &view) {
   react_native_assert(isViewKind(view) && "Only ViewKind views have ViewProps");
   return static_cast<const ViewProps &>(*view.props);
+}
+
+static inline double defaultViewOpacity() {
+  static const double opacity = ViewProps{}.opacity;
+  return opacity;
 }
 
 // Android mounts the Deletes of a transaction after its Creates, so a transaction that deletes and

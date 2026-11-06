@@ -49,6 +49,14 @@ const ChangeThemeSharedExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ChangeTheme').default
   );
+const CustomTransitionExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CustomTransition').default as React.FC
+  );
+const ModalPresentationsExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalPresentations').default as React.FC
+  );
 const ChatHeadsExample: React.FC = () =>
   React.createElement(require('./ChatHeadsExample').default as React.FC);
 const ChessExample: React.FC = () =>
@@ -115,6 +123,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -165,6 +177,11 @@ const InterruptedExitingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
   );
+const ExitingInterruptsEnteringExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingInterruptsEnteringExample')
+      .default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -212,6 +229,8 @@ const SynchronousPropsSETExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/SynchronousPropsExample').default
   );
+const NestedTagsExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/NestedTags').default);
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -713,6 +732,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
+  ExitingInterruptsEntering: {
+    title: '[LA] Exiting animation interrupting entering',
+    screen: ExitingInterruptsEnteringExample,
+  },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
     screen: LayoutAnimationBatchSyncExample,
@@ -827,6 +850,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  NestedTagsExample: {
+    title: '[SET] Nested tags',
+    screen: NestedTagsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -881,6 +913,16 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  CustomTransitionExample: {
+    title: '[SET] Custom Transition',
+    screen: CustomTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  ModalPresentationsExample: {
+    title: '[SET] Modal presentations',
+    screen: ModalPresentationsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
@@ -911,6 +953,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

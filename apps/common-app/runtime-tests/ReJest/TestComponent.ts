@@ -1,6 +1,7 @@
 import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
 
+import RuntimeTestObserver from './native/NativeRuntimeTestObserver';
 import type { ComponentRef, MountedViewProps, ValidPropNames } from './types';
 import { runOnUIBlocking } from './utils/runOnUIBlocking';
 
@@ -36,6 +37,24 @@ export class TestComponent {
       'worklet';
       return global._obtainMountedViewProps(tag, true);
     });
+  }
+
+  public getTransformObservation() {
+    if (!RuntimeTestObserver) {
+      throw new Error(
+        'RuntimeTestObserver requires a FabricExample runtime-test build'
+      );
+    }
+    return RuntimeTestObserver.observeTransform(this.getTag());
+  }
+
+  public getTextInputObservation() {
+    if (!RuntimeTestObserver) {
+      throw new Error(
+        'RuntimeTestObserver requires a FabricExample runtime-test build'
+      );
+    }
+    return RuntimeTestObserver.observeTextInput(this.getTag());
   }
 
   public getTag() {

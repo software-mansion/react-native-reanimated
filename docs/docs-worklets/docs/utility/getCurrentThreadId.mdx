@@ -3,6 +3,9 @@ sidebar_position: 42 # Use alphabetical order
 title: getCurrentThreadId
 ---
 
+import * as ApiGetCurrentThreadIdSnippet from './_examples/apiGetCurrentThreadId';
+import ApiGetCurrentThreadIdSource from '!!raw-loader!./_examples/apiGetCurrentThreadId';
+
 <Badges version="0.13.0">
   # getCurrentThreadId
 </Badges>
@@ -11,21 +14,7 @@ title: getCurrentThreadId
 
 ## Reference
 
-```javascript
-import { getCurrentThreadId, runOnUISync, scheduleOnUI } from 'react-native-worklets';
-
-console.log(getCurrentThreadId()); // The JS thread id.
-
-scheduleOnUI(() => {
-  'worklet';
-  console.log(getCurrentThreadId()); // The UI thread id.
-});
-
-runOnUISync(() => {
-    'worklet';
-    console.log(getCurrentThreadId()); // The JS thread id.
-})
-```
+<ThreadingSimulation module={ApiGetCurrentThreadIdSnippet} source={ApiGetCurrentThreadIdSource}/>
 
 <details>
   <summary>Type definitions</summary>

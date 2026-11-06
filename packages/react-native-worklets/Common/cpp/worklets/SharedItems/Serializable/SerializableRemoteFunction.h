@@ -1,89 +1,89 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/RNRuntimeStatus.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace worklets {
-
-class RuntimeManager;
 
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
  public:
-  /** Creates RN Runtime Remote Function. */
   SerializableRemoteFunction(
-      facebook::jsi::Runtime &rnRuntime,
+      facebook::jsi::Runtime &hostRuntime,
       const std::string &name,
       facebook::jsi::Function &&function,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus)
+      RuntimeIdentity hostIdentity,
+      const std::shared_ptr<JSScheduler> &jsScheduler = nullptr)
       : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&rnRuntime),
-        hostRuntimeId_(RuntimeData::rnRuntimeId),
-        function_(std::make_unique<facebook::jsi::Value>(rnRuntime, std::move(function))),
+        hostIdentity_(std::move(hostIdentity)),
+        function_(std::make_unique<facebook::jsi::Value>(hostRuntime, std::move(function))),
         name_(name),
-        jsScheduler_(jsScheduler),
-        rnRuntimeStatus_(rnRuntimeStatus) {}
-
-  /** Creates Worklet Runtime Remote Function. */
-  SerializableRemoteFunction(
-      facebook::jsi::Runtime &workletRuntime,
-      const std::string &name,
-      facebook::jsi::Function &&function,
-      RuntimeData::RuntimeId hostRuntimeId)
-      : Serializable(ValueType::RemoteFunctionType),
-        hostRuntime_(&workletRuntime),
-        hostRuntimeId_(hostRuntimeId),
-        function_(std::make_unique<facebook::jsi::Value>(workletRuntime, std::move(function))),
-        name_(name),
-        jsScheduler_(nullptr),
-        rnRuntimeStatus_(nullptr) {}
+        jsScheduler_(jsScheduler) {
+    react_native_assert(
+        hostIdentity_.isRNRuntime() == (jsScheduler_ != nullptr) &&
+        "[Worklets] A Remote Function needs a JSScheduler if and only if it is hosted on the RN Runtime.");
+  }
 
   ~SerializableRemoteFunction() override;
 
   SerializableRemoteFunction(const SerializableRemoteFunction &) = delete;
   SerializableRemoteFunction &operator=(const SerializableRemoteFunction &) = delete;
 
-  void resolveOrRejectPromise(
-      const std::shared_ptr<Serializable> &resolveValue,
-      const std::shared_ptr<RuntimeManager> &runtimeManager);
+  void resolveOrRejectPromise(const std::shared_ptr<Serializable> &resolveValue);
 
   facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
   [[nodiscard]] bool isHostedOnRNRuntime() const noexcept {
-    return hostRuntimeId_ == RuntimeData::rnRuntimeId;
+    return hostIdentity_.isRNRuntime();
   }
 
   [[nodiscard]] RuntimeData::RuntimeId getHostRuntimeId() const noexcept {
-    return hostRuntimeId_;
+    return hostIdentity_.getRuntimeId();
+  }
+
+  [[nodiscard]] bool isSettled() const noexcept {
+    return settled_;
   }
 
  private:
-  facebook::jsi::Runtime *hostRuntime_;
-  const RuntimeData::RuntimeId hostRuntimeId_;
+  std::atomic_bool settled_{false};
+  const RuntimeIdentity hostIdentity_;
   std::unique_ptr<facebook::jsi::Value> function_;
   const std::string name_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
-  const std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
 };
 
-facebook::jsi::Value makeRNRuntimeSerializableRemoteFunction(
-    facebook::jsi::Runtime &rnRuntime,
-    const std::string &name,
-    const facebook::jsi::Function &function,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
+class PromiseDropGuard {
+ public:
+  PromiseDropGuard(
+      std::shared_ptr<SerializableRemoteFunction> resolve,
+      std::shared_ptr<SerializableRemoteFunction> reject)
+      : resolve_(std::move(resolve)), reject_(std::move(reject)) {}
 
-facebook::jsi::Value makeWorkletRuntimeSerializableRemoteFunction(
-    facebook::jsi::Runtime &workletRuntime,
+  ~PromiseDropGuard();
+
+  PromiseDropGuard(const PromiseDropGuard &) = delete;
+  PromiseDropGuard &operator=(const PromiseDropGuard &) = delete;
+
+ private:
+  const std::shared_ptr<SerializableRemoteFunction> resolve_;
+  const std::shared_ptr<SerializableRemoteFunction> reject_;
+};
+
+facebook::jsi::Value makeSerializableRemoteFunction(
+    facebook::jsi::Runtime &hostRuntime,
     const std::string &name,
     const facebook::jsi::Function &function,
-    RuntimeData::RuntimeId hostRuntimeId);
+    const RuntimeIdentity &hostIdentity,
+    const std::shared_ptr<JSScheduler> &jsScheduler = nullptr);
 
 } // namespace worklets

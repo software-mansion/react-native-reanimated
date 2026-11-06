@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiScheduleOnRNSnippet from './_examples/apiScheduleOnRN';
+import ApiScheduleOnRNSource from '!!raw-loader!./_examples/apiScheduleOnRN';
+
 # scheduleOnRN
 
 `scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime) from any [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime).
@@ -12,14 +15,7 @@ To learn more about the different runtime kinds, check [Runtime Kinds](../concep
 
 ## Reference
 
-```javascript
-import { scheduleOnRN } from 'react-native-worklets';
-
-function App() {
-  // While on the UI thread
-  scheduleOnRN(navigation.goBack);
-}
-```
+<ThreadingSimulation module={ApiScheduleOnRNSnippet} source={ApiScheduleOnRNSource}/>
 
 <details>
   <summary>Type definitions</summary>

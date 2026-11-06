@@ -131,17 +131,21 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         value._value = style.initialValues;
       }
 
-      const animation = withStyleAnimation(currentAnimation, (finished) => {
-        if (finished) {
-          currentAnimationForTag.delete(tag);
-          mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
-        }
-        if (style.callback) {
-          style.callback(finished);
-        }
-      });
+      const animation = withStyleAnimation(
+        currentAnimation,
+        (finished) => {
+          if (finished) {
+            currentAnimationForTag.delete(tag);
+            mutableValuesForTag.delete(tag);
+            const shouldRemoveView = type === LayoutAnimationType.EXITING;
+            stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
+          }
+          if (style.callback) {
+            style.callback(finished);
+          }
+        },
+        type === LayoutAnimationType.EXITING
+      );
 
       startObservingProgress(tag, value, scheduleFlush);
       const previousFrameTimestamp = global.__frameTimestamp;

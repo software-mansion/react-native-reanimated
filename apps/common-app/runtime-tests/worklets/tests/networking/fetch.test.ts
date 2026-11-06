@@ -13,7 +13,7 @@ import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 
 /**
  * Must match `ECHO_TEXT` in
- * `apps/fabric-example/scripts/runtime-tests-server.js`.
+ * `apps/fabric-example/scripts/runtime-tests-server.mts`.
  */
 const EXPECTED_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 

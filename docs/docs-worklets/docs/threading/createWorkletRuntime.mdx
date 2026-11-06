@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiCreateWorkletRuntimeSnippet from './_examples/apiCreateWorkletRuntime';
+import ApiCreateWorkletRuntimeSource from '!!raw-loader!./_examples/apiCreateWorkletRuntime';
+
 # createWorkletRuntime
 
 `createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](../tutorials/0-concurrency-model.mdx#worklet-functions) possibly on different threads than [JS](../tutorials/0-concurrency-model.mdx#the-react-native-model) or [UI thread](../tutorials/0-concurrency-model.mdx#the-react-native-model). Use this function if you need to integrate with Worklet Runtimes in C++.
@@ -12,31 +15,29 @@ The return value represents the runtime. You can pass it to the C++ side using J
 
 ### Usage in JavaScript
 
-```jsx
-import { createWorkletRuntime } from 'react-native-worklets';
+The initializer runs in the new runtime **on the creating thread**, before `createWorkletRuntime` returns. It sets a global variable that the scheduled task later reads on the worker's own thread. Compare the thread IDs in the console: the initializer and creator match, while the scheduled task has a different ID.
 
-function App() {
-  const runtime = createWorkletRuntime({
-    name: 'background',
-    initializer: () => {
-      'worklet';
-      console.log('Runtime initialized!');
-    },
-  });
-}
-```
+<ThreadingSimulation module={ApiCreateWorkletRuntimeSnippet} source={ApiCreateWorkletRuntimeSource}/>
 
 ### Usage in C++
 
 ```cpp
-auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-jsi::Runtime &rt = runtime->getJSIRuntime();
+void scheduleNativeWork(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
 
-auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
-
-runtime->runGuarded(worklet, ...args);
+  worker->schedule([](facebook::jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(workerRuntime, "nativeWorkFinished", true);
+  });
+}
 ```
+
+`rnRuntime` owns the incoming `runtimeValue`. The scheduled callback receives the worker's JSI runtime and runs on its queue with the runtime lock held. Keep the default queue and locking enabled for this example, and retain the Worker Runtime while its work is pending.
+
+Use `worker->runSync(...)` for a short synchronous operation on the calling thread.
 
 <details>
   <summary>Type definitions</summary>
@@ -53,6 +54,7 @@ runtime->runGuarded(worklet, ...args);
     initializer?: () => void;
     animationQueuePollingRate?: number;
     enableNetworking?: boolean;
+    abortable?: boolean;
     queue?: 'default' | object | null;
   } & (
     | { enableEventLoop?: boolean; enableLocking?: true }
@@ -94,6 +96,12 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
 
 Determines whether the [networking API](../bundleMode/usage.mdx#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
+<Badges version="0.14.0">
+  ##### `abortable`
+</Badges>
+
+Determines whether the Runtime can be stopped with [abortWorkletRuntime](./abortWorkletRuntime.mdx). With a custom queue, the Runtime's pending jobs are dropped only if the queue implements `AsyncQueue::stop`. Defaults to `false`.
+
 <Badges version="0.12.0">
   ##### `enableLocking`
 </Badges>
@@ -115,7 +123,7 @@ Controls the queue used for scheduling worklet functions on this runtime. Defaul
 
 ### Returns
 
-`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+`createWorkletRuntime` returns a JavaScript object backed by a C++ `worklets::WorkletRuntime`, which derives from `jsi::HostObject`.
 
 ## Remarks
 
