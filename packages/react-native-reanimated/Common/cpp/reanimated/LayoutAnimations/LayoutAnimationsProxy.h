@@ -529,6 +529,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::vector<Ancestor> &ancestors,
       bool settled) const;
   void adjustForNativePlacement(CollectedTransition &collectedTransition, BeforeOrAfter index) const;
+  void adjustForNativePlacement(CollectedTransitions &transitions) const;
   const ShadowView &viewOnScreen(const std::shared_ptr<LightNode> &node) const;
 
   void overrideTransform(

@@ -36,7 +36,7 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
 
   std::shared_ptr<WorkletRuntime> getUIRuntime();
 
-  size_t getAliveRuntimeCount();
+  bool isRuntimeAlive(RuntimeData::RuntimeId runtimeId);
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       const std::shared_ptr<const JSIWorkletsModuleProxy> &sourceProxy,

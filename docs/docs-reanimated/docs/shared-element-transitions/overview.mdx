@@ -2,242 +2,100 @@
 id: overview
 title: Shared Element Transitions
 sidebar_label: Overview
+sidebar_position: 1
 ---
 
-# Shared Element Transitions
+import Overview from '@site/src/examples/shared-element-transitions/Overview';
+import OverviewSrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Overview.code';
+import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
 
-:::caution
+<Badges version="4.8.0">
+  # Shared Element Transitions
+</Badges>
 
-Shared Element Transitions is an experimental feature available [behind a feature flag](../guides/feature-flags.md#enable_shared_element_transitions), not recommended for production use yet. We are waiting for your feedback to improve the implementation.
-:::
+Shared Element Transitions move a view from one screen to another. When you navigate, a view on the old screen moves to the position of the matching view on the new screen. Its size and style change during the transition.
 
-Shared Element Transitions allow you to smoothly transform a component from one screen into a component on another screen.
+<InteractiveExample src={OverviewSrc} component={Overview} larger/>
 
-## Reference
+## Your first shared element transition
 
-```javascript
-import Animated from 'react-native-reanimated';
+```tsx
+import { Pressable } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-function One({ navigation }) {
+function ListScreen({ navigation }) {
   return (
-    <>
+    <Pressable onPress={() => navigation.navigate('Details')}>
       <Animated.View
-        // highlight-start
-        sharedTransitionTag="sharedTag"
-        // highlight-end
+        // highlight-next-line
+        sharedTransitionTag="photo"
+        style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
       />
-      <Button title="Two" onPress={() => navigation.navigate('Two')} />
-    </>
+    </Pressable>
   );
 }
 
-function Two({ navigation }) {
-  return (
-    <>
-      <Animated.View
-        // highlight-start
-        sharedTransitionTag="sharedTag"
-        // highlight-end
-      />
-      <Button title="One" onPress={() => navigation.navigate('One')} />
-    </>
-  );
-}
-
-export default function SharedElementExample() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="One" component={One} />
-        <Stack.Screen name="Two" component={Two} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-```
-
-## Overview
-
-When Reanimated detects that the current top screen on the stack changes, it checks if there are components with the same `sharedTransitionTag` on the new and old top screen.
-
-If it finds two matching components, Reanimated moves the source native view above the screen content and hides the target view. If React removes the source, Reanimated keeps its native subtree until the transition ends. Reanimated animates the view between the source and target frames and styles. When the transition ends, the target appears in its normal place, and Reanimated deletes a retained source. A running transition keeps its moving view when its target changes.
-
-The view moves with its children. By default, Reanimated does not match the children of the two views or add separate fades for them. Use [`fadeContent()`](#fade-content) to fade their content. The target's children appear when the transition ends. A child with its own `sharedTransitionTag` can animate as a separate view. When its target is inside the parent's target, it moves inside the moving parent: it keeps its place in the drawing order and the parent's clipping, and the two land together when the slower one ends.
-
-The moving view keeps its own content props, such as an image source or a video player. The frame and animated styles change during the transition. Changes that React commits to the moving view's own props or layout wait until the view returns to its parent or the transition restarts. This includes changes from React state and `useAnimatedStyle` updates that use commits. The latest values then appear at once, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can also apply during the move.
-
-When React deletes the source, the shared transition takes priority over new exiting animations in its retained subtree. An exiting animation that already runs can finish, but Reanimated keeps its native view until the shared transition ends. Native retention does not keep the React components mounted.
-
-By default, every property that differs between the two views (for example `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor`, `opacity` or the border radius) is animated with a duration of 500 ms using the [`withTiming`](../animations/withTiming.mdx) animation function.
-
-## Usage
-
-To create a shared transition animation between two components on different screens, simply assign the same `sharedTransitionTag` to both components. When you navigate between screens, the shared transition animation will automatically play.
-
-If you want to use more than one shared view on the same screen, be sure to assign a **unique** shared tag to each component.
-
-**Screen A**
-
-```tsx {2}
-<Animated.View
-  sharedTransitionTag="sharedTag"
-  style={{ width: 150, height: 150, backgroundColor: 'green' }}
-/>
-```
-
-**Screen B**
-
-```tsx {2}
-<Animated.View
-  sharedTransitionTag="sharedTag"
-  style={{ width: 100, height: 100, backgroundColor: 'green' }}
-/>
-```
-
-## Videos
-
-To reduce video glitches during the transition:
-
-- On iOS, you can pass the same video player to the video views on both screens to share playback state.
-- On Android, expo-video cannot show one player in two mounted views. Use a separate player on each screen. These players can be at different playback positions, so the video can jump when the target appears. See the [expo-video guidance](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
-
-On Android, use a `TextureView` for video that moves over other content, for example `surfaceType="textureView"` on the expo-video `VideoView`. It draws as part of the view hierarchy, which helps with overlapping views. It can cost more to render than a `SurfaceView` and cannot display DRM content. See the [Android `TextureView` reference](https://developer.android.com/reference/android/view/TextureView). Set the surface type before the transition; do not change it at runtime.
-
-Reanimated does not keep React components or their video-player hooks alive. `useVideoPlayer` releases its player when the component that created it unmounts, even if Reanimated still shows its native view. If navigation removes that component at the start of the transition, its player is released then. An iOS native back gesture or back button can keep the screen mounted until the native transition ends. A JavaScript `goBack()` removes the route from React state before the native transition ends. The Android hardware back button calls `goBack()` in React Navigation, so it also removes the route at once. Do not use the visible native view as proof that its player owner is still mounted. See the [expo-video player lifetime guidance](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
-
-Keep the player alive while any view uses it, including during shared transitions and [exiting animations](../layout-animations/entering-exiting-animations.mdx):
-
-- Create the player in a component that stays mounted, for example above the navigator.
-- Or use `createVideoPlayer` and call `release()` when no view needs the player, including views still animating after React removes them. See [manual player lifetime](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
-
-## Custom animation
-
-You can customize the transition with the `SharedTransition` builder class. The available customization will be extended as the feature matures.
-
-```tsx
-import { SharedTransition } from 'react-native-reanimated';
-
-const transition = SharedTransition.duration(550).springify();
-
-function SharedView() {
+function DetailsScreen() {
   return (
     <Animated.View
-      sharedTransitionTag="reanimatedTransition"
       // highlight-next-line
-      sharedTransitionStyle={transition}
-      style={{ backgroundColor: 'blue', width: 200, height: 100 }}
+      sharedTransitionTag="photo"
+      style={{ width: '100%', height: 300, backgroundColor: '#b58df1' }}
     />
   );
 }
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+
+function App() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="List" component={ListScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
+  );
+}
 ```
 
-To define the animation yourself, use `SharedTransition.custom`. The worklet receives the values of the source view (`current*`), the values of the target view (`target*`) and the window size (`windowWidth`, `windowHeight`), and returns the animations for each property.
+To make a shared element transition:
 
-```tsx
-const transition = SharedTransition.custom((values) => {
-  'worklet';
-  return {
-    width: withSpring(values.targetWidth),
-    height: withSpring(values.targetHeight),
-    originX: withSpring(values.targetOriginX),
-    originY: withSpring(values.targetOriginY),
-  };
-});
-```
+1. Give the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag) to an animated component on each screen.
+1. Wrap each screen in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary). Set `isActive` to `true` on the screen that the user sees. In the example, the [`screenLayout`](https://reactnavigation.org/docs/navigator/#screen-layout) prop of the navigator wraps all of its screens. For other ways to wrap screens, see [Usage with navigation](./screens-and-boundaries.mdx#usage-with-navigation).
 
-The values include `OriginX`, `OriginY`, `Width`, `Height`, `Opacity`, `BackgroundColor`, `Transform` (`{ matrix }`), `TransformOrigin`, `BorderRadius`, `BorderWidth`, `BorderColor` and the shadow properties, each with the `current` and the `target` prefix. Per-corner and per-side border values are included when one of the views sets them. `GlobalOriginX`, `GlobalOriginY` and `TransformMatrix` are kept for compatibility with Reanimated 3, and a returned `transformMatrix` is applied as the `transform`. Every animated property starts from its value in the source view, so animate the transform as a whole, with `transform: [{ matrix }]` or `transformMatrix`. The `custom` callback does not support individual transform operations such as `transform: [{ scale: withTiming(2) }]`.
+When the active boundary changes, Reanimated finds the views with the same tag in the old and the new boundary and runs the transition between them.
 
-### Progress-based animation
+## How it works
 
-On iOS, back navigation (a swipe gesture or the back button) runs a progress-based transition: the shared view follows the progress of the screen transition, and a cancelled swipe returns it to its place. By default every property is interpolated linearly. Use `progressAnimation` to compute the style for a given progress (0-1) yourself:
+During the transition, Reanimated moves the view from the old screen above the screen content and hides the view on the new screen. Then it animates the moving view from its old frame and style to the frame and style of the new view. When the animation ends, the view on the new screen shows in its place.
 
-```tsx
-const transition = SharedTransition.custom((values) => {
-  'worklet';
-  return { width: withSpring(values.targetWidth) };
-}).progressAnimation((values, progress) => {
-  'worklet';
-  return {
-    width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
-  };
-});
-```
+By default, the transition is a 500 ms [`withTiming`](../animations/withTiming.mdx) animation of every property that is different on the two views:
 
-Call `.defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` to use the progress-based animation for every transition. During iOS back navigation, the screen transition controls progress. Otherwise, the builder settings control progress: for example, `.duration(800)` animates progress from 0 to 1 over 800 ms, while `.springify()` uses a spring animation.
+- position and size,
+- `opacity` and `backgroundColor`,
+- `borderRadius`, `borderWidth` and `borderColor`, also per side and per corner,
+- `transform` and `transformOrigin`,
+- `boxShadow` and the `shadow*` properties,
+- on Android, `elevation`.
 
-### Typing separate callbacks
-
-When defining callbacks separately from the builder, use the exported `CustomSharedTransitionAnimation` and `ProgressSharedTransitionAnimation` types:
-
-```tsx
-import {
-  SharedTransition,
-  withSpring,
-  type CustomSharedTransitionAnimation,
-  type ProgressSharedTransitionAnimation,
-} from 'react-native-reanimated';
-
-const customAnimation: CustomSharedTransitionAnimation = (values) => {
-  'worklet';
-  return { width: withSpring(values.targetWidth) };
-};
-
-const progressAnimation: ProgressSharedTransitionAnimation = (values, progress) => {
-  'worklet';
-  return {
-    width: values.currentWidth + progress * (values.targetWidth - values.currentWidth),
-  };
-};
-
-const transition = SharedTransition.custom(customAnimation).progressAnimation(progressAnimation);
-```
-
-### Remarks
-
-Callbacks passed to `custom` and `progressAnimation` must include the `'worklet'` directive. These callbacks are not automatically workletized, whether defined inline or separately.
-
-### Fade content
-
-<Badges version="4.8.0">
-  By default, one view moves and the other view is hidden until the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, the children change at once at the end. Add `fadeContent()` to change them in steps: the moving view stays visible and its frame and style, such as the background, border and shadow, animate to the target as without `fadeContent()`. Its children fade out while it moves, and when it lands the children of the target view fade in.
-</Badges>
-
-```tsx
-const transition = SharedTransition.duration(450).fadeContent();
-
-<Animated.View
-  sharedTransitionTag="item"
-  // highlight-next-line
-  sharedTransitionStyle={transition}
-/>;
-```
-
-- The direct children fade out with the timing or spring of the move and follow the iOS back gesture. A spring fade stops at zero without a rebound. The target fade-in waits until the spring settles.
-- The children of the target view fade in after the move, in half of the configured transition duration. A target child with a pending or running layout animation keeps that animation instead of this fade-in. A direct child that fades and has its own [`entering`](../layout-animations/entering-exiting-animations.mdx) animation plays it instead, and it replaces a layout animation of that child. A running layout animation that it replaces stops, and its callback gets `finished` set to `false`. A layout animation that has not started yet does not run, and its callback does not run. The `entering` animation waits until the view lands, also while the transition waits for a parent shared view. When the view stops being the target without a landing, for example when the navigation goes back, the animation starts at once. If React removes the child before then, the animation does not start and its callback does not run. An `entering` animation of a deeper child plays during the move, while the target view is hidden.
-- A new run uses the fade settings of its source view. A reused moving view keeps the first run's fade settings, including when the new source has different settings. A reversal uses the new source's move timing, but does not enable or disable its content fade. To fade new runs in both directions, give `fadeContent()` to both views.
-- The direct children of the shared views fade. A nested shared view keeps its own opacity. When a direct child holds a nested shared view, that child keeps its opacity and its other children fade instead, down to the nested shared view. A child that is a background, for example an image that fills the view, fades like the other children. A shared view without child views, for example a shared `Image`, does not fade.
-- A direct child with a matching `sharedTransitionTag` can move in its own run and does not fade with its parent. A tagged child with no match fades with its parent. Reanimated does not match untagged children, so a child that appears on both screens also fades. Give matching children, for example an icon, their own shared tag to move them separately.
-- When React removes the source view in the same update that starts the transition, Reanimated keeps the source native view and moves it. Its children fade out during the move. The target children fade in when it lands.
-
-To change the two fades, pass options to `fadeContent()`:
-
-```tsx
-const transition = SharedTransition.duration(450).fadeContent({
-  // highlight-next-line
-  fadeOut: { end: 0.5 },
-  // highlight-next-line
-  fadeIn: { duration: 150 },
-});
-```
-
-- `fadeOut.end` is the point of the move progress, more than 0 and at most 1, at which the children reach opacity 0. A value below 0.000001 works as 0.000001. The progress follows the easing or the spring of the move, so `end: 0.5` is the middle of the distance, but not always the middle of the time. When a target change restarts the move while the children fade out, the fade-out starts from the current opacity and ends at that part of the new move. When the navigation goes back during the move, the children fade in during the full return move, and `end` does not apply.
-- `fadeIn.duration` is the length of the fade-in after the landing, in milliseconds. Without it, the fade-in takes half of the transition duration. `springify()` without a duration sets the transition duration back to the default 500 ms, so then the fade-in takes 250 ms. Pass the duration to `springify(duration)`.
+The view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. To fade the old children out and the new children in, use [`fadeContent()`](./children-of-shared-views.mdx#fadecontent).
 
 ## Example
-
-import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
 
 <ExampleVideo
   sources={{
@@ -247,28 +105,16 @@ ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
 }}
 />
 
-<CollapsibleCode src={SharedElementSrc} showLines={[48, 78]}/>
+<CollapsibleCode src={SharedElementSrc} showLines={[138, 161]}/>
 
-## Current limitations
+## What's next
 
-- Both shared views must use the same native component type. For example, do not pair `Animated.View` with `Animated.Image`, or image components from different libraries. Debug builds assert when the native types differ.
-- React updates to the moving view's own props and layout appear at once when it returns to its parent or the transition restarts. Changes from React state and `useAnimatedStyle` updates that use commits also wait, which can cause a jump. Its children can update during the move. Synchronous UI prop updates can apply during the move.
-- If the target changes only its style during the transition, the moving view does not animate to the new style. The new style appears when the view lands.
-- React can move or reorder the moving view or its ancestors during the transition. The view goes to its new place when the transition ends.
-- A nested shared view that moves inside its parent follows the parent's path. When the two use different timing, it moves relative to the parent, not along its own path on screen. A nested view that finishes first waits inside the parent until the parent lands. If the layout of its target changes while it waits, it moves again with its full duration.
-- A nested shared view moves on its own, above other views, when it is nested on only one of the screens, when its new target after a retarget is outside the parent's target, or when React moves it out of the parent or removes a view between it and the parent. It keeps its frame on screen when it starts moving on its own.
-- A nested shared view does not follow a scroll or a layout animation of a view between it and its moving parent. A view between them with `overflow: hidden` clips it to that view's source bounds.
-- If the layout of the target changes just as the moving view lands, the view can move again to the new layout with the full duration.
-- If React removes the target during a timed transition while the source stays mounted, the move continues to the last target frame. When the move ends, the source jumps back to its own frame. The removed target stays hidden during its exit animation. If the same update makes the source screen active again, for example a JavaScript `goBack()`, the transition reverses instead and the view moves back to the source.
-- On Android, a moving view that gets a new `sharedTransitionTag` and is the source of a new transition in the same update returns to its parent and moves again at once. A content fade frame of the old transition can then arrive late and leave a child faded until the next update of that child.
-- Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
-- The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
-- On iOS you can encounter some issues with the vertical positioning of transitioning views. This is due to issues with header height information propagation.
-- There are some performance bottlenecks, that stem from transforms being recalculated too eagerly.
-- We have to use a workaround for react-native-screens to not keep a snapshot of the transitioning view on the popped screen. Currently the fix is available in 3.19+ versions.
-- Enabling the feature flag causes the `zIndex` of views with exiting animations to change (they are brought to the front). This differs from the current behavior in Reanimated 4.
-- Sometimes on a fast refresh, the transition will run for elements that are on the same screen. It can happen when the navigator is wrapped with a context provider, and the native view that represents the screen changed, so the SET logic was triggered.
+- [Shared transition props](./shared-transition-props.mdx) - how views find their match and which transition they use.
+- [Screens and boundaries](./screens-and-boundaries.mdx) - how to set up screens in stacks, tabs, nested navigators and modals.
+- [`SharedTransition`](./shared-transition.mdx) - how to change the duration, the easing, or to use a spring.
+- [Children of shared views](./children-of-shared-views.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx) - for more control.
+- [Limitations and troubleshooting](./limitations.mdx) - what to know before you release your app.
 
-## Platform Compatibility
+## Platform compatibility
 
 <PlatformCompatibility android ios/>

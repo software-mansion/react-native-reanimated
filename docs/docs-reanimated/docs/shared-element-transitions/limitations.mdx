@@ -1,0 +1,49 @@
+---
+sidebar_position: 8
+title: Limitations and troubleshooting
+sidebar_label: Limitations and troubleshooting
+---
+
+<Badges version="4.8.0">
+  # Limitations and troubleshooting
+</Badges>
+
+## The view does not move
+
+Check these points:
+
+- Both views have the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag), and each tag shows only once on a screen.
+- Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`. With different types, a debug build stops on an assertion. A release build moves the view, but the view takes only the position, the size and the transform of the other view.
+- The tag is on a component with its own native view. A `Text` inside another `Text` has no native view, so it cannot be a shared view.
+- Each screen is in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
+- No boundary that is always active is around the boundaries of your screens.
+- The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
+
+## Updates during the transition
+
+- Changes that React makes to the props or the layout of the moving view itself wait until the transition ends. Then they show at once, which can look like a jump. This includes changes from React state and from `useAnimatedStyle` updates that go through React. The children of the moving view can update during the move.
+- If the target view changes only its style during the transition, the moving view does not animate to the new style. The new style shows when the transition ends. A shared view that waits for its parent (see below) animates to a new style of its target.
+- If the target view moves or changes its size during the transition, the moving view goes to the new place. For a timed transition, if this happens just as the transition ends, the view can move again with the full duration.
+- If React removes the target view during the transition and the source view stays, the view moves to the last place of the target. Then the source view shows in its own place at once. If the same update makes the source screen active again, for example `navigation.goBack()`, the view moves back to the source.
+- A shared view inside another shared view moves inside the moving parent when its target is inside the target of the parent. It follows the path of the parent. When the two use different timing, it moves relative to the parent, not along its own path on screen. If its own transition ends first, it waits inside the parent until the transition of the parent ends. If the layout of its target changes while it waits, it moves again with its full duration.
+- A nested shared view moves on its own, above other views, when it is nested on only one of the screens, when its new target after a retarget is outside the target of the parent, or when React moves it out of the parent or removes a view between it and the parent. It keeps its frame on screen when it starts to move on its own.
+
+## Known issues
+
+- On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that flies to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
+- On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
+- A nested shared view does not follow a scroll or a layout animation of a view between it and its moving parent. A view between them with `overflow: hidden` clips it to the source bounds of that view.
+- During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
+
+## Videos and media
+
+The moving view keeps its own content, for example an image or a video player. To reduce video glitches:
+
+- On iOS, give the same video player to the video views on both screens. Then the playback continues from the same position.
+- On Android, expo-video cannot show one player in two mounted views. Use a separate player on each screen. The two players can be at different positions, so the video can jump when the target shows. See the [expo-video guide](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
+- On Android, use a `TextureView` for a video that moves over other content, for example `surfaceType="textureView"` on the expo-video `VideoView`. A `TextureView` draws as a part of the view hierarchy, so it moves and overlaps like other views. It can cost more to draw and cannot show DRM content. Set the surface type when you create the video view, and do not change it at runtime. See the [Android `TextureView` reference](https://developer.android.com/reference/android/view/TextureView).
+
+Reanimated keeps the native view on screen during the transition, but not the React component that owns it. `useVideoPlayer` releases its player when the component that created it unmounts, also when the view still shows. For example, `navigation.goBack()` or the Android back button can unmount the screen while its shared view still moves. To keep the player alive:
+
+- Create the player in a component that stays mounted, for example above the navigator.
+- Or create it with `createVideoPlayer` and call `release()` when no view needs it any more.

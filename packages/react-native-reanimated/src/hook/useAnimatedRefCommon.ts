@@ -19,7 +19,8 @@ type ObserverRun = {
 };
 
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
-  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper,
+  onDetach?: () => void
 ): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, ObserverRun>>(
     new Map()
@@ -55,10 +56,37 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
             });
           });
         }
+      } else if (ref === null) {
+        // React calls a callback ref with null when the element unmounts.
+        // Calling the ref with no argument only reads the wrapper, so it must
+        // not detach.
+        // Drop the instance so that this ref, which the owner's closures often
+        // keep reachable, does not retain the unmounted component and
+        // everything its props reach.
+        wrapperRef.current = null;
+        fun.getTag = () => null;
+        fun.current = null;
+        if (observers.size) {
+          queueMicrotask(cleanUpObserversIfDetached);
+        }
+        onDetach?.();
       }
 
       return wrapperRef.current;
     });
+
+    const cleanUpObserversIfDetached = () => {
+      if (fun.current !== null) {
+        return;
+      }
+      observers.forEach(({ tag, cleanup }, observer) => {
+        if (tag === null) {
+          return;
+        }
+        cleanup?.();
+        observers.set(observer, { tag: null, cleanup: undefined });
+      });
+    };
 
     fun.observe = (observer: AnimatedRefObserver) => {
       // Call observer immediately to get the initial value
@@ -72,6 +100,7 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
     };
 
     fun.current = null;
+    fun.getTag = () => null;
     resultRef.current = fun;
   }
 

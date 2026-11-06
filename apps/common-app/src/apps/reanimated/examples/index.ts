@@ -878,7 +878,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: ModalsExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken header height
+      ios: true,
       android: true,
     },
   },
@@ -905,7 +905,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: TransitionRestartExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // goes too far up for some reason?
+      ios: false, // the restarted transition targets the new screen before its header height is known
       android: true,
     },
   },
@@ -933,7 +933,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: NestedRotationExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken for modals
+      ios: false, // the rotation reverses for a few frames when the modal is dismissed
       android: false, // broken transform, I think due to skew
     },
   },
@@ -942,7 +942,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: BorderRadiiExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken on back gesture
+      ios: true,
       android: true,
     },
   },

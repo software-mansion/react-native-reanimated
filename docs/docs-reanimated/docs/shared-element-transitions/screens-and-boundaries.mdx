@@ -1,0 +1,268 @@
+---
+sidebar_position: 3
+title: Screens and boundaries
+sidebar_label: Screens and boundaries
+---
+
+import Boundary from '@site/src/examples/shared-element-transitions/Boundary';
+import BoundarySrc from '!!raw-loader!@site/src/examples/shared-element-transitions/Boundary.code';
+
+<Badges version="4.8.0">
+  # Screens and boundaries
+</Badges>
+
+Shared Element Transitions run between screens. A boundary tells Reanimated where a screen is: you put a boundary around the content of each screen, and you tell each boundary if its screen is the one that the user sees. When the active boundary changes, Reanimated runs a transition between the views with the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag) in the old and the new boundary.
+
+With boundaries, Shared Element Transitions work with any navigation setup: stacks, tabs, nested navigators, modals, or screens that you show without a navigator.
+
+## `SharedTransitionBoundary`
+
+The component that marks a screen for Shared Element Transitions.
+
+### Reference
+
+```tsx
+import { useIsFocused } from '@react-navigation/native';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function DetailsScreen() {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      <Animated.View sharedTransitionTag="photo" />
+      {/* the rest of the screen */}
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  interface SharedTransitionBoundaryProps {
+    isActive: boolean;
+    children?: ReactNode;
+  }
+  ```
+</details>
+
+### Arguments
+
+#### `isActive`
+
+A boolean that tells if the user sees this screen. With React Navigation, use the value of [`useIsFocused()`](https://reactnavigation.org/docs/use-is-focused). When the active boundary changes, the transition starts.
+
+#### `children` <Optional/>
+
+The content of the screen. `SharedTransitionBoundary` does not change the layout: it renders with `display: 'contents'`.
+
+### Example
+
+<InteractiveExample src={BoundarySrc} component={Boundary} larger/>
+
+## Usage with navigation
+
+One boundary should contain all shared views of its screen, so wrap whole screens, not single views. Set `isActive` to `true` only while the screen is focused.
+
+You can wrap screens in three ways:
+
+- **All screens of a navigator**, with `screenLayout`. Use it when the screens of the navigator are normal screens, not other navigators.
+- **One screen component**, with a higher-order component. Use it when only some screens have shared views, or when the screens of a navigator are other navigators.
+- **The content of a screen**, by hand. Use it when a screen needs its own `isActive` value, for example with a React Native [`Modal`](#react-native-modal).
+
+### All screens of a navigator
+
+The [`screenLayout`](https://reactnavigation.org/docs/navigator/#screen-layout) prop of a React Navigation navigator wraps each of its screens:
+
+```tsx
+import { useIsFocused } from '@react-navigation/native';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="List" component={ListScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+`screenLayout` works the same way with tabs and other navigators. To wrap only some screens, use the [`layout`](https://reactnavigation.org/docs/screen/#layout) prop of each `Stack.Screen`.
+
+### One screen component
+
+A small higher-order component wraps one screen:
+
+```tsx
+function withSharedTransitionBoundary<P extends object>(
+  Screen: React.ComponentType<P>
+) {
+  return function ScreenWithBoundary(props: P) {
+    const isFocused = useIsFocused();
+
+    return (
+      <SharedTransitionBoundary isActive={isFocused}>
+        <Screen {...props} />
+      </SharedTransitionBoundary>
+    );
+  };
+}
+
+// highlight-start
+const List = withSharedTransitionBoundary(ListScreen);
+const Details = withSharedTransitionBoundary(DetailsScreen);
+// highlight-end
+
+function App() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="List" component={List} />
+      <Stack.Screen name="Details" component={Details} />
+    </Stack.Navigator>
+  );
+}
+```
+
+Create each wrapped screen outside of components, as in the example. A new component on each render mounts the screen again.
+
+### The content of a screen
+
+You can also put the boundary in the screen itself. Make it the outer element of the screen:
+
+```tsx
+function DetailsScreen() {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      <Header />
+      <Animated.View sharedTransitionTag="photo" style={styles.photo} />
+      <Description />
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+```
+
+### Nested navigators
+
+Reanimated looks for the active boundary from the root of the app, and it does not look for other boundaries inside an active boundary. A boundary around a navigator stays active while any of its screens shows, so it hides the boundaries of these screens.
+
+For this reason, do not use `screenLayout` on a navigator whose screens are other navigators. Use it on the inner navigators, and wrap the other screens one by one:
+
+```tsx
+function HomeStack() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="Feed" component={FeedScreen} />
+      <Stack.Screen name="Post" component={PostScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// highlight-next-line
+const Settings = withSharedTransitionBoundary(SettingsScreen);
+
+function App() {
+  return (
+    // no screenLayout here: HomeStack is a navigator
+    <Tab.Navigator>
+      <Tab.Screen name="HomeStack" component={HomeStack} />
+      <Tab.Screen name="Settings" component={Settings} />
+    </Tab.Navigator>
+  );
+}
+```
+
+### Without a navigator
+
+You do not need a navigator. Set `isActive` from your own state:
+
+```tsx
+function Gallery() {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <>
+      <SharedTransitionBoundary isActive={selected === null}>
+        <Grid onSelect={setSelected} />
+      </SharedTransitionBoundary>
+      {selected !== null && (
+        <SharedTransitionBoundary isActive>
+          <Details id={selected} onClose={() => setSelected(null)} />
+        </SharedTransitionBoundary>
+      )}
+    </>
+  );
+}
+```
+
+### Modals
+
+During a transition to or from a modal, the moving view shows above the modal.
+
+#### Native stack modals
+
+A screen that a native stack presents as a modal is a normal screen of the navigator. Wrap it in the same way as the other screens:
+
+```tsx
+<Stack.Navigator
+  screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+  <Stack.Screen name="List" component={ListScreen} />
+  <Stack.Screen
+    name="Photo"
+    component={PhotoScreen}
+    // highlight-next-line
+    options={{ presentation: 'formSheet' }}
+  />
+</Stack.Navigator>
+```
+
+On iOS, when the user closes a sheet with a swipe, the view follows the swipe. If the user cancels the swipe, the view goes back to the sheet.
+
+#### React Native `Modal`
+
+A React Native [`Modal`](https://reactnative.dev/docs/modal) is not a screen, so `useIsFocused()` does not change when it opens. Set `isActive` of both boundaries from the state of the modal:
+
+```tsx
+<SharedTransitionBoundary isActive={isFocused && !isModalVisible}>
+  {/* screen content */}
+</SharedTransitionBoundary>
+<Modal visible={isModalVisible}>
+  <SharedTransitionBoundary isActive={isModalVisible}>
+    {/* modal content */}
+  </SharedTransitionBoundary>
+</Modal>
+```
+
+## Remarks
+
+- Reanimated runs a transition only between two boundaries. A view outside of all boundaries does not take part.
+- Only one boundary should be active at a time. If more boundaries are active, Reanimated uses the one that React renders last.
+- When a new boundary becomes active during a transition, for example when the user goes back before the transition ends, the view turns and moves to its match in the new boundary. If the new boundary has no match, the transition stops and the views show in their own places at once.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios/>

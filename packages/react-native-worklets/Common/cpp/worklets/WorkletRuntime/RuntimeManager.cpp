@@ -56,9 +56,9 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(RuntimeData::uiRuntimeId);
 }
 
-size_t RuntimeManager::getAliveRuntimeCount() {
+bool RuntimeManager::isRuntimeAlive(RuntimeData::RuntimeId runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
-  return weakRuntimes_.size();
+  return weakRuntimes_.contains(runtimeId);
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
