@@ -227,6 +227,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   } else if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
+    if (transition_ && !mutations.empty()) {
+      followProgressTargets(propsParserContext);
+    }
     activeBoundaryMayHaveChanged_ = true;
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId_];

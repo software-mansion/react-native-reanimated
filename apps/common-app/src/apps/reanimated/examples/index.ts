@@ -914,7 +914,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: ChangeThemeSharedExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // s2 -> change theme -> go back (progress) will have wrong target
+      ios: true,
       android: true,
     },
   },
