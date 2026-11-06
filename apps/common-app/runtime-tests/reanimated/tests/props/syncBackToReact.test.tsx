@@ -10,11 +10,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
+  processColor,
   useAnimatedProps,
+  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import type { SettledUpdate } from 'react-native-reanimated/lib/typescript/commonTypes';
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
 
 import {
   createTestValue,
@@ -26,7 +30,9 @@ import {
   wait,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { Operation } from '../../../ReJest/types';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const NOTIFICATION_NAME = 'SYNC_BACK_ANIMATION_FINISHED';
 // Native sets a view to settled after SETTLED_ANIMATION_THRESHOLD_MS (1000 ms)
@@ -46,6 +52,10 @@ const SECOND_WRITE_NOTIFICATION_NAME = 'SYNC_BACK_SECOND_WRITE_FINISHED';
 // that, with a margin for a slow emulator.
 const SECOND_WRITE_DELAY_MS = 4000;
 const SECOND_WRITE_BORDER_RADIUS = 20;
+const SETTLED_BLUR_RADIUS = 8;
+// processBoxShadow of Reanimated adds this color when a shadow has none.
+const STYLE_BUILDER_DEFAULT_SHADOW_COLOR = '#000000';
+const SETTLED_GRADIENT_ANGLE = 225;
 
 type Gradient = Exclude<
   NonNullable<ViewStyle['backgroundImage']>,
@@ -196,7 +206,10 @@ function blockJSThread(durationMs: number) {
   }
 }
 
-type ScrollBoxAnimatedProps = ScrollViewProps & { borderRadius?: number };
+type StyleBuilderValues = Pick<ViewStyle, 'boxShadow' | 'backgroundImage'>;
+
+type ScrollBoxAnimatedProps = ScrollViewProps &
+  StyleBuilderValues & { borderRadius?: number };
 
 type ReceivedProps = {
   props: ScrollBoxAnimatedProps;
@@ -367,6 +380,302 @@ describe('sync of a value written by both origins after native removed the settl
     }
   );
 });
+
+function LastWriteComponent({
+  getValues,
+  lastWriteOrigin,
+  onProps,
+}: {
+  getValues: (progress: number) => StyleBuilderValues;
+  lastWriteOrigin: WriteOrigin;
+  onProps: (received: ReceivedProps) => void;
+}) {
+  const styleProgress = useSharedValue(0);
+  const propsProgress = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => getValues(styleProgress.value));
+  const animatedProps = useAnimatedProps<ScrollBoxAnimatedProps>(() =>
+    getValues(propsProgress.value)
+  );
+
+  useEffect(() => {
+    const [firstProgress, lastProgress] =
+      lastWriteOrigin === 'animatedStyle'
+        ? [propsProgress, styleProgress]
+        : [styleProgress, propsProgress];
+    firstProgress.value = withTiming(1, { duration: 200 }, () => {
+      lastProgress.value = withTiming(1, { duration: 200 }, () => {
+        notify(NOTIFICATION_NAME);
+      });
+    });
+  }, [styleProgress, propsProgress, lastWriteOrigin]);
+
+  return (
+    <View style={styles.container}>
+      <AnimatedScrollBox
+        animatedProps={animatedProps}
+        style={[styles.box, animatedStyle]}
+        onProps={onProps}
+      />
+    </View>
+  );
+}
+
+async function renderAndWaitForLastWriteSyncBack(
+  getValues: (progress: number) => StyleBuilderValues,
+  lastWriteOrigin: WriteOrigin
+) {
+  const [received, setReceived] = createTestValue<ReceivedProps>({
+    props: {},
+    style: {},
+  });
+
+  await render(
+    <LastWriteComponent
+      getValues={getValues}
+      lastWriteOrigin={lastWriteOrigin}
+      onProps={setReceived}
+    />
+  );
+  await waitForNotification(NOTIFICATION_NAME);
+  await wait(SYNC_BACK_DELAY_MS);
+
+  return received.value as ReceivedProps;
+}
+
+// Android throws when `useAnimatedProps` sends a color string in a boxShadow
+// or a backgroundImage string to a View. A ScrollView ignores backgroundImage.
+function getBoxShadow(progress: number): StyleBuilderValues {
+  'worklet';
+  return {
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 4,
+        blurRadius: interpolate(progress, [0, 1], [1, SETTLED_BLUR_RADIUS]),
+        spreadDistance: 0,
+      },
+    ],
+  };
+}
+
+function getBackgroundImage(progress: number): StyleBuilderValues {
+  'worklet';
+  return {
+    backgroundImage: `linear-gradient(${interpolate(progress, [0, 1], [45, SETTLED_GRADIENT_ANGLE])}deg, #ff0000, #0000ff)`,
+  };
+}
+
+describe('sync of a value that only the style props builder processes, written by both origins', () => {
+  test('React receives a boxShadow it can process as a prop and inside style when animatedStyle wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBoxShadow,
+      'animatedStyle'
+    );
+
+    for (const boxShadow of [props.boxShadow, style.boxShadow]) {
+      const [shadow] = boxShadow as BoxShadowValue[];
+      expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+      expect(typeof shadow.color).toBe('string');
+      expect(shadow.color as string).toBe(
+        STYLE_BUILDER_DEFAULT_SHADOW_COLOR,
+        ComparisonMode.COLOR
+      );
+    }
+  });
+
+  test('React receives a boxShadow unchanged as a prop and inside style when animatedProps wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBoxShadow,
+      'animatedProps'
+    );
+
+    for (const boxShadow of [props.boxShadow, style.boxShadow]) {
+      const [shadow] = boxShadow as BoxShadowValue[];
+      expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+      expect('color' in shadow).toBe(false);
+    }
+  });
+
+  test('React receives a backgroundImage it can process as a prop and inside style when animatedStyle wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBackgroundImage,
+      'animatedStyle'
+    );
+
+    for (const backgroundImage of [
+      props.backgroundImage,
+      style.backgroundImage,
+    ]) {
+      expect(Array.isArray(backgroundImage)).toBe(true);
+      const [linear] = backgroundImage as Gradient[];
+      expect((linear as { direction?: string }).direction as string).toBe(
+        `${SETTLED_GRADIENT_ANGLE}deg`
+      );
+      expect(typeof linear.colorStops[0].color).toBe('string');
+    }
+  });
+
+  test('React receives a backgroundImage unchanged as a prop and inside style when animatedProps wrote last', async () => {
+    const { props, style } = await renderAndWaitForLastWriteSyncBack(
+      getBackgroundImage,
+      'animatedProps'
+    );
+
+    const settledBackgroundImage = getBackgroundImage(1).backgroundImage;
+    expect(props.backgroundImage as string).toBe(
+      settledBackgroundImage as string
+    );
+    expect(style.backgroundImage as string).toBe(
+      settledBackgroundImage as string
+    );
+  });
+});
+
+function PendingWriteComponent({
+  onReady,
+}: {
+  onReady: (
+    shadowNodeWrapper: NonNullable<Operation['shadowNodeWrapper']>,
+    tag: number
+  ) => void;
+}) {
+  const ref = useAnimatedRef<ComponentRef<typeof ScrollView>>();
+
+  useEffect(() => {
+    onReady(
+      ref() as NonNullable<Operation['shadowNodeWrapper']>,
+      ref.getTag!()!
+    );
+  }, [onReady, ref]);
+
+  return <Animated.ScrollView ref={ref} style={styles.box} />;
+}
+
+describe('sync of a pending value written by a different origin', () => {
+  test.each<WriteOrigin>(['animatedStyle', 'animatedProps'])(
+    'defers the snapshot until the pending %s write reaches the registry',
+    async (lastWriteOrigin) => {
+      let shadowNodeWrapper: NonNullable<Operation['shadowNodeWrapper']>;
+      let tag = -1;
+      await render(
+        <PendingWriteComponent
+          onReady={(wrapper, viewTag) => {
+            shadowNodeWrapper = wrapper;
+            tag = viewTag;
+          }}
+        />
+      );
+      const written = createSynchronizable(false);
+      const released = createSynchronizable(false);
+      const lastWriteIsStyle = lastWriteOrigin === 'animatedStyle';
+
+      try {
+        await runOnUIBlocking(() => {
+          'worklet';
+          const values = getNativeBoxShadow(0, !lastWriteIsStyle);
+          global._updateProps([
+            {
+              name: 'ScrollView',
+              shadowNodeWrapper,
+              updates: values,
+              isAnimatedProps: lastWriteIsStyle,
+            },
+          ]);
+          global._maybeFlushUIUpdatesQueue();
+        });
+        blockJSThread(SYNC_BACK_DELAY_MS);
+        const firstUpdate = getSettledUpdates(tag).find(
+          (update) => update.viewTag === tag
+        );
+        expect(firstUpdate !== undefined).toBe(true);
+
+        scheduleOnUI(() => {
+          'worklet';
+          const values = getNativeBoxShadow(1, lastWriteIsStyle);
+          global._updateProps([
+            {
+              name: 'ScrollView',
+              shadowNodeWrapper,
+              updates: values,
+              isAnimatedProps: !lastWriteIsStyle,
+            },
+          ]);
+          written.setBlocking(true);
+          const deadline = performance.now() + 5000;
+          while (!released.getBlocking() && performance.now() < deadline) {
+            // Keep the pending batch on the UI thread until JS reads it.
+          }
+          global._maybeFlushUIUpdatesQueue();
+        });
+        await Promise.resolve();
+        const deadline = performance.now() + 3000;
+        while (!written.getBlocking() && performance.now() < deadline) {
+          // Keep the automatic sync timer from reading the registry.
+        }
+        expect(written.getBlocking()).toBe(true);
+        const pendingUpdates = getSettledUpdates(tag).filter(
+          (update) => update.viewTag === tag
+        );
+        released.setBlocking(true);
+
+        expect(pendingUpdates.length).toBe(0);
+        const flushDeadline = performance.now() + 3000;
+        let flushedUpdate: SettledUpdate | undefined;
+        do {
+          flushedUpdate = getSettledUpdates(tag).find(
+            (update) => update.viewTag === tag
+          );
+        } while (!flushedUpdate && performance.now() < flushDeadline);
+        expect(flushedUpdate !== undefined).toBe(true);
+        if (flushedUpdate) {
+          expect(
+            flushedUpdate.keysLastWrittenByAnimatedStyle.includes('boxShadow')
+          ).toBe(lastWriteIsStyle);
+          for (const values of [flushedUpdate.props, flushedUpdate.style]) {
+            const [shadow] = values.boxShadow as BoxShadowValue[];
+            expect(shadow.blurRadius as number).toBe(SETTLED_BLUR_RADIUS);
+            expect('color' in shadow).toBe(lastWriteIsStyle);
+            if (lastWriteIsStyle) {
+              expect(typeof shadow.color).toBe('number');
+            }
+          }
+        }
+      } finally {
+        released.setBlocking(true);
+        await runOnUIBlocking(() => {
+          'worklet';
+          global._maybeFlushUIUpdatesQueue();
+        });
+      }
+    }
+  );
+});
+
+function getSettledUpdates(tag: number): SettledUpdate[] {
+  return (
+    global.__reanimatedModuleProxy.getSettledUpdates as (
+      registeredViewTags: number[]
+    ) => SettledUpdate[]
+  )([tag]);
+}
+
+function getNativeBoxShadow(progress: number, isAnimatedStyle: boolean) {
+  'worklet';
+  const shadow = {
+    offsetX: 0,
+    offsetY: 4,
+    blurRadius: interpolate(progress, [0, 1], [1, SETTLED_BLUR_RADIUS]),
+    spreadDistance: 0,
+  };
+  return {
+    boxShadow: [
+      isAnimatedStyle
+        ? { ...shadow, color: processColor(STYLE_BUILDER_DEFAULT_SHADOW_COLOR) }
+        : shadow,
+    ],
+  };
+}
 
 const styles = StyleSheet.create({
   container: {
