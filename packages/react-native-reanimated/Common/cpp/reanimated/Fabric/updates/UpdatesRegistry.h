@@ -9,6 +9,7 @@
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -50,7 +51,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
-  const folly::dynamic *findProp(Tag tag, const char *propName) const;
+  std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const;
 #ifdef ANDROID
   void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
 #endif

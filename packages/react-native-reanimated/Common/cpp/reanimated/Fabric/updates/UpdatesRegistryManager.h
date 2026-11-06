@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -52,7 +53,7 @@ class UpdatesRegistryManager {
   std::vector<Tag> handleNodeRemovals();
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
-  const folly::dynamic *findRegistryProp(Tag viewTag, const char *propName) const;
+  std::optional<folly::dynamic> getRegistryProp(Tag viewTag, const char *propName) const;
 #ifdef ANDROID
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target, PropNamePredicate isIncluded);
 #endif

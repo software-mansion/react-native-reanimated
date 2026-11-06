@@ -1389,7 +1389,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
           return std::nullopt;
         }
         auto lock = strongThis->updatesRegistryManager_->lock();
-        const auto opacity = strongThis->updatesRegistryManager_->findRegistryProp(tag, "opacity");
+        const auto opacity = strongThis->updatesRegistryManager_->getRegistryProp(tag, "opacity");
         if (opacity && opacity->isNull()) {
           return defaultViewOpacity();
         }
