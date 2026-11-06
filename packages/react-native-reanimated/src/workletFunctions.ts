@@ -77,7 +77,11 @@ export const runOnJS: typeof runOnJSFromWorklets =
 export const runOnUI: typeof runOnUIFromWorklets =
   (worklet) =>
   (...args) =>
-    queueMicrotask(() => (worklet as (...args: unknown[]) => unknown)(...args));
+    queueMicrotask(() =>
+      requestAnimationFrame(() =>
+        (worklet as (...args: unknown[]) => unknown)(...args)
+      )
+    );
 
 /**
  * @deprecated Please use [`scheduleOnRuntime` from
