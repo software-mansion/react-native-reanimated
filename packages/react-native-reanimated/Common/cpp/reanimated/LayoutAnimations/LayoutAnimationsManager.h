@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -68,7 +69,7 @@ class LayoutAnimationsManager {
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
   std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
-  void startLayoutAnimation(
+  bool startLayoutAnimation(
       jsi::Runtime &rt,
       const int tag,
       const LayoutAnimationType type,
@@ -80,8 +81,14 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
+  static bool
+  runGuardedOnUIRuntime(jsi::Runtime &rt, const char *name, const std::function<void(jsi::Runtime &)> &call);
 
  private:
+  static bool callLayoutAnimationsManager(
+      jsi::Runtime &rt,
+      const char *methodName,
+      const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;

@@ -158,7 +158,7 @@ void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(const bool flushedDe
 }
 #endif
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif

@@ -366,7 +366,10 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
     values.setProperty(uiRuntime_, "windowHeight", window_.height);
     const auto progressAnimation =
         layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_).asFunction(uiRuntime_);
-    const auto style = progressAnimation.call(uiRuntime_, values, transition_->progress);
+    auto style = jsi::Value::undefined();
+    LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime_, "progressAnimation", [&](jsi::Runtime &rt) {
+      style = progressAnimation.call(rt, values, transition_->progress);
+    });
     if (style.isObject()) {
       progressLayoutAnimation(tag, style.asObject(uiRuntime_));
     }
