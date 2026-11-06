@@ -411,7 +411,6 @@ void LayoutAnimationsProxy::updateLightTree(
   ReanimatedSystraceSection s("updateLightTree");
   auto &filteredMutations = transaction.filteredMutations;
   std::unordered_set<Tag> inserted, moved, deleted;
-  std::unordered_map<Tag, IndexCursors> indexCursors;
   std::unordered_map<Tag, ShadowView> updatedViews;
   std::unordered_map<Tag, std::vector<AncestorOrigin>> oldChains;
   std::unordered_set<Tag> removedSubtreeRoots;
@@ -515,8 +514,10 @@ void LayoutAnimationsProxy::updateLightTree(
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
         react_native_assert(node->state == LIVE && "React inserts a view whose removal is withheld");
         auto &parent = lightNodes_[mutation.parentTag];
-        const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
+        auto &cursors = transaction.indexCursors[mutation.parentTag];
+        const auto hostIndex = parent->toHostIndexForInsert(mutation.index, cursors);
         parent->children.insert(parent->children.begin() + hostIndex, node);
+        cursors.remove = {};
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
         bool hasSharedTransition = false;
@@ -577,7 +578,9 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
         react_native_assert(parent && "Remove mutation from an unknown parent");
-        const auto hostIndex = parent->toHostIndexForRemove(mutation.index, indexCursors[parentTag]);
+        auto &cursors = transaction.indexCursors[parentTag];
+        const auto hostIndex = parent->toHostIndexForRemove(mutation.index, cursors);
+        cursors.insert = {};
         react_native_assert(
             hostIndex < static_cast<int>(parent->children.size()) &&
             parent->children[hostIndex]->current.tag == mutation.oldChildShadowView.tag &&
@@ -837,6 +840,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(
   react_native_assert(node->state == DECISION_PENDING && "A subtree that does not animate stays DECISION_PENDING");
   const auto hostIndex = parent->removeChild(node);
   react_native_assert(hostIndex != -1 && "Removed node not found in its parent");
+  transaction.indexCursors.erase(parent->current.tag);
   node->setExitingState(TORN_DOWN);
   unmapLightNode(node);
   cancelLayoutAnimation(node->current.tag);
@@ -1006,6 +1010,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     TransactionMeta &transaction,
     StartAnimationsRecursivelyConfig config) const {
   react_native_assert(node->state == DECISION_PENDING && "Subtree removal of a view that React does not delete");
+  transaction.indexCursors.erase(node->current.tag);
   auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop, defersTeardown] = config;
   auto &mutations = defersTeardown ? transaction.teardownMutations : transaction.filteredMutations;
   if (isRNSScreenOrStack(node)) {
