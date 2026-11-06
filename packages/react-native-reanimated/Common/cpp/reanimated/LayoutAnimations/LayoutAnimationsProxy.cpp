@@ -327,6 +327,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   holdFramesUntilBatchIsQueued(filteredMutations);
   keepCarriersDetachedUntilFramesAreQueued(filteredMutations);
 #endif
+  eraseFinishedSharedTransitionRuns();
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
@@ -1313,7 +1314,6 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     sharedTransitionRuns_.clear();
-    activeSharedTransitionCarriers_.clear();
 #ifdef __APPLE__
     react_native_assert(!carrierOverlay_ && "The last pull of a surface deletes its overlay");
 #endif
