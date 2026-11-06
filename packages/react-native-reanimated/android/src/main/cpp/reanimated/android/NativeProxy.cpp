@@ -206,6 +206,22 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag) {
+  static const auto method = getJniMethod<jni::local_ref<jni::JArrayFloat>(int)>("obtainMountedViewProps");
+  auto values = method(javaPart_.get(), tag);
+  if (!values) {
+    return std::nullopt;
+  }
+  const auto region = values->getRegion(0, 5);
+  return MountedViewProps{
+      .x = region[0],
+      .y = region[1],
+      .width = region[2],
+      .height = region[3],
+      .opacity = region[4],
+  };
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -389,6 +405,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
+  auto obtainMountedViewPropsFunction = bindThis(&NativeProxy::obtainMountedViewProps);
+
   auto platformTransitionBackend = makePlatformTransitionBackend();
 
   return {
@@ -404,6 +422,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       maybeFlushUiUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
 }
