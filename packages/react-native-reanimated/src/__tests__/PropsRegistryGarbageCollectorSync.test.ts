@@ -59,6 +59,7 @@ describe('PropsRegistryGarbageCollector.syncPropsBackToReact', () => {
         viewTag: VIEW_TAG,
         props: { scrollEnabled: false },
         style: { opacity: 0 },
+        keysLastWrittenByAnimatedStyle: ['opacity'],
       },
     ]);
 

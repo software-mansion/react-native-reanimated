@@ -17,6 +17,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
+  /// Skips tags with updates not yet flushed into the registry.
   /// Also evicts entries that have already been synced to React — by the time
   /// of the next call, the corresponding `settledProps` state is guaranteed to
   /// be committed, so the registry entries are redundant. Skips views that JS
@@ -30,10 +31,15 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
  private:
   static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
 
+  struct KeyOrigins {
+    bool writtenByAnimatedProps = false;
+    bool writtenByAnimatedStyle = false;
+    bool lastWrittenByAnimatedStyle = false;
+  };
+
   struct WriteHistory {
     double lastWriteTimestamp = 0;
-    std::unordered_set<std::string> animatedPropsKeys;
-    std::unordered_set<std::string> animatedStyleKeys;
+    std::unordered_map<std::string, KeyOrigins> keyOrigins;
   };
 
   // Kept after eviction of the registry entry, until `removeTag`. Each sync
