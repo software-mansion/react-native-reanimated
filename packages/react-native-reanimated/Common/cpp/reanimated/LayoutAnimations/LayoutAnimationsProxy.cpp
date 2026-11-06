@@ -1311,6 +1311,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     sharedTransitionRuns_.clear();
+    activeSharedTransitionCarriers_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);
     }
@@ -1542,8 +1543,7 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // also restores the content of the carrier, so the frames of its content keep it too.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
   const bool hasCarriers = !detachedCarriers_.empty() ||
-      std::ranges::any_of(
-          activeSharedTransitionRuns(), [](const SharedTransitionRun &run) { return run.carrier->isNestedCarrier; });
+      std::ranges::any_of(activeSharedTransitionRuns(), [](const auto &run) { return run.carrier->isNestedCarrier; });
   if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }

@@ -321,7 +321,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
     for (const auto carrierTag : carrierTagsOfRuns(SharedTransitionLifecycle::ACTIVE)) {
       auto *run = sharedTransitionRun(carrierTag, SharedTransitionLifecycle::ACTIVE);
       if (run && run->driver == SharedTransitionDriver::GESTURE) {
-        finishSharedTransition(*run, transaction, propsParserContext, transition_->state == TransitionState::END);
+        finishSharedTransition(carrierTag, transaction, propsParserContext, transition_->state == TransitionState::END);
       }
     }
     if (transition_->state == TransitionState::END) {
@@ -438,7 +438,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         finishNestedSharedTransitions(carrier, transaction, propsParserContext, false);
         if (auto *remainingRun = findRunOfCarrier(carrier)) {
           attachCarrier(*remainingRun, transaction.filteredMutations, propsParserContext);
-          sharedTransitionRuns_.erase(tag);
+          eraseSharedTransitionRun(tag);
         }
       }
       run = nullptr;
@@ -449,13 +449,15 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     // A view carries one run. Its shared tag can change while it carries the run of the old tag.
     // On Android, a frame of the old run can still be outside the mount queue here.
     if (auto *carried = carrier->isCarrier() ? runOfCarrier(carrier) : nullptr) {
-      finishSharedTransition(*carried, transaction, propsParserContext);
+      finishSharedTransition(carried->carrier->current.tag, transaction, propsParserContext);
     }
     const auto carrierTag = carrier->current.tag;
     react_native_assert(!sharedTransitionRuns_.contains(carrierTag) && "A view carries one run");
+    react_native_assert(!activeSharedTransitionCarriers_.contains(sharedTag) && "Shared tag already has an active run");
     run = &sharedTransitionRuns_
                .insert_or_assign(carrierTag, SharedTransitionRun{.sharedTag = sharedTag, .carrier = carrier})
                .first->second;
+    activeSharedTransitionCarriers_.insert_or_assign(sharedTag, carrierTag);
     if (contentFade) {
       run->contentFade = ContentFade{.options = *contentFade, .range = {1, 1}};
     }
@@ -1027,14 +1029,26 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     if (hasUnqueuedCarrierFrame(carrierTag)) {
       retireSharedTransition(*run);
     } else {
-      finishSharedTransition(*run, transaction, propsParserContext);
+      finishSharedTransition(carrierTag, transaction, propsParserContext);
     }
   }
 }
 
 void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run) const {
   react_native_assert(run.lifecycle == SharedTransitionLifecycle::ACTIVE && "The run already retires");
+  activeSharedTransitionCarriers_.erase(run.sharedTag);
   run.lifecycle = SharedTransitionLifecycle::RETIRING;
+}
+
+void LayoutAnimationsProxy::eraseSharedTransitionRun(const Tag carrierTag) const {
+  const auto it = sharedTransitionRuns_.find(carrierTag);
+  if (it == sharedTransitionRuns_.end()) {
+    return;
+  }
+  if (it->second.lifecycle == SharedTransitionLifecycle::ACTIVE) {
+    activeSharedTransitionCarriers_.erase(it->second.sharedTag);
+  }
+  sharedTransitionRuns_.erase(it);
 }
 
 void LayoutAnimationsProxy::finishRetiringSharedTransitions(
@@ -1047,7 +1061,7 @@ void LayoutAnimationsProxy::finishRetiringSharedTransitions(
   for (const auto carrierTag : carrierTagsOfRuns(SharedTransitionLifecycle::RETIRING)) {
     auto *run = sharedTransitionRun(carrierTag, SharedTransitionLifecycle::RETIRING);
     if (run && !hasUnqueuedCarrierFrame(carrierTag)) {
-      finishSharedTransition(*run, transaction, propsParserContext, false);
+      finishSharedTransition(carrierTag, transaction, propsParserContext, false);
     }
   }
 }
@@ -1100,7 +1114,7 @@ void LayoutAnimationsProxy::removeFromParent(
         ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, parent->hostIndex(position)));
   }
   if (carried) {
-    sharedTransitionRuns_.erase(node->current.tag);
+    eraseSharedTransitionRun(node->current.tag);
   }
   if (parent) {
     parent->removeChild(node);
@@ -1207,12 +1221,10 @@ SharedTransitionRun *LayoutAnimationsProxy::findRunOfCarrier(const std::shared_p
 }
 
 SharedTransitionRun *LayoutAnimationsProxy::activeSharedTransitionRun(const SharedTag &sharedTag) const {
-  for (auto &run : activeSharedTransitionRuns()) {
-    if (run.sharedTag == sharedTag) {
-      return &run;
-    }
-  }
-  return nullptr;
+  const auto it = activeSharedTransitionCarriers_.find(sharedTag);
+  return it == activeSharedTransitionCarriers_.end()
+      ? nullptr
+      : sharedTransitionRun(it->second, SharedTransitionLifecycle::ACTIVE);
 }
 
 SharedTransitionRun *LayoutAnimationsProxy::sharedTransitionRun(
@@ -1590,7 +1602,7 @@ void LayoutAnimationsProxy::finishEndedSharedTransitions(
     }
     const auto blocker = landingBlocker(*run, flushStructuralMutations, coveringViews);
     if (blocker == LandingBlocker::NONE) {
-      finishSharedTransition(*run, transaction, propsParserContext, true);
+      finishSharedTransition(carrierTag, transaction, propsParserContext, true);
     } else if (blocker != LandingBlocker::CARRIER_NOT_ENDED) {
       preservedTags.insert(carrierTag);
     }
@@ -1669,11 +1681,15 @@ std::vector<std::shared_ptr<LightNode>> LayoutAnimationsProxy::viewsHiddenByCont
 // The teardown of a nested carrier can remove this carrier and end its run, and the attach can also end the run. So
 // the finish works on a copy, and a removed carrier does not attach, but its faded children show again.
 void LayoutAnimationsProxy::finishSharedTransition(
-    SharedTransitionRun &registeredRun,
+    const Tag carrierTag,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext,
     const bool landed) const {
-  auto run = registeredRun;
+  const auto it = sharedTransitionRuns_.find(carrierTag);
+  if (it == sharedTransitionRuns_.end()) {
+    return;
+  }
+  auto run = it->second;
   finishNestedSharedTransitions(run.carrier, transaction, propsParserContext, landed);
   const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
   // A gesture-driven run leaves its source to the screen pop.
@@ -1687,7 +1703,7 @@ void LayoutAnimationsProxy::finishSharedTransition(
   if (landed && !targetGone && run.contentFade && run.carrier != run.target) {
     fadeInTargetContent(run, transaction, propsParserContext);
   }
-  sharedTransitionRuns_.erase(run.carrier->current.tag);
+  eraseSharedTransitionRun(carrierTag);
   if (!heldEnterings_.empty()) {
     schedulePullOnNextFrame();
   }
@@ -1706,8 +1722,8 @@ void LayoutAnimationsProxy::finishNestedSharedTransitions(
     }
   }
   for (const auto carrierTag : nestedTags) {
-    if (auto *run = sharedTransitionRun(carrierTag, SharedTransitionLifecycle::ACTIVE)) {
-      finishSharedTransition(*run, transaction, propsParserContext, landed);
+    if (sharedTransitionRun(carrierTag, SharedTransitionLifecycle::ACTIVE)) {
+      finishSharedTransition(carrierTag, transaction, propsParserContext, landed);
     }
   }
 }
@@ -2312,7 +2328,7 @@ void LayoutAnimationsProxy::endSharedTransitionOf(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   if (auto *run = activeSharedTransitionRun(sharedTag)) {
-    finishSharedTransition(*run, transaction, propsParserContext);
+    finishSharedTransition(run->carrier->current.tag, transaction, propsParserContext);
   }
 }
 

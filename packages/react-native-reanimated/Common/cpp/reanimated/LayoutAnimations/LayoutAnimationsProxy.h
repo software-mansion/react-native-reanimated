@@ -205,6 +205,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   // The runs by the tag of their carrier. A view carries one run, and a shared tag has one active run.
   mutable std::unordered_map<Tag, SharedTransitionRun> sharedTransitionRuns_;
+  mutable std::unordered_map<SharedTag, Tag> activeSharedTransitionCarriers_;
   // the detached carriers in their host order under the root, after the children of the root
   mutable std::vector<std::shared_ptr<LightNode>> detachedCarriers_;
   // Entering animations of target children that wait until their run lands.
@@ -453,6 +454,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void retireSharedTransition(SharedTransitionRun &run) const;
+  void eraseSharedTransitionRun(Tag carrierTag) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -532,7 +534,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool landsWithOtherRuns(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
-      SharedTransitionRun &registeredRun,
+      Tag carrierTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool landed = false) const;
