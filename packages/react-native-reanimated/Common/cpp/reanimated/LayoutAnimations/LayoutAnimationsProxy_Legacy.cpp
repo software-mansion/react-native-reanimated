@@ -419,6 +419,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
 
 void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &mutations) const {
 #ifdef ANDROID
+  std::unordered_set<Tag> unmountedTags;
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
   if (!isMountingCoordinatorPullModelEnabled()) {
@@ -445,6 +446,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 #ifdef ANDROID
     i++;
     if (correctedTags != nullptr && correctedTags[i] == -1) {
+      unmountedTags.insert(tag);
       // skip views that have not been mounted yet
       // on Android we start entering animations from the JS thread
       // so it might happen, that the first frame of the animation goes through
@@ -475,7 +477,11 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
       layoutAnimation.opacity.reset();
     }
   }
+#ifdef ANDROID
+  std::erase_if(updateMap_, [&unmountedTags](const auto &update) { return !unmountedTags.contains(update.first); });
+#else
   updateMap_.clear();
+#endif
 }
 
 void LayoutAnimationsProxy_Legacy::endAnimationsRecursively(

@@ -758,6 +758,7 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     const std::unordered_set<Tag> &preservedTags) const {
 #ifdef ANDROID
   std::vector<OpacityRestoration> opacityRestorations;
+  bool needsNextFrame = false;
 #endif
   for (auto it = completedAnimations_.begin(); it != completedAnimations_.end();) {
     const auto tag = it->first;
@@ -770,6 +771,13 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
       ++it;
       continue;
     }
+#ifdef ANDROID
+    if (!completedAnimation.shouldRemove && updateMap_.contains(tag)) {
+      needsNextFrame = true;
+      ++it;
+      continue;
+    }
+#endif
     auto &animation = completedAnimation.animation;
     auto finalView = animation.currentView;
     if (needsFinalFrameReconciliation(animation.type)) {
@@ -794,6 +802,9 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     it = completedAnimations_.erase(it);
   }
 #ifdef ANDROID
+  if (needsNextFrame) {
+    schedulePullOnNextFrame();
+  }
   if (!opacityRestorations.empty()) {
     restoreOpacityInShadowTree(std::move(opacityRestorations));
   }

@@ -1124,6 +1124,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
   auto &mutations = transaction.filteredMutations;
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef ANDROID
+  std::unordered_set<Tag> unmountedTags;
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
   if (!isMountingCoordinatorPullModelEnabled()) {
@@ -1149,6 +1150,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
 #ifdef ANDROID
     i++;
     if (correctedTags != nullptr && correctedTags[i] == -1) {
+      unmountedTags.insert(tag);
       // skip views that have not been mounted yet
       // on Android we start entering animations from the JS thread
       // so it might happen, that the first frame of the animation goes through
@@ -1196,10 +1198,10 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
   }
 #ifdef ANDROID
   // The next JS-thread pull can retain a due removal instead of removing it. That pull then sends the last frame.
-  std::erase_if(updateMap_, [this, &transaction](const auto &update) {
+  std::erase_if(updateMap_, [this, &transaction, &unmountedTags](const auto &update) {
     const auto tag = update.first;
     const bool waitsForRemoval = transaction.dueRemovals.contains(tag) && lightNodes_.contains(tag);
-    return !unqueuedBatchTags_.contains(tag) && !waitsForRemoval;
+    return !unmountedTags.contains(tag) && !unqueuedBatchTags_.contains(tag) && !waitsForRemoval;
   });
 #else
   updateMap_.clear();
