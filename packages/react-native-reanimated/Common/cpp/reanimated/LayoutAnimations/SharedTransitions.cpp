@@ -2350,7 +2350,10 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
 // A covered screen can get its native header frame after the gesture that uncovers it has started.
 void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &propsParserContext) const {
   for (const auto &run : activeSharedTransitionRuns()) {
-    if (run.driver != SharedTransitionDriver::GESTURE || !isLightNodeMapped(run.target)) {
+    if (run.driver != SharedTransitionDriver::GESTURE) {
+      continue;
+    }
+    if (!isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
       continue;
     }
     const auto carrierTag = run.carrier->current.tag;
