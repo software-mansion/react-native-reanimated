@@ -78,7 +78,8 @@ describe('react-freeze *under a native stack only*', () => {
   test('a second round trip picks up where the first one left off', async () => {
     await navigatorDriver.mount();
 
-    let previous = await readBoxes();
+    const baseline = await readBoxes();
+    let previous = baseline;
 
     for (let trip = 0; trip < 2; trip++) {
       await navigatorDriver.freeze();
@@ -86,7 +87,7 @@ describe('react-freeze *under a native stack only*', () => {
       await navigatorDriver.thaw();
 
       const current = await readBoxes();
-      expect(driftReport(previous, current)).toBe(ALIGNED);
+      expect(driftReport(baseline, current)).toBe(ALIGNED);
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }

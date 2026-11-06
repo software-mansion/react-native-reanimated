@@ -75,7 +75,8 @@ describe('react-freeze *prop-driven only*', () => {
   test('survives repeated freeze cycles', async () => {
     await plainDriver.mount();
 
-    let previous = await readBoxes();
+    const baseline = await readBoxes();
+    let previous = baseline;
 
     // A cadence no navigator can reach.
     for (let cycle = 0; cycle < 3; cycle++) {
@@ -85,7 +86,7 @@ describe('react-freeze *prop-driven only*', () => {
       await waitForFrames(2);
 
       const current = await readBoxes();
-      expect(driftReport(previous, current)).toBe(ALIGNED);
+      expect(driftReport(baseline, current)).toBe(ALIGNED);
       expect(travelReport(previous, current)).toBe(ON_TIME);
       previous = current;
     }
