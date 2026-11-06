@@ -28,10 +28,12 @@ function Screens({
   sourceMounted = true,
   sourceScreenMounted = true,
   targetOffset = 0,
+  targetTranslateX = 0,
 }: {
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
   targetOffset?: number;
+  targetTranslateX?: number;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -51,7 +53,13 @@ function Screens({
             ref={target}
             sharedTransitionTag="gesture-retained-source"
             sharedTransitionStyle={transition}
-            style={[styles.target, { marginTop: targetOffset }]}
+            style={[
+              styles.target,
+              {
+                marginTop: targetOffset,
+                transform: [{ translateX: targetTranslateX }],
+              },
+            ]}
           />
         </SharedTransitionBoundary>
       </Screen>
@@ -288,6 +296,40 @@ describe('Target moved during native Screen progress', () => {
     );
     await expectEventually(
       async () => (await carrierY(tags.source))! - before!
+    ).toBe(50, ComparisonMode.PIXEL);
+
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      1,
+      false,
+      false
+    );
+    await expectTargetOpacity(1);
+  });
+
+  gestureTest('moves the carrier toward the new target transform', async () => {
+    const tags = await startGesture();
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectCarrier(tags.source, 105);
+
+    await render(<Screens targetTranslateX={100} />);
+    const target = getTestComponent('gestureTarget').getTag();
+    await expectEventually(
+      async () => (await observer().observeTransform(target))?.translateX
+    ).toBe(100, ComparisonMode.PIXEL);
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectEventually(
+      async () => (await observer().observeTransform(tags.source))?.translateX
     ).toBe(50, ComparisonMode.PIXEL);
 
     await observer().emitScreenTransitionProgress(

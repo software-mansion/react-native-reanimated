@@ -2363,7 +2363,9 @@ void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &prop
     }
     const auto after = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext), propsParserContext);
     const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
-    if (animationIt->second.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
+    const auto &finalView = animationIt->second.finalView;
+    if (finalView.layoutMetrics != carrierAfter.layoutMetrics ||
+        SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(finalView), getViewProps(carrierAfter))) {
       updateLayoutAnimationTarget(
           carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, run.config);
     }
