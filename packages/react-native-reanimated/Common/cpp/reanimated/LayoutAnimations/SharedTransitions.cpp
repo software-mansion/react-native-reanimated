@@ -255,9 +255,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
       findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
 
+      adjustForNativePlacement(transaction.transitions);
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
-        adjustForNativePlacement(collectedTransition, BEFORE);
-        adjustForNativePlacement(collectedTransition, AFTER);
         auto &transition = collectedTransition.transition;
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
@@ -982,9 +981,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   }
 
   if (beforeTopScreen != afterTopScreen) {
+    adjustForNativePlacement(transaction.transitions);
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
-      adjustForNativePlacement(collectedTransition, BEFORE);
-      adjustForNativePlacement(collectedTransition, AFTER);
       auto &transition = collectedTransition.transition;
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
@@ -1930,6 +1928,15 @@ void LayoutAnimationsProxy::adjustForNativePlacement(
   moveBelowAncestor(*ancestor, absolutePositions);
   collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
   collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+}
+
+// A run that starts detaches its carrier, which ends the native placement search of the paths below it.
+// The paths were collected before that, so all of them are adjusted before the first run starts.
+void LayoutAnimationsProxy::adjustForNativePlacement(CollectedTransitions &transitions) const {
+  for (auto &[_, collectedTransition] : transitions) {
+    adjustForNativePlacement(collectedTransition, BEFORE);
+    adjustForNativePlacement(collectedTransition, AFTER);
+  }
 }
 
 // A source that left the screen before its transition starts, e.g. a sheet dismissed by a swipe, has nothing to fly
