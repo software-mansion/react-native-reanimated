@@ -17,12 +17,6 @@ class ReanimatedModule(
         reactContext.assertOnJSQueueThread()
     }
 
-    override fun initialize() {
-        val reactContext = reactApplicationContext
-        reactContext.assertOnJSQueueThread()
-        reactContext.addLifecycleEventListener(this)
-    }
-
     override fun onHostPause() {
         mNodesManager?.onHostPause()
     }
@@ -45,6 +39,8 @@ class ReanimatedModule(
         reactContext.assertOnJSQueueThread()
         mNodesManager = NodesManager(reactContext)
         mNodesManager!!.getNativeProxy()!!.installJSIBindings()
+        // Registered once NodesManager exists, so React Native's replay of a resume that came first reaches it.
+        reactContext.addLifecycleEventListener(this)
         return true
     }
 

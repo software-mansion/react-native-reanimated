@@ -3,11 +3,11 @@ package com.swmansion.reanimated.nativeProxy
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.WritableMap
-import com.facebook.react.uimanager.events.RCTModernEventEmitter
-import com.swmansion.reanimated.resolveCustomEventName
+import com.facebook.react.uimanager.events.Event
+import com.swmansion.reanimated.forEachPayload
 
 @DoNotStrip
-class EventHandler : RCTModernEventEmitter {
+class EventHandler {
     @field:DoNotStrip
     private val mHybridData: HybridData
 
@@ -21,25 +21,18 @@ class EventHandler : RCTModernEventEmitter {
 
     private fun isInDrawPass(): Boolean = isInDrawPassProvider?.invoke() == true
 
-    @Suppress("OVERRIDE_DEPRECATION")
-    override fun receiveEvent(
-        surfaceId: Int,
-        targetTag: Int,
-        eventName: String,
-        canCoalesceEvent: Boolean,
-        customCoalesceKey: Int,
-        params: WritableMap?,
-        category: Int,
+    internal fun handle(
+        event: Event<*>,
+        resolvedEventName: String,
     ) {
-        handle(eventName, targetTag, params)
+        event.forEachPayload { targetTag, payload -> handle(resolvedEventName, targetTag, payload) }
     }
 
     internal fun handle(
-        eventName: String,
+        resolvedEventName: String,
         targetTag: Int,
         params: WritableMap?,
     ) {
-        val resolvedEventName = resolveCustomEventName(eventName)
         nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
     }
 
