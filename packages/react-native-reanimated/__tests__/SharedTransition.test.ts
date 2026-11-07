@@ -78,29 +78,27 @@ function rotationOf(style: StyleProps) {
 
 describe('SharedTransition', () => {
   describe('default animation', () => {
-    test('animates only the properties that differ', () => {
+    test('uses one geometry clock and keeps separate style animations', () => {
       const { initialValues, animations } = runLayoutAnimation(
         new SharedTransition()
       );
       const changed = [
         'backgroundColor',
         'borderRadius',
-        'originX',
-        'transform',
-        'transformOrigin',
-        'width',
+        'sharedTransitionGeometryProgress',
       ];
       expect(Object.keys(initialValues).sort()).toEqual(changed);
       expect(Object.keys(animations).sort()).toEqual(changed);
     });
 
-    test('passes the transform as an array of matrices', () => {
-      const { initialValues, animations } = runLayoutAnimation(
-        new SharedTransition()
-      );
-      expect(initialValues.transform).toEqual([{ matrix: IDENTITY }]);
-      expect(animations.transform).toHaveLength(1);
-      expect(animations.transform[0]).toHaveProperty('matrix');
+    test('uses the geometry clock when only the gesture callback is custom', () => {
+      const transition = SharedTransition.progressAnimation(() => ({
+        width: -1,
+      }));
+      const { animations } = runLayoutAnimation(transition);
+      expect(animations).toHaveProperty('sharedTransitionGeometryProgress');
+      expect(animations).not.toHaveProperty('width');
+      expect(transition.getProgressAnimation()(VALUES, 0.5).width).toBe(-1);
     });
   });
 
