@@ -148,6 +148,7 @@ struct Ancestor {
 struct AncestorOutsideReactParent {
   size_t index;
   react::Point position;
+  Transform transform;
 };
 
 struct CollectedTransition {
@@ -570,7 +571,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<Transform> parseParentTransforms(
       const std::vector<Ancestor> &ancestors,
-      const std::vector<react::Point> &absolutePositions) const;
+      const std::vector<react::Point> &absolutePositions,
+      const std::optional<AncestorOutsideReactParent> &nativePlacement = std::nullopt) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,
