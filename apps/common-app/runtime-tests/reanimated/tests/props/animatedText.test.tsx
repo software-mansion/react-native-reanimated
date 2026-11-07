@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { memo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
@@ -285,6 +286,32 @@ function CounterText({ progress }: { progress: SharedValue<number> }) {
       <Animated.Text ref={ref} style={styles.text}>
         {text}
       </Animated.Text>
+    </View>
+  );
+}
+
+const MemoCounterText = memo(function MemoCounterText({
+  progress,
+}: {
+  progress: SharedValue<number>;
+  version: number;
+}) {
+  return <CounterText progress={progress} />;
+});
+
+function LabelAndCounterText({
+  label,
+  progress,
+  version,
+}: {
+  label: string;
+  progress: SharedValue<number>;
+  version: number;
+}) {
+  return (
+    <View>
+      <Text>{label}</Text>
+      <MemoCounterText progress={progress} version={version} />
     </View>
   );
 }
@@ -1054,6 +1081,29 @@ describe('Animated.Text with a shared value as children', () => {
       progress.value = 0;
       const widthAtZero = await readSettled('width');
 
+      expect(widthAtHundred > widthAtZero).toBe(true);
+    });
+
+    test('a re-render after an unrelated commit keeps the text', async () => {
+      const progress = makeMutable(0);
+      await render(
+        <LabelAndCounterText label="a" progress={progress} version={0} />
+      );
+      const widthAtZero = await readSettled('width');
+      progress.value = 100;
+      const widthAtHundred = await readSettled('width');
+
+      await render(
+        <LabelAndCounterText label="b" progress={progress} version={0} />
+      );
+      await render(
+        <LabelAndCounterText label="b" progress={progress} version={1} />
+      );
+
+      expect(await readSettled('width')).toBe(
+        widthAtHundred,
+        ComparisonMode.PIXEL
+      );
       expect(widthAtHundred > widthAtZero).toBe(true);
     });
 
