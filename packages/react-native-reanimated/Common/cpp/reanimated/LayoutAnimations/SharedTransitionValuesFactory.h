@@ -75,10 +75,12 @@ class SharedTransitionValuesFactory {
 
  public:
   // True when create animates a style prop between these props.
-  static bool hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps);
+  static bool
+  hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps, bool includeTransform = true);
 
   explicit SharedTransitionValuesFactory(jsi::Runtime &rt) : rt_(rt) {}
 
+  jsi::Object createGeometry(const ShadowView &sourceView, const ShadowView &targetView);
   jsi::Object create(const ShadowView &sourceView, const ShadowView &targetView);
 };
 

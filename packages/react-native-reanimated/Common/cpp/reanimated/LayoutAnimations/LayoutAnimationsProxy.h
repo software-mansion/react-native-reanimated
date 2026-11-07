@@ -308,6 +308,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config) const;
   void applyProgressAnimations();
+  void applySharedTransitionGeometry() const override;
+  bool hasPendingSharedTransitionGeometry() const override;
+  bool updateSharedTransitionGeometry(const SharedTransitionRun &run, LayoutAnimation &animation) const;
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
@@ -502,7 +505,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
-  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
+  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget, bool targetChanged) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,

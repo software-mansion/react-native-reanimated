@@ -414,6 +414,140 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
   }
 }
 
+bool LayoutAnimationsProxy::hasPendingSharedTransitionGeometry() const {
+  for (const auto &run : activeSharedTransitionRuns()) {
+    if (run.driver != SharedTransitionDriver::TIME) {
+      continue;
+    }
+    const auto tag = run.carrier->current.tag;
+    const auto active = layoutAnimations_.find(tag);
+    const auto ended = completedAnimations_.find(tag);
+    const auto *animation = active != layoutAnimations_.end() ? &active->second
+        : ended != completedAnimations_.end()                 ? &ended->second.animation
+                                                              : nullptr;
+    if (animation && animation->geometry && !animation->geometry->failed && animation->geometry->needsUpdate) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void LayoutAnimationsProxy::applySharedTransitionGeometry() const {
+  bool needsPull = false;
+  for (const auto &run : activeSharedTransitionRuns()) {
+    const auto tag = run.carrier->current.tag;
+    if (run.driver != SharedTransitionDriver::TIME || layoutAnimationPhase(tag) == LayoutAnimationPhase::QUEUED) {
+      continue;
+    }
+    LayoutAnimation *animation = nullptr;
+    if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+      animation = &it->second;
+    } else if (const auto it = completedAnimations_.find(tag);
+               it != completedAnimations_.end() && !it->second.shouldRemove) {
+      animation = &it->second.animation;
+    }
+    if (!animation || !animation->geometry || animation->geometry->failed) {
+      continue;
+    }
+    if (updateSharedTransitionGeometry(run, *animation)) {
+      needsPull = true;
+    }
+  }
+  if (needsPull) {
+    schedulePullOnNextFrame();
+  }
+}
+
+bool LayoutAnimationsProxy::updateSharedTransitionGeometry(const SharedTransitionRun &run, LayoutAnimation &animation)
+    const {
+  const PropsParserContext context{surfaceId_, *contextContainer_};
+  const auto sampled = isLightNodeMapped(run.target) && !run.target->isExiting() && !run.target->isCarrier()
+      ? targetInCarrierSpace(run, targetOnScreen(run, context), context)
+      : animation.finalView;
+  const auto &previous = animation.finalView;
+  const bool geometryChanged = previous.layoutMetrics != sampled.layoutMetrics ||
+      getViewProps(previous).transform != getViewProps(sampled).transform ||
+      getViewProps(previous).transformOrigin != getViewProps(sampled).transformOrigin;
+  if (!animation.geometry->needsUpdate && !geometryChanged) {
+    return false;
+  }
+  const auto progress = animation.geometry->value;
+  if (!worklets::isOnUIThread(uiScheduler_) && progress != 1) {
+    animation.geometry->needsUpdate = true;
+    return false;
+  }
+  auto target = animation.finalView;
+  target.layoutMetrics = sampled.layoutMetrics;
+  const auto copyGeometry = [&](const Props::Shared &base) {
+#ifdef ANDROID
+    folly::dynamic geometryProps = folly::dynamic::object(
+        "transform",
+        folly::dynamic::array(
+            folly::dynamic::object("matrix", getViewProps(sampled).transform.operator folly::dynamic())))(
+        "transformOrigin", sampled.props->rawProps.getDefault("transformOrigin", nullptr));
+    return componentDescriptorRegistry_->at(target.componentHandle)
+        .cloneProps(context, base, RawProps(folly::dynamic::merge(base->rawProps, geometryProps)));
+#else
+    auto props = componentDescriptorRegistry_->at(target.componentHandle).cloneProps(context, base, {});
+    auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
+    viewProps->transform = getViewProps(sampled).transform;
+    viewProps->transformOrigin = getViewProps(sampled).transformOrigin;
+    return props;
+#endif
+  };
+  if (geometryChanged) {
+    target.props = copyGeometry(target.props);
+  }
+  const auto tag = run.carrier->current.tag;
+  if (progress == 1) {
+    const auto pending = updateMap_.find(tag);
+    const auto &props = pending != updateMap_.end() && pending->second.newProps ? pending->second.newProps
+                                                                                : animation.currentView.props;
+    const bool animatesOpacity = pending != updateMap_.end() && pending->second.animatesOpacity;
+    const auto &frame = target.layoutMetrics.frame;
+    updateMap_.insert_or_assign(
+        tag,
+        UpdateValues{
+            copyGeometry(props),
+            Frame(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height),
+            animatesOpacity});
+    animation.frameOffset = {};
+    animation.finalView = target;
+    animation.geometry->needsUpdate = false;
+    return true;
+  }
+  auto values = SharedTransitionValuesFactory(uiRuntime_).createGeometry(animation.startView, target);
+  auto style = jsi::Value::undefined();
+  const bool evaluated =
+      LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime_, "sharedTransitionGeometry", [&](jsi::Runtime &rt) {
+        const auto function = rt.global().getPropertyAsFunction(rt, "_getSharedTransitionGeometry");
+        style = function.call(rt, values, progress);
+      });
+  if (!evaluated) {
+    animation.geometry->needsUpdate = false;
+    animation.geometry->failed = true;
+    layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, tag);
+    endLayoutAnimation(tag, false);
+    return false;
+  }
+  if (!style.isObject()) {
+    return false;
+  }
+  if (const auto pending = updateMap_.find(tag); pending != updateMap_.end()) {
+    if (pending->second.frame.x) {
+      *pending->second.frame.x += animation.frameOffset.x;
+    }
+    if (pending->second.frame.y) {
+      *pending->second.frame.y += animation.frameOffset.y;
+    }
+  }
+  animation.frameOffset = {};
+  animation.finalView = target;
+  applyLayoutAnimationStyle(tag, animation, style.asObject(uiRuntime_), true);
+  animation.geometry->needsUpdate = false;
+  return true;
+}
+
 void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
@@ -529,12 +663,22 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   return carrierView;
 }
 
-bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
-  const auto &previousTarget = carrierAnimation(run).finalView;
-  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
+bool LayoutAnimationsProxy::targetEndChanged(
+    const SharedTransitionRun &run,
+    const ShadowView &carrierTarget,
+    bool targetChanged) const {
+  const auto &animation = carrierAnimation(run);
+  const auto &previousTarget = animation.finalView;
+  const bool followsGeometry = animation.geometry.has_value();
+  if (animation.geometry && animation.geometry->failed) {
+    return targetChanged;
+  }
+  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics &&
+      !(followsGeometry && completedAnimations_.contains(run.carrier->current.tag))) {
     return true;
   }
-  return SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
+  return SharedTransitionValuesFactory::hasAnimatedChanges(
+             getViewProps(previousTarget), getViewProps(carrierTarget), !followsGeometry) &&
       waitsForCoveringRun(run, viewsHiddenByContinuingRuns());
 }
 
@@ -1331,7 +1475,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (!afterNode) {
         continue;
       }
-      if (run.target != afterNode) {
+      const bool targetChanged = run.target != afterNode;
+      if (targetChanged) {
         transaction.restoreRequests.push_back({sharedTag, run.target});
         if (!afterNode->isCarrier()) {
           hideInSharedElement(sharedTag, afterNode);
@@ -1360,7 +1505,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             restartContentFade(run));
         continue;
       }
-      if (targetEndChanged(run, carrierAfter)) {
+      if (targetEndChanged(run, carrierAfter, targetChanged)) {
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -1618,6 +1763,10 @@ LandingBlocker LayoutAnimationsProxy::landingBlocker(
   if (hasUnqueuedCarrierFrame(tag)) {
     return LandingBlocker::CARRIER_FRAMES_UNQUEUED;
   }
+  if (carrierAnimation(run).geometry && !carrierAnimation(run).geometry->failed &&
+      carrierAnimation(run).geometry->needsUpdate) {
+    return LandingBlocker::CARRIER_FRAMES_UNQUEUED;
+  }
   if (landsWithOtherRuns(run)) {
     return LandingBlocker::LANDS_WITH_OTHER_RUNS;
   }
@@ -1639,7 +1788,11 @@ bool LayoutAnimationsProxy::waitsForCoveringRun(
 }
 
 bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
-  return layoutAnimationPhase(carrierTag) != LayoutAnimationPhase::ENDED || hasUnqueuedCarrierFrame(carrierTag);
+  if (layoutAnimationPhase(carrierTag) != LayoutAnimationPhase::ENDED || hasUnqueuedCarrierFrame(carrierTag)) {
+    return true;
+  }
+  const auto &animation = completedAnimations_.at(carrierTag).animation;
+  return animation.geometry && !animation.geometry->failed && animation.geometry->needsUpdate;
 }
 
 // Nested carriers land with the carrier that moves them, when the last run of the group ends. A nested carrier
@@ -2375,6 +2528,9 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
       continue;
     }
     const auto &animation = carrierAnimation(run);
+    if (animation.geometry && animation.geometry->failed) {
+      continue;
+    }
     if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics ||
         getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform) {
       startSharedTransition(

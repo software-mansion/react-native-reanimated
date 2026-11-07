@@ -174,7 +174,12 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
       animation.frameOffset += offset;
     }
-    animation.finalView = newView;
+    if (animation.geometry) {
+      animation.geometry->needsUpdate = !animation.geometry->failed;
+      animation.finalView.layoutMetrics = newView.layoutMetrics;
+    } else {
+      animation.finalView = newView;
+    }
     return animation.currentView;
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
@@ -182,10 +187,18 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     auto &animation = completedAnimationIt->second.animation;
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
+    if (animation.geometry) {
+      animation.startView.layoutMetrics.frame.origin += offset;
+    }
     if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
       animation.frameOffset += offset;
     }
-    animation.finalView = newView;
+    if (animation.geometry) {
+      animation.geometry->needsUpdate = !animation.geometry->failed;
+      animation.finalView.layoutMetrics = newView.layoutMetrics;
+    } else {
+      animation.finalView = newView;
+    }
     return animation.currentView;
   }
   return pendingCurrentView;
