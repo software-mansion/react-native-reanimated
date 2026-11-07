@@ -43,6 +43,26 @@ static CGPoint originInWindow(UIView *view, BOOL current)
   return [superlayer convertPoint:origin toLayer:windowLayer];
 }
 
+static facebook::react::Transform ancestorTransformInWindow(UIView *view, BOOL current)
+{
+  CALayer *superlayer = view.superview.layer;
+  CALayer *windowLayer = view.window.layer;
+  if (current) {
+    superlayer = superlayer.presentationLayer ?: superlayer;
+    windowLayer = windowLayer.presentationLayer ?: windowLayer;
+  }
+  const CGPoint origin = [superlayer convertPoint:CGPointZero toLayer:windowLayer];
+  const CGPoint x = [superlayer convertPoint:CGPointMake(1, 0) toLayer:windowLayer];
+  const CGPoint y = [superlayer convertPoint:CGPointMake(0, 1) toLayer:windowLayer];
+  facebook::react::Transform transform;
+  transform.matrix[0] = x.x - origin.x;
+  transform.matrix[1] = x.y - origin.y;
+  transform.matrix[4] = y.x - origin.x;
+  transform.matrix[5] = y.y - origin.y;
+  return facebook::react::Transform::FromTransformOperation(
+      facebook::react::TransformOperation(facebook::react::TransformOperationType::Arbitrary), {}, transform);
+}
+
 // A full screen presentation removes the presenting views from the window, so the window that shows a surface is
 // then the one of the view controller presented over it.
 static UIWindow *surfaceWindow(UIView *rootView)
@@ -192,7 +212,8 @@ static UIWindow *surfaceWindow(UIView *rootView)
   const CGPoint rootOrigin = untransformedFrameInWindow(rootView).origin;
   return {
       .kind = reanimated::NativeViewPlacement::Kind::OutsideReactParent,
-      .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y}};
+      .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y},
+      .transform = ancestorTransformInWindow(view, !settled)};
 }
 
 @end

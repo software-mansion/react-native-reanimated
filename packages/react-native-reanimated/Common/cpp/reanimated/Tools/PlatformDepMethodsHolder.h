@@ -9,6 +9,7 @@
 #include <react/renderer/core/Props.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #include <react/renderer/graphics/Point.h>
+#include <react/renderer/graphics/Transform.h>
 
 #include <memory>
 #include <optional>
@@ -63,6 +64,7 @@ struct NativeViewPlacement {
   enum class Kind { InsideReactParent, OffWindow, OutsideReactParent, DifferentWindow };
   Kind kind;
   react::Point origin;
+  react::Transform transform;
 };
 using NativeViewPlacementFunction =
     std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;

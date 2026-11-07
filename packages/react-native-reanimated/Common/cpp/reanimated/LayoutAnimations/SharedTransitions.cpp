@@ -1023,10 +1023,13 @@ ShadowView LayoutAnimationsProxy::targetInCarrierSpace(
   auto transform = parseParentTransforms(ancestors, positions);
   if (const auto above = transformsAboveNestedCarrier(run.carrier, ancestor, view)) {
     const auto &own = ancestors[0];
-    const auto below = transform.value_or(resolveTransform(own.ownSize, own.ownSize, own.transform, own.origin));
+    const auto below = transform.value_or(resolveTransform(own.ownSize, own.ownSize, own.transform, {}));
     if (const auto inverse = invertedTransform(*above)) {
+      const auto origin = getTranslateForTransformOrigin(own.ownSize.width, own.ownSize.height, own.origin);
+      const auto inverseAboveInOwnOrigin = Transform::Translate(-origin[0], -origin[1], -origin[2]) * *inverse *
+          Transform::Translate(origin[0], origin[1], origin[2]);
       transform = Transform::FromTransformOperation(
-          react::TransformOperation(TransformOperationType::Arbitrary), {}, *inverse * below);
+          react::TransformOperation(TransformOperationType::Arbitrary), {}, inverseAboveInOwnOrigin * below);
     }
   }
   overrideTransform(view, transform, propsParserContext);
@@ -2349,7 +2352,8 @@ std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOut
     }
     const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
     if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
-      return AncestorOutsideReactParent{.index = i, .position = ancestors[i].scrollPosition + placement.origin};
+      return AncestorOutsideReactParent{
+          .index = i, .position = ancestors[i].scrollPosition + placement.origin, .transform = placement.transform};
     }
   }
 #endif
@@ -2380,7 +2384,7 @@ void LayoutAnimationsProxy::adjustForNativePlacement(
   auto &absolutePositions = collectedTransition.absolutePositions[index];
   moveBelowAncestor(*ancestor, absolutePositions);
   collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
-  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions, ancestor);
 }
 
 // A run that starts detaches its carrier, which ends the native placement search of the paths below it.
@@ -2441,11 +2445,12 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
   const auto ancestors = collectAncestors(run.target, false);
-  if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
+  const auto ancestor = findAncestorOutsideReactParent(ancestors, true);
+  if (ancestor) {
     moveBelowAncestor(*ancestor, absolutePositions);
   }
   target.layoutMetrics.frame.origin = absolutePositions[0];
-  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
+  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions, ancestor), propsParserContext);
   return target;
 }
 
@@ -2491,7 +2496,8 @@ void LayoutAnimationsProxy::followOffWindowTargets(
       continue;
     }
     const auto &animation = carrierAnimation(run);
-    if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
+    if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics ||
+        getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform) {
       startSharedTransition(
           run.carrier, animation.currentView, carrierAfter, frameProps, config, restartContentFade(run));
     }
@@ -2554,11 +2560,20 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
 
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::vector<Ancestor> &ancestors,
-    const std::vector<react::Point> &absolutePositions) const {
+    const std::vector<react::Point> &absolutePositions,
+    const std::optional<AncestorOutsideReactParent> &nativePlacement) const {
   const auto &targetSize = ancestors[0].ownSize;
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
-  bool parentHasTransform = false;
+  bool parentHasTransform = nativePlacement && nativePlacement->transform.matrix != Transform{}.matrix;
+  if (parentHasTransform) {
+    const auto &ancestor = ancestors[nativePlacement->index];
+    const auto position = nativePlacement->position - ancestor.scrollPosition;
+    TransformOrigin origin;
+    origin.xy[0] = {static_cast<float>(position.x - targetViewPosition.x), UnitType::Point};
+    origin.xy[1] = {static_cast<float>(position.y - targetViewPosition.y), UnitType::Point};
+    combinedMatrix = resolveTransform(targetSize, ancestor.ownSize, nativePlacement->transform, origin);
+  }
   for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
     const auto &ancestor = ancestors[i];
     if (ancestor.transform.operations.empty()) {
@@ -2580,6 +2595,9 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
+    const auto origin = getTranslateForTransformOrigin(targetSize.width, targetSize.height, ancestors[0].origin);
+    combinedMatrix = Transform::Translate(-origin[0], -origin[1], -origin[2]) * combinedMatrix *
+        Transform::Translate(origin[0], origin[1], origin[2]);
     return Transform::FromTransformOperation(
         react::TransformOperation(TransformOperationType::Arbitrary), {}, combinedMatrix);
   }
