@@ -8,6 +8,7 @@ import type {
 } from '../src/commonTypes';
 import type { SharedTransitionAnimationsValues } from '../src/layoutReanimation/SharedTransition';
 import {
+  getSharedTransitionGeometry,
   SharedTransition,
   SharedTransitionType,
 } from '../src/layoutReanimation/SharedTransition';
@@ -76,31 +77,47 @@ function rotationOf(style: StyleProps) {
   return (Math.atan2(matrix[1], matrix[0]) * 180) / Math.PI;
 }
 
+function geometryAt(progress: number, values = VALUES) {
+  return getSharedTransitionGeometry(values, progress);
+}
+
 describe('SharedTransition', () => {
   describe('default animation', () => {
-    test('animates only the properties that differ', () => {
+    test('uses one geometry clock and keeps separate style animations', () => {
       const { initialValues, animations } = runLayoutAnimation(
         new SharedTransition()
       );
       const changed = [
         'backgroundColor',
         'borderRadius',
-        'originX',
-        'transform',
-        'transformOrigin',
-        'width',
+        'sharedTransitionGeometryProgress',
       ];
       expect(Object.keys(initialValues).sort()).toEqual(changed);
       expect(Object.keys(animations).sort()).toEqual(changed);
     });
 
-    test('passes the transform as an array of matrices', () => {
-      const { initialValues, animations } = runLayoutAnimation(
-        new SharedTransition()
-      );
-      expect(initialValues.transform).toEqual([{ matrix: IDENTITY }]);
-      expect(animations.transform).toHaveLength(1);
-      expect(animations.transform[0]).toHaveProperty('matrix');
+    test('evaluates geometry as a matrix without style properties', () => {
+      const initial = geometryAt(0);
+      expect(initial.transform).toEqual([{ matrix: IDENTITY }]);
+      expect(initial.width).toBe(100);
+      expect(initial).not.toHaveProperty('backgroundColor');
+      expect(initial).not.toHaveProperty('borderRadius');
+      expect(geometryAt(1).transform).toEqual([{ matrix: ROTATE_90 }]);
+    });
+
+    test('uses default geometry when only the gesture callback is custom', () => {
+      const transition = SharedTransition.progressAnimation(() => ({
+        width: -1,
+      }));
+      expect(geometryAt(0.5).width).toBe(200);
+      expect(transition.getProgressAnimation()(VALUES, 0.5).width).toBe(-1);
+    });
+
+    test('keeps geometry through equal, changed, and original endpoints', () => {
+      const initial = { ...VALUES, targetWidth: VALUES.currentWidth };
+      expect(geometryAt(0.2, initial).width).toBe(100);
+      expect(geometryAt(0.5, { ...initial, targetWidth: 300 }).width).toBe(200);
+      expect(geometryAt(0.8, initial).width).toBe(100);
     });
   });
 

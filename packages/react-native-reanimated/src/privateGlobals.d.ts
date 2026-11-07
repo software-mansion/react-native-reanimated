@@ -9,9 +9,11 @@ import type {
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
+  StyleProps,
 } from './commonTypes';
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/commonTypes';
+import type { SharedTransitionAnimationsValues } from './layoutReanimation/SharedTransition';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
@@ -61,6 +63,10 @@ declare global {
   var __reanimatedLoggerConfig: LoggerConfigInternal | undefined;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
+  var _getSharedTransitionGeometry: (
+    values: SharedTransitionAnimationsValues,
+    progress: number
+  ) => StyleProps;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
