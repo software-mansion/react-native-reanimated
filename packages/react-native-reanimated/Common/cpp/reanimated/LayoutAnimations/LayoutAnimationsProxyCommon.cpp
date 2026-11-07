@@ -579,6 +579,20 @@ bool LayoutAnimationsProxyCommon::hasPendingLayoutAnimation(const Tag tag) const
   return pendingLayoutAnimations_.contains(tag);
 }
 
+LayoutAnimationPhase LayoutAnimationsProxyCommon::layoutAnimationPhase(const Tag tag) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (pendingLayoutAnimations_.contains(tag)) {
+    return LayoutAnimationPhase::QUEUED;
+  }
+  if (layoutAnimations_.contains(tag)) {
+    return LayoutAnimationPhase::RUNNING;
+  }
+  if (completedAnimations_.contains(tag)) {
+    return LayoutAnimationPhase::ENDED;
+  }
+  return LayoutAnimationPhase::NONE;
+}
+
 void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const Tag tag,
     const ShadowView &finalView,

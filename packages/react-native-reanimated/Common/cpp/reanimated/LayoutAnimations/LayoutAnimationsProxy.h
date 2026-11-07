@@ -17,6 +17,7 @@
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -62,6 +63,17 @@ struct SharedTransitionRun {
   bool gestureDriven = false;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+};
+
+// The first reason, in this order, why a run does not land in a pull.
+enum class LandingBlocker : std::uint8_t {
+  NONE,
+  CARRIER_NOT_ENDED,
+  NO_STRUCTURAL_FLUSH,
+  CARRIER_FRAMES_UNQUEUED,
+  LANDS_WITH_OTHER_RUNS,
+  TARGET_IN_HIDDEN_VIEW,
+  TARGET_OFF_WINDOW,
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -498,7 +510,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext,
       bool flushStructuralMutations,
       std::unordered_set<Tag> &preservedTags) const;
-  bool hasCarrierAnimationEnded(Tag tag) const;
+  LandingBlocker landingBlocker(
+      const SharedTransitionRun &run,
+      bool flushStructuralMutations,
+      const std::vector<std::shared_ptr<LightNode>> &coveringViews) const;
   bool waitsForCoveringRun(const SharedTransitionRun &run, const std::vector<std::shared_ptr<LightNode>> &coveringViews)
       const;
   bool runContinues(Tag carrierTag) const;
