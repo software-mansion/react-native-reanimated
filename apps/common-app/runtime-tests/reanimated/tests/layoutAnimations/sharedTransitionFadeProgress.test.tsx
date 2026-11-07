@@ -249,7 +249,7 @@ describe('Shared transition content fade during Screen progress', () => {
         await RuntimeTestObserver!.emitScreenGestureCancel(sourceScreen);
         await expectOpacity('fadeSource', 1);
         await expectOpacity('fadeSourceChild', 0.8);
-        await expectOpacity('fadeTarget', 1);
+        await expectOpacity('fadeTarget', 0);
         for (let frame = 0; frame < 12; frame++) {
           const [sourceView, sourceChild, targetView, child] = await sample([
             'fadeSource',
@@ -263,7 +263,7 @@ describe('Shared transition content fade during Screen progress', () => {
               !!sourceChild &&
               Math.abs(sourceChild.opacity - 0.8) < 0.01 &&
               !!targetView &&
-              Math.abs(targetView.opacity - 1) < 0.01 &&
+              targetView.opacity === 0 &&
               !!child &&
               Math.abs(child.opacity - 0.6) < 0.01
           ).toBe(true);
@@ -294,6 +294,14 @@ describe('Nested shared transition content fade during Screen progress', () => {
         await RuntimeTestObserver!.observeParent(innerSource);
       requireReady('nested:parent', originalParent !== null);
       await expectOpacity('nestedInnerTargetChild', 0.6);
+      const [outerTargetBefore, innerTargetBefore] = await sample([
+        'nestedOuterTarget',
+        'nestedInnerTarget',
+      ]);
+      requireReady(
+        'nested:targets',
+        !!outerTargetBefore && !!innerTargetBefore
+      );
 
       await RuntimeTestObserver!.emitScreenTransitionProgress(
         targetScreen,
@@ -368,6 +376,8 @@ describe('Nested shared transition content fade during Screen progress', () => {
         await RuntimeTestObserver!.emitScreenGestureCancel(sourceScreen);
         await expectOpacity('nestedInnerSource', 1);
         await expectOpacity('nestedInnerSourceChild', 0.8);
+        await expectOpacity('nestedOuterTarget', outerTargetBefore!.opacity);
+        await expectOpacity('nestedInnerTarget', innerTargetBefore!.opacity);
         for (let frame = 0; frame < 12; frame++) {
           const [child] = await sample(['nestedInnerTargetChild']);
           expect(!!child && Math.abs(child.opacity - 0.6) < 0.01).toBe(true);
