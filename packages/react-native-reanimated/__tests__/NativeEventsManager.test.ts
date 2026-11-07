@@ -90,7 +90,7 @@ describe('NativeEventsManager', () => {
     manager.updateEvents();
 
     expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
-    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(1);
+    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(1, 'onScroll');
 
     component.props = {};
     manager.updateEvents();
@@ -113,14 +113,10 @@ describe('NativeEventsManager', () => {
       expect(handler.unregisterFromEvents).toHaveBeenCalledTimes(1);
       expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
       expect(nextHandler.registerForEvents).toHaveBeenCalledTimes(1);
-      if (viewTag === 1) {
-        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(viewTag);
-      } else {
-        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(
-          viewTag,
-          'onScroll'
-        );
-      }
+      expect(nextHandler.registerForEvents).toHaveBeenCalledWith(
+        viewTag,
+        'onScroll'
+      );
 
       eventsManager.detachEvents();
       expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(viewTag);
