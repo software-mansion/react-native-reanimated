@@ -176,6 +176,7 @@ export const withSpring = ((
         : value - (animation.toValue as number);
 
       animation.startValue = x0;
+      animation.retargetDirection = undefined;
 
       if (previousAnimation) {
         animation.velocity =
@@ -196,12 +197,14 @@ export const withSpring = ((
         animation.velocity = 0;
       }
 
+      animation.needsCalibration =
+        config.useDuration && x0 === 0 && animation.velocity === 0;
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
-        if (config.useDuration) {
+        if (config.useDuration && !animation.needsCalibration) {
           const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
@@ -244,8 +247,57 @@ export const withSpring = ((
         : now;
     }
 
+    function onTargetChange(
+      animation: InnerSpringAnimation,
+      target: number,
+      now: Timestamp
+    ) {
+      if (animation.reduceMotion) {
+        animation.current = target;
+        animation.toValue = target;
+        return;
+      }
+      if (animation.lastTimestamp && now > animation.lastTimestamp) {
+        springOnFrame(animation, now);
+      }
+      animation.toValue = target;
+      animation.startValue = animation.current - target;
+      if (
+        animation.needsCalibration &&
+        (animation.startValue !== 0 || animation.velocity !== 0)
+      ) {
+        config.stiffness = calculateNewStiffnessToMatchDuration(
+          animation.startValue,
+          config,
+          animation.velocity
+        );
+        const { zeta, omega0, omega1 } = initialCalculations(
+          config.stiffness,
+          config
+        );
+        animation.zeta = zeta;
+        animation.omega0 = omega0;
+        animation.omega1 = omega1;
+        if (config.clamp !== undefined) {
+          animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
+        }
+        animation.needsCalibration = false;
+      }
+      animation.retargetDirection = Math.sign(
+        animation.startValue || animation.velocity
+      );
+      animation.initialEnergy = getEnergy(
+        animation.startValue,
+        animation.velocity,
+        config.stiffness,
+        config.mass
+      );
+      animation.lastTimestamp = now;
+    }
+
     return {
       onFrame: springOnFrame,
+      onTargetChange,
       onStart,
       toValue,
       velocity: config.velocity || 0,
@@ -258,6 +310,7 @@ export const withSpring = ((
       omega0: 0,
       omega1: 0,
       initialEnergy: 0,
+      needsCalibration: false,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });

@@ -119,12 +119,14 @@ function measureWindowY(ref: AnimatedRef<Animated.View>) {
 // Records the source and target that each shared transition start gets, in root coordinates.
 async function recordSharedTransitionStarts() {
   const starts = makeMutable<SharedTransitionStart[]>([]);
+  const targets = makeMutable<number[]>([]);
   await runOnUIBlocking(() => {
     'worklet';
     const original = global.LayoutAnimationsManager;
     global.LayoutAnimationsManager = {
       start: (tag, type, values, config) => {
         if (type === SHARED_ELEMENT_TRANSITION) {
+          targets.value = [...targets.value, values.targetGlobalOriginY ?? NaN];
           starts.value = [
             ...starts.value,
             {
@@ -136,11 +138,16 @@ async function recordSharedTransitionStarts() {
         original.start(tag, type, values, config);
       },
       stop: original.stop,
+      updateTarget: (tag, values) => {
+        targets.value = [...targets.value, values.targetGlobalOriginY ?? NaN];
+        return original.updateTarget(tag, values);
+      },
     };
     global.managerBeforeStartRecording = original;
   });
   return {
     starts,
+    targets,
     stop: () =>
       runOnUIBlocking(() => {
         'worklet';
@@ -157,7 +164,7 @@ describe('Shared transition to a new native stack screen', () => {
     await waitForNotification(STACK_READY);
     await waitForFrames(10);
     const firstWindowY = await measureWindowY(boxRefs.first);
-    const { starts, stop } = await recordSharedTransitionStarts();
+    const { starts, targets, stop } = await recordSharedTransitionStarts();
     try {
       navigation.navigate('Second');
       await waitForNotification(FORWARD_FINISHED);
@@ -168,6 +175,9 @@ describe('Shared transition to a new native stack screen', () => {
       const rootOffset = firstWindowY - starts.value[0].sourceY;
       const secondY = secondWindowY - rootOffset;
       expect(secondY).toBeWithinRange(1, 10000);
+      const forwardTargets = targets.value.slice(
+        Platform.OS === 'ios' ? -1 : 0
+      );
       navigation.navigate('Third');
       await expectEventually(() => starts.value.length > forwardStarts).toBe(
         true
@@ -176,10 +186,6 @@ describe('Shared transition to a new native stack screen', () => {
         secondY - 1,
         secondY + 1
       );
-      // On iOS, a later start of the push corrects the target of its first start.
-      const forwardTargets = starts.value
-        .slice(Platform.OS === 'ios' ? forwardStarts - 1 : 0, forwardStarts)
-        .map(({ targetY }) => targetY);
       for (const targetY of forwardTargets) {
         expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
       }

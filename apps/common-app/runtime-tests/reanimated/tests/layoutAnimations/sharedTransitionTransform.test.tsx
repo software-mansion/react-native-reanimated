@@ -31,6 +31,8 @@ function TransformScreens({
   targetX,
   ancestor,
   targetWidth = 150,
+  targetRotates = false,
+  ancestorScale = 1,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -38,10 +40,20 @@ function TransformScreens({
   targetX: number | null;
   ancestor: boolean;
   targetWidth?: number;
+  targetRotates?: boolean;
+  ancestorScale?: number;
 }) {
   const source = useTestRef('transform-source');
   return (
-    <View style={ancestor ? { transform: [{ translateX: 0 }] } : undefined}>
+    <View
+      style={
+        ancestor
+          ? {
+              transform: [{ scale: ancestorScale }],
+              transformOrigin: [0, 0, 0],
+            }
+          : undefined
+      }>
       <SharedTransitionBoundary isActive={!active}>
         <View style={{ height: 170 }}>
           <Animated.View
@@ -66,6 +78,7 @@ function TransformScreens({
               transition={transition}
               targetX={targetX}
               width={targetWidth}
+              rotates={targetRotates}
             />
           )}
         </View>
@@ -78,10 +91,12 @@ function TransformTarget({
   transition,
   targetX,
   width,
+  rotates,
 }: {
   transition: SharedTransition;
   targetX: number | null;
   width: number;
+  rotates: boolean;
 }) {
   const target = useTestRef('transform-target');
   return (
@@ -95,6 +110,12 @@ function TransformTarget({
         height: 150,
         backgroundColor: 'red',
         ...(targetX === null ? {} : { transform: [{ translateX: targetX }] }),
+        ...(rotates
+          ? {
+              transform: [{ rotate: '90deg' }],
+              transformOrigin: [0, 0, 0] as const,
+            }
+          : {}),
       }}
     />
   );
@@ -140,6 +161,38 @@ async function expectTranslation(name: string, translateX: number) {
 
 describe('Shared transition transform copying', () => {
   const nativeTest = RuntimeTestObserver ? test : test.skip;
+  nativeTest.each([1, 0.9])(
+    'applies a top-left transform origin once under ancestor scale %p',
+    async (ancestorScale) => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const props = {
+        transition: heldTransition(),
+        sourceX: null,
+        targetX: null,
+        ancestor: true,
+        ancestorScale,
+        targetRotates: true,
+      };
+      await render(<TransformScreens {...props} active={false} />);
+      await waitForFrames();
+      await render(<TransformScreens {...props} active />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(2800);
+      const carrier =
+        await getTestComponent('transform-source').getTransformObservation();
+      expect(carrier?.width).toBe(150, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(1200);
+      await waitForNotification('transform-finished');
+      await waitForFrames(3);
+      const target =
+        await getTestComponent('transform-target').getTransformObservation();
+      expect(carrier?.translateX).toBe(
+        target!.translateX * ancestorScale +
+          (ancestorScale - 1) * (120 + 150 / 2),
+        ComparisonMode.PIXEL
+      );
+    }
+  );
   nativeTest.each([
     ['source translation', 40, null, false],
     ['target translation', null, 30, false],

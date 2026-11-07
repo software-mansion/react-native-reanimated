@@ -51,6 +51,18 @@ const customFade = SharedTransition.custom((values) => {
 })
   .duration(3000)
   .fadeContent();
+const linearCustomFade = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    width: withTiming(values.targetWidth, {
+      duration: 3000,
+      easing: Easing.linear,
+    }),
+  };
+})
+  .duration(3000)
+  .easing(Easing.linear)
+  .fadeContent();
 const progressFade = SharedTransition.duration(3000)
   .progressAnimation((values, progress) => {
     'worklet';
@@ -118,11 +130,13 @@ function Screens({
   removeSource = false,
   hiddenTargetChild = false,
   sharedTransition = transition,
+  targetWidth = TARGET_WIDTH,
 }: {
   showTarget: boolean;
   removeSource?: boolean;
   hiddenTargetChild?: boolean;
   sharedTransition?: SharedTransition;
+  targetWidth?: number;
 }) {
   return (
     <View style={styles.container}>
@@ -137,7 +151,7 @@ function Screens({
       <Endpoint
         name="target"
         active={showTarget}
-        style={styles.target}
+        style={[styles.target, { width: targetWidth }]}
         hiddenChild={hiddenTargetChild}
         sharedTransition={sharedTransition}
       />
@@ -587,6 +601,45 @@ describe('Shared transition with fadeContent', () => {
       await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     }
   );
+
+  test('keeps the original fade clock when a layout update restarts a custom animation', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(
+      <Screens showTarget={false} sharedTransition={linearCustomFade} />
+    );
+    await waitForFrames();
+    await render(<Screens showTarget sharedTransition={linearCustomFade} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
+    const before = await mountedProps('sourceChild');
+    expect(before?.opacity).toBeWithinRange(0.52, 0.55);
+
+    await render(
+      <Screens
+        showTarget
+        sharedTransition={linearCustomFade}
+        targetWidth={NEXT_WIDTH}
+      />
+    );
+    await waitForFrames(3);
+    const after = await mountedProps('sourceChild');
+    expect(after?.opacity).toBeWithinRange(
+      before!.opacity - 0.01,
+      before!.opacity + 0.01
+    );
+    await advanceAnimationTimer(1500);
+    const [source, child] = await sample(['source', 'sourceChild']);
+    expect(source?.width).toBeWithinRange(144, 146);
+    const expectedOpacity = CHILD_OPACITY * (1 - (1000 + 1500) / 3000);
+    expect(child?.opacity).toBeWithinRange(
+      expectedOpacity - 0.01,
+      expectedOpacity + 0.01
+    );
+    await advanceAnimationTimer(1500);
+    await expectOpacity('target', 1);
+    await advanceAnimationTimer(1500);
+    await expectOpacity('targetChild', CHILD_OPACITY);
+  });
 
   test('fades the children of the target in after the moving view lands', async () => {
     await render(<Screens showTarget={false} hiddenTargetChild />);

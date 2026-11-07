@@ -42,6 +42,7 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
+  uint64_t id;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -88,8 +89,17 @@ struct LayoutAnimationCancellation {
   bool shouldStopManager;
 };
 
-using LayoutAnimationOperation =
-    std::variant<ManagedLayoutAnimationStart, ProgressLayoutAnimationStart, LayoutAnimationCancellation>;
+struct SharedTransitionTargetUpdate {
+  Tag tag;
+  uint64_t animationId;
+  bool restartUnsupported;
+};
+
+using LayoutAnimationOperation = std::variant<
+    ManagedLayoutAnimationStart,
+    ProgressLayoutAnimationStart,
+    LayoutAnimationCancellation,
+    SharedTransitionTargetUpdate>;
 
 #ifdef ANDROID
 using SynchronousPropsReader = std::function<folly::dynamic(Tag tag)>;
@@ -246,8 +256,14 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
     ManagedLayoutAnimationStart start;
     Rect window;
   };
-  using PreparedLayoutAnimationOperation =
-      std::variant<PreparedLayoutAnimationStart, LayoutAnimationStop, std::monostate>;
+  struct PreparedSharedTransitionTargetUpdate {
+    Tag tag;
+    LayoutAnimation animation;
+    Rect window;
+    bool restartUnsupported;
+  };
+  using PreparedLayoutAnimationOperation = std::
+      variant<PreparedLayoutAnimationStart, LayoutAnimationStop, PreparedSharedTransitionTargetUpdate, std::monostate>;
 #ifdef ANDROID
   struct OpacityRestoration {
     ShadowView shadowView;
@@ -259,6 +275,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
     return false;
+  }
+  virtual std::optional<ContentOpacityRange> restartSharedTransitionContentFade(Tag /*tag*/) const {
+    return std::nullopt;
   }
   std::deque<LayoutAnimationOperation> takeDeferredLayoutAnimationStarts(
       std::deque<LayoutAnimationOperation> &operations) const;
@@ -284,8 +303,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
     size_t operationIndex;
   };
 
+  mutable uint64_t nextLayoutAnimationId_ = 0;
   mutable std::deque<LayoutAnimationOperation> layoutAnimationOperations_;
   mutable std::unordered_map<Tag, PendingLayoutAnimation> pendingLayoutAnimations_;
+  mutable std::unordered_map<uint64_t, size_t> pendingSharedTransitionTargetUpdates_;
 };
 
 // A proxy reads the updates registry with the proxy mutex held, so a thread that holds the registry lock must not

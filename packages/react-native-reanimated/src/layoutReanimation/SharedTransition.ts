@@ -9,10 +9,12 @@ import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
   AnimationObject,
+  AnimationFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  LayoutAnimationValues,
   StyleProps,
   Timestamp,
 } from '../commonTypes';
@@ -164,6 +166,14 @@ type ChangedStyle = { key: string; current: unknown; target: unknown };
 
 // `globalOrigin*` and `transformMatrix` repeat `origin*` and `transform`.
 const ALIAS_NAMES = ['GlobalOriginX', 'GlobalOriginY', 'TransformMatrix'];
+const GEOMETRY_NAMES = [
+  'OriginX',
+  'OriginY',
+  'Width',
+  'Height',
+  'Transform',
+  'TransformOrigin',
+] as const;
 
 function isEqual(a: unknown, b: unknown): boolean {
   'worklet';
@@ -256,11 +266,28 @@ function interpolateValue(
 
 function defaultProgressAnimation(
   values: SharedTransitionAnimationsValues,
-  progress: number
+  progress: number,
+  keepGeometry = false
 ): StyleProps {
   'worklet';
   const style: Record<string, unknown> = {};
-  for (const { key, current, target } of getChangedStyles(values)) {
+  const changed = getChangedStyles(values);
+  if (keepGeometry) {
+    const record = values as unknown as Record<string, unknown>;
+    for (const name of GEOMETRY_NAMES) {
+      const key = name[0].toLowerCase() + name.slice(1);
+      const current = record['current' + name];
+      const target = record['target' + name];
+      if (
+        current !== undefined &&
+        target !== undefined &&
+        !changed.some((entry) => entry.key === key)
+      ) {
+        changed.push({ key, current, target });
+      }
+    }
+  }
+  for (const { key, current, target } of changed) {
     if (key === 'transform') {
       const matrix = interpolateMatrix(
         progress,
@@ -378,26 +405,46 @@ function mapAnimations(
   return result;
 }
 
+function targetUpdater(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  return (target: Partial<LayoutAnimationValues>) => {
+    'worklet';
+    const record = values as unknown as Record<string, unknown>;
+    for (const key in target) {
+      if (key.startsWith('target') || key.startsWith('window')) {
+        const value = (target as Record<string, unknown>)[key];
+        if (!isEqual(record[key], value)) {
+          record[key] = value;
+        }
+      }
+    }
+  };
+}
+
 function progressDrivenAnimations(
   values: SharedTransitionAnimationsValues,
   initialStyle: StyleProps,
   progressAnimation: ProgressSharedTransitionAnimation,
-  createDriver: () => AnimationObject
-): StyleProps {
+  createDriver: () => AnimationObject,
+  matrixAsArray = false
+): {
+  animations: StyleProps;
+  updateTarget: (target: Partial<LayoutAnimationValues>) => void;
+} {
   'worklet';
-  const frame = { timestamp: -1, style: initialStyle };
-  const styleAt = (timestamp: Timestamp, progress: number) => {
-    if (frame.timestamp !== timestamp) {
-      frame.timestamp = timestamp;
-      frame.style = progressAnimation(values, progress);
-    }
-    return frame.style;
+  const frame = { timestamp: -1, style: initialStyle, finished: false };
+  const running: AnimationObject[] = [];
+  const driver = {
+    animation: undefined as Animation<AnimationObject> | undefined,
   };
-  const animations: Record<string, unknown> = {};
-  for (const key in initialStyle) {
-    animations[key] = defineAnimation(0, () => {
+  const animationFor = (key: string, matrix = false) => {
+    const valueOf = (style: StyleProps) =>
+      matrix
+        ? (style.transform as [{ matrix: number[] }])[0].matrix
+        : style[key];
+    const initial = valueOf(initialStyle);
+    return defineAnimation(0, () => {
       'worklet';
-      const driver = createDriver() as Animation<AnimationObject>;
       return {
         isHigherOrder: true,
         onStart: (
@@ -405,22 +452,143 @@ function progressDrivenAnimations(
           _value: unknown,
           timestamp: Timestamp
         ) => {
-          driver.onStart(driver, 0, timestamp, undefined!);
-          animation.current = initialStyle[key];
+          if (!driver.animation) {
+            driver.animation = createDriver() as Animation<AnimationObject>;
+            driver.animation.onStart(
+              driver.animation,
+              0,
+              timestamp,
+              undefined!
+            );
+          }
+          animation.current = initial;
+          running.push(animation);
         },
         onFrame: (
           animation: Animation<AnimationObject>,
           timestamp: Timestamp
         ) => {
-          const finished = driver.onFrame(driver, timestamp);
-          animation.current = styleAt(timestamp, driver.current as number)[key];
-          return finished;
+          if (frame.timestamp !== timestamp) {
+            frame.timestamp = timestamp;
+            if (!frame.finished) {
+              frame.finished = driver.animation!.onFrame(
+                driver.animation!,
+                timestamp
+              );
+            }
+            frame.style = progressAnimation(
+              values,
+              driver.animation!.current as number
+            );
+          }
+          animation.current = valueOf(frame.style);
+          return frame.finished;
         },
-        current: initialStyle[key],
+        current: initial,
       } as unknown as AnimationObject;
     });
+  };
+  const animations: Record<string, unknown> = {};
+  for (const key in initialStyle) {
+    animations[key] =
+      matrixAsArray && key === 'transform'
+        ? [{ matrix: animationFor(key, true) }]
+        : animationFor(key);
   }
-  return animations;
+  const updateValues = targetUpdater(values);
+  return {
+    animations,
+    updateTarget: (target) => {
+      updateValues(target);
+      frame.timestamp = -1;
+      running.forEach((animation) => {
+        animation.finished = false;
+      });
+    },
+  };
+}
+
+function transformAnimation(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  const state = {
+    target: values.targetTransform.matrix,
+    matrix: prepareMatrixInterpolation(
+      values.currentTransform.matrix as AffineMatrixFlat,
+      values.targetTransform.matrix as AffineMatrixFlat
+    ),
+  };
+  return (_values: SharedTransitionAnimationsValues, progress: number) => {
+    'worklet';
+    if (state.target !== values.targetTransform.matrix) {
+      state.target = values.targetTransform.matrix;
+      state.matrix = prepareMatrixInterpolation(
+        values.currentTransform.matrix as AffineMatrixFlat,
+        state.target as AffineMatrixFlat
+      );
+    }
+    return {
+      transform: [{ matrix: interpolateMatrix(progress, state.matrix) }],
+    };
+  };
+}
+
+function retargetableAnimation(
+  initialTarget: number,
+  createAnimation: (target: number) => Animation<AnimationObject>,
+  delayAnimation: AnimationFunction
+) {
+  'worklet';
+  const initialAnimation = createAnimation(initialTarget);
+  const state = {
+    target: initialTarget,
+    running: undefined as Animation<AnimationObject> | undefined,
+    inner: undefined as Animation<AnimationObject> | undefined,
+  };
+  const definition = defineAnimation(initialTarget, () => {
+    'worklet';
+    return {
+      isHigherOrder: true,
+      current: initialTarget,
+      onStart: (
+        animation: Animation<AnimationObject>,
+        value: number,
+        now: Timestamp
+      ) => {
+        state.running = animation;
+        state.inner = initialAnimation;
+        state.inner.toValue = state.target;
+        state.inner.reduceMotion ??= animation.reduceMotion;
+        state.inner.onStart(state.inner, value, now, undefined!);
+        animation.current = state.inner.current;
+      },
+      onFrame: (animation: Animation<AnimationObject>, now: Timestamp) => {
+        const finished = state.inner!.onFrame(state.inner!, now);
+        animation.current = state.inner!.current;
+        return finished;
+      },
+    } as AnimationObject;
+  });
+  const delayed = delayAnimation(definition) as AnimationObject;
+  return {
+    animation: delayed,
+    updateTarget: (nextTarget: number) => {
+      'worklet';
+      if (state.target === nextTarget) {
+        return;
+      }
+      state.target = nextTarget;
+      if (state.inner && state.running) {
+        state.inner.onTargetChange!(
+          state.inner,
+          state.target,
+          global.__frameTimestamp ?? global._getAnimationTimestamp()
+        );
+        state.running.current = state.inner.current;
+        state.running.finished = false;
+        delayed.finished = false;
+      }
+    },
+  };
 }
 
 export class SharedTransition
@@ -573,7 +741,7 @@ export class SharedTransition
     const callback = this.callbackV;
     const delay = this.getDelay();
     const customAnimationFactory = this.customAnimationFactory;
-    const progressAnimation = this.getStyleProgressAnimation();
+    const progressAnimation = this.getStyleProgressAnimation(true);
     const fadeContentOpacity = (target: number) => {
       'worklet';
       return delayFunction(
@@ -585,12 +753,13 @@ export class SharedTransition
     if (this.transitionType === SharedTransitionType.PROGRESS_ANIMATION) {
       return (layoutAnimationValues) => {
         'worklet';
-        const values =
-          layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
+        const values = {
+          ...layoutAnimationValues,
+        } as unknown as SharedTransitionAnimationsValues;
         const initialValues = progressAnimation(values, 0);
         return {
           initialValues,
-          animations: progressDrivenAnimations(
+          ...progressDrivenAnimations(
             values,
             initialValues,
             progressAnimation,
@@ -628,8 +797,9 @@ export class SharedTransition
 
     return (layoutAnimationValues) => {
       'worklet';
-      const values =
-        layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
+      const values = {
+        ...layoutAnimationValues,
+      } as unknown as SharedTransitionAnimationsValues;
       const animateValue = (target: unknown): unknown => {
         if (Array.isArray(target)) {
           return target.map(animateValue);
@@ -644,29 +814,68 @@ export class SharedTransition
         }
         return delayFunction(delay, animation(target, config));
       };
-      const changed = getChangedStyles(values);
+      const initialGeometry: StyleProps = {};
       const animations: Record<string, unknown> = {};
+      let updateValues = targetUpdater(values);
+      if (values.currentTransform && values.targetTransform) {
+        const transform = transformAnimation(values);
+        Object.assign(initialGeometry, transform(values, 0));
+        const progress = progressDrivenAnimations(
+          values,
+          initialGeometry,
+          transform,
+          () => delayFunction(delay, animation(1, config)),
+          true
+        );
+        Object.assign(animations, progress.animations);
+        updateValues = progress.updateTarget;
+      }
+      const geometryUpdates: (() => void)[] = [];
+      const record = values as unknown as Record<string, unknown>;
+      for (const name of GEOMETRY_NAMES) {
+        if (name === 'Transform') {
+          continue;
+        }
+        const key = name[0].toLowerCase() + name.slice(1);
+        const current = record['current' + name];
+        const target = record['target' + name];
+        if (current === undefined || target === undefined) {
+          continue;
+        }
+        initialGeometry[key] = current;
+        const create = (initialTarget: number, readTarget: () => number) => {
+          const result = retargetableAnimation(
+            initialTarget,
+            (nextTarget) => animation(nextTarget, config),
+            (next) => delayFunction(delay, next)
+          );
+          geometryUpdates.push(() => result.updateTarget(readTarget()));
+          return result.animation;
+        };
+        animations[key] = Array.isArray(target)
+          ? target.map((value, index) =>
+              create(value, () => (record['target' + name] as number[])[index])
+            )
+          : create(target as number, () => record['target' + name] as number);
+      }
+      const changed = getChangedStyles(values).filter(
+        ({ key }) => !(key in initialGeometry)
+      );
       for (const { key, target } of changed) {
         if (key === 'contentOpacity') {
           animations[key] = fadeContentOpacity(target as number);
           continue;
         }
-        animations[key] =
-          key === 'transform'
-            ? [
-                {
-                  matrix: delayFunction(
-                    delay,
-                    animation((target as { matrix: number[] }).matrix, config)
-                  ),
-                },
-              ]
-            : animateValue(target);
+        animations[key] = animateValue(target);
       }
 
       return {
-        initialValues: getInitialStyle(changed),
+        initialValues: { ...getInitialStyle(changed), ...initialGeometry },
         animations,
+        updateTarget: (nextValues) => {
+          updateValues(nextValues);
+          geometryUpdates.forEach((update) => update());
+        },
         callback,
       };
     };
@@ -681,9 +890,15 @@ export class SharedTransition
     );
   }
 
-  private getStyleProgressAnimation(): ProgressSharedTransitionAnimation {
+  private getStyleProgressAnimation(
+    keepGeometry = false
+  ): ProgressSharedTransitionAnimation {
     const progressAnimation =
-      this.progressAnimationFactory ?? defaultProgressAnimation;
+      this.progressAnimationFactory ??
+      ((values, progress) => {
+        'worklet';
+        return defaultProgressAnimation(values, progress, keepGeometry);
+      });
     return (values, progress) => {
       'worklet';
       let style = progressAnimation(values, progress);

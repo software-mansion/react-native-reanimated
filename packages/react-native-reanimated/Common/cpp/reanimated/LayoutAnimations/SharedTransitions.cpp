@@ -472,6 +472,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->config = config;
   run->driver = driver;
   run->targetOffWindow = false;
+  run->tracksNativePlacement = false;
   if (run->carrier->placement() == CarrierPlacement::NESTED && !keepsNesting(run->carrier, run->target)) {
     moveNestedCarrierToRoot(*run, transaction.filteredMutations, propsParserContext);
   }
@@ -499,12 +500,74 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   return carrierView;
 }
 
-bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
-  const auto &previousTarget = carrierAnimation(run).finalView;
-  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
-    return true;
+ShadowView LayoutAnimationsProxy::viewWithGeometryOf(
+    const ShadowView &view,
+    const ShadowView &geometry,
+    const PropsParserContext &propsParserContext) const {
+  auto result = view;
+  result.layoutMetrics = geometry.layoutMetrics;
+#ifdef ANDROID
+  auto rawProps = view.props->rawProps;
+  rawProps["transform"] = geometry.props->rawProps.getDefault("transform", nullptr);
+  rawProps["transformOrigin"] = geometry.props->rawProps.getDefault("transformOrigin", nullptr);
+  result.props = componentDescriptorRegistry_->at(view.componentHandle)
+                     .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+#else
+  auto props = componentDescriptorRegistry_->at(view.componentHandle).cloneProps(propsParserContext, view.props, {});
+  auto &viewProps = *std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
+  const auto &geometryProps = getViewProps(geometry);
+  viewProps.transform = geometryProps.transform;
+  viewProps.transformOrigin = geometryProps.transformOrigin;
+  result.props = props;
+#endif
+  return result;
+}
+
+void LayoutAnimationsProxy::updateSharedTransitionGeometry(
+    const SharedTransitionRun &run,
+    const ShadowView &target,
+    const Props::Shared &frameProps,
+    const PropsParserContext &propsParserContext) const {
+  const auto tag = run.carrier->current.tag;
+  const auto finalView = viewWithGeometryOf(carrierAnimation(run).finalView, target, propsParserContext);
+  if (const auto completed = completedAnimations_.find(tag); completed != completedAnimations_.end()) {
+    auto &animation = completed->second.animation;
+    auto currentView = animation.currentView;
+    const auto pending = updateMap_.find(tag);
+    const bool animatesOpacity = pending != updateMap_.end() && pending->second.animatesOpacity;
+    if (pending != updateMap_.end() && pending->second.newProps) {
+      currentView.props = pending->second.newProps;
+    }
+    const auto frameView = viewWithGeometryOf(currentView, target, propsParserContext);
+    animation.finalView = finalView;
+    const auto &frame = frameView.layoutMetrics.frame;
+    updateMap_.insert_or_assign(
+        tag,
+        UpdateValues{
+            frameView.props,
+            Frame(
+                frame.origin.x - animation.frameOffset.x,
+                frame.origin.y - animation.frameOffset.y,
+                frame.size.width,
+                frame.size.height),
+            animatesOpacity});
+    return;
   }
-  return SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
+  updateLayoutAnimationTarget(tag, finalView, frameProps, run.config);
+}
+
+bool LayoutAnimationsProxy::targetGeometryChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget)
+    const {
+  const auto &previousTarget = carrierAnimation(run).finalView;
+  const auto &previousProps = getViewProps(previousTarget);
+  const auto &targetProps = getViewProps(carrierTarget);
+  return previousTarget.layoutMetrics != carrierTarget.layoutMetrics ||
+      previousProps.transform != targetProps.transform || previousProps.transformOrigin != targetProps.transformOrigin;
+}
+
+bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
+  return SharedTransitionValuesFactory::hasAnimatedChanges(
+             getViewProps(carrierAnimation(run).finalView), getViewProps(carrierTarget), false) &&
       waitsForCoveringRun(run, viewsHiddenByContinuingRuns());
 }
 
@@ -1269,6 +1332,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           config->animation,
           restartContentFade(run));
       run.targetOffWindow = isOffWindow(afterNode);
+      run.tracksNativePlacement =
+          run.targetOffWindow || findAncestorOutsideReactParent(collectedTransition.ancestors[AFTER], true).has_value();
       if (run.targetOffWindow) {
         schedulePullOnNextFrame();
       }
@@ -1327,7 +1392,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             restartContentFade(run));
         continue;
       }
-      if (targetEndChanged(run, carrierAfter)) {
+      if (phase == LayoutAnimationPhase::RUNNING && targetGeometryChanged(run, carrierAfter)) {
+        updateSharedTransitionGeometry(
+            run, carrierAfter, ownCarrierView(target, run.carrier, propsParserContext).props, propsParserContext);
+      } else if (
+          (phase == LayoutAnimationPhase::ENDED &&
+           carrierAnimation(run).finalView.layoutMetrics != carrierAfter.layoutMetrics) ||
+          targetEndChanged(run, carrierAfter)) {
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -1335,6 +1406,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             config->animation,
             restartContentFade(run));
+      } else if (phase == LayoutAnimationPhase::ENDED && targetGeometryChanged(run, carrierAfter)) {
+        updateSharedTransitionGeometry(
+            run, carrierAfter, ownCarrierView(target, run.carrier, propsParserContext).props, propsParserContext);
       }
     }
   }
@@ -1689,6 +1763,11 @@ std::optional<ContentOpacityRange> LayoutAnimationsProxy::restartContentFade(Sha
   contentFade.range = {contentOpacityOnScreen(run), run.carrier == run.target ? 1.0 : 0.0};
   const auto &[from, to] = contentFade.range;
   return ContentOpacityRange{.from = from, .to = from + (to - from) / fadeLength(contentFade)};
+}
+
+std::optional<ContentOpacityRange> LayoutAnimationsProxy::restartSharedTransitionContentFade(const Tag tag) const {
+  const auto run = sharedTransitionRun(tag, SharedTransitionLifecycle::ACTIVE);
+  return run ? restartContentFade(*run) : std::nullopt;
 }
 
 double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &run) const {
@@ -2225,7 +2304,8 @@ std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOut
     }
     const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
     if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
-      return AncestorOutsideReactParent{.index = i, .position = ancestors[i].scrollPosition + placement.origin};
+      return AncestorOutsideReactParent{
+          .index = i, .position = ancestors[i].scrollPosition + placement.origin, .transform = placement.transform};
     }
   }
 #endif
@@ -2256,7 +2336,7 @@ void LayoutAnimationsProxy::adjustForNativePlacement(
   auto &absolutePositions = collectedTransition.absolutePositions[index];
   moveBelowAncestor(*ancestor, absolutePositions);
   collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
-  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions);
+  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions, ancestor);
 }
 
 // A run that starts detaches its carrier, which ends the native placement search of the paths below it.
@@ -2299,11 +2379,12 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
   const auto ancestors = collectAncestors(run.target, false);
-  if (const auto ancestor = findAncestorOutsideReactParent(ancestors, true)) {
+  const auto ancestor = findAncestorOutsideReactParent(ancestors, true);
+  if (ancestor) {
     moveBelowAncestor(*ancestor, absolutePositions);
   }
   target.layoutMetrics.frame.origin = absolutePositions[0];
-  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions), propsParserContext);
+  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions, ancestor), propsParserContext);
   return target;
 }
 
@@ -2311,17 +2392,17 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
 // origin of its stack. The run follows the target once the platform places it, until the transition ends.
 void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &propsParserContext) const {
   for (auto &run : activeSharedTransitionRuns()) {
-    if (!run.targetOffWindow) {
+    if (!run.tracksNativePlacement) {
       continue;
     }
     const auto carrierTag = run.carrier->current.tag;
     const bool targetMapped = isLightNodeMapped(run.target);
     const bool targetOffWindow = targetMapped && isOffWindow(run.target);
+    run.targetOffWindow = targetOffWindow;
     if (targetOffWindow && (hasPendingLayoutAnimation(carrierTag) || layoutAnimations_.contains(carrierTag))) {
       schedulePullOnNextFrame();
       continue;
     }
-    run.targetOffWindow = false;
     if (!targetMapped || targetOffWindow) {
       continue;
     }
@@ -2339,10 +2420,8 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
     if (!layoutAnimations_.contains(carrierTag) && !completedAnimations_.contains(carrierTag)) {
       continue;
     }
-    const auto &animation = carrierAnimation(run);
-    if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics) {
-      startSharedTransition(
-          run.carrier, animation.currentView, carrierAfter, frameProps, config, restartContentFade(run));
+    if (targetGeometryChanged(run, carrierAfter)) {
+      updateSharedTransitionGeometry(run, carrierAfter, frameProps, propsParserContext);
     }
   }
 }
@@ -2403,11 +2482,20 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
 
 std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::vector<Ancestor> &ancestors,
-    const std::vector<react::Point> &absolutePositions) const {
+    const std::vector<react::Point> &absolutePositions,
+    const std::optional<AncestorOutsideReactParent> &nativePlacement) const {
   const auto &targetSize = ancestors[0].ownSize;
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
-  bool parentHasTransform = false;
+  bool parentHasTransform = nativePlacement && nativePlacement->transform.matrix != Transform{}.matrix;
+  if (parentHasTransform) {
+    const auto &ancestor = ancestors[nativePlacement->index];
+    const auto position = nativePlacement->position - ancestor.scrollPosition;
+    TransformOrigin origin;
+    origin.xy[0] = {static_cast<float>(position.x - targetViewPosition.x), UnitType::Point};
+    origin.xy[1] = {static_cast<float>(position.y - targetViewPosition.y), UnitType::Point};
+    combinedMatrix = resolveTransform(targetSize, ancestor.ownSize, nativePlacement->transform, origin);
+  }
   for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
     const auto &ancestor = ancestors[i];
     if (ancestor.transform.operations.empty()) {
@@ -2427,6 +2515,9 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
+    const auto origin = getTranslateForTransformOrigin(targetSize.width, targetSize.height, ancestors[0].origin);
+    combinedMatrix = Transform::Translate(-origin[0], -origin[1], -origin[2]) * combinedMatrix *
+        Transform::Translate(origin[0], origin[1], origin[2]);
     return Transform::FromTransformOperation(
         react::TransformOperation(TransformOperationType::Arbitrary), {}, combinedMatrix);
   }

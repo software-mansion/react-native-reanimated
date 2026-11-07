@@ -28,12 +28,11 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   omega0: number;
   omega1: number;
   initialEnergy: number;
+  needsCalibration: boolean;
+  retargetDirection?: number;
 }
 
-export interface InnerSpringAnimation extends Omit<
-  SpringAnimation,
-  'toValue' | 'current'
-> {
+export interface InnerSpringAnimation extends SpringAnimation {
   toValue: number;
   current: number;
 }
@@ -377,7 +376,11 @@ export function isAnimationTerminatingCalculation(
   if (config.overshootClamping) {
     const leftBound = startValue >= 0 ? toValue : toValue + startValue;
     const rightBound = leftBound + Math.abs(startValue);
-    if (current < leftBound || current > rightBound) {
+    const crossedTarget =
+      animation.retargetDirection !== undefined
+        ? (current - toValue) * animation.retargetDirection < 0
+        : current < leftBound || current > rightBound;
+    if (crossedTarget) {
       return true;
     }
   }

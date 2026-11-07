@@ -177,6 +177,70 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).not.toHaveBeenCalled();
   });
 
+  test('updates a target without starting or cancelling the animation', () => {
+    const callback = jest.fn();
+    const updateTarget = jest.fn();
+    const config = jest.fn(() => ({
+      ...makePendingConfig(callback)(),
+      updateTarget,
+    }));
+    manager.start(
+      40,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      config
+    );
+    expect(manager.updateTarget(40, { targetWidth: 200 })).toBe(true);
+    expect(manager.updateTarget(40, { targetWidth: 300 })).toBe(true);
+    expect(config).toHaveBeenCalledTimes(1);
+    expect(updateTarget).toHaveBeenLastCalledWith({ targetWidth: 300 });
+    expect(callback).not.toHaveBeenCalled();
+    manager.stop(40);
+    expect(manager.updateTarget(40, { targetWidth: 400 })).toBe(false);
+  });
+
+  test('replaces the target callback with the next animation of the tag', () => {
+    const previous = jest.fn();
+    const next = jest.fn();
+    manager.start(
+      41,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      () => ({
+        ...makePendingConfig(jest.fn())(),
+        updateTarget: previous,
+      })
+    );
+    manager.start(
+      41,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      () => ({
+        ...makePendingConfig(jest.fn())(),
+        updateTarget: next,
+      })
+    );
+    manager.updateTarget(41, { targetWidth: 300 });
+    expect(previous).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith({ targetWidth: 300 });
+    manager.stop(41);
+  });
+
+  test('removes the target callback when the animation finishes', () => {
+    const updateTarget = jest.fn();
+    manager.start(
+      42,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      {},
+      () => ({
+        ...makeConfig([])(),
+        updateTarget,
+      })
+    );
+    expect(manager.updateTarget(42, { targetWidth: 300 })).toBe(false);
+    expect(updateTarget).not.toHaveBeenCalled();
+  });
+
   test('reports exactly one native end when an animation finishes', () => {
     manager.start(7, LayoutAnimationType.EXITING, {}, makeConfig([]));
 

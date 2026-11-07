@@ -81,6 +81,7 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+  bool tracksNativePlacement = false;
 };
 
 // The first reason, in this order, why a run does not land in a pull.
@@ -148,6 +149,7 @@ struct Ancestor {
 struct AncestorOutsideReactParent {
   size_t index;
   react::Point position;
+  Transform transform;
 };
 
 struct CollectedTransition {
@@ -257,6 +259,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config,
       std::optional<ContentOpacityRange> contentOpacity) const;
   std::optional<ContentOpacityRange> restartContentFade(SharedTransitionRun &run) const;
+  std::optional<ContentOpacityRange> restartSharedTransitionContentFade(Tag tag) const override;
   double contentOpacityOnScreen(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> fadingChildren(
       const std::shared_ptr<LightNode> &node,
@@ -489,6 +492,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
+  ShadowView viewWithGeometryOf(
+      const ShadowView &view,
+      const ShadowView &geometry,
+      const PropsParserContext &propsParserContext) const;
+  void updateSharedTransitionGeometry(
+      const SharedTransitionRun &run,
+      const ShadowView &target,
+      const Props::Shared &frameProps,
+      const PropsParserContext &propsParserContext) const;
+  bool targetGeometryChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
@@ -570,7 +583,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<Transform> parseParentTransforms(
       const std::vector<Ancestor> &ancestors,
-      const std::vector<react::Point> &absolutePositions) const;
+      const std::vector<react::Point> &absolutePositions,
+      const std::optional<AncestorOutsideReactParent> &nativePlacement = std::nullopt) const;
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,

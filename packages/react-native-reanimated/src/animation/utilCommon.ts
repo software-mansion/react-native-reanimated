@@ -44,6 +44,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   globalOriginY: true,
   opacity: true,
   transform: true,
+  transformOrigin: true,
   backgroundColor: true,
   contentOpacity: true,
 };

@@ -152,6 +152,14 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
       rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
 }
 
+bool LayoutAnimationsManager::updateLayoutAnimationTarget(jsi::Runtime &rt, Tag tag, const jsi::Object &values) const {
+  bool updated = false;
+  callLayoutAnimationsManager(rt, "updateTarget", [&](jsi::Runtime &runtime, const jsi::Function &update) {
+    updated = update.call(runtime, jsi::Value(tag), values).getBool();
+  });
+  return updated;
+}
+
 bool LayoutAnimationsManager::callLayoutAnimationsManager(
     jsi::Runtime &rt,
     const char *methodName,

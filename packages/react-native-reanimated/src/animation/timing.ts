@@ -164,8 +164,27 @@ export const withTiming = function (
       }
     }
 
+    function onTargetChange(
+      animation: InnerTimingAnimation,
+      target: number,
+      now: Timestamp
+    ) {
+      if (animation.reduceMotion) {
+        animation.current = target;
+        animation.toValue = target;
+        return;
+      }
+      const endTime = animation.startTime + config.duration;
+      timing(animation, now);
+      config.duration = Math.max(0, endTime - now);
+      animation.startValue = animation.current;
+      animation.startTime = now;
+      animation.toValue = target;
+    }
+
     return {
       type: 'timing',
+      onTargetChange,
       onFrame: timing,
       onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
       progress: 0,

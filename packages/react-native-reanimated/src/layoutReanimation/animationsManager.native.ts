@@ -62,6 +62,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const targetUpdatesForTag = new Map<
+    number,
+    LayoutAnimation['updateTarget']
+  >();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -112,6 +116,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     } finally {
       currentAnimationForTag.delete(tag);
       mutableValuesForTag.delete(tag);
+      targetUpdatesForTag.delete(tag);
     }
   };
 
@@ -128,6 +133,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     ) {
       try {
         const style = config(yogaValues);
+        targetUpdatesForTag.set(tag, style.updateTarget);
         let currentAnimation = style.animations;
 
         // When layout animation is requested, but a previous one is still running, we merge
@@ -153,6 +159,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
             if (finished) {
               currentAnimationForTag.delete(tag);
               mutableValuesForTag.delete(tag);
+              targetUpdatesForTag.delete(tag);
               const shouldRemoveView = type === LayoutAnimationType.EXITING;
               stopObservingProgress(
                 tag,
@@ -184,6 +191,14 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         }
         throw error;
       }
+    },
+    updateTarget(tag, values) {
+      const updateTarget = targetUpdatesForTag.get(tag);
+      if (!updateTarget) {
+        return false;
+      }
+      updateTarget(values);
+      return true;
     },
     stop,
   };

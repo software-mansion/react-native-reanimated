@@ -105,6 +105,7 @@ async function throwFromLayoutAnimationStart() {
         throw new Error(START_ERROR);
       },
       stop: global.originalLayoutAnimationsManager.stop,
+      updateTarget: global.originalLayoutAnimationsManager.updateTarget,
     };
   });
 }

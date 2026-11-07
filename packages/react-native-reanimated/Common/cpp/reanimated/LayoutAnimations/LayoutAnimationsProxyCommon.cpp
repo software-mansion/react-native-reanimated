@@ -99,6 +99,7 @@ void LayoutAnimationsProxyCommon::surfaceDidUnmount() {
 
 void LayoutAnimationsProxyCommon::clearSurfaceState() const {
   layoutAnimationOperations_.clear();
+  pendingSharedTransitionTargetUpdates_.clear();
   pendingLayoutAnimations_.clear();
   updateMap_.clear();
   layoutAnimations_.clear();
@@ -254,7 +255,9 @@ void LayoutAnimationsProxyCommon::applySynchronousPropsToLayoutAnimation(const T
       std::visit(
           [&](auto &start) {
             using Start = std::decay_t<decltype(start)>;
-            if constexpr (!std::is_same_v<Start, LayoutAnimationCancellation>) {
+            if constexpr (
+                std::is_same_v<Start, ManagedLayoutAnimationStart> ||
+                std::is_same_v<Start, ProgressLayoutAnimationStart>) {
               if (start.tag != tag) {
                 return;
               }
@@ -341,6 +344,7 @@ ShadowView LayoutAnimationsProxyCommon::materializeLayoutAnimation(
           .opacity = opacity,
           .type = type,
           .config = config,
+          .id = ++nextLayoutAnimationId_,
       });
   return currentView;
 }
@@ -388,6 +392,14 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         progressStart->config);
     return std::monostate{};
   }
+  if (const auto *update = std::get_if<SharedTransitionTargetUpdate>(&operation)) {
+    const auto animation = layoutAnimations_.find(update->tag);
+    if (animation == layoutAnimations_.end() || animation->second.id != update->animationId ||
+        animation->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+      return std::monostate{};
+    }
+    return PreparedSharedTransitionTargetUpdate{update->tag, animation->second, window_, update->restartUnsupported};
+  }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);
   react_native_assert(cancellation.shouldStopManager);
   return LayoutAnimationStop{cancellation.tag};
@@ -421,6 +433,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     return;
   }
   auto operations = std::exchange(layoutAnimationOperations_, std::deque<LayoutAnimationOperation>{});
+  pendingSharedTransitionTargetUpdates_.clear();
   pendingLayoutAnimations_.clear();
   reconcileLayoutAnimationOperations(operations);
   auto deferredStarts = takeDeferredLayoutAnimationStarts(operations);
@@ -429,6 +442,41 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
        operation = takeNextLayoutAnimationOperation(operations)) {
     if (const auto *stop = std::get_if<LayoutAnimationStop>(&*operation)) {
       layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, stop->tag);
+      continue;
+    }
+    if (const auto *update = std::get_if<PreparedSharedTransitionTargetUpdate>(&*operation)) {
+      const auto &animation = update->animation;
+      auto current = animation.currentView;
+      auto target = animation.finalView;
+      current.layoutMetrics.frame.origin -= animation.frameOffset;
+      target.layoutMetrics.frame.origin -= animation.frameOffset;
+      auto values = SharedTransitionValuesFactory(uiRuntime_).create(current, target);
+      values.setProperty(uiRuntime_, "windowWidth", update->window.width);
+      values.setProperty(uiRuntime_, "windowHeight", update->window.height);
+      if (!layoutAnimationsManager_->updateLayoutAnimationTarget(uiRuntime_, update->tag, values) &&
+          update->restartUnsupported) {
+        values = SharedTransitionValuesFactory(uiRuntime_).create(animation.currentView, animation.finalView);
+        values.setProperty(uiRuntime_, "windowWidth", update->window.width);
+        values.setProperty(uiRuntime_, "windowHeight", update->window.height);
+        if (const auto contentOpacity = restartSharedTransitionContentFade(update->tag)) {
+          values.setProperty(uiRuntime_, "currentContentOpacity", contentOpacity->from);
+          values.setProperty(uiRuntime_, "targetContentOpacity", contentOpacity->to);
+        }
+        materializeLayoutAnimation(
+            update->tag,
+            animation.currentView,
+            animation.finalView,
+            animation.frameProps,
+            animation.parentTag,
+            animation.opacity,
+            animation.type,
+            animation.config);
+        if (!layoutAnimationsManager_->startLayoutAnimation(
+                uiRuntime_, update->tag, animation.type, values, animation.config)) {
+          endLayoutAnimation(update->tag, false);
+          hasFailedStart = true;
+        }
+      }
       continue;
     }
     const auto *preparedStart = std::get_if<PreparedLayoutAnimationStart>(&*operation);
@@ -501,6 +549,7 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
   }
   std::ranges::move(layoutAnimationOperations_, std::back_inserter(starts));
   layoutAnimationOperations_ = std::move(starts);
+  pendingSharedTransitionTargetUpdates_.clear();
   pendingLayoutAnimations_.clear();
   for (size_t index = 0; index < layoutAnimationOperations_.size(); index++) {
     std::visit(
@@ -511,8 +560,10 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
           } else if constexpr (std::is_same_v<Operation, ProgressLayoutAnimationStart>) {
             pendingLayoutAnimations_.try_emplace(
                 operation.tag, PendingLayoutAnimation{LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS, index});
-          } else {
+          } else if constexpr (std::is_same_v<Operation, LayoutAnimationCancellation>) {
             pendingLayoutAnimations_.erase(operation.tag);
+          } else if constexpr (std::is_same_v<Operation, SharedTransitionTargetUpdate>) {
+            pendingSharedTransitionTargetUpdates_.insert_or_assign(operation.animationId, index);
           }
         },
         layoutAnimationOperations_[index]);
@@ -620,8 +671,20 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     react_native_assert(false && "Pending managed layout animation not found");
   }
   if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
+    const bool layoutChanged = animationIt->second.finalView.layoutMetrics != finalView.layoutMetrics;
     animationIt->second.finalView = finalView;
     animationIt->second.frameProps = frameProps;
+    if (animationIt->second.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+      const auto animationId = animationIt->second.id;
+      if (const auto pending = pendingSharedTransitionTargetUpdates_.find(animationId);
+          pending != pendingSharedTransitionTargetUpdates_.end()) {
+        auto &update = std::get<SharedTransitionTargetUpdate>(layoutAnimationOperations_[pending->second]);
+        update.restartUnsupported |= layoutChanged;
+        return;
+      }
+      pendingSharedTransitionTargetUpdates_.emplace(animationId, layoutAnimationOperations_.size());
+      layoutAnimationOperations_.push_back(SharedTransitionTargetUpdate{tag, animationId, layoutChanged});
+    }
     return;
   }
   react_native_assert(false && "Layout animation not found");

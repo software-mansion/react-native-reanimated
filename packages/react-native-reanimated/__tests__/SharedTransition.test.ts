@@ -1,4 +1,4 @@
-import { withTiming } from '../src/animation';
+import { withSpring, withStyleAnimation, withTiming } from '../src/animation';
 import { ReduceMotion } from '../src/commonTypes';
 import type {
   AnimationObject,
@@ -6,6 +6,7 @@ import type {
   LayoutAnimationsValues,
   StyleProps,
 } from '../src/commonTypes';
+import { Easing } from '../src/Easing';
 import type { SharedTransitionAnimationsValues } from '../src/layoutReanimation/SharedTransition';
 import {
   SharedTransition,
@@ -78,14 +79,16 @@ function rotationOf(style: StyleProps) {
 
 describe('SharedTransition', () => {
   describe('default animation', () => {
-    test('animates only the properties that differ', () => {
+    test('keeps geometry active when an endpoint can change', () => {
       const { initialValues, animations } = runLayoutAnimation(
         new SharedTransition()
       );
       const changed = [
         'backgroundColor',
         'borderRadius',
+        'height',
         'originX',
+        'originY',
         'transform',
         'transformOrigin',
         'width',
@@ -419,3 +422,375 @@ describe('SharedTransition perspective', () => {
     }
   });
 });
+
+describe('SharedTransition target updates', () => {
+  const originalTimestamp = global.__frameTimestamp;
+
+  afterEach(() => {
+    global.__frameTimestamp = originalTimestamp;
+  });
+
+  test('changes width without a jump and keeps the timing deadline', () => {
+    const run = startTransition(
+      SharedTransition.duration(1000).easing(Easing.linear)
+    );
+    run.frame(700);
+    const width = run.animation.current.width;
+    run.style.updateTarget!({ targetWidth: 500 });
+    run.frame(700);
+    expect(run.animation.current.width).toBe(width);
+    expect(run.frame(1000)).toBe(true);
+    expect(run.animation.current.width).toBe(500);
+  });
+
+  test('finishes while the target transform keeps moving', () => {
+    const run = startTransition(
+      SharedTransition.duration(1000).easing(Easing.linear)
+    );
+    for (let time = 100; time < 1000; time += 100) {
+      run.frame(time);
+      const matrix = [...IDENTITY];
+      matrix[13] = time;
+      run.style.updateTarget!({ targetTransform: { matrix } } as never);
+    }
+    expect(run.frame(1000)).toBe(true);
+    expect(run.animation.current.transform).toEqual([
+      { matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 900, 0, 1] },
+    ]);
+  });
+
+  test('restores a transform that was equal at the start', () => {
+    const run = startTransition(SharedTransition.duration(1000), {
+      targetTransform: { matrix: IDENTITY },
+    });
+    run.frame(250);
+    run.style.updateTarget!({
+      targetTransform: { matrix: ROTATE_90 },
+    } as never);
+    run.frame(500);
+    expect(rotationOf(run.animation.current)).toBeGreaterThan(0);
+    run.style.updateTarget!({ targetTransform: { matrix: IDENTITY } } as never);
+    expect(run.frame(1000)).toBe(true);
+    expect(rotationOf(run.animation.current)).toBeCloseTo(0);
+  });
+
+  test('revives a finished scalar while the transform still runs', () => {
+    const run = startTransition(
+      SharedTransition.springify().damping(15).mass(1).stiffness(100),
+      { currentWidth: 100, targetWidth: 100 }
+    );
+    run.frame(16);
+    run.frame(100);
+    run.style.updateTarget!({ targetWidth: 200 });
+    run.frame(132);
+    expect(run.animation.current.width).toBeGreaterThan(100);
+    run.style.updateTarget!({ targetWidth: 100 });
+    let finished = false;
+    for (let time = 148; !finished && time < 5000; time += 16) {
+      finished = run.frame(time);
+    }
+    expect(finished).toBe(true);
+    expect(run.animation.current.width).toBe(100);
+  });
+
+  const springCases = [
+    {
+      name: 'physics',
+      config: { damping: 15, mass: 1, stiffness: 100 },
+      builder: () =>
+        SharedTransition.springify().damping(15).mass(1).stiffness(100),
+    },
+    {
+      name: 'duration',
+      config: { duration: 600, dampingRatio: 0.85 },
+      builder: () => SharedTransition.springify(600).dampingRatio(0.85),
+    },
+    {
+      name: 'clamped',
+      config: { damping: 15, mass: 1, stiffness: 100, overshootClamping: true },
+      builder: () =>
+        SharedTransition.springify()
+          .damping(15)
+          .mass(1)
+          .stiffness(100)
+          .overshootClamping(true),
+    },
+  ];
+
+  describe.each(springCases)('$name spring', ({ config, builder }) => {
+    test.each([-1000, -0.001, 0.001, 1000])(
+      'keeps scalar frames and completion for a target of %s',
+      (target) => {
+        const style = builder().build()({
+          ...VALUES,
+          currentOriginX: 0,
+          targetOriginX: target,
+        } as never);
+        const scalar = resolveAnimation(style.animations.originX);
+        const expected = resolveAnimation(withSpring(target, config));
+        scalar.onStart(scalar, 0, 0, undefined!);
+        expected.onStart(expected, 0, 0, undefined!);
+        for (let time = 16; time < 5000; time += 16) {
+          const actualFinished = scalar.onFrame(scalar, time);
+          const expectedFinished = expected.onFrame(expected, time);
+          expect(scalar.current).toBeCloseTo(expected.current as number, 8);
+          expect(actualFinished).toBe(expectedFinished);
+          if (expectedFinished) {
+            return;
+          }
+        }
+        throw new Error('[Reanimated] The spring did not finish.');
+      }
+    );
+
+    test('keeps matrix frames and completion', () => {
+      const style = runLayoutAnimation(builder());
+      const actual = resolveAnimation(style.animations.transform[0].matrix);
+      const expected = resolveAnimation(withSpring(ROTATE_90, config));
+      actual.onStart(actual, IDENTITY, 0, undefined!);
+      expected.onStart(expected, IDENTITY, 0, undefined!);
+      for (let time = 16; time < 5000; time += 16) {
+        const actualFinished = actual.onFrame(actual, time);
+        const expectedFinished = expected.onFrame(expected, time);
+        (actual.current as number[]).forEach((value, index) => {
+          expect(value).toBeCloseTo((expected.current as number[])[index], 8);
+        });
+        expect(actualFinished).toBe(expectedFinished);
+        if (expectedFinished) {
+          return;
+        }
+      }
+      throw new Error('[Reanimated] The matrix spring did not finish.');
+    });
+  });
+
+  test('keeps spring position and velocity when its target changes', () => {
+    const animation = resolveAnimation(
+      withSpring(100, { damping: 15, stiffness: 100, mass: 1 })
+    );
+    animation.onStart(animation, 0, 0, undefined!);
+    for (let time = 16; time <= 160; time += 16) {
+      animation.onFrame(animation, time);
+    }
+    const current = animation.current;
+    const velocity = animation.velocity;
+    const omega0 = animation.omega0;
+    animation.onTargetChange(animation, -100, 160);
+    expect(animation.current).toBe(current);
+    expect(animation.velocity).toBe(velocity);
+    expect(animation.omega0).toBe(omega0);
+    expect(animation.toValue).toBe(-100);
+    expect(animation.initialEnergy).toBeGreaterThan(0);
+  });
+
+  test('keeps placement live after its driver finishes', () => {
+    const run = startTransition(
+      SharedTransition.springify(200).dampingRatio(0.85)
+    );
+    const transform = resolveAnimation(
+      run.style.animations.transform[0].matrix
+    );
+    for (let time = 16; time < 3000; time += 16) {
+      const finished = run.frame(time);
+      if (time === 128) {
+        run.style.updateTarget!({ targetWidth: 1000 });
+      }
+      if (transform.finished && !finished) {
+        const matrix = [...IDENTITY];
+        matrix[12] = 100;
+        run.style.updateTarget!({ targetTransform: { matrix } } as never);
+        run.frame(time + 16);
+        expect(run.animation.current.transform).toEqual([{ matrix }]);
+        return;
+      }
+    }
+    throw new Error(
+      '[Reanimated] The scalar did not outlast the placement driver.'
+    );
+  });
+
+  test('does not clamp a reversing spring before it crosses the target', () => {
+    const animation = resolveAnimation(
+      withSpring(100, {
+        damping: 15,
+        stiffness: 100,
+        mass: 1,
+        overshootClamping: true,
+      })
+    );
+    animation.onStart(animation, 0, 0, undefined!);
+    for (let time = 16; time <= 160; time += 16) {
+      animation.onFrame(animation, time);
+    }
+    const current = animation.current as number;
+    expect(animation.velocity).toBeGreaterThan(0);
+    animation.onTargetChange(animation, -100, 160);
+    expect(animation.onFrame(animation, 176)).toBe(false);
+    expect(animation.current).toBeGreaterThan(current);
+    for (let time = 192; time < 5000; time += 16) {
+      if (animation.onFrame(animation, time)) {
+        expect(animation.current).toBe(-100);
+        return;
+      }
+    }
+    throw new Error('[Reanimated] The reversing spring did not finish.');
+  });
+
+  test('calibrates an initially equal duration spring when it starts moving', () => {
+    const config = { duration: 600, dampingRatio: 0.85 };
+    const run = startTransition(
+      SharedTransition.springify(config.duration).dampingRatio(
+        config.dampingRatio
+      ),
+      {
+        currentWidth: 100,
+        targetWidth: 100,
+      }
+    );
+    run.frame(16);
+    run.frame(100);
+    run.style.updateTarget!({ targetWidth: 200 });
+    const expected = resolveAnimation(withSpring(200, config));
+    expected.onStart(expected, 100, 100, undefined!);
+    for (let time = 116; time < 5000; time += 16) {
+      run.frame(time);
+      const finished = expected.onFrame(expected, time);
+      expect(run.animation.current.width).toBeCloseTo(
+        expected.current as number,
+        8
+      );
+      if (finished) {
+        expect(run.animation.current.width).toBe(200);
+        return;
+      }
+    }
+    throw new Error('[Reanimated] The duration spring did not finish.');
+  });
+
+  test('keeps default progress geometry when it changes back to the source', () => {
+    const run = startTransition(
+      SharedTransition.defaultTransitionType(
+        SharedTransitionType.PROGRESS_ANIMATION
+      )
+        .duration(1000)
+        .easing(Easing.linear),
+      { targetWidth: 100, targetTransform: { matrix: IDENTITY } }
+    );
+    run.frame(250);
+    run.style.updateTarget!({
+      targetWidth: 500,
+      targetTransform: { matrix: ROTATE_90 },
+    } as never);
+    run.frame(500);
+    expect(run.animation.current.width).toBe(300);
+    expect(rotationOf(run.animation.current)).toBeCloseTo(45);
+    run.style.updateTarget!({
+      targetWidth: 100,
+      targetTransform: { matrix: IDENTITY },
+    } as never);
+    run.frame(750);
+    expect(run.animation.current.width).toBe(100);
+    expect(rotationOf(run.animation.current)).toBeCloseTo(0);
+    expect(run.frame(1000)).toBe(true);
+  });
+
+  test('does not restart the color or content fade', () => {
+    const values = { currentContentOpacity: 1, targetContentOpacity: 0 };
+    const baseline = startTransition(
+      SharedTransition.duration(1000).fadeContent(),
+      values
+    );
+    const moving = startTransition(
+      SharedTransition.duration(1000).fadeContent(),
+      values
+    );
+    for (let time = 100; time <= 1000; time += 100) {
+      baseline.frame(time);
+      moving.frame(time);
+      expect(moving.animation.current.backgroundColor).toEqual(
+        baseline.animation.current.backgroundColor
+      );
+      expect(moving.animation.current.contentOpacity).toBe(
+        baseline.animation.current.contentOpacity
+      );
+      if (time < 1000) {
+        moving.style.updateTarget!({ targetWidth: 300 + time });
+      }
+    }
+  });
+
+  test('updates progress values and aliases without changing the source', () => {
+    const transition = SharedTransition.progressAnimation(
+      (values, progress) => ({
+        width:
+          values.currentWidth +
+          progress * (values.targetWidth - values.currentWidth),
+        originX:
+          values.currentGlobalOriginX +
+          progress * (values.targetGlobalOriginX - values.currentGlobalOriginX),
+        transformMatrix: values.targetTransformMatrix,
+      })
+    )
+      .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
+      .duration(1000)
+      .easing(Easing.linear);
+    const run = startTransition(transition);
+    run.frame(250);
+    run.style.updateTarget!({
+      currentWidth: 999,
+      targetWidth: 500,
+      targetGlobalOriginX: 210,
+      targetTransformMatrix: IDENTITY,
+    } as never);
+    run.frame(250);
+    expect(run.animation.current.width).toBe(200);
+    run.frame(500);
+    expect(run.animation.current.width).toBe(300);
+    expect(run.animation.current.originX).toBe(110);
+    expect(run.animation.current.transform).toEqual([{ matrix: IDENTITY }]);
+    expect(run.frame(1000)).toBe(true);
+  });
+
+  test('keeps the delay when the target changes before it starts', () => {
+    const run = startTransition(
+      SharedTransition.duration(1000).delay(200).easing(Easing.linear)
+    );
+    run.frame(100);
+    run.style.updateTarget!({ targetWidth: 500 });
+    run.frame(150);
+    expect(run.animation.current.width).toBe(100);
+    run.frame(200);
+    expect(run.frame(1200)).toBe(true);
+    expect(run.animation.current.width).toBe(500);
+  });
+
+  test('applies reduced motion to scalar and transform geometry', () => {
+    const run = startTransition(
+      SharedTransition.duration(1000).reduceMotion(ReduceMotion.Always)
+    );
+    expect(run.frame(0)).toBe(true);
+    expect(run.animation.current.width).toBe(300);
+    expect(rotationOf(run.animation.current)).toBeCloseTo(90);
+  });
+});
+
+function startTransition(
+  transition: SharedTransition,
+  values: Record<string, unknown> = {}
+) {
+  const style = transition.build()({ ...VALUES, ...values } as never);
+  const animation = withStyleAnimation(style.animations);
+  animation.onStart(animation, style.initialValues, 0, undefined!);
+  return {
+    style,
+    animation,
+    frame(timestamp: number) {
+      global.__frameTimestamp = timestamp;
+      return animation.onFrame(animation, timestamp);
+    },
+  };
+}
+
+function resolveAnimation(value: unknown): AnimationObject {
+  return typeof value === 'function' ? value() : (value as AnimationObject);
+}

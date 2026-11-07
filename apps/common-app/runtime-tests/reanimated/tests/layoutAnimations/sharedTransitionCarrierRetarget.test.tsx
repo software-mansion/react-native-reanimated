@@ -134,16 +134,15 @@ describe('Shared transition carrier changes during a run', () => {
     const reversing = await mountedWidth('source');
     expect(reversing).toBeWithinRange(61, 104);
 
-    // Without the retarget, the carrier would land at width 60 after the next half run.
     await render(<ReversedScreens active={false} sourceWidth={160} />);
     await waitForFrames(3);
-    await advanceAnimationTimer(DURATION / 2);
+    await advanceAnimationTimer(DURATION / 4);
     expect(await mountedWidth('source')).toBeWithinRange(
       (reversing ?? 0) + 1,
       159
     );
 
-    await advanceAnimationTimer(DURATION / 2);
+    await advanceAnimationTimer(DURATION / 4);
     await waitForNotification('carrier-finished');
     await expectEventually(async () => {
       const props = await getTestComponent('source').getMountedViewProps();

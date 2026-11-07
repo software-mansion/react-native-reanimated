@@ -79,6 +79,7 @@ class LayoutAnimationsManager {
   void clearSharedTransitionConfigs(const std::vector<Tag> &tags);
   void clearSharedTransitionContentFade(int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  bool updateLayoutAnimationTarget(jsi::Runtime &rt, Tag tag, const jsi::Object &values) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
   static bool

@@ -473,8 +473,8 @@ describe('Nested shared transitions', () => {
       />
     );
     await waitForFrames(3);
-    await advanceAnimationTimer(retargetInnerDuration / 2);
-    await advanceAnimationTimer(retargetInnerDuration / 2);
+    await advanceAnimationTimer(retargetInnerDuration / 4);
+    await advanceAnimationTimer(retargetInnerDuration / 4);
     const endSample = await expectInnerViewToReach(
       'width',
       (width) => Math.abs(width - 90) < 0.5
@@ -705,12 +705,20 @@ describe('Nested shared transitions', () => {
     await waitForFrames(3);
     await advanceAnimationTimer(retargetInnerDuration / 2);
     await render(
-      <Screens active innerColor="#00ff00" transitions={retargetTransitions} />
+      <Screens
+        active
+        innerSize={90}
+        innerColor="#00ff00"
+        transitions={retargetTransitions}
+      />
     );
     await waitForFrames(3);
     await advanceAnimationTimer(retargetInnerDuration / 2);
     await waitForNotification('inner-finished');
-    await expectInnerViewPhase('completed');
+    await expectInnerViewToReach(
+      'width',
+      (width) => Math.abs(width - 90) < 0.5
+    );
     const oldColor = (
       await getTestComponent('sourceInner').getPresentedViewProps()
     )?.backgroundColor;
@@ -719,6 +727,7 @@ describe('Nested shared transitions', () => {
     await render(
       <Screens
         active
+        innerSize={90}
         innerColor="#00ff00"
         innerLabel="changed"
         transitions={retargetTransitions}

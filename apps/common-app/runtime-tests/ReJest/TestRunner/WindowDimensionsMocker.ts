@@ -44,6 +44,12 @@ export class WindowDimensionsMocker {
       global.LayoutAnimationsManager = {
         start: startLayoutAnimation,
         stop: originalLayoutAnimationsManager.stop,
+        updateTarget: (tag, values) =>
+          originalLayoutAnimationsManager.updateTarget(tag, {
+            ...values,
+            windowHeight: 852,
+            windowWidth: 393,
+          }),
       };
     });
   }

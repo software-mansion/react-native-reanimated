@@ -70,6 +70,7 @@ export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
   callback?: (finished: boolean) => void;
+  updateTarget?: (values: Partial<LayoutAnimationValues>) => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,6 +121,10 @@ export type LayoutAnimationStartFunction = (
 export type LayoutAnimationsManager = {
   start: LayoutAnimationStartFunction;
   stop: (tag: number) => void;
+  updateTarget: (
+    tag: number,
+    values: Partial<LayoutAnimationValues>
+  ) => boolean;
 };
 
 export interface ILayoutAnimationBuilder {
@@ -317,6 +322,7 @@ export interface AnimationObject<T = AnimatableValue> {
 }
 
 export interface Animation<T extends AnimationObject> extends AnimationObject {
+  onTargetChange?: (animation: T, target: number, timestamp: Timestamp) => void;
   onFrame: (animation: T, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: T,

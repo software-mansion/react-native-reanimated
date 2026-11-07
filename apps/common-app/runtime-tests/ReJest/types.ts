@@ -5,12 +5,11 @@ import type {
   RefObject,
   SetStateAction,
 } from 'react';
+import type { AnimatedStyle, StyleProps } from 'react-native-reanimated';
 import type {
-  AnimatedStyle,
-  LayoutAnimationStartFunction,
-  StyleProps,
-} from 'react-native-reanimated';
-import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
+  LayoutAnimationsManager,
+  ShadowNodeWrapper,
+} from 'react-native-reanimated/lib/typescript/commonTypes';
 
 import type { TestFailure } from './utils/remoteProtocol';
 
@@ -222,12 +221,6 @@ declare global {
     tag: number,
     presented: boolean
   ) => MountedViewProps | null;
-  var LayoutAnimationsManager: {
-    start: LayoutAnimationStartFunction;
-    stop: (tag: number) => void;
-  };
-  var originalLayoutAnimationsManager: {
-    start: LayoutAnimationStartFunction;
-    stop: (tag: number) => void;
-  };
+  var LayoutAnimationsManager: LayoutAnimationsManager;
+  var originalLayoutAnimationsManager: LayoutAnimationsManager;
 }
