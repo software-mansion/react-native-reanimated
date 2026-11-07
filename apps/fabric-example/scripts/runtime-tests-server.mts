@@ -1754,14 +1754,32 @@ function probeMetro(timeoutMs = 1000): Promise<boolean> {
   });
 }
 
+// A Metro started seconds ago with --reset-cache accepts the connection long
+// before /status answers, so a busy port is not a stale one. Wait for it the
+// way a Metro this script starts is waited for, just with a shorter budget:
+// the tests never need a fresh bundle from it.
+const EXISTING_METRO_WAIT_MS = 30_000;
+// A Metro that is still starting answers /status late on every request, not
+// just once, so the request that waits for it has to allow for that.
+const METRO_PROBE_TIMEOUT_MS = 5_000;
+
 async function ensureMetroRunning() {
-  if (await probeMetro()) {
+  const outcome = await waitForMetro({
+    probeMetro: (timeoutMs) => probeMetro(timeoutMs),
+    probeTcp: () => probeTcp('127.0.0.1', METRO_PORT),
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    now: () => Date.now(),
+    timeoutMs: EXISTING_METRO_WAIT_MS,
+    intervalMs: 500,
+    probeTimeoutMs: METRO_PROBE_TIMEOUT_MS,
+  });
+  if (outcome === 'running') {
     console.log(
       `[runtime-tests] Metro already running on :${METRO_PORT}, reusing it`
     );
     return;
   }
-  if (await probeTcp('127.0.0.1', METRO_PORT)) {
+  if (outcome === 'foreign') {
     throw new Error(
       `Port ${METRO_PORT} is in use but not responding as Metro. Kill the stale process or pass --metro-port.`
     );
