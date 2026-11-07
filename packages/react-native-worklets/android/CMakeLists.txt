@@ -50,7 +50,8 @@ file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
 
-target_precompile_headers(worklets PRIVATE "${ANDROID_CPP_DIR}/WorkletsPCH.h")
+include("${CMAKE_SOURCE_DIR}/cmake/pch-ccache.cmake")
+pch_ccache_precompile_headers(worklets "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 
 # Stop Clang from embedding a build timestamp in the .pch. Without this the PCH
 # is non-reproducible across builds, so ccache can't reuse it and translation
