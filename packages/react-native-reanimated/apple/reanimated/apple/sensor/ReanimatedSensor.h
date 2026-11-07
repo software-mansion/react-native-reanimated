@@ -1,34 +1,23 @@
 #import <Foundation/Foundation.h>
 
-#if !TARGET_OS_TV && !TARGET_OS_OSX
-#import <CoreMotion/CoreMotion.h>
-#import <UIKit/UIKit.h>
-#endif
-
 #import <reanimated/apple/sensor/ReanimatedSensorType.h>
 
-@interface ReanimatedSensor : NSObject {
-  ReanimatedSensorType _sensorType;
-  double _interval;
-  double _lastTimestamp;
-  int _referenceFrame;
-#if !TARGET_OS_TV && !TARGET_OS_OSX
-  CMMotionManager *_motionManager;
-#endif
-  void (^_setter)(double[], int);
-}
+@interface ReanimatedSensor : NSObject
 
-+ (bool)isAvailable:(ReanimatedSensorType)sensorType;
 - (instancetype)init:(ReanimatedSensorType)sensorType
              interval:(int)interval
     iosReferenceFrame:(int)iosReferenceFrame
                setter:(void (^)(double[], int))setter;
-- (bool)initialize;
-- (bool)initializeGyroscope;
-- (bool)initializeAccelerometer;
-- (bool)initializeGravity;
-- (bool)initializeMagnetometer;
-- (bool)initializeOrientation;
-- (void)cancel;
+
+@end
+
+// Delivers readings to sensors through a single CMMotionManager, as Apple warns that multiple
+// instances can affect the rate of the data. Sensors in different reference frames are the only
+// exception, because a CMMotionManager provides device motion in one frame at a time.
+@interface ReanimatedSensorHub : NSObject
+
+- (bool)isAvailable:(ReanimatedSensorType)sensorType;
+- (bool)addSensor:(ReanimatedSensor *)sensor;
+- (void)removeSensor:(ReanimatedSensor *)sensor;
 
 @end
