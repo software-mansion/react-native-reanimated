@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, StyleSheet, Text, View } from 'react-native';
 import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
   ReduceMotion,
@@ -471,7 +471,8 @@ describe('Shared element transition between boundaries', () => {
     await waitForFrames(2);
     const clips = await mountedClips();
     expect(clips.length).toBe(1);
-    expect(clips[0].width).toBeWithinRange(100, 140);
+    const pixel = 1 / PixelRatio.get();
+    expect(clips[0].width).toBeWithinRange(100 - pixel, 140 + pixel);
 
     await waitForNotification('shared-transition-finished');
     await waitForFrames();
