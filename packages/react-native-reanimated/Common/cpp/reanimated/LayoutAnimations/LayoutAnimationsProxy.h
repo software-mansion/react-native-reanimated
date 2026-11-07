@@ -59,10 +59,12 @@ enum class SharedTransitionDriver : std::uint8_t {
 };
 
 // A retiring run has no reason to continue, but the frames of its carrier are not in the mount queue yet. It ends in
-// the first pull that can remove views after those frames are queued.
+// the first pull that can remove views after those frames are queued. A finished run stays in the registry until
+// the end of the pull, so that a finish does not invalidate the runs that a caller holds.
 enum class SharedTransitionLifecycle : std::uint8_t {
   ACTIVE,
   RETIRING,
+  FINISHED,
 };
 
 // The carrier is the view that the run animates, moved from its parent to the root for the time of the
@@ -205,7 +207,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<SharedTag, SharedElement> sharedElements_;
   // The runs by the tag of their carrier. A view carries one run, and a shared tag has one active run.
   mutable std::unordered_map<Tag, SharedTransitionRun> sharedTransitionRuns_;
-  mutable std::unordered_map<SharedTag, Tag> activeSharedTransitionCarriers_;
   mutable CarrierPlacements carrierPlacements_;
   // Entering animations of target children that wait until their run lands.
   mutable std::vector<PendingNodeAnimation> heldEnterings_;
@@ -360,6 +361,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool flushStructuralMutations) const;
+  void eraseFinishedSharedTransitionRuns() const;
   void cleanupSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
   bool hasPendingStructuralCleanup() const;
@@ -453,7 +455,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void retireSharedTransition(SharedTransitionRun &run) const;
-  void eraseSharedTransitionRun(Tag carrierTag) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -475,10 +476,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   SharedTransitionRun *runOfCarrier(const std::shared_ptr<LightNode> &node) const;
-  SharedTransitionRun *findRunOfCarrier(const std::shared_ptr<LightNode> &node) const;
   SharedTransitionRun *activeSharedTransitionRun(const SharedTag &sharedTag) const;
   SharedTransitionRun *sharedTransitionRun(Tag carrierTag, SharedTransitionLifecycle lifecycle) const;
-  std::vector<Tag> carrierTagsOfRuns(SharedTransitionLifecycle lifecycle) const;
   // A loop over this view must not change the lifecycle of a run.
   auto activeSharedTransitionRuns() const {
     return sharedTransitionRuns_ | std::views::values | std::views::filter([](const SharedTransitionRun &run) {
@@ -531,7 +530,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool landsWithOtherRuns(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
-      Tag carrierTag,
+      SharedTransitionRun &run,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool landed = false) const;
