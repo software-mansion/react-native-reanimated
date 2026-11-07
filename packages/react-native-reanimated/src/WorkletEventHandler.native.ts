@@ -7,7 +7,7 @@ export class WorkletEventHandler<
 > implements IWorkletEventHandler<Event> {
   eventNames: string[];
   worklet: (event: ReanimatedEvent<Event>) => void;
-  #viewTags: Set<number>;
+  #fallbackEventNames: Map<number, string | undefined>;
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
@@ -15,7 +15,7 @@ export class WorkletEventHandler<
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
-    this.#viewTags = new Set<number>();
+    this.#fallbackEventNames = new Map<number, string | undefined>();
     this.#registrations = new Map<number, number[]>();
   }
 
@@ -34,16 +34,13 @@ export class WorkletEventHandler<
     });
 
     // Attach new events with new worklet
-    Array.from(this.#viewTags).forEach((tag) => {
-      const newRegistrations = this.eventNames.map((eventName) =>
-        registerEventHandler(this.worklet, eventName, tag)
-      );
-      this.#registrations.set(tag, newRegistrations);
+    this.#fallbackEventNames.forEach((fallbackEventName, tag) => {
+      this.registerForEvents(tag, fallbackEventName);
     });
   }
 
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
-    this.#viewTags.add(viewTag);
+    this.#fallbackEventNames.set(viewTag, fallbackEventName);
 
     const newRegistrations = this.eventNames.map((eventName) =>
       registerEventHandler(this.worklet, eventName, viewTag)
@@ -61,7 +58,7 @@ export class WorkletEventHandler<
   }
 
   unregisterFromEvents(viewTag: number): void {
-    this.#viewTags.delete(viewTag);
+    this.#fallbackEventNames.delete(viewTag);
     this.#registrations.get(viewTag)?.forEach((id) => {
       unregisterEventHandler(id);
     });
