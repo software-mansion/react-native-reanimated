@@ -119,6 +119,16 @@ type SharedTransitionSnapshotValues = {
   ShadowRadius: number;
   /** Android only. */
   Elevation?: number;
+  /**
+   * The clip of the moving view in window coordinates: the bounds of its
+   * ancestors with `overflow: hidden`. Present only when an ancestor clips
+   * either view.
+   */
+  ClipOriginX?: number;
+  ClipOriginY?: number;
+  ClipWidth?: number;
+  ClipHeight?: number;
+  ClipBorderRadius?: number;
 };
 
 /**
