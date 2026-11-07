@@ -66,6 +66,33 @@ describe('resolvePlatform', () => {
     assert.doesNotMatch(result.error ?? '', /--serial/);
   });
 
+  it('rejects an empty --serial instead of selecting Android for it', () => {
+    // `--serial "$ANDROID_SERIAL"` expands to an empty string when the variable
+    // is unset. Selecting Android for it would drop the name and let the run
+    // pick whatever device happens to be connected.
+    const result = resolvePlatform({ serial: '' });
+    assert.equal(result.platform, null);
+    assert.match(result.error ?? '', /--serial/);
+  });
+
+  it('rejects an empty --avd', () => {
+    const result = resolvePlatform({ avd: '' });
+    assert.equal(result.platform, null);
+    assert.match(result.error ?? '', /--avd/);
+  });
+
+  it('rejects an empty --udid', () => {
+    const result = resolvePlatform({ udid: '' });
+    assert.equal(result.platform, null);
+    assert.match(result.error ?? '', /--udid/);
+  });
+
+  it('rejects an empty --platform', () => {
+    const result = resolvePlatform({ platform: '' });
+    assert.equal(result.platform, null);
+    assert.match(result.error ?? '', /--platform/);
+  });
+
   it('rejects an unknown --platform', () => {
     const result = resolvePlatform({ platform: 'windows' });
     assert.equal(result.platform, null);

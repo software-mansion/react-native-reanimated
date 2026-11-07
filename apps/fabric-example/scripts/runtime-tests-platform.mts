@@ -23,7 +23,22 @@ const DEVICE_FLAG_PLATFORMS = {
 type DeviceFlag = keyof typeof DEVICE_FLAG_PLATFORMS;
 
 export function resolvePlatform(args: PlatformArgs): ResolvedPlatform {
-  const selected = (Object.keys(DEVICE_FLAG_PLATFORMS) as DeviceFlag[]).filter(
+  const deviceFlags = Object.keys(DEVICE_FLAG_PLATFORMS) as DeviceFlag[];
+
+  // `--serial "$ANDROID_SERIAL"` reaches the script as an empty string when the
+  // variable is unset. Treating that as a selection would drop the name and let
+  // the run pick whatever device is connected, so it has to be an error.
+  const empty = deviceFlags.filter((flag) => args[flag] === '');
+  if (empty.length > 0) {
+    return {
+      platform: null,
+      error: `${empty
+        .map((flag) => `--${flag}`)
+        .join(', ')} requires a value; an empty one would select the platform but not the device.`,
+    };
+  }
+
+  const selected = deviceFlags.filter(
     (flag) => typeof args[flag] === 'string'
   );
 
