@@ -100,6 +100,14 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
   UpdatesBatchAnimatedProps remaining;
 
   for (auto &[shadowNodeFamily, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
+#if REACT_NATIVE_VERSION_MINOR >= 89
+    // The backend commits text, and it can't commit during the draw pass.
+    if (animatedProp.text) {
+      remaining.push_back(AnimatedPropsEntry{shadowNodeFamily, std::move(animatedProp), true});
+      continue;
+    }
+#endif
+
     // Split typed props by layout vs non-layout.
     std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTypedProps;
     std::vector<std::unique_ptr<AnimatedPropBase>> layoutTypedProps;
@@ -180,6 +188,13 @@ void UpdatesRegistry::addRawPropsToAnimatedPropsBatch(
   animatedPropsBuilder_.storeDynamic(props);
   addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get(), hasLayoutUpdates);
 }
+
+#if REACT_NATIVE_VERSION_MINOR >= 89
+void UpdatesRegistry::addTextToAnimatedPropsBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, std::string text) {
+  animatedPropsBuilder_.setText(std::move(text));
+  addAnimatedPropsToBatch(shadowNodeFamily, animatedPropsBuilder_.get());
+}
+#endif
 
 void UpdatesRegistry::addJSIPropsToAnimatedPropsBatch(
     const ShadowNodeFamily::Shared &shadowNodeFamily,

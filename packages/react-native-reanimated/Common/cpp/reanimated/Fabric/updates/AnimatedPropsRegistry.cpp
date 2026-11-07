@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,6 +30,30 @@ static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
   }
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 89
+[[maybe_unused]] static std::optional<std::string> textFromChildren(jsi::Runtime &rt, const jsi::Value &children) {
+  if (children.isString()) {
+    return children.getString(rt).utf8(rt);
+  }
+  if (children.isNumber()) {
+    return folly::dynamic(children.getNumber()).asString();
+  }
+  return std::nullopt;
+}
+
+[[maybe_unused]] static jsi::Object withoutChildren(jsi::Runtime &rt, const jsi::Object &updates) {
+  jsi::Object rest(rt);
+  const auto names = updates.getPropertyNames(rt);
+  for (size_t i = 0, length = names.size(rt); i < length; ++i) {
+    const auto name = names.getValueAtIndex(rt, i).asString(rt);
+    if (name.utf8(rt) != "children") {
+      rest.setProperty(rt, name, updates.getProperty(rt, name));
+    }
+  }
+  return rest;
+}
+#endif
+
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
@@ -45,6 +70,22 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     roundTextMetrics(rt, updates);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+#if REACT_NATIVE_VERSION_MINOR >= 89
+      if (isTextComponent(*shadowNode)) {
+        const auto updatesObject = updates.asObject(rt);
+        if (updatesObject.hasProperty(rt, "children")) {
+          if (auto text = textFromChildren(rt, updatesObject.getProperty(rt, "children"))) {
+            addTextToAnimatedPropsBatch(shadowNode->getFamilyShared(), std::move(*text));
+          }
+          auto rest = withoutChildren(rt, updatesObject);
+          if (rest.getPropertyNames(rt).size(rt) > 0) {
+            jsi::Value restValue(rt, rest);
+            addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, restValue);
+          }
+          continue;
+        }
+      }
+#endif
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
       auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
