@@ -181,7 +181,7 @@ void LayoutAnimationsProxy::resolveTransitionLifecycle(
   bool popSettledThisPull = false;
   if (uncommittedScreenPop_) {
     const bool gestureCancelled = uncommittedScreenPop_->cancelled && uncommittedScreenPop_->sourceScreen;
-    if (!settleUncommittedScreenPop(transaction)) {
+    if (!settleUncommittedScreenPop(transaction, propsParserContext)) {
       return;
     }
     popSettledThisPull = true;
@@ -200,20 +200,51 @@ void LayoutAnimationsProxy::resolveTransitionLifecycle(
   handleProgressTransition(transaction, mutations, propsParserContext, popSettledThisPull);
 }
 
-bool LayoutAnimationsProxy::settleUncommittedScreenPop(TransactionMeta &transaction) const {
+bool LayoutAnimationsProxy::settleUncommittedScreenPop(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
   if (uncommittedScreenPop_->sourceScreen && !uncommittedScreenPop_->cancelled) {
     return false;
   }
   if (uncommittedScreenPop_->sourceScreen) {
-    for (const auto &source : uncommittedScreenPop_->sources) {
-      if (isLightNodeMapped(source.node)) {
-        transaction.restoreRequests.push_back(source);
-      }
-    }
+    restoreCancelledProgressTransition(uncommittedScreenPop_->endpoints, transaction, propsParserContext);
   }
   topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
   uncommittedScreenPop_.reset();
   return true;
+}
+
+void LayoutAnimationsProxy::restoreCancelledProgressTransition(
+    const std::vector<ProgressTransitionEndpoint> &endpoints,
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  for (const auto &[sharedTag, source, target, targetWasHidden] : endpoints) {
+    const bool sourceSurvives =
+        isLightNodeMapped(source) && source->presence() != ReactPresence::REMOVED && !source->isExiting();
+    if (sourceSurvives) {
+      transaction.restoreRequests.push_back({sharedTag, source});
+    }
+    if (!targetWasHidden || !sourceSurvives || findSharedTag(source->current) != sharedTag) {
+      transaction.restoreRequests.push_back({sharedTag, target});
+      continue;
+    }
+    if (!isLightNodeMapped(target) || target->presence() == ReactPresence::REMOVED || target->isExiting() ||
+        target->isCarrier() || isInSharedTransition(target) || findSharedTag(target->current) != sharedTag) {
+      continue;
+    }
+    std::erase_if(transaction.restoreRequests, [&](const RestoreRequest &request) {
+      return request.sharedTag == sharedTag && withShownEndpoint(request).node == target;
+    });
+    resolveLightNodeProps(target);
+    const auto parent = target->parent.lock();
+    if (!parent) {
+      continue;
+    }
+    const auto &view = viewOnScreen(target);
+    hideInSharedElement(sharedTag, target);
+    transaction.filteredMutations.push_back(createPropsUpdate(
+        view, cloneViewWithoutOpacity(view, propsParserContext), parent->current.tag, propsParserContext));
+  }
 }
 
 // A gesture that starts while the previous one still awaits its source
@@ -260,6 +291,15 @@ void LayoutAnimationsProxy::handleProgressTransition(
     } else {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
       findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+
+      const auto hiddenBefore = hiddenViewTags();
+      for (const auto &[sharedTag, collectedTransition] : transaction.transitions) {
+        const auto &[source, target] = collectedTransition.nodes;
+        if (source && target) {
+          transition_->endpoints.push_back(
+              {sharedTag, source, target, hiddenBefore.contains(target->current.tag) || target->isCarrier()});
+        }
+      }
 
       adjustForNativePlacement(transaction.transitions);
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
@@ -313,12 +353,6 @@ void LayoutAnimationsProxy::handleProgressTransition(
   if (transition_->state == TransitionState::START) {
     transition_->state = TransitionState::ACTIVE;
   } else if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
-    std::vector<RestoreRequest> sources;
-    for (const auto &run : activeSharedTransitionRuns()) {
-      if (run.driver == SharedTransitionDriver::GESTURE) {
-        sources.push_back({run.sharedTag, run.source});
-      }
-    }
     for (auto &[_, run] : sharedTransitionRuns_) {
       if (run.lifecycle == SharedTransitionLifecycle::ACTIVE && run.driver == SharedTransitionDriver::GESTURE) {
         finishSharedTransition(run, transaction, propsParserContext, transition_->state == TransitionState::END);
@@ -328,15 +362,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
       react_native_assert(!uncommittedScreenPop_ && "Previous screen pop not settled");
       react_native_assert(transition_->sourceScreen && "Shared transition source not found");
       if (transition_->sourceScreen) {
-        uncommittedScreenPop_ = UncommittedScreenPop{transition_->sourceScreen, std::move(sources)};
+        uncommittedScreenPop_ = UncommittedScreenPop{transition_->sourceScreen, std::move(transition_->endpoints)};
       }
     } else {
       topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
-      for (const auto &source : sources) {
-        if (isLightNodeMapped(source.node)) {
-          transaction.restoreRequests.push_back(source);
-        }
-      }
+      restoreCancelledProgressTransition(transition_->endpoints, transaction, propsParserContext);
     }
     transition_.reset();
   }
@@ -2077,8 +2107,8 @@ bool LayoutAnimationsProxy::isInSharedTransition(const std::shared_ptr<LightNode
   });
   return isInRun ||
       (uncommittedScreenPop_ &&
-       std::ranges::find(uncommittedScreenPop_->sources, node, &RestoreRequest::node) !=
-           uncommittedScreenPop_->sources.end());
+       std::ranges::find(uncommittedScreenPop_->endpoints, node, &ProgressTransitionEndpoint::source) !=
+           uncommittedScreenPop_->endpoints.end());
 }
 
 void LayoutAnimationsProxy::eraseFinishedSharedTransitionRuns() const {
