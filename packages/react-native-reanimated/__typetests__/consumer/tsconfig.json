@@ -1,0 +1,19 @@
+{
+  // Type-checks this folder the way a consumer's TypeScript sees the package:
+  // through `package.json#types` (the built `lib/typescript`), with no
+  // `moduleSuffixes` and with `skipLibCheck` off. Deliberately doesn't extend
+  // the repo's tsconfig, whose `.native` suffix preference hides declarations
+  // that consumers don't get. Requires `yarn build` first.
+  "compilerOptions": {
+    "target": "es2021",
+    "lib": ["es2021"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "strict": true,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "types": []
+  },
+  "include": ["."]
+}
