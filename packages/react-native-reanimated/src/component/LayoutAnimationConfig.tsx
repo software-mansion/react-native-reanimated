@@ -7,6 +7,7 @@ import {
   createContext,
   Fragment,
   isValidElement,
+  useContext,
   useEffect,
   useRef,
 } from 'react';
@@ -28,37 +29,36 @@ interface LayoutAnimationConfigProps {
   children: ReactNode;
 }
 
-function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
-  const skipValueRef = useRef(props.shouldSkip);
+function SkipEntering(props: {
+  shouldSkip: boolean | undefined;
+  children: ReactNode;
+}) {
+  const inheritedSkipValueRef = useContext(SkipEnteringContext);
+  const skipValueRef = useRef(props.shouldSkip === true);
 
   useEffect(() => {
     skipValueRef.current = false;
   }, [skipValueRef]);
 
   return (
-    <SkipEnteringContext value={skipValueRef}>
+    <SkipEnteringContext
+      value={
+        props.shouldSkip === undefined ? inheritedSkipValueRef : skipValueRef
+      }>
       {props.children}
     </SkipEnteringContext>
   );
 }
 
-// skipExiting (unlike skipEntering) cannot be done by conditionally
-// configuring the animation in `createAnimatedComponent`, since at this stage
-// we don't know if the wrapper is going to be unmounted or not.
-// That's why we need to pass the skipExiting flag to the native side
-// when the wrapper is unmounted to prevent the animation.
-// Since `ReactNode` can be a list of nodes, we wrap every child with our wrapper
-// so we are able to access its tag with `findNodeHandle`.
-/**
- * A component that lets you skip entering and exiting animations.
- *
- * @param skipEntering - A boolean indicating whether children's entering
- *   animations should be skipped when `LayoutAnimationConfig` is mounted.
- * @param skipExiting - A boolean indicating whether children's exiting
- *   animations should be skipped when LayoutAnimationConfig is unmounted.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
- */
-export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
+interface LayoutAnimationConfigChildProps {
+  trackedChildren: Set<LayoutAnimationConfigChild>;
+  tracksRef: boolean;
+  children: ReactNode;
+}
+
+// One child of a `LayoutAnimationConfig`, which the config marks when it
+// unmounts. Its own unmount, when only this child is removed, marks nothing.
+class LayoutAnimationConfigChild extends Component<LayoutAnimationConfigChildProps> {
   _childInstance: InstanceWithViewTag | null = null;
   _mergedRef?: RefCallback<InstanceWithViewTag>;
   _mergedRefSource?: Ref<InstanceWithViewTag>;
@@ -75,25 +75,32 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     return this._mergedRef;
   }
 
-  getComponentViewTag() {
-    return getViewTagFromInstance(this._childInstance) ?? -1;
+  getChildViewTag() {
+    return getViewTagFromInstance(this._childInstance);
   }
 
-  getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1 && this.props.skipExiting
-      ? Children.map(this.props.children, (child) => (
-          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
-        ))
-      : this.getMaybeRefTrackedChild();
+  getViewTags(): number[] {
+    if (this._childInstance instanceof LayoutAnimationConfig) {
+      return this._childInstance.getViewTags();
+    }
+    const tag = this.getChildViewTag() ?? findNodeHandle(this);
+    return tag ? [tag] : [];
   }
 
-  getMaybeRefTrackedChild() {
-    const { children } = this.props;
+  componentDidMount(): void {
+    this.props.trackedChildren.add(this);
+  }
+
+  componentWillUnmount(): void {
+    this.props.trackedChildren.delete(this);
+  }
+
+  render(): ReactNode {
+    const { children, tracksRef } = this.props;
 
     if (
-      this.props.skipExiting === undefined ||
-      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children) ||
-      children.type === Fragment
+      !tracksRef ||
+      !isValidElement<{ ref?: Ref<InstanceWithViewTag> }>(children)
     ) {
       return children;
     }
@@ -102,14 +109,48 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
       ref: this._getMergedRef(children.props.ref),
     });
   }
+}
+
+// skipExiting (unlike skipEntering) cannot be done by conditionally
+// configuring the animation in `createAnimatedComponent`, since at this stage
+// we don't know if the wrapper is going to be unmounted or not.
+// That's why we need to pass the skipExiting flag to the native side
+// when the wrapper is unmounted to prevent the animation.
+// Since `ReactNode` can be a list of nodes, every child, including each child of
+// a Fragment, is rendered through a `LayoutAnimationConfigChild`, which gives
+// the config access to its tag; a nested `LayoutAnimationConfig` hands over the
+// tags of its own children.
+// React unmounts a class component before its children, so the config reads
+// every tag before any child is gone.
+/**
+ * A component that lets you skip entering and exiting animations.
+ *
+ * @param skipEntering - A boolean indicating whether children's entering
+ *   animations should be skipped when `LayoutAnimationConfig` is mounted.
+ * @param skipExiting - A boolean indicating whether children's exiting
+ *   animations should be skipped when LayoutAnimationConfig is unmounted.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
+ */
+export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
+  _trackedChildren = new Set<LayoutAnimationConfigChild>();
+
+  getComponentViewTag() {
+    if (this._trackedChildren.size !== 1) {
+      return -1;
+    }
+    const [onlyChild] = this._trackedChildren;
+    return onlyChild.getChildViewTag() ?? -1;
+  }
+
+  getViewTags(): number[] {
+    return [...this._trackedChildren].flatMap((trackedChild) =>
+      trackedChild.getViewTags()
+    );
+  }
 
   setShouldAnimateExiting() {
-    if (Children.count(this.props.children) === 1) {
-      const tag =
-        getViewTagFromInstance(this._childInstance) ?? findNodeHandle(this);
-      if (tag) {
-        setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
-      }
+    for (const tag of this.getViewTags()) {
+      setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
     }
   }
 
@@ -119,16 +160,35 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
   }
 
+  renderTrackedChildren(children: ReactNode): ReactNode {
+    return Children.map(children, (child) => {
+      if (child === null) {
+        return null;
+      }
+      if (
+        isValidElement<{ children?: ReactNode }>(child) &&
+        child.type === Fragment
+      ) {
+        return cloneElement(
+          child,
+          undefined,
+          this.renderTrackedChildren(child.props.children)
+        );
+      }
+      return (
+        <LayoutAnimationConfigChild
+          trackedChildren={this._trackedChildren}
+          tracksRef={this.props.skipExiting !== undefined}>
+          {child}
+        </LayoutAnimationConfigChild>
+      );
+    });
+  }
+
   render(): ReactNode {
-    const children = this.getMaybeWrappedChildren();
-
-    if (this.props.skipEntering === undefined) {
-      return children;
-    }
-
     return (
       <SkipEntering shouldSkip={this.props.skipEntering}>
-        {children}
+        {this.renderTrackedChildren(this.props.children)}
       </SkipEntering>
     );
   }
