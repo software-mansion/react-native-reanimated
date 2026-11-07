@@ -58,6 +58,14 @@ describe('resolvePlatform', () => {
     assert.match(result.error ?? '', /--avd/);
   });
 
+  it('names the flags that disagree when they select different platforms', () => {
+    const result = resolvePlatform({ avd: 'Pixel_9', udid: '1234-ABCD' });
+    assert.equal(result.platform, null);
+    assert.match(result.error ?? '', /--avd/);
+    assert.match(result.error ?? '', /--udid/);
+    assert.doesNotMatch(result.error ?? '', /--serial/);
+  });
+
   it('rejects an unknown --platform', () => {
     const result = resolvePlatform({ platform: 'windows' });
     assert.equal(result.platform, null);

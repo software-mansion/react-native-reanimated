@@ -40,8 +40,9 @@ export function resolvePlatform(args: PlatformArgs): ResolvedPlatform {
   if (implied.size > 1) {
     return {
       platform: null,
-      error:
-        '--serial and --avd select Android devices, while --udid selects an iOS simulator; pass the flags of one platform only.',
+      error: `${selected
+        .map((flag) => `--${flag}`)
+        .join(', ')} select different platforms; pass the flags of one platform only.`,
     };
   }
 
