@@ -21,11 +21,21 @@ using namespace facebook::react;
 using namespace worklets;
 using SharedTag = std::string;
 
+// The intersection of the frames of the ancestors that clip their content, in root coordinates.
+struct AncestorClip {
+  react::Rect frame;
+  Float borderRadius = 0;
+
+  bool operator==(const AncestorClip &other) const = default;
+};
+
 // [0] is before and [1] is after (best to use BeforeOrAfter enum)
 struct Transition {
   ShadowView snapshot[2];
   Tag parentTag[2] = {0, 0};
   std::optional<Transform> transform[2];
+  Float ancestorOpacity[2] = {1, 1};
+  AncestorClip clip[2];
 };
 
 struct SharedTransitionManager {
@@ -34,6 +44,7 @@ struct SharedTransitionManager {
   std::unordered_map<Tag, std::string> nativeIDToName_;
   // Above the tags of React's views.
   Tag nextOverlayTag_{10000002};
+  Tag nextClipTag_{20000002};
 };
 
 // The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.

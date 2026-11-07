@@ -119,6 +119,16 @@ type SharedTransitionSnapshotValues = {
   ShadowRadius: number;
   /** Android only. */
   Elevation?: number;
+  /**
+   * The clip of the moving view in window coordinates: the bounds of its
+   * ancestors with `overflow: hidden`. Present only when an ancestor clips
+   * either view.
+   */
+  ClipOriginX?: number;
+  ClipOriginY?: number;
+  ClipWidth?: number;
+  ClipHeight?: number;
+  ClipBorderRadius?: number;
 };
 
 /**
@@ -308,6 +318,21 @@ function getContentOpacityChange(values: SharedTransitionAnimationsValues) {
     current !== target
     ? { current, target }
     : undefined;
+}
+
+// The clip of the moving view, in the coordinates of the window. A custom animation that does not animate it gets the
+// default animation, so that the moving view stays clipped like the ancestors of the shared views.
+const CLIP_KEYS = [
+  'clipOriginX',
+  'clipOriginY',
+  'clipWidth',
+  'clipHeight',
+  'clipBorderRadius',
+];
+
+function getClipChanges(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  return getChangedStyles(values).filter(({ key }) => CLIP_KEYS.includes(key));
 }
 
 function getInitialStyle(
@@ -618,6 +643,13 @@ export class SharedTransition
             contentOpacity.target
           );
         }
+        const delayedRecord = delayedAnimations as Record<string, unknown>;
+        for (const { key, target } of getClipChanges(values)) {
+          delayedRecord[key] ??= delayFunction(
+            delay,
+            animation(target as number, config)
+          );
+        }
         return {
           initialValues: getCustomInitialStyle(values, animations),
           animations: delayedAnimations,
@@ -687,6 +719,14 @@ export class SharedTransition
     return (values, progress) => {
       'worklet';
       let style = progressAnimation(values, progress);
+      for (const { key, current, target } of getClipChanges(values)) {
+        if ((style as Record<string, unknown>)[key] === undefined) {
+          style = {
+            ...style,
+            [key]: interpolateValue(progress, current, target),
+          };
+        }
+      }
       const contentOpacity = getContentOpacityChange(values);
       if (contentOpacity && style.contentOpacity === undefined) {
         style = {

@@ -421,7 +421,9 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     auto update = ShadowViewMutation::UpdateMutation(
         mounted,
         recreated,
-        node->placement() == CarrierPlacement::AT_ROOT || !parent ? surfaceId_ : parent->current.tag);
+        node->placement() == CarrierPlacement::AT_ROOT ? carrierParentTag(node)
+            : !parent                                  ? surfaceId_
+                                                       : parent->current.tag);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
@@ -1200,6 +1202,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
             ? createPropsUpdate(layoutAnimation.currentView, newView, layoutAnimation.parentTag, propsParserContext)
             : ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
+    if (layoutAnimation.clip) {
+      updateCarrierClip(tag, *layoutAnimation.clip, mutations, propsParserContext);
+    }
     if (layoutAnimation.opacity &&
         (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
@@ -1460,12 +1465,12 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Remove) {
       const auto tag = mutation.oldChildShadowView.tag;
-      if (mutation.parentTag == surfaceId_) {
+      if (isCarrierHost(mutation.parentTag)) {
         std::erase(movedToRoot, tag);
       } else {
         removedFromParents.insert(tag);
       }
-    } else if (mutation.type == ShadowViewMutation::Insert && mutation.parentTag == surfaceId_) {
+    } else if (mutation.type == ShadowViewMutation::Insert && isCarrierHost(mutation.parentTag)) {
       const auto tag = mutation.newChildShadowView.tag;
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() &&
@@ -1688,7 +1693,8 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
-    const std::optional<ContentOpacityRange> contentOpacity) const {
+    const std::optional<ContentOpacityRange> contentOpacity,
+    const std::optional<AncestorClipRange> clip) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = carrier->current.tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
@@ -1698,6 +1704,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .parentTag = carrierParentTag(carrier),
       .config = config,
       .contentOpacity = contentOpacity,
+      .clip = clip,
   });
 }
 

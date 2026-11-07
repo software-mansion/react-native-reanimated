@@ -31,7 +31,7 @@ void StaleSynchronousPropsTracker::forget(const Tag tag, const folly::dynamic &p
 }
 
 // A layout animation applies the props of the view itself. A shared element transition also
-// bakes the transforms of every ancestor into its snapshot.
+// bakes the transforms and the opacities of every ancestor into its snapshot.
 std::optional<Tag> StaleSynchronousPropsTracker::find(
     const std::shared_ptr<LightNode> &node,
     const LayoutAnimationType type) const {
@@ -43,7 +43,7 @@ std::optional<Tag> StaleSynchronousPropsTracker::find(
   }
   for (auto ancestor = node->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
     const auto it = propNames_.find(ancestor->current.tag);
-    if (it != propNames_.end() && it->second.contains("transform")) {
+    if (it != propNames_.end() && (it->second.contains("transform") || it->second.contains("opacity"))) {
       return ancestor->current.tag;
     }
   }
@@ -57,9 +57,9 @@ StaleSynchronousPropsTracker::takeWarning(const Tag tag, const Tag staleTag, con
   }
   const auto animationKind =
       type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION ? "shared element transition" : "layout animation";
-  const auto reason = staleTag == tag
-      ? std::string("with props that were applied through the synchronous path")
-      : "under view " + std::to_string(staleTag) + ", whose transform was applied through the synchronous path";
+  const auto reason = staleTag == tag ? std::string("with props that were applied through the synchronous path")
+                                      : "under view " + std::to_string(staleTag) +
+          ", whose transform or opacity was applied through the synchronous path";
   return "[Reanimated] View " + std::to_string(tag) + " starts a " + animationKind + " " + reason +
       ", so it starts from stale values. Set the TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS dynamic feature flag to notify the reanimated Layout Animation / Shared Transition bookkeeping of the synchronous updates";
 }
