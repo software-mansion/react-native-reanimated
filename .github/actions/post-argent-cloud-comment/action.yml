@@ -37,7 +37,7 @@ runs:
         TARGET: ${{ inputs.target }}
         COMMENT_FILE: ${{ inputs.comment-file }}
         SCREENSHOTS: ${{ inputs.screenshots }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        ARGENT_GITHUB_TOKEN: ${{ inputs.github-token }}
         SIM_ROUTER_API_KEY: ${{ inputs.sim-router-api-key }}
         ARGENT_BACKEND_IP: ${{ inputs.backend-ip }}
       run: |
