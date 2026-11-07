@@ -1303,16 +1303,15 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
-    for (const auto &[_, element] : sharedElements_) {
-      if (element.run) {
-        element.run->carrier->isNestedCarrier = false;
-      }
+    for (const auto &[_, run] : sharedTransitionRuns_) {
+      run.carrier->isNestedCarrier = false;
     }
     layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(
         deferredSharedTransitionConfigReleases_.begin(), deferredSharedTransitionConfigReleases_.end()));
     deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
-    retiringSharedTransitions_.clear();
+    sharedTransitionRuns_.clear();
+    activeSharedTransitionCarriers_.clear();
     for (const auto &carrier : detachedCarriers_) {
       carrier->setDetached(false);
     }
@@ -1397,7 +1396,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
         }
         const auto carrier = detachedCarrierOf(node->second);
         if (carrier &&
-            (retiringSharedTransitions_.contains(carrier->current.tag) ||
+            (sharedTransitionRun(carrier->current.tag, SharedTransitionLifecycle::RETIRING) ||
              hasUnqueuedCarrierFrame(carrier->current.tag))) {
           preservedTags.insert(tag);
         }
@@ -1420,8 +1419,9 @@ bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag t
 
 #ifdef ANDROID
 bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
-  if (std::ranges::any_of(retiringSharedTransitions_, [this](const auto &entry) {
-        return entry.second.run && !hasUnqueuedCarrierFrame(entry.first);
+  if (std::ranges::any_of(sharedTransitionRuns_, [this](const auto &entry) {
+        const auto &[carrierTag, run] = entry;
+        return run.lifecycle == SharedTransitionLifecycle::RETIRING && !hasUnqueuedCarrierFrame(carrierTag);
       })) {
     return true;
   }
@@ -1438,11 +1438,8 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
 bool LayoutAnimationsProxy::isCarrierOfUncoveredRun(
     const Tag tag,
     const std::vector<std::shared_ptr<LightNode>> &coveringViews) const {
-  return std::ranges::any_of(sharedElements_, [&](const auto &entry) {
-    const auto &run = entry.second.run;
-    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews) &&
-        !landsWithOtherRuns(*run);
-  });
+  const auto *run = sharedTransitionRun(tag, SharedTransitionLifecycle::ACTIVE);
+  return run && !isDescendantOfAny(run->target, coveringViews) && !landsWithOtherRuns(*run);
 }
 
 void LayoutAnimationsProxy::maybeScheduleCleanupPull(const bool flushedStructuralMutations) const {
@@ -1545,9 +1542,8 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // arrives from the JS thread, because that job runs after the frames are in the queue. The attach
 // also restores the content of the carrier, so the frames of its content keep it too.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
-  const bool hasCarriers = !detachedCarriers_.empty() || std::ranges::any_of(sharedElements_, [](const auto &entry) {
-    return entry.second.run && entry.second.run->carrier->isNestedCarrier;
-  });
+  const bool hasCarriers = !detachedCarriers_.empty() ||
+      std::ranges::any_of(activeSharedTransitionRuns(), [](const auto &run) { return run.carrier->isNestedCarrier; });
   if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
