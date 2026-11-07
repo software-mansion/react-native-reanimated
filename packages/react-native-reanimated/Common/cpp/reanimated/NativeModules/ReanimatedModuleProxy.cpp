@@ -1174,7 +1174,8 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch) {
-  if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
+  const bool hasSynchronousUpdates = !synchronousUpdatesBatch.empty();
+  if (layoutAnimationsProxyRegistry_ && hasSynchronousUpdates) {
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
   }
@@ -1182,6 +1183,10 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpda
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
   writeSynchronousPropsToViews(std::move(synchronousUpdatesBatch));
+  if (hasSynchronousUpdates) {
+    flushLayoutAnimationOperations();
+    executeLayoutAnimationsRequests();
+  }
 }
 
 void ReanimatedModuleProxy::writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch) {
@@ -1383,6 +1388,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
     }
     scheduleOnUI(strongThis->uiScheduler_, [weakThis, surfaceId] {
       if (const auto strongThis = weakThis.lock()) {
+        strongThis->layoutAnimationFlushRequests_.insert(surfaceId);
         strongThis->requestRender_([weakThis, surfaceId](const double) {
           if (const auto strongThis = weakThis.lock()) {
             strongThis->layoutAnimationFlushRequests_.insert(surfaceId);

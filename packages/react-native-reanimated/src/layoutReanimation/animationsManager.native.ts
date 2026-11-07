@@ -16,6 +16,7 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
+import { getSharedTransitionGeometry } from './SharedTransition';
 
 const TAG_OFFSET = 1e9;
 
@@ -149,7 +150,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         // When layout animation is requested, but a previous one is still running, we merge
         // new layout animation targets into the ongoing animation
         const previousAnimation = currentAnimationForTag.get(tag);
-        if (previousAnimation) {
+        if (
+          previousAnimation &&
+          type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        ) {
           currentAnimation = { ...previousAnimation, ...style.animations };
         }
         currentAnimationForTag.set(tag, currentAnimation);
@@ -213,6 +217,7 @@ export function initializeLayoutAnimationsManager() {
   }
   runOnUISync(() => {
     'worklet';
+    global._getSharedTransitionGeometry = getSharedTransitionGeometry;
     global.LayoutAnimationsManager = createLayoutAnimationManager();
   });
   isLayoutAnimationsManagerInitialized = true;

@@ -107,14 +107,42 @@ void LayoutAnimationsProxyCommon::clearSurfaceState() const {
 
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
-    const jsi::Object &newStyle) {
+    const jsi::Object &newStyle) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  const auto layoutAnimationIt = layoutAnimations_.find(tag);
-  if (layoutAnimationIt == layoutAnimations_.end()) {
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() &&
+             !it->second.shouldRemove && it->second.animation.geometry &&
+             newStyle.hasProperty(uiRuntime_, "sharedTransitionGeometryProgress")) {
+    animation = &it->second.animation;
+  }
+  if (!animation) {
     return {};
   }
+  auto style = jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
+  if (style.hasProperty(uiRuntime_, "sharedTransitionGeometryProgress")) {
+    if ((animation->geometry && animation->geometry->failed) || hasPendingLayoutAnimation(tag)) {
+      return {};
+    }
+    const auto value = style.getProperty(uiRuntime_, "sharedTransitionGeometryProgress").asNumber();
+    if (!animation->geometry) {
+      animation->geometry = SharedTransitionGeometry{value};
+    } else {
+      animation->geometry->value = value;
+      animation->geometry->needsUpdate = true;
+    }
+    style = withoutProperty(uiRuntime_, style, "sharedTransitionGeometryProgress");
+  }
+  applyLayoutAnimationStyle(tag, *animation, style, false);
+  return surfaceId_;
+}
 
-  auto &layoutAnimation = layoutAnimationIt->second;
+void LayoutAnimationsProxyCommon::applyLayoutAnimationStyle(
+    Tag tag,
+    LayoutAnimation &layoutAnimation,
+    const jsi::Object &newStyle,
+    bool mergePending) const {
   const bool animatesOpacity = newStyle.hasProperty(uiRuntime_, "opacity");
   const bool animatesContentOpacity = newStyle.hasProperty(uiRuntime_, kContentOpacity);
   if (animatesContentOpacity) {
@@ -123,22 +151,39 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   const auto viewStyle = animatesContentOpacity ? withoutProperty(uiRuntime_, newStyle, kContentOpacity)
                                                 : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
 
+  const auto pending = updateMap_.find(tag);
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, viewStyle));
-  if (layoutAnimation.opacity && !animatesOpacity) {
+  if (layoutAnimation.opacity && !animatesOpacity &&
+      !(mergePending && pending != updateMap_.end() && pending->second.animatesOpacity)) {
     auto props = (folly::dynamic)*rawProps;
     props["opacity"] = *layoutAnimation.opacity;
     rawProps = std::make_shared<RawProps>(std::move(props));
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
-  const auto &frameProps = layoutAnimation.framePropsBase();
+  const auto &frameProps = mergePending
+      ? (pending != updateMap_.end() && pending->second.newProps ? pending->second.newProps
+                                                                 : layoutAnimation.currentView.props)
+      : layoutAnimation.framePropsBase();
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(folly::dynamic::merge(frameProps->rawProps, (folly::dynamic)*rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, frameProps, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, viewStyle), animatesOpacity});
-
-  return surfaceId_;
+  auto frame = Frame(uiRuntime_, viewStyle);
+  bool opacity = animatesOpacity;
+  if (mergePending && pending != updateMap_.end()) {
+    const auto &old = pending->second;
+    if (!frame.x)
+      frame.x = old.frame.x;
+    if (!frame.y)
+      frame.y = old.frame.y;
+    if (!frame.width)
+      frame.width = old.frame.width;
+    if (!frame.height)
+      frame.height = old.frame.height;
+    opacity = opacity || old.animatesOpacity;
+  }
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, frame, opacity});
 }
 
 void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
@@ -187,12 +232,14 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   react_native_assert(
       lock.owns_lock() && lock.mutex() == &mutex && "flushLayoutAnimationOperations requires the proxy lock");
   if (!worklets::isOnUIThread(uiScheduler_)) {
-    if (!layoutAnimationOperations_.empty()) {
+    applySharedTransitionGeometry();
+    if (!layoutAnimationOperations_.empty() || hasPendingSharedTransitionGeometry()) {
       requestLayoutAnimationFlush_(surfaceId_);
     }
     return;
   }
   flushLayoutAnimationOperationsLocked();
+  applySharedTransitionGeometry();
 }
 
 // iOS, and Android with accumulated raw props, write the props of an Insert to the view. The shadow props of a view
@@ -523,6 +570,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations() const {
   react_native_assert(worklets::isOnUIThread(uiScheduler_));
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   flushLayoutAnimationOperationsLocked();
+  applySharedTransitionGeometry();
 }
 
 void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {

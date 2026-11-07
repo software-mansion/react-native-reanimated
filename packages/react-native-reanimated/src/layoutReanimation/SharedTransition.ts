@@ -165,6 +165,14 @@ type ChangedStyle = { key: string; current: unknown; target: unknown };
 
 // `globalOrigin*` and `transformMatrix` repeat `origin*` and `transform`.
 const ALIAS_NAMES = ['GlobalOriginX', 'GlobalOriginY', 'TransformMatrix'];
+const GEOMETRY_KEYS = [
+  'originX',
+  'originY',
+  'width',
+  'height',
+  'transform',
+  'transformOrigin',
+];
 
 function isEqual(a: unknown, b: unknown): boolean {
   'worklet';
@@ -204,7 +212,8 @@ function matchTransparentColor(color: unknown, otherColor: unknown): unknown {
 }
 
 function getChangedStyles(
-  values: SharedTransitionAnimationsValues
+  values: SharedTransitionAnimationsValues,
+  includeGeometry = false
 ): ChangedStyle[] {
   'worklet';
   const record = values as unknown as Record<string, unknown>;
@@ -216,7 +225,12 @@ function getChangedStyles(
     const name = currentKey.slice('current'.length);
     const current = record[currentKey];
     const target = record['target' + name];
-    if (ALIAS_NAMES.includes(name) || isEqual(current, target)) {
+    const key = name[0].toLowerCase() + name.slice(1);
+    if (
+      ALIAS_NAMES.includes(name) ||
+      (isEqual(current, target) &&
+        !(includeGeometry && GEOMETRY_KEYS.includes(key)))
+    ) {
       continue;
     }
     const isColorStyle = name.endsWith('Color');
@@ -273,11 +287,18 @@ function interpolateValue(
 
 function defaultProgressAnimation(
   values: SharedTransitionAnimationsValues,
-  progress: number
+  progress: number,
+  geometryOnly = false
 ): StyleProps {
   'worklet';
   const style: Record<string, unknown> = {};
-  for (const { key, current, target } of getChangedStyles(values)) {
+  for (const { key, current, target } of getChangedStyles(
+    values,
+    geometryOnly
+  )) {
+    if (geometryOnly && !GEOMETRY_KEYS.includes(key)) {
+      continue;
+    }
     if (key === 'transform') {
       const matrix = interpolateMatrix(
         progress,
@@ -292,6 +313,14 @@ function defaultProgressAnimation(
     }
   }
   return style;
+}
+
+export function getSharedTransitionGeometry(
+  values: SharedTransitionAnimationsValues,
+  progress: number
+): StyleProps {
+  'worklet';
+  return defaultProgressAnimation(values, progress, true);
 }
 
 // Reanimated 3 animated `transformMatrix`, which Fabric does not read.
@@ -662,27 +691,36 @@ export class SharedTransition
         return delayFunction(delay, animation(target, config));
       };
       const changed = getChangedStyles(values);
-      const animations: Record<string, unknown> = {};
-      for (const { key, target } of changed) {
+      const nonGeometry = changed.filter(
+        ({ key }) => !GEOMETRY_KEYS.includes(key)
+      );
+      const hasGeometryChanges = changed.some(({ key }) =>
+        GEOMETRY_KEYS.includes(key)
+      );
+      const animations: Record<string, unknown> = hasGeometryChanges
+        ? progressDrivenAnimations(
+            values,
+            { sharedTransitionGeometryProgress: 0 },
+            (_values, progress) => {
+              'worklet';
+              return { sharedTransitionGeometryProgress: progress };
+            },
+            () => delayFunction(delay, animation(1, config))
+          )
+        : { sharedTransitionGeometryProgress: 1 };
+      for (const { key, target } of nonGeometry) {
         if (key === 'contentOpacity') {
           animations[key] = fadeContentOpacity(target as number);
           continue;
         }
-        animations[key] =
-          key === 'transform'
-            ? [
-                {
-                  matrix: delayFunction(
-                    delay,
-                    animation((target as { matrix: number[] }).matrix, config)
-                  ),
-                },
-              ]
-            : animateValue(target);
+        animations[key] = animateValue(target);
       }
 
       return {
-        initialValues: getInitialStyle(changed),
+        initialValues: {
+          ...getInitialStyle(nonGeometry),
+          sharedTransitionGeometryProgress: hasGeometryChanges ? 0 : 1,
+        },
         animations,
         callback,
       };

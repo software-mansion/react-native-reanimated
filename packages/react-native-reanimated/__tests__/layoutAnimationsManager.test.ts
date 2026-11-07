@@ -7,6 +7,10 @@ import type {
 } from '../src/commonTypes';
 import { LayoutAnimationType } from '../src/commonTypes';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
+import {
+  SharedTransition,
+  SharedTransitionType,
+} from '../src/layoutReanimation/SharedTransition';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -96,9 +100,14 @@ describe('LayoutAnimationsManager', () => {
   });
 
   test('initializes only once', () => {
+    const geometry = globalThis._getSharedTransitionGeometry;
     initializeLayoutAnimationsManager();
 
     expect(globalThis.LayoutAnimationsManager).toBe(manager);
+    expect(globalThis._getSharedTransitionGeometry).toBe(geometry);
+    expect(
+      geometry({ currentWidth: 30, targetWidth: 90 } as never, 0.5)
+    ).toEqual({ width: 60 });
   });
 
   test('uses one start timestamp for animations started before the next frame', () => {
@@ -202,7 +211,10 @@ describe('LayoutAnimationsManager', () => {
     let frames: FrameRequestCallback[];
 
     // Animates linearly from the value it starts at to `toValue`
-    function makeLinearAnimation(toValue: number) {
+    function makeLinearAnimation(
+      toValue: number,
+      duration = ANIMATION_DURATION
+    ) {
       let startValue = 0;
       let startTimestamp = 0;
       const animation: AnimationObject = {
@@ -213,10 +225,7 @@ describe('LayoutAnimationsManager', () => {
           animation.current = startValue;
         },
         onFrame(_animation, timestamp) {
-          const progress = Math.min(
-            (timestamp - startTimestamp) / ANIMATION_DURATION,
-            1
-          );
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
           animation.current = startValue + (toValue - startValue) * progress;
           return progress === 1;
         },
@@ -229,15 +238,11 @@ describe('LayoutAnimationsManager', () => {
     // animation then starts at 140 ms.
     function startAndRunTo40Percent(
       tag: number,
-      enteringAnimation: LayoutAnimation
+      enteringAnimation: LayoutAnimation,
+      type = LayoutAnimationType.ENTERING
     ) {
       getAnimationTimestamp.mockReturnValueOnce(100).mockReturnValueOnce(140);
-      manager.start(
-        tag,
-        LayoutAnimationType.ENTERING,
-        {},
-        () => enteringAnimation
-      );
+      manager.start(tag, type, {}, () => enteringAnimation);
       frameFinalizers.splice(0).forEach((finalizer) => finalizer());
       frames.splice(0).forEach((frame) => frame(140));
     }
@@ -252,6 +257,85 @@ describe('LayoutAnimationsManager', () => {
 
     afterEach(() => {
       globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    });
+
+    test('drops the old shared clock and passes retained property state to a replacement', () => {
+      const previousWidth = makeLinearAnimation(100);
+      startAndRunTo40Percent(
+        15,
+        {
+          initialValues: { width: 0, sharedTransitionGeometryProgress: 0 },
+          animations: {
+            width: previousWidth,
+            sharedTransitionGeometryProgress: makeLinearAnimation(1, 1000),
+          },
+        },
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+      );
+      const onStart = jest.fn(
+        (
+          animation: AnimationObject,
+          value: AnimatableValue,
+          _timestamp: Timestamp,
+          _previous: AnimationObject
+        ) => {
+          animation.current = value;
+        }
+      );
+      manager.start(
+        15,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        {},
+        () => ({
+          initialValues: { width: 40 },
+          animations: {
+            width: {
+              current: 40,
+              onStart,
+              onFrame: () => true,
+            } as unknown as number,
+          },
+        })
+      );
+      expect(onStart.mock.calls[0][3]).toBe(previousWidth);
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(15, {
+        width: 40,
+      });
+      frames.splice(0).forEach((frame) => frame(240));
+      expect(globalThis._notifyAboutEnd).toHaveBeenCalledTimes(1);
+      expect(globalThis._notifyAboutEnd).toHaveBeenCalledWith(15, false);
+    });
+
+    test('replaces the active properties when a shared transition changes mode', () => {
+      const values = { currentWidth: 30, targetWidth: 90 };
+      const builtIn = SharedTransition.duration(600);
+      const custom = SharedTransition.custom(() => {
+        'worklet';
+        return {
+          width: makeLinearAnimation(90),
+          opacity: makeLinearAnimation(0.5),
+        };
+      });
+      const progress = SharedTransition.duration(600).defaultTransitionType(
+        SharedTransitionType.PROGRESS_ANIMATION
+      );
+      for (const [transition, keys] of [
+        [builtIn, ['sharedTransitionGeometryProgress']],
+        [custom, ['opacity', 'width']],
+        [progress, ['width']],
+        [builtIn, ['sharedTransitionGeometryProgress']],
+      ] as const) {
+        manager.start(
+          17,
+          LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+          values,
+          transition.build()
+        );
+        const updates = jest.mocked(globalThis._notifyAboutProgress).mock
+          .lastCall?.[1];
+        expect(Object.keys(updates ?? {}).sort()).toEqual(keys);
+      }
+      manager.stop(17);
     });
 
     test('starts an exiting animation from the current values', () => {

@@ -15,7 +15,10 @@ void SharedTransitionValuesFactory::setProperty(jsi::Object &values, const char 
   values.setProperty(rt_, name, value);
 }
 
-bool SharedTransitionValuesFactory::hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps) {
+bool SharedTransitionValuesFactory::hasAnimatedChanges(
+    const ViewProps &sourceProps,
+    const ViewProps &targetProps,
+    const bool includeTransform) {
 #ifdef ANDROID
   if (sourceProps.elevation != targetProps.elevation) {
     return true;
@@ -54,7 +57,9 @@ bool SharedTransitionValuesFactory::hasAnimatedChanges(const ViewProps &sourcePr
   const auto &sourceColors = sourceProps.borderColors;
   const auto &targetColors = targetProps.borderColors;
   return sourceProps.opacity != targetProps.opacity || sourceProps.backgroundColor != targetProps.backgroundColor ||
-      sourceProps.transform != targetProps.transform || sourceProps.transformOrigin != targetProps.transformOrigin ||
+      (includeTransform &&
+       (sourceProps.transform != targetProps.transform ||
+        sourceProps.transformOrigin != targetProps.transformOrigin)) ||
       !std::ranges::equal(sourceProps.boxShadow, targetProps.boxShadow, sameAnimatedBoxShadow) ||
       sourceProps.shadowColor != targetProps.shadowColor || sourceProps.shadowOffset != targetProps.shadowOffset ||
       sourceProps.shadowOpacity != targetProps.shadowOpacity || sourceProps.shadowRadius != targetProps.shadowRadius ||
@@ -69,16 +74,20 @@ jsi::Object SharedTransitionValuesFactory::create(const ShadowView &sourceView, 
   const auto &sourceViewProps = getViewProps(sourceView);
   const auto &targetViewProps = getViewProps(targetView);
 
-  jsi::Object values(rt_);
-
-  writeFrame(values, sourceView, targetView);
+  auto values = createGeometry(sourceView, targetView);
   writeOpacity(values, sourceViewProps, targetViewProps);
   writeBackgroundColor(values, sourceViewProps, targetViewProps);
-  writeTransform(values, sourceView, targetView);
-  writeTransformOrigin(values, sourceView, targetView, sourceViewProps, targetViewProps);
   writeShadow(values, sourceViewProps, targetViewProps);
   writeBorder(values, sourceViewProps, targetViewProps);
 
+  return values;
+}
+
+jsi::Object SharedTransitionValuesFactory::createGeometry(const ShadowView &sourceView, const ShadowView &targetView) {
+  jsi::Object values(rt_);
+  writeFrame(values, sourceView, targetView);
+  writeTransform(values, sourceView, targetView);
+  writeTransformOrigin(values, sourceView, targetView, getViewProps(sourceView), getViewProps(targetView));
   return values;
 }
 
