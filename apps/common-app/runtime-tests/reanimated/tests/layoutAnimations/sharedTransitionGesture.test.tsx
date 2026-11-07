@@ -7,11 +7,13 @@ import { Screen } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
   isViewMountedNatively,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -29,11 +31,17 @@ function Screens({
   sourceScreenMounted = true,
   targetOffset = 0,
   targetTranslateX = 0,
+  sourceActive = true,
+  tagged = true,
+  sourceTag = 'gesture-retained-source',
 }: {
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
   targetOffset?: number;
   targetTranslateX?: number;
+  sourceActive?: boolean;
+  tagged?: boolean;
+  sourceTag?: string;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -48,10 +56,11 @@ function Screens({
         enabled
         activityState={2}
         style={styles.screen}>
-        <SharedTransitionBoundary isActive={!sourceScreenMounted}>
+        <SharedTransitionBoundary
+          isActive={!sourceScreenMounted || !sourceActive}>
           <Animated.View
             ref={target}
-            sharedTransitionTag="gesture-retained-source"
+            sharedTransitionTag={tagged ? 'gesture-retained-source' : undefined}
             sharedTransitionStyle={transition}
             style={[
               styles.target,
@@ -70,11 +79,11 @@ function Screens({
           enabled
           activityState={2}
           style={styles.screen}>
-          <SharedTransitionBoundary isActive>
+          <SharedTransitionBoundary isActive={sourceActive}>
             {sourceMounted && (
               <Animated.View
                 ref={source}
-                sharedTransitionTag="gesture-retained-source"
+                sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transition}
                 style={styles.source}>
                 <View ref={child} collapsable={false} style={styles.child} />
@@ -189,6 +198,154 @@ describe('Retained source during native Screen progress', () => {
       await render(<Screens sourceScreenMounted={false} />);
       await expectGone(tags.sourceScreen, tags.source, tags.child);
       await expectTargetOpacity(1);
+    }
+  );
+});
+
+describe('Endpoint visibility after a cancelled Screen gesture', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each(['cancel', 'zero', 'late-cancel'] as const)(
+    'keeps the prior hidden target after %p',
+    async (outcome) => {
+      const tags = await startGestureWithHiddenTarget();
+      await render(<Screens targetOffset={80} targetTranslateX={30} />);
+      await waitForFrames(3);
+      if (outcome === 'late-cancel') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+        await expectTargetOpacity(1);
+        await waitForFrames(3);
+      }
+      if (outcome === 'zero') {
+        await observer().emitScreenTransitionProgress(
+          tags.sourceScreen,
+          0,
+          true,
+          false
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await expectCarrier(tags.source, 60);
+      await expectTargetOpacity(0);
+      expect(await observer().observeParent(tags.source)).toBe(
+        tags.originalParent
+      );
+      expect(
+        (await getTestComponent('gestureTarget').getTransformObservation())
+          ?.translateX
+      ).toBe(30, ComparisonMode.PIXEL);
+      await render(<Screens targetOffset={80} targetTranslateX={30} />);
+      for (let frame = 0; frame < 6; frame++) {
+        await expectTargetOpacity(0);
+        await waitForFrames(1);
+      }
+    }
+  );
+
+  gestureTest(
+    'shows the prior hidden target when cancellation cannot restore its removed source',
+    async () => {
+      const tags = await startGestureWithHiddenTarget();
+      await render(<Screens sourceMounted={false} />);
+      await waitForFrames(3);
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectGone(tags.source, tags.child);
+      await expectTargetOpacity(1);
+    }
+  );
+
+  gestureTest(
+    'keeps an initially visible target visible after cancellation',
+    async () => {
+      await render(<Screens tagged={false} />);
+      await waitForNotification('gesture-source-appeared');
+      await waitForNotification('gesture-target-appeared');
+      await render(<Screens />);
+      await waitForFrames(3);
+      await expectTargetOpacity(1);
+      const tags = await beginGesture();
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+      await expectTargetOpacity(1);
+      expect(await observer().observeParent(tags.source)).toBe(
+        tags.originalParent
+      );
+    }
+  );
+
+  gestureTest(
+    'keeps the target visible when the completed gesture removes its source screen',
+    async () => {
+      const tags = await startGestureWithHiddenTarget();
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        1,
+        false,
+        false
+      );
+      await expectTargetOpacity(1);
+      await render(<Screens sourceScreenMounted={false} />);
+      await expectGone(tags.sourceScreen, tags.source, tags.child);
+      await expectTargetOpacity(1);
+    }
+  );
+
+  gestureTest(
+    'restores both views when the source changes its shared tag before a late cancel',
+    async () => {
+      const tags = await startGestureWithHiddenTarget();
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        1,
+        false,
+        false
+      );
+      await expectTargetOpacity(1);
+      await render(<Screens sourceTag="gesture-renamed-source" />);
+      await waitForFrames(3);
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+      await expectTargetOpacity(1);
+      expect(await observer().observeParent(tags.source)).toBe(
+        tags.originalParent
+      );
+      await waitForFrames(6);
+      await expectTargetOpacity(1);
+    }
+  );
+
+  gestureTest(
+    'keeps the grid endpoint hidden when a reverse gesture interrupts its forward carrier',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(<Screens sourceActive={false} />);
+      await waitForNotification('gesture-source-appeared');
+      await waitForNotification('gesture-target-appeared');
+      const target = getTestComponent('gestureTarget').getTag();
+      const originalParent = await observer().observeParent(target);
+      await render(<Screens />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(15000);
+      await expectCarrier(target, 105);
+      const sourceScreen = getTestComponent('gestureSourceScreen').getTag();
+      const targetScreen = getTestComponent('gestureTargetScreen').getTag();
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.25,
+        false,
+        false
+      );
+      await waitForFrames(3);
+      await observer().emitScreenGestureCancel(sourceScreen);
+      await expectTargetOpacity(0);
+      await expectCarrier(getTestComponent('gestureSource').getTag(), 60);
+      expect(await observer().observeParent(target)).toBe(originalParent);
     }
   );
 });
@@ -350,6 +507,22 @@ async function startGesture() {
     async () =>
       (await getTestComponent('gestureSource').getMountedViewProps())?.width
   ).toBe(60, ComparisonMode.PIXEL);
+  return beginGesture();
+}
+
+async function startGestureWithHiddenTarget() {
+  await mockAnimationTimer({ autoAdvance: false });
+  await render(<Screens sourceActive={false} />);
+  await waitForNotification('gesture-source-appeared');
+  await waitForNotification('gesture-target-appeared');
+  await render(<Screens />);
+  await waitForFrames(3);
+  await advanceAnimationTimer(30000);
+  await expectTargetOpacity(0);
+  return beginGesture();
+}
+
+async function beginGesture() {
   const tags = {
     sourceScreen: getTestComponent('gestureSourceScreen').getTag(),
     targetScreen: getTestComponent('gestureTargetScreen').getTag(),
@@ -376,7 +549,7 @@ async function startGesture() {
   );
   await expectCarrier(tags.source, 82.5);
   await expectTargetOpacity(0);
-  return tags;
+  return { ...tags, originalParent };
 }
 
 function carrierY(tag: number) {
