@@ -1,0 +1,86 @@
+"""Interleaved A/B runs: in every round, installs each APK and runs the
+scenarios with bench.py. The order of APKs alternates between rounds to
+cancel out thermal drift. Runs already recorded with the same count and APK
+are skipped, so an interrupted session can be resumed.
+
+usage: ANDROID_SERIAL=<serial> python ab.py OUT_JSONL ROUNDS COUNT \\
+         "label=path/to.apk,label=path/to.apk" SCENARIO [SCENARIO...]
+"""
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bench  # noqa: E402
+
+
+def sha256(path):
+    with open(path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def main():
+    out, rounds, count = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+    variants = [v.split('=') for v in sys.argv[4].split(',')]
+    scenarios = sys.argv[5:]
+    labels = [label for label, _ in variants]
+    if len(set(labels)) != len(labels):
+        sys.exit(f'duplicate variant labels: {", ".join(labels)}')
+    bench.check_count(count)
+    bench.check_scenarios(scenarios)
+    # Install from private copies, so a rebuild during the session can't
+    # change the measured APK under its recorded hash.
+    copies = {}
+    for label, apk in variants:
+        copies[label] = os.path.join(bench.TMP, f'{label}.apk')
+        shutil.copyfile(apk, copies[label])
+    variants = [(label, copies[label]) for label in labels]
+    hashes = {label: sha256(apk) for label, apk in variants}
+    subprocess.run(bench.ADB + ['push', os.path.join(bench.HERE, 'snap.sh'),
+                                '/data/local/tmp/snap.sh'],
+                   capture_output=True, check=True)
+    done = set()
+    if os.path.exists(out):
+        for line in open(out):
+            d = json.loads(line)
+            done.add((d['round'], d['variant'], d['scenario'], d['count'],
+                      d.get('apk_sha256')))
+    for rnd in range(rounds):
+        order = variants if rnd % 2 == 0 else list(reversed(variants))
+        for label, apk in order:
+            todo = [s for s in scenarios
+                    if (rnd, label, s, count, hashes[label]) not in done]
+            if not todo:
+                continue
+            subprocess.run(bench.ADB + ['install', '-r', apk],
+                           capture_output=True, check=True)
+            for s in todo:
+                try:
+                    r = bench.run(s, count)
+                except subprocess.CalledProcessError:
+                    print(f'r{rnd} {label} {s}: run failed, reinstalling',
+                          flush=True)
+                    subprocess.run(bench.ADB + ['install', '-r', apk],
+                                   capture_output=True, check=True)
+                    r = bench.run(s, count)
+                r['variant'] = label
+                r['round'] = rnd
+                r['apk_sha256'] = hashes[label]
+                w = r['wall_s']
+                ui = sum(v for k, v in r['threads_ms'].items()
+                         if k.startswith('m.fabric')) / w / 10
+                p = sum(v for k, v in r['rails_mw'].items()
+                        if k.startswith('cpu')) + r['rails_mw'].get('gpu', 0)
+                print(f'r{rnd} {label:6s} {s:24s} ui={ui:5.1f}% '
+                      f'app={r["app_cpu_ms"]/w/10:5.1f}% cpu+gpu={p:6.0f}mW '
+                      f'fps={r["fps"]:5.1f}', flush=True)
+                with open(out, 'a') as f:
+                    f.write(json.dumps(r) + '\n')
+    subprocess.run(bench.ADB + ['shell', 'am force-stop com.fabricexample'])
+
+
+if __name__ == '__main__':
+    main()

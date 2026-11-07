@@ -1,0 +1,3 @@
+buffers { size_kb: 65536 fill_policy: RING_BUFFER }
+data_sources { config { name: "android.power" android_power_config { battery_poll_ms: 500 collect_power_rails: true } } }
+duration_ms: DURATION
