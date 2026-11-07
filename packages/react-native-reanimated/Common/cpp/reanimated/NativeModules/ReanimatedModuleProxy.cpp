@@ -1381,17 +1381,14 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
-      // A proxy calls this with its mutex held, and it takes the registry lock. So code that holds the
-      // registry lock must not call into a layout animations proxy.
+      // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();
         if (!strongThis || !shouldUseSynchronousUpdatesInPerformOperations()) {
           return std::nullopt;
         }
-        folly::dynamic props = folly::dynamic::object();
         auto lock = strongThis->updatesRegistryManager_->lock();
-        strongThis->updatesRegistryManager_->mergeRegistryProps(tag, props);
-        const auto opacity = props.get_ptr("opacity");
+        const auto opacity = strongThis->updatesRegistryManager_->getRegistryProp(tag, "opacity");
         if (opacity && opacity->isNull()) {
           return defaultViewOpacity();
         }

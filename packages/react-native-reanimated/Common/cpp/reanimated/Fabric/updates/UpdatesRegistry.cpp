@@ -37,6 +37,19 @@ void UpdatesRegistry::mergeInto(const Tag tag, folly::dynamic &target) const {
   target.update(it->second.second);
 }
 
+std::optional<folly::dynamic> UpdatesRegistry::getProp(const Tag tag, const char *propName) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  auto it = updatesRegistry_.find(tag);
+  if (it == updatesRegistry_.cend()) {
+    return std::nullopt;
+  }
+  const auto *value = it->second.second.get_ptr(propName);
+  if (!value) {
+    return std::nullopt;
+  }
+  return *value;
+}
+
 #ifdef ANDROID
 void UpdatesRegistry::mergeInto(const Tag tag, folly::dynamic &target, const PropNamePredicate isIncluded) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());

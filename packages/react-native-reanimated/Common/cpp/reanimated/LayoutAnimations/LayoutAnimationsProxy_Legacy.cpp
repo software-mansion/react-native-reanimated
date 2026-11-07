@@ -40,6 +40,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
+  assertUpdatesRegistryUnlocked();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
