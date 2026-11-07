@@ -1,7 +1,10 @@
 export type MetroOutcome = 'running' | 'foreign' | 'idle';
 
 export interface WaitForMetroOptions {
-  /** Resolves true when /status reports a running packager, false on timeout or error. */
+  /**
+   * Resolves true when /status reports a running packager, false on timeout or
+   * error.
+   */
   probeMetro: (timeoutMs: number) => Promise<boolean>;
   probeTcp: () => Promise<boolean>;
   sleep: (ms: number) => Promise<void>;
@@ -21,9 +24,9 @@ export interface WaitForMetroOptions {
  * long as something holds the port, keep asking until it answers or the
  * deadline passes.
  *
- * The probes made while waiting get a longer budget than the first one. A
- * Metro that is still starting answers late every time rather than once, and
- * a probe that gives up before that can never see it come up.
+ * The probes made while waiting get a longer budget than the first one. A Metro
+ * that is still starting answers late every time rather than once, and a probe
+ * that gives up before that can never see it come up.
  */
 export async function waitForMetro({
   probeMetro,
@@ -46,6 +49,9 @@ export async function waitForMetro({
     await sleep(intervalMs);
     if (await probeMetro(probeTimeoutMs)) {
       return 'running';
+    }
+    if (!(await probeTcp())) {
+      return 'idle';
     }
   }
   return 'foreign';

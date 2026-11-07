@@ -34,6 +34,7 @@ import {
   resolveAndroidDevice as resolveAndroidTarget,
 } from './android-device.mts';
 import type { AdbDevice, AndroidTools } from './android-device.mts';
+import { waitForMetro } from './runtime-tests-metro.mts';
 import { reloadRepeatsSuites, selectSuites } from './runtime-tests-suites.mts';
 
 interface Sanitizer {

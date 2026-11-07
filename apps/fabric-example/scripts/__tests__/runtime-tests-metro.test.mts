@@ -84,6 +84,30 @@ describe('waitForMetro', () => {
     assert.equal(probes, 1);
   });
 
+  it('reports an idle port when the holder exits during the wait', async () => {
+    // The process that held the port can exit while we wait for it to answer.
+    // Treating that as a foreign holder would abort instead of starting Metro
+    // on the port it just freed.
+    let elapsed = 0;
+    let probes = 0;
+    const outcome = await waitForMetro({
+      probeMetro: async () => {
+        probes += 1;
+        return false;
+      },
+      probeTcp: async () => probes < 2,
+      sleep: async (ms) => {
+        elapsed += ms;
+      },
+      now: () => elapsed,
+      timeoutMs: 30_000,
+      intervalMs: 500,
+      probeTimeoutMs: 5_000,
+    });
+
+    assert.equal(outcome, 'idle');
+  });
+
   it('stops at the deadline instead of polling forever', async () => {
     let elapsed = 0;
     let probes = 0;
