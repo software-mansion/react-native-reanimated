@@ -301,10 +301,6 @@ describe('Nested shared transition content fade during Screen progress', () => {
         false,
         false
       );
-      await expectEventually(async () => {
-        const parent = await RuntimeTestObserver!.observeParent(innerSource);
-        return parent !== null && parent !== originalParent;
-      }).toBe(true);
       await RuntimeTestObserver!.emitScreenTransitionProgress(
         targetScreen,
         0.5,
@@ -325,6 +321,9 @@ describe('Nested shared transition content fade during Screen progress', () => {
           outerTarget?.opacity === 0
         );
       }).toBe(true);
+      expect(await RuntimeTestObserver!.observeParent(innerSource)).toBe(
+        originalParent
+      );
 
       if (outcome === 'end') {
         await RuntimeTestObserver!.emitScreenTransitionProgress(

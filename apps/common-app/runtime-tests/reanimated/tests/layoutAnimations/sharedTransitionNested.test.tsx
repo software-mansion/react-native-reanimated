@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   FadeOut,
@@ -70,6 +70,7 @@ function Target({
   repeatInner,
   exiting,
   transitions,
+  wrapperTranslateX,
 }: {
   active: boolean;
   innerSize: number;
@@ -78,6 +79,7 @@ function Target({
   repeatInner: boolean;
   exiting: boolean;
   transitions: Transitions;
+  wrapperTranslateX: number;
 }) {
   const outer = useTestRef('targetOuter');
   const inner = useTestRef('targetInner');
@@ -92,6 +94,24 @@ function Target({
   const innerStyle = useAnimatedStyle(() =>
     repeatInner ? { opacity: 0.6 + repeat.value * 0.4 } : {}
   );
+  const innerView = (
+    <Animated.View
+      ref={inner}
+      sharedTransitionTag="inner"
+      sharedTransitionStyle={transitions.inner}
+      exiting={exiting ? targetExiting : undefined}
+      accessibilityLabel={innerLabel}
+      style={[
+        styles.targetInner,
+        {
+          width: innerSize,
+          height: innerSize,
+          backgroundColor: innerColor,
+        },
+        innerStyle,
+      ]}
+    />
+  );
   return (
     <SharedTransitionBoundary isActive={active}>
       <Animated.View
@@ -100,22 +120,13 @@ function Target({
         sharedTransitionStyle={transitions.outer}
         exiting={exiting ? targetExiting : undefined}
         style={styles.targetOuter}>
-        <Animated.View
-          ref={inner}
-          sharedTransitionTag="inner"
-          sharedTransitionStyle={transitions.inner}
-          exiting={exiting ? targetExiting : undefined}
-          accessibilityLabel={innerLabel}
-          style={[
-            styles.targetInner,
-            {
-              width: innerSize,
-              height: innerSize,
-              backgroundColor: innerColor,
-            },
-            innerStyle,
-          ]}
-        />
+        {wrapperTranslateX ? (
+          <View style={{ transform: [{ translateX: wrapperTranslateX }] }}>
+            {innerView}
+          </View>
+        ) : (
+          innerView
+        )}
       </Animated.View>
     </SharedTransitionBoundary>
   );
@@ -132,6 +143,7 @@ function Screens({
   transitions = innerEndsFirst,
   removeSource = false,
   innerWrapped = false,
+  wrapperTranslateX = 0,
 }: {
   active: boolean;
   keepTarget?: boolean;
@@ -143,6 +155,7 @@ function Screens({
   transitions?: Transitions;
   removeSource?: boolean;
   innerWrapped?: boolean;
+  wrapperTranslateX?: number;
 }) {
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
@@ -159,8 +172,13 @@ function Screens({
             {/* A collapsable wrapper is flattened, so the inner view changes its native parent. */}
             <View
               ref={innerWrapper}
-              collapsable={!innerWrapped}
-              style={innerWrapped && styles.innerWrapper}>
+              collapsable={!innerWrapped && !wrapperTranslateX}
+              style={[
+                innerWrapped && styles.innerWrapper,
+                !!wrapperTranslateX && {
+                  transform: [{ translateX: wrapperTranslateX }],
+                },
+              ]}>
               <Animated.View
                 ref={inner}
                 sharedTransitionTag="inner"
@@ -180,6 +198,7 @@ function Screens({
           repeatInner={repeatInner}
           exiting={exitingTarget}
           transitions={transitions}
+          wrapperTranslateX={wrapperTranslateX}
         />
       )}
     </View>
@@ -516,7 +535,7 @@ describe('Nested shared transitions', () => {
     ['inner first', innerEndsFirst, 600, 3000],
     ['outer first', outerEndsFirst, 300, 1200],
   ] as const) {
-    test(`keeps deleted nested carriers independent when they finish ${order}`, async () => {
+    test(`keeps deleted nested carriers until both finish when the ${order.replace(' first', '')} one ends first`, async () => {
       await mockAnimationTimer({ autoAdvance: false });
       await render(
         <Screens active={false} transitions={transitions} removeSource />
@@ -538,13 +557,7 @@ describe('Nested shared transitions', () => {
           return global._obtainMountedViewProps(innerTag, false)?.opacity;
         })
       ).toBe(1);
-      if (order === 'outer first') {
-        await expectEventually(() => isViewMountedNatively(outerTag)).toBe(
-          false
-        );
-      } else {
-        expect(await isViewMountedNatively(outerTag)).toBe(true);
-      }
+      expect(await isViewMountedNatively(outerTag)).toBe(true);
       await advanceAnimationTimer(secondEnd - firstEnd);
       await waitForNotification(
         order === 'inner first' ? 'outer-finished' : 'inner-finished'
@@ -557,7 +570,7 @@ describe('Nested shared transitions', () => {
   }
 
   test.each([true, false])(
-    'keeps a waiting inner view on screen when React moves it (wrapped first: %p)',
+    'moves a waiting inner view with React (wrapped first: %p)',
     async (wrapped) => {
       await mockAnimationTimer({ autoAdvance: false });
       await render(<Screens active={false} innerWrapped={wrapped} />);
@@ -576,17 +589,11 @@ describe('Nested shared transitions', () => {
       await waitForNotification('inner-finished');
       await waitForFrames(2);
 
-      await RuntimeTestObserver?.startUnmountRecording();
       await render(<Screens active innerWrapped={!wrapped} />);
       await expectEventually(() => isViewMountedNatively(wrapperTag)).toBe(
         !wrapped
       );
-      const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
-      if (unmounts) {
-        expect(unmounts.some(({ childTag }) => childTag === innerTag)).toBe(
-          false
-        );
-      }
+      expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
       expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
       const inner = await runOnUIBlocking(() => {
         'worklet';
@@ -602,6 +609,47 @@ describe('Nested shared transitions', () => {
       expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
     }
   );
+
+  test('keeps the inner view in its parent during the flight', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} />);
+    await waitForFrames();
+    const innerTag = getTestComponent('sourceInner').getTag();
+    const homeParent = await RuntimeTestObserver?.observeParent(innerTag);
+    await RuntimeTestObserver?.startUnmountRecording();
+    await render(<Screens active />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
+    await waitForFrames(2);
+    expect(await RuntimeTestObserver?.observeParent(innerTag)).toBe(homeParent);
+    if (Platform.OS === 'ios') {
+      const unmounts = await RuntimeTestObserver?.takeUnmountRecording();
+      expect(!!unmounts).toBe(true);
+      expect(!!unmounts?.some(({ childTag }) => childTag === innerTag)).toBe(
+        false
+      );
+    }
+    await advanceAnimationTimer(2700);
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
+
+  test('applies the transform of a wrapper around the inner view once', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} wrapperTranslateX={30} />);
+    await waitForFrames();
+    const innerTag = getTestComponent('sourceInner').getTag();
+    await render(<Screens active wrapperTranslateX={30} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
+    await waitForNotification('inner-finished');
+    await waitForFrames(2);
+    const transform = await RuntimeTestObserver?.observeTransform(innerTag);
+    expect(!!transform && Math.abs(transform.translateX) < 0.5).toBe(true);
+    await advanceAnimationTimer(2400);
+    await waitForNotification('outer-finished');
+    await expectAllShownAtTargets();
+  });
 
   test('keeps the inner view on screen until the outer transition ends', async () => {
     await render(<Screens active={false} />);

@@ -234,7 +234,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void startExitingAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
   void startLayoutAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
   void startSharedTransition(
-      int tag,
+      const std::shared_ptr<LightNode> &carrier,
       const ShadowView &before,
       const ShadowView &after,
       const Props::Shared &frameProps,
@@ -277,7 +277,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void startProgressTransition(
-      int tag,
+      const std::shared_ptr<LightNode> &carrier,
       const ShadowView &before,
       const ShadowView &after,
       const Props::Shared &frameProps,
@@ -391,6 +391,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void detachCarrier(
       SharedTransitionRun &run,
       const ShadowView &startView,
+      bool nested,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
@@ -406,6 +407,31 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void flushSubtreeRemovals(TransactionMeta &transaction) const;
   void scheduleTransitionLifecycleCleanup() const;
   std::shared_ptr<LightNode> detachedCarrierOf(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> carrierAncestorOf(const std::shared_ptr<LightNode> &node) const;
+  bool isCarriedBy(const std::shared_ptr<LightNode> &carrier, const std::shared_ptr<LightNode> &ancestor) const;
+  void moveNestedCarriersOutOf(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
+  bool keepsNesting(const std::shared_ptr<LightNode> &carrier, const std::shared_ptr<LightNode> &target) const;
+  void moveNestedCarrierToRoot(
+      SharedTransitionRun &run,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  react::Point carriedDistance(const std::shared_ptr<LightNode> &carrier) const;
+  ShadowView movedCarrierTarget(Tag tag, react::Point offset) const;
+  ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
+  react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;
+  Tag carrierParentTag(const std::shared_ptr<LightNode> &carrier) const;
+  ShadowView targetInCarrierSpace(
+      const SharedTransitionRun &run,
+      const ShadowView &target,
+      const PropsParserContext &propsParserContext) const;
+  std::optional<Transform> transformsAboveNestedCarrier(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &ancestor,
+      const ShadowView &view) const;
+  react::Point positionIn(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<LightNode> &ancestor,
+      bool useViewsOnScreen) const;
   bool isRetiringContent(Tag tag) const;
   void retireOrphanedSharedTransitions() const;
   void finishCoveredSharedTransitions(
@@ -431,6 +457,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
+  ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
   void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
@@ -475,6 +502,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool waitsForCoveringRun(const SharedTransitionRun &run, const std::vector<std::shared_ptr<LightNode>> &coveringViews)
       const;
   bool runContinues(Tag carrierTag) const;
+  bool landsWithOtherRuns(const SharedTransitionRun &run) const;
   std::vector<std::shared_ptr<LightNode>> viewsHiddenByContinuingRuns() const;
   void finishSharedTransition(
       const SharedTag &sharedTag,
@@ -482,6 +510,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
       bool landed = false) const;
+  void finishNestedSharedTransitions(
+      const std::shared_ptr<LightNode> &carrier,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext,
+      bool landed) const;
   bool hasUnqueuedCarrierFrame(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
   void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;

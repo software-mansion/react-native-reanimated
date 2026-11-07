@@ -77,6 +77,59 @@ function Screens({
   );
 }
 
+function NestedScreens({ innerMounted = true }: { innerMounted?: boolean }) {
+  const sourceScreen = useTestRef('nestedGestureSourceScreen');
+  const targetScreen = useTestRef('nestedGestureTargetScreen');
+  const outer = useTestRef('nestedGestureOuter');
+  const inner = useTestRef('nestedGestureInner');
+  return (
+    <View style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        onAppear={() => notify('nested-gesture-target-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <SharedTransitionBoundary isActive={false}>
+          <Animated.View
+            sharedTransitionTag="nested-gesture-outer"
+            sharedTransitionStyle={transition}
+            style={styles.nestedOuterTarget}>
+            <Animated.View
+              sharedTransitionTag="nested-gesture-inner"
+              sharedTransitionStyle={transition}
+              style={styles.nestedInnerTarget}
+            />
+          </Animated.View>
+        </SharedTransitionBoundary>
+      </Screen>
+      <Screen
+        ref={sourceScreen}
+        onAppear={() => notify('nested-gesture-source-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            ref={outer}
+            sharedTransitionTag="nested-gesture-outer"
+            sharedTransitionStyle={transition}
+            style={styles.nestedOuterSource}>
+            {innerMounted && (
+              <Animated.View
+                ref={inner}
+                sharedTransitionTag="nested-gesture-inner"
+                sharedTransitionStyle={transition}
+                style={styles.source}
+              />
+            )}
+          </Animated.View>
+        </SharedTransitionBoundary>
+      </Screen>
+    </View>
+  );
+}
+
 describe('Retained source during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
@@ -129,6 +182,81 @@ describe('Retained source during native Screen progress', () => {
     }
   );
 });
+
+describe('Nested shared view during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'moves a removed nested view to its target on screen',
+    async () => {
+      await render(<NestedScreens />);
+      await waitForNotification('nested-gesture-source-appeared');
+      await waitForNotification('nested-gesture-target-appeared');
+      await expectEventually(
+        async () =>
+          (await getTestComponent('nestedGestureInner').getMountedViewProps())
+            ?.width
+      ).toBe(60, ComparisonMode.PIXEL);
+      const targetScreen = getTestComponent(
+        'nestedGestureTargetScreen'
+      ).getTag();
+      const outer = getTestComponent('nestedGestureOuter').getTag();
+      const inner = getTestComponent('nestedGestureInner').getTag();
+      const originalParent = await observer().observeParent(outer);
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0,
+        false,
+        false
+      );
+      await expectEventually(async () => {
+        const parent = await observer().observeParent(outer);
+        return parent !== null && parent !== originalParent;
+      }).toBe(true);
+      const outerStart = await mountedX(outer);
+      if (outerStart === undefined) {
+        throw new Error('The outer carrier is not mounted');
+      }
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectEventually(() => mountedX(outer)).toBe(
+        outerStart + 50,
+        ComparisonMode.PIXEL
+      );
+      await render(<NestedScreens innerMounted={false} />);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.75,
+        false,
+        false
+      );
+      // The outer view moves by 100 and the inner view by 20 inside it.
+      await expectEventually(() => mountedX(inner)).toBe(
+        outerStart + 90,
+        ComparisonMode.PIXEL
+      );
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        1,
+        false,
+        false
+      );
+      await expectGone(inner);
+    }
+  );
+});
+
+function mountedX(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false)?.x;
+  });
+}
 
 async function startGesture() {
   await render(<Screens />);
@@ -208,4 +336,17 @@ const styles = StyleSheet.create({
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
+  nestedOuterSource: { width: 100, height: 100, backgroundColor: '#dd5522' },
+  nestedOuterTarget: {
+    marginLeft: 100,
+    width: 150,
+    height: 150,
+    backgroundColor: '#2277dd',
+  },
+  nestedInnerTarget: {
+    marginLeft: 20,
+    width: 60,
+    height: 60,
+    backgroundColor: '#ffffff',
+  },
 });

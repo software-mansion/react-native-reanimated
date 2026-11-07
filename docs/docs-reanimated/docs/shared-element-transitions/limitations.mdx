@@ -25,12 +25,14 @@ Check these points:
 - If the target view changes only its style during the transition, the moving view does not animate to the new style. The new style shows when the transition ends. A shared view that waits for its parent (see below) animates to a new style of its target.
 - If the target view moves or changes its size during the transition, the moving view goes to the new place. For a timed transition, if this happens just as the transition ends, the view can move again with the full duration.
 - If React removes the target view during the transition and the source view stays, the view moves to the last place of the target. Then the source view shows in its own place at once. If the same update makes the source screen active again, for example `navigation.goBack()`, the view moves back to the source.
-- A shared view inside another shared view waits for its parent. If its own transition ends first, it stays at its target until the transition of the parent ends.
+- A shared view inside another shared view moves inside the moving parent when its target is inside the target of the parent. It follows the path of the parent. When the two use different timing, it moves relative to the parent, not along its own path on screen. If its own transition ends first, it waits inside the parent until the transition of the parent ends. If the layout of its target changes while it waits, it moves again with its full duration.
+- A nested shared view moves on its own, above other views, when it is nested on only one of the screens, when its new target after a retarget is outside the target of the parent, or when React moves it out of the parent or removes a view between it and the parent. It keeps its frame on screen when it starts to move on its own.
 
 ## Known issues
 
 - On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that flies to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
 - On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
+- A nested shared view does not follow a scroll or a layout animation of a view between it and its moving parent. A view between them with `overflow: hidden` clips it to the source bounds of that view.
 - During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
 
 ## Videos and media

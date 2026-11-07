@@ -171,7 +171,9 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
     animation.startView.layoutMetrics.frame.origin += offset;
-    animation.frameOffset += offset;
+    if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      animation.frameOffset += offset;
+    }
     animation.finalView = newView;
     return animation.currentView;
   }
@@ -180,7 +182,9 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     auto &animation = completedAnimationIt->second.animation;
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
-    animation.frameOffset += offset;
+    if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      animation.frameOffset += offset;
+    }
     animation.finalView = newView;
     return animation.currentView;
   }
@@ -529,7 +533,7 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto tag = mutation.newChildShadowView.tag;
         // Without layout configs and animation records, every lookup below finds nothing, so the
         // update goes through as it is. Checked per mutation, as an Insert can transfer a config.
-        const bool mayAnimate = !node->isDetached &&
+        const bool mayAnimate = !node->isCarrier() &&
             (hasLayoutAnimationRecords() || layoutAnimationsManager_->hasLayoutAnimationConfigs(LAYOUT));
         std::shared_ptr<Serializable> config;
         auto shouldAnimate = false;
@@ -554,7 +558,7 @@ void LayoutAnimationsProxy::updateLightTree(
         }
         // The shared transition owns the mounted props and frame of its carrier.
         // attachCarrier mounts React props and synchronous updates from the light node.
-        if (node->isDetached) {
+        if (node->isCarrier()) {
           break;
         }
         if (!mayAnimate) {
@@ -644,7 +648,8 @@ void LayoutAnimationsProxy::updateLightTree(
         if (moved.contains(tag)) {
           const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
           node->previous.layoutMetrics.frame.origin += offset;
-          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, node->current, offset)) {
+          const auto finalView = node->isNestedCarrier ? movedCarrierTarget(tag, offset) : node->current;
+          if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, finalView, offset)) {
             filteredMutations.push_back(
                 ShadowViewMutation::InsertMutation(mutation.parentTag, *currentView, hostIndex));
           } else if (const auto updatedViewIt = updatedViews.find(tag); updatedViewIt != updatedViews.end() &&
@@ -857,7 +862,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree && !node->isDetached) {
+    if (!trackInLightTree && !node->isCarrier()) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }
@@ -978,6 +983,9 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (!transaction.surfaceDropped) {
+      moveNestedCarriersOutOf(node, transaction);
+    }
     retainRemovedCarriers(node, transaction);
     if (node->isRetained) {
       return;
@@ -1294,6 +1302,11 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    for (const auto &[_, element] : sharedElements_) {
+      if (element.run) {
+        element.run->carrier->isNestedCarrier = false;
+      }
+    }
     layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(
         deferredSharedTransitionConfigReleases_.begin(), deferredSharedTransitionConfigReleases_.end()));
     deferredSharedTransitionConfigReleases_.clear();
@@ -1426,7 +1439,8 @@ bool LayoutAnimationsProxy::isCarrierOfUncoveredRun(
     const std::vector<std::shared_ptr<LightNode>> &coveringViews) const {
   return std::ranges::any_of(sharedElements_, [&](const auto &entry) {
     const auto &run = entry.second.run;
-    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews);
+    return run && run->carrier->current.tag == tag && !isDescendantOfAny(run->target, coveringViews) &&
+        !landsWithOtherRuns(*run);
   });
 }
 
@@ -1530,7 +1544,10 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // arrives from the JS thread, because that job runs after the frames are in the queue. The attach
 // also restores the content of the carrier, so the frames of its content keep it too.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
-  if (detachedCarriers_.empty() || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
+  const bool hasCarriers = !detachedCarriers_.empty() || std::ranges::any_of(sharedElements_, [](const auto &entry) {
+    return entry.second.run && entry.second.run->carrier->isNestedCarrier;
+  });
+  if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   std::vector<Tag> tags;
@@ -1543,10 +1560,12 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     if (node == lightNodes_.end()) {
       continue;
     }
-    if (const auto carrier = detachedCarrierOf(node->second)) {
-      const auto carrierTag = carrier->current.tag;
-      tags.push_back(carrierTag);
-      unqueuedCarrierFrames_[carrierTag]++;
+    for (auto carrier = node->second; carrier; carrier = carrier->parent.lock()) {
+      if (carrier->isCarrier()) {
+        const auto carrierTag = carrier->current.tag;
+        tags.push_back(carrierTag);
+        unqueuedCarrierFrames_[carrierTag]++;
+      }
     }
   }
   if (tags.empty()) {
@@ -1666,36 +1685,36 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 }
 
 void LayoutAnimationsProxy::startSharedTransition(
-    const int tag,
+    const std::shared_ptr<LightNode> &carrier,
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
     const std::optional<ContentOpacityRange> contentOpacity) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
-      .tag = tag,
+      .tag = carrier->current.tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = carrierHostTag(),
+      .parentTag = carrierParentTag(carrier),
       .config = config,
       .contentOpacity = contentOpacity,
   });
 }
 
 void LayoutAnimationsProxy::startProgressTransition(
-    const int tag,
+    const std::shared_ptr<LightNode> &carrier,
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config) const {
   enqueueLayoutAnimation(ProgressLayoutAnimationStart{
-      .tag = tag,
+      .tag = carrier->current.tag,
       .before = before,
       .after = after,
       .frameProps = frameProps,
-      .parentTag = carrierHostTag(),
+      .parentTag = carrierParentTag(carrier),
       .config = config,
   });
 }

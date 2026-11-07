@@ -130,12 +130,18 @@ struct LightNode {
   int exitingChildrenCount = 0;
   // A shared transition carrier is mounted under the root, not under its parent.
   bool isDetached = false;
+  // A shared transition carrier inside a moving carrier stays under its parent and moves with it.
+  bool isNestedCarrier = false;
   // A carrier that React deleted. It and its content stay mounted until its run ends.
   bool isRetained = false;
   int detachedChildrenCount = 0;
 
   bool isExiting() const {
     return state != ExitingState::LIVE;
+  }
+
+  bool isCarrier() const {
+    return isDetached || isNestedCarrier;
   }
 
   void setExitingState(ExitingState newState) {
@@ -355,6 +361,16 @@ static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::share
     }
   }
   return false;
+}
+
+// A view that React moved keeps its old parent until the Insert, but that parent no longer holds it.
+static inline bool isLinkedInSubtree(const std::shared_ptr<LightNode> &node, const std::shared_ptr<LightNode> &root) {
+  for (auto child = node, parent = node->parent.lock(); child != root; child = parent, parent = parent->parent.lock()) {
+    if (!parent || parent->positionOf(child) == -1) {
+      return false;
+    }
+  }
+  return true;
 }
 
 static inline bool isInRetainedCarrier(std::shared_ptr<LightNode> node) {
