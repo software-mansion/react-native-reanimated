@@ -232,7 +232,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     auto root = lightNodes_[surfaceId_];
     react_native_assert(root && "Root node not found");
     auto beforeTopScreen = topScreen_;
-    if (beforeTopScreen) {
+    const bool collectSharedElements = shouldCollectSharedElements(mutations);
+    if (beforeTopScreen && collectSharedElements) {
       ReanimatedSystraceSection s("find before elements");
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
     }
@@ -246,8 +247,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     activeBoundaryMayHaveChanged_ = false;
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
-      ReanimatedSystraceSection s("find after elements");
-      findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+      if (collectSharedElements) {
+        ReanimatedSystraceSection s("find after elements");
+        findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+      }
 #ifdef __APPLE__
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the

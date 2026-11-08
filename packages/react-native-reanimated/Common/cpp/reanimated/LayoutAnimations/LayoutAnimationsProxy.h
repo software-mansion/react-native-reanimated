@@ -400,6 +400,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
 
+  bool shouldCollectSharedElements(const ShadowViewMutationList &mutations) const;
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
       BeforeOrAfter index,

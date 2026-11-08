@@ -108,6 +108,20 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::s
   return result;
 }
 
+bool LayoutAnimationsProxy::shouldCollectSharedElements(const ShadowViewMutationList &mutations) const {
+  if (activeBoundaryMayHaveChanged_ || !sharedTransitionRuns_.empty() || !sharedElements_.empty() ||
+      !heldEnterings_.empty()) {
+    return true;
+  }
+  return std::ranges::any_of(mutations, [this](const auto &mutation) {
+    if (mutation.type != ShadowViewMutation::Update) {
+      return true;
+    }
+    const auto node = lightNodes_.find(mutation.newChildShadowView.tag);
+    return node == lightNodes_.end() || isSETBoundary(node->second);
+  });
+}
+
 void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
