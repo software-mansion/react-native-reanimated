@@ -87,7 +87,7 @@ SharedTransition.duration(400)
 
 - `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
 - `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` sets how the animation responds to the reduced motion [accessibility](../guides/accessibility.mdx) setting of the device.
+- `.reduceMotion(reduceMotion: ReduceMotion)` controls whether SET runs. `Always` skips SET. `System` skips SET when reduced motion is enabled at the start. `Never` keeps SET enabled. A skipped SET leaves both views in their screens and does not apply content fading. The navigator controls the screen transition. A running SET keeps its initial decision. For skipped native back transitions, the callback reports navigation commit or cancellation.
 - `.withCallback(callback: (finished: boolean) => void)` sets a function that runs when the animation ends. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
 
 ### Shared transition modifiers <Optional/>

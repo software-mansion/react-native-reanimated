@@ -5,6 +5,7 @@ import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
+  ReduceMotion,
 } from './commonTypes';
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
@@ -70,14 +71,18 @@ export const updateLayoutAnimations: (
     | SharedTransitionProgressConfig,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFade?: SharedTransitionContentFade
+  sharedTransitionContentFade?: SharedTransitionContentFade,
+  sharedTransitionReduceMotion?: ReduceMotion,
+  sharedTransitionCallback?: (finished: boolean) => void
 ) => void = (
   viewTag,
   type,
   config,
   isUnmounting,
   sharedTransitionTag,
-  sharedTransitionContentFade
+  sharedTransitionContentFade,
+  sharedTransitionReduceMotion,
+  sharedTransitionCallback
 ) =>
   updateLayoutAnimationsManager.update(
     {
@@ -85,6 +90,10 @@ export const updateLayoutAnimations: (
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionReduceMotion,
+      sharedTransitionCallback: sharedTransitionCallback
+        ? createSerializable({ callback: sharedTransitionCallback })
+        : undefined,
       sharedTransitionContentFade: sharedTransitionContentFade
         ? {
             fadeIn: createSerializable(sharedTransitionContentFade.fadeIn),

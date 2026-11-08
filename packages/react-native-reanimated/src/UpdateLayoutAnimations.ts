@@ -2,6 +2,7 @@
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
+  ReduceMotion,
 } from './commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type {
@@ -34,7 +35,9 @@ export const updateLayoutAnimations: (
     | SharedTransitionProgressConfig,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFade?: SharedTransitionContentFade
+  sharedTransitionContentFade?: SharedTransitionContentFade,
+  sharedTransitionReduceMotion?: ReduceMotion,
+  sharedTransitionCallback?: (finished: boolean) => void
 ) => void = () => {
   // no-op
 };

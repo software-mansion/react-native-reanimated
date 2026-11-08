@@ -14,6 +14,9 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
+import { ReducedMotionManager } from '../ReducedMotion';
+
+const reducedMotionOnUI = ReducedMotionManager.uiValue;
 
 const TAG_OFFSET = 1e9;
 
@@ -25,6 +28,9 @@ function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
 }
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
+const ENABLE_SHARED_ELEMENT_TRANSITIONS = getStaticFeatureFlag(
+  'ENABLE_SHARED_ELEMENT_TRANSITIONS'
+);
 
 function startObservingProgress(
   tag: number,
@@ -197,6 +203,12 @@ export function initializeLayoutAnimationsManager() {
   }
   runOnUISync(() => {
     'worklet';
+    if (ENABLE_SHARED_ELEMENT_TRANSITIONS) {
+      global._setLayoutAnimationsReduceMotion?.(reducedMotionOnUI.value);
+      reducedMotionOnUI.addListener(0, (enabled) => {
+        global._setLayoutAnimationsReduceMotion?.(enabled);
+      });
+    }
     global.LayoutAnimationsManager = createLayoutAnimationManager();
   });
   isLayoutAnimationsManagerInitialized = true;

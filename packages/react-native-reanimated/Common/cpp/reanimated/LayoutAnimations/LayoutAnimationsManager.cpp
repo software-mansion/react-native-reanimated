@@ -27,14 +27,15 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
   }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : configUpdates) {
-    const auto &[tag, type, config, sharedTag, contentFade] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag, contentFade, reduceMotion, callback] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
-      sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade};
+      sharedTransitionsForNativeID_[tag] = {
+          .animation = config, .contentFade = contentFade, .reduceMotion = reduceMotion, .callback = callback};
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
       continue;
     }
@@ -43,7 +44,8 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {
-        sharedTransitions_[tag] = {.animation = config, .contentFade = contentFade};
+        sharedTransitions_[tag] = {
+            .animation = config, .contentFade = contentFade, .reduceMotion = reduceMotion, .callback = callback};
         sharedTransitionManager_->tagToName_[tag] = sharedTag;
       }
       continue;
@@ -52,7 +54,16 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
       if (config == nullptr) {
         progressSharedTransitionsForNativeID_.erase(tag);
       } else {
-        progressSharedTransitionsForNativeID_[tag] = config;
+        progressSharedTransitionsForNativeID_[tag] = {
+            .animation = config, .reduceMotion = reduceMotion, .callback = callback};
+      }
+      continue;
+    }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      if (config == nullptr) {
+        progressSharedTransitions_.erase(tag);
+      } else {
+        progressSharedTransitions_[tag] = {.animation = config, .reduceMotion = reduceMotion, .callback = callback};
       }
       continue;
     }
@@ -79,20 +90,33 @@ std::shared_ptr<Serializable> LayoutAnimationsManager::getLayoutAnimationConfig(
     const int tag,
     const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    const auto config = getSharedTransitionConfig(tag, true);
+    return config ? config->animation : nullptr;
+  }
   const auto &configs = getConfigsForType(type);
   const auto configIt = configs.find(tag);
   return configIt == configs.end() ? nullptr : configIt->second;
 }
 
-bool LayoutAnimationsManager::hasLayoutAnimationConfigs(const LayoutAnimationType type) {
-  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return !getConfigsForType(type).empty();
+bool LayoutAnimationsManager::shouldReduceSharedTransition(const int tag) {
+  const auto config = getSharedTransitionConfig(tag);
+  return config && config->reduceMotion.value_or(isReducedMotion());
 }
 
-std::optional<SharedTransitionConfig> LayoutAnimationsManager::getSharedTransitionConfig(const int tag) {
+bool LayoutAnimationsManager::hasLayoutAnimationConfigs(const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  const auto it = sharedTransitions_.find(tag);
-  return it == sharedTransitions_.end() ? std::nullopt : std::optional(it->second);
+  return type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS ? !progressSharedTransitions_.empty()
+                                                                         : !getConfigsForType(type).empty();
+}
+
+std::optional<SharedTransitionConfig> LayoutAnimationsManager::getSharedTransitionConfig(
+    const int tag,
+    const bool progress) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  const auto &configs = progress ? progressSharedTransitions_ : sharedTransitions_;
+  const auto it = configs.find(tag);
+  return it == configs.end() ? std::nullopt : std::optional(it->second);
 }
 
 std::shared_ptr<Serializable> LayoutAnimationsManager::takeExitingAnimationConfigAndClearTag(const int tag) {
@@ -206,7 +230,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
 
   // Transfer progress shared transition config from nativeId to view tag
   const auto progressConfig = progressSharedTransitionsForNativeID_[nativeId];
-  if (progressConfig) {
+  if (progressConfig.animation) {
     progressSharedTransitions_.insert_or_assign(tag, progressConfig);
   }
   progressSharedTransitionsForNativeID_.erase(nativeId);
@@ -225,8 +249,6 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       return exitingAnimations_;
     case LayoutAnimationType::LAYOUT:
       return layoutAnimations_;
-    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS:
-      return progressSharedTransitions_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }

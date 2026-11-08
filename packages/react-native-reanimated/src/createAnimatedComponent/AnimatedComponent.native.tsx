@@ -5,7 +5,7 @@ import { Fragment } from 'react';
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
-import { LayoutAnimationType } from '../commonTypes';
+import { LayoutAnimationType, ReduceMotion } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
@@ -440,10 +440,12 @@ export default class AnimatedComponent
       useNativeId
         ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-      maybeBuild(sharedTransition),
+      sharedTransition.build(ReduceMotion.Never),
       undefined,
       this.props.sharedTransitionTag,
-      sharedTransition.buildContentFade?.()
+      sharedTransition.buildContentFade(ReduceMotion.Never),
+      sharedTransition.getReduceMotion(),
+      sharedTransition.callbackV
     );
     updateLayoutAnimations(
       useNativeId ? this.reanimatedID : this.getComponentViewTag(),
@@ -452,7 +454,10 @@ export default class AnimatedComponent
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
       sharedTransition.getProgressConfig(),
       undefined,
-      undefined
+      undefined,
+      undefined,
+      sharedTransition.getReduceMotion(),
+      sharedTransition.callbackV
     );
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = this.props.sharedTransitionTag;

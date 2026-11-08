@@ -259,6 +259,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  requestNativeRender_ = platformDepMethodsHolder.requestRender;
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -379,6 +380,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     };
   }
 
+  const std::function<void(bool)> setReducedMotion = [weakThis = weak_from_this()](const bool enabled) {
+    if (const auto strongThis = weakThis.lock()) {
+      strongThis->layoutAnimationsManager_->setReducedMotion(enabled);
+    }
+  };
+
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
@@ -391,6 +398,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       progressLayoutAnimation,
       endLayoutAnimation,
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
+      setReducedMotion,
       requestAnimationFrame);
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
@@ -529,6 +537,21 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     } else {
       batchItem.config = extractSerializable(
           rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
+    }
+    const auto reduceMotion = item.getProperty(rt, "sharedTransitionReduceMotion");
+    if (reduceMotion.isString()) {
+      const auto policy = reduceMotion.asString(rt).utf8(rt);
+      if (policy != "system") {
+        batchItem.sharedTransitionReduceMotion = policy == "always";
+      }
+    }
+    const auto sharedCallback = item.getProperty(rt, "sharedTransitionCallback");
+    if (!sharedCallback.isUndefined()) {
+      batchItem.sharedTransitionCallback = extractSerializable(
+          rt,
+          sharedCallback,
+          "[Reanimated] Shared transition callback must be serializable.",
+          Serializable::ValueType::ObjectType);
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
@@ -1387,9 +1410,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       componentDescriptorRegistry,
       scheduler->getContextContainer(),
       getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+      uiRuntime_,
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [weakThis = weak_from_this()](std::function<void()> callback) {
+        if (const auto strongThis = weakThis.lock()) {
+          scheduleOnUI(strongThis->uiScheduler_, [weakThis, callback = std::move(callback)]() mutable {
+            if (const auto strongThis = weakThis.lock()) {
+              strongThis->requestNativeRender_([callback = std::move(callback)](const double) { callback(); });
+            }
+          });
+        }
+      },
       // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();

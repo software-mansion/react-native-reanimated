@@ -111,7 +111,9 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
     const SurfaceId surfaceId,
     const LayoutAnimationsProxyDependencies &dependencies)
     : LayoutAnimationsProxyCommon(surfaceId, dependencies),
-      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
+      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
+      uiRuntimeWeak_(dependencies.uiRuntimeWeak),
+      scheduleOnNextUIFrame_(dependencies.scheduleOnNextUIFrame) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
   setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
@@ -682,7 +684,9 @@ void LayoutAnimationsProxy::updateLightTree(
               cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
               mutation.parentTag,
               propsParserContext));
-        } else if (sharedTag && isInsideInactiveBoundary(node)) {
+        } else if (
+            sharedTag && isInsideInactiveBoundary(node) &&
+            !layoutAnimationsManager_->shouldReduceSharedTransition(tag)) {
           hideInSharedElement(*sharedTag, node);
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
@@ -1305,6 +1309,16 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    if (transition_) {
+      for (auto &config : transition_->progressCallbacks) {
+        queueProgressCallback(std::move(config), false);
+      }
+    }
+    if (uncommittedScreenPop_) {
+      for (auto &config : uncommittedScreenPop_->progressCallbacks) {
+        queueProgressCallback(std::move(config), false);
+      }
+    }
     carrierPlacements_.clear();
     for (const auto &[_, run] : sharedTransitionRuns_) {
       carrierPlacements_.tearDown(run.carrier);

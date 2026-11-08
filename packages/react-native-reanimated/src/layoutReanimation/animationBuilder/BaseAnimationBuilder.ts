@@ -138,9 +138,8 @@ export class BaseAnimationBuilder {
     return this.reduceMotionV;
   }
 
-  getDelayFunction(): AnimationFunction {
+  getDelayFunction(reduceMotion = this.getReduceMotion()): AnimationFunction {
     const isDelayProvided = this.randomizeDelay || this.delayV;
-    const reduceMotion = this.getReduceMotion();
     return isDelayProvided
       ? (delay, animation) => {
           'worklet';

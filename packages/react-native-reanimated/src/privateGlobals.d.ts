@@ -33,6 +33,9 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _registriesLeakCheck: () => string;
+  var _setLayoutAnimationsReduceMotion:
+    | ((enabled: boolean) => void)
+    | undefined;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _tagToJSPropNamesMapping: Record<number, Record<string, boolean>>;

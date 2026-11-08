@@ -11,7 +11,6 @@ import {
   SharedTransition,
   SharedTransitionType,
 } from '../src/layoutReanimation/SharedTransition';
-import { ReducedMotionManager } from '../src/ReducedMotion';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -421,28 +420,27 @@ describe('SharedTransition perspective', () => {
   });
 });
 
-describe('SharedTransition native progress config', () => {
-  test('resolves System when the native run starts', () => {
-    const previous = ReducedMotionManager.jsValue;
-    const config = SharedTransition.reduceMotion(
-      ReduceMotion.System
-    ).getProgressConfig();
-    try {
-      ReducedMotionManager.setEnabled(false);
-      expect(config.reduceMotion()).toBe(false);
-      ReducedMotionManager.setEnabled(true);
-      expect(config.reduceMotion()).toBe(true);
-    } finally {
-      ReducedMotionManager.setEnabled(previous);
+describe('SharedTransition native configuration', () => {
+  test.each([ReduceMotion.System, ReduceMotion.Always, ReduceMotion.Never])(
+    'retains the %s policy when native builds the visual animation',
+    (motion) => {
+      const builder = SharedTransition.reduceMotion(motion);
+      const style = builder.build(ReduceMotion.Never)(
+        VALUES as unknown as LayoutAnimationsValues
+      );
+      expect(builder.getReduceMotion()).toBe(motion);
+      expect(style.animations.width.reduceMotion).toBe(false);
     }
-  });
+  );
 
-  test.each([
-    [ReduceMotion.Always, true],
-    [ReduceMotion.Never, false],
-  ] as const)('resolves %s independently of System', (motion, expected) => {
-    const config = SharedTransition.reduceMotion(motion).getProgressConfig();
-    expect(config.reduceMotion()).toBe(expected);
+  test('keeps the callback without running the animation factory', () => {
+    const factory = jest.fn(() => ({ width: 300 }));
+    const callback = jest.fn();
+    const config = SharedTransition.custom(factory)
+      .withCallback(callback)
+      .getProgressConfig();
+    expect(config.callback).toBe(callback);
+    expect(factory).not.toHaveBeenCalled();
     expect(config.animation(VALUES, 0.5).width).toBe(200);
   });
 });

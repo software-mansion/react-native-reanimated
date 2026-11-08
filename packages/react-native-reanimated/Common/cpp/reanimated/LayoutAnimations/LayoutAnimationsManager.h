@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -45,6 +46,8 @@ struct SharedTransitionContentFade {
 struct SharedTransitionConfig {
   std::shared_ptr<Serializable> animation;
   std::optional<SharedTransitionContentFade> contentFade;
+  std::optional<bool> reduceMotion;
+  std::shared_ptr<Serializable> callback;
 };
 
 struct LayoutAnimationConfig {
@@ -53,6 +56,8 @@ struct LayoutAnimationConfig {
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
   std::optional<SharedTransitionContentFade> sharedTransitionContentFade;
+  std::optional<bool> sharedTransitionReduceMotion;
+  std::shared_ptr<Serializable> sharedTransitionCallback;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -61,13 +66,20 @@ struct LayoutAnimationConfig {
 class LayoutAnimationsManager {
  public:
   LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
+  void setReducedMotion(bool enabled) {
+    reducedMotion_.store(enabled, std::memory_order_relaxed);
+  }
+  bool isReducedMotion() const {
+    return reducedMotion_.load(std::memory_order_relaxed);
+  }
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   std::unique_lock<std::recursive_mutex> lockAndFlushConfigUpdates();
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   std::shared_ptr<Serializable> getLayoutAnimationConfig(const int tag, const LayoutAnimationType type);
+  bool shouldReduceSharedTransition(int tag);
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
-  std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag);
+  std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag, bool progress = false);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
   bool startLayoutAnimation(
       jsi::Runtime &rt,
@@ -91,12 +103,13 @@ class LayoutAnimationsManager {
       const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
+  std::atomic<bool> reducedMotion_{false};
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, SharedTransitionConfig> sharedTransitionsForNativeID_;
   std::unordered_map<int, SharedTransitionConfig> sharedTransitions_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitions_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitionsForNativeID_;
+  std::unordered_map<int, SharedTransitionConfig> progressSharedTransitions_;
+  std::unordered_map<int, SharedTransitionConfig> progressSharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;

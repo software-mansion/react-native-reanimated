@@ -237,11 +237,14 @@ describe('Shared element transition between boundaries', () => {
     }
   );
 
-  test('runs a transition that ends on its first frame', async () => {
+  test('skips a reduced-motion transition without running its animation factory', async () => {
     const finished: boolean[] = [];
+    const recorded: RecordedValues[] = [];
     const transition = createTransition(
       finished,
-      SharedTransition.reduceMotion(ReduceMotion.Always)
+      createRecordingTransition(recorded)
+        .reduceMotion(ReduceMotion.Always)
+        .fadeContent()
     );
     await render(<Screens showTarget={false} transition={transition} />);
     await waitForFrames();
@@ -251,7 +254,14 @@ describe('Shared element transition between boundaries', () => {
     await waitForFrames();
 
     expect(finished).toBe([true]);
+    expect(recorded.length).toBe(0);
+    await expectMountedAtLayout('source', 1);
     await expectMountedAtLayout('target', 1);
+    await render(<Screens showTarget={false} transition={transition} />);
+    await expectEventually(() => finished.length).toBe(2);
+    expect(finished).toBe([true, true]);
+    expect(recorded.length).toBe(0);
+    await expectMountedAtLayout('source', 1);
   });
 
   test('runs a transition between views that do not differ', async () => {

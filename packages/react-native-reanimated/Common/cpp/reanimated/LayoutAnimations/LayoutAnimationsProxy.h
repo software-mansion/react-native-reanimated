@@ -123,6 +123,7 @@ struct ProgressTransition {
   std::shared_ptr<LightNode> targetScreen;
   double progress = 0;
   bool updated = true;
+  std::vector<std::shared_ptr<Serializable>> progressCallbacks;
 };
 
 // A finished gesture whose hidden source views wait for React to commit the
@@ -131,6 +132,7 @@ struct ProgressTransition {
 struct UncommittedScreenPop {
   std::shared_ptr<LightNode> sourceScreen;
   std::vector<RestoreRequest> sources;
+  std::vector<std::shared_ptr<Serializable>> progressCallbacks;
   bool cancelled = false;
 };
 
@@ -211,6 +213,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // Entering animations of target children that wait until their run lands.
   mutable std::vector<PendingNodeAnimation> heldEnterings_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
+  std::weak_ptr<WorkletRuntime> uiRuntimeWeak_;
+  std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
+  void queueProgressCallback(std::shared_ptr<Serializable> config, bool finished) const;
+  void filterReducedMotionSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext)
+      const;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   // removed components whose views are still shown; their shared transition configs are released when they unmap

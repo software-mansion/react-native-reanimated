@@ -178,6 +178,8 @@ export interface LayoutAnimationBatchItem {
   type: LayoutAnimationType;
   config: SerializableRef | undefined;
   sharedTransitionTag?: string;
+  sharedTransitionReduceMotion?: ReduceMotion;
+  sharedTransitionCallback?: SerializableRef;
   sharedTransitionContentFade?: {
     fadeIn: SerializableRef<EntryExitAnimationFunction>;
     fadeOutEnd: number;

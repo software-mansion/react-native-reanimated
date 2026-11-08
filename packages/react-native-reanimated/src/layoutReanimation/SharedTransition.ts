@@ -5,7 +5,6 @@ import {
   interpolateMatrix,
   prepareMatrixInterpolation,
 } from '../animation/transformationMatrix/matrixUtils';
-import { getReduceMotionFromConfig } from '../animation/utilCommon';
 import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
@@ -14,6 +13,7 @@ import type {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  ReduceMotion,
   StyleProps,
   Timestamp,
 } from '../commonTypes';
@@ -163,7 +163,7 @@ export type ProgressSharedTransitionAnimation = (
 
 export type SharedTransitionProgressConfig = {
   animation: ProgressSharedTransitionAnimation;
-  reduceMotion: () => boolean;
+  callback?: (finished: boolean) => void;
 };
 
 type ChangedStyle = { key: string; current: unknown; target: unknown };
@@ -475,24 +475,30 @@ export class SharedTransition
     return this;
   }
 
-  buildContentFade(): SharedTransitionContentFade | undefined {
+  buildContentFade(
+    reduceMotion = this.getReduceMotion()
+  ): SharedTransitionContentFade | undefined {
     if (!this.fadeContentV) {
       return undefined;
     }
     const { fadeOut, fadeIn } = this.fadeContentV;
     return {
       fadeIn: this.buildContentFadeIn(
-        fadeIn?.duration ?? (this.durationV ?? DEFAULT_DURATION) / 2
+        fadeIn?.duration ?? (this.durationV ?? DEFAULT_DURATION) / 2,
+        reduceMotion
       ),
       fadeOutEnd: fadeOut?.end ?? 1,
     };
   }
 
-  private buildContentFadeIn(duration: number): EntryExitAnimationFunction {
+  private buildContentFadeIn(
+    duration: number,
+    reduceMotion: ReduceMotion
+  ): EntryExitAnimationFunction {
     const config = {
       duration,
       easing: Easing.out(Easing.quad),
-      reduceMotion: this.reduceMotionV,
+      reduceMotion,
     };
     const fadeIn = (
       values: EntryAnimationsValues & { targetOpacity?: number }
@@ -570,8 +576,8 @@ export class SharedTransition
     return this;
   }
 
-  build = (): LayoutAnimationFunction => {
-    const delayFunction = this.getDelayFunction();
+  build = (reduceMotion = this.getReduceMotion()): LayoutAnimationFunction => {
+    const delayFunction = this.getDelayFunction(reduceMotion);
     if (!this.isPhysicsBasedSpring()) {
       this.durationV ??= DEFAULT_DURATION;
     }
@@ -710,13 +716,9 @@ export class SharedTransition
   }
 
   getProgressConfig(): SharedTransitionProgressConfig {
-    const reduceMotion = this.getReduceMotion();
     return {
       animation: this.getProgressAnimation(),
-      reduceMotion: () => {
-        'worklet';
-        return getReduceMotionFromConfig(reduceMotion);
-      },
+      callback: this.callbackV,
     };
   }
 

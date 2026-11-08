@@ -6,6 +6,7 @@ import Animated, {
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
 import { Screen } from 'react-native-screens';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -143,7 +144,7 @@ describe('Reduced motion during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
   gestureTest.each([
-    [ReduceMotion.Always, 150],
+    [ReduceMotion.Always, 60],
     [ReduceMotion.Never, 82.5],
   ] as const)(
     'uses reduced motion ${0} and restores a cancelled swipe',
@@ -158,7 +159,7 @@ describe('Reduced motion during native Screen progress', () => {
       );
       await expectCarrier(
         tags.source,
-        motion === ReduceMotion.Always ? 150 : 127.5
+        motion === ReduceMotion.Always ? 60 : 127.5
       );
       await observer().emitScreenGestureCancel(tags.sourceScreen);
       await expectCarrier(tags.source, 60);
@@ -176,7 +177,7 @@ describe('System reduced motion during native Screen progress', () => {
       const style = SharedTransition.duration(30000)
         .reduceMotion(ReduceMotion.System)
         .fadeContent();
-      const tags = await startGesture(style, 150, async () => {
+      const tags = await startGesture(style, 60, async () => {
         await render(
           <Screens transitionStyle={style} systemMotion={ReduceMotion.Always} />
         );
@@ -187,7 +188,7 @@ describe('System reduced motion during native Screen progress', () => {
           'worklet';
           return global._obtainMountedViewProps(tags.child, false)?.opacity;
         })
-      ).toBe(0);
+      ).toBe(1);
       await render(
         <Screens transitionStyle={style} systemMotion={ReduceMotion.Never} />
       );
@@ -198,7 +199,7 @@ describe('System reduced motion during native Screen progress', () => {
         false,
         false
       );
-      await expectCarrier(tags.source, 150);
+      await expectCarrier(tags.source, 60);
       await observer().emitScreenGestureCancel(tags.sourceScreen);
       await expectCarrier(tags.source, 60);
       await expectEventually(() =>
@@ -207,6 +208,85 @@ describe('System reduced motion during native Screen progress', () => {
           return global._obtainMountedViewProps(tags.child, false)?.opacity;
         })
       ).toBe(1);
+    }
+  );
+});
+
+describe('Skipped shared transition during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+  gestureTest.each([['commit'], ['cancel'], ['late cancel']] as const)(
+    'keeps native parents and reports ${0} once',
+    async ([outcome]) => {
+      const finished: boolean[] = [];
+      const record = (value: boolean) => {
+        finished.push(value);
+        notify('skipped-gesture-finished');
+      };
+      const style = SharedTransition.reduceMotion(ReduceMotion.Always)
+        .fadeContent()
+        .withCallback((value) => {
+          'worklet';
+          scheduleOnRN(record, value);
+        });
+      const tags = await startGesture(style, 60);
+      expect(await observer().observeParent(tags.source)).toBe(
+        tags.originalParent
+      );
+      await expectEventually(() =>
+        runOnUIBlocking(() => {
+          'worklet';
+          return global._obtainMountedViewProps(tags.child, false)?.opacity;
+        })
+      ).toBe(1);
+      expect(finished).toBe([]);
+      if (outcome !== 'cancel') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+        await waitForFrames(3);
+        expect(finished).toBe([]);
+      }
+      if (outcome === 'commit') {
+        await render(
+          <Screens transitionStyle={style} sourceScreenMounted={false} />
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await waitForNotification('skipped-gesture-finished');
+      await waitForFrames(3);
+      expect(finished).toBe([outcome === 'commit']);
+      await expectTargetOpacity(1);
+    }
+  );
+
+  gestureTest(
+    'keeps a running gesture when System changes to reduced motion',
+    async () => {
+      const style = SharedTransition.reduceMotion(ReduceMotion.System);
+      const tags = await startGesture(style, 82.5, async () => {
+        await render(
+          <Screens transitionStyle={style} systemMotion={ReduceMotion.Never} />
+        );
+        await waitForFrames(3);
+      });
+      await render(
+        <Screens transitionStyle={style} systemMotion={ReduceMotion.Always} />
+      );
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.75,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 127.5);
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+      await expectTargetOpacity(1);
     }
   );
 });
@@ -368,9 +448,12 @@ async function startGesture(
   );
   await expectEventually(async () => {
     const parent = await observer().observeParent(tags.source);
-    return parent !== null && parent !== originalParent;
+    return (
+      parent !== null &&
+      (width === 60 ? parent === originalParent : parent !== originalParent)
+    );
   }).toBe(true);
-  await expectCarrier(tags.source, width === 150 ? 150 : 60);
+  await expectCarrier(tags.source, 60);
   await observer().emitScreenTransitionProgress(
     tags.targetScreen,
     0.25,
@@ -378,8 +461,8 @@ async function startGesture(
     false
   );
   await expectCarrier(tags.source, width);
-  await expectTargetOpacity(0);
-  return tags;
+  await expectTargetOpacity(width === 60 ? 1 : 0);
+  return { ...tags, originalParent };
 }
 
 function observer() {

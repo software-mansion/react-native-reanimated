@@ -211,6 +211,9 @@ bool LayoutAnimationsProxy::settleUncommittedScreenPop(TransactionMeta &transact
       }
     }
   }
+  for (auto &config : uncommittedScreenPop_->progressCallbacks) {
+    queueProgressCallback(std::move(config), !uncommittedScreenPop_->cancelled);
+  }
   topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
   uncommittedScreenPop_.reset();
   return true;
@@ -261,6 +264,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
       findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
 
+      filterReducedMotionSharedTransitions(transaction, propsParserContext);
       adjustForNativePlacement(transaction.transitions);
       for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
         auto &transition = collectedTransition.transition;
@@ -328,9 +332,13 @@ void LayoutAnimationsProxy::handleProgressTransition(
       react_native_assert(!uncommittedScreenPop_ && "Previous screen pop not settled");
       react_native_assert(transition_->sourceScreen && "Shared transition source not found");
       if (transition_->sourceScreen) {
-        uncommittedScreenPop_ = UncommittedScreenPop{transition_->sourceScreen, std::move(sources)};
+        uncommittedScreenPop_ = UncommittedScreenPop{
+            transition_->sourceScreen, std::move(sources), std::move(transition_->progressCallbacks)};
       }
     } else {
+      for (auto &config : transition_->progressCallbacks) {
+        queueProgressCallback(std::move(config), false);
+      }
       topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
       for (const auto &source : sources) {
         if (isLightNodeMapped(source.node)) {
@@ -373,12 +381,7 @@ void LayoutAnimationsProxy::applyProgressAnimation(const SharedTransitionRun &ru
     return;
   }
   const auto config = layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_);
-  if (!layoutAnimation.reduceMotion) {
-    LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime_, "sharedTransitionReduceMotion", [&](jsi::Runtime &rt) {
-      layoutAnimation.reduceMotion = config.getPropertyAsFunction(rt, "reduceMotion").call(rt).getBool();
-    });
-  }
-  const auto progress = layoutAnimation.reduceMotion.value_or(false) ? 1.0 : transition_->progress;
+  const auto progress = transition_->progress;
   if (const auto &contentFade = run.contentFade) {
     const auto &[from, to] = contentFade->range;
     const auto fadeProgress = std::clamp(progress / fadeLength(*contentFade), 0.0, 1.0);
@@ -394,6 +397,52 @@ void LayoutAnimationsProxy::applyProgressAnimation(const SharedTransitionRun &ru
   if (style.isObject()) {
     progressLayoutAnimation(tag, style.asObject(uiRuntime_));
   }
+}
+
+void LayoutAnimationsProxy::queueProgressCallback(std::shared_ptr<Serializable> config, const bool finished) const {
+  scheduleOnNextUIFrame_([weakRuntime = uiRuntimeWeak_, config = std::move(config), finished]() {
+    const auto runtime = weakRuntime.lock();
+    if (!runtime) {
+      return;
+    }
+    auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(runtime);
+    LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime, "sharedTransitionCallback", [&](jsi::Runtime &rt) {
+      const auto object = config->toJSValue(rt).asObject(rt);
+      const auto callback = object.getProperty(rt, "callback");
+      if (!callback.isUndefined()) {
+        callback.asObject(rt).asFunction(rt).call(rt, finished);
+      }
+    });
+  });
+}
+
+void LayoutAnimationsProxy::filterReducedMotionSharedTransitions(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  const bool systemReducedMotion = layoutAnimationsManager_->isReducedMotion();
+  std::erase_if(transaction.transitions, [&](const auto &entry) {
+    const auto &[sharedTag, collected] = entry;
+    const auto config = layoutAnimationsManager_->getSharedTransitionConfig(
+        collected.transition.snapshot[BEFORE].tag, transition_.has_value());
+    if (!config || !config->reduceMotion.value_or(systemReducedMotion)) {
+      return false;
+    }
+    endSharedTransitionOf(sharedTag, transaction, propsParserContext);
+    for (const auto &node : collected.nodes) {
+      if (node) {
+        transaction.restoreRequests.push_back({sharedTag, node});
+      }
+    }
+    auto callbackConfig = config->callback;
+    if (callbackConfig) {
+      if (transition_) {
+        transition_->progressCallbacks.push_back(std::move(callbackConfig));
+      } else {
+        queueProgressCallback(std::move(callbackConfig), true);
+      }
+    }
+    return true;
+  });
 }
 
 void LayoutAnimationsProxy::overrideTransform(
@@ -1235,6 +1284,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   }
 
   if (beforeTopScreen != afterTopScreen) {
+    filterReducedMotionSharedTransitions(transaction, propsParserContext);
     adjustForNativePlacement(transaction.transitions);
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;

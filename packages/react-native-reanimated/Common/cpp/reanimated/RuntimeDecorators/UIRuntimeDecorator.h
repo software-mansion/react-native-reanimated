@@ -24,6 +24,7 @@ class UIRuntimeDecorator {
       const ProgressLayoutAnimationFunction &progressLayoutAnimation,
       const EndLayoutAnimationFunction &endLayoutAnimation,
       const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue,
+      const std::function<void(bool)> &setReducedMotion,
       const std::optional<worklets::RequestAnimationFrameHostFunction> &requestAnimationFrame);
 };
 
