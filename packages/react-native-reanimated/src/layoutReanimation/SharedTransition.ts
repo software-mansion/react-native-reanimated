@@ -5,6 +5,7 @@ import {
   interpolateMatrix,
   prepareMatrixInterpolation,
 } from '../animation/transformationMatrix/matrixUtils';
+import { convertToRGBA, isColor, rgbaArrayToRGBAColor } from '../Colors';
 import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
@@ -187,6 +188,21 @@ function isEqual(a: unknown, b: unknown): boolean {
   );
 }
 
+// A transparent color takes the RGB of the other color, as in
+// `interpolateColor`, so that the fade does not pass through gray.
+function matchTransparentColor(color: unknown, otherColor: unknown): unknown {
+  'worklet';
+  if (
+    !isColor(color) ||
+    !isColor(otherColor) ||
+    convertToRGBA(color)[3] !== 0
+  ) {
+    return color;
+  }
+  const [red, green, blue] = convertToRGBA(otherColor);
+  return rgbaArrayToRGBAColor([red, green, blue, 0]);
+}
+
 function getChangedStyles(
   values: SharedTransitionAnimationsValues
 ): ChangedStyle[] {
@@ -203,10 +219,11 @@ function getChangedStyles(
     if (ALIAS_NAMES.includes(name) || isEqual(current, target)) {
       continue;
     }
+    const isColorStyle = name.endsWith('Color');
     changed.push({
       key: name[0].toLowerCase() + name.slice(1),
-      current,
-      target,
+      current: isColorStyle ? matchTransparentColor(current, target) : current,
+      target: isColorStyle ? matchTransparentColor(target, current) : target,
     });
   }
   return changed;
