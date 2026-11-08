@@ -432,12 +432,22 @@ describe('Nested shared transitions', () => {
 
   for (const exitingTarget of [false, true]) {
     test(`returns a waiting carrier when the ${exitingTarget ? 'exiting ' : ''}target boundary is removed`, async () => {
+      await mockAnimationTimer({ autoAdvance: false });
       await render(<Screens active={false} exitingTarget={exitingTarget} />);
       await waitForFrames();
       await render(<Screens active exitingTarget={exitingTarget} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(600);
       await waitForNotification('inner-finished');
       expect(await opacityOf('targetOuter')).toBe(0);
+      const waiting =
+        await getTestComponent('sourceInner').getPresentedViewProps();
+      expect(waiting?.opacity).toBe(1);
+      expect(waiting?.width).toBe(60, ComparisonMode.PIXEL);
+      expect(waiting?.height).toBe(60, ComparisonMode.PIXEL);
       await render(<Screens active={false} exitingTarget={exitingTarget} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(3000);
       await expectEventually(() => opacityOf('sourceInner')).toBe(1);
       await expectEventually(async () => {
         const props =

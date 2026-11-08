@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -45,6 +46,13 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     roundTextMetrics(rt, updates);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+        const auto opacity = updates.asObject(rt).getProperty(rt, "opacity");
+        if (opacity.isNumber() || opacity.isNull()) {
+          backendOpacities_[shadowNode->getTag()] = {
+              shadowNode->getFamilyShared(), opacity.isNull() ? 1.0 : opacity.asNumber()};
+        }
+      }
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
       auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
@@ -57,6 +65,19 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       addUpdatesToBatch(shadowNode->getFamilyShared(), std::move(dynamicUpdates));
     }
   }
+}
+
+std::optional<folly::dynamic> AnimatedPropsRegistry::getProp(const Tag tag, const char *propName) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (std::string_view(propName) == "opacity") {
+      const auto it = backendOpacities_.find(tag);
+      if (it != backendOpacities_.end() && !it->second.family.expired()) {
+        return it->second.value;
+      }
+    }
+  }
+  return UpdatesRegistry::getProp(tag, propName);
 }
 
 void AnimatedPropsRegistry::trackUpdate(
@@ -210,6 +231,7 @@ void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
+  backendOpacities_.erase(tag);
   updatesRegistry_.erase(tag);
   writeHistories_.erase(tag);
   syncedTags_.erase(tag);

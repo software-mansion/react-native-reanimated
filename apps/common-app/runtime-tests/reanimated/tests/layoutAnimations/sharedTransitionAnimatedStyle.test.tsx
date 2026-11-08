@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
+  getStaticFeatureFlag,
   makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
@@ -200,6 +201,33 @@ async function expectOpacityForFrames(name: string, opacity: number) {
 }
 
 describe('Shared transition of views with an animated opacity', () => {
+  test('starts with the latest opacity written before the move', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const sourceOpacity = makeMutable<number | null>(0.4);
+    const targetOpacity = makeMutable<number | null>(0.4);
+    await render(
+      <OpacityScreens
+        active={false}
+        sourceOpacity={sourceOpacity}
+        targetOpacity={targetOpacity}
+      />
+    );
+    await waitForFrames();
+    sourceOpacity.value = 0.6;
+    await expectEventually(() => mountedOpacity('opacity-source')).toBe(0.6);
+    await render(
+      <OpacityScreens
+        active
+        sourceOpacity={sourceOpacity}
+        targetOpacity={targetOpacity}
+      />
+    );
+    await waitForFrames(3);
+    await expectOpacityForFrames('opacity-source', 0.6);
+    await advanceAnimationTimer(DURATION);
+    await waitForNotification('hiding-finished');
+  });
+
   test('keeps hidden views at opacity 0 and shows the newest opacity at the end', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     const sourceOpacity = makeMutable<number | null>(1);
@@ -269,6 +297,111 @@ describe('Shared transition of views with an animated opacity', () => {
     await waitForNotification('hiding-finished');
     await expectEventually(() => mountedOpacity('opacity-target')).toBe(1);
   });
+});
+
+function BackendOpacityTarget() {
+  const target = useTestRef('backend-target');
+  return (
+    <SharedTransitionBoundary isActive>
+      <Animated.View
+        ref={target}
+        sharedTransitionTag="backend-opacity"
+        sharedTransitionStyle={hidingTransition}
+        style={styles.target}
+      />
+    </SharedTransitionBoundary>
+  );
+}
+
+function BackendOpacityScreens({
+  active,
+  revision = 0,
+}: {
+  active: boolean;
+  revision?: number;
+}) {
+  const source = useTestRef('backend-source');
+  return (
+    <View
+      style={styles.container}
+      accessibilityLabel={`backend revision ${revision}`}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={source}
+          sharedTransitionTag="backend-opacity"
+          sharedTransitionStyle={hidingTransition}
+          style={styles.source}
+        />
+      </SharedTransitionBoundary>
+      {active && <BackendOpacityTarget />}
+    </View>
+  );
+}
+
+const backendTest =
+  Platform.OS === 'android' && getStaticFeatureFlag('USE_ANIMATION_BACKEND')
+    ? test
+    : test.skip;
+
+describe('Shared transition opacity from backend native events', () => {
+  for (const flushFirst of [false, true]) {
+    backendTest(
+      `keeps the newest raw opacity across draw and safe events (flush first: ${flushFirst})`,
+      async () => {
+        await mockAnimationTimer({ autoAdvance: false });
+        await render(<BackendOpacityScreens active={false} />);
+        await waitForFrames();
+        await render(<BackendOpacityScreens active />);
+        await waitForFrames(3);
+        await advanceAnimationTimer(400);
+        const wrapper =
+          getTestComponent('backend-target').getShadowNodeWrapper();
+        const targetTag = getTestComponent('backend-target').getTag();
+        const immediate = await runOnUIAsync(() => {
+          'worklet';
+          global._testAnimationBackendUpdate!(
+            wrapper,
+            { opacity: null, backgroundColor: -13408615 },
+            true
+          );
+          const mounted = global._obtainMountedViewProps(targetTag, false);
+          if (!flushFirst)
+            global._testAnimationBackendUpdate!(
+              wrapper,
+              { opacity: 0.8 },
+              false
+            );
+          return mounted;
+        });
+        expect(immediate?.opacity).toBe(0);
+        expect(immediate?.backgroundColor).toBe('#336699ff');
+        await expectOpacityForFrames('backend-target', 0);
+        if (flushFirst) {
+          await runOnUIAsync(() => {
+            'worklet';
+            global._testAnimationBackendUpdate!(
+              wrapper,
+              { opacity: 0.8 },
+              false
+            );
+          });
+        }
+        await expectOpacityForFrames('backend-target', 0);
+        expect(
+          (await getTestComponent('backend-target').getMountedViewProps())
+            ?.backgroundColor
+        ).toBe('#336699ff');
+        await advanceAnimationTimer(DURATION);
+        await waitForNotification('hiding-finished');
+        await expectEventually(() => mountedOpacity('backend-target')).toBe(
+          0.8
+        );
+        await render(<BackendOpacityScreens active revision={1} />);
+        await waitForFrames(3);
+        await expectOpacityForFrames('backend-target', 0.8);
+      }
+    );
+  }
 });
 
 const styles = StyleSheet.create({

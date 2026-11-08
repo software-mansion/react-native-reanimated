@@ -9,6 +9,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <algorithm>
 #include <cstring>
@@ -805,14 +806,22 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
         finalView.layoutMetrics = animation.finalView.layoutMetrics;
       }
     }
-    if (!completedAnimation.shouldRemove && animation.opacity) {
+    auto finalOpacity = animation.opacity;
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      if (animation.type == LayoutAnimationType::ENTERING && readSynchronousOpacity_) {
+        if (const auto opacity = readSynchronousOpacity_(tag)) {
+          finalOpacity = opacity;
+        }
+      }
+    }
+    if (!completedAnimation.shouldRemove && finalOpacity) {
 #ifdef ANDROID
       opacityRestorations.push_back(OpacityRestoration{
           .shadowView = animation.finalView,
-          .opacity = *animation.opacity,
+          .opacity = *finalOpacity,
       });
 #else
-      finalView = cloneViewWithOpacity(finalView, *animation.opacity, propsParserContext);
+      finalView = cloneViewWithOpacity(finalView, *finalOpacity, propsParserContext);
 #endif
     }
     if (!completedAnimation.shouldRemove &&

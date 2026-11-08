@@ -214,6 +214,13 @@ declare global {
     tag: number,
     value: Record<string, unknown>
   ) => void;
+  var _testAnimationBackendUpdate:
+    | ((
+        wrapper: ShadowNodeWrapper,
+        props: Record<string, unknown>,
+        duringDraw: boolean
+      ) => void)
+    | undefined;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
   var __stashSerializableForReload: (value: unknown) => void;
   var __takeSerializablesStashedForReload: () => object[];

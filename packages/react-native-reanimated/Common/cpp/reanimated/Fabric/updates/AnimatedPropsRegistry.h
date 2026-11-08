@@ -14,6 +14,8 @@ namespace reanimated {
 class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
   void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
+  std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const override;
+  bool isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const;
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
@@ -56,7 +58,11 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   std::unordered_map<Tag, std::weak_ptr<const ShadowNodeFamily>> unmountedFamilies_;
   size_t unmountedFamiliesPruneThreshold_ = MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD;
 
-  bool isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const;
+  struct BackendOpacity {
+    std::weak_ptr<const ShadowNodeFamily> family;
+    double value;
+  };
+  std::unordered_map<Tag, BackendOpacity> backendOpacities_;
   void pruneExpiredUnmountedFamilies();
 
   void trackUpdate(Tag tag, const folly::dynamic &updates, bool isAnimatedProps, double timestamp);

@@ -223,6 +223,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   AnimationMutations collectEventUpdates();
   AnimationMutations collectNonLayoutAnimationUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
+  AnimationMutations prepareBackendUpdates(AnimationMutations mutations, GrandCallbackSource source);
+  AnimationMutations deferredBackendUpdates_;
 
   const bool isReducedMotion_;
   std::atomic<bool> shouldFlushRegistry_{false};

@@ -1845,6 +1845,34 @@ double LayoutAnimationsProxy::ownOpacity(const std::shared_ptr<LightNode> &node,
   return synchronousOpacity.value_or(getViewProps(node->current).opacity);
 }
 
+void LayoutAnimationsProxy::prepareBackendOpacityUpdates(AnimationMutations &mutations, const UpdatesBatch &updates)
+    const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  applySynchronousProps(updates, true);
+  const auto hiddenTags = viewTagsKeptHidden();
+  auto managedTags = hiddenTags;
+  for (const auto *run : contentFadeRuns()) {
+    for (const auto &child : fadingChildren(run->carrier, hiddenTags)) {
+      managedTags.insert(child->current.tag);
+    }
+  }
+  if (managedTags.empty()) {
+    return;
+  }
+  std::unordered_set<Tag> opacityTags;
+  for (const auto &[family, _] : updates) {
+    if (family->getSurfaceId() == surfaceId_) {
+      opacityTags.insert(family->getTag());
+    }
+  }
+  for (auto &mutation : mutations.batch) {
+    if (mutation.family->getSurfaceId() == surfaceId_ && opacityTags.contains(mutation.tag) &&
+        managedTags.contains(mutation.tag)) {
+      mutation.hasLayoutUpdates = true;
+    }
+  }
+}
+
 // Synchronous writes skip pullTransaction. Only pull mutations change the opacity of a hidden view, because a pull
 // can hide a carrier before the mutations that move it mount. A child of a fading carrier gets the content opacity.
 void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) const {

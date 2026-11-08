@@ -32,6 +32,13 @@ declare global {
     tag: number,
     value: Record<string, unknown>
   ) => void;
+  var _testAnimationBackendUpdate:
+    | ((
+        wrapper: ShadowNodeWrapper,
+        props: Record<string, unknown>,
+        duringDraw: boolean
+      ) => void)
+    | undefined;
   var _registriesLeakCheck: () => string;
   var _setLayoutAnimationsReduceMotion:
     | ((enabled: boolean) => void)

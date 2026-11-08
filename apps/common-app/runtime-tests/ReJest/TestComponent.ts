@@ -57,6 +57,15 @@ export class TestComponent {
     return RuntimeTestObserver.observeTextInput(this.getTag());
   }
 
+  public getShadowNodeWrapper() {
+    if (!this.ref.current) {
+      throw new Error('The test component is not mounted');
+    }
+    const { getShadowNodeWrapperFromRef } =
+      require('react-native-reanimated/src/fabricUtils') as typeof import('react-native-reanimated/lib/typescript/fabricUtils');
+    return getShadowNodeWrapperFromRef(this.ref.current);
+  }
+
   public getTag() {
     return findNodeHandle(this.ref.current) ?? -1;
   }

@@ -348,6 +348,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const override;
+  void prepareBackendOpacityUpdates(AnimationMutations &mutations, const UpdatesBatch &updates) const override;
 
   void reconcileContradictedRemovals(
       ShadowViewMutationList &mutations,

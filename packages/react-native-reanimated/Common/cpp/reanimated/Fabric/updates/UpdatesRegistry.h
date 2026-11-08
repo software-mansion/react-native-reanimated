@@ -51,7 +51,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
-  std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const;
+  virtual std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const;
 #ifdef ANDROID
   void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
 #endif

@@ -51,18 +51,58 @@ namespace {
 
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
+    auto sourceRawProps = source.rawProps->toDynamic();
+    if (sourceRawProps.get_ptr("opacity")) {
+      std::erase_if(target.props, [](const auto &prop) { return prop->propName == OPACITY; });
+    }
     if (target.rawProps) {
-      auto mergedRawProps = target.rawProps->toDynamic();
-      mergedRawProps.merge_patch(source.rawProps->toDynamic());
-      target.rawProps = std::make_unique<RawProps>(std::move(mergedRawProps));
+      auto raw = target.rawProps->toDynamic();
+      raw.update(sourceRawProps);
+      target.rawProps = std::make_unique<RawProps>(std::move(raw));
     } else {
       target.rawProps = std::move(source.rawProps);
     }
   }
-
   for (auto &prop : source.props) {
+    if (prop->propName == OPACITY) {
+      std::erase_if(target.props, [](const auto &old) { return old->propName == OPACITY; });
+    }
     target.props.push_back(std::move(prop));
   }
+}
+
+void appendAnimationMutations(AnimationMutations &target, AnimationMutations source) {
+  std::unordered_map<Tag, size_t> indices;
+  for (size_t index = 0; index < target.batch.size(); ++index) {
+    indices.emplace(target.batch[index].tag, index);
+  }
+  for (auto &mutation : source.batch) {
+    const auto [it, inserted] = indices.emplace(mutation.tag, target.batch.size());
+    if (inserted) {
+      target.batch.push_back(std::move(mutation));
+    } else {
+      auto &existing = target.batch[it->second];
+      existing.hasLayoutUpdates |= mutation.hasLayoutUpdates;
+      mergeAnimatedProps(existing.props, std::move(mutation.props));
+    }
+  }
+  target.asyncFlushSurfaces.merge(source.asyncFlushSurfaces);
+}
+
+std::optional<double> animatedOpacity(const AnimatedProps &props) {
+  std::optional<double> opacity;
+  if (props.rawProps) {
+    const auto raw = props.rawProps->toDynamic();
+    if (const auto value = raw.get_ptr("opacity"); value && (value->isNumber() || value->isNull())) {
+      opacity = value->isNull() ? defaultViewOpacity() : value->asDouble();
+    }
+  }
+  for (const auto &prop : props.props) {
+    if (prop->propName == OPACITY) {
+      opacity = react::get<Float>(prop);
+    }
+  }
+  return opacity;
 }
 
 #ifdef ANDROID
@@ -400,6 +440,30 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction,
       setReducedMotion,
       requestAnimationFrame);
+
+  if constexpr (
+      StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG") && StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    jsi_utils::installJsiFunction(
+        uiRuntime,
+        "_testAnimationBackendUpdate",
+        [weakThis = weak_from_this()](
+            jsi::Runtime &rt, const jsi::Value &wrapper, const jsi::Value &props, const jsi::Value &duringDraw) {
+          const auto self = weakThis.lock();
+          if (!self) {
+            return;
+          }
+          const auto node = shadowNodeFromValue(rt, wrapper);
+          {
+            auto lock = self->updatesRegistryManager_->lock();
+            self->animatedPropsRegistry_->addRawPropsToAnimatedPropsBatch(
+                node->getFamilyShared(), jsi::dynamicFromValue(rt, props));
+          }
+          const auto source =
+              duringDraw.asBool() ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event;
+          self->getAnimationBackend()->pushAnimationMutations(
+              [self, source](AnimationTimestamp timestamp) { return self->runGrandCallback(timestamp, source); });
+        });
+  }
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
     jsi_utils::installJsiFunction(
@@ -1061,7 +1125,8 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
     const bool hasWork = producedMutations || !pendingFrameCallbacks_.empty() ||
         pendingAnimationFrameCallbackFromWorklets_ != nullptr || operationsLoop_->hasOngoingOperations() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates() || shouldFlushRegistry_ ||
-        !layoutAnimationFlushRequests_.empty();
+        !layoutAnimationFlushRequests_.empty() || !deferredBackendUpdates_.batch.empty() ||
+        !deferredBackendUpdates_.asyncFlushSurfaces.empty();
     if (!hasWork) {
       getAnimationBackend()->stop(animationBackendCallbackId_);
       isAnimationRunning_ = false;
@@ -1071,26 +1136,77 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const bool producedMutations) {
 
 AnimationMutations ReanimatedModuleProxy::mutationsFromAnimatedPropsBatch(
     UpdatesBatchAnimatedProps &&animatedPropsBatch) {
-  // This is a temporary fix, in reanimated we can sometimes produce multiple updates for the same view
-  // In that case Animation Backend will only apply the last one.
-  // Until the fix is implemented there, we will keep the merging logic here.
   AnimationMutations mutations;
   mutations.batch.reserve(animatedPropsBatch.size());
-  std::unordered_map<Tag, size_t> mutationIndexByTag;
-  for (auto &[shadowNodeFamily, animatedProps, hasLayoutUpdates] : animatedPropsBatch) {
-    const auto tag = shadowNodeFamily->getTag();
-
-    const auto it = mutationIndexByTag.find(tag);
-    if (it == mutationIndexByTag.end()) {
-      mutationIndexByTag.emplace(tag, mutations.batch.size());
-      mutations.batch.push_back(AnimationMutation{tag, shadowNodeFamily, std::move(animatedProps), hasLayoutUpdates});
-    } else {
-      auto &mutation = mutations.batch[it->second];
-      mutation.hasLayoutUpdates |= hasLayoutUpdates;
-      mergeAnimatedProps(mutation.props, std::move(animatedProps));
-    }
+  for (auto &[family, props, hasLayoutUpdates] : animatedPropsBatch) {
+    mutations.batch.push_back({family->getTag(), family, std::move(props), hasLayoutUpdates});
   }
   return mutations;
+}
+
+AnimationMutations ReanimatedModuleProxy::prepareBackendUpdates(
+    AnimationMutations mutations,
+    const GrandCallbackSource source) {
+  auto merged = std::exchange(deferredBackendUpdates_, {});
+  appendAnimationMutations(merged, std::move(mutations));
+  {
+    auto lock = updatesRegistryManager_->lock();
+    std::erase_if(
+        merged.batch, [this](const auto &mutation) { return animatedPropsRegistry_->isUnmounted(*mutation.family); });
+  }
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_) {
+      UpdatesBatch opacityUpdates;
+      for (const auto &mutation : merged.batch) {
+        if (const auto opacity = animatedOpacity(mutation.props)) {
+          opacityUpdates.emplace_back(
+              std::const_pointer_cast<ShadowNodeFamily>(mutation.family), folly::dynamic::object("opacity", *opacity));
+        }
+      }
+      if (!opacityUpdates.empty()) {
+        layoutAnimationsProxyRegistry_->prepareBackendOpacityUpdates(merged, opacityUpdates);
+      }
+    }
+  }
+  if (source == GrandCallbackSource::EventInAndroidDraw) {
+    AnimationMutations immediate;
+    for (auto &mutation : merged.batch) {
+      if (mutation.hasLayoutUpdates) {
+        const auto opacity = animatedOpacity(mutation.props);
+        react_native_assert(opacity && "Draw-time mounting updates must contain opacity");
+        if (opacity) {
+          AnimatedProps deferredProps;
+          for (auto &prop : mutation.props.props) {
+            if (prop->propName == OPACITY) {
+              deferredProps.props.push_back(std::move(prop));
+            }
+          }
+          std::erase_if(mutation.props.props, [](const auto &prop) { return !prop; });
+          if (mutation.props.rawProps) {
+            auto raw = mutation.props.rawProps->toDynamic();
+            if (const auto value = raw.get_ptr("opacity")) {
+              deferredProps.rawProps = std::make_unique<RawProps>(folly::dynamic::object("opacity", *value));
+              raw.erase("opacity");
+              mutation.props.rawProps = raw.empty() ? nullptr : std::make_unique<RawProps>(std::move(raw));
+            }
+          }
+          deferredBackendUpdates_.batch.push_back({mutation.tag, mutation.family, std::move(deferredProps), true});
+        }
+        mutation.hasLayoutUpdates = false;
+      }
+      if (!mutation.props.props.empty() || mutation.props.rawProps) {
+        immediate.batch.push_back(std::move(mutation));
+      }
+    }
+    if (!deferredBackendUpdates_.batch.empty()) {
+      deferredBackendUpdates_.asyncFlushSurfaces.merge(merged.asyncFlushSurfaces);
+      startBackendIfNeeded();
+    } else {
+      immediate.asyncFlushSurfaces.merge(merged.asyncFlushSurfaces);
+    }
+    return immediate;
+  }
+  return merged;
 }
 
 AnimationMutations ReanimatedModuleProxy::runGrandCallback(
@@ -1098,6 +1214,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     const GrandCallbackSource source) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
 
+  AnimationMutations mutations;
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
       // Worklet callbacks and layout animation flushes run outside the manager
@@ -1107,27 +1224,28 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
       flushLayoutAnimationOperations();
       executeLayoutAnimationsRequests();
 
-      AnimationMutations mutations;
       {
         auto lock = updatesRegistryManager_->lock();
         executeOperationsLoop(timestamp);
         mutations = executeOperationsAndCollectUpdates(timestamp);
         stopBackendIfIdle(!mutations.batch.empty());
       }
-      return mutations;
+      break;
     }
 
     case GrandCallbackSource::Event: {
       flushLayoutAnimationOperations();
       executeLayoutAnimationsRequests();
-      return collectEventUpdates();
+      mutations = collectEventUpdates();
+      break;
     }
 
     case GrandCallbackSource::EventInAndroidDraw:
-      return collectNonLayoutAnimationUpdates();
+      mutations = collectNonLayoutAnimationUpdates();
+      break;
   }
 
-  return AnimationMutations{};
+  return prepareBackendUpdates(std::move(mutations), source);
 }
 
 void ReanimatedModuleProxy::executeOperationsLoop(const AnimationTimestamp timestamp) {
@@ -1426,7 +1544,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();
-        if (!strongThis || !hasSynchronousPropsWrites()) {
+        if (!strongThis || (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND") && !hasSynchronousPropsWrites())) {
           return std::nullopt;
         }
         auto lock = strongThis->updatesRegistryManager_->lock();
