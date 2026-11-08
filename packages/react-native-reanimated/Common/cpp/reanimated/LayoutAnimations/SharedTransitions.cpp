@@ -2420,9 +2420,11 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
+    // The absolute position of a scroll view is the position of its content.
+    const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
     auto transformOrigin = ancestor.origin;
-    transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
-    transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
+    transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
+    transformOrigin.xy[1].value -= targetViewPosition.y - ancestorPosition.y;
     combinedMatrix =
         combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin);
     combinedMatrix.operations.clear();
