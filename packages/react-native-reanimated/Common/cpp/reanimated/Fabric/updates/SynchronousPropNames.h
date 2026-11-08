@@ -6,7 +6,8 @@
 namespace reanimated {
 
 inline bool isSynchronousPropName(const std::string &name) {
-  static const std::unordered_set<std::string> synchronousPropNames = {
+  // Never destroyed: a UI thread frame can still call this while `exit()` runs static destructors on another thread.
+  static const auto &synchronousPropNames = *new std::unordered_set<std::string>{
       "opacity",
       "elevation",
       "shadowColor",
