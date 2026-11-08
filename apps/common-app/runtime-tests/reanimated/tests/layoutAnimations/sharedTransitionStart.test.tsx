@@ -262,6 +262,86 @@ describe('Shared transition that starts while the JS thread is busy', () => {
   });
 });
 
+const IDLE_FINISHED = 'idleUpdateFinished';
+const IDLE_OFFSET = 200;
+
+const idleTransition = SharedTransition.duration(DURATION / 4)
+  .easing(Easing.linear)
+  .withCallback((finished) => {
+    'worklet';
+    if (finished) {
+      notify(IDLE_FINISHED);
+    }
+  });
+
+function IdleUpdateScreens({
+  active,
+  offset,
+}: {
+  active: boolean;
+  offset: number;
+}) {
+  const sourceRef = useAnimatedRef<Animated.View>();
+  const targetRef = useAnimatedRef<Animated.View>();
+  boxRefs.idleSource = sourceRef;
+  boxRefs.idleTarget = targetRef;
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <View collapsable={false} style={{ top: offset }}>
+          <Animated.View
+            ref={sourceRef}
+            sharedTransitionTag="idleUpdate"
+            sharedTransitionStyle={idleTransition}
+            style={styles.busySource}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      {active && (
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            ref={targetRef}
+            sharedTransitionTag="idleUpdate"
+            sharedTransitionStyle={idleTransition}
+            style={styles.busyTarget}
+          />
+        </SharedTransitionBoundary>
+      )}
+    </View>
+  );
+}
+
+describe('Shared transition after an update that starts no transition', () => {
+  test('starts from where the update moved the source', async () => {
+    await render(<IdleUpdateScreens active={false} offset={0} />);
+    await waitForFrames(3);
+    const sourceYBefore = await measureWindowY(boxRefs.idleSource);
+    await render(<IdleUpdateScreens active={false} offset={IDLE_OFFSET} />);
+    await waitForFrames(3);
+    const sourceY = await measureWindowY(boxRefs.idleSource);
+    expect(sourceY - sourceYBefore).toBeWithinRange(
+      IDLE_OFFSET - 1,
+      IDLE_OFFSET + 1
+    );
+    const { starts, stop } = await recordSharedTransitionStarts();
+    try {
+      await render(<IdleUpdateScreens active offset={IDLE_OFFSET} />);
+      await waitForNotification(IDLE_FINISHED);
+      await waitForFrames(3);
+      const targetY = await measureWindowY(boxRefs.idleTarget);
+      expect(starts.value.length).toBe(1);
+      const start = starts.value[0];
+      expect(start.targetY - start.sourceY).toBeWithinRange(
+        targetY - sourceY - 1,
+        targetY - sourceY + 1
+      );
+    } finally {
+      await stop();
+    }
+    await render(null);
+  });
+});
+
 const styles = StyleSheet.create({
   root: { width: 380, height: 700 },
   content: { flex: 1, padding: 10, backgroundColor: 'white' },
