@@ -532,6 +532,9 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
+      if (!sharedTag.isString()) {
+        throw std::runtime_error("[Reanimated] `sharedTransitionTag` must be a string.");
+      }
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
     if (const auto contentFade = item.getProperty(rt, "sharedTransitionContentFade"); contentFade.isObject()) {
