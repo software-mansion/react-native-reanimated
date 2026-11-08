@@ -42,6 +42,7 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
+  std::optional<bool> reduceMotion;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -151,7 +152,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual bool deferSharedTransitionConfigRelease(Tag /*tag*/) {
     return false;
   }
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) const;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const = 0;
   virtual void startSurface(
       const facebook::react::ShadowTree &shadowTree,
@@ -257,6 +258,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
+  virtual void initializeProgressAnimation(Tag /*tag*/) const {}
+
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
     return false;
   }

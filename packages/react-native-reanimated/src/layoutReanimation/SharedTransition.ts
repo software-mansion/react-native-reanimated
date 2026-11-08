@@ -5,6 +5,7 @@ import {
   interpolateMatrix,
   prepareMatrixInterpolation,
 } from '../animation/transformationMatrix/matrixUtils';
+import { getReduceMotionFromConfig } from '../animation/utilCommon';
 import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
@@ -159,6 +160,11 @@ export type ProgressSharedTransitionAnimation = (
   values: SharedTransitionAnimationsValues,
   progress: number
 ) => StyleProps;
+
+export type SharedTransitionProgressConfig = {
+  animation: ProgressSharedTransitionAnimation;
+  reduceMotion: () => boolean;
+};
 
 type ChangedStyle = { key: string; current: unknown; target: unknown };
 
@@ -700,6 +706,17 @@ export class SharedTransition
       }
       // Animated styles process only the colors of individually animated shadows.
       return withProcessedBoxShadow(withTransformMatrixAsTransform(style));
+    };
+  }
+
+  getProgressConfig(): SharedTransitionProgressConfig {
+    const reduceMotion = this.getReduceMotion();
+    return {
+      animation: this.getProgressAnimation(),
+      reduceMotion: () => {
+        'worklet';
+        return getReduceMotionFromConfig(reduceMotion);
+      },
     };
   }
 

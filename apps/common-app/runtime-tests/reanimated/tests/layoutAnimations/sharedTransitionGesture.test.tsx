@@ -1,5 +1,7 @@
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
+  ReduceMotion,
+  ReducedMotionConfig,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
@@ -25,9 +27,13 @@ import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 const transition = SharedTransition.duration(30000);
 
 function Screens({
+  transitionStyle = transition,
+  systemMotion,
   sourceMounted = true,
   sourceScreenMounted = true,
 }: {
+  transitionStyle?: SharedTransition;
+  systemMotion?: ReduceMotion;
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
 }) {
@@ -38,6 +44,9 @@ function Screens({
   const target = useTestRef('gestureTarget');
   return (
     <View style={styles.container}>
+      {systemMotion !== undefined && (
+        <ReducedMotionConfig mode={systemMotion} />
+      )}
       <Screen
         ref={targetScreen}
         onAppear={() => notify('gesture-target-appeared')}
@@ -48,7 +57,7 @@ function Screens({
           <Animated.View
             ref={target}
             sharedTransitionTag="gesture-retained-source"
-            sharedTransitionStyle={transition}
+            sharedTransitionStyle={transitionStyle}
             style={styles.target}
           />
         </SharedTransitionBoundary>
@@ -65,7 +74,7 @@ function Screens({
               <Animated.View
                 ref={source}
                 sharedTransitionTag="gesture-retained-source"
-                sharedTransitionStyle={transition}
+                sharedTransitionStyle={transitionStyle}
                 style={styles.source}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
@@ -129,6 +138,78 @@ function NestedScreens({ innerMounted = true }: { innerMounted?: boolean }) {
     </View>
   );
 }
+
+describe('Reduced motion during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([
+    [ReduceMotion.Always, 150],
+    [ReduceMotion.Never, 82.5],
+  ] as const)(
+    'uses reduced motion ${0} and restores a cancelled swipe',
+    async ([motion, width]) => {
+      const style = SharedTransition.duration(30000).reduceMotion(motion);
+      const tags = await startGesture(style, width);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.75,
+        false,
+        false
+      );
+      await expectCarrier(
+        tags.source,
+        motion === ReduceMotion.Always ? 150 : 127.5
+      );
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+      await expectTargetOpacity(1);
+    }
+  );
+});
+
+describe('System reduced motion during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'reads System at start and retains it during the swipe',
+    async () => {
+      const style = SharedTransition.duration(30000)
+        .reduceMotion(ReduceMotion.System)
+        .fadeContent();
+      const tags = await startGesture(style, 150, async () => {
+        await render(
+          <Screens transitionStyle={style} systemMotion={ReduceMotion.Always} />
+        );
+        await waitForFrames(3);
+      });
+      await expectEventually(() =>
+        runOnUIBlocking(() => {
+          'worklet';
+          return global._obtainMountedViewProps(tags.child, false)?.opacity;
+        })
+      ).toBe(0);
+      await render(
+        <Screens transitionStyle={style} systemMotion={ReduceMotion.Never} />
+      );
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 150);
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+      await expectEventually(() =>
+        runOnUIBlocking(() => {
+          'worklet';
+          return global._obtainMountedViewProps(tags.child, false)?.opacity;
+        })
+      ).toBe(1);
+    }
+  );
+});
 
 describe('Retained source during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
@@ -258,8 +339,12 @@ function mountedX(tag: number) {
   });
 }
 
-async function startGesture() {
-  await render(<Screens />);
+async function startGesture(
+  transitionStyle = transition,
+  width = 82.5,
+  beforeGesture?: () => Promise<void>
+) {
+  await render(<Screens transitionStyle={transitionStyle} />);
   await waitForNotification('gesture-source-appeared');
   await waitForNotification('gesture-target-appeared');
   await expectEventually(
@@ -272,6 +357,7 @@ async function startGesture() {
     source: getTestComponent('gestureSource').getTag(),
     child: getTestComponent('gestureChild').getTag(),
   };
+  await beforeGesture?.();
   const originalParent = await observer().observeParent(tags.source);
   expect(originalParent !== null).toBe(true);
   await observer().emitScreenTransitionProgress(
@@ -284,13 +370,14 @@ async function startGesture() {
     const parent = await observer().observeParent(tags.source);
     return parent !== null && parent !== originalParent;
   }).toBe(true);
+  await expectCarrier(tags.source, width === 150 ? 150 : 60);
   await observer().emitScreenTransitionProgress(
     tags.targetScreen,
     0.25,
     false,
     false
   );
-  await expectCarrier(tags.source, 82.5);
+  await expectCarrier(tags.source, width);
   await expectTargetOpacity(0);
   return tags;
 }

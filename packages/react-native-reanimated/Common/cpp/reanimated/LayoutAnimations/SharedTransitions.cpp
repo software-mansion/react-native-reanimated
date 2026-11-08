@@ -342,45 +342,57 @@ void LayoutAnimationsProxy::handleProgressTransition(
   }
 }
 
-// Called from onTransitionProgress on the UI thread. pullTransaction can run off the UI thread, so it must not call
-// worklets.
-void LayoutAnimationsProxy::applyProgressAnimations() {
+void LayoutAnimationsProxy::initializeProgressAnimation(const Tag tag) const {
+  const auto run = sharedTransitionRuns_.find(tag);
+  if (transition_ && run != sharedTransitionRuns_.end() && run->second.driver == SharedTransitionDriver::GESTURE) {
+    applyProgressAnimation(run->second);
+  }
+}
+
+void LayoutAnimationsProxy::applyProgressAnimations() const {
   for (const auto &run : activeSharedTransitionRuns()) {
-    if (run.driver != SharedTransitionDriver::GESTURE) {
-      continue;
+    if (run.driver == SharedTransitionDriver::GESTURE) {
+      applyProgressAnimation(run);
     }
-    const auto tag = run.carrier->current.tag;
-    if (layoutAnimationPhase(tag) == LayoutAnimationPhase::QUEUED) {
-      continue;
-    }
-    const auto layoutAnimationIt = layoutAnimations_.find(tag);
-    if (layoutAnimationIt == layoutAnimations_.end() ||
-        layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
-      continue;
-    }
-    auto &layoutAnimation = layoutAnimationIt->second;
-    if (const auto &contentFade = run.contentFade) {
-      const auto &[from, to] = contentFade->range;
-      const auto fadeProgress = std::clamp(transition_->progress / fadeLength(*contentFade), 0.0, 1.0);
-      layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
-    }
-    react_native_assert(layoutAnimation.config && "Progress shared transition without a progress animation");
-    if (!layoutAnimation.config) {
-      continue;
-    }
-    auto values =
-        SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
-    values.setProperty(uiRuntime_, "windowWidth", window_.width);
-    values.setProperty(uiRuntime_, "windowHeight", window_.height);
-    const auto progressAnimation =
-        layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_).asFunction(uiRuntime_);
-    auto style = jsi::Value::undefined();
-    LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime_, "progressAnimation", [&](jsi::Runtime &rt) {
-      style = progressAnimation.call(rt, values, transition_->progress);
+  }
+}
+
+void LayoutAnimationsProxy::applyProgressAnimation(const SharedTransitionRun &run) const {
+  const auto tag = run.carrier->current.tag;
+  if (layoutAnimationPhase(tag) == LayoutAnimationPhase::QUEUED) {
+    return;
+  }
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end() ||
+      layoutAnimationIt->second.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    return;
+  }
+  auto &layoutAnimation = layoutAnimationIt->second;
+  react_native_assert(layoutAnimation.config && "Progress shared transition without a progress animation");
+  if (!layoutAnimation.config) {
+    return;
+  }
+  const auto config = layoutAnimation.config->toJSValue(uiRuntime_).asObject(uiRuntime_);
+  if (!layoutAnimation.reduceMotion) {
+    LayoutAnimationsManager::runGuardedOnUIRuntime(uiRuntime_, "sharedTransitionReduceMotion", [&](jsi::Runtime &rt) {
+      layoutAnimation.reduceMotion = config.getPropertyAsFunction(rt, "reduceMotion").call(rt).getBool();
     });
-    if (style.isObject()) {
-      progressLayoutAnimation(tag, style.asObject(uiRuntime_));
-    }
+  }
+  const auto progress = layoutAnimation.reduceMotion.value_or(false) ? 1.0 : transition_->progress;
+  if (const auto &contentFade = run.contentFade) {
+    const auto &[from, to] = contentFade->range;
+    const auto fadeProgress = std::clamp(progress / fadeLength(*contentFade), 0.0, 1.0);
+    layoutAnimation.contentOpacity = from + fadeProgress * (to - from);
+  }
+  auto values = SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
+  values.setProperty(uiRuntime_, "windowWidth", window_.width);
+  values.setProperty(uiRuntime_, "windowHeight", window_.height);
+  const auto progressAnimation = config.getPropertyAsFunction(uiRuntime_, "animation");
+  auto style = jsi::Value::undefined();
+  LayoutAnimationsManager::runGuardedOnUIRuntime(
+      uiRuntime_, "progressAnimation", [&](jsi::Runtime &rt) { style = progressAnimation.call(rt, values, progress); });
+  if (style.isObject()) {
+    progressLayoutAnimation(tag, style.asObject(uiRuntime_));
   }
 }
 

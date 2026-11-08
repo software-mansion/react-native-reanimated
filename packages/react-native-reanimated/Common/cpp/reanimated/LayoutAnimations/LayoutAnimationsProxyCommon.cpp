@@ -107,7 +107,7 @@ void LayoutAnimationsProxyCommon::clearSurfaceState() const {
 
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
-    const jsi::Object &newStyle) {
+    const jsi::Object &newStyle) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
   if (layoutAnimationIt == layoutAnimations_.end()) {
@@ -386,6 +386,7 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
         std::nullopt,
         LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS,
         progressStart->config);
+    initializeProgressAnimation(tag);
     return std::monostate{};
   }
   const auto cancellation = std::get<LayoutAnimationCancellation>(operation);

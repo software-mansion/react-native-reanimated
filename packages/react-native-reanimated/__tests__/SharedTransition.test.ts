@@ -11,6 +11,7 @@ import {
   SharedTransition,
   SharedTransitionType,
 } from '../src/layoutReanimation/SharedTransition';
+import { ReducedMotionManager } from '../src/ReducedMotion';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -417,5 +418,31 @@ describe('SharedTransition perspective', () => {
         expect(matrix[i]).toBeCloseTo(-0.002 * progress, 10);
       }
     }
+  });
+});
+
+describe('SharedTransition native progress config', () => {
+  test('resolves System when the native run starts', () => {
+    const previous = ReducedMotionManager.jsValue;
+    const config = SharedTransition.reduceMotion(
+      ReduceMotion.System
+    ).getProgressConfig();
+    try {
+      ReducedMotionManager.setEnabled(false);
+      expect(config.reduceMotion()).toBe(false);
+      ReducedMotionManager.setEnabled(true);
+      expect(config.reduceMotion()).toBe(true);
+    } finally {
+      ReducedMotionManager.setEnabled(previous);
+    }
+  });
+
+  test.each([
+    [ReduceMotion.Always, true],
+    [ReduceMotion.Never, false],
+  ] as const)('resolves %s independently of System', (motion, expected) => {
+    const config = SharedTransition.reduceMotion(motion).getProgressConfig();
+    expect(config.reduceMotion()).toBe(expected);
+    expect(config.animation(VALUES, 0.5).width).toBe(200);
   });
 });

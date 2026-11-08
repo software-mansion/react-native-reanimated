@@ -10,7 +10,7 @@ import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type {
-  ProgressSharedTransitionAnimation,
+  SharedTransitionProgressConfig,
   SharedTransitionContentFade,
 } from './layoutReanimation/SharedTransition';
 
@@ -67,7 +67,7 @@ export const updateLayoutAnimations: (
   config?:
     | ReanimatedKeyframe
     | LayoutAnimationFunction
-    | ProgressSharedTransitionAnimation,
+    | SharedTransitionProgressConfig,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
   sharedTransitionContentFade?: SharedTransitionContentFade
