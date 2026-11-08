@@ -1232,7 +1232,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
-      const bool sourceOffWindow = isOffWindow(collectedTransition.nodes[BEFORE]);
+      const auto &source = collectedTransition.nodes[BEFORE];
+      // The carrier of a run shows its target until it lands.
+      const auto *activeRun = activeSharedTransitionRun(sharedTag);
+      const bool sourceOffWindow = (!activeRun || activeRun->target != source) && isOffWindow(source);
       if (sourceOffWindow) {
         endSharedTransitionOf(sharedTag, transaction, propsParserContext);
       }
