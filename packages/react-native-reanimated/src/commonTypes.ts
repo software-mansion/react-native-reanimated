@@ -134,7 +134,7 @@ export interface BaseLayoutAnimationConfig {
   dampingRatio?: number;
   mass?: number;
   stiffness?: number;
-  overshootClamping?: number;
+  overshootClamping?: boolean;
   energyThreshold?: number;
 }
 

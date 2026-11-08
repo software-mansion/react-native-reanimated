@@ -77,4 +77,13 @@ describe('SharedTransition', () => {
       SharedTransition.defaultTransitionType(SharedTransitionType.ANIMATION)
     ).type.toBe<SharedTransition>();
   });
+
+  test('overshootClamping takes a boolean, like withSpring', () => {
+    expect(
+      new SharedTransition().springify().overshootClamping(true)
+    ).type.toBe<SharedTransition>();
+    expect(() => {
+      new SharedTransition().overshootClamping(1);
+    }).type.toRaiseError(2345);
+  });
 });
