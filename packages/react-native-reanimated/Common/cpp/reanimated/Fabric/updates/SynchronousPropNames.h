@@ -10,7 +10,10 @@ namespace reanimated {
 // A constant array, not a function-local static container: a static is destroyed by `exit()`,
 // which on macOS runs on a watchdog thread while the UI thread can still be calling this.
 inline constexpr auto kSynchronousPropNames = std::to_array<std::string_view>({
+    // The most commonly animated props come first, since this is a linear search.
     "opacity",
+    "transform",
+    "backgroundColor",
     "elevation",
     "shadowColor",
 #if __APPLE__
@@ -18,7 +21,6 @@ inline constexpr auto kSynchronousPropNames = std::to_array<std::string_view>({
     "shadowOpacity",
     "shadowRadius",
 #endif // __APPLE__
-    "backgroundColor",
     // "color", // not supported
     "tintColor",
     "placeholderTextColor",
@@ -48,7 +50,6 @@ inline constexpr auto kSynchronousPropNames = std::to_array<std::string_view>({
     "outlineColor",
     "outlineOffset",
     "outlineWidth",
-    "transform",
 });
 
 inline bool isSynchronousPropName(const std::string &name) {
