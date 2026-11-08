@@ -70,6 +70,7 @@ enum class SharedTransitionLifecycle : std::uint8_t {
 // The carrier is the view that the run animates, moved from its parent to the root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
+  std::shared_ptr<Serializable> progressCallbackConfig;
   SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
@@ -215,6 +216,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::weak_ptr<WorkletRuntime> uiRuntimeWeak_;
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
+  void finishProgressCallback(SharedTransitionRun &run) const;
   void queueProgressCallback(std::shared_ptr<Serializable> config, bool finished) const;
   void filterReducedMotionSharedTransitions(TransactionMeta &transaction, const PropsParserContext &propsParserContext)
       const;

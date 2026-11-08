@@ -291,6 +291,99 @@ describe('Skipped shared transition during native Screen progress', () => {
   );
 });
 
+describe('Callbacks during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([['commit'], ['cancel'], ['late cancel']] as const)(
+    'reports ${0} once with the callback accepted at start',
+    async ([outcome]) => {
+      const results: boolean[] = [];
+      const replacementResults: boolean[] = [];
+      const record = (finished: boolean) => results.push(finished);
+      const recordReplacement = (finished: boolean) =>
+        replacementResults.push(finished);
+      const style = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(record, finished);
+        }
+      );
+      const tags = await startGesture(style);
+      const replacement = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(recordReplacement, finished);
+        }
+      );
+      await render(<Screens transitionStyle={replacement} />);
+      await waitForFrames(3);
+      if (outcome !== 'cancel') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+        await waitForFrames(3);
+        expect(results).toBe([]);
+      }
+      if (outcome === 'commit') {
+        await render(
+          <Screens transitionStyle={replacement} sourceScreenMounted={false} />
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([outcome === 'commit']);
+      expect(replacementResults).toBe([]);
+      if (outcome === 'commit') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await waitForFrames(3);
+      expect(results.length).toBe(1);
+    }
+  );
+});
+
+describe('Callback when native progress loses its screens', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([['source'], ['both']] as const)(
+    'reports one cancellation after removing ${0}',
+    async ([removed]) => {
+      const results: boolean[] = [];
+      const record = (finished: boolean) => results.push(finished);
+      const style = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(record, finished);
+        }
+      );
+      await startGesture(style);
+      if (removed === 'source') {
+        await render(
+          <Screens transitionStyle={style} sourceScreenMounted={false} />
+        );
+      } else {
+        await render(<View />);
+      }
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
+      await render(<View />);
+      await waitForFrames(3);
+      expect(results.length).toBe(1);
+    }
+  );
+});
+
 describe('Retained source during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 

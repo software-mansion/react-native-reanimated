@@ -1320,7 +1320,8 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       }
     }
     carrierPlacements_.clear();
-    for (const auto &[_, run] : sharedTransitionRuns_) {
+    for (auto &[_, run] : sharedTransitionRuns_) {
+      finishProgressCallback(run);
       carrierPlacements_.tearDown(run.carrier);
     }
     layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(

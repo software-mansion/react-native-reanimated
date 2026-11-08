@@ -318,9 +318,13 @@ void LayoutAnimationsProxy::handleProgressTransition(
     transition_->state = TransitionState::ACTIVE;
   } else if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
     std::vector<RestoreRequest> sources;
-    for (const auto &run : activeSharedTransitionRuns()) {
+    auto progressCallbacks = std::move(transition_->progressCallbacks);
+    for (auto &run : activeSharedTransitionRuns()) {
       if (run.driver == SharedTransitionDriver::GESTURE) {
         sources.push_back({run.sharedTag, run.source});
+        if (transition_->state == TransitionState::END && transition_->sourceScreen && run.progressCallbackConfig) {
+          progressCallbacks.push_back(std::exchange(run.progressCallbackConfig, nullptr));
+        }
       }
     }
     for (auto &[_, run] : sharedTransitionRuns_) {
@@ -332,11 +336,11 @@ void LayoutAnimationsProxy::handleProgressTransition(
       react_native_assert(!uncommittedScreenPop_ && "Previous screen pop not settled");
       react_native_assert(transition_->sourceScreen && "Shared transition source not found");
       if (transition_->sourceScreen) {
-        uncommittedScreenPop_ = UncommittedScreenPop{
-            transition_->sourceScreen, std::move(sources), std::move(transition_->progressCallbacks)};
+        uncommittedScreenPop_ =
+            UncommittedScreenPop{transition_->sourceScreen, std::move(sources), std::move(progressCallbacks)};
       }
     } else {
-      for (auto &config : transition_->progressCallbacks) {
+      for (auto &config : progressCallbacks) {
         queueProgressCallback(std::move(config), false);
       }
       topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
@@ -396,6 +400,12 @@ void LayoutAnimationsProxy::applyProgressAnimation(const SharedTransitionRun &ru
       uiRuntime_, "progressAnimation", [&](jsi::Runtime &rt) { style = progressAnimation.call(rt, values, progress); });
   if (style.isObject()) {
     progressLayoutAnimation(tag, style.asObject(uiRuntime_));
+  }
+}
+
+void LayoutAnimationsProxy::finishProgressCallback(SharedTransitionRun &run) const {
+  if (auto config = std::exchange(run.progressCallbackConfig, nullptr)) {
+    queueProgressCallback(std::move(config), false);
   }
 }
 
@@ -481,6 +491,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const PropsParserContext &propsParserContext) const {
   auto *run = activeSharedTransitionRun(sharedTag);
   if (run) {
+    finishProgressCallback(*run);
     const auto &oldTarget = run->target;
     if (oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
       transaction.restoreRequests.push_back({sharedTag, oldTarget});
@@ -532,6 +543,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->target = nodes[AFTER];
   run->config = config;
   run->driver = driver;
+  const auto progressConfig = layoutAnimationsManager_->getSharedTransitionConfig(before.tag, true);
+  run->progressCallbackConfig =
+      driver == SharedTransitionDriver::GESTURE && progressConfig ? progressConfig->callback : nullptr;
   run->targetOffWindow = false;
   if (run->carrier->placement() == CarrierPlacement::NESTED && !keepsNesting(run->carrier, run->target)) {
     moveNestedCarrierToRoot(*run, transaction.filteredMutations, propsParserContext);
@@ -1098,6 +1112,7 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
 
 void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run) const {
   react_native_assert(run.lifecycle == SharedTransitionLifecycle::ACTIVE && "The run already retires");
+  finishProgressCallback(run);
   run.lifecycle = SharedTransitionLifecycle::RETIRING;
 }
 
@@ -1162,6 +1177,7 @@ void LayoutAnimationsProxy::removeFromParent(
   }
   carrierPlacements_.tearDown(node);
   if (carried) {
+    finishProgressCallback(*carried);
     carried->lifecycle = SharedTransitionLifecycle::FINISHED;
   }
   if (parent) {
@@ -1707,6 +1723,7 @@ void LayoutAnimationsProxy::finishSharedTransition(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext,
     const bool landed) const {
+  finishProgressCallback(run);
   finishNestedSharedTransitions(run.carrier, transaction, propsParserContext, landed);
   const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
   // A gesture-driven run leaves its source to the screen pop.

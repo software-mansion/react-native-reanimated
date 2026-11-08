@@ -444,3 +444,16 @@ describe('SharedTransition native configuration', () => {
     expect(config.animation(VALUES, 0.5).width).toBe(200);
   });
 });
+
+describe('SharedTransition native progress callback', () => {
+  test('retains the callback that the component registers', () => {
+    const original = jest.fn();
+    const replacement = jest.fn();
+    const transition = SharedTransition.withCallback(original);
+    const config = transition.getProgressConfig();
+    transition.withCallback(replacement);
+    config.callback?.(false);
+    expect(original).toHaveBeenCalledWith(false);
+    expect(replacement).not.toHaveBeenCalled();
+  });
+});
