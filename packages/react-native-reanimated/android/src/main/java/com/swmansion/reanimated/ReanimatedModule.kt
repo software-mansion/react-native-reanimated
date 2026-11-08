@@ -32,7 +32,7 @@ class ReanimatedModule(
     }
 
     override fun onHostDestroy() {
-        // do nothing
+        mNodesManager?.onHostDestroy()
     }
 
     // This property is accessed from react-native-gesture-handler.
