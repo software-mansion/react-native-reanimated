@@ -241,6 +241,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     updateLightTree(propsParserContext, mutations, transaction);
 
     react_native_assert(
+        (collectSharedElements || !activeBoundaryMayHaveChanged_) &&
+        "A pull without shared element snapshots changed the active boundary");
+    react_native_assert(
         (activeBoundaryMayHaveChanged_ || findActiveBoundary(root) == topScreen_) &&
         "Active boundary changed without setting activeBoundaryMayHaveChanged_");
     auto afterTopScreen = activeBoundaryMayHaveChanged_ ? findActiveBoundary(root) : topScreen_;

@@ -117,8 +117,8 @@ bool LayoutAnimationsProxy::shouldCollectSharedElements(const ShadowViewMutation
     if (mutation.type != ShadowViewMutation::Update) {
       return true;
     }
-    const auto node = lightNodes_.find(mutation.newChildShadowView.tag);
-    return node == lightNodes_.end() || isSETBoundary(node->second);
+    const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+    return nodeIt == lightNodes_.end() || isSETBoundary(nodeIt->second);
   });
 }
 
