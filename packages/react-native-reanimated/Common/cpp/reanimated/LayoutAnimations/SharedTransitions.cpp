@@ -1898,6 +1898,12 @@ void LayoutAnimationsProxy::holdTargetEntering(
   if (heldEnterings_.empty() && transaction.entering.empty()) {
     return;
   }
+  // The transition is the entering animation of its target.
+  std::erase_if(transaction.entering, [this](const PendingNodeAnimation &entering) {
+    return std::ranges::any_of(activeSharedTransitionRuns(), [&entering](const SharedTransitionRun &run) {
+      return run.target == entering.node && run.carrier != run.target;
+    });
+  });
   const auto targetContent = fadingTargetContent();
   std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
     if (!isLightNodeMapped(held.node)) {
