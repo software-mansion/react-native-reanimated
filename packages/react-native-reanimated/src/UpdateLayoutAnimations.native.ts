@@ -34,9 +34,10 @@ function createUpdateManager() {
       }
     },
     flush(this: void) {
-      configureLayoutAnimationBatch(animations.concat(deferredAnimations));
+      const batch = animations.concat(deferredAnimations);
       animations.length = 0;
       deferredAnimations.length = 0;
+      configureLayoutAnimationBatch(batch);
     },
   };
 }
