@@ -104,6 +104,29 @@ function Screens({
   );
 }
 
+function MountedScreens({
+  sourceActive,
+  sourceWidth,
+  transition,
+}: {
+  sourceActive: boolean;
+  sourceWidth: number;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.container}>
+      <Target transition={transition} isActive />
+      <SharedTransitionBoundary isActive={sourceActive}>
+        <Animated.View
+          sharedTransitionTag="box"
+          sharedTransitionStyle={transition}
+          style={[styles.source, { width: sourceWidth }]}
+        />
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 // On Android a nested Text forms a view whose props are TextProps, not ViewProps.
 function NestedTextScreens({ targetActive }: { targetActive: boolean }) {
   return (
@@ -218,6 +241,33 @@ function createProgressTransition(progresses: number[]) {
 }
 
 describe('Shared element transition between boundaries', () => {
+  test('starts a transition when only the active boundary changes', async () => {
+    const recorded: RecordedValues[] = [];
+    const transition = createRecordingTransition(recorded);
+    await render(
+      <MountedScreens sourceActive sourceWidth={60} transition={transition} />
+    );
+    await waitForFrames();
+    await render(
+      <MountedScreens sourceActive sourceWidth={100} transition={transition} />
+    );
+    await waitForFrames();
+    expect(recorded.length).toBe(0);
+
+    await render(
+      <MountedScreens
+        sourceActive={false}
+        sourceWidth={100}
+        transition={transition}
+      />
+    );
+    await waitForNotification('shared-transition-finished');
+    expect(recorded.length).toBe(1);
+    expect(recorded[0].currentWidth).toBe(100, ComparisonMode.PIXEL);
+    expect(recorded[0].targetWidth).toBe(150, ComparisonMode.PIXEL);
+    await expectMountedAtLayout('target', 1);
+  });
+
   test('ignores a nested Text with a shared tag', async () => {
     await render(<NestedTextScreens targetActive={false} />);
     await waitForFrames();
