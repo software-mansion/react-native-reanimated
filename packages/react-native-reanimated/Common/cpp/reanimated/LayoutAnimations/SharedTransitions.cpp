@@ -89,13 +89,14 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::
   return nullptr;
 }
 
+// The boundaries of a screen below the top one are inactive. The platform shows only one tab of a tab navigator.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
     return result;
   }
-  if (isSETBoundary(node)) {
+  if (isSETBoundary(node) && !isOffWindow(node)) {
     result = node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
