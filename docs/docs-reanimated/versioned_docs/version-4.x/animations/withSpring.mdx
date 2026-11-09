@@ -28,7 +28,7 @@ function App() {
   ```typescript
   type AnimatableValue = number | string | number[];
 
-  export type SpringConfig = {
+  export type WithSpringConfig = {
     mass?: number;
     overshootClamping?: boolean;
     energyThreshold?: number;
@@ -53,7 +53,7 @@ function App() {
 
   function withSpring<T extends AnimatableValue>(
     toValue: T,
-    config?: SpringConfig,
+    config?: WithSpringConfig,
     callback?: (finished?: boolean, current?: AnimatableValue) => void
   ): T;
 
@@ -94,7 +94,7 @@ Available for duration-based spring:
 | ------------------------ | -------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | duration <Optional/>     | `number`                         | 550         | Perceptual duration of the animation in milliseconds. Actual duration is 1.5 times the value of perceptual duration.                                                 |
 | dampingRatio <Optional/> | `number`                         | 1           | How damped the spring is. Value `1` means the spring is critically damped, value `>1` means the spring is overdamped and value `<1` means the spring is underdamped. |
-| clamp <Optional/>        | `{ min?: number; max?: number }` | `undefined` | Limits the range of movement by increasing `dampingRatio` when needed.                                                                                               |
+| clamp <Optional/>        | `{ min?: number; max?: number }` | `undefined` | Increases `dampingRatio` when needed so the spring bounces less past `min` and `max`. It is not a hard limit.                                                        |
 
 :::info
 The `stiffness` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).

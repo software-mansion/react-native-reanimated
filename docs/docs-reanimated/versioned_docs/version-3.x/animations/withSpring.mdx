@@ -91,7 +91,7 @@ Available for duration-based spring:
 | ------------------------ | -------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | duration <Optional/>     | `number`                         | 2000        | Length of the animation (in milliseconds). <br/> Available in Reanimated ≥ 3.2.x                                                                                |
 | dampingRatio <Optional/> | `number`                         | 0.5         | How damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. <br/> Available in Reanimated ≥ 3.2.x |
-| clamp <Optional/>        | `{ min?: number; max?: number }` | `undefined` | Limits the range of movement by increasing `dampingRatio` when needed. <br/> Available in Reanimated ≥ 3.7.x                                                    |
+| clamp <Optional/>        | `{ min?: number; max?: number }` | `undefined` | Increases `dampingRatio` when needed so the spring bounces less past `min` and `max`. It is not a hard limit. <br/> Available in Reanimated ≥ 3.7.x             |
 
 :::info
 The `mass` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).
