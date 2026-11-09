@@ -17,6 +17,13 @@ Shared Element Transitions move a view from one screen to another. When you navi
 
 <InteractiveExample src={OverviewSrc} component={Overview} larger/>
 
+## Setup
+
+Shared Element Transitions need Reanimated 4.8 or newer, where they are on by default, and the matching version of `react-native-worklets`. See the [compatibility table](../guides/compatibility.mdx#supported-react-native-worklets-versions).
+
+- **Expo**: an Expo SDK selects the versions that `npx expo install` installs, and it can select a Reanimated version older than 4.8. Install Reanimated 4.8 or newer together with the matching `react-native-worklets`, and then build your [development build](https://docs.expo.dev/develop/development-builds/introduction/) again. Expo Go has only the native code of the versions that its SDK selects.
+- **Android**: use `react-native-screens` 4.28 or newer. In older versions, an app can crash in `MountingCoordinator::pullTransaction` after a race at startup. See [react-native-screens#4413](https://github.com/software-mansion/react-native-screens/pull/4413).
+
 ## Your first shared element transition
 
 ```tsx
