@@ -30,7 +30,7 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
   dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
-  overshootClampingV?: number;
+  overshootClampingV?: boolean;
   energyThresholdV?: number;
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
@@ -194,13 +194,13 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    */
   static overshootClamping<T extends AnimationConfigBuilderClass>(
     this: T,
-    overshootClamping: number
+    overshootClamping: boolean
   ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): this {
+  overshootClamping(overshootClamping: boolean): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }

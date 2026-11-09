@@ -314,6 +314,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
   void releaseUnmappedContentFadeConfigs() const;
 
+  bool mayChangeActiveBoundary(const ShadowViewMutation &mutation) const;
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       ShadowViewMutationList &mutations,
@@ -473,6 +474,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
   void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
+  void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   SharedTransitionRun *runOfCarrier(const std::shared_ptr<LightNode> &node) const;

@@ -227,12 +227,20 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   } else if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
+    if (transition_ && !mutations.empty()) {
+      followProgressTargets(propsParserContext);
+    }
     activeBoundaryMayHaveChanged_ = true;
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId_];
     react_native_assert(root && "Root node not found");
+    activeBoundaryMayHaveChanged_ = activeBoundaryMayHaveChanged_ ||
+        std::ranges::any_of(mutations, [this](const auto &mutation) { return mayChangeActiveBoundary(mutation); });
+    // Every reader of the snapshots needs a change of the active boundary or an active run.
+    const bool collectsSharedElements =
+        activeBoundaryMayHaveChanged_ || !std::ranges::empty(activeSharedTransitionRuns());
     auto beforeTopScreen = topScreen_;
-    if (beforeTopScreen) {
+    if (beforeTopScreen && collectsSharedElements) {
       ReanimatedSystraceSection s("find before elements");
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
     }
@@ -246,8 +254,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     activeBoundaryMayHaveChanged_ = false;
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
-      ReanimatedSystraceSection s("find after elements");
-      findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+      if (collectsSharedElements) {
+        ReanimatedSystraceSection s("find after elements");
+        findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+      }
 #ifdef __APPLE__
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
       // which takes the snapshot of the popped screen before we hide the
@@ -463,6 +473,14 @@ ShadowView LayoutAnimationsProxy::resetPropsMissingFrom(
 }
 #endif
 
+bool LayoutAnimationsProxy::mayChangeActiveBoundary(const ShadowViewMutation &mutation) const {
+  if (mutation.type != ShadowViewMutation::Update) {
+    return true;
+  }
+  const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+  return nodeIt != lightNodes_.end() && isSETBoundary(nodeIt->second);
+}
+
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
   // we need to listen to every possible mutation to keep the light tree updated
   return true;
@@ -518,11 +536,6 @@ void LayoutAnimationsProxy::updateLightTree(
 
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
-    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      if (mutation.type != ShadowViewMutation::Update) {
-        activeBoundaryMayHaveChanged_ = true;
-      }
-    }
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
         const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
@@ -530,11 +543,6 @@ void LayoutAnimationsProxy::updateLightTree(
           break;
         }
         const auto &node = nodeIt->second;
-        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          if (isSETBoundary(node)) {
-            activeBoundaryMayHaveChanged_ = true;
-          }
-        }
         const auto tag = mutation.newChildShadowView.tag;
         // Without layout configs and animation records, every lookup below finds nothing, so the
         // update goes through as it is. Checked per mutation, as an Insert can transfer a config.

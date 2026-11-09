@@ -104,6 +104,116 @@ describe('SharedTransition', () => {
     });
   });
 
+  describe('transparent colors', () => {
+    const TRANSPARENT = 'rgba(0, 0, 0, 0)';
+    const BLUE = 'rgba(34, 119, 221, 1)';
+
+    function colorValues(current: string, target: string) {
+      return {
+        ...VALUES,
+        currentBackgroundColor: current,
+        targetBackgroundColor: target,
+      } as unknown as SharedTransitionAnimationsValues;
+    }
+
+    // Timed animations give `rgba()` strings, progress animations give
+    // processed ARGB numbers.
+    function channels(color: unknown): number[] {
+      if (typeof color === 'number') {
+        return [
+          (color >> 16) & 255,
+          (color >> 8) & 255,
+          color & 255,
+          (color >>> 24) / 255,
+        ];
+      }
+      return (color as string).match(/[\d.e-]+/g)!.map(Number);
+    }
+
+    function timedSamples(values: SharedTransitionAnimationsValues) {
+      const { initialValues, animations } = new SharedTransition().build()(
+        values as unknown as LayoutAnimationsValues
+      );
+      const definition = animations.backgroundColor as
+        | AnimationObject
+        | (() => AnimationObject);
+      const animation =
+        typeof definition === 'function' ? definition() : definition;
+      animation.onStart(
+        animation,
+        initialValues.backgroundColor,
+        0,
+        undefined!
+      );
+      animation.onFrame(animation, 250);
+      const middle = animation.current;
+      let finished = false;
+      for (
+        let timestamp = 266;
+        !finished && timestamp < 1000;
+        timestamp += 16
+      ) {
+        finished = animation.onFrame(animation, timestamp);
+      }
+      expect(finished).toBe(true);
+      return [initialValues.backgroundColor, middle, animation.current];
+    }
+
+    function progressSamples(values: SharedTransitionAnimationsValues) {
+      const progressAnimation = new SharedTransition().getProgressAnimation();
+      return [0, 0.5, 1].map(
+        (progress) => progressAnimation(values, progress).backgroundColor
+      );
+    }
+
+    describe.each([
+      ['transparent to opaque', TRANSPARENT, BLUE, 0, 1],
+      ['opaque to transparent', BLUE, TRANSPARENT, 1, 0],
+    ])('%s', (_name, current, target, startAlpha, endAlpha) => {
+      test.each([
+        ['timed', timedSamples],
+        ['progress', progressSamples],
+      ])(
+        'keeps the RGB of the opaque color in the %s animation',
+        (_type, samples) => {
+          const [start, middle, end] = samples(
+            colorValues(current, target)
+          ).map(channels);
+          for (const sample of [start, middle, end]) {
+            expect(sample.slice(0, 3)).toEqual([34, 119, 221]);
+          }
+          expect(start[3]).toBe(startAlpha);
+          expect(middle[3]).toBeGreaterThan(0);
+          expect(middle[3]).toBeLessThan(1);
+          expect(end[3]).toBe(endAlpha);
+        }
+      );
+
+      test('passes the snapshot colors unchanged to custom animations', () => {
+        const received: string[] = [];
+        SharedTransition.custom((values) => {
+          'worklet';
+          received.push(
+            values.currentBackgroundColor,
+            values.targetBackgroundColor
+          );
+          return {};
+        }).build()(
+          colorValues(current, target) as unknown as LayoutAnimationsValues
+        );
+        SharedTransition.progressAnimation((values) => {
+          'worklet';
+          received.push(
+            values.currentBackgroundColor,
+            values.targetBackgroundColor
+          );
+          return {};
+        }).getProgressAnimation()(colorValues(current, target), 0.5);
+        expect(received).toEqual([current, target, current, target]);
+      });
+    });
+  });
+
   describe('custom animation', () => {
     test('maps a transformMatrix result to transform', () => {
       const { animations } = runLayoutAnimation(

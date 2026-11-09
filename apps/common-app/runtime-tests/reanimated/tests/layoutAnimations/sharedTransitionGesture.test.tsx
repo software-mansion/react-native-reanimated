@@ -3,7 +3,7 @@ import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
-import { Screen } from 'react-native-screens';
+import { Screen, ScreenContainer } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -27,9 +27,13 @@ const transition = SharedTransition.duration(30000);
 function Screens({
   sourceMounted = true,
   sourceScreenMounted = true,
+  targetOffset = 0,
+  targetTranslateX = 0,
 }: {
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
+  targetOffset?: number;
+  targetTranslateX?: number;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -49,7 +53,13 @@ function Screens({
             ref={target}
             sharedTransitionTag="gesture-retained-source"
             sharedTransitionStyle={transition}
-            style={styles.target}
+            style={[
+              styles.target,
+              {
+                marginTop: targetOffset,
+                transform: [{ translateX: targetTranslateX }],
+              },
+            ]}
           />
         </SharedTransitionBoundary>
       </Screen>
@@ -129,6 +139,102 @@ function NestedScreens({ innerMounted = true }: { innerMounted?: boolean }) {
     </View>
   );
 }
+
+// The screen below holds two tabs. The container detaches the tab that it does not show.
+function TabScreens() {
+  const sourceScreen = useTestRef('tabsSourceScreen');
+  const targetScreen = useTestRef('tabsTargetScreen');
+  const source = useTestRef('tabsSource');
+  const shownTarget = useTestRef('tabsShownTarget');
+  return (
+    <View style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        onAppear={() => notify('tabs-target-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <ScreenContainer style={styles.screen}>
+          <Screen enabled activityState={2} style={styles.screen}>
+            <SharedTransitionBoundary isActive={false}>
+              <Animated.View
+                ref={shownTarget}
+                sharedTransitionTag="tab-photo"
+                sharedTransitionStyle={transition}
+                style={styles.target}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+          <Screen enabled activityState={0} style={styles.screen}>
+            <SharedTransitionBoundary isActive={false}>
+              <Animated.View
+                sharedTransitionTag="tab-photo"
+                sharedTransitionStyle={transition}
+                style={styles.hiddenTabTarget}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+        </ScreenContainer>
+      </Screen>
+      <Screen
+        ref={sourceScreen}
+        onAppear={() => notify('tabs-source-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            ref={source}
+            sharedTransitionTag="tab-photo"
+            sharedTransitionStyle={transition}
+            style={styles.source}
+          />
+        </SharedTransitionBoundary>
+      </Screen>
+    </View>
+  );
+}
+
+describe('Back gesture to a screen with tabs', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the view to the tab on screen', async () => {
+    await render(<TabScreens />);
+    await waitForNotification('tabs-source-appeared');
+    await waitForNotification('tabs-target-appeared');
+    const targetScreen = getTestComponent('tabsTargetScreen').getTag();
+    const source = getTestComponent('tabsSource').getTag();
+    await observer().emitScreenTransitionProgress(
+      targetScreen,
+      0,
+      false,
+      false
+    );
+    await observer().emitScreenTransitionProgress(
+      targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectCarrier(source, 105);
+    await expectEventually(
+      async () =>
+        (await getTestComponent('tabsShownTarget').getMountedViewProps())
+          ?.opacity
+    ).toBe(0);
+    await observer().emitScreenTransitionProgress(
+      targetScreen,
+      1,
+      false,
+      false
+    );
+    await expectEventually(
+      async () =>
+        (await getTestComponent('tabsShownTarget').getMountedViewProps())
+          ?.opacity
+    ).toBe(1);
+  });
+});
 
 describe('Retained source during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
@@ -258,6 +364,80 @@ function mountedX(tag: number) {
   });
 }
 
+describe('Target moved during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the carrier toward the new target position', async () => {
+    const tags = await startGesture();
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectCarrier(tags.source, 105);
+    const before = await carrierY(tags.source);
+    const target = getTestComponent('gestureTarget');
+    const targetY = (await target.getMountedViewProps())!.y;
+
+    await render(<Screens targetOffset={100} />);
+    await expectEventually(
+      async () => (await target.getMountedViewProps())!.y - targetY
+    ).toBe(100, ComparisonMode.PIXEL);
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectEventually(
+      async () => (await carrierY(tags.source))! - before!
+    ).toBe(50, ComparisonMode.PIXEL);
+
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      1,
+      false,
+      false
+    );
+    await expectTargetOpacity(1);
+  });
+
+  gestureTest('moves the carrier toward the new target transform', async () => {
+    const tags = await startGesture();
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectCarrier(tags.source, 105);
+
+    await render(<Screens targetTranslateX={100} />);
+    const target = getTestComponent('gestureTarget').getTag();
+    await expectEventually(
+      async () => (await observer().observeTransform(target))?.translateX
+    ).toBe(100, ComparisonMode.PIXEL);
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectEventually(
+      async () => (await observer().observeTransform(tags.source))?.translateX
+    ).toBe(50, ComparisonMode.PIXEL);
+
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      1,
+      false,
+      false
+    );
+    await expectTargetOpacity(1);
+  });
+});
+
 async function startGesture() {
   await render(<Screens />);
   await waitForNotification('gesture-source-appeared');
@@ -293,6 +473,13 @@ async function startGesture() {
   await expectCarrier(tags.source, 82.5);
   await expectTargetOpacity(0);
   return tags;
+}
+
+function carrierY(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false)?.y;
+  });
 }
 
 function observer() {
@@ -335,6 +522,7 @@ const styles = StyleSheet.create({
   screen: { position: 'absolute', left: 0, top: 0, width: 300, height: 400 },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
+  hiddenTabTarget: { width: 240, height: 240, backgroundColor: '#22aa55' },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
   nestedOuterSource: { width: 100, height: 100, backgroundColor: '#dd5522' },
   nestedOuterTarget: {

@@ -75,7 +75,7 @@ function Photo() {
 
 ### `progressAnimation` <Optional/>
 
-A worklet that gets the same [`values`](./custom-animations.mdx#arguments) as a custom animation and the `progress`, from 0 to 1. It returns the style of the view at this progress: plain values, not animations. Reanimated does not animate the properties that you do not return.
+A worklet that gets the same [`values`](./custom-animations.mdx#arguments) as a custom animation and the `progress`. Progress goes from 0 to 1 when the transition completes. A spring can overshoot this range. It returns the style of the view at this progress: plain values, not animations. Reanimated does not animate the properties that you do not return.
 
 ### `defaultTransitionType` <Optional/>
 
@@ -97,6 +97,7 @@ const transition = SharedTransition.duration(800)
 
 - The callback must have the `'worklet'` directive.
 - With `PROGRESS_ANIMATION`, the same worklet sets the look of the transition in both cases: when the user swipes and when the builder runs it. Use it when you want the two to look the same.
+- With `.springify()`, keep the returned styles valid when progress goes past an endpoint. Use `.overshootClamping(true)` to prevent overshoot, or clamp progress inside the worklet for properties that need a bounded range.
 
 ## Platform compatibility
 

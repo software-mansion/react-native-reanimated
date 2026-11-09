@@ -353,7 +353,7 @@ class BaseAnimationMock {
     return this;
   }
 
-  overshootClamping(_: number) {
+  overshootClamping(_: boolean) {
     return this;
   }
 

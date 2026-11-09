@@ -89,13 +89,14 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::
   return nullptr;
 }
 
+// The boundaries of a screen below the top one are inactive. The platform shows only one tab of a tab navigator.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
     return result;
   }
-  if (isSETBoundary(node)) {
+  if (isSETBoundary(node) && !isOffWindow(node)) {
     result = node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
@@ -1231,7 +1232,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       overrideTransform(before, transform[BEFORE], propsParserContext);
       overrideTransform(after, transform[AFTER], propsParserContext);
       const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
-      const bool sourceOffWindow = isOffWindow(collectedTransition.nodes[BEFORE]);
+      const auto &source = collectedTransition.nodes[BEFORE];
+      // The carrier of a run shows its target until it lands.
+      const auto *activeRun = activeSharedTransitionRun(sharedTag);
+      const bool sourceOffWindow = (!activeRun || activeRun->target != source) && isOffWindow(source);
       if (sourceOffWindow) {
         endSharedTransitionOf(sharedTag, transaction, propsParserContext);
       }
@@ -1897,9 +1901,16 @@ void LayoutAnimationsProxy::holdTargetEntering(
   if (heldEnterings_.empty() && transaction.entering.empty()) {
     return;
   }
+  // The transition is the entering animation of its target.
+  const auto isRunTarget = [this](const PendingNodeAnimation &animation) {
+    return std::ranges::any_of(activeSharedTransitionRuns(), [&animation](const SharedTransitionRun &run) {
+      return run.target == animation.node && run.carrier != run.target;
+    });
+  };
+  std::erase_if(transaction.entering, isRunTarget);
   const auto targetContent = fadingTargetContent();
   std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
-    if (!isLightNodeMapped(held.node)) {
+    if (!isLightNodeMapped(held.node) || isRunTarget(held)) {
       return true;
     }
     // A removed child stays hidden until it is gone, and its entering animation does not start.
@@ -2347,6 +2358,31 @@ void LayoutAnimationsProxy::followOffWindowTargets(const PropsParserContext &pro
   }
 }
 
+// A covered screen can get its native header frame after the gesture that uncovers it has started.
+void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &propsParserContext) const {
+  for (const auto &run : activeSharedTransitionRuns()) {
+    if (run.driver != SharedTransitionDriver::GESTURE) {
+      continue;
+    }
+    if (!isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
+      continue;
+    }
+    const auto carrierTag = run.carrier->current.tag;
+    const auto animationIt = layoutAnimations_.find(carrierTag);
+    if (animationIt == layoutAnimations_.end()) {
+      continue;
+    }
+    const auto after = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext), propsParserContext);
+    const auto carrierAfter = asCarrierView(after, run.carrier, propsParserContext);
+    const auto &finalView = animationIt->second.finalView;
+    if (finalView.layoutMetrics != carrierAfter.layoutMetrics ||
+        SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(finalView), getViewProps(carrierAfter))) {
+      updateLayoutAnimationTarget(
+          carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, run.config);
+    }
+  }
+}
+
 std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
     const std::shared_ptr<LightNode> &node,
     const bool useViewsOnScreen) const {
@@ -2394,9 +2430,11 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
+    // The absolute position of a scroll view is the position of its content.
+    const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
     auto transformOrigin = ancestor.origin;
-    transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
-    transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
+    transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
+    transformOrigin.xy[1].value -= targetViewPosition.y - ancestorPosition.y;
     combinedMatrix =
         combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin);
     combinedMatrix.operations.clear();

@@ -4,6 +4,8 @@ import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
+import { isValidLayoutAnimationProp } from '../animation/util';
+import { logger } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationsManager,
@@ -56,6 +58,17 @@ function stopObservingProgress(
   removeProgressListener(tag, sharedValue);
   global._notifyAboutEnd(tag, removeView);
   scheduleFlush();
+}
+
+function warnAboutUnsupportedProps(animations: Record<string, unknown>) {
+  'worklet';
+  for (const propName in animations) {
+    if (!isValidLayoutAnimationProp(propName.trim())) {
+      logger.warn(
+        `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
+      );
+    }
+  }
 }
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
@@ -128,6 +141,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     ) {
       try {
         const style = config(yogaValues);
+        if (__DEV__ && type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION) {
+          warnAboutUnsupportedProps(style.animations);
+        }
         let currentAnimation = style.animations;
 
         // When layout animation is requested, but a previous one is still running, we merge

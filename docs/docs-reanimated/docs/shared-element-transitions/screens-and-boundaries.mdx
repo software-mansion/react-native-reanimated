@@ -68,6 +68,8 @@ The content of the screen. `SharedTransitionBoundary` does not change the layout
 
 One boundary should contain all shared views of its screen, so wrap whole screens, not single views. Set `isActive` to `true` only while the screen is focused.
 
+Use `@react-navigation/core` 7.16.0 or newer, which `@react-navigation/native` 7.1.32 and newer require. In older versions, `useIsFocused()` changes one update after a screen is removed, so on Android the transition back to the previous screen sometimes does not run.
+
 You can wrap screens in three ways:
 
 - **All screens of a navigator**, with `screenLayout`. Use it when the screens of the navigator are normal screens, not other navigators.
@@ -218,6 +220,41 @@ function Gallery() {
   );
 }
 ```
+
+### Expo Router
+
+With Expo Router, import `useIsFocused` from `expo-router`. Put the boundaries in the layouts of the stacks that show your screens:
+
+```tsx
+// app/(tabs)/gallery/_layout.tsx
+import { Stack, useIsFocused } from 'expo-router';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  // highlight-next-line
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+export default function GalleryLayout() {
+  return (
+    <Stack
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[id]" />
+    </Stack>
+  );
+}
+```
+
+- Do not use `screenLayout` in a layout whose routes are other navigators, for example in the root `_layout.tsx` that shows a `(tabs)` group, or in the layout of the `(tabs)` group. See [Nested navigators](#nested-navigators).
+- A route that the root stack shows as a modal, for example `photo/[id]` with `presentation: 'modal'`, is a screen of the root stack. Put its boundary in the [content of the screen](#the-content-of-a-screen).
 
 ### Modals
 

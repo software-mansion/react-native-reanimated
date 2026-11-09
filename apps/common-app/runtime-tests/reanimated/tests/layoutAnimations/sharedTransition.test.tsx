@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
+  FadeIn,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
@@ -10,10 +11,12 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -38,14 +41,23 @@ function createTransition(
   });
 }
 
-function Target({ transition }: { transition: SharedTransition }) {
+function Target({
+  transition,
+  entering,
+  isActive,
+}: {
+  transition: SharedTransition;
+  entering?: FadeIn;
+  isActive: boolean;
+}) {
   const ref = useTestRef('target');
   return (
-    <SharedTransitionBoundary isActive>
+    <SharedTransitionBoundary isActive={isActive}>
       <Animated.View
         ref={ref}
         sharedTransitionTag="box"
         sharedTransitionStyle={transition}
+        entering={entering}
         style={styles.target}
       />
     </SharedTransitionBoundary>
@@ -56,10 +68,14 @@ function Screens({
   showTarget,
   transition,
   sourceTag = 'box',
+  targetEntering,
+  covered = false,
 }: {
   showTarget: boolean;
   transition: SharedTransition;
   sourceTag?: string | null;
+  targetEntering?: FadeIn;
+  covered?: boolean;
 }) {
   const sourceRef = useTestRef('source');
   return (
@@ -72,7 +88,18 @@ function Screens({
           style={styles.source}
         />
       </SharedTransitionBoundary>
-      {showTarget && <Target transition={transition} />}
+      {showTarget && (
+        <Target
+          transition={transition}
+          entering={targetEntering}
+          isActive={!covered}
+        />
+      )}
+      {covered && (
+        <SharedTransitionBoundary isActive>
+          <View collapsable={false} style={styles.cover} />
+        </SharedTransitionBoundary>
+      )}
     </View>
   );
 }
@@ -215,6 +242,54 @@ describe('Shared element transition between boundaries', () => {
     await expectMountedAtLayout('target', 1);
   });
 
+  test('runs in place of the entering animation of the target', async () => {
+    const finished: boolean[] = [];
+    const entered: boolean[] = [];
+    const recordEntering = (isFinished: boolean) => entered.push(isFinished);
+    const transition = createTransition(finished);
+    const targetEntering = FadeIn.duration(10000).withCallback((isFinished) => {
+      'worklet';
+      scheduleOnRN(recordEntering, isFinished);
+    });
+    const props = { transition, targetEntering };
+    await render(<Screens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<Screens {...props} showTarget />);
+    await waitForNotification('shared-transition-finished');
+    await waitForFrames();
+
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('target', 1);
+    expect(entered).toBe([]);
+  });
+
+  test('does not play the entering animation of a target whose transition stops', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const entered: boolean[] = [];
+    const recordEntering = (isFinished: boolean) => entered.push(isFinished);
+    const transition = createTransition([]);
+    const targetEntering = FadeIn.duration(300).withCallback((isFinished) => {
+      'worklet';
+      scheduleOnRN(recordEntering, isFinished);
+    });
+    const props = { transition, targetEntering };
+    await render(<Screens {...props} showTarget={false} />);
+    await waitForFrames();
+    await render(<Screens {...props} showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(150);
+
+    // The new active boundary has no match, so the run stops and the target shows in its place.
+    await render(<Screens {...props} showTarget covered />);
+    await waitForFrames(3);
+    await expectMountedAtLayout('target', 1);
+
+    await advanceAnimationTimer(600);
+    await expectMountedAtLayout('target', 1);
+    expect(entered).toBe([]);
+  });
+
   test.each([
     ['removed', null],
     ['changed', 'other'],
@@ -345,6 +420,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#22aa55',
   },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
+  cover: { width: 20, height: 20 },
   target: {
     marginTop: 200,
     marginLeft: 100,
