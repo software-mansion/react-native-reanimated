@@ -2202,7 +2202,10 @@ function printUsage() {
 
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
-\`yarn runtime-tests:server\` waits for you to start the app yourself.
+\`yarn runtime-tests:server\` waits for you to start the app yourself. A Debug
+build starts the test app only when launched with RUNTIME_TESTS_LIBRARY set.
+On iOS, run the RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY
+to reanimated; change it under Edit Scheme > Run > Environment Variables).
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
