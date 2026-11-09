@@ -1,3 +1,4 @@
+import { logger } from '../src/common';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -364,6 +365,46 @@ describe('LayoutAnimationsManager', () => {
         opacity: 1,
       });
       manager.stop(12);
+    });
+  });
+
+  describe('unsupported props warning', () => {
+    function startTransformOrigin(tag: number, type: LayoutAnimationType) {
+      manager.start(tag, type, {}, () => ({
+        initialValues: { transformOrigin: [0, 0, 0] },
+        animations: {
+          transformOrigin: [0, 0, 0].map(
+            () =>
+              ({
+                current: 0,
+                onStart: jest.fn(),
+                onFrame: () => false,
+              }) as unknown as number
+          ),
+        },
+      }));
+      manager.stop(tag);
+    }
+
+    test('warns once per layout animation prop', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation();
+
+      startTransformOrigin(20, LayoutAnimationType.LAYOUT);
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("'transformOrigin' property is not officially")
+      );
+      warn.mockRestore();
+    });
+
+    test('does not warn about the props of a shared transition', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation();
+
+      startTransformOrigin(21, LayoutAnimationType.SHARED_ELEMENT_TRANSITION);
+
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 });
