@@ -55,6 +55,15 @@ export interface Spec extends TurboModule {
     tag: CodegenTypes.Int32
   ): Promise<TransformObservation | null>;
 
+  /**
+   * Android only. Tells if the window of the first view was added after the
+   * window of the second view, so it shows above it. iOS returns null.
+   */
+  observeWindowAbove(
+    tag: CodegenTypes.Int32,
+    otherTag: CodegenTypes.Int32
+  ): Promise<boolean | null>;
+
   observeTextInput(
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;

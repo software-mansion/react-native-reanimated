@@ -102,6 +102,14 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)observeWindowAbove:(NSInteger)tag
+                  otherTag:(NSInteger)otherTag
+                   resolve:(RCTPromiseResolveBlock)resolve
+                    reject:(RCTPromiseRejectBlock)reject
+{
+  resolve((id)kCFNull);
+}
+
 - (void)observeTransform:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{
