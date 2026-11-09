@@ -1899,14 +1899,15 @@ void LayoutAnimationsProxy::holdTargetEntering(
     return;
   }
   // The transition is the entering animation of its target.
-  std::erase_if(transaction.entering, [this](const PendingNodeAnimation &entering) {
-    return std::ranges::any_of(activeSharedTransitionRuns(), [&entering](const SharedTransitionRun &run) {
-      return run.target == entering.node && run.carrier != run.target;
+  const auto isRunTarget = [this](const PendingNodeAnimation &animation) {
+    return std::ranges::any_of(activeSharedTransitionRuns(), [&animation](const SharedTransitionRun &run) {
+      return run.target == animation.node && run.carrier != run.target;
     });
-  });
+  };
+  std::erase_if(transaction.entering, isRunTarget);
   const auto targetContent = fadingTargetContent();
   std::erase_if(heldEnterings_, [&](const PendingNodeAnimation &held) {
-    if (!isLightNodeMapped(held.node)) {
+    if (!isLightNodeMapped(held.node) || isRunTarget(held)) {
       return true;
     }
     // A removed child stays hidden until it is gone, and its entering animation does not start.
