@@ -4,10 +4,15 @@ import {
   useIsFocused,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { ComponentRef, ComponentType } from 'react';
 import { useLayoutEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Platform, StyleSheet, View } from 'react-native';
-import type { AnimatedRef, LayoutAnimationType } from 'react-native-reanimated';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
+import type {
+  AnimatedRef,
+  CustomSharedTransitionAnimation,
+  LayoutAnimationType,
+} from 'react-native-reanimated';
 import Animated, {
   Easing,
   makeMutable,
@@ -15,8 +20,12 @@ import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
   useAnimatedRef,
+  withTiming,
 } from 'react-native-reanimated';
+import type { ScreenStackProps } from 'react-native-screens';
+import { Screen, ScreenContainer, ScreenStack } from 'react-native-screens';
 
+import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   describe,
   expect,
@@ -47,15 +56,19 @@ const linearTransition = SharedTransition.duration(DURATION)
 type Routes = { First: undefined; Second: undefined; Third: undefined };
 const Stack = createNativeStackNavigator<Routes>();
 const navigation = createNavigationContainerRef<Routes>();
+const NativeScreenStack: ComponentType<Omit<ScreenStackProps, 'ref'>> =
+  ScreenStack;
 
 const boxRefs: Record<string, AnimatedRef<Animated.View>> = {};
 
 function StackBox({
   name,
   style,
+  transition = linearTransition,
 }: {
   name: string;
   style: StyleProp<ViewStyle>;
+  transition?: SharedTransition;
 }) {
   const ref = useAnimatedRef<Animated.View>();
   boxRefs[name] = ref;
@@ -66,7 +79,7 @@ function StackBox({
         <Animated.View
           ref={ref}
           sharedTransitionTag="newScreen"
-          sharedTransitionStyle={linearTransition}
+          sharedTransitionStyle={transition}
           style={style}
         />
       </View>
@@ -100,6 +113,87 @@ function StackWithHeader({ modal = false }: { modal?: boolean }) {
           <Stack.Screen name="Third" component={ThirdScreen} />
         </Stack.Navigator>
       </NavigationContainer>
+    </View>
+  );
+}
+
+const customSheetAnimation: CustomSharedTransitionAnimation = (values) => {
+  'worklet';
+  return {
+    originX: withTiming(values.targetOriginX, { duration: DURATION }),
+    originY: withTiming(values.targetOriginY, { duration: DURATION }),
+    width: withTiming(values.targetWidth, { duration: DURATION }),
+    height: withTiming(values.targetHeight, { duration: DURATION }),
+    transform: [
+      {
+        matrix: withTiming(values.targetTransformMatrix, {
+          duration: DURATION,
+        }),
+      },
+    ],
+  };
+};
+
+const sheetTargetTransition = SharedTransition.duration(DURATION).easing(
+  Easing.linear
+);
+
+let sheetTestId = 0;
+
+function StackWithSheet({
+  animated,
+  transition,
+  dismissed,
+  phase,
+}: {
+  animated: boolean;
+  transition: SharedTransition;
+  dismissed: string;
+  phase: 'source' | 'sheet' | 'closed';
+}) {
+  const isSheetOpen = phase === 'sheet';
+  return (
+    <View style={styles.root}>
+      <NativeScreenStack
+        style={{ flex: 1 }}
+        onFinishTransitioning={() => {
+          if (phase === 'closed') notify(dismissed);
+        }}>
+        <Screen
+          isNativeStack
+          activityState={2}
+          style={{ flex: 1 }}
+          onAppear={() => notify(STACK_READY)}>
+          <SharedTransitionBoundary isActive={!isSheetOpen}>
+            <View collapsable={false} style={styles.content}>
+              <Animated.View
+                sharedTransitionTag="newScreen"
+                sharedTransitionStyle={transition}
+                style={styles.sheetSource}
+              />
+            </View>
+          </SharedTransitionBoundary>
+        </Screen>
+        {isSheetOpen && (
+          <Screen
+            isNativeStack
+            activityState={2}
+            style={{ flex: 1 }}
+            stackPresentation="formSheet"
+            stackAnimation={animated ? 'default' : 'none'}
+            sheetAllowedDetents={[0.72, 1]}>
+            <SharedTransitionBoundary isActive>
+              <View collapsable={false} style={styles.content}>
+                <Animated.View
+                  sharedTransitionTag="newScreen"
+                  sharedTransitionStyle={sheetTargetTransition}
+                  style={styles.sheetTarget}
+                />
+              </View>
+            </SharedTransitionBoundary>
+          </Screen>
+        )}
+      </NativeScreenStack>
     </View>
   );
 }
@@ -217,6 +311,439 @@ describe('Shared transition to a new native stack screen', () => {
     await render(null);
   });
 });
+
+if (Platform.OS === 'ios') {
+  describe('Shared transition to a native sheet', () => {
+    test.each([
+      { animated: true, custom: false },
+      { animated: false, custom: false },
+      { animated: true, custom: true },
+      { animated: false, custom: true },
+    ])(
+      'does not start toward the sheet placeholder (animated: ${animated}, custom: ${custom})',
+      async ({ animated, custom }) => {
+        const id = sheetTestId++;
+        const forwardFinished = `sheetForwardFinished${id}`;
+        const dismissed = `sheetDismissed${id}`;
+        const transition = (
+          custom
+            ? SharedTransition.custom(customSheetAnimation)
+            : SharedTransition.duration(DURATION).easing(Easing.linear)
+        ).withCallback((finished) => {
+          'worklet';
+          if (finished) notify(forwardFinished);
+        });
+        const renderSheet = (phase: 'source' | 'sheet' | 'closed') =>
+          render(
+            <StackWithSheet
+              animated={animated}
+              transition={transition}
+              dismissed={dismissed}
+              phase={phase}
+            />
+          );
+        await renderSheet('source');
+        await waitForNotification(STACK_READY);
+        await waitForFrames(10);
+        const { starts, stop } = await recordSharedTransitionStarts();
+        try {
+          await renderSheet('sheet');
+          await waitForNotification(forwardFinished);
+          await waitForFrames(10);
+          expect(starts.value.length).toBe(1);
+          const first = starts.value[0];
+          expect(first.targetY).toBeWithinRange(first.sourceY + 1, 10000);
+        } finally {
+          try {
+            await stop();
+            await renderSheet('closed');
+            await waitForNotification(dismissed);
+          } finally {
+            await render(null);
+          }
+        }
+      }
+    );
+  });
+}
+
+if (Platform.OS === 'ios') {
+  describe('Shared transition to a full-screen modal', () => {
+    test.each([
+      { native: true, animated: true },
+      { native: true, animated: false },
+      { native: false, animated: true },
+      { native: false, animated: false },
+    ])(
+      'finishes both directions and restores the source parent (native: ${native}, animated: ${animated})',
+      async ({ native, animated }) => {
+        const id = sheetTestId++;
+        const forwardFinished = `fullScreenForwardFinished${id}`;
+        const reverseFinished = `fullScreenReverseFinished${id}`;
+        const dismissed = `fullScreenDismissed${id}`;
+        const callbacks = makeMutable({ forward: 0, reverse: 0, failed: 0 });
+        const sourceTransition = SharedTransition.duration(DURATION)
+          .easing(Easing.linear)
+          .withCallback((finished) => {
+            'worklet';
+            callbacks.value = {
+              ...callbacks.value,
+              forward: callbacks.value.forward + (finished ? 1 : 0),
+              failed: callbacks.value.failed + (finished ? 0 : 1),
+            };
+            if (finished) notify(forwardFinished);
+          });
+        const targetTransition = SharedTransition.duration(DURATION)
+          .easing(Easing.linear)
+          .withCallback((finished) => {
+            'worklet';
+            callbacks.value = {
+              ...callbacks.value,
+              reverse: callbacks.value.reverse + (finished ? 1 : 0),
+              failed: callbacks.value.failed + (finished ? 0 : 1),
+            };
+            if (finished) notify(reverseFinished);
+          });
+        const show = (phase: 'source' | 'open' | 'closed') =>
+          render(
+            <FullScreenModal
+              native={native}
+              animated={animated}
+              phase={phase}
+              sourceTransition={sourceTransition}
+              targetTransition={targetTransition}
+              dismissed={dismissed}
+            />
+          );
+        await show('source');
+        await waitForFrames(10);
+        const sourceTag = getTestComponent('fullScreenSource').getTag();
+        const parent = await RuntimeTestObserver!.observeParent(sourceTag);
+        expect(parent).not.toBe(null);
+        let closed = false;
+        try {
+          await show('open');
+          await waitForNotification(forwardFinished);
+          await waitForFrames(10);
+          const targetTag = getTestComponent('fullScreenTarget').getTag();
+          expect(await RuntimeTestObserver!.observeParent(targetTag)).not.toBe(
+            null
+          );
+          await show('closed');
+          await waitForNotification(dismissed);
+          closed = true;
+          await waitForNotification(reverseFinished);
+          await waitForFrames(10);
+          const result = await runOnUIBlocking(() => {
+            'worklet';
+            return callbacks.value;
+          });
+          expect(result.forward).toBe(1);
+          expect(result.reverse).toBe(1);
+          expect(result.failed).toBe(0);
+          expect(getTestComponent('fullScreenSource').getTag()).toBe(sourceTag);
+          expect(await RuntimeTestObserver!.observeParent(sourceTag)).toBe(
+            parent
+          );
+        } finally {
+          try {
+            if (!closed) {
+              await show('closed');
+              await waitForNotification(dismissed);
+            }
+          } finally {
+            await render(null);
+          }
+        }
+      }
+    );
+  });
+}
+
+function FullScreenModal({
+  native,
+  animated,
+  phase,
+  sourceTransition,
+  targetTransition,
+  dismissed,
+}: {
+  native: boolean;
+  animated: boolean;
+  phase: 'source' | 'open' | 'closed';
+  sourceTransition: SharedTransition;
+  targetTransition: SharedTransition;
+  dismissed: string;
+}) {
+  const open = phase === 'open';
+  const source = (
+    <FullScreenBox source active={!open} transition={sourceTransition} />
+  );
+  const target = (
+    <FullScreenBox source={false} active={open} transition={targetTransition} />
+  );
+  if (!native) {
+    return (
+      <View style={styles.root}>
+        {source}
+        <Modal
+          visible={open}
+          presentationStyle="fullScreen"
+          animationType={animated ? 'slide' : 'none'}
+          onDismiss={() => notify(dismissed)}>
+          {target}
+        </Modal>
+      </View>
+    );
+  }
+  return (
+    <NativeScreenStack
+      style={styles.root}
+      onFinishTransitioning={() => {
+        if (phase === 'closed') notify(dismissed);
+      }}>
+      <Screen isNativeStack activityState={2} style={styles.root}>
+        {source}
+      </Screen>
+      {open && (
+        <Screen
+          isNativeStack
+          activityState={2}
+          style={styles.root}
+          stackPresentation="fullScreenModal"
+          stackAnimation={animated ? 'default' : 'none'}>
+          {target}
+        </Screen>
+      )}
+    </NativeScreenStack>
+  );
+}
+
+function FullScreenBox({
+  source,
+  active,
+  transition,
+}: {
+  source: boolean;
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  const ref = useTestRef(source ? 'fullScreenSource' : 'fullScreenTarget');
+  return (
+    <SharedTransitionBoundary isActive={active}>
+      <View collapsable={false} style={styles.content}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="fullScreen"
+          sharedTransitionStyle={transition}
+          style={source ? styles.sheetSource : styles.sheetTarget}
+        />
+      </View>
+    </SharedTransitionBoundary>
+  );
+}
+
+function MountedBoundaries({ active }: { active: boolean }) {
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          sharedTransitionTag="mounted"
+          sharedTransitionStyle={linearTransition}
+          style={styles.busySource}
+        />
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.View
+            sharedTransitionTag="mounted"
+            sharedTransitionStyle={linearTransition}
+            style={styles.busyTarget}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+if (Platform.OS === 'ios') {
+  describe('Shared transition to a pre-mounted boundary', () => {
+    test('starts a new target inside a boundary that is already in the window', async () => {
+      await render(<MountedBoundaries active={false} />);
+      await waitForFrames(10);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        await render(<MountedBoundaries active />);
+        await waitForNotification(FORWARD_FINISHED);
+        expect(starts.value.length).toBe(1);
+        const first = starts.value[0];
+        expect(first.targetY - first.sourceY).toBeWithinRange(199.5, 200.5);
+      } finally {
+        await stop();
+        await render(null);
+      }
+    });
+  });
+}
+
+function PendingScreen({
+  active,
+  showTarget,
+  nativeActive,
+  targetTop = 200,
+  hostWidth = 10,
+}: {
+  active: boolean;
+  showTarget: boolean;
+  nativeActive: boolean;
+  targetTop?: number;
+  hostWidth?: number;
+}) {
+  const source = useTestRef('heldSource');
+  const sourceRef = useAnimatedRef<Animated.View>();
+  const targetRef = useAnimatedRef<Animated.View>();
+  boxRefs.heldSource = sourceRef;
+  boxRefs.heldTarget = targetRef;
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={(node: ComponentRef<typeof Animated.View> | null) => {
+            source.current = node;
+            sourceRef(node);
+          }}
+          sharedTransitionTag="held"
+          sharedTransitionStyle={linearTransition}
+          style={styles.busySource}
+        />
+      </SharedTransitionBoundary>
+      <View
+        collapsable={false}
+        style={{ position: 'absolute', width: hostWidth, height: 1 }}
+      />
+      <ScreenContainer style={styles.root}>
+        <Screen
+          activityState={nativeActive ? 2 : 0}
+          freezeOnBlur={false}
+          style={styles.root}>
+          <SharedTransitionBoundary isActive={active}>
+            {showTarget && (
+              <Animated.View
+                ref={targetRef}
+                sharedTransitionTag="held"
+                sharedTransitionStyle={linearTransition}
+                style={[styles.busyTarget, { top: targetTop }]}
+              />
+            )}
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
+    </View>
+  );
+}
+
+if (Platform.OS === 'ios') {
+  describe('Shared transition with a pending native boundary', () => {
+    test('uses the latest target geometry after unrelated updates while waiting', async () => {
+      await render(
+        <PendingScreen active={false} showTarget nativeActive={false} />
+      );
+      await waitForFrames(10);
+      const sourceWindowY = await measureWindowY(boxRefs.heldSource);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        await render(<PendingScreen active showTarget nativeActive={false} />);
+        await waitForFrames(10);
+        expect(starts.value.length).toBe(0);
+        await render(
+          <PendingScreen
+            active
+            showTarget
+            nativeActive={false}
+            targetTop={250}
+            hostWidth={30}
+          />
+        );
+        await waitForFrames(10);
+        expect(starts.value.length).toBe(0);
+        await render(
+          <PendingScreen
+            active
+            showTarget
+            nativeActive
+            targetTop={250}
+            hostWidth={30}
+          />
+        );
+        await waitForNotification(FORWARD_FINISHED);
+        await waitForFrames(10);
+        expect(starts.value.length).toBe(1);
+        const targetWindowY = await measureWindowY(boxRefs.heldTarget);
+        const rootOffset = sourceWindowY - starts.value[0].sourceY;
+        expect(starts.value[0].targetY).toBeWithinRange(
+          targetWindowY - rootOffset - 1,
+          targetWindowY - rootOffset + 1
+        );
+      } finally {
+        try {
+          await stop();
+        } finally {
+          await render(null);
+        }
+      }
+    });
+    test.each([true, false])(
+      'cancels a held start to a detached screen before a late attachment (remove target: %p)',
+      async (removeTarget) => {
+        await render(
+          <PendingScreen active={false} showTarget nativeActive={false} />
+        );
+        await waitForFrames(10);
+        const sourceTag = getTestComponent('heldSource').getTag();
+        const parent = await RuntimeTestObserver!.observeParent(sourceTag);
+        const { starts, stop } = await recordSharedTransitionStarts();
+        try {
+          await render(
+            <PendingScreen active showTarget nativeActive={false} />
+          );
+          await waitForFrames(10);
+          expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+            parent
+          );
+          expect(starts.value.length).toBe(0);
+          await render(
+            <PendingScreen
+              active={removeTarget}
+              showTarget={!removeTarget}
+              nativeActive={false}
+            />
+          );
+          await expectEventually(
+            async () =>
+              (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
+          ).toBe(true);
+          expect(
+            (await getTestComponent('heldSource').getMountedViewProps())
+              ?.opacity
+          ).toBe(1);
+          expect(starts.value.length).toBe(0);
+          await render(
+            <PendingScreen active={false} showTarget nativeActive />
+          );
+          await waitForFrames(10);
+          expect(starts.value.length).toBe(0);
+          expect(getTestComponent('heldSource').getTag()).toBe(sourceTag);
+        } finally {
+          try {
+            await stop();
+          } finally {
+            await render(null);
+          }
+        }
+      }
+    );
+  });
+}
 
 const BUSY_TIME = 2 * DURATION;
 const TARGET_WIDTH = 150;
@@ -389,6 +916,18 @@ const styles = StyleSheet.create({
     width: 100,
     height: 40,
     marginTop: 200,
+    backgroundColor: '#2277dd',
+  },
+  sheetSource: {
+    width: 150,
+    height: 130,
+    marginTop: 70,
+    backgroundColor: '#2277dd',
+  },
+  sheetTarget: {
+    width: 300,
+    height: 260,
+    marginTop: 28,
     backgroundColor: '#2277dd',
   },
   busySource: {

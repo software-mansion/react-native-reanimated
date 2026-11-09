@@ -390,10 +390,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
-  bool defersLayoutAnimationStart(Tag tag) const override;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
   void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
 #endif
+
+  bool defersLayoutAnimationStart(Tag tag) const override;
 
   void hideTransitioningViews(
       BeforeOrAfter index,
@@ -487,13 +488,15 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   Tag carrierHostTag() const;
   void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
+  NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
+  NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
   void endSharedTransitionOf(
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
-  void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
+  void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;

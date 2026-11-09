@@ -18,6 +18,7 @@ Check these points:
 - Each screen is in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
 - No boundary that is always active is around the boundaries of your screens.
 - The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of the boundary of the screen. A boundary in the header becomes the active boundary instead of the boundary of the screen. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
+- On iOS, both boundaries must use the `UIWindow` of the React Native root view or a modal presented over it. A boundary in another window is not supported. In that setup, the view can stay still or move to the wrong place.
 - The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
 
 ## Modals and sheets on Android

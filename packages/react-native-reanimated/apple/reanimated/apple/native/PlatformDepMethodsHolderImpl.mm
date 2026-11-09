@@ -224,9 +224,9 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
 #if TARGET_OS_IOS
 SetSharedTransitionOverlayFunction makeSetSharedTransitionOverlayFunction(REASharedTransitionOverlays *overlays)
 {
-  return [overlays](SurfaceId surfaceId, std::optional<Tag> tag) {
+  return [overlays](SurfaceId surfaceId, std::optional<Tag> tag, std::function<void()> onWindowAttach) {
     if (tag) {
-      [overlays showOverlayWithTag:*tag surfaceId:surfaceId];
+      [overlays showOverlayWithTag:*tag surfaceId:surfaceId onWindowAttach:std::move(onWindowAttach)];
     } else {
       [overlays hideOverlayForSurfaceId:surfaceId];
     }

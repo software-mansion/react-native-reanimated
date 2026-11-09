@@ -15,7 +15,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
 // The view is created by the mount that follows, so it is attached after that mount.
-- (void)showOverlayWithTag:(NSInteger)tag surfaceId:(NSInteger)surfaceId;
+- (void)showOverlayWithTag:(NSInteger)tag
+                 surfaceId:(NSInteger)surfaceId
+            onWindowAttach:(std::function<void()>)onWindowAttach;
 
 // Detaches the overlay before the mount that deletes it.
 - (void)hideOverlayForSurfaceId:(NSInteger)surfaceId;
