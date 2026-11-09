@@ -19,10 +19,10 @@ Shared Element Transitions move a view from one screen to another. When you navi
 
 ## Setup
 
-Shared Element Transitions need Reanimated 4.8 or newer, where they are on by default, and the matching version of `react-native-worklets`. See the [compatibility table](../guides/compatibility.mdx#supported-react-native-worklets-versions).
+This chapter describes Shared Element Transitions in Reanimated 4.8 and newer, where they are on by default. They need the matching version of `react-native-worklets` and a React Native version that Reanimated supports. See the [compatibility table](../guides/compatibility.mdx). Reanimated 4.2 to 4.7 have an experimental version behind the [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](../guides/feature-flags.md#enable_shared_element_transitions) feature flag.
 
-- **Expo**: an Expo SDK selects the versions that `npx expo install` installs, and it can select a Reanimated version older than 4.8. Install Reanimated 4.8 or newer together with the matching `react-native-worklets`, and then build your [development build](https://docs.expo.dev/develop/development-builds/introduction/) again. Expo Go has only the native code of the versions that its SDK selects.
-- **Android**: use `react-native-screens` 4.28 or newer. In older versions, an app can crash in `MountingCoordinator::pullTransaction` after a race at startup. See [react-native-screens#4413](https://github.com/software-mansion/react-native-screens/pull/4413).
+- **Expo**: an Expo SDK selects the versions that `npx expo install` installs, and it can select a Reanimated version older than 4.8. Use an Expo SDK with a React Native version that Reanimated 4.8 supports. Install Reanimated 4.8 or newer together with the matching `react-native-worklets`, and then build your [development build](https://docs.expo.dev/develop/development-builds/introduction/) again. Expo Go has only the native code of the versions that its SDK selects.
+- **Android**: use `react-native-screens` 4.28 or newer. In older versions, an app can crash in `MountingCoordinator::pullTransaction` after a race at startup. See [react-native-screens#4413](https://github.com/software-mansion/react-native-screens/pull/4413). After you upgrade it, build the app again.
 
 ## Your first shared element transition
 
