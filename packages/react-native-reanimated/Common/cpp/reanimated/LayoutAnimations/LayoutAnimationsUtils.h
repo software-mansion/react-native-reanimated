@@ -84,7 +84,7 @@ struct MutationNode;
 enum class CarrierPlacement : std::uint8_t {
   // The node is not a carrier and is mounted under its parent.
   IN_PARENT,
-  // The carrier is mounted under the root, not under its parent.
+  // The carrier is mounted under its layout root, not under its parent.
   AT_ROOT,
   // The carrier is in a moving carrier. It stays under its parent and moves with it.
   NESTED,
@@ -325,21 +325,25 @@ struct LightNode {
 // the counts of carriers at the root in their parents in step with the placements.
 class CarrierPlacements {
  public:
-  // In the order that the host tree mounts them, after the children of the root.
+  // In the order that the host tree mounts them, after the children of their hosts.
   const std::vector<std::shared_ptr<LightNode>> &atRoot() const {
     return atRoot_;
   }
 
-  int indexAtRoot(const std::shared_ptr<LightNode> &node) const {
-    const auto it = std::ranges::find(atRoot_, node);
-    react_native_assert(it != atRoot_.end() && "The node is not a carrier at the root");
-    return static_cast<int>(std::distance(atRoot_.begin(), it));
+  const std::shared_ptr<LightNode> &hostOf(const std::shared_ptr<LightNode> &node) const {
+    return hosts_[positionAtRoot(node)];
   }
 
-  void detach(const std::shared_ptr<LightNode> &node) {
+  int indexInHost(const std::shared_ptr<LightNode> &node) const {
+    const auto position = hosts_.begin() + static_cast<std::ptrdiff_t>(positionAtRoot(node));
+    return static_cast<int>(std::count(hosts_.begin(), position, *position));
+  }
+
+  void detach(const std::shared_ptr<LightNode> &node, std::shared_ptr<LightNode> host) {
     react_native_assert(node->placement_ != CarrierPlacement::AT_ROOT && "The carrier is already at the root");
     setPlacement(node, CarrierPlacement::AT_ROOT);
     atRoot_.push_back(node);
+    hosts_.push_back(std::move(host));
   }
 
   void nest(const std::shared_ptr<LightNode> &node) {
@@ -374,14 +378,25 @@ class CarrierPlacements {
       setPlacement(node, CarrierPlacement::IN_PARENT);
     }
     atRoot_.clear();
+    hosts_.clear();
   }
 
  private:
   std::vector<std::shared_ptr<LightNode>> atRoot_;
+  // The layout root that mounts the carrier at the same position in atRoot_.
+  std::vector<std::shared_ptr<LightNode>> hosts_;
+
+  size_t positionAtRoot(const std::shared_ptr<LightNode> &node) const {
+    const auto it = std::ranges::find(atRoot_, node);
+    react_native_assert(it != atRoot_.end() && "The node is not a carrier at the root");
+    return static_cast<size_t>(std::distance(atRoot_.begin(), it));
+  }
 
   void leave(const std::shared_ptr<LightNode> &node) {
     if (node->placement_ == CarrierPlacement::AT_ROOT) {
-      std::erase(atRoot_, node);
+      const auto position = static_cast<std::ptrdiff_t>(positionAtRoot(node));
+      atRoot_.erase(atRoot_.begin() + position);
+      hosts_.erase(hosts_.begin() + position);
     }
     setPlacement(node, CarrierPlacement::IN_PARENT);
   }
