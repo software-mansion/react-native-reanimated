@@ -20,6 +20,18 @@ Check these points:
 - The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of the boundary of the screen. A boundary in the header becomes the active boundary instead of the boundary of the screen. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
 - The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
 
+## Android layout roots
+
+On Android, SET does not start when either endpoint is inside another layout root, such as React Native `Modal` or a native-overlay sheet. Both endpoints keep their own size and opacity. A refused timed attempt calls its callback once with `true`.
+
+A native host that puts its children in another window must mark its shadow node with React Native's `RootNodeKind` trait. This marked root must stay in the mounted ancestry of its children. SET cannot detect hosts that move children without this trait. The trait marks a layout root, not a window identity, so SET also refuses two endpoints in the same Modal. Inline and portal content can use SET when it stays under the surface's layout root.
+
+When the active boundary stays the same, an active SET refuses a distinct new target inside another layout root. The new target stays visible. The accepted flight keeps its old destination and callback; its moving view can remain visible until that flight ends. A later valid target can still update that flight. Refusal does not start a new attempt or call the new target's callback.
+
+A boundary change starts a new attempt. If SET refuses that attempt, it ends the old attempt for that shared tag and applies the new attempt's skip rules. This also applies when the old target stays mounted.
+
+Do not change the host or layout-root ancestry of an accepted endpoint or a refused target during the active flight. This includes changing a sheet's `nativeOverlay` value. This case is unsupported. These checks do not provide full cross-window transitions. iOS keeps its existing window overlay behavior. A timed attempt skipped for an off-window iOS source also calls its callback with `true`.
+
 ## Updates during the transition
 
 - Changes that React makes to the props or the layout of the moving view itself wait until the transition ends. Then they show at once, which can look like a jump. This includes changes from React state and from `useAnimatedStyle` updates that go through React. The children of the moving view can update during the move.

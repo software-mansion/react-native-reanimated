@@ -86,13 +86,17 @@ function ThirdScreen() {
   return <StackBox name="third" style={styles.thirdBox} />;
 }
 
-function StackWithHeader() {
+function StackWithHeader({ modal = false }: { modal?: boolean }) {
   return (
     <View style={styles.root}>
       <NavigationContainer ref={navigation} onReady={() => notify(STACK_READY)}>
         <Stack.Navigator>
           <Stack.Screen name="First" component={FirstScreen} />
-          <Stack.Screen name="Second" component={SecondScreen} />
+          <Stack.Screen
+            name="Second"
+            component={SecondScreen}
+            options={{ presentation: modal ? 'modal' : 'card' }}
+          />
           <Stack.Screen name="Third" component={ThirdScreen} />
         </Stack.Navigator>
       </NavigationContainer>
@@ -150,6 +154,30 @@ async function recordSharedTransitionStarts() {
 }
 
 describe('Shared transition to a new native stack screen', () => {
+  (Platform.OS === 'android' ? test : test.skip)(
+    'keeps a native-stack modal transition enabled',
+    async () => {
+      await render(<StackWithHeader modal />);
+      await waitForNotification(STACK_READY);
+      await waitForFrames(10);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        navigation.navigate('Second');
+        await waitForNotification(FORWARD_FINISHED);
+        expect(starts.value.length).toBeWithinRange(1, 100);
+        const targetRef = boxRefs.second;
+        const props = await runOnUIBlocking(() => {
+          'worklet';
+          return measure(targetRef);
+        });
+        expect(props?.width).toBe(160);
+      } finally {
+        await stop();
+      }
+      await render(null);
+    }
+  );
+
   // On Android, the first frame of a new screen starts below its header until React Native Screens sends the
   // native frame.
   test('moves toward the target of a new screen below a header', async () => {
