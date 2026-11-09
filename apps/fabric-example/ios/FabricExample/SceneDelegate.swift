@@ -10,8 +10,10 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
     let library = ProcessInfo.processInfo.environment["RUNTIME_TESTS_LIBRARY"]
 #if RUNTIME_TESTS
     return library ?? "reanimated"
-#else
+#elseif DEBUG
     return library
+#else
+    return nil
 #endif
   }()
 
