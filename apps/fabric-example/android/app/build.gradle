@@ -93,7 +93,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "boolean", "RUNTIME_TESTS", "false"
-        manifestPlaceholders = [gwpAsanMode: runtimeTestsGwpAsanMode]
+        manifestPlaceholders = [gwpAsanMode: "default"]
     }
     signingConfigs {
         debug {
@@ -106,6 +106,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [gwpAsanMode: runtimeTestsGwpAsanMode]
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
@@ -119,7 +120,7 @@ android {
             matchingFallbacks = ["release"]
             // The React Native Gradle plugin fills this placeholder only for
             // the build types it knows about (debug, debugOptimized, release).
-            manifestPlaceholders = [usesCleartextTraffic: "true"]
+            manifestPlaceholders = [usesCleartextTraffic: "true", gwpAsanMode: runtimeTestsGwpAsanMode]
             buildConfigField "boolean", "RUNTIME_TESTS", "true"
         }
     }
