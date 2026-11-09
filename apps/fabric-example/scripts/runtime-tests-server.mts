@@ -2202,12 +2202,13 @@ function printUsage() {
 
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
-\`yarn runtime-tests:server\` waits for you to start the app yourself. On iOS,
-the Debug build starts the test app only when launched with
-RUNTIME_TESTS_LIBRARY set: run the RuntimeTests scheme in Xcode (it sets
-RUNTIME_TESTS_LIBRARY to reanimated; change it under Edit Scheme > Run >
-Environment Variables). The app reports to the Metro port + 1. With another
---port, also set RUNTIME_TESTS_WS_URL=ws://127.0.0.1:<port> there.
+\`yarn runtime-tests:server\` waits for you to start the app yourself, and does
+not start Metro (run \`yarn start\` first). On iOS, the Debug build starts the
+test app only when launched with RUNTIME_TESTS_LIBRARY set: run the
+RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY to reanimated;
+change it under Edit Scheme > Run > Environment Variables). The app reports
+to the Metro port + 1. With another --port, also set
+RUNTIME_TESTS_WS_URL=ws://<host>:<port> there (127.0.0.1 on a simulator).
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
