@@ -85,6 +85,7 @@ class NodesManager(
         if (mCallbackPosted.getAndSet(false)) {
             startUpdatingOnAnimationFrame()
         }
+        mDrawPassDetector.initialize()
     }
 
     fun startUpdatingOnAnimationFrame() {
