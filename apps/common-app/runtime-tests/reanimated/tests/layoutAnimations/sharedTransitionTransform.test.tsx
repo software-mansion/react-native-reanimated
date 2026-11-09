@@ -1,7 +1,10 @@
-import { View } from 'react-native';
+import type { ComponentRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { ScrollView, View } from 'react-native';
 import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -132,6 +135,68 @@ function layoutOnlyTransition() {
   return transition;
 }
 
+// The source is 150 points down the content of a flipped scroll view, which shows it 150 points up from its bottom.
+function FlippedScrollScreens({
+  active,
+  offset,
+  transition,
+}: {
+  active: boolean;
+  offset: number;
+  transition: SharedTransition;
+}) {
+  const list = useRef<ComponentRef<typeof ScrollView>>(null);
+  useEffect(() => {
+    list.current?.scrollTo({ y: offset, animated: false });
+  }, [offset]);
+  const tag = `flipped-box-${offset}`;
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <ScrollView
+          ref={list}
+          style={{ height: 200, transform: [{ scaleY: -1 }] }}>
+          <View style={{ height: 600, paddingTop: 150 }}>
+            <Animated.View
+              sharedTransitionTag={tag}
+              sharedTransitionStyle={transition}
+              style={{ width: 40, height: 40, backgroundColor: 'red' }}
+            />
+          </View>
+        </ScrollView>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.View
+            sharedTransitionTag={tag}
+            sharedTransitionStyle={transition}
+            style={{ width: 40, height: 40, backgroundColor: 'red' }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The transform of the source applies around its center.
+function sourceCenterYTransition(centers: number[], notification: string) {
+  const record = (center: number) => centers.push(center);
+  const finish = () => notify(notification);
+  return SharedTransition.custom((values) => {
+    'worklet';
+    scheduleOnRN(
+      record,
+      values.currentOriginY +
+        values.currentHeight / 2 +
+        values.currentTransform.matrix[13]
+    );
+    return { width: withTiming(values.targetWidth, { duration: 100 }) };
+  }).withCallback(() => {
+    'worklet';
+    scheduleOnRN(finish);
+  });
+}
+
 async function expectTranslation(name: string, translateX: number) {
   const observation = await getTestComponent(name).getTransformObservation();
   expect(observation).not.toBe(null);
@@ -206,6 +271,22 @@ describe('Shared transition transform copying', () => {
       await expectTranslation('transform-target', 40);
     }
   );
+
+  test('starts from a source in a scrolled flipped scroll view', async () => {
+    const centers: number[] = [];
+    for (const offset of [0, 100]) {
+      const notification = `flipped-finished-${offset}`;
+      const transition = sourceCenterYTransition(centers, notification);
+      const props = { offset, transition };
+      await render(null);
+      await render(<FlippedScrollScreens {...props} active={false} />);
+      await waitForFrames(3);
+      await render(<FlippedScrollScreens {...props} active />);
+      await waitForNotification(notification);
+    }
+    expect(centers.length).toBe(2);
+    expect(centers[1] - centers[0]).toBe(100, ComparisonMode.PIXEL);
+  });
 
   nativeTest(
     'keeps the held transform when the target width changes',
