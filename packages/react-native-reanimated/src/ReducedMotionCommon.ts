@@ -11,7 +11,17 @@ export function createReducedMotionManager(initialValue: boolean) {
       manager.jsValue = value;
       manager.uiValue.value = value;
       if (changed) {
-        manager.listeners.forEach((listener) => listener());
+        const errors: unknown[] = [];
+        manager.listeners.forEach((listener) => {
+          try {
+            listener();
+          } catch (error) {
+            errors.push(error);
+          }
+        });
+        if (errors.length) {
+          throw errors[0];
+        }
       }
     },
   };
