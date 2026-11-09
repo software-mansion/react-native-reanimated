@@ -2199,16 +2199,18 @@ function printUsage() {
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
 \`yarn runtime-tests:server\` waits for you to start the app yourself, and does
-not start Metro (run \`yarn start\` first). On iOS, the Debug build starts the
-test app only when launched with RUNTIME_TESTS_LIBRARY set: run the
-RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY to reanimated;
-change it under Edit Scheme > Run > Environment Variables). The app reports
-to the Metro port + 1. With another --port, also set
-RUNTIME_TESTS_WS_URL=ws://<host>:<port> there (127.0.0.1 on a simulator).
+not start Metro (run \`yarn start\` first). The Debug build starts the test app
+only when launched with RUNTIME_TESTS_LIBRARY set. The app reports to the
+Metro port + 1. With another --port, also set
+RUNTIME_TESTS_WS_URL=ws://<host>:<port> (127.0.0.1 on a simulator).
+On iOS, run the RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY
+to reanimated; change it under Edit Scheme > Run > Environment Variables).
 On Android, start the app cold, because the library is fixed for the life of
-the process:
-  adb shell am start -S -n ${ANDROID_APP_ID}/.MainActivity \\
-    --es RUNTIME_TESTS_LIBRARY <library>
+the process (\`adb devices\` lists the serials):
+  adb -s <serial> shell am start -S -n ${ANDROID_APP_ID}/.MainActivity \\
+    --es RUNTIME_TESTS_LIBRARY <library> [--es RUNTIME_TESTS_WS_URL <url>]
+If the app reaches Metro through localhost, forward the reporting port too:
+  adb -s <serial> reverse tcp:<port> tcp:<port>
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
