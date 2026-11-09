@@ -221,6 +221,41 @@ function Gallery() {
 }
 ```
 
+### Expo Router
+
+Expo Router includes React Navigation, so your app may not have `@react-navigation/native`. In Expo SDK 58, import `useIsFocused` from `expo-router`. Put the boundaries in the layouts of the stacks that show your screens:
+
+```tsx
+// app/(tabs)/gallery/_layout.tsx
+import { Stack, useIsFocused } from 'expo-router';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  // highlight-next-line
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+export default function GalleryLayout() {
+  return (
+    <Stack
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[id]" />
+    </Stack>
+  );
+}
+```
+
+- Do not use `screenLayout` in a layout whose routes are other navigators, for example in the root `_layout.tsx` that shows a `(tabs)` group, or in the layout of the `(tabs)` group. See [Nested navigators](#nested-navigators).
+- A route that the root stack shows as a modal, for example `photo/[id]` with `presentation: 'modal'`, is a screen of the root stack. Put its boundary in the [content of the screen](#the-content-of-a-screen).
+
 ### Modals
 
 During a transition to or from a modal, the moving view shows above the modal.
