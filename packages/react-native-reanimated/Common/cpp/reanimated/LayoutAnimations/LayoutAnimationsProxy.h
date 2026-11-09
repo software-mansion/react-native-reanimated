@@ -237,11 +237,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   bool isLayoutRoot(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> layoutRootOf(const std::shared_ptr<LightNode> &node) const;
-  bool hasSharedViewInLayoutRoot(
-      const SharedTag &sharedTag,
-      const std::shared_ptr<LightNode> &node,
-      const std::unordered_map<Tag, SharedTag> &tagToName,
-      std::unordered_map<SharedTag, std::vector<Tag>> &tagsBySharedTag) const;
   void filterSharedTransitionStarts(
       SharedTransitionDriver driver,
       TransactionMeta &transaction,
@@ -254,6 +249,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
   ReleaseViewTransitionsFunction releaseViewTransitions_;
+  CanShowSharedTransitionOverlayFunction canShowSharedTransitionOverlay_;
   void releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const;
   bool isInRemovedScreen(const std::shared_ptr<LightNode> &node, const ShadowViewMutationList &mutations) const;
   mutable bool cleanupPullScheduled_ = false;
@@ -268,12 +264,23 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #ifdef __APPLE__
   mutable std::vector<HeldModal> heldModals_;
   ForceScreenSnapshotFunction forceScreenSnapshot_;
-  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
-  // iOS presents modals above the root view, so detached carriers live in a view that the platform keeps on top of the
-  // window. It lives until its surface stops.
-  mutable std::shared_ptr<LightNode> carrierOverlay_;
 #endif
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  // Modals show above the root view, so detached carriers can live in a view that the platform keeps above all windows
+  // of the surface. iOS uses it for all carriers, Android for carriers between layout roots. It lives until its surface
+  // stops.
+  mutable std::shared_ptr<LightNode> carrierOverlay_;
+  // Layout roots that show in windows added after the overlay window, so above it. A carrier in the overlay that flies
+  // to or from one of them raises the overlay.
+  mutable std::unordered_set<Tag> layoutRootsAboveOverlay_;
+  mutable int overlayRaises_ = 0;
+  bool hasKnownWindow(const std::shared_ptr<LightNode> &layoutRoot) const;
+  bool canHostRun(const std::shared_ptr<LightNode> &source, const std::shared_ptr<LightNode> &target) const;
+  std::shared_ptr<LightNode> homeLayoutRootOf(const std::shared_ptr<LightNode> &node) const;
+  void raiseCarrierOverlayAboveEndpoints(
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
   void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
@@ -455,6 +462,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       const ShadowView &startView,
       bool nested,
+      const std::shared_ptr<LightNode> &target,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
@@ -513,6 +521,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   Tag carrierHostTag(const std::shared_ptr<LightNode> &node) const;
   void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
+  std::shared_ptr<LightNode> carrierHostOf(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &target) const;
+  std::shared_ptr<LightNode> carrierHost(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &target,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;

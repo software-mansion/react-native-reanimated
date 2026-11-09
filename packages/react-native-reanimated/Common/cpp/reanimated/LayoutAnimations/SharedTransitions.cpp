@@ -487,7 +487,7 @@ bool LayoutAnimationsProxy::isLayoutRoot([[maybe_unused]] const std::shared_ptr<
 #endif
 }
 
-// A run moves its carrier in one layout root, so a carrier at the root stays in the layout root of its start.
+// A detached carrier stays in the host of its start: its layout root, or the overlay between two layout roots.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::layoutRootOf(const std::shared_ptr<LightNode> &node) const {
   auto current = node;
   while (current->placement() != CarrierPlacement::AT_ROOT) {
@@ -501,33 +501,6 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::layoutRootOf(const std::shared
     current = parent;
   }
   return carrierPlacements_.hostOf(current);
-}
-
-// A run cannot leave its layout root, so a view hidden in another layout root stays hidden only when a view of its
-// shared tag is in the same layout root.
-bool LayoutAnimationsProxy::hasSharedViewInLayoutRoot(
-    const SharedTag &sharedTag,
-    const std::shared_ptr<LightNode> &node,
-    const std::unordered_map<Tag, SharedTag> &tagToName,
-    std::unordered_map<SharedTag, std::vector<Tag>> &tagsBySharedTag) const {
-  const auto layoutRoot = layoutRootOf(node);
-  if (layoutRoot->current.tag == surfaceId_) {
-    return true;
-  }
-  if (tagsBySharedTag.empty()) {
-    for (const auto &[tag, name] : tagToName) {
-      tagsBySharedTag[name].push_back(tag);
-    }
-  }
-  const auto tagsIt = tagsBySharedTag.find(sharedTag);
-  if (tagsIt == tagsBySharedTag.end()) {
-    return false;
-  }
-  return std::ranges::any_of(tagsIt->second, [&](const Tag tag) {
-    const auto nodeIt = lightNodes_.find(tag);
-    return tag != node->current.tag && nodeIt != lightNodes_.end() && nodeIt->second && !nodeIt->second->isExiting() &&
-        layoutRootOf(nodeIt->second) == layoutRoot;
-  });
 }
 
 void LayoutAnimationsProxy::filterSharedTransitionStarts(
@@ -548,7 +521,7 @@ void LayoutAnimationsProxy::filterSharedTransitionStarts(
     const bool sourceOffWindow = !continuesRun && isOffWindow(source);
     if (config && !sourceOffWindow &&
         targetBoundaryPlacementKind(target) != NativeViewPlacement::Kind::DifferentWindow &&
-        layoutRootOf(source) == layoutRootOf(target)) {
+        canHostRun(source, target)) {
       return false;
     }
     skipSharedTransition(
@@ -604,10 +577,10 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         run->carrier->presence() != ReactPresence::REMOVED && findSharedTag(run->carrier->current) != sharedTag;
     const bool waitsToLand = phase == LayoutAnimationPhase::ENDED &&
         (run->carrier->presence() == ReactPresence::REMOVED || landsWithOtherRuns(*run));
-    // A carrier stays in its layout root, so the run of another layout root needs a new carrier.
-    const bool carrierInOtherLayoutRoot = layoutRootOf(run->carrier) != layoutRootOf(nodes[AFTER]);
+    // A carrier stays in its host, so a run that needs another host needs a new carrier.
+    const bool carrierInOtherHost = layoutRootOf(run->carrier) != carrierHostOf(nodes[BEFORE], nodes[AFTER]);
     if ((!isQueuedOrRunning(phase) && !waitsToLand && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag ||
-        carrierInOtherLayoutRoot) {
+        carrierInOtherHost) {
       react_native_assert(phase != LayoutAnimationPhase::NONE && "Shared carrier has no animation");
       if (hasUnqueuedCarrierFrame(tag)) {
         retireSharedTransition(*run);
@@ -641,6 +614,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         *run,
         carrierViewWithStyleOf(nested ? inParentSpace(before, carrier) : before, carrier, propsParserContext),
         nested,
+        nodes[AFTER],
         transaction,
         propsParserContext);
   }
@@ -759,6 +733,7 @@ void LayoutAnimationsProxy::detachCarrier(
     SharedTransitionRun &run,
     const ShadowView &startView,
     const bool nested,
+    const std::shared_ptr<LightNode> &target,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   const auto &node = run.carrier;
@@ -781,7 +756,7 @@ void LayoutAnimationsProxy::detachCarrier(
 #endif
     mutations.push_back(
         ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
-    carrierPlacements_.detach(node, layoutRootOf(node));
+    carrierPlacements_.detach(node, carrierHost(node, target, mutations, propsParserContext));
   }
   // The run owns the frames of its carrier, so an animation that this transaction queued or that
   // waits for a landing for the same view does not start.
@@ -802,7 +777,6 @@ void LayoutAnimationsProxy::detachCarrier(
   if (nested) {
     mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, parent->current.tag));
   } else {
-    ensureCarrierOverlay(mutations, propsParserContext);
     mutations.push_back(
         ShadowViewMutation::InsertMutation(carrierHostTag(node), run.carrierStartView, carrierHostIndex(node)));
     mutations.push_back(ShadowViewMutation::UpdateMutation(mounted, run.carrierStartView, carrierHostTag(node)));
@@ -1016,7 +990,7 @@ void LayoutAnimationsProxy::moveNestedCarrierToRoot(
   const auto mounted = carrierViewOnScreen(run);
   mutations.push_back(
       ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
-  carrierPlacements_.detach(node, layoutRootOf(node));
+  carrierPlacements_.detach(node, carrierHost(node, run.target, mutations, propsParserContext));
   run.carrierStartView.layoutMetrics.frame.origin += startOffset;
   auto view = mounted;
   view.layoutMetrics.frame.origin += offset;
@@ -1025,7 +999,6 @@ void LayoutAnimationsProxy::moveNestedCarrierToRoot(
   if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
     animationIt->second.startView.layoutMetrics.frame.origin += startOffset - offset;
   }
-  ensureCarrierOverlay(mutations, propsParserContext);
   mutations.push_back(ShadowViewMutation::InsertMutation(carrierHostTag(node), view, carrierHostIndex(node)));
 }
 
@@ -1261,7 +1234,12 @@ void LayoutAnimationsProxy::flushSubtreeRemovals(TransactionMeta &transaction) c
     }
   }
   if (transaction.surfaceDropped) {
-    removeCarriersHostedIn(lightNodes_.at(surfaceId_), transaction);
+    const auto carriers = carrierPlacements_.atRoot();
+    for (const auto &carrier : carriers) {
+      if (isLightNodeMapped(carrier) && carrier->presence() == ReactPresence::REMOVED) {
+        endAnimationsRecursively(carrier, transaction.filteredMutations, transaction.filteredMutations);
+      }
+    }
   }
 }
 
@@ -1306,7 +1284,7 @@ void LayoutAnimationsProxy::removeFromParent(
   cancelLayoutAnimation(node->current.tag);
 }
 
-// Detached carriers follow the children of their layout root, or live in the overlay on iOS.
+// Detached carriers follow the children of their host. On iOS, the overlay holds all of them.
 int LayoutAnimationsProxy::carrierHostIndex(const std::shared_ptr<LightNode> &node) const {
   const auto index = carrierPlacements_.indexInHost(node);
 #ifdef __APPLE__
@@ -1327,12 +1305,11 @@ Tag LayoutAnimationsProxy::carrierHostTag(const std::shared_ptr<LightNode> &node
   return carrierPlacements_.hostOf(node)->current.tag;
 }
 
-// iOS presents modals above the root view, so the overlay that holds the carriers is created with the first carrier
-// and kept on top of the window until the surface stops.
+// Modals show above the root view, so the overlay that holds the carriers is created with the first carrier that needs
+// it and kept above the windows of the surface until the surface stops.
 void LayoutAnimationsProxy::ensureCarrierOverlay(
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
-#ifdef __APPLE__
   if (!setSharedTransitionOverlay_ || carrierOverlay_) {
     return;
   }
@@ -1350,13 +1327,14 @@ void LayoutAnimationsProxy::ensureCarrierOverlay(
       descriptor.cloneProps(propsParserContext, nullptr, RawProps(folly::dynamic::object("pointerEvents", "none")));
   overlay.layoutMetrics = lightNodes_.at(surfaceId_)->current.layoutMetrics;
   carrierOverlay_ = std::make_shared<LightNode>();
+  layoutRootsAboveOverlay_.clear();
   carrierOverlay_->current = overlay;
   mutations.push_back(ShadowViewMutation::CreateMutation(overlay));
   // The overlay is never inserted, and a recycled view keeps the props of its previous use until an update.
   auto recycledView = overlay;
   recycledView.props = descriptor.cloneProps(propsParserContext, nullptr, {});
   recycledView.layoutMetrics = EmptyLayoutMetrics;
-  mutations.push_back(ShadowViewMutation::UpdateMutation(recycledView, overlay, Tag{0}));
+  mutations.push_back(ShadowViewMutation::UpdateMutation(recycledView, overlay, surfaceId_));
   const std::weak_ptr<const LayoutAnimationsProxy> weakThis =
       std::static_pointer_cast<const LayoutAnimationsProxy>(shared_from_this());
   setSharedTransitionOverlay_(surfaceId_, overlay.tag, [weakThis] {
@@ -1370,7 +1348,96 @@ void LayoutAnimationsProxy::ensureCarrierOverlay(
       }
     }
   });
+}
+
+// The overlay holds the carriers of iOS and the carriers that move between two layout roots on Android. Android shows
+// it above the windows of both roots.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::carrierHostOf(
+    const std::shared_ptr<LightNode> &carrier,
+    const std::shared_ptr<LightNode> &target) const {
+  const auto layoutRoot = layoutRootOf(carrier);
+  return layoutRoot == layoutRootOf(target) ? layoutRoot : carrierOverlay_;
+}
+
+bool LayoutAnimationsProxy::canHostRun(
+    const std::shared_ptr<LightNode> &source,
+    const std::shared_ptr<LightNode> &target) const {
+  const auto sourceRoot = layoutRootOf(source);
+  const auto targetRoot = layoutRootOf(target);
+  if (sourceRoot == targetRoot) {
+    return true;
+  }
+#ifdef ANDROID
+  return setSharedTransitionOverlay_ && hasKnownWindow(sourceRoot) && hasKnownWindow(targetRoot) &&
+      canShowSharedTransitionOverlay_ && canShowSharedTransitionOverlay_();
+#else
+  return false;
 #endif
+}
+
+// The overlay can follow the views of the surface root and of a React Native Modal, which fills the screen in its own
+// window. The window of another layout root is unknown.
+bool LayoutAnimationsProxy::hasKnownWindow(const std::shared_ptr<LightNode> &layoutRoot) const {
+  return layoutRoot->current.tag == surfaceId_ || layoutRoot == carrierOverlay_ ||
+      !std::strcmp(layoutRoot->current.componentName, "ModalHostView");
+}
+
+// Android adds the overlay window again after the mount that changes its native ID, so that it is above the windows
+// that this mount shows.
+void LayoutAnimationsProxy::raiseCarrierOverlayAboveEndpoints(
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  if (!carrierOverlay_ || layoutRootsAboveOverlay_.empty()) {
+    return;
+  }
+  std::erase_if(layoutRootsAboveOverlay_, [this](const Tag tag) { return !lightNodes_.contains(tag); });
+  const auto isAboveOverlay = [this](const std::shared_ptr<LightNode> &endpoint) {
+    const auto root = isLightNodeMapped(endpoint) ? homeLayoutRootOf(endpoint) : nullptr;
+    return root && layoutRootsAboveOverlay_.contains(root->current.tag);
+  };
+  const bool coversEndpoint = std::ranges::any_of(activeSharedTransitionRuns(), [&](const SharedTransitionRun &run) {
+    return layoutRootOf(run.carrier) == carrierOverlay_ && (isAboveOverlay(run.target) || isAboveOverlay(run.source));
+  });
+  if (!coversEndpoint) {
+    return;
+  }
+  layoutRootsAboveOverlay_.clear();
+  auto overlay = carrierOverlay_->current;
+  overlay.props =
+      componentDescriptorRegistry_->at(overlay.componentHandle)
+          .cloneProps(
+              propsParserContext,
+              overlay.props,
+              RawProps(folly::dynamic::object("nativeID", "reanimated-overlay-" + std::to_string(++overlayRaises_))));
+  mutations.push_back(ShadowViewMutation::UpdateMutation(carrierOverlay_->current, overlay, surfaceId_));
+  carrierOverlay_->current = overlay;
+}
+
+// A carrier at the root shows in its host, but its React parent stays in the layout root of its home.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::homeLayoutRootOf(const std::shared_ptr<LightNode> &node) const {
+  if (node->placement() != CarrierPlacement::AT_ROOT) {
+    return layoutRootOf(node);
+  }
+  const auto parent = node->parent.lock();
+  if (!parent) {
+    return nullptr;
+  }
+  return isLayoutRoot(parent) ? parent : layoutRootOf(parent);
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy::carrierHost(
+    const std::shared_ptr<LightNode> &carrier,
+    const std::shared_ptr<LightNode> &target,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+#ifdef __APPLE__
+  ensureCarrierOverlay(mutations, propsParserContext);
+#else
+  if (layoutRootOf(carrier) != layoutRootOf(target)) {
+    ensureCarrierOverlay(mutations, propsParserContext);
+  }
+#endif
+  return carrierHostOf(carrier, target);
 }
 
 // A run that ended keeps the record of its carrier until the run finishes.
@@ -1487,7 +1554,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         continue;
       }
       const auto host = layoutRootOf(run.carrier);
-      if (afterNode != run.target && layoutRootOf(afterNode) != host) {
+      const bool inOverlay = host == carrierOverlay_;
+      const auto afterRoot = layoutRootOf(afterNode);
+      if (afterNode != run.target && (inOverlay ? !hasKnownWindow(afterRoot) : afterRoot != host)) {
         transaction.restoreRequests.push_back({sharedTag, afterNode});
         it = transaction.transitions.erase(current);
         continue;
@@ -1498,7 +1567,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         continue;
       }
       auto animation = run.config;
-      if (layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
+      if (inOverlay || layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
         const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         if (!config) {
           continue;
@@ -2279,12 +2348,10 @@ void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) c
   }
   auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   const auto &tagToName = sharedTransitionManager_->tagToName_;
-  std::unordered_map<SharedTag, std::vector<Tag>> tagsBySharedTag;
   for (const auto &[sharedTag, element] : sharedElements_) {
     for (const auto &[node, restoreDeferred] : element.hiddenViews) {
       const auto nameIt = tagToName.find(node->current.tag);
-      if (restoreDeferred || nameIt == tagToName.end() || nameIt->second != sharedTag ||
-          !hasSharedViewInLayoutRoot(sharedTag, node, tagToName, tagsBySharedTag)) {
+      if (restoreDeferred || nameIt == tagToName.end() || nameIt->second != sharedTag) {
         transaction.restoreRequests.push_back({sharedTag, node});
       }
     }
@@ -2340,7 +2407,6 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
         parent->current.tag,
         propsParserContext));
   }
-#ifdef __APPLE__
   // The overlay is attached to its window after a mount, which misses a commit that the mount forces, such as the
   // snapshot of a dismissed screen, so the overlay stays attached between transitions.
   if (transaction.surfaceDropped && carrierOverlay_) {
@@ -2349,7 +2415,6 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     filteredMutations.push_back(ShadowViewMutation::DeleteMutation(carrierOverlay_->current));
     carrierOverlay_.reset();
   }
-#endif
 
   std::erase_if(sharedElements_, [](const auto &entry) { return entry.second.hiddenViews.empty(); });
 }

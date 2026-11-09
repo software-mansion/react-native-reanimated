@@ -1,5 +1,6 @@
 package com.fabricexample
 
+import android.annotation.SuppressLint
 import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
@@ -35,6 +36,22 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
     }
   }
 
+  override fun observeLocationOnScreen(tag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val view = mountedView(tag)
+      if (view == null) {
+        promise.resolve(null)
+        return@runOnUiThread
+      }
+      val location = IntArray(2)
+      view.getLocationOnScreen(location)
+      val observation = Arguments.createMap()
+      observation.putDouble("x", PixelUtil.toDIPFromPixel((location[0] - view.translationX).toFloat()).toDouble())
+      observation.putDouble("y", PixelUtil.toDIPFromPixel((location[1] - view.translationY).toFloat()).toDouble())
+      promise.resolve(observation)
+    }
+  }
+
   override fun observeTransform(tag: Double, promise: Promise) {
     UiThreadUtil.runOnUiThread {
       val view = mountedView(tag)
@@ -46,6 +63,19 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
       observation.putDouble("width", PixelUtil.toDIPFromPixel(view.width.toFloat()).toDouble())
       observation.putDouble("translateX", PixelUtil.toDIPFromPixel(view.translationX).toDouble())
       promise.resolve(observation)
+    }
+  }
+
+  override fun observeWindowAbove(tag: Double, otherTag: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      val window = mountedView(tag)?.rootView
+      val otherWindow = mountedView(otherTag)?.rootView
+      val windows = windowsInAddOrder()
+      if (window == null || otherWindow == null || windows == null) {
+        promise.resolve(null)
+        return@runOnUiThread
+      }
+      promise.resolve(windows.indexOf(window) > windows.indexOf(otherWindow))
     }
   }
 
@@ -85,6 +115,18 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
       }
     return view?.takeIf { it.isAttachedToWindow }
   }
+
+  // The SDK has no window order, and windows of one type and one activity stack in the order they were added.
+  @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
+  private fun windowsInAddOrder(): List<View>? =
+    try {
+      val windowManagerGlobal = Class.forName("android.view.WindowManagerGlobal")
+      val instance = windowManagerGlobal.getMethod("getInstance").invoke(null)
+      val views = windowManagerGlobal.getDeclaredField("mViews").apply { isAccessible = true }
+      (views.get(instance) as List<*>).filterIsInstance<View>()
+    } catch (_: ReflectiveOperationException) {
+      null
+    }
 
   companion object {
     const val NAME = "RuntimeTestObserver"

@@ -84,6 +84,32 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)observeLocationOnScreen:(NSInteger)tag
+                        resolve:(RCTPromiseResolveBlock)resolve
+                         reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    if (view.window == nil) {
+      resolve((id)kCFNull);
+      return;
+    }
+    const CGPoint anchor = view.layer.anchorPoint;
+    const CGPoint untransformedOrigin = {
+        view.center.x - view.bounds.size.width * anchor.x, view.center.y - view.bounds.size.height * anchor.y};
+    const CGPoint origin = [view.superview convertPoint:untransformedOrigin toView:nil];
+    resolve(@{@"x" : @(origin.x), @"y" : @(origin.y)});
+  });
+}
+
+- (void)observeWindowAbove:(NSInteger)tag
+                  otherTag:(NSInteger)otherTag
+                   resolve:(RCTPromiseResolveBlock)resolve
+                    reject:(RCTPromiseRejectBlock)reject
+{
+  resolve((id)kCFNull);
+}
+
 - (void)observeTransform:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{

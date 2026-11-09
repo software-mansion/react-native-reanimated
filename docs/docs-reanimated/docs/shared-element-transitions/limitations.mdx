@@ -23,9 +23,18 @@ Check these points:
 
 ## Modals and sheets on Android
 
-On Android, a shared view can move between two views in the same React Native `Modal`. The moving view stays in the window of the `Modal`. If the `Modal` closes during the transition, the transition stops, and its callback gets `false`.
+On Android, a shared view can move inside one React Native `Modal`, between the screen and a `Modal`, and between two `Modal`s. A `Modal` inside another `Modal` counts as a different `Modal`. Inside one `Modal`, the moving view stays in the window of the `Modal`. Between windows, the moving view is in a separate window above them, so it does not get touches and the `Modal` keeps the focus. If the `Modal` of the moving view closes during a transition inside that `Modal`, the transition stops, and its callback gets `false`. When the `Modal` of the target closes during a transition between windows and the source boundary stays inactive, the view moves to the last place of the target. Then the source view shows in its own place, and the callback gets `true`. When the `Modal` of the source closes, the view goes on to the target, and the callback gets `true`. When the same update makes the source boundary active again, the view moves back to the source, as described in [Updates during the transition](#updates-during-the-transition).
 
-A shared view does not move between the screen and a `Modal`, between two different `Modal`s, or to or from a native-overlay sheet. The two views stay visible in their own places. A `Modal` inside another `Modal` counts as a different `Modal`. This limit does not apply to iOS.
+These limits apply to Android only:
+
+- On Android 14 and later, the screen keeps its frame until the first frame of a new `Modal` shows, so that the moving view moves between the two windows in one frame. The moving view can still be missing for one frame when a transition between windows starts, and for a few frames when it changes its target to a view in a new `Modal` or when its transition goes on into a new `Modal`. On older Android versions, the moving view can be missing, or under the new `Modal`, for a few frames when a transition between windows starts.
+- When a `Modal` opens with `animationType="slide"` or `"fade"`, the moving view goes to the final place of the target. It can arrive before the animation of the `Modal` ends.
+- After the first transition between windows, a `Modal` that opens covers the moving view, unless the moving view flies to or from that `Modal`.
+- If the `animationType` or `hardwareAccelerated` prop of the target `Modal` changes during the transition, React Native shows the `Modal` in a new window, and that window covers the moving view. When React Native edge-to-edge is off, `statusBarTranslucent` and `navigationBarTranslucent` do this too.
+- A transition inside one window, the screen or one `Modal`, does not change its target to a view in another window. The moving view goes on to its old target.
+- Between windows, the moving view shows only in the area of the React Native root view, and not over the navigation bar.
+- The moving view uses the same origin for the screen and the `Modal`. If the content of the screen and the content of the `Modal` do not start at the same height, the moving view can be off by the difference. For example, this occurs when your app is not edge-to-edge and the `Modal` uses `statusBarTranslucent`.
+- A shared view does not move to or from a native-overlay sheet or another native host with its own window. The two views stay visible in their own places.
 
 ## Updates during the transition
 

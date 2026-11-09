@@ -66,6 +66,11 @@ function Screens({
   targetDialog,
   separateDialogs = false,
   targetMounted = true,
+  sourceMounted = true,
+  nestDialogs = false,
+  candidate = false,
+  candidateDialog = false,
+  nextDialog = false,
   transition,
 }: {
   active: boolean;
@@ -73,29 +78,66 @@ function Screens({
   targetDialog: boolean;
   separateDialogs?: boolean;
   targetMounted?: boolean;
+  sourceMounted?: boolean;
+  nestDialogs?: boolean;
+  candidate?: boolean;
+  candidateDialog?: boolean;
+  nextDialog?: boolean;
   transition: SharedTransition;
 }) {
-  const sameDialog = sourceDialog && targetDialog && !separateDialogs;
+  const candidateView = <Endpoint name="candidate" transition={transition} />;
+  const sameDialog =
+    sourceDialog && targetDialog && !separateDialogs && !nestDialogs;
+  const target = targetMounted && (
+    <NativeRoot dialog={targetDialog}>
+      <SharedTransitionBoundary isActive={active && !nextDialog}>
+        <Endpoint name="target" transition={transition} />
+        {candidate &&
+          (candidateDialog ? (
+            <OpaqueModal>{candidateView}</OpaqueModal>
+          ) : (
+            candidateView
+          ))}
+      </SharedTransitionBoundary>
+    </NativeRoot>
+  );
   return (
     <View style={styles.root}>
-      <NativeRoot dialog={sourceDialog}>
-        <SharedTransitionBoundary isActive={!active}>
-          <Endpoint name="source" transition={transition} />
-        </SharedTransitionBoundary>
-        {sameDialog && targetMounted && (
-          <SharedTransitionBoundary isActive={active}>
-            <Endpoint name="target" transition={transition} />
+      {sourceMounted && (
+        <NativeRoot dialog={sourceDialog}>
+          <SharedTransitionBoundary isActive={!active}>
+            <Endpoint name="source" transition={transition} />
           </SharedTransitionBoundary>
-        )}
-      </NativeRoot>
-      {!sameDialog && targetMounted && (
-        <NativeRoot dialog={targetDialog}>
-          <SharedTransitionBoundary isActive={active}>
-            <Endpoint name="target" transition={transition} />
-          </SharedTransitionBoundary>
+          {sameDialog && targetMounted && (
+            <SharedTransitionBoundary isActive={active}>
+              <Endpoint name="target" transition={transition} />
+            </SharedTransitionBoundary>
+          )}
+          {nestDialogs && target}
         </NativeRoot>
       )}
+      {!sameDialog && !nestDialogs && target}
+      {nextDialog && (
+        <OpaqueModal>
+          <SharedTransitionBoundary isActive>
+            {candidateView}
+          </SharedTransitionBoundary>
+        </OpaqueModal>
+      )}
     </View>
+  );
+}
+
+function ModalMarker() {
+  const ref = useTestRef('window-marker');
+  return <View ref={ref} collapsable={false} style={styles.marker} />;
+}
+
+function OpaqueModal({ children }: { children: ReactNode }) {
+  return (
+    <Modal animationType="none">
+      <View style={styles.opaqueRoot}>{children}</View>
+    </Modal>
   );
 }
 
@@ -180,61 +222,280 @@ function InModal({
 
 describe('Shared transitions and Android layout roots', () => {
   androidTest.each([
-    [false, true, false, false],
-    [true, false, false, false],
-    [true, true, false, true],
-    [false, true, true, false],
+    ['the screen to a Modal', false, true, false, false],
+    ['a Modal to the screen', true, false, false, false],
+    ['a Modal to another Modal', true, true, false, true],
+    ['a Modal to a Modal inside it', true, true, false, false, true],
+    [
+      'the screen to a Modal that mounts with the target',
+      false,
+      true,
+      true,
+      false,
+    ],
   ] as const)(
-    'refuses source dialog ${0}, target dialog ${1}, new target ${2}, two dialogs ${3}',
-    async ([sourceDialog, targetDialog, newTarget, separateDialogs]) => {
-      await mockAnimationTimer({ autoAdvance: false });
+    'flies from ${0} and back',
+    async ([
+      ,
+      sourceDialog,
+      targetDialog,
+      newTarget,
+      separateDialogs,
+      nestDialogs = false,
+    ]) => {
       const results: boolean[] = [];
       const transition = recordingTransition(results);
-      await render(
+      const screens = (active: boolean, targetMounted = true) => (
         <Screens
-          active={false}
+          active={active}
           sourceDialog={sourceDialog}
           targetDialog={targetDialog}
           separateDialogs={separateDialogs}
-          targetMounted={!newTarget}
+          nestDialogs={nestDialogs}
+          targetMounted={targetMounted}
           transition={transition}
         />
       );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(screens(false, !newTarget));
       await waitForFrames(3);
-      if (!newTarget && targetDialog) await expectEndpoint('target', 150, 0.7);
-      await render(
-        <Screens
-          active
-          sourceDialog={sourceDialog}
-          targetDialog={targetDialog}
-          separateDialogs={separateDialogs}
-          transition={transition}
-        />
+      const home = await homeOf('window-source');
+      const sourceOnScreen = await locationOnScreen(home.tag);
+      await render(screens(true));
+      await waitForFrames(3);
+      const target = await homeOf('window-target');
+      const targetOnScreen = await locationOnScreen(target.tag);
+      expect(await RuntimeTestObserver!.observeParent(home.tag)).not.toBe(
+        home.parent
       );
-      await waitForFrames();
-      await expectEndpoint('source', 60, 0.6);
-      await expectEndpoint('target', 150, 0.7);
+      await expectOnScreen(home.tag, sourceOnScreen);
+      await advanceAnimationTimer(1199);
+      await expectOnScreen(home.tag, targetOnScreen);
+      await advanceAnimationTimer(400);
+      await expectSettledEndpoint('target', 150, 0.7);
       await expectEventually(() => results.length).toBe(1);
       expect(results).toBe([true]);
+      await expectLandedAtHome(home);
+      await render(screens(false));
+      await waitForFrames(3);
+      await expectOnScreen(target.tag, targetOnScreen);
       await advanceAnimationTimer(1600);
-      await expectEndpoint('source', 60, 0.6);
-      await expectEndpoint('target', 150, 0.7);
-      await render(
+      await expectSettledEndpoint('source', 60, 0.6);
+      await expectEventually(() => results.length).toBe(2);
+      expect(results).toBe([true, true]);
+      await expectLandedAtHome(target);
+    }
+  );
+
+  androidTest('moves a flight between windows to a new target', async () => {
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    const screens = (active: boolean, candidate = false) => (
+      <Screens
+        active={active}
+        sourceDialog={false}
+        targetDialog
+        candidate={candidate}
+        transition={transition}
+      />
+    );
+    const { sourceTag } = await startFlight(screens);
+    await render(screens(true, true));
+    await waitForFrames(3);
+    const candidateOnScreen = await locationOnScreen(
+      getTestComponent('window-candidate').getTag()
+    );
+    await advanceAnimationTimer(1199);
+    await expectOnScreen(sourceTag, candidateOnScreen);
+    expect(await mountedWidth(sourceTag)).toBe(210, ComparisonMode.PIXEL);
+    await advanceAnimationTimer(400);
+    await expectSettledEndpoint('candidate', 210, 0.8);
+    await expectSettledEndpoint('target', 150, 0.7);
+    await expectEventually(() => results.length).toBe(2);
+    expect(results).toBe([false, true]);
+  });
+
+  androidTest.each([
+    ['a retarget into a new Modal', true, false, 0.7],
+    ['a navigation into a new Modal', false, true, 0],
+  ] as const)(
+    'raises a flight between windows above ${0}',
+    async ([, candidateDialog, nextDialog, targetOpacity]) => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const screens = (active: boolean, next = false) => (
         <Screens
-          active={false}
-          sourceDialog={sourceDialog}
-          targetDialog={targetDialog}
-          separateDialogs={separateDialogs}
+          active={active}
+          sourceDialog={false}
+          targetDialog
+          candidate={next && candidateDialog}
+          candidateDialog={candidateDialog}
+          nextDialog={next && nextDialog}
           transition={transition}
         />
       );
-      await waitForFrames();
-      await expectEndpoint('source', 60, 0.6);
-      await expectEndpoint('target', 150, 0.7);
+      const { sourceTag } = await startFlight(screens);
+      await render(screens(true, true));
+      await waitForFrames(3);
+      const candidateTag = getTestComponent('window-candidate').getTag();
+      const candidateOnScreen = await locationOnScreen(candidateTag);
+      expect(
+        await RuntimeTestObserver!.observeWindowAbove(sourceTag, candidateTag)
+      ).toBe(true);
+      await advanceAnimationTimer(1199);
+      await expectOnScreen(sourceTag, candidateOnScreen);
+      expect(await mountedWidth(sourceTag)).toBe(210, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(400);
+      await expectSettledEndpoint('candidate', 210, 0.8);
+      await expectSettledEndpoint('target', 150, targetOpacity);
+      await expectEventually(() => results[results.length - 1]).toBe(true);
+      expect(results.filter((finished) => finished).length).toBe(1);
+    }
+  );
+
+  androidTest(
+    'raises a flight between windows above a Modal that holds the source',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const screens = (active: boolean) => (
+        <Screens
+          active={active}
+          sourceDialog={false}
+          targetDialog
+          transition={transition}
+        />
+      );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(screens(false));
+      await waitForFrames(3);
+      await render(screens(true));
+      await waitForFrames(3);
+      await advanceAnimationTimer(1600);
+      await expectEventually(() => results.length).toBe(1);
+      await render(<View />);
+      await waitForFrames(3);
+      const modalFirst = (back: boolean) => (
+        <View style={styles.root}>
+          <SharedTransitionBoundary isActive={back}>
+            {back && <Endpoint name="target" transition={transition} />}
+          </SharedTransitionBoundary>
+          <OpaqueModal>
+            <ModalMarker />
+            <SharedTransitionBoundary isActive={!back}>
+              <Endpoint name="candidate" transition={transition} />
+            </SharedTransitionBoundary>
+          </OpaqueModal>
+        </View>
+      );
+      await render(modalFirst(false));
+      await waitForFrames(3);
+      const candidateTag = getTestComponent('window-candidate').getTag();
+      await render(modalFirst(true));
+      await waitForFrames(3);
+      expect(
+        await RuntimeTestObserver!.observeWindowAbove(
+          candidateTag,
+          getTestComponent('window-marker').getTag()
+        )
+      ).toBe(true);
+      await advanceAnimationTimer(1600);
+      await expectSettledEndpoint('target', 150, 0.7);
       await expectEventually(() => results.length).toBe(2);
       expect(results).toBe([true, true]);
     }
   );
+
+  androidTest(
+    'flies to the last place of a target whose Modal closes',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const screens = (active: boolean, targetMounted = true) => (
+        <Screens
+          active={active}
+          sourceDialog={false}
+          targetDialog
+          targetMounted={targetMounted}
+          transition={transition}
+        />
+      );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(screens(false));
+      await waitForFrames(3);
+      const home = await homeOf('window-source');
+      await render(screens(true));
+      await waitForFrames(3);
+      await advanceAnimationTimer(400);
+      await render(screens(true, false));
+      await waitForFrames(3);
+      expect(results).toBe([]);
+      await advanceAnimationTimer(1600);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([true]);
+      await expectLandedAtHome(home);
+      await waitForFrames(3);
+      expect(results).toBe([true]);
+    }
+  );
+
+  androidTest(
+    'keeps flying to the screen when the Modal of the source closes',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const screens = (active: boolean, sourceMounted = true) => (
+        <Screens
+          active={active}
+          sourceDialog
+          targetDialog={false}
+          sourceMounted={sourceMounted}
+          transition={transition}
+        />
+      );
+      const { sourceTag } = await startFlight(screens);
+      await render(screens(true, false));
+      await waitForFrames(3);
+      expect((await mountedWidth(sourceTag)) !== undefined).toBe(true);
+      await advanceAnimationTimer(1600);
+      await expectSettledEndpoint('target', 150, 0.7);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([true]);
+      await expectEventually(
+        async () => (await mountedWidth(sourceTag)) === undefined
+      ).toBe(true);
+    }
+  );
+
+  androidTest('reverses a flight between windows', async () => {
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    const screens = (active: boolean) => (
+      <Screens
+        active={active}
+        sourceDialog={false}
+        targetDialog
+        transition={transition}
+      />
+    );
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(screens(false));
+    await waitForFrames(3);
+    const home = await homeOf('window-source');
+    const sourceOnScreen = await locationOnScreen(home.tag);
+    await render(screens(true));
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
+    await render(screens(false));
+    await waitForFrames(3);
+    await advanceAnimationTimer(1199);
+    await expectOnScreen(home.tag, sourceOnScreen);
+    await advanceAnimationTimer(400);
+    await expectSettledEndpoint('source', 60, 0.6);
+    await expectEventually(() => results.length).toBe(2);
+    expect([...results].sort()).toBe([false, true]);
+    await expectLandedAtHome(home);
+  });
 
   androidTest('keeps the surface-root transition enabled', async () => {
     await mockAnimationTimer({ autoAdvance: false });
@@ -271,7 +532,7 @@ describe('Shared transitions and Android layout roots', () => {
   });
 
   androidTest(
-    'skips a new navigation while the old carrier moves',
+    'starts a new flight into a Modal while the old carrier moves',
     async () => {
       const results: boolean[] = [];
       const transition = recordingTransition(results);
@@ -288,21 +549,17 @@ describe('Shared transitions and Android layout roots', () => {
       const { home } = await startFlight(screens);
       await render(screens(true, true));
       await waitForFrames(3);
-      await expectEndpoint('candidate', 210, 0.8);
-      await expectSettledEndpoint('target', 150, 0.7);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
       await expectSettledEndpoint('source', 60, 0);
-      await expectEventually(() => results.length).toBe(2);
-      expect([...results].sort()).toBe([false, true]);
       const restored =
         await getTestComponent('window-source').getMountedViewProps();
       expect(restored?.x).toBe(home?.x, ComparisonMode.PIXEL);
       expect(restored?.y).toBe(home?.y, ComparisonMode.PIXEL);
       await advanceAnimationTimer(1600);
-      expect(results.length).toBe(2);
-      await render(screens(false));
-      await expectSettledEndpoint('source', 60, 0.6);
-      await expectEventually(() => results.length).toBe(3);
-      expect(results[2]).toBe(true);
+      await expectSettledEndpoint('candidate', 210, 0.8);
+      await expectEventually(() => results.length).toBe(2);
+      expect(results).toBe([false, true]);
     }
   );
 
@@ -623,6 +880,17 @@ async function modalHostOf(tag: number) {
   return null;
 }
 
+async function locationOnScreen(tag: number) {
+  const location = await RuntimeTestObserver!.observeLocationOnScreen(tag);
+  return { x: location?.x ?? NaN, y: location?.y ?? NaN };
+}
+
+async function expectOnScreen(tag: number, expected: { x: number; y: number }) {
+  const actual = await locationOnScreen(tag);
+  expect(actual.x).toBe(expected.x, ComparisonMode.PIXEL);
+  expect(actual.y).toBe(expected.y, ComparisonMode.PIXEL);
+}
+
 async function translateXOf(tag: number) {
   return (await RuntimeTestObserver!.observeTransform(tag))?.translateX;
 }
@@ -765,6 +1033,8 @@ function mountedWidth(tag: number) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  opaqueRoot: { flex: 1, backgroundColor: '#ffffff' },
+  marker: { width: 10, height: 10 },
   modalOffset: { flex: 1, marginTop: 80, marginLeft: 30 },
   sourceOffset: { marginTop: 120, marginLeft: 40 },
   sourceTransform: { transform: [{ translateX: 20 }] },

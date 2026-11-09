@@ -58,6 +58,8 @@ using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 // Shows the overlay and listens for boundary window attachment until nullopt removes the overlay.
 using SetSharedTransitionOverlayFunction =
     std::function<void(SurfaceId surfaceId, std::optional<Tag> tag, std::function<void()> onWindowAttach)>;
+// Android shows the overlay in a window of an activity, so a carrier between two windows needs one.
+using CanShowSharedTransitionOverlayFunction = std::function<bool()>;
 // The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
 // origin relative to the root view of the surface comes from the platform, at the end of the presentation if settled.
 struct NativeViewPlacement {
@@ -90,6 +92,8 @@ struct PlatformDepMethodsHolder {
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   ReleaseViewTransitionsFunction releaseViewTransitionsFunction;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  CanShowSharedTransitionOverlayFunction canShowSharedTransitionOverlayFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;

@@ -12,6 +12,12 @@ export type TextInputObservation = {
   placeholderTextColor: string | null;
 };
 
+/** The origin of the view on the screen, without its own transform. */
+export type ScreenLocation = {
+  x: number;
+  y: number;
+};
+
 export type TransformObservation = {
   width: number;
   translateX: number;
@@ -36,9 +42,22 @@ export interface Spec extends TurboModule {
   /** Returns null when the parent of the mounted view is not a React view. */
   observeParent(tag: CodegenTypes.Int32): Promise<number | null>;
 
+  observeLocationOnScreen(
+    tag: CodegenTypes.Int32
+  ): Promise<ScreenLocation | null>;
+
   observeTransform(
     tag: CodegenTypes.Int32
   ): Promise<TransformObservation | null>;
+
+  /**
+   * Android only. Tells if the window of the first view was added after the
+   * window of the second view, so it shows above it. iOS returns null.
+   */
+  observeWindowAbove(
+    tag: CodegenTypes.Int32,
+    otherTag: CodegenTypes.Int32
+  ): Promise<boolean | null>;
 
   observeTextInput(
     tag: CodegenTypes.Int32

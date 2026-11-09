@@ -214,6 +214,20 @@ void NativeProxy::releaseViewTransitions(std::vector<int> &tags, bool isBatchQue
   method(javaPart_.get(), jArrayInt, isBatchQueued);
 }
 
+// Android has no window attach signal for boundaries, so the overlay ignores it.
+void NativeProxy::setSharedTransitionOverlay(
+    const SurfaceId surfaceId,
+    const std::optional<Tag> tag,
+    const std::function<void()> & /*onWindowAttach*/) {
+  static const auto method = getJniMethod<void(int, int)>("setSharedTransitionOverlay");
+  method(javaPart_.get(), surfaceId, tag.value_or(-1));
+}
+
+bool NativeProxy::canShowSharedTransitionOverlay() {
+  static const auto method = getJniMethod<jboolean()>("canShowSharedTransitionOverlay");
+  return method(javaPart_.get());
+}
+
 // Android animators write the view on every frame, so the view's props are the presented ones.
 std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
   static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
@@ -404,6 +418,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto releaseViewTransitionsFunction = bindThis(&NativeProxy::releaseViewTransitions);
 
+  auto setSharedTransitionOverlayFunction = bindThis(&NativeProxy::setSharedTransitionOverlay);
+
+  auto canShowSharedTransitionOverlayFunction = bindThis(&NativeProxy::canShowSharedTransitionOverlay);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto isSensorAvailableFunction = bindThis(&NativeProxy::isSensorAvailable);
@@ -432,6 +450,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       requestRender,
       preserveMountedTags,
       releaseViewTransitionsFunction,
+      setSharedTransitionOverlayFunction,
+      canShowSharedTransitionOverlayFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       isSensorAvailableFunction,

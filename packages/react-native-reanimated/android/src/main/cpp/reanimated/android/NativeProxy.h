@@ -57,6 +57,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
   void releaseViewTransitions(std::vector<int> &tags, bool isBatchQueued);
+  void setSharedTransitionOverlay(SurfaceId surfaceId, std::optional<Tag> tag, const std::function<void()> &);
+  bool canShowSharedTransitionOverlay();
   std::optional<MountedViewProps> obtainMountedViewProps(Tag tag, bool presented);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
