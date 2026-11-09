@@ -34,8 +34,13 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
-      sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade};
-      sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      if (config == nullptr) {
+        sharedTransitionsForNativeID_.erase(tag);
+        sharedTransitionManager_->nativeIDToName_.erase(tag);
+      } else {
+        sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade};
+        sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      }
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {

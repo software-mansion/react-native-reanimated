@@ -87,7 +87,8 @@ describe('Shared transition registration', () => {
       ReducedMotionManager.setEnabled(true);
       component._configureSharedTransition(useNativeId);
       const removals = jest.mocked(updateLayoutAnimations).mock.calls;
-      expect(removals).toHaveLength(2);
+      const removalCount = useNativeId ? 2 : 4;
+      expect(removals).toHaveLength(removalCount);
       expect(removals.map(([, type]) => type)).toEqual(
         useNativeId
           ? [
@@ -95,13 +96,15 @@ describe('Shared transition registration', () => {
               LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID,
             ]
           : [
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID,
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID,
               LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
               LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
             ]
       );
       expect(removals.every(([, , config]) => config === undefined)).toBe(true);
       component._configureSharedTransition(useNativeId);
-      expect(removals).toHaveLength(2);
+      expect(removals).toHaveLength(removalCount);
       jest.mocked(updateLayoutAnimations).mockClear();
       ReducedMotionManager.setEnabled(false);
       component._configureSharedTransition(useNativeId);
