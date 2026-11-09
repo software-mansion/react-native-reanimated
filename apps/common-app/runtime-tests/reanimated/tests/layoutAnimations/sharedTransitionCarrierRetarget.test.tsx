@@ -1,10 +1,11 @@
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { Screen, ScreenContainer } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -111,6 +112,43 @@ function RenamedCarrierScreens({
   );
 }
 
+// The container detaches its inactive screen, like a native stack that has not shown a pushed screen yet.
+function OffWindowTargetScreens({
+  active,
+}: {
+  active: 'source' | 'offWindow' | 'target';
+}) {
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={active === 'source'}>
+        <TaggedView
+          name="source"
+          sharedTag="off-window"
+          style={styles.source}
+        />
+      </SharedTransitionBoundary>
+      <ScreenContainer style={StyleSheet.absoluteFill}>
+        <Screen enabled activityState={0} style={StyleSheet.absoluteFill}>
+          <SharedTransitionBoundary isActive={active === 'offWindow'}>
+            <TaggedView
+              name="offWindowTarget"
+              sharedTag="off-window"
+              style={styles.target}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
+      <SharedTransitionBoundary isActive={active === 'target'}>
+        <TaggedView
+          name="target"
+          sharedTag="off-window"
+          style={styles.secondTarget}
+        />
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 async function mountedWidth(name: string) {
   return (await getTestComponent(name).getMountedViewProps())?.width;
 }
@@ -149,6 +187,33 @@ describe('Shared transition carrier changes during a run', () => {
       const props = await getTestComponent('source').getMountedViewProps();
       return (
         !!props && props.opacity === 1 && Math.abs(props.width - 160) < 0.5
+      );
+    }).toBe(true);
+  });
+
+  const iosTest = Platform.OS === 'ios' ? test : test.skip;
+
+  iosTest('moves on to a new target from a target off the window', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<OffWindowTargetScreens active="source" />);
+    await waitForFrames();
+    await render(<OffWindowTargetScreens active="offWindow" />);
+    await waitForFrames(3);
+
+    await render(<OffWindowTargetScreens active="target" />);
+    await waitForFrames(3);
+    expect(
+      (await getTestComponent('target').getMountedViewProps())?.opacity
+    ).toBe(0);
+    await advanceAnimationTimer(DURATION / 2);
+    expect(await mountedWidth('source')).toBeWithinRange(61, 199);
+
+    await advanceAnimationTimer(DURATION / 2);
+    await waitForNotification('carrier-finished');
+    await expectEventually(async () => {
+      const props = await getTestComponent('target').getMountedViewProps();
+      return (
+        !!props && props.opacity === 1 && Math.abs(props.width - 200) < 0.5
       );
     }).toBe(true);
   });
@@ -200,5 +265,12 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     backgroundColor: '#2277dd',
+  },
+  secondTarget: {
+    marginTop: 200,
+    marginLeft: 40,
+    width: 200,
+    height: 120,
+    backgroundColor: '#22aa55',
   },
 });
