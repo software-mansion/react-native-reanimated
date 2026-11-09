@@ -31,14 +31,14 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
       uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
-  [nodesManager registerPerformOperations:^() {
-    if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy;
+    [nodesManager registerPerformOperations:^() {
       if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
         reanimatedModuleProxy->performOperations();
       }
-    }
-  }];
+    }];
+  }
 
   return reanimatedModuleProxy;
 }

@@ -218,17 +218,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
   void finishProgressCallback(SharedTransitionRun &run) const;
   void scheduleSharedTransitionCallback(std::shared_ptr<Serializable> callback, bool finished) const;
-  void skipSharedTransition(
-      const SharedTag &sharedTag,
-      const CollectedTransition &collected,
-      SharedTransitionDriver driver,
-      std::shared_ptr<Serializable> callback,
-      TransactionMeta &transaction,
-      const PropsParserContext &propsParserContext) const;
-  void filterSharedTransitionStarts(
-      SharedTransitionDriver driver,
-      TransactionMeta &transaction,
-      const PropsParserContext &propsParserContext) const;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   // removed components whose views are still shown; their shared transition configs are released when they unmap
