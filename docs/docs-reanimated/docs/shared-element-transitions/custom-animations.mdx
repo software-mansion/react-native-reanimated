@@ -127,6 +127,7 @@ const transition = SharedTransition.custom((values) => {
 - The callback must have the `'worklet'` directive.
 - Reanimated does not animate the properties that you do not return. Such a property keeps the value of the source view until the transition ends.
 - The clip is an exception: when you do not return the `clip*` properties, they animate with the duration and the easing of the builder, in a straight line. If the view moves on a curve or with other timing, it can move outside of its clip. Return the `clip*` properties with the same animations as `originX`, `originY`, `width` and `height` to keep the view inside its clip.
+- The clip uses the bounds of the clipping ancestors without their transforms, also in the default transition. If such an ancestor is scaled, for example by a press animation on a rounded card, the view starts with corners that do not match the card on screen. Scale the shared view itself instead.
 - Animate the transform as a whole, with `transform: [{ matrix }]`. Separate transform operations, for example `transform: [{ scale: withTiming(2) }]`, are not supported.
 - The worklet controls the timing of each animation. The `.delay()` and `.withCallback()` modifiers of the builder still apply, for example `SharedTransition.custom(animation).delay(100)`.
 
