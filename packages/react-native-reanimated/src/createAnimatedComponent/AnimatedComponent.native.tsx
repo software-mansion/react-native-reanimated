@@ -5,7 +5,7 @@ import { Fragment } from 'react';
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
-import { LayoutAnimationType } from '../commonTypes';
+import { LayoutAnimationType, ReduceMotion } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
@@ -13,6 +13,7 @@ import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
+import { ReducedMotionManager } from '../ReducedMotion';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
@@ -400,7 +401,19 @@ export default class AnimatedComponent
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
-    if (!this.props.sharedTransitionTag) {
+    const sharedTransition = this.props.sharedTransitionTag
+      ? (this.props.sharedTransitionStyle ??
+        this._sharedTransition ??
+        new SharedTransition())
+      : undefined;
+    const reduceMotion = sharedTransition?.getReduceMotion();
+    const sharedTransitionTag =
+      reduceMotion === ReduceMotion.Always ||
+      (reduceMotion === ReduceMotion.System && ReducedMotionManager.jsValue)
+        ? undefined
+        : this.props.sharedTransitionTag;
+    if (!sharedTransitionTag || !sharedTransition) {
+      this._sharedTransition = sharedTransition ?? this._sharedTransition;
       if (this._sharedTransitionTag) {
         updateLayoutAnimations(
           useNativeId ? this.reanimatedID : this.getComponentViewTag(),
@@ -424,13 +437,9 @@ export default class AnimatedComponent
       }
       return;
     }
-    const sharedTransition =
-      this.props.sharedTransitionStyle ??
-      this._sharedTransition ??
-      new SharedTransition();
     if (
       this._sharedTransition === sharedTransition &&
-      this._sharedTransitionTag === this.props.sharedTransitionTag &&
+      this._sharedTransitionTag === sharedTransitionTag &&
       this._sharedTransitionFadeContent === sharedTransition.fadeContentV
     ) {
       return;
@@ -442,7 +451,7 @@ export default class AnimatedComponent
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
       maybeBuild(sharedTransition),
       undefined,
-      this.props.sharedTransitionTag,
+      sharedTransitionTag,
       sharedTransition.buildContentFade?.()
     );
     updateLayoutAnimations(
@@ -455,7 +464,7 @@ export default class AnimatedComponent
       undefined
     );
     this._sharedTransition = sharedTransition;
-    this._sharedTransitionTag = this.props.sharedTransitionTag;
+    this._sharedTransitionTag = sharedTransitionTag;
     this._sharedTransitionFadeContent = sharedTransition.fadeContentV;
   }
 

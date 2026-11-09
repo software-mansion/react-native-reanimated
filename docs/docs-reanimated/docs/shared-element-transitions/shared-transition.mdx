@@ -87,7 +87,7 @@ SharedTransition.duration(400)
 
 - `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
 - `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` sets how the animation responds to the reduced motion [accessibility](../guides/accessibility.mdx) setting of the device.
+- `.reduceMotion(reduceMotion: ReduceMotion)` disables SET for the view when reduced motion applies. If either view opts out, SET does not run. The navigator still controls the screen transition.
 - `.withCallback(callback: (finished: boolean) => void)` sets a function that runs when the animation ends. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
 
 ### Shared transition modifiers <Optional/>
@@ -98,6 +98,7 @@ SharedTransition.duration(400)
 
 ## Remarks
 
+- SET checks reduced motion when the view registers. After `ReducedMotionConfig` changes the mode, render the view again to update its registration.
 - `.springify()` sets the duration again. Call `.springify(duration)` with the duration that you want, not `.duration(...)` before `.springify()`.
 - The transition uses the builder of the view that it starts from. See [`sharedTransitionStyle`](./shared-transition-props.mdx#sharedtransitionstyle).
 
