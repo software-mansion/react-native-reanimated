@@ -2205,6 +2205,10 @@ RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY to reanimated;
 change it under Edit Scheme > Run > Environment Variables). The app reports
 to the Metro port + 1. With another --port, also set
 RUNTIME_TESTS_WS_URL=ws://<host>:<port> there (127.0.0.1 on a simulator).
+On Android, start the app cold, because the library is fixed for the life of
+the process:
+  adb shell am start -S -n ${ANDROID_APP_ID}/.MainActivity \\
+    --es RUNTIME_TESTS_LIBRARY <library>
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
