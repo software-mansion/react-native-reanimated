@@ -127,6 +127,60 @@ const FadeContentExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/FadeContent').default
   );
+const CakeShopFadeMenu: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentMenu').default
+  );
+const CakeShopFadeCategories: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentCategories').default
+  );
+const CakeShopFadeCategoriesTopBar: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentCategoriesTopBar')
+      .default
+  );
+const CakeShopCartPanel: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryCartPanel').default
+  );
+const CakeShopFadeCart: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentCart').default
+  );
+const CakeShopFadeSpecials: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentSpecials').default
+  );
+const CakeShopQuickView: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryQuickView').default
+  );
+const CakeShopLightbox: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryLightbox').default
+  );
+const CakeShopInPlace: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryInPlace').default
+  );
+const CakeShopCartSheet: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryCartSheet').default
+  );
+const CakeShopFadeNativeHeader: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/FadeContentNativeHeader')
+      .default
+  );
+const CakeShopFormSheet: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BoundaryFormSheet').default
+  );
+const CakeShopOrderDelivered: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/OrderDelivered').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -967,6 +1021,123 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FadeContentExample: {
     title: '[SET] Fade content',
     screen: FadeContentExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeMenu: {
+    title: '[SET] Cake shop: fade menu',
+    screen: CakeShopFadeMenu,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeCategories: {
+    title: '[SET] Cake shop: fade categories',
+    screen: CakeShopFadeCategories,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeCategoriesTopBar: {
+    title: '[SET] Cake shop: fade categories, top bar',
+    screen: CakeShopFadeCategoriesTopBar,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopCartPanel: {
+    title: '[SET] Cake shop: cart panel',
+    screen: CakeShopCartPanel,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeCart: {
+    title: '[SET] Cake shop: fade cart',
+    screen: CakeShopFadeCart,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeSpecials: {
+    title: '[SET] Cake shop: fade specials',
+    screen: CakeShopFadeSpecials,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopQuickView: {
+    title: '[SET] Cake shop: quick view sheet',
+    screen: CakeShopQuickView,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopLightbox: {
+    title: '[SET] Cake shop: modal lightbox',
+    screen: CakeShopLightbox,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopInPlace: {
+    title: '[SET] Cake shop: in place',
+    screen: CakeShopInPlace,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopCartSheet: {
+    title: '[SET] Cake shop: cart sheet',
+    screen: CakeShopCartSheet,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFadeNativeHeader: {
+    title: '[SET] Cake shop: fade native header',
+    screen: CakeShopFadeNativeHeader,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopFormSheet: {
+    title: '[SET] Cake shop: native form sheet',
+    screen: CakeShopFormSheet,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopOrderDelivered: {
+    title: '[SET] Cake shop: order delivered',
+    screen: CakeShopOrderDelivered,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
