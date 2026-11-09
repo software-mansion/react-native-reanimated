@@ -70,6 +70,7 @@ enum class SharedTransitionLifecycle : std::uint8_t {
 // The carrier is the view that the run animates, moved from its parent to the root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
+  std::shared_ptr<Serializable> progressCallback;
   SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
@@ -123,6 +124,7 @@ struct ProgressTransition {
   std::shared_ptr<LightNode> targetScreen;
   double progress = 0;
   bool updated = true;
+  std::vector<std::shared_ptr<Serializable>> progressCallbacks;
 };
 
 // A finished gesture whose hidden source views wait for React to commit the
@@ -131,6 +133,7 @@ struct ProgressTransition {
 struct UncommittedScreenPop {
   std::shared_ptr<LightNode> sourceScreen;
   std::vector<RestoreRequest> sources;
+  std::vector<std::shared_ptr<Serializable>> progressCallbacks;
   bool cancelled = false;
 };
 
@@ -211,6 +214,21 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // Entering animations of target children that wait until their run lands.
   mutable std::vector<PendingNodeAnimation> heldEnterings_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
+  std::weak_ptr<WorkletRuntime> uiRuntimeWeak_;
+  std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
+  void finishProgressCallback(SharedTransitionRun &run) const;
+  void scheduleSharedTransitionCallback(std::shared_ptr<Serializable> callback, bool finished) const;
+  void skipSharedTransition(
+      const SharedTag &sharedTag,
+      const CollectedTransition &collected,
+      SharedTransitionDriver driver,
+      std::shared_ptr<Serializable> callback,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+  void filterSharedTransitionStarts(
+      SharedTransitionDriver driver,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   // removed components whose views are still shown; their shared transition configs are released when they unmap

@@ -1,9 +1,11 @@
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
+  ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
 import { Screen, ScreenContainer } from 'react-native-screens';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -25,11 +27,13 @@ import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 const transition = SharedTransition.duration(30000);
 
 function Screens({
+  transitionStyle = transition,
   sourceMounted = true,
   sourceScreenMounted = true,
   targetOffset = 0,
   targetTranslateX = 0,
 }: {
+  transitionStyle?: SharedTransition;
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
   targetOffset?: number;
@@ -52,7 +56,7 @@ function Screens({
           <Animated.View
             ref={target}
             sharedTransitionTag="gesture-retained-source"
-            sharedTransitionStyle={transition}
+            sharedTransitionStyle={transitionStyle}
             style={[
               styles.target,
               {
@@ -75,7 +79,7 @@ function Screens({
               <Animated.View
                 ref={source}
                 sharedTransitionTag="gesture-retained-source"
-                sharedTransitionStyle={transition}
+                sharedTransitionStyle={transitionStyle}
                 style={styles.source}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
@@ -84,6 +88,63 @@ function Screens({
         </Screen>
       )}
     </View>
+  );
+}
+
+function DeferredScreens({
+  top,
+  transitionStyle,
+}: {
+  top: number;
+  transitionStyle: SharedTransition;
+}) {
+  return (
+    <View style={styles.container}>
+      {[0, 1, 2]
+        .filter((index) => index <= top)
+        .map((index) => (
+          <DeferredScreen
+            key={index}
+            index={index}
+            active={index === top}
+            transitionStyle={transitionStyle}
+          />
+        ))}
+    </View>
+  );
+}
+
+function DeferredScreen({
+  index,
+  active,
+  transitionStyle,
+}: {
+  index: number;
+  active: boolean;
+  transitionStyle: SharedTransition;
+}) {
+  const screen = useTestRef(`deferred-screen-${index}`);
+  const endpoint = useTestRef(`deferred-endpoint-${index}`);
+  return (
+    <Screen
+      ref={screen}
+      enabled
+      activityState={2}
+      onAppear={() => notify(`deferred-screen-${index}-appeared`)}
+      style={styles.screen}>
+      <SharedTransitionBoundary isActive={active}>
+        {index < 2 ? (
+          <Animated.View
+            ref={endpoint}
+            sharedTransitionTag="deferred-back"
+            sharedTransitionStyle={transitionStyle}
+            style={index === 0 ? styles.target : styles.source}
+          />
+        ) : (
+          <View ref={endpoint} collapsable={false} style={styles.source} />
+        )}
+      </SharedTransitionBoundary>
+    </Screen>
   );
 }
 
@@ -234,6 +295,178 @@ describe('Back gesture to a screen with tabs', () => {
           ?.opacity
     ).toBe(1);
   });
+});
+
+describe('Deferred native progress callbacks', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+  gestureTest.each([
+    [ReduceMotion.Never, 'commit'],
+    [ReduceMotion.Never, 'late cancel'],
+  ] as const)(
+    'reports a deferred gesture whose END precedes discovery: ${0}, ${1}',
+    async ([mode, outcome]) => {
+      const results: boolean[] = [];
+      const record = (value: boolean) => results.push(value);
+      const style = SharedTransition.reduceMotion(mode).withCallback(
+        (value) => {
+          'worklet';
+          scheduleOnRN(record, value);
+        }
+      );
+      await render(<DeferredScreens top={2} transitionStyle={style} />);
+      for (const index of [0, 1, 2]) {
+        await waitForNotification(`deferred-screen-${index}-appeared`);
+      }
+      const first = getTestComponent('deferred-screen-0').getTag();
+      const second = getTestComponent('deferred-screen-1').getTag();
+      const third = getTestComponent('deferred-screen-2').getTag();
+      const target = getTestComponent('deferred-endpoint-0').getTag();
+      const targetParent = await observer().observeParent(target);
+      expect(targetParent !== null).toBe(true);
+      const endpoint = getTestComponent('deferred-endpoint-1').getTag();
+      const parent = await observer().observeParent(endpoint);
+      expect(parent !== null).toBe(true);
+      await observer().emitScreenTransitionProgress(third, 1, false, true);
+      await observer().emitScreenTransitionProgress(second, 1, false, true);
+      await observer().emitScreenTransitionProgress(second, 0, false, false);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(second, 0.25, false, false);
+      await observer().emitScreenTransitionProgress(second, 1, false, false);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(first, 0.25, false, false);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(first, 1, false, false);
+      await waitForFrames(3);
+      expect(await isViewMountedNatively(third)).toBe(true);
+      expect(await observer().observeParent(endpoint)).toBe(parent);
+      expect(results).toBe([]);
+      await render(<DeferredScreens top={1} transitionStyle={style} />);
+      await waitForFrames(3);
+      expect(await isViewMountedNatively(third)).toBe(false);
+      expect(results).toBe([]);
+      if (outcome === 'commit') {
+        await render(<DeferredScreens top={0} transitionStyle={style} />);
+      } else {
+        await observer().emitScreenGestureCancel(second);
+      }
+      const expected = outcome === 'commit';
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([expected]);
+      await waitForFrames(6);
+      expect(results).toBe([expected]);
+      const visible = getTestComponent(
+        `deferred-endpoint-${outcome === 'commit' ? 0 : 1}`
+      );
+      await expectEventually(
+        async () => (await visible.getMountedViewProps())?.opacity
+      ).toBe(1);
+      await expectEventually(() => observer().observeParent(target)).toBe(
+        targetParent
+      );
+      if (outcome === 'commit') {
+        await expectEventually(() => isViewMountedNatively(endpoint)).toBe(
+          false
+        );
+      } else {
+        await expectEventually(() => observer().observeParent(endpoint)).toBe(
+          parent
+        );
+      }
+    }
+  );
+});
+
+describe('Callbacks during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([['commit'], ['cancel'], ['late cancel']] as const)(
+    'reports ${0} once with the callback accepted at start',
+    async ([outcome]) => {
+      const results: boolean[] = [];
+      const replacementResults: boolean[] = [];
+      const record = (finished: boolean) => results.push(finished);
+      const recordReplacement = (finished: boolean) =>
+        replacementResults.push(finished);
+      const style = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(record, finished);
+        }
+      );
+      const tags = await startGesture(style);
+      const replacement = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(recordReplacement, finished);
+        }
+      );
+      await render(<Screens transitionStyle={replacement} />);
+      await waitForFrames(3);
+      if (outcome !== 'cancel') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+        await waitForFrames(3);
+        expect(results).toBe([]);
+      }
+      if (outcome === 'commit') {
+        await render(
+          <Screens transitionStyle={replacement} sourceScreenMounted={false} />
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([outcome === 'commit']);
+      expect(replacementResults).toBe([]);
+      if (outcome === 'commit') {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+      } else {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+      }
+      await waitForFrames(3);
+      expect(results.length).toBe(1);
+    }
+  );
+});
+
+describe('Callback when native progress loses its screens', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([['source'], ['both']] as const)(
+    'reports one cancellation after removing ${0}',
+    async ([removed]) => {
+      const results: boolean[] = [];
+      const record = (finished: boolean) => results.push(finished);
+      const style = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(record, finished);
+        }
+      );
+      await startGesture(style);
+      if (removed === 'source') {
+        await render(
+          <Screens transitionStyle={style} sourceScreenMounted={false} />
+        );
+      } else {
+        await render(<View />);
+      }
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
+      await render(<View />);
+      await waitForFrames(3);
+      expect(results.length).toBe(1);
+    }
+  );
 });
 
 describe('Retained source during native Screen progress', () => {
@@ -438,8 +671,8 @@ describe('Target moved during native Screen progress', () => {
   });
 });
 
-async function startGesture() {
-  await render(<Screens />);
+async function startGesture(transitionStyle = transition) {
+  await render(<Screens transitionStyle={transitionStyle} />);
   await waitForNotification('gesture-source-appeared');
   await waitForNotification('gesture-target-appeared');
   await expectEventually(
@@ -472,7 +705,7 @@ async function startGesture() {
   );
   await expectCarrier(tags.source, 82.5);
   await expectTargetOpacity(0);
-  return tags;
+  return { ...tags, originalParent };
 }
 
 function carrierY(tag: number) {
