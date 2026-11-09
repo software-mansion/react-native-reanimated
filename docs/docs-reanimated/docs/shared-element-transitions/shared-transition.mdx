@@ -91,7 +91,7 @@ SharedTransition.duration(400)
 - `.reduceMotion(reduceMotion: ReduceMotion)` disables SET for the view when reduced motion applies. If either view opts out, SET does not run. The navigator still controls the screen transition.
 - `.withCallback(callback: (finished: boolean) => void)` sets a function that runs on the UI runtime when the animation ends. The callback must be a worklet. This builder chain does not workletize it automatically. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
 
-For iOS native back navigation, the callback uses the function accepted at the start. After native progress reaches its end, the callback reports `true` when React commits the navigation. It reports `false` when the gesture cancels or the SET attempt stops. Removing both shared views stops a running SET. Its callback reports `false`, even if navigation commits later. Views excluded by reduced motion have no SET callback. A config change during the attempt does not replace its callback. SET does not call the callback if the gesture cancels, or if React removes the source or target screen, before SET selects the two views.
+For iOS back gestures, the callback reports `true` when navigation commits. It reports `false` if the gesture cancels or SET stops.
 
 ### Shared transition modifiers <Optional/>
 
