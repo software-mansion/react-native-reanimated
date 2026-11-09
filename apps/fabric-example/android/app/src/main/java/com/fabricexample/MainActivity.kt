@@ -34,8 +34,10 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
-    intent?.getStringExtra("RUNTIME_TESTS_LIBRARY")?.let {
-      MainApplication.runtimeTestsLibrary = it
+    if (BuildConfig.DEBUG || BuildConfig.RUNTIME_TESTS) {
+      intent?.getStringExtra("RUNTIME_TESTS_LIBRARY")?.let {
+        MainApplication.runtimeTestsLibrary = it
+      }
     }
     super.onCreate(savedInstanceState)
 
