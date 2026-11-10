@@ -33,6 +33,8 @@ import {
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
+const iosTest = Platform.OS === 'ios' ? test : test.skip;
+
 describe('Shared transition live target geometry', () => {
   // With synchronous UI props, the parents of the target move without a commit.
   test.each([[false], [true]] as const)(
@@ -288,6 +290,43 @@ describe('Shared transition live target geometry', () => {
     await expectEndpoint(30);
   });
 
+  // A bottom sheet library can move its sheet with a native view between the React views.
+  iosTest('follows a target that a native parent moves', async () => {
+    const state = counters();
+    const transition = countedTransition(1200, state);
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(
+      <NativeParentScreens active={false} transition={transition} />
+    );
+    await waitForFrames();
+    const holder = getTestComponent('nativeHolder').getTag();
+    const source = await geometryOf('source');
+    const layoutTarget = await geometryOf('target');
+    const target = (y: number) => ({ ...layoutTarget, y: layoutTarget.y + y });
+    await RuntimeTestObserver!.translateNativeParent(holder, 200, 200);
+    await waitForFrames();
+    expect((await geometryOf('target')).y).toBe(
+      target(200).y,
+      ComparisonMode.PIXEL
+    );
+    await render(<NativeParentScreens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(600);
+    await expectCarrierBetween(source, target(200), 0.5);
+    await RuntimeTestObserver!.translateNativeParent(holder, 300, 100);
+    await waitForFrames(3);
+    await advanceAnimationTimer(300);
+    await expectCarrierBetween(source, target(100), 0.75);
+    await RuntimeTestObserver!.translateNativeParent(holder, 100, 100);
+    await advanceAnimationTimer(600);
+    await expectEventually(() => state.value.success).toBe(1);
+    expect(state.value.failure).toBe(0);
+    expect((await geometryOf('target')).y).toBe(
+      target(100).y,
+      ComparisonMode.PIXEL
+    );
+  });
+
   test.each(['decomposable', 'zeroScale'] as const)(
     'interpolates the frame and the matrix like interpolateMatrix, matrices: %s',
     async (matrices) => {
@@ -418,6 +457,56 @@ async function geometryOf(name: string) {
     height: props!.height,
     matrix: [...transform!.matrix],
   };
+}
+
+type Geometry = Awaited<ReturnType<typeof geometryOf>>;
+
+async function expectCarrierBetween(
+  source: Geometry,
+  target: Geometry,
+  progress: number
+) {
+  const carrier = await geometryOf('source');
+  for (const key of ['x', 'y', 'width', 'height'] as const) {
+    expect(carrier[key]).toBe(
+      source[key] + progress * (target[key] - source[key]),
+      ComparisonMode.PIXEL
+    );
+  }
+}
+
+// An outline on a view that clips makes React Native put a native view between it and its children.
+function NativeParentScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={useTestRef('source')}
+          sharedTransitionTag="native-parent"
+          sharedTransitionStyle={transition}
+          style={styles.source}
+        />
+      </SharedTransitionBoundary>
+      <View collapsable={false} style={styles.nativeParentHost}>
+        <View ref={useTestRef('nativeHolder')} collapsable={false}>
+          <SharedTransitionBoundary isActive={active}>
+            <Animated.View
+              ref={useTestRef('target')}
+              sharedTransitionTag="native-parent"
+              sharedTransitionStyle={transition}
+              style={styles.target}
+            />
+          </SharedTransitionBoundary>
+        </View>
+      </View>
+    </View>
+  );
 }
 
 function Screens({
@@ -600,6 +689,14 @@ const styles = StyleSheet.create({
   source: { width: 30, height: 30, backgroundColor: '#ff0000', opacity: 0.8 },
   target: { width: 90, height: 90, backgroundColor: '#0000ff', opacity: 0.6 },
   sameGeometry: { width: 30, height: 30 },
+  nativeParentHost: {
+    marginTop: 40,
+    marginLeft: 120,
+    width: 200,
+    height: 500,
+    overflow: 'hidden',
+    outlineWidth: 1,
+  },
   matrixSource: {
     width: 40,
     height: 40,

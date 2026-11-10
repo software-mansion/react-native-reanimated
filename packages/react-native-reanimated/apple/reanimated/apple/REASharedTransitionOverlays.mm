@@ -21,6 +21,13 @@ static CGRect untransformedFrameInWindow(UIView *view)
   return frame;
 }
 
+static CGPoint untransformedOrigin(CALayer *layer)
+{
+  return {
+      layer.position.x - layer.bounds.size.width * layer.anchorPoint.x,
+      layer.position.y - layer.bounds.size.height * layer.anchorPoint.y};
+}
+
 // The origin of the view in the coordinates of its window, with the transforms of its ancestors but not its own. React
 // applies the transforms of the view and of its React ancestors itself. The current origin follows running animations,
 // such as the dismissal of a sheet released by a swipe.
@@ -34,10 +41,22 @@ static CGPoint originInWindow(UIView *view, BOOL current)
     superlayer = superlayer.presentationLayer ?: superlayer;
     windowLayer = windowLayer.presentationLayer ?: windowLayer;
   }
-  const CGPoint origin = {
-      layer.position.x - layer.bounds.size.width * layer.anchorPoint.x,
-      layer.position.y - layer.bounds.size.height * layer.anchorPoint.y};
-  return [superlayer convertPoint:origin toLayer:windowLayer];
+  return [superlayer convertPoint:untransformedOrigin(layer) toLayer:windowLayer];
+}
+
+// The rotation, scale and skew from the space of one layer to the space of another, without the translation.
+static facebook::react::Transform linearTransform(CALayer *from, CALayer *to)
+{
+  const CGPoint origin = [from convertPoint:CGPointZero toLayer:to];
+  const CGPoint x = [from convertPoint:CGPointMake(1, 0) toLayer:to];
+  const CGPoint y = [from convertPoint:CGPointMake(0, 1) toLayer:to];
+  facebook::react::Transform transform;
+  transform.matrix[0] = x.x - origin.x;
+  transform.matrix[1] = x.y - origin.y;
+  transform.matrix[4] = y.x - origin.x;
+  transform.matrix[5] = y.y - origin.y;
+  return facebook::react::Transform::FromTransformOperation(
+      facebook::react::TransformOperation(facebook::react::TransformOperationType::Arbitrary), {}, transform);
 }
 
 static facebook::react::Transform ancestorTransformInWindow(UIView *view, BOOL current)
@@ -48,16 +67,7 @@ static facebook::react::Transform ancestorTransformInWindow(UIView *view, BOOL c
     superlayer = superlayer.presentationLayer ?: superlayer;
     windowLayer = windowLayer.presentationLayer ?: windowLayer;
   }
-  const CGPoint origin = [superlayer convertPoint:CGPointZero toLayer:windowLayer];
-  const CGPoint x = [superlayer convertPoint:CGPointMake(1, 0) toLayer:windowLayer];
-  const CGPoint y = [superlayer convertPoint:CGPointMake(0, 1) toLayer:windowLayer];
-  facebook::react::Transform transform;
-  transform.matrix[0] = x.x - origin.x;
-  transform.matrix[1] = x.y - origin.y;
-  transform.matrix[4] = y.x - origin.x;
-  transform.matrix[5] = y.y - origin.y;
-  return facebook::react::Transform::FromTransformOperation(
-      facebook::react::TransformOperation(facebook::react::TransformOperationType::Arbitrary), {}, transform);
+  return linearTransform(superlayer, windowLayer);
 }
 
 // A full screen presentation removes the presenting views from the window, so the window that shows a surface is
@@ -74,6 +84,44 @@ static UIWindow *surfaceWindow(UIView *rootView)
     }
   }
   return nil;
+}
+
+// A container view controller, such as a navigation controller, moves the views of its children in its own
+// transitions. A shared transition does not follow these transitions.
+static BOOL isViewControllerView(UIView *view)
+{
+  return [view.nextResponder isKindOfClass:[UIViewController class]];
+}
+
+static BOOL movesSublayers(CALayer *layer)
+{
+  return !CGPointEqualToPoint(untransformedOrigin(layer), CGPointZero) || !CATransform3DIsIdentity(layer.transform);
+}
+
+// React knows the scroll offset of a scroll view, but not the frames and the transforms of native views between a view
+// and its React parent, e.g. the sheet of a bottom sheet.
+static BOOL isMovedByNativeViews(UIView *view, UIView *reactParent)
+{
+  for (UIView *current = view.superview; current != reactParent; current = current.superview) {
+    CALayer *presentationLayer = current.layer.presentationLayer;
+    if (movesSublayers(current.layer) || (presentationLayer && movesSublayers(presentationLayer))) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+// The native views between a view and its React parent can move with a Core Animation animation, so the placement uses
+// their current values.
+static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIView *reactParent)
+{
+  CALayer *superlayer = view.superview.layer.presentationLayer ?: view.superview.layer;
+  CALayer *parentLayer = reactParent.layer.presentationLayer ?: reactParent.layer;
+  const CGPoint origin = [superlayer convertPoint:untransformedOrigin(view.layer) toLayer:parentLayer];
+  return {
+      .kind = reanimated::NativeViewPlacement::Kind::MovedInsideReactParent,
+      .origin = {origin.x, origin.y},
+      .transform = linearTransform(superlayer, parentLayer)};
 }
 
 @implementation REASharedTransitionOverlays {
@@ -161,8 +209,14 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (view.window != surfaceWindow(rootView)) {
     return {.kind = reanimated::NativeViewPlacement::Kind::DifferentWindow};
   }
-  if ([view isDescendantOfView:parent]) {
+  if (view.superview == parent) {
     return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
+  }
+  if ([view isDescendantOfView:parent]) {
+    if (isViewControllerView(view) || !isMovedByNativeViews(view, parent)) {
+      return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
+    }
+    return placementInReactParent(view, parent);
   }
   CGPoint viewOrigin = originInWindow(view, !settled);
   UIViewController *presented = view.reactViewController;

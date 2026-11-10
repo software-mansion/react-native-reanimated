@@ -59,6 +59,17 @@ export interface Spec extends TurboModule {
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;
 
+  /**
+   * IOS only. Moves the native view between the mounted view and its React
+   * parent down by `y`. The screen shows `presentedY` until the next call, as
+   * during a Core Animation animation.
+   */
+  translateNativeParent(
+    tag: CodegenTypes.Int32,
+    y: number,
+    presentedY: number
+  ): Promise<void>;
+
   startUnmountRecording(): Promise<void>;
 
   /** Returns the Removes since the start in mount order. Android returns null. */
