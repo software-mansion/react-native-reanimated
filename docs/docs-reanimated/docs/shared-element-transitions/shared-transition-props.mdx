@@ -98,7 +98,6 @@ function Thumbnail() {
 
 - A transition uses the `sharedTransitionStyle` of the view that it starts from. When you navigate forward, it uses the style of the view on the old screen. When you go back, it uses the style of the view on the screen that closes. To get the same transition in both directions, give the same builder to both views.
 - Create the builder once, outside of the component, or memoize it. A new builder on each render configures the transition again.
-- If you remove only `sharedTransitionStyle`, the view keeps the last builder that it had. To stop the transition, remove `sharedTransitionTag`.
 - To change how the view moves, see [`SharedTransition`](./shared-transition.mdx), [Children of shared views](./children-of-shared-views.mdx), [Custom animations](./custom-animations.mdx) and [Progress-based transitions](./progress-transitions.mdx).
 
 ## Platform compatibility

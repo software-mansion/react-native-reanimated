@@ -67,13 +67,25 @@ describe('Shared transition registration', () => {
     expect(updateLayoutAnimations).not.toHaveBeenCalled();
   });
 
-  test('keeps an excluded builder when only the style prop is removed', () => {
+  test('uses the default transition when only the style prop is removed', () => {
+    const custom = SharedTransition.custom(() => ({}));
+    const component = mountWith(custom);
+    Object.assign(component, { props: { sharedTransitionTag: 'tag' } });
+    component._configureSharedTransition(true);
+    const registrations = sharedTransitionRegistrations();
+    expect(registrations).toHaveLength(2);
+    expect(registrations[1][7]).toBe(true);
+    component._configureSharedTransition(true);
+    expect(sharedTransitionRegistrations()).toHaveLength(2);
+  });
+
+  test('registers again when only the style prop is removed from an excluded builder', () => {
     const component = mountWith(
       SharedTransition.reduceMotion(ReduceMotion.Always)
     );
     Object.assign(component, { props: { sharedTransitionTag: 'tag' } });
     component._configureSharedTransition(true);
-    expect(updateLayoutAnimations).not.toHaveBeenCalled();
+    expect(sharedTransitionRegistrations()).toHaveLength(1);
   });
 
   test.each([
