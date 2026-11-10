@@ -27,10 +27,12 @@ import { Screen, ScreenContainer, ScreenStack } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -789,6 +791,19 @@ function countedCallbacks(builder: SharedTransition) {
   return { callbacks, transition };
 }
 
+// The callback runs in the frame after the run ends.
+async function expectReportedCallbacks(
+  read: () => Promise<{ finished: number; failed: number }>,
+  finished: number,
+  failed: number
+) {
+  await expectEventually(async () => {
+    const counts = await read();
+    return counts.finished + counts.failed;
+  }).toBe(finished + failed);
+  await expectCallbacks(read, finished, failed);
+}
+
 async function expectCallbacks(
   read: () => Promise<{ finished: number; failed: number }>,
   finished: number,
@@ -864,6 +879,8 @@ if (Platform.OS === 'ios') {
         }
       }
     });
+    // The animation clock stands still until the test moves it, so the real-time window limit passes during the
+    // animation.
     test('starts a built-in animation at once and lands after the boundary enters the window', async () => {
       const { callbacks, transition } = countedCallbacks(
         SharedTransition.duration(SHORT_DURATION).easing(Easing.linear)
@@ -877,6 +894,7 @@ if (Platform.OS === 'ios') {
             transition={transition}
           />
         );
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <PendingScreen
           active={false}
@@ -890,21 +908,20 @@ if (Platform.OS === 'ios') {
       const parent = await RuntimeTestObserver!.observeParent(sourceTag);
       const { starts, stop } = await recordSharedTransitionStarts();
       try {
-        const startTime = Date.now();
         await show(false);
         await waitForFrames(3);
         expect(starts.value.length).toBe(1);
-        await wait(SHORT_DURATION + 100);
-        // The carrier waits to land only until the window limit.
-        expect(Date.now() - startTime).toBeWithinRange(
-          0,
-          TARGET_WINDOW_WAIT - 100
-        );
+        await wait(TARGET_WINDOW_WAIT + 100);
         expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
           parent
         );
         await expectCallbacks(callbacks, 0, 0);
         await show(true);
+        await waitForFrames(3);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+          parent
+        );
+        await advanceAnimationTimer(SHORT_DURATION);
         await expectEventually(
           async () =>
             (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
@@ -916,7 +933,7 @@ if (Platform.OS === 'ios') {
           (await getTestComponent('heldSource').getMountedViewProps())?.opacity
         ).toBe(0);
         expect(starts.value.length).toBe(1);
-        await expectCallbacks(callbacks, 1, 0);
+        await expectReportedCallbacks(callbacks, 1, 0);
       } finally {
         try {
           await stop();
@@ -938,32 +955,31 @@ if (Platform.OS === 'ios') {
             transition={transition}
           />
         );
+      await mockAnimationTimer({ autoAdvance: false });
       await show(false);
       await waitForFrames(10);
       const sourceTag = getTestComponent('heldSource').getTag();
       const parent = await RuntimeTestObserver!.observeParent(sourceTag);
       const { starts, stop } = await recordSharedTransitionStarts();
       try {
-        const startTime = Date.now();
         await show(true);
         await waitForFrames(3);
         expect(starts.value.length).toBe(1);
-        await wait(TARGET_WINDOW_WAIT + 200 - (Date.now() - startTime));
+        await wait(TARGET_WINDOW_WAIT + 100);
+        await advanceAnimationTimer(DURATION / 2);
         expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
           parent
         );
+        await expectCallbacks(callbacks, 0, 0);
+        await advanceAnimationTimer(DURATION / 2);
         await expectEventually(
           async () =>
             (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
         ).toBe(true);
-        expect(Date.now() - startTime).toBeWithinRange(
-          DURATION,
-          DURATION + 500
-        );
         expect(
           (await getTestComponent('heldSource').getMountedViewProps())?.opacity
         ).toBe(1);
-        await expectCallbacks(callbacks, 0, 1);
+        await expectReportedCallbacks(callbacks, 0, 1);
         await show(true, true);
         await waitForFrames(10);
         expect(
@@ -997,25 +1013,20 @@ if (Platform.OS === 'ios') {
               innerTransition={inner.transition}
             />
           );
+        await mockAnimationTimer({ autoAdvance: false });
         await show(false);
         await waitForFrames(10);
         try {
-          const startTime = Date.now();
           await show(true);
-          await wait(TARGET_WINDOW_WAIT + 200 - (Date.now() - startTime));
+          await waitForFrames(3);
+          await advanceAnimationTimer(SHORT_DURATION);
+          await wait(TARGET_WINDOW_WAIT + 100);
+          await waitForFrames(3);
           await expectCallbacks(inner.callbacks, 0, 0);
-          await expectEventually(
-            async () => (await inner.callbacks()).failed
-          ).toBe(1);
-          expect(Date.now() - startTime).toBeWithinRange(
-            DURATION,
-            DURATION + 500
-          );
-          await expectCallbacks(inner.callbacks, 0, 1);
-          await expectEventually(
-            async () => (await outer.callbacks()).failed
-          ).toBe(1);
-          await expectCallbacks(outer.callbacks, 0, 1);
+          await expectCallbacks(outer.callbacks, 0, 0);
+          await advanceAnimationTimer(DURATION);
+          await expectReportedCallbacks(inner.callbacks, 0, 1);
+          await expectReportedCallbacks(outer.callbacks, 0, 1);
         } finally {
           await render(null);
         }
