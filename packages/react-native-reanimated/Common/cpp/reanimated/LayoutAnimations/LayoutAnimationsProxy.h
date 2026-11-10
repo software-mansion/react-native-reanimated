@@ -79,6 +79,8 @@ struct SharedTransitionRun {
   std::shared_ptr<LightNode> target;
   // The source can be released while the run follows its target, which releases the configs of the source.
   std::shared_ptr<Serializable> config;
+  // The view that gave config. A run that keeps its target takes the config changes of this view.
+  std::shared_ptr<LightNode> configSource;
   SharedTransitionDriver driver = SharedTransitionDriver::TIME;
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
@@ -552,6 +554,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;
   SharedTransitionRun *runOfCarrier(const std::shared_ptr<LightNode> &node) const;
   SharedTransitionRun *activeSharedTransitionRun(const SharedTag &sharedTag) const;
+  std::optional<SharedTransitionConfig> configOfSource(const SharedTransitionRun &run) const;
   SharedTransitionRun *sharedTransitionRun(Tag carrierTag, SharedTransitionLifecycle lifecycle) const;
   // A loop over this view must not change the lifecycle of a run.
   auto activeSharedTransitionRuns() const {
