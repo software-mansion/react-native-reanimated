@@ -950,12 +950,13 @@ void LayoutAnimationsProxy::resolveLightNodeProps(const std::shared_ptr<LightNod
 #endif // ANDROID
 }
 
-// Synchronous prop updates skip pullTransaction. Animation records and detached
-// carriers take the values. The dynamic flag enables updates for other light nodes.
+// Synchronous prop updates skip pullTransaction. Animation records, detached carriers and the views that a shared
+// transition follows take the values. The dynamic flag enables updates for other light nodes.
 void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBatch, const bool trackInLightTree) const {
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const bool hasRecords = hasLayoutAnimationRecords();
+  const auto followedTags = trackInLightTree ? std::unordered_set<Tag>{} : tagsFollowedBySharedTransitions();
   bool updatesLightTree = false;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
@@ -976,7 +977,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree && !node->isCarrier()) {
+    if (!trackInLightTree && !node->isCarrier() && !followedTags.contains(tag)) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }
