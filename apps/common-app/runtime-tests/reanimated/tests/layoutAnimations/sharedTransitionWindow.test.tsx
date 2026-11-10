@@ -787,6 +787,7 @@ describe('Shared transitions inside one Android Modal', () => {
       await expectEventually(
         async () => (await mountedWidth(sourceTag)) === undefined
       ).toBe(true);
+      await advanceAnimationTimer(1600);
       await waitForFrames(3);
       expect(results).toBe([false]);
     }
