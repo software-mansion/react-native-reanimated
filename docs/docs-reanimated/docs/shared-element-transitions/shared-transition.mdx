@@ -101,8 +101,6 @@ For iOS back gestures, the callback reports `true` when navigation commits. It r
 - [`.custom(animation)`](./custom-animations.mdx) uses your own animation worklet.
 - [`.progressAnimation(animation)` and `.defaultTransitionType(type)`](./progress-transitions.mdx) set the transition that follows the progress of the screen change.
 
-`SharedTransition` does not support `.withInitialValues()`, `.withTargetValues()` and `.rotate()` of the [layout animation builders](../layout-animations/entering-exiting-animations.mdx). The transition always starts at the source view and ends at the target view.
-
 ## Remarks
 
 - `.springify()` sets the duration again. Call `.springify(duration)` with the duration that you want, not `.duration(...)` before `.springify()`.
