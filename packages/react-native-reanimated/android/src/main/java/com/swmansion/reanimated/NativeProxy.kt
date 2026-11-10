@@ -62,6 +62,7 @@ open class NativeProxy {
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
     private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
+    private val sharedTransitionOverlays: SharedTransitionOverlays?
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -85,6 +86,7 @@ open class NativeProxy {
     @Suppress("unused")
     private val mHybridData: HybridData
     private val tracksSynchronousWrites: Boolean
+    private val pullsMountTransactions: Boolean
 
     private enum class CarrierBatch {
         NOT_QUEUED,
@@ -99,13 +101,24 @@ open class NativeProxy {
         object : UIManagerListener {
             override fun willDispatchViewUpdates(uiManager: UIManager) = Unit
 
-            override fun willMountItems(uiManager: UIManager) = ifNotInvalidated(Unit) { releasePendingViewTransitions() }
+            override fun willMountItems(uiManager: UIManager) =
+                ifNotInvalidated(Unit) {
+                    // The release can drop the carriers of a batch that this dispatch mounts, so it comes after. In the
+                    // pull model, the dispatch pulls its batch after this call.
+                    sharedTransitionOverlays?.willMountItems(
+                        movesCarriers =
+                            pendingViewTransitionReleases.isNotEmpty() ||
+                                pullsMountTransactions,
+                    )
+                    releasePendingViewTransitions()
+                }
 
             override fun didMountItems(uiManager: UIManager) =
                 ifNotInvalidated(Unit) {
                     if (tracksSynchronousWrites) {
                         rewriteSynchronousProps()
                     }
+                    sharedTransitionOverlays?.didMountItems()
                     // A dispatch takes its items before `willMountItems`, so the dispatch that sees a queued batch
                     // may not run it. Only a dispatch that starts after this one is known to have it.
                     pendingViewTransitionReleases.replaceAll { _, batch ->
@@ -157,6 +170,9 @@ open class NativeProxy {
                 mFabricUIManager,
             )
         tracksSynchronousWrites = hasSynchronousWritesTracker()
+        pullsMountTransactions = isMountingCoordinatorPullModelEnabled()
+        sharedTransitionOverlays =
+            if (hasSharedElementTransitions()) SharedTransitionOverlays(mFabricUIManager, mContext) else null
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
@@ -180,6 +196,10 @@ open class NativeProxy {
     private external fun performNonLayoutOperationsCpp()
 
     private external fun hasSynchronousWritesTracker(): Boolean
+
+    private external fun hasSharedElementTransitions(): Boolean
+
+    private external fun isMountingCoordinatorPullModelEnabled(): Boolean
 
     private external fun rewriteSynchronousProps()
 
@@ -227,6 +247,7 @@ open class NativeProxy {
         mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
+        sharedTransitionOverlays?.invalidate()
         mNativeStateLock.write {
             if (mHybridData.isValid) {
                 invalidateCpp()
@@ -266,6 +287,17 @@ open class NativeProxy {
             tags.forEach { tag -> resolveViewOrNull(tag)?.let(::endViewTransitions) }
         }
     }
+
+    @DoNotStrip
+    fun setSharedTransitionOverlay(
+        surfaceId: Int,
+        tag: Int,
+    ) {
+        sharedTransitionOverlays?.setOverlay(surfaceId, tag.takeIf { it >= 0 })
+    }
+
+    @DoNotStrip
+    fun canShowSharedTransitionOverlay(): Boolean = sharedTransitionOverlays?.canShow() == true
 
     private fun releasePendingViewTransitions() {
         val pending = pendingViewTransitionReleases.entries.iterator()

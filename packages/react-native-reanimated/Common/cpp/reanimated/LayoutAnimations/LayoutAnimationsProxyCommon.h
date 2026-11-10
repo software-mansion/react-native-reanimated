@@ -113,6 +113,8 @@ struct LayoutAnimationsProxyDependencies {
   ReleaseViewTransitionsFunction releaseViewTransitions;
   std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
   SynchronousPropsReader readSynchronousProps;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
+  CanShowSharedTransitionOverlayFunction canShowSharedTransitionOverlay;
 #endif
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot;

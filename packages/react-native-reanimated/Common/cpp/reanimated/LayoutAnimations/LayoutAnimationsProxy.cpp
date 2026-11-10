@@ -114,13 +114,14 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
       sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
       uiRuntimeWeak_(dependencies.uiRuntimeWeak),
       scheduleOnNextUIFrame_(dependencies.scheduleOnNextUIFrame) {
+  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
-  setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
   nativeViewPlacement_ = dependencies.nativeViewPlacement;
 #endif
 #ifdef ANDROID
   releaseViewTransitions_ = dependencies.releaseViewTransitions;
+  canShowSharedTransitionOverlay_ = dependencies.canShowSharedTransitionOverlay;
 #endif
 }
 
@@ -316,6 +317,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     followOffWindowTargets(transaction, propsParserContext);
     flushSubtreeRemovals(transaction);
+    raiseCarrierOverlayAboveEndpoints(filteredMutations, propsParserContext);
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
     holdTargetEntering(transaction, propsParserContext);
@@ -743,6 +745,9 @@ void LayoutAnimationsProxy::updateLightTree(
         const auto hostIndex = parent->hostIndex(position);
         LightNode::insertChild(parent, position, node);
         cursors.remove = {};
+        if (overlayHost_ && isLayoutRoot(node)) {
+          layoutRootsAboveOverlay_.insert(node->current.tag);
+        }
         if (node->placement() == CarrierPlacement::AT_ROOT) {
           break;
         }
@@ -1438,7 +1443,8 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     sharedTransitionRuns_.clear();
-    react_native_assert(carrierLayers_.empty() && "The last pull of a surface removes its carrier layers");
+    react_native_assert(
+        carrierLayers_.empty() && !overlayHost_ && "The last pull of a surface removes its carrier layers");
     heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();

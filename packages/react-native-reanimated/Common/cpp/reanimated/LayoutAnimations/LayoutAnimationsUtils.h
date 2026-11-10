@@ -85,7 +85,7 @@ struct MutationNode;
 enum class CarrierPlacement : std::uint8_t {
   // The node is not a carrier and is mounted under its parent.
   IN_PARENT,
-  // The carrier is mounted in the carrier layer of its layout root, not under its parent.
+  // The carrier is mounted in the carrier layer of its host, not under its parent.
   AT_ROOT,
   // The carrier is in a moving carrier. It stays under its parent and moves with it.
   NESTED,
@@ -389,7 +389,7 @@ class CarrierPlacements {
 
  private:
   std::vector<std::shared_ptr<LightNode>> atRoot_;
-  // The layout root that mounts the carrier at the same position in atRoot_.
+  // The host that mounts the carrier at the same position in atRoot_: a layout root or the overlay host.
   std::vector<std::shared_ptr<LightNode>> hosts_;
 
   size_t positionAtRoot(const std::shared_ptr<LightNode> &node) const {

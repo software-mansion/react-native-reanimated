@@ -1,4 +1,5 @@
 #include <react/fabric/Binding.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -148,6 +149,14 @@ bool NativeProxy::hasSynchronousWritesTracker() {
   return reanimatedModuleProxy_->hasSynchronousWritesTracker();
 }
 
+bool NativeProxy::hasSharedElementTransitions() {
+  return StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+
+bool NativeProxy::isMountingCoordinatorPullModelEnabled() {
+  return reanimated::isMountingCoordinatorPullModelEnabled();
+}
+
 void NativeProxy::rewriteSynchronousProps() {
   reanimatedModuleProxy_->rewriteSynchronousProps();
 }
@@ -169,6 +178,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("hasSharedElementTransitions", NativeProxy::hasSharedElementTransitions),
+       makeNativeMethod("isMountingCoordinatorPullModelEnabled", NativeProxy::isMountingCoordinatorPullModelEnabled),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
@@ -212,6 +223,16 @@ void NativeProxy::releaseViewTransitions(std::vector<int> &tags, bool isBatchQue
   auto jArrayInt = jni::JArrayInt::newArray(tags.size());
   jArrayInt->setRegion(0, tags.size(), tags.data());
   method(javaPart_.get(), jArrayInt, isBatchQueued);
+}
+
+void NativeProxy::setSharedTransitionOverlay(const SurfaceId surfaceId, const std::optional<Tag> tag) {
+  static const auto method = getJniMethod<void(int, int)>("setSharedTransitionOverlay");
+  method(javaPart_.get(), surfaceId, tag.value_or(-1));
+}
+
+bool NativeProxy::canShowSharedTransitionOverlay() {
+  static const auto method = getJniMethod<jboolean()>("canShowSharedTransitionOverlay");
+  return method(javaPart_.get());
 }
 
 // Android animators write the view on every frame, so the view's props are the presented ones.
@@ -404,6 +425,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto releaseViewTransitionsFunction = bindThis(&NativeProxy::releaseViewTransitions);
 
+  auto setSharedTransitionOverlayFunction = bindThis(&NativeProxy::setSharedTransitionOverlay);
+
+  auto canShowSharedTransitionOverlayFunction = bindThis(&NativeProxy::canShowSharedTransitionOverlay);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto isSensorAvailableFunction = bindThis(&NativeProxy::isSensorAvailable);
@@ -432,6 +457,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       requestRender,
       preserveMountedTags,
       releaseViewTransitionsFunction,
+      setSharedTransitionOverlayFunction,
+      canShowSharedTransitionOverlayFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       isSensorAvailableFunction,

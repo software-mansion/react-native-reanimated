@@ -81,8 +81,8 @@ enum class SharedTransitionLifecycle : std::uint8_t {
   FINISHED,
 };
 
-// The carrier is the view that the run animates, moved from its parent to the carrier layer of its layout root for the
-// time of the run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
+// The carrier is the view that the run animates, moved from its parent to the carrier layer of its host for the time
+// of the run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
   // The run reports this callback once, when it ends. It gets true only when the run lands.
   std::shared_ptr<Serializable> callback;
@@ -268,8 +268,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // The runs by the tag of their carrier. A view carries one run, and a shared tag has one active run.
   mutable std::unordered_map<Tag, SharedTransitionRun> sharedTransitionRuns_;
   mutable CarrierPlacements carrierPlacements_;
-  // The views that hold the carriers at the root, by their layout root. A layer takes no touches and hides its
-  // carriers from accessibility.
+  // The views that hold the carriers at the root, by their host: a layout root or the overlay host. A layer takes no
+  // touches and hides its carriers from accessibility.
   mutable std::unordered_map<std::shared_ptr<LightNode>, ShadowView> carrierLayers_;
   // Entering animations of target children that wait until their run lands.
   mutable std::vector<PendingNodeAnimation> heldEnterings_;
@@ -286,11 +286,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   bool isLayoutRoot(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> layoutRootOf(const std::shared_ptr<LightNode> &node) const;
-  bool hasSharedViewInLayoutRoot(
-      const SharedTag &sharedTag,
-      const std::shared_ptr<LightNode> &node,
-      const std::unordered_map<Tag, SharedTag> &tagToName,
-      std::unordered_map<SharedTag, std::vector<Tag>> &tagsBySharedTag) const;
   void filterSharedTransitionStarts(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
@@ -300,6 +295,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable bool surfaceToRemove_ = false;
 #ifdef ANDROID
   ReleaseViewTransitionsFunction releaseViewTransitions_;
+  CanShowSharedTransitionOverlayFunction canShowSharedTransitionOverlay_;
   void releaseViewTransitionsOfMovedCarriers(const ShadowViewMutationList &mutations) const;
   bool isInRemovedScreen(const std::shared_ptr<LightNode> &node, const ShadowViewMutationList &mutations) const;
   mutable bool cleanupPullScheduled_ = false;
@@ -315,9 +311,22 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 #ifdef __APPLE__
   mutable std::vector<HeldModal> heldModals_;
   ForceScreenSnapshotFunction forceScreenSnapshot_;
-  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
 #endif
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  // The host of the carriers that fly between two layout roots on Android. The platform keeps its carrier layer, the
+  // overlay, in a window above the windows of the surface.
+  mutable std::shared_ptr<LightNode> overlayHost_;
+  // Layout roots that show in windows added after the overlay window, so above it. A carrier in the overlay that flies
+  // to or from one of them raises the overlay.
+  mutable std::unordered_set<Tag> layoutRootsAboveOverlay_;
+  mutable int overlayRaises_ = 0;
+  bool hasKnownWindow(const std::shared_ptr<LightNode> &layoutRoot) const;
+  bool canHostRun(const std::shared_ptr<LightNode> &source, const std::shared_ptr<LightNode> &target) const;
+  std::shared_ptr<LightNode> homeLayoutRootOf(const std::shared_ptr<LightNode> &node) const;
+  void raiseCarrierOverlayAboveEndpoints(
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   // It starts above the initial LightNode::followedInSynchronousBatch, so a view that no batch marked never matches.
   mutable uint64_t synchronousBatch_ = 1;
@@ -535,6 +544,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       const ShadowView &startView,
       bool nested,
+      const std::shared_ptr<LightNode> &target,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   bool canDetachBeforeScreenSnapshot(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
@@ -598,7 +608,15 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
   void removeCarrierLayersIn(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &mutations) const;
-  bool keepsCarrierLayerInWindow() const;
+  bool keepsCarrierLayerInWindow(const std::shared_ptr<LightNode> &host) const;
+  std::shared_ptr<LightNode> carrierHostOf(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &target) const;
+  std::shared_ptr<LightNode> carrierHost(
+      const std::shared_ptr<LightNode> &carrier,
+      const std::shared_ptr<LightNode> &target,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;

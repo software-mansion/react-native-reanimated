@@ -201,9 +201,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
-      setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
       nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
 #endif
+      setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_, mountedRootsRegistry_)),
@@ -236,6 +236,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
       releaseViewTransitions_(platformDepMethodsHolder.releaseViewTransitionsFunction),
+      canShowSharedTransitionOverlay_(platformDepMethodsHolder.canShowSharedTransitionOverlayFunction),
 #endif // ANDROID
       synchronousWritesTracker_(makeSynchronousWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -1432,6 +1433,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       releaseViewTransitions_,
       jsInvoker_,
       keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
+      setSharedTransitionOverlay_,
+      canShowSharedTransitionOverlay_,
 #endif
 #ifdef __APPLE__
       forceScreenSnapshot_,
