@@ -3,7 +3,11 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/TextMetrics.h>
 
+#if __has_include(<React/Debug.h>)
+#include <React/Debug.h>
+#else
 #include <react/debug/react_native_assert.h>
+#endif
 
 #include <algorithm>
 #include <memory>

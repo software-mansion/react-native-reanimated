@@ -119,6 +119,7 @@ let package = Package(
             sources: ["Common/cpp/worklets", "apple/worklets"],
             publicHeadersPath: "Common/cpp",
             cSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("apple"),
@@ -127,6 +128,7 @@ let package = Package(
                 .define("HERMES_ENABLE_DEBUGGER", to: "1", .when(configuration: .debug)),
             ],
             cxxSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("apple"),

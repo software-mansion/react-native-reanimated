@@ -2,7 +2,11 @@
 
 #import <cstring>
 
+#if __has_include(<React/Debug.h>)
+#import <React/Debug.h>
+#else
 #import <react/debug/react_native_assert.h>
+#endif
 
 constexpr auto turboModuleManagerQueueLabel = "com.meta.react.turbomodulemanager.queue";
 

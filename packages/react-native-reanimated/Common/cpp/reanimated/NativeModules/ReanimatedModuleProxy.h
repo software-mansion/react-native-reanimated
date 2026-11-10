@@ -1,8 +1,16 @@
 #pragma once
 
+#if __has_include(<React/CallInvoker.h>)
+#include <React/CallInvoker.h>
+#else
 #include <ReactCommon/CallInvoker.h>
+#endif
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/ShadowNode.h>
+#endif
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>

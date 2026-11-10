@@ -68,7 +68,10 @@ static UIWindow *surfaceWindow(UIView *rootView)
     _overlayTags = [NSMutableDictionary new];
     // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
     // See `REAPseudoSelectorAttachQueue`.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [surfacePresenter addObserver:self];
+#pragma clang diagnostic pop
   }
   return self;
 }

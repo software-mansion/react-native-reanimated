@@ -1,14 +1,21 @@
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#if __has_include(<React/Debug.h>)
+#include <React/Debug.h>
+#else
 #include <react/debug/react_native_assert.h>
-#include <react/featureflags/ReactNativeFeatureFlags.h>
+#endif
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/RawProps.h>
+#endif
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -766,18 +773,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-#if REACT_NATIVE_VERSION_MINOR >= 87
   const auto tag = eventTarget->getTag();
-#else
-  // A stale event dispatched during unmount may carry an EventTarget with a null
-  // InstanceHandle which getTag() would dereference (see #9925).
-  // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
-  const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
-  if (shadowNodeFamily == nullptr) {
-    return false;
-  }
-  const auto tag = shadowNodeFamily->getTag();
-#endif
 
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {

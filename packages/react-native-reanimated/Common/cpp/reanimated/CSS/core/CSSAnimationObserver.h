@@ -2,7 +2,11 @@
 
 #include <reanimated/CSS/events/CSSEvent.h>
 
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/ReactPrimitives.h>
+#endif
 
 #include <string>
 

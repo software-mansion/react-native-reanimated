@@ -1,6 +1,14 @@
 #pragma once
+#if __has_include(<React/View.h>)
+#include <React/View.h>
+#else
 #include <react/renderer/components/view/ViewProps.h>
+#endif
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/graphicsConversions.h>
+#endif
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 

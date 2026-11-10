@@ -1,8 +1,12 @@
 #pragma once
 
 #include <folly/dynamic.h>
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/core/ShadowNodeFamily.h>
+#endif
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <unordered_map>

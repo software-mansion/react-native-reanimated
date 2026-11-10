@@ -45,7 +45,10 @@ static void attachObserverToView(
     // `addObserver:` is deprecated in favor of `RCTMountingTransactionObserverCoordinator`, but the
     // replacement only accepts ComponentView classes as observers - there's no external-observer
     // hook, so migrating would require a custom always-present ComponentView per surface.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [surfacePresenter addObserver:self];
+#pragma clang diagnostic pop
   }
   return self;
 }

@@ -5,7 +5,11 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/android/CSS/CSSPlatformEasings.h>
 
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/ReactPrimitives.h>
+#endif
 
 #include <functional>
 #include <memory>

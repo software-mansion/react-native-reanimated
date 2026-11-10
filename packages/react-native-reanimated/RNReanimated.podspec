@@ -72,8 +72,8 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
   }
   s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag}"
   s.xcconfig = {

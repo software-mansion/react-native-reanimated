@@ -1,5 +1,9 @@
 #include <folly/dynamic.h>
+#if __has_include(<React/Debug.h>)
+#include <React/Debug.h>
+#else
 #include <react/debug/react_native_assert.h>
+#endif
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>

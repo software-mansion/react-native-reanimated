@@ -1,7 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#if __has_include(<React/Debug.h>)
+#include <React/Debug.h>
+#else
 #include <react/debug/react_native_assert.h>
+#endif
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>

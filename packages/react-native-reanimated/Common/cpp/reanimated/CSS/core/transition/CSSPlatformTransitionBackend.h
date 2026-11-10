@@ -3,7 +3,11 @@
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
 
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/ReactPrimitives.h>
+#endif
 
 #include <string>
 

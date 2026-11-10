@@ -1,7 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#if __has_include(<React/Debug.h>)
+#include <React/Debug.h>
+#else
 #include <react/debug/react_native_assert.h>
+#endif
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>

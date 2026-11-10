@@ -2,7 +2,11 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/ShadowNode.h>
+#endif
 
 #include <memory>
 #include <string>

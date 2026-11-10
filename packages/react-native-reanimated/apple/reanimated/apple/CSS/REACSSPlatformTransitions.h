@@ -5,7 +5,11 @@
 
 #import <React/RCTSurfacePresenter.h>
 
+#if __has_include(<React/RendererCore.h>)
+#import <React/RendererCore.h>
+#else
 #import <react/renderer/core/ReactPrimitives.h>
+#endif
 
 #import <Foundation/Foundation.h>
 

@@ -1,9 +1,21 @@
 #pragma once
 
+#if __has_include(<React/View.h>)
+#include <React/View.h>
+#else
 #include <react/renderer/components/view/ViewProps.h>
+#endif
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/core/ShadowNode.h>
+#endif
+#if __has_include(<React/Graphics.h>)
+#include <React/Graphics.h>
+#else
 #include <react/renderer/graphics/BackgroundImage.h>
+#endif
 
 #include <memory>
 #include <string>

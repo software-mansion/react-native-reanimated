@@ -65,6 +65,8 @@ target_compile_options(
 
 include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(reanimated PUBLIC)
+# React Native exposes the native integration APIs to framework libraries.
+target_compile_definitions(reanimated PRIVATE RN_ALLOW_FRAMEWORKS)
 
 target_include_directories(
   reanimated
@@ -78,7 +80,7 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/android"
           "${REACT_NATIVE_DIR}/ReactCommon/react/utils/platform/android"
 )
 
