@@ -29,7 +29,7 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 - _Values & Type definitions_ blocks after each animation preset show the exact type for both `withInitialValues` and `withTargetValues` (they accept the same props per preset). The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
 - If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 - On the New Architecture:
-  - `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
+  - `nativeID` is used internally to configure entering animations, so a component with its own `nativeID` does not run its entering animation. Some components (e.g. `TouchableWithoutFeedback` with a `nativeID`) give their `nativeID` to their child. To work around this issue, put the `nativeID` on a `View` that wraps the animated component. <Badges version="4.8.0">`nativeID={undefined}` does not stop the entering animation.</Badges>
   - removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
 
 ## Fade

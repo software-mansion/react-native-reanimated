@@ -1,0 +1,1 @@
+Run entering animations on components that get `nativeID={undefined}`, such as the child of `TouchableWithoutFeedback`, and stop keeping the entering configuration of a component with its own `nativeID`.
