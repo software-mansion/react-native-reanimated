@@ -406,25 +406,20 @@ describe('Shared transition moves a real native view', () => {
     expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
   });
 
-  // On Android, a carrier inside one window moves into the window root, not into an overlay.
-  const overlayTest = Platform.OS === 'ios' ? test : test.skip;
-  overlayTest(
-    'moves the source into an overlay with a tag that React does not give',
-    async () => {
-      await mockAnimationTimer({ autoAdvance: false });
-      const transition = transitionWithNotification();
-      await render(<Screens active={false} transition={transition} />);
-      await waitForFrames();
-      const sourceTag = getTestComponent('source').getTag();
-      await render(<Screens active transition={transition} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(500);
-      await expectMoving('source');
-      const overlayTag = (await observer().observeParent(sourceTag))!;
-      expect(overlayTag % 2).toBe(1);
-      expect(overlayTag % 10 === 1).toBe(false);
-    }
-  );
+  test('moves the source into a carrier layer with a tag that React does not give', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+    const layerTag = (await observer().observeParent(sourceTag))!;
+    expect(layerTag % 2).toBe(1);
+    expect(layerTag % 10 === 1).toBe(false);
+  });
 
   test('ends the run when a screen without its tag covers the target', async () => {
     await mockAnimationTimer({ autoAdvance: false });
