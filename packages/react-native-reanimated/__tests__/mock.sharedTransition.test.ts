@@ -16,6 +16,8 @@ const MODIFIERS = [
   'energyThreshold',
   'reduceMotion',
   'withCallback',
+  'withInitialValues',
+  'withTargetValues',
   'fadeContent',
   'custom',
   'progressAnimation',

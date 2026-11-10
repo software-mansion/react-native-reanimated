@@ -333,6 +333,10 @@ class BaseAnimationMock {
     return this;
   }
 
+  withTargetValues() {
+    return this;
+  }
+
   easing(_: (t: number) => number) {
     return this;
   }
