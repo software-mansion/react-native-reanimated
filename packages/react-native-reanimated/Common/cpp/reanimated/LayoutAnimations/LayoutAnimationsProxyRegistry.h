@@ -30,7 +30,7 @@ class LayoutAnimationsProxyRegistry {
       const std::vector<Tag> &removedTags,
       LayoutAnimationsManager &layoutAnimationsManager) const;
   void flushLayoutAnimationOperations() const;
-  void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
+  bool applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const;
 
  private:

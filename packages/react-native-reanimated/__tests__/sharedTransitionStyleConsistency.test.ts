@@ -13,14 +13,6 @@ const transitions = readFileSync(
 const copy = transitions
   .split('ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[1]
   .split('\nvoid LayoutAnimationsProxy::detachCarrier(')[0];
-const creation = ['create', 'createGeometry']
-  .map(
-    (name) =>
-      factory
-        .split(`jsi::Object SharedTransitionValuesFactory::${name}(`)[1]
-        .split('\n}')[0]
-  )
-  .join('\n');
 const methods = [
   ...factory.matchAll(
     /void SharedTransitionValuesFactory::(\w+)\([^]*?(?=\n(?:void|std::vector|inline|jsi::Object|bool) |\n} \/\/ namespace)/g
@@ -29,7 +21,10 @@ const methods = [
   .filter(
     ([, name]) =>
       !['writeFrame', 'writeTransform'].includes(name) &&
-      creation.includes(`${name}(values,`)
+      factory
+        .split('jsi::Object SharedTransitionValuesFactory::create(')[1]
+        .split('\n}')[0]
+        .includes(`${name}(values,`)
   )
   .map(([body]) => body)
   .join('\n');

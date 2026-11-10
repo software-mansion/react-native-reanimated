@@ -80,7 +80,6 @@ class SharedTransitionValuesFactory {
 
   explicit SharedTransitionValuesFactory(jsi::Runtime &rt) : rt_(rt) {}
 
-  jsi::Object createGeometry(const ShadowView &sourceView, const ShadowView &targetView);
   jsi::Object create(const ShadowView &sourceView, const ShadowView &targetView);
 };
 

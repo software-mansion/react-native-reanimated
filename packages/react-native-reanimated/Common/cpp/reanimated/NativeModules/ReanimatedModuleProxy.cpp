@@ -1174,17 +1174,14 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch) {
-  const bool hasSynchronousUpdates = !synchronousUpdatesBatch.empty();
-  if (layoutAnimationsProxyRegistry_ && hasSynchronousUpdates) {
-    layoutAnimationsProxyRegistry_->applySynchronousProps(
-        synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
-  }
+  const bool movesCarrier = layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty() &&
+      layoutAnimationsProxyRegistry_->applySynchronousProps(
+          synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
   writeSynchronousPropsToViews(std::move(synchronousUpdatesBatch));
-  if (hasSynchronousUpdates) {
-    flushLayoutAnimationOperations();
+  if (movesCarrier) {
     executeLayoutAnimationsRequests();
   }
 }

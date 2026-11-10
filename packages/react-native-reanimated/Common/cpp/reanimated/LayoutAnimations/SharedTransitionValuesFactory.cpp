@@ -74,20 +74,16 @@ jsi::Object SharedTransitionValuesFactory::create(const ShadowView &sourceView, 
   const auto &sourceViewProps = getViewProps(sourceView);
   const auto &targetViewProps = getViewProps(targetView);
 
-  auto values = createGeometry(sourceView, targetView);
+  jsi::Object values(rt_);
+
+  writeFrame(values, sourceView, targetView);
   writeOpacity(values, sourceViewProps, targetViewProps);
   writeBackgroundColor(values, sourceViewProps, targetViewProps);
+  writeTransform(values, sourceView, targetView);
+  writeTransformOrigin(values, sourceView, targetView, sourceViewProps, targetViewProps);
   writeShadow(values, sourceViewProps, targetViewProps);
   writeBorder(values, sourceViewProps, targetViewProps);
 
-  return values;
-}
-
-jsi::Object SharedTransitionValuesFactory::createGeometry(const ShadowView &sourceView, const ShadowView &targetView) {
-  jsi::Object values(rt_);
-  writeFrame(values, sourceView, targetView);
-  writeTransform(values, sourceView, targetView);
-  writeTransformOrigin(values, sourceView, targetView, getViewProps(sourceView), getViewProps(targetView));
   return values;
 }
 

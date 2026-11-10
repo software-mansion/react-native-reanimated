@@ -124,12 +124,14 @@ void LayoutAnimationsProxyRegistry::flushLayoutAnimationOperations() const {
   }
 }
 
-void LayoutAnimationsProxyRegistry::applySynchronousProps(
+bool LayoutAnimationsProxyRegistry::applySynchronousProps(
     const UpdatesBatch &updatesBatch,
     const bool trackInLightTree) {
+  bool movesCarrier = false;
   for (const auto &instance : instances()) {
-    instance->applySynchronousProps(updatesBatch, trackInLightTree);
+    movesCarrier = instance->applySynchronousProps(updatesBatch, trackInLightTree) || movesCarrier;
   }
+  return movesCarrier;
 }
 
 void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &updatesBatch) const {

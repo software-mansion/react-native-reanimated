@@ -32,12 +32,6 @@ struct ContentOpacityRange {
   double to;
 };
 
-struct SharedTransitionGeometry {
-  double value;
-  bool needsUpdate = true;
-  bool failed = false;
-};
-
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
@@ -48,7 +42,8 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
-  std::optional<SharedTransitionGeometry> geometry;
+  // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
+  std::optional<double> geometryProgress;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -169,7 +164,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
   virtual void surfaceDidUnmount();
-  virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
+  // Returns true when a carrier follows a target that the batch moved. Its frame waits for a pull.
+  virtual bool applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
@@ -182,12 +178,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   virtual void clearSurfaceState() const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
-  virtual void applySharedTransitionGeometry() const {}
-  virtual bool hasPendingSharedTransitionGeometry() const {
-    return false;
-  }
-  void applyLayoutAnimationStyle(Tag tag, LayoutAnimation &animation, const jsi::Object &style, bool mergePending)
-      const;
+  void writeSharedTransitionGeometry(Tag tag, LayoutAnimation &animation) const;
+  virtual void followTargetsPlacedNatively() const {}
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
@@ -272,6 +264,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   };
 #endif
 
+  std::optional<SurfaceId> progressSharedTransitionGeometry(Tag tag, const jsi::Object &newStyle) const;
+  Props::Shared cloneFrameProps(const LayoutAnimation &animation, const Props::Shared &base, folly::dynamic props)
+      const;
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {

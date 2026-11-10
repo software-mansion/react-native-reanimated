@@ -16,7 +16,6 @@ import type {
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
-import { getSharedTransitionGeometry } from './SharedTransition';
 
 const TAG_OFFSET = 1e9;
 
@@ -217,7 +216,6 @@ export function initializeLayoutAnimationsManager() {
   }
   runOnUISync(() => {
     'worklet';
-    global._getSharedTransitionGeometry = getSharedTransitionGeometry;
     global.LayoutAnimationsManager = createLayoutAnimationManager();
   });
   isLayoutAnimationsManagerInitialized = true;

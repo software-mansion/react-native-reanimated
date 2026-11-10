@@ -21,6 +21,11 @@ export type ScreenLocation = {
 export type TransformObservation = {
   width: number;
   translateX: number;
+  /**
+   * The 4x4 matrix in the layout of React Native. Android gives only the 2D
+   * part: translation, scale and rotation about z.
+   */
+  matrix: ReadonlyArray<number>;
 };
 
 /** A Remove that the iOS mounting layer applied. */

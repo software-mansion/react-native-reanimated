@@ -1,11 +1,12 @@
 import { withDelay, withSpring, withTiming } from '../src/animation';
+import {
+  interpolateMatrix,
+  prepareMatrixInterpolation,
+} from '../src/animation/transformationMatrix/matrixUtils';
 import type { AnimationObject } from '../src/commonTypes';
 import { ReduceMotion } from '../src/commonTypes';
 import { Easing } from '../src/Easing';
-import {
-  getSharedTransitionGeometry,
-  SharedTransition,
-} from '../src/layoutReanimation/SharedTransition';
+import { SharedTransition } from '../src/layoutReanimation/SharedTransition';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -136,6 +137,62 @@ describe('fresh shared transition geometry clocks', () => {
     expect(finished).toBe(true);
   });
 
+  test('holds equal geometry at the start during the delay', () => {
+    const style = SharedTransition.duration(600)
+      .easing(Easing.linear)
+      .delay(500)
+      .build()({
+      currentOriginX: 10,
+      targetOriginX: 10,
+      currentBackgroundColor: 'red',
+      targetBackgroundColor: 'blue',
+    } as never);
+    expect(style.initialValues.sharedTransitionGeometryProgress).toBe(0);
+    const scalar = resolveAnimation(
+      withDelay(500, withTiming(1, { duration: 600, easing: Easing.linear }))
+    );
+    const progress = resolveAnimation(
+      style.animations.sharedTransitionGeometryProgress
+    );
+    scalar.onStart(scalar, 0, 0, undefined!);
+    progress.onStart(progress, 0, 0, undefined!);
+    for (let time = 16; time < 2000; time += 16) {
+      const finished = scalar.onFrame(scalar, time);
+      expect(progress.onFrame(progress, time)).toBe(finished);
+      expect(progress.current).toBeCloseTo(scalar.current as number, 8);
+      if (finished) return;
+    }
+    throw new Error('[Reanimated] The delayed geometry clock did not finish.');
+  });
+
+  test('ends a delayed fade-only spring with its fade', () => {
+    const style = SharedTransition.springify()
+      .damping(5)
+      .mass(1)
+      .stiffness(100)
+      .delay(200)
+      .fadeContent()
+      .build()({
+      currentOriginX: 10,
+      targetOriginX: 10,
+      currentContentOpacity: 1,
+      targetContentOpacity: 0,
+    } as never);
+    const fade = resolveAnimation(style.animations.contentOpacity);
+    const progress = resolveAnimation(
+      style.animations.sharedTransitionGeometryProgress
+    );
+    fade.onStart(fade, 1, 0, undefined!);
+    progress.onStart(progress, 0, 0, undefined!);
+    for (let time = 16; time < 3000; time += 16) {
+      const finished = fade.onFrame(fade, time);
+      expect(progress.onFrame(progress, time)).toBe(finished);
+      expect(progress.current).toBeCloseTo(1 - (fade.current as number), 8);
+      if (finished) return;
+    }
+    throw new Error('[Reanimated] The delayed fade did not finish.');
+  });
+
   test('keeps the delay before a fresh geometry clock starts', () => {
     const scalar = resolveAnimation(
       withDelay(120, withTiming(100, { duration: 600, easing: Easing.linear }))
@@ -182,6 +239,7 @@ describe('fresh shared transition geometry clocks', () => {
         currentTransform: { matrix: source },
         targetTransform: { matrix: target },
       } as never;
+      const interpolation = prepareMatrixInterpolation(source, target);
       const scalar = resolveAnimation(withSpring(target, spring));
       const progress = resolveAnimation(
         builder.build()(values).animations.sharedTransitionGeometryProgress
@@ -191,10 +249,10 @@ describe('fresh shared transition geometry clocks', () => {
       for (let time = 16; time < 5000; time += 16) {
         const finished = scalar.onFrame(scalar, time);
         expect(progress.onFrame(progress, time)).toBe(finished);
-        const matrix = (
-          getSharedTransitionGeometry(values, progress.current as number)
-            .transform as [{ matrix: number[] }]
-        )[0].matrix;
+        const matrix = interpolateMatrix(
+          progress.current as number,
+          interpolation
+        );
         matrix.forEach((value, index) => {
           expect(value).toBeCloseTo((scalar.current as number[])[index], 8);
         });

@@ -100,14 +100,9 @@ describe('LayoutAnimationsManager', () => {
   });
 
   test('initializes only once', () => {
-    const geometry = globalThis._getSharedTransitionGeometry;
     initializeLayoutAnimationsManager();
 
     expect(globalThis.LayoutAnimationsManager).toBe(manager);
-    expect(globalThis._getSharedTransitionGeometry).toBe(geometry);
-    expect(
-      geometry({ currentWidth: 30, targetWidth: 90 } as never, 0.5)
-    ).toEqual({ width: 60 });
   });
 
   test('uses one start timestamp for animations started before the next frame', () => {

@@ -83,6 +83,9 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+  // UIKit can move a target in a presented view without a React commit. Such a run, and a run that has no sample yet,
+  // samples its target on each frame.
+  std::optional<bool> targetPlacedNatively;
   std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
 };
@@ -345,9 +348,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config) const;
   void applyProgressAnimations();
-  void applySharedTransitionGeometry() const override;
-  bool hasPendingSharedTransitionGeometry() const override;
-  bool updateSharedTransitionGeometry(const SharedTransitionRun &run, LayoutAnimation &animation) const;
+  bool followSharedTransitionTargets(const PropsParserContext &propsParserContext, bool onlyPlacedNatively) const;
+  void followTargetsPlacedNatively() const override;
+  LayoutAnimation *liveGeometryAnimation(const SharedTransitionRun &run) const;
+  ShadowView
+  withGeometryOf(const ShadowView &view, const ShadowView &target, const PropsParserContext &propsParserContext) const;
   void handleProgressTransition(
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
@@ -375,6 +380,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::optional<ShadowView>
   reparentLayoutAnimation(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
+  void moveLayoutAnimationTarget(Tag tag, LayoutAnimation &animation, const ShadowView &newView, react::Point offset)
+      const;
   const ShadowView &mountedView(const std::shared_ptr<LightNode> &node) const;
 
   void applyInitialMutationsToLightTree(const ShadowViewMutationList &mutations) const;
@@ -389,7 +396,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
     return lightNodes_.contains(surfaceId_);
   }
 
-  void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
+  bool applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const override;
 
   void reconcileContradictedRemovals(
@@ -546,6 +553,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
+  ShadowView targetOnScreen(
+      const SharedTransitionRun &run,
+      const PropsParserContext &propsParserContext,
+      bool &placedNatively) const;
   void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
@@ -563,7 +574,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
-  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget, bool targetChanged) const;
+  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,

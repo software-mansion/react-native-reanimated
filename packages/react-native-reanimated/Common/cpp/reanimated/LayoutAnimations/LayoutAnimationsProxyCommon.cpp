@@ -5,9 +5,11 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 #include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>
@@ -30,6 +32,7 @@ void assertUpdatesRegistryUnlocked() {
 
 namespace {
 constexpr auto kContentOpacity = "contentOpacity";
+constexpr auto kGeometryProgress = "sharedTransitionGeometryProgress";
 
 ShadowView withProps(ShadowView view, const Props::Shared &props) {
   view.props = props;
@@ -109,40 +112,15 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
     const jsi::Object &newStyle) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  LayoutAnimation *animation = nullptr;
-  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
-    animation = &it->second;
-  } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() &&
-             !it->second.shouldRemove && it->second.animation.geometry &&
-             newStyle.hasProperty(uiRuntime_, "sharedTransitionGeometryProgress")) {
-    animation = &it->second.animation;
+  if (newStyle.hasProperty(uiRuntime_, kGeometryProgress)) {
+    return progressSharedTransitionGeometry(tag, newStyle);
   }
-  if (!animation) {
+  const auto layoutAnimationIt = layoutAnimations_.find(tag);
+  if (layoutAnimationIt == layoutAnimations_.end()) {
     return {};
   }
-  auto style = jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
-  if (style.hasProperty(uiRuntime_, "sharedTransitionGeometryProgress")) {
-    if ((animation->geometry && animation->geometry->failed) || hasPendingLayoutAnimation(tag)) {
-      return {};
-    }
-    const auto value = style.getProperty(uiRuntime_, "sharedTransitionGeometryProgress").asNumber();
-    if (!animation->geometry) {
-      animation->geometry = SharedTransitionGeometry{value};
-    } else {
-      animation->geometry->value = value;
-      animation->geometry->needsUpdate = true;
-    }
-    style = withoutProperty(uiRuntime_, style, "sharedTransitionGeometryProgress");
-  }
-  applyLayoutAnimationStyle(tag, *animation, style, false);
-  return surfaceId_;
-}
 
-void LayoutAnimationsProxyCommon::applyLayoutAnimationStyle(
-    Tag tag,
-    LayoutAnimation &layoutAnimation,
-    const jsi::Object &newStyle,
-    bool mergePending) const {
+  auto &layoutAnimation = layoutAnimationIt->second;
   const bool animatesOpacity = newStyle.hasProperty(uiRuntime_, "opacity");
   const bool animatesContentOpacity = newStyle.hasProperty(uiRuntime_, kContentOpacity);
   if (animatesContentOpacity) {
@@ -151,39 +129,83 @@ void LayoutAnimationsProxyCommon::applyLayoutAnimationStyle(
   const auto viewStyle = animatesContentOpacity ? withoutProperty(uiRuntime_, newStyle, kContentOpacity)
                                                 : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
 
-  const auto pending = updateMap_.find(tag);
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, viewStyle));
-  if (layoutAnimation.opacity && !animatesOpacity &&
-      !(mergePending && pending != updateMap_.end() && pending->second.animatesOpacity)) {
+  if (layoutAnimation.opacity && !animatesOpacity) {
     auto props = (folly::dynamic)*rawProps;
     props["opacity"] = *layoutAnimation.opacity;
     rawProps = std::make_shared<RawProps>(std::move(props));
   }
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
-  const auto &frameProps = mergePending
-      ? (pending != updateMap_.end() && pending->second.newProps ? pending->second.newProps
-                                                                 : layoutAnimation.currentView.props)
-      : layoutAnimation.framePropsBase();
+  const auto &frameProps = layoutAnimation.framePropsBase();
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(folly::dynamic::merge(frameProps->rawProps, (folly::dynamic)*rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, frameProps, std::move(*rawProps));
-  auto frame = Frame(uiRuntime_, viewStyle);
-  bool opacity = animatesOpacity;
-  if (mergePending && pending != updateMap_.end()) {
-    const auto &old = pending->second;
-    if (!frame.x)
-      frame.x = old.frame.x;
-    if (!frame.y)
-      frame.y = old.frame.y;
-    if (!frame.width)
-      frame.width = old.frame.width;
-    if (!frame.height)
-      frame.height = old.frame.height;
-    opacity = opacity || old.animatesOpacity;
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, viewStyle), animatesOpacity});
+
+  return surfaceId_;
+}
+
+// A built-in shared transition gets its frame and transform in the same update as its style. A completed carrier that
+// waits to land gets the frames too.
+std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGeometry(
+    const Tag tag,
+    const jsi::Object &newStyle) const {
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove && it->second.animation.geometryProgress) {
+    animation = &it->second.animation;
   }
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, frame, opacity});
+  if (!animation || hasPendingLayoutAnimation(tag)) {
+    return {};
+  }
+  auto style = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  animation->geometryProgress = style[kGeometryProgress].asDouble();
+  style.erase(kGeometryProgress);
+  if (const auto contentOpacity = style.find(kContentOpacity); contentOpacity != style.items().end()) {
+    animation->contentOpacity = std::clamp(contentOpacity->second.asDouble(), 0.0, 1.0);
+    style.erase(contentOpacity);
+  }
+  const bool animatesOpacity = style.count("opacity") > 0;
+  if (animation->opacity && !animatesOpacity) {
+    style["opacity"] = *animation->opacity;
+  }
+  auto geometry =
+      interpolateSharedTransitionGeometry(animation->startView, animation->finalView, *animation->geometryProgress);
+  style.update(geometry.props);
+  updateMap_.insert_or_assign(
+      tag,
+      UpdateValues{
+          cloneFrameProps(*animation, animation->framePropsBase(), std::move(style)), geometry.frame, animatesOpacity});
+  return surfaceId_;
+}
+
+// Without a frame that waits for a pull, the frame on screen is the base.
+void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, LayoutAnimation &animation) const {
+  react_native_assert(animation.geometryProgress && "The animation does not interpolate the geometry");
+  auto geometry =
+      interpolateSharedTransitionGeometry(animation.startView, animation.finalView, *animation.geometryProgress);
+  const auto pending = updateMap_.find(tag);
+  const bool hasPendingFrame = pending != updateMap_.end() && pending->second.newProps;
+  auto props = cloneFrameProps(
+      animation, hasPendingFrame ? pending->second.newProps : animation.currentView.props, std::move(geometry.props));
+  updateMap_.insert_or_assign(
+      tag, UpdateValues{std::move(props), geometry.frame, hasPendingFrame && pending->second.animatesOpacity});
+}
+
+Props::Shared LayoutAnimationsProxyCommon::cloneFrameProps(
+    const LayoutAnimation &animation,
+    const Props::Shared &base,
+    folly::dynamic props) const {
+#ifdef RN_SERIALIZABLE_STATE
+  props = folly::dynamic::merge(base->rawProps, props);
+#endif
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  return componentDescriptorRegistry_->at(animation.finalView.componentHandle)
+      .cloneProps(propsParserContext, base, RawProps(std::move(props)));
 }
 
 void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
@@ -232,14 +254,12 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations(std::unique_loc
   react_native_assert(
       lock.owns_lock() && lock.mutex() == &mutex && "flushLayoutAnimationOperations requires the proxy lock");
   if (!worklets::isOnUIThread(uiScheduler_)) {
-    applySharedTransitionGeometry();
-    if (!layoutAnimationOperations_.empty() || hasPendingSharedTransitionGeometry()) {
+    if (!layoutAnimationOperations_.empty()) {
       requestLayoutAnimationFlush_(surfaceId_);
     }
     return;
   }
   flushLayoutAnimationOperationsLocked();
-  applySharedTransitionGeometry();
 }
 
 // iOS, and Android with accumulated raw props, write the props of an Insert to the view. The shadow props of a view
@@ -273,11 +293,11 @@ Props::Shared LayoutAnimationsProxyCommon::mergeSynchronousProps(const ShadowVie
 }
 
 // The registry broadcasts one batch to every surface proxy; entries of other surfaces are skipped here.
-void LayoutAnimationsProxyCommon::applySynchronousProps(const UpdatesBatch &updatesBatch, bool /*trackInLightTree*/)
+bool LayoutAnimationsProxyCommon::applySynchronousProps(const UpdatesBatch &updatesBatch, bool /*trackInLightTree*/)
     const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (!hasLayoutAnimationRecords()) {
-    return;
+    return false;
   }
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
@@ -285,6 +305,7 @@ void LayoutAnimationsProxyCommon::applySynchronousProps(const UpdatesBatch &upda
     }
     applySynchronousPropsToLayoutAnimation(shadowNodeFamily->getTag(), props);
   }
+  return false;
 }
 
 bool LayoutAnimationsProxyCommon::hasLayoutAnimationRecords() const {
@@ -570,7 +591,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations() const {
   react_native_assert(worklets::isOnUIThread(uiScheduler_));
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   flushLayoutAnimationOperationsLocked();
-  applySharedTransitionGeometry();
+  followTargetsPlacedNatively();
 }
 
 void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {

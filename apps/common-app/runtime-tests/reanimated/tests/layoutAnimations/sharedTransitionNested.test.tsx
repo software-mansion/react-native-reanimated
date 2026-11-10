@@ -1,9 +1,5 @@
 import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import type {
-  SharedTransitionAnimationsValues,
-  StyleProps,
-} from 'react-native-reanimated';
 import Animated, {
   cancelAnimation,
   FadeOut,
@@ -613,117 +609,6 @@ describe('Nested shared transitions', () => {
       expect(await nativeParentOfInner()).toBe(homeParent(!wrapped));
     }
   );
-
-  if (__DEV__) {
-    const observerTest = RuntimeTestObserver ? test : test.skip;
-    observerTest(
-      'lands a failed child after native reparent from its wrapper to the outer carrier',
-      async () => {
-        type GeometryHelper = (
-          values: SharedTransitionAnimationsValues,
-          progress: number
-        ) => StyleProps;
-        type GeometryTestGlobal = typeof global & {
-          _getSharedTransitionGeometry: GeometryHelper;
-          geometryBeforeReparentTest?: GeometryHelper;
-        };
-        const armed = makeMutable(false);
-        const errors = makeMutable(0);
-        const innerCalls = makeMutable(0);
-        const failures = makeMutable(0);
-        const successes = makeMutable(0);
-        const sourceWidth = styles.sourceInner.width;
-        const transitions: Transitions = {
-          outer: innerEndsFirst.outer,
-          inner: SharedTransition.duration(600).withCallback((finished) => {
-            'worklet';
-            if (finished) successes.value++;
-            else failures.value++;
-          }),
-        };
-        await mockAnimationTimer({ autoAdvance: false });
-        await render(
-          <Screens active={false} innerWrapped transitions={transitions} />
-        );
-        await waitForFrames();
-        const innerTag = getTestComponent('sourceInner').getTag();
-        const outerTag = getTestComponent('sourceOuter').getTag();
-        const wrapperTag = getTestComponent('innerWrapper').getTag();
-        const parentOfInner = () =>
-          RuntimeTestObserver!.observeParent(innerTag);
-        expect(await parentOfInner()).toBe(wrapperTag);
-        await runOnUIBlocking(() => {
-          'worklet';
-          const testGlobal = global as GeometryTestGlobal;
-          const original = testGlobal._getSharedTransitionGeometry;
-          testGlobal.geometryBeforeReparentTest = original;
-          testGlobal._getSharedTransitionGeometry = (values, progress) => {
-            if (Math.abs(values.currentWidth - sourceWidth) < 0.5) {
-              innerCalls.value++;
-              if (armed.value && progress > 0 && progress < 1) {
-                errors.value++;
-                throw new Error('SET inner geometry throws on purpose');
-              }
-            }
-            return original(values, progress);
-          };
-        });
-        try {
-          await render(
-            <Screens active innerWrapped transitions={transitions} />
-          );
-          await waitForFrames(3);
-          expect(await parentOfInner()).toBe(wrapperTag);
-          await runOnUIBlocking(() => {
-            'worklet';
-            armed.value = true;
-          });
-          await advanceAnimationTimer(300);
-          await expectEventually(() => errors.value).toBe(1);
-          await expectEventually(() => failures.value).toBe(1);
-          await waitForFrames(3);
-          const callsAfterFailure = innerCalls.value;
-          expect(successes.value).toBe(0);
-          expect(await opacityOf('targetOuter')).toBe(0);
-
-          await render(
-            <Screens active innerWrapped={false} transitions={transitions} />
-          );
-          await expectEventually(() => isViewMountedNatively(wrapperTag)).toBe(
-            false
-          );
-          await expectEventually(parentOfInner).toBe(outerTag);
-          expect(getTestComponent('sourceInner').getTag()).toBe(innerTag);
-          await waitForFrames(3);
-          expect(innerCalls.value).toBe(callsAfterFailure);
-          expect(errors.value).toBe(1);
-          expect(failures.value).toBe(1);
-          await advanceAnimationTimer(2700);
-          await waitForNotification('outer-finished');
-          await expectAllShownAtTargets();
-          expect(await parentOfInner()).toBe(outerTag);
-          expect(
-            (await getTestComponent('sourceInner').getMountedViewProps())?.width
-          ).toBe(30, ComparisonMode.PIXEL);
-          await advanceAnimationTimer(3000);
-          expect(innerCalls.value).toBe(callsAfterFailure);
-          expect(errors.value).toBe(1);
-          expect(failures.value).toBe(1);
-          expect(successes.value).toBe(0);
-        } finally {
-          await runOnUIBlocking(() => {
-            'worklet';
-            const testGlobal = global as GeometryTestGlobal;
-            if (testGlobal.geometryBeforeReparentTest) {
-              testGlobal._getSharedTransitionGeometry =
-                testGlobal.geometryBeforeReparentTest;
-              delete testGlobal.geometryBeforeReparentTest;
-            }
-          });
-        }
-      }
-    );
-  }
 
   test('keeps the inner view in its parent during the flight', async () => {
     await mockAnimationTimer({ autoAdvance: false });

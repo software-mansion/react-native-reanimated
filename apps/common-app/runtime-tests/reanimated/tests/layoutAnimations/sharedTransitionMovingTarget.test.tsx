@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -9,6 +9,11 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
+import type { AffineMatrixFlat } from 'react-native-reanimated/src/animation/transformationMatrix/matrixUtils';
+import {
+  interpolateMatrix,
+  prepareMatrixInterpolation,
+} from 'react-native-reanimated/src/animation/transformationMatrix/matrixUtils';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -210,32 +215,167 @@ describe('Shared transition live target geometry', () => {
       await stop();
     }
   });
+
+  test('keeps a delayed carrier at its start while the target moves', async () => {
+    const state = counters();
+    const offset = makeMutable(0);
+    const transition = SharedTransition.duration(600)
+      .delay(500)
+      .easing(Easing.linear)
+      .withCallback(completionCounter(state));
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(
+      <Screens active={false} sameGeometry {...{ transition, offset }} />
+    );
+    await waitForFrames();
+    await render(<Screens active sameGeometry {...{ transition, offset }} />);
+    await waitForFrames(3);
+    offset.value = 100;
+    await waitForFrames(3);
+    await expectTranslation(0);
+    await advanceAnimationTimer(400);
+    await expectTranslation(0);
+    // The delayed animations start in the first frame after the delay.
+    await advanceAnimationTimer(100);
+    await advanceAnimationTimer(300);
+    await expectTranslation(50);
+    expect(state.value.success).toBe(0);
+    await advanceAnimationTimer(300);
+    await expectEventually(() => state.value.success).toBe(1);
+    await expectEndpoint(30);
+  });
+
+  test('interpolates the frame and the matrix like interpolateMatrix', async () => {
+    const quarter = 150;
+    // The progress reaches 1 before the run ends, so the carrier still shows the last sample.
+    const transition = SharedTransition.duration((quarter * 4) / 0.75).easing(
+      (time) => {
+        'worklet';
+        return Math.min(1, time / 0.75);
+      }
+    );
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<MatrixScreens active={false} transition={transition} />);
+    await waitForFrames();
+    const start = await geometryOf('source');
+    await render(<MatrixScreens active transition={transition} />);
+    await waitForFrames(3);
+    const target = await geometryOf('target');
+    const interpolation = prepareMatrixInterpolation(
+      start.matrix as AffineMatrixFlat,
+      target.matrix as AffineMatrixFlat
+    );
+    for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
+      if (progress > 0) {
+        await advanceAnimationTimer(quarter);
+      }
+      const carrier = await geometryOf('source');
+      for (const key of ['x', 'y', 'width', 'height'] as const) {
+        const expected = start[key] + progress * (target[key] - start[key]);
+        expect(carrier[key]).toBeWithinRange(
+          expected - FRAME_TOLERANCE,
+          expected + FRAME_TOLERANCE
+        );
+      }
+      const expectedMatrix = interpolateMatrix(progress, interpolation);
+      carrier.matrix.forEach((cell, index) => {
+        const tolerance = TRANSLATION_CELLS.includes(index)
+          ? TRANSLATION_TOLERANCE
+          : 1e-3;
+        expect(cell).toBeWithinRange(
+          expectedMatrix[index] - tolerance,
+          expectedMatrix[index] + tolerance
+        );
+      });
+    }
+  });
 });
+
+function MatrixScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <MatrixView name="source" transition={transition} />
+      </SharedTransitionBoundary>
+      {active && (
+        <SharedTransitionBoundary isActive>
+          <MatrixView name="target" transition={transition} />
+        </SharedTransitionBoundary>
+      )}
+    </View>
+  );
+}
+
+function MatrixView({
+  name,
+  transition,
+}: {
+  name: 'source' | 'target';
+  transition: SharedTransition;
+}) {
+  return (
+    <Animated.View
+      ref={useTestRef(name)}
+      sharedTransitionTag="matrix"
+      sharedTransitionStyle={transition}
+      style={name === 'source' ? styles.matrixSource : styles.matrixTarget}
+    />
+  );
+}
+
+const FRAME_TOLERANCE =
+  Platform.OS === 'ios' ? 0.01 : 1 / PixelRatio.get() + 0.01;
+const TRANSLATION_CELLS = [12, 13, 14];
+// Android applies the transform origin in pixels, so the translation of the view can differ by one pixel.
+const TRANSLATION_TOLERANCE = Platform.OS === 'ios' ? 0.01 : FRAME_TOLERANCE;
+
+async function geometryOf(name: string) {
+  const component = getTestComponent(name);
+  const tag = component.getTag();
+  const [location, transform, props] = await Promise.all([
+    RuntimeTestObserver!.observeLocationOnScreen(tag),
+    RuntimeTestObserver!.observeTransform(tag),
+    component.getMountedViewProps(),
+  ]);
+  return {
+    x: location!.x,
+    y: location!.y,
+    width: props!.width,
+    height: props!.height,
+    matrix: [...transform!.matrix],
+  };
+}
 
 function Screens({
   active,
   transition,
   offset,
   nested = false,
+  sameGeometry = false,
   targetWidth = 90,
 }: {
   active: boolean;
   transition: SharedTransition;
   offset: SharedValue<number>;
   nested?: boolean;
+  sameGeometry?: boolean;
   targetWidth?: number;
 }) {
+  const sideProps = { transition, offset, nested, sameGeometry, targetWidth };
   return (
     <View style={styles.root}>
       <SharedTransitionBoundary isActive={!active}>
-        <Side name="source" {...{ transition, offset, nested, targetWidth }} />
+        <Side name="source" {...sideProps} />
       </SharedTransitionBoundary>
       {active && (
         <SharedTransitionBoundary isActive>
-          <Side
-            name="target"
-            {...{ transition, offset, nested, targetWidth }}
-          />
+          <Side name="target" {...sideProps} />
         </SharedTransitionBoundary>
       )}
     </View>
@@ -249,12 +389,14 @@ function Side({
   transition,
   offset,
   nested,
+  sameGeometry,
   targetWidth = 90,
 }: {
   name: 'source' | 'target';
   transition: SharedTransition;
   offset: SharedValue<number>;
   nested: boolean;
+  sameGeometry: boolean;
   targetWidth?: number;
 }) {
   const outer = useTestRef(`${name}Outer`);
@@ -276,7 +418,12 @@ function Side({
           sharedTransitionTag="moving-child"
           sharedTransitionStyle={transition}
           style={
-            target ? [styles.target, { width: targetWidth }] : styles.source
+            target
+              ? [
+                  styles.target,
+                  sameGeometry ? styles.sameGeometry : { width: targetWidth },
+                ]
+              : styles.source
           }
         />
       </Animated.View>
@@ -382,4 +529,20 @@ const styles = StyleSheet.create({
   outer: { position: 'absolute', width: 200, height: 200 },
   source: { width: 30, height: 30, backgroundColor: '#ff0000', opacity: 0.8 },
   target: { width: 90, height: 90, backgroundColor: '#0000ff', opacity: 0.6 },
+  sameGeometry: { width: 30, height: 30 },
+  matrixSource: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#ff0000',
+    transform: [{ translateX: 10 }, { rotate: '15deg' }],
+  },
+  matrixTarget: {
+    position: 'absolute',
+    left: 150,
+    top: 250,
+    width: 120,
+    height: 80,
+    backgroundColor: '#0000ff',
+    transform: [{ translateY: 20 }, { rotate: '105deg' }, { scale: 1.5 }],
+  },
 });

@@ -212,8 +212,7 @@ function matchTransparentColor(color: unknown, otherColor: unknown): unknown {
 }
 
 function getChangedStyles(
-  values: SharedTransitionAnimationsValues,
-  includeGeometry = false
+  values: SharedTransitionAnimationsValues
 ): ChangedStyle[] {
   'worklet';
   const record = values as unknown as Record<string, unknown>;
@@ -225,12 +224,7 @@ function getChangedStyles(
     const name = currentKey.slice('current'.length);
     const current = record[currentKey];
     const target = record['target' + name];
-    const key = name[0].toLowerCase() + name.slice(1);
-    if (
-      ALIAS_NAMES.includes(name) ||
-      (isEqual(current, target) &&
-        !(includeGeometry && GEOMETRY_KEYS.includes(key)))
-    ) {
+    if (ALIAS_NAMES.includes(name) || isEqual(current, target)) {
       continue;
     }
     const isColorStyle = name.endsWith('Color');
@@ -287,18 +281,11 @@ function interpolateValue(
 
 function defaultProgressAnimation(
   values: SharedTransitionAnimationsValues,
-  progress: number,
-  geometryOnly = false
+  progress: number
 ): StyleProps {
   'worklet';
   const style: Record<string, unknown> = {};
-  for (const { key, current, target } of getChangedStyles(
-    values,
-    geometryOnly
-  )) {
-    if (geometryOnly && !GEOMETRY_KEYS.includes(key)) {
-      continue;
-    }
+  for (const { key, current, target } of getChangedStyles(values)) {
     if (key === 'transform') {
       const matrix = interpolateMatrix(
         progress,
@@ -313,14 +300,6 @@ function defaultProgressAnimation(
     }
   }
   return style;
-}
-
-export function getSharedTransitionGeometry(
-  values: SharedTransitionAnimationsValues,
-  progress: number
-): StyleProps {
-  'worklet';
-  return defaultProgressAnimation(values, progress, true);
 }
 
 // Reanimated 3 animated `transformMatrix`, which Fabric does not read.
@@ -697,7 +676,22 @@ export class SharedTransition
       const hasGeometryChanges = changed.some(({ key }) =>
         GEOMETRY_KEYS.includes(key)
       );
-      const animations: Record<string, unknown> = hasGeometryChanges
+      // Equal geometry needs a clock only to hold the start during the delay. The clamp keeps a fade-only spring
+      // from ending after its fade.
+      const geometryClock =
+        hasGeometryChanges || delay > 0
+          ? () =>
+              delayFunction(
+                delay,
+                animation(
+                  1,
+                  hasGeometryChanges
+                    ? config
+                    : { ...config, overshootClamping: true }
+                )
+              )
+          : undefined;
+      const animations: Record<string, unknown> = geometryClock
         ? progressDrivenAnimations(
             values,
             { sharedTransitionGeometryProgress: 0 },
@@ -705,7 +699,7 @@ export class SharedTransition
               'worklet';
               return { sharedTransitionGeometryProgress: progress };
             },
-            () => delayFunction(delay, animation(1, config))
+            geometryClock
           )
         : { sharedTransitionGeometryProgress: 1 };
       for (const { key, target } of nonGeometry) {
@@ -719,7 +713,7 @@ export class SharedTransition
       return {
         initialValues: {
           ...getInitialStyle(nonGeometry),
-          sharedTransitionGeometryProgress: hasGeometryChanges ? 0 : 1,
+          sharedTransitionGeometryProgress: geometryClock ? 0 : 1,
         },
         animations,
         callback,
