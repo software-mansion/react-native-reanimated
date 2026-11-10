@@ -1,7 +1,9 @@
+import { render } from '@testing-library/react-native';
 import { View } from 'react-native';
 
 import { LayoutAnimationType, ReduceMotion } from '../src/commonTypes';
 import AnimatedComponent from '../src/createAnimatedComponent/AnimatedComponent.native';
+import { createAnimatedComponent } from '../src/createAnimatedComponent/createAnimatedComponent';
 import { SharedTransition } from '../src/layoutReanimation';
 import { ReducedMotionManager } from '../src/ReducedMotion';
 import { updateLayoutAnimations } from '../src/UpdateLayoutAnimations';
@@ -77,6 +79,22 @@ describe('Shared transition registration', () => {
     expect(registrations[1][7]).toBe(true);
     component._configureSharedTransition(true);
     expect(sharedTransitionRegistrations()).toHaveLength(2);
+  });
+
+  test('registers the default transition when a rerender removes the style prop', () => {
+    const AnimatedView = createAnimatedComponent(View);
+    const view = render(
+      <AnimatedView
+        sharedTransitionTag="tag"
+        sharedTransitionStyle={SharedTransition.custom(() => ({}))}
+      />
+    );
+    jest.mocked(updateLayoutAnimations).mockClear();
+    view.rerender(<AnimatedView sharedTransitionTag="tag" />);
+    const registrations = sharedTransitionRegistrations();
+    expect(registrations).toHaveLength(1);
+    expect(registrations[0][2]).toBeDefined();
+    expect(registrations[0][7]).toBe(true);
   });
 
   test('registers again when only the style prop is removed from an excluded builder', () => {
