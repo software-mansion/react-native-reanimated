@@ -1063,7 +1063,7 @@ if (Platform.OS === 'ios') {
         expect(
           (await getTestComponent('heldSource').getMountedViewProps())?.opacity
         ).toBe(1);
-        await expectCallbacks(readCallbacks, 0, 1);
+        await expectReportedCallbacks(readCallbacks, 0, 1);
         await render(
           <PendingScreen
             active
