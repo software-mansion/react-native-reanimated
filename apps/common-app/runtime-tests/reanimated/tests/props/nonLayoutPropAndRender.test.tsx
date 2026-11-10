@@ -26,6 +26,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 import { ComparisonMode } from '../../../ReJest/types';
+import { processColorNumber } from '../../../ReJest/utils/colorUtils';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'NON_LAYOUT_PROP_BOX';
@@ -187,10 +188,9 @@ async function recordColorFrames(
   // The two runs can reach the update count at different animation positions.
   // Capture through the target color so both contain the whole sequence.
   const box = getTestComponent(BOX_REF);
-  await expectEventually(() => box.getAnimatedStyle('backgroundColor')).toBe(
-    toColor,
-    ComparisonMode.COLOR
-  );
+  await expectEventually(async () =>
+    processColorNumber(await box.getAnimatedStyle('backgroundColor'))
+  ).toBe(processColorNumber(toColor), ComparisonMode.NUMBER);
 
   await stopRecordingAnimationUpdates();
   const frames = toColorFrames(await updatesContainer.getUpdates());
