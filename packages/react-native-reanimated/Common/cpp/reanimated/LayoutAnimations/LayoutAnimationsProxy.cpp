@@ -956,7 +956,9 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const bool hasRecords = hasLayoutAnimationRecords();
-  const auto followedTags = trackInLightTree ? std::unordered_set<Tag>{} : tagsFollowedBySharedTransitions();
+  if (!trackInLightTree) {
+    markViewsFollowedBySharedTransitions();
+  }
   bool updatesLightTree = false;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
@@ -977,7 +979,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
     if (isRoot(node)) {
       continue;
     }
-    if (!trackInLightTree && !node->isCarrier() && !followedTags.contains(tag)) {
+    if (!trackInLightTree && !node->isCarrier() && !isFollowedBySharedTransition(*node)) {
       staleSynchronousProps_.record(tag, props);
       continue;
     }

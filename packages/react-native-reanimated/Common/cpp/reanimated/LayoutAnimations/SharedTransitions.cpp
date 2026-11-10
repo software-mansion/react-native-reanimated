@@ -714,19 +714,22 @@ bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run
 }
 
 // A built-in run reads the props of its target and of the parents of its target in each frame.
-std::unordered_set<Tag> LayoutAnimationsProxy::tagsFollowedBySharedTransitions() const {
-  std::unordered_set<Tag> tags;
+void LayoutAnimationsProxy::markViewsFollowedBySharedTransitions() const {
+  synchronousBatch_++;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     for (const auto &run : activeSharedTransitionRuns()) {
       if (run.driver != SharedTransitionDriver::TIME || !run.followsTarget || !hasLiveTarget(run)) {
         continue;
       }
       for (auto node = run.target; node; node = node->parent.lock()) {
-        tags.insert(node->current.tag);
+        node->followedInSynchronousBatch = synchronousBatch_;
       }
     }
   }
-  return tags;
+}
+
+bool LayoutAnimationsProxy::isFollowedBySharedTransition(const LightNode &node) const {
+  return node.followedInSynchronousBatch == synchronousBatch_;
 }
 
 // A carrier shows the frames of its own run, so a run that aims at a carrier does not follow it.
