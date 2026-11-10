@@ -11,9 +11,15 @@
 #else
 #include <react/renderer/core/RawProps.h>
 #endif
+#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
+#include <React/renderer/scheduler/Scheduler.h>
+#include <React/renderer/uimanager/UIManagerBinding.h>
+#include <React/renderer/uimanager/primitives.h>
+#else
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#endif
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/Compat/WorkletsApi.h>

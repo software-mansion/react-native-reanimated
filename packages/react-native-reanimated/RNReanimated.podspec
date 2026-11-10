@@ -11,6 +11,8 @@ deprecation_flag = config[:is_reanimated_example_app] ? '-Werror=deprecated-decl
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
 version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 ios_min_version = '13.4'
+# RN 0.89 prebuilt artifacts expose framework-tier headers under React/, while source builds use react/.
+prebuilt_rncore_flag = defined?(ReactNativeCoreUtils) && !ReactNativeCoreUtils.build_rncore_from_source() ? '-DREANIMATED_PREBUILT_RNCORE' : ''
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -89,7 +91,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
       "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}/jsitooling\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flag} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
+    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flag} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag} #{prebuilt_rncore_flag}",
   }
   s.requires_arc = true
 

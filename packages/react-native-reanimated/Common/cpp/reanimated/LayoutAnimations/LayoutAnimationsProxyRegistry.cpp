@@ -1,7 +1,11 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
+#include <React/renderer/mounting/ShadowTree.h>
+#else
 #include <react/renderer/mounting/ShadowTree.h>
+#endif
 
 #include <algorithm>
 #include <utility>

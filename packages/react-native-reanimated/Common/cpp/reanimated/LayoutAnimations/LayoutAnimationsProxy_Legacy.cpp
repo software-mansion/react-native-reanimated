@@ -11,8 +11,13 @@
 #else
 #include <react/debug/react_native_assert.h>
 #endif
+#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
+#include <React/renderer/mounting/ShadowTree.h>
+#include <React/renderer/mounting/ShadowViewMutation.h>
+#else
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#endif
 
 #include <memory>
 #include <optional>
