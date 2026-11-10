@@ -128,6 +128,15 @@ function Screens({
   );
 }
 
+// The UI thread makes frames while the JS thread renders, so their acknowledgements wait for the commit.
+function BlockJSThread({ milliseconds }: { milliseconds: number }) {
+  const end = Date.now() + milliseconds;
+  while (Date.now() < end) {
+    // Busy wait.
+  }
+  return null;
+}
+
 function ModalMarker() {
   const ref = useTestRef('window-marker');
   return <View ref={ref} collapsable={false} style={styles.marker} />;
@@ -753,6 +762,35 @@ describe('Shared transitions inside one Android Modal', () => {
     await waitForFrames(3);
     expect(results).toBe([false]);
   });
+
+  androidTest(
+    'ends the flight when the Modal closes before the last frames are in the mount queue',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const { sourceTag } = await startFlight((active) =>
+        modalScreens(transition, { active })
+      );
+      await runOnUIBlocking(() => {
+        'worklet';
+        global.autoAdvanceAnimationTimer = true;
+      });
+      await render(
+        <>
+          {modalScreens(transition, { active: true, open: false })}
+          <BlockJSThread milliseconds={100} />
+        </>
+      );
+      await waitForFrames(3);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
+      await expectEventually(
+        async () => (await mountedWidth(sourceTag)) === undefined
+      ).toBe(true);
+      await waitForFrames(3);
+      expect(results).toBe([false]);
+    }
+  );
 
   androidTest('refuses a retarget into another Modal', async () => {
     const results: boolean[] = [];

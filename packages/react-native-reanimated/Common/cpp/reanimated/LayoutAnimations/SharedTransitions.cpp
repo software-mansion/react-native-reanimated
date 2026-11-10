@@ -1029,7 +1029,8 @@ void LayoutAnimationsProxy::removeCarriersHostedIn(const std::shared_ptr<LightNo
     const {
   const auto carriers = carrierPlacements_.atRoot();
   for (const auto &carrier : carriers) {
-    if (carrier->placement() == CarrierPlacement::AT_ROOT && carrier->presence() == ReactPresence::REMOVED &&
+    const bool reactRemoves = carrier->presence() == ReactPresence::REMOVED || isInSubtree(carrier, node);
+    if (carrier->placement() == CarrierPlacement::AT_ROOT && reactRemoves &&
         isInSubtree(carrierPlacements_.hostOf(carrier), node)) {
 #ifdef ANDROID
       if (!transaction.surfaceDropped && hasUnqueuedCarrierFrame(carrier->current.tag)) {
