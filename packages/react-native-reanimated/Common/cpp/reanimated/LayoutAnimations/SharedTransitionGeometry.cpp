@@ -58,7 +58,8 @@ TransformMatrix3D::MatrixArray resolvedMatrix(const ShadowView &view) {
   return cells;
 }
 
-// CSS shows a matrix that it cannot decompose until half of the progress, and then the other matrix.
+// A singular matrix, for example a scale of 0, has no decomposition. Its cells are interpolated, as in interpolateMatrix
+// of the gesture path.
 TransformMatrix3D interpolateMatrix(
     const TransformMatrix3D::MatrixArray &start,
     const TransformMatrix3D::MatrixArray &target,
@@ -72,7 +73,11 @@ TransformMatrix3D interpolateMatrix(
   const auto from = TransformMatrix3D(start).decompose();
   const auto to = TransformMatrix3D(target).decompose();
   if (!from || !to) {
-    return TransformMatrix3D(progress < 0.5 ? start : target);
+    TransformMatrix3D::MatrixArray cells{};
+    for (size_t i = 0; i < cells.size(); ++i) {
+      cells[i] = interpolate(start[i], target[i], progress);
+    }
+    return TransformMatrix3D(cells);
   }
   return TransformMatrix3D::recompose(from->interpolate(progress, *to));
 }
