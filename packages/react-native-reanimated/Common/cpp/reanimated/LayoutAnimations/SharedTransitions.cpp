@@ -2528,9 +2528,11 @@ const ShadowView &LayoutAnimationsProxy::pathView(
   return useViewsOnScreen ? viewOnScreen(pathNode) : pathNode->current;
 }
 
-static react::Point scrollPosition(const ShadowView &view) {
+// The offset of a scroll view moves the views in it, not the scroll view.
+static react::Point scrollPosition(const std::shared_ptr<LightNode> &pathNode, const std::shared_ptr<LightNode> &node) {
   react::Point position;
-  if (!strcmp(view.componentName, "ScrollView")) {
+  const auto &view = pathNode->current;
+  if (pathNode != node && !strcmp(view.componentName, "ScrollView")) {
     position -= std::static_pointer_cast<const ConcreteState<ScrollViewState>>(view.state)->getData().contentOffset;
   }
   return position;
@@ -2545,7 +2547,7 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
     const bool endsPath = endsPathOnScreen(currentNode, node, useViewsOnScreen);
     const auto &componentName = currentNode->current.componentName;
     react_native_assert(componentName && "Component name is nullptr");
-    react::Point viewPosition = scrollPosition(currentNode->current);
+    react::Point viewPosition = scrollPosition(currentNode, node);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
     auto origin = view.layoutMetrics.frame.origin;
@@ -2816,7 +2818,7 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
       origin.xy[1] = {static_cast<float>(viewSize.height * 0.5), UnitType::Point};
     }
     ancestors.push_back(
-        {currentNode->current.tag, scrollPosition(currentNode->current), props.transform, origin, viewSize});
+        {currentNode->current.tag, scrollPosition(currentNode, node), props.transform, origin, viewSize});
     const auto parent = currentNode->parent.lock();
     currentNode = endsPath || (parent && isLayoutRoot(parent)) ? nullptr : parent;
   }
@@ -2850,7 +2852,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
-    // The absolute position of a scroll view is the position of its content.
+    // The absolute position of a scroll view above the shared view is the position of its content.
     const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
     auto transformOrigin = ancestor.origin;
     transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
@@ -2872,7 +2874,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
 
 // The methods resolveTransform and getTranslateForTransformOrigin are sourced
 // from:
-// https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
+// https://github.com/facebook/react-native/blob/v0.83.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L588
 // We need a copy of these methods to modify the `resolveTransform` method
 // to accept the transform origin as a parameter instead of as a class field,
 // and to resolve percent operations with the size of the view that owns them.
@@ -2882,10 +2884,6 @@ react::Transform LayoutAnimationsProxy::resolveTransform(
     const Transform &transform,
     const TransformOrigin &transformOrigin) const {
   auto transformMatrix = Transform{};
-  if (originFrameSize.width == 0 && originFrameSize.height == 0) {
-    return transformMatrix;
-  }
-
   if (transform.operations.size() == 1 &&
       transform.operations[0].type == facebook::react::TransformOperationType::Arbitrary) {
     transformMatrix = transform;
