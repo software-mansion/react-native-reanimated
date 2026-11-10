@@ -343,7 +343,7 @@ describe('Shared transition moves a real native view', () => {
       await advanceAnimationTimer(500);
       expect(
         (await getTestComponent('source').getMountedViewProps())?.width
-      ).toBe(71.25 + (150 - 71.25) / 8, ComparisonMode.PIXEL);
+      ).toBe(60 + (150 - 60) / 4, ComparisonMode.PIXEL);
       if (containerTag !== null) {
         expect(await isViewMountedNatively(containerTag)).toBe(true);
       }

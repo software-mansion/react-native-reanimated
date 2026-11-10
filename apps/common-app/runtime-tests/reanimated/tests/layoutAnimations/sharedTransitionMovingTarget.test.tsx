@@ -216,6 +216,69 @@ describe('Shared transition live target geometry', () => {
     }
   });
 
+  test('bends its path to a new target layout on the same clock', async () => {
+    const state = counters();
+    const offset = makeMutable(0);
+    const transition = countedTransition(1200, state);
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} {...{ transition, offset }} />);
+    await waitForFrames();
+    const stop = await recordStarts(state);
+    try {
+      await render(<Screens active {...{ transition, offset }} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      expect((await props('source'))?.width).toBe(45, ComparisonMode.PIXEL);
+      await render(
+        <Screens active targetWidth={150} {...{ transition, offset }} />
+      );
+      await waitForFrames(3);
+      for (const progress of [0.5, 0.75]) {
+        await advanceAnimationTimer(300);
+        expect((await props('source'))?.width).toBe(
+          30 + progress * (150 - 30),
+          ComparisonMode.PIXEL
+        );
+      }
+      expect(state.value.success).toBe(0);
+      await advanceAnimationTimer(300);
+      await expectEventually(() => state.value.success).toBe(1);
+      await expectEndpoint(150);
+      expect(state.value.starts).toBe(1);
+      expect(state.value.failure).toBe(0);
+    } finally {
+      await stop();
+    }
+  });
+
+  test('keeps the spring of its geometry when the target layout changes', async () => {
+    const state = counters();
+    const offset = makeMutable(0);
+    const transition = SharedTransition.springify()
+      .duration(1200)
+      .withCallback(completionCounter(state));
+    await mockAnimationTimer();
+    await render(<Screens active={false} {...{ transition, offset }} />);
+    await waitForFrames();
+    const stop = await recordStarts(state);
+    try {
+      await render(<Screens active {...{ transition, offset }} />);
+      await waitForFrames(12);
+      expect((await props('source'))?.width).toBeWithinRange(31, 89);
+      await render(
+        <Screens active targetWidth={150} {...{ transition, offset }} />
+      );
+      await waitForFrames(3);
+      expect(state.value.starts).toBe(1);
+      await expectEventually(() => state.value.success).toBe(1);
+      await expectEndpoint(150);
+      expect(state.value.starts).toBe(1);
+      expect(state.value.failure).toBe(0);
+    } finally {
+      await stop();
+    }
+  });
+
   test('keeps the config of its source when a commit moves the target', async () => {
     const state = counters();
     const offset = makeMutable(0);
@@ -223,13 +286,14 @@ describe('Shared transition live target geometry', () => {
     const targetTransition = SharedTransition.duration(300).easing(
       Easing.linear
     );
+    // With equal geometry, the run has no geometry clock, so a new target layout starts a new move.
     const screens = { transition, targetTransition, offset };
     await mockAnimationTimer({ autoAdvance: false });
-    await render(<Screens active={false} {...screens} />);
+    await render(<Screens active={false} sameGeometry {...screens} />);
     await waitForFrames();
     const stop = await recordStarts(state);
     try {
-      await render(<Screens active {...screens} />);
+      await render(<Screens active sameGeometry {...screens} />);
       await waitForFrames(3);
       await advanceAnimationTimer(300);
       await render(<Screens active targetWidth={150} {...screens} />);

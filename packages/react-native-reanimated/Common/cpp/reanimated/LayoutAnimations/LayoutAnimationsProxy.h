@@ -375,6 +375,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void followTargetsPlacedNatively() const override;
   LayoutAnimation *liveGeometryAnimation(const SharedTransitionRun &run) const;
   bool followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
+  bool hasLiveTarget(const SharedTransitionRun &run) const;
   ShadowView
   withGeometryOf(const ShadowView &view, const ShadowView &target, const PropsParserContext &propsParserContext) const;
   void handleProgressTransition(

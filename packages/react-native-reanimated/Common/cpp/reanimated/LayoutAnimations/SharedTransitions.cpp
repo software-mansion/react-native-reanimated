@@ -659,7 +659,7 @@ bool LayoutAnimationsProxy::followSharedTransitionTarget(
     SharedTransitionRun &run,
     const PropsParserContext &propsParserContext) const {
   auto *animation = liveGeometryAnimation(run);
-  if (!animation || !isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
+  if (!animation || !hasLiveTarget(run)) {
     return false;
   }
   bool placedNatively = false;
@@ -704,13 +704,22 @@ LayoutAnimation *LayoutAnimationsProxy::liveGeometryAnimation(const SharedTransi
   return animation && (animation->geometryProgress || run.followsTarget) ? animation : nullptr;
 }
 
-// The platform gives a target that is not in its window yet its frame in later commits. A run that follows its target
-// takes that frame without a restart.
+// A run with a running geometry clock aims at each new frame of its target. A run without one starts a new move.
 bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget)
     const {
-  return run.followsTarget && run.targetOffWindow &&
-      !SharedTransitionValuesFactory::hasAnimatedChanges(
-             getViewProps(carrierAnimation(run).finalView), getViewProps(carrierTarget), false);
+  if (!run.followsTarget || !hasLiveTarget(run) ||
+      SharedTransitionValuesFactory::hasAnimatedChanges(
+          getViewProps(carrierAnimation(run).finalView), getViewProps(carrierTarget), false)) {
+    return false;
+  }
+  const auto animation = layoutAnimations_.find(run.carrier->current.tag);
+  return run.targetOffWindow ||
+      (animation != layoutAnimations_.end() && animation->second.geometryProgress.value_or(1) != 1);
+}
+
+// A carrier shows the frames of its own run, so a run that aims at a carrier does not follow it.
+bool LayoutAnimationsProxy::hasLiveTarget(const SharedTransitionRun &run) const {
+  return isLightNodeMapped(run.target) && !run.target->isExiting() && !run.target->isCarrier();
 }
 
 ShadowView LayoutAnimationsProxy::withGeometryOf(
@@ -1762,7 +1771,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
             restartContentFade(run));
-      } else if (!targetChanged && !leavesMovingParent && followsWithoutRestart(run, carrierAfter)) {
+      } else if (!targetChanged && !leavesMovingParent && followsTarget && followsWithoutRestart(run, carrierAfter)) {
         followSharedTransitionTarget(run, propsParserContext);
       } else if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter)) {
         run.followsTarget = followsTarget;

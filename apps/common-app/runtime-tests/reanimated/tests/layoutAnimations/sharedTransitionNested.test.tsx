@@ -480,8 +480,8 @@ describe('Nested shared transitions', () => {
       />
     );
     await waitForFrames(3);
-    await advanceAnimationTimer(retargetInnerDuration / 2);
-    await advanceAnimationTimer(retargetInnerDuration / 2);
+    await advanceAnimationTimer(retargetInnerDuration / 4);
+    await advanceAnimationTimer(retargetInnerDuration / 4);
     const endSample = await expectInnerViewToReach(
       'width',
       (width) => Math.abs(width - 90) < 0.5

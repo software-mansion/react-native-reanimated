@@ -295,10 +295,28 @@ describe('Shared transition to a new native stack screen', () => {
     await waitForNotification(STACK_READY);
     await waitForFrames(10);
     const firstWindowY = await measureWindowY(boxRefs.first);
+    const carrierTag = boxRefs.first.getTag?.() ?? -1;
+    const restY =
+      (await RuntimeTestObserver?.observeLocationOnScreen(carrierTag))?.y ?? 0;
     const { starts, stop } = await recordSharedTransitionStarts();
     try {
+      let landed = false;
+      const landing = waitForNotification(FORWARD_FINISHED);
+      const stopSampling = () => {
+        landed = true;
+      };
+      landing.then(stopSampling, stopSampling);
       navigation.navigate('Second');
-      await waitForNotification(FORWARD_FINISHED);
+      const carrierYs: number[] = [];
+      while (!landed) {
+        const location =
+          await RuntimeTestObserver?.observeLocationOnScreen(carrierTag);
+        if (location) {
+          carrierYs.push(location.y);
+        }
+        await waitForFrames(1);
+      }
+      await landing;
       await waitForFrames(10);
       const secondWindowY = await measureWindowY(boxRefs.second);
       const forwardStarts = starts.value.length;
@@ -306,6 +324,11 @@ describe('Shared transition to a new native stack screen', () => {
       const rootOffset = firstWindowY - starts.value[0].sourceY;
       const secondY = secondWindowY - rootOffset;
       expect(secondY).toBeWithinRange(1, 10000);
+      // On iOS, the header frame comes after the start, and the view aims at the lower target from then on.
+      const carrierOffset = restY - starts.value[0].sourceY;
+      for (const carrierY of carrierYs) {
+        expect(carrierY - carrierOffset).toBeWithinRange(secondY - 1, 10000);
+      }
       navigation.navigate('Third');
       await expectEventually(() => starts.value.length > forwardStarts).toBe(
         true
@@ -314,12 +337,10 @@ describe('Shared transition to a new native stack screen', () => {
         secondY - 1,
         secondY + 1
       );
-      // On iOS, a later start of the push corrects the target of its first start.
-      const forwardTargets = starts.value
-        .slice(Platform.OS === 'ios' ? forwardStarts - 1 : 0, forwardStarts)
-        .map(({ targetY }) => targetY);
-      for (const targetY of forwardTargets) {
-        expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
+      if (Platform.OS === 'android') {
+        for (const { targetY } of starts.value.slice(0, forwardStarts)) {
+          expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
+        }
       }
     } finally {
       await stop();
