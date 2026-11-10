@@ -11,7 +11,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -38,6 +38,14 @@ function transitionWithNotification(duration: number, name: string) {
     if (finished) {
       notify(name);
     }
+  });
+}
+
+function recordingTransition(duration: number, results: boolean[]) {
+  const record = (finished: boolean) => results.push(finished);
+  return SharedTransition.duration(duration).withCallback((finished) => {
+    'worklet';
+    scheduleOnRN(record, finished);
   });
 }
 
@@ -435,8 +443,7 @@ describe('Nested shared transitions', () => {
       await render(<Screens active={false} exitingTarget={exitingTarget} />);
       await waitForFrames();
       await render(<Screens active exitingTarget={exitingTarget} />);
-      await waitForNotification('inner-finished');
-      expect(await opacityOf('targetOuter')).toBe(0);
+      await expectInnerViewPhase('completed');
       await render(<Screens active={false} exitingTarget={exitingTarget} />);
       await expectEventually(() => opacityOf('sourceInner')).toBe(1);
       await expectEventually(async () => {
@@ -498,7 +505,6 @@ describe('Nested shared transitions', () => {
     await render(<Screens active removeSource />);
     await waitForFrames(3);
     await advanceAnimationTimer(600);
-    await waitForNotification('inner-finished');
     await waitForFrames(2);
     await render(<Screens active removeSource innerSize={90} />);
     await expectEventually(
@@ -546,9 +552,6 @@ describe('Nested shared transitions', () => {
       await render(<Screens active transitions={transitions} removeSource />);
       await waitForFrames(3);
       await advanceAnimationTimer(firstEnd);
-      await waitForNotification(
-        order === 'inner first' ? 'inner-finished' : 'outer-finished'
-      );
       await waitForFrames(2);
       expect(await isViewMountedNatively(innerTag)).toBe(true);
       expect(
@@ -559,9 +562,7 @@ describe('Nested shared transitions', () => {
       ).toBe(1);
       expect(await isViewMountedNatively(outerTag)).toBe(true);
       await advanceAnimationTimer(secondEnd - firstEnd);
-      await waitForNotification(
-        order === 'inner first' ? 'outer-finished' : 'inner-finished'
-      );
+      await waitForNotification('outer-finished');
       await expectEventually(() => isViewMountedNatively(innerTag)).toBe(false);
       await expectEventually(() => isViewMountedNatively(outerTag)).toBe(false);
       await expectEventually(() => opacityOf('targetInner')).toBe(1);
@@ -586,7 +587,6 @@ describe('Nested shared transitions', () => {
       await render(<Screens active innerWrapped={wrapped} />);
       await waitForFrames(3);
       await advanceAnimationTimer(600);
-      await waitForNotification('inner-finished');
       await waitForFrames(2);
 
       await render(<Screens active innerWrapped={!wrapped} />);
@@ -642,7 +642,6 @@ describe('Nested shared transitions', () => {
     await render(<Screens active wrapperTranslateX={30} />);
     await waitForFrames(3);
     await advanceAnimationTimer(600);
-    await waitForNotification('inner-finished');
     await waitForFrames(2);
     const transform = await RuntimeTestObserver?.observeTransform(innerTag);
     expect(!!transform && Math.abs(transform.translateX) < 0.5).toBe(true);
@@ -656,7 +655,7 @@ describe('Nested shared transitions', () => {
     await waitForFrames();
 
     await render(<Screens active />);
-    await waitForNotification('inner-finished');
+    await expectInnerViewPhase('completed');
     const samples = await sampleInnerViewWhileOuterTargetIsHidden();
     expect(samples.hidden).toBe(0);
     expect(samples.shown > 0).toBe(true);
@@ -672,7 +671,6 @@ describe('Nested shared transitions', () => {
     await render(<Screens active transitions={retargetTransitions} />);
     await waitForFrames(3);
     await advanceAnimationTimer(retargetInnerDuration);
-    await waitForNotification('inner-finished');
     await expectInnerViewPhase('completed');
     await render(
       <Screens active innerSize={90} transitions={retargetTransitions} />
@@ -709,7 +707,6 @@ describe('Nested shared transitions', () => {
     );
     await waitForFrames(3);
     await advanceAnimationTimer(retargetInnerDuration / 2);
-    await waitForNotification('inner-finished');
     await expectInnerViewPhase('completed');
     const oldColor = (
       await getTestComponent('sourceInner').getPresentedViewProps()
@@ -746,10 +743,10 @@ describe('Nested shared transitions', () => {
     for (let time = 0; time < retargetOuterDuration; time += 100) {
       await advanceAnimationTimer(100);
     }
-    await waitForNotification('outer-finished');
     for (let time = 0; time < 2 * retargetInnerDuration; time += 100) {
       await advanceAnimationTimer(100);
     }
+    await waitForNotification('outer-finished');
     await expectEventually(async () => {
       const targetInner = await opacityOf('targetInner');
       return (
@@ -769,7 +766,6 @@ describe('Nested shared transitions', () => {
     await render(<Screens active transitions={retargetTransitions} />);
     await waitForFrames(3);
     await advanceAnimationTimer(retargetInnerDuration);
-    await waitForNotification('inner-finished');
     await expectInnerViewPhase('completed');
     const oldColor = (
       await getTestComponent('sourceInner').getPresentedViewProps()
@@ -804,12 +800,41 @@ describe('Nested shared transitions', () => {
     await expectAllShownAtTargets();
   });
 
+  test.each([
+    ['inner', 300, 1200],
+    ['outer', 1200, 300],
+  ] as const)(
+    'reports both callbacks when the group lands (${0} ends first)',
+    async ([, innerDuration, outerDuration]) => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const outer: boolean[] = [];
+      const inner: boolean[] = [];
+      const transitions = {
+        outer: recordingTransition(outerDuration, outer),
+        inner: recordingTransition(innerDuration, inner),
+      };
+      await render(<Screens active={false} transitions={transitions} />);
+      await waitForFrames();
+      await render(<Screens active transitions={transitions} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(600);
+      await waitForFrames(10);
+      expect(outer).toBe([]);
+      expect(inner).toBe([]);
+      await advanceAnimationTimer(1200);
+      await expectEventually(() => outer.length + inner.length).toBe(2);
+      await waitForFrames(10);
+      expect(outer).toBe([true]);
+      expect(inner).toBe([true]);
+      await expectAllShownAtTargets();
+    }
+  );
+
   test('keeps the inner view on screen when the outer transition ends first', async () => {
     await render(<Screens active={false} transitions={outerEndsFirst} />);
     await waitForFrames();
 
     await render(<Screens active transitions={outerEndsFirst} />);
-    await waitForNotification('outer-finished');
     const samples = await sampleInnerViewUntilItLands();
     expect(samples.hidden).toBe(0);
     expect(samples.shown > 0).toBe(true);

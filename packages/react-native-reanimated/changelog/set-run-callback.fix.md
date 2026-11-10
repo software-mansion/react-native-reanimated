@@ -1,0 +1,1 @@
+Report the callback of a shared element transition once, when the view lands or the transition stops, so that a restart no longer reports `false` and a start that ends before its animation reports `false`.
