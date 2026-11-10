@@ -27422,14 +27422,14 @@ __metadata:
 
 "react-native-svg@patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch":
   version: 15.15.5
-  resolution: "react-native-svg@patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch::version=15.15.5&hash=07efcc"
+  resolution: "react-native-svg@patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch::version=15.15.5&hash=7c6f34"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/160a90c6074cc1aca6f7a93d660ab8ed4097048f94eb2519534e3b5f46250a1da043510b852556f80649058e8f5856fc8f40bae247ce57a27eae4fb34e4cbae9
+  checksum: 10/54ef59a2f6f743d312ddf55f766481114a1141c8a7aa6e632d421598ef0de0e8e0d1372743deffc607628aac07398e6311c45f75b4962c57595f16a7036b59c7
   languageName: node
   linkType: hard
 
