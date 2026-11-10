@@ -27,7 +27,7 @@
     "ws": "8.21.0"
   },
   "engines": {
-    "node": ">= 22.11.0"
+    "node": "^22.13.0 || ^24.3.0 || >= 26.0.0"
   },
   "installConfig": {
     "selfReferences": false
