@@ -19,6 +19,7 @@ import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -62,7 +63,7 @@ open class NativeProxy {
     private val keyboardAnimationManager: KeyboardAnimationManager
     private val pseudoSelectorManager: PseudoSelectorManager
     private val cssPlatformTransitionsManager: CSSPlatformTransitionsManager
-    private val sharedTransitionOverlays: SharedTransitionOverlays
+    private val sharedTransitionOverlays: SharedTransitionOverlays?
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -102,8 +103,14 @@ open class NativeProxy {
 
             override fun willMountItems(uiManager: UIManager) =
                 ifNotInvalidated(Unit) {
+                    // The release can drop the carriers of a batch that this dispatch mounts, so it comes after. In the
+                    // pull model, the dispatch pulls its batch after this call.
+                    sharedTransitionOverlays?.willMountItems(
+                        movesCarriers =
+                            pendingViewTransitionReleases.isNotEmpty() ||
+                                ReactNativeFeatureFlags.enableMountingCoordinatorPullModelAndroid(),
+                    )
                     releasePendingViewTransitions()
-                    sharedTransitionOverlays.willMountItems()
                 }
 
             override fun didMountItems(uiManager: UIManager) =
@@ -111,7 +118,7 @@ open class NativeProxy {
                     if (tracksSynchronousWrites) {
                         rewriteSynchronousProps()
                     }
-                    sharedTransitionOverlays.didMountItems()
+                    sharedTransitionOverlays?.didMountItems()
                     // A dispatch takes its items before `willMountItems`, so the dispatch that sees a queued batch
                     // may not run it. Only a dispatch that starts after this one is known to have it.
                     pendingViewTransitionReleases.replaceAll { _, batch ->
@@ -154,7 +161,6 @@ open class NativeProxy {
         pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager, mContext)
         cssPlatformTransitionsManager =
             CSSPlatformTransitionsManager(mFabricUIManager, mContext, ::getAnimationTimestamp)
-        sharedTransitionOverlays = SharedTransitionOverlays(mFabricUIManager, mContext)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -164,6 +170,8 @@ open class NativeProxy {
                 mFabricUIManager,
             )
         tracksSynchronousWrites = hasSynchronousWritesTracker()
+        sharedTransitionOverlays =
+            if (hasSharedElementTransitions()) SharedTransitionOverlays(mFabricUIManager, mContext) else null
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
         }
@@ -187,6 +195,8 @@ open class NativeProxy {
     private external fun performNonLayoutOperationsCpp()
 
     private external fun hasSynchronousWritesTracker(): Boolean
+
+    private external fun hasSharedElementTransitions(): Boolean
 
     private external fun rewriteSynchronousProps()
 
@@ -234,7 +244,7 @@ open class NativeProxy {
         mFabricUIManager.removeUIManagerEventListener(mountListener)
         pseudoSelectorManager.invalidate()
         cssPlatformTransitionsManager.invalidate()
-        sharedTransitionOverlays.invalidate()
+        sharedTransitionOverlays?.invalidate()
         mNativeStateLock.write {
             if (mHybridData.isValid) {
                 invalidateCpp()
@@ -279,10 +289,12 @@ open class NativeProxy {
     fun setSharedTransitionOverlay(
         surfaceId: Int,
         tag: Int,
-    ) = sharedTransitionOverlays.setOverlay(surfaceId, tag.takeIf { it >= 0 })
+    ) {
+        sharedTransitionOverlays?.setOverlay(surfaceId, tag.takeIf { it >= 0 })
+    }
 
     @DoNotStrip
-    fun canShowSharedTransitionOverlay(): Boolean = sharedTransitionOverlays.canShow()
+    fun canShowSharedTransitionOverlay(): Boolean = sharedTransitionOverlays?.canShow() == true
 
     private fun releasePendingViewTransitions() {
         val pending = pendingViewTransitionReleases.entries.iterator()

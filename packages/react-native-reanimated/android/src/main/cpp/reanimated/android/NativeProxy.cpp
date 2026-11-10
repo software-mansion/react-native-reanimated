@@ -148,6 +148,10 @@ bool NativeProxy::hasSynchronousWritesTracker() {
   return reanimatedModuleProxy_->hasSynchronousWritesTracker();
 }
 
+bool NativeProxy::hasSharedElementTransitions() {
+  return StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+
 void NativeProxy::rewriteSynchronousProps() {
   reanimatedModuleProxy_->rewriteSynchronousProps();
 }
@@ -169,6 +173,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("performOperationsCpp", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
+       makeNativeMethod("hasSharedElementTransitions", NativeProxy::hasSharedElementTransitions),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});

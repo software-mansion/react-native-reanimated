@@ -68,6 +68,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
   void performOperations();
   void performNonLayoutOperations();
   bool hasSynchronousWritesTracker();
+  bool hasSharedElementTransitions();
   void rewriteSynchronousProps();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);

@@ -8,6 +8,7 @@ import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +47,8 @@ class SharedTransitionOverlays(
         val params: WindowManager.LayoutParams,
         val nativeId: Any?,
         var carrierTags: List<Int>,
+        var rootWidth: Int,
+        var rootHeight: Int,
     )
 
     private val activityCallbacks =
@@ -108,19 +111,19 @@ class SharedTransitionOverlays(
         overlayTags[surfaceId] = tag
     }
 
-    // `resumedActivity` is written on the UI thread and read on the commit thread, so it is volatile.
-    fun canShow(): Boolean = resumedActivity?.get() != null
+    fun canShow(): Boolean = overlayActivity() != null
 
-    fun willMountItems() {
-        if (overlayTags.isNotEmpty()) {
+    // Only a mount that moves a carrier into a host, or a mount while the overlay holds carriers, can sync windows.
+    fun willMountItems(movesCarriers: Boolean) {
+        if (movesCarriers || shownOverlays.values.any { it.carrierTags.isNotEmpty() }) {
             windowSync.willMount()
         }
     }
 
     fun didMountItems() {
         UiThreadUtil.assertOnUiThread()
-        val activitiesWithMovedCarriers = overlayTags.keys.mapNotNull(::update).distinct()
-        windowSync.didMount(activitiesWithMovedCarriers)
+        val activitiesWithMovedCarriers = overlayTags.entries.mapNotNull { (surfaceId, tag) -> update(surfaceId, tag) }
+        windowSync.didMount(activitiesWithMovedCarriers.distinct())
     }
 
     fun invalidate() {
@@ -131,35 +134,44 @@ class SharedTransitionOverlays(
 
     // Returns the activity of the overlay when a carrier moves into or out of the overlay window in this mount, or when
     // the window is added.
-    private fun update(surfaceId: Int): Activity? {
-        val overlay = overlayTags[surfaceId]?.let(::resolveView) as? ViewGroup
+    private fun update(
+        surfaceId: Int,
+        overlayTag: Int,
+    ): Activity? {
         val rootView = resolveView(surfaceId)
-        if (overlay == null || rootView == null) {
+        if (rootView == null) {
+            overlayTags.remove(surfaceId, overlayTag)
             hide(surfaceId)
             return null
         }
-        val carrierTags = overlay.children.map { it.id }.toList()
+        val overlay = resolveView(overlayTag) as? ViewGroup
         val shown = shownOverlays[surfaceId]
-        if (shown != null && shown.view === overlay && shown.nativeId == nativeIdOf(overlay)) {
-            followRootView(shown, rootView)
-            val movesCarrier = carrierTags != shown.carrierTags
-            shown.carrierTags = carrierTags
-            return shown.activity.takeIf { movesCarrier }
+        if (overlay == null || shown == null || shown.view !== overlay || shown.nativeId != nativeIdOf(overlay)) {
+            hide(surfaceId)
+            return overlay?.let { show(surfaceId, it, rootView) }
         }
-        hide(surfaceId)
-        return show(surfaceId, overlay, rootView, carrierTags)
+        val rootResized = shown.rootWidth != rootView.width || shown.rootHeight != rootView.height
+        if (overlay.childCount == 0 && shown.carrierTags.isEmpty() && !rootResized) {
+            return null
+        }
+        shown.rootWidth = rootView.width
+        shown.rootHeight = rootView.height
+        followRootView(shown, rootView)
+        val carrierTags = carrierTagsOf(overlay)
+        val movesCarrier = carrierTags != shown.carrierTags
+        shown.carrierTags = carrierTags
+        return shown.activity.takeIf { movesCarrier }
     }
 
     private fun show(
         surfaceId: Int,
         overlay: ViewGroup,
         rootView: View,
-        carrierTags: List<Int>,
     ): Activity? {
-        val activity = activityOf(rootView.context) ?: resumedActivity?.get() ?: return null
-        if (activity.isFinishing || activity.isDestroyed) {
+        if (overlay.childCount == 0) {
             return null
         }
+        val activity = overlayActivity()?.takeIf { it === activityOf(rootView.context) } ?: return null
         val params =
             WindowManager.LayoutParams(
                 WindowManager.LayoutParams.TYPE_APPLICATION,
@@ -176,13 +188,38 @@ class SharedTransitionOverlays(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             params.fitInsetsTypes = 0
             params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
-        setBounds(params, overlay, rootView)
+        setBounds(params, overlay, rootView, activity)
         overlay.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-        activity.windowManager.addView(overlay, params)
-        shownOverlays[surfaceId] = ShownOverlay(overlay, activity, params, nativeIdOf(overlay), carrierTags)
+        try {
+            activity.windowManager.addView(overlay, params)
+        } catch (e: WindowManager.BadTokenException) {
+            Log.w("Reanimated", "Cannot show the shared transition overlay", e)
+            return null
+        } catch (e: IllegalStateException) {
+            Log.w("Reanimated", "Cannot show the shared transition overlay", e)
+            return null
+        }
+        shownOverlays[surfaceId] =
+            ShownOverlay(
+                overlay,
+                activity,
+                params,
+                nativeIdOf(overlay),
+                carrierTagsOf(overlay),
+                rootView.width,
+                rootView.height,
+            )
         return activity
     }
+
+    // The commit thread asks if a run between two windows can start, so `resumedActivity` is volatile. The window uses
+    // the same activity, and only when it shows the surface.
+    private fun overlayActivity(): Activity? = resumedActivity?.get()?.takeUnless { it.isFinishing || it.isDestroyed }
+
+    private fun carrierTagsOf(overlay: ViewGroup) = overlay.children.map { it.id }.toList()
 
     private fun nativeIdOf(overlay: View): Any? = overlay.getTag(R.id.view_tag_native_id)
 
@@ -192,18 +229,20 @@ class SharedTransitionOverlays(
     ) {
         val params = shown.params
         val previous = intArrayOf(params.x, params.y, params.width, params.height)
-        setBounds(params, shown.view, rootView)
+        setBounds(params, shown.view, rootView, shown.activity)
         if (!previous.contentEquals(intArrayOf(params.x, params.y, params.width, params.height))) {
             shown.activity.windowManager.updateViewLayout(shown.view, params)
         }
     }
 
     // A window over the navigation bar decides its color, so the overlay window is the part of the root view that is
-    // not over the bar. The overlay keeps the origin of the root view.
+    // not over the bar. The overlay keeps the origin of the root view. The position of the window is relative to the
+    // window of the activity, which is not at the origin of the screen in multi-window mode.
     private fun setBounds(
         params: WindowManager.LayoutParams,
         overlay: View,
         rootView: View,
+        activity: Activity,
     ) {
         val root = rectOnScreen(rootView)
         val visible = rectOnScreen(rootView.rootView)
@@ -216,8 +255,9 @@ class SharedTransitionOverlays(
         if (!visible.intersect(root)) {
             visible.set(root.left, root.top, root.left, root.top)
         }
-        params.x = visible.left
-        params.y = visible.top
+        val activityWindow = rectOnScreen(activity.window.decorView)
+        params.x = visible.left - activityWindow.left
+        params.y = visible.top - activityWindow.top
         params.width = visible.width()
         params.height = visible.height()
         overlay.translationX = (root.left - visible.left).toFloat()
