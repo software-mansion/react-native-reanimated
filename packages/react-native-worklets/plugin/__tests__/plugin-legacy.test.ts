@@ -1556,6 +1556,32 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    test('workletizes callback functions on SharedTransition chains', () => {
+      const input = html`<script>
+        SharedTransition.duration(300)
+          .springify()
+          .withCallback((finished) => {
+            console.log('SharedTransition finished', finished);
+          });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes custom and progress animations of SharedTransition', () => {
+      const input = html`<script>
+        SharedTransition.custom((values) => ({
+          width: withTiming(values.targetWidth),
+        })).progressAnimation((values, progress) => ({ opacity: progress }));
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for debugging', () => {
