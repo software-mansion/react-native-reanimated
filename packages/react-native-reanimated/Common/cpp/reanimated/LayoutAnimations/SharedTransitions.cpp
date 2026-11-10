@@ -1973,9 +1973,13 @@ void LayoutAnimationsProxy::onSharedTransitionConfigured(const std::vector<Tag> 
     return;
   }
   const auto hiddenTags = hiddenViewTags();
-  const bool configuresHiddenView =
-      std::ranges::any_of(viewTags, [&hiddenTags](const Tag tag) { return hiddenTags.contains(tag); });
-  if (configuresHiddenView) {
+  // A view hidden at mount can show when another view leaves its shared tag.
+  const bool mayShowHiddenView =
+      std::ranges::any_of(viewTags, [&hiddenTags](const Tag tag) { return hiddenTags.contains(tag); }) ||
+      std::ranges::any_of(sharedElements_ | std::views::values, [](const SharedElement &element) {
+        return std::ranges::any_of(element.hiddenViews, &HiddenView::hiddenAtMount);
+      });
+  if (mayShowHiddenView) {
     schedulePullOnNextFrame();
   }
 }
@@ -2481,13 +2485,60 @@ void LayoutAnimationsProxy::fadeInTargetContent(
   schedulePullOnNextFrame();
 }
 
-void LayoutAnimationsProxy::hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node)
-    const {
+void LayoutAnimationsProxy::hideInSharedElement(
+    const SharedTag &sharedTag,
+    const std::shared_ptr<LightNode> &node,
+    const bool hiddenAtMount) const {
   if (!isLightNodeMapped(node)) {
     return;
   }
   forgetHiddenView(node->current.tag);
-  sharedElements_[sharedTag].hiddenViews.push_back(HiddenView{.node = node});
+  sharedElements_[sharedTag].hiddenViews.push_back(HiddenView{.node = node, .hiddenAtMount = hiddenAtMount});
+}
+
+// A screen can mount before its boundary becomes active. Its shared view must not show beside the view that flies to
+// it.
+void LayoutAnimationsProxy::hideInsertedSharedViewsBesideTheirTag(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  for (const auto &[sharedTag, node] : transaction.insertedSharedViews) {
+    if (!isLightNodeMapped(node) || node->isExiting() || !isInsideInactiveBoundary(node) ||
+        !isSharedTagShownOrMoved(sharedTag, node)) {
+      continue;
+    }
+    hideInSharedElement(sharedTag, node, true);
+    transaction.filteredMutations.push_back(createPropsUpdate(
+        node->current,
+        cloneViewWithoutOpacity(node->current, propsParserContext),
+        node->parent.lock()->current.tag,
+        propsParserContext));
+  }
+}
+
+bool LayoutAnimationsProxy::isSharedTagShownOrMoved(
+    const SharedTag &sharedTag,
+    const std::shared_ptr<LightNode> &except) const {
+  if (isSharedTagMoved(sharedTag)) {
+    return true;
+  }
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  const auto &nameToTags = sharedTransitionManager_->nameToTags_;
+  const auto tagsIt = nameToTags.find(sharedTag);
+  return tagsIt != nameToTags.end() && std::ranges::any_of(tagsIt->second, [&](const Tag tag) {
+           const auto nodeIt = lightNodes_.find(tag);
+           return nodeIt != lightNodes_.end() && nodeIt->second != except && isViewKind(nodeIt->second->current) &&
+               isOnTopScreen(nodeIt->second);
+         });
+}
+
+bool LayoutAnimationsProxy::isSharedTagMoved(const SharedTag &sharedTag) const {
+  const bool inRun = std::ranges::any_of(sharedTransitionRuns_ | std::views::values, [&](const auto &run) {
+    return run.lifecycle != SharedTransitionLifecycle::FINISHED && run.sharedTag == sharedTag;
+  });
+  return inRun ||
+      (uncommittedScreenPop_ &&
+       std::ranges::find(uncommittedScreenPop_->endpoints, sharedTag, &ProgressTransitionEndpoint::sharedTag) !=
+           uncommittedScreenPop_->endpoints.end());
 }
 
 RestoreRequest LayoutAnimationsProxy::withShownEndpoint(const RestoreRequest &request) const {
@@ -2546,7 +2597,8 @@ std::unordered_set<Tag> LayoutAnimationsProxy::viewTagsKeptHidden() const {
   return tags;
 }
 
-// A view on the top screen stays hidden only while a run or the uncommitted screen pop moves it.
+// A view on the top screen stays hidden only while a run or the uncommitted screen pop moves it. A view hidden at mount
+// below the top screen stays hidden only while another view has its shared tag or a run moves the tag.
 void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) const {
   if (sharedElements_.empty()) {
     return;
@@ -2554,12 +2606,24 @@ void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) c
   auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   const auto &tagToName = sharedTransitionManager_->tagToName_;
   std::unordered_map<SharedTag, std::vector<Tag>> tagsBySharedTag;
+  const auto &nameToTags = sharedTransitionManager_->nameToTags_;
+  const auto isLastViewOfSharedTag = [&](const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) {
+    return !isSharedTagMoved(sharedTag) &&
+        std::ranges::none_of(
+            nameToTags.at(sharedTag),
+            [&](const Tag tag) {
+              const auto nodeIt = lightNodes_.find(tag);
+              return nodeIt != lightNodes_.end() && nodeIt->second != node && isViewKind(nodeIt->second->current);
+            }) &&
+        !isInExitingSubtree(node);
+  };
   for (const auto &[sharedTag, element] : sharedElements_) {
-    for (const auto &[node, restoreDeferred] : element.hiddenViews) {
+    for (const auto &[node, restoreDeferred, hiddenAtMount] : element.hiddenViews) {
       const auto nameIt = tagToName.find(node->current.tag);
       if (restoreDeferred || nameIt == tagToName.end() || nameIt->second != sharedTag ||
           !hasSharedViewInLayoutRoot(sharedTag, node, tagToName, tagsBySharedTag) ||
-          (isOnTopScreen(node) && !isInSharedTransition(node))) {
+          ((isOnTopScreen(node) || (hiddenAtMount && isLastViewOfSharedTag(sharedTag, node))) &&
+           !isInSharedTransition(node))) {
         transaction.restoreRequests.push_back({sharedTag, node});
       }
     }

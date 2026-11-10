@@ -56,6 +56,8 @@ function DetailsScreen() {
 
 A boolean that tells if the user sees this screen. With React Navigation, use the value of [`useIsFocused()`](https://reactnavigation.org/docs/use-is-focused). When the active boundary changes, the transition starts.
 
+A shared view that mounts under an inactive boundary is hidden only when the active boundary shows a view with the same `sharedTransitionTag`, or when a transition moves that tag. Otherwise it shows, for example in a list under a sheet or on a page of a pager.
+
 #### `children` <Optional/>
 
 The content of the screen. `SharedTransitionBoundary` does not change the layout: it renders with `display: 'contents'`.

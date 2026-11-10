@@ -1,0 +1,1 @@
+A shared view that mounts under an inactive `SharedTransitionBoundary` is hidden at mount only when the active boundary shows its tag or a transition moves it, so new rows under a sheet and the pages of a pager show.
