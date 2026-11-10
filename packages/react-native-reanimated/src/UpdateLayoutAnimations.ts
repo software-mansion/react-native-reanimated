@@ -35,7 +35,8 @@ export const updateLayoutAnimations: (
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
   sharedTransitionContentFade?: SharedTransitionContentFade,
-  sharedTransitionCallback?: (finished: boolean) => void
+  sharedTransitionCallback?: (finished: boolean) => void,
+  sharedTransitionFollowsTarget?: boolean
 ) => void = () => {
   // no-op
 };

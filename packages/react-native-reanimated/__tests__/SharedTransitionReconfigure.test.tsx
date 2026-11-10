@@ -48,6 +48,19 @@ describe('Shared transition registration', () => {
 
   afterEach(() => ReducedMotionManager.setEnabled(initialReducedMotion));
 
+  test.each([
+    ['a built-in', new SharedTransition(), true],
+    ['a custom', SharedTransition.custom(() => ({})), false],
+  ])(
+    'registers whether %s transition follows the target',
+    (_name, transition, followsTarget) => {
+      mountWith(transition);
+      const registrations = sharedTransitionRegistrations();
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0][7]).toBe(followsTarget);
+    }
+  );
+
   test('does not register a default transition when reduced motion is enabled', () => {
     ReducedMotionManager.setEnabled(true);
     new AnimatedComponent(View, { sharedTransitionTag: 'tag' }, 'View');
