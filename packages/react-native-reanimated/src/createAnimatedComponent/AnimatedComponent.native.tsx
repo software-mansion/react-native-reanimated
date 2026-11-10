@@ -95,7 +95,7 @@ export default class AnimatedComponent
     if (this.props.nativeID == null) {
       this._configureSharedTransition(true);
     }
-    if (__DEV__ && this.props.entering && this.props.nativeID !== undefined) {
+    if (__DEV__ && this.props.entering && this.props.nativeID != null) {
       logger.warn(
         `${displayName}: The entering animation does not run on a component with its own \`nativeID\`.`
       );
@@ -370,7 +370,7 @@ export default class AnimatedComponent
   // Native moves the entering config to the view when it inserts a view with
   // the Reanimated native ID, so a view with its own `nativeID` never gets it.
   _configureEnteringAnimation(context = this.context) {
-    if (!context?.current && this.props.nativeID === undefined) {
+    if (!context?.current && this.props.nativeID == null) {
       this._configureLayoutAnimation(
         LayoutAnimationType.ENTERING,
         this.props.entering
