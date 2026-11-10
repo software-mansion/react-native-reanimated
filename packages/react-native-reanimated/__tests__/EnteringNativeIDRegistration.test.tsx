@@ -16,7 +16,7 @@ function enteringRegistrations() {
     .mock.calls.filter(([, type]) => type === LayoutAnimationType.ENTERING);
 }
 
-function construct(props: { nativeID?: string }) {
+function construct(props: { nativeID?: string | null }) {
   return new AnimatedComponent(View, { entering: FadeIn, ...props }, 'View');
 }
 
@@ -30,8 +30,8 @@ describe('Entering animation registration', () => {
     ]);
   });
 
-  test('registers when nativeID is undefined', () => {
-    construct({ nativeID: undefined });
+  test.each([undefined, null])('registers when nativeID is %s', (nativeID) => {
+    construct({ nativeID });
     expect(enteringRegistrations()).toHaveLength(1);
   });
 
