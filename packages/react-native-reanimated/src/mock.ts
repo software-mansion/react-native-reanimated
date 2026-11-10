@@ -408,6 +408,29 @@ class SharedTransitionMock extends BaseAnimationMock {
   }
 }
 
+const SharedTransition = withStaticModifiers(SharedTransitionMock);
+
+type Methods = Record<string, (...args: unknown[]) => unknown>;
+
+function withStaticModifiers<Builder extends new () => object>(
+  BuilderClass: Builder
+) {
+  const statics = BuilderClass as unknown as Methods;
+  for (
+    let prototype = BuilderClass.prototype;
+    prototype !== Object.prototype;
+    prototype = Object.getPrototypeOf(prototype)
+  ) {
+    for (const name of Object.getOwnPropertyNames(prototype)) {
+      if (name !== 'constructor' && !(name in BuilderClass)) {
+        statics[name] = (...args) =>
+          (new BuilderClass() as Methods)[name](...args);
+      }
+    }
+  }
+  return BuilderClass;
+}
+
 class NativeEventsManagerMock {
   attachEvents = NOOP;
   detachEvents = NOOP;
@@ -498,7 +521,7 @@ const layoutReanimation = {
   RotateOutUpLeft: new BaseAnimationMock(),
   RotateOutUpRight: new BaseAnimationMock(),
   SequencedTransition: new BaseAnimationMock(),
-  SharedTransition: new SharedTransitionMock(),
+  SharedTransition,
   SharedTransitionType,
   SlideInDown: new BaseAnimationMock(),
   SlideInLeft: new BaseAnimationMock(),

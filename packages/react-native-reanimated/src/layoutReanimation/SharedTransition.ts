@@ -13,6 +13,7 @@ import type {
   EntryAnimationsValues,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationAndConfig,
   LayoutAnimationFunction,
   StyleProps,
   Timestamp,
@@ -20,7 +21,7 @@ import type {
 import { Easing } from '../Easing';
 import { interpolateColor } from '../interpolateColor';
 import type { BaseAnimationBuilder } from './animationBuilder';
-import { ComplexAnimationBuilder } from './animationBuilder';
+import { AnimationConfigBuilder } from './animationBuilder';
 
 const DEFAULT_DURATION = 500;
 
@@ -449,7 +450,7 @@ function progressDrivenAnimations(
 }
 
 export class SharedTransition
-  extends ComplexAnimationBuilder
+  extends AnimationConfigBuilder
   implements ILayoutAnimationBuilder
 {
   static presetName = 'SharedTransition';
@@ -547,9 +548,13 @@ export class SharedTransition
   static custom(
     customAnimationFactory: CustomSharedTransitionAnimation
   ): SharedTransition {
-    const instance = new SharedTransition();
-    instance.customAnimationFactory = customAnimationFactory;
-    return instance;
+    return new SharedTransition().custom(customAnimationFactory);
+  }
+
+  /** Uses a custom animation worklet. See {@link SharedTransition.custom}. */
+  custom(customAnimationFactory: CustomSharedTransitionAnimation): this {
+    this.customAnimationFactory = customAnimationFactory;
+    return this;
   }
 
   /**
@@ -602,11 +607,61 @@ export class SharedTransition
     return this;
   }
 
+  /** Not supported. A shared transition starts from the source view. */
+  static withInitialValues<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _values: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('withInitialValues');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition starts from the source view. */
+  withInitialValues(_values: never): this {
+    warnUnsupportedModifier('withInitialValues');
+    return this;
+  }
+
+  /** Not supported. A shared transition ends at the target view. */
+  static withTargetValues<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _values: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('withTargetValues');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition ends at the target view. */
+  withTargetValues(_values: never): this {
+    warnUnsupportedModifier('withTargetValues');
+    return this;
+  }
+
+  /** Not supported. A shared transition animates the transform of the view. */
+  static rotate<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _degree: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('rotate');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition animates the transform of the view. */
+  rotate(_degree: never): this {
+    warnUnsupportedModifier('rotate');
+    return this;
+  }
+
+  getAnimationAndConfig(): LayoutAnimationAndConfig {
+    const [animation, config] = super.getAnimationAndConfig();
+    if (config.duration === undefined && !this.isPhysicsBasedSpring()) {
+      config.duration = DEFAULT_DURATION;
+    }
+    return [animation, config];
+  }
+
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    if (!this.isPhysicsBasedSpring()) {
-      this.durationV ??= DEFAULT_DURATION;
-    }
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const customAnimationFactory = this.customAnimationFactory;
@@ -776,6 +831,13 @@ export class SharedTransition
       return style;
     };
   }
+}
+
+function warnUnsupportedModifier(name: string) {
+  logger.warnOnce(
+    `SharedTransition: ${name}() is not supported and has no effect.`,
+    0
+  );
 }
 
 function isOptionsObject(value: unknown): value is object {
