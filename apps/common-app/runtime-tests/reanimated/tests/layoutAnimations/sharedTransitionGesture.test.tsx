@@ -265,6 +265,58 @@ function TabScreens() {
   );
 }
 
+// The source screen detaches the inner screen that holds the source, so the source is off the window.
+function OffWindowSourceScreens({
+  transitionStyle,
+  sourceScreenMounted = true,
+}: {
+  transitionStyle: SharedTransition;
+  sourceScreenMounted?: boolean;
+}) {
+  const sourceScreen = useTestRef('offWindowSourceScreen');
+  const targetScreen = useTestRef('offWindowTargetScreen');
+  const target = useTestRef('offWindowTarget');
+  return (
+    <View style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        onAppear={() => notify('off-window-target-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <SharedTransitionBoundary isActive={!sourceScreenMounted}>
+          <Animated.View
+            ref={target}
+            sharedTransitionTag="off-window-gesture"
+            sharedTransitionStyle={transitionStyle}
+            style={styles.target}
+          />
+        </SharedTransitionBoundary>
+      </Screen>
+      {sourceScreenMounted && (
+        <Screen
+          ref={sourceScreen}
+          onAppear={() => notify('off-window-source-appeared')}
+          enabled
+          activityState={2}
+          style={styles.screen}>
+          <ScreenContainer style={styles.screen}>
+            <Screen enabled activityState={0} style={styles.screen}>
+              <SharedTransitionBoundary isActive>
+                <Animated.View
+                  sharedTransitionTag="off-window-gesture"
+                  sharedTransitionStyle={transitionStyle}
+                  style={styles.source}
+                />
+              </SharedTransitionBoundary>
+            </Screen>
+          </ScreenContainer>
+        </Screen>
+      )}
+    </View>
+  );
+}
+
 describe('Back gesture to a screen with tabs', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
@@ -624,6 +676,63 @@ describe('Callback when native progress loses its screens', () => {
       await render(<View />);
       await waitForFrames(3);
       expect(results.length).toBe(1);
+    }
+  );
+});
+
+describe('Callback of a back gesture that SET refuses', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([['commit'], ['cancel']] as const)(
+    'reports false once at the start and nothing on ${0}',
+    async ([outcome]) => {
+      const results: boolean[] = [];
+      const record = (finished: boolean) => results.push(finished);
+      const style = SharedTransition.duration(30000).withCallback(
+        (finished) => {
+          'worklet';
+          scheduleOnRN(record, finished);
+        }
+      );
+      await render(<OffWindowSourceScreens transitionStyle={style} />);
+      await waitForNotification('off-window-source-appeared');
+      await waitForNotification('off-window-target-appeared');
+      const sourceScreen = getTestComponent('offWindowSourceScreen').getTag();
+      const targetScreen = getTestComponent('offWindowTargetScreen').getTag();
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0,
+        false,
+        false
+      );
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.25,
+        false,
+        false
+      );
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
+      expect(await opacityOf('offWindowTarget')).toBe(1);
+      if (outcome === 'commit') {
+        await observer().emitScreenTransitionProgress(
+          targetScreen,
+          1,
+          false,
+          false
+        );
+        await render(
+          <OffWindowSourceScreens
+            transitionStyle={style}
+            sourceScreenMounted={false}
+          />
+        );
+      } else {
+        await observer().emitScreenGestureCancel(sourceScreen);
+      }
+      await waitForFrames(6);
+      expect(results).toBe([false]);
+      expect(await opacityOf('offWindowTarget')).toBe(1);
     }
   );
 });
