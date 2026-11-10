@@ -261,13 +261,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     react_native_assert(root && "Root node not found");
     activeBoundaryMayHaveChanged_ = activeBoundaryMayHaveChanged_ ||
         std::ranges::any_of(mutations, [this](const auto &mutation) { return mayChangeActiveBoundary(mutation); });
-    // Every reader of the snapshots needs a change of the active boundary or an active run.
-    const bool collectsSharedElements =
-        activeBoundaryMayHaveChanged_ || !std::ranges::empty(activeSharedTransitionRuns());
+    const auto snapshotTags = activeBoundaryMayHaveChanged_ ? std::nullopt : sharedTagsAffectedBy(mutations);
     auto beforeTopScreen = topScreen_;
-    if (beforeTopScreen && collectsSharedElements) {
+    if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
-      findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
+      findSharedElements(beforeTopScreen, BEFORE, snapshotTags, transaction);
     }
 
     updateLightTree(propsParserContext, mutations, transaction);
@@ -275,14 +273,16 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     react_native_assert(
         (activeBoundaryMayHaveChanged_ || findActiveBoundary(root) == topScreen_) &&
         "Active boundary changed without setting activeBoundaryMayHaveChanged_");
+    react_native_assert(
+        (!snapshotTags || !activeBoundaryMayHaveChanged_) && "The light tree update changed the active boundary");
     auto afterTopScreen = activeBoundaryMayHaveChanged_ ? findActiveBoundary(root) : topScreen_;
     activeBoundaryMayHaveChanged_ = false;
     rememberCoveredTopBoundary(beforeTopScreen, afterTopScreen);
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
-      if (collectsSharedElements) {
+      {
         ReanimatedSystraceSection s("find after elements");
-        findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
+        findSharedElements(afterTopScreen, AFTER, snapshotTags, transaction);
       }
 #ifdef __APPLE__
       // TODO (future): this is a temporary workaround for RNScreens on iOS,
@@ -389,7 +389,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   react_native_assert(
       node->placement() != CarrierPlacement::AT_ROOT && "Remove the carrier from the root before unmapping its node");
   lightNodes_.erase(it);
-  activeBoundaryMayHaveChanged_ = true;
+  if (boundaries_.erase(node)) {
+    activeBoundaryMayHaveChanged_ = true;
+  }
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     unmappedContentFadeTags_.insert(node->current.tag);
     if (deferredSharedTransitionConfigReleases_.erase(node->current.tag)) {
@@ -507,12 +509,70 @@ ShadowView LayoutAnimationsProxy::resetPropsMissingFrom(
 }
 #endif
 
+// The differ sends a Create, Insert, Remove or Delete for each view of a subtree that it adds or deletes, but a Remove
+// and an Insert only for the root of a subtree that it moves.
 bool LayoutAnimationsProxy::mayChangeActiveBoundary(const ShadowViewMutation &mutation) const {
-  if (mutation.type != ShadowViewMutation::Update) {
-    return true;
+  switch (mutation.type) {
+    case ShadowViewMutation::Create:
+    case ShadowViewMutation::Insert:
+      return isSETBoundary(mutation.newChildShadowView);
+    case ShadowViewMutation::Delete:
+      return isSETBoundary(mutation.oldChildShadowView);
+    case ShadowViewMutation::Remove: {
+      const auto nodeIt = lightNodes_.find(mutation.oldChildShadowView.tag);
+      return nodeIt != lightNodes_.end() && holdsBoundary(nodeIt->second);
+    }
+    case ShadowViewMutation::Update: {
+      const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
+      return nodeIt != lightNodes_.end() && isSETBoundary(nodeIt->second) &&
+          isBoundaryActive(nodeIt->second) != isBoundaryActive(mutation.newChildShadowView);
+    }
+    default:
+      return true;
   }
-  const auto nodeIt = lightNodes_.find(mutation.newChildShadowView.tag);
-  return nodeIt != lightNodes_.end() && isSETBoundary(nodeIt->second);
+}
+
+bool LayoutAnimationsProxy::holdsBoundary(const std::shared_ptr<LightNode> &node) const {
+  return std::ranges::any_of(boundaries_, [&node](const auto &boundary) { return isInSubtree(boundary, node); });
+}
+
+// When the active boundary stays, a snapshot changes for its readers only in the views of a run, which follow their
+// targets, and in the views that the commit adds or removes. A view that leaves a deleted parent and stays, as when
+// React flattens the parent, keeps that parent among the ancestors that the iOS modal hold reads, so then all shared
+// views are collected (nullopt).
+std::optional<std::unordered_set<SharedTag>> LayoutAnimationsProxy::sharedTagsAffectedBy(
+    const ShadowViewMutationList &mutations) const {
+  std::unordered_set<Tag> deletedTags;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Delete) {
+      deletedTags.insert(mutation.oldChildShadowView.tag);
+    }
+  }
+  const bool leavesDeletedParent = std::ranges::any_of(mutations, [&deletedTags](const auto &mutation) {
+    return mutation.type == ShadowViewMutation::Remove && deletedTags.contains(mutation.parentTag) &&
+        !deletedTags.contains(mutation.oldChildShadowView.tag);
+  });
+  if (leavesDeletedParent) {
+    return std::nullopt;
+  }
+  std::unordered_set<SharedTag> sharedTags;
+  for (const auto &run : activeSharedTransitionRuns()) {
+    sharedTags.insert(run.sharedTag);
+  }
+  auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+  const auto &tagToName = sharedTransitionManager_->tagToName_;
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Update) {
+      continue;
+    }
+    const auto &view = mutation.type == ShadowViewMutation::Create || mutation.type == ShadowViewMutation::Insert
+        ? mutation.newChildShadowView
+        : mutation.oldChildShadowView;
+    if (const auto nameIt = tagToName.find(view.tag); nameIt != tagToName.end()) {
+      sharedTags.insert(nameIt->second);
+    }
+  }
+  return sharedTags;
 }
 
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
@@ -636,6 +696,9 @@ void LayoutAnimationsProxy::updateLightTree(
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           forgetHiddenView(mutation.newChildShadowView.tag);
+          if (isSETBoundary(node)) {
+            boundaries_.insert(node);
+          }
         }
         lightNodes_[mutation.newChildShadowView.tag] = node;
         staleSynchronousProps_.forget(mutation.newChildShadowView.tag);
@@ -802,11 +865,16 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
         node->current = mutation.newChildShadowView;
         react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
         lightNodes_[mutation.newChildShadowView.tag] = node;
+        if (isSETBoundary(node)) {
+          boundaries_.insert(node);
+        }
         break;
       }
       case ShadowViewMutation::Delete: {
         const auto tag = mutation.oldChildShadowView.tag;
-        if (lightNodes_.erase(tag)) {
+        if (const auto it = lightNodes_.find(tag); it != lightNodes_.end()) {
+          boundaries_.erase(it->second);
+          lightNodes_.erase(it);
           if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
             unmappedContentFadeTags_.insert(tag);
           }

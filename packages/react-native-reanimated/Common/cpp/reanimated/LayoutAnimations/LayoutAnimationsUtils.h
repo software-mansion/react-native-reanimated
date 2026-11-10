@@ -487,6 +487,31 @@ static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::share
   return false;
 }
 
+// The positions of the children on the path from root down to node, if a walk from root that skips exiting nodes
+// reaches node. A walk visits the nodes in the lexicographic order of these positions.
+static inline std::optional<std::vector<int>> childPositionsFrom(
+    const std::shared_ptr<LightNode> &root,
+    std::shared_ptr<LightNode> node) {
+  std::vector<int> positions;
+  while (node != root) {
+    auto parent = node->parent.lock();
+    if (node->isExiting() || !parent) {
+      return std::nullopt;
+    }
+    const auto position = parent->positionOf(node);
+    if (position == -1) {
+      return std::nullopt;
+    }
+    positions.push_back(position);
+    node = std::move(parent);
+  }
+  if (root->isExiting()) {
+    return std::nullopt;
+  }
+  std::ranges::reverse(positions);
+  return positions;
+}
+
 // A view that React moved keeps its old parent until the Insert, but that parent no longer holds it.
 static inline bool isLinkedInSubtree(const std::shared_ptr<LightNode> &node, const std::shared_ptr<LightNode> &root) {
   for (auto child = node, parent = node->parent.lock(); child != root; child = parent, parent = parent->parent.lock()) {
@@ -513,13 +538,20 @@ static inline bool isDescendantOfAny(
   return std::ranges::any_of(views, [&parent](const auto &view) { return isInSubtree(parent, view); });
 }
 
+static inline bool isSETBoundary(const ShadowView &view) {
+  return !std::strcmp(view.componentName, "REASharedTransitionBoundary");
+}
+
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
-  return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
+  return isSETBoundary(node->current);
+}
+
+static inline bool isBoundaryActive(const ShadowView &view) {
+  return std::static_pointer_cast<const REASharedTransitionBoundaryProps>(view.props)->isActive;
 }
 
 static inline bool isBoundaryActive(const std::shared_ptr<LightNode> &node) {
-  auto boundaryProps = std::static_pointer_cast<const REASharedTransitionBoundaryProps>(node->current.props);
-  return boundaryProps->isActive;
+  return isBoundaryActive(node->current);
 }
 
 static inline bool isInsideInactiveBoundary(const std::shared_ptr<LightNode> &node) {
