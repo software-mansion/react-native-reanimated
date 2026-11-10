@@ -24,6 +24,7 @@ jobs:
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+      full: true
     secrets:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
@@ -39,3 +40,4 @@ jobs:
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+      full: true
