@@ -245,67 +245,83 @@ describe('Shared transition live target geometry', () => {
     await expectEndpoint(30);
   });
 
-  test('interpolates the frame and the matrix like interpolateMatrix', async () => {
-    const quarter = 150;
-    // The progress reaches 1 before the run ends, so the carrier still shows the last sample.
-    const transition = SharedTransition.duration((quarter * 4) / 0.75).easing(
-      (time) => {
-        'worklet';
-        return Math.min(1, time / 0.75);
+  test.each(['decomposable', 'zeroScale'] as const)(
+    'interpolates the frame and the matrix like interpolateMatrix, matrices: %s',
+    async (matrices) => {
+      const quarter = 150;
+      // The progress reaches 1 before the run ends, so the carrier still shows the last sample.
+      const transition = SharedTransition.duration((quarter * 4) / 0.75).easing(
+        (time) => {
+          'worklet';
+          return Math.min(1, time / 0.75);
+        }
+      );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(
+        <MatrixScreens
+          active={false}
+          matrices={matrices}
+          transition={transition}
+        />
+      );
+      await waitForFrames();
+      const start = await geometryOf('source');
+      await render(
+        <MatrixScreens active matrices={matrices} transition={transition} />
+      );
+      await waitForFrames(3);
+      const target = await geometryOf('target');
+      const interpolation = prepareMatrixInterpolation(
+        start.matrix as AffineMatrixFlat,
+        target.matrix as AffineMatrixFlat
+      );
+      for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
+        if (progress > 0) {
+          await advanceAnimationTimer(quarter);
+        }
+        const carrier = await geometryOf('source');
+        for (const key of ['x', 'y', 'width', 'height'] as const) {
+          const expected = start[key] + progress * (target[key] - start[key]);
+          expect(carrier[key]).toBeWithinRange(
+            expected - FRAME_TOLERANCE,
+            expected + FRAME_TOLERANCE
+          );
+        }
+        const expectedMatrix = interpolateMatrix(progress, interpolation);
+        carrier.matrix.forEach((cell, index) => {
+          const tolerance = TRANSLATION_CELLS.includes(index)
+            ? TRANSLATION_TOLERANCE
+            : 1e-3;
+          expect(cell).toBeWithinRange(
+            expectedMatrix[index] - tolerance,
+            expectedMatrix[index] + tolerance
+          );
+        });
       }
-    );
-    await mockAnimationTimer({ autoAdvance: false });
-    await render(<MatrixScreens active={false} transition={transition} />);
-    await waitForFrames();
-    const start = await geometryOf('source');
-    await render(<MatrixScreens active transition={transition} />);
-    await waitForFrames(3);
-    const target = await geometryOf('target');
-    const interpolation = prepareMatrixInterpolation(
-      start.matrix as AffineMatrixFlat,
-      target.matrix as AffineMatrixFlat
-    );
-    for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
-      if (progress > 0) {
-        await advanceAnimationTimer(quarter);
-      }
-      const carrier = await geometryOf('source');
-      for (const key of ['x', 'y', 'width', 'height'] as const) {
-        const expected = start[key] + progress * (target[key] - start[key]);
-        expect(carrier[key]).toBeWithinRange(
-          expected - FRAME_TOLERANCE,
-          expected + FRAME_TOLERANCE
-        );
-      }
-      const expectedMatrix = interpolateMatrix(progress, interpolation);
-      carrier.matrix.forEach((cell, index) => {
-        const tolerance = TRANSLATION_CELLS.includes(index)
-          ? TRANSLATION_TOLERANCE
-          : 1e-3;
-        expect(cell).toBeWithinRange(
-          expectedMatrix[index] - tolerance,
-          expectedMatrix[index] + tolerance
-        );
-      });
     }
-  });
+  );
 });
+
+type Matrices = 'decomposable' | 'zeroScale';
 
 function MatrixScreens({
   active,
+  matrices,
   transition,
 }: {
   active: boolean;
+  matrices: Matrices;
   transition: SharedTransition;
 }) {
+  const sideProps = { matrices, transition };
   return (
     <View style={styles.root}>
       <SharedTransitionBoundary isActive={!active}>
-        <MatrixView name="source" transition={transition} />
+        <MatrixView name="source" {...sideProps} />
       </SharedTransitionBoundary>
       {active && (
         <SharedTransitionBoundary isActive>
-          <MatrixView name="target" transition={transition} />
+          <MatrixView name="target" {...sideProps} />
         </SharedTransitionBoundary>
       )}
     </View>
@@ -314,9 +330,11 @@ function MatrixScreens({
 
 function MatrixView({
   name,
+  matrices,
   transition,
 }: {
   name: 'source' | 'target';
+  matrices: Matrices;
   transition: SharedTransition;
 }) {
   return (
@@ -324,9 +342,16 @@ function MatrixView({
       ref={useTestRef(name)}
       sharedTransitionTag="matrix"
       sharedTransitionStyle={transition}
-      style={name === 'source' ? styles.matrixSource : styles.matrixTarget}
+      style={matrixStyle(matrices, name)}
     />
   );
+}
+
+function matrixStyle(matrices: Matrices, name: 'source' | 'target') {
+  if (matrices === 'zeroScale') {
+    return name === 'source' ? styles.zeroScaleSource : styles.identityTarget;
+  }
+  return name === 'source' ? styles.matrixSource : styles.matrixTarget;
 }
 
 const FRAME_TOLERANCE =
@@ -544,5 +569,19 @@ const styles = StyleSheet.create({
     height: 80,
     backgroundColor: '#0000ff',
     transform: [{ translateY: 20 }, { rotate: '105deg' }, { scale: 1.5 }],
+  },
+  zeroScaleSource: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#ff0000',
+    transform: [{ scale: 0 }],
+  },
+  identityTarget: {
+    position: 'absolute',
+    left: 150,
+    top: 250,
+    width: 120,
+    height: 80,
+    backgroundColor: '#0000ff',
   },
 });
