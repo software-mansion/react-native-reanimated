@@ -82,7 +82,13 @@ interface SimctlDevice {
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
+const BOOLEAN_FLAGS = new Set([
+  'launch',
+  'skip-build',
+  'build-only',
+  'full',
+  'help',
+]);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
@@ -151,6 +157,7 @@ const AFTER_SUITE =
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
+const FULL = args.full === true || args.full === '';
 const SIMULATOR =
   typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
 const UDID = typeof args.udid === 'string' ? args.udid : null;
@@ -693,7 +700,7 @@ function onHello(msg: Partial<HelloMessage>) {
     return;
   }
 
-  selectedSuites = selectSuites(suites, ONLY);
+  selectedSuites = selectSuites(suites, ONLY, FULL);
   let only = ONLY;
   if (resumeFromSuite !== null) {
     only = suitesToResume();
@@ -710,6 +717,7 @@ function onHello(msg: Partial<HelloMessage>) {
   send({
     type: 'start',
     ...(only ? { only } : {}),
+    ...(FULL ? { full: true } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
 }
@@ -2232,6 +2240,9 @@ Build and run
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --full                    Run the long variants (more iterations, complete
+                            matrices) and the suites a short run skips, as
+                            the nightly does.
   --after-suite <command>   Shell command to run each time the app finishes a
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending

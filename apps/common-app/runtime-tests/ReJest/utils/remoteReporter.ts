@@ -32,6 +32,7 @@ export interface RemoteReporterOptions {
   onStatus: (message: string) => void;
   onStart: (params: {
     only?: string[];
+    full?: boolean;
     reportSuiteFinished: (suiteName: string) => void;
     requestReload: (resumeFromSuite: string, summarySoFar: RunSummary) => void;
   }) => Promise<RunSummary | void>;
@@ -258,7 +259,12 @@ export function runWithRemoteReporter({
       safeSend({ type: 'reload', resumeFromSuite, ...summarySoFar });
     };
 
-    onStart({ only: parsed.only, reportSuiteFinished, requestReload })
+    onStart({
+      only: parsed.only,
+      full: parsed.full,
+      reportSuiteFinished,
+      requestReload,
+    })
       .then((summary) => {
         const finalSummary = summary ?? {
           passed: 0,

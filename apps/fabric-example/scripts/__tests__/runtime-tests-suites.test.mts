@@ -8,15 +8,25 @@ const SUITES = [
   { name: 'B', skipByDefault: true },
   { name: 'C', disabled: true },
   { name: 'D' },
+  { name: 'E', fullRunOnly: true },
 ];
 
 describe('selectSuites', () => {
   it('skips suites that are skipped by default or disabled', () => {
-    assert.deepEqual(selectSuites(SUITES, null), ['A', 'D']);
+    assert.deepEqual(selectSuites(SUITES, null, false), ['A', 'D']);
+  });
+
+  it('adds the full run suites to a full run', () => {
+    assert.deepEqual(selectSuites(SUITES, null, true), ['A', 'D', 'E']);
   });
 
   it('keeps only the requested suites in declaration order', () => {
-    assert.deepEqual(selectSuites(SUITES, ['D', 'B', 'A']), ['A', 'B', 'D']);
+    assert.deepEqual(selectSuites(SUITES, ['E', 'D', 'B', 'A'], false), [
+      'A',
+      'B',
+      'D',
+      'E',
+    ]);
   });
 });
 
