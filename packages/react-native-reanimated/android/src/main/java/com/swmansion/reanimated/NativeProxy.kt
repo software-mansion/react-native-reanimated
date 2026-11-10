@@ -19,7 +19,6 @@ import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
-import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
@@ -87,6 +86,7 @@ open class NativeProxy {
     @Suppress("unused")
     private val mHybridData: HybridData
     private val tracksSynchronousWrites: Boolean
+    private val pullsMountTransactions: Boolean
 
     private enum class CarrierBatch {
         NOT_QUEUED,
@@ -108,7 +108,7 @@ open class NativeProxy {
                     sharedTransitionOverlays?.willMountItems(
                         movesCarriers =
                             pendingViewTransitionReleases.isNotEmpty() ||
-                                ReactNativeFeatureFlags.enableMountingCoordinatorPullModelAndroid(),
+                                pullsMountTransactions,
                     )
                     releasePendingViewTransitions()
                 }
@@ -170,6 +170,7 @@ open class NativeProxy {
                 mFabricUIManager,
             )
         tracksSynchronousWrites = hasSynchronousWritesTracker()
+        pullsMountTransactions = isMountingCoordinatorPullModelEnabled()
         sharedTransitionOverlays =
             if (hasSharedElementTransitions()) SharedTransitionOverlays(mFabricUIManager, mContext) else null
         if (BuildConfig.DEBUG) {
@@ -197,6 +198,8 @@ open class NativeProxy {
     private external fun hasSynchronousWritesTracker(): Boolean
 
     private external fun hasSharedElementTransitions(): Boolean
+
+    private external fun isMountingCoordinatorPullModelEnabled(): Boolean
 
     private external fun rewriteSynchronousProps()
 

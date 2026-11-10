@@ -1,4 +1,5 @@
 #include <react/fabric/Binding.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -152,6 +153,10 @@ bool NativeProxy::hasSharedElementTransitions() {
   return StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
 }
 
+bool NativeProxy::isMountingCoordinatorPullModelEnabled() {
+  return reanimated::isMountingCoordinatorPullModelEnabled();
+}
+
 void NativeProxy::rewriteSynchronousProps() {
   reanimatedModuleProxy_->rewriteSynchronousProps();
 }
@@ -174,6 +179,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("performNonLayoutOperationsCpp", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("hasSynchronousWritesTracker", NativeProxy::hasSynchronousWritesTracker),
        makeNativeMethod("hasSharedElementTransitions", NativeProxy::hasSharedElementTransitions),
+       makeNativeMethod("isMountingCoordinatorPullModelEnabled", NativeProxy::isMountingCoordinatorPullModelEnabled),
        makeNativeMethod("rewriteSynchronousProps", NativeProxy::rewriteSynchronousProps),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp),
        makeNativeMethod("toggleSlowAnimationsOnUIRuntime", NativeProxy::toggleSlowAnimationsOnUIRuntime)});
