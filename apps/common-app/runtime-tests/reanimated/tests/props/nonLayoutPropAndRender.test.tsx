@@ -184,6 +184,14 @@ async function recordColorFrames(
     await waitForAnimationUpdates(RECORDED_FRAMES + 1);
   }
 
+  // The two runs can reach the update count at different animation positions.
+  // Capture through the target color so both contain the whole sequence.
+  const box = getTestComponent(BOX_REF);
+  await expectEventually(() => box.getAnimatedStyle('backgroundColor')).toBe(
+    toColor,
+    ComparisonMode.COLOR
+  );
+
   await stopRecordingAnimationUpdates();
   const frames = toColorFrames(await updatesContainer.getUpdates());
   const nativeFrames = toColorFrames(
