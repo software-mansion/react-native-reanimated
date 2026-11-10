@@ -55,9 +55,8 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReleaseViewTransitionsFunction = std::function<void(std::vector<int> &tags, bool isBatchQueued)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
-// Shows the overlay and listens for boundary window attachment until nullopt removes the overlay.
-using SetSharedTransitionOverlayFunction =
-    std::function<void(SurfaceId surfaceId, std::optional<Tag> tag, std::function<void()> onWindowAttach)>;
+// Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
+using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
 // Android shows the overlay in a window of an activity, so a carrier between two windows needs one.
 using CanShowSharedTransitionOverlayFunction = std::function<bool()>;
 // The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its

@@ -214,11 +214,7 @@ void NativeProxy::releaseViewTransitions(std::vector<int> &tags, bool isBatchQue
   method(javaPart_.get(), jArrayInt, isBatchQueued);
 }
 
-// Android has no window attach signal for boundaries, so the overlay ignores it.
-void NativeProxy::setSharedTransitionOverlay(
-    const SurfaceId surfaceId,
-    const std::optional<Tag> tag,
-    const std::function<void()> & /*onWindowAttach*/) {
+void NativeProxy::setSharedTransitionOverlay(const SurfaceId surfaceId, const std::optional<Tag> tag) {
   static const auto method = getJniMethod<void(int, int)>("setSharedTransitionOverlay");
   method(javaPart_.get(), surfaceId, tag.value_or(-1));
 }

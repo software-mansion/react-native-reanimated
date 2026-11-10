@@ -70,6 +70,7 @@ enum class SharedTransitionLifecycle : std::uint8_t {
 // The carrier is the view that the run animates, moved from its parent to its layout root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
+  // The run reports this callback itself: a gesture gives the result, a start that does not leave its hold gets false.
   std::shared_ptr<Serializable> progressCallback;
   SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
@@ -82,6 +83,7 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+  std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
 };
 
@@ -536,6 +538,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
+  bool isInOtherWindow(const std::shared_ptr<LightNode> &target) const;
+  void waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target) const;
+  void oweCallbackOfHeldStart(SharedTransitionRun &run, std::shared_ptr<Serializable> callback) const;
   void endSharedTransitionOf(
       const SharedTag &sharedTag,
       TransactionMeta &transaction,

@@ -35,6 +35,7 @@ import {
   render,
   test,
   useTestRef,
+  wait,
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -43,6 +44,7 @@ import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 const DURATION = 1000;
 const STACK_READY = 'startStackReady';
 const FORWARD_FINISHED = 'startForwardFinished';
+const TARGET_WINDOW_WAIT = 500;
 
 const linearTransition = SharedTransition.duration(DURATION)
   .easing(Easing.linear)
@@ -592,14 +594,17 @@ function PendingScreen({
   nativeActive,
   targetTop = 200,
   hostWidth = 10,
+  transition = linearTransition,
 }: {
   active: boolean;
   showTarget: boolean;
   nativeActive: boolean;
   targetTop?: number;
   hostWidth?: number;
+  transition?: SharedTransition;
 }) {
   const source = useTestRef('heldSource');
+  const target = useTestRef('heldTarget');
   const sourceRef = useAnimatedRef<Animated.View>();
   const targetRef = useAnimatedRef<Animated.View>();
   boxRefs.heldSource = sourceRef;
@@ -613,7 +618,7 @@ function PendingScreen({
             sourceRef(node);
           }}
           sharedTransitionTag="held"
-          sharedTransitionStyle={linearTransition}
+          sharedTransitionStyle={transition}
           style={styles.busySource}
         />
       </SharedTransitionBoundary>
@@ -629,12 +634,55 @@ function PendingScreen({
           <SharedTransitionBoundary isActive={active}>
             {showTarget && (
               <Animated.View
-                ref={targetRef}
+                ref={(node: ComponentRef<typeof Animated.View> | null) => {
+                  target.current = node;
+                  targetRef(node);
+                }}
                 sharedTransitionTag="held"
-                sharedTransitionStyle={linearTransition}
+                sharedTransitionStyle={transition}
                 style={[styles.busyTarget, { top: targetTop }]}
               />
             )}
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
+    </View>
+  );
+}
+
+function MovedOnScreens({
+  active,
+}: {
+  active: 'first' | 'second' | 'detached';
+}) {
+  const first = useTestRef('movedOnFirst');
+  const second = useTestRef('movedOnSecond');
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={active === 'first'}>
+        <Animated.View
+          ref={first}
+          sharedTransitionTag="movedOn"
+          sharedTransitionStyle={linearTransition}
+          style={styles.busySource}
+        />
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active === 'second'}>
+        <Animated.View
+          ref={second}
+          sharedTransitionTag="movedOn"
+          sharedTransitionStyle={linearTransition}
+          style={styles.busyTarget}
+        />
+      </SharedTransitionBoundary>
+      <ScreenContainer style={styles.root}>
+        <Screen activityState={0} freezeOnBlur={false} style={styles.root}>
+          <SharedTransitionBoundary isActive={active === 'detached'}>
+            <Animated.View
+              sharedTransitionTag="movedOn"
+              sharedTransitionStyle={linearTransition}
+              style={[styles.busyTarget, { top: 400 }]}
+            />
           </SharedTransitionBoundary>
         </Screen>
       </ScreenContainer>
@@ -653,7 +701,7 @@ if (Platform.OS === 'ios') {
       const { starts, stop } = await recordSharedTransitionStarts();
       try {
         await render(<PendingScreen active showTarget nativeActive={false} />);
-        await waitForFrames(10);
+        await waitForFrames(3);
         expect(starts.value.length).toBe(0);
         await render(
           <PendingScreen
@@ -664,7 +712,7 @@ if (Platform.OS === 'ios') {
             hostWidth={30}
           />
         );
-        await waitForFrames(10);
+        await waitForFrames(3);
         expect(starts.value.length).toBe(0);
         await render(
           <PendingScreen
@@ -692,6 +740,92 @@ if (Platform.OS === 'ios') {
         }
       }
     });
+    test('ends a start when the screen stays detached', async () => {
+      const callbacks = makeMutable({ finished: 0, failed: 0 });
+      const transition = SharedTransition.duration(DURATION)
+        .easing(Easing.linear)
+        .withCallback((finished) => {
+          'worklet';
+          callbacks.value = {
+            finished: callbacks.value.finished + (finished ? 1 : 0),
+            failed: callbacks.value.failed + (finished ? 0 : 1),
+          };
+        });
+      const show = (active: boolean) =>
+        render(
+          <PendingScreen
+            active={active}
+            showTarget
+            nativeActive={false}
+            transition={transition}
+          />
+        );
+      await show(false);
+      await waitForFrames(10);
+      const sourceTag = getTestComponent('heldSource').getTag();
+      const parent = await RuntimeTestObserver!.observeParent(sourceTag);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        await show(true);
+        await waitForFrames(2);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+          parent
+        );
+        await wait(TARGET_WINDOW_WAIT + 300);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).toBe(
+          parent
+        );
+        expect(
+          (await getTestComponent('heldSource').getMountedViewProps())?.opacity
+        ).toBe(1);
+        const result = await runOnUIBlocking(() => {
+          'worklet';
+          return callbacks.value;
+        });
+        expect(result.finished).toBe(0);
+        expect(result.failed).toBe(1);
+        await render(
+          <PendingScreen
+            active
+            showTarget
+            nativeActive
+            transition={transition}
+          />
+        );
+        await waitForFrames(10);
+        expect(
+          (await getTestComponent('heldTarget').getMountedViewProps())?.opacity
+        ).toBe(1);
+        expect(starts.value.length).toBe(0);
+      } finally {
+        try {
+          await stop();
+        } finally {
+          await render(null);
+        }
+      }
+    });
+    test('shows the current source when a moved-on start stays detached', async () => {
+      await render(<MovedOnScreens active="first" />);
+      await waitForFrames(10);
+      const firstTag = getTestComponent('movedOnFirst').getTag();
+      const firstParent = await RuntimeTestObserver!.observeParent(firstTag);
+      try {
+        await render(<MovedOnScreens active="second" />);
+        await waitForFrames(3);
+        await render(<MovedOnScreens active="detached" />);
+        await wait(TARGET_WINDOW_WAIT + 300);
+        expect(await RuntimeTestObserver!.observeParent(firstTag)).toBe(
+          firstParent
+        );
+        expect(
+          (await getTestComponent('movedOnSecond').getMountedViewProps())
+            ?.opacity
+        ).toBe(1);
+      } finally {
+        await render(null);
+      }
+    });
     test.each([true, false])(
       'cancels a held start to a detached screen before a late attachment (remove target: %p)',
       async (removeTarget) => {
@@ -703,10 +837,11 @@ if (Platform.OS === 'ios') {
         const parent = await RuntimeTestObserver!.observeParent(sourceTag);
         const { starts, stop } = await recordSharedTransitionStarts();
         try {
+          const holdStart = Date.now();
           await render(
             <PendingScreen active showTarget nativeActive={false} />
           );
-          await waitForFrames(10);
+          await waitForFrames(3);
           expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
             parent
           );
@@ -722,6 +857,7 @@ if (Platform.OS === 'ios') {
             async () =>
               (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
           ).toBe(true);
+          expect(Date.now() - holdStart).toBeWithinRange(0, TARGET_WINDOW_WAIT);
           expect(
             (await getTestComponent('heldSource').getMountedViewProps())
               ?.opacity

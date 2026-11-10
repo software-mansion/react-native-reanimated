@@ -6,9 +6,6 @@
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 #import <React/UIView+React.h>
-#import <reanimated/apple/view/REASharedTransitionBoundaryView.h>
-
-#import <unordered_map>
 
 // The frame of the view in the coordinates of its window, without the transforms of the view and its ancestors. A
 // sheet scales the view that presents it, which must not move the overlay or the measured screens.
@@ -82,7 +79,6 @@ static UIWindow *surfaceWindow(UIView *rootView)
 @implementation REASharedTransitionOverlays {
   __weak RCTSurfacePresenter *_surfacePresenter;
   NSMutableDictionary<NSNumber *, NSNumber *> *_overlayTags;
-  std::unordered_map<NSInteger, std::function<void()>> _windowAttachCallbacks;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -93,10 +89,6 @@ static UIWindow *surfaceWindow(UIView *rootView)
     // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
     // See `REAPseudoSelectorAttachQueue`.
     [surfacePresenter addObserver:self];
-    [NSNotificationCenter.defaultCenter addObserver:self
-                                           selector:@selector(boundaryDidAttachToWindow:)
-                                               name:REASharedTransitionBoundaryDidAttachToWindowNotification
-                                             object:nil];
   }
   return self;
 }
@@ -104,7 +96,6 @@ static UIWindow *surfaceWindow(UIView *rootView)
 - (void)dealloc
 {
   [_surfacePresenter removeObserver:self];
-  [NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (UIView *)viewWithTag:(NSInteger)tag
@@ -113,33 +104,15 @@ static UIWindow *surfaceWindow(UIView *rootView)
   return [registry findComponentViewWithTag:static_cast<facebook::react::Tag>(tag)];
 }
 
-- (void)showOverlayWithTag:(NSInteger)tag
-                 surfaceId:(NSInteger)surfaceId
-            onWindowAttach:(std::function<void()>)onWindowAttach
+- (void)showOverlayWithTag:(NSInteger)tag surfaceId:(NSInteger)surfaceId
 {
   RCTAssertMainQueue();
   _overlayTags[@(surfaceId)] = @(tag);
-  _windowAttachCallbacks.insert_or_assign(surfaceId, std::move(onWindowAttach));
-}
-
-- (void)boundaryDidAttachToWindow:(NSNotification *)notification
-{
-  UIView *view = notification.object;
-  if ([self viewWithTag:view.tag] != view) {
-    return;
-  }
-  const auto callbacks = _windowAttachCallbacks;
-  for (const auto &[_, callback] : callbacks) {
-    if (callback) {
-      callback();
-    }
-  }
 }
 
 - (void)hideOverlayForSurfaceId:(NSInteger)surfaceId
 {
   RCTAssertMainQueue();
-  _windowAttachCallbacks.erase(surfaceId);
   NSNumber *tag = _overlayTags[@(surfaceId)];
   if (!tag) {
     return;

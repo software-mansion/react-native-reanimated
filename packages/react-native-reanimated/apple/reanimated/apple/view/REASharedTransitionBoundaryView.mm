@@ -8,9 +8,6 @@
 
 using namespace facebook::react;
 
-NSNotificationName const REASharedTransitionBoundaryDidAttachToWindowNotification =
-    @"REASharedTransitionBoundaryDidAttachToWindow";
-
 @implementation REASharedTransitionBoundaryView
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -27,17 +24,6 @@ NSNotificationName const REASharedTransitionBoundaryDidAttachToWindowNotificatio
 
   return self;
 }
-
-#if TARGET_OS_IOS
-- (void)didMoveToWindow
-{
-  [super didMoveToWindow];
-  if (self.window) {
-    [NSNotificationCenter.defaultCenter postNotificationName:REASharedTransitionBoundaryDidAttachToWindowNotification
-                                                      object:self];
-  }
-}
-#endif
 
 - (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics

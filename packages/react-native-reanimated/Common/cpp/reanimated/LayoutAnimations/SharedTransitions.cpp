@@ -17,6 +17,11 @@
 
 namespace reanimated {
 
+namespace {
+// A screen that UIKit presents enters the window in less time than this.
+constexpr auto kTargetWindowWait = std::chrono::milliseconds(500);
+} // namespace
+
 #ifdef ANDROID
 namespace {
 // The style props that SharedTransitionValuesFactory animates.
@@ -519,9 +524,7 @@ void LayoutAnimationsProxy::filterSharedTransitionStarts(
         hasPendingLayoutAnimation(activeRun->carrier->current.tag);
     const bool continuesRun = activeRun && activeRun->target == source && !reversesHeldStart;
     const bool sourceOffWindow = !continuesRun && isOffWindow(source);
-    if (config && !sourceOffWindow &&
-        targetBoundaryPlacementKind(target) != NativeViewPlacement::Kind::DifferentWindow &&
-        canHostRun(source, target)) {
+    if (config && !sourceOffWindow && !isInOtherWindow(target) && canHostRun(source, target)) {
       return false;
     }
     skipSharedTransition(
@@ -1500,19 +1503,7 @@ void LayoutAnimationsProxy::ensureCarrierOverlay(
   recycledView.props = descriptor.cloneProps(propsParserContext, nullptr, {});
   recycledView.layoutMetrics = EmptyLayoutMetrics;
   mutations.push_back(ShadowViewMutation::UpdateMutation(recycledView, overlay, surfaceId_));
-  const std::weak_ptr<const LayoutAnimationsProxy> weakThis =
-      std::static_pointer_cast<const LayoutAnimationsProxy>(shared_from_this());
-  setSharedTransitionOverlay_(surfaceId_, overlay.tag, [weakThis] {
-    if (const auto self = weakThis.lock()) {
-      const auto lock = std::unique_lock<std::recursive_mutex>(self->mutex);
-      for (const auto &run : self->activeSharedTransitionRuns()) {
-        if (run.targetOffWindow) {
-          self->schedulePullOnNextFrame();
-          break;
-        }
-      }
-    }
-  });
+  setSharedTransitionOverlay_(surfaceId_, overlay.tag);
 }
 
 // The overlay holds the carriers of iOS and the carriers that move between two layout roots on Android. Android shows
@@ -1690,7 +1681,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           transaction,
           propsParserContext);
 
-      run.targetOffWindow = targetBoundaryPlacementKind(afterNode) == NativeViewPlacement::Kind::OffWindow;
+      waitForTargetWindow(run, afterNode);
       const auto target = targetInCarrierSpace(run, after, propsParserContext);
       startSharedTransition(
           run.carrier,
@@ -1699,6 +1690,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           ownCarrierView(target, run.carrier, propsParserContext).props,
           config->animation,
           restartContentFade(run));
+      oweCallbackOfHeldStart(run, config->callback);
     }
     finishCoveredSharedTransitions(afterTopScreen, transaction, propsParserContext);
   } else if (!mutations.empty()) {
@@ -1721,7 +1713,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto host = layoutRootOf(run.carrier);
       const bool inOverlay = host == carrierOverlay_;
       const auto afterRoot = layoutRootOf(afterNode);
-      if (afterNode != run.target && (inOverlay ? !hasKnownWindow(afterRoot) : afterRoot != host)) {
+      if (afterNode != run.target &&
+          (isInOtherWindow(afterNode) || (inOverlay ? !hasKnownWindow(afterRoot) : afterRoot != host))) {
         transaction.restoreRequests.push_back({sharedTag, afterNode});
         it = transaction.transitions.erase(current);
         continue;
@@ -1732,16 +1725,18 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         continue;
       }
       auto animation = run.config;
+      auto callback = run.progressCallback;
       if (inOverlay || layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
         const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         if (!config) {
           continue;
         }
         animation = config->animation;
+        callback = config->callback;
       }
       const bool targetChanged = run.target != afterNode;
       if (targetChanged) {
-        run.targetOffWindow = targetBoundaryPlacementKind(afterNode) == NativeViewPlacement::Kind::OffWindow;
+        waitForTargetWindow(run, afterNode);
         transaction.restoreRequests.push_back({sharedTag, run.target});
         if (!afterNode->isCarrier()) {
           hideInSharedElement(sharedTag, afterNode);
@@ -1772,9 +1767,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
             restartContentFade(run));
-        continue;
-      }
-      if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter, targetChanged)) {
+      } else if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter, targetChanged)) {
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -1782,6 +1775,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             animation,
             restartContentFade(run));
+      }
+      if (targetChanged) {
+        oweCallbackOfHeldStart(run, std::move(callback));
       }
     }
   }
@@ -2586,7 +2582,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
   // snapshot of a dismissed screen, so the overlay stays attached between transitions.
   if (transaction.surfaceDropped && carrierOverlay_) {
     react_native_assert(carrierPlacements_.atRoot().empty() && "The last pull of a surface removes its carriers");
-    setSharedTransitionOverlay_(surfaceId_, std::nullopt, {});
+    setSharedTransitionOverlay_(surfaceId_, std::nullopt);
     filteredMutations.push_back(ShadowViewMutation::DeleteMutation(carrierOverlay_->current));
     carrierOverlay_.reset();
   }
@@ -2759,6 +2755,27 @@ bool LayoutAnimationsProxy::isOffWindow(const std::shared_ptr<LightNode> &node) 
   return placement == NativeViewPlacement::Kind::OffWindow || placement == NativeViewPlacement::Kind::DifferentWindow;
 }
 
+// The carriers of a surface show in its window, so they cannot fly to a boundary in another window.
+bool LayoutAnimationsProxy::isInOtherWindow(const std::shared_ptr<LightNode> &target) const {
+  return targetBoundaryPlacementKind(target) == NativeViewPlacement::Kind::DifferentWindow;
+}
+
+void LayoutAnimationsProxy::waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target)
+    const {
+  run.targetOffWindow = targetBoundaryPlacementKind(target) == NativeViewPlacement::Kind::OffWindow;
+  run.targetWindowDeadline = std::chrono::steady_clock::now() + kTargetWindowWait;
+}
+
+// The animation reports the callback when it starts, and a held start can end before that.
+void LayoutAnimationsProxy::oweCallbackOfHeldStart(SharedTransitionRun &run, std::shared_ptr<Serializable> callback)
+    const {
+  if (run.driver != SharedTransitionDriver::TIME) {
+    return;
+  }
+  const bool held = run.targetOffWindow && hasPendingLayoutAnimation(run.carrier->current.tag);
+  run.progressCallback = held ? std::move(callback) : nullptr;
+}
+
 // Ends the run that still flies between the views of the shared tag, without landing.
 void LayoutAnimationsProxy::endSharedTransitionOf(
     const SharedTag &sharedTag,
@@ -2805,15 +2822,20 @@ void LayoutAnimationsProxy::followOffWindowTargets(
       continue;
     }
     const auto placement = targetBoundaryPlacementKind(run.target);
-    if (targetMapped && placement == NativeViewPlacement::Kind::DifferentWindow) {
+    const bool targetOffWindow = targetMapped && placement == NativeViewPlacement::Kind::OffWindow;
+    const bool waitsForWindow = targetOffWindow && !run.target->isExiting();
+    if ((targetMapped && placement == NativeViewPlacement::Kind::DifferentWindow) ||
+        (waitsForWindow && std::chrono::steady_clock::now() >= run.targetWindowDeadline)) {
+      transaction.restoreRequests.push_back({run.sharedTag, run.source});
       finishSharedTransition(run, transaction, propsParserContext, false);
       continue;
     }
-    const bool targetOffWindow = targetMapped && placement == NativeViewPlacement::Kind::OffWindow;
-    if (targetOffWindow && !run.target->isExiting()) {
+    if (waitsForWindow) {
+      schedulePullOnNextFrame();
       continue;
     }
     run.targetOffWindow = false;
+    oweCallbackOfHeldStart(run, nullptr);
     if (!targetMapped || targetOffWindow) {
       continue;
     }
