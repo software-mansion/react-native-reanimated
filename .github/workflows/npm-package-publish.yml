@@ -81,7 +81,9 @@ jobs:
         env:
           PACKAGE_NAME: ${{ inputs.package-name }}
         run: |
-          short_sha="${GITHUB_SHA::9}"
+          # The same commit that scripts/releasing.js puts in the version.
+          head_sha=$(git rev-parse HEAD)
+          short_sha="${head_sha::9}"
           # A separate command, so that a failed lookup fails the step
           # instead of reading as an unpublished commit.
           versions=$(npm view "$PACKAGE_NAME" versions --json)
