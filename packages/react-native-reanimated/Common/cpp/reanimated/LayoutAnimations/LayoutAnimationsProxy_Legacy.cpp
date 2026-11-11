@@ -6,18 +6,7 @@
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #endif // ANDROID
 
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
-#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
-#include <React/renderer/mounting/ShadowTree.h>
-#include <React/renderer/mounting/ShadowViewMutation.h>
-#else
-#include <react/renderer/mounting/ShadowTree.h>
-#include <react/renderer/mounting/ShadowViewMutation.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <optional>

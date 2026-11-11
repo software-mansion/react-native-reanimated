@@ -1,11 +1,7 @@
 #pragma once
 
-#if __has_include(<React/Graphics.h>)
-#include <React/Graphics.h>
-#else
-#include <react/renderer/graphics/Transform.h>
-#endif
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 

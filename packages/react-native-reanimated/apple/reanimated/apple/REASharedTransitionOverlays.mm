@@ -1,3 +1,5 @@
+#import <reanimated/apple/REASurfacePresenterCompat.h>
+
 #import <reanimated/apple/REASharedTransitionOverlays.h>
 
 #if TARGET_OS_IOS
@@ -66,12 +68,7 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
-    // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
-    // See `REAPseudoSelectorAttachQueue`.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [surfacePresenter addObserver:self];
-#pragma clang diagnostic pop
+    REAAddSurfacePresenterObserver(surfacePresenter, self);
   }
   return self;
 }

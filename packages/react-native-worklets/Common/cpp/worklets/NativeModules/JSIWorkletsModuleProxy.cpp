@@ -1,10 +1,6 @@
 #include <jsi/jsi.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
 #include <worklets/Compat/Holders.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable/CustomSerializable.h>

@@ -5,17 +5,9 @@
 #include <reanimated/Fabric/MountedRootsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
-#if __has_include(<React/View.h>)
-#include <React/View.h>
-#else
-#include <react/renderer/components/view/ViewProps.h>
-#endif
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/LayoutableShadowNode.h>
-#endif
 #include <react/renderer/dom/DOM.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 
 #include <memory>
 #include <string>

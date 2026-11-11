@@ -6,17 +6,8 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/Props.h>
-#include <react/renderer/core/ReactPrimitives.h>
-#endif
-#if __has_include(<React/Graphics.h>)
-#include <React/Graphics.h>
-#else
-#include <react/renderer/graphics/Point.h>
-#endif
+#include <reanimated/Compat/ReactNativeGraphics.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>

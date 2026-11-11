@@ -3,11 +3,7 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>

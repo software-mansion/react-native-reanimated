@@ -1,16 +1,6 @@
 #pragma once
 
-#if __has_include(<React/CallInvoker.h>)
-#include <React/CallInvoker.h>
-#else
-#include <ReactCommon/CallInvoker.h>
-#endif
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ShadowNode.h>
-#endif
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
@@ -21,6 +11,8 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Compat/ReactNativeCallInvoker.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>

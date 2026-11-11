@@ -2,15 +2,11 @@
 
 #include <jsi/jsi.h>
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
-#if __has_include(<React/Graphics.h>)
-#include <React/Graphics.h>
-#else
-#include <react/renderer/graphics/Point.h>
-#endif
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/uimanager/UIManager.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>

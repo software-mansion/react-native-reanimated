@@ -1,3 +1,5 @@
+#import <reanimated/apple/REASurfacePresenterCompat.h>
+
 #import <reanimated/apple/REASynchronousPropsRewriter.h>
 
 #import <React/RCTAssert.h>
@@ -14,12 +16,7 @@
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
     _reanimatedModuleProxy = reanimatedModuleProxy;
-    // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
-    // See `REAPseudoSelectorAttachQueue`.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [surfacePresenter addObserver:self];
-#pragma clang diagnostic pop
+    REAAddSurfacePresenterObserver(surfacePresenter, self);
   }
   return self;
 }

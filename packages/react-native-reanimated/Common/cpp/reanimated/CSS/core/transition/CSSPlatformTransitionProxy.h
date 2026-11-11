@@ -8,11 +8,7 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ReactPrimitives.h>
-#endif
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>

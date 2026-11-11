@@ -1,21 +1,5 @@
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
-#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
-#include <React/renderer/mounting/Differentiator.h>
-#include <React/renderer/mounting/MountingCoordinator.h>
-#include <React/renderer/mounting/ShadowTree.h>
-#include <React/renderer/mounting/ShadowViewMutation.h>
-#include <React/utils/LowPriorityExecutor.h>
-#else
-#include <react/renderer/mounting/Differentiator.h>
-#include <react/renderer/mounting/MountingCoordinator.h>
-#include <react/renderer/mounting/ShadowTree.h>
-#include <react/renderer/mounting/ShadowViewMutation.h>
-#include <react/utils/LowPriorityExecutor.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
+
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>

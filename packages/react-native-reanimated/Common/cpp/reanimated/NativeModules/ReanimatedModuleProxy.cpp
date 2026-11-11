@@ -1,25 +1,9 @@
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/RawProps.h>
-#endif
-#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
-#include <React/renderer/scheduler/Scheduler.h>
-#include <React/renderer/uimanager/UIManagerBinding.h>
-#include <React/renderer/uimanager/primitives.h>
-#else
-#include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
-#endif
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/Compat/WorkletsApi.h>

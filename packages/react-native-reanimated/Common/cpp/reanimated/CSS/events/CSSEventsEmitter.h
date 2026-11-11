@@ -2,12 +2,8 @@
 
 #include <reanimated/CSS/events/CSSEvent.h>
 
-#if __has_include(<React/CallInvoker.h>)
-#include <React/CallInvoker.h>
-#else
-#include <ReactCommon/CallInvoker.h>
-#endif
 #include <jsi/jsi.h>
+#include <reanimated/Compat/ReactNativeCallInvoker.h>
 
 #include <memory>
 #include <mutex>

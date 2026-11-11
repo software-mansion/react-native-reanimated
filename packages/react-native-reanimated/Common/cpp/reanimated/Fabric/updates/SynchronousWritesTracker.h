@@ -3,11 +3,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <react/renderer/components/root/RootShadowNode.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ShadowNodeFamily.h>
-#endif
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <cstdint>
 #include <deque>

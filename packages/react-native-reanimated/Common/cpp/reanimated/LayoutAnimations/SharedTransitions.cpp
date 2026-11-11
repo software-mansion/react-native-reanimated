@@ -1,15 +1,7 @@
 #include <folly/dynamic.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
 #include <react/renderer/components/rnreanimated/Props.h>
-#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
-#include <React/renderer/components/scrollview/ScrollViewState.h>
-#else
-#include <react/renderer/components/scrollview/ScrollViewState.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
+
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>

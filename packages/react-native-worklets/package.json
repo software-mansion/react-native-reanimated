@@ -64,7 +64,7 @@
     "@babel/core": "*",
     "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "0.87 - 0.89 || 0.89.0-rc.1"
+    "react-native": "0.87 - 0.89"
   },
   "dependencies": {
     "@babel/generator": "^7.27.1",

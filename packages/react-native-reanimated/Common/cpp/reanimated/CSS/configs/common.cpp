@@ -1,13 +1,5 @@
 #include <reanimated/CSS/configs/common.h>
 
-#if defined(REANIMATED_PREBUILT_RNCORE) && __has_include(<React/RendererCore.h>)
-#include <React/renderer/componentregistry/componentNameByReactViewName.h>
-#else
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#endif
-
-using facebook::react::componentNameByReactViewName;
-
 namespace reanimated::css {
 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config) {

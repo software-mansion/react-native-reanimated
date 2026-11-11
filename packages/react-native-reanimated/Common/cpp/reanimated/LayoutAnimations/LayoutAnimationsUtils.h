@@ -1,19 +1,11 @@
 #pragma once
 
 #include <folly/dynamic.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
 #include <react/renderer/components/rnreanimated/Props.h>
-#if __has_include(<React/View.h>)
-#include <React/View.h>
-#else
-#include <react/renderer/components/view/ViewProps.h>
-#endif
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>

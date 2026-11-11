@@ -1,19 +1,11 @@
 #ifdef ANDROID
-#if __has_include(<React/CallInvoker.h>)
-#include <React/CallInvoker.h>
-#else
-#include <ReactCommon/CallInvoker.h>
-#endif
 #include <react/renderer/core/DynamicPropsUtilities.h>
+#include <reanimated/Compat/ReactNativeCallInvoker.h>
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 #include <folly/dynamic.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>

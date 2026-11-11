@@ -60,7 +60,7 @@ target_compile_options(
 
 include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(worklets PUBLIC)
-# React Native exposes the native integration APIs to framework libraries.
+# Acknowledge framework-tier APIs when the app opts into RN_STRICT_API.
 target_compile_definitions(worklets PRIVATE RN_ALLOW_FRAMEWORKS)
 
 # includes

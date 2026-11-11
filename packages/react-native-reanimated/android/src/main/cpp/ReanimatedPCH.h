@@ -36,18 +36,8 @@
 // react-native renderer (Fabric)
 #include <react/renderer/components/root/RootProps.h>
 #include <react/renderer/components/root/RootShadowNode.h>
-#if __has_include(<React/View.h>)
-#include <React/View.h>
-#else
-#include <react/renderer/components/view/BaseViewProps.h>
-#include <react/renderer/components/view/ViewProps.h>
-#endif
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/EventDispatcher.h>
-#include <react/renderer/core/ShadowNode.h>
-#endif
+#include <reanimated/Compat/ReactNativeView.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
 

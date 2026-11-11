@@ -146,7 +146,6 @@ let package = Package(
             ],
             cSettings: [
                 .define("RN_ALLOW_FRAMEWORKS"),
-                .define("REANIMATED_PREBUILT_RNCORE"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("Common/NativeView"),
@@ -156,7 +155,6 @@ let package = Package(
             ],
             cxxSettings: [
                 .define("RN_ALLOW_FRAMEWORKS"),
-                .define("REANIMATED_PREBUILT_RNCORE"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("Common/NativeView"),

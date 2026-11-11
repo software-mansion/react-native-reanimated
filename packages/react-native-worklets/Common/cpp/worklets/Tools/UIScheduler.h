@@ -2,11 +2,7 @@
 
 #include <worklets/Tools/ThreadSafeQueue.h>
 
-#if __has_include(<React/CallInvoker.h>)
-#include <React/CallInvoker.h>
-#else
-#include <ReactCommon/CallInvoker.h>
-#endif
+#include <worklets/Compat/ReactNativeCallInvoker.h>
 
 #include <atomic>
 

@@ -3,11 +3,7 @@
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
+#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <atomic>

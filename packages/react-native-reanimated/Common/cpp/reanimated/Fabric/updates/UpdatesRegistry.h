@@ -1,11 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ShadowNode.h>
-#endif
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>

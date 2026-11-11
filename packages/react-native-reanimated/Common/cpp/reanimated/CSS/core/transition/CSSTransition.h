@@ -7,11 +7,7 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ShadowNode.h>
-#endif
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>

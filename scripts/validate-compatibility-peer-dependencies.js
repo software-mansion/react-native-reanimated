@@ -23,22 +23,9 @@ function main() {
     compatibility?.fabric || compatibility,
     packageVersion
   );
-  let compatibilityReactNativeRange = getRangeFromCompatibility(
+  const compatibilityReactNativeRange = getRangeFromCompatibility(
     currentCompatibility['react-native']
   );
-
-  // Include the exact RN prerelease exercised by this package's development setup.
-  // The compatibility table still describes the supported stable minor versions.
-  const developmentReactNative = packageJson.devDependencies?.['react-native'];
-  if (
-    semver.valid(developmentReactNative) &&
-    semver.prerelease(developmentReactNative) &&
-    semver.satisfies(developmentReactNative, compatibilityReactNativeRange, {
-      includePrerelease: true,
-    })
-  ) {
-    compatibilityReactNativeRange += ` || ${developmentReactNative}`;
-  }
 
   validateRanges(
     'react-native',

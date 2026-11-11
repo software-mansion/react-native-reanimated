@@ -1,15 +1,7 @@
 #pragma once
 
-#if __has_include(<React/Debug.h>)
-#include <React/Debug.h>
-#else
-#include <react/debug/react_native_assert.h>
-#endif
-#if __has_include(<React/RendererCore.h>)
-#include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ReactPrimitives.h>
-#endif
+#include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <cstdint>
 #include <limits>
