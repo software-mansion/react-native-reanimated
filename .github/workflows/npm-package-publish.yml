@@ -61,17 +61,34 @@ jobs:
   publish:
     runs-on: ${{ inputs.runs-on }}
     steps:
+      # The nightly version holds the UTC date of the moment it is resolved,
+      # so a run that crosses midnight and the next run on the same commit
+      # resolve the same version, and npm refuses the second publish.
+      - name: Check for a published nightly of this commit
+        id: published-nightly
+        if: inputs.release-type == 'nightly' && inputs.publish
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
+        run: |
+          short_sha="${GITHUB_SHA::9}"
+          if npm view "$PACKAGE_NAME" versions --json | grep -q -- "-nightly-[0-9]*-${short_sha}\""; then
+            echo "::notice::$PACKAGE_NAME already has a nightly of $short_sha, skipping the publish."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
+        if: steps.published-nightly.outputs.exists != 'true'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Use Node.js
+        if: steps.published-nightly.outputs.exists != 'true'
         id: setup-node
         uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
       - name: Download prebuilt artifacts
-        if: inputs.artifacts-pattern != ''
+        if: steps.published-nightly.outputs.exists != 'true' && inputs.artifacts-pattern != ''
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
           pattern: ${{ inputs.artifacts-pattern }}
@@ -79,6 +96,7 @@ jobs:
           merge-multiple: true
 
       - name: Build and publish ${{ inputs.package-name }}
+        if: steps.published-nightly.outputs.exists != 'true'
         uses: software-mansion/npm-package-publish@bbfbcdf3f27e2dc288d7d56f5989a731efc79e6f
         with:
           package-name: ${{ inputs.package-name }}
