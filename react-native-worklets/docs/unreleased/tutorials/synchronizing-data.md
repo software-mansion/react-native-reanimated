@@ -258,7 +258,7 @@ the state of the Shareable, i.e. whether it has been updated, so the Guest Runti
 it if it
 hasn't changed.
 
-This is how [Reanimated Shared Values](https://docs.swmansion.com/reanimated/docs/shared-values) are
+This is how [Reanimated Shared Values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#shared-value) are
 implemented.
 
 A Shareable hosted on the UI Runtime stores the animation progress. When the RN
