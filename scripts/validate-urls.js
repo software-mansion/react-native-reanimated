@@ -39,7 +39,7 @@ const ignoredFiles = [
 ];
 
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
+  /\b((http|https):\/\/?)[^\s<>[\]`'"]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 /**
  * @param {string} dir
@@ -105,7 +105,10 @@ async function validUrls(data) {
       }
     } catch (error) {
       isBrokenUrlDetected = true;
-      console.error('Error:', error);
+      console.error(
+        `🔴 Request failed: ${currentData.url} in file: ${currentData.file}\n`,
+        error
+      );
     }
   }
   if (isBrokenUrlDetected) {
