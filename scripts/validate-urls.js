@@ -93,7 +93,11 @@ async function validUrls(data) {
         },
       });
       const status = response.status;
-      if (![200, 301, 302, 307, 503].includes(status)) {
+      const extraStatuses =
+        Object.entries(extraValidStatuses).find(([host]) =>
+          currentData.url.includes(host)
+        )?.[1] ?? [];
+      if (![200, 301, 302, 307, 503, ...extraStatuses].includes(status)) {
         console.error(
           `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
         );
@@ -145,5 +149,9 @@ const skippedUrls = [
 const skippedExactUrls = [
   'https://docs.swmansion.com/react-native-worklets/docs',
 ];
+
+const extraValidStatuses = {
+  'swm-delivery.com': [204], // README banner slot with no banner booked
+};
 
 scanLinks();
