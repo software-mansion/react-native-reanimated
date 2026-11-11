@@ -70,8 +70,30 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      # The nightly version holds the UTC date of the moment it is resolved,
+      # so a run that crosses midnight and the next run on the same commit
+      # resolve the same version, and npm refuses the second publish. A run
+      # with an explicit npm tag is never skipped, so that it cannot succeed
+      # without applying the tag.
+      - name: Check for a published nightly of this commit
+        id: published-nightly
+        if: inputs.release-type == 'nightly' && inputs.publish && inputs.npm-tag == ''
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
+        run: |
+          # The same commit that scripts/releasing.js puts in the version.
+          head_sha=$(git rev-parse HEAD)
+          short_sha="${head_sha::9}"
+          # A separate command, so that a failed lookup fails the step
+          # instead of reading as an unpublished commit.
+          versions=$(npm view "$PACKAGE_NAME" versions --json)
+          if grep -q -- "-nightly-[0-9]*-${short_sha}\"" <<< "$versions"; then
+            echo "::notice::$PACKAGE_NAME already has a nightly of $short_sha, skipping the publish."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download prebuilt artifacts
-        if: inputs.artifacts-pattern != ''
+        if: steps.published-nightly.outputs.exists != 'true' && inputs.artifacts-pattern != ''
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
           pattern: ${{ inputs.artifacts-pattern }}
@@ -79,6 +101,7 @@ jobs:
           merge-multiple: true
 
       - name: Build and publish ${{ inputs.package-name }}
+        if: steps.published-nightly.outputs.exists != 'true'
         uses: software-mansion/npm-package-publish@bbfbcdf3f27e2dc288d7d56f5989a731efc79e6f
         with:
           package-name: ${{ inputs.package-name }}
