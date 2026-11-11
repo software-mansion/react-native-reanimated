@@ -61,10 +61,20 @@ jobs:
   publish:
     runs-on: ${{ inputs.runs-on }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       # The nightly version holds the UTC date of the moment it is resolved,
       # so a run that crosses midnight and the next run on the same commit
       # resolve the same version, and npm refuses the second publish. A run
-      # with an explicit npm tag still publishes, so that the tag is updated.
+      # with an explicit npm tag is never skipped, so that it cannot succeed
+      # without applying the tag.
       - name: Check for a published nightly of this commit
         id: published-nightly
         if: inputs.release-type == 'nightly' && inputs.publish && inputs.npm-tag == ''
@@ -79,17 +89,6 @@ jobs:
             echo "::notice::$PACKAGE_NAME already has a nightly of $short_sha, skipping the publish."
             echo "exists=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Checkout
-        if: steps.published-nightly.outputs.exists != 'true'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-
-      - name: Use Node.js
-        if: steps.published-nightly.outputs.exists != 'true'
-        id: setup-node
-        uses: $/.github/actions/setup-node-yarn
-        with:
-          node-version-file: '.nvmrc'
 
       - name: Download prebuilt artifacts
         if: steps.published-nightly.outputs.exists != 'true' && inputs.artifacts-pattern != ''
