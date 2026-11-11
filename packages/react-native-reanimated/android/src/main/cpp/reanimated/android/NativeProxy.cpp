@@ -353,7 +353,7 @@ void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event,
-    jboolean isInDrawPass) {
+    jboolean isInsideEventDispatch) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -389,7 +389,7 @@ void NativeProxy::handleEvent(
         eventName->toString(),
         emitterReactTag,
         payload,
-        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
+        isInsideEventDispatch ? GrandCallbackSource::EventInAndroidDispatch : GrandCallbackSource::Event);
   } else {
     reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
   }
