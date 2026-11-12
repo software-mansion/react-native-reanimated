@@ -785,8 +785,6 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    // Shared element transitions follow these screen events, but worklet handlers
-    // registered for them (e.g. useReanimatedTransitionProgress) must still run.
     std::optional<SurfaceId> surfaceId;
     if (layoutAnimationsProxyRegistry_ && eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);

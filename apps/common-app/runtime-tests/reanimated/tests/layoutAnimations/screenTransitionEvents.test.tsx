@@ -112,7 +112,6 @@ describe('Screen transition events with worklet handlers', () => {
 
     navigation.navigate('Second');
     await expectEventually(() => sawProgress('second', 1)).toBe(true);
-    // The pop starts after the push ends.
     await waitForNotification(PUSH_ENDED);
 
     navigation.goBack();
