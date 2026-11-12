@@ -38,7 +38,8 @@ struct SharedTransitionManager {
   std::unordered_map<Tag, std::string> nativeIDToName_;
   // Odd tags that end in 7. React gives even tags to views and tags that end in 1 to surfaces.
   Tag nextOverlayTag_{std::numeric_limits<Tag>::max()};
-  // Mirrors !tagToName_.empty(), so that a pull can skip the lock when no view has a shared tag.
+  // Mirrors !tagToName_.empty(), so that a pull can skip the lock when no view has a shared tag. A name is set before
+  // its shared transition config is stored and erased after it, so no config exists while this is false.
   std::atomic<bool> hasNames_{false};
 
   // A shared tag is registered in the config flush of a pull or when a pull inserts its view, so the pulling thread
@@ -48,13 +49,19 @@ struct SharedTransitionManager {
   }
 
   void setName(const Tag tag, const std::string &name) {
-    eraseName(tag);
+    removeName(tag);
     tagToName_[tag] = name;
     nameToTags_[name].insert(tag);
     hasNames_.store(true, std::memory_order_release);
   }
 
   void eraseName(const Tag tag) {
+    removeName(tag);
+    hasNames_.store(!tagToName_.empty(), std::memory_order_release);
+  }
+
+  // Does not write hasNames_, so that a change of the last name does not show "no names" in between.
+  void removeName(const Tag tag) {
     const auto it = tagToName_.find(tag);
     if (it == tagToName_.end()) {
       return;
@@ -65,7 +72,6 @@ struct SharedTransitionManager {
       nameToTags_.erase(tagsIt);
     }
     tagToName_.erase(it);
-    hasNames_.store(!tagToName_.empty(), std::memory_order_release);
   }
 };
 
