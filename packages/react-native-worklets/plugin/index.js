@@ -376,7 +376,8 @@ var require_layoutAnimationAutoworkletization = __commonJS({
     ]);
     var LayoutAnimations = /* @__PURE__ */ new Set([
       ...EntryExitAnimations,
-      ...LayoutTransitions
+      ...LayoutTransitions,
+      "SharedTransition"
     ]);
     var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "build",
@@ -385,12 +386,15 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "getDuration",
       "randomDelay",
       "getDelay",
-      "getDelayFunction"
+      "getDelayFunction",
+      "reduceMotion",
+      "withCallback"
     ]);
     var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "easing",
       "rotate",
       "springify",
+      "dampingRatio",
       "damping",
       "mass",
       "stiffness",
@@ -399,6 +403,7 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "restDisplacementThreshold",
       "restSpeedThreshold",
       "withInitialValues",
+      "withTargetValues",
       "getAnimationAndConfig"
     ]);
     var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
@@ -410,12 +415,23 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "exiting",
       "reverse"
     ]);
+    var SharedTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "fadeContent",
+      "custom",
+      "progressAnimation",
+      "defaultTransitionType"
+    ]);
     var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
       ...BaseAnimationsChainableMethods,
       ...ComplexAnimationsChainableMethods,
-      ...DefaultTransitionChainableMethods
+      ...DefaultTransitionChainableMethods,
+      ...SharedTransitionChainableMethods
     ]);
-    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set([
+      "withCallback",
+      "custom",
+      "progressAnimation"
+    ]);
     function isLayoutAnimationCallback(path) {
       return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
     }

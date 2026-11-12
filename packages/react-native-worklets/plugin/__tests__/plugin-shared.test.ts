@@ -441,6 +441,130 @@ describe.each([
     });
   });
 
+  describe('autoworkletization of shared transition callbacks', () => {
+    function factoryCount(input: string): number {
+      const result = runPlugin(input, { bundleMode });
+      return bundleMode
+        ? result.files.length
+        : countOccurrences(result.code, 'Factory(');
+    }
+
+    test.each([
+      {
+        name: 'withCallback on SharedTransition',
+        input: html`<script>
+          SharedTransition.withCallback((finished) => {});
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'withCallback after duration',
+        input: html`<script>
+          SharedTransition.duration(300).withCallback((finished) => {
+            console.log(finished);
+          });
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'withCallback after a spring config',
+        input: html`<script>
+          SharedTransition.springify(400)
+            .dampingRatio(0.8)
+            .reduceMotion(ReduceMotion.System)
+            .withCallback((finished) => {});
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'withCallback after fadeContent',
+        input: html`<script>
+          SharedTransition.fadeContent({ fadeOut: { end: 0.5 } })
+            .delay(100)
+            .withCallback((finished) => {});
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'custom animation and withCallback',
+        input: html`<script>
+          SharedTransition.custom((values) => ({
+            width: withTiming(values.targetWidth),
+          }))
+            .duration(800)
+            .withCallback((finished) => {});
+        </script>`,
+        expected: 2,
+      },
+      {
+        name: 'progress animation and withCallback',
+        input: html`<script>
+          new SharedTransition()
+            .duration(800)
+            .progressAnimation((values, progress) => ({ opacity: progress }))
+            .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
+            .withCallback((finished) => {});
+        </script>`,
+        expected: 2,
+      },
+      {
+        name: 'progress animation after withCallback',
+        input: html`<script>
+          SharedTransition.withCallback((finished) => {}).progressAnimation(
+            (values, progress) => ({ opacity: progress })
+          );
+        </script>`,
+        expected: 2,
+      },
+      {
+        name: 'withCallback of FadeIn after the new chain methods',
+        input: html`<script>
+          FadeIn.withTargetValues({ opacity: 1 })
+            .reduceMotion(ReduceMotion.System)
+            .springify()
+            .dampingRatio(0.8)
+            .withCallback((finished) => {});
+        </script>`,
+        expected: 1,
+      },
+      {
+        name: 'static progress animation',
+        input: html`<script>
+          SharedTransition.progressAnimation((values, progress) => ({
+            opacity: progress,
+          }));
+        </script>`,
+        expected: 1,
+      },
+    ])('workletizes $name', ({ input, expected }) => {
+      expect(factoryCount(input)).toBe(expected);
+    });
+
+    test.each([
+      {
+        name: 'withCallback on an unknown object',
+        input: html`<script>
+          SharedTransitionHelper.duration(300).withCallback((finished) => {});
+        </script>`,
+      },
+      {
+        name: 'custom on an unknown object',
+        input: html`<script>
+          animations.custom((values) => values);
+        </script>`,
+      },
+      {
+        name: 'a callback referenced by name',
+        input: html`<script>
+          const onEnd = (finished) => {};
+          SharedTransition.duration(300).withCallback(onEnd);
+        </script>`,
+      },
+    ])('does not workletize $name', ({ input }) => {
+      expect(factoryCount(input)).toBe(0);
+    });
+  });
+
   describe('without worklets', () => {
     test('leaves code untouched and emits no factory', () => {
       const input = html`<script>

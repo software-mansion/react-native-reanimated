@@ -118,6 +118,27 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 });"
 `;
 
+exports[`babel plugin for Layout Animations workletizes callback functions on SharedTransition chains 1`] = `
+"const _worklet_1_init_data = {
+  code: "(function null1(finished){console.log('SharedTransition finished',finished);})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+SharedTransition.duration(300).springify().withCallback(function null1Factory([_worklet_1_init_data]) {
+  const _e = [new global.Error(), 1, -27];
+  const null1 = function (finished) {
+    "use no memo";
+
+    console.log("SharedTransition finished", finished);
+  };
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__initData = _worklet_1_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}([_worklet_1_init_data]));"
+`;
+
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
 "const _worklet_1_init_data = {
   code: "(function null1(){console.log('FadeIn with build after');})",
@@ -284,6 +305,49 @@ new FadeIn().withCallback(function null1Factory([_worklet_1_init_data]) {
   null1.__stackDetails = _e;
   return null1;
 }([_worklet_1_init_data])).AmogusIn();"
+`;
+
+exports[`babel plugin for Layout Animations workletizes custom and progress animations of SharedTransition 1`] = `
+"const _worklet_1_init_data = {
+  code: "(function null1(values){let[withTiming]=this.__closure;return{width:withTiming(values.targetWidth)};})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const _worklet_2_init_data = {
+  code: "(function null2(values,progress){return{opacity:progress};})",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+SharedTransition.custom(function null1Factory([_worklet_1_init_data, withTiming]) {
+  const _e = [new global.Error(), -2, -27];
+  const null1 = function (values) {
+    "use no memo";
+
+    return {
+      width: withTiming(values.targetWidth)
+    };
+  };
+  null1.__closure = [withTiming];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__initData = _worklet_1_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}([_worklet_1_init_data, withTiming])).progressAnimation(function null2Factory([_worklet_2_init_data]) {
+  const _e = [new global.Error(), 1, -27];
+  const null2 = function (values, progress) {
+    "use no memo";
+
+    return {
+      opacity: progress
+    };
+  };
+  null2.__workletHash = 2;
+  null2.__pluginVersion = "x.y.z";
+  null2.__initData = _worklet_2_init_data;
+  null2.__stackDetails = _e;
+  return null2;
+}([_worklet_2_init_data]));"
 `;
 
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
