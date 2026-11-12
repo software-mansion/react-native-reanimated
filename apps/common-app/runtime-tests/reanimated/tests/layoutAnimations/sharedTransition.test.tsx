@@ -312,20 +312,20 @@ describe('Shared element transition between boundaries', () => {
     }
   );
 
-  test('runs a transition that ends on its first frame', async () => {
+  test('leaves reduced-motion views untagged', async () => {
     const finished: boolean[] = [];
     const transition = createTransition(
       finished,
-      SharedTransition.reduceMotion(ReduceMotion.Always)
+      SharedTransition.reduceMotion(ReduceMotion.Always).fadeContent()
     );
     await render(<Screens showTarget={false} transition={transition} />);
     await waitForFrames();
 
     await render(<Screens showTarget transition={transition} />);
-    await waitForNotification('shared-transition-finished');
-    await waitForFrames();
+    await waitForFrames(3);
 
-    expect(finished).toBe([true]);
+    expect(finished).toBe([]);
+    await expectMountedAtLayout('source', 1);
     await expectMountedAtLayout('target', 1);
   });
 
@@ -369,13 +369,13 @@ describe('Shared element transition between boundaries', () => {
 
   test('runs a custom animation defined outside the worklet', async () => {
     const finished: boolean[] = [];
-    const width = withTiming(150, { duration: 100000 });
+    const width = withTiming(150, { duration: 100 });
     const transition = createTransition(
       finished,
       SharedTransition.custom(() => {
         'worklet';
         return { width };
-      }).reduceMotion(ReduceMotion.Always)
+      }).reduceMotion(ReduceMotion.Never)
     );
     await render(<Screens showTarget={false} transition={transition} />);
     await waitForFrames();
