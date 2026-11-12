@@ -94,17 +94,14 @@ function createUpdatePropsManager() {
     const jsPropNames = global._tagToJSPropNamesMapping[tag];
     if (!jsPropNames) {
       // Fast path for the common case of a view without JS props: hand the
-      // updates over as they are instead of copying them every frame. Native
-      // reads them without modifying them, except with USE_ANIMATION_BACKEND,
-      // which rounds text metrics in place. Animated props are the updater's
-      // own object, so in that case they are copied to keep its last values.
+      // updates over as they are instead of copying them every frame. Style
+      // updates are a fresh object from the props builder. Animated props are
+      // the updater's own object, which native rounds in place, so they are
+      // copied to keep the updater's last values unchanged.
       if (!hasAnyProp(updates)) {
         return {};
       }
-      return {
-        nativePropUpdates:
-          isAnimatedProps && USE_ANIMATION_BACKEND ? { ...updates } : updates,
-      };
+      return { nativePropUpdates: isAnimatedProps ? { ...updates } : updates };
     }
     let nativePropUpdates: Record<string, unknown> | undefined;
     let jsPropUpdates: Record<string, unknown> | undefined;

@@ -19,22 +19,12 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
-// Rounds in place. Used only with USE_ANIMATION_BACKEND, where the props are read from JSI directly.
-[[maybe_unused]] static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
+static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
   const auto object = updates.asObject(rt);
   for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
     const auto value = object.getProperty(rt, propName);
     if (value.isNumber()) {
       object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
-    }
-  }
-}
-
-static void roundTextMetrics(folly::dynamic &updates) {
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    auto *value = updates.get_ptr(propName);
-    if (value != nullptr && value->isNumber()) {
-      *value = roundTextMetric(value->asDouble());
     }
   }
 }
@@ -52,13 +42,12 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     }
 
     jsi::Value updates = item.getProperty(rt, "updates");
+    roundTextMetrics(rt, updates);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-      roundTextMetrics(rt, updates);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
       auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
-      roundTextMetrics(dynamicUpdates);
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.
       if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
