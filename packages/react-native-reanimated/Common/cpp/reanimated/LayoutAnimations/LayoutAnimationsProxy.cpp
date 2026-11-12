@@ -1423,11 +1423,6 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
-    if (transition_) {
-      for (auto &config : transition_->progressCallbacks) {
-        scheduleSharedTransitionCallback(std::move(config), false);
-      }
-    }
     if (uncommittedScreenPop_) {
       for (auto &config : uncommittedScreenPop_->progressCallbacks) {
         scheduleSharedTransitionCallback(std::move(config), false);

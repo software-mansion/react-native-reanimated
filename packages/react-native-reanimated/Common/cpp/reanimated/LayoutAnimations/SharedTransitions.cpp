@@ -386,7 +386,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, transaction);
       findSharedElementsOnScreen(afterTopScreen, AFTER, transaction);
 
-      filterSharedTransitionStarts(SharedTransitionDriver::GESTURE, transaction, propsParserContext);
+      filterSharedTransitionStarts(transaction, propsParserContext);
       const auto hiddenBefore = hiddenViewTags();
       for (const auto &[sharedTag, collectedTransition] : transaction.transitions) {
         const auto &[source, target] = collectedTransition.nodes;
@@ -444,7 +444,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
     transition_->state = transition_->progress == 1 ? TransitionState::END : TransitionState::ACTIVE;
   }
   if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
-    auto progressCallbacks = std::move(transition_->progressCallbacks);
+    std::vector<std::shared_ptr<Serializable>> progressCallbacks;
     for (auto &run : activeSharedTransitionRuns()) {
       if (run.driver == SharedTransitionDriver::GESTURE && run.callback) {
         progressCallbacks.push_back(std::exchange(run.callback, nullptr));
@@ -539,7 +539,6 @@ void LayoutAnimationsProxy::scheduleSharedTransitionCallback(
 void LayoutAnimationsProxy::skipSharedTransition(
     const SharedTag &sharedTag,
     const CollectedTransition &collected,
-    const SharedTransitionDriver driver,
     std::shared_ptr<Serializable> callback,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -553,14 +552,8 @@ void LayoutAnimationsProxy::skipSharedTransition(
       }
     }
   }
-  if (!callback) {
-    return;
-  }
-  if (driver == SharedTransitionDriver::GESTURE) {
-    react_native_assert(transition_ && "Skipped gesture has no transition");
-    transition_->progressCallbacks.push_back(std::move(callback));
-  } else {
-    scheduleSharedTransitionCallback(std::move(callback), true);
+  if (callback) {
+    scheduleSharedTransitionCallback(std::move(callback), false);
   }
 }
 
@@ -618,7 +611,6 @@ bool LayoutAnimationsProxy::hasSharedViewInLayoutRoot(
 }
 
 void LayoutAnimationsProxy::filterSharedTransitionStarts(
-    const SharedTransitionDriver driver,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   std::erase_if(transaction.transitions, [&](const auto &entry) {
@@ -636,8 +628,7 @@ void LayoutAnimationsProxy::filterSharedTransitionStarts(
     if (config && !sourceOffWindow && !isInOtherWindow(target) && layoutRootOf(source) == layoutRootOf(target)) {
       return false;
     }
-    skipSharedTransition(
-        sharedTag, collected, driver, config ? config->callback : nullptr, transaction, propsParserContext);
+    skipSharedTransition(sharedTag, collected, config ? config->callback : nullptr, transaction, propsParserContext);
     return true;
   });
 }
@@ -1661,7 +1652,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   }
 
   if (beforeTopScreen != afterTopScreen) {
-    filterSharedTransitionStarts(SharedTransitionDriver::TIME, transaction, propsParserContext);
+    filterSharedTransitionStarts(transaction, propsParserContext);
     adjustForNativePlacement(transaction.transitions);
     for (auto &[sharedTag, collectedTransition] : transaction.transitions) {
       auto &transition = collectedTransition.transition;

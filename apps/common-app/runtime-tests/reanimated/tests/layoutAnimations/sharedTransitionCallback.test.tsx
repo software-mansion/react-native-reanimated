@@ -399,7 +399,7 @@ describe('Shared transition callbacks', () => {
   );
 
   iosTest(
-    'reports false to the builder of a held start that goes back',
+    'reports false to both builders when a held start goes back',
     async () => {
       const forward: boolean[] = [];
       const reverse: boolean[] = [];
@@ -423,7 +423,7 @@ describe('Shared transition callbacks', () => {
       await expectEventually(() =>
         RuntimeTestObserver!.observeParent(sourceTag)
       ).toBe(parent);
-      await expectReportsAfterSettle([forward, [false]], [reverse, [true]]);
+      await expectReportsAfterSettle([forward, [false]], [reverse, [false]]);
     }
   );
 });
