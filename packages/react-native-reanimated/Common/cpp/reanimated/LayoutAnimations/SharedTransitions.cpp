@@ -2247,11 +2247,12 @@ void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) 
 }
 
 void LayoutAnimationsProxy::applyContentOpacity(
-    const std::shared_ptr<LightNode> &child,
+    FadedChild &fadedChild,
     const double fromContentOpacity,
     const double toContentOpacity,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
+  const auto &child = fadedChild.node;
   const auto tag = child->current.tag;
   auto mountedContentOpacity = fromContentOpacity;
   for (auto &mutation : mutations) {
@@ -2259,6 +2260,7 @@ void LayoutAnimationsProxy::applyContentOpacity(
         mutation.newChildShadowView.tag != tag) {
       continue;
     }
+    fadedChild.mounted.reset();
     if (mutation.type == ShadowViewMutation::Update) {
       const auto &oldView = mutation.oldChildShadowView;
       mutation.oldChildShadowView =
@@ -2275,12 +2277,23 @@ void LayoutAnimationsProxy::applyContentOpacity(
     return;
   }
   const auto &view = mountedView(child);
+  const auto opacity = ownOpacity(child, view);
+  const auto &mounted = fadedChild.mounted;
+  const bool isMountedFadeCurrent = mounted && mounted->source == view && mounted->ownOpacity == opacity &&
+      mounted->contentOpacity == fromContentOpacity;
+  const auto oldView = isMountedFadeCurrent
+      ? mounted->view
+      : cloneViewWithOpacity(view, opacity * fromContentOpacity, propsParserContext);
+  auto newView = cloneViewWithOpacity(view, opacity * toContentOpacity, propsParserContext);
   const auto parent = child->parent.lock();
-  mutations.push_back(createPropsUpdate(
-      withContentOpacity(child, view, fromContentOpacity, propsParserContext),
-      withContentOpacity(child, view, toContentOpacity, propsParserContext),
-      parent ? parent->current.tag : surfaceId_,
-      propsParserContext));
+  mutations.push_back(
+      createPropsUpdate(oldView, newView, parent ? parent->current.tag : surfaceId_, propsParserContext));
+  fadedChild.mounted = MountedFade{
+      .source = view,
+      .ownOpacity = opacity,
+      .contentOpacity = toContentOpacity,
+      .view = std::move(newView),
+  };
 }
 
 // A retiring run keeps the fade of its children until its carrier attaches.
@@ -2313,10 +2326,11 @@ void LayoutAnimationsProxy::composeCarrierContent(
     auto &contentFade = *run->contentFade;
     const auto opacity = contentOpacityOnScreen(*run);
     for (const auto &child : children) {
-      const auto tag = child->current.tag;
-      const auto shownOpacity = contentFade.fadedChildren.contains(tag) ? contentFade.mountedOpacity : 1.0;
-      applyContentOpacity(child, shownOpacity, opacity, filteredMutations, propsParserContext);
-      contentFade.fadedChildren[tag] = child;
+      const auto [entry, isNew] = contentFade.fadedChildren.try_emplace(child->current.tag);
+      auto &fadedChild = entry->second;
+      fadedChild.node = child;
+      applyContentOpacity(
+          fadedChild, isNew ? 1.0 : contentFade.mountedOpacity, opacity, filteredMutations, propsParserContext);
     }
     contentFade.mountedOpacity = opacity;
   }
@@ -2328,13 +2342,13 @@ void LayoutAnimationsProxy::restoreFadedChildren(
     const std::unordered_set<Tag> &hiddenTags,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext) const {
-  std::erase_if(contentFade.fadedChildren, [&](const auto &entry) {
-    const auto &[tag, child] = entry;
-    if (std::ranges::find(keptChildren, child) != keptChildren.end()) {
+  std::erase_if(contentFade.fadedChildren, [&](auto &entry) {
+    auto &[tag, fadedChild] = entry;
+    if (std::ranges::find(keptChildren, fadedChild.node) != keptChildren.end()) {
       return false;
     }
-    if (isLightNodeMapped(child) && !hiddenTags.contains(tag)) {
-      applyContentOpacity(child, contentFade.mountedOpacity, 1, mutations, propsParserContext);
+    if (isLightNodeMapped(fadedChild.node) && !hiddenTags.contains(tag)) {
+      applyContentOpacity(fadedChild, contentFade.mountedOpacity, 1, mutations, propsParserContext);
     }
     return true;
   });
