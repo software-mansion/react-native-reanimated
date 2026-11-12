@@ -69,7 +69,7 @@ import AnimatedTextSrc from '!!raw-loader!@site/src/examples/AnimatedText';
 
 - A number is converted to a string, so use [`useDerivedValue`](./useDerivedValue.mdx) to format it, for example to round it or to add a unit.
 
-- `Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](../guides/feature-flags.md) static feature flag is enabled.
+- With the [`USE_ANIMATION_BACKEND`](../guides/feature-flags.md) static feature flag enabled, `Animated.Text` updates shared value children only on React Native 0.89 or newer.
 
 ## Platform compatibility
 

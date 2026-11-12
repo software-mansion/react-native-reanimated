@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
@@ -78,6 +79,9 @@ class UpdatesRegistry {
       AnimatedProps animatedProps,
       bool hasLayoutUpdates = false);
   void addRawPropsToAnimatedPropsBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic props);
+#if REACT_NATIVE_VERSION_MINOR >= 89
+  void addTextToAnimatedPropsBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, std::string text);
+#endif
   void addJSIPropsToAnimatedPropsBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,
       jsi::Runtime &rt,

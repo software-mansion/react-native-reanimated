@@ -17,6 +17,8 @@ namespace reanimated {
 using PropsMap = std::unordered_map<ShadowNodeFamily::Shared, std::vector<folly::dynamic>>;
 using ChildrenMap = std::unordered_map<ShadowNodeFamily::Shared, std::unordered_set<int>>;
 
+bool isTextComponent(const ShadowNode &shadowNode);
+
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap);
 
 } // namespace reanimated

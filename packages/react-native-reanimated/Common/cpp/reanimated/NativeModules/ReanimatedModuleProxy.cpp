@@ -63,6 +63,12 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   for (auto &prop : source.props) {
     target.props.push_back(std::move(prop));
   }
+
+#if REACT_NATIVE_VERSION_MINOR >= 89
+  if (source.text) {
+    target.text = std::move(source.text);
+  }
+#endif
 }
 
 #ifdef ANDROID
