@@ -427,30 +427,23 @@ describe('Layout Animations', () => {
       );
       const view = screen.getByTestId('box1').parentElement as HTMLElement;
 
-      // The keyframes of a custom animation are cleaned up after 5 times its duration
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+      const animationName = view.style.animationName;
+      expect(getKeyframesText(animationName)).toBeDefined();
+
+      // The keyframes of a custom animation are removed after 5 times its duration
       act(() => {
         jest.advanceTimersByTime(1000);
       });
-      const animationName = view.style.animationName;
 
-      expect(animationName).toMatch(/^REA-ENTERING-/);
+      expect(getKeyframesText(animationName)).toBeUndefined();
       expect(view.style.position).not.toBe('absolute');
       expect(view.style.width).toBe('');
       expect(view.style.height).toBe('');
-      // The view still shows the last frame of the animation
-      expect(getKeyframesText(animationName)).toBeDefined();
-
-      // The keyframes go away with the next cleanup after the view is unmounted
-      toggleVisibility(screen);
-      toggleVisibility(screen);
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-      const nextView = screen.getByTestId('box1').parentElement as HTMLElement;
-
-      expect(nextView.style.animationName).not.toBe(animationName);
-      expect(getKeyframesText(animationName)).toBeUndefined();
-      expect(getKeyframesText(nextView.style.animationName)).toBeDefined();
+      // The last frame stays as an inline style, which later updates can change
+      expect(view.style.opacity).toBe('0.5');
     });
   });
 });

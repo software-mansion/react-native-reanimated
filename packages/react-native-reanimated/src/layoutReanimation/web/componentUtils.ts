@@ -23,7 +23,7 @@ import type {
 } from './config';
 import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
-import { scheduleAnimationCleanup } from './domUtils';
+import { applyLastAnimationFrame, scheduleAnimationCleanup } from './domUtils';
 import type { WebEasingsNames } from './Easing';
 import { getEasingByName, maybeGetBezierEasing, WebEasings } from './Easing';
 import { prepareCurvedTransition } from './transition/Curved';
@@ -315,16 +315,20 @@ export function setElementAnimation(
   };
 
   if (!(animationName in Animations)) {
-    scheduleAnimationCleanup(
-      animationName,
-      duration + delay,
-      () => {
-        maybeRunCleanup();
-        maybeCallCallback(false);
-      },
-      // The view that entered stays mounted, unlike the copy that plays an exiting animation.
-      shouldSavePosition ? element : undefined
-    );
+    scheduleAnimationCleanup(animationName, duration + delay, () => {
+      // The keyframes are about to be removed. A view that entered with a `Keyframe` still shows
+      // their last frame, so it would jump back to its own style.
+      if (
+        shouldSavePosition &&
+        element.style.animationName === animationName &&
+        element.style.animationFillMode === 'forwards'
+      ) {
+        applyLastAnimationFrame(element, animationName);
+      }
+
+      maybeRunCleanup();
+      maybeCallCallback(false);
+    });
   }
 }
 
@@ -379,8 +383,9 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig);
 }
 
+// Only the scroll of the ancestors moves the element. Its own scroll moves its children.
 function getElementScrollValue(element: AnimatableDOMElement): ScrollOffsets {
-  let current: AnimatableDOMElement | null = element;
+  let current: AnimatableDOMElement | null = element.parentElement;
 
   const scrollOffsets: ScrollOffsets = {
     scrollTopOffset: 0,

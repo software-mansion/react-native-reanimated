@@ -77,4 +77,54 @@ test.describe('ResizedOverlay', () => {
       );
     });
   }
+
+  test('exits in place after its own content was scrolled', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Open with a preset' }).click();
+    await page.waitForTimeout(600);
+
+    // Scrolling the content of the overlay doesn't move the overlay
+    const topBeforeExit = await page.evaluate(() => {
+      const overlay = document.querySelector<HTMLElement>(
+        '[data-testid="overlay"]'
+      )!;
+      const tallContent = document.createElement('div');
+      tallContent.style.flexShrink = '0';
+      tallContent.style.height = '2000px';
+      overlay.style.overflow = 'auto';
+      overlay.appendChild(tallContent);
+      overlay.scrollTop = 100;
+      return overlay.getBoundingClientRect().top;
+    });
+    await page.getByRole('button', { name: 'Close' }).dispatchEvent('click');
+    await page.waitForTimeout(300);
+
+    const topDuringExit = await page.evaluate(
+      () =>
+        Array.from(
+          document.querySelectorAll<HTMLElement>('[data-testid="overlay"]')
+        )
+          .find((element) => getComputedStyle(element).visibility !== 'hidden')
+          ?.getBoundingClientRect().top
+    );
+    expect(topDuringExit).toBe(topBeforeExit);
+  });
+
+  test('accepts style updates after entering with a Keyframe', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Open with a Keyframe' }).click();
+    // The keyframes of a custom entering animation are cleaned up after 5 times its duration
+    await page.waitForTimeout(2000);
+
+    const opacity = await page.evaluate(() => {
+      const overlay = document.querySelector<HTMLElement>(
+        '[data-testid="overlay"]'
+      )!;
+      overlay.style.opacity = '0.3';
+      return getComputedStyle(overlay).opacity;
+    });
+    expect(opacity).toBe('0.3');
+  });
 });
