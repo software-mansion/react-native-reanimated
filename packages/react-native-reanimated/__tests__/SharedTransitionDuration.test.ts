@@ -11,6 +11,12 @@ describe('layout animation duration', () => {
     expect(builtDuration(new SharedTransition())).toBe(500);
   });
 
+  test('SharedTransition build keeps the duration of the builder unset', () => {
+    const transition = new SharedTransition();
+    transition.build();
+    expect(transition.durationV).toBeUndefined();
+  });
+
   test('SharedTransition keeps a zero duration', () => {
     expect(builtDuration(SharedTransition.duration(0))).toBe(0);
   });

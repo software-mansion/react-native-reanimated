@@ -1,4 +1,5 @@
 import { withTiming } from '../src/animation';
+import { logger } from '../src/common';
 import { ReduceMotion } from '../src/commonTypes';
 import type {
   AnimationObject,
@@ -315,6 +316,59 @@ describe('SharedTransition', () => {
       );
       expect(animations.width.reduceMotion).toBe(true);
     });
+
+    test('can come after other modifiers', () => {
+      const { animations } = runLayoutAnimation(
+        SharedTransition.duration(800).custom((values) => {
+          'worklet';
+          return { width: values.targetWidth };
+        })
+      );
+      expect(animations).toEqual({ width: 300 });
+    });
+  });
+
+  describe('unsupported modifiers', () => {
+    beforeEach(() => {
+      jest.spyOn(logger, 'warnOnce').mockImplementation();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test.each([
+      [
+        'withInitialValues',
+        () => SharedTransition.withInitialValues({ width: 0 } as never),
+        () => new SharedTransition().withInitialValues({ width: 0 } as never),
+      ],
+      [
+        'withTargetValues',
+        () => SharedTransition.withTargetValues({ width: 0 } as never),
+        () => new SharedTransition().withTargetValues({ width: 0 } as never),
+      ],
+      [
+        'rotate',
+        () => SharedTransition.rotate('45deg' as never),
+        () => new SharedTransition().rotate('45deg' as never),
+      ],
+    ])(
+      'warns about %s and keeps the default animation',
+      (name, fromStatic, fromInstance) => {
+        const expected = JSON.stringify(
+          runLayoutAnimation(new SharedTransition())
+        );
+        for (const builder of [fromStatic, fromInstance]) {
+          expect(JSON.stringify(runLayoutAnimation(builder()))).toBe(expected);
+        }
+        expect(logger.warnOnce).toHaveBeenCalledTimes(2);
+        expect(logger.warnOnce).toHaveBeenCalledWith(
+          expect.stringContaining(`${name}() is not supported`),
+          0
+        );
+      }
+    );
   });
 
   describe('default progress animation', () => {
