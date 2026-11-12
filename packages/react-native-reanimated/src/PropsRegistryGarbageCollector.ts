@@ -1,5 +1,8 @@
 'use strict';
 
+import type { AppStateStatus, EventSubscription } from 'react-native';
+import { AppState } from 'react-native';
+
 import type {
   ProcessedBackgroundImageValue,
   ProcessedColorStop,
@@ -21,6 +24,7 @@ const FLUSH_INTERVAL_MS = 500;
 export const PropsRegistryGarbageCollector = {
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
   intervalId: null as NodeJS.Timeout | null,
+  appStateSubscription: null as EventSubscription | null,
 
   registerView(viewTag: number, component: IAnimatedComponentInternal) {
     if (this.viewsMap.has(viewTag)) {
@@ -57,13 +61,45 @@ export const PropsRegistryGarbageCollector = {
   },
 
   registerInterval() {
-    this.intervalId = setInterval(
-      this.syncPropsBackToReact.bind(this),
-      FLUSH_INTERVAL_MS
+    if (
+      AppState.currentState !== 'inactive' &&
+      AppState.currentState !== 'background'
+    ) {
+      this.startInterval();
+    }
+    // Pause flushing while the app isn't active (e.g. behind a system prompt),
+    // otherwise the interval keeps native timers busy the whole time.
+    this.appStateSubscription = AppState.addEventListener('change', (state) =>
+      this.handleAppStateChange(state)
     );
   },
 
   unregisterInterval() {
+    this.stopInterval();
+    this.appStateSubscription?.remove();
+    this.appStateSubscription = null;
+  },
+
+  handleAppStateChange(state: AppStateStatus) {
+    if (state === 'active') {
+      // Flush updates that settled while the app wasn't active.
+      this.syncPropsBackToReact();
+      this.startInterval();
+    } else {
+      this.stopInterval();
+    }
+  },
+
+  startInterval() {
+    if (this.intervalId === null) {
+      this.intervalId = setInterval(
+        this.syncPropsBackToReact.bind(this),
+        FLUSH_INTERVAL_MS
+      );
+    }
+  },
+
+  stopInterval() {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
