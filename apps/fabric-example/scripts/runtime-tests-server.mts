@@ -34,6 +34,7 @@ import {
   resolveAndroidDevice as resolveAndroidTarget,
 } from './android-device.mts';
 import type { AdbDevice, AndroidTools } from './android-device.mts';
+import { resolvePlatform } from './runtime-tests-platform.mts';
 import { reloadRepeatsSuites, selectSuites } from './runtime-tests-suites.mts';
 
 interface Sanitizer {
@@ -127,7 +128,17 @@ if (args.help) {
 }
 
 const LIBRARY = String(args.library ?? '').toLowerCase();
-const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
+const RESOLVED_PLATFORM = resolvePlatform({
+  platform: typeof args.platform === 'string' ? args.platform : undefined,
+  serial: typeof args.serial === 'string' ? args.serial : undefined,
+  avd: typeof args.avd === 'string' ? args.avd : undefined,
+  udid: typeof args.udid === 'string' ? args.udid : undefined,
+});
+if (RESOLVED_PLATFORM.error !== undefined) {
+  console.error(`[runtime-tests] ${RESOLVED_PLATFORM.error}`);
+  process.exit(1);
+}
+const PLATFORM = RESOLVED_PLATFORM.platform ?? 'ios';
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
   typeof args.configuration === 'string'
@@ -169,13 +180,6 @@ const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
     `[runtime-tests] --library must be one of: ${LIBRARIES.join(', ')} (got: ${LIBRARY || 'nothing'})`
-  );
-  process.exit(1);
-}
-
-if (!PLATFORMS.includes(PLATFORM)) {
-  console.error(
-    `[runtime-tests] --platform must be one of: ${PLATFORMS.join(', ')} (got: ${PLATFORM})`
   );
   process.exit(1);
 }
@@ -2212,7 +2216,8 @@ Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
 
 Target
-  --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
+  --platform <name>         One of: ${PLATFORMS.join(', ')}. Inferred from the
+                            device flag below, else ios.
   --simulator <name>        iOS simulator to boot. Default: iPhone 17.
   --udid <udid>             iOS simulator to reuse, instead of --simulator.
                             Needed for crash reports in server mode on macOS.
