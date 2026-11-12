@@ -1,0 +1,1 @@
+Fix layout animations on web using a stale size after the view was resized without a render, for example by a window resize: an exiting animation now starts from the current size and position of the view, and a view that entered with a `Keyframe` or with `withInitialValues` is no longer pinned to fixed pixel sizes.

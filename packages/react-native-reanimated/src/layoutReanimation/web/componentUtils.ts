@@ -50,6 +50,42 @@ function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {
   return fallbackSnapshot;
 }
 
+/**
+ * Returns the layout animation of the element that is still running, if there
+ * is one.
+ */
+export function getRunningLayoutAnimation(element: HTMLElement) {
+  if (typeof CSSAnimation === 'undefined') {
+    return undefined;
+  }
+
+  return element
+    .getAnimations()
+    .find(
+      (animation) =>
+        animation instanceof CSSAnimation &&
+        animation.animationName === element.style.animationName &&
+        animation.playState === 'running'
+    );
+}
+
+// The size and the position of the element can change without a render, for example
+// when the window is resized, so the exiting animation has to start from a fresh measurement.
+function getSnapshotForExitingElement(
+  element: HTMLElement
+): ReanimatedSnapshot {
+  // A hidden element (for example frozen by `react-freeze`) has no box to measure, and a running
+  // layout animation distorts the box. The last saved snapshot is the best estimate in these cases.
+  if (
+    element.getClientRects().length === 0 ||
+    getRunningLayoutAnimation(element)
+  ) {
+    return getSnapshotForElement(element);
+  }
+
+  return saveSnapshot(element);
+}
+
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
     return getEasingByName('linear');
@@ -185,6 +221,8 @@ export function saveSnapshot(element: AnimatableDOMElement) {
   };
 
   snapshots.set(element, snapshot);
+
+  return snapshot;
 }
 
 export function setElementAnimation(
@@ -277,14 +315,16 @@ export function setElementAnimation(
   };
 
   if (!(animationName in Animations)) {
-    scheduleAnimationCleanup(animationName, duration + delay, () => {
-      if (shouldSavePosition) {
-        setElementPosition(element, getSnapshotForElement(element));
-      }
-
-      maybeRunCleanup();
-      maybeCallCallback(false);
-    });
+    scheduleAnimationCleanup(
+      animationName,
+      duration + delay,
+      () => {
+        maybeRunCleanup();
+        maybeCallCallback(false);
+      },
+      // The view that entered stays mounted, unlike the copy that plays an exiting animation.
+      shouldSavePosition ? element : undefined
+    );
   }
 }
 
@@ -414,6 +454,8 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
+  // The element has to be measured before it loses its animation and its children.
+  const snapshot = getSnapshotForExitingElement(element);
   const dummy = element.cloneNode() as ReanimatedHTMLElement;
 
   dummy.isDummy = true;
@@ -443,8 +485,6 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   restoreScrollPositions(dummy, scrollPositions, element);
-
-  const snapshot = getSnapshotForElement(element);
 
   const scrollOffsets = getElementScrollValue(element);
 

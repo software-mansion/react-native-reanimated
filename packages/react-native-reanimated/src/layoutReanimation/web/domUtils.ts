@@ -12,6 +12,9 @@ const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
 const animationNameToIndex = new Map<string, number>();
 const animationNameList: string[] = [];
 
+// Keyframes of finished animations whose last frame is still the style of a mounted element.
+const heldAnimations = new Map<string, WeakRef<HTMLElement>>();
+
 let isObserverSet = false;
 
 /**
@@ -80,10 +83,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
   }
 }
 
-function removeWebAnimation(
-  animationName: string,
-  animationRemoveCallback: () => void
-) {
+function removeWebAnimation(animationName: string) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!IS_WINDOW_AVAILABLE) {
     return;
@@ -98,8 +98,6 @@ function removeWebAnimation(
   if (currentAnimationIndex === undefined) {
     throw new Error('[Reanimated] Failed to obtain animation index.');
   }
-
-  animationRemoveCallback();
 
   styleTag.sheet?.deleteRule(currentAnimationIndex);
 
@@ -122,10 +120,44 @@ const timeoutScale = 5; // We use this value to enlarge timeout duration. It can
 const frameDurationMs = 16; // Just an approximation.
 const minimumFrames = 10;
 
+// Only an animation that fills forwards keeps styling the element after it ends.
+function isAnimationHeldByElement(animationName: string, element: HTMLElement) {
+  return (
+    element.isConnected &&
+    element.style.animationName === animationName &&
+    element.style.animationFillMode === 'forwards'
+  );
+}
+
+function removeReleasedAnimations() {
+  for (const [animationName, elementRef] of heldAnimations) {
+    const element = elementRef.deref();
+
+    if (!element || !isAnimationHeldByElement(animationName, element)) {
+      heldAnimations.delete(animationName);
+      removeWebAnimation(animationName);
+    }
+  }
+}
+
+/**
+ * Removes the keyframes of a custom animation once the animation is over.
+ *
+ * @param animationName - Name of the keyframes to remove.
+ * @param animationDuration - Duration of the animation, with its delay, in
+ *   seconds.
+ * @param animationRemoveCallback - Called when the animation is considered
+ *   over.
+ * @param holdingElement - Element that may keep the last frame of the animation
+ *   as its style. The keyframes stay until the element stops using them, so
+ *   that it doesn't jump back and doesn't need its last frame copied into fixed
+ *   inline styles.
+ */
 export function scheduleAnimationCleanup(
   animationName: string,
   animationDuration: number,
-  animationRemoveCallback: () => void
+  animationRemoveCallback: () => void,
+  holdingElement?: HTMLElement
 ) {
   // If duration is very short, we want to keep remove delay to at least 10 frames
   // In our case it is exactly 160/1099 s, which is approximately 0.15s
@@ -134,10 +166,21 @@ export function scheduleAnimationCleanup(
     animationDuration + frameDurationMs * minimumFrames
   );
 
-  setTimeout(
-    () => removeWebAnimation(animationName, animationRemoveCallback),
-    timeoutValue
-  );
+  setTimeout(() => {
+    animationRemoveCallback();
+    removeReleasedAnimations();
+
+    if (
+      holdingElement &&
+      typeof WeakRef !== 'undefined' &&
+      isAnimationHeldByElement(animationName, holdingElement)
+    ) {
+      heldAnimations.set(animationName, new WeakRef(holdingElement));
+      return;
+    }
+
+    removeWebAnimation(animationName);
+  }, timeoutValue);
 }
 
 function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {

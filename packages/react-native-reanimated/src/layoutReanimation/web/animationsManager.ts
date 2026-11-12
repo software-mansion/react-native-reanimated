@@ -12,6 +12,7 @@ import type { TransitionData } from './animationParser';
 import { makeElementVisible } from './componentStyle';
 import {
   getProcessedConfig,
+  getRunningLayoutAnimation,
   handleExitingAnimation,
   handleLayoutTransition,
   maybeModifyStyleForKeyframe,
@@ -116,18 +117,7 @@ function chooseAction(
 function getInterruptedAnimationValues(
   element: ReanimatedHTMLElement
 ): InitialValuesStyleProps | undefined {
-  if (typeof CSSAnimation === 'undefined') {
-    return undefined;
-  }
-
-  const runningAnimation = element
-    .getAnimations()
-    .find(
-      (animation) =>
-        animation instanceof CSSAnimation &&
-        animation.animationName === element.style.animationName &&
-        animation.playState === 'running'
-    );
+  const runningAnimation = getRunningLayoutAnimation(element);
   const animatesOpacity = (
     runningAnimation?.effect as KeyframeEffect | null | undefined
   )
