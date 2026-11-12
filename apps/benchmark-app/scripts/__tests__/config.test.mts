@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { validateConfig, validateNoiseLimits } from '../config.mts';
+import { blocksOf, validateConfig, validateNoiseLimits } from '../config.mts';
 import { VERDICT_METRICS } from '../metrics.mts';
 
 const CONFIG_DIR = '/configs';
@@ -13,12 +13,12 @@ function config(overrides: Record<string, unknown> = {}) {
     name: 'android-sync-ui-props',
     a: {
       reanimated: '4.7.1',
-      worklets: '0.8.3',
+      worklets: '0.13.1',
       reanimatedFlags: { ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false },
     },
     b: {
       reanimated: 'tarballs/react-native-reanimated-4.8.0.tgz',
-      worklets: '0.8.3',
+      worklets: '0.13.1',
     },
     scenarios: ['worklet-styles-transform', 'css'],
     ...overrides,
@@ -39,7 +39,7 @@ describe('validateConfig', () => {
     const result = validateConfig(config(), CONFIG_DIR, files);
     assert.deepEqual(result.a, {
       reanimated: { kind: 'npm', version: '4.7.1' },
-      worklets: { kind: 'npm', version: '0.8.3' },
+      worklets: { kind: 'npm', version: '0.13.1' },
       reanimatedFlags: { ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false },
       workletsFlags: {},
       bundleMode: false,
@@ -142,7 +142,7 @@ describe('validateConfig', () => {
         config({
           b: {
             reanimated: '4.7.1',
-            worklets: '0.8.3',
+            worklets: '0.13.1',
             workletsFlags: { lower: true, OK_FLAG: 1 },
           },
         })
@@ -156,6 +156,38 @@ describe('validateConfig', () => {
       problemsOf(config({ expect: [{ is: 'better', byAtLeast: 2 }] })),
       /must be a fraction/
     );
+  });
+});
+
+describe('config blocks', () => {
+  it('reads a block count for a scenario of the run', () => {
+    const result = validateConfig(
+      config({ blocks: { css: 10 } }),
+      CONFIG_DIR,
+      files
+    );
+    assert.deepEqual(result.blocks, { css: 10 });
+    assert.equal(blocksOf(result, 'css', 5), 10);
+    assert.equal(blocksOf(result, 'worklet-styles-transform', 5), 5);
+    assert.equal(validateConfig(config(), CONFIG_DIR, files).blocks, undefined);
+  });
+
+  it('rejects a scenario that the run does not measure and a count that is not a positive integer', () => {
+    const message = problemsOf(
+      config({
+        blocks: { 'idle-cost': 3, css: 0, 'worklet-styles-transform': 2.5 },
+      })
+    );
+    for (const expected of [
+      'config.blocks: "idle-cost" is not a scenario of this run',
+      'config.blocks.css must be a positive integer',
+      'config.blocks.worklet-styles-transform must be a positive integer',
+    ]) {
+      assert.ok(
+        message.includes(expected),
+        `missing "${expected}" in:\n${message}`
+      );
+    }
   });
 });
 

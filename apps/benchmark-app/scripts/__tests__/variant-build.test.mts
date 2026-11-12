@@ -14,7 +14,7 @@ import {
 
 const VARIANT: Variant = {
   reanimated: { kind: 'npm', version: '4.7.1' },
-  worklets: { kind: 'tarball', path: '/abs/react-native-worklets-0.8.3.tgz' },
+  worklets: { kind: 'tarball', path: '/abs/react-native-worklets-0.13.1.tgz' },
   reanimatedFlags: {
     ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: true,
     IOS_CSS_CORE_ANIMATION: false,
@@ -106,7 +106,7 @@ describe('packageSpec', () => {
     );
     assert.equal(
       packageSpec('react-native-worklets', VARIANT.worklets),
-      'react-native-worklets@file:/abs/react-native-worklets-0.8.3.tgz'
+      'react-native-worklets@file:/abs/react-native-worklets-0.13.1.tgz'
     );
   });
 });

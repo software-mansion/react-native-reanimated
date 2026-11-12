@@ -5,12 +5,26 @@ import type { DeviceState } from './android-device.mts';
 import type { RunConfig, VariantKey } from './config.mts';
 import { ToolError } from './errors.mts';
 import type { ExpectationResult } from './expectations.mts';
+import type { VerdictMetric } from './metrics.mts';
+import type { Scenario } from './scenarios.mts';
 import type { ScenarioOutcome } from './session.mts';
 import type { ToolVersions } from './tools.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { NoiseLimits, VerdictRow } from './verdict.mts';
 
 export type RunStatus = 'running' | 'done' | 'interrupted' | 'tool error';
+
+export interface Segment {
+  startedAt: string;
+  finishedAt?: string;
+  status: RunStatus;
+  error?: string;
+  device: DeviceState;
+}
+
+export type RunVariant = BuiltVariant & { apkSha256: string };
+
+export type AbandonedScenario = ScenarioOutcome & { segment: number };
 
 export interface RunResult {
   formatVersion: 1;
@@ -26,10 +40,13 @@ export interface RunResult {
   };
   noiseLimits: NoiseLimits | null;
   serial: string;
-  device?: DeviceState;
+  segments: Segment[];
+  appRefreshRate: number | null;
   tools?: ToolVersions;
-  variants: Partial<Record<VariantKey, BuiltVariant>>;
+  variants: Partial<Record<VariantKey, RunVariant>>;
   scenarios: ScenarioOutcome[];
+  incompleteScenario: ScenarioOutcome | null;
+  abandonedScenarios: AbandonedScenario[];
   statistics: VerdictRow[];
   expectations: ExpectationResult[];
 }
@@ -54,6 +71,15 @@ export function createRunFolder(
   return folder;
 }
 
+export function readResult(folder: string): RunResult {
+  const file = path.join(folder, 'result.json');
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8')) as RunResult;
+  } catch (error) {
+    throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
+  }
+}
+
 export function writeResult(folder: string, result: RunResult) {
   const file = path.join(folder, 'result.json');
   fs.writeFileSync(
@@ -61,6 +87,26 @@ export function writeResult(folder: string, result: RunResult) {
     `${JSON.stringify(result, rejectNonFinite, 2)}\n`
   );
   fs.renameSync(`${file}.partial`, file);
+}
+
+export function scenariosWithoutData(result: RunResult): Scenario[] {
+  return result.config.scenarios.filter(
+    (scenario) =>
+      !result.scenarios.some((outcome) => outcome.scenario === scenario)
+  );
+}
+
+export function acceptedValues(
+  outcome: ScenarioOutcome,
+  metric: VerdictMetric,
+  variant: VariantKey
+): number[] {
+  return outcome.samples.flatMap((sample) => {
+    const selected =
+      sample.valid && sample.accepted && sample.variant === variant;
+    const value = selected ? sample.metrics[metric] : null;
+    return typeof value === 'number' ? [value] : [];
+  });
 }
 
 export function finiteNumber(value: number, label: string): number {

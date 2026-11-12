@@ -67,6 +67,22 @@ describe('runScenario', () => {
     );
   });
 
+  it('gives the samples to the progress listener after each sample', async () => {
+    const { take } = sampler((_place, count) =>
+      count === 2 ? 'thermal' : null
+    );
+    const progress: [number, boolean | null][] = [];
+    const outcome = await runScenario('css', 1, take, (snapshot) =>
+      progress.push([snapshot.samples.length, snapshot.failed === null])
+    );
+    assert.deepEqual(
+      progress.map(([count]) => count),
+      [1, 2, 3, 4, 5, 6]
+    );
+    assert.ok(progress.every(([, notFailed]) => notFailed));
+    assert.equal(outcome.samples.length, 6);
+  });
+
   it('fails the scenario after 3 invalid blocks in sequence', async () => {
     const { take } = sampler((place) => {
       if (place.block !== 1) {

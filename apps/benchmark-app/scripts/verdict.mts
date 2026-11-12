@@ -43,10 +43,13 @@ export type MetricValues = (
 
 export const FALSE_DISCOVERY_RATE = 0.05;
 
+export const MISSING_ROW_P_VALUE = 1;
+
 export function computeVerdictRows(
   scenarios: readonly Scenario[],
   valuesOf: MetricValues,
-  noiseLimits: NoiseLimits
+  noiseLimits: NoiseLimits,
+  scenariosWithoutRows: readonly Scenario[] = []
 ): VerdictRow[] {
   const rows = scenarios.flatMap((scenario) =>
     verdictMetricsOf(scenario).map((metric) =>
@@ -58,8 +61,11 @@ export function computeVerdictRows(
       )
     )
   );
+  const missingPValues = scenariosWithoutRows.flatMap((scenario) =>
+    verdictMetricsOf(scenario).map(() => MISSING_ROW_P_VALUE)
+  );
   const passes = benjaminiHochberg(
-    rows.map((row) => row.pValue),
+    [...rows.map((row) => row.pValue), ...missingPValues],
     FALSE_DISCOVERY_RATE
   );
   return rows.map((row, i) => {

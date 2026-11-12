@@ -28,6 +28,7 @@ const TRACE_METRICS: TraceMetrics = {
   jsThreadCpu: 80,
   renderThreadCpu: 60,
   processCpu: 400,
+  mountBatchCount: 590,
   memory: 150000,
   memoryGrowth: 100,
   frameCount: 600,

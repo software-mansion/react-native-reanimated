@@ -121,6 +121,54 @@ describe('parseArguments', () => {
     );
   });
 
+  it('reads run --resume', () => {
+    assert.deepEqual(
+      parseArguments(['run', '--resume', 'runs/r1', '--serial', 'S1']),
+      {
+        command: 'resume',
+        folder: 'runs/r1',
+        serial: 'S1',
+        traceProcessor: undefined,
+      }
+    );
+  });
+
+  it('rejects the stored options with --resume', () => {
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--resume',
+          'runs/r1',
+          '--serial',
+          'S1',
+          '--blocks',
+          '3',
+          '--keep-traces',
+        ]),
+      /Remove --blocks, --keep-traces/
+    );
+    assert.throws(
+      () => parseArguments(['run', '--resume', 'runs/r1']),
+      /--serial is required/
+    );
+  });
+
+  it('reads the noise-limits command with one or more runs', () => {
+    assert.deepEqual(parseArguments(['noise-limits', '--runs', 'r1', 'r2']), {
+      command: 'noise-limits',
+      runs: ['r1', 'r2'],
+    });
+    assert.deepEqual(parseArguments(['noise-limits', '--runs', 'r1']), {
+      command: 'noise-limits',
+      runs: ['r1'],
+    });
+    assert.throws(
+      () => parseArguments(['noise-limits', 'r1']),
+      /--runs is required/
+    );
+  });
+
   it('gives help with no command', () => {
     assert.deepEqual(parseArguments([]), { command: 'help' });
   });

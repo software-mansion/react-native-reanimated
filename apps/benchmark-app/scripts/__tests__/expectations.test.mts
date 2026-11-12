@@ -115,6 +115,33 @@ describe('evaluateExpectations', () => {
     );
   });
 
+  it('is not decided when a selected scenario has no data', () => {
+    const [result] = evaluateExpectations(
+      [{ scenarios: ['css'], metrics: ['uiThreadCpu'], is: 'better' }],
+      ROWS.filter((candidate) => candidate.scenario === 'css'),
+      [],
+      ['css']
+    );
+    assert.equal(result.status, 'not decided');
+    assert.deepEqual(result.scenariosWithoutData, ['css']);
+  });
+
+  it('still fails on a worse row when another selected scenario has no data', () => {
+    const [result] = evaluateExpectations(
+      [
+        {
+          scenarios: ['css', 'sticky-header'],
+          metrics: ['frameDurationP95'],
+          is: 'notWorse',
+        },
+      ],
+      ROWS,
+      [],
+      ['css']
+    );
+    assert.equal(result.status, 'fails');
+  });
+
   it('ignores a failed scenario that it does not select', () => {
     const failed: FailedScenario[] = [
       { scenario: 'idle-cost', variants: ['b'], causes: [] },

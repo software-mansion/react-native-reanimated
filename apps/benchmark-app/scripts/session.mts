@@ -17,6 +17,8 @@ export type SampleRecord = MeasuredSample & { accepted: boolean };
 
 export type Sampler = (place: SamplePlace) => Promise<MeasuredSample>;
 
+export type ProgressListener = (outcome: ScenarioOutcome) => void;
+
 export interface FailedScenario {
   scenario: Scenario;
   variants: VariantKey[];
@@ -35,9 +37,14 @@ export const INVALID_BLOCKS_LIMIT = 3;
 export async function runScenario(
   scenario: Scenario,
   blocks: number,
-  sampler: Sampler
+  sampler: Sampler,
+  onProgress: ProgressListener = () => {}
 ): Promise<ScenarioOutcome> {
   const samples: SampleRecord[] = [];
+  const record = (sample: SampleRecord) => {
+    samples.push(sample);
+    onProgress({ scenario, samples: [...samples], failed: null });
+  };
   for (let block = 0; block < blocks; block++) {
     const invalidAttempts: (SamplePlace & InvalidSample)[] = [];
     while (true) {
@@ -45,9 +52,9 @@ export async function runScenario(
         scenario,
         block,
         invalidAttempts.length,
-        sampler
+        sampler,
+        record
       );
-      samples.push(...attempt);
       const invalid = attempt.find(isInvalid);
       if (!invalid) {
         attempt.forEach((sample) => (sample.accepted = true));
@@ -70,7 +77,8 @@ async function runBlock(
   scenario: Scenario,
   block: number,
   attempt: number,
-  sampler: Sampler
+  sampler: Sampler,
+  record: (sample: SampleRecord) => void
 ): Promise<SampleRecord[]> {
   const samples: SampleRecord[] = [];
   for (const [position, variant] of blockOrder(block).entries()) {
@@ -79,6 +87,7 @@ async function runBlock(
       accepted: false,
     };
     samples.push(sample);
+    record(sample);
     if (!sample.valid) {
       break;
     }

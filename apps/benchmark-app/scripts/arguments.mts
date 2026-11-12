@@ -16,6 +16,18 @@ export interface RunOptions {
   traceProcessor?: string;
 }
 
+export interface ResumeOptions {
+  command: 'resume';
+  folder: string;
+  serial: string;
+  traceProcessor?: string;
+}
+
+export interface NoiseLimitsOptions {
+  command: 'noise-limits';
+  runs: string[];
+}
+
 export interface SampleOptions {
   command: 'sample';
   serial: string;
@@ -26,10 +38,17 @@ export interface SampleOptions {
   traceProcessor?: string;
 }
 
-export type Command = RunOptions | SampleOptions | { command: 'help' };
+export type Command =
+  | RunOptions
+  | ResumeOptions
+  | NoiseLimitsOptions
+  | SampleOptions
+  | { command: 'help' };
 
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> --serial <adb serial> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> --serial <adb serial> [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample --serial <adb serial> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 
 Scenarios: ${SCENARIOS.join(', ')}
@@ -43,9 +62,16 @@ const COMMON_OPTIONS: ParseArgsOptionsConfig = {
 const RUN_OPTIONS: ParseArgsOptionsConfig = {
   ...COMMON_OPTIONS,
   config: { type: 'string' },
+  resume: { type: 'string' },
   blocks: { type: 'string' },
   'noise-limits': { type: 'string' },
   'keep-traces': { type: 'boolean' },
+};
+
+const STORED_RUN_OPTIONS = ['config', 'blocks', 'noise-limits', 'keep-traces'];
+
+const NOISE_LIMITS_OPTIONS: ParseArgsOptionsConfig = {
+  runs: { type: 'string', multiple: true },
 };
 
 const SAMPLE_OPTIONS: ParseArgsOptionsConfig = {
@@ -67,7 +93,10 @@ export function parseArguments(argv: string[]): Command {
     return { command: 'help' };
   }
   if (command === 'run') {
-    const values = parseOptions(rest, RUN_OPTIONS);
+    const { values } = parseOptions(rest, RUN_OPTIONS);
+    if (values.resume !== undefined) {
+      return resumeOptions(values);
+    }
     return {
       command,
       config: required(values, 'config'),
@@ -81,8 +110,19 @@ export function parseArguments(argv: string[]): Command {
       traceProcessor: optionalString(values, 'trace-processor'),
     };
   }
+  if (command === 'noise-limits') {
+    const { values, positionals } = parseOptions(
+      rest,
+      NOISE_LIMITS_OPTIONS,
+      true
+    );
+    if (!Array.isArray(values.runs)) {
+      throw new ToolError(`--runs is required.\n\n${USAGE}`);
+    }
+    return { command, runs: [...values.runs, ...positionals] };
+  }
   if (command === 'sample') {
-    const values = parseOptions(rest, SAMPLE_OPTIONS);
+    const { values } = parseOptions(rest, SAMPLE_OPTIONS);
     const scenario = required(values, 'scenario');
     if (!isScenario(scenario)) {
       throw new ToolError(
@@ -105,15 +145,36 @@ export function parseArguments(argv: string[]): Command {
   throw new ToolError(`Unknown command "${command}".\n\n${USAGE}`);
 }
 
-type Values = Record<string, string | boolean | undefined>;
+type Values = Record<string, string | string[] | boolean | undefined>;
 
-function parseOptions(args: string[], options: ParseArgsOptionsConfig): Values {
+function parseOptions(
+  args: string[],
+  options: ParseArgsOptionsConfig,
+  allowPositionals = false
+): { values: Values; positionals: string[] } {
   try {
-    return parseArgs({ args, options, strict: true, allowPositionals: false })
-      .values as Values;
+    const parsed = parseArgs({ args, options, strict: true, allowPositionals });
+    return { values: parsed.values as Values, positionals: parsed.positionals };
   } catch (error) {
     throw new ToolError(`${(error as Error).message}\n\n${USAGE}`);
   }
+}
+
+function resumeOptions(values: Values): ResumeOptions {
+  const stored = STORED_RUN_OPTIONS.filter(
+    (name) => values[name] !== undefined
+  );
+  if (stored.length > 0) {
+    throw new ToolError(
+      `--resume takes the config, the blocks, the noise limits and --keep-traces from the stored result. Remove ${stored.map((name) => `--${name}`).join(', ')}.`
+    );
+  }
+  return {
+    command: 'resume',
+    folder: required(values, 'resume'),
+    serial: required(values, 'serial'),
+    traceProcessor: optionalString(values, 'trace-processor'),
+  };
 }
 
 function required(values: Values, name: string): string {
@@ -125,7 +186,7 @@ function required(values: Values, name: string): string {
 }
 
 function positiveInteger(
-  value: string | boolean | undefined,
+  value: string | string[] | boolean | undefined,
   name: string
 ): number {
   const number = Number(value);

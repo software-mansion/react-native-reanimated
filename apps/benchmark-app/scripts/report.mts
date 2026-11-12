@@ -4,8 +4,8 @@ import type { ExpectationResult } from './expectations.mts';
 import { METRIC_UNITS, VERDICT_METRICS } from './metrics.mts';
 import type { MetricUnit } from './metrics.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
-import { finiteNumber } from './results.mts';
-import type { RunResult } from './results.mts';
+import { finiteNumber, scenariosWithoutData } from './results.mts';
+import type { RunResult, Segment } from './results.mts';
 import type { FailedScenario, SampleRecord } from './session.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { VerdictRow } from './verdict.mts';
@@ -17,14 +17,19 @@ export interface Difference {
 }
 
 export function renderReport(result: RunResult): string {
-  const samples = result.scenarios.flatMap((outcome) => outcome.samples);
+  const samples = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+    ...result.abandonedScenarios,
+  ].flatMap((outcome) => outcome.samples);
   const failed = result.scenarios.flatMap((outcome) =>
     outcome.failed ? [outcome.failed] : []
   );
   return [
     `# Benchmark ${result.config.name}`,
     '',
-    `Started ${result.startedAt}. Finished ${result.finishedAt ?? '-'}. Blocks for each scenario: ${result.options.blocks}.`,
+    ...(result.status === 'done' ? [] : [incompleteNote(result), '']),
+    `Started ${result.startedAt}. Finished ${result.finishedAt ?? '-'}. Blocks for each scenario: ${blocksText(result)}.`,
     ...(result.config.note ? ['', result.config.note] : []),
     '',
     '## Differences between A and B',
@@ -45,7 +50,11 @@ export function renderReport(result: RunResult): string {
     '',
     '## Device',
     '',
-    deviceSection(result.serial, result.device),
+    deviceSection(result.serial, result.segments[0].device),
+    '',
+    '## Segments',
+    '',
+    segmentsSection(result.segments),
     '',
     '## Invalid samples',
     '',
@@ -56,6 +65,19 @@ export function renderReport(result: RunResult): string {
     timingSection(samples),
     '',
   ].join('\n');
+}
+
+function incompleteNote(result: RunResult): string {
+  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
+}
+
+function blocksText(result: RunResult): string {
+  const overrides = Object.entries(result.config.blocks ?? {}).map(
+    ([scenario, blocks]) => `${scenario}: ${blocks}`
+  );
+  return overrides.length > 0
+    ? `${result.options.blocks} (${overrides.join(', ')})`
+    : String(result.options.blocks);
 }
 
 function differencesSection(result: RunResult): string {
@@ -175,6 +197,7 @@ export function expectationLine(
     ...result.failedScenarios.map(
       (failed) => `${failed.scenario} failed on ${failedVariants(failed)}`
     ),
+    ...result.scenariosWithoutData.map((scenario) => `${scenario} has no data`),
   ];
   const detail = details.length > 0 ? ` (${details.join('; ')})` : '';
   return `${index + 1}. ${scenarios}, ${metrics}: ${claim} -> ${result.status}${detail}`;
@@ -201,7 +224,10 @@ function formatDifference(row: VerdictRow): string {
 }
 
 function formatSigned(value: number, unit: MetricUnit): string {
-  return `${value > 0 ? '+' : ''}${formatValue(value, unit)}`;
+  const sign = value > 0 ? '+' : '';
+  return unit === 'share'
+    ? `${sign}${(finiteNumber(value, 'A value in the report') * 100).toFixed(2)} pp`
+    : `${sign}${formatValue(value, unit)}`;
 }
 
 function formatValue(value: number, unit: MetricUnit): string {
@@ -229,9 +255,15 @@ function failedVariants(failed: FailedScenario): string {
 }
 
 function verdictsSection(result: RunResult): string {
-  const limits = result.noiseLimits
-    ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (memoryGrowth, in kB). A row with no limit in the file has the limit 0.`
-    : 'No noise limits given: the limit is 0 for all rows.';
+  const limits = [
+    ...(result.status === 'done'
+      ? []
+      : ['Provisional: the run is not complete.']),
+    result.noiseLimits
+      ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points; memoryGrowth, in kB). A row with no limit in the file has the limit 0.`
+      : 'No noise limits given: the limit is 0 for all rows.',
+    'The difference and the interval of jankyFrames are in percentage points (pp).',
+  ].join(' ');
   if (result.statistics.length === 0) {
     return `${limits}\n\nNo rows.`;
   }
@@ -239,6 +271,7 @@ function verdictsSection(result: RunResult): string {
   const rows = result.statistics.map((row) => [
     row.scenario,
     row.metric,
+    `${row.samplesA}/${row.samplesB}`,
     formatValue(row.medianA, METRIC_UNITS[row.metric]),
     formatValue(row.medianB, METRIC_UNITS[row.metric]),
     formatDifference(row),
@@ -252,6 +285,7 @@ function verdictsSection(result: RunResult): string {
       [
         'Scenario',
         'Metric',
+        'Samples A/B',
         'Median A',
         'Median B',
         'Difference',
@@ -284,17 +318,35 @@ function failedSection(failed: FailedScenario[]): string {
     .join('\n');
 }
 
-function deviceSection(
-  serial: string,
-  device: DeviceState | undefined
-): string {
+function deviceSection(serial: string, device: DeviceState): string {
   const entries: [string, unknown][] = [
     ['serial', serial],
-    ...Object.entries(device ?? {}),
+    ...Object.entries(device),
   ];
   return table(
     ['Key', 'Value at session start'],
     entries.map(([key, value]) => [key, String(value)])
+  );
+}
+
+function segmentsSection(segments: Segment[]): string {
+  return table(
+    [
+      'Segment',
+      'Started',
+      'Finished',
+      'Status',
+      'Battery level',
+      'Battery temperature',
+    ],
+    segments.map((segment, i) => [
+      String(i),
+      segment.startedAt,
+      segment.finishedAt ?? '-',
+      segment.status,
+      `${segment.device.batteryLevel}%`,
+      `${segment.device.batteryTemperature} °C`,
+    ])
   );
 }
 

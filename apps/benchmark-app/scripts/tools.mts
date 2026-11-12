@@ -202,17 +202,25 @@ export function resolveTraceProcessor(
   );
 }
 
+const ADB_VERSION_LINES = 2;
+
 export async function readToolVersions(
   processes: Processes,
   adb: string,
   traceProcessor: string,
   serial: string
 ): Promise<ToolVersions> {
-  const firstLine = async (command: string, args: string[]) =>
-    (await processes.run(command, args)).stdout.trim().split('\n')[0];
+  const firstLines = async (command: string, args: string[], count: number) =>
+    (await processes.run(command, args)).stdout
+      .trim()
+      .split('\n')
+      .slice(0, count)
+      .join(', ');
+  const firstLine = (command: string, args: string[]) =>
+    firstLines(command, args, 1);
   return {
     node: process.version,
-    adb: await firstLine(adb, ['version']),
+    adb: await firstLines(adb, ['version'], ADB_VERSION_LINES),
     traceProcessor: await firstLine(traceProcessor, ['--version']),
     devicePerfetto: await firstLine(adb, [
       '-s',

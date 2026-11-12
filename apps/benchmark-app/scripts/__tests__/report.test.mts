@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { evaluateExpectations } from '../expectations.mts';
 import { VERDICT_METRICS } from '../metrics.mts';
@@ -9,14 +10,13 @@ import {
   renderReport,
   variantDifferences,
 } from '../report.mts';
-import type { RunResult } from '../results.mts';
+import type { RunResult, RunVariant } from '../results.mts';
 import type { SampleRecord } from '../session.mts';
-import type { BuiltVariant } from '../variant-build.mts';
 import type { VerdictRow } from '../verdict.mts';
 
 const VARIANT: Variant = {
   reanimated: { kind: 'npm', version: '4.7.1' },
-  worklets: { kind: 'npm', version: '0.8.3' },
+  worklets: { kind: 'npm', version: '0.13.1' },
   reanimatedFlags: {},
   workletsFlags: {},
   bundleMode: false,
@@ -45,14 +45,32 @@ const CONFIG: RunConfig = {
   ],
 };
 
-function built(variant: 'a' | 'b', syncFlag: boolean): BuiltVariant {
+const DEVICE: DeviceState = {
+  model: 'Pixel',
+  fingerprint: 'google/pixel:17/X/1:user/release-keys',
+  sdk: 37,
+  abi: 'arm64-v8a',
+  refreshRate: 120,
+  brightness: 102,
+  brightnessMode: 'manual',
+  batteryLevel: 80,
+  batteryStatus: 'charging',
+  chargeState: 'usb',
+  wifiEnabled: true,
+  wifiConnected: true,
+  thermalStatus: 0,
+  batteryTemperature: 30,
+};
+
+function built(variant: 'a' | 'b', syncFlag: boolean): RunVariant {
   return {
     variant,
     buildKey: `key-${variant}`,
     directory: `/builds/key-${variant}`,
     apk: `/builds/key-${variant}/app-release.apk`,
+    apkSha256: `sha-${variant}`,
     applicationId: `com.reanimatedbenchmark.${variant}`,
-    installedVersions: { reanimated: '4.7.1', worklets: '0.8.3' },
+    installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
     effectiveFlags: {
       reanimated: {
         ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: syncFlag,
@@ -100,9 +118,19 @@ const ROWS = [
     medianA: 0,
     medianB: 0.02,
     comparison: 'absolute',
-    comparisonFallback: true,
     difference: 0.02,
     interval: { low: 0, high: 0.04 },
+    verdict: 'no change found',
+  }),
+  row({
+    scenario: 'sticky-header',
+    metric: 'coldStart',
+    medianA: 0,
+    medianB: 2,
+    comparison: 'absolute',
+    comparisonFallback: true,
+    difference: 2,
+    interval: { low: 0, high: 4 },
     noiseLimit: null,
     verdict: 'no change found',
   }),
@@ -134,6 +162,15 @@ const RESULT: RunResult = {
   options: { blocks: 5, noiseLimitsFile: null, keepTraces: false },
   noiseLimits: null,
   serial: 'SERIAL1',
+  segments: [
+    {
+      startedAt: '2026-11-12T10:00:00.000Z',
+      finishedAt: '2026-11-12T11:00:00.000Z',
+      status: 'done',
+      device: DEVICE,
+    },
+  ],
+  appRefreshRate: 60,
   variants: { a: built('a', false), b: built('b', true) },
   scenarios: [
     { scenario: 'worklet-styles-transform', samples: [], failed: null },
@@ -146,6 +183,8 @@ const RESULT: RunResult = {
       failed: null,
     },
   ],
+  incompleteScenario: null,
+  abandonedScenarios: [],
   statistics: ROWS,
   expectations: evaluateExpectations(CONFIG.expect, ROWS, []),
 };
@@ -225,6 +264,7 @@ describe('renderReport', () => {
       '## Verdicts',
       '## Failed scenarios',
       '## Device',
+      '## Segments',
       '## Invalid samples',
       '## Time for each sample (mean)',
     ]);
@@ -236,12 +276,22 @@ describe('renderReport', () => {
     );
     assert.ok(
       report.includes(
-        '| worklet-styles-transform | uiThreadCpu | 100.00 ms/s | 69.00 ms/s | -31% | -33% to -29% | better |'
+        '| worklet-styles-transform | uiThreadCpu | 10/10 | 100.00 ms/s | 69.00 ms/s | -31% | -33% to -29% | better |'
       )
     );
     assert.ok(
       report.includes(
-        '| sticky-header | jankyFrames | 0.0% of frames | 2.0% of frames | +2.0% of frames (absolute, no noise limit) | 0.0% of frames to +4.0% of frames | no change found |'
+        '| sticky-header | jankyFrames | 10/10 | 0.0% of frames | 2.0% of frames | +2.00 pp | 0.00 pp to +4.00 pp | no change found |'
+      )
+    );
+    assert.ok(
+      report.includes(
+        '| sticky-header | coldStart | 10/10 | 0.00 ms | 2.00 ms | +2.00 ms (absolute, no noise limit) | 0.00 ms to +4.00 ms | no change found |'
+      )
+    );
+    assert.ok(
+      report.includes(
+        'The difference and the interval of jankyFrames are in percentage points (pp).'
       )
     );
     assert.ok(
@@ -258,18 +308,18 @@ describe('renderReport', () => {
 
   it('marks only the fallback rows without a noise limit', () => {
     const fallback = row({
-      metric: 'jankyFrames',
-      medianA: 0.01,
-      medianB: 0.03,
+      metric: 'coldStart',
+      medianA: 10,
+      medianB: 30,
       comparison: 'absolute',
       comparisonFallback: true,
-      difference: 0.02,
-      interval: { low: 0.01, high: 0.03 },
-      noiseLimit: 0.005,
+      difference: 20,
+      interval: { low: 10, high: 30 },
+      noiseLimit: 0.5,
       verdict: 'worse',
     });
     const withFallback = renderReport({ ...RESULT, statistics: [fallback] });
-    assert.ok(withFallback.includes('| +2.0% of frames (absolute) |'));
+    assert.ok(withFallback.includes('| +20.00 ms (absolute) |'));
     assert.ok(!withFallback.includes('(absolute, no noise limit)'));
   });
 
@@ -293,12 +343,12 @@ describe('renderReport', () => {
     });
     assert.ok(
       withLimits.includes(
-        '| worklet-styles-transform | memoryGrowth | -120 kB | 380 kB | +500 kB | +300 kB to +700 kB | worse |'
+        '| worklet-styles-transform | memoryGrowth | 10/10 | -120 kB | 380 kB | +500 kB | +300 kB to +700 kB | worse |'
       )
     );
     assert.ok(
       withLimits.includes(
-        'a value in the unit of the metric for an absolute metric (memoryGrowth, in kB)'
+        'a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points; memoryGrowth, in kB)'
       )
     );
     assert.ok(!withLimits.includes('(absolute)'));
@@ -312,6 +362,76 @@ describe('renderReport', () => {
           statistics: [row({ difference: Number.NaN })],
         }),
       /not a finite number/
+    );
+  });
+
+  it('marks a run that is not complete and names the scenarios without data', () => {
+    const stopped: RunResult = {
+      ...RESULT,
+      status: 'interrupted',
+      scenarios: [RESULT.scenarios[0]],
+      incompleteScenario: {
+        ...RESULT.scenarios[1],
+        samples: [sample({ cause: 'frames' })],
+      },
+      statistics: [ROWS[0]],
+      expectations: evaluateExpectations(
+        CONFIG.expect,
+        [ROWS[0]],
+        [],
+        ['sticky-header']
+      ),
+    };
+    const lines = renderReport(stopped).split('\n');
+    assert.equal(
+      lines[2],
+      'This run is not complete (status: interrupted). Scenarios without data: sticky-header. The verdicts and the expectations are provisional.'
+    );
+    assert.ok(
+      lines.includes(
+        '2. all scenarios, all metrics: not worse -> not decided (-31%, interval -33% to -29%; sticky-header has no data)'
+      )
+    );
+    assert.ok(
+      lines.some((line) =>
+        line.startsWith('Provisional: the run is not complete. No noise limits')
+      )
+    );
+    assert.ok(lines.includes('| frames | 1 |'));
+    assert.ok(!report.includes('not complete'));
+  });
+
+  it('names the scenarios with their own block count', () => {
+    const report = renderReport({
+      ...RESULT,
+      config: { ...CONFIG, blocks: { 'sticky-header': 10 } },
+    });
+    assert.ok(
+      report.includes('Blocks for each scenario: 5 (sticky-header: 10).')
+    );
+  });
+
+  it('lists the segments of a resumed run', () => {
+    const report = renderReport({
+      ...RESULT,
+      segments: [
+        { ...RESULT.segments[0], status: 'tool error', error: 'offline' },
+        {
+          startedAt: '2026-11-12T12:00:00.000Z',
+          status: 'running',
+          device: { ...DEVICE, batteryLevel: 75, batteryTemperature: 31.5 },
+        },
+      ],
+    });
+    assert.ok(
+      report.includes(
+        '| 0 | 2026-11-12T10:00:00.000Z | 2026-11-12T11:00:00.000Z | tool error | 80% | 30 °C |'
+      )
+    );
+    assert.ok(
+      report.includes(
+        '| 1 | 2026-11-12T12:00:00.000Z | - | running | 75% | 31.5 °C |'
+      )
     );
   });
 

@@ -38,7 +38,7 @@ function withSummary(summary: string): ResultSet[] {
 describe('parseQueryOutput', () => {
   it('splits the result sets and reads NULL and quoted cells', () => {
     const sets = parseQueryOutput(OUTPUT);
-    assert.equal(sets.length, 7);
+    assert.equal(sets.length, 8);
     assert.deepEqual(sets[0].columns, [
       'window_ns',
       'app_processes',
@@ -47,7 +47,8 @@ describe('parseQueryOutput', () => {
       'trace_frame_slices',
     ]);
     assert.equal(sets[3].rows.length, 591);
-    assert.deepEqual(sets[6], { columns: ['name', 'idx', 'value'], rows: [] });
+    assert.deepEqual(sets[5], { columns: ['mount_batches'], rows: [['588']] });
+    assert.deepEqual(sets[7], { columns: ['name', 'idx', 'value'], rows: [] });
     assert.deepEqual(parseQueryOutput('"a","b"\n"x","[NULL]"\n')[0].rows, [
       ['x', null],
     ]);
@@ -73,6 +74,7 @@ describe('computeTraceMetrics', () => {
     assertClose(metrics.uiThreadCpu, 6665.745159 / SECONDS);
     assertClose(metrics.renderThreadCpu, 4634.078004 / SECONDS);
     assertClose(metrics.processCpu, 14883.558033 / SECONDS);
+    assert.equal(metrics.mountBatchCount, 588);
     assert.equal(metrics.memory, 111592);
     assert.equal(metrics.memoryGrowth, -51484);
   });
@@ -196,8 +198,16 @@ describe('trace config and query', () => {
       pid: 4321,
     });
     const selection = "WHERE pid = 4321 AND name = 'com.reanimatedbenchmark.a'";
-    assert.equal(query.split(selection).length - 1, 6);
-    assert.equal(query.split('FROM process').length - 1, 6);
+    assert.equal(query.split(selection).length - 1, 7);
+    assert.equal(query.split('FROM process').length - 1, 7);
+  });
+
+  it('counts the mount batches of the app process in the trace window', () => {
+    assert.ok(
+      metricsQuery(APP).includes(
+        "SELECT COUNT(*) AS mount_batches FROM thread_slice\nWHERE name = 'IntBufferBatchMountItem::mountViews';"
+      )
+    );
   });
 
   it('clips the sched slices to the trace window and ends unfinished slices at the window end', () => {

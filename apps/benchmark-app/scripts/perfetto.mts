@@ -24,6 +24,7 @@ export const JS_THREAD_NAME = 'mqt_v_js';
 export const RENDER_THREAD_NAME = 'RenderThread';
 export const FRAME_SLICE_PATTERN = 'Choreographer#doFrame%';
 export const DRAW_FRAME_SLICE_PATTERN = 'DrawFrame%';
+export const MOUNT_BATCH_SLICE_NAME = 'IntBufferBatchMountItem::mountViews';
 export const APP_DEADLINE_MISSED = 'App Deadline Missed';
 export const TRACE_PROCESSOR_TIMEOUT_MS = 5 * 60_000;
 
@@ -204,6 +205,12 @@ WITH
 SELECT dur FROM thread_slice
 WHERE thread_name = '${RENDER_THREAD_NAME}' AND name LIKE '${DRAW_FRAME_SLICE_PATTERN}'
 ORDER BY ts;
+WITH
+  ${traceWindow},
+  ${appProcess},
+  ${threadSlices}
+SELECT COUNT(*) AS mount_batches FROM thread_slice
+WHERE name = '${MOUNT_BATCH_SLICE_NAME}';
 WITH ${appProcess}
 SELECT counter.ts, process_counter_track.name = 'mem.swap' AS is_swap, counter.value
 FROM counter
@@ -241,6 +248,7 @@ export function computeTraceMetrics(
     frameTimelineSet,
     frameSet,
     drawFrameSet,
+    mountBatchSet,
     memorySet,
     lossSet,
   ] = sets;
@@ -250,11 +258,12 @@ export function computeTraceMetrics(
     !frameTimelineSet ||
     !frameSet ||
     !drawFrameSet ||
+    !mountBatchSet ||
     !memorySet ||
     !lossSet
   ) {
     throw new ToolError(
-      `trace_processor_shell returned ${sets.length} result sets, expected 7`
+      `trace_processor_shell returned ${sets.length} result sets, expected 8`
     );
   }
   checkNoDataLoss(lossSet);
@@ -290,6 +299,7 @@ export function computeTraceMetrics(
     ...frameTimelineMetrics(numericRows(frameTimelineSet)),
     ...drawFrameMetrics(durationsMs(drawFrameSet)),
     ...cpuMetrics(threadCpuSet, windowSeconds),
+    mountBatchCount: numericRows(mountBatchSet)[0].mount_batches,
     ...memoryMetrics(numericRows(memorySet)),
     expectedFrameCount,
   };

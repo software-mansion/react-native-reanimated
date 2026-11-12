@@ -1,4 +1,5 @@
 import type { Expectation } from './config.mts';
+import type { Scenario } from './scenarios.mts';
 import type { FailedScenario } from './session.mts';
 import type { VerdictRow } from './verdict.mts';
 
@@ -10,15 +11,22 @@ export interface ExpectationResult {
   rows: VerdictRow[];
   decidingRows: VerdictRow[];
   failedScenarios: FailedScenario[];
+  scenariosWithoutData: Scenario[];
 }
 
 export function evaluateExpectations(
   expectations: readonly Expectation[],
   rows: readonly VerdictRow[],
-  failedScenarios: readonly FailedScenario[]
+  failedScenarios: readonly FailedScenario[],
+  scenariosWithoutData: readonly Scenario[] = []
 ): ExpectationResult[] {
   return expectations.map((expectation) =>
-    evaluateExpectation(expectation, rows, failedScenarios)
+    evaluateExpectation(
+      expectation,
+      rows,
+      failedScenarios,
+      scenariosWithoutData
+    )
   );
 }
 
@@ -29,7 +37,8 @@ export function exitCodeOf(results: readonly ExpectationResult[]): 0 | 1 {
 function evaluateExpectation(
   expectation: Expectation,
   allRows: readonly VerdictRow[],
-  allFailedScenarios: readonly FailedScenario[]
+  allFailedScenarios: readonly FailedScenario[],
+  allScenariosWithoutData: readonly Scenario[]
 ): ExpectationResult {
   const rows = allRows.filter(
     (row) =>
@@ -39,12 +48,16 @@ function evaluateExpectation(
   const failedScenarios = allFailedScenarios.filter((failed) =>
     expectation.scenarios.includes(failed.scenario)
   );
+  const scenariosWithoutData = allScenariosWithoutData.filter((scenario) =>
+    expectation.scenarios.includes(scenario)
+  );
   const result = (status: ExpectationStatus, decidingRows: VerdictRow[]) => ({
     expectation,
     status,
     rows,
     decidingRows,
     failedScenarios,
+    scenariosWithoutData,
   });
 
   const failingRows = rows.filter((row) => rowFails(expectation, row));
@@ -54,7 +67,7 @@ function evaluateExpectation(
   ) {
     return result('fails', failingRows);
   }
-  if (failedScenarios.length > 0) {
+  if (failedScenarios.length > 0 || scenariosWithoutData.length > 0) {
     return result('not decided', []);
   }
   if (expectation.is === 'notWorse') {

@@ -120,7 +120,7 @@ export function createRandom(seed: number): () => number {
   };
 }
 
-function sortedQuantile(sorted: readonly number[], q: number): number {
+export function sortedQuantile(sorted: readonly number[], q: number): number {
   if (sorted.length === 0) {
     return Number.NaN;
   }

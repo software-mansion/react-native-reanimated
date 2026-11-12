@@ -121,40 +121,40 @@ describe('computeVerdictRows', () => {
     const rows = computeVerdictRows(
       ['css'],
       valuesFrom({
-        jankyFrames: {
+        coldStart: {
           a: [0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
           b: [0, 0, 0, 0, 2, 2, 2, 2, 2, 2],
         },
       }),
-      { css: { jankyFrames: 0.01 } }
+      { css: { coldStart: 0.01 } }
     );
-    const janky = rowOf(rows, 'jankyFrames');
-    assert.equal(janky.medianA, 1);
-    assert.equal(janky.comparison, 'absolute');
-    assert.equal(janky.comparisonFallback, true);
-    assert.equal(janky.difference, 1);
-    assert.equal(janky.noiseLimit, 0.01);
+    const cold = rowOf(rows, 'coldStart');
+    assert.equal(cold.medianA, 1);
+    assert.equal(cold.comparison, 'absolute');
+    assert.equal(cold.comparisonFallback, true);
+    assert.equal(cold.difference, 1);
+    assert.equal(cold.noiseLimit, 0.01);
     rows.forEach(assertFiniteRow);
   });
 
   it('scales the relative noise limit by the median of A for a fallback row', () => {
     const values = valuesFrom({
-      jankyFrames: {
+      coldStart: {
         a: [0, 0, 0, 0, 10, 10, 10, 10, 10, 10],
         b: BASE.map(() => 11),
       },
     });
     const limited = rowOf(
-      computeVerdictRows(['css'], values, { css: { jankyFrames: 0.5 } }),
-      'jankyFrames'
+      computeVerdictRows(['css'], values, { css: { coldStart: 0.5 } }),
+      'coldStart'
     );
     assert.equal(limited.comparisonFallback, true);
     assert.equal(limited.difference, 1);
     assert.equal(limited.noiseLimit, 5);
     assert.equal(limited.verdict, 'no change found');
     const unlimited = rowOf(
-      computeVerdictRows(['css'], values, { css: { jankyFrames: 0.05 } }),
-      'jankyFrames'
+      computeVerdictRows(['css'], values, { css: { coldStart: 0.05 } }),
+      'coldStart'
     );
     assert.equal(unlimited.noiseLimit, 0.5);
     assert.equal(unlimited.verdict, 'worse');
@@ -164,20 +164,20 @@ describe('computeVerdictRows', () => {
     const rows = computeVerdictRows(
       ['css'],
       valuesFrom({
-        jankyFrames: {
+        coldStart: {
           a: [0, 0, 0, 0, 0, 0, 0.001, 0.002, 0.003, 0.004],
           b: BASE.map((value) => value / 1000),
         },
       }),
-      { css: { jankyFrames: 0.5 } }
+      { css: { coldStart: 0.5 } }
     );
-    const janky = rowOf(rows, 'jankyFrames');
-    assert.equal(janky.comparison, 'absolute');
-    assert.equal(janky.comparisonFallback, true);
-    assert.equal(janky.difference, 0.1);
-    assert.ok(janky.pValue < 0.05 / 7);
-    assert.equal(janky.noiseLimit, null);
-    assert.equal(janky.verdict, 'worse');
+    const cold = rowOf(rows, 'coldStart');
+    assert.equal(cold.comparison, 'absolute');
+    assert.equal(cold.comparisonFallback, true);
+    assert.equal(cold.difference, 0.1);
+    assert.ok(cold.pValue < 0.05 / 7);
+    assert.equal(cold.noiseLimit, null);
+    assert.equal(cold.verdict, 'worse');
   });
 
   it('gives no change found when both medians are 0', () => {
@@ -188,6 +188,48 @@ describe('computeVerdictRows', () => {
       {}
     );
     assert.equal(rowOf(rows, 'jankyFrames').verdict, 'no change found');
+  });
+
+  it('compares jankyFrames as a difference in share of frames with an absolute noise limit', () => {
+    const a = BASE.map((value) => value / 10000);
+    const values = valuesFrom({
+      jankyFrames: { a, b: a.map((value) => value + 0.004) },
+    });
+    const inside = rowOf(
+      computeVerdictRows(['css'], values, { css: { jankyFrames: 0.005 } }),
+      'jankyFrames'
+    );
+    assert.equal(inside.comparison, 'absolute');
+    assert.equal(inside.comparisonFallback, false);
+    assert.ok(Math.abs(inside.difference - 0.004) < 1e-12);
+    assert.equal(inside.noiseLimit, 0.005);
+    assert.equal(inside.verdict, 'no change found');
+    const outside = rowOf(
+      computeVerdictRows(['css'], values, { css: { jankyFrames: 0.003 } }),
+      'jankyFrames'
+    );
+    assert.equal(outside.verdict, 'worse');
+  });
+
+  it('counts each planned row without data with a p-value of 1', () => {
+    const values = valuesFrom({
+      uiThreadCpu: { a: BASE, b: BASE.map((value) => value - 3) },
+    });
+    const complete = rowOf(
+      computeVerdictRows(['css'], values, {}),
+      'uiThreadCpu'
+    );
+    assert.ok(complete.pValue <= 0.05 / 7 && complete.pValue > 0.05 / 35);
+    assert.equal(complete.verdict, 'better');
+    const withMissing = computeVerdictRows(['css'], values, {}, [
+      'idle-cost',
+      'sticky-header',
+      'mount-unmount',
+      'worklet-styles-layout',
+    ]);
+    assert.equal(withMissing.length, 7);
+    assert.equal(rowOf(withMissing, 'uiThreadCpu').passesFalseDiscovery, false);
+    assert.equal(rowOf(withMissing, 'uiThreadCpu').verdict, 'no change found');
   });
 
   it('stops with a tool error instead of a number that is not finite', () => {

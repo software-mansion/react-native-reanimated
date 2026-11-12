@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import { USAGE, parseArguments } from './arguments.mts';
+import type { Command } from './arguments.mts';
 import { ToolError } from './errors.mts';
-import { runCommand } from './run.mts';
+import { noiseLimitsCommand } from './noise-limits.mts';
+import { resumeCommand, runCommand } from './run.mts';
 import { sampleCommand } from './sample.mts';
 import { Processes } from './tools.mts';
 import type { CommandContext } from './tools.mts';
@@ -27,15 +29,10 @@ async function main() {
     },
   };
   try {
-    const command = parseArguments(process.argv.slice(2));
-    if (command.command === 'help') {
-      console.log(USAGE);
-      return;
-    }
-    process.exitCode =
-      command.command === 'run'
-        ? await runCommand(command, context)
-        : await sampleCommand(command, context);
+    process.exitCode = await runParsedCommand(
+      parseArguments(process.argv.slice(2)),
+      context
+    );
   } catch (error) {
     if (interrupted) {
       return;
@@ -46,6 +43,25 @@ async function main() {
         : String((error as Error).stack ?? error)
     );
     process.exitCode = TOOL_ERROR_EXIT_CODE;
+  }
+}
+
+async function runParsedCommand(
+  command: Command,
+  context: CommandContext
+): Promise<number> {
+  switch (command.command) {
+    case 'help':
+      console.log(USAGE);
+      return 0;
+    case 'run':
+      return runCommand(command, context);
+    case 'resume':
+      return resumeCommand(command, context);
+    case 'noise-limits':
+      return noiseLimitsCommand(command);
+    case 'sample':
+      return sampleCommand(command, context);
   }
 }
 

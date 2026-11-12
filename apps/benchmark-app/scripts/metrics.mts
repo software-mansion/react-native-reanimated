@@ -32,6 +32,7 @@ export interface SampleMetrics {
   jsThreadCpu: number;
   renderThreadCpu: number;
   processCpu: number;
+  mountBatchCount: number;
   memory: number;
   memoryGrowth: number;
   coldStart: number;
@@ -55,7 +56,7 @@ export const METRIC_UNITS: Record<VerdictMetric, MetricUnit> = {
 export const METRIC_COMPARISONS: Record<VerdictMetric, Comparison> = {
   frameDurationMedian: 'relative',
   frameDurationP95: 'relative',
-  jankyFrames: 'relative',
+  jankyFrames: 'absolute',
   uiThreadCpu: 'relative',
   jsThreadCpu: 'relative',
   memory: 'relative',

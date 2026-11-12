@@ -37,11 +37,14 @@ export interface Expectation {
   byAtLeast?: number;
 }
 
+export type ScenarioBlocks = Partial<Record<Scenario, number>>;
+
 export interface RunConfig {
   name: string;
   a: Variant;
   b: Variant;
   scenarios: Scenario[];
+  blocks?: ScenarioBlocks;
   expect: Expectation[];
   note?: string;
 }
@@ -50,7 +53,7 @@ export interface FileSystem {
   isFile: (file: string) => boolean;
 }
 
-const RUN_FIELDS = ['name', 'a', 'b', 'scenarios', 'expect', 'note'];
+const RUN_FIELDS = ['name', 'a', 'b', 'scenarios', 'blocks', 'expect', 'note'];
 const VARIANT_FIELDS = [
   'reanimated',
   'worklets',
@@ -80,6 +83,7 @@ export function validateConfig(
     );
   }
   const scenarios = validateScenarios(config.scenarios, problems);
+  const blocks = validateBlocks(config.blocks, scenarios, problems);
   const a = validateVariant(config.a, 'a', configDir, fileSystem, problems);
   const b = validateVariant(config.b, 'b', configDir, fileSystem, problems);
   const expect = validateExpectations(config.expect, scenarios, problems);
@@ -97,9 +101,18 @@ export function validateConfig(
     a,
     b,
     scenarios,
+    ...(blocks === undefined ? {} : { blocks }),
     expect,
     ...(config.note === undefined ? {} : { note: config.note as string }),
   };
+}
+
+export function blocksOf(
+  config: RunConfig,
+  scenario: Scenario,
+  defaultBlocks: number
+): number {
+  return config.blocks?.[scenario] ?? defaultBlocks;
 }
 
 export function validateNoiseLimits(raw: unknown): NoiseLimits {
@@ -177,6 +190,31 @@ function validateScenarios(value: unknown, problems: string[]): Scenario[] {
     problems.push('config.scenarios must not repeat a scenario');
   }
   return value.filter(isScenario);
+}
+
+function validateBlocks(
+  value: unknown,
+  runScenarios: Scenario[],
+  problems: string[]
+): ScenarioBlocks | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const blocks: ScenarioBlocks = {};
+  for (const [scenario, count] of Object.entries(
+    record(value, 'config.blocks', problems)
+  )) {
+    if (!runScenarios.includes(scenario as Scenario)) {
+      problems.push(
+        `config.blocks: "${scenario}" is not a scenario of this run (run: ${runScenarios.join(', ')})`
+      );
+    } else if (!Number.isInteger(count) || (count as number) < 1) {
+      problems.push(`config.blocks.${scenario} must be a positive integer`);
+    } else {
+      blocks[scenario as Scenario] = count as number;
+    }
+  }
+  return blocks;
 }
 
 function validateVariant(

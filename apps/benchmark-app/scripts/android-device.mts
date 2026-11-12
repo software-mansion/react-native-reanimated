@@ -279,8 +279,11 @@ export class DeviceStateGuard {
   readonly #start: DeviceState;
   #inAppReference: DeviceState | null = null;
 
-  constructor(start: DeviceState) {
+  constructor(start: DeviceState, inAppRefreshRate: number | null = null) {
     this.#start = start;
+    if (inAppRefreshRate !== null) {
+      this.#inAppReference = { ...start, refreshRate: inAppRefreshRate };
+    }
   }
 
   checkIdle(state: DeviceState) {
