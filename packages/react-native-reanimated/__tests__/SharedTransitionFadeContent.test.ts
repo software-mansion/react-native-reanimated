@@ -199,7 +199,7 @@ describe('SharedTransition content fade builder', () => {
     } as unknown as LayoutAnimationValues);
     expect(withSpring).toHaveBeenNthCalledWith(
       1,
-      150,
+      1,
       expect.not.objectContaining({ overshootClamping: true })
     );
     expect(withSpring).toHaveBeenNthCalledWith(

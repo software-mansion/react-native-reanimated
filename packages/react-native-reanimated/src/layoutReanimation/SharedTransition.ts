@@ -165,6 +165,14 @@ type ChangedStyle = { key: string; current: unknown; target: unknown };
 
 // `globalOrigin*` and `transformMatrix` repeat `origin*` and `transform`.
 const ALIAS_NAMES = ['GlobalOriginX', 'GlobalOriginY', 'TransformMatrix'];
+const GEOMETRY_KEYS = [
+  'originX',
+  'originY',
+  'width',
+  'height',
+  'transform',
+  'transformOrigin',
+];
 
 function isEqual(a: unknown, b: unknown): boolean {
   'worklet';
@@ -662,27 +670,51 @@ export class SharedTransition
         return delayFunction(delay, animation(target, config));
       };
       const changed = getChangedStyles(values);
-      const animations: Record<string, unknown> = {};
-      for (const { key, target } of changed) {
+      const nonGeometry = changed.filter(
+        ({ key }) => !GEOMETRY_KEYS.includes(key)
+      );
+      const hasGeometryChanges = changed.some(({ key }) =>
+        GEOMETRY_KEYS.includes(key)
+      );
+      // Equal geometry needs a clock only to hold the start during the delay. The clamp keeps a fade-only spring
+      // from ending after its fade.
+      const geometryClock =
+        hasGeometryChanges || delay > 0
+          ? () =>
+              delayFunction(
+                delay,
+                animation(
+                  1,
+                  hasGeometryChanges
+                    ? config
+                    : { ...config, overshootClamping: true }
+                )
+              )
+          : undefined;
+      const animations: Record<string, unknown> = geometryClock
+        ? progressDrivenAnimations(
+            values,
+            { sharedTransitionGeometryProgress: 0 },
+            (_values, progress) => {
+              'worklet';
+              return { sharedTransitionGeometryProgress: progress };
+            },
+            geometryClock
+          )
+        : { sharedTransitionGeometryProgress: 1 };
+      for (const { key, target } of nonGeometry) {
         if (key === 'contentOpacity') {
           animations[key] = fadeContentOpacity(target as number);
           continue;
         }
-        animations[key] =
-          key === 'transform'
-            ? [
-                {
-                  matrix: delayFunction(
-                    delay,
-                    animation((target as { matrix: number[] }).matrix, config)
-                  ),
-                },
-              ]
-            : animateValue(target);
+        animations[key] = animateValue(target);
       }
 
       return {
-        initialValues: getInitialStyle(changed),
+        initialValues: {
+          ...getInitialStyle(nonGeometry),
+          sharedTransitionGeometryProgress: geometryClock ? 0 : 1,
+        },
         animations,
         callback,
       };

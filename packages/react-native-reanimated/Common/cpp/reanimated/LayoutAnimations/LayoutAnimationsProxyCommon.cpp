@@ -5,9 +5,11 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 #include <folly/dynamic.h>
+#include <jsi/JSIDynamic.h>
 #include <react/debug/react_native_assert.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>
@@ -30,6 +32,7 @@ void assertUpdatesRegistryUnlocked() {
 
 namespace {
 constexpr auto kContentOpacity = "contentOpacity";
+constexpr auto kGeometryProgress = "sharedTransitionGeometryProgress";
 
 ShadowView withProps(ShadowView view, const Props::Shared &props) {
   view.props = props;
@@ -107,8 +110,11 @@ void LayoutAnimationsProxyCommon::clearSurfaceState() const {
 
 std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
     const int tag,
-    const jsi::Object &newStyle) {
+    const jsi::Object &newStyle) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (newStyle.hasProperty(uiRuntime_, kGeometryProgress)) {
+    return progressSharedTransitionGeometry(tag, newStyle);
+  }
   const auto layoutAnimationIt = layoutAnimations_.find(tag);
   if (layoutAnimationIt == layoutAnimations_.end()) {
     return {};
@@ -139,6 +145,67 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, viewStyle), animatesOpacity});
 
   return surfaceId_;
+}
+
+// A built-in shared transition gets its frame and transform in the same update as its style. A completed carrier that
+// waits to land gets the frames too.
+std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGeometry(
+    const Tag tag,
+    const jsi::Object &newStyle) const {
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove && it->second.animation.geometryProgress) {
+    animation = &it->second.animation;
+  }
+  if (!animation || hasPendingLayoutAnimation(tag)) {
+    return {};
+  }
+  auto style = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  animation->geometryProgress = style[kGeometryProgress].asDouble();
+  style.erase(kGeometryProgress);
+  if (const auto contentOpacity = style.find(kContentOpacity); contentOpacity != style.items().end()) {
+    animation->contentOpacity = std::clamp(contentOpacity->second.asDouble(), 0.0, 1.0);
+    style.erase(contentOpacity);
+  }
+  const bool animatesOpacity = style.count("opacity") > 0;
+  if (animation->opacity && !animatesOpacity) {
+    style["opacity"] = *animation->opacity;
+  }
+  auto geometry =
+      interpolateSharedTransitionGeometry(animation->startView, animation->finalView, *animation->geometryProgress);
+  style.update(geometry.props);
+  updateMap_.insert_or_assign(
+      tag,
+      UpdateValues{
+          cloneFrameProps(*animation, animation->framePropsBase(), std::move(style)), geometry.frame, animatesOpacity});
+  return surfaceId_;
+}
+
+// Without a frame that waits for a pull, the frame on screen is the base.
+void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, LayoutAnimation &animation) const {
+  react_native_assert(animation.geometryProgress && "The animation does not interpolate the geometry");
+  auto geometry =
+      interpolateSharedTransitionGeometry(animation.startView, animation.finalView, *animation.geometryProgress);
+  const auto pending = updateMap_.find(tag);
+  const bool hasPendingFrame = pending != updateMap_.end() && pending->second.newProps;
+  auto props = cloneFrameProps(
+      animation, hasPendingFrame ? pending->second.newProps : animation.currentView.props, std::move(geometry.props));
+  updateMap_.insert_or_assign(
+      tag, UpdateValues{std::move(props), geometry.frame, hasPendingFrame && pending->second.animatesOpacity});
+}
+
+Props::Shared LayoutAnimationsProxyCommon::cloneFrameProps(
+    const LayoutAnimation &animation,
+    const Props::Shared &base,
+    folly::dynamic props) const {
+#ifdef RN_SERIALIZABLE_STATE
+  props = folly::dynamic::merge(base->rawProps, props);
+#endif
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  return componentDescriptorRegistry_->at(animation.finalView.componentHandle)
+      .cloneProps(propsParserContext, base, RawProps(std::move(props)));
 }
 
 void LayoutAnimationsProxyCommon::transferConfigFromNativeID(const std::string &nativeIdString, const int tag) const {
@@ -523,6 +590,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations() const {
   react_native_assert(worklets::isOnUIThread(uiScheduler_));
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   flushLayoutAnimationOperationsLocked();
+  followTargetsPlacedNatively();
 }
 
 void LayoutAnimationsProxyCommon::cancelLayoutAnimation(const Tag tag) const {

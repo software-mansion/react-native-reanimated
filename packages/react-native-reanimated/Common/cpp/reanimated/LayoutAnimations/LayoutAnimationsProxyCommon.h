@@ -42,6 +42,8 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
+  // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
+  std::optional<double> geometryProgress;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -153,7 +155,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual bool deferSharedTransitionConfigRelease(Tag /*tag*/) {
     return false;
   }
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) const;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const = 0;
   virtual void startSurface(
       const facebook::react::ShadowTree &shadowTree,
@@ -173,6 +175,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   virtual void clearSurfaceState() const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+  void writeSharedTransitionGeometry(Tag tag, LayoutAnimation &animation) const;
+  virtual void followTargetsPlacedNatively() const {}
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
@@ -257,6 +261,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   };
 #endif
 
+  std::optional<SurfaceId> progressSharedTransitionGeometry(Tag tag, const jsi::Object &newStyle) const;
+  Props::Shared cloneFrameProps(const LayoutAnimation &animation, const Props::Shared &base, folly::dynamic props)
+      const;
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
