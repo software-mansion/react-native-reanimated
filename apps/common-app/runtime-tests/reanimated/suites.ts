@@ -210,6 +210,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'screen transition events',
+    importTest: () => {
+      require('./tests/layoutAnimations/screenTransitionEvents.test');
+    },
+  },
+  {
     testSuiteName: 'layout animations skip exiting',
     importTest: () => {
       require('./tests/layoutAnimations/skipExiting.test');

@@ -785,35 +785,23 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (eventType == "onTransitionProgress") {
+    // Shared element transitions follow these screen events, but worklet handlers
+    // registered for them (e.g. useReanimatedTransitionProgress) must still run.
+    std::optional<SurfaceId> surfaceId;
+    if (layoutAnimationsProxyRegistry_ && eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
       auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
-
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
-      if (!surfaceId) {
-        return false;
-      }
+      surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
+    } else if (layoutAnimationsProxyRegistry_ && eventType == "onGestureCancel") {
+      surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
+    }
+    if (surfaceId) {
       uiManager_->getShadowTreeRegistry().visit(
           *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
-    } else if (eventType == "onGestureCancel") {
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
-      if (!surfaceId) {
-        return false;
-      }
-      uiManager_->getShadowTreeRegistry().visit(
-          *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
     }
   }
 
