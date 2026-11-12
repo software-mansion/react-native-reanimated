@@ -356,6 +356,8 @@ dependencies {
     "implementation"("androidx.core:core:1.15.0")
     "implementation"("com.facebook.react:react-android") // version substituted by RNGP
     "implementation"("androidx.core:core-ktx:1.18.0")
+    "testImplementation"("junit:junit:4.13.2")
+    "testImplementation"("org.robolectric:robolectric:4.17")
 
     if (project == rootProject) {
         // This is needed for linting in Reanimated's repo.
