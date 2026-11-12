@@ -1,0 +1,1 @@
+Fixed worklet handlers for the `onTransitionProgress` and `onGestureCancel` screen events, such as `useReanimatedTransitionProgress` from react-native-screens, not running on iOS when shared element transitions are enabled.
