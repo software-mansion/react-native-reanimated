@@ -274,8 +274,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     updateLightTree(propsParserContext, mutations, transaction);
 
     react_native_assert(
-        (activeBoundaryMayHaveChanged_ ||
-         (boundaries_.empty() ? !topScreen_ : findActiveBoundary(root) == topScreen_)) &&
+        (activeBoundaryMayHaveChanged_ || (boundaries_.empty() && !topScreen_) ||
+         findActiveBoundary(root) == topScreen_) &&
         "Active boundary changed without setting activeBoundaryMayHaveChanged_");
     react_native_assert(
         (!snapshotTags || !activeBoundaryMayHaveChanged_) && "The light tree update changed the active boundary");
