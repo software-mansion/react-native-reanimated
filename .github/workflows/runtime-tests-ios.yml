@@ -18,7 +18,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       sanitizer:
         required: false
         type: string
@@ -32,7 +32,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       sanitizer:
         required: false
         type: string
@@ -54,12 +54,12 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
-      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
       SANITIZER_FLAG: ${{ inputs.sanitizer && format('--sanitizer {0}', inputs.sanitizer) || '' }}
       SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
       USE_CCACHE_LAUNCHER: 1
     concurrency:
-      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ inputs.sanitizer }}
+      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.sanitizer }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -161,7 +161,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
+          name: ios-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14

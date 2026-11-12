@@ -132,7 +132,9 @@ const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
   typeof args.configuration === 'string'
     ? args.configuration
-    : 'DebugRuntimeTests';
+    : PLATFORM === 'ios'
+      ? 'Debug'
+      : 'DebugRuntimeTests';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
@@ -1866,7 +1868,7 @@ function xcodebuildArgs(udid: string | null) {
     '-workspace',
     'FabricExample.xcworkspace',
     '-scheme',
-    'DebugRuntimeTests',
+    'Debug FabricExample',
     '-configuration',
     CONFIGURATION,
     ...(udid
@@ -2200,7 +2202,13 @@ function printUsage() {
 
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
-\`yarn runtime-tests:server\` waits for you to start the app yourself.
+\`yarn runtime-tests:server\` waits for you to start the app yourself, and does
+not start Metro (run \`yarn start\` first). On iOS, the Debug build starts the
+test app only when launched with RUNTIME_TESTS_LIBRARY set: run the
+RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY to reanimated;
+change it under Edit Scheme > Run > Environment Variables). The app reports
+to the Metro port + 1. With another --port, also set
+RUNTIME_TESTS_WS_URL=ws://<host>:<port> there (127.0.0.1 on a simulator).
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
@@ -2218,8 +2226,9 @@ Target
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
-                            Default: DebugRuntimeTests. Release builds embed
-                            the bundle and run without Metro.
+                            Default: Debug on iOS, DebugRuntimeTests on
+                            Android. ReleaseRuntimeTests embeds the bundles
+                            and runs without Metro.
   --skip-build              Reuse the installed app. Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.

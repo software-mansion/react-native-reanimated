@@ -6,6 +6,16 @@ import UIKit
 class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate {
   var window: UIWindow?
   var reactNativeFactory: RCTReactNativeFactory?
+  let runtimeTestsLibrary: String? = {
+    let library = ProcessInfo.processInfo.environment["RUNTIME_TESTS_LIBRARY"]
+#if RUNTIME_TESTS
+    return library ?? "reanimated"
+#elseif DEBUG
+    return library
+#else
+    return nil
+#endif
+  }()
 
   func scene(
     _ scene: UIScene,
@@ -28,22 +38,14 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
     )
 #endif
 
-#if RUNTIME_TESTS
     let initialProperties = ProcessInfo.processInfo.environment["RUNTIME_TESTS_WS_URL"]
       .map { ["wsUrl": $0] as [AnyHashable: Any] }
     reactNativeFactory?.startReactNative(
-      withModuleName: "FabricExampleRuntimeTests",
+      withModuleName: runtimeTestsLibrary == nil ? "FabricExample" : "FabricExampleRuntimeTests",
       in: window,
       initialProperties: initialProperties,
       connectionOptions: connectionOptions
     )
-#else
-    reactNativeFactory?.startReactNative(
-      withModuleName: "FabricExample",
-      in: window,
-      connectionOptions: connectionOptions
-    )
-#endif
   }
 
   func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -59,20 +61,12 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
   }
 
   override func bundleURL() -> URL? {
-#if RUNTIME_TESTS
-    let library =
-      ProcessInfo.processInfo.environment["RUNTIME_TESTS_LIBRARY"] ?? "reanimated"
 #if DEBUG
     return RCTBundleURLProvider.sharedSettings()
-      .jsBundleURL(forBundleRoot: "index.runtimeTests.\(library)")
+      .jsBundleURL(forBundleRoot: runtimeTestsLibrary.map { "index.runtimeTests.\($0)" } ?? "index")
 #else
     return Bundle.main.url(
-      forResource: "main.runtimeTests.\(library)", withExtension: "jsbundle")
-#endif
-#elseif DEBUG
-    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
-#else
-    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+      forResource: runtimeTestsLibrary.map { "main.runtimeTests.\($0)" } ?? "main", withExtension: "jsbundle")
 #endif
   }
 }

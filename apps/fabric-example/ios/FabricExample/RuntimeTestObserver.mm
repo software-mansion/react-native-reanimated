@@ -1,4 +1,4 @@
-#if RUNTIME_TESTS
+#if DEBUG || RUNTIME_TESTS
 
 #import <React/RCTBackedTextInputViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
