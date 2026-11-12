@@ -59,7 +59,7 @@ using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceI
 // The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
 // origin relative to the root view of the surface comes from the platform, at the end of the presentation if settled.
 struct NativeViewPlacement {
-  enum class Kind { InsideReactParent, OffWindow, OutsideReactParent };
+  enum class Kind { InsideReactParent, OffWindow, OutsideReactParent, DifferentWindow };
   Kind kind;
   react::Point origin;
 };
