@@ -27,10 +27,12 @@ import { Screen, ScreenContainer, ScreenStack } from 'react-native-screens';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
@@ -136,6 +138,16 @@ const customSheetAnimation: CustomSharedTransitionAnimation = (values) => {
   };
 };
 
+// A custom animation keeps the snapshot of its target, so its start waits for the window.
+const snapshotTransition = SharedTransition.custom(
+  customSheetAnimation
+).withCallback((finished) => {
+  'worklet';
+  if (finished) {
+    notify(FORWARD_FINISHED);
+  }
+});
+
 const sheetTargetTransition = SharedTransition.duration(DURATION).easing(
   Easing.linear
 );
@@ -154,6 +166,7 @@ function StackWithSheet({
   phase: 'source' | 'sheet' | 'closed';
 }) {
   const isSheetOpen = phase === 'sheet';
+  const sourceRef = useTestRef('sheetSource');
   return (
     <View style={styles.root}>
       <NativeScreenStack
@@ -169,6 +182,7 @@ function StackWithSheet({
           <SharedTransitionBoundary isActive={!isSheetOpen}>
             <View collapsable={false} style={styles.content}>
               <Animated.View
+                ref={sourceRef}
                 sharedTransitionTag="newScreen"
                 sharedTransitionStyle={transition}
                 style={styles.sheetSource}
@@ -316,57 +330,86 @@ describe('Shared transition to a new native stack screen', () => {
 
 if (Platform.OS === 'ios') {
   describe('Shared transition to a native sheet', () => {
-    test.each([
-      { animated: true, custom: false },
-      { animated: false, custom: false },
-      { animated: true, custom: true },
-      { animated: false, custom: true },
-    ])(
-      'does not start toward the sheet placeholder (animated: ${animated}, custom: ${custom})',
-      async ({ animated, custom }) => {
-        const id = sheetTestId++;
-        const forwardFinished = `sheetForwardFinished${id}`;
-        const dismissed = `sheetDismissed${id}`;
-        const transition = (
-          custom
-            ? SharedTransition.custom(customSheetAnimation)
-            : SharedTransition.duration(DURATION).easing(Easing.linear)
-        ).withCallback((finished) => {
-          'worklet';
-          if (finished) notify(forwardFinished);
-        });
-        const renderSheet = (phase: 'source' | 'sheet' | 'closed') =>
-          render(
-            <StackWithSheet
-              animated={animated}
-              transition={transition}
-              dismissed={dismissed}
-              phase={phase}
-            />
-          );
-        await renderSheet('source');
-        await waitForNotification(STACK_READY);
-        await waitForFrames(10);
-        const { starts, stop } = await recordSharedTransitionStarts();
-        try {
-          await renderSheet('sheet');
-          await waitForNotification(forwardFinished);
-          await waitForFrames(10);
-          expect(starts.value.length).toBe(1);
-          const first = starts.value[0];
-          expect(first.targetY).toBeWithinRange(first.sourceY + 1, 10000);
-        } finally {
-          try {
-            await stop();
-            await renderSheet('closed');
-            await waitForNotification(dismissed);
-          } finally {
-            await render(null);
-          }
-        }
+    test.each([true, false])(
+      'does not start a custom animation toward the sheet placeholder (animated: %p)',
+      async (animated) => {
+        const { starts } = await openSheet(
+          animated,
+          SharedTransition.custom(customSheetAnimation)
+        );
+        expect(starts.length).toBe(1);
+        expect(starts[0].targetY).toBeWithinRange(starts[0].sourceY + 1, 10000);
+      }
+    );
+
+    // The placeholder of the sheet is above the source, and the sheet is below it.
+    test.each([true, false])(
+      'does not move a built-in animation toward the sheet placeholder (animated: %p)',
+      async (animated) => {
+        const { starts, sourceY, flightY } = await openSheet(
+          animated,
+          SharedTransition.duration(DURATION).easing(Easing.linear)
+        );
+        expect(starts.length).toBe(1);
+        expect(Math.min(...flightY)).toBeWithinRange(
+          sourceY - PLACEHOLDER_DRIFT,
+          10000
+        );
+        expect(Math.max(...flightY)).toBeWithinRange(sourceY + 1, 10000);
       }
     );
   });
+}
+
+const PLACEHOLDER_DRIFT = 3;
+const FLIGHT_SAMPLES = 20;
+
+async function openSheet(animated: boolean, builder: SharedTransition) {
+  const id = sheetTestId++;
+  const forwardFinished = `sheetForwardFinished${id}`;
+  const dismissed = `sheetDismissed${id}`;
+  const transition = builder.withCallback((finished) => {
+    'worklet';
+    if (finished) notify(forwardFinished);
+  });
+  const renderSheet = (phase: 'source' | 'sheet' | 'closed') =>
+    render(
+      <StackWithSheet
+        animated={animated}
+        transition={transition}
+        dismissed={dismissed}
+        phase={phase}
+      />
+    );
+  await renderSheet('source');
+  await waitForNotification(STACK_READY);
+  await waitForFrames(10);
+  const sourceTag = getTestComponent('sheetSource').getTag();
+  const sourceY = await screenY(sourceTag);
+  const { starts, stop } = await recordSharedTransitionStarts();
+  try {
+    await renderSheet('sheet');
+    const flightY: number[] = [];
+    for (let sample = 0; sample < FLIGHT_SAMPLES; sample++) {
+      flightY.push(await screenY(sourceTag));
+      await waitForFrames(1);
+    }
+    await waitForNotification(forwardFinished);
+    await waitForFrames(10);
+    return { starts: starts.value, sourceY, flightY };
+  } finally {
+    try {
+      await stop();
+      await renderSheet('closed');
+      await waitForNotification(dismissed);
+    } finally {
+      await render(null);
+    }
+  }
+}
+
+async function screenY(tag: number) {
+  return (await RuntimeTestObserver!.observeLocationOnScreen(tag))?.y ?? NaN;
 }
 
 if (Platform.OS === 'ios') {
@@ -650,10 +693,49 @@ function PendingScreen({
   );
 }
 
+function NestedPendingScreen({
+  active,
+  outerTransition,
+  innerTransition,
+}: {
+  active: boolean;
+  outerTransition: SharedTransition;
+  innerTransition: SharedTransition;
+}) {
+  const box = (isSource: boolean) => (
+    <Animated.View
+      sharedTransitionTag="nestedOuter"
+      sharedTransitionStyle={outerTransition}
+      style={isSource ? styles.nestedOuter : styles.busyTarget}>
+      <Animated.View
+        sharedTransitionTag="nestedInner"
+        sharedTransitionStyle={innerTransition}
+        style={styles.nestedInner}
+      />
+    </Animated.View>
+  );
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        {box(true)}
+      </SharedTransitionBoundary>
+      <ScreenContainer style={styles.root}>
+        <Screen activityState={0} freezeOnBlur={false} style={styles.root}>
+          <SharedTransitionBoundary isActive={active}>
+            {box(false)}
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
+    </View>
+  );
+}
+
 function MovedOnScreens({
   active,
+  transition,
 }: {
   active: 'first' | 'second' | 'detached';
+  transition: SharedTransition;
 }) {
   const first = useTestRef('movedOnFirst');
   const second = useTestRef('movedOnSecond');
@@ -663,7 +745,7 @@ function MovedOnScreens({
         <Animated.View
           ref={first}
           sharedTransitionTag="movedOn"
-          sharedTransitionStyle={linearTransition}
+          sharedTransitionStyle={transition}
           style={styles.busySource}
         />
       </SharedTransitionBoundary>
@@ -671,7 +753,7 @@ function MovedOnScreens({
         <Animated.View
           ref={second}
           sharedTransitionTag="movedOn"
-          sharedTransitionStyle={linearTransition}
+          sharedTransitionStyle={transition}
           style={styles.busyTarget}
         />
       </SharedTransitionBoundary>
@@ -680,7 +762,7 @@ function MovedOnScreens({
           <SharedTransitionBoundary isActive={active === 'detached'}>
             <Animated.View
               sharedTransitionTag="movedOn"
-              sharedTransitionStyle={linearTransition}
+              sharedTransitionStyle={transition}
               style={[styles.busyTarget, { top: 400 }]}
             />
           </SharedTransitionBoundary>
@@ -690,17 +772,72 @@ function MovedOnScreens({
   );
 }
 
+const SHORT_DURATION = 100;
+
+function countedCallbacks(builder: SharedTransition) {
+  const counts = makeMutable({ finished: 0, failed: 0 });
+  const transition = builder.withCallback((finished) => {
+    'worklet';
+    counts.value = {
+      finished: counts.value.finished + (finished ? 1 : 0),
+      failed: counts.value.failed + (finished ? 0 : 1),
+    };
+  });
+  const callbacks = () =>
+    runOnUIBlocking(() => {
+      'worklet';
+      return counts.value;
+    });
+  return { callbacks, transition };
+}
+
+// The callback runs in the frame after the run ends.
+async function expectReportedCallbacks(
+  read: () => Promise<{ finished: number; failed: number }>,
+  finished: number,
+  failed: number
+) {
+  await expectEventually(async () => {
+    const counts = await read();
+    return counts.finished + counts.failed;
+  }).toBe(finished + failed);
+  await expectCallbacks(read, finished, failed);
+}
+
+async function expectCallbacks(
+  read: () => Promise<{ finished: number; failed: number }>,
+  finished: number,
+  failed: number
+) {
+  const counts = await read();
+  expect(counts.finished).toBe(finished);
+  expect(counts.failed).toBe(failed);
+}
+
 if (Platform.OS === 'ios') {
   describe('Shared transition with a pending native boundary', () => {
-    test('uses the latest target geometry after unrelated updates while waiting', async () => {
+    test('uses the latest target geometry of a custom animation after unrelated updates while waiting', async () => {
+      const transition = snapshotTransition;
       await render(
-        <PendingScreen active={false} showTarget nativeActive={false} />
+        <PendingScreen
+          active={false}
+          showTarget
+          nativeActive={false}
+          transition={transition}
+        />
       );
       await waitForFrames(10);
       const sourceWindowY = await measureWindowY(boxRefs.heldSource);
       const { starts, stop } = await recordSharedTransitionStarts();
       try {
-        await render(<PendingScreen active showTarget nativeActive={false} />);
+        await render(
+          <PendingScreen
+            active
+            showTarget
+            nativeActive={false}
+            transition={transition}
+          />
+        );
         await waitForFrames(3);
         expect(starts.value.length).toBe(0);
         await render(
@@ -710,6 +847,7 @@ if (Platform.OS === 'ios') {
             nativeActive={false}
             targetTop={250}
             hostWidth={30}
+            transition={transition}
           />
         );
         await waitForFrames(3);
@@ -721,6 +859,7 @@ if (Platform.OS === 'ios') {
             nativeActive
             targetTop={250}
             hostWidth={30}
+            transition={transition}
           />
         );
         await waitForNotification(FORWARD_FINISHED);
@@ -740,17 +879,163 @@ if (Platform.OS === 'ios') {
         }
       }
     });
-    test('ends a start when the screen stays detached', async () => {
-      const callbacks = makeMutable({ finished: 0, failed: 0 });
-      const transition = SharedTransition.duration(DURATION)
-        .easing(Easing.linear)
-        .withCallback((finished) => {
-          'worklet';
-          callbacks.value = {
-            finished: callbacks.value.finished + (finished ? 1 : 0),
-            failed: callbacks.value.failed + (finished ? 0 : 1),
-          };
-        });
+    // The animation clock stands still until the test moves it, so the real-time window limit passes during the
+    // animation.
+    test('starts a built-in animation at once and lands after the boundary enters the window', async () => {
+      const { callbacks, transition } = countedCallbacks(
+        SharedTransition.duration(SHORT_DURATION).easing(Easing.linear)
+      );
+      const show = (nativeActive: boolean) =>
+        render(
+          <PendingScreen
+            active
+            showTarget
+            nativeActive={nativeActive}
+            transition={transition}
+          />
+        );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(
+        <PendingScreen
+          active={false}
+          showTarget
+          nativeActive={false}
+          transition={transition}
+        />
+      );
+      await waitForFrames(10);
+      const sourceTag = getTestComponent('heldSource').getTag();
+      const parent = await RuntimeTestObserver!.observeParent(sourceTag);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        await show(false);
+        await waitForFrames(3);
+        expect(starts.value.length).toBe(1);
+        await wait(TARGET_WINDOW_WAIT + 100);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+          parent
+        );
+        await expectCallbacks(callbacks, 0, 0);
+        await show(true);
+        await waitForFrames(3);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+          parent
+        );
+        await advanceAnimationTimer(SHORT_DURATION);
+        await expectEventually(
+          async () =>
+            (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
+        ).toBe(true);
+        expect(
+          (await getTestComponent('heldTarget').getMountedViewProps())?.opacity
+        ).toBe(1);
+        expect(
+          (await getTestComponent('heldSource').getMountedViewProps())?.opacity
+        ).toBe(0);
+        expect(starts.value.length).toBe(1);
+        await expectReportedCallbacks(callbacks, 1, 0);
+      } finally {
+        try {
+          await stop();
+        } finally {
+          await render(null);
+        }
+      }
+    });
+    test('ends a built-in animation at its end when the screen stays detached', async () => {
+      const { callbacks, transition } = countedCallbacks(
+        SharedTransition.duration(DURATION).easing(Easing.linear)
+      );
+      const show = (active: boolean, nativeActive = false) =>
+        render(
+          <PendingScreen
+            active={active}
+            showTarget
+            nativeActive={nativeActive}
+            transition={transition}
+          />
+        );
+      await mockAnimationTimer({ autoAdvance: false });
+      await show(false);
+      await waitForFrames(10);
+      const sourceTag = getTestComponent('heldSource').getTag();
+      const parent = await RuntimeTestObserver!.observeParent(sourceTag);
+      const { starts, stop } = await recordSharedTransitionStarts();
+      try {
+        await show(true);
+        await waitForFrames(3);
+        expect(starts.value.length).toBe(1);
+        await wait(TARGET_WINDOW_WAIT + 100);
+        await advanceAnimationTimer(DURATION / 2);
+        expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
+          parent
+        );
+        await expectCallbacks(callbacks, 0, 0);
+        await advanceAnimationTimer(DURATION / 2);
+        await expectEventually(
+          async () =>
+            (await RuntimeTestObserver!.observeParent(sourceTag)) === parent
+        ).toBe(true);
+        expect(
+          (await getTestComponent('heldSource').getMountedViewProps())?.opacity
+        ).toBe(1);
+        await expectReportedCallbacks(callbacks, 0, 1);
+        await show(true, true);
+        await waitForFrames(10);
+        expect(
+          (await getTestComponent('heldTarget').getMountedViewProps())?.opacity
+        ).toBe(1);
+        expect(starts.value.length).toBe(1);
+      } finally {
+        try {
+          await stop();
+        } finally {
+          await render(null);
+        }
+      }
+    });
+    test.each([false, true])(
+      'keeps a nested built-in animation until its end when the screen stays detached (custom outer: %p)',
+      async (customOuter) => {
+        const outer = countedCallbacks(
+          customOuter
+            ? SharedTransition.custom(customSheetAnimation)
+            : SharedTransition.duration(SHORT_DURATION).easing(Easing.linear)
+        );
+        const inner = countedCallbacks(
+          SharedTransition.duration(DURATION).easing(Easing.linear)
+        );
+        const show = (active: boolean) =>
+          render(
+            <NestedPendingScreen
+              active={active}
+              outerTransition={outer.transition}
+              innerTransition={inner.transition}
+            />
+          );
+        await mockAnimationTimer({ autoAdvance: false });
+        await show(false);
+        await waitForFrames(10);
+        try {
+          await show(true);
+          await waitForFrames(3);
+          await advanceAnimationTimer(SHORT_DURATION);
+          await wait(TARGET_WINDOW_WAIT + 100);
+          await waitForFrames(3);
+          await expectCallbacks(inner.callbacks, 0, 0);
+          await expectCallbacks(outer.callbacks, 0, 0);
+          await advanceAnimationTimer(DURATION);
+          await expectReportedCallbacks(inner.callbacks, 0, 1);
+          await expectReportedCallbacks(outer.callbacks, 0, 1);
+        } finally {
+          await render(null);
+        }
+      }
+    );
+    test('ends a custom start when the screen stays detached', async () => {
+      const { callbacks: readCallbacks, transition } = countedCallbacks(
+        SharedTransition.custom(customSheetAnimation)
+      );
       const show = (active: boolean) =>
         render(
           <PendingScreen
@@ -778,12 +1063,7 @@ if (Platform.OS === 'ios') {
         expect(
           (await getTestComponent('heldSource').getMountedViewProps())?.opacity
         ).toBe(1);
-        const result = await runOnUIBlocking(() => {
-          'worklet';
-          return callbacks.value;
-        });
-        expect(result.finished).toBe(0);
-        expect(result.failed).toBe(1);
+        await expectReportedCallbacks(readCallbacks, 0, 1);
         await render(
           <PendingScreen
             active
@@ -805,32 +1085,49 @@ if (Platform.OS === 'ios') {
         }
       }
     });
-    test('shows the current source when a moved-on start stays detached', async () => {
-      await render(<MovedOnScreens active="first" />);
-      await waitForFrames(10);
-      const firstTag = getTestComponent('movedOnFirst').getTag();
-      const firstParent = await RuntimeTestObserver!.observeParent(firstTag);
-      try {
-        await render(<MovedOnScreens active="second" />);
-        await waitForFrames(3);
-        await render(<MovedOnScreens active="detached" />);
-        await wait(TARGET_WINDOW_WAIT + 300);
-        expect(await RuntimeTestObserver!.observeParent(firstTag)).toBe(
-          firstParent
-        );
-        expect(
-          (await getTestComponent('movedOnSecond').getMountedViewProps())
-            ?.opacity
-        ).toBe(1);
-      } finally {
-        await render(null);
+    test.each([
+      { custom: true, end: TARGET_WINDOW_WAIT },
+      { custom: false, end: DURATION },
+    ])(
+      'shows the current source when a moved-on start stays detached (custom: ${custom})',
+      async ({ custom, end }) => {
+        const transition = custom ? snapshotTransition : linearTransition;
+        await render(<MovedOnScreens active="first" transition={transition} />);
+        await waitForFrames(10);
+        const firstTag = getTestComponent('movedOnFirst').getTag();
+        const firstParent = await RuntimeTestObserver!.observeParent(firstTag);
+        try {
+          await render(
+            <MovedOnScreens active="second" transition={transition} />
+          );
+          await waitForFrames(3);
+          await render(
+            <MovedOnScreens active="detached" transition={transition} />
+          );
+          await wait(end + 300);
+          expect(await RuntimeTestObserver!.observeParent(firstTag)).toBe(
+            firstParent
+          );
+          expect(
+            (await getTestComponent('movedOnSecond').getMountedViewProps())
+              ?.opacity
+          ).toBe(1);
+        } finally {
+          await render(null);
+        }
       }
-    });
+    );
     test.each([true, false])(
-      'cancels a held start to a detached screen before a late attachment (remove target: %p)',
+      'cancels a held custom start to a detached screen before a late attachment (remove target: %p)',
       async (removeTarget) => {
+        const transition = snapshotTransition;
         await render(
-          <PendingScreen active={false} showTarget nativeActive={false} />
+          <PendingScreen
+            active={false}
+            showTarget
+            nativeActive={false}
+            transition={transition}
+          />
         );
         await waitForFrames(10);
         const sourceTag = getTestComponent('heldSource').getTag();
@@ -839,7 +1136,12 @@ if (Platform.OS === 'ios') {
         try {
           const holdStart = Date.now();
           await render(
-            <PendingScreen active showTarget nativeActive={false} />
+            <PendingScreen
+              active
+              showTarget
+              nativeActive={false}
+              transition={transition}
+            />
           );
           await waitForFrames(3);
           expect(await RuntimeTestObserver!.observeParent(sourceTag)).not.toBe(
@@ -851,6 +1153,7 @@ if (Platform.OS === 'ios') {
               active={removeTarget}
               showTarget={!removeTarget}
               nativeActive={false}
+              transition={transition}
             />
           );
           await expectEventually(
@@ -864,7 +1167,12 @@ if (Platform.OS === 'ios') {
           ).toBe(1);
           expect(starts.value.length).toBe(0);
           await render(
-            <PendingScreen active={false} showTarget nativeActive />
+            <PendingScreen
+              active={false}
+              showTarget
+              nativeActive
+              transition={transition}
+            />
           );
           await waitForFrames(10);
           expect(starts.value.length).toBe(0);
@@ -1070,6 +1378,17 @@ const styles = StyleSheet.create({
     width: SOURCE_WIDTH,
     height: 60,
     backgroundColor: '#dd5522',
+  },
+  nestedOuter: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#dd5522',
+  },
+  nestedInner: {
+    width: 40,
+    height: 40,
+    margin: 20,
+    backgroundColor: '#22aa55',
   },
   busyTarget: {
     position: 'absolute',

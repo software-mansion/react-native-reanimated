@@ -1711,7 +1711,7 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
 bool LayoutAnimationsProxy::defersLayoutAnimationStart(const Tag tag) const {
   const auto run = sharedTransitionRuns_.find(tag);
   if (run != sharedTransitionRuns_.end() && run->second.lifecycle == SharedTransitionLifecycle::ACTIVE &&
-      run->second.targetOffWindow) {
+      run->second.holdsStart()) {
     return true;
   }
 #ifdef ANDROID

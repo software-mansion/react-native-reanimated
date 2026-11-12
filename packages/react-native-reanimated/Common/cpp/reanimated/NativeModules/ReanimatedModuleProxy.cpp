@@ -557,6 +557,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
       };
     }
+    const auto followsTarget = item.getProperty(rt, "sharedTransitionFollowsTarget");
+    batchItem.sharedTransitionFollowsTarget = followsTarget.isBool() && followsTarget.getBool();
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {

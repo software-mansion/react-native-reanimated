@@ -507,6 +507,19 @@ export class SharedTransition
     };
   }
 
+  /**
+   * Tells if the built animation aims at the current geometry of the target in
+   * each frame. Custom animations and timed progress animations use the
+   * geometry that the target has when they start. This is used internally by
+   * the layout animations system.
+   */
+  followsTarget(): boolean {
+    return (
+      this.transitionType !== SharedTransitionType.PROGRESS_ANIMATION &&
+      !this.customAnimationFactory
+    );
+  }
+
   private buildContentFadeIn(duration: number): EntryExitAnimationFunction {
     const config = {
       duration,

@@ -59,6 +59,9 @@ function createUpdateManager() {
  *   of shared elements. Defaults to `false`.
  * @param sharedTransitionTag - The shared tag that pairs the views.
  * @param sharedTransitionContentFade - The content fade settings of the run.
+ * @param sharedTransitionCallback - The callback of the run.
+ * @param sharedTransitionFollowsTarget - Whether the animation aims at the
+ *   current geometry of the target in each frame.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 
@@ -72,7 +75,8 @@ export const updateLayoutAnimations: (
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
   sharedTransitionContentFade?: SharedTransitionContentFade,
-  sharedTransitionCallback?: (finished: boolean) => void
+  sharedTransitionCallback?: (finished: boolean) => void,
+  sharedTransitionFollowsTarget?: boolean
 ) => void = (
   viewTag,
   type,
@@ -80,7 +84,8 @@ export const updateLayoutAnimations: (
   isUnmounting,
   sharedTransitionTag,
   sharedTransitionContentFade,
-  sharedTransitionCallback
+  sharedTransitionCallback,
+  sharedTransitionFollowsTarget
 ) =>
   updateLayoutAnimationsManager.update(
     {
@@ -97,6 +102,7 @@ export const updateLayoutAnimations: (
             fadeOutEnd: sharedTransitionContentFade.fadeOutEnd,
           }
         : undefined,
+      sharedTransitionFollowsTarget,
     },
     isUnmounting
   );
