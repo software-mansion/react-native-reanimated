@@ -11,7 +11,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -21,7 +21,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
 
 permissions:
   contents: read
@@ -39,9 +39,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
-      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -147,7 +147,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: android-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14

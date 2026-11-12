@@ -281,7 +281,7 @@ function createWorkDir() {
       'build',
       'intermediates',
       'merged_native_libs',
-      'debugRuntimeTests',
+      'debug',
       'out',
       'lib',
       'arm64-v8a'

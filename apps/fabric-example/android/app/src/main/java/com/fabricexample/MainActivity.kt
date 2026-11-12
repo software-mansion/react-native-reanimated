@@ -15,7 +15,7 @@ class MainActivity : ReactActivity() {
    * rendering of the component.
    */
   override fun getMainComponentName(): String =
-      if (BuildConfig.RUNTIME_TESTS) "FabricExampleRuntimeTests" else "FabricExample"
+      if (MainApplication.runtimeTestsLibrary == null) "FabricExample" else "FabricExampleRuntimeTests"
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
@@ -23,19 +23,18 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       object : DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled) {
+        // The activity creates its delegate before onCreate reads the launch intent.
+        override fun getMainComponentName(): String = this@MainActivity.mainComponentName
+
         override fun getLaunchOptions(): Bundle? =
-            if (BuildConfig.RUNTIME_TESTS) {
-              this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {
-                Bundle().apply { putString("wsUrl", it) }
-              }
-            } else {
-              null
+            this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {
+              Bundle().apply { putString("wsUrl", it) }
             }
       }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
-    if (BuildConfig.RUNTIME_TESTS) {
+    if (BuildConfig.DEBUG || BuildConfig.RUNTIME_TESTS) {
       intent?.getStringExtra("RUNTIME_TESTS_LIBRARY")?.let {
         MainApplication.runtimeTestsLibrary = it
       }
