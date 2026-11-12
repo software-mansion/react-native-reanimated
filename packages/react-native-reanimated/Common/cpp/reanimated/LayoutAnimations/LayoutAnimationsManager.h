@@ -45,6 +45,7 @@ struct SharedTransitionContentFade {
 struct SharedTransitionConfig {
   std::shared_ptr<Serializable> animation;
   std::optional<SharedTransitionContentFade> contentFade;
+  std::shared_ptr<Serializable> callback;
 };
 
 struct LayoutAnimationConfig {
@@ -53,6 +54,7 @@ struct LayoutAnimationConfig {
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
   std::optional<SharedTransitionContentFade> sharedTransitionContentFade;
+  std::shared_ptr<Serializable> sharedTransitionCallback;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.

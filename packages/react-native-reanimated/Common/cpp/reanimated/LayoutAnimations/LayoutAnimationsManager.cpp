@@ -27,7 +27,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
   }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : configUpdates) {
-    const auto &[tag, type, config, sharedTag, contentFade] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag, contentFade, callback] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
@@ -38,7 +38,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitionsForNativeID_.erase(tag);
         sharedTransitionManager_->nativeIDToName_.erase(tag);
       } else {
-        sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade};
+        sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade, .callback = callback};
         sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
       }
       continue;
@@ -48,7 +48,7 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->tagToName_.erase(tag);
       } else {
-        sharedTransitions_[tag] = {.animation = config, .contentFade = contentFade};
+        sharedTransitions_[tag] = {.animation = config, .contentFade = contentFade, .callback = callback};
         sharedTransitionManager_->tagToName_[tag] = sharedTag;
       }
       continue;
