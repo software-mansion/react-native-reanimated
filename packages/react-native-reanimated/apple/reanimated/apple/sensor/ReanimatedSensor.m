@@ -1,26 +1,24 @@
 #import <reanimated/apple/sensor/ReanimatedSensor.h>
 
 #if !TARGET_OS_TV && !TARGET_OS_OSX && !TARGET_OS_VISION
-@implementation ReanimatedSensor
+#import <CoreMotion/CoreMotion.h>
+#import <UIKit/UIKit.h>
 
-+ (bool)isAvailable:(ReanimatedSensorType)sensorType
-{
-  static CMMotionManager *motionManager;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{ motionManager = [[CMMotionManager alloc] init]; });
+static const int AUTO_REFERENCE_FRAME = 4;
 
-  switch (sensorType) {
-    case ACCELEROMETER:
-      return [motionManager isAccelerometerAvailable];
-    case GYROSCOPE:
-      return [motionManager isGyroAvailable];
-    case MAGNETIC_FIELD:
-      return [motionManager isMagnetometerAvailable];
-    case GRAVITY:
-    case ROTATION_VECTOR:
-      return [motionManager isDeviceMotionAvailable];
-  }
-  return false;
+@interface ReanimatedSensor ()
+
+@property (nonatomic, readonly) ReanimatedSensorType sensorType;
+@property (nonatomic, readonly) double interval;
+@property (nonatomic, readonly) int referenceFrame;
+
+- (void)handleReading:(CMLogItem *)reading streamInterval:(double)streamInterval;
+
+@end
+
+@implementation ReanimatedSensor {
+  double _lastTimestamp;
+  void (^_setter)(double[], int);
 }
 
 - (instancetype)init:(ReanimatedSensorType)sensorType
@@ -37,167 +35,60 @@
   }
   _referenceFrame = iosReferenceFrame;
   _setter = setter;
-  _motionManager = [[CMMotionManager alloc] init];
   return self;
 }
 
-- (bool)initialize
+- (void)handleReading:(CMLogItem *)reading streamInterval:(double)streamInterval
 {
-  if (![ReanimatedSensor isAvailable:_sensorType]) {
-    return false;
+  // This takes the reading closest to the interval, using the time of the readings, as handlers can
+  // wait on the main queue. CoreMotion also rounds the update interval, so a sensor as fast as the
+  // stream gets a reading that comes early instead of every other one.
+  if (reading.timestamp - _lastTimestamp < _interval - streamInterval / 2) {
+    return;
   }
+  _lastTimestamp = reading.timestamp;
 
-  if (_sensorType == ACCELEROMETER) {
-    return [self initializeAccelerometer];
-  } else if (_sensorType == GYROSCOPE) {
-    return [self initializeGyroscope];
-  } else if (_sensorType == GRAVITY) {
-    return [self initializeGravity];
-  } else if (_sensorType == MAGNETIC_FIELD) {
-    return [self initializeMagnetometer];
-  } else if (_sensorType == ROTATION_VECTOR) {
-    return [self initializeOrientation];
-  }
-
-  return false;
-}
-
-- (bool)initializeGyroscope
-{
-  [_motionManager setGyroUpdateInterval:_interval];
-  [_motionManager startGyroUpdates];
-  [_motionManager
-      startGyroUpdatesToQueue:[NSOperationQueue mainQueue]
-                  withHandler:^(CMGyroData *sensorData, NSError *error) {
-                    double currentTime = CACurrentMediaTime() * 1000;
-                    if (currentTime - self->_lastTimestamp < self->_interval) {
-                      return;
-                    }
-                    double data[] = {sensorData.rotationRate.x, sensorData.rotationRate.y, sensorData.rotationRate.z};
-                    self->_setter(data, [self getInterfaceOrientation]);
-                    self->_lastTimestamp = currentTime;
-                  }];
-
-  return true;
-}
-
-- (bool)initializeAccelerometer
-{
-  [_motionManager setAccelerometerUpdateInterval:_interval];
-  [_motionManager startAccelerometerUpdates];
-  [_motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue mainQueue]
-                                       withHandler:^(CMAccelerometerData *sensorData, NSError *error) {
-                                         double currentTime = CACurrentMediaTime() * 1000;
-                                         if (currentTime - self->_lastTimestamp < self->_interval) {
-                                           return;
-                                         }
-                                         double G = 9.81;
-                                         // convert G to m/s^2
-                                         double data[] = {
-                                             sensorData.acceleration.x * G,
-                                             sensorData.acceleration.y * G,
-                                             sensorData.acceleration.z * G};
-                                         self->_setter(data, [self getInterfaceOrientation]);
-                                         self->_lastTimestamp = currentTime;
-                                       }];
-
-  return true;
-}
-
-- (bool)initializeGravity
-{
-  [_motionManager setDeviceMotionUpdateInterval:_interval];
-  [_motionManager setShowsDeviceMovementDisplay:YES];
-  [_motionManager
-      startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue]
-                          withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                            double currentTime = CACurrentMediaTime() * 1000;
-                            if (currentTime - self->_lastTimestamp < self->_interval) {
-                              return;
-                            }
-                            double G = 9.81;
-                            // convert G to m/s^2
-                            double data[] = {
-                                sensorData.gravity.x * G, sensorData.gravity.y * G, sensorData.gravity.z * G};
-                            self->_setter(data, [self getInterfaceOrientation]);
-                            self->_lastTimestamp = currentTime;
-                          }];
-
-  return true;
-}
-
-- (bool)initializeMagnetometer
-{
-  [_motionManager setMagnetometerUpdateInterval:_interval];
-  [_motionManager startMagnetometerUpdates];
-  [_motionManager
-      startMagnetometerUpdatesToQueue:[NSOperationQueue mainQueue]
-                          withHandler:^(CMMagnetometerData *sensorData, NSError *error) {
-                            double currentTime = CACurrentMediaTime() * 1000;
-                            if (currentTime - self->_lastTimestamp < self->_interval) {
-                              return;
-                            }
-                            double data[] = {
-                                sensorData.magneticField.x, sensorData.magneticField.y, sensorData.magneticField.z};
-                            self->_setter(data, [self getInterfaceOrientation]);
-                            self->_lastTimestamp = currentTime;
-                          }];
-
-  return true;
-}
-
-- (bool)initializeOrientation
-{
-  [_motionManager setDeviceMotionUpdateInterval:_interval];
-
-  [_motionManager setShowsDeviceMovementDisplay:YES];
-
-  // _referenceFrame = Auto, on devices without magnetometer fall back to `XArbitraryZVertical`,
-  // `XArbitraryCorrectedZVertical` otherwise
-  if (_referenceFrame == 4) {
-    if (![_motionManager isMagnetometerAvailable]) {
-      _referenceFrame = 0;
-    } else {
-      _referenceFrame = 1;
+  const double G = 9.81;
+  switch (_sensorType) {
+    case ACCELEROMETER: {
+      CMAcceleration acceleration = ((CMAccelerometerData *)reading).acceleration;
+      // convert G to m/s^2
+      double data[] = {acceleration.x * G, acceleration.y * G, acceleration.z * G};
+      _setter(data, [self getInterfaceOrientation]);
+      break;
     }
-  }
-
-  // the binary shift works here because of the definition of CMAttitudeReferenceFrame
-  [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
-                                                      toQueue:[NSOperationQueue mainQueue]
-                                                  withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
-                                                    double currentTime = CACurrentMediaTime() * 1000;
-                                                    if (currentTime - self->_lastTimestamp < self->_interval) {
-                                                      return;
-                                                    }
-                                                    CMAttitude *attitude = sensorData.attitude;
-                                                    double data[] = {
-                                                        attitude.quaternion.x,
-                                                        attitude.quaternion.y,
-                                                        attitude.quaternion.z,
-                                                        attitude.quaternion.w,
-                                                        attitude.yaw,
-                                                        attitude.pitch,
-                                                        attitude.roll};
-                                                    self->_setter(data, [self getInterfaceOrientation]);
-                                                    self->_lastTimestamp = currentTime;
-                                                  }];
-
-  return true;
-}
-
-- (void)cancel
-{
-  if (_sensorType == ACCELEROMETER) {
-    [_motionManager stopAccelerometerUpdates];
-  } else if (_sensorType == GYROSCOPE) {
-    [_motionManager stopGyroUpdates];
-  } else if (_sensorType == GRAVITY) {
-    [_motionManager stopDeviceMotionUpdates];
-  } else if (_sensorType == MAGNETIC_FIELD) {
-    [_motionManager stopMagnetometerUpdates];
-  } else if (_sensorType == ROTATION_VECTOR) {
-    [_motionManager stopDeviceMotionUpdates];
+    case GYROSCOPE: {
+      CMRotationRate rotationRate = ((CMGyroData *)reading).rotationRate;
+      double data[] = {rotationRate.x, rotationRate.y, rotationRate.z};
+      _setter(data, [self getInterfaceOrientation]);
+      break;
+    }
+    case GRAVITY: {
+      CMAcceleration gravity = ((CMDeviceMotion *)reading).gravity;
+      // convert G to m/s^2
+      double data[] = {gravity.x * G, gravity.y * G, gravity.z * G};
+      _setter(data, [self getInterfaceOrientation]);
+      break;
+    }
+    case MAGNETIC_FIELD: {
+      CMMagneticField magneticField = ((CMMagnetometerData *)reading).magneticField;
+      double data[] = {magneticField.x, magneticField.y, magneticField.z};
+      _setter(data, [self getInterfaceOrientation]);
+      break;
+    }
+    case ROTATION_VECTOR: {
+      CMAttitude *attitude = ((CMDeviceMotion *)reading).attitude;
+      double data[] = {
+          attitude.quaternion.x,
+          attitude.quaternion.y,
+          attitude.quaternion.z,
+          attitude.quaternion.w,
+          attitude.yaw,
+          attitude.pitch,
+          attitude.roll};
+      _setter(data, [self getInterfaceOrientation]);
+      break;
+    }
   }
 }
 
@@ -224,14 +115,318 @@
 
 @end
 
+// Updates of one kind from one CMMotionManager. Gravity and rotation are both device motion.
+typedef NS_ENUM(NSUInteger, ReanimatedSensorStreamKind) {
+  ACCELEROMETER_STREAM,
+  GYROSCOPE_STREAM,
+  MAGNETOMETER_STREAM,
+  DEVICE_MOTION_STREAM,
+};
+
+static ReanimatedSensorStreamKind streamKindOf(ReanimatedSensorType sensorType)
+{
+  switch (sensorType) {
+    case ACCELEROMETER:
+      return ACCELEROMETER_STREAM;
+    case GYROSCOPE:
+      return GYROSCOPE_STREAM;
+    case MAGNETIC_FIELD:
+      return MAGNETOMETER_STREAM;
+    case GRAVITY:
+    case ROTATION_VECTOR:
+      return DEVICE_MOTION_STREAM;
+  }
+}
+
+@interface ReanimatedSensorStream : NSObject
+
+@property (nonatomic, readonly) ReanimatedSensorStreamKind kind;
+@property (nonatomic, readonly) CMMotionManager *manager;
+@property (nonatomic, readonly) int referenceFrame;
+// Atomic, because the handlers read these on the main queue. They never take the lock of the hub.
+@property (atomic, readonly, copy) NSArray<ReanimatedSensor *> *sensors;
+@property (atomic, readonly) double interval;
+
+- (instancetype)initWithKind:(ReanimatedSensorStreamKind)kind
+                     manager:(CMMotionManager *)manager
+              referenceFrame:(int)referenceFrame;
+- (void)addSensor:(ReanimatedSensor *)sensor;
+- (void)removeSensor:(ReanimatedSensor *)sensor;
+- (bool)hasRotationSensor;
+- (void)switchToReferenceFrame:(int)referenceFrame;
+- (void)stop;
+
+@end
+
+@interface ReanimatedSensorStream ()
+
+@property (atomic, readwrite, copy) NSArray<ReanimatedSensor *> *sensors;
+@property (atomic, readwrite) double interval;
+
+@end
+
+@implementation ReanimatedSensorStream
+
+- (instancetype)initWithKind:(ReanimatedSensorStreamKind)kind
+                     manager:(CMMotionManager *)manager
+              referenceFrame:(int)referenceFrame
+{
+  self = [super init];
+  _kind = kind;
+  _manager = manager;
+  _referenceFrame = referenceFrame;
+  self.sensors = @[];
+  return self;
+}
+
+- (void)addSensor:(ReanimatedSensor *)sensor
+{
+  const bool wasRunning = self.sensors.count > 0;
+  self.sensors = [self.sensors arrayByAddingObject:sensor];
+  [self updateInterval];
+  if (!wasRunning) {
+    [self start];
+  }
+}
+
+- (void)removeSensor:(ReanimatedSensor *)sensor
+{
+  NSMutableArray<ReanimatedSensor *> *sensors = [self.sensors mutableCopy];
+  [sensors removeObject:sensor];
+  self.sensors = sensors;
+  if (sensors.count > 0) {
+    [self updateInterval];
+  }
+}
+
+- (bool)hasRotationSensor
+{
+  for (ReanimatedSensor *sensor in self.sensors) {
+    if (sensor.sensorType == ROTATION_VECTOR) {
+      return true;
+    }
+  }
+  return false;
+}
+
+- (void)switchToReferenceFrame:(int)referenceFrame
+{
+  if (referenceFrame == _referenceFrame) {
+    return;
+  }
+  _referenceFrame = referenceFrame;
+  [self stop];
+  [self start];
+}
+
+// The stream runs at the fastest interval of its sensors, and each sensor skips what it doesn't need.
+- (void)updateInterval
+{
+  double interval = DBL_MAX;
+  for (ReanimatedSensor *sensor in self.sensors) {
+    interval = MIN(interval, sensor.interval);
+  }
+  self.interval = interval;
+  switch (_kind) {
+    case ACCELEROMETER_STREAM:
+      _manager.accelerometerUpdateInterval = interval;
+      break;
+    case GYROSCOPE_STREAM:
+      _manager.gyroUpdateInterval = interval;
+      break;
+    case MAGNETOMETER_STREAM:
+      _manager.magnetometerUpdateInterval = interval;
+      break;
+    case DEVICE_MOTION_STREAM:
+      _manager.deviceMotionUpdateInterval = interval;
+      break;
+  }
+}
+
+- (void)start
+{
+  NSOperationQueue *queue = [NSOperationQueue mainQueue];
+  // Weak, because the manager keeps the handler for as long as it runs.
+  __weak ReanimatedSensorStream *weakSelf = self;
+  switch (_kind) {
+    case ACCELEROMETER_STREAM: {
+      [_manager startAccelerometerUpdatesToQueue:queue
+                                     withHandler:^(CMAccelerometerData *data, NSError *error) {
+                                       [weakSelf deliverReading:data];
+                                     }];
+      break;
+    }
+    case GYROSCOPE_STREAM: {
+      [_manager startGyroUpdatesToQueue:queue
+                            withHandler:^(CMGyroData *data, NSError *error) { [weakSelf deliverReading:data]; }];
+      break;
+    }
+    case MAGNETOMETER_STREAM: {
+      [_manager startMagnetometerUpdatesToQueue:queue
+                                    withHandler:^(CMMagnetometerData *data, NSError *error) {
+                                      [weakSelf deliverReading:data];
+                                    }];
+      break;
+    }
+    case DEVICE_MOTION_STREAM: {
+      [_manager setShowsDeviceMovementDisplay:YES];
+      // the binary shift works here because of the definition of CMAttitudeReferenceFrame
+      [_manager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
+                                                    toQueue:queue
+                                                withHandler:^(CMDeviceMotion *data, NSError *error) {
+                                                  [weakSelf deliverReading:data];
+                                                }];
+      break;
+    }
+  }
+}
+
+- (void)stop
+{
+  switch (_kind) {
+    case ACCELEROMETER_STREAM:
+      [_manager stopAccelerometerUpdates];
+      break;
+    case GYROSCOPE_STREAM:
+      [_manager stopGyroUpdates];
+      break;
+    case MAGNETOMETER_STREAM:
+      [_manager stopMagnetometerUpdates];
+      break;
+    case DEVICE_MOTION_STREAM:
+      [_manager stopDeviceMotionUpdates];
+      break;
+  }
+}
+
+- (void)deliverReading:(CMLogItem *)reading
+{
+  if (reading == nil) {
+    return;
+  }
+  const double interval = self.interval;
+  for (ReanimatedSensor *sensor in self.sensors) {
+    [sensor handleReading:reading streamInterval:interval];
+  }
+}
+
+@end
+
+@implementation ReanimatedSensorHub {
+  CMMotionManager *_motionManager;
+  NSMutableArray<ReanimatedSensorStream *> *_streams;
+}
+
+- (instancetype)init
+{
+  self = [super init];
+  _motionManager = [[CMMotionManager alloc] init];
+  _streams = [[NSMutableArray alloc] init];
+  return self;
+}
+
+- (bool)isAvailable:(ReanimatedSensorType)sensorType
+{
+  switch (sensorType) {
+    case ACCELEROMETER:
+      return [_motionManager isAccelerometerAvailable];
+    case GYROSCOPE:
+      return [_motionManager isGyroAvailable];
+    case MAGNETIC_FIELD:
+      return [_motionManager isMagnetometerAvailable];
+    case GRAVITY:
+    case ROTATION_VECTOR:
+      return [_motionManager isDeviceMotionAvailable];
+  }
+  return false;
+}
+
+- (bool)addSensor:(ReanimatedSensor *)sensor
+{
+  if (![self isAvailable:sensor.sensorType]) {
+    return false;
+  }
+  @synchronized(self) {
+    [[self streamForSensor:sensor] addSensor:sensor];
+  }
+  return true;
+}
+
+- (void)removeSensor:(ReanimatedSensor *)sensor
+{
+  @synchronized(self) {
+    for (ReanimatedSensorStream *stream in _streams) {
+      if (![stream.sensors containsObject:sensor]) {
+        continue;
+      }
+      [stream removeSensor:sensor];
+      if (stream.sensors.count == 0) {
+        [stream stop];
+        [_streams removeObject:stream];
+      }
+      return;
+    }
+  }
+}
+
+- (ReanimatedSensorStream *)streamForSensor:(ReanimatedSensor *)sensor
+{
+  const ReanimatedSensorStreamKind kind = streamKindOf(sensor.sensorType);
+  const bool needsReferenceFrame = sensor.sensorType == ROTATION_VECTOR;
+  const int referenceFrame = [self resolveReferenceFrame:sensor];
+
+  // Only rotation depends on the reference frame, so a stream without it can switch to any frame.
+  ReanimatedSensorStream *switchableStream = nil;
+  for (ReanimatedSensorStream *stream in _streams) {
+    if (stream.kind != kind) {
+      continue;
+    }
+    if (!needsReferenceFrame || stream.referenceFrame == referenceFrame) {
+      return stream;
+    }
+    if (![stream hasRotationSensor]) {
+      switchableStream = stream;
+    }
+  }
+  if (switchableStream != nil) {
+    [switchableStream switchToReferenceFrame:referenceFrame];
+    return switchableStream;
+  }
+
+  ReanimatedSensorStream *stream =
+      [[ReanimatedSensorStream alloc] initWithKind:kind
+                                           manager:[self managerForStreamOfKind:kind]
+                                    referenceFrame:needsReferenceFrame ? referenceFrame : 0];
+  [_streams addObject:stream];
+  return stream;
+}
+
+// A second CMMotionManager is needed only for a second reference frame of device motion.
+- (CMMotionManager *)managerForStreamOfKind:(ReanimatedSensorStreamKind)kind
+{
+  for (ReanimatedSensorStream *stream in _streams) {
+    if (stream.kind == kind && stream.manager == _motionManager) {
+      return [[CMMotionManager alloc] init];
+    }
+  }
+  return _motionManager;
+}
+
+// On devices without magnetometer `Auto` falls back to `XArbitraryZVertical`,
+// `XArbitraryCorrectedZVertical` otherwise
+- (int)resolveReferenceFrame:(ReanimatedSensor *)sensor
+{
+  if (sensor.referenceFrame != AUTO_REFERENCE_FRAME) {
+    return sensor.referenceFrame;
+  }
+  return [_motionManager isMagnetometerAvailable] ? 1 : 0;
+}
+
+@end
+
 #else
 
 @implementation ReanimatedSensor
-
-+ (bool)isAvailable:(ReanimatedSensorType)sensorType
-{
-  return false;
-}
 
 - (instancetype)init:(ReanimatedSensorType)sensorType
              interval:(int)interval
@@ -242,37 +437,21 @@
   return self;
 }
 
-- (bool)initialize
+@end
+
+@implementation ReanimatedSensorHub
+
+- (bool)isAvailable:(ReanimatedSensorType)sensorType
 {
   return false;
 }
 
-- (bool)initializeGyroscope
+- (bool)addSensor:(ReanimatedSensor *)sensor
 {
   return false;
 }
 
-- (bool)initializeAccelerometer
-{
-  return false;
-}
-
-- (bool)initializeGravity
-{
-  return false;
-}
-
-- (bool)initializeMagnetometer
-{
-  return false;
-}
-
-- (bool)initializeOrientation
-{
-  return false;
-}
-
-- (void)cancel
+- (void)removeSensor:(ReanimatedSensor *)sensor
 {
 }
 

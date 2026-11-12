@@ -26,7 +26,9 @@ export class SensorContainer {
   }
 
   getSensorId(sensorType: SensorType, config: SensorConfig) {
+    const interval = config.interval === 'auto' ? -1 : config.interval;
     return (
+      (interval + 1) * 1000 +
       sensorType * 100 +
       config.iosReferenceFrame * 10 +
       Number(config.adjustToInterfaceOrientation)
