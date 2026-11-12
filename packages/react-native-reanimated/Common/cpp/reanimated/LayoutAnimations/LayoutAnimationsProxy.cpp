@@ -262,7 +262,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     react_native_assert(root && "Root node not found");
     activeBoundaryMayHaveChanged_ = activeBoundaryMayHaveChanged_ ||
         std::ranges::any_of(mutations, [this](const auto &mutation) { return mayChangeActiveBoundary(mutation); });
-    // Without an active boundary, no snapshot reads the tags.
     const auto snapshotTags =
         activeBoundaryMayHaveChanged_ || !topScreen_ ? std::nullopt : sharedTagsAffectedBy(mutations);
     auto beforeTopScreen = topScreen_;

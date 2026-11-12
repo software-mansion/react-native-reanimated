@@ -49,7 +49,6 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->eraseName(tag);
       } else {
-        // The name comes first: hasNames() must be true while a config exists.
         sharedTransitionManager_->setName(tag, sharedTag);
         sharedTransitions_[tag] = {
             .animation = config, .contentFade = contentFade, .callback = callback, .followsTarget = followsTarget};
