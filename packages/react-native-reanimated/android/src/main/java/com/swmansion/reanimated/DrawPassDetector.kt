@@ -39,6 +39,13 @@ internal class DrawPassDetector(
             mDecorView = null
         }
 
+        // A new Activity's decor view is not attached yet at its first onResume. On API 24 and 25,
+        // draw listeners added before the attach are lost, and the check above would then skip
+        // every later retry. The decor view of a destroyed Activity is not attached either.
+        if (!decorView.isAttachedToWindow) {
+            return
+        }
+
         val observer = decorView.viewTreeObserver
         if (!observer.isAlive) {
             return

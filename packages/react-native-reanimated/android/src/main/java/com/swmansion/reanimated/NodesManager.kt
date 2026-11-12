@@ -68,6 +68,10 @@ class NodesManager(
         mFabricUIManager.eventDispatcher.removeListener(this)
     }
 
+    fun onHostDestroy() {
+        mDrawPassDetector.invalidate()
+    }
+
     fun onHostPause() {
         if (mCallbackPosted.get()) {
             stopUpdatingOnAnimationFrame()
@@ -81,6 +85,7 @@ class NodesManager(
         if (mCallbackPosted.getAndSet(false)) {
             startUpdatingOnAnimationFrame()
         }
+        mDrawPassDetector.initialize()
     }
 
     fun startUpdatingOnAnimationFrame() {
