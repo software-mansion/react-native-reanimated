@@ -308,6 +308,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::shared_ptr<LightNode> carrierOverlay_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
+  // It starts above the initial LightNode::followedInSynchronousBatch, so a view that no batch marked never matches.
+  mutable uint64_t synchronousBatch_ = 1;
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
   void warnIfSnapshotIsStale(const ShadowView &snapshot, const TransactionMeta &transaction) const;
 
@@ -375,6 +377,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void followTargetsPlacedNatively() const override;
   LayoutAnimation *liveGeometryAnimation(const SharedTransitionRun &run) const;
   bool followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
+  bool hasLiveTarget(const SharedTransitionRun &run) const;
+  void markViewsFollowedBySharedTransitions() const;
+  bool isFollowedBySharedTransition(const LightNode &node) const;
   ShadowView
   withGeometryOf(const ShadowView &view, const ShadowView &target, const PropsParserContext &propsParserContext) const;
   void handleProgressTransition(
