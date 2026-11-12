@@ -141,8 +141,7 @@ void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations
       folly::dynamic layoutDyn = folly::dynamic::object();
       for (const auto &key : propsDyn.keys()) {
         const auto keyStr = key.asString();
-        const auto propName = propNameFromString(keyStr);
-        if (propName.has_value() && isLayoutProp(propName.value())) {
+        if (isLayoutPropName(keyStr)) {
           layoutDyn[keyStr] = propsDyn[key];
         } else {
           nonLayoutDyn[keyStr] = propsDyn[key];
