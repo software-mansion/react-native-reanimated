@@ -2091,6 +2091,16 @@ async function installAndLaunchAndroid(serial: string) {
   }
   console.log(`[runtime-tests] installing ${apk}`);
   await adb(serial, ['install', '-r', apk]);
+  // Android 17 asks for local network access before the app can reach the
+  // reporting WebSocket. Without the grant, the prompt blocks the run until
+  // the driver times out. Older versions do not have this permission.
+  await adb(serial, [
+    'shell',
+    'pm',
+    'grant',
+    ANDROID_APP_ID,
+    'android.permission.ACCESS_LOCAL_NETWORK',
+  ]).catch(() => {});
 
   for (const port of [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
