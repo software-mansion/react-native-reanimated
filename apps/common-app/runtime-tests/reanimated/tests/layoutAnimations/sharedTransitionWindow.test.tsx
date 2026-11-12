@@ -456,7 +456,11 @@ describe('Shared transitions inside one Android Modal', () => {
       await getTestComponent('window-target').getMountedViewProps();
     const modalHost = await modalHostOf(home.tag);
     await renderInModal(transition, { active: true });
-    expect(await RuntimeTestObserver!.observeParent(home.tag)).toBe(modalHost);
+    const layer = await RuntimeTestObserver!.observeParent(home.tag);
+    expect(layer).not.toBe(home.parent);
+    expect(await RuntimeTestObserver!.observeParent(layer ?? -1)).toBe(
+      modalHost
+    );
     await expectCarrier(home.tag, SOURCE_IN_MODAL.x, SOURCE_IN_MODAL.y, 60);
     await advanceAnimationTimer(600);
     await expectCarrier(
@@ -471,6 +475,10 @@ describe('Shared transitions inside one Android Modal', () => {
     expect(results).toBe([true]);
     await expectLandedAtHome(home);
     await expectEndpoint('source', 60, 0);
+    await renderInModal(transition, { active: true, open: false });
+    await expectEventually(() =>
+      RuntimeTestObserver!.observeParent(layer ?? -1)
+    ).toBe(null);
   });
 
   androidTest('flies back to the source in one Modal', async () => {
