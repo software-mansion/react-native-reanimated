@@ -1,0 +1,1 @@
+Add `setPseudoStyles`, which styles a component that is not `Animated` by its `:active`, `:hover` and `:focus` states on the UI thread, and `createPseudoGroup`, which lets a view match another view's state the way Tailwind's `group-active:` does.

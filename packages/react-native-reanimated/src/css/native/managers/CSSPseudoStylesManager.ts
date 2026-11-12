@@ -16,6 +16,8 @@ import type {
   CSSPseudoStyleEntry,
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
+  PseudoStyleInput,
+  PseudoStylesInput,
 } from '../types';
 import { validatePseudoStyles } from './validatePseudoStyles';
 
@@ -25,7 +27,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private readonly propsBuilder: NativePropsBuilder;
   private readonly componentName: string;
 
-  private prevPseudoStylesBySelector: PseudoStylesBySelector | null = null;
+  private prevSource: PseudoStylesBySelector | PseudoStylesInput | null = null;
   private prevTransitionProperties: CSSTransitionProperties | null = null;
   private isRegistered = false;
 
@@ -45,94 +47,93 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
     pseudoStylesBySelector: PseudoStylesBySelector | null,
     transitionProperties: CSSTransitionProperties | null
   ): void {
-    if (
-      deepEqual(pseudoStylesBySelector, this.prevPseudoStylesBySelector) &&
-      deepEqual(transitionProperties, this.prevTransitionProperties)
-    ) {
+    if (this.isUnchanged(pseudoStylesBySelector, transitionProperties)) {
       return;
     }
-    const removedSelector = hasRemovedNativeSelector(
-      this.prevPseudoStylesBySelector,
-      pseudoStylesBySelector
+    this.register(
+      pseudoStylesBySelector &&
+        pseudoStylesInputFromSelectors(pseudoStylesBySelector),
+      transitionProperties
     );
+  }
 
-    this.prevPseudoStylesBySelector = pseudoStylesBySelector;
-    this.prevTransitionProperties = transitionProperties;
-
-    if (!pseudoStylesBySelector) {
-      if (this.isRegistered) {
-        this.detach();
-      }
+  updateInput(
+    input: PseudoStylesInput | null,
+    transitionProperties: CSSTransitionProperties | null
+  ): void {
+    if (this.isUnchanged(input, transitionProperties)) {
       return;
     }
-
-    // Only a selector removal detaches; re-renders keep the registration alive.
-    if (this.isRegistered && removedSelector) {
-      this.detach();
-    }
-
-    const normalizedTransition = transitionProperties
-      ? normalizeCSSTransitionProperties(transitionProperties)
-      : null;
-
-    const mergedDefaultStyle: UnknownRecord = {};
-    for (const [selector, { defaultStyle }] of Object.entries(
-      pseudoStylesBySelector
-    )) {
-      if (NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
-        Object.assign(mergedDefaultStyle, defaultStyle);
-      }
-    }
-
-    const builtDefaultStyle = this.propsBuilder.build(mergedDefaultStyle, {
-      includeUnprocessed: true,
-    });
-    nullifyUndefinedValues(builtDefaultStyle);
-
-    const selectors: CSSPseudoStyleEntry[] = [];
-    for (const [selector, { selectorStyle }] of Object.entries(
-      pseudoStylesBySelector
-    )) {
-      if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
-        if (__DEV__) {
-          logger.warn(
-            `Pseudo selector "${selector}" is not supported on native and will be ignored.`
-          );
-        }
-        continue;
-      }
-      selectors.push(
-        this.buildPseudoStyleEntry(
-          selector as NativePseudoSelectorKey,
-          selectorStyle,
-          builtDefaultStyle,
-          normalizedTransition
-        )
-      );
-    }
-
-    if (selectors.length > 0) {
-      if (__DEV__) {
-        validatePseudoStyles(
-          pseudoStylesBySelector,
-          mergedDefaultStyle,
-          this.componentName
-        );
-      }
-      registerPseudoStyles(this.shadowNodeWrapper, {
-        defaultStyle: builtDefaultStyle,
-        selectors,
-      });
-      this.isRegistered = true;
-    }
+    this.register(input, transitionProperties);
   }
 
   unmountCleanup(): void {
     if (this.isRegistered) {
       this.detach();
     }
-    this.prevPseudoStylesBySelector = null;
+    this.prevSource = null;
     this.prevTransitionProperties = null;
+  }
+
+  private isUnchanged(
+    source: PseudoStylesBySelector | PseudoStylesInput | null,
+    transitionProperties: CSSTransitionProperties | null
+  ): boolean {
+    if (
+      deepEqual(source, this.prevSource) &&
+      deepEqual(transitionProperties, this.prevTransitionProperties)
+    ) {
+      return true;
+    }
+    this.prevSource = source;
+    this.prevTransitionProperties = transitionProperties;
+    return false;
+  }
+
+  // The native registry replaces a view's selectors on every registration, so
+  // a re-render updates in place and only an empty input detaches.
+  private register(
+    input: PseudoStylesInput | null,
+    transitionProperties: CSSTransitionProperties | null
+  ) {
+    if (
+      !input ||
+      (input.selectors.length === 0 && input.hostsGroup === undefined)
+    ) {
+      if (this.isRegistered) {
+        this.detach();
+      }
+      return;
+    }
+
+    const normalizedTransition = transitionProperties
+      ? normalizeCSSTransitionProperties(transitionProperties)
+      : null;
+
+    const builtDefaultStyle = this.propsBuilder.build(input.defaultStyle, {
+      includeUnprocessed: true,
+    });
+    nullifyUndefinedValues(builtDefaultStyle);
+
+    if (__DEV__) {
+      validatePseudoStyles(
+        input.selectors,
+        input.defaultStyle,
+        this.componentName
+      );
+    }
+    registerPseudoStyles(this.shadowNodeWrapper, {
+      defaultStyle: builtDefaultStyle,
+      selectors: input.selectors.map((entry) =>
+        this.buildPseudoStyleEntry(
+          entry,
+          builtDefaultStyle,
+          normalizedTransition
+        )
+      ),
+      ...(input.hostsGroup !== undefined && { hostsGroup: input.hostsGroup }),
+    });
+    this.isRegistered = true;
   }
 
   private detach() {
@@ -141,8 +142,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   }
 
   private buildPseudoStyleEntry(
-    selector: NativePseudoSelectorKey,
-    selectorStyle: UnknownRecord,
+    { selector, group, selectorStyle }: PseudoStyleInput,
     mergedDefaultStyle: UnknownRecord,
     normalizedTransition: NormalizedCSSTransitionConfig | null
   ): CSSPseudoStyleEntry {
@@ -169,25 +169,34 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
 
     return {
       selector,
+      ...(group !== undefined && { group }),
       selectorStyle: builtSelectorStyle,
       transition,
     };
   }
 }
 
-function hasRemovedNativeSelector(
-  prev: PseudoStylesBySelector | null,
-  next: PseudoStylesBySelector | null
-): boolean {
-  if (!prev) {
-    return false;
+function pseudoStylesInputFromSelectors(
+  pseudoStylesBySelector: PseudoStylesBySelector
+): PseudoStylesInput | null {
+  const defaultStyle: UnknownRecord = {};
+  const selectors: PseudoStyleInput[] = [];
+  for (const [selector, value] of Object.entries(pseudoStylesBySelector)) {
+    if (!NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey)) {
+      if (__DEV__) {
+        logger.warn(
+          `Pseudo selector "${selector}" is not supported on native and will be ignored.`
+        );
+      }
+      continue;
+    }
+    Object.assign(defaultStyle, value.defaultStyle);
+    selectors.push({
+      selector: selector as NativePseudoSelectorKey,
+      selectorStyle: value.selectorStyle,
+    });
   }
-  const nextKeys = next ? new Set(Object.keys(next)) : new Set<string>();
-  return Object.keys(prev).some(
-    (selector) =>
-      NATIVE_PSEUDO_SELECTORS.has(selector as NativePseudoSelectorKey) &&
-      !nextKeys.has(selector)
-  );
+  return selectors.length > 0 ? { defaultStyle, selectors } : null;
 }
 
 function nullifyUndefinedValues(style: UnknownRecord): void {
