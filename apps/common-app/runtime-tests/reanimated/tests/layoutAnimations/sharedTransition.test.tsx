@@ -1,7 +1,9 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
+  LayoutAnimationConfig,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
@@ -145,6 +147,71 @@ function IdenticalScreens({
           sharedTransitionTag="identical"
           sharedTransitionStyle={transition}
           style={styles.identical}
+        />
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+type NativeIDCase = 'skipEntering' | 'nativeID';
+
+function BoxWithoutReanimatedNativeID({
+  nativeIDCase,
+  name,
+  transition,
+  entering,
+  style,
+}: {
+  nativeIDCase: NativeIDCase;
+  name: string;
+  transition: SharedTransition;
+  entering?: FadeIn;
+  style: ViewStyle;
+}) {
+  const ref = useTestRef(name);
+  const box = (
+    <Animated.View
+      ref={ref}
+      nativeID={nativeIDCase === 'nativeID' ? name : undefined}
+      sharedTransitionTag="withoutNativeID"
+      sharedTransitionStyle={transition}
+      entering={entering}
+      style={style}
+    />
+  );
+  return nativeIDCase === 'skipEntering' ? (
+    <LayoutAnimationConfig skipEntering>{box}</LayoutAnimationConfig>
+  ) : (
+    box
+  );
+}
+
+function ScreensWithoutReanimatedNativeID({
+  nativeIDCase,
+  targetActive,
+  transition,
+  entering,
+}: {
+  nativeIDCase: NativeIDCase;
+  targetActive: boolean;
+  transition: SharedTransition;
+  entering?: FadeIn;
+}) {
+  const props = { nativeIDCase, transition, entering };
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!targetActive}>
+        <BoxWithoutReanimatedNativeID
+          {...props}
+          name="sourceWithoutNativeID"
+          style={styles.source}
+        />
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={targetActive}>
+        <BoxWithoutReanimatedNativeID
+          {...props}
+          name="targetWithoutNativeID"
+          style={styles.target}
         />
       </SharedTransitionBoundary>
     </View>
@@ -407,6 +474,39 @@ describe('Shared element transition between boundaries', () => {
     ).toBe(true);
     await expectMountedAtLayout('target', 1);
   });
+});
+
+describe('Shared element transition of views without the Reanimated native ID', () => {
+  test.each(['skipEntering', 'nativeID'] as const)(
+    'runs between views rendered with %s',
+    async (nativeIDCase) => {
+      const finished: boolean[] = [];
+      const entered: boolean[] = [];
+      const recordEntering = (isFinished: boolean) => entered.push(isFinished);
+      const transition = createTransition(finished);
+      const entering = FadeIn.duration(100).withCallback((isFinished) => {
+        'worklet';
+        scheduleOnRN(recordEntering, isFinished);
+      });
+      const props = { nativeIDCase, transition, entering };
+      await render(
+        <ScreensWithoutReanimatedNativeID {...props} targetActive={false} />
+      );
+      await waitForFrames();
+
+      await render(
+        <ScreensWithoutReanimatedNativeID {...props} targetActive />
+      );
+      await waitForNotification('shared-transition-finished');
+      await waitForFrames();
+
+      expect(finished).toBe([true]);
+      await expectMountedAtLayout('targetWithoutNativeID', 1);
+      if (nativeIDCase === 'skipEntering') {
+        expect(entered).toBe([]);
+      }
+    }
+  );
 });
 
 const styles = StyleSheet.create({

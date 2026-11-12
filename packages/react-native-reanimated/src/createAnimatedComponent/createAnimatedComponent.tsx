@@ -3,6 +3,7 @@ import type {
   ComponentProps,
   ComponentRef,
   ComponentType,
+  ContextType,
   ReactNode,
   Ref,
   RefAttributes,
@@ -13,6 +14,7 @@ import type {
   InstanceOrElement,
   SharedValueDisableContravariance,
 } from '../commonTypes';
+import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { CSSCallbackProps } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
@@ -128,13 +130,22 @@ export function createAnimatedComponent<
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
     })`;
-    constructor(props: AnimatedComponentProps<InitialComponentProps>) {
+    constructor(
+      props: AnimatedComponentProps<InitialComponentProps>,
+      context?: ContextType<typeof SkipEnteringContext>
+    ) {
       // User can override component-defined jsProps via options
       const jsProps = options?.jsProps ?? Component.jsProps;
       const modifiedOptions = jsProps?.length
         ? { ...options, jsProps }
         : options;
-      super(Component, props, AnimatedComponent.displayName, modifiedOptions);
+      super(
+        Component,
+        props,
+        AnimatedComponent.displayName,
+        modifiedOptions,
+        context
+      );
     }
   }
 

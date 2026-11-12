@@ -76,7 +76,8 @@ export default class AnimatedComponent
     ChildComponent: AnyComponent,
     props: AnimatedComponentProps<InitialComponentProps>,
     displayName: string,
-    options?: Options<InitialComponentProps>
+    options?: Options<InitialComponentProps>,
+    context?: React.ContextType<typeof SkipEnteringContext>
   ) {
     super(ChildComponent, props);
     this._options = options;
@@ -90,11 +91,14 @@ export default class AnimatedComponent
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
     }
-    this._configureSharedTransition(true);
-    const entering = this.props.entering;
-    const skipEntering = this.context?.current;
-    if (!skipEntering) {
-      this._configureLayoutAnimation(LayoutAnimationType.ENTERING, entering);
+    if (this.props.nativeID == null) {
+      this._configureSharedTransition(true);
+    }
+    if (!context?.current) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
     }
   }
 
@@ -524,7 +528,7 @@ export default class AnimatedComponent
         jestAnimatedStyle: this.jestAnimatedStyle,
         jestAnimatedProps: this.jestAnimatedProps,
       };
-    } else if (!skipEntering) {
+    } else if (!skipEntering || this._sharedTransitionTag) {
       nativeID = `${this.reanimatedID}`;
     }
 
@@ -550,8 +554,8 @@ export default class AnimatedComponent
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {
       return super.render({
-        nativeID,
         ...filteredProps,
+        nativeID: filteredProps.nativeID ?? nativeID,
         ...this.state.settledProps,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
@@ -559,8 +563,8 @@ export default class AnimatedComponent
     }
 
     return super.render({
-      nativeID,
       ...filteredProps,
+      nativeID: filteredProps.nativeID ?? nativeID,
       ...jestProps,
     });
   }
