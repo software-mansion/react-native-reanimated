@@ -87,6 +87,10 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
     }
   }
 
+  override fun translateNativeParent(tag: Double, y: Double, presentedY: Double, promise: Promise) {
+    promise.reject("E_PLATFORM", "Native parent tests require iOS")
+  }
+
   override fun startUnmountRecording(promise: Promise) {
     promise.resolve(null)
   }

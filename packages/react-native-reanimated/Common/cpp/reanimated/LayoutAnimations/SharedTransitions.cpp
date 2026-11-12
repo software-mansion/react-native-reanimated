@@ -2805,13 +2805,28 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
   return viewsAbsolutePositions;
 }
 
-// UIKit can show a view outside the view of its React parent, for example in a presented modal.
-std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOutsideReactParent(
-    const std::vector<Ancestor> &ancestors,
+#ifdef __APPLE__
+// Moves the ancestor at the index, with the views below it, to the position.
+static void
+moveAncestor(const size_t index, const react::Point position, std::vector<react::Point> &absolutePositions) {
+  react_native_assert(index < absolutePositions.size() && "Ancestor outside the absolute positions");
+  const auto shift = position - absolutePositions[index];
+  for (size_t i = 0; i <= index; ++i) {
+    absolutePositions[i] += shift;
+  }
+}
+#endif
+
+// UIKit can show a view outside the view of its React parent, for example in a presented modal, or move it with a
+// native view between the two, for example in a bottom sheet. Native views do not change during a pull.
+NativePathPlacement LayoutAnimationsProxy::placeNatively(
+    std::vector<Ancestor> &ancestors,
+    std::vector<react::Point> &absolutePositions,
     const bool settled) const {
+  NativePathPlacement result;
 #ifdef __APPLE__
   if (!nativeViewPlacement_) {
-    return std::nullopt;
+    return result;
   }
   for (size_t i = 0; i + 1 < ancestors.size(); ++i) {
     // A detached carrier is in the overlay, and the paths of the views in it already end at the carrier.
@@ -2820,40 +2835,40 @@ std::optional<AncestorOutsideReactParent> LayoutAnimationsProxy::findAncestorOut
       break;
     }
     const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
-    if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
-      return AncestorOutsideReactParent{
-          .index = i, .position = ancestors[i].scrollPosition + placement.origin, .transform = placement.transform};
+    if (placement.kind == NativeViewPlacement::Kind::MovedInsideReactParent) {
+      const auto parentFrameOrigin = absolutePositions[i + 1] - ancestors[i + 1].scrollPosition;
+      moveAncestor(i, parentFrameOrigin + placement.origin + ancestors[i].scrollPosition, absolutePositions);
+      if (placement.transform.matrix != Transform{}.matrix) {
+        ancestors[i].nativeTransform = placement.transform;
+      }
+      result.placed = true;
+    } else if (placement.kind == NativeViewPlacement::Kind::OutsideReactParent) {
+      // The position of the ancestor from UIKit replaces the positions of the ancestors above it.
+      const auto position = ancestors[i].scrollPosition + placement.origin;
+      moveAncestor(i, position, absolutePositions);
+      absolutePositions.resize(i + 1);
+      result.placed = true;
+      result.outsideReactParent =
+          AncestorOutsideReactParent{.index = i, .position = position, .transform = placement.transform};
+      break;
     }
   }
 #endif
-  return std::nullopt;
+  return result;
 }
 
-// The position of the ancestor from UIKit replaces the positions of the ancestors above it.
-static void moveBelowAncestor(
-    const AncestorOutsideReactParent &ancestor,
-    std::vector<react::Point> &absolutePositions) {
-  react_native_assert(ancestor.index < absolutePositions.size() && "Ancestor outside the absolute positions");
-  const auto shift = ancestor.position - absolutePositions[ancestor.index];
-  absolutePositions.resize(ancestor.index + 1);
-  for (auto &position : absolutePositions) {
-    position += shift;
-  }
-}
-
-// Native views do not change during a pull.
 void LayoutAnimationsProxy::adjustForNativePlacement(
     CollectedTransition &collectedTransition,
     const BeforeOrAfter index) const {
-  const auto &ancestors = collectedTransition.ancestors[index];
-  const auto ancestor = findAncestorOutsideReactParent(ancestors, index == AFTER);
-  if (!ancestor) {
+  auto &ancestors = collectedTransition.ancestors[index];
+  auto &absolutePositions = collectedTransition.absolutePositions[index];
+  const auto placement = placeNatively(ancestors, absolutePositions, index == AFTER);
+  if (!placement.placed) {
     return;
   }
-  auto &absolutePositions = collectedTransition.absolutePositions[index];
-  moveBelowAncestor(*ancestor, absolutePositions);
   collectedTransition.transition.snapshot[index].layoutMetrics.frame.origin = absolutePositions[0];
-  collectedTransition.transition.transform[index] = parseParentTransforms(ancestors, absolutePositions, ancestor);
+  collectedTransition.transition.transform[index] =
+      parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent);
 }
 
 // A run that starts detaches its carrier, which ends the native placement search of the paths below it.
@@ -2932,14 +2947,12 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   resolveLightNodeProps(run.target);
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
-  const auto ancestors = collectAncestors(run.target, false);
-  const auto ancestor = findAncestorOutsideReactParent(ancestors, true);
-  placedNatively = ancestor.has_value();
-  if (ancestor) {
-    moveBelowAncestor(*ancestor, absolutePositions);
-  }
+  auto ancestors = collectAncestors(run.target, false);
+  const auto placement = placeNatively(ancestors, absolutePositions, true);
+  placedNatively = placement.placed;
   target.layoutMetrics.frame.origin = absolutePositions[0];
-  overrideTransform(target, parseParentTransforms(ancestors, absolutePositions, ancestor), propsParserContext);
+  overrideTransform(
+      target, parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent), propsParserContext);
   return target;
 }
 
@@ -3078,6 +3091,17 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
   }
   for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
     const auto &ancestor = ancestors[i];
+    // The absolute position of a scroll view above the shared view is the position of its content.
+    const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
+    if (ancestor.nativeTransform) {
+      TransformOrigin origin;
+      origin.xy[0] = {static_cast<float>(ancestorPosition.x - targetViewPosition.x), UnitType::Point};
+      origin.xy[1] = {static_cast<float>(ancestorPosition.y - targetViewPosition.y), UnitType::Point};
+      combinedMatrix =
+          combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, *ancestor.nativeTransform, origin);
+      combinedMatrix.operations.clear();
+      parentHasTransform = true;
+    }
     if (ancestor.transform.operations.empty()) {
       continue;
     } else if (i > 0) {
@@ -3087,8 +3111,6 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
       // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
-    // The absolute position of a scroll view above the shared view is the position of its content.
-    const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
     auto transformOrigin = ancestor.origin;
     transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
     transformOrigin.xy[1].value -= targetViewPosition.y - ancestorPosition.y;

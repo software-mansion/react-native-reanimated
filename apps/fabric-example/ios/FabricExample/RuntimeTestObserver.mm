@@ -144,6 +144,33 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)translateNativeParent:(NSInteger)tag
+                            y:(double)y
+                   presentedY:(double)presentedY
+                      resolve:(RCTPromiseResolveBlock)resolve
+                       reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    UIView *nativeParent = view.superview;
+    if (nativeParent == nil || nativeParent.tag > 0) {
+      reject(@"E_PARENT", @"The mounted view has no native parent", nil);
+      return;
+    }
+    NSString *key = @"presentedTranslation";
+    [nativeParent.layer removeAnimationForKey:key];
+    nativeParent.transform = CGAffineTransformMakeTranslation(0, y);
+    if (presentedY != y) {
+      CABasicAnimation *presented = [CABasicAnimation animationWithKeyPath:@"transform.translation.y"];
+      presented.fromValue = @(presentedY);
+      presented.toValue = @(presentedY);
+      presented.duration = 3600;
+      [nativeParent.layer addAnimation:presented forKey:key];
+    }
+    resolve(nil);
+  });
+}
+
 - (void)startUnmountRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{
