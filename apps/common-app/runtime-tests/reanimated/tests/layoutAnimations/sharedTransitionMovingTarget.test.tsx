@@ -216,6 +216,36 @@ describe('Shared transition live target geometry', () => {
     }
   });
 
+  test('keeps the config of its source when a commit moves the target', async () => {
+    const state = counters();
+    const offset = makeMutable(0);
+    const transition = countedTransition(1200, state);
+    const targetTransition = SharedTransition.duration(300).easing(
+      Easing.linear
+    );
+    const screens = { transition, targetTransition, offset };
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<Screens active={false} {...screens} />);
+    await waitForFrames();
+    const stop = await recordStarts(state);
+    try {
+      await render(<Screens active {...screens} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      await render(<Screens active targetWidth={150} {...screens} />);
+      await waitForFrames(3);
+      expect(state.value.starts).toBe(2);
+      await advanceAnimationTimer(600);
+      expect(state.value.success).toBe(0);
+      await advanceAnimationTimer(600);
+      await expectEventually(() => state.value.success).toBe(1);
+      expect(state.value.failure).toBe(0);
+      await expectEndpoint(150);
+    } finally {
+      await stop();
+    }
+  });
+
   test('keeps a delayed carrier at its start while the target moves', async () => {
     const state = counters();
     const offset = makeMutable(0);
@@ -380,6 +410,7 @@ async function geometryOf(name: string) {
 function Screens({
   active,
   transition,
+  targetTransition = transition,
   offset,
   nested = false,
   sameGeometry = false,
@@ -387,20 +418,21 @@ function Screens({
 }: {
   active: boolean;
   transition: SharedTransition;
+  targetTransition?: SharedTransition;
   offset: SharedValue<number>;
   nested?: boolean;
   sameGeometry?: boolean;
   targetWidth?: number;
 }) {
-  const sideProps = { transition, offset, nested, sameGeometry, targetWidth };
+  const sideProps = { offset, nested, sameGeometry, targetWidth };
   return (
     <View style={styles.root}>
       <SharedTransitionBoundary isActive={!active}>
-        <Side name="source" {...sideProps} />
+        <Side name="source" transition={transition} {...sideProps} />
       </SharedTransitionBoundary>
       {active && (
         <SharedTransitionBoundary isActive>
-          <Side name="target" {...sideProps} />
+          <Side name="target" transition={targetTransition} {...sideProps} />
         </SharedTransitionBoundary>
       )}
     </View>

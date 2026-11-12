@@ -683,6 +683,15 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
+// The view that gave the config of a run can release its config or move to another shared tag.
+std::optional<SharedTransitionConfig> LayoutAnimationsProxy::configOfSource(const SharedTransitionRun &run) const {
+  const auto &source = run.configSource;
+  if (!isLightNodeMapped(source) || findSharedTag(source->current) != run.sharedTag) {
+    return std::nullopt;
+  }
+  return layoutAnimationsManager_->getSharedTransitionConfig(source->current.tag);
+}
+
 SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const ShadowView &before,
     const SharedTag &sharedTag,
@@ -749,6 +758,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->config = config;
+  run->configSource = nodes[BEFORE];
   run->callback = std::move(callback);
   run->driver = driver;
   run->targetOffWindow = false;
@@ -1614,17 +1624,23 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       if (phase == LayoutAnimationPhase::NONE) {
         continue;
       }
+      const bool targetChanged = run.target != afterNode;
       auto animation = run.config;
+      auto configSource = run.configSource;
       auto callback = run.callback;
-      if (layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
+      if (!targetChanged) {
+        if (const auto config = configOfSource(run)) {
+          animation = config->animation;
+        }
+      } else if (layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
         const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         if (!config) {
           continue;
         }
         animation = config->animation;
+        configSource = collectedTransition.nodes[BEFORE];
         callback = config->callback;
       }
-      const bool targetChanged = run.target != afterNode;
       if (targetChanged) {
         finishCallback(run, false);
         run.callback = std::move(callback);
@@ -1642,6 +1658,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       run.target = afterNode;
       if (phase != LayoutAnimationPhase::QUEUED || targetChanged) {
         run.config = animation;
+        run.configSource = configSource;
       }
       adjustForNativePlacement(collectedTransition, AFTER);
       const bool leavesMovingParent =
