@@ -28,6 +28,7 @@ const SERIAL = 'SERIAL1';
 
 const STATE: DeviceState = {
   model: 'Pixel',
+  hardwareSerial: 'HW1',
   fingerprint: 'google/pixel:17/X/1:user/release-keys',
   sdk: 37,
   abi: 'arm64-v8a',
@@ -329,8 +330,8 @@ describe('resumeCommand', () => {
   it('refuses another device', async () => {
     const folder = await stoppedRun();
     await assert.rejects(
-      resume(folder, {}, 'SERIAL2').run,
-      /used the device SERIAL1, not SERIAL2/
+      resume(folder, { state: { ...STATE, hardwareSerial: 'OTHER' } }).run,
+      /not the same as at the start of the run: hardwareSerial: HW1 -> OTHER/
     );
   });
 

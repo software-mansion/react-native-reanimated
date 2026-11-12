@@ -37,6 +37,7 @@ const TRACE_METRICS: TraceMetrics = {
 
 const STATE: DeviceState = {
   model: 'Pixel',
+  hardwareSerial: 'HW1',
   fingerprint: 'google/pixel:17/X/1:user/release-keys',
   sdk: 37,
   abi: 'arm64-v8a',

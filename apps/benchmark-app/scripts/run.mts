@@ -156,7 +156,7 @@ export async function resumeCommand(
   const { processes, log } = context;
   const folder = path.resolve(options.folder);
   const result = readResult(folder);
-  const variants = checkResumable(result, options.serial);
+  const variants = checkResumable(result);
   const tools = resolveTools(options.traceProcessor);
   const device = dependencies.createDevice(
     processes,
@@ -175,6 +175,7 @@ export async function resumeCommand(
   );
   checkSameDeviceState(result.segments[0].device, startState);
 
+  result.serial = options.serial;
   startSegment(result, startState);
   writeResult(folder, result);
   log(
@@ -424,15 +425,10 @@ function sha256File(file: string): string {
     .digest('hex');
 }
 
-function checkResumable(result: RunResult, serial: string): Variants {
+function checkResumable(result: RunResult): Variants {
   if (result.status === 'done') {
     throw new ToolError(
       'The run is done. Only a run that is not done can resume.'
-    );
-  }
-  if (result.serial !== serial) {
-    throw new ToolError(
-      `The run used the device ${result.serial}, not ${serial}. A run resumes only on its device.`
     );
   }
   for (const key of VARIANT_KEYS) {

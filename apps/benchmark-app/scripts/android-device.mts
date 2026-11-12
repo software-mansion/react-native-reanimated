@@ -2,6 +2,7 @@ import { ToolError } from './errors.mts';
 import type { LineStream, Processes } from './tools.mts';
 
 export interface DeviceState {
+  hardwareSerial: string;
   model: string;
   fingerprint: string;
   sdk: number;
@@ -43,6 +44,7 @@ export interface CleanupDevice {
 export type StateMoment = 'before the trace' | 'after the trace';
 
 export const COMPARED_STATE_KEYS = [
+  'hardwareSerial',
   'fingerprint',
   'refreshRate',
   'brightness',
@@ -126,6 +128,7 @@ export class AndroidDevice {
   async readState(): Promise<DeviceState> {
     const battery = parseBattery(await this.shell(['dumpsys', 'battery']));
     return {
+      hardwareSerial: await this.property('ro.serialno'),
       model: await this.property('ro.product.model'),
       fingerprint: await this.property('ro.build.fingerprint'),
       sdk: Number(await this.property('ro.build.version.sdk')),

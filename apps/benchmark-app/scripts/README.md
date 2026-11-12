@@ -111,7 +111,7 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 
 `run --resume <run folder> --serial <adb serial>` continues the run in the same folder:
 
-- It uses the config, the blocks, the noise limits and `--keep-traces` of `result.json`. The serial must be the serial of the run.
+- It uses the config, the blocks, the noise limits and `--keep-traces` of `result.json`. The adb serial can be a new one, but the device must be the same (`ro.serialno`).
 - It stops when the run is `done`, when an APK is missing or is not the same (SHA-256 in `result.json`), when the tool versions changed, or when the device state changed (the keys that the driver compares before each cool-down).
 - It installs and compiles A and B again. It keeps the complete scenarios. It measures the incomplete scenario again from its first block and moves its old samples to `abandonedScenarios`. The statistics do not use them.
 - The battery temperature at the start of the run stays the reference for the cool-down. The refresh rate of the app in the first sample stays the reference for the run.
