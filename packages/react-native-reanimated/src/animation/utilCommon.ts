@@ -46,6 +46,11 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   transform: true,
   backgroundColor: true,
   contentOpacity: true,
+  clipOriginX: true,
+  clipOriginY: true,
+  clipWidth: true,
+  clipHeight: true,
+  clipBorderRadius: true,
 };
 
 type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
