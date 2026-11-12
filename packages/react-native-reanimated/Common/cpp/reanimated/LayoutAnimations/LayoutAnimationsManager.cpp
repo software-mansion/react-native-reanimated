@@ -49,9 +49,9 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
         sharedTransitions_.erase(tag);
         sharedTransitionManager_->eraseName(tag);
       } else {
+        sharedTransitionManager_->setName(tag, sharedTag);
         sharedTransitions_[tag] = {
             .animation = config, .contentFade = contentFade, .callback = callback, .followsTarget = followsTarget};
-        sharedTransitionManager_->setName(tag, sharedTag);
       }
       continue;
     }
@@ -205,8 +205,8 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
 
   const auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
   if (sharedTransitionConfig.animation) {
-    sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
     sharedTransitionManager_->setName(tag, sharedTransitionManager_->nativeIDToName_[nativeId]);
+    sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);

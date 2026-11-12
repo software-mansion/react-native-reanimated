@@ -262,7 +262,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     react_native_assert(root && "Root node not found");
     activeBoundaryMayHaveChanged_ = activeBoundaryMayHaveChanged_ ||
         std::ranges::any_of(mutations, [this](const auto &mutation) { return mayChangeActiveBoundary(mutation); });
-    const auto snapshotTags = activeBoundaryMayHaveChanged_ ? std::nullopt : sharedTagsAffectedBy(mutations);
+    const auto snapshotTags =
+        activeBoundaryMayHaveChanged_ || !topScreen_ ? std::nullopt : sharedTagsAffectedBy(mutations);
     auto beforeTopScreen = topScreen_;
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
@@ -272,7 +273,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     updateLightTree(propsParserContext, mutations, transaction);
 
     react_native_assert(
-        (activeBoundaryMayHaveChanged_ || findActiveBoundary(root) == topScreen_) &&
+        (activeBoundaryMayHaveChanged_ || (boundaries_.empty() && !topScreen_) ||
+         findActiveBoundary(root) == topScreen_) &&
         "Active boundary changed without setting activeBoundaryMayHaveChanged_");
     react_native_assert(
         (!snapshotTags || !activeBoundaryMayHaveChanged_) && "The light tree update changed the active boundary");
@@ -395,7 +397,9 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     activeBoundaryMayHaveChanged_ = true;
   }
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    unmappedContentFadeTags_.insert(node->current.tag);
+    if (sharedTransitionManager_->hasNames()) {
+      unmappedContentFadeTags_.insert(node->current.tag);
+    }
     if (deferredSharedTransitionConfigReleases_.erase(node->current.tag)) {
       layoutAnimationsManager_->clearSharedTransitionConfigs({node->current.tag});
     }
@@ -872,7 +876,9 @@ void LayoutAnimationsProxy::applyInitialMutationsToLightTree(const ShadowViewMut
           boundaries_.erase(it->second);
           lightNodes_.erase(it);
           if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-            unmappedContentFadeTags_.insert(tag);
+            if (sharedTransitionManager_->hasNames()) {
+              unmappedContentFadeTags_.insert(tag);
+            }
           }
         }
         break;
