@@ -30,6 +30,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const STACK_READY = 'transitionEventsStackReady';
+const PUSH_ENDED = 'transitionEventsPushEnded';
 
 type Routes = { First: undefined; Second: undefined };
 const Stack = createNativeStackNavigator<Routes>();
@@ -75,7 +76,17 @@ function StackWithProgress() {
           onReady={() => notify(STACK_READY)}>
           <Stack.Navigator>
             <Stack.Screen name="First" component={FirstScreen} />
-            <Stack.Screen name="Second" component={SecondScreen} />
+            <Stack.Screen
+              name="Second"
+              component={SecondScreen}
+              listeners={{
+                transitionEnd: (event) => {
+                  if (!event.data.closing) {
+                    notify(PUSH_ENDED);
+                  }
+                },
+              }}
+            />
           </Stack.Navigator>
         </NavigationContainer>
       </ReanimatedScreenProvider>
@@ -101,7 +112,8 @@ describe('Screen transition events with worklet handlers', () => {
 
     navigation.navigate('Second');
     await expectEventually(() => sawProgress('second', 1)).toBe(true);
-    await waitForFrames(30);
+    // The pop starts after the push ends.
+    await waitForNotification(PUSH_ENDED);
 
     navigation.goBack();
     // The screen that appears records the pop, because the closing screen unmounts.
