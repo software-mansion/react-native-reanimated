@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#include <cxxreact/JSBigString.h>
+#include <worklets/Compat/ReactNativeJSBigString.h>
 
 #include <memory>
 #include <utility>

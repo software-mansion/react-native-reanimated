@@ -1,9 +1,5 @@
 #include <reanimated/CSS/configs/common.h>
 
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-
-using facebook::react::componentNameByReactViewName;
-
 namespace reanimated::css {
 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config) {

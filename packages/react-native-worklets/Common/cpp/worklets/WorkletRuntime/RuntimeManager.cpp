@@ -2,7 +2,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <stdexcept>

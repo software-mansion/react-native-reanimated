@@ -5,7 +5,7 @@
 
 #import <React/RCTSurfacePresenter.h>
 
-#import <react/renderer/core/ReactPrimitives.h>
+#import <reanimated/Compat/ReactNativeRendererCore.h>
 
 #import <Foundation/Foundation.h>
 

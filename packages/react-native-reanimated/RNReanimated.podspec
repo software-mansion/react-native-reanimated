@@ -72,8 +72,7 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
   }
   s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag}"
   s.xcconfig = {
@@ -85,9 +84,11 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
-      # for static frameworks
-      "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}/jsitooling\"",
+      # Source headers must not shadow headers from the prebuilt React Native artifact.
+      *(defined?(ReactNativeCoreUtils) && !ReactNativeCoreUtils.build_rncore_from_source() ? [] : [
+        "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
+        "\"$(PODS_ROOT)/#{config[:react_native_common_dir]}/jsitooling\"",
+      ]),
     ].join(' '),
     "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flag} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
   }

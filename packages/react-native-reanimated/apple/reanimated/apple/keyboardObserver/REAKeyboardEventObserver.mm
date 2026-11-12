@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import <React/RCTAssert.h>
-#import <React/RCTBridgeConstants.h>
+#import <React/RCTReloadCommand.h>
 #import <React/RCTUtils.h>
 
 #import <reanimated/apple/READisplayLink.h>
@@ -40,12 +40,12 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
   _animationStartTimestamp = 0;
   _isKeyboardObserverAttached = false;
   _isInteractiveDismissalCanceled = false;
-  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-
-  [notificationCenter addObserver:self
-                         selector:@selector(cleanupListeners)
-                             name:RCTBridgeDidInvalidateModulesNotification
-                           object:nil];
+#if !TARGET_OS_TV && !TARGET_OS_OSX
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(cleanupListeners)
+                                               name:RCTTriggerReloadCommandNotification
+                                             object:nil];
+#endif
   return self;
 }
 
@@ -302,7 +302,7 @@ static UIWindow *_Nullable REAFindKeyWindow(void)
 {
   RCTUnsafeExecuteOnMainQueueSync(^() {
     [self->_listeners removeAllObjects];
-    [[self getDisplayLink] invalidate];
+    [self->_displayLink invalidate];
     self->_displayLink = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   });

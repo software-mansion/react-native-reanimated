@@ -8,12 +8,19 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
-#include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowTreeRevision.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
+
+#include <react/renderer/components/scrollview/ScrollViewState.h>
+#include <react/renderer/mounting/Differentiator.h>
+#include <react/renderer/mounting/MountingCoordinator.h>
+#include <react/renderer/mounting/ShadowTree.h>
+#include <react/renderer/mounting/ShadowViewMutation.h>
+#include <react/utils/LowPriorityExecutor.h>
 
 #include <array>
 #include <chrono>

@@ -1,7 +1,7 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <string>

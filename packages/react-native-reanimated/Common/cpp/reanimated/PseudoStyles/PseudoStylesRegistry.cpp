@@ -1,6 +1,6 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <string>
 #include <utility>

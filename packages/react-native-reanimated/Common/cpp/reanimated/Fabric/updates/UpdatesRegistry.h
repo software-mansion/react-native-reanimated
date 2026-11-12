@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>

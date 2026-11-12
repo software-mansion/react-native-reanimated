@@ -36,11 +36,9 @@
 // react-native renderer (Fabric)
 #include <react/renderer/components/root/RootProps.h>
 #include <react/renderer/components/root/RootShadowNode.h>
-#include <react/renderer/components/view/BaseViewProps.h>
-#include <react/renderer/components/view/ViewProps.h>
-#include <react/renderer/core/EventDispatcher.h>
-#include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 
 // IWYU pragma: end_keep

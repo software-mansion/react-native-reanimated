@@ -2,8 +2,8 @@
 
 #include <reanimated/CSS/events/CSSEvent.h>
 
-#include <ReactCommon/CallInvoker.h>
 #include <jsi/jsi.h>
+#include <reanimated/Compat/ReactNativeCallInvoker.h>
 
 #include <memory>
 #include <mutex>

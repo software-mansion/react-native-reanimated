@@ -5,7 +5,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
@@ -18,11 +17,10 @@ class MainActivity : ReactActivity() {
       if (BuildConfig.RUNTIME_TESTS) "FabricExampleRuntimeTests" else "FabricExample"
 
   /**
-   * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
-   * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
+   * Returns the instance of the [ReactActivityDelegate].
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
-      object : DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled) {
+      object : DefaultReactActivityDelegate(this, mainComponentName) {
         override fun getLaunchOptions(): Bundle? =
             if (BuildConfig.RUNTIME_TESTS) {
               this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {

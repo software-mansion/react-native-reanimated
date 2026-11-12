@@ -1,9 +1,8 @@
 #pragma once
 
-#include <react/renderer/components/view/ViewProps.h>
-#include <react/renderer/core/LayoutableShadowNode.h>
-#include <react/renderer/core/ShadowNode.h>
-#include <react/renderer/graphics/BackgroundImage.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 
 #include <memory>
 #include <string>

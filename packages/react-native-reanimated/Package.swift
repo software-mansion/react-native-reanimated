@@ -145,6 +145,7 @@ let package = Package(
                 "Common/NativeView",
             ],
             cSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("Common/NativeView"),
@@ -153,6 +154,7 @@ let package = Package(
                 .define("REANIMATED_FEATURE_FLAGS", to: featureFlags),
             ],
             cxxSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("Common/NativeView"),

@@ -6,9 +6,7 @@
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #endif // ANDROID
 
-#include <react/debug/react_native_assert.h>
-#include <react/renderer/mounting/ShadowTree.h>
-#include <react/renderer/mounting/ShadowViewMutation.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <optional>
