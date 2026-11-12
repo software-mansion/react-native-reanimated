@@ -1,0 +1,4 @@
+Stopping: com.benchprobe
+Starting: Intent { cmp=com.benchprobe/.NoActivity }
+Error type 3
+Error: Activity class {com.benchprobe/com.benchprobe.NoActivity} does not exist.

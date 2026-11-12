@@ -1,0 +1,6 @@
+Wifi is enabled
+Wifi scanning is always available
+==== Primary ClientModeManager instance ====
+Wifi is connected to "ExampleNetwork"
+WifiInfo: SSID: "ExampleNetwork", BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:01, IP: /192.0.2.10, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 11ac, RSSI: -67, Link speed: 175Mbps, Tx Link speed: 175Mbps, Max Supported Tx Link speed: 433Mbps, Rx Link speed: -1Mbps, Max Supported Rx Link speed: 433Mbps, Frequency: 5580MHz, Net ID: 0, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none>"ExampleNetwork"wpa2-pskMLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>
+successfulTxPackets: 1398814

@@ -1,0 +1,78 @@
+Current Battery Service state:
+  AC powered: false
+  USB powered: true
+  Wireless powered: false
+  Dock powered: false
+  Max charging current: 0
+ Time when the latest updated value of the Max charging current was sent via battery changed broadcast: 0
+  Max charging voltage: 0
+  Charge counter: 3631500
+  status: 4
+  health: 2
+  present: true
+  level: 80
+  scale: 100
+  voltage: 4172
+ Time when the latest updated value of the voltage was sent via battery changed broadcast: 0
+ The last voltage value sent via the battery changed broadcast: 4172
+  temperature: 273
+  technology: Li-ion
+  Charging state: 0
+  Charging policy: 0
+  Capacity level: -1
+  batteryMiscEvent: 16842752
+  batteryCurrentEvent: 0
+  mSecPlugTypeSummary: 2
+  LED Charging: true
+  LED Low Battery: true
+  current now: 0
+  charge counter: 3631500
+  Adaptive Fast Charging Settings: true
+  Super Fast Charging Settings: false
+FEATURE_WIRELESS_FAST_CHARGER_CONTROL: true
+  mWasUsedWirelessFastChargerPreviously: false
+  mWirelessFastChargingSettingsEnable: true
+LLB CAL: 20260514
+LLB MAN: 
+LLB CURRENT: YEAR2026M11D5
+LLB DIFF: 24
+SEC_FEATURE_BATTERY_FULL_CAPACITY: true
+  mFullCapacityEnable: false
+FEATURE_HICCUP_CONTROL: true
+FEATURE_SUPPORTED_DAILY_BOARD: false
+SEC_FEATURE_BATTERY_LIFE_EXTENDER: false
+SEC_FEATURE_USE_WIRELESS_POWER_SHARING: false
+ mProtectBatteryMode: 2
+ mProtectionThreshold: 80
+ mMaximumProtectionThreshold: 80
+ mLtcHighThreshold: 95
+ mLtcHighSocDuration: 10080
+ mLtcReleaseThreshold: 75
+[Not Battery Adaptive Protect Mode]
+  FEATURE_SAVE_BATTERY_CYCLE: true
+  FEATURE_FULL_BATTERY_CYCLE: true
+  battery IcAuthenticationResults: [true]
+  battery FirstUseDate: [20260812]
+  mSavedBatteryAsoc: [100]
+  mSavedBatteryUsage: [321]
+  mSavedFullStatusDuration: [41924]
+
+[EventLogBuffer]
+11-05 02:21:34.100  android.intent.action.ACTION_POWER_CONNECTED
+11-05 02:21:51.729  Sending ACTION_POPUP_BATTERY_DETERIORATION : 1
+
+[SleepChargingLogBuffer]
+
+[BattInfoLogBuffer]
+11-05 02:21:26.740  mBatteryType:1 ,mBatteryCount:1
+11-05 02:21:29.746  Final IcAuthenticationResults:[true]
+
+[BattActionChangedLogBuffer]
+11-11 12:27:23.687  Sending ACTION_BATTERY_CHANGED: level:80, status:4, health:2, remain:0, ac:false, usb:true, wireless:false, pogo:false, misc:0x1010000, charge_type:0, charger_type:0, voltage:4174, temperature:267, online:5, charging_status:0, cycle_count:0, current_avg:0, ps:false, hvc:false, current_event:0x0, mcc:0, mcv:0, cc:3636000, present:true, scale:100, technology:Li-ion, protection:0
+11-11 12:55:31.299  Sending ACTION_BATTERY_CHANGED: level:80, status:4, health:2, remain:0, ac:false, usb:true, wireless:false, pogo:false, misc:0x1010000, charge_type:0, charger_type:0, voltage:4174, temperature:255, online:5, charging_status:0, cycle_count:0, current_avg:0, ps:false, hvc:false, current_event:0x0, mcc:0, mcv:0, cc:3636000, present:true, scale:100, technology:Li-ion, protection:0
+
+mBatteryChangedConditionCounts:[2, 1, 1, 2, 1, 2, 120, 0, 0, 1, 2, 0, 0, 0, 0, 2, 2, 1, 0, 0, 0, 1]
+BatteryInfoBackUp
+  mSavedBatteryMaxTemp: 898
+  mSavedBatteryMaxCurrent: 4482000
+  mSavedBatteryBsoh: 100
