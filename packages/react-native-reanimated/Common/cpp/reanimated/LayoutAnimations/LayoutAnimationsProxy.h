@@ -70,8 +70,8 @@ enum class SharedTransitionLifecycle : std::uint8_t {
 // The carrier is the view that the run animates, moved from its parent to its layout root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
-  // The run reports this callback itself: a gesture gives the result, a start that does not leave its hold gets false.
-  std::shared_ptr<Serializable> progressCallback;
+  // The run reports this callback once, when it ends. It gets true only when the run lands.
+  std::shared_ptr<Serializable> callback;
   SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
   ShadowView carrierStartView;
@@ -233,7 +233,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::weak_ptr<WorkletRuntime> uiRuntimeWeak_;
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
-  void finishProgressCallback(SharedTransitionRun &run) const;
+  void finishCallback(SharedTransitionRun &run, bool finished) const;
   void scheduleSharedTransitionCallback(std::shared_ptr<Serializable> callback, bool finished) const;
   void skipSharedTransition(
       const SharedTag &sharedTag,
@@ -537,7 +537,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
   bool isInOtherWindow(const std::shared_ptr<LightNode> &target) const;
   void waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target) const;
-  void oweCallbackOfHeldStart(SharedTransitionRun &run, std::shared_ptr<Serializable> callback) const;
   void endSharedTransitionOf(
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
@@ -589,6 +588,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config,
       SharedTransitionDriver driver,
       const std::optional<SharedTransitionContentFade> &contentFade,
+      std::shared_ptr<Serializable> callback,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void finishEndedSharedTransitions(

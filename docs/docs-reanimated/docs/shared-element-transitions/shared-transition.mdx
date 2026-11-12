@@ -89,7 +89,9 @@ SharedTransition.duration(400)
 - `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
 - `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` disables SET for the view when reduced motion applies. If either view opts out, SET does not run. The navigator still controls the screen transition.
-- `.withCallback(callback: (finished: boolean) => void)` sets a function that runs on the UI runtime when the animation ends. The callback must be a worklet. This builder chain does not workletize it automatically. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
+- `.withCallback(callback: (finished: boolean) => void)` sets a function that runs on the UI runtime once, when the transition ends. The callback must be a worklet. This builder chain does not workletize it automatically. `finished` is `true` when the view lands at its target, and `false` when the transition stops before that.
+
+The callback runs in the frame after the view lands. A shared view that moves inside its moving parent lands together with the parent, so their callbacks run in the same frame. A layout change of the target does not end the transition. A reverse, a new view that takes the shared tag of the target, or a new transition of the same tag ends the old transition, so its callback gets `false`. Then the new transition reports its own result.
 
 For iOS back gestures, the callback reports `true` when navigation commits. It reports `false` if the gesture cancels or SET stops.
 
