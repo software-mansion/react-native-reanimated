@@ -90,11 +90,12 @@ export default class AnimatedComponent
       this.jestAnimatedProps = { value: {} };
     }
     this._configureSharedTransition(true);
-    const entering = this.props.entering;
-    const skipEntering = this.context?.current;
-    if (!skipEntering) {
-      this._configureLayoutAnimation(LayoutAnimationType.ENTERING, entering);
+    if (__DEV__ && this.props.entering && this.props.nativeID != null) {
+      logger.warn(
+        `${displayName}: The entering animation does not run on a component with its own \`nativeID\`.`
+      );
     }
+    this._configureEnteringAnimation();
   }
 
   componentDidMount() {
@@ -116,12 +117,8 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
-    const skipEntering = this.context?.current;
-    if (IS_IOS && !this._isFirstRender && !skipEntering) {
-      this._configureLayoutAnimation(
-        LayoutAnimationType.ENTERING,
-        this.props.entering
-      );
+    if (IS_IOS && !this._isFirstRender) {
+      this._configureEnteringAnimation();
     }
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
@@ -361,6 +358,19 @@ export default class AnimatedComponent
       this._cssStyle = filteredStyles.cssStyle ?? {};
     }
   }
+
+  // Native moves the entering config to the view when it inserts a view with
+  // the Reanimated native ID, so a view with its own `nativeID` never gets it.
+  _configureEnteringAnimation() {
+    const skipEntering = this.context?.current;
+    if (!skipEntering && this.props.nativeID == null) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
+    }
+  }
+
   _configureLayoutAnimation(
     type: LayoutAnimationType,
     currentConfig: LayoutAnimationOrBuilder | undefined,
@@ -488,7 +498,8 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    let nativeID, jestProps;
+    let nativeID = filteredProps.nativeID,
+      jestProps;
 
     if (IS_JEST) {
       jestProps = {
@@ -498,7 +509,7 @@ export default class AnimatedComponent
         jestAnimatedProps: this.jestAnimatedProps,
       };
     } else if (!skipEntering) {
-      nativeID = `${this.reanimatedID}`;
+      nativeID ??= `${this.reanimatedID}`;
     }
 
     if (
@@ -523,8 +534,8 @@ export default class AnimatedComponent
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {
       return super.render({
-        nativeID,
         ...filteredProps,
+        nativeID,
         ...this.state.settledProps,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
@@ -532,8 +543,8 @@ export default class AnimatedComponent
     }
 
     return super.render({
-      nativeID,
       ...filteredProps,
+      nativeID,
       ...jestProps,
     });
   }
