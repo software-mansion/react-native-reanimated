@@ -252,6 +252,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   } else if (transition_ || uncommittedScreenPop_) {
     updateLightTree(propsParserContext, mutations, transaction);
     resolveTransitionLifecycle(transaction, mutations, propsParserContext);
+    hideInsertedSharedViewsBesideTheirTag(transaction, propsParserContext);
     if (transition_ && !mutations.empty()) {
       followProgressTargets(propsParserContext);
     }
@@ -279,6 +280,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     activeBoundaryMayHaveChanged_ = false;
     rememberCoveredTopBoundary(beforeTopScreen, afterTopScreen);
     topScreen_ = afterTopScreen;
+    hideInsertedSharedViewsBesideTheirTag(transaction, propsParserContext);
     if (afterTopScreen) {
       {
         ReanimatedSystraceSection s("find after elements");
@@ -787,18 +789,12 @@ void LayoutAnimationsProxy::updateLightTree(
               cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
               mutation.parentTag,
               propsParserContext));
-        } else if (sharedTag && isInsideInactiveBoundary(node)) {
-          hideInSharedElement(*sharedTag, node);
-          filteredMutations.push_back(
-              ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
-          filteredMutations.push_back(createPropsUpdate(
-              mutation.newChildShadowView,
-              cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext),
-              mutation.parentTag,
-              propsParserContext));
         } else {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, mutation.newChildShadowView, hostIndex));
+          if (sharedTag) {
+            transaction.insertedSharedViews.push_back({*sharedTag, node});
+          }
         }
         break;
       }

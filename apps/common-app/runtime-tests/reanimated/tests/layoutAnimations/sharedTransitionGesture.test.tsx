@@ -829,6 +829,38 @@ describe('Endpoint visibility after a cancelled Screen gesture', () => {
   );
 });
 
+describe('Target that showed before its source took the shared tag', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each(['cancel', 'end'] as const)(
+    'hides the target during the gesture and shows it after %p',
+    async (outcome) => {
+      await render(<Screens sourceTag="gesture-other-source" />);
+      await waitForNotification('gesture-source-appeared');
+      await waitForNotification('gesture-target-appeared');
+      await expectTargetOpacity(1);
+      await render(<Screens />);
+      await waitForFrames(3);
+      await expectTargetOpacity(1);
+      const tags = await beginGesture();
+      if (outcome === 'cancel') {
+        await observer().emitScreenGestureCancel(tags.sourceScreen);
+        await expectCarrier(tags.source, 60);
+      } else {
+        await observer().emitScreenTransitionProgress(
+          tags.targetScreen,
+          1,
+          false,
+          false
+        );
+        await render(<Screens sourceScreenMounted={false} />);
+        await expectGone(tags.sourceScreen, tags.source, tags.child);
+      }
+      await expectTargetOpacity(1);
+    }
+  );
+});
+
 describe('Nested shared view during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 

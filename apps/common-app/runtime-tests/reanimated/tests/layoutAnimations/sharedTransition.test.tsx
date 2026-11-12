@@ -476,6 +476,239 @@ describe('Shared element transition between boundaries', () => {
   });
 });
 
+// Both boundaries are on screen, like a list under a sheet. The row is under the inactive one.
+function InactiveBoundaryScreens({
+  rowMounted,
+  nested = false,
+  topTagged = false,
+  rowActive = false,
+  topTag = 'inactive-boundary-row',
+  transition = SharedTransition.duration(300),
+}: {
+  rowMounted: boolean;
+  nested?: boolean;
+  topTagged?: boolean;
+  rowActive?: boolean;
+  topTag?: string;
+  transition?: SharedTransition;
+}) {
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!rowActive}>
+        {topTagged && (
+          <InactiveBoundaryTop tag={topTag} transition={transition} />
+        )}
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={rowActive}>
+        {rowMounted && (
+          <InactiveBoundaryRow nested={nested} transition={transition} />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+function InactiveBoundaryTop({
+  tag,
+  transition,
+}: {
+  tag: string;
+  transition: SharedTransition;
+}) {
+  const ref = useTestRef('inactive-boundary-top');
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag={tag}
+      sharedTransitionStyle={transition}
+      style={styles.source}
+    />
+  );
+}
+
+function InactiveBoundaryRow({
+  nested,
+  transition,
+}: {
+  nested: boolean;
+  transition: SharedTransition;
+}) {
+  const ref = useTestRef('inactive-boundary-row');
+  const view = (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag="inactive-boundary-row"
+      sharedTransitionStyle={transition}
+      style={styles.target}
+    />
+  );
+  return nested ? <View collapsable={false}>{view}</View> : view;
+}
+
+// The second page mounts while the first one is focused. Both pages are on screen.
+function Pager({
+  secondPageMounted,
+  secondPageFocused = false,
+}: {
+  secondPageMounted: boolean;
+  secondPageFocused?: boolean;
+}) {
+  return (
+    <View style={[styles.container, styles.pages]}>
+      <View style={styles.page}>
+        <SharedTransitionBoundary isActive={!secondPageFocused}>
+          <Animated.View
+            sharedTransitionTag="pager-first-photo"
+            style={styles.source}
+          />
+        </SharedTransitionBoundary>
+      </View>
+      {secondPageMounted && <SecondPage focused={secondPageFocused} />}
+    </View>
+  );
+}
+
+function SecondPage({ focused }: { focused: boolean }) {
+  const photo = useTestRef('pager-second-photo');
+  const caption = useTestRef('pager-second-caption');
+  return (
+    <View style={styles.page}>
+      <SharedTransitionBoundary isActive={focused}>
+        <Animated.View
+          ref={photo}
+          sharedTransitionTag="pager-second-photo"
+          style={styles.source}
+        />
+        <View collapsable={false}>
+          <Animated.View
+            ref={caption}
+            sharedTransitionTag="pager-second-caption"
+            style={styles.cover}
+          />
+        </View>
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+async function expectOpacityForFrames(name: string, opacity: number) {
+  for (let frame = 0; frame < 4; frame++) {
+    expect((await getTestComponent(name).getMountedViewProps())?.opacity).toBe(
+      opacity
+    );
+    await waitForFrames(1);
+  }
+}
+
+describe('Shared view that mounts under an inactive boundary', () => {
+  test.each([
+    ['top-level', false],
+    ['nested', true],
+  ] as const)(
+    'shows a ${0} view whose tag the top screen does not show',
+    async ([, nested]) => {
+      await render(
+        <InactiveBoundaryScreens rowMounted={false} nested={nested} />
+      );
+      await waitForFrames();
+      await render(<InactiveBoundaryScreens rowMounted nested={nested} />);
+      await waitForFrames(3);
+      await expectOpacityForFrames('inactive-boundary-row', 1);
+    }
+  );
+
+  test.each([
+    ['top-level', false],
+    ['nested', true],
+  ] as const)(
+    'hides a ${0} view whose tag the top screen shows',
+    async ([, nested]) => {
+      const props = { nested, topTagged: true };
+      await render(<InactiveBoundaryScreens {...props} rowMounted={false} />);
+      await waitForFrames();
+      await render(<InactiveBoundaryScreens {...props} rowMounted />);
+      await waitForFrames(3);
+      await expectOpacityForFrames('inactive-boundary-row', 0);
+      await expectOpacityForFrames('inactive-boundary-top', 1);
+    }
+  );
+
+  test('shows the hidden view when the top screen removes its tag', async () => {
+    await render(<InactiveBoundaryScreens rowMounted topTagged />);
+    await waitForFrames(3);
+    await expectOpacityForFrames('inactive-boundary-row', 0);
+    await render(<InactiveBoundaryScreens rowMounted />);
+    await expectEventually(
+      async () =>
+        (await getTestComponent('inactive-boundary-row').getMountedViewProps())
+          ?.opacity
+    ).toBe(1);
+  });
+
+  test('shows the hidden view when the top view changes its tag', async () => {
+    const transition = SharedTransition.duration(300);
+    const props = { rowMounted: true, topTagged: true, transition };
+    await render(<InactiveBoundaryScreens {...props} />);
+    await waitForFrames(3);
+    await expectOpacityForFrames('inactive-boundary-row', 0);
+    await render(<InactiveBoundaryScreens {...props} topTag="other-tag" />);
+    await expectEventually(
+      async () =>
+        (await getTestComponent('inactive-boundary-row').getMountedViewProps())
+          ?.opacity
+    ).toBe(1);
+    await expectOpacityForFrames('inactive-boundary-top', 1);
+  });
+
+  test('hides the target in flight when the top screen mounts its tag later', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const finished: boolean[] = [];
+    const transition = createTransition(finished);
+    await render(
+      <InactiveBoundaryScreens rowMounted transition={transition} />
+    );
+    await waitForFrames(3);
+    await render(
+      <InactiveBoundaryScreens rowMounted topTagged transition={transition} />
+    );
+    await waitForFrames(3);
+    await expectOpacityForFrames('inactive-boundary-row', 1);
+    await expectOpacityForFrames('inactive-boundary-top', 1);
+
+    await render(
+      <InactiveBoundaryScreens
+        rowMounted
+        topTagged
+        rowActive
+        transition={transition}
+      />
+    );
+    await waitForFrames(3);
+    await advanceAnimationTimer(150);
+    await expectOpacityForFrames('inactive-boundary-row', 0);
+
+    await advanceAnimationTimer(600);
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+    await expectMountedAtLayout('inactive-boundary-row', 1);
+    await expectMountedAtLayout('inactive-boundary-top', 0);
+  });
+
+  test('shows the views of a page that mounts while another page is focused', async () => {
+    await render(<Pager secondPageMounted={false} />);
+    await waitForFrames();
+    await render(<Pager secondPageMounted />);
+    await waitForFrames(3);
+    await expectOpacityForFrames('pager-second-photo', 1);
+    await expectOpacityForFrames('pager-second-caption', 1);
+
+    await render(<Pager secondPageMounted secondPageFocused />);
+    await waitForFrames(3);
+    await expectOpacityForFrames('pager-second-photo', 1);
+    await expectOpacityForFrames('pager-second-caption', 1);
+  });
+});
+
 describe('Shared element transition of views without the Reanimated native ID', () => {
   test.each(['skipEntering', 'nativeID'] as const)(
     'runs between views rendered with %s',
@@ -521,6 +754,8 @@ const styles = StyleSheet.create({
   },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   cover: { width: 20, height: 20 },
+  pages: { flexDirection: 'row' },
+  page: { width: 150 },
   target: {
     marginTop: 200,
     marginLeft: 100,

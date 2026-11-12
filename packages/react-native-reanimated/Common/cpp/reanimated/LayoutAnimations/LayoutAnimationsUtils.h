@@ -533,6 +533,15 @@ static inline bool isInRetainedCarrier(std::shared_ptr<LightNode> node) {
   return false;
 }
 
+static inline bool isInExitingSubtree(std::shared_ptr<LightNode> node) {
+  for (; node; node = node->parent.lock()) {
+    if (node->isExiting()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static inline bool isDescendantOfAny(
     const std::shared_ptr<LightNode> &node,
     const std::vector<std::shared_ptr<LightNode>> &views) {
