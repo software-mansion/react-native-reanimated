@@ -454,6 +454,22 @@ describe('XMLHttpRequest.abort', () => {
     expect(xhr.readyState).toBe(XMLHttpRequest.OPENED);
     expect(() => xhr.send()).not.toThrow();
   });
+  test('does not fire the unsupported-scheme error after an abort', async () => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/rel');
+    const events = record(xhr);
+    xhr.send();
+    xhr.abort();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(events).toEqual([
+      'loadstart',
+      'readystatechange:4',
+      'abort',
+      'loadend',
+    ]);
+    expect(xhr.readyState).toBe(XMLHttpRequest.UNSENT);
+  });
 });
 
 describe('XMLHttpRequest upload', () => {
@@ -711,6 +727,26 @@ describe('XMLHttpRequest stale responses', () => {
 
     respond(second);
     second.emit('done', { body: bodyOf('fresh') });
+    expect(xhr.responseText).toBe('fresh');
+    expect(xhr.status).toBe(200);
+  });
+
+  test('drops the error of a superseded unsupported-scheme request', async () => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/rel');
+    xhr.send();
+
+    xhr.open('GET', 'https://example.com/');
+    const events = record(xhr);
+    xhr.send();
+    const request = lastRequest();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(events).toEqual(['loadstart']);
+    expect(xhr.readyState).toBe(XMLHttpRequest.OPENED);
+
+    respond(request);
+    request.emit('done', { body: bodyOf('fresh') });
     expect(xhr.responseText).toBe('fresh');
     expect(xhr.status).toBe(200);
   });
