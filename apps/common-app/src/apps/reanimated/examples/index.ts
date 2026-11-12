@@ -307,8 +307,6 @@ const StrictModeComparison: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/StrictModeComparisonExample').default
   );
-const SyncBackToReactExample: React.FC = () =>
-  React.createElement(require('./SyncBackToReactExample').default as React.FC);
 const SynchronousPropsExample: React.FC = () =>
   React.createElement(require('./SynchronousPropsExample').default as React.FC);
 const TabNavigatorExample: React.FC = () =>
@@ -368,11 +366,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Slow animations',
     section: REGRESSIONS,
     screen: SlowAnimationsExample,
-  },
-  SyncBackToReactExample: {
-    icon: '🔄',
-    title: 'Sync back to React',
-    screen: SyncBackToReactExample,
   },
   AndroidDrawPassExample: {
     icon: '✍️',
