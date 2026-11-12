@@ -7,6 +7,7 @@
 
 #include <jsi/jsi.h>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -32,8 +33,8 @@ struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-  // Above the tags of React's views.
-  Tag nextOverlayTag_{10000002};
+  // Odd tags that end in 7. React gives even tags to views and tags that end in 1 to surfaces.
+  Tag nextOverlayTag_{std::numeric_limits<Tag>::max()};
 };
 
 // The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.
