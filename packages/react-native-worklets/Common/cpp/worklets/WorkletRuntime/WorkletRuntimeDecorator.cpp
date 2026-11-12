@@ -20,6 +20,7 @@
 #endif
 
 #if defined(__APPLE__)
+#include <mach/mach_time.h>
 #include <os/trace_base.h>
 #if OS_LOG_TARGET_HAS_10_15_FEATURES
 #include <os/log.h>
@@ -28,6 +29,7 @@
 #endif
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -47,13 +49,32 @@ static os_log_t getWorkletsInstrumentsLogHandle() {
 
 namespace worklets {
 
-static inline double performanceNow() {
-  // copied from JSExecutor.cpp
-  auto time = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count();
+#ifdef __APPLE__
+static double getMachTimebaseConversionFactor() {
+  mach_timebase_info_data_t info;
+  mach_timebase_info(&info);
+  return static_cast<double>(info.numer) / info.denom;
+}
+#endif
 
-  constexpr double NANOSECONDS_IN_MILLISECOND = 1000000.0;
-  return duration / NANOSECONDS_IN_MILLISECOND;
+static inline double performanceNow() {
+#ifdef __APPLE__
+  static const double conversionFactor = getMachTimebaseConversionFactor();
+  const auto nanoseconds = static_cast<int64_t>(static_cast<double>(mach_absolute_time()) * conversionFactor);
+#else
+  const auto nanoseconds =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+#endif
+  return std::chrono::duration<double, std::milli>(std::chrono::nanoseconds(nanoseconds)).count();
+}
+
+static inline double getTimerTimestamp() {
+#ifdef __APPLE__
+  const auto time = std::chrono::system_clock::now().time_since_epoch();
+#else
+  const auto time = std::chrono::steady_clock::now().time_since_epoch();
+#endif
+  return std::chrono::duration<double, std::milli>(time).count();
 }
 
 void WorkletRuntimeDecorator::decorate(
@@ -202,6 +223,9 @@ void WorkletRuntimeDecorator::decorate(
             return jsi::Value(performanceNow());
           }));
   rt.global().setProperty(rt, "performance", performance);
+
+  jsi_utils::installJsiFunction(
+      rt, "_getTimerTimestamp", [](jsi::Runtime &rt) { return jsi::Value(getTimerTimestamp()); });
 
   rt.global().setProperty(
       rt,

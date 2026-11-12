@@ -97,6 +97,7 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
+  var _getTimerTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
