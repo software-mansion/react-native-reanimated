@@ -1859,44 +1859,38 @@ function sanitizerBuildArgs() {
   return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
 }
 
-async function buildApp() {
+// A simulator build compiles only its architecture. Without one (a CI artifact
+// built for another machine) it compiles every simulator architecture.
+function xcodebuildArgs(udid: string | null) {
+  return [
+    '-workspace',
+    'FabricExample.xcworkspace',
+    '-scheme',
+    'DebugRuntimeTests',
+    '-configuration',
+    CONFIGURATION,
+    ...(udid
+      ? [
+          '-destination',
+          `platform=iOS Simulator,id=${udid}`,
+          'ONLY_ACTIVE_ARCH=YES',
+        ]
+      : ['-destination', 'generic/platform=iOS Simulator']),
+    ...sanitizerBuildArgs(),
+  ];
+}
+
+async function buildApp(udid: string | null) {
   console.log(
     `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
-  await run(
-    'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      'build',
-    ],
-    { cwd: iosDir }
-  );
+  await run('xcodebuild', [...xcodebuildArgs(udid), 'build'], { cwd: iosDir });
 }
 
-async function appPath() {
+async function appPath(udid: string | null) {
   const { stdout } = await run(
     'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      '-showBuildSettings',
-      '-json',
-    ],
+    [...xcodebuildArgs(udid), '-showBuildSettings', '-json'],
     { cwd: iosDir }
   );
   const entries: { buildSettings?: Record<string, string> }[] = JSON.parse(
@@ -1917,7 +1911,7 @@ async function appPath() {
 }
 
 async function installAndLaunch(udid: string) {
-  const app = await appPath();
+  const app = await appPath(udid);
   if (SANITIZER) {
     assertSanitizerRuntimeEmbedded(app);
   }
@@ -2141,7 +2135,7 @@ if (SHOULD_LAUNCH) {
       iosUdid = device.udid;
       await ensureBooted(device);
       if (!SKIP_BUILD) {
-        await buildApp();
+        await buildApp(device.udid);
       }
       await installAndLaunch(device.udid);
     }
@@ -2187,9 +2181,9 @@ if (BUILD_ONLY) {
     if (SANITIZER) {
       fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
     }
-    await buildApp();
+    await buildApp(UDID);
     if (SANITIZER) {
-      assertSanitizerRuntimeEmbedded(await appPath());
+      assertSanitizerRuntimeEmbedded(await appPath(UDID));
     }
     shutdown(0);
   })().catch((error) => {
