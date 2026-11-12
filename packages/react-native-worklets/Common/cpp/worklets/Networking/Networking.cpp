@@ -192,6 +192,109 @@ class Networking::RequestListener final : public NetworkRequestListener {
   const uint64_t requestId_;
 };
 
+class Networking::SocketListener final : public WebSocketListener {
+ public:
+  SocketListener(
+      const std::weak_ptr<Networking> &weakNetworking,
+      const std::shared_ptr<RequestRecord> &record,
+      const std::shared_ptr<SerializableRemoteFunction> &callback,
+      const uint64_t socketId)
+      : weakNetworking_(weakNetworking), record_(record), callback_(callback), socketId_(socketId) {}
+
+  ~SocketListener() override {
+    if (!callback_) {
+      return;
+    }
+    const auto workletRuntime = record_->weakRuntime.lock();
+    if (!workletRuntime) {
+      return;
+    }
+    workletRuntime->schedule([callback = std::move(callback_)](jsi::Runtime &) {});
+  }
+
+  void onOpen(std::string &&protocol, std::string &&extensions) override {
+    if (record_->settled.load()) {
+      return;
+    }
+    emitEvent(
+        record_->weakRuntime,
+        callback_,
+        "open",
+        [protocol = std::move(protocol), extensions = std::move(extensions)](jsi::Runtime &rt) {
+          auto payload = jsi::Object(rt);
+          payload.setProperty(rt, "protocol", jsi::String::createFromUtf8(rt, text::toValidUtf8(protocol)));
+          payload.setProperty(rt, "extensions", jsi::String::createFromUtf8(rt, text::toValidUtf8(extensions)));
+          return jsi::Value(std::move(payload));
+        });
+  }
+
+  void onFlushed(const int64_t bytes) override {
+    if (record_->settled.load()) {
+      return;
+    }
+    emitEvent(record_->weakRuntime, callback_, "flushed", [bytes](jsi::Runtime &rt) {
+      auto payload = jsi::Object(rt);
+      payload.setProperty(rt, "bytes", jsi::Value(static_cast<double>(bytes)));
+      return jsi::Value(std::move(payload));
+    });
+  }
+
+  void onTextMessage(std::string &&message) override {
+    if (record_->settled.load()) {
+      return;
+    }
+    emitEvent(record_->weakRuntime, callback_, "message", [message = std::move(message)](jsi::Runtime &rt) {
+      auto payload = jsi::Object(rt);
+      payload.setProperty(rt, "text", jsi::String::createFromUtf8(rt, text::toValidUtf8(message)));
+      return jsi::Value(std::move(payload));
+    });
+  }
+
+  void onBinaryMessage(std::vector<uint8_t> &&message) override {
+    if (record_->settled.load()) {
+      return;
+    }
+    emitEvent(record_->weakRuntime, callback_, "message", [message = std::move(message)](jsi::Runtime &rt) mutable {
+      auto payload = jsi::Object(rt);
+      payload.setProperty(rt, "binary", jsi::ArrayBuffer(rt, std::make_shared<VectorBuffer>(std::move(message))));
+      return jsi::Value(std::move(payload));
+    });
+  }
+
+  void onError(std::string &&message) override {
+    if (record_->settled.load()) {
+      return;
+    }
+    emitEvent(record_->weakRuntime, callback_, "error", [message = std::move(message)](jsi::Runtime &rt) {
+      auto payload = jsi::Object(rt);
+      payload.setProperty(rt, "message", jsi::String::createFromUtf8(rt, text::toValidUtf8(message)));
+      return jsi::Value(std::move(payload));
+    });
+  }
+
+  void onClose(const uint16_t code, std::string &&reason, const bool wasClean) override {
+    if (record_->settled.exchange(true)) {
+      return;
+    }
+    if (const auto networking = weakNetworking_.lock()) {
+      networking->unregisterSocket(socketId_);
+    }
+    emitEvent(record_->weakRuntime, callback_, "close", [code, reason = std::move(reason), wasClean](jsi::Runtime &rt) {
+      auto payload = jsi::Object(rt);
+      payload.setProperty(rt, "code", jsi::Value(static_cast<double>(code)));
+      payload.setProperty(rt, "reason", jsi::String::createFromUtf8(rt, text::toValidUtf8(reason)));
+      payload.setProperty(rt, "wasClean", jsi::Value(wasClean));
+      return jsi::Value(std::move(payload));
+    });
+  }
+
+ private:
+  const std::weak_ptr<Networking> weakNetworking_;
+  const std::shared_ptr<RequestRecord> record_;
+  std::shared_ptr<SerializableRemoteFunction> callback_;
+  const uint64_t socketId_;
+};
+
 Networking::Networking(const std::shared_ptr<NetworkingBackend> &backend) : backend_(backend) {}
 
 uint64_t Networking::sendRequest(jsi::Runtime &rt, const jsi::Object &config, jsi::Function &&callback) {
@@ -263,6 +366,18 @@ void Networking::abortAllForRuntime(const RuntimeData::RuntimeId runtimeId) {
   for (const auto requestId : requestIds) {
     backend_->abortRequest(requestId);
   }
+  std::vector<uint64_t> socketIds;
+  {
+    const std::lock_guard<std::mutex> lock(socketsMutex_);
+    for (const auto &[socketId, record] : sockets_) {
+      if (record->runtimeId == runtimeId) {
+        socketIds.push_back(socketId);
+      }
+    }
+  }
+  for (const auto socketId : socketIds) {
+    backend_->closeWebSocket(socketId, static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived), "");
+  }
 }
 
 void Networking::abortAll() {
@@ -277,11 +392,101 @@ void Networking::abortAll() {
   for (const auto requestId : requestIds) {
     backend_->abortRequest(requestId);
   }
+  std::vector<uint64_t> socketIds;
+  {
+    const std::lock_guard<std::mutex> lock(socketsMutex_);
+    socketIds.reserve(sockets_.size());
+    for (const auto &[socketId, record] : sockets_) {
+      socketIds.push_back(socketId);
+    }
+  }
+  for (const auto socketId : socketIds) {
+    backend_->closeWebSocket(socketId, static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived), "");
+  }
 }
 
 std::optional<std::string>
 Networking::decodeTextWithPlatform(const uint8_t *data, const size_t size, const std::string &label) {
   return backend_->decodeText(data, size, label);
+}
+
+uint64_t Networking::connectWebSocket(jsi::Runtime &rt, const jsi::Object &config, jsi::Function &&callback) {
+  const auto weakRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
+  const auto workletRuntime = weakRuntime.lock();
+  if (!workletRuntime) {
+    throw jsi::JSError(rt, "[Worklets] Cannot open a WebSocket from a dying Worklet Runtime.");
+  }
+
+  const auto *hostIdentity = findRuntimeIdentity(rt);
+  react_native_assert(hostIdentity != nullptr && "[Worklets] A Worklet Runtime must have a runtime identity.");
+
+  const auto serializableCallback = std::make_shared<SerializableRemoteFunction>(
+      rt, "workletsWebSocketCallback", std::move(callback), *hostIdentity);
+
+  std::vector<std::string> protocols;
+  auto protocolsArray = config.getProperty(rt, "protocols").asObject(rt).asArray(rt);
+  const auto protocolCount = protocolsArray.size(rt);
+  protocols.reserve(protocolCount);
+  for (size_t i = 0; i < protocolCount; i++) {
+    protocols.push_back(protocolsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+  }
+
+  WebSocketConfig socketConfig{
+      .url = config.getProperty(rt, "url").asString(rt).utf8(rt),
+      .protocols = std::move(protocols),
+      .headers = parseHeaders(rt, config),
+  };
+
+  const auto socketId = nextSocketId_.fetch_add(1);
+  const auto record = std::make_shared<RequestRecord>(weakRuntime, workletRuntime->getRuntimeId());
+  {
+    const std::lock_guard<std::mutex> lock(socketsMutex_);
+    sockets_.emplace(socketId, record);
+  }
+
+  backend_->connectWebSocket(
+      socketId,
+      std::move(socketConfig),
+      std::make_shared<SocketListener>(weak_from_this(), record, serializableCallback, socketId));
+
+  if (workletRuntime->isAborted()) [[unlikely]] {
+    backend_->closeWebSocket(socketId, static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived), "");
+  }
+
+  return socketId;
+}
+
+void Networking::sendWebSocketText(jsi::Runtime &rt, const uint64_t socketId, std::string &&message) {
+  if (ownsSocket(rt, socketId)) {
+    backend_->sendWebSocketText(socketId, std::move(message));
+  }
+}
+
+void Networking::sendWebSocketBinary(jsi::Runtime &rt, const uint64_t socketId, std::vector<uint8_t> &&message) {
+  if (ownsSocket(rt, socketId)) {
+    backend_->sendWebSocketBinary(socketId, std::move(message));
+  }
+}
+
+void Networking::closeWebSocket(jsi::Runtime &rt, const uint64_t socketId, const uint16_t code, std::string &&reason) {
+  if (ownsSocket(rt, socketId)) {
+    backend_->closeWebSocket(socketId, code, std::move(reason));
+  }
+}
+
+bool Networking::ownsSocket(jsi::Runtime &rt, const uint64_t socketId) {
+  const auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
+  if (!workletRuntime) {
+    return false;
+  }
+  const std::lock_guard<std::mutex> lock(socketsMutex_);
+  const auto record = sockets_.find(socketId);
+  return record != sockets_.end() && record->second->runtimeId == workletRuntime->getRuntimeId();
+}
+
+void Networking::unregisterSocket(const uint64_t socketId) {
+  const std::lock_guard<std::mutex> lock(socketsMutex_);
+  sockets_.erase(socketId);
 }
 
 void Networking::unregisterRequest(const uint64_t requestId) {

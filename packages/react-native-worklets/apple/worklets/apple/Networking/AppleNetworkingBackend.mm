@@ -1,10 +1,12 @@
 #import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/Networking/WorkletsURLSessionDelegate.h>
+#import <worklets/apple/Networking/WorkletsWebSocketDelegate.h>
 
 #import <algorithm>
 #import <optional>
 #import <string>
 #import <utility>
+#import <vector>
 
 namespace worklets {
 
@@ -12,11 +14,15 @@ namespace {
 NSString *decodeLossy(const uint8_t *data, size_t size, NSStringEncoding encoding, CFStringEncoding cfEncoding);
 } // namespace
 
-AppleNetworkingBackend::AppleNetworkingBackend() : delegate_([WorkletsURLSessionDelegate new]) {}
+AppleNetworkingBackend::AppleNetworkingBackend()
+    : delegate_([WorkletsURLSessionDelegate new]), webSocketDelegate_([WorkletsWebSocketDelegate new])
+{
+}
 
 AppleNetworkingBackend::~AppleNetworkingBackend()
 {
   [delegate_ invalidate];
+  [webSocketDelegate_ invalidate];
 }
 
 void AppleNetworkingBackend::sendRequest(
@@ -30,6 +36,29 @@ void AppleNetworkingBackend::sendRequest(
 void AppleNetworkingBackend::abortRequest(const uint64_t requestId)
 {
   [delegate_ abortRequest:requestId];
+}
+
+void AppleNetworkingBackend::connectWebSocket(
+    const uint64_t socketId,
+    WebSocketConfig &&config,
+    const std::shared_ptr<WebSocketListener> &listener)
+{
+  [webSocketDelegate_ connect:std::move(config) socketId:socketId listener:listener];
+}
+
+void AppleNetworkingBackend::sendWebSocketText(const uint64_t socketId, std::string &&message)
+{
+  [webSocketDelegate_ sendText:socketId message:std::move(message)];
+}
+
+void AppleNetworkingBackend::sendWebSocketBinary(const uint64_t socketId, std::vector<uint8_t> &&message)
+{
+  [webSocketDelegate_ sendBinary:socketId message:std::move(message)];
+}
+
+void AppleNetworkingBackend::closeWebSocket(const uint64_t socketId, const uint16_t code, std::string &&reason)
+{
+  [webSocketDelegate_ close:socketId code:code reason:std::move(reason)];
 }
 
 std::optional<std::string>

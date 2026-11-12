@@ -51,6 +51,7 @@ describe('networking API on Worklet Runtimes', () => {
             'FileReader',
             'AbortController',
             'AbortSignal',
+            'WebSocket',
           ];
           return globalNames
             .filter(

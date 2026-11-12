@@ -63,6 +63,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/networking/api.test');
       require('./tests/networking/xhr.test');
       require('./tests/networking/fetch.test');
+      require('./tests/networking/websocket.test');
     },
     disabled: !isBundleModeEnabled(),
   },
