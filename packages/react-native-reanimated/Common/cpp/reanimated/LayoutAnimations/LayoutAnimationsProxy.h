@@ -210,6 +210,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::optional<ProgressTransition> transition_;
   mutable std::optional<UncommittedScreenPop> uncommittedScreenPop_;
   mutable std::shared_ptr<LightNode> topScreen_;
+  // The top boundary under each screen when another screen covered it, by screen tag.
+  mutable std::unordered_map<Tag, std::weak_ptr<LightNode>> coveredTopBoundaries_;
   // Set whenever the active boundary might no longer be `topScreen_`: on a structural change, a boundary's props
   // changing or a node leaving the light tree. A light node never becomes live again, so nothing else changes it.
   mutable bool activeBoundaryMayHaveChanged_ = true;
@@ -457,6 +459,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
   std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> findRevealedBoundary(const std::shared_ptr<LightNode> &screen) const;
+  void rememberCoveredTopBoundary(
+      const std::shared_ptr<LightNode> &beforeTopScreen,
+      const std::shared_ptr<LightNode> &afterTopScreen) const;
 
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
@@ -619,6 +625,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::unordered_set<Tag> hiddenViewTags() const;
   std::unordered_set<Tag> viewTagsKeptHidden() const;
   void queuePendingRestores(TransactionMeta &transaction) const;
+  bool isOnTopScreen(const std::shared_ptr<LightNode> &node) const;
   bool isInSharedTransition(const std::shared_ptr<LightNode> &node) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
