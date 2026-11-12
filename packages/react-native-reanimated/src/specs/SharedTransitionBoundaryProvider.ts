@@ -1,9 +1,10 @@
 'use strict';
+import type { ViewProps } from 'react-native';
 
-import type { HostComponent } from 'react-native';
-
-// This is a workaround for Next.js, which resolves the non-native file
-// during SSR — `codegenNativeComponent` cannot be called there, so we
-// export a dummy host component instead.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default {} as HostComponent<any>;
+// Web has no Shared Element Transitions. Also, Next.js SSR cannot call
+// `codegenNativeComponent`, so web must not import the native component.
+export default function REASharedTransitionBoundary({
+  children,
+}: ViewProps & { isActive: boolean }) {
+  return children;
+}
