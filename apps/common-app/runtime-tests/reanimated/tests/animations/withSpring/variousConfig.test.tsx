@@ -12,6 +12,7 @@ import {
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   waitForAnimationUpdates,
@@ -61,6 +62,7 @@ async function getSnapshotUpdates(
     />
   );
   await waitForAnimationUpdates(Snapshots[snapshotName].length);
+  await stopRecordingAnimationUpdates();
   const updates = await updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
 

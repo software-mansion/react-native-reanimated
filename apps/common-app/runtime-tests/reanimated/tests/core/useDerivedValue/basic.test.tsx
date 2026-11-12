@@ -14,6 +14,7 @@ import {
   getTestComponent,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -155,6 +156,7 @@ describe('Test useDerivedValue changing width', () => {
           derivedFun(finalWidth),
           ComparisonMode.PIXEL
         );
+        await stopRecordingAnimationUpdates();
         const updates = await updatesContainerActive.getUpdates();
         const naiveUpdates = await updatesContainerActive.getNativeSnapshots();
         await unmockAnimationTimer();

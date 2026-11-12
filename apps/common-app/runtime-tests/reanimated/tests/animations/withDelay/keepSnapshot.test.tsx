@@ -16,6 +16,7 @@ import {
   getTestComponent,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -121,6 +122,7 @@ async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
   );
   await wait(350);
 
+  await stopRecordingAnimationUpdates();
   let componentActive = getTestComponent(TEST_COMPONENT_ACTIVE_REF);
   let componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
 
@@ -145,6 +147,7 @@ async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
     />
   );
   await wait(350 + delay);
+  await stopRecordingAnimationUpdates();
   componentActive = getTestComponent(TEST_COMPONENT_ACTIVE_REF);
   componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
 

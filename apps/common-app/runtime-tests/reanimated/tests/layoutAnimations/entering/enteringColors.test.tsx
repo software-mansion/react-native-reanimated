@@ -7,6 +7,7 @@ import {
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   waitForAnimationUpdates,
@@ -41,6 +42,7 @@ async function getSnapshotUpdates(
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
   await waitForAnimationUpdates(snapshot.length);
+  await stopRecordingAnimationUpdates();
   const updates = await updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];
