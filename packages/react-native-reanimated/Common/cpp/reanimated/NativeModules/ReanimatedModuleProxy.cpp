@@ -1103,7 +1103,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
       return collectEventUpdates();
     }
 
-    case GrandCallbackSource::EventInAndroidDraw:
+    case GrandCallbackSource::EventInAndroidDispatch:
       return collectNonLayoutAnimationUpdates();
   }
 

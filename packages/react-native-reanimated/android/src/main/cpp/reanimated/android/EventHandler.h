@@ -20,9 +20,9 @@ class EventHandler : public HybridClass<EventHandler> {
       jni::alias_ref<JString> eventKey, // NOLINT(performance-unnecessary-value-param)
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event, // NOLINT(performance-unnecessary-value-param)
-      jboolean isInDrawPass) {
+      jboolean isInsideEventDispatch) {
     ReanimatedSystraceSection s("EventHandler::receiveEvent");
-    handler_(eventKey, emitterReactTag, event, isInDrawPass);
+    handler_(eventKey, emitterReactTag, event, isInsideEventDispatch);
   }
 
   static void registerNatives() {
@@ -38,7 +38,7 @@ class EventHandler : public HybridClass<EventHandler> {
                             jni::alias_ref<JString>,
                             jint emitterReactTag,
                             jni::alias_ref<react::WritableMap>,
-                            jboolean isInDrawPass)> handler)
+                            jboolean isInsideEventDispatch)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>, jboolean)> handler_;

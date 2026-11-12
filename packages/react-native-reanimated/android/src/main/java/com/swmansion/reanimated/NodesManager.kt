@@ -113,7 +113,7 @@ class NodesManager(
 
     internal fun performOperationsRespectingDrawPass() {
         mDrawPassDetector.initialize()
-        if (isInDrawPass()) {
+        if (mDrawPassDetector.isInDrawPass()) {
             performNonLayoutOperations()
             startUpdatingOnAnimationFrame()
             return
@@ -122,10 +122,10 @@ class NodesManager(
         performOperations()
     }
 
-    internal fun isInDrawPass(): Boolean = mDrawPassDetector.isInDrawPass()
-
     private fun onAnimationFrame(frameTimeNanos: Long) {
         UiThreadUtil.assertOnUiThread()
+        // Cleared first, so that an event that this frame causes can request the next frame.
+        mCallbackPosted.set(false)
 
         try {
             if (BuildConfig.REANIMATED_PROFILING) {
@@ -159,9 +159,11 @@ class NodesManager(
                 }
 
                 performOperations()
+            } else {
+                // The work of the skipped callback, also the layout work of an event, waits for the next frame.
+                startUpdatingOnAnimationFrame()
             }
 
-            mCallbackPosted.set(false)
             if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty()) {
                 // enqueue next frame
                 startUpdatingOnAnimationFrame()
@@ -188,11 +190,11 @@ class NodesManager(
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
-                // Ensure draw-pass tracking is attached before event handling; the backend reads
-                // isInDrawPass during receiveEvent.
-                mDrawPassDetector.initialize()
+                // A mount inside the dispatch can break a native transaction of the view that sends the event.
+                // The frame is requested first, so that the flushes of the handler also wait for it.
+                startUpdatingOnAnimationFrame()
                 handleEvent(event)
-                performOperationsRespectingDrawPass()
+                performNonLayoutOperations()
             } else {
                 val eventName = resolveCustomEventName(event.eventName)
                 val viewTag = event.viewTag
@@ -214,7 +216,12 @@ class NodesManager(
     }
 
     private fun handleEvent(copiedEvent: CopiedEvent) {
-        mCustomEventHandler?.handle(copiedEvent.eventName, copiedEvent.targetTag, copiedEvent.payload)
+        mCustomEventHandler?.handle(
+            copiedEvent.eventName,
+            copiedEvent.targetTag,
+            copiedEvent.payload,
+            isInsideEventDispatch = false,
+        )
     }
 
     fun registerEventHandler(handler: EventHandler) {
