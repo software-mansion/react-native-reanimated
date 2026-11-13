@@ -7,14 +7,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Attaches the view that holds the shared transition containers of a surface directly to the window of the surface,
+// Attaches the view that holds the carriers of a surface to the window of the surface,
 // at a zPosition above the presentation containers of modals, so modals presented over the surface don't cover the
 // transition.
 @interface REASharedTransitionOverlays : NSObject <RCTSurfacePresenterObserver>
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-// The view is created by the mount that follows, so it is attached after that mount.
+// Attaches the overlay before and after each mount, once a mount has created it.
 - (void)showOverlayWithTag:(NSInteger)tag surfaceId:(NSInteger)surfaceId;
 
 // Detaches the overlay before the mount that deletes it.
