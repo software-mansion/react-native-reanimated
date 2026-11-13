@@ -3,7 +3,7 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_IOS, IS_JEST, logger } from '../common';
+import { IS_ANDROID, IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType, ReduceMotion } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -446,13 +446,15 @@ export default class AnimatedComponent
               : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
             undefined
           );
-          updateLayoutAnimations(
-            nativeId ? this.reanimatedID : this.getComponentViewTag(),
-            nativeId
-              ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
-              : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
-            undefined
-          );
+          if (!IS_ANDROID) {
+            updateLayoutAnimations(
+              nativeId ? this.reanimatedID : this.getComponentViewTag(),
+              nativeId
+                ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+                : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+              undefined
+            );
+          }
         }
         this._sharedTransitionTag = undefined;
       }
@@ -477,15 +479,17 @@ export default class AnimatedComponent
       sharedTransition.callbackV,
       sharedTransition.followsTarget?.()
     );
-    updateLayoutAnimations(
-      useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-      useNativeId
-        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
-        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
-      sharedTransition.getProgressAnimation(),
-      undefined,
-      undefined
-    );
+    if (!IS_ANDROID) {
+      updateLayoutAnimations(
+        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+        useNativeId
+          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+        sharedTransition.getProgressAnimation(),
+        undefined,
+        undefined
+      );
+    }
     this._sharedTransition = sharedTransition;
     this._sharedTransitionTag = sharedTransitionTag;
     this._sharedTransitionFadeContent = sharedTransition.fadeContentV;
