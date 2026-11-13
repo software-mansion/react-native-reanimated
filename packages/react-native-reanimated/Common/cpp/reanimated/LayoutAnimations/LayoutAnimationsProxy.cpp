@@ -3,7 +3,6 @@
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
-#include <react/utils/LowPriorityExecutor.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -295,8 +294,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
   }
-  for (const auto &[node, config] : transaction.layout) {
-    startLayoutAnimation(node, config);
+  for (const auto &[node, config, before] : transaction.layout) {
+    startLayoutAnimation(node, config, before);
   }
   for (const auto &[node, config] : transaction.exiting) {
     startExitingAnimation(node, config);
@@ -331,7 +330,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   react_native_assert(!deletesCreatedTag(filteredMutations) && "Transaction deletes a view that it creates");
-  releaseDroppedViews();
 #ifdef ANDROID
   releaseViewTransitionsOfMovedCarriers(filteredMutations);
   holdFramesUntilBatchIsQueued(filteredMutations);
@@ -562,10 +560,8 @@ void LayoutAnimationsProxy::updateLightTree(
           resolveLightNodeProps(node);
           previousProps = node->current.props;
         }
+        node->previous = node->isCarrier() ? std::optional(mutation.oldChildShadowView) : std::nullopt;
         updateLightNodeProps(node, mutation.oldChildShadowView, mutation.newChildShadowView);
-        if (previousProps) {
-          node->previous.props = previousProps;
-        }
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
@@ -582,7 +578,11 @@ void LayoutAnimationsProxy::updateLightTree(
           break;
         }
         if (config && shouldAnimate) {
-          transaction.layout.push_back({node, config});
+          auto before = mutation.oldChildShadowView;
+          if (previousProps) {
+            before.props = previousProps;
+          }
+          transaction.layout.push_back({node, config, std::move(before)});
         } else if (config && (layoutAnimations_.contains(tag) || hasPendingLayoutAnimation(tag))) {
           updateLayoutAnimationTarget(tag, node->current, nullptr, config);
         } else {
@@ -658,7 +658,14 @@ void LayoutAnimationsProxy::updateLightTree(
             : nullptr;
         if (moved.contains(tag)) {
           const auto offset = reparentOffset(oldChains.at(tag), ancestorOrigins(parent, {}));
-          node->previous.layoutMetrics.frame.origin += offset;
+          for (auto &layout : transaction.layout) {
+            if (layout.node == node) {
+              layout.before.layoutMetrics.frame.origin += offset;
+            }
+          }
+          if (node->previous) {
+            node->previous->layoutMetrics.frame.origin += offset;
+          }
           const auto finalView =
               node->placement() == CarrierPlacement::NESTED ? movedCarrierTarget(tag, offset) : node->current;
           if (const auto currentView = reparentLayoutAnimation(tag, mutation.parentTag, finalView, offset)) {
@@ -669,9 +676,9 @@ void LayoutAnimationsProxy::updateLightTree(
             auto updatedView = updatedViewIt->second;
             updatedView.layoutMetrics.frame.origin += offset;
             filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, updatedView, hostIndex));
-          } else if (hasPendingLayoutAnimation(tag)) {
+          } else if (node->previous && hasPendingLayoutAnimation(tag)) {
             filteredMutations.push_back(
-                ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
+                ShadowViewMutation::InsertMutation(mutation.parentTag, *node->previous, hostIndex));
           } else {
             auto view = mutation.newChildShadowView;
             const auto updatedViewIt = updatedViews.find(tag);
@@ -810,8 +817,6 @@ void LayoutAnimationsProxy::updateLightNodeProps(
     const ShadowView &newView) const {
   const auto currentProps = node->current.props;
   const auto propsChanged = newView.props != oldView.props;
-  droppedViews_.push_back(std::move(node->previous));
-  node->previous = oldView;
   node->current = newView;
   if (!propsChanged) {
     node->current.props = currentProps;
@@ -911,15 +916,6 @@ void LayoutAnimationsProxy::startSurface(
   initializeLightTree(mountingCoordinator->getBaseRevision());
 }
 
-void LayoutAnimationsProxy::releaseDroppedViews() const {
-  if (droppedViews_.empty()) {
-    return;
-  }
-  // shared_ptr, because on iOS the executor copies the callable on this thread
-  LowPriorityExecutor::execute(
-      [views = std::make_shared<std::vector<ShadowView>>(std::exchange(droppedViews_, {}))]() {});
-}
-
 void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRevision) {
   ShadowViewMutationList initialMutations;
   if (baseRevision.rootShadowNode) {
@@ -948,7 +944,6 @@ void LayoutAnimationsProxy::initializeLightTree(const ShadowTreeRevision &baseRe
     }
   }
   pendingTransactions_.clear();
-  releaseDroppedViews();
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     topScreen_ = findActiveBoundary(lightNodes_.at(surfaceId_));
   }
@@ -1671,20 +1666,19 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
 void LayoutAnimationsProxy::startLayoutAnimation(
     const std::shared_ptr<LightNode> &node,
-    const std::shared_ptr<Serializable> &config) const {
+    const std::shared_ptr<Serializable> &config,
+    const ShadowView &before) const {
   if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::LAYOUT)) {
     warnAboutStaleSynchronousProps(node->current.tag, *staleTag, LayoutAnimationType::LAYOUT);
   }
   resolveLightNodeProps(node);
-  const auto &oldChildShadowView = node->previous;
-  const auto &newChildShadowView = node->current;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
-      .tag = oldChildShadowView.tag,
+      .tag = before.tag,
       .type = LayoutAnimationType::LAYOUT,
-      .before = oldChildShadowView,
-      .after = newChildShadowView,
+      .before = before,
+      .after = node->current,
       .parentTag = parent->current.tag,
       .config = config,
   });
