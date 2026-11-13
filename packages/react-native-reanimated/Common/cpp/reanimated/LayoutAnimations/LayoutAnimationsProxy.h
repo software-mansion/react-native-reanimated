@@ -597,6 +597,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &host,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  void prepareCarrierLayerInWindow(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void removeCarrierLayersIn(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &mutations) const;
   bool keepsCarrierLayerInWindow() const;
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
