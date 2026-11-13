@@ -182,6 +182,10 @@ const ExitingInterruptsEnteringExample: React.FC = () =>
     require('./LayoutAnimations/ExitingInterruptsEnteringExample')
       .default as React.FC
   );
+const ResizedOverlayExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ResizedOverlayExample').default as React.FC
+  );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
 const KeyframeAnimation: React.FC = () =>
@@ -735,6 +739,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
   ExitingInterruptsEntering: {
     title: '[LA] Exiting animation interrupting entering',
     screen: ExitingInterruptsEnteringExample,
+  },
+  ResizedOverlay: {
+    title: '[LA] Overlay resized while mounted (#11214)',
+    screen: ResizedOverlayExample,
   },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',

@@ -15,7 +15,7 @@ import {
 import { Button, View, type ViewProps } from 'react-native';
 
 import type { EntryOrExitLayoutType } from '../src';
-import Animated, { BounceOut, FadeIn, FadeOut } from '../src';
+import Animated, { BounceOut, FadeIn, FadeOut, Keyframe } from '../src';
 
 function Example({
   initialVisible = false,
@@ -82,6 +82,15 @@ function SvgWrapper({
 const AnimatedAnimatableRefWrapper =
   Animated.createAnimatedComponent(AnimatableRefWrapper);
 const AnimatedSvgWrapper = Animated.createAnimatedComponent(SvgWrapper);
+
+const getKeyframesText = (animationName: string) => {
+  const styleTag = document.getElementById(
+    'ReanimatedCustomWebAnimationsStyle'
+  ) as HTMLStyleElement;
+  return Array.from(styleTag.sheet?.cssRules ?? []).find(
+    (rule) => (rule as CSSKeyframesRule).name === animationName
+  )?.cssText;
+};
 
 describe('Layout Animations', () => {
   describe.each([
@@ -315,15 +324,6 @@ describe('Layout Animations', () => {
       return box.parentElement as HTMLElement;
     };
 
-    const getKeyframesText = (animationName: string) => {
-      const styleTag = document.getElementById(
-        'ReanimatedCustomWebAnimationsStyle'
-      ) as HTMLStyleElement;
-      return Array.from(styleTag.sheet?.cssRules ?? []).find(
-        (rule) => (rule as CSSKeyframesRule).name === animationName
-      )?.cssText;
-    };
-
     test('starts from the current opacity', () => {
       const copy = renderAndHide(FadeOut);
 
@@ -363,6 +363,87 @@ describe('Layout Animations', () => {
       const copy = renderAndHide(FadeOut, { keyframes: null });
 
       expect(copy.style.animationName).toBe('FadeOut');
+    });
+  });
+
+  describe('when the size of a view changes without a render', () => {
+    // jsdom doesn't lay elements out, so the tests provide the size of every element.
+    let size = { width: 0, height: 0 };
+
+    beforeAll(() => {
+      jest.useFakeTimers();
+      jest
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(
+          () => ({ x: 0, y: 0, top: 0, left: 0, ...size }) as DOMRect
+        );
+      jest
+        .spyOn(Element.prototype, 'getClientRects')
+        .mockImplementation(() => [size] as unknown as DOMRectList);
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    const toggleVisibility = (screen: RenderResult) => {
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
+      });
+    };
+
+    test.each([
+      ['a predefined animation', FadeOut],
+      [
+        'a Keyframe',
+        new Keyframe({ from: { opacity: 1 }, to: { opacity: 0 } }),
+      ],
+    ])('%s exits at the current size', (_, exiting) => {
+      size = { width: 440, height: 360 };
+      const screen = originalRender(
+        <Example exiting={exiting} initialVisible />
+      );
+      const box = screen.getByTestId('box1');
+
+      // For example, the window was enlarged
+      size = { width: 1100, height: 900 };
+      toggleVisibility(screen);
+
+      // The exiting animation runs on a copy of the view that the children move into
+      const copy = box.parentElement as HTMLElement;
+      expect(copy.style.width).toBe('1100px');
+      expect(copy.style.height).toBe('900px');
+    });
+
+    test('a view that entered with a Keyframe keeps following its layout', () => {
+      const entering = new Keyframe({
+        from: { opacity: 0 },
+        to: { opacity: 0.5 },
+      }).duration(100);
+      size = { width: 440, height: 360 };
+      const screen = originalRender(
+        <Example entering={entering} initialVisible />
+      );
+      const view = screen.getByTestId('box1').parentElement as HTMLElement;
+
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+      const animationName = view.style.animationName;
+      expect(getKeyframesText(animationName)).toBeDefined();
+
+      // The keyframes of a custom animation are removed after 5 times its duration
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(getKeyframesText(animationName)).toBeUndefined();
+      expect(view.style.position).not.toBe('absolute');
+      expect(view.style.width).toBe('');
+      expect(view.style.height).toBe('');
+      // The last frame stays as an inline style, which later updates can change
+      expect(view.style.opacity).toBe('0.5');
     });
   });
 });

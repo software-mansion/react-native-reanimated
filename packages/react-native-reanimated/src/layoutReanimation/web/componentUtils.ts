@@ -23,7 +23,7 @@ import type {
 } from './config';
 import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
-import { scheduleAnimationCleanup } from './domUtils';
+import { applyLastAnimationFrame, scheduleAnimationCleanup } from './domUtils';
 import type { WebEasingsNames } from './Easing';
 import { getEasingByName, maybeGetBezierEasing, WebEasings } from './Easing';
 import { prepareCurvedTransition } from './transition/Curved';
@@ -48,6 +48,42 @@ function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {
   snapshots.set(element, fallbackSnapshot);
 
   return fallbackSnapshot;
+}
+
+/**
+ * Returns the layout animation of the element that is still running, if there
+ * is one.
+ */
+export function getRunningLayoutAnimation(element: HTMLElement) {
+  if (typeof CSSAnimation === 'undefined') {
+    return undefined;
+  }
+
+  return element
+    .getAnimations()
+    .find(
+      (animation) =>
+        animation instanceof CSSAnimation &&
+        animation.animationName === element.style.animationName &&
+        animation.playState === 'running'
+    );
+}
+
+// The size and the position of the element can change without a render, for example
+// when the window is resized, so the exiting animation has to start from a fresh measurement.
+function getSnapshotForExitingElement(
+  element: HTMLElement
+): ReanimatedSnapshot {
+  // A hidden element (for example frozen by `react-freeze`) has no box to measure, and a running
+  // layout animation distorts the box. The last saved snapshot is the best estimate in these cases.
+  if (
+    element.getClientRects().length === 0 ||
+    getRunningLayoutAnimation(element)
+  ) {
+    return getSnapshotForElement(element);
+  }
+
+  return saveSnapshot(element);
 }
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -185,6 +221,8 @@ export function saveSnapshot(element: AnimatableDOMElement) {
   };
 
   snapshots.set(element, snapshot);
+
+  return snapshot;
 }
 
 export function setElementAnimation(
@@ -278,8 +316,14 @@ export function setElementAnimation(
 
   if (!(animationName in Animations)) {
     scheduleAnimationCleanup(animationName, duration + delay, () => {
-      if (shouldSavePosition) {
-        setElementPosition(element, getSnapshotForElement(element));
+      // The keyframes are about to be removed. A view that entered with a `Keyframe` still shows
+      // their last frame, so it would jump back to its own style.
+      if (
+        shouldSavePosition &&
+        element.style.animationName === animationName &&
+        element.style.animationFillMode === 'forwards'
+      ) {
+        applyLastAnimationFrame(element, animationName);
       }
 
       maybeRunCleanup();
@@ -339,8 +383,9 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig);
 }
 
+// Only the scroll of the ancestors moves the element. Its own scroll moves its children.
 function getElementScrollValue(element: AnimatableDOMElement): ScrollOffsets {
-  let current: AnimatableDOMElement | null = element;
+  let current: AnimatableDOMElement | null = element.parentElement;
 
   const scrollOffsets: ScrollOffsets = {
     scrollTopOffset: 0,
@@ -414,6 +459,8 @@ export function handleExitingAnimation(
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
+  // The element has to be measured before it loses its animation and its children.
+  const snapshot = getSnapshotForExitingElement(element);
   const dummy = element.cloneNode() as ReanimatedHTMLElement;
 
   dummy.isDummy = true;
@@ -443,8 +490,6 @@ export function handleExitingAnimation(
   parent?.appendChild(dummy);
 
   restoreScrollPositions(dummy, scrollPositions, element);
-
-  const snapshot = getSnapshotForElement(element);
 
   const scrollOffsets = getElementScrollValue(element);
 
