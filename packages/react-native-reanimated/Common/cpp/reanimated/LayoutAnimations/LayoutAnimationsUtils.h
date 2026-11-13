@@ -131,7 +131,6 @@ struct IndexCursors {
 };
 
 struct LightNode {
-  ShadowView previous;
   ShadowView current;
 #ifdef ANDROID
   // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
