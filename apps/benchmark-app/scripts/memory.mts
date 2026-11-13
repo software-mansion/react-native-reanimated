@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { STATE_KEYS_WITHOUT_BATTERY_LEVEL } from './android-device.mts';
+import type { BatteryInfo } from './android-device.mts';
 import type { MemoryOptions, MemoryResumeOptions } from './arguments.mts';
 import { VARIANT_KEYS, validateVariantsConfig } from './config.mts';
 import type { VariantKey } from './config.mts';
@@ -16,17 +17,21 @@ import type {
 } from './measurement.mts';
 import { renderMemoryReport } from './memory-report.mts';
 import {
-  LAUNCHES_PER_BLOCK,
+  checkedFrameCounter,
+  drawingFloor,
   exitCodeOfVerdicts,
+  launchCount,
   leakVerdict,
+  memoryLaunchOrder,
+  parseGfxinfo,
   parseMeminfo,
-  parseTotalFrames,
   readingProblem,
   readingTimes,
   tailLevel,
   tailSlope,
 } from './memory-series.mts';
 import type {
+  CountedFrames,
   LeakVerdict,
   MemoryReading,
   MemorySchedule,
@@ -52,16 +57,20 @@ import type { CommandContext } from './tools.mts';
 export interface MemoryDevice extends SampleDevice {
   readMeminfo: (applicationId: string) => Promise<string>;
   readGfxinfo: (applicationId: string) => Promise<string>;
-  readBatteryLevel: () => Promise<number>;
+  readBattery: () => Promise<BatteryInfo>;
 }
+
+type LaunchProblem = Pick<InvalidMemoryLaunch, 'cause' | 'detail'>;
 
 interface MemorySeries {
   readings: MemoryReading[];
-  problem: Pick<InvalidMemoryLaunch, 'cause' | 'detail'> | null;
+  minimumFrameRate: number;
+  problem: LaunchProblem | null;
 }
 
 interface LaunchObservations {
   readings: MemoryReading[];
+  minimumFrameRate?: number;
   work?: SampleResult;
   refreshRate?: number;
   timings: SampleSteps['timings'];
@@ -81,8 +90,7 @@ export type InvalidMemoryLaunch = LaunchObservations & {
 export type MemoryLaunch = ValidMemoryLaunch | InvalidMemoryLaunch;
 
 export interface LaunchTail {
-  block: number;
-  position: number;
+  launch: number;
   segment: number;
   tailLevel: number;
   tailSlope: number;
@@ -166,7 +174,8 @@ function memoryJob(
   return {
     scenarios: [options.scenario],
     stateKeys: STATE_KEYS_WITHOUT_BATTERY_LEVEL,
-    blocksOf: () => options.launches / LAUNCHES_PER_BLOCK,
+    blocksOf: () => launchCount(options.launches),
+    orderOf: memoryLaunchOrder,
     measure: (request, device, collector, clock) =>
       takeMemoryLaunch(request, options, device, collector, clock),
     clearSummary: (stopped) => {
@@ -201,12 +210,21 @@ async function measureMemory(
   collector: Collector
 ): Promise<MemoryLaunch> {
   const { timings } = app.steps;
-  const { readings, problem } = await readMemorySeries(app, schedule, device);
+  const { readings, minimumFrameRate, problem } = await readMemorySeries(
+    app,
+    schedule,
+    device
+  );
   if (problem !== null) {
-    return { valid: false, ...problem, readings, timings };
+    return { valid: false, ...problem, readings, minimumFrameRate, timings };
   }
   const work = await measureRunningApp(app, collector);
-  const observed = { readings, refreshRate: work.refreshRate, timings };
+  const observed = {
+    readings,
+    minimumFrameRate,
+    refreshRate: work.refreshRate,
+    timings,
+  };
   return work.valid
     ? { valid: true, ...observed, work }
     : {
@@ -223,16 +241,25 @@ async function readMemorySeries(
   schedule: MemorySchedule,
   device: MemoryDevice
 ): Promise<MemorySeries> {
-  const { applicationId } = app.request;
+  const { applicationId, guard } = app.request;
   const { clock } = app;
+  const minimumFrameRate = drawingFloor(
+    guard.checkInApp(await device.readState(), 'before the readings')
+  );
   const startedAt = clock.now();
-  const secondsSinceStart = (time: number) =>
-    (time - startedAt) / MILLISECONDS_PER_SECOND;
-  let previous = {
-    seconds: 0,
-    frameCount: parseTotalFrames(await device.readGfxinfo(applicationId)),
-  };
+  const secondsSinceStart = () =>
+    (clock.now() - startedAt) / MILLISECONDS_PER_SECOND;
   const readings: MemoryReading[] = [];
+  const series = (problem: LaunchProblem | null) => ({
+    readings,
+    minimumFrameRate,
+    problem,
+  });
+  const baseline = await readFrames(app, device, secondsSinceStart);
+  if (typeof baseline === 'string') {
+    return series({ cause: 'crash', detail: baseline });
+  }
+  let previous: CountedFrames = baseline;
   for (const plannedSeconds of readingTimes(schedule)) {
     await clock.sleep(
       Math.max(
@@ -243,30 +270,64 @@ async function readMemorySeries(
     const requestedAt = clock.now();
     const meminfo = await device.readMeminfo(applicationId);
     const returnedAt = clock.now();
-    const gfxinfo = await device.readGfxinfo(applicationId);
-    const batteryLevel = await device.readBatteryLevel();
+    const seconds = secondsSinceStart();
+    const frames = await readFrames(app, device, secondsSinceStart);
+    const battery = await device.readBattery();
+    const values = parseMeminfo(meminfo);
     const ended =
       app.watch.checkedFailure() ??
       (await processEnd(device, applicationId, app.pid, 'the memory readings'));
     if (ended !== null) {
-      return { readings, problem: { cause: 'crash', detail: ended } };
+      return series({ cause: 'crash', detail: ended });
+    }
+    if (typeof frames === 'string') {
+      return series({ cause: 'crash', detail: frames });
+    }
+    if (values === null) {
+      return series({
+        cause: 'crash',
+        detail: 'dumpsys meminfo found no process of the app',
+      });
     }
     const reading: MemoryReading = {
       plannedSeconds,
-      seconds: secondsSinceStart(returnedAt),
+      seconds,
       meminfoMs: returnedAt - requestedAt,
-      frameCount: parseTotalFrames(gfxinfo),
-      batteryLevel,
-      ...parseMeminfo(meminfo),
+      ...frames,
+      batteryLevel: battery.level,
+      batteryTemperature: battery.temperature,
+      ...values,
     };
     readings.push(reading);
-    const problem = readingProblem(reading, previous, schedule);
+    const problem = readingProblem(
+      reading,
+      previous,
+      schedule,
+      minimumFrameRate
+    );
     if (problem !== null) {
-      return { readings, problem };
+      return series(problem);
     }
     previous = reading;
   }
-  return { readings, problem: null };
+  return series(null);
+}
+
+async function readFrames(
+  app: RunningApp,
+  device: MemoryDevice,
+  secondsSinceStart: () => number
+): Promise<CountedFrames | string> {
+  const output = await device.readGfxinfo(app.request.applicationId);
+  const frameSeconds = secondsSinceStart();
+  const counter = checkedFrameCounter(parseGfxinfo(output), app.pid);
+  return typeof counter === 'string'
+    ? counter
+    : {
+        frameSeconds,
+        frameCount: counter.frameCount,
+        statsSinceNs: counter.statsSinceNs,
+      };
 }
 
 export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
@@ -281,8 +342,7 @@ export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
     const tails = launches
       .filter((launch) => launch.variant === variant)
       .map((launch) => ({
-        block: launch.block,
-        position: launch.position,
+        launch: launch.block,
         segment: launch.segment,
         tailLevel: tailLevel(launch.readings, options.durationSeconds),
         tailSlope: tailSlope(launch.readings, options.durationSeconds),

@@ -1,3 +1,4 @@
+import type { VariantKey } from './config.mts';
 import { ToolError } from './errors.mts';
 import { blockOrder } from './session.mts';
 import { median } from './statistics.mts';
@@ -11,16 +12,29 @@ export interface MemoryValues {
   totalSwapPss: number;
 }
 
-export type MemoryReading = MemoryValues & {
-  plannedSeconds: number;
-  seconds: number;
-  meminfoMs: number;
+export interface FrameCounter {
+  pid: number;
+  statsSinceNs: number;
   frameCount: number;
-  batteryLevel: number;
-};
+}
+
+export interface CountedFrames {
+  frameSeconds: number;
+  frameCount: number;
+  statsSinceNs: number;
+}
+
+export type MemoryReading = MemoryValues &
+  CountedFrames & {
+    plannedSeconds: number;
+    seconds: number;
+    meminfoMs: number;
+    batteryLevel: number;
+    batteryTemperature: number;
+  };
 
 export interface ReadingProblem {
-  cause: 'late' | 'frames';
+  cause: 'late' | 'reset' | 'drawing';
   detail: string;
 }
 
@@ -43,16 +57,19 @@ export const DEFAULT_INTERVAL_SECONDS = 60;
 export const DEFAULT_DURATION_SECONDS = 1200;
 export const DEFAULT_SLOPE_LIMIT = 1000;
 export const MINIMUM_READINGS = 4;
-export const LAUNCHES_PER_BLOCK = blockOrder(0).filter(
-  (variant) => variant === 'a'
-).length;
 export const TAIL_LEVEL_START = 0.75;
 export const TAIL_SLOPE_START = 0.5;
 export const LATE_LIMIT_SHARE = 0.5;
-export const MINIMUM_FRAME_RATE = 10;
+export const DRAWING_FLOOR_SHARE = 0.25;
 
 const SECONDS_PER_MINUTE = 60;
-const TOTAL_FRAMES_PATTERN = /Total frames rendered:\s*(\d+)/;
+const LAUNCHES_PER_ORDER_BLOCK = blockOrder(0).length;
+const VARIANTS_IN_TEST = 2;
+const NO_PROCESS_PATTERN = /^No process found for: /m;
+const GFXINFO_HEADER_PATTERN =
+  /^\*\* Graphics info for pid (\d+) \[[^\]]+\] \*\*/m;
+const STATS_SINCE_PATTERN = /^Stats since: (\d+)ns/m;
+const TOTAL_FRAMES_PATTERN = /^Total frames rendered: (\d+)/m;
 const MEMINFO_PATTERNS: Record<keyof MemoryValues, RegExp> = {
   totalPss: /TOTAL PSS:\s+(\d+)/,
   nativeHeap: /^\s*Native Heap\s+(\d+)/m,
@@ -75,6 +92,19 @@ export function checkSchedule(schedule: MemorySchedule) {
   }
 }
 
+export function memoryLaunchOrder(launch: number): VariantKey[] {
+  const order = blockOrder(Math.floor(launch / LAUNCHES_PER_ORDER_BLOCK));
+  return [order[launch % LAUNCHES_PER_ORDER_BLOCK]];
+}
+
+export function launchCount(launchesForEachVariant: number): number {
+  return VARIANTS_IN_TEST * launchesForEachVariant;
+}
+
+export function drawingFloor(refreshRate: number): number {
+  return DRAWING_FLOOR_SHARE * refreshRate;
+}
+
 export function readingTimes(schedule: MemorySchedule): number[] {
   return Array.from(
     { length: schedule.durationSeconds / schedule.intervalSeconds },
@@ -82,7 +112,10 @@ export function readingTimes(schedule: MemorySchedule): number[] {
   );
 }
 
-export function parseMeminfo(output: string): MemoryValues {
+export function parseMeminfo(output: string): MemoryValues | null {
+  if (NO_PROCESS_PATTERN.test(output)) {
+    return null;
+  }
   const missing = MEMINFO_FIELDS.filter(
     (field) => !MEMINFO_PATTERNS[field].test(output)
   );
@@ -103,20 +136,44 @@ export function parseMeminfo(output: string): MemoryValues {
   };
 }
 
-export function parseTotalFrames(output: string): number {
-  const frames = TOTAL_FRAMES_PATTERN.exec(output)?.[1];
-  if (frames === undefined) {
+export function parseGfxinfo(output: string): FrameCounter | null {
+  if (NO_PROCESS_PATTERN.test(output)) {
+    return null;
+  }
+  const header = GFXINFO_HEADER_PATTERN.exec(output);
+  const stats = header ? output.slice(header.index) : '';
+  const statsSince = STATS_SINCE_PATTERN.exec(stats)?.[1];
+  const frames = TOTAL_FRAMES_PATTERN.exec(stats)?.[1];
+  if (!header || statsSince === undefined || frames === undefined) {
     throw new ToolError(
-      `Cannot read "Total frames rendered" from dumpsys gfxinfo:\n${output.slice(0, 500)}`
+      `Cannot read the pid, "Stats since" and "Total frames rendered" from dumpsys gfxinfo:\n${output.slice(0, 500)}`
     );
   }
-  return Number(frames);
+  return {
+    pid: Number(header[1]),
+    statsSinceNs: Number(statsSince),
+    frameCount: Number(frames),
+  };
+}
+
+export function checkedFrameCounter(
+  counter: FrameCounter | null,
+  pid: number
+): FrameCounter | string {
+  if (counter === null) {
+    return `dumpsys gfxinfo found no process of the app (process ${pid})`;
+  }
+  if (counter.pid !== pid) {
+    return `dumpsys gfxinfo gives process ${counter.pid}, the launch has process ${pid}`;
+  }
+  return counter;
 }
 
 export function readingProblem(
   reading: MemoryReading,
-  previous: Pick<MemoryReading, 'seconds' | 'frameCount'>,
-  schedule: MemorySchedule
+  previous: CountedFrames,
+  schedule: MemorySchedule,
+  minimumFrameRate: number
 ): ReadingProblem | null {
   const lateLimit = LATE_LIMIT_SHARE * schedule.intervalSeconds;
   if (reading.seconds - reading.plannedSeconds > lateLimit) {
@@ -125,12 +182,21 @@ export function readingProblem(
       detail: `the reading of ${reading.plannedSeconds} s came at ${reading.seconds.toFixed(1)} s, more than ${lateLimit} s late`,
     };
   }
-  const frames = reading.frameCount - previous.frameCount;
-  const seconds = reading.seconds - previous.seconds;
-  if (frames < MINIMUM_FRAME_RATE * seconds) {
+  if (
+    reading.statsSinceNs !== previous.statsSinceNs ||
+    reading.frameCount < previous.frameCount
+  ) {
     return {
-      cause: 'frames',
-      detail: `${frames} frames in the ${seconds.toFixed(1)} s before the reading of ${reading.plannedSeconds} s, expected at least ${MINIMUM_FRAME_RATE} frames per second`,
+      cause: 'reset',
+      detail: `the frame counter of dumpsys gfxinfo was reset before the reading of ${reading.plannedSeconds} s (stats since ${previous.statsSinceNs} ns -> ${reading.statsSinceNs} ns, frames ${previous.frameCount} -> ${reading.frameCount})`,
+    };
+  }
+  const frames = reading.frameCount - previous.frameCount;
+  const seconds = reading.frameSeconds - previous.frameSeconds;
+  if (frames < minimumFrameRate * seconds) {
+    return {
+      cause: 'drawing',
+      detail: `${frames} frames in the ${seconds.toFixed(1)} s before the reading of ${reading.plannedSeconds} s, expected at least ${minimumFrameRate} frames per second`,
     };
   }
   return null;

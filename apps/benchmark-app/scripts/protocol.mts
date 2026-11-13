@@ -67,7 +67,14 @@ export interface SampleRequest {
   keepTrace: boolean;
 }
 
-export type InvalidCause = 'crash' | 'thermal' | 'frames' | 'work' | 'late';
+export type InvalidCause =
+  | 'crash'
+  | 'thermal'
+  | 'frames'
+  | 'work'
+  | 'late'
+  | 'reset'
+  | 'drawing';
 
 export const INVALID_CAUSES: readonly InvalidCause[] = [
   'crash',

@@ -18,7 +18,9 @@ export interface FakeOptions {
   metrics?: Partial<TraceMetrics>;
   meminfo?: (applicationId: string, msAfterStart: number) => string;
   meminfoMs?: (reading: number) => number;
-  framesPerSecond?: number;
+  frameCountAt?: (msAfterStart: number) => number;
+  gfxinfoPid?: number;
+  gfxinfoNoProcessAt?: number;
   batteryLevelAt?: (time: number) => number;
   diesAtReading?: number;
 }
@@ -32,6 +34,12 @@ export interface TestRoot {
 }
 
 export const SERIAL = 'SERIAL1';
+export const PID = 100;
+
+const GFXINFO = fs.readFileSync(
+  path.join(import.meta.dirname, 'fixtures', 'gfxinfo.txt'),
+  'utf8'
+);
 
 export const STATE: DeviceState = {
   model: 'Pixel',
@@ -125,6 +133,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
   let startedAt = 0;
   let traces = 0;
   let readings = 0;
+  let gfxinfoReads = 0;
   let alive = true;
   let scenario = '';
   let interrupt: (() => Promise<void>) | null = null;
@@ -144,8 +153,13 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
         ? { ...state, batteryLevel: options.batteryLevelAt(time) }
         : state;
     },
-    readBatteryLevel: async () =>
-      options.batteryLevelAt?.(time) ?? (options.state ?? STATE).batteryLevel,
+    readBattery: async () => ({
+      level:
+        options.batteryLevelAt?.(time) ?? (options.state ?? STATE).batteryLevel,
+      status: 'charging',
+      chargeState: 'usb',
+      temperature: 30,
+    }),
     install: async (apk: string) => void installs.push(apk),
     compileForSpeed: async () => {},
     forceStop: async () => {},
@@ -164,7 +178,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       onLine(`READY scenario=${scenario} version=1 load=1 jsThread=4350`);
       return { stop: () => {}, failure: () => null };
     },
-    readPid: async () => (alive ? 100 : null),
+    readPid: async () => (alive ? PID : null),
     readMeminfo: async (applicationId: string) => {
       readings++;
       if (readings === options.diesAtReading) {
@@ -174,8 +188,23 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       time += options.meminfoMs?.(readings) ?? 0;
       return output;
     },
-    readGfxinfo: async () =>
-      `Total frames rendered: ${Math.floor(((time - startedAt) / 1000) * (options.framesPerSecond ?? 60))}`,
+    readGfxinfo: async (applicationId: string) => {
+      gfxinfoReads++;
+      if (gfxinfoReads === options.gfxinfoNoProcessAt) {
+        return `No process found for: ${applicationId}\n`;
+      }
+      const msAfterStart = time - startedAt;
+      const frames =
+        options.frameCountAt?.(msAfterStart) ??
+        Math.floor((msAfterStart / 1000) * 60);
+      return GFXINFO.replace(
+        `pid 2617 [com.google.android.apps.nexuslauncher]`,
+        `pid ${options.gfxinfoPid ?? PID} [${applicationId}]`
+      ).replace(
+        'Total frames rendered: 24',
+        `Total frames rendered: ${frames}`
+      );
+    },
     push: async () => {},
     recordTrace: async () => {
       traces++;

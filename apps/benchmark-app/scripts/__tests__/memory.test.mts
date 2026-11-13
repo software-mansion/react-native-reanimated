@@ -84,10 +84,10 @@ async function failedMemoryTest(options: FakeOptions) {
   return { ...measured, outcome };
 }
 
-async function stoppedMemoryTest(): Promise<string> {
+async function stoppedMemoryTest(interruptAtTrace = 2): Promise<string> {
   const { dependencies, context } = createFake(TEST_ROOT, {
     meminfo,
-    interruptAtTrace: 2,
+    interruptAtTrace,
   });
   await assert.rejects(
     memoryCommand(OPTIONS, context, dependencies),
@@ -132,6 +132,8 @@ describe('memoryCommand', () => {
       assert.equal(launch.readings[0].nativeHeap, 37153);
       assert.equal(launch.readings[0].meminfoMs, 0);
       assert.equal(launch.readings[0].batteryLevel, 80);
+      assert.equal(launch.readings[0].batteryTemperature, 30);
+      assert.ok(launch.readings[0].frameSeconds >= launch.readings[0].seconds);
       assert.ok(launch.readings[1].frameCount > launch.readings[0].frameCount);
       assert.equal(launch.work?.metrics?.mountBatchCount, 590);
     }
@@ -162,7 +164,8 @@ describe('memoryCommand', () => {
       '- The test does not find a rise that is slower than the slope limit.',
       '- A late drop of memory can hide a rise.',
       '- The second half of the duration can still contain start-up effects.',
-      'This is a low fixed floor',
+      'The frame count proves that the app drew during each interval. It does not prove that the scenario made progress during each interval.',
+      'The trace after the last reading proves the work of the scenario for the last 10 s only.',
     ]) {
       assert.ok(report.includes(limit), limit);
     }
@@ -173,21 +176,22 @@ describe('memoryCommand', () => {
     assert.match(report, /\| B \| 2\/2 \| .* \| 2000 kB\/min \| rises \|/);
     assert.ok(
       report.includes(
-        '### Launch 1: A, segment 0, block 0, attempt 0, position 0, valid, accepted'
+        '### Launch 1: A, segment 0, launch 0, attempt 0, valid, accepted'
       )
     );
     assert.match(
       report,
-      /\| 60 \| 60\.0 \| 0 \| \d+ \| 80% \| 170035 kB \| 37153 kB \| 9742 kB \| 26073 kB \| 30276 kB \| 485 kB \|/
+      /\| 60 \| 60\.0 \| 0 \| 60\.0 \| \d+ \| 80% \| 30 \| 170035 kB \| 37153 kB \| 9742 kB \| 26073 kB \| 30276 kB \| 485 kB \|/
     );
     assert.ok(report.includes('| late | 0 |'));
+    assert.ok(report.includes('| reset | 0 |'));
+    assert.ok(report.includes('| drawing | 0 |'));
   });
 
-  it('makes a launch invalid when the app process ends during the readings and launches the block again', async () => {
+  it('makes a launch invalid when the app process ends during the readings and repeats that launch only', async () => {
     const { exitCode, result } = await measureMemory({ diesAtReading: 2 });
     assert.equal(exitCode, 0);
     const [first, ...others] = result.scenarios[0].samples;
-    assert.equal(first.valid, false);
     assert.ok(!first.valid && first.cause === 'crash');
     assert.equal(
       !first.valid && first.detail,
@@ -198,9 +202,73 @@ describe('memoryCommand', () => {
       [60]
     );
     assert.deepEqual(
-      others.map((launch) => [launch.attempt, launch.valid, launch.accepted]),
-      [0, 1, 2, 3].map(() => [1, true, true])
+      others.map((launch) => [
+        launch.block,
+        launch.attempt,
+        launch.variant,
+        launch.accepted,
+      ]),
+      [
+        [0, 1, 'a', true],
+        [1, 0, 'b', true],
+        [2, 0, 'b', true],
+        [3, 0, 'a', true],
+      ]
     );
+  });
+
+  it('keeps the first two launches when the third launch is invalid', async () => {
+    const { exitCode, result } = await measureMemory({ diesAtReading: 21 });
+    assert.equal(exitCode, 0);
+    assert.deepEqual(
+      result.scenarios[0].samples.map((launch) => [
+        launch.block,
+        launch.attempt,
+        launch.valid,
+        launch.accepted,
+      ]),
+      [
+        [0, 0, true, true],
+        [1, 0, true, true],
+        [2, 0, false, false],
+        [2, 1, true, true],
+        [3, 0, true, true],
+      ]
+    );
+  });
+
+  it('makes a launch invalid when gfxinfo finds no process before the first reading, and repeats it', async () => {
+    const { exitCode, result } = await measureMemory({ gfxinfoNoProcessAt: 1 });
+    assert.equal(exitCode, 0);
+    const [first] = result.scenarios[0].samples;
+    assert.ok(!first.valid && first.cause === 'crash');
+    assert.equal(
+      !first.valid && first.detail,
+      'dumpsys gfxinfo found no process of the app (process 100)'
+    );
+    assert.equal(result.scenarios[0].samples.length, 5);
+  });
+
+  it('makes a launch invalid when gfxinfo gives another process', async () => {
+    const { outcome } = await failedMemoryTest({ gfxinfoPid: 4321 });
+    assert.deepEqual(
+      outcome.failed?.causes.map((cause) => [cause.cause, cause.detail]),
+      [0, 1, 2].map(() => [
+        'crash',
+        'dumpsys gfxinfo gives process 4321, the launch has process 100',
+      ])
+    );
+  });
+
+  it('makes a launch invalid with reset when the frame counter goes down', async () => {
+    const { outcome } = await failedMemoryTest({
+      frameCountAt: (ms) => (ms > 130_000 ? 10 : Math.floor((ms / 1000) * 60)),
+    });
+    assert.deepEqual(
+      outcome.failed?.causes.map((cause) => cause.cause),
+      ['reset', 'reset', 'reset']
+    );
+    assert.ok(outcome.samples.every((launch) => launch.readings.length === 3));
   });
 
   it('makes a launch invalid when the final trace has too few frames, and fails after 3 invalid blocks', async () => {
@@ -232,16 +300,29 @@ describe('memoryCommand', () => {
     );
   });
 
-  it('makes a launch invalid when the app draws too few frames between two readings', async () => {
-    const { outcome } = await failedMemoryTest({ framesPerSecond: 5 });
+  it('makes a launch invalid with drawing when the app draws under the floor from the first reading', async () => {
+    const { outcome } = await failedMemoryTest({
+      frameCountAt: (ms) => Math.floor((ms / 1000) * 5),
+    });
     assert.ok(outcome.samples.every((launch) => launch.readings.length === 1));
     assert.deepEqual(
       outcome.failed?.causes.map((cause) => cause.cause),
-      ['frames', 'frames', 'frames']
+      ['drawing', 'drawing', 'drawing']
     );
     assert.match(
       outcome.failed?.causes[0].detail ?? '',
-      /frames in the 60\.0 s before the reading of 60 s, expected at least 10 frames per second/
+      /frames in the 60\.0 s before the reading of 60 s, expected at least 15 frames per second/
+    );
+  });
+
+  it('makes a launch invalid with drawing when a later interval is under the floor', async () => {
+    const { outcome } = await failedMemoryTest({
+      frameCountAt: (ms) => Math.floor((Math.min(ms, 200_000) / 1000) * 60),
+    });
+    assert.ok(outcome.samples.every((launch) => launch.readings.length === 5));
+    assert.match(
+      outcome.failed?.causes[0].detail ?? '',
+      /^0 frames in the 60\.0 s before the reading of 300 s/
     );
   });
 
@@ -252,7 +333,7 @@ describe('memoryCommand', () => {
     });
     assert.equal(exitCode, 0);
     const [first, second, ...others] = result.scenarios[0].samples;
-    assert.ok(first.valid);
+    assert.ok(first.valid && first.accepted);
     assert.equal(first.readings[1].plannedSeconds, 120);
     assert.equal(first.readings[1].seconds, 140);
     assert.equal(first.readings[1].meminfoMs, 20_000);
@@ -261,7 +342,14 @@ describe('memoryCommand', () => {
       !second.valid && second.detail,
       'the reading of 180 s came at 211.0 s, more than 30 s late'
     );
-    assert.equal(others.length, 4);
+    assert.deepEqual(
+      others.map((launch) => [launch.block, launch.attempt]),
+      [
+        [1, 1],
+        [2, 0],
+        [3, 0],
+      ]
+    );
   });
 
   it('stores the battery level of each reading and does not stop when it changes', async () => {
@@ -312,11 +400,20 @@ describe('memoryCommand', () => {
 });
 
 describe('memoryResumeCommand', () => {
-  it('continues a stopped memory test and keeps the launch in progress as abandoned', async () => {
-    const folder = await stoppedMemoryTest();
+  it('continues a stopped memory test with the launch in progress, keeps the valid launches and accepts another battery level', async () => {
+    const folder = await stoppedMemoryTest(3);
     const stopped = readMemoryResult(folder);
     assert.equal(stopped.status, 'interrupted');
-    assert.equal(stopped.incompleteScenario?.samples.length, 1);
+    assert.deepEqual(
+      stopped.incompleteScenario?.samples.map((launch) => [
+        launch.block,
+        launch.accepted,
+      ]),
+      [
+        [0, true],
+        [1, true],
+      ]
+    );
     assert.ok(reportOf(folder).includes('This test is not complete'));
 
     const { context, dependencies } = createFake(TEST_ROOT, {
@@ -338,14 +435,20 @@ describe('memoryResumeCommand', () => {
     );
     const result = readMemoryResult(folder);
     assert.equal(result.status, 'done');
-    assert.equal(result.scenarios[0].samples.length, 4);
     assert.deepEqual(
-      result.abandonedScenarios.map((outcome) => [
-        outcome.segment,
-        outcome.samples.length,
+      result.scenarios[0].samples.map((launch) => [
+        launch.block,
+        launch.segment,
+        launch.variant,
       ]),
-      [[0, 1]]
+      [
+        [0, 0, 'a'],
+        [1, 0, 'b'],
+        [2, 1, 'b'],
+        [3, 1, 'a'],
+      ]
     );
+    assert.deepEqual(result.abandonedScenarios, []);
     assert.deepEqual(
       result.summary.map((variant) => variant.verdict),
       ['no rise found', 'rises']

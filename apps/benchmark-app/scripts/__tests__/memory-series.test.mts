@@ -4,22 +4,28 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
-  LAUNCHES_PER_BLOCK,
   checkSchedule,
+  checkedFrameCounter,
+  drawingFloor,
   exitCodeOfVerdicts,
+  launchCount,
   leakVerdict,
+  memoryLaunchOrder,
+  parseGfxinfo,
   parseMeminfo,
-  parseTotalFrames,
   readingProblem,
   readingTimes,
   tailLevel,
   tailSlope,
 } from '../memory-series.mts';
-import type { MemoryReading } from '../memory-series.mts';
+import type { CountedFrames, MemoryReading } from '../memory-series.mts';
 
 const MEMINFO = fixture('meminfo.txt');
 const GFXINFO = fixture('gfxinfo.txt');
+const GFXINFO_PID = 2617;
+const GFXINFO_STATS_SINCE = 25385044445;
 const SCHEDULE = { intervalSeconds: 60, durationSeconds: 1200 };
+const FLOOR_AT_60_HZ = 15;
 
 function fixture(name: string): string {
   return fs.readFileSync(
@@ -41,14 +47,18 @@ function reading(
   plannedSeconds: number,
   seconds: number,
   totalPssAt: (seconds: number) => number = () => 0,
-  frameCount = seconds * 60
+  frames: Partial<CountedFrames> = {}
 ): MemoryReading {
   return {
     plannedSeconds,
     seconds,
     meminfoMs: 300,
-    frameCount,
+    frameSeconds: seconds + 0.2,
+    frameCount: (seconds + 0.2) * 60,
+    statsSinceNs: GFXINFO_STATS_SINCE,
+    ...frames,
     batteryLevel: 80,
+    batteryTemperature: 30,
     totalPss: totalPssAt(seconds),
     nativeHeap: 0,
     dalvikHeap: 0,
@@ -56,6 +66,16 @@ function reading(
     privateOther: 0,
     totalSwapPss: 0,
   };
+}
+
+function gfxinfoWith(change: { pid?: number; statsSince?: number }): string {
+  return GFXINFO.replace(
+    `pid ${GFXINFO_PID} [`,
+    `pid ${change.pid ?? GFXINFO_PID} [`
+  ).replace(
+    `Stats since: ${GFXINFO_STATS_SINCE}ns`,
+    `Stats since: ${change.statsSince ?? GFXINFO_STATS_SINCE}ns`
+  );
 }
 
 describe('parseMeminfo', () => {
@@ -70,9 +90,16 @@ describe('parseMeminfo', () => {
     });
   });
 
+  it('gives null when the app has no process', () => {
+    assert.equal(
+      parseMeminfo('No process found for: com.reanimatedbenchmark.a\n'),
+      null
+    );
+  });
+
   it('names the fields that it cannot read', () => {
     assert.throws(
-      () => parseMeminfo('No process found for: com.reanimatedbenchmark.a'),
+      () => parseMeminfo('Applications Memory Usage (in Kilobytes):'),
       /Cannot read totalPss, nativeHeap, dalvikHeap, graphics, privateOther, totalSwapPss from dumpsys meminfo/
     );
     assert.throws(
@@ -82,55 +109,131 @@ describe('parseMeminfo', () => {
   });
 });
 
-describe('parseTotalFrames', () => {
-  it('reads the first "Total frames rendered" of dumpsys gfxinfo, which is for the process', () => {
-    assert.equal(parseTotalFrames(GFXINFO), 3571);
+describe('parseGfxinfo', () => {
+  it('reads the pid, "Stats since" and "Total frames rendered" of a real dump', () => {
+    assert.deepEqual(parseGfxinfo(GFXINFO), {
+      pid: GFXINFO_PID,
+      statsSinceNs: GFXINFO_STATS_SINCE,
+      frameCount: 24,
+    });
   });
 
-  it('stops when the line is missing', () => {
+  it('gives null when the app has no process', () => {
+    assert.equal(
+      parseGfxinfo('No process found for: com.reanimatedbenchmark.a\n'),
+      null
+    );
+  });
+
+  it('stops when the dump has no header for the process', () => {
     assert.throws(
-      () => parseTotalFrames('No process found for: com.reanimatedbenchmark.a'),
-      /Cannot read "Total frames rendered" from dumpsys gfxinfo/
+      () => parseGfxinfo(GFXINFO.replace(/^\*\*.*\*\*$/m, '')),
+      /Cannot read the pid, "Stats since" and "Total frames rendered" from dumpsys gfxinfo/
+    );
+  });
+});
+
+describe('checkedFrameCounter', () => {
+  it('accepts the counter of the launch process', () => {
+    assert.deepEqual(
+      checkedFrameCounter(parseGfxinfo(GFXINFO), GFXINFO_PID),
+      parseGfxinfo(GFXINFO)
+    );
+  });
+
+  it('rejects a counter of another process and a missing process', () => {
+    assert.equal(
+      checkedFrameCounter(
+        parseGfxinfo(gfxinfoWith({ pid: 4321 })),
+        GFXINFO_PID
+      ),
+      'dumpsys gfxinfo gives process 4321, the launch has process 2617'
+    );
+    assert.equal(
+      checkedFrameCounter(null, GFXINFO_PID),
+      'dumpsys gfxinfo found no process of the app (process 2617)'
     );
   });
 });
 
 describe('readingProblem', () => {
-  const previous = { seconds: 60, frameCount: 3600 };
+  const previous: CountedFrames = {
+    frameSeconds: 60.2,
+    frameCount: 3612,
+    statsSinceNs: GFXINFO_STATS_SINCE,
+  };
 
   it('accepts a reading on time with enough frames', () => {
-    assert.equal(readingProblem(reading(120, 120.4), previous, SCHEDULE), null);
+    assert.equal(
+      readingProblem(reading(120, 120.4), previous, SCHEDULE, FLOOR_AT_60_HZ),
+      null
+    );
   });
 
   it('gives late when the reading comes more than half an interval after its planned time', () => {
-    assert.equal(readingProblem(reading(120, 150), previous, SCHEDULE), null);
-    assert.deepEqual(readingProblem(reading(120, 150.5), previous, SCHEDULE), {
-      cause: 'late',
-      detail: 'the reading of 120 s came at 150.5 s, more than 30 s late',
-    });
-  });
-
-  it('gives frames when the app drew fewer than 10 frames per second since the reading before', () => {
     assert.equal(
-      readingProblem(
-        reading(120, 120, () => 0, 3600 + 600),
-        previous,
-        SCHEDULE
-      ),
+      readingProblem(reading(120, 150), previous, SCHEDULE, FLOOR_AT_60_HZ),
       null
     );
     assert.deepEqual(
-      readingProblem(
-        reading(120, 120, () => 0, 3600 + 599),
-        previous,
-        SCHEDULE
-      ),
+      readingProblem(reading(120, 150.5), previous, SCHEDULE, FLOOR_AT_60_HZ),
       {
-        cause: 'frames',
-        detail:
-          '599 frames in the 60.0 s before the reading of 120 s, expected at least 10 frames per second',
+        cause: 'late',
+        detail: 'the reading of 120 s came at 150.5 s, more than 30 s late',
       }
     );
+  });
+
+  it('gives reset when "Stats since" of the real dump changes or the count goes down', () => {
+    const reset = parseGfxinfo(gfxinfoWith({ statsSince: 99000000000 }));
+    assert.ok(reset !== null);
+    const problem = readingProblem(
+      reading(120, 120, () => 0, { statsSinceNs: reset.statsSinceNs }),
+      previous,
+      SCHEDULE,
+      FLOOR_AT_60_HZ
+    );
+    assert.equal(problem?.cause, 'reset');
+    assert.match(
+      problem?.detail ?? '',
+      /frame counter of dumpsys gfxinfo was reset before the reading of 120 s \(stats since 25385044445 ns -> 99000000000 ns/
+    );
+    assert.equal(
+      readingProblem(
+        reading(120, 120, () => 0, { frameCount: 3611 }),
+        previous,
+        SCHEDULE,
+        FLOOR_AT_60_HZ
+      )?.cause,
+      'reset'
+    );
+  });
+
+  it('gives drawing when the app drew fewer frames than the floor, from the times of the frame counts', () => {
+    const counted = (frameSeconds: number, frames: number) =>
+      reading(120, 120, () => 0, {
+        frameSeconds,
+        frameCount: previous.frameCount + frames,
+      });
+    assert.equal(
+      readingProblem(counted(100.2, 600), previous, SCHEDULE, FLOOR_AT_60_HZ),
+      null
+    );
+    assert.deepEqual(
+      readingProblem(counted(100.2, 599), previous, SCHEDULE, FLOOR_AT_60_HZ),
+      {
+        cause: 'drawing',
+        detail:
+          '599 frames in the 40.0 s before the reading of 120 s, expected at least 15 frames per second',
+      }
+    );
+  });
+});
+
+describe('drawingFloor', () => {
+  it('is 25% of the display refresh rate', () => {
+    assert.equal(drawingFloor(60), 15);
+    assert.equal(drawingFloor(120), 30);
   });
 });
 
@@ -157,9 +260,15 @@ describe('readingTimes and checkSchedule', () => {
       /must be a multiple of --interval/
     );
   });
+});
 
-  it('launches each variant two times in each block', () => {
-    assert.equal(LAUNCHES_PER_BLOCK, 2);
+describe('memoryLaunchOrder and launchCount', () => {
+  it('gives one launch for each block in the order A B B A, B A A B', () => {
+    const order = Array.from({ length: 10 }, (_, launch) =>
+      memoryLaunchOrder(launch).join('')
+    ).join('');
+    assert.equal(order, 'abbabaabab');
+    assert.equal(launchCount(3), 6);
   });
 });
 

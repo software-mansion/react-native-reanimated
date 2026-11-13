@@ -1,18 +1,31 @@
 Applications Graphics Acceleration Info:
-Uptime: 759844631 Realtime: 759844631
+Uptime: 1836623 Realtime: 1836623
 
-** Graphics info for pid 30324 [com.reanimatedbenchmark.a] **
+** Graphics info for pid 2617 [com.google.android.apps.nexuslauncher] **
 
-Stats since: 759784631000000ns
-Total frames rendered: 3571
-Janky frames: 12 (0.34%)
-Janky frames (legacy): 40 (1.12%)
+Stats since: 25385044445ns
+Total frames rendered: 24
+Janky frames: 2 (8.33%)
+Janky frames (legacy): 2 (8.33%)
 50th percentile: 5ms
-90th percentile: 7ms
-95th percentile: 8ms
-99th percentile: 13ms
+90th percentile: 16ms
+95th percentile: 48ms
+99th percentile: 113ms
+Number Missed Vsync: 1
+Number High input latency: 16
+Number Slow UI thread: 2
+Number Slow bitmap uploads: 0
+Number Slow issue draw commands: 1
+Number Frame deadline missed: 2
+Number Frame deadline missed (legacy): 2
+HISTOGRAM: 5ms=20 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=1 13ms=0 14ms=0 15ms=0 16ms=1 17ms=0 18ms=0 19ms=0 20ms=0 21ms=0 22ms=0 23ms=0 24ms=0 25ms=0 26ms=0 27ms=0 28ms=0 29ms=0 30ms=0 31ms=0 32ms=0 34ms=0 36ms=0 38ms=0 40ms=0 42ms=0 44ms=0 46ms=0 48ms=1 53ms=0 57ms=0 61ms=0 65ms=0 69ms=0 73ms=0 77ms=0 81ms=0 85ms=0 89ms=0 93ms=0 97ms=0 101ms=0 105ms=0 109ms=0 113ms=1 117ms=0 121ms=0 125ms=0 129ms=0 133ms=0 150ms=0 200ms=0 250ms=0 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 2ms
+90th gpu percentile: 2ms
+95th gpu percentile: 2ms
+99th gpu percentile: 2ms
+GPU HISTOGRAM: 1ms=4 2ms=15 3ms=0 4ms=0 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=0 18ms=0 19ms=0 20ms=0 21ms=0 22ms=0 23ms=0 24ms=0 25ms=0 4950ms=0
 
-Window: com.reanimatedbenchmark.a/com.reanimatedbenchmark.MainActivity
-Stats since: 759784631000000ns
-Total frames rendered: 3560
-Janky frames: 12 (0.34%)
+Profile data in ms:
+
+	Taskbar/android.view.ViewRootImpl@feb8cd9 (visibility=0)
+	com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity/android.view.ViewRootImpl@50b469e (visibility=8)

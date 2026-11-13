@@ -70,6 +70,24 @@ function resume(folder: string, options: FakeOptions = {}, serial = SERIAL) {
   };
 }
 
+function failedOnlyOnMemoryGrowth(result: Pick<RunResult, 'statistics'>) {
+  const memory = result.statistics.find((row) => row.metric === 'memory');
+  assert.ok(memory);
+  const growth = { ...memory, metric: 'memoryGrowth', verdict: 'worse' };
+  return {
+    expectation: {
+      scenarios: ['css'],
+      metrics: ['memory', 'memoryGrowth'],
+      is: 'notWorse',
+    },
+    status: 'fails',
+    rows: [memory, growth],
+    decidingRows: [growth],
+    failedScenarios: [],
+    scenariosWithoutData: [],
+  };
+}
+
 function editResult(folder: string, edit: (result: RunResult) => void) {
   const result = readResult(folder);
   edit(result);
@@ -257,17 +275,20 @@ describe('resumeCommand', () => {
         ...current.statistics,
         { ...current.statistics[0], metric: 'memoryGrowth' },
       ],
-      expectations: current.expectations.map((expectation) => ({
-        ...expectation,
-        expectation: {
-          ...expectation.expectation,
-          metrics: [...expectation.expectation.metrics, 'memoryGrowth'],
-        },
-        rows: [
-          ...expectation.rows,
-          { ...current.statistics[0], metric: 'memoryGrowth' },
-        ],
-      })),
+      expectations: [
+        failedOnlyOnMemoryGrowth(current),
+        ...current.expectations.map((expectation) => ({
+          ...expectation,
+          expectation: {
+            ...expectation.expectation,
+            metrics: [...expectation.expectation.metrics, 'memoryGrowth'],
+          },
+          rows: [
+            ...expectation.rows,
+            { ...current.statistics[0], metric: 'memoryGrowth' },
+          ],
+        })),
+      ],
     };
     fs.writeFileSync(
       file,
@@ -279,6 +300,8 @@ describe('resumeCommand', () => {
 
     const upgraded = readResult(folder);
     assert.equal(upgraded.statistics.length, current.statistics.length);
+    assert.equal(upgraded.expectations[0].status, 'holds');
+    assert.deepEqual(upgraded.expectations[0].decidingRows, []);
     assert.ok(
       !JSON.stringify(upgraded).includes('memoryGrowth'),
       'the upgraded result has no memoryGrowth'

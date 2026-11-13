@@ -126,7 +126,7 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 - It installs and compiles A and B again. It keeps the complete scenarios. In the incomplete scenario, it keeps the accepted blocks (4 valid samples) and continues with the first block that is not accepted. The statistics use the kept samples when the scenario is complete.
 - It moves the other samples of the incomplete scenario (the block in progress and its invalid attempts) to `abandonedScenarios`. The statistics do not use them. The count of invalid blocks starts at 0 again.
 - The battery temperature at the start of the run stays the reference for the cool-down. The refresh rate of the app in the first sample stays the reference for the run.
-- It reads a `result.json` of format 1 (from older versions). The driver renames the metric `memoryGrowth` of each sample to `windowMemoryDelta`. It removes `memoryGrowth` from the expectations, the noise limits, the statistics and the expectation results, and it removes an expectation that has no other metric. `noise-limits` reads these files too.
+- It reads a `result.json` of format 1 (from older versions). The driver renames the metric `memoryGrowth` of each sample to `windowMemoryDelta`. It removes `memoryGrowth` from the expectations, the noise limits, the statistics and the expectation results, and it removes an expectation that has no other metric. It computes the status of each expectation result again from the rows that stay. `noise-limits` reads these files too.
 - `result.json` and the report list each segment (one start of the driver) with its start, end, status and device state. Each sample in `result.json` has the number of its segment. For each scenario with blocks from more than one segment, the report gives the blocks of each segment.
 
 ## Noise limits
@@ -147,19 +147,22 @@ When the relative difference is not defined for a division (a median of 0 or les
 `memory --config <file.json> --scenario <name> --serial <adb serial>` looks for a memory leak in one scenario. It reads and checks only `name`, `a`, `b` and `note` of the config. It ignores all other fields, so a config without `scenarios` works.
 
 1. The driver builds and installs A and B as `run` does.
-1. It launches the app in the scenario for each variant in turn: A, B, B, A, then B, A, A, B. `--launches` sets the number of launches for each variant (default 2, a multiple of 2).
+1. It launches the app in the scenario for each variant in turn: A, B, B, A, then B, A, A, B. `--launches` sets the number of launches for each variant (default 2).
 1. After READY, it reads `dumpsys meminfo <application id>` every `--interval` seconds (default 60) for `--duration` seconds (default 1200). The duration must be a multiple of the interval and at least 4 intervals.
-1. Each reading has the planned time, the measured time (seconds after READY when `dumpsys meminfo` returns), the time of the command in ms, the frame count (the first "Total frames rendered" of `dumpsys gfxinfo <application id>`), the battery level, and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
+1. Each reading has the planned time, the measured time (seconds after READY when `dumpsys meminfo` returns), the time of the command in ms, the frame count with its own measured time (when `dumpsys gfxinfo <application id>` returns), the battery level, the battery temperature, and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
 1. After the last reading, the driver records one trace and checks the app as `run` does (`thermal`, `frames`, `work`, `crash`).
 
 A launch is invalid when:
 
-- the app process stops or changes during the readings, or the app writes `FAILED` (`crash`);
+- the app process stops or changes during the readings, the app writes `FAILED`, `dumpsys meminfo` or `dumpsys gfxinfo` finds no process, or the pid of `dumpsys gfxinfo` is not the pid of the launch (`crash`);
 - a reading comes more than half an interval after its planned time (`late`);
-- the app draws fewer than 10 frames per second between two readings, or between READY and the first reading (`frames`). This is a low fixed floor. Some scenarios draw fewer frames than the refresh rate, so the driver has no sound value for each scenario;
+- the frame counter of `dumpsys gfxinfo` was reset: its `Stats since` value changed, or its count is lower than at the reading before (`reset`);
+- the drawing check fails: between two frame counts, the app draws fewer frames per second than 25% of the display refresh rate of the device state (15 at 60 Hz) (`drawing`). The driver reads the first frame count after READY;
 - the check of the trace after the last reading fails.
 
-After an invalid launch, the driver launches the block again. After 3 invalid blocks in sequence, the test fails.
+The frame count proves that the app drew during each interval. It does not prove that the scenario made progress during each interval. The trace after the last reading proves the work of the scenario for the last 10 s only.
+
+Each launch is a unit of its own. The driver accepts each valid launch. After an invalid launch, it repeats that launch only. After 3 invalid attempts of a launch in sequence, the test fails.
 
 For each accepted launch, the driver uses the measured time:
 
@@ -184,4 +187,4 @@ Limits of the test:
 
 `result.json` keeps the readings and the trace check of each launch, and the summary. `report.md` gives the verdicts, the limits, the `tailLevel` and `tailSlope` of each launch and their medians, and the series of each launch. The exit code is 0 for `rises`, `no rise found` and `not judged`, 1 when a variant is `mixed` or `not decided`, and 2 for a tool error.
 
-The device rules of `run` apply, but the memory test does not compare the battery level, because a long test can change it. Each reading stores the battery level. The test still compares the power source, the device settings and the display, and it checks the thermal state. `memory --resume <run folder> --serial <adb serial>` continues a stopped memory test with the same rules. The driver launches the block in progress again.
+The device rules of `run` apply, but the memory test does not compare the battery level, because a long test can change it. Each reading stores the battery level. The test still compares the power source, the device settings and the display, and it checks the thermal state. `memory --resume <run folder> --serial <adb serial>` continues a stopped memory test with the same rules. It keeps all valid launches and starts the launch in progress again. The cool-down rule of `run` applies before each launch. Each reading stores the battery temperature, so the data shows a long launch that makes the device warm.

@@ -7,7 +7,6 @@ import {
   DEFAULT_INTERVAL_SECONDS,
   DEFAULT_LAUNCHES,
   DEFAULT_SLOPE_LIMIT,
-  LAUNCHES_PER_BLOCK,
   checkSchedule,
 } from './memory-series.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
@@ -241,11 +240,6 @@ function memoryOptions(values: Values): MemoryOptions {
     'launches',
     DEFAULT_LAUNCHES
   );
-  if (launches % LAUNCHES_PER_BLOCK !== 0) {
-    throw new ToolError(
-      `--launches must be a multiple of ${LAUNCHES_PER_BLOCK}, because each block launches each variant ${LAUNCHES_PER_BLOCK} times (A, B, B, A)`
-    );
-  }
   const intervalSeconds = optionalPositiveInteger(
     values,
     'interval',

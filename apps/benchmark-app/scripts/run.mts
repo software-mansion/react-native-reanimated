@@ -24,6 +24,7 @@ import {
   scenariosWithoutData,
 } from './results.mts';
 import type { RunResult } from './results.mts';
+import { blockOrder } from './session.mts';
 import type { CommandContext } from './tools.mts';
 import { computeVerdictRows } from './verdict.mts';
 
@@ -82,6 +83,7 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
   return {
     scenarios: result.config.scenarios,
     stateKeys: COMPARED_STATE_KEYS,
+    orderOf: blockOrder,
     blocksOf: (scenario) =>
       blocksOf(result.config, scenario, result.options.blocks),
     measure: takeSample,

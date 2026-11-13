@@ -1,6 +1,6 @@
 import {
   LATE_LIMIT_SHARE,
-  MINIMUM_FRAME_RATE,
+  DRAWING_FLOOR_SHARE,
   MINIMUM_JUDGED_DURATION_SECONDS,
   TAIL_LEVEL_START,
   TAIL_SLOPE_START,
@@ -55,7 +55,8 @@ export function renderMemoryReport(result: MemoryResult): string {
     failedSection(
       result.scenarios.flatMap((outcome) =>
         outcome.failed ? [outcome.failed] : []
-      )
+      ),
+      'launches'
     ),
     '',
     '## Series',
@@ -72,7 +73,7 @@ export function renderMemoryReport(result: MemoryResult): string {
     '',
     '## Invalid launches',
     '',
-    invalidSection(launches, [...INVALID_CAUSES, 'late']),
+    invalidSection(launches, [...INVALID_CAUSES, 'late', 'reset', 'drawing']),
     '',
     '## Time for each launch (mean)',
     '',
@@ -93,8 +94,10 @@ function verdictsSection(result: MemoryResult): string {
   ].join(' ');
   const checks = [
     `A reading that comes more than ${LATE_LIMIT_SHARE * options.intervalSeconds} s after its planned time makes the launch invalid (\`late\`).`,
-    `Between two readings, the app must draw at least ${MINIMUM_FRAME_RATE} frames per second ("Total frames rendered" of \`dumpsys gfxinfo\`). Else the launch is invalid (\`frames\`).`,
-    'This is a low fixed floor: some scenarios draw fewer frames than the refresh rate, so the driver has no sound value for each scenario.',
+    `Drawing check: between two frame counts ("Total frames rendered" of \`dumpsys gfxinfo\`), the app must draw at least ${percent(DRAWING_FLOOR_SHARE)} of the display refresh rate in frames per second. Else the launch is invalid (\`drawing\`).`,
+    'A new "Stats since" value or a lower count means that the counter was reset, and the launch is invalid (`reset`).',
+    'The frame count proves that the app drew during each interval. It does not prove that the scenario made progress during each interval.',
+    'The trace after the last reading proves the work of the scenario for the last 10 s only.',
   ].join(' ');
   return [
     rule,
@@ -166,8 +169,10 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
                 'Planned s',
                 'Measured s',
                 'meminfo ms',
+                'Frames s',
                 'Frames',
                 'Battery',
+                'Battery °C',
                 'Total PSS',
                 'Native heap',
                 'Dalvik heap',
@@ -179,8 +184,10 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
                 String(reading.plannedSeconds),
                 reading.seconds.toFixed(1),
                 String(Math.round(reading.meminfoMs)),
+                reading.frameSeconds.toFixed(1),
                 String(reading.frameCount),
                 `${reading.batteryLevel}%`,
+                String(reading.batteryTemperature),
                 kB(reading.totalPss),
                 kB(reading.nativeHeap),
                 kB(reading.dalvikHeap),
@@ -195,7 +202,7 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
 }
 
 function launchTitle(launch: Recorded<MemoryLaunch>): string {
-  const place = `${launch.variant.toUpperCase()}, segment ${launch.segment}, block ${launch.block}, attempt ${launch.attempt}, position ${launch.position}`;
+  const place = `${launch.variant.toUpperCase()}, segment ${launch.segment}, launch ${launch.block}, attempt ${launch.attempt}`;
   const state = launch.valid
     ? 'valid'
     : `invalid (${launch.cause}: ${launch.detail})`;

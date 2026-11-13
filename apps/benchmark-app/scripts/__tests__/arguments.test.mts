@@ -204,7 +204,7 @@ describe('parseArguments', () => {
     );
   });
 
-  it('rejects memory options that the test cannot use', () => {
+  it('accepts an odd number of launches and rejects memory options that the test cannot use', () => {
     const required = [
       'memory',
       '--config',
@@ -214,9 +214,10 @@ describe('parseArguments', () => {
       '--serial',
       'S1',
     ];
-    assert.throws(
-      () => parseArguments([...required, '--launches', '3']),
-      /--launches must be a multiple of 2/
+    assert.equal(
+      (parseArguments([...required, '--launches', '3']) as { launches: number })
+        .launches,
+      3
     );
     assert.throws(
       () => parseArguments([...required, '--duration', '120']),

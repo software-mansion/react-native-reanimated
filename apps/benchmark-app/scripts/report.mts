@@ -316,7 +316,10 @@ function verdictsSection(result: RunResult): string {
   ].join('\n');
 }
 
-export function failedSection(failed: FailedScenario[]): string {
+export function failedSection(
+  failed: FailedScenario[],
+  attempts = 'blocks'
+): string {
   if (failed.length === 0) {
     return 'None.';
   }
@@ -326,7 +329,7 @@ export function failedSection(failed: FailedScenario[]): string {
         (cause) =>
           `${cause.variant.toUpperCase()}: ${cause.cause}, ${cause.detail}`
       );
-      return `- ${scenario.scenario} failed on ${failedVariants(scenario)}. Last ${causes.length} invalid blocks: ${causes.join('; ')}.`;
+      return `- ${scenario.scenario} failed on ${failedVariants(scenario)}. Last ${causes.length} invalid ${attempts}: ${causes.join('; ')}.`;
     })
     .join('\n');
 }

@@ -9,6 +9,7 @@ import type {
   VariantsConfig,
 } from './config.mts';
 import { ToolError } from './errors.mts';
+import { evaluateExpectations } from './expectations.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { RETIRED_VERDICT_METRIC, isVerdictMetric } from './metrics.mts';
 import type { SampleMetrics, VerdictMetric } from './metrics.mts';
@@ -135,9 +136,7 @@ function upgradedFormatOne(stored: FormatOneResult): RunResult {
     },
     noiseLimits: stored.noiseLimits && withCurrentLimits(stored.noiseLimits),
     statistics: stored.statistics.filter((row) => isVerdictMetric(row.metric)),
-    expectations: stored.expectations
-      .map(withCurrentRows)
-      .filter((result) => result.expectation.metrics.length > 0),
+    expectations: stored.expectations.flatMap(reevaluated),
   };
 }
 
@@ -172,14 +171,17 @@ function withCurrentMetrics(expectation: Expectation): Expectation {
   };
 }
 
-function withCurrentRows(result: ExpectationResult): ExpectationResult {
-  const current = (row: VerdictRow) => isVerdictMetric(row.metric);
-  return {
-    ...result,
-    expectation: withCurrentMetrics(result.expectation),
-    rows: result.rows.filter(current),
-    decidingRows: result.decidingRows.filter(current),
-  };
+function reevaluated(result: ExpectationResult): ExpectationResult[] {
+  const expectation = withCurrentMetrics(result.expectation);
+  if (expectation.metrics.length === 0) {
+    return [];
+  }
+  return evaluateExpectations(
+    [expectation],
+    result.rows.filter((row) => isVerdictMetric(row.metric)),
+    result.failedScenarios,
+    result.scenariosWithoutData
+  );
 }
 
 function withCurrentLimits(limits: NoiseLimits): NoiseLimits {

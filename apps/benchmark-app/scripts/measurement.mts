@@ -28,7 +28,13 @@ import {
 import type { MeasurementResult, RunStatus, RunVariant } from './results.mts';
 import type { Scenario } from './scenarios.mts';
 import { runScenario } from './session.mts';
-import type { Judged, Measured, Recorded, SamplePlace } from './session.mts';
+import type {
+  BlockOrder,
+  Judged,
+  Measured,
+  Recorded,
+  SamplePlace,
+} from './session.mts';
 import {
   once,
   readToolVersions,
@@ -60,6 +66,7 @@ export interface MeasurementJob<
   scenarios: readonly Scenario[];
   stateKeys: readonly (keyof DeviceState)[];
   blocksOf: (scenario: Scenario) => number;
+  orderOf: BlockOrder;
   measure: (
     request: SampleRequest,
     device: AndroidDevice,
@@ -309,7 +316,8 @@ async function measure<S extends JobResult, R extends MeasurementResult<S>>(
           result.incompleteScenario = progress;
           writeResult(folder, result);
         },
-        keptSamples(result, scenario)
+        keptSamples(result, scenario),
+        job.orderOf
       );
       result.incompleteScenario = null;
       result.scenarios.push(outcome);

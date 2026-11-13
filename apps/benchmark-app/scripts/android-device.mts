@@ -41,7 +41,10 @@ export interface CleanupDevice {
   removeAllTraces: () => Promise<void>;
 }
 
-export type StateMoment = 'before the trace' | 'after the trace';
+export type StateMoment =
+  | 'before the readings'
+  | 'before the trace'
+  | 'after the trace';
 
 export const COMPARED_STATE_KEYS = [
   'hardwareSerial',
@@ -207,8 +210,8 @@ export class AndroidDevice {
     return this.shell(['dumpsys', 'gfxinfo', applicationId]);
   }
 
-  async readBatteryLevel(): Promise<number> {
-    return parseBattery(await this.shell(['dumpsys', 'battery'])).level;
+  async readBattery(): Promise<BatteryInfo> {
+    return parseBattery(await this.shell(['dumpsys', 'battery']));
   }
 
   async readPid(applicationId: string): Promise<number | null> {

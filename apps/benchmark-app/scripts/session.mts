@@ -29,6 +29,8 @@ export type MeasuredSample = Measured;
 
 export type SampleRecord = Recorded;
 
+export type BlockOrder = (block: number) => VariantKey[];
+
 export type Sampler<R extends Judged> = (
   place: SamplePlace
 ) => Promise<Measured<R>>;
@@ -57,7 +59,8 @@ export async function runScenario<R extends Judged>(
   blocks: number,
   sampler: Sampler<R>,
   onProgress: ProgressListener<R> = () => {},
-  acceptedSamples: Recorded<R>[] = []
+  acceptedSamples: Recorded<R>[] = [],
+  orderOf: BlockOrder = blockOrder
 ): Promise<ScenarioOutcome<R>> {
   const samples: Recorded<R>[] = [...acceptedSamples];
   const reportProgress = () =>
@@ -72,9 +75,8 @@ export async function runScenario<R extends Judged>(
     const invalidAttempts: (SamplePlace & InvalidJudgement)[] = [];
     while (true) {
       const attempt = await runBlock(
-        scenario,
-        block,
-        invalidAttempts.length,
+        { scenario, block, attempt: invalidAttempts.length },
+        orderOf(block),
         sampler,
         record
       );
@@ -98,21 +100,14 @@ export async function runScenario<R extends Judged>(
 }
 
 async function runBlock<R extends Judged>(
-  scenario: Scenario,
-  block: number,
-  attempt: number,
+  start: Pick<SamplePlace, 'scenario' | 'block' | 'attempt'>,
+  order: VariantKey[],
   sampler: Sampler<R>,
   record: (sample: Recorded<R>) => void
 ): Promise<Recorded<R>[]> {
   const samples: Recorded<R>[] = [];
-  for (const [position, variant] of blockOrder(block).entries()) {
-    const measured = await sampler({
-      scenario,
-      variant,
-      block,
-      attempt,
-      position,
-    });
+  for (const [position, variant] of order.entries()) {
+    const measured = await sampler({ ...start, variant, position });
     const sample: Recorded<R> = Object.assign(measured, { accepted: false });
     samples.push(sample);
     record(sample);
