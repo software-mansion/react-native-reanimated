@@ -43,6 +43,12 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+struct PendingLayoutTransition {
+  std::shared_ptr<LightNode> node;
+  std::shared_ptr<Serializable> config;
+  ShadowView before;
+};
+
 // The children of the carrier fade with the progress of the run. When the carrier lands, the children
 // of the target fade in.
 struct ContentFade {
@@ -173,7 +179,7 @@ struct TransactionMeta {
   bool surfaceDropped = false;
   CollectedTransitionMap transitionMap;
   CollectedTransitions transitions;
-  std::vector<PendingNodeAnimation> layout;
+  std::vector<PendingLayoutTransition> layout;
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
@@ -195,8 +201,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // Set whenever the active boundary might no longer be `topScreen_`: on a structural change, a boundary's props
   // changing or a node leaving the light tree. A light node never becomes live again, so nothing else changes it.
   mutable bool activeBoundaryMayHaveChanged_ = true;
-  // Views the light tree replaced, often the last owners of their props. Destroyed off the UI thread.
-  mutable std::vector<ShadowView> droppedViews_;
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
   // back
   mutable std::unordered_set<Tag> snapshottedScreens_;
@@ -248,7 +252,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config,
       bool isContentFadeIn = false) const;
   void startExitingAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
-  void startLayoutAnimation(const std::shared_ptr<LightNode> &node, const std::shared_ptr<Serializable> &config) const;
+  void startLayoutAnimation(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<Serializable> &config,
+      const ShadowView &before) const;
   void startSharedTransition(
       const std::shared_ptr<LightNode> &carrier,
       const ShadowView &before,
@@ -330,7 +337,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &oldView,
       const ShadowView &newView) const;
   void resolveLightNodeProps(const std::shared_ptr<LightNode> &node) const;
-  void releaseDroppedViews() const;
   void initializeLightTree(const ShadowTreeRevision &baseRevision);
   bool isLightTreeInitialized() const {
     return lightNodes_.contains(surfaceId_);

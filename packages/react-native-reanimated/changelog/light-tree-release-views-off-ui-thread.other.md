@@ -1,1 +1,2 @@
-Release the views that layout animations stop tracking off the UI thread.
+Keep the view before an update only where a layout animation or a shared element transition needs it.
+pr: 11332

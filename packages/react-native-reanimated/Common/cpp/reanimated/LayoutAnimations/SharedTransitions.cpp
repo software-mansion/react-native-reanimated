@@ -609,7 +609,7 @@ void LayoutAnimationsProxy::detachCarrier(
   }
   // The run owns the frames of its carrier, so an animation that this transaction queued or that
   // waits for a landing for the same view does not start.
-  const auto isCarrier = [&node](const PendingNodeAnimation &animation) {
+  const auto isCarrier = [&node](const auto &animation) {
     return animation.node == node;
   };
   std::erase_if(transaction.layout, isCarrier);
@@ -1953,12 +1953,15 @@ void LayoutAnimationsProxy::startHeldEntering(
     const PropsParserContext &propsParserContext) const {
   const auto &node = held.node;
   const auto tag = node->current.tag;
-  const bool layoutQueued = std::erase_if(transaction.layout, [&node](const PendingNodeAnimation &layout) {
-                              return layout.node == node;
-                            }) > 0;
+  const auto isOfNode = [&node](const PendingLayoutTransition &layout) {
+    return layout.node == node;
+  };
+  const auto queuedLayout = std::ranges::find_if(transaction.layout, isOfNode);
   resolveLightNodeProps(node);
   // A layout animation of this pull holds back the React Update, so the screen still shows the previous view.
-  const auto mounted = layoutAnimationViewOnScreen(tag).value_or(layoutQueued ? node->previous : node->current);
+  const auto mounted = layoutAnimationViewOnScreen(tag).value_or(
+      queuedLayout != transaction.layout.end() ? queuedLayout->before : node->current);
+  std::erase_if(transaction.layout, isOfNode);
   cancelLayoutAnimation(tag);
   const auto parent = node->parent.lock();
   transaction.filteredMutations.push_back(createPropsUpdate(

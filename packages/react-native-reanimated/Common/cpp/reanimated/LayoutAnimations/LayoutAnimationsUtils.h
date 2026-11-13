@@ -123,7 +123,8 @@ struct IndexCursors {
 };
 
 struct LightNode {
-  ShadowView previous;
+  // The view before the last React update of a carrier. The proxy does not mount that update.
+  std::optional<ShadowView> previous;
   ShadowView current;
 #ifdef ANDROID
   // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
