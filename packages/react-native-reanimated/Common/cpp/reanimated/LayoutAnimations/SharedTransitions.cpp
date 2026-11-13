@@ -1272,7 +1272,7 @@ void LayoutAnimationsProxy::moveNestedCarriersOutOf(
         run.followsTarget = run.configFollowsTarget;
         startSharedTransition(
             run.carrier,
-            carrierAnimation(run).currentView,
+            carrierViewOnScreen(run),
             asCarrierView(target, run.carrier, propsParserContext),
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
@@ -1659,10 +1659,10 @@ const LayoutAnimation &LayoutAnimationsProxy::carrierAnimation(const SharedTrans
 const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransitionRun &run) const {
   const auto tag = run.carrier->current.tag;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
-    return it->second.currentView;
+    return currentViewOf(it->second);
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
-    return it->second.animation.currentView;
+    return currentViewOf(it->second.animation);
   }
   return run.carrierStartView;
 }
@@ -1837,7 +1837,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         run.followsTarget = followsTarget;
         startSharedTransition(
             run.carrier,
-            carrierAnimation(run).currentView,
+            carrierViewOnScreen(run),
             carrierAfter,
             ownCarrierView(target, run.carrier, propsParserContext).props,
             animation,
@@ -2749,10 +2749,10 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   }
   const auto tag = node->current.tag;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
-    return it->second.currentView;
+    return currentViewOf(it->second);
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
-    return it->second.animation.currentView;
+    return currentViewOf(it->second.animation);
   }
   if (const auto *queued = queuedLayoutStartView(tag)) {
     return *queued;
@@ -3025,7 +3025,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
         getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform) {
       run.followsTarget = run.configFollowsTarget;
       startSharedTransition(
-          run.carrier, animation.currentView, carrierAfter, frameProps, config, restartContentFade(run));
+          run.carrier, carrierViewOnScreen(run), carrierAfter, frameProps, config, restartContentFade(run));
     }
   }
 }
