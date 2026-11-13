@@ -39,7 +39,7 @@ With no scenario or an unknown name, the app shows the list of scenario names.
 | `sticky-header` | A scroll view that scrolls 400 px down in 1000 ms and up in 1000 ms from the UI runtime, and moves a header and its items | number of items |
 | `shared-elements` | Two native stack screens that push and pop with shared element transitions | views on a screen |
 | `mount-unmount` | Animated views that mount for 500 ms and unmount for 500 ms. One more animated view stays mounted, so the frames continue. | number of views that mount and unmount |
-| `idle-cost` | Plain views that React renders on each frame, with no Reanimated component | number of views |
+| `idle-cost` | Plain views that React renders on each second frame, with no Reanimated component | number of views |
 
 Each Reanimated animation that has a `reduceMotion` option uses `ReduceMotion.Never`, so the reduced motion setting of the system does not stop the frames.
 

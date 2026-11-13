@@ -53,7 +53,7 @@ export const scenarios: readonly Scenario[] = [
     findUnmetRequirement: findSharedElementsUnmetRequirement,
   },
   { name: 'mount-unmount', version: 1, load: 40, Component: MountUnmount },
-  { name: 'idle-cost', version: 2, load: 150, Component: IdleCost },
+  { name: 'idle-cost', version: 3, load: 250, Component: IdleCost },
 ];
 
 export function findScenario(name: string) {

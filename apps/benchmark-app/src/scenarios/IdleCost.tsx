@@ -5,33 +5,39 @@ import { Grid } from '../components/Grid';
 import { range } from '../components/range';
 import type { ScenarioProps } from './registry';
 
+const FRAMES_PER_UPDATE = 2;
+
 export function IdleCost({ load }: ScenarioProps) {
-  const frame = useFrameCounter();
+  const update = useUpdateCounter();
 
   return (
     <Grid>
       {range(0, load).map((index) => (
         <View
           key={index}
-          style={[styles.box, { width: 6 + ((frame + index) % 12) }]}
+          style={[styles.box, { width: 6 + ((update + index) % 12) }]}
         />
       ))}
     </Grid>
   );
 }
 
-function useFrameCounter() {
-  const [frame, setFrame] = useState(0);
+function useUpdateCounter() {
+  const [update, setUpdate] = useState(0);
 
   useEffect(() => {
+    let frame = 0;
     let request = requestAnimationFrame(function onFrame() {
-      setFrame((value) => value + 1);
+      frame += 1;
+      if (frame % FRAMES_PER_UPDATE === 0) {
+        setUpdate((value) => value + 1);
+      }
       request = requestAnimationFrame(onFrame);
     });
     return () => cancelAnimationFrame(request);
   }, []);
 
-  return frame;
+  return update;
 }
 
 const styles = StyleSheet.create({
