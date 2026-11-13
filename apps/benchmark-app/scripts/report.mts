@@ -6,7 +6,11 @@ import type { MetricUnit } from './metrics.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
 import type { RunResult, Segment } from './results.mts';
-import type { FailedScenario, SampleRecord } from './session.mts';
+import type {
+  FailedScenario,
+  SampleRecord,
+  ScenarioOutcome,
+} from './session.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { VerdictRow } from './verdict.mts';
 
@@ -54,7 +58,7 @@ export function renderReport(result: RunResult): string {
     '',
     '## Segments',
     '',
-    segmentsSection(result.segments),
+    segmentsSection(result),
     '',
     '## Invalid samples',
     '',
@@ -329,7 +333,18 @@ function deviceSection(serial: string, device: DeviceState): string {
   );
 }
 
-function segmentsSection(segments: Segment[]): string {
+function segmentsSection(result: RunResult): string {
+  const lines = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+  ].flatMap(blockSegmentsLine);
+  return [
+    segmentsTable(result.segments),
+    ...(lines.length > 0 ? ['', ...lines] : []),
+  ].join('\n');
+}
+
+function segmentsTable(segments: Segment[]): string {
   return table(
     [
       'Segment',
@@ -348,6 +363,29 @@ function segmentsSection(segments: Segment[]): string {
       `${segment.device.batteryTemperature} °C`,
     ])
   );
+}
+
+function blockSegmentsLine(outcome: ScenarioOutcome): string[] {
+  const blocksBySegment = new Map<number, number[]>();
+  for (const sample of outcome.samples.filter((sample) => sample.accepted)) {
+    blocksBySegment.set(sample.segment, [
+      ...(blocksBySegment.get(sample.segment) ?? []),
+      sample.block,
+    ]);
+  }
+  if (blocksBySegment.size < 2) {
+    return [];
+  }
+  const parts = [...blocksBySegment]
+    .sort(([first], [second]) => first - second)
+    .map(([segment, blocks]) => `${blockRange(blocks)} in segment ${segment}`);
+  return [`- ${outcome.scenario}: ${parts.join(', ')}.`];
+}
+
+function blockRange(blocks: number[]): string {
+  const first = Math.min(...blocks);
+  const last = Math.max(...blocks);
+  return first === last ? `block ${first}` : `blocks ${first}-${last}`;
 }
 
 function invalidSection(samples: SampleRecord[]): string {

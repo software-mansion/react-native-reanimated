@@ -11,7 +11,7 @@ export interface SamplePlace {
 }
 
 export type MeasuredSample = SamplePlace &
-  SampleResult & { batteryLevel: number };
+  SampleResult & { segment: number; batteryLevel: number };
 
 export type SampleRecord = MeasuredSample & { accepted: boolean };
 
@@ -38,14 +38,17 @@ export async function runScenario(
   scenario: Scenario,
   blocks: number,
   sampler: Sampler,
-  onProgress: ProgressListener = () => {}
+  onProgress: ProgressListener = () => {},
+  acceptedSamples: SampleRecord[] = []
 ): Promise<ScenarioOutcome> {
-  const samples: SampleRecord[] = [];
+  const samples: SampleRecord[] = [...acceptedSamples];
   const record = (sample: SampleRecord) => {
     samples.push(sample);
     onProgress({ scenario, samples: [...samples], failed: null });
   };
-  for (let block = 0; block < blocks; block++) {
+  const firstBlock = new Set(acceptedSamples.map((sample) => sample.block))
+    .size;
+  for (let block = firstBlock; block < blocks; block++) {
     const invalidAttempts: (SamplePlace & InvalidSample)[] = [];
     while (true) {
       const attempt = await runBlock(

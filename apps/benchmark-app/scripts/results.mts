@@ -73,11 +73,26 @@ export function createRunFolder(
 
 export function readResult(folder: string): RunResult {
   const file = path.join(folder, 'result.json');
+  let result: RunResult;
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8')) as RunResult;
+    result = JSON.parse(fs.readFileSync(file, 'utf8')) as RunResult;
   } catch (error) {
     throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
   }
+  return withSampleSegments(result);
+}
+
+function withSampleSegments(result: RunResult): RunResult {
+  const fill = (outcome: ScenarioOutcome, segment: number) =>
+    outcome.samples.forEach((sample) => (sample.segment ??= segment));
+  result.scenarios.forEach((outcome) => fill(outcome, 0));
+  if (result.incompleteScenario) {
+    fill(result.incompleteScenario, result.segments.length - 1);
+  }
+  result.abandonedScenarios.forEach((outcome) =>
+    fill(outcome, outcome.segment)
+  );
+  return result;
 }
 
 export function writeResult(folder: string, result: RunResult) {

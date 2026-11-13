@@ -35,8 +35,9 @@ import {
   writeResult,
 } from './results.mts';
 import type { RunResult, RunStatus, RunVariant } from './results.mts';
+import type { Scenario } from './scenarios.mts';
 import { runScenario } from './session.mts';
-import type { SamplePlace } from './session.mts';
+import type { SamplePlace, SampleRecord } from './session.mts';
 import {
   once,
   readToolVersions,
@@ -272,7 +273,8 @@ async function measure(
         (progress) => {
           result.incompleteScenario = progress;
           writeResult(folder, result);
-        }
+        },
+        keptSamples(result, scenario)
       );
       result.incompleteScenario = null;
       result.scenarios.push(outcome);
@@ -393,7 +395,13 @@ async function takeCheckedSample(place: SamplePlace, context: SampleContext) {
   context.log(
     `${place.scenario} block ${place.block} attempt ${place.attempt} ${place.variant.toUpperCase()}: ${sample.valid ? 'valid' : `invalid (${sample.cause}: ${sample.detail})`}`
   );
-  return { ...place, batteryLevel: state.batteryLevel, ...sample };
+  return { ...place, segment, batteryLevel: state.batteryLevel, ...sample };
+}
+
+function keptSamples(result: RunResult, scenario: Scenario): SampleRecord[] {
+  return result.incompleteScenario?.scenario === scenario
+    ? result.incompleteScenario.samples
+    : [];
 }
 
 async function buildVariants(
@@ -488,12 +496,20 @@ function startSegment(result: RunResult, device: DeviceState) {
   if (result.segments[previousSegment].status === 'running') {
     result.segments[previousSegment].status = 'interrupted';
   }
-  if (result.incompleteScenario) {
-    result.abandonedScenarios.push({
-      ...result.incompleteScenario,
-      segment: previousSegment,
-    });
-    result.incompleteScenario = null;
+  const incomplete = result.incompleteScenario;
+  if (incomplete) {
+    const abandoned = incomplete.samples.filter((sample) => !sample.accepted);
+    if (abandoned.length > 0) {
+      result.abandonedScenarios.push({
+        ...incomplete,
+        samples: abandoned,
+        segment: previousSegment,
+      });
+    }
+    result.incompleteScenario = {
+      ...incomplete,
+      samples: incomplete.samples.filter((sample) => sample.accepted),
+    };
   }
   result.status = 'running';
   result.error = undefined;

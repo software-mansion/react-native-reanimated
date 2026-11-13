@@ -13,7 +13,7 @@ function sampler(
   const take = async (place: SamplePlace): Promise<MeasuredSample> => {
     places.push(place);
     const cause = invalidAt(place, places.length);
-    const common = { ...place, batteryLevel: 90, timings: {} };
+    const common = { ...place, segment: 0, batteryLevel: 90, timings: {} };
     return cause
       ? { ...common, valid: false, cause, detail: `${cause} detail` }
       : {
@@ -81,6 +81,26 @@ describe('runScenario', () => {
     );
     assert.ok(progress.every(([, notFailed]) => notFailed));
     assert.equal(outcome.samples.length, 6);
+  });
+
+  it('continues after the accepted blocks of a stopped scenario', async () => {
+    const first = await runScenario('css', 1, sampler(() => null).take);
+    const { take, places } = sampler(() => null);
+    const outcome = await runScenario('css', 2, take, undefined, first.samples);
+    assert.equal(outcome.failed, null);
+    assert.deepEqual(
+      places.map((place) => [place.block, place.attempt, place.variant]),
+      [
+        [1, 0, 'b'],
+        [1, 0, 'a'],
+        [1, 0, 'a'],
+        [1, 0, 'b'],
+      ]
+    );
+    assert.deepEqual(
+      outcome.samples.map((sample) => [sample.block, sample.accepted]),
+      [0, 0, 0, 0, 1, 1, 1, 1].map((block) => [block, true])
+    );
   });
 
   it('fails the scenario after 3 invalid blocks in sequence', async () => {

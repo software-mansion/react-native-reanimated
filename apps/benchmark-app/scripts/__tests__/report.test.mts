@@ -144,6 +144,7 @@ function sample(overrides: Partial<SampleRecord>): SampleRecord {
     block: 0,
     attempt: 0,
     position: 0,
+    segment: 0,
     batteryLevel: 80,
     accepted: false,
     valid: false,
@@ -434,6 +435,41 @@ describe('renderReport', () => {
         '| 1 | 2026-11-12T12:00:00.000Z | - | running | 75% | 31.5 °C |'
       )
     );
+  });
+
+  it('names the segment of each block of a resumed scenario', () => {
+    const accepted = (block: number, segment: number) =>
+      [0, 1, 2, 3].map((position) =>
+        sample({ block, position, segment, accepted: true, valid: true })
+      );
+    const resumed = renderReport({
+      ...RESULT,
+      scenarios: [
+        {
+          scenario: 'worklet-styles-transform',
+          samples: [...accepted(0, 0), ...accepted(1, 0)],
+          failed: null,
+        },
+        {
+          scenario: 'sticky-header',
+          samples: [
+            ...accepted(0, 0),
+            ...accepted(1, 0),
+            sample({ block: 2, segment: 0 }),
+            ...accepted(2, 1),
+            ...accepted(3, 2),
+          ],
+          failed: null,
+        },
+      ],
+    });
+    assert.ok(
+      resumed.includes(
+        '- sticky-header: blocks 0-1 in segment 0, block 2 in segment 1, block 3 in segment 2.'
+      )
+    );
+    assert.ok(!resumed.includes('- worklet-styles-transform:'));
+    assert.ok(!report.includes(' in segment '));
   });
 
   it('counts invalid samples by cause and gives the mean time of each step', () => {

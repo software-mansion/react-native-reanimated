@@ -13,6 +13,7 @@ import { readResult, writeResult } from '../results.mts';
 import type { RunResult, RunVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import type { RunDependencies } from '../run.mts';
+import type { SampleRecord } from '../session.mts';
 import type { CommandContext, Processes } from '../tools.mts';
 import type { BuiltVariant } from '../variant-build.mts';
 
@@ -190,8 +191,11 @@ function createFake(options: FakeOptions = {}) {
   return { dependencies, context, installs };
 }
 
-async function stoppedRun(): Promise<string> {
-  const { dependencies, context } = createFake({ interruptAtTrace: 6 });
+async function stoppedRun({
+  interruptAtTrace = 6,
+  keepTraces = false,
+} = {}): Promise<string> {
+  const { dependencies, context } = createFake({ interruptAtTrace });
   await assert.rejects(
     runCommand(
       {
@@ -199,7 +203,7 @@ async function stoppedRun(): Promise<string> {
         config: path.join(ROOT, 'config.json'),
         serial: SERIAL,
         blocks: 1,
-        keepTraces: false,
+        keepTraces,
         traceProcessor: path.join(ROOT, 'trace_processor_shell'),
       },
       context,
@@ -267,7 +271,7 @@ describe('a stopped run', () => {
 });
 
 describe('resumeCommand', () => {
-  it('measures the incomplete scenario again and keeps the abandoned samples', async () => {
+  it('measures the block in progress again and keeps its samples as abandoned', async () => {
     const folder = await stoppedRun();
     const { run, installs } = resume(folder);
     assert.equal(await run, 0);
@@ -305,6 +309,91 @@ describe('resumeCommand', () => {
       fs
         .readdirSync(path.join(folder, 'traces'))
         .every((file) => !file.endsWith('.perfetto-trace'))
+    );
+  });
+
+  it('keeps the accepted blocks of the incomplete scenario', async () => {
+    const folder = await stoppedRun({ interruptAtTrace: 10, keepTraces: true });
+    assert.deepEqual(
+      readResult(folder).incompleteScenario?.samples.map((sample) => [
+        sample.block,
+        sample.segment,
+        sample.accepted,
+      ]),
+      [
+        [0, 0, true],
+        [0, 0, true],
+        [0, 0, true],
+        [0, 0, true],
+        [1, 0, false],
+      ]
+    );
+    assert.equal(await resume(folder).run, 0);
+    const result = readResult(folder);
+    const idleCost = result.scenarios.find(
+      (outcome) => outcome.scenario === 'idle-cost'
+    );
+    assert.deepEqual(
+      idleCost?.samples.map((sample) => [
+        sample.block,
+        sample.segment,
+        sample.attempt,
+        sample.accepted,
+      ]),
+      [
+        ...[0, 0, 0, 0].map((block) => [block, 0, 0, true]),
+        ...[1, 1, 1, 1].map((block) => [block, 1, 0, true]),
+      ]
+    );
+    assert.deepEqual(
+      result.abandonedScenarios.map((outcome) => [
+        outcome.scenario,
+        outcome.segment,
+        outcome.samples.map((sample) => [sample.block, sample.segment]),
+      ]),
+      [['idle-cost', 0, [[1, 0]]]]
+    );
+    const idleCostRows = result.statistics.filter(
+      (row) => row.scenario === 'idle-cost'
+    );
+    assert.equal(idleCostRows.length, 7);
+    assert.ok(
+      idleCostRows.every((row) => row.samplesA === 4 && row.samplesB === 4)
+    );
+    const traces = [...result.scenarios, ...result.abandonedScenarios].flatMap(
+      (outcome) => outcome.samples.map((sample) => sample.trace)
+    );
+    assert.equal(new Set(traces).size, 13);
+    assert.equal(
+      fs
+        .readdirSync(path.join(folder, 'traces'))
+        .filter((file) => file.endsWith('.perfetto-trace')).length,
+      13
+    );
+    const report = fs.readFileSync(path.join(folder, 'report.md'), 'utf8');
+    assert.ok(
+      report.includes(
+        '- idle-cost: block 0 in segment 0, block 1 in segment 1.'
+      )
+    );
+  });
+
+  it('reads a result without sample segments', async () => {
+    const folder = await stoppedRun({ interruptAtTrace: 10 });
+    editResult(folder, (result) => {
+      result.segments.push({ ...result.segments[0] });
+      for (const outcome of [result.scenarios[0], result.incompleteScenario]) {
+        outcome?.samples.forEach(
+          (sample) => delete (sample as Partial<SampleRecord>).segment
+        );
+      }
+    });
+    const result = readResult(folder);
+    assert.ok(
+      result.scenarios[0].samples.every((sample) => sample.segment === 0)
+    );
+    assert.ok(
+      result.incompleteScenario?.samples.every((sample) => sample.segment === 1)
     );
   });
 
