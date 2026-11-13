@@ -2,6 +2,14 @@ import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
 import { ToolError } from './errors.mts';
+import {
+  DEFAULT_DURATION_SECONDS,
+  DEFAULT_INTERVAL_SECONDS,
+  DEFAULT_LAUNCHES,
+  DEFAULT_SLOPE_LIMIT,
+  LAUNCHES_PER_BLOCK,
+  checkSchedule,
+} from './memory-series.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import { DEFAULT_BLOCKS } from './session.mts';
@@ -18,6 +26,26 @@ export interface RunOptions {
 
 export interface ResumeOptions {
   command: 'resume';
+  folder: string;
+  serial: string;
+  traceProcessor?: string;
+}
+
+export interface MemoryOptions {
+  command: 'memory';
+  config: string;
+  serial: string;
+  scenario: Scenario;
+  launches: number;
+  intervalSeconds: number;
+  durationSeconds: number;
+  slopeLimit: number;
+  keepTraces: boolean;
+  traceProcessor?: string;
+}
+
+export interface MemoryResumeOptions {
+  command: 'memory-resume';
   folder: string;
   serial: string;
   traceProcessor?: string;
@@ -41,6 +69,8 @@ export interface SampleOptions {
 export type Command =
   | RunOptions
   | ResumeOptions
+  | MemoryOptions
+  | MemoryResumeOptions
   | NoiseLimitsOptions
   | SampleOptions
   | { command: 'help' };
@@ -48,6 +78,8 @@ export type Command =
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> --serial <adb serial> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> --serial <adb serial> [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> --serial <adb serial> [--launches ${DEFAULT_LAUNCHES}] [--interval ${DEFAULT_INTERVAL_SECONDS}] [--duration ${DEFAULT_DURATION_SECONDS}] [--slope-limit ${DEFAULT_SLOPE_LIMIT}] [--keep-traces] [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> --serial <adb serial> [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample --serial <adb serial> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 
@@ -69,6 +101,28 @@ const RUN_OPTIONS: ParseArgsOptionsConfig = {
 };
 
 const STORED_RUN_OPTIONS = ['config', 'blocks', 'noise-limits', 'keep-traces'];
+
+const MEMORY_OPTIONS: ParseArgsOptionsConfig = {
+  ...COMMON_OPTIONS,
+  config: { type: 'string' },
+  resume: { type: 'string' },
+  scenario: { type: 'string' },
+  launches: { type: 'string' },
+  interval: { type: 'string' },
+  duration: { type: 'string' },
+  'slope-limit': { type: 'string' },
+  'keep-traces': { type: 'boolean' },
+};
+
+const STORED_MEMORY_OPTIONS = [
+  'config',
+  'scenario',
+  'launches',
+  'interval',
+  'duration',
+  'slope-limit',
+  'keep-traces',
+];
 
 const NOISE_LIMITS_OPTIONS: ParseArgsOptionsConfig = {
   runs: { type: 'string', multiple: true },
@@ -95,20 +149,30 @@ export function parseArguments(argv: string[]): Command {
   if (command === 'run') {
     const { values } = parseOptions(rest, RUN_OPTIONS);
     if (values.resume !== undefined) {
-      return resumeOptions(values);
+      return {
+        command: 'resume',
+        ...resumeOptions(values, STORED_RUN_OPTIONS),
+      };
     }
     return {
       command,
       config: required(values, 'config'),
       serial: required(values, 'serial'),
-      blocks:
-        values.blocks === undefined
-          ? DEFAULT_BLOCKS
-          : positiveInteger(values.blocks, 'blocks'),
+      blocks: optionalPositiveInteger(values, 'blocks', DEFAULT_BLOCKS),
       noiseLimits: optionalString(values, 'noise-limits'),
       keepTraces: values['keep-traces'] === true,
       traceProcessor: optionalString(values, 'trace-processor'),
     };
+  }
+  if (command === 'memory') {
+    const { values } = parseOptions(rest, MEMORY_OPTIONS);
+    if (values.resume !== undefined) {
+      return {
+        command: 'memory-resume',
+        ...resumeOptions(values, STORED_MEMORY_OPTIONS),
+      };
+    }
+    return memoryOptions(values);
   }
   if (command === 'noise-limits') {
     const { values, positionals } = parseOptions(
@@ -123,17 +187,11 @@ export function parseArguments(argv: string[]): Command {
   }
   if (command === 'sample') {
     const { values } = parseOptions(rest, SAMPLE_OPTIONS);
-    const scenario = required(values, 'scenario');
-    if (!isScenario(scenario)) {
-      throw new ToolError(
-        `Unknown scenario "${scenario}". Known: ${SCENARIOS.join(', ')}`
-      );
-    }
     return {
       command,
       serial: required(values, 'serial'),
       applicationId: required(values, 'package'),
-      scenario,
+      scenario: requiredScenario(values),
       load:
         values.load === undefined
           ? undefined
@@ -160,21 +218,70 @@ function parseOptions(
   }
 }
 
-function resumeOptions(values: Values): ResumeOptions {
-  const stored = STORED_RUN_OPTIONS.filter(
-    (name) => values[name] !== undefined
-  );
+function resumeOptions(
+  values: Values,
+  storedOptions: readonly string[]
+): Omit<ResumeOptions, 'command'> {
+  const stored = storedOptions.filter((name) => values[name] !== undefined);
   if (stored.length > 0) {
     throw new ToolError(
-      `--resume takes the config, the blocks, the noise limits and --keep-traces from the stored result. Remove ${stored.map((name) => `--${name}`).join(', ')}.`
+      `--resume takes ${storedOptions.map((name) => `--${name}`).join(', ')} from the stored result. Remove ${stored.map((name) => `--${name}`).join(', ')}.`
     );
   }
   return {
-    command: 'resume',
     folder: required(values, 'resume'),
     serial: required(values, 'serial'),
     traceProcessor: optionalString(values, 'trace-processor'),
   };
+}
+
+function memoryOptions(values: Values): MemoryOptions {
+  const launches = optionalPositiveInteger(
+    values,
+    'launches',
+    DEFAULT_LAUNCHES
+  );
+  if (launches % LAUNCHES_PER_BLOCK !== 0) {
+    throw new ToolError(
+      `--launches must be a multiple of ${LAUNCHES_PER_BLOCK}, because each block launches each variant ${LAUNCHES_PER_BLOCK} times (A, B, B, A)`
+    );
+  }
+  const intervalSeconds = optionalPositiveInteger(
+    values,
+    'interval',
+    DEFAULT_INTERVAL_SECONDS
+  );
+  const durationSeconds = optionalPositiveInteger(
+    values,
+    'duration',
+    DEFAULT_DURATION_SECONDS
+  );
+  checkSchedule({ intervalSeconds, durationSeconds });
+  return {
+    command: 'memory',
+    config: required(values, 'config'),
+    serial: required(values, 'serial'),
+    scenario: requiredScenario(values),
+    launches,
+    intervalSeconds,
+    durationSeconds,
+    slopeLimit:
+      values['slope-limit'] === undefined
+        ? DEFAULT_SLOPE_LIMIT
+        : nonNegativeNumber(values['slope-limit'], 'slope-limit'),
+    keepTraces: values['keep-traces'] === true,
+    traceProcessor: optionalString(values, 'trace-processor'),
+  };
+}
+
+function requiredScenario(values: Values): Scenario {
+  const scenario = required(values, 'scenario');
+  if (!isScenario(scenario)) {
+    throw new ToolError(
+      `Unknown scenario "${scenario}". Known: ${SCENARIOS.join(', ')}`
+    );
+  }
+  return scenario;
 }
 
 function required(values: Values, name: string): string {
@@ -193,6 +300,29 @@ function positiveInteger(
   if (!Number.isInteger(number) || number < 1) {
     throw new ToolError(
       `--${name} must be a positive integer, not "${String(value)}"`
+    );
+  }
+  return number;
+}
+
+function optionalPositiveInteger(
+  values: Values,
+  name: string,
+  defaultValue: number
+): number {
+  return values[name] === undefined
+    ? defaultValue
+    : positiveInteger(values[name], name);
+}
+
+function nonNegativeNumber(
+  value: string | string[] | boolean | undefined,
+  name: string
+): number {
+  const number = Number(value);
+  if (value === '' || !Number.isFinite(number) || number < 0) {
+    throw new ToolError(
+      `--${name} must be a number of 0 or more, not "${String(value)}"`
     );
   }
   return number;

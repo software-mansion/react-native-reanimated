@@ -197,6 +197,10 @@ export class AndroidDevice {
     );
   }
 
+  async readMeminfo(applicationId: string): Promise<string> {
+    return this.shell(['dumpsys', 'meminfo', applicationId]);
+  }
+
   async readPid(applicationId: string): Promise<number | null> {
     return parsePid(await this.shell(['pidof', applicationId, '||', 'true']));
   }

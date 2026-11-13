@@ -123,17 +123,17 @@ describe('validateConfig', () => {
     );
   });
 
-  it('rejects an expectation that selects no row', () => {
-    assert.match(
-      problemsOf(
-        config({
-          expect: [
-            { scenarios: ['css'], metrics: ['memoryGrowth'], is: 'notWorse' },
-          ],
-        })
-      ),
-      /selects no scenario and metric pair/
-    );
+  it('rejects an expectation of a metric without a verdict', () => {
+    for (const metric of ['memoryGrowth', 'windowMemoryDelta']) {
+      assert.match(
+        problemsOf(
+          config({
+            expect: [{ scenarios: ['css'], metrics: [metric], is: 'notWorse' }],
+          })
+        ),
+        new RegExp(`unknown name "${metric}"`)
+      );
+    }
   });
 
   it('rejects flags that are not booleans', () => {
@@ -196,6 +196,22 @@ describe('validateNoiseLimits', () => {
     assert.deepEqual(validateNoiseLimits({ css: { uiThreadCpu: 0.05 } }), {
       css: { uiThreadCpu: 0.05 },
     });
+  });
+
+  it('ignores the limits of the old metric memoryGrowth', () => {
+    assert.deepEqual(
+      validateNoiseLimits({
+        'mount-unmount': { memory: 0.03, memoryGrowth: 4000 },
+      }),
+      { 'mount-unmount': { memory: 0.03 } }
+    );
+  });
+
+  it('rejects windowMemoryDelta, which has no verdict', () => {
+    assert.throws(
+      () => validateNoiseLimits({ css: { windowMemoryDelta: 4000 } }),
+      /unknown metric "windowMemoryDelta"/
+    );
   });
 
   it('rejects unknown names and negative limits', () => {

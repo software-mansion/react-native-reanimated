@@ -156,7 +156,8 @@ function sample(overrides: Partial<SampleRecord>): SampleRecord {
 }
 
 const RESULT: RunResult = {
-  formatVersion: 1,
+  formatVersion: 2,
+  command: 'run',
   status: 'done',
   startedAt: '2026-11-12T10:00:00.000Z',
   finishedAt: '2026-11-12T11:00:00.000Z',
@@ -325,35 +326,33 @@ describe('renderReport', () => {
     assert.ok(!withFallback.includes('(absolute, no noise limit)'));
   });
 
-  it('writes memoryGrowth in kB without the fallback mark and names the units of the noise limits', () => {
-    const growth = row({
+  it('writes memory in kB and names the units of the noise limits', () => {
+    const memory = row({
       scenario: 'worklet-styles-transform',
-      metric: 'memoryGrowth',
-      medianA: -120,
-      medianB: 380,
-      comparison: 'absolute',
-      difference: 500,
-      interval: { low: 300, high: 700 },
-      noiseLimit: 100,
+      metric: 'memory',
+      medianA: 120000,
+      medianB: 126000,
+      difference: 0.05,
+      interval: { low: 0.03, high: 0.07 },
+      noiseLimit: 0.02,
       verdict: 'worse',
     });
     const withLimits = renderReport({
       ...RESULT,
       options: { ...RESULT.options, noiseLimitsFile: 'limits.json' },
-      noiseLimits: { 'worklet-styles-transform': { memoryGrowth: 100 } },
-      statistics: [growth],
+      noiseLimits: { 'worklet-styles-transform': { memory: 0.02 } },
+      statistics: [memory],
     });
     assert.ok(
       withLimits.includes(
-        '| worklet-styles-transform | memoryGrowth | 10/10 | -120 kB | 380 kB | +500 kB | +300 kB to +700 kB | worse |'
+        '| worklet-styles-transform | memory | 10/10 | 120000 kB | 126000 kB | +5% | +3% to +7% | worse |'
       )
     );
     assert.ok(
       withLimits.includes(
-        'a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points; memoryGrowth, in kB)'
+        'a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
       )
     );
-    assert.ok(!withLimits.includes('(absolute)'));
   });
 
   it('stops instead of writing a number that is not finite', () => {

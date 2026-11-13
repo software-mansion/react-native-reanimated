@@ -11,11 +11,6 @@ export const SCENARIOS = [
 
 export type Scenario = (typeof SCENARIOS)[number];
 
-export const MEMORY_GROWTH_SCENARIOS: readonly Scenario[] = [
-  'shared-elements',
-  'mount-unmount',
-];
-
 export const MINIMUM_MOUNT_BATCHES: Partial<Record<Scenario, number>> = {
   'shared-elements': 300,
 };

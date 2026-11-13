@@ -131,19 +131,21 @@ type ReadyOutcome =
   | { ready: true; report: ScenarioReport }
   | { ready: false; reason: string };
 
-interface SampleSteps {
+export interface SampleSteps {
   timings: SampleResult['timings'];
   timed: <T>(step: SampleStep, action: () => Promise<T>) => Promise<T>;
 }
 
-interface RunningApp {
+export interface RunningApp {
   request: SampleRequest;
   device: SampleDevice;
-  collector: Collector;
   clock: Clock;
   steps: SampleSteps;
   watch: ReportWatch;
   coldStart: number;
+  report: ScenarioReport;
+  pid: number;
+  jsThread: number;
 }
 
 interface TraceFiles {
@@ -171,6 +173,17 @@ export async function takeSample(
   collector: Collector,
   clock: Clock
 ): Promise<SampleResult> {
+  return runLaunchedApp(request, device, clock, (app) =>
+    measureRunningApp(app, collector)
+  );
+}
+
+export async function runLaunchedApp<T>(
+  request: SampleRequest,
+  device: SampleDevice,
+  clock: Clock,
+  measure: (app: RunningApp) => Promise<T>
+): Promise<T | InvalidSample> {
   const steps = timedSteps(clock);
   for (const applicationId of request.stopApplicationIds) {
     await device.forceStop(applicationId);
@@ -194,15 +207,10 @@ export async function takeSample(
   }
   const watch = new ReportWatch(device, request.scenario);
   try {
-    return await measureRunningApp({
-      request,
-      device,
-      collector,
-      clock,
-      steps,
-      watch,
-      coldStart: start.totalTime,
-    });
+    return await measureReadyApp(
+      { request, device, clock, steps, watch, coldStart: start.totalTime },
+      measure
+    );
   } finally {
     watch.stop();
     await device.forceStop(request.applicationId);
@@ -271,7 +279,7 @@ async function waitForCoolDevice(
   }
 }
 
-class ReportWatch {
+export class ReportWatch {
   readonly #scenario: string;
   readonly #stream: LineStream;
   #report: ScenarioReport | null = null;
@@ -316,12 +324,15 @@ class ReportWatch {
   }
 }
 
-async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
-  const { request, device, watch } = app;
+async function measureReadyApp<T>(
+  started: Omit<RunningApp, 'report' | 'pid' | 'jsThread'>,
+  measure: (app: RunningApp) => Promise<T>
+): Promise<T | InvalidSample> {
+  const { request, device, watch } = started;
   const { applicationId } = request;
-  const { timings, timed } = app.steps;
+  const { timings, timed } = started.steps;
   const ready = await timed('ready', () =>
-    waitForReady(device, app.clock, watch, applicationId)
+    waitForReady(device, started.clock, watch, applicationId)
   );
   if (!ready.ready) {
     return { valid: false, cause: 'crash', detail: ready.reason, timings };
@@ -343,7 +354,16 @@ async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
       timings,
     };
   }
+  return measure({ ...started, report, pid, jsThread });
+}
 
+export async function measureRunningApp(
+  app: RunningApp,
+  collector: Collector
+): Promise<SampleResult> {
+  const { request, device, watch, report, pid, jsThread } = app;
+  const { applicationId } = request;
+  const { timings, timed } = app.steps;
   const before = await device.readState();
   const refreshRate = request.guard.checkInApp(before, 'before the trace');
   const thermalBefore = before.thermalStatus;
@@ -363,7 +383,8 @@ async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
     await device.recordTrace(files.remoteConfig, files.remoteTrace);
   });
   const ended =
-    watch.checkedFailure() ?? (await processEnd(device, applicationId, pid));
+    watch.checkedFailure() ??
+    (await processEnd(device, applicationId, pid, 'the trace'));
   if (ended !== null) {
     await stopAndPull(app, files);
     return tracedCrash(ended, observed, request);
@@ -377,7 +398,7 @@ async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
   }
 
   const reading = await timed('parse', () =>
-    app.collector.collect(
+    collector.collect(
       request.traceFile,
       { applicationId, pid, jsThread },
       refreshRate
@@ -445,18 +466,19 @@ async function pushConfig(
   }
 }
 
-async function processEnd(
+export async function processEnd(
   device: SampleDevice,
   applicationId: string,
-  pid: number
+  pid: number,
+  period: string
 ): Promise<string | null> {
   const current = await device.readPid(applicationId);
   if (current === pid) {
     return null;
   }
   return current === null
-    ? `the app process ${pid} died during the trace`
-    : `the app process ${pid} ended during the trace, process ${current} runs now`;
+    ? `the app process ${pid} died during ${period}`
+    : `the app process ${pid} ended during ${period}, process ${current} runs now`;
 }
 
 async function stopAndPull(app: RunningApp, files: TraceFiles) {

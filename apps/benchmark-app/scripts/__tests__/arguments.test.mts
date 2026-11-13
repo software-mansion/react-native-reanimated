@@ -154,6 +154,113 @@ describe('parseArguments', () => {
     );
   });
 
+  it('reads the memory command with defaults and with all options', () => {
+    const required = [
+      'memory',
+      '--config',
+      'c.json',
+      '--scenario',
+      'shared-elements',
+      '--serial',
+      'S1',
+    ];
+    assert.deepEqual(parseArguments(required), {
+      command: 'memory',
+      config: 'c.json',
+      serial: 'S1',
+      scenario: 'shared-elements',
+      launches: 2,
+      intervalSeconds: 60,
+      durationSeconds: 1200,
+      slopeLimit: 1000,
+      keepTraces: false,
+      traceProcessor: undefined,
+    });
+    assert.deepEqual(
+      parseArguments([
+        ...required,
+        '--launches',
+        '4',
+        '--interval',
+        '30',
+        '--duration',
+        '600',
+        '--slope-limit',
+        '250.5',
+        '--keep-traces',
+      ]),
+      {
+        command: 'memory',
+        config: 'c.json',
+        serial: 'S1',
+        scenario: 'shared-elements',
+        launches: 4,
+        intervalSeconds: 30,
+        durationSeconds: 600,
+        slopeLimit: 250.5,
+        keepTraces: true,
+        traceProcessor: undefined,
+      }
+    );
+  });
+
+  it('rejects memory options that the test cannot use', () => {
+    const required = [
+      'memory',
+      '--config',
+      'c.json',
+      '--scenario',
+      'css',
+      '--serial',
+      'S1',
+    ];
+    assert.throws(
+      () => parseArguments([...required, '--launches', '3']),
+      /--launches must be a multiple of 2/
+    );
+    assert.throws(
+      () => parseArguments([...required, '--duration', '120']),
+      /at least 4 times --interval/
+    );
+    assert.throws(
+      () => parseArguments([...required, '--slope-limit=-1']),
+      /--slope-limit must be a number of 0 or more/
+    );
+    assert.throws(
+      () => parseArguments([...required, '--slope-limit', 'many']),
+      /--slope-limit must be a number of 0 or more/
+    );
+    assert.throws(
+      () => parseArguments(['memory', '--config', 'c.json', '--serial', 'S1']),
+      /--scenario is required/
+    );
+  });
+
+  it('reads memory --resume and rejects the stored options with it', () => {
+    assert.deepEqual(
+      parseArguments(['memory', '--resume', 'runs/m1', '--serial', 'S1']),
+      {
+        command: 'memory-resume',
+        folder: 'runs/m1',
+        serial: 'S1',
+        traceProcessor: undefined,
+      }
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'memory',
+          '--resume',
+          'runs/m1',
+          '--serial',
+          'S1',
+          '--duration',
+          '600',
+        ]),
+      /Remove --duration\./
+    );
+  });
+
   it('reads the noise-limits command with one or more runs', () => {
     assert.deepEqual(parseArguments(['noise-limits', '--runs', 'r1', 'r2']), {
       command: 'noise-limits',

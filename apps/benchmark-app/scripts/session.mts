@@ -1,5 +1,5 @@
 import type { VariantKey } from './config.mts';
-import type { InvalidCause, InvalidSample, SampleResult } from './protocol.mts';
+import type { InvalidCause, SampleResult } from './protocol.mts';
 import type { Scenario } from './scenarios.mts';
 
 export interface SamplePlace {
@@ -10,14 +10,32 @@ export interface SamplePlace {
   position: number;
 }
 
-export type MeasuredSample = SamplePlace &
-  SampleResult & { segment: number; batteryLevel: number };
+export interface InvalidJudgement {
+  valid: false;
+  cause: InvalidCause;
+  detail: string;
+}
 
-export type SampleRecord = MeasuredSample & { accepted: boolean };
+export type Judged = { valid: true } | InvalidJudgement;
 
-export type Sampler = (place: SamplePlace) => Promise<MeasuredSample>;
+export type Measured<R extends Judged = SampleResult> = SamplePlace &
+  R & { segment: number; batteryLevel: number };
 
-export type ProgressListener = (outcome: ScenarioOutcome) => void;
+export type Recorded<R extends Judged = SampleResult> = Measured<R> & {
+  accepted: boolean;
+};
+
+export type MeasuredSample = Measured;
+
+export type SampleRecord = Recorded;
+
+export type Sampler<R extends Judged> = (
+  place: SamplePlace
+) => Promise<Measured<R>>;
+
+export type ProgressListener<R extends Judged> = (
+  outcome: ScenarioOutcome<R>
+) => void;
 
 export interface FailedScenario {
   scenario: Scenario;
@@ -25,33 +43,33 @@ export interface FailedScenario {
   causes: { variant: VariantKey; cause: InvalidCause; detail: string }[];
 }
 
-export interface ScenarioOutcome {
+export interface ScenarioOutcome<R extends Judged = SampleResult> {
   scenario: Scenario;
-  samples: SampleRecord[];
+  samples: Recorded<R>[];
   failed: FailedScenario | null;
 }
 
 export const DEFAULT_BLOCKS = 5;
 export const INVALID_BLOCKS_LIMIT = 3;
 
-export async function runScenario(
+export async function runScenario<R extends Judged>(
   scenario: Scenario,
   blocks: number,
-  sampler: Sampler,
-  onProgress: ProgressListener = () => {},
-  acceptedSamples: SampleRecord[] = []
-): Promise<ScenarioOutcome> {
-  const samples: SampleRecord[] = [...acceptedSamples];
+  sampler: Sampler<R>,
+  onProgress: ProgressListener<R> = () => {},
+  acceptedSamples: Recorded<R>[] = []
+): Promise<ScenarioOutcome<R>> {
+  const samples: Recorded<R>[] = [...acceptedSamples];
   const reportProgress = () =>
     onProgress({ scenario, samples: [...samples], failed: null });
-  const record = (sample: SampleRecord) => {
+  const record = (sample: Recorded<R>) => {
     samples.push(sample);
     reportProgress();
   };
   const firstBlock = new Set(acceptedSamples.map((sample) => sample.block))
     .size;
   for (let block = firstBlock; block < blocks; block++) {
-    const invalidAttempts: (SamplePlace & InvalidSample)[] = [];
+    const invalidAttempts: (SamplePlace & InvalidJudgement)[] = [];
     while (true) {
       const attempt = await runBlock(
         scenario,
@@ -79,19 +97,23 @@ export async function runScenario(
   return { scenario, samples, failed: null };
 }
 
-async function runBlock(
+async function runBlock<R extends Judged>(
   scenario: Scenario,
   block: number,
   attempt: number,
-  sampler: Sampler,
-  record: (sample: SampleRecord) => void
-): Promise<SampleRecord[]> {
-  const samples: SampleRecord[] = [];
+  sampler: Sampler<R>,
+  record: (sample: Recorded<R>) => void
+): Promise<Recorded<R>[]> {
+  const samples: Recorded<R>[] = [];
   for (const [position, variant] of blockOrder(block).entries()) {
-    const sample = {
-      ...(await sampler({ scenario, variant, block, attempt, position })),
-      accepted: false,
-    };
+    const measured = await sampler({
+      scenario,
+      variant,
+      block,
+      attempt,
+      position,
+    });
+    const sample: Recorded<R> = Object.assign(measured, { accepted: false });
     samples.push(sample);
     record(sample);
     if (!sample.valid) {
@@ -105,15 +127,15 @@ export function blockOrder(block: number): VariantKey[] {
   return block % 2 === 0 ? ['a', 'b', 'b', 'a'] : ['b', 'a', 'a', 'b'];
 }
 
-function isInvalid(
-  sample: SampleRecord
-): sample is SampleRecord & InvalidSample {
+function isInvalid<R extends Judged>(
+  sample: Recorded<R>
+): sample is Recorded<R> & InvalidJudgement {
   return !sample.valid;
 }
 
 function failedScenario(
   scenario: Scenario,
-  invalidAttempts: (SamplePlace & InvalidSample)[]
+  invalidAttempts: (SamplePlace & InvalidJudgement)[]
 ): FailedScenario {
   return {
     scenario,

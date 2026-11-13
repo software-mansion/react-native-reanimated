@@ -82,7 +82,7 @@ describe('computeTraceMetrics', () => {
     assertClose(metrics.processCpu, 14883.558033 / SECONDS);
     assert.equal(metrics.mountBatchCount, 588);
     assert.equal(metrics.memory, 111592);
-    assert.equal(metrics.memoryGrowth, -51484);
+    assert.equal(metrics.windowMemoryDelta, -51484);
   });
 
   it('takes the JS thread CPU time from the JS thread only and counts the other threads apart', () => {

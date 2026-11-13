@@ -2,12 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { DeviceState } from './android-device.mts';
-import type { RunConfig, VariantKey } from './config.mts';
+import type { Expectation, RunConfig, VariantKey } from './config.mts';
 import { ToolError } from './errors.mts';
 import type { ExpectationResult } from './expectations.mts';
-import type { VerdictMetric } from './metrics.mts';
+import { RETIRED_VERDICT_METRIC, isVerdictMetric } from './metrics.mts';
+import type { SampleMetrics, VerdictMetric } from './metrics.mts';
+import type { SampleResult } from './protocol.mts';
 import type { Scenario } from './scenarios.mts';
-import type { ScenarioOutcome } from './session.mts';
+import type { Judged, SampleRecord, ScenarioOutcome } from './session.mts';
 import type { ToolVersions } from './tools.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { NoiseLimits, VerdictRow } from './verdict.mts';
@@ -24,32 +26,47 @@ export interface Segment {
 
 export type RunVariant = BuiltVariant & { apkSha256: string };
 
-export type AbandonedScenario = ScenarioOutcome & { segment: number };
+export type AbandonedScenario<R extends Judged = SampleResult> =
+  ScenarioOutcome<R> & { segment: number };
 
-export interface RunResult {
-  formatVersion: 1;
+export type ResultCommand = 'run' | 'memory';
+
+export interface MeasurementResult<R extends Judged = SampleResult> {
+  formatVersion: typeof FORMAT_VERSION;
+  command: ResultCommand;
   status: RunStatus;
   startedAt: string;
   finishedAt?: string;
   error?: string;
   config: RunConfig;
+  options: { keepTraces: boolean };
+  serial: string;
+  segments: Segment[];
+  appRefreshRate: number | null;
+  tools?: ToolVersions;
+  variants: Partial<Record<VariantKey, RunVariant>>;
+  scenarios: ScenarioOutcome<R>[];
+  incompleteScenario: ScenarioOutcome<R> | null;
+  abandonedScenarios: AbandonedScenario<R>[];
+}
+
+export interface RunResult extends MeasurementResult {
+  command: 'run';
   options: {
     blocks: number;
     noiseLimitsFile: string | null;
     keepTraces: boolean;
   };
   noiseLimits: NoiseLimits | null;
-  serial: string;
-  segments: Segment[];
-  appRefreshRate: number | null;
-  tools?: ToolVersions;
-  variants: Partial<Record<VariantKey, RunVariant>>;
-  scenarios: ScenarioOutcome[];
-  incompleteScenario: ScenarioOutcome | null;
-  abandonedScenarios: AbandonedScenario[];
   statistics: VerdictRow[];
   expectations: ExpectationResult[];
 }
+
+type FormatOneResult = Omit<RunResult, 'formatVersion' | 'command'> & {
+  formatVersion: 1;
+};
+
+export const FORMAT_VERSION = 2;
 
 export function runFolderName(date: Date, name: string): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -72,18 +89,92 @@ export function createRunFolder(
 }
 
 export function readResult(folder: string): RunResult {
+  return readMeasurementResult<RunResult>(folder, 'run');
+}
+
+export function readMeasurementResult<R extends MeasurementResult<Judged>>(
+  folder: string,
+  command: R['command']
+): R {
   const file = path.join(folder, 'result.json');
-  let result: RunResult;
+  let stored: MeasurementResult<Judged> | FormatOneResult;
   try {
-    result = JSON.parse(fs.readFileSync(file, 'utf8')) as RunResult;
+    stored = JSON.parse(fs.readFileSync(file, 'utf8')) as typeof stored;
   } catch (error) {
     throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
   }
-  return withSampleSegments(result);
+  const result =
+    stored.formatVersion === 1 ? upgradedFormatOne(stored) : stored;
+  if (result.command !== command) {
+    throw new ToolError(
+      `${folder} holds the result of the ${result.command} command, not of the ${command} command`
+    );
+  }
+  return withSampleSegments(result as R);
 }
 
-function withSampleSegments(result: RunResult): RunResult {
-  const fill = (outcome: ScenarioOutcome, segment: number) =>
+function upgradedFormatOne(stored: FormatOneResult): RunResult {
+  outcomesOf(stored)
+    .flatMap((outcome) => outcome.samples)
+    .forEach(renameRetiredMetric);
+  return {
+    ...stored,
+    formatVersion: FORMAT_VERSION,
+    command: 'run',
+    config: {
+      ...stored.config,
+      expect: stored.config.expect
+        .map(withCurrentMetrics)
+        .filter((expectation) => expectation.metrics.length > 0),
+    },
+    noiseLimits: stored.noiseLimits && withCurrentLimits(stored.noiseLimits),
+  };
+}
+
+function outcomesOf<R extends Judged>(
+  result: Pick<
+    MeasurementResult<R>,
+    'scenarios' | 'incompleteScenario' | 'abandonedScenarios'
+  >
+): ScenarioOutcome<R>[] {
+  return [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+    ...result.abandonedScenarios,
+  ];
+}
+
+function renameRetiredMetric(sample: SampleRecord) {
+  const metrics = sample.metrics as
+    | (SampleMetrics & { [RETIRED_VERDICT_METRIC]?: number })
+    | undefined;
+  const value = metrics?.[RETIRED_VERDICT_METRIC];
+  if (metrics && value !== undefined) {
+    metrics.windowMemoryDelta = value;
+    delete metrics[RETIRED_VERDICT_METRIC];
+  }
+}
+
+function withCurrentMetrics(expectation: Expectation): Expectation {
+  return {
+    ...expectation,
+    metrics: expectation.metrics.filter(isVerdictMetric),
+  };
+}
+
+function withCurrentLimits(limits: NoiseLimits): NoiseLimits {
+  return Object.fromEntries(
+    Object.entries(limits).map(([scenario, metrics]) => [
+      scenario,
+      Object.fromEntries(
+        Object.entries(metrics).filter(([metric]) => isVerdictMetric(metric))
+      ),
+    ])
+  );
+}
+
+function withSampleSegments<R extends MeasurementResult<Judged>>(result: R): R {
+  const fill = (outcome: ScenarioOutcome<Judged>, segment: number) =>
     outcome.samples.forEach((sample) => (sample.segment ??= segment));
   result.scenarios.forEach((outcome) => fill(outcome, 0));
   if (result.incompleteScenario) {
@@ -95,7 +186,7 @@ function withSampleSegments(result: RunResult): RunResult {
   return result;
 }
 
-export function writeResult(folder: string, result: RunResult) {
+export function writeResult(folder: string, result: MeasurementResult<Judged>) {
   const file = path.join(folder, 'result.json');
   fs.writeFileSync(
     `${file}.partial`,
@@ -104,8 +195,11 @@ export function writeResult(folder: string, result: RunResult) {
   fs.renameSync(`${file}.partial`, file);
 }
 
-export function scenariosWithoutData(result: RunResult): Scenario[] {
-  return result.config.scenarios.filter(
+export function scenariosWithoutData(
+  result: MeasurementResult<Judged>,
+  scenarios: readonly Scenario[] = result.config.scenarios
+): Scenario[] {
+  return scenarios.filter(
     (scenario) =>
       !result.scenarios.some((outcome) => outcome.scenario === scenario)
   );

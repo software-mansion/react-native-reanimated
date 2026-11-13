@@ -2,196 +2,32 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { after, before, beforeEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
-import type { AndroidDevice, DeviceState } from '../android-device.mts';
-import { ToolError } from '../errors.mts';
-import { REPOSITORY_ROOT } from '../paths.mts';
-import type { TraceMetrics } from '../perfetto.mts';
-import type { Clock } from '../protocol.mts';
 import { readResult, writeResult } from '../results.mts';
 import type { RunResult, RunVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
-import type { RunDependencies } from '../run.mts';
 import type { SampleRecord } from '../session.mts';
-import type { CommandContext, Processes } from '../tools.mts';
-import type { BuiltVariant } from '../variant-build.mts';
+import {
+  SERIAL,
+  STATE,
+  createFake as createCommandFake,
+  onlyRunFolder,
+  useTestRoot,
+} from './command-fake.mts';
+import type { FakeOptions } from './command-fake.mts';
 
-const ROOT = path.join(
-  REPOSITORY_ROOT,
-  '.tmp',
-  'benchmarks',
-  'tests',
-  `run-${process.pid}`
-);
-const RUNS_DIR = path.join(ROOT, 'runs');
-const SERIAL = 'SERIAL1';
-
-const STATE: DeviceState = {
-  model: 'Pixel',
-  hardwareSerial: 'HW1',
-  fingerprint: 'google/pixel:17/X/1:user/release-keys',
-  sdk: 37,
-  abi: 'arm64-v8a',
-  refreshRate: 60,
-  brightness: 102,
-  brightnessMode: 'manual',
-  batteryLevel: 80,
-  batteryStatus: 'charging',
-  chargeState: 'usb',
-  wifiEnabled: true,
-  wifiConnected: true,
-  thermalStatus: 0,
-  batteryTemperature: 30,
-};
-
-const METRICS: TraceMetrics = {
-  frameDurationMedian: 8,
-  frameDurationP90: 10,
-  frameDurationP95: 11,
-  frameDurationP99: 14,
-  jankyFrames: 0.01,
-  frameTimelineDurationMedian: 16,
-  frameTimelineDurationP95: 33,
-  frameTimelineFrameCount: 600,
-  jankFlaggedFrames: 0.02,
-  appDeadlineMissedFrames: 0.01,
-  drawFrameMedian: 6,
-  drawFrameP95: 9,
-  uiThreadCpu: 120,
-  jsThreadCpu: 80,
-  renderThreadCpu: 60,
-  otherThreadsCpu: 140,
-  processCpu: 400,
-  uiThreadCpuWork: 240000,
-  processCpuWork: 800000,
-  mountBatchCount: 590,
-  memory: 150000,
-  memoryGrowth: 100,
-  frameCount: 600,
-  expectedFrameCount: 600,
-};
-
-interface FakeOptions {
-  interruptAtTrace?: number;
-  state?: DeviceState;
-  toolVersion?: string;
-}
-
-let previousAndroidHome: string | undefined;
-
-before(() => {
-  previousAndroidHome = process.env.ANDROID_HOME;
-  fs.mkdirSync(path.join(ROOT, 'sdk', 'platform-tools'), { recursive: true });
-  fs.writeFileSync(path.join(ROOT, 'sdk', 'platform-tools', 'adb'), '');
-  fs.writeFileSync(path.join(ROOT, 'trace_processor_shell'), '');
-  process.env.ANDROID_HOME = path.join(ROOT, 'sdk');
+const TEST_ROOT = useTestRoot('run', {
+  name: 'resume-test',
+  a: { reanimated: '4.7.1', worklets: '0.13.1' },
+  b: { reanimated: '4.7.1', worklets: '0.13.1' },
+  scenarios: ['css', 'idle-cost'],
+  blocks: { 'idle-cost': 2 },
 });
-
-after(() => {
-  process.env.ANDROID_HOME = previousAndroidHome;
-  fs.rmSync(ROOT, { recursive: true, force: true });
-});
-
-beforeEach(() => {
-  fs.rmSync(RUNS_DIR, { recursive: true, force: true });
-  for (const variant of ['a', 'b']) {
-    fs.mkdirSync(path.join(ROOT, 'builds', variant), { recursive: true });
-    fs.writeFileSync(apkOf(variant), `apk ${variant}`);
-  }
-  fs.writeFileSync(
-    path.join(ROOT, 'config.json'),
-    JSON.stringify({
-      name: 'resume-test',
-      a: { reanimated: '4.7.1', worklets: '0.13.1' },
-      b: { reanimated: '4.7.1', worklets: '0.13.1' },
-      scenarios: ['css', 'idle-cost'],
-      blocks: { 'idle-cost': 2 },
-    })
-  );
-});
-
-function apkOf(variant: string): string {
-  return path.join(ROOT, 'builds', variant, 'app-release.apk');
-}
+const { apkOf } = TEST_ROOT;
 
 function createFake(options: FakeOptions = {}) {
-  let time = 0;
-  let traces = 0;
-  let scenario = '';
-  let interrupt: (() => Promise<void>) | null = null;
-  const installs: string[] = [];
-  const logs: string[] = [];
-  const clock: Clock = {
-    now: () => time,
-    sleep: async (ms) => {
-      time += ms;
-    },
-  };
-  const device = {
-    checkConnected: async () => {},
-    readState: async () => options.state ?? STATE,
-    install: async (apk: string) => void installs.push(apk),
-    compileForSpeed: async () => {},
-    forceStop: async () => {},
-    stopTraces: async () => {},
-    removeAllTraces: async () => {},
-    readThermalStatus: async () => 0,
-    readBatteryTemperature: async () => 30,
-    clearLog: async () => {},
-    startActivity: async (_id: string, name: string) => {
-      scenario = name;
-      return { started: true, totalTime: 300 };
-    },
-    streamReports: (onLine: (line: string) => void) => {
-      onLine(`READY scenario=${scenario} version=1 load=1 jsThread=4350`);
-      return { stop: () => {}, failure: () => null };
-    },
-    readPid: async () => 100,
-    push: async () => {},
-    recordTrace: async () => {
-      traces++;
-      if (traces === options.interruptAtTrace) {
-        await interrupt?.();
-        throw new ToolError('the device connection ended');
-      }
-    },
-    pull: async (_remote: string, local: string) =>
-      fs.writeFileSync(local, 'trace'),
-    remove: async () => {},
-  };
-  const dependencies: RunDependencies = {
-    buildVariant: async ({ key }) =>
-      ({
-        variant: key,
-        buildKey: `key-${key}`,
-        directory: path.join(ROOT, 'builds', key),
-        apk: apkOf(key),
-        applicationId: `com.reanimatedbenchmark.${key}`,
-        installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
-        effectiveFlags: { reanimated: {}, worklets: {} },
-      }) satisfies BuiltVariant,
-    createDevice: () => device as unknown as AndroidDevice,
-    createCollector: () => ({
-      collect: async () => ({ processLived: true, metrics: METRICS }),
-    }),
-    clock,
-    runsDir: RUNS_DIR,
-  };
-  const processes = {
-    run: async () => ({
-      stdout: `${options.toolVersion ?? '1.0'}\n`,
-      stderr: '',
-    }),
-  } as unknown as Processes;
-  const context: CommandContext = {
-    processes,
-    log: (message) => void logs.push(message),
-    onInterrupt: (action) => {
-      interrupt = action;
-    },
-  };
-  return { dependencies, context, installs };
+  return createCommandFake(TEST_ROOT, options);
 }
 
 async function stoppedRun({
@@ -203,19 +39,18 @@ async function stoppedRun({
     runCommand(
       {
         command: 'run',
-        config: path.join(ROOT, 'config.json'),
+        config: TEST_ROOT.configFile,
         serial: SERIAL,
         blocks: 1,
         keepTraces,
-        traceProcessor: path.join(ROOT, 'trace_processor_shell'),
+        traceProcessor: TEST_ROOT.traceProcessor,
       },
       context,
       dependencies
     ),
     /the device connection ended/
   );
-  const [folder] = fs.readdirSync(RUNS_DIR);
-  return path.join(RUNS_DIR, folder);
+  return onlyRunFolder(TEST_ROOT);
 }
 
 function resume(folder: string, options: FakeOptions = {}, serial = SERIAL) {
@@ -227,7 +62,7 @@ function resume(folder: string, options: FakeOptions = {}, serial = SERIAL) {
         command: 'resume',
         folder,
         serial,
-        traceProcessor: path.join(ROOT, 'trace_processor_shell'),
+        traceProcessor: TEST_ROOT.traceProcessor,
       },
       context,
       dependencies
@@ -398,6 +233,49 @@ describe('resumeCommand', () => {
     assert.ok(
       result.incompleteScenario?.samples.every((sample) => sample.segment === 1)
     );
+  });
+
+  it('resumes a run of result format 1 with the old metric memoryGrowth', async () => {
+    const folder = await stoppedRun({ interruptAtTrace: 10 });
+    const file = path.join(folder, 'result.json');
+    const { command: _command, ...current } = readResult(folder);
+    const formatOne = {
+      ...current,
+      formatVersion: 1,
+      config: {
+        ...current.config,
+        expect: [
+          { scenarios: ['css'], metrics: ['memoryGrowth'], is: 'notWorse' },
+          ...current.config.expect.map((expectation) => ({
+            ...expectation,
+            metrics: [...expectation.metrics, 'memoryGrowth'],
+          })),
+        ],
+      },
+      noiseLimits: { css: { memory: 0.03, memoryGrowth: 4000 } },
+    };
+    fs.writeFileSync(
+      file,
+      JSON.stringify(formatOne).replaceAll(
+        '"windowMemoryDelta"',
+        '"memoryGrowth"'
+      )
+    );
+
+    assert.equal(await resume(folder).run, 0);
+    const text = fs.readFileSync(file, 'utf8');
+    assert.ok(!text.includes('memoryGrowth'));
+    const result = readResult(folder);
+    assert.equal(result.formatVersion, 2);
+    assert.equal(result.command, 'run');
+    assert.deepEqual(result.noiseLimits, { css: { memory: 0.03 } });
+    assert.equal(result.config.expect.length, 1);
+    assert.ok(
+      result.scenarios
+        .flatMap((outcome) => outcome.samples)
+        .every((sample) => sample.metrics?.windowMemoryDelta === 100)
+    );
+    assert.equal(result.expectations[0].status, 'holds');
   });
 
   it('closes a segment that ended without cleanup', async () => {

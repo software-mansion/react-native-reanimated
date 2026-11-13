@@ -61,7 +61,7 @@ function outcome(
             uiThreadCpu: 100,
             jsThreadCpu: 50,
             memory: 100000,
-            memoryGrowth: 0,
+            windowMemoryDelta: 0,
             coldStart: 300,
             ...metricsOf(variant, i),
           },
@@ -76,8 +76,22 @@ function writeRun(
   outcomes: ScenarioOutcome[],
   b: Variant = VARIANT
 ): string {
+  const folder = runFolder(name);
+  writeResult(folder, runResult(name, outcomes, b));
+  return folder;
+}
+
+function runFolder(name: string): string {
   const folder = path.join(ROOT, name);
   fs.mkdirSync(folder, { recursive: true });
+  return folder;
+}
+
+function runResult(
+  name: string,
+  outcomes: ScenarioOutcome[],
+  b: Variant = VARIANT
+): RunResult {
   const config: RunConfig = {
     name,
     a: VARIANT,
@@ -85,8 +99,9 @@ function writeRun(
     scenarios: outcomes.map((item) => item.scenario),
     expect: [],
   };
-  writeResult(folder, {
-    formatVersion: 1,
+  return {
+    formatVersion: 2,
+    command: 'run',
     status: 'tool error',
     startedAt: '2026-11-12T10:00:00.000Z',
     config,
@@ -101,8 +116,7 @@ function writeRun(
     abandonedScenarios: [],
     statistics: [],
     expectations: [],
-  } satisfies RunResult);
-  return folder;
+  };
 }
 
 function printed(runs: string[]): unknown {
@@ -147,12 +161,14 @@ describe('splitNoise', () => {
 });
 
 describe('computeNoiseLimits', () => {
-  it('applies the floors and gives memoryGrowth only for its scenarios', () => {
+  it('applies the floors and gives no limit for windowMemoryDelta', () => {
     const limits = computeNoiseLimits([
       outcome('css', () => ({})),
-      outcome('mount-unmount', (_variant, i) => ({ memoryGrowth: i * 3000 })),
+      outcome('mount-unmount', (_variant, i) => ({
+        windowMemoryDelta: i * 3000,
+      })),
     ]);
-    assert.deepEqual(limits.css, {
+    const floors = {
       frameDurationMedian: NOISE_LIMIT_FLOORS.frameDurationMedian,
       frameDurationP95: 0.02,
       jankyFrames: 0.005,
@@ -160,8 +176,9 @@ describe('computeNoiseLimits', () => {
       jsThreadCpu: 0.02,
       memory: 0.02,
       coldStart: 0.02,
-    });
-    assert.ok((limits['mount-unmount']?.memoryGrowth ?? 0) > 4000);
+    };
+    assert.deepEqual(limits.css, floors);
+    assert.deepEqual(limits['mount-unmount'], floors);
   });
 
   it('leaves out a relative metric whose median can be 0', () => {
@@ -178,6 +195,20 @@ describe('noiseLimitsCommand', () => {
     const second = writeRun('aa-2', [outcome('sticky-header', () => ({}))]);
     const limits = printed([first, second]) as Record<string, unknown>;
     assert.deepEqual(Object.keys(limits), ['css', 'sticky-header']);
+  });
+
+  it('reads a run of result format 1 with memoryGrowth', () => {
+    const folder = runFolder('format-1');
+    const { command: _command, ...current } = runResult('format-1', [
+      outcome('mount-unmount', () => ({})),
+    ]);
+    const stored = JSON.stringify({ ...current, formatVersion: 1 }).replaceAll(
+      '"windowMemoryDelta"',
+      '"memoryGrowth"'
+    );
+    fs.writeFileSync(path.join(folder, 'result.json'), stored);
+    const limits = printed([folder]) as Record<string, object>;
+    assert.equal(Object.keys(limits['mount-unmount']).length, 7);
   });
 
   it('refuses a run that is not A/A', () => {

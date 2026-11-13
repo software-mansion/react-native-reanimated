@@ -3,6 +3,7 @@
 import { USAGE, parseArguments } from './arguments.mts';
 import type { Command } from './arguments.mts';
 import { ToolError } from './errors.mts';
+import { memoryCommand, memoryResumeCommand } from './memory.mts';
 import { noiseLimitsCommand } from './noise-limits.mts';
 import { resumeCommand, runCommand } from './run.mts';
 import { sampleCommand } from './sample.mts';
@@ -58,6 +59,10 @@ async function runParsedCommand(
       return runCommand(command, context);
     case 'resume':
       return resumeCommand(command, context);
+    case 'memory':
+      return memoryCommand(command, context);
+    case 'memory-resume':
+      return memoryResumeCommand(command, context);
     case 'noise-limits':
       return noiseLimitsCommand(command);
     case 'sample':

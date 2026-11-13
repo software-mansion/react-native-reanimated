@@ -19,6 +19,10 @@ iOS: launch arguments `-benchmarkScenario <name> [-benchmarkLoad <integer>]`.
 
 The Gradle property `benchmarkApplicationIdSuffix` adds a suffix to the Android application id and the app label (`-PbenchmarkApplicationIdSuffix=.a` gives `com.reanimatedbenchmark.a`). On iOS, set `PRODUCT_BUNDLE_IDENTIFIER`.
 
+## Measure
+
+The driver in [`scripts/`](scripts/README.md) measures the app on an Android device. `run` compares two builds for each scenario and metric. `memory` reads the memory of two builds in one scenario for a long time and looks for a leak.
+
 ## Report lines
 
 The `BenchmarkReporter` TurboModule writes each line to logcat with the tag `ReanimatedBenchmark` on Android, and to stdout with the prefix `ReanimatedBenchmark: ` on iOS.

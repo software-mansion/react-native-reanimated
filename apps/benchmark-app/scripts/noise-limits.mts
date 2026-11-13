@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import type { NoiseLimitsOptions } from './arguments.mts';
 import { ToolError } from './errors.mts';
-import { METRIC_COMPARISONS, verdictMetricsOf } from './metrics.mts';
+import { METRIC_COMPARISONS, VERDICT_METRICS } from './metrics.mts';
 import type { VerdictMetric } from './metrics.mts';
 import { variantDifferences } from './report.mts';
 import { acceptedValues, readResult } from './results.mts';
@@ -24,7 +24,6 @@ export const NOISE_LIMIT_FLOORS: Record<VerdictMetric, number> = {
   uiThreadCpu: 0.02,
   jsThreadCpu: 0.02,
   memory: 0.02,
-  memoryGrowth: 4000,
   coldStart: 0.02,
 };
 export const EXACT_SPLITS_LIMIT = 200_000;
@@ -78,7 +77,7 @@ export function computeNoiseLimits(outcomes: ScenarioOutcome[]): NoiseLimits {
   const limits: NoiseLimits = {};
   for (const outcome of outcomes) {
     const metrics: Partial<Record<VerdictMetric, number>> = {};
-    for (const metric of verdictMetricsOf(outcome.scenario)) {
+    for (const metric of VERDICT_METRICS) {
       const limit = splitNoise(
         acceptedValues(outcome, metric, 'a'),
         acceptedValues(outcome, metric, 'b'),

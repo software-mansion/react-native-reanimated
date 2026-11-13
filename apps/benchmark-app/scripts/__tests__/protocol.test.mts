@@ -33,7 +33,7 @@ const TRACE_METRICS: TraceMetrics = {
   processCpuWork: 800000,
   mountBatchCount: 590,
   memory: 150000,
-  memoryGrowth: 100,
+  windowMemoryDelta: 100,
   frameCount: 600,
   expectedFrameCount: 600,
 };

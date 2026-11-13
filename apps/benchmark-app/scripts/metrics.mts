@@ -1,5 +1,3 @@
-import { MEMORY_GROWTH_SCENARIOS } from './scenarios.mts';
-import type { Scenario } from './scenarios.mts';
 import type { Comparison } from './statistics.mts';
 
 export const VERDICT_METRICS = [
@@ -9,11 +7,12 @@ export const VERDICT_METRICS = [
   'uiThreadCpu',
   'jsThreadCpu',
   'memory',
-  'memoryGrowth',
   'coldStart',
 ] as const;
 
 export type VerdictMetric = (typeof VERDICT_METRICS)[number];
+
+export const RETIRED_VERDICT_METRIC = 'memoryGrowth';
 
 export interface SampleMetrics {
   frameDurationMedian: number | null;
@@ -37,7 +36,7 @@ export interface SampleMetrics {
   processCpuWork: number | null;
   mountBatchCount: number;
   memory: number;
-  memoryGrowth: number;
+  windowMemoryDelta: number;
   coldStart: number;
   frameCount: number;
   expectedFrameCount: number;
@@ -52,7 +51,6 @@ export const METRIC_UNITS: Record<VerdictMetric, MetricUnit> = {
   uiThreadCpu: 'ms/s',
   jsThreadCpu: 'ms/s',
   memory: 'kB',
-  memoryGrowth: 'kB',
   coldStart: 'ms',
 };
 
@@ -63,17 +61,9 @@ export const METRIC_COMPARISONS: Record<VerdictMetric, Comparison> = {
   uiThreadCpu: 'relative',
   jsThreadCpu: 'relative',
   memory: 'relative',
-  memoryGrowth: 'absolute',
   coldStart: 'relative',
 };
 
 export function isVerdictMetric(name: unknown): name is VerdictMetric {
   return VERDICT_METRICS.includes(name as VerdictMetric);
-}
-
-export function verdictMetricsOf(scenario: Scenario): VerdictMetric[] {
-  return VERDICT_METRICS.filter(
-    (metric) =>
-      metric !== 'memoryGrowth' || MEMORY_GROWTH_SCENARIOS.includes(scenario)
-  );
 }

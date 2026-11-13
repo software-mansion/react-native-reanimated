@@ -1,5 +1,5 @@
 import { ToolError } from './errors.mts';
-import { METRIC_COMPARISONS, verdictMetricsOf } from './metrics.mts';
+import { METRIC_COMPARISONS, VERDICT_METRICS } from './metrics.mts';
 import type { VerdictMetric } from './metrics.mts';
 import type { Scenario } from './scenarios.mts';
 import {
@@ -52,7 +52,7 @@ export function computeVerdictRows(
   scenariosWithoutRows: readonly Scenario[] = []
 ): VerdictRow[] {
   const rows = scenarios.flatMap((scenario) =>
-    verdictMetricsOf(scenario).map((metric) =>
+    VERDICT_METRICS.map((metric) =>
       compareMetric(
         scenario,
         metric,
@@ -61,8 +61,8 @@ export function computeVerdictRows(
       )
     )
   );
-  const missingPValues = scenariosWithoutRows.flatMap((scenario) =>
-    verdictMetricsOf(scenario).map(() => MISSING_ROW_P_VALUE)
+  const missingPValues = scenariosWithoutRows.flatMap(() =>
+    VERDICT_METRICS.map(() => MISSING_ROW_P_VALUE)
   );
   const passes = benjaminiHochberg(
     [...rows.map((row) => row.pValue), ...missingPValues],

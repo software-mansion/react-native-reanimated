@@ -44,7 +44,10 @@ describe('computeVerdictRows', () => {
     assert.equal(rows.filter((row) => row.scenario === 'css').length, 7);
     assert.equal(
       rows.filter((row) => row.scenario === 'mount-unmount').length,
-      8
+      7
+    );
+    assert.ok(
+      rows.every((row) => (row.metric as string) !== 'windowMemoryDelta')
     );
     assert.ok(rows.every((row) => row.verdict === 'no change found'));
   });
@@ -77,43 +80,19 @@ describe('computeVerdictRows', () => {
     assert.equal(row.verdict, 'no change found');
   });
 
-  it('compares memoryGrowth as an absolute difference with a noise limit in kB', () => {
-    const growthA = BASE.map((value) => value * 10);
-    const growthB = growthA.map((value) => value + 300);
-    const values = valuesFrom({ memoryGrowth: { a: growthA, b: growthB } });
-    const inside = rowOf(
-      computeVerdictRows(['mount-unmount'], values, {
-        'mount-unmount': { memoryGrowth: 400 },
-      }),
-      'memoryGrowth'
-    );
-    assert.equal(inside.comparison, 'absolute');
-    assert.equal(inside.comparisonFallback, false);
-    assert.equal(inside.difference, 300);
-    assert.equal(inside.noiseLimit, 400);
-    assert.equal(inside.verdict, 'no change found');
-    const outside = rowOf(
-      computeVerdictRows(['mount-unmount'], values, {
-        'mount-unmount': { memoryGrowth: 200 },
-      }),
-      'memoryGrowth'
-    );
-    assert.equal(outside.verdict, 'worse');
-  });
-
-  it('does not reverse the verdict for negative memory growth', () => {
+  it('falls back to the absolute difference for memory values of 0 or less', () => {
     const a = Array.from({ length: 10 }, (_, i) => -100 - i);
     const b = Array.from({ length: 10 }, (_, i) => -200 - i);
-    const rows = computeVerdictRows(
-      ['mount-unmount'],
-      valuesFrom({ memoryGrowth: { a, b }, memory: { a, b } }),
-      {}
+    const memory = rowOf(
+      computeVerdictRows(
+        ['mount-unmount'],
+        valuesFrom({ memory: { a, b } }),
+        {}
+      ),
+      'memory'
     );
-    const growth = rowOf(rows, 'memoryGrowth');
-    assert.equal(growth.difference, -100);
-    assert.equal(growth.verdict, 'better');
-    const memory = rowOf(rows, 'memory');
     assert.equal(memory.comparisonFallback, true);
+    assert.equal(memory.difference, -100);
     assert.notEqual(memory.verdict, 'worse');
   });
 

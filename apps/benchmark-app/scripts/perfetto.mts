@@ -472,7 +472,7 @@ function memoryMetrics(samples: Record<string, number>[]) {
     BYTES_PER_KB;
   const first = total(() => 0);
   const last = total((values) => values.length - 1);
-  return { memory: last, memoryGrowth: last - first };
+  return { memory: last, windowMemoryDelta: last - first };
 }
 
 function checkFiniteMetrics(metrics: TraceMetrics) {

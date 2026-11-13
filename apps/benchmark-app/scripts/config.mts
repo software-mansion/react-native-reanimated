@@ -2,9 +2,9 @@ import path from 'node:path';
 
 import { ToolError } from './errors.mts';
 import {
+  RETIRED_VERDICT_METRIC,
   VERDICT_METRICS,
   isVerdictMetric,
-  verdictMetricsOf,
 } from './metrics.mts';
 import type { VerdictMetric } from './metrics.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
@@ -126,9 +126,10 @@ export function validateNoiseLimits(raw: unknown): NoiseLimits {
       continue;
     }
     limits[scenario] = {};
-    for (const [metric, limit] of Object.entries(
+    const entries = Object.entries(
       record(metrics, `noise limits.${scenario}`, problems)
-    )) {
+    ).filter(([metric]) => metric !== RETIRED_VERDICT_METRIC);
+    for (const [metric, limit] of entries) {
       if (!isVerdictMetric(metric)) {
         problems.push(`noise limits.${scenario}: unknown metric "${metric}"`);
       } else if (typeof limit !== 'number' || !(limit >= 0)) {
@@ -390,12 +391,6 @@ function validateExpectation(
     ) {
       problems.push(`${label}.byAtLeast must be a fraction between 0 and 1`);
     }
-  }
-  const selectsRows = scenarios.some((scenario) =>
-    verdictMetricsOf(scenario).some((metric) => metrics.includes(metric))
-  );
-  if (!selectsRows) {
-    problems.push(`${label} selects no scenario and metric pair of this run`);
   }
   return {
     scenarios,

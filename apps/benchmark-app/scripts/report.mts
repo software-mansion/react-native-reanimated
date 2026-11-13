@@ -4,15 +4,19 @@ import type { ExpectationResult } from './expectations.mts';
 import { METRIC_UNITS, VERDICT_METRICS } from './metrics.mts';
 import type { MetricUnit } from './metrics.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
+import type { SampleSteps } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
-import type { RunResult, Segment } from './results.mts';
+import type { MeasurementResult, RunResult, Segment } from './results.mts';
 import type {
   FailedScenario,
-  SampleRecord,
+  Judged,
+  Recorded,
   ScenarioOutcome,
 } from './session.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { VerdictRow } from './verdict.mts';
+
+type Timed = Judged & { timings: SampleSteps['timings'] };
 
 export interface Difference {
   field: string;
@@ -84,7 +88,7 @@ function blocksText(result: RunResult): string {
     : String(result.options.blocks);
 }
 
-function differencesSection(result: RunResult): string {
+export function differencesSection(result: MeasurementResult<Judged>): string {
   const differences = variantDifferences(result.config, result.variants);
   if (differences.length === 0) {
     return 'A and B have the same sources, flags and build options.';
@@ -154,7 +158,7 @@ function flagDifferences(
   }));
 }
 
-function table(header: string[], rows: string[][]): string {
+export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
   return [line(header), line(header.map(() => '---')), ...rows.map(line)].join(
     '\n'
@@ -264,7 +268,7 @@ function verdictsSection(result: RunResult): string {
       ? []
       : ['Provisional: the run is not complete.']),
     result.noiseLimits
-      ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points; memoryGrowth, in kB). A row with no limit in the file has the limit 0.`
+      ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`
       : 'No noise limits given: the limit is 0 for all rows.',
     'The difference and the interval of jankyFrames are in percentage points (pp).',
   ].join(' ');
@@ -307,7 +311,7 @@ function verdictsSection(result: RunResult): string {
   ].join('\n');
 }
 
-function failedSection(failed: FailedScenario[]): string {
+export function failedSection(failed: FailedScenario[]): string {
   if (failed.length === 0) {
     return 'None.';
   }
@@ -322,7 +326,7 @@ function failedSection(failed: FailedScenario[]): string {
     .join('\n');
 }
 
-function deviceSection(serial: string, device: DeviceState): string {
+export function deviceSection(serial: string, device: DeviceState): string {
   const entries: [string, unknown][] = [
     ['serial', serial],
     ...Object.entries(device),
@@ -333,7 +337,7 @@ function deviceSection(serial: string, device: DeviceState): string {
   );
 }
 
-function segmentsSection(result: RunResult): string {
+export function segmentsSection(result: MeasurementResult<Judged>): string {
   const lines = [
     ...result.scenarios,
     ...(result.incompleteScenario ? [result.incompleteScenario] : []),
@@ -365,7 +369,7 @@ function segmentsTable(segments: Segment[]): string {
   );
 }
 
-function blockSegmentsLine(outcome: ScenarioOutcome): string[] {
+function blockSegmentsLine(outcome: ScenarioOutcome<Judged>): string[] {
   const blocksBySegment = new Map<number, number[]>();
   for (const sample of outcome.samples.filter((sample) => sample.accepted)) {
     blocksBySegment.set(sample.segment, [
@@ -388,7 +392,7 @@ function blockRange(blocks: number[]): string {
   return first === last ? `block ${first}` : `blocks ${first}-${last}`;
 }
 
-function invalidSection(samples: SampleRecord[]): string {
+export function invalidSection(samples: Recorded<Judged>[]): string {
   return table(
     ['Cause', 'Samples'],
     INVALID_CAUSES.map((cause) => [
@@ -401,7 +405,7 @@ function invalidSection(samples: SampleRecord[]): string {
   );
 }
 
-function timingSection(samples: SampleRecord[]): string {
+export function timingSection(samples: Recorded<Timed>[]): string {
   return table(
     ['Step', 'Mean'],
     SAMPLE_STEPS.map((step) => {
