@@ -149,7 +149,7 @@ When the relative difference is not defined for a division (a median of 0 or les
 1. The driver builds and installs A and B as `run` does.
 1. It launches the app in the scenario for each variant in turn: A, B, B, A, then B, A, A, B. `--launches` sets the number of launches for each variant (default 2).
 1. After READY, it reads `dumpsys meminfo <application id>` every `--interval` seconds (default 60) for `--duration` seconds (default 1200). The duration must be a multiple of the interval and at least 4 intervals.
-1. Each reading has the planned time, the measured time (seconds after READY when `dumpsys meminfo` returns), the time of the command in ms, the frame count with its own measured time (when `dumpsys gfxinfo <application id>` returns), the battery level, the battery temperature, and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
+1. Each reading has the planned time, the measured time (seconds from the start of the readings, which is a short time after READY, to the moment when `dumpsys meminfo` returns), the time of the command in ms, the frame count with its own measured time (when `dumpsys gfxinfo <application id>` returns), the battery level, the battery temperature, and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
 1. After the last reading, the driver records one trace and checks the app as `run` does (`thermal`, `frames`, `work`, `crash`).
 
 A launch is invalid when:
@@ -184,6 +184,8 @@ Limits of the test:
 - The test does not find a rise that is slower than the slope limit.
 - A late drop of memory can hide a rise.
 - The second half of the duration can still contain start-up effects.
+- The verdict uses total PSS only. A rise in another value, for example in swap PSS, does not change it.
+- The same number of launches for each variant does not give the same conditions. A repeated launch or a resumed test changes the order, and the launches of one variant can start on a cooler device. The report gives the segment, the launch number and the attempt of each launch.
 
 `result.json` keeps the readings and the trace check of each launch, and the summary. `report.md` gives the verdicts, the limits, the `tailLevel` and `tailSlope` of each launch and their medians, and the series of each launch. The exit code is 0 for `rises`, `no rise found` and `not judged`, 1 when a variant is `mixed` or `not decided`, and 2 for a tool error.
 

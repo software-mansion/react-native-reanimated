@@ -109,6 +109,8 @@ function verdictsSection(result: MemoryResult): string {
     '- The test does not find a rise that is slower than the slope limit.',
     '- A late drop of memory can hide a rise.',
     '- The second half of the duration can still contain start-up effects.',
+    '- The verdict uses total PSS only. A rise in another value, for example in swap PSS, does not change it.',
+    '- The same number of launches for each variant does not give the same conditions. A repeated launch or a resumed test changes the order, and the launches of one variant can start on a cooler device. The Series section gives the segment, the launch number and the attempt of each launch.',
     '',
     checks,
     '',
