@@ -4,26 +4,97 @@ import { expect, test } from '@playwright/test';
 const SMALL_VIEWPORT = { width: 440, height: 360 };
 const LARGE_VIEWPORT = { width: 1100, height: 900 };
 
-// The exiting animation runs on a copy of the overlay, and the original is hidden
-function getVisibleOverlaySize(page: Page) {
-  return page.evaluate(() => {
-    const overlay = Array.from(
-      document.querySelectorAll<HTMLElement>('[data-testid="overlay"]')
-    ).find((element) => getComputedStyle(element).visibility !== 'hidden');
-    const rect = overlay?.getBoundingClientRect();
-    return rect ? { width: rect.width, height: rect.height } : null;
-  });
-}
+type Animation = 'a preset' | 'a Keyframe' | 'initial values';
 
-async function getParentSize(page: Page) {
-  return page.evaluate(() => {
+// Opens the overlay and waits until its entering animation is over
+async function openOverlay(page: Page, animation: Animation) {
+  await page.getByRole('button', { name: `Open with ${animation}` }).click();
+  await page.waitForFunction(() => {
     const overlay = document.querySelector<HTMLElement>(
       '[data-testid="overlay"]'
     );
-    const rect = (
-      overlay?.offsetParent ?? document.body
-    ).getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
+    // The overlay is hidden until its entering animation starts
+    return (
+      overlay &&
+      getComputedStyle(overlay).visibility !== 'hidden' &&
+      overlay.getAnimations().every(({ playState }) => playState === 'finished')
+    );
+  });
+}
+
+// The keyframes of a custom entering animation are removed some time after the animation
+async function waitForKeyframesCleanup(page: Page) {
+  await page.waitForFunction(() => {
+    const animationName = document.querySelector<HTMLElement>(
+      '[data-testid="overlay"]'
+    )?.style.animationName;
+    const styleTag = document.getElementById(
+      'ReanimatedCustomWebAnimationsStyle'
+    ) as HTMLStyleElement | null;
+    return (
+      animationName?.startsWith('REA-ENTERING-') &&
+      !Array.from(styleTag?.sheet?.cssRules ?? []).some(
+        (rule) => (rule as CSSKeyframesRule).name === animationName
+      )
+    );
+  });
+}
+
+// This runs in the page, so the overlay is measured in the first frames of its exiting animation.
+// The exiting animation runs on a copy of the overlay, and the original is hidden.
+function closeOverlayAndMeasure(page: Page) {
+  return page.evaluate(async () => {
+    const toBox = ({ top, left, width, height }: DOMRect) => ({
+      top,
+      left,
+      width,
+      height,
+    });
+    const overlay = document.querySelector<HTMLElement>(
+      '[data-testid="overlay"]'
+    )!;
+    const parent = toBox(
+      (overlay.offsetParent ?? document.body).getBoundingClientRect()
+    );
+    const beforeExit = toBox(overlay.getBoundingClientRect());
+    const getCopy = () =>
+      Array.from(
+        document.querySelectorAll<HTMLElement>('[data-testid="overlay"]')
+      ).find(
+        (element) =>
+          element !== overlay &&
+          getComputedStyle(element).visibility !== 'hidden'
+      );
+
+    Array.from(overlay.querySelectorAll<HTMLElement>('[role="button"]'))
+      .find((button) => button.textContent === 'Close')
+      ?.click();
+
+    let copy = getCopy();
+    for (let frame = 0; frame < 30 && !copy; frame++) {
+      await new Promise(requestAnimationFrame);
+      copy = getCopy();
+    }
+    return {
+      parent,
+      beforeExit,
+      duringExit: copy ? toBox(copy.getBoundingClientRect()) : null,
+    };
+  });
+}
+
+function getOverlayAndParentSizes(page: Page) {
+  return page.evaluate(() => {
+    const toSize = ({ width, height }: DOMRect) => ({ width, height });
+    const overlay = document.querySelector<HTMLElement>(
+      '[data-testid="overlay"]'
+    )!;
+    return {
+      overlay: toSize(overlay.getBoundingClientRect()),
+      parent: toSize(
+        (overlay.offsetParent ?? document.body).getBoundingClientRect()
+      ),
+    };
   });
 }
 
@@ -38,54 +109,42 @@ test.describe('ResizedOverlay', () => {
     [SMALL_VIEWPORT, LARGE_VIEWPORT],
     [LARGE_VIEWPORT, SMALL_VIEWPORT],
   ]) {
-    for (const animation of ['a preset', 'a Keyframe']) {
+    for (const animation of ['a preset', 'a Keyframe'] as const) {
       test(`exits at the current size with ${animation} after a resize from ${from.width} to ${to.width}`, async ({
         page,
       }) => {
         await page.setViewportSize(from);
-        await page
-          .getByRole('button', { name: `Open with ${animation}` })
-          .click();
-        // The entering animation takes 300 ms
-        await page.waitForTimeout(600);
+        await openOverlay(page, animation);
 
         await page.setViewportSize(to);
-        const parentSize = await getParentSize(page);
-        await page.getByRole('button', { name: 'Close' }).click();
-        // The exiting animation takes 1500 ms
-        await page.waitForTimeout(300);
+        const { parent, duringExit } = await closeOverlayAndMeasure(page);
 
-        expect(await getVisibleOverlaySize(page)).toEqual(parentSize);
+        expect(duringExit).toEqual(parent);
       });
     }
   }
 
-  for (const animation of ['a Keyframe', 'initial values']) {
+  for (const animation of ['a Keyframe', 'initial values'] as const) {
     test(`keeps following its parent after entering with ${animation}`, async ({
       page,
     }) => {
-      await page
-        .getByRole('button', { name: `Open with ${animation}` })
-        .click();
-      // The keyframes of a custom entering animation are cleaned up after 5 times its duration
-      await page.waitForTimeout(2000);
+      await openOverlay(page, animation);
+      await waitForKeyframesCleanup(page);
 
       await page.setViewportSize(LARGE_VIEWPORT);
 
-      expect(await getVisibleOverlaySize(page)).toEqual(
-        await getParentSize(page)
-      );
+      const { overlay, parent } = await getOverlayAndParentSizes(page);
+      expect(overlay).toEqual(parent);
     });
   }
 
   test('exits in place after its own content was scrolled', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: 'Open with a preset' }).click();
-    await page.waitForTimeout(600);
+    await openOverlay(page, 'a preset');
 
     // Scrolling the content of the overlay doesn't move the overlay
-    const topBeforeExit = await page.evaluate(() => {
+    await page.evaluate(() => {
       const overlay = document.querySelector<HTMLElement>(
         '[data-testid="overlay"]'
       )!;
@@ -95,28 +154,17 @@ test.describe('ResizedOverlay', () => {
       overlay.style.overflow = 'auto';
       overlay.appendChild(tallContent);
       overlay.scrollTop = 100;
-      return overlay.getBoundingClientRect().top;
     });
-    await page.getByRole('button', { name: 'Close' }).dispatchEvent('click');
-    await page.waitForTimeout(300);
+    const { beforeExit, duringExit } = await closeOverlayAndMeasure(page);
 
-    const topDuringExit = await page.evaluate(
-      () =>
-        Array.from(
-          document.querySelectorAll<HTMLElement>('[data-testid="overlay"]')
-        )
-          .find((element) => getComputedStyle(element).visibility !== 'hidden')
-          ?.getBoundingClientRect().top
-    );
-    expect(topDuringExit).toBe(topBeforeExit);
+    expect(duringExit).toEqual(beforeExit);
   });
 
   test('accepts style updates after entering with a Keyframe', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: 'Open with a Keyframe' }).click();
-    // The keyframes of a custom entering animation are cleaned up after 5 times its duration
-    await page.waitForTimeout(2000);
+    await openOverlay(page, 'a Keyframe');
+    await waitForKeyframesCleanup(page);
 
     const opacity = await page.evaluate(() => {
       const overlay = document.querySelector<HTMLElement>(

@@ -93,13 +93,15 @@ function removeWebAnimation(
     CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
+  // The callback can insert another animation, which shifts the indices, so it has to run
+  // before the index is read.
+  animationRemoveCallback();
+
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
     throw new Error('[Reanimated] Failed to obtain animation index.');
   }
-
-  animationRemoveCallback();
 
   styleTag.sheet?.deleteRule(currentAnimationIndex);
 
