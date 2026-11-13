@@ -307,6 +307,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<Tag, int> unqueuedBatchTags_;
   // carriers whose last UI-thread frames are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedCarrierFrames_;
+  // frames in `unqueuedCarrierFrames_` that no release round trip includes yet
+  mutable std::unordered_map<Tag, int> carrierFramesWithoutRelease_;
+  // a pull found a frame in `unqueuedCarrierFrames_` and waits for its release
+  mutable bool pullWaitsForCarrierRelease_ = false;
   // deletes of carriers that left a removed layout root, until their last frames are in the mount queue, and of
   // the carrier layers that held them
   mutable std::deque<std::pair<Tag, ShadowViewMutationList>> carrierDeletesAfterQueuedFrames_;
@@ -473,7 +477,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
-  void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
+  void maybeStartCarrierRelease() const;
+  bool isCarrierAnimating(Tag carrierTag) const;
+  void releaseCarriersOfQueuedFrames(const std::unordered_map<Tag, int> &frames) const;
   void removeCarrierBeforeQueuedFrames(const std::shared_ptr<LightNode> &carrier, ShadowViewMutationList &mutations)
       const;
   void flushCarrierDeletesAfterQueuedFrames(ShadowViewMutationList &mutations) const;
