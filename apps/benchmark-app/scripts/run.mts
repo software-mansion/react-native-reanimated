@@ -1,7 +1,8 @@
 import path from 'node:path';
 
+import { COMPARED_STATE_KEYS } from './android-device.mts';
 import type { ResumeOptions, RunOptions } from './arguments.mts';
-import { blocksOf, validateNoiseLimits } from './config.mts';
+import { blocksOf, validateConfig, validateNoiseLimits } from './config.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
 import {
   DEFAULT_DEPENDENCIES,
@@ -31,7 +32,7 @@ export async function runCommand(
   context: CommandContext,
   dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
 ): Promise<number> {
-  const config = readConfig(options.config);
+  const config = readConfig(options.config, validateConfig);
   const noiseLimits = options.noiseLimits
     ? validateNoiseLimits(readJson(options.noiseLimits))
     : null;
@@ -45,6 +46,7 @@ export async function runCommand(
     (fields) => ({
       ...fields,
       command: 'run',
+      config,
       options: {
         blocks: options.blocks,
         noiseLimitsFile: options.noiseLimits ?? null,
@@ -79,6 +81,7 @@ export async function resumeCommand(
 function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
   return {
     scenarios: result.config.scenarios,
+    stateKeys: COMPARED_STATE_KEYS,
     blocksOf: (scenario) =>
       blocksOf(result.config, scenario, result.options.blocks),
     measure: takeSample,
@@ -113,6 +116,6 @@ function summarize(result: RunResult) {
     result.scenarios.flatMap((outcome) =>
       outcome.failed ? [outcome.failed] : []
     ),
-    scenariosWithoutData(result)
+    scenariosWithoutData(result, result.config.scenarios)
   );
 }

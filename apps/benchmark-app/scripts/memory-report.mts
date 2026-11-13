@@ -1,9 +1,16 @@
-import { TAIL_LEVEL_START, TAIL_SLOPE_START } from './memory-series.mts';
+import {
+  LATE_LIMIT_SHARE,
+  MINIMUM_FRAME_RATE,
+  MINIMUM_JUDGED_DURATION_SECONDS,
+  TAIL_LEVEL_START,
+  TAIL_SLOPE_START,
+} from './memory-series.mts';
 import type {
   MemoryLaunch,
   MemoryResult,
   VariantMemorySummary,
 } from './memory.mts';
+import { INVALID_CAUSES } from './protocol.mts';
 import {
   deviceSection,
   differencesSection,
@@ -65,7 +72,7 @@ export function renderMemoryReport(result: MemoryResult): string {
     '',
     '## Invalid launches',
     '',
-    invalidSection(launches),
+    invalidSection(launches, [...INVALID_CAUSES, 'late']),
     '',
     '## Time for each launch (mean)',
     '',
@@ -79,12 +86,28 @@ function verdictsSection(result: MemoryResult): string {
   const rule = [
     `\`tailLevel\` is the median total PSS of the readings at or after ${percent(TAIL_LEVEL_START)} of the duration.`,
     `\`tailSlope\` is the least-squares slope of total PSS over the readings at or after ${percent(TAIL_SLOPE_START)} of the duration, in kB per minute.`,
-    `A variant "rises" when the \`tailSlope\` of each of its launches is above the slope limit (${options.slopeLimit} kB per minute). Else it is "stable".`,
+    `A variant "rises" when the \`tailSlope\` of each of its launches is above the slope limit (${options.slopeLimit} kB per minute).`,
+    'It is "no rise found" when the `tailSlope` of each launch is at or below the limit, and "mixed" when the launches do not agree.',
     `It is "not decided" when it has fewer than ${options.launches} accepted launches.`,
-    'The test uses no other statistics.',
+    `A verdict needs a duration of at least ${MINIMUM_JUDGED_DURATION_SECONDS} s. Else the verdict is "not judged".`,
+  ].join(' ');
+  const checks = [
+    `A reading that comes more than ${LATE_LIMIT_SHARE * options.intervalSeconds} s after its planned time makes the launch invalid (\`late\`).`,
+    `Between two readings, the app must draw at least ${MINIMUM_FRAME_RATE} frames per second ("Total frames rendered" of \`dumpsys gfxinfo\`). Else the launch is invalid (\`frames\`).`,
+    'This is a low fixed floor: some scenarios draw fewer frames than the refresh rate, so the driver has no sound value for each scenario.',
   ].join(' ');
   return [
     rule,
+    '',
+    'Limits of the test:',
+    '',
+    `- It uses ${options.launches} launches for each variant and gives no confidence interval.`,
+    '- "no rise found" does not prove that there is no leak.',
+    '- The test does not find a rise that is slower than the slope limit.',
+    '- A late drop of memory can hide a rise.',
+    '- The second half of the duration can still contain start-up effects.',
+    '',
+    checks,
     '',
     table(
       [
@@ -140,7 +163,11 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
           ? 'No readings.'
           : table(
               [
-                'Seconds',
+                'Planned s',
+                'Measured s',
+                'meminfo ms',
+                'Frames',
+                'Battery',
                 'Total PSS',
                 'Native heap',
                 'Dalvik heap',
@@ -149,7 +176,11 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
                 'Total swap PSS',
               ],
               launch.readings.map((reading) => [
-                String(reading.seconds),
+                String(reading.plannedSeconds),
+                reading.seconds.toFixed(1),
+                String(Math.round(reading.meminfoMs)),
+                String(reading.frameCount),
+                `${reading.batteryLevel}%`,
                 kB(reading.totalPss),
                 kB(reading.nativeHeap),
                 kB(reading.dalvikHeap),

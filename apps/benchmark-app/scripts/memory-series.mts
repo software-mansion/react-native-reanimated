@@ -11,14 +11,32 @@ export interface MemoryValues {
   totalSwapPss: number;
 }
 
-export type MemoryReading = MemoryValues & { seconds: number };
+export type MemoryReading = MemoryValues & {
+  plannedSeconds: number;
+  seconds: number;
+  meminfoMs: number;
+  frameCount: number;
+  batteryLevel: number;
+};
+
+export interface ReadingProblem {
+  cause: 'late' | 'frames';
+  detail: string;
+}
 
 export interface MemorySchedule {
   intervalSeconds: number;
   durationSeconds: number;
 }
 
-export type LeakVerdict = 'rises' | 'stable' | 'not decided';
+export const MINIMUM_JUDGED_DURATION_SECONDS = 600;
+
+export type LeakVerdict =
+  | 'rises'
+  | 'no rise found'
+  | 'mixed'
+  | 'not decided'
+  | `not judged (duration under ${typeof MINIMUM_JUDGED_DURATION_SECONDS} s)`;
 
 export const DEFAULT_LAUNCHES = 2;
 export const DEFAULT_INTERVAL_SECONDS = 60;
@@ -30,8 +48,11 @@ export const LAUNCHES_PER_BLOCK = blockOrder(0).filter(
 ).length;
 export const TAIL_LEVEL_START = 0.75;
 export const TAIL_SLOPE_START = 0.5;
+export const LATE_LIMIT_SHARE = 0.5;
+export const MINIMUM_FRAME_RATE = 10;
 
 const SECONDS_PER_MINUTE = 60;
+const TOTAL_FRAMES_PATTERN = /Total frames rendered:\s*(\d+)/;
 const MEMINFO_PATTERNS: Record<keyof MemoryValues, RegExp> = {
   totalPss: /TOTAL PSS:\s+(\d+)/,
   nativeHeap: /^\s*Native Heap\s+(\d+)/m,
@@ -82,6 +103,39 @@ export function parseMeminfo(output: string): MemoryValues {
   };
 }
 
+export function parseTotalFrames(output: string): number {
+  const frames = TOTAL_FRAMES_PATTERN.exec(output)?.[1];
+  if (frames === undefined) {
+    throw new ToolError(
+      `Cannot read "Total frames rendered" from dumpsys gfxinfo:\n${output.slice(0, 500)}`
+    );
+  }
+  return Number(frames);
+}
+
+export function readingProblem(
+  reading: MemoryReading,
+  previous: Pick<MemoryReading, 'seconds' | 'frameCount'>,
+  schedule: MemorySchedule
+): ReadingProblem | null {
+  const lateLimit = LATE_LIMIT_SHARE * schedule.intervalSeconds;
+  if (reading.seconds - reading.plannedSeconds > lateLimit) {
+    return {
+      cause: 'late',
+      detail: `the reading of ${reading.plannedSeconds} s came at ${reading.seconds.toFixed(1)} s, more than ${lateLimit} s late`,
+    };
+  }
+  const frames = reading.frameCount - previous.frameCount;
+  const seconds = reading.seconds - previous.seconds;
+  if (frames < MINIMUM_FRAME_RATE * seconds) {
+    return {
+      cause: 'frames',
+      detail: `${frames} frames in the ${seconds.toFixed(1)} s before the reading of ${reading.plannedSeconds} s, expected at least ${MINIMUM_FRAME_RATE} frames per second`,
+    };
+  }
+  return null;
+}
+
 export function tailLevel(
   readings: readonly MemoryReading[],
   durationSeconds: number
@@ -116,12 +170,28 @@ export function tailSlope(
 export function leakVerdict(
   slopes: readonly number[],
   launches: number,
-  slopeLimit: number
+  slopeLimit: number,
+  durationSeconds: number
 ): LeakVerdict {
   if (slopes.length < launches) {
     return 'not decided';
   }
-  return slopes.every((slope) => slope > slopeLimit) ? 'rises' : 'stable';
+  if (durationSeconds < MINIMUM_JUDGED_DURATION_SECONDS) {
+    return `not judged (duration under ${MINIMUM_JUDGED_DURATION_SECONDS} s)`;
+  }
+  const rising = slopes.filter((slope) => slope > slopeLimit).length;
+  if (rising === slopes.length) {
+    return 'rises';
+  }
+  return rising === 0 ? 'no rise found' : 'mixed';
+}
+
+export function exitCodeOfVerdicts(verdicts: readonly LeakVerdict[]): 0 | 1 {
+  return verdicts.some(
+    (verdict) => verdict === 'mixed' || verdict === 'not decided'
+  )
+    ? 1
+    : 0;
 }
 
 function readingsFrom(

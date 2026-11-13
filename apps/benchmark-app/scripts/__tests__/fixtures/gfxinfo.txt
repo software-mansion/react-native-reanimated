@@ -1,0 +1,18 @@
+Applications Graphics Acceleration Info:
+Uptime: 759844631 Realtime: 759844631
+
+** Graphics info for pid 30324 [com.reanimatedbenchmark.a] **
+
+Stats since: 759784631000000ns
+Total frames rendered: 3571
+Janky frames: 12 (0.34%)
+Janky frames (legacy): 40 (1.12%)
+50th percentile: 5ms
+90th percentile: 7ms
+95th percentile: 8ms
+99th percentile: 13ms
+
+Window: com.reanimatedbenchmark.a/com.reanimatedbenchmark.MainActivity
+Stats since: 759784631000000ns
+Total frames rendered: 3560
+Janky frames: 12 (0.34%)

@@ -2,7 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { DeviceState } from './android-device.mts';
-import type { Expectation, RunConfig, VariantKey } from './config.mts';
+import type {
+  Expectation,
+  RunConfig,
+  VariantKey,
+  VariantsConfig,
+} from './config.mts';
 import { ToolError } from './errors.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { RETIRED_VERDICT_METRIC, isVerdictMetric } from './metrics.mts';
@@ -38,7 +43,7 @@ export interface MeasurementResult<R extends Judged = SampleResult> {
   startedAt: string;
   finishedAt?: string;
   error?: string;
-  config: RunConfig;
+  config: VariantsConfig;
   options: { keepTraces: boolean };
   serial: string;
   segments: Segment[];
@@ -52,6 +57,7 @@ export interface MeasurementResult<R extends Judged = SampleResult> {
 
 export interface RunResult extends MeasurementResult {
   command: 'run';
+  config: RunConfig;
   options: {
     blocks: number;
     noiseLimitsFile: string | null;
@@ -128,6 +134,10 @@ function upgradedFormatOne(stored: FormatOneResult): RunResult {
         .filter((expectation) => expectation.metrics.length > 0),
     },
     noiseLimits: stored.noiseLimits && withCurrentLimits(stored.noiseLimits),
+    statistics: stored.statistics.filter((row) => isVerdictMetric(row.metric)),
+    expectations: stored.expectations
+      .map(withCurrentRows)
+      .filter((result) => result.expectation.metrics.length > 0),
   };
 }
 
@@ -159,6 +169,16 @@ function withCurrentMetrics(expectation: Expectation): Expectation {
   return {
     ...expectation,
     metrics: expectation.metrics.filter(isVerdictMetric),
+  };
+}
+
+function withCurrentRows(result: ExpectationResult): ExpectationResult {
+  const current = (row: VerdictRow) => isVerdictMetric(row.metric);
+  return {
+    ...result,
+    expectation: withCurrentMetrics(result.expectation),
+    rows: result.rows.filter(current),
+    decidingRows: result.decidingRows.filter(current),
   };
 }
 
@@ -197,7 +217,7 @@ export function writeResult(folder: string, result: MeasurementResult<Judged>) {
 
 export function scenariosWithoutData(
   result: MeasurementResult<Judged>,
-  scenarios: readonly Scenario[] = result.config.scenarios
+  scenarios: readonly Scenario[]
 ): Scenario[] {
   return scenarios.filter(
     (scenario) =>

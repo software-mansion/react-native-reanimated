@@ -17,6 +17,9 @@ export interface FakeOptions {
   toolVersion?: string;
   metrics?: Partial<TraceMetrics>;
   meminfo?: (applicationId: string, msAfterStart: number) => string;
+  meminfoMs?: (reading: number) => number;
+  framesPerSecond?: number;
+  batteryLevelAt?: (time: number) => number;
   diesAtReading?: number;
 }
 
@@ -135,7 +138,14 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
   };
   const device = {
     checkConnected: async () => {},
-    readState: async () => options.state ?? STATE,
+    readState: async () => {
+      const state = options.state ?? STATE;
+      return options.batteryLevelAt
+        ? { ...state, batteryLevel: options.batteryLevelAt(time) }
+        : state;
+    },
+    readBatteryLevel: async () =>
+      options.batteryLevelAt?.(time) ?? (options.state ?? STATE).batteryLevel,
     install: async (apk: string) => void installs.push(apk),
     compileForSpeed: async () => {},
     forceStop: async () => {},
@@ -160,8 +170,12 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       if (readings === options.diesAtReading) {
         alive = false;
       }
-      return options.meminfo?.(applicationId, time - startedAt) ?? '';
+      const output = options.meminfo?.(applicationId, time - startedAt) ?? '';
+      time += options.meminfoMs?.(readings) ?? 0;
+      return output;
     },
+    readGfxinfo: async () =>
+      `Total frames rendered: ${Math.floor(((time - startedAt) / 1000) * (options.framesPerSecond ?? 60))}`,
     push: async () => {},
     recordTrace: async () => {
       traces++;

@@ -5,15 +5,15 @@ import path from 'node:path';
 import {
   AndroidDevice,
   DeviceStateGuard,
-  IDLE_STATE_KEYS,
+  idleKeysOf,
   changedStateKeys,
   checkAbi,
   checkSdk,
   cleanUpDevice,
 } from './android-device.mts';
 import type { DeviceState } from './android-device.mts';
-import { VARIANT_KEYS, validateConfig } from './config.mts';
-import type { RunConfig, VariantKey } from './config.mts';
+import { VARIANT_KEYS } from './config.mts';
+import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
 import { APP_DIR, BUILDS_DIR, RUNS_DIR } from './paths.mts';
 import { TraceProcessor } from './perfetto.mts';
@@ -58,6 +58,7 @@ export interface MeasurementJob<
   R extends MeasurementResult<S>,
 > {
   scenarios: readonly Scenario[];
+  stateKeys: readonly (keyof DeviceState)[];
   blocksOf: (scenario: Scenario) => number;
   measure: (
     request: SampleRequest,
@@ -77,7 +78,7 @@ export type NewResultFields<S extends JobResult> = Omit<
 >;
 
 export interface Start {
-  config: RunConfig;
+  config: VariantsConfig;
   serial: string;
   traceProcessor?: string;
   folderName: string;
@@ -113,8 +114,11 @@ export const DEFAULT_DEPENDENCIES: MeasurementDependencies = {
   runsDir: RUNS_DIR,
 };
 
-export function readConfig(file: string): RunConfig {
-  return validateConfig(readJson(file), path.dirname(path.resolve(file)), {
+export function readConfig<C>(
+  file: string,
+  validate: (raw: unknown, configDir: string, fileSystem: FileSystem) => C
+): C {
+  return validate(readJson(file), path.dirname(path.resolve(file)), {
     isFile: (candidate) =>
       fs.statSync(candidate, { throwIfNoEntry: false })?.isFile() ?? false,
   });
@@ -214,9 +218,9 @@ export async function resumeMeasurement<
       resume.serial
     )
   );
-  checkSameDeviceState(result.segments[0].device, startState);
-
   const job = createJob(result);
+  checkSameDeviceState(result.segments[0].device, startState, job.stateKeys);
+
   result.serial = resume.serial;
   startSegment(result, startState);
   job.clearSummary(result);
@@ -290,7 +294,8 @@ async function measure<S extends JobResult, R extends MeasurementResult<S>>(
       variants,
       guard: new DeviceStateGuard(
         result.segments[0].device,
-        result.appRefreshRate
+        result.appRefreshRate,
+        job.stateKeys
       ),
       clock: dependencies.clock,
       log,
@@ -424,7 +429,7 @@ function keptSamples<S extends JobResult>(
 }
 
 async function buildVariants(
-  config: RunConfig,
+  config: VariantsConfig,
   androidHome: string,
   context: CommandContext,
   dependencies: MeasurementDependencies,
@@ -501,8 +506,12 @@ function checkSameTools(
   }
 }
 
-function checkSameDeviceState(stored: DeviceState, current: DeviceState) {
-  const changes = changedStateKeys(stored, current, IDLE_STATE_KEYS);
+function checkSameDeviceState(
+  stored: DeviceState,
+  current: DeviceState,
+  keys: readonly (keyof DeviceState)[]
+) {
+  const changes = changedStateKeys(stored, current, idleKeysOf(keys));
   if (changes.length > 0) {
     throw new ToolError(
       `The device state is not the same as at the start of the run: ${changes.join(', ')}`

@@ -253,6 +253,21 @@ describe('resumeCommand', () => {
         ],
       },
       noiseLimits: { css: { memory: 0.03, memoryGrowth: 4000 } },
+      statistics: [
+        ...current.statistics,
+        { ...current.statistics[0], metric: 'memoryGrowth' },
+      ],
+      expectations: current.expectations.map((expectation) => ({
+        ...expectation,
+        expectation: {
+          ...expectation.expectation,
+          metrics: [...expectation.expectation.metrics, 'memoryGrowth'],
+        },
+        rows: [
+          ...expectation.rows,
+          { ...current.statistics[0], metric: 'memoryGrowth' },
+        ],
+      })),
     };
     fs.writeFileSync(
       file,
@@ -260,6 +275,13 @@ describe('resumeCommand', () => {
         '"windowMemoryDelta"',
         '"memoryGrowth"'
       )
+    );
+
+    const upgraded = readResult(folder);
+    assert.equal(upgraded.statistics.length, current.statistics.length);
+    assert.ok(
+      !JSON.stringify(upgraded).includes('memoryGrowth'),
+      'the upgraded result has no memoryGrowth'
     );
 
     assert.equal(await resume(folder).run, 0);
@@ -276,6 +298,27 @@ describe('resumeCommand', () => {
         .every((sample) => sample.metrics?.windowMemoryDelta === 100)
     );
     assert.equal(result.expectations[0].status, 'holds');
+  });
+
+  it('stops a run when the battery level changes', async () => {
+    const { dependencies, context } = createFake({
+      batteryLevelAt: (time) => (time > 15_000 ? 79 : 80),
+    });
+    await assert.rejects(
+      runCommand(
+        {
+          command: 'run',
+          config: TEST_ROOT.configFile,
+          serial: SERIAL,
+          blocks: 1,
+          keepTraces: false,
+          traceProcessor: TEST_ROOT.traceProcessor,
+        },
+        context,
+        dependencies
+      ),
+      /batteryLevel: 80 -> 79/
+    );
   });
 
   it('closes a segment that ended without cleanup', async () => {

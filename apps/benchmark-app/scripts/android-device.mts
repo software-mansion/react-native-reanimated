@@ -55,8 +55,10 @@ export const COMPARED_STATE_KEYS = [
   'wifiConnected',
 ] as const satisfies readonly (keyof DeviceState)[];
 
-export const IDLE_STATE_KEYS = COMPARED_STATE_KEYS.filter(
-  (key) => key !== 'refreshRate'
+export const IDLE_STATE_KEYS = idleKeysOf(COMPARED_STATE_KEYS);
+
+export const STATE_KEYS_WITHOUT_BATTERY_LEVEL = COMPARED_STATE_KEYS.filter(
+  (key) => key !== 'batteryLevel'
 );
 
 export const MINIMUM_SDK = 31;
@@ -201,6 +203,14 @@ export class AndroidDevice {
     return this.shell(['dumpsys', 'meminfo', applicationId]);
   }
 
+  async readGfxinfo(applicationId: string): Promise<string> {
+    return this.shell(['dumpsys', 'gfxinfo', applicationId]);
+  }
+
+  async readBatteryLevel(): Promise<number> {
+    return parseBattery(await this.shell(['dumpsys', 'battery'])).level;
+  }
+
   async readPid(applicationId: string): Promise<number | null> {
     return parsePid(await this.shell(['pidof', applicationId, '||', 'true']));
   }
@@ -284,10 +294,16 @@ export class AndroidDevice {
 
 export class DeviceStateGuard {
   readonly #start: DeviceState;
+  readonly #keys: readonly (keyof DeviceState)[];
   #inAppReference: DeviceState | null = null;
 
-  constructor(start: DeviceState, inAppRefreshRate: number | null = null) {
+  constructor(
+    start: DeviceState,
+    inAppRefreshRate: number | null = null,
+    keys: readonly (keyof DeviceState)[] = COMPARED_STATE_KEYS
+  ) {
     this.#start = start;
+    this.#keys = keys;
     if (inAppRefreshRate !== null) {
       this.#inAppReference = { ...start, refreshRate: inAppRefreshRate };
     }
@@ -295,14 +311,17 @@ export class DeviceStateGuard {
 
   checkIdle(state: DeviceState) {
     throwOnChanges(
-      changedStateKeys(this.#start, state, IDLE_STATE_KEYS),
+      changedStateKeys(this.#start, state, idleKeysOf(this.#keys)),
       'before the cool-down'
     );
   }
 
   checkInApp(state: DeviceState, moment: StateMoment): number {
     this.#inAppReference ??= { ...this.#start, refreshRate: state.refreshRate };
-    throwOnChanges(changedStateKeys(this.#inAppReference, state), moment);
+    throwOnChanges(
+      changedStateKeys(this.#inAppReference, state, this.#keys),
+      moment
+    );
     return state.refreshRate;
   }
 }
@@ -426,6 +445,12 @@ export function parsePid(output: string): number | null {
     );
   }
   return pids.length === 1 ? Number(pids[0]) : null;
+}
+
+export function idleKeysOf(
+  keys: readonly (keyof DeviceState)[]
+): (keyof DeviceState)[] {
+  return keys.filter((key) => key !== 'refreshRate');
 }
 
 export function changedStateKeys(

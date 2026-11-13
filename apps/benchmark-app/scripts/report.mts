@@ -1,10 +1,15 @@
 import type { DeviceState } from './android-device.mts';
-import type { PackageSource, RunConfig, VariantKey } from './config.mts';
+import type {
+  PackageSource,
+  RunConfig,
+  VariantKey,
+  VariantsConfig,
+} from './config.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { METRIC_UNITS, VERDICT_METRICS } from './metrics.mts';
 import type { MetricUnit } from './metrics.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
-import type { SampleSteps } from './protocol.mts';
+import type { InvalidCause, SampleSteps } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
 import type { MeasurementResult, RunResult, Segment } from './results.mts';
 import type {
@@ -76,7 +81,7 @@ export function renderReport(result: RunResult): string {
 }
 
 function incompleteNote(result: RunResult): string {
-  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
+  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result, result.config.scenarios).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
 }
 
 function blocksText(result: RunResult): string {
@@ -100,7 +105,7 @@ export function differencesSection(result: MeasurementResult<Judged>): string {
 }
 
 export function variantDifferences(
-  config: RunConfig,
+  config: VariantsConfig,
   variants: Partial<Record<VariantKey, BuiltVariant>>
 ): Difference[] {
   const { a, b } = config;
@@ -392,10 +397,13 @@ function blockRange(blocks: number[]): string {
   return first === last ? `block ${first}` : `blocks ${first}-${last}`;
 }
 
-export function invalidSection(samples: Recorded<Judged>[]): string {
+export function invalidSection(
+  samples: Recorded<Judged>[],
+  causes: readonly InvalidCause[] = INVALID_CAUSES
+): string {
   return table(
     ['Cause', 'Samples'],
-    INVALID_CAUSES.map((cause) => [
+    causes.map((cause) => [
       cause,
       String(
         samples.filter((sample) => !sample.valid && sample.cause === cause)

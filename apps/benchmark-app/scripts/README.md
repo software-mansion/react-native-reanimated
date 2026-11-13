@@ -126,7 +126,7 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 - It installs and compiles A and B again. It keeps the complete scenarios. In the incomplete scenario, it keeps the accepted blocks (4 valid samples) and continues with the first block that is not accepted. The statistics use the kept samples when the scenario is complete.
 - It moves the other samples of the incomplete scenario (the block in progress and its invalid attempts) to `abandonedScenarios`. The statistics do not use them. The count of invalid blocks starts at 0 again.
 - The battery temperature at the start of the run stays the reference for the cool-down. The refresh rate of the app in the first sample stays the reference for the run.
-- It reads a `result.json` of format 1 (from older versions). The driver renames the metric `memoryGrowth` of each sample to `windowMemoryDelta`. It removes `memoryGrowth` from the expectations and the noise limits, and it removes an expectation that has no other metric. `noise-limits` reads these files too.
+- It reads a `result.json` of format 1 (from older versions). The driver renames the metric `memoryGrowth` of each sample to `windowMemoryDelta`. It removes `memoryGrowth` from the expectations, the noise limits, the statistics and the expectation results, and it removes an expectation that has no other metric. `noise-limits` reads these files too.
 - `result.json` and the report list each segment (one start of the driver) with its start, end, status and device state. Each sample in `result.json` has the number of its segment. For each scenario with blocks from more than one segment, the report gives the blocks of each segment.
 
 ## Noise limits
@@ -144,21 +144,44 @@ When the relative difference is not defined for a division (a median of 0 or les
 
 ## Memory test
 
-`memory --config <file.json> --scenario <name> --serial <adb serial>` looks for a memory leak in one scenario. It uses `name`, `a`, `b` and `note` of the config, and it ignores `scenarios`, `blocks` and `expect`.
+`memory --config <file.json> --scenario <name> --serial <adb serial>` looks for a memory leak in one scenario. It reads and checks only `name`, `a`, `b` and `note` of the config. It ignores all other fields, so a config without `scenarios` works.
 
 1. The driver builds and installs A and B as `run` does.
 1. It launches the app in the scenario for each variant in turn: A, B, B, A, then B, A, A, B. `--launches` sets the number of launches for each variant (default 2, a multiple of 2).
 1. After READY, it reads `dumpsys meminfo <application id>` every `--interval` seconds (default 60) for `--duration` seconds (default 1200). The duration must be a multiple of the interval and at least 4 intervals.
-1. Each reading has the seconds after READY and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
-1. After the last reading, the driver records one trace and checks the app as `run` does (`thermal`, `frames`, `work`, `crash`). A launch is also invalid (`crash`) when the app process stops or changes during the readings, or when the app writes `FAILED`. After an invalid launch, the driver launches the block again. After 3 invalid blocks in sequence, the test fails.
+1. Each reading has the planned time, the measured time (seconds after READY when `dumpsys meminfo` returns), the time of the command in ms, the frame count (the first "Total frames rendered" of `dumpsys gfxinfo <application id>`), the battery level, and these values in kB: total PSS, the PSS of the native heap and of the Dalvik heap (rows of the table), and graphics, private other and total swap PSS (App Summary).
+1. After the last reading, the driver records one trace and checks the app as `run` does (`thermal`, `frames`, `work`, `crash`).
 
-For each accepted launch:
+A launch is invalid when:
+
+- the app process stops or changes during the readings, or the app writes `FAILED` (`crash`);
+- a reading comes more than half an interval after its planned time (`late`);
+- the app draws fewer than 10 frames per second between two readings, or between READY and the first reading (`frames`). This is a low fixed floor. Some scenarios draw fewer frames than the refresh rate, so the driver has no sound value for each scenario;
+- the check of the trace after the last reading fails.
+
+After an invalid launch, the driver launches the block again. After 3 invalid blocks in sequence, the test fails.
+
+For each accepted launch, the driver uses the measured time:
 
 - `tailLevel`: the median total PSS of the readings at or after 75% of the duration, in kB.
 - `tailSlope`: the least-squares slope of total PSS over the readings at or after 50% of the duration, in kB per minute.
 
-For each variant, the verdict is `rises` when the `tailSlope` of each launch is above `--slope-limit` (default 1000 kB per minute). Else it is `stable`. It is `not decided` when the variant has fewer accepted launches than `--launches`. The test uses no other statistics: with 2 launches, a bootstrap interval has no meaning.
+The verdict of each variant:
 
-`result.json` keeps the readings and the trace check of each launch, and the summary. `report.md` gives the verdicts, the `tailLevel` and `tailSlope` of each launch and their medians, and the series of each launch. The exit code is 0 when each variant has a verdict, 1 when a variant is `not decided`, and 2 for a tool error.
+- `rises`: the `tailSlope` of each launch is above `--slope-limit` (default 1000 kB per minute).
+- `no rise found`: the `tailSlope` of each launch is at or below the limit.
+- `mixed`: the launches do not agree.
+- `not decided`: the variant has fewer accepted launches than `--launches`.
+- `not judged (duration under 600 s)`: a verdict needs a duration of at least 600 s. The report still gives the series, the levels and the slopes.
 
-The device rules of `run` apply: the test stops when the battery level changes. `memory --resume <run folder> --serial <adb serial>` continues a stopped memory test as `run --resume` does. The driver launches the block in progress again.
+Limits of the test:
+
+- It uses few launches for each variant and gives no confidence interval.
+- `no rise found` does not prove that there is no leak.
+- The test does not find a rise that is slower than the slope limit.
+- A late drop of memory can hide a rise.
+- The second half of the duration can still contain start-up effects.
+
+`result.json` keeps the readings and the trace check of each launch, and the summary. `report.md` gives the verdicts, the limits, the `tailLevel` and `tailSlope` of each launch and their medians, and the series of each launch. The exit code is 0 for `rises`, `no rise found` and `not judged`, 1 when a variant is `mixed` or `not decided`, and 2 for a tool error.
+
+The device rules of `run` apply, but the memory test does not compare the battery level, because a long test can change it. Each reading stores the battery level. The test still compares the power source, the device settings and the display, and it checks the thermal state. `memory --resume <run folder> --serial <adb serial>` continues a stopped memory test with the same rules. The driver launches the block in progress again.

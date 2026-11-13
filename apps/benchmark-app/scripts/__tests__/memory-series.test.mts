@@ -6,31 +6,56 @@ import { describe, it } from 'node:test';
 import {
   LAUNCHES_PER_BLOCK,
   checkSchedule,
+  exitCodeOfVerdicts,
   leakVerdict,
   parseMeminfo,
+  parseTotalFrames,
+  readingProblem,
   readingTimes,
   tailLevel,
   tailSlope,
 } from '../memory-series.mts';
 import type { MemoryReading } from '../memory-series.mts';
 
-const MEMINFO = fs.readFileSync(
-  path.join(import.meta.dirname, 'fixtures', 'meminfo.txt'),
-  'utf8'
-);
+const MEMINFO = fixture('meminfo.txt');
+const GFXINFO = fixture('gfxinfo.txt');
+const SCHEDULE = { intervalSeconds: 60, durationSeconds: 1200 };
 
-function series(totalPssAt: (seconds: number) => number): MemoryReading[] {
-  return readingTimes({ intervalSeconds: 60, durationSeconds: 1200 }).map(
-    (seconds) => ({
-      seconds,
-      totalPss: totalPssAt(seconds),
-      nativeHeap: 0,
-      dalvikHeap: 0,
-      graphics: 0,
-      privateOther: 0,
-      totalSwapPss: 0,
-    })
+function fixture(name: string): string {
+  return fs.readFileSync(
+    path.join(import.meta.dirname, 'fixtures', name),
+    'utf8'
   );
+}
+
+function series(
+  totalPssAt: (seconds: number) => number,
+  measuredAt: (plannedSeconds: number) => number = (planned) => planned
+): MemoryReading[] {
+  return readingTimes(SCHEDULE).map((plannedSeconds) =>
+    reading(plannedSeconds, measuredAt(plannedSeconds), totalPssAt)
+  );
+}
+
+function reading(
+  plannedSeconds: number,
+  seconds: number,
+  totalPssAt: (seconds: number) => number = () => 0,
+  frameCount = seconds * 60
+): MemoryReading {
+  return {
+    plannedSeconds,
+    seconds,
+    meminfoMs: 300,
+    frameCount,
+    batteryLevel: 80,
+    totalPss: totalPssAt(seconds),
+    nativeHeap: 0,
+    dalvikHeap: 0,
+    graphics: 0,
+    privateOther: 0,
+    totalSwapPss: 0,
+  };
 }
 
 describe('parseMeminfo', () => {
@@ -53,6 +78,58 @@ describe('parseMeminfo', () => {
     assert.throws(
       () => parseMeminfo(MEMINFO.replace(/^\s*Graphics:.*$/m, '')),
       /Cannot read graphics from/
+    );
+  });
+});
+
+describe('parseTotalFrames', () => {
+  it('reads the first "Total frames rendered" of dumpsys gfxinfo, which is for the process', () => {
+    assert.equal(parseTotalFrames(GFXINFO), 3571);
+  });
+
+  it('stops when the line is missing', () => {
+    assert.throws(
+      () => parseTotalFrames('No process found for: com.reanimatedbenchmark.a'),
+      /Cannot read "Total frames rendered" from dumpsys gfxinfo/
+    );
+  });
+});
+
+describe('readingProblem', () => {
+  const previous = { seconds: 60, frameCount: 3600 };
+
+  it('accepts a reading on time with enough frames', () => {
+    assert.equal(readingProblem(reading(120, 120.4), previous, SCHEDULE), null);
+  });
+
+  it('gives late when the reading comes more than half an interval after its planned time', () => {
+    assert.equal(readingProblem(reading(120, 150), previous, SCHEDULE), null);
+    assert.deepEqual(readingProblem(reading(120, 150.5), previous, SCHEDULE), {
+      cause: 'late',
+      detail: 'the reading of 120 s came at 150.5 s, more than 30 s late',
+    });
+  });
+
+  it('gives frames when the app drew fewer than 10 frames per second since the reading before', () => {
+    assert.equal(
+      readingProblem(
+        reading(120, 120, () => 0, 3600 + 600),
+        previous,
+        SCHEDULE
+      ),
+      null
+    );
+    assert.deepEqual(
+      readingProblem(
+        reading(120, 120, () => 0, 3600 + 599),
+        previous,
+        SCHEDULE
+      ),
+      {
+        cause: 'frames',
+        detail:
+          '599 frames in the 60.0 s before the reading of 120 s, expected at least 10 frames per second',
+      }
     );
   });
 });
@@ -106,6 +183,14 @@ describe('tailSlope', () => {
     assert.ok(Math.abs(tailSlope(readings, 1200) - 500) < 1e-9);
   });
 
+  it('uses the measured time of each reading, not the planned time', () => {
+    const readings = series(
+      (seconds) => (seconds / 60) * 1000,
+      (planned) => planned + (planned % 120 === 0 ? 25 : 0)
+    );
+    assert.ok(Math.abs(tailSlope(readings, 1200) - 1000) < 1e-9);
+  });
+
   it('uses only the second half of the duration', () => {
     const riseThenStable = series((seconds) =>
       seconds < 600 ? 100000 + seconds * 100 : 200000
@@ -138,15 +223,37 @@ describe('tailSlope', () => {
 });
 
 describe('leakVerdict', () => {
-  it('gives rises only when the slope of each launch is above the limit', () => {
-    assert.equal(leakVerdict([1200, 1500], 2, 1000), 'rises');
-    assert.equal(leakVerdict([1200, 900], 2, 1000), 'stable');
-    assert.equal(leakVerdict([1000, 1000], 2, 1000), 'stable');
-    assert.equal(leakVerdict([-400, 100], 2, 1000), 'stable');
+  it('gives rises, no rise found or mixed from the slope of each launch', () => {
+    assert.equal(leakVerdict([1200, 1500], 2, 1000, 1200), 'rises');
+    assert.equal(leakVerdict([1000, -400], 2, 1000, 1200), 'no rise found');
+    assert.equal(leakVerdict([1200, 900], 2, 1000, 1200), 'mixed');
   });
 
   it('gives not decided when a launch is missing', () => {
-    assert.equal(leakVerdict([5000], 2, 1000), 'not decided');
-    assert.equal(leakVerdict([], 2, 1000), 'not decided');
+    assert.equal(leakVerdict([5000], 2, 1000, 1200), 'not decided');
+    assert.equal(leakVerdict([], 2, 1000, 1200), 'not decided');
+  });
+
+  it('does not judge a duration under 600 s', () => {
+    assert.equal(
+      leakVerdict([5000, 5000], 2, 1000, 540),
+      'not judged (duration under 600 s)'
+    );
+    assert.equal(leakVerdict([5000, 5000], 2, 1000, 600), 'rises');
+  });
+});
+
+describe('exitCodeOfVerdicts', () => {
+  it('gives 1 for mixed and not decided, and 0 for the other verdicts', () => {
+    assert.equal(
+      exitCodeOfVerdicts([
+        'rises',
+        'no rise found',
+        'not judged (duration under 600 s)',
+      ]),
+      0
+    );
+    assert.equal(exitCodeOfVerdicts(['rises', 'mixed']), 1);
+    assert.equal(exitCodeOfVerdicts(['not decided', 'rises']), 1);
   });
 });

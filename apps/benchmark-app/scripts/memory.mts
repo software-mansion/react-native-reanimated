@@ -1,7 +1,8 @@
 import path from 'node:path';
 
+import { STATE_KEYS_WITHOUT_BATTERY_LEVEL } from './android-device.mts';
 import type { MemoryOptions, MemoryResumeOptions } from './arguments.mts';
-import { VARIANT_KEYS } from './config.mts';
+import { VARIANT_KEYS, validateVariantsConfig } from './config.mts';
 import type { VariantKey } from './config.mts';
 import {
   DEFAULT_DEPENDENCIES,
@@ -16,8 +17,11 @@ import type {
 import { renderMemoryReport } from './memory-report.mts';
 import {
   LAUNCHES_PER_BLOCK,
+  exitCodeOfVerdicts,
   leakVerdict,
   parseMeminfo,
+  parseTotalFrames,
+  readingProblem,
   readingTimes,
   tailLevel,
   tailSlope,
@@ -47,6 +51,13 @@ import type { CommandContext } from './tools.mts';
 
 export interface MemoryDevice extends SampleDevice {
   readMeminfo: (applicationId: string) => Promise<string>;
+  readGfxinfo: (applicationId: string) => Promise<string>;
+  readBatteryLevel: () => Promise<number>;
+}
+
+interface MemorySeries {
+  readings: MemoryReading[];
+  problem: Pick<InvalidMemoryLaunch, 'cause' | 'detail'> | null;
 }
 
 interface LaunchObservations {
@@ -105,7 +116,7 @@ export async function memoryCommand(
   context: CommandContext,
   dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
 ): Promise<number> {
-  const config = readConfig(options.config);
+  const config = readConfig(options.config, validateVariantsConfig);
   return startMeasurement(
     {
       config,
@@ -154,6 +165,7 @@ function memoryJob(
   const { options } = result;
   return {
     scenarios: [options.scenario],
+    stateKeys: STATE_KEYS_WITHOUT_BATTERY_LEVEL,
     blocksOf: () => options.launches / LAUNCHES_PER_BLOCK,
     measure: (request, device, collector, clock) =>
       takeMemoryLaunch(request, options, device, collector, clock),
@@ -165,9 +177,7 @@ function memoryJob(
     },
     renderReport: renderMemoryReport,
     exitCode: (done) =>
-      done.summary.every((variant) => variant.verdict !== 'not decided')
-        ? 0
-        : 1,
+      exitCodeOfVerdicts(done.summary.map((variant) => variant.verdict)),
   };
 }
 
@@ -191,9 +201,9 @@ async function measureMemory(
   collector: Collector
 ): Promise<MemoryLaunch> {
   const { timings } = app.steps;
-  const { readings, ended } = await readMemorySeries(app, schedule, device);
-  if (ended !== null) {
-    return { valid: false, cause: 'crash', detail: ended, readings, timings };
+  const { readings, problem } = await readMemorySeries(app, schedule, device);
+  if (problem !== null) {
+    return { valid: false, ...problem, readings, timings };
   }
   const work = await measureRunningApp(app, collector);
   const observed = { readings, refreshRate: work.refreshRate, timings };
@@ -212,27 +222,51 @@ async function readMemorySeries(
   app: RunningApp,
   schedule: MemorySchedule,
   device: MemoryDevice
-): Promise<{ readings: MemoryReading[]; ended: string | null }> {
+): Promise<MemorySeries> {
   const { applicationId } = app.request;
-  const startedAt = app.clock.now();
+  const { clock } = app;
+  const startedAt = clock.now();
+  const secondsSinceStart = (time: number) =>
+    (time - startedAt) / MILLISECONDS_PER_SECOND;
+  let previous = {
+    seconds: 0,
+    frameCount: parseTotalFrames(await device.readGfxinfo(applicationId)),
+  };
   const readings: MemoryReading[] = [];
-  for (const seconds of readingTimes(schedule)) {
-    await app.clock.sleep(
+  for (const plannedSeconds of readingTimes(schedule)) {
+    await clock.sleep(
       Math.max(
         0,
-        startedAt + seconds * MILLISECONDS_PER_SECOND - app.clock.now()
+        startedAt + plannedSeconds * MILLISECONDS_PER_SECOND - clock.now()
       )
     );
-    const output = await device.readMeminfo(applicationId);
+    const requestedAt = clock.now();
+    const meminfo = await device.readMeminfo(applicationId);
+    const returnedAt = clock.now();
+    const gfxinfo = await device.readGfxinfo(applicationId);
+    const batteryLevel = await device.readBatteryLevel();
     const ended =
       app.watch.checkedFailure() ??
       (await processEnd(device, applicationId, app.pid, 'the memory readings'));
     if (ended !== null) {
-      return { readings, ended };
+      return { readings, problem: { cause: 'crash', detail: ended } };
     }
-    readings.push({ seconds, ...parseMeminfo(output) });
+    const reading: MemoryReading = {
+      plannedSeconds,
+      seconds: secondsSinceStart(returnedAt),
+      meminfoMs: returnedAt - requestedAt,
+      frameCount: parseTotalFrames(gfxinfo),
+      batteryLevel,
+      ...parseMeminfo(meminfo),
+    };
+    readings.push(reading);
+    const problem = readingProblem(reading, previous, schedule);
+    if (problem !== null) {
+      return { readings, problem };
+    }
+    previous = reading;
   }
-  return { readings, ended: null };
+  return { readings, problem: null };
 }
 
 export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
@@ -259,7 +293,12 @@ export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
       launches: tails,
       tailLevelMedian: medianOrNull(tails.map((tail) => tail.tailLevel)),
       tailSlopeMedian: medianOrNull(slopes),
-      verdict: leakVerdict(slopes, options.launches, options.slopeLimit),
+      verdict: leakVerdict(
+        slopes,
+        options.launches,
+        options.slopeLimit,
+        options.durationSeconds
+      ),
     };
   });
 }

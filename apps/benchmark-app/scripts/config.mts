@@ -39,14 +39,17 @@ export interface Expectation {
 
 export type ScenarioBlocks = Partial<Record<Scenario, number>>;
 
-export interface RunConfig {
+export interface VariantsConfig {
   name: string;
   a: Variant;
   b: Variant;
+  note?: string;
+}
+
+export interface RunConfig extends VariantsConfig {
   scenarios: Scenario[];
   blocks?: ScenarioBlocks;
   expect: Expectation[];
-  note?: string;
 }
 
 export interface FileSystem {
@@ -75,36 +78,33 @@ export function validateConfig(
   const problems: string[] = [];
   const config = record(raw, 'config', problems);
   rejectUnknownFields(config, RUN_FIELDS, 'config', problems);
-
-  const name = config.name;
-  if (typeof name !== 'string' || !NAME_PATTERN.test(name)) {
-    problems.push(
-      'config.name must be a string of letters, digits, ".", "_" or "-"'
-    );
-  }
+  const variants = readVariantsConfig(config, configDir, fileSystem, problems);
   const scenarios = validateScenarios(config.scenarios, problems);
   const blocks = validateBlocks(config.blocks, scenarios, problems);
-  const a = validateVariant(config.a, 'a', configDir, fileSystem, problems);
-  const b = validateVariant(config.b, 'b', configDir, fileSystem, problems);
   const expect = validateExpectations(config.expect, scenarios, problems);
-  if (config.note !== undefined && typeof config.note !== 'string') {
-    problems.push('config.note must be a string');
-  }
-
-  if (problems.length > 0) {
-    throw new ToolError(
-      `The config is not valid:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`
-    );
-  }
+  throwConfigProblems(problems);
   return {
-    name: name as string,
-    a,
-    b,
+    ...variants,
     scenarios,
     ...(blocks === undefined ? {} : { blocks }),
     expect,
-    ...(config.note === undefined ? {} : { note: config.note as string }),
   };
+}
+
+export function validateVariantsConfig(
+  raw: unknown,
+  configDir: string,
+  fileSystem: FileSystem
+): VariantsConfig {
+  const problems: string[] = [];
+  const variants = readVariantsConfig(
+    record(raw, 'config', problems),
+    configDir,
+    fileSystem,
+    problems
+  );
+  throwConfigProblems(problems);
+  return variants;
 }
 
 export function blocksOf(
@@ -147,6 +147,39 @@ export function validateNoiseLimits(raw: unknown): NoiseLimits {
     );
   }
   return limits;
+}
+
+function readVariantsConfig(
+  config: Record<string, unknown>,
+  configDir: string,
+  fileSystem: FileSystem,
+  problems: string[]
+): VariantsConfig {
+  const name = config.name;
+  if (typeof name !== 'string' || !NAME_PATTERN.test(name)) {
+    problems.push(
+      'config.name must be a string of letters, digits, ".", "_" or "-"'
+    );
+  }
+  const a = validateVariant(config.a, 'a', configDir, fileSystem, problems);
+  const b = validateVariant(config.b, 'b', configDir, fileSystem, problems);
+  if (config.note !== undefined && typeof config.note !== 'string') {
+    problems.push('config.note must be a string');
+  }
+  return {
+    name: name as string,
+    a,
+    b,
+    ...(config.note === undefined ? {} : { note: config.note as string }),
+  };
+}
+
+function throwConfigProblems(problems: string[]) {
+  if (problems.length > 0) {
+    throw new ToolError(
+      `The config is not valid:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`
+    );
+  }
 }
 
 function record(
