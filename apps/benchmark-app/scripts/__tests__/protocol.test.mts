@@ -27,7 +27,10 @@ const TRACE_METRICS: TraceMetrics = {
   uiThreadCpu: 120,
   jsThreadCpu: 80,
   renderThreadCpu: 60,
+  otherThreadsCpu: 140,
   processCpu: 400,
+  uiThreadCpuWork: 240000,
+  processCpuWork: 800000,
   mountBatchCount: 590,
   memory: 150000,
   memoryGrowth: 100,
@@ -66,7 +69,10 @@ const TRACES_DIR = path.join(
 before(() => fs.mkdirSync(TRACES_DIR, { recursive: true }));
 after(() => fs.rmSync(TRACES_DIR, { recursive: true, force: true }));
 
-function request(name: string, overrides: Partial<SampleRequest> = {}) {
+function request(
+  name: string,
+  overrides: Partial<SampleRequest> = {}
+): SampleRequest {
   return {
     applicationId: 'com.reanimatedbenchmark.a',
     stopApplicationIds: [
@@ -116,7 +122,9 @@ function createFake(options: FakeOptions = {}) {
       time += ms;
       if (onLine && time >= 3000) {
         (
-          options.reportLines ?? ['READY scenario=css version=1 load=40']
+          options.reportLines ?? [
+            'READY scenario=css version=1 load=40 jsThread=4350',
+          ]
         ).forEach(onLine);
         if (options.streamFailure === 'before READY') {
           failStream();
@@ -209,12 +217,13 @@ function causeOf(sample: Awaited<ReturnType<typeof takeSample>>) {
 describe('parseReportLine', () => {
   it('reads READY and FAILED lines', () => {
     assert.deepEqual(
-      parseReportLine('READY scenario=css version=1 load=40\r'),
+      parseReportLine('READY scenario=css version=1 load=40 jsThread=4350\r'),
       {
         kind: 'ready',
         scenario: 'css',
         version: 1,
         load: 40,
+        jsThread: 4350,
       }
     );
     assert.deepEqual(
@@ -227,6 +236,20 @@ describe('parseReportLine', () => {
     );
     assert.equal(parseReportLine('--------- beginning of main'), null);
     assert.equal(parseReportLine('READY scenario=css version=x load=1'), null);
+    assert.equal(
+      parseReportLine('READY scenario=css version=1 load=1 jsThread=x'),
+      null
+    );
+  });
+
+  it('reads a READY line of an old app without the JS thread id', () => {
+    assert.deepEqual(parseReportLine('READY scenario=css version=1 load=40'), {
+      kind: 'ready',
+      scenario: 'css',
+      version: 1,
+      load: 40,
+      jsThread: null,
+    });
   });
 });
 
@@ -241,7 +264,7 @@ describe('takeSample', () => {
       fake.clock
     );
     assert.equal(sample.valid, true);
-    assert.deepEqual(sample.report, { version: 1, load: 40 });
+    assert.deepEqual(sample.report, { version: 1, load: 40, jsThread: 4350 });
     assert.equal(sample.pid, PID);
     assert.equal(sample.metrics?.coldStart, 512);
     assert.equal(sample.trace, req.traceFile);
@@ -317,7 +340,7 @@ describe('takeSample', () => {
 
   it('gives a crash when no READY line comes in 60 s', async () => {
     const fake = createFake({
-      reportLines: ['READY scenario=other version=1 load=1'],
+      reportLines: ['READY scenario=other version=1 load=1 jsThread=4350'],
     });
     const sample = await takeSample(
       request('no-ready'),
@@ -422,10 +445,30 @@ describe('takeSample', () => {
     await takeSample(request('pid'), fake.device, fake.collector, fake.clock);
     assert.deepEqual(fake.collected, [
       {
-        app: { applicationId: 'com.reanimatedbenchmark.a', pid: PID },
+        app: {
+          applicationId: 'com.reanimatedbenchmark.a',
+          pid: PID,
+          jsThread: 4350,
+        },
         refreshRate: 60,
       },
     ]);
+  });
+
+  it('stops with a tool error when the READY line has no JS thread id', async () => {
+    const fake = createFake({
+      reportLines: ['READY scenario=css version=1 load=40'],
+    });
+    await assert.rejects(
+      takeSample(request('old-app'), fake.device, fake.collector, fake.clock),
+      (error) =>
+        error instanceof ToolError &&
+        /READY line of com\.reanimatedbenchmark\.a has no jsThread field/.test(
+          error.message
+        )
+    );
+    assert.equal(fake.collected.length, 0);
+    assert.ok(fake.calls.includes('stop stream'));
   });
 
   it('gives a crash and keeps the trace when the trace shows that the process ended', async () => {
@@ -541,6 +584,66 @@ describe('takeSample', () => {
     });
     assert.equal(sample.metrics?.frameDurationMedian, null);
     assert.ok(fs.existsSync(req.traceFile));
+  });
+
+  it('gives work when a scenario with a minimum makes too few mount batches', async () => {
+    const fake = createFake({
+      reportLines: [
+        'READY scenario=shared-elements version=1 load=40 jsThread=4350',
+      ],
+      reading: {
+        processLived: true,
+        metrics: { ...TRACE_METRICS, mountBatchCount: 38 },
+      },
+    });
+    const req = request('no-transitions', {
+      scenario: 'shared-elements',
+      keepTrace: false,
+    });
+    const sample = await takeSample(
+      req,
+      fake.device,
+      fake.collector,
+      fake.clock
+    );
+    assert.deepEqual(causeOf(sample), {
+      cause: 'work',
+      detail: '38 mount batches, expected at least 300',
+    });
+    assert.ok(fs.existsSync(req.traceFile));
+  });
+
+  it('accepts the minimum of mount batches and has no minimum for other scenarios', async () => {
+    const atMinimum = createFake({
+      reportLines: [
+        'READY scenario=shared-elements version=1 load=40 jsThread=4350',
+      ],
+      reading: {
+        processLived: true,
+        metrics: { ...TRACE_METRICS, mountBatchCount: 300 },
+      },
+    });
+    const sharedElements = await takeSample(
+      request('at-minimum', { scenario: 'shared-elements' }),
+      atMinimum.device,
+      atMinimum.collector,
+      atMinimum.clock
+    );
+    assert.equal(sharedElements.valid, true);
+
+    const noMinimum = createFake({
+      reading: {
+        processLived: true,
+        metrics: { ...TRACE_METRICS, mountBatchCount: 0 },
+      },
+    });
+    const css = await takeSample(
+      request('no-minimum'),
+      noMinimum.device,
+      noMinimum.collector,
+      noMinimum.clock
+    );
+    assert.equal(css.valid, true);
   });
 
   it('removes the local trace of a valid sample unless it must keep it', async () => {

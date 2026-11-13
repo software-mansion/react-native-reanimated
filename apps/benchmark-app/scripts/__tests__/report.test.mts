@@ -472,10 +472,39 @@ describe('renderReport', () => {
     assert.ok(!report.includes(' in segment '));
   });
 
+  it('names the work cause and the mount batch count of a failed scenario', () => {
+    const detail = '38 mount batches, expected at least 300';
+    const invalid = { variant: 'a' as const, cause: 'work' as const, detail };
+    const failed = renderReport({
+      ...RESULT,
+      scenarios: [
+        ...RESULT.scenarios,
+        {
+          scenario: 'shared-elements',
+          samples: [
+            sample({ scenario: 'shared-elements', cause: 'work', detail }),
+          ],
+          failed: {
+            scenario: 'shared-elements',
+            variants: ['a'],
+            causes: [invalid, invalid, invalid],
+          },
+        },
+      ],
+    });
+    assert.ok(
+      failed.includes(
+        `- shared-elements failed on A. Last 3 invalid blocks: A: work, ${detail}; A: work, ${detail}; A: work, ${detail}.`
+      )
+    );
+    assert.ok(failed.includes('| work | 1 |'));
+  });
+
   it('counts invalid samples by cause and gives the mean time of each step', () => {
     assert.ok(report.includes('| thermal | 1 |'));
     assert.ok(report.includes('| crash | 1 |'));
     assert.ok(report.includes('| frames | 0 |'));
+    assert.ok(report.includes('| work | 0 |'));
     assert.ok(report.includes('| wait | 13.0 s |'));
     assert.ok(report.includes('| start | 0.9 s |'));
     assert.ok(report.includes('| pull | - |'));

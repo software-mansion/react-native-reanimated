@@ -31,7 +31,10 @@ export interface SampleMetrics {
   uiThreadCpu: number;
   jsThreadCpu: number;
   renderThreadCpu: number;
+  otherThreadsCpu: number;
   processCpu: number;
+  uiThreadCpuWork: number | null;
+  processCpuWork: number | null;
   mountBatchCount: number;
   memory: number;
   memoryGrowth: number;

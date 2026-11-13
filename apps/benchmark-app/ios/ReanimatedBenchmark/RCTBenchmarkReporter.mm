@@ -1,5 +1,6 @@
 #import "RCTBenchmarkReporter.h"
 
+#include <pthread.h>
 #include <cstdio>
 
 @implementation RCTBenchmarkReporter
@@ -19,6 +20,13 @@
 {
   std::printf("ReanimatedBenchmark: %s\n", line.UTF8String);
   std::fflush(stdout);
+}
+
+- (NSNumber *)currentThreadId
+{
+  uint64_t threadId = 0;
+  pthread_threadid_np(nullptr, &threadId);
+  return @(threadId);
 }
 
 @end

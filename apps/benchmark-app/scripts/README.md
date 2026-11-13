@@ -48,7 +48,7 @@ The driver stops before it builds when the config has an unknown field, scenario
 - Node from `.nvmrc` and Yarn 4.
 - The Android SDK. The driver uses `ANDROID_HOME`, or the default SDK folder when `ANDROID_HOME` is not set.
 - `adb` from the SDK `platform-tools` folder or from `PATH`.
-- `trace_processor_shell` from Perfetto: `--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`.
+- `trace_processor_shell` from Perfetto: `--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`. The query uses the module `linux.cpu.utilization.thread` of the Perfetto standard library.
 - An Android device with SDK 31 or newer and the ABI `arm64-v8a`. Do not change the brightness, the charger, the refresh rate or the network during a run. The driver reads the device state before each cool-down, and before and after each trace. The run stops when the battery level changes. The refresh rate is the render frame rate of the display. The refresh rate of the app in the first sample is the reference for the run.
 
 ## Output
@@ -70,8 +70,9 @@ The driver reads each metric from the trace window of 10 s. Lower values are bet
 | `jankyFrames` | Share of dropped frames: `max(0, 1 - frameCount / expectedFrameCount)` | yes |
 | `frameCount`, `expectedFrameCount` | Count of the `Choreographer#doFrame` slices; refresh rate times the length of the trace window | no |
 | `uiThreadCpu` | CPU time of the main thread, in ms for each second of the trace | yes |
-| `jsThreadCpu` | CPU time of all threads with the name `mqt_v_js`, in ms for each second | yes |
-| `renderThreadCpu`, `processCpu` | CPU time of `RenderThread` and of all threads of the app, in ms for each second | no |
+| `jsThreadCpu` | CPU time of the JS thread (`jsThread` of the READY line), in ms for each second | yes |
+| `renderThreadCpu`, `otherThreadsCpu`, `processCpu` | CPU time of `RenderThread`, of all threads of the app except the main thread, the JS thread and `RenderThread`, and of all threads of the app, in ms for each second | no |
+| `uiThreadCpuWork`, `processCpuWork` | Sum of the duration of each scheduling slice times the clock rate of its CPU at that time, for the main thread and for all threads of the app, in MHz·ms for each second (1 MHz·ms is 1000 CPU cycles). `null` when the trace has no clock rate data. | no |
 | `mountBatchCount` | Count of the `IntBufferBatchMountItem::mountViews` slices of the app | no |
 | `memory` | Last value of anonymous RSS plus swap of the app, in kB | yes |
 | `memoryGrowth` | Last value minus first value of `memory`, in kB, only in `shared-elements` and `mount-unmount` | yes |
@@ -79,6 +80,10 @@ The driver reads each metric from the trace window of 10 s. Lower values are bet
 | `drawFrameMedian`, `drawFrameP95` | Duration of the `DrawFrame` slices on `RenderThread`, in ms | no |
 | `frameTimelineDurationMedian`, `frameTimelineDurationP95`, `frameTimelineFrameCount` | Duration and count of the frame timeline rows of the app | no |
 | `jankFlaggedFrames`, `appDeadlineMissedFrames` | Share of frame timeline rows with a jank type, and with the jank type `App Deadline Missed` | no |
+
+The app gives the id of its JS thread in the READY line (`jsThread`), because other threads can have the name `mqt_v_js` too. A READY line without `jsThread` (an app from an older source) is a tool error. A trace in which the app has no thread `mqt_v_js` with this id is a tool error.
+
+The clock rate comes from the ftrace event `power/cpu_frequency` and from `linux.sys_stats`, which reads the clock rate of each CPU at the start of the trace and then every 1000 ms. The driver uses `cpu_cycles_per_thread_in_interval` of the Perfetto standard library. CPU time before the first clock rate value of its CPU does not count. CPU time does not show a change of the clock rate: the work metrics do.
 
 The frame timeline does not give the verdict frame metrics. On some devices it marks each frame as janky at each load ("Buffer Stuffing"), and its durations change in steps of one refresh period. A trace without a `Choreographer#doFrame` slice on any thread is a tool error: the atrace category `view` gave no data. When only other processes have these slices, the app drew no frame: `frameCount` is 0, the frame duration metrics are `null`, and the sample is invalid (`frames`).
 
@@ -96,7 +101,7 @@ The frame timeline does not give the verdict frame metrics. On some devices it m
 
 `memoryGrowth` can be negative, so the driver compares it as an absolute difference in kB. `jankyFrames` is often near 0, so the driver compares it as an absolute difference in share of frames, and the report gives it in percentage points (pp). The other metrics use the relative difference. When the median of A, or the median of A in a bootstrap draw, is 0 or less, a relative difference is not defined. The row then uses the absolute difference, and the report marks it. When the median of A is above 0, the noise limit of the row is the relative limit times the median of A, in the unit of the metric. When the median of A is 0 or less, the row has no noise limit, and the report marks this too.
 
-A sample is invalid when the app crashes before or during the trace (`crash`), when the device is hot (`thermal`), or when the app draws fewer than 90% of the expected frames (`frames`). The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails.
+A sample is invalid when the app crashes before or during the trace (`crash`), when the device is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). Only `shared-elements` has a work limit: at least 300 `mountBatchCount`. The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail (for `work`, the count) of each of the 3 blocks.
 
 A device command that does not finish in its time limit is a tool error.
 

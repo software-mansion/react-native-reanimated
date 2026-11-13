@@ -1,5 +1,5 @@
 "window_ns","app_processes","ended_processes","js_threads","trace_frame_slices"
-9878221001,1,0,2,591
+9878221001,1,0,1,591
 
 "role","cpu_ns"
 "main",6665745159
@@ -18,9 +18,30 @@
 "other",155659620
 "other",185479138
 "other",764782757
-"js",621158920
+"other",621158920
 "other",54503381
 "other",6592000
+
+"role","millicycles"
+"main","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"render","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"js","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
+"other","[NULL]"
 
 "dur","jank_flagged","app_deadline_missed"
 14619076,1,0

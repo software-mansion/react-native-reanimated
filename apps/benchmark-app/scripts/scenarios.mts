@@ -16,6 +16,10 @@ export const MEMORY_GROWTH_SCENARIOS: readonly Scenario[] = [
   'mount-unmount',
 ];
 
+export const MINIMUM_MOUNT_BATCHES: Partial<Record<Scenario, number>> = {
+  'shared-elements': 300,
+};
+
 export function isScenario(name: unknown): name is Scenario {
   return SCENARIOS.includes(name as Scenario);
 }

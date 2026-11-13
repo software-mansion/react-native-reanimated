@@ -8,6 +8,7 @@ export type TraceMetrics = Omit<SampleMetrics, 'coldStart'>;
 export interface TracedApp {
   applicationId: string;
   pid: number;
+  jsThread: number;
 }
 
 export type TraceReading =
@@ -26,12 +27,15 @@ export const FRAME_SLICE_PATTERN = 'Choreographer#doFrame%';
 export const DRAW_FRAME_SLICE_PATTERN = 'DrawFrame%';
 export const MOUNT_BATCH_SLICE_NAME = 'IntBufferBatchMountItem::mountViews';
 export const APP_DEADLINE_MISSED = 'App Deadline Missed';
+export const CPU_FREQUENCY_POLL_MS = 1000;
 export const TRACE_PROCESSOR_TIMEOUT_MS = 5 * 60_000;
 
 const APPLICATION_ID_PATTERN =
   /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/;
 const NANOSECONDS_PER_MS = 1e6;
+const MILLICYCLES_PER_MHZ_MS = 1e6;
 const BYTES_PER_KB = 1024;
+const THREAD_ROLES = ['main', 'js', 'render', 'other'];
 
 export class TraceProcessor {
   readonly #processes: Processes;
@@ -96,6 +100,15 @@ data_sources {
 }
 data_sources {
   config {
+    name: "linux.sys_stats"
+    target_buffer: 1
+    sys_stats_config {
+      cpufreq_period_ms: ${CPU_FREQUENCY_POLL_MS}
+    }
+  }
+}
+data_sources {
+  config {
     name: "linux.ftrace"
     target_buffer: 0
     ftrace_config {
@@ -106,6 +119,7 @@ data_sources {
       ftrace_events: "sched/sched_process_free"
       ftrace_events: "task/task_newtask"
       ftrace_events: "task/task_rename"
+      ftrace_events: "power/cpu_frequency"
       atrace_categories: "gfx"
       atrace_categories: "view"
       atrace_apps: "${applicationId}"
@@ -118,7 +132,8 @@ duration_ms: ${durationMs}
 
 export function metricsQuery(app: TracedApp): string {
   checkApplicationId(app.applicationId);
-  checkPid(app.pid);
+  checkId(app.pid, 'process id');
+  checkId(app.jsThread, 'thread id');
   const traceWindow = `trace_window AS (
     SELECT
       MAX(start_ts, COALESCE((SELECT int_value FROM metadata WHERE name = 'all_data_source_started_ns'), start_ts)) AS start_ts,
@@ -128,6 +143,18 @@ export function metricsQuery(app: TracedApp): string {
   const appProcess = `app AS (
     SELECT upid, pid, end_ts FROM process
     WHERE pid = ${app.pid} AND name = '${app.applicationId}'
+  )`;
+  const appThreads = `app_thread AS (
+    SELECT
+      thread.utid,
+      thread.name,
+      CASE
+        WHEN thread.tid = app.pid THEN 'main'
+        WHEN thread.tid = ${app.jsThread} THEN 'js'
+        WHEN thread.name = '${RENDER_THREAD_NAME}' THEN 'render'
+        ELSE 'other'
+      END AS role
+    FROM thread JOIN app USING (upid)
   )`;
   const threadSlices = `thread_slice AS (
     SELECT slice.ts, slice.dur, slice.name, thread.tid = app.pid AS is_main, thread.name AS thread_name
@@ -140,44 +167,47 @@ export function metricsQuery(app: TracedApp): string {
       AND slice.ts >= trace_window.start_ts
       AND slice.ts < trace_window.end_ts
   )`;
-  return `WITH
+  return `INCLUDE PERFETTO MODULE linux.cpu.utilization.thread;
+WITH
   ${traceWindow},
   ${appProcess},
-  app_thread AS (
-    SELECT thread.utid, thread.tid = app.pid AS is_main, thread.name
-    FROM thread JOIN app USING (upid)
-  )
+  ${appThreads}
 SELECT
   (SELECT end_ts - start_ts FROM trace_window) AS window_ns,
   (SELECT COUNT(*) FROM app) AS app_processes,
   (SELECT COUNT(*) FROM app JOIN trace_window WHERE app.end_ts < trace_window.end_ts) AS ended_processes,
-  (SELECT COUNT(*) FROM app_thread WHERE name = '${JS_THREAD_NAME}') AS js_threads,
+  (SELECT COUNT(*) FROM app_thread WHERE role = 'js' AND name = '${JS_THREAD_NAME}') AS js_threads,
   (
     SELECT COUNT(*) FROM slice JOIN thread_track ON slice.track_id = thread_track.id
     WHERE slice.name LIKE '${FRAME_SLICE_PATTERN}'
   ) AS trace_frame_slices;
 WITH
   ${traceWindow},
-  ${appProcess}
+  ${appProcess},
+  ${appThreads}
 SELECT
-  CASE
-    WHEN thread.tid = app.pid THEN 'main'
-    WHEN thread.name = '${JS_THREAD_NAME}' THEN 'js'
-    WHEN thread.name = '${RENDER_THREAD_NAME}' THEN 'render'
-    ELSE 'other'
-  END AS role,
+  app_thread.role,
   SUM(
     IIF(sched.dur = -1, trace_window.end_ts, MIN(sched.ts + sched.dur, trace_window.end_ts))
       - MAX(sched.ts, trace_window.start_ts)
   ) AS cpu_ns
-FROM thread
-JOIN app USING (upid)
+FROM app_thread
 JOIN sched USING (utid)
 JOIN trace_window
 WHERE sched.dur != 0
   AND sched.ts < trace_window.end_ts
   AND (sched.dur = -1 OR sched.ts + sched.dur > trace_window.start_ts)
-GROUP BY thread.utid;
+GROUP BY app_thread.utid;
+WITH
+  ${traceWindow},
+  ${appProcess},
+  ${appThreads}
+SELECT app_thread.role, cycles.millicycles
+FROM cpu_cycles_per_thread_in_interval(
+  (SELECT start_ts FROM trace_window),
+  (SELECT end_ts - start_ts FROM trace_window)
+) AS cycles
+JOIN app_thread USING (utid);
 WITH
   ${traceWindow},
   ${appProcess}
@@ -245,6 +275,7 @@ export function computeTraceMetrics(
   const [
     summarySet,
     threadCpuSet,
+    threadWorkSet,
     frameTimelineSet,
     frameSet,
     drawFrameSet,
@@ -255,6 +286,7 @@ export function computeTraceMetrics(
   if (
     !summarySet ||
     !threadCpuSet ||
+    !threadWorkSet ||
     !frameTimelineSet ||
     !frameSet ||
     !drawFrameSet ||
@@ -263,7 +295,7 @@ export function computeTraceMetrics(
     !lossSet
   ) {
     throw new ToolError(
-      `trace_processor_shell returned ${sets.length} result sets, expected 8`
+      `trace_processor_shell returned ${sets.length} result sets, expected 9`
     );
   }
   checkNoDataLoss(lossSet);
@@ -280,7 +312,9 @@ export function computeTraceMetrics(
     };
   }
   if (summary.js_threads === 0) {
-    throw new ToolError(`The app process has no thread "${JS_THREAD_NAME}"`);
+    throw new ToolError(
+      `The app process has no thread "${JS_THREAD_NAME}" with the jsThread ${app.jsThread} of the READY line`
+    );
   }
   if (summary.trace_frame_slices === 0) {
     throw new ToolError(
@@ -299,6 +333,7 @@ export function computeTraceMetrics(
     ...frameTimelineMetrics(numericRows(frameTimelineSet)),
     ...drawFrameMetrics(durationsMs(drawFrameSet)),
     ...cpuMetrics(threadCpuSet, windowSeconds),
+    ...cpuWorkMetrics(threadWorkSet, windowSeconds),
     mountBatchCount: numericRows(mountBatchSet)[0].mount_batches,
     ...memoryMetrics(numericRows(memorySet)),
     expectedFrameCount,
@@ -313,9 +348,9 @@ function checkApplicationId(applicationId: string) {
   }
 }
 
-function checkPid(pid: number) {
-  if (!Number.isInteger(pid) || pid <= 0) {
-    throw new ToolError(`${pid} is not a valid process id`);
+function checkId(id: number, kind: string) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new ToolError(`${id} is not a valid ${kind}`);
   }
 }
 
@@ -398,7 +433,25 @@ function cpuMetrics(threadCpuSet: ResultSet, windowSeconds: number) {
     uiThreadCpu: cpuPerSecond(['main']),
     jsThreadCpu: cpuPerSecond(['js']),
     renderThreadCpu: cpuPerSecond(['render']),
-    processCpu: cpuPerSecond(['main', 'js', 'render', 'other']),
+    otherThreadsCpu: cpuPerSecond(['other']),
+    processCpu: cpuPerSecond(THREAD_ROLES),
+  };
+}
+
+function cpuWorkMetrics(threadWorkSet: ResultSet, windowSeconds: number) {
+  const workPerSecond = (roles: (string | null)[]) => {
+    const millicycles = threadWorkSet.rows.flatMap(([role, value]) =>
+      roles.includes(role) && value !== null ? [Number(value)] : []
+    );
+    return millicycles.length > 0
+      ? millicycles.reduce((sum, value) => sum + value, 0) /
+          MILLICYCLES_PER_MHZ_MS /
+          windowSeconds
+      : null;
+  };
+  return {
+    uiThreadCpuWork: workPerSecond(['main']),
+    processCpuWork: workPerSecond(THREAD_ROLES),
   };
 }
 

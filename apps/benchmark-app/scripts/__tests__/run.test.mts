@@ -61,7 +61,10 @@ const METRICS: TraceMetrics = {
   uiThreadCpu: 120,
   jsThreadCpu: 80,
   renderThreadCpu: 60,
+  otherThreadsCpu: 140,
   processCpu: 400,
+  uiThreadCpuWork: 240000,
+  processCpuWork: 800000,
   mountBatchCount: 590,
   memory: 150000,
   memoryGrowth: 100,
@@ -141,7 +144,7 @@ function createFake(options: FakeOptions = {}) {
       return { started: true, totalTime: 300 };
     },
     streamReports: (onLine: (line: string) => void) => {
-      onLine(`READY scenario=${scenario} version=1 load=1`);
+      onLine(`READY scenario=${scenario} version=1 load=1 jsThread=4350`);
       return { stop: () => {}, failure: () => null };
     },
     readPid: async () => 100,

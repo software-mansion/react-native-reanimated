@@ -15,6 +15,8 @@ import { ToolError } from './errors.mts';
 import type { SampleMetrics } from './metrics.mts';
 import { traceConfig } from './perfetto.mts';
 import type { TracedApp, TraceReading } from './perfetto.mts';
+import { MINIMUM_MOUNT_BATCHES } from './scenarios.mts';
+import type { Scenario } from './scenarios.mts';
 import type { LineStream } from './tools.mts';
 
 export interface SampleDevice {
@@ -57,7 +59,7 @@ export const SYSTEM_CLOCK: Clock = {
 export interface SampleRequest {
   applicationId: string;
   stopApplicationIds: string[];
-  scenario: string;
+  scenario: Scenario;
   load?: number;
   baselineTemperature: number;
   guard: DeviceStateGuard;
@@ -65,12 +67,13 @@ export interface SampleRequest {
   keepTrace: boolean;
 }
 
-export type InvalidCause = 'crash' | 'thermal' | 'frames';
+export type InvalidCause = 'crash' | 'thermal' | 'frames' | 'work';
 
 export const INVALID_CAUSES: readonly InvalidCause[] = [
   'crash',
   'thermal',
   'frames',
+  'work',
 ];
 
 export const SAMPLE_STEPS = [
@@ -87,6 +90,7 @@ export type SampleStep = (typeof SAMPLE_STEPS)[number];
 export interface ScenarioReport {
   version: number;
   load: number;
+  jsThread: number | null;
 }
 
 interface SampleObservations {
@@ -114,7 +118,13 @@ export type InvalidSample = SampleObservations & {
 export type SampleResult = ValidSample | InvalidSample;
 
 export type ReportLine =
-  | { kind: 'ready'; scenario: string; version: number; load: number }
+  | {
+      kind: 'ready';
+      scenario: string;
+      version: number;
+      load: number;
+      jsThread: number | null;
+    }
   | { kind: 'failed'; scenario: string; reason: string };
 
 type ReadyOutcome =
@@ -201,13 +211,17 @@ export async function takeSample(
 
 export function parseReportLine(line: string): ReportLine | null {
   const text = line.trim();
-  const ready = /^READY scenario=(\S+) version=(\d+) load=(\d+)$/.exec(text);
+  const ready =
+    /^READY scenario=(\S+) version=(\d+) load=(\d+)(?: jsThread=(\d+))?$/.exec(
+      text
+    );
   if (ready) {
     return {
       kind: 'ready',
       scenario: ready[1],
       version: Number(ready[2]),
       load: Number(ready[3]),
+      jsThread: ready[4] === undefined ? null : Number(ready[4]),
     };
   }
   const failed = /^FAILED scenario=(\S+) reason=(.*)$/.exec(text);
@@ -293,7 +307,11 @@ class ReportWatch {
     if (report?.kind === 'failed') {
       this.#failure ??= `FAILED scenario=${report.scenario} reason=${report.reason}`;
     } else if (report?.scenario === this.#scenario) {
-      this.#report ??= { version: report.version, load: report.load };
+      this.#report ??= {
+        version: report.version,
+        load: report.load,
+        jsThread: report.jsThread,
+      };
     }
   }
 }
@@ -309,6 +327,12 @@ async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
     return { valid: false, cause: 'crash', detail: ready.reason, timings };
   }
   const { report } = ready;
+  const { jsThread } = report;
+  if (jsThread === null) {
+    throw new ToolError(
+      `The READY line of ${applicationId} has no jsThread field. Build the app again from the current benchmark app source.`
+    );
+  }
   const pid = await device.readPid(applicationId);
   if (pid === null) {
     return {
@@ -355,7 +379,7 @@ async function measureRunningApp(app: RunningApp): Promise<SampleResult> {
   const reading = await timed('parse', () =>
     app.collector.collect(
       request.traceFile,
-      { applicationId, pid },
+      { applicationId, pid, jsThread },
       refreshRate
     )
   );
@@ -461,6 +485,7 @@ function tracedCrash(
 function judge(measured: Measured, request: SampleRequest): SampleResult {
   const { metrics, thermalAfter } = measured;
   const minimumFrames = MINIMUM_FRAME_SHARE * metrics.expectedFrameCount;
+  const minimumMountBatches = MINIMUM_MOUNT_BATCHES[request.scenario] ?? 0;
   if (thermalAfter > 0) {
     return {
       valid: false,
@@ -475,6 +500,15 @@ function judge(measured: Measured, request: SampleRequest): SampleResult {
       valid: false,
       cause: 'frames',
       detail: `${metrics.frameCount} frames, expected at least ${Math.ceil(minimumFrames)}`,
+      trace: request.traceFile,
+      ...measured,
+    };
+  }
+  if (metrics.mountBatchCount < minimumMountBatches) {
+    return {
+      valid: false,
+      cause: 'work',
+      detail: `${metrics.mountBatchCount} mount batches, expected at least ${minimumMountBatches}`,
       trace: request.traceFile,
       ...measured,
     };

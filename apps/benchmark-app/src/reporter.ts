@@ -21,8 +21,9 @@ export function reportReady(scenario: string, version: number, load: number) {
     return;
   }
   hasReportedReady = true;
+  const jsThread = NativeBenchmarkReporter.currentThreadId();
   NativeBenchmarkReporter.report(
-    `READY scenario=${scenario} version=${version} load=${load}`
+    `READY scenario=${scenario} version=${version} load=${load} jsThread=${jsThread}`
   );
 }
 

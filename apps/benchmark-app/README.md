@@ -23,7 +23,7 @@ The Gradle property `benchmarkApplicationIdSuffix` adds a suffix to the Android 
 
 The `BenchmarkReporter` TurboModule writes each line to logcat with the tag `ReanimatedBenchmark` on Android, and to stdout with the prefix `ReanimatedBenchmark: ` on iOS.
 
-- `READY scenario=<name> version=<integer> load=<integer>`: 3000 ms after the scenario starts. The app writes it one time for each process.
+- `READY scenario=<name> version=<integer> load=<integer> jsThread=<integer>`: 3000 ms after the scenario starts. The app writes it one time for each process. `jsThread` is the id of the JavaScript thread: a synchronous call of the TurboModule on that thread reads `android.os.Process.myTid()` on Android and `pthread_threadid_np` on iOS.
 - `FAILED scenario=<name or none> reason=<text>`: the name is missing or unknown, the load is not a positive integer, a requirement of the scenario is not met, or a JavaScript error occurs. The app writes `none` for an error before it reads the scenario name. After `FAILED`, the app does not write `READY`.
 
 With no scenario or an unknown name, the app shows the list of scenario names.
