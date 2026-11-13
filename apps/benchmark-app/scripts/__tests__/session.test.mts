@@ -67,7 +67,7 @@ describe('runScenario', () => {
     );
   });
 
-  it('gives the samples to the progress listener after each sample', async () => {
+  it('gives the samples to the progress listener after each sample and each accepted block', async () => {
     const { take } = sampler((_place, count) =>
       count === 2 ? 'thermal' : null
     );
@@ -77,10 +77,20 @@ describe('runScenario', () => {
     );
     assert.deepEqual(
       progress.map(([count]) => count),
-      [1, 2, 3, 4, 5, 6]
+      [1, 2, 3, 4, 5, 6, 6]
     );
     assert.ok(progress.every(([, notFailed]) => notFailed));
     assert.equal(outcome.samples.length, 6);
+  });
+
+  it('reports a block as accepted before the next sample starts', async () => {
+    const reports: string[] = [];
+    await runScenario('css', 1, sampler(() => null).take, (progress) =>
+      reports.push(
+        JSON.stringify(progress.samples.map((sample) => sample.accepted))
+      )
+    );
+    assert.equal(reports.at(-1), '[true,true,true,true]');
   });
 
   it('continues after the accepted blocks of a stopped scenario', async () => {

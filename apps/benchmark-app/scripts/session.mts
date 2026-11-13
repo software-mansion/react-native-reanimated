@@ -42,9 +42,11 @@ export async function runScenario(
   acceptedSamples: SampleRecord[] = []
 ): Promise<ScenarioOutcome> {
   const samples: SampleRecord[] = [...acceptedSamples];
+  const reportProgress = () =>
+    onProgress({ scenario, samples: [...samples], failed: null });
   const record = (sample: SampleRecord) => {
     samples.push(sample);
-    onProgress({ scenario, samples: [...samples], failed: null });
+    reportProgress();
   };
   const firstBlock = new Set(acceptedSamples.map((sample) => sample.block))
     .size;
@@ -61,6 +63,7 @@ export async function runScenario(
       const invalid = attempt.find(isInvalid);
       if (!invalid) {
         attempt.forEach((sample) => (sample.accepted = true));
+        reportProgress();
         break;
       }
       invalidAttempts.push(invalid);
