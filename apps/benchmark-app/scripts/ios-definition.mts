@@ -39,11 +39,12 @@ export const IOS_DEFINITION: PlatformDefinition = {
   segmentColumns: [],
   deviceState: shape(DEVICE_STATE),
   inAppState: shape(IN_APP_STATE),
-  verdictMetrics: ['uiThreadCpu', 'jsThreadCpu', 'memory'],
+  verdictMetrics: ['uiThreadCpu', 'jsThreadCpu'],
   advisoryMetrics: [
     'uiUpdateDurationMedian',
     'uiUpdateDurationP95',
     'missedDisplayLinkCallbacks',
+    'memory',
     'coldStart',
   ],
   verdictsNeedValidation: true,
@@ -120,7 +121,8 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         '`phys_footprint` of `task_info(TASK_VM_INFO)` at the end read of the window',
       interval: 'The end of the sample window: 10 s after READY',
-      limits: 'One value for each sample.',
+      limits:
+        'One value for each sample. No verdict on iOS: the comparison with Activity Monitor in the cross-check is reported data only.',
     },
     {
       names: ['windowMemoryDelta'],

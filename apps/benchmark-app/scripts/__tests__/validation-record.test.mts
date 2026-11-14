@@ -39,7 +39,7 @@ const IDENTITY: ValidationIdentity = {
   appBuild: 'build1',
 };
 
-const METRICS = ['uiThreadCpu', 'jsThreadCpu', 'memory'] as const;
+const METRICS = ['uiThreadCpu', 'jsThreadCpu'] as const;
 
 const { writeCrosscheck, writeObserverCost, record } = validationSources(
   SOURCES_DIR,
@@ -77,29 +77,35 @@ describe('buildValidationRecord', () => {
     assert.deepEqual(validated(built), {
       uiThreadCpu: true,
       jsThreadCpu: true,
-      memory: true,
     });
     assert.equal(built.appBuild, 'build1');
     assert.equal(built.sources.crosschecks.length, 2);
     assert.match(built.sources.crosschecks[0].sha256, /^[0-9a-f]{64}$/);
     assert.deepEqual(
-      built.metrics.memory?.gates.map((gate) => gate.gate),
+      built.metrics.jsThreadCpu?.gates.map((gate) => gate.gate),
       [
         'at least 2 cross-check recordings (here 2)',
         'a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load',
         'a cross-check of `crosscheck-load` with the loads idle, ui-stall, js-load, render-heavy',
         'an observer-cost test of `idle-cost`',
         'an observer-cost test of a loaded benchmark scenario',
-        'worklet-styles-transform: the result has 4 epoch results',
-        'worklet-styles-transform: the thermal state stayed Nominal',
-        'worklet-styles-transform: `phys_footprint` against `memory-physical-footprint` of Activity Monitor',
-        'crosscheck-load: the result has 4 epoch results',
-        'crosscheck-load: the thermal state stayed Nominal',
-        'crosscheck-load: `phys_footprint` against `memory-physical-footprint` of Activity Monitor',
-        'idle-cost: observer cost of memory (5 blocks)',
-        'worklet-styles-transform: observer cost of memory (5 blocks)',
+        ...[
+          ['worklet-styles-transform', STEADY_PLAN],
+          ['crosscheck-load', LOADS_PLAN],
+        ].flatMap(([scenario, plan]) => [
+          `${scenario}: the result has 4 epoch results`,
+          `${scenario}: the thermal state stayed Nominal`,
+          `${scenario}: the planned loads ran`,
+          ...(plan as Plan).map(
+            ([load, collector], i) =>
+              `${scenario}: epoch ${i} (${load}, ${collector}): jsThreadCpu against \`thread-state\``
+          ),
+        ]),
+        'idle-cost: observer cost of jsThreadCpu (5 blocks)',
+        'worklet-styles-transform: observer cost of jsThreadCpu (5 blocks)',
       ]
     );
+    assert.equal(built.metrics.memory, undefined);
   });
 
   it('does not validate without the coverage of the plans and the scenarios', () => {
@@ -111,7 +117,7 @@ describe('buildValidationRecord', () => {
           writeCrosscheck('second', noneFull),
         ])
       ),
-      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+      { uiThreadCpu: false, jsThreadCpu: false }
     );
     assert.deepEqual(
       validated(
@@ -120,7 +126,7 @@ describe('buildValidationRecord', () => {
           writeObserverCost('other', 'css'),
         ])
       ),
-      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+      { uiThreadCpu: false, jsThreadCpu: false }
     );
   });
 
@@ -132,30 +138,11 @@ describe('buildValidationRecord', () => {
       validated(
         record([steady(), loads({ epochs: crosscheckEpochs(LOADS_PLAN, 300) })])
       ),
-      { uiThreadCpu: false, jsThreadCpu: true, memory: true }
-    );
-    assert.deepEqual(
-      validated(
-        record([steady(), loads({ footprints: footprints(5, () => null) })])
-      ),
-      { uiThreadCpu: true, jsThreadCpu: true, memory: false }
-    );
-    assert.deepEqual(
-      validated(
-        record([
-          steady(),
-          loads({
-            footprints: footprints(5, (boundary) =>
-              boundary === 0 ? [42_000, 42_000] : [40_000, 40_000]
-            ),
-          }),
-        ])
-      ),
-      { uiThreadCpu: true, jsThreadCpu: true, memory: false }
+      { uiThreadCpu: false, jsThreadCpu: true }
     );
     assert.deepEqual(
       validated(record([steady(), loads({ thermalState: 1 })])),
-      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+      { uiThreadCpu: false, jsThreadCpu: false }
     );
     assert.deepEqual(
       validated(
@@ -166,18 +153,52 @@ describe('buildValidationRecord', () => {
           ),
         ])
       ),
-      { uiThreadCpu: true, jsThreadCpu: false, memory: true }
+      { uiThreadCpu: true, jsThreadCpu: false }
     );
-    assert.deepEqual(
-      validated(
-        record(undefined, [
-          writeObserverCost('idle', 'idle-cost'),
-          writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
-            metric === 'memory' ? 'failed' : 'passed'
+  });
+
+  it('does not validate memory, and its data does not change the validation of the CPU metrics', () => {
+    const built = record(
+      [
+        writeCrosscheck('steady', STEADY_PLAN, {
+          footprints: footprints(5, () => null),
+        }),
+        writeCrosscheck('loads', LOADS_PLAN, {
+          footprints: footprints(5, (boundary) =>
+            boundary === 0 ? [42_000, 42_000] : [40_000, 40_000]
           ),
-        ])
-      ),
-      { uiThreadCpu: true, jsThreadCpu: true, memory: false }
+        }),
+      ],
+      [
+        writeObserverCost('idle', 'idle-cost'),
+        writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
+          metric === 'memory' ? 'failed' : 'passed'
+        ),
+      ]
+    );
+    assert.deepEqual(validated(built), {
+      uiThreadCpu: true,
+      jsThreadCpu: true,
+    });
+    assert.deepEqual(
+      metricValidity(built, IDENTITY, ['uiThreadCpu', 'memory']),
+      {
+        validated: ['uiThreadCpu'],
+        reason: 'the validation record does not validate memory',
+      }
+    );
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            metrics: {
+              ...built.metrics,
+              memory: { validated: true, gates: [] },
+            },
+          })
+        ),
+      /- memory is not a verdict metric of iOS/
     );
   });
 
@@ -402,11 +423,11 @@ describe('readValidationRecord', () => {
             ...built,
             metrics: {
               ...built.metrics,
-              memory: { ...built.metrics.memory, validated: true },
+              jsThreadCpu: { ...built.metrics.jsThreadCpu, validated: true },
             },
           })
         ),
-      /is not a valid validation record:\n {2}- the flag of memory does not match its gates/
+      /is not a valid validation record:\n {2}- the flag of jsThreadCpu does not match its gates/
     );
     assert.throws(
       () =>
@@ -421,11 +442,10 @@ describe('readValidationRecord', () => {
         ),
       /the gates of uiThreadCpu do not follow from its sources/
     );
-    const { memory: _memory, ...withoutMemory } = built.metrics;
+    const { jsThreadCpu: _jsThreadCpu, ...withoutJs } = built.metrics;
     assert.throws(
-      () =>
-        readValidationRecord(writeRecord({ ...built, metrics: withoutMemory })),
-      /it has no entry for memory/
+      () => readValidationRecord(writeRecord({ ...built, metrics: withoutJs })),
+      /it has no entry for jsThreadCpu/
     );
     assert.throws(
       () => readValidationRecord(writeRecord({ ...built, appBuild: 1 })),
@@ -505,12 +525,12 @@ describe('metricValidity', () => {
     const built = record(undefined, [
       writeObserverCost('idle', 'idle-cost'),
       writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
-        metric === 'memory' ? 'failed' : 'passed'
+        metric === 'jsThreadCpu' ? 'failed' : 'passed'
       ),
     ]);
     assert.deepEqual(metricValidity(built, IDENTITY, METRICS), {
-      validated: ['uiThreadCpu', 'jsThreadCpu'],
-      reason: 'the validation record does not validate memory',
+      validated: ['uiThreadCpu'],
+      reason: 'the validation record does not validate jsThreadCpu',
     });
     assert.deepEqual(
       metricValidity(
@@ -518,13 +538,13 @@ describe('metricValidity', () => {
           ...built,
           metrics: {
             ...built.metrics,
-            memory: { validated: true, gates: [] },
+            jsThreadCpu: { validated: true, gates: [] },
           },
         },
         IDENTITY,
         METRICS
       ).validated,
-      ['uiThreadCpu', 'jsThreadCpu']
+      ['uiThreadCpu']
     );
   });
 

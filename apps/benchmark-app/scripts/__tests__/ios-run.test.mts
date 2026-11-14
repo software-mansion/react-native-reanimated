@@ -182,7 +182,7 @@ function run(
 
 function writeValidationRecord(
   change: Partial<ValidationIdentity> = {},
-  memory: 'passed' | 'not validated' = 'passed'
+  jsThreadCpu: 'passed' | 'not validated' = 'passed'
 ): string {
   const directory = path.join(TEST_ROOT.root, 'validation-sources');
   fs.rmSync(directory, { recursive: true, force: true });
@@ -193,7 +193,7 @@ function writeValidationRecord(
   const built = record(undefined, [
     writeObserverCost('idle', 'idle-cost'),
     writeObserverCost('loaded', 'css', (metric) =>
-      metric === 'memory' ? memory : 'passed'
+      metric === 'jsThreadCpu' ? jsThreadCpu : 'passed'
     ),
   ]);
   fs.writeFileSync(VALIDATION_FILE, JSON.stringify(built));
@@ -249,10 +249,10 @@ describe('an iOS run', () => {
       [
         ['uiThreadCpu', true],
         ['jsThreadCpu', true],
-        ['memory', true],
         ['uiUpdateDurationMedian', false],
         ['uiUpdateDurationP95', false],
         ['missedDisplayLinkCallbacks', false],
+        ['memory', false],
         ['coldStart', false],
       ]
     );
@@ -287,15 +287,20 @@ describe('an iOS run', () => {
     const result = readResult(onlyRunFolder(TEST_ROOT));
     assert.deepEqual(
       result.verdictRows.map((row) => row.metric),
-      ['uiThreadCpu', 'jsThreadCpu']
+      ['uiThreadCpu']
     );
     assert.deepEqual(result.validity, {
-      validated: ['uiThreadCpu', 'jsThreadCpu'],
-      reason: 'the validation record does not validate memory',
+      validated: ['uiThreadCpu'],
+      reason: 'the validation record does not validate jsThreadCpu',
     });
     assert.ok(
       result.advisoryRows.some(
-        (row) => row.metric === 'memory' && 'unvalidated' in row
+        (row) => row.metric === 'jsThreadCpu' && 'unvalidated' in row
+      )
+    );
+    assert.ok(
+      result.advisoryRows.some(
+        (row) => row.metric === 'memory' && !('unvalidated' in row)
       )
     );
   });
@@ -446,7 +451,7 @@ describe('an iOS run', () => {
     assert.equal(result.status, 'done');
     assert.deepEqual(
       result.verdictRows.map((row) => row.metric),
-      ['uiThreadCpu', 'jsThreadCpu', 'memory']
+      ['uiThreadCpu', 'jsThreadCpu']
     );
   });
 });

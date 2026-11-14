@@ -36,7 +36,7 @@ const RECORD: NoiseLimitsRecord = {
   sources: [],
   scenarios: { [SCENARIO]: { version: 1, load: 80 } },
   limits: {
-    [SCENARIO]: { uiThreadCpu: 0.08, jsThreadCpu: 0.08, memory: 0.08 },
+    [SCENARIO]: { uiThreadCpu: 0.08, jsThreadCpu: 0.08 },
   },
 };
 
@@ -91,7 +91,7 @@ describe('observerCostCommand', () => {
         ['uiThreadCpu', 'passed'],
         ['jsThreadCpu', 'passed'],
         ['processCpu', 'not validated'],
-        ['memory', 'passed'],
+        ['memory', 'not validated'],
       ]
     );
   });

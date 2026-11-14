@@ -273,7 +273,7 @@ function crosscheckReport(
     '',
     'Memory footprint (kB) at each boundary: the app (`phys_footprint`) and the Activity Monitor rows (`memory-physical-footprint`) from the last row that ends before the read to the first row that starts after it, with the clock uncertainty. A boundary is comparable only when these rows cover at most 2 s and differ by less than the tolerance. The error is the distance of the app value from the range of the rows. This is a second reader of the same counter and unit, not a proof of the kernel accounting.',
     '',
-    'Assumption, not verified: Activity Monitor took the value of a row at a time between the start and the end of the row. The export of a phone recording must show what the time of a row means before memory can be validated. Until then, memory stays unvalidated.',
+    'Assumption, not verified: Activity Monitor took the value of a row at a time between the start and the end of the row. The export of a phone recording can show what the time of a row means. The memory comparison is reported data only: `memory` has no verdict on iOS, and no validation record validates it.',
     '',
     '| Boundary | App | Rows | Activity Monitor | Signed error | Tolerance | Within |',
     `|${' --- |'.repeat(7)}`,

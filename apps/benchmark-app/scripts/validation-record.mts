@@ -8,7 +8,6 @@ import {
   rederivedEpoch,
   rederivedFootprint,
 } from './crosscheck.mts';
-import type { MemoryOutcome } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
@@ -67,7 +66,6 @@ interface CrosscheckSummary {
   scenario: string;
   thermalState: number;
   loadsRan: boolean;
-  memory: MemoryOutcome;
   epochs: {
     load: string;
     collector: Collector;
@@ -357,7 +355,6 @@ function crosscheckSummary({
     scenario: result.scenario,
     thermalState: result.thermalState,
     loadsRan: verdict.loadsRan,
-    memory: verdict.memory,
     epochs: epochs.map((epoch) => ({
       load: epoch.load,
       collector: epoch.collector,
@@ -461,15 +458,6 @@ function crosscheckGates(
       source.thermalState === 0 ? 'passed' : 'not validated'
     ),
   ];
-  if (metric === 'memory') {
-    return [
-      ...common,
-      gate(
-        '`phys_footprint` against `memory-physical-footprint` of Activity Monitor',
-        source.memory === 'not available' ? 'not validated' : source.memory
-      ),
-    ];
-  }
   const field = CROSSCHECK_CPU_FIELDS[metric];
   if (field === undefined) {
     return [gate(`no cross-check measures ${metric}`, 'not validated')];
