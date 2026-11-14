@@ -111,7 +111,7 @@ describe('parseSampleLine', () => {
     );
     assert.throws(
       () => parseSampleLine(JSON.stringify({ format: 1 }), PLAN),
-      /SAMPLE\.format must be one of 2[\s\S]*SAMPLE\.boundaries must be a list/
+      /SAMPLE\.format must be one of 3[\s\S]*SAMPLE\.boundaries must be a list/
     );
   });
 
@@ -146,6 +146,39 @@ describe('parseSampleLine', () => {
     assert.throws(
       () => parsed(inAppSample({ boundaries: [START_BOUNDARY] })),
       /has 1 boundaries for 1 epochs, expected 2/
+    );
+  });
+
+  it('is a tool error when a read bracket is reversed or the reads are not in the order of the sampler', () => {
+    const withStart = (change: Partial<typeof START_BOUNDARY>) =>
+      parsed(
+        inAppSample({
+          boundaries: [{ ...START_BOUNDARY, ...change }, END_BOUNDARY],
+        })
+      );
+    assert.throws(
+      () => withStart({ uiReadStartNs: 4_000, uiReadEndNs: 3_000 }),
+      /Boundary 0 of the SAMPLE line: uiReadEndNs \(3000 ns\) is before uiReadStartNs \(4000 ns\)\. The reads are not in the order of the sampler\./
+    );
+    assert.throws(
+      () => withStart({ footprintReadStartNs: 19_000 }),
+      /Boundary 0 of the SAMPLE line: footprintReadStartNs \(19000 ns\) is before processReadEndNs \(20000 ns\)/
+    );
+    assert.throws(
+      () =>
+        parsed(
+          inAppSample({
+            boundaries: [
+              START_BOUNDARY,
+              { ...END_BOUNDARY, uiReadStartNs: 27_000, uiReadEndNs: 27_500 },
+            ],
+          })
+        ),
+      /Boundary 1 of the SAMPLE line: uiReadStartNs \(27000 ns\) is before signpostEndNs \(28000 ns\) of the boundary before it/
+    );
+    assert.throws(
+      () => parsed(inAppSample({ cpuCount: 0 })),
+      /SAMPLE\.cpuCount must be a positive number/
     );
   });
 
@@ -195,11 +228,15 @@ describe('readEpoch', () => {
     assert.equal(reading.windowMemoryDelta, 300);
   });
 
-  it('gives the timing uncertainty of each CPU value from its read brackets and the counter resolution', () => {
-    const { cpuUncertainty } = readEpoch(parsed(), 0, 60);
-    assertClose(cpuUncertainty.uiThread, (2_500 + 2_500 + 1_000) / 1e6 / 10);
-    assertClose(cpuUncertainty.jsThread, (2_500 + 2_500 + 1_000) / 1e6 / 10);
-    assertClose(cpuUncertainty.process, (5_000 + 5_000 + 1_000) / 1e6 / 10);
+  it('gives the timing uncertainty of each CPU value from its read brackets, the cores that its counter can count and the counter resolution', () => {
+    const { cpuUncertainty, counterCores } = readEpoch(parsed(), 0, 60);
+    assert.deepEqual(counterCores, { uiThread: 1, jsThread: 1, process: 6 });
+    assertClose(cpuUncertainty.uiThread, (2_500 + 2_500 + 2_000) / 1e6 / 10);
+    assertClose(cpuUncertainty.jsThread, (2_500 + 2_500 + 2_000) / 1e6 / 10);
+    assertClose(
+      cpuUncertainty.process,
+      ((5_000 + 5_000) * 6 + 2_000) / 1e6 / 10
+    );
   });
 
   it('counts the display refreshes between two updates as missed', () => {
@@ -271,7 +308,7 @@ describe('readEpoch', () => {
   });
 
   it('allows the process time to be less than the two threads by the read delay at the start and the resolution', () => {
-    const allowedUs = 20 + 15 + 3;
+    const allowedUs = 20 + 15 + 6;
     const reading = readEpoch(
       withEnd({ processCpuUs: 2_000_000 + 3_520_000 - allowedUs }),
       0,
@@ -285,7 +322,7 @@ describe('readEpoch', () => {
           0,
           60
         ),
-      /the process CPU time \(3519961 µs\) is less than the sum of the main thread and the JS thread \(3520000 µs\) by more than the read delay and the counter resolution \(38 µs\)/
+      /the process CPU time \(3519958 µs\) is less than the sum of the main thread and the JS thread \(3520000 µs\) by more than the read delay and the counter resolution \(41 µs\)/
     );
   });
 
@@ -296,7 +333,14 @@ describe('readEpoch', () => {
           parsed(
             inAppSample({
               boundaries: [
-                { ...START_BOUNDARY, processReadEndNs: 10_000_000 },
+                {
+                  ...START_BOUNDARY,
+                  processReadEndNs: 10_000_000,
+                  footprintReadStartNs: 10_000_000,
+                  footprintReadEndNs: 10_001_000,
+                  signpostStartNs: 10_002_000,
+                  signpostEndNs: 10_008_000,
+                },
                 END_BOUNDARY,
               ],
             })

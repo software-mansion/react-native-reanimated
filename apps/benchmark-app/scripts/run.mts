@@ -207,10 +207,10 @@ function summarize(result: RunResult) {
 
 function validationIdentityOf(result: RunResult): ValidationIdentity | null {
   const sources = new Set(
-    VARIANT_KEYS.map((key) => result.variants[key]?.appSources)
+    VARIANT_KEYS.map((key) => result.variants[key]?.appBuild)
   );
-  const [appSources] = sources;
-  if (result.platform !== 'ios' || sources.size !== 1 || !appSources) {
+  const [appBuild] = sources;
+  if (result.platform !== 'ios' || sources.size !== 1 || !appBuild) {
     return null;
   }
   return {
@@ -219,7 +219,7 @@ function validationIdentityOf(result: RunResult): ValidationIdentity | null {
       result.segments[0].device
     ),
     measurementRevision: result.measurementRevision,
-    appSources,
+    appBuild,
   };
 }
 

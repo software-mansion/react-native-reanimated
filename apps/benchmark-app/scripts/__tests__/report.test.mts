@@ -73,7 +73,7 @@ function built(variant: 'a' | 'b', syncFlag: boolean): MeasuredVariant {
     applicationId: `com.reanimatedbenchmark.${variant}`,
     installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
     lockfileSha256: 'lock',
-    appSources: 'sources',
+    appBuild: 'sources',
     effectiveFlags: {
       reanimated: {
         ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: syncFlag,

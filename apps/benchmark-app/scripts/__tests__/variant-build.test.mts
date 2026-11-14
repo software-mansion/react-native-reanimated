@@ -8,6 +8,7 @@ import { androidBuild } from '../android-build.mts';
 import { applicationIdOf } from '../application-id.mts';
 import { addLibraries } from '../build-copy.mts';
 import {
+  appBuildIdentity,
   collectBuildKeyInputs,
   listProjectFiles,
   variantBuildKey,
@@ -121,6 +122,41 @@ describe('variantBuildKey', () => {
   });
 });
 
+describe('appBuildIdentity', () => {
+  const inputs: BuildKeyInputs = {
+    variant: VARIANT,
+    platform: 'ios',
+    suffix: '.a',
+    nodeVersion: 'v24.16.0',
+    toolIdentity: { xcode: '27.2', sdk: '27.1' },
+    projectHash: 'project',
+    tarballHashes: {},
+    procedureHash: 'procedure',
+  };
+
+  it('changes with the app sources, the tools and the build procedure, not with the variant', () => {
+    const identity = appBuildIdentity(inputs);
+    assert.match(identity, /^[0-9a-f]{64}$/);
+    for (const same of [
+      { suffix: '.b' },
+      { tarballHashes: { worklets: 'other' } },
+      {
+        variant: { ...VARIANT, reanimated: { kind: 'npm', version: '4.6.0' } },
+      },
+    ] as const) {
+      assert.equal(appBuildIdentity({ ...inputs, ...same }), identity);
+    }
+    for (const changed of [
+      { nodeVersion: 'v26.0.0' },
+      { toolIdentity: { xcode: '27.3', sdk: '27.1' } },
+      { projectHash: 'changed' },
+      { procedureHash: 'changed' },
+    ]) {
+      assert.notEqual(appBuildIdentity({ ...inputs, ...changed }), identity);
+    }
+  });
+});
+
 describe('addLibraries', () => {
   const directory = path.join(ROOT, 'copy');
   const installLibraries = async (command: ProjectCommand) => {
@@ -203,7 +239,7 @@ describe('platform builds', () => {
         directory: '/builds/key',
         key,
         variant,
-        appSources: 'sources',
+        appBuild: 'sources',
         run: async (command: ProjectCommand) => void commands.push(command),
       },
     };

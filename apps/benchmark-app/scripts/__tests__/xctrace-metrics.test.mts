@@ -462,15 +462,15 @@ describe('readBoundarySignposts', () => {
 });
 
 describe('readFootprints', () => {
-  it('gives the physical footprint of the app in kB at each Activity Monitor row', () => {
+  it('gives the physical footprint of the app in kB and the interval of each Activity Monitor row', () => {
     const processes = withRows(EXPORTS.processes, [
       footprintRow(1_000_000_000, 41_943_040),
       footprintRow(1_000_000_000, 99_999_999, OTHER_PID),
       footprintRow(2_000_000_000, 42_991_616),
     ]);
     assert.deepEqual(readFootprints({ processes }, APP.pid), [
-      { timeNs: 1_000_000_000, footprintKb: 40_960 },
-      { timeNs: 2_000_000_000, footprintKb: 41_984 },
+      { startNs: 1_000_000_000, endNs: 1_000_000_001, footprintKb: 40_960 },
+      { startNs: 2_000_000_000, endNs: 2_000_000_001, footprintKb: 41_984 },
     ]);
     assert.deepEqual(readFootprints(EXPORTS, APP.pid), []);
   });

@@ -23,11 +23,11 @@ final class ProcessReporter {
     }
     var mainThread: UInt64 = 0
     pthread_threadid_np(nil, &mainThread)
-    let sources = Bundle.main.object(forInfoDictionaryKey: "BenchmarkAppSources") as? String ?? ""
+    let build = Bundle.main.object(forInfoDictionaryKey: "BenchmarkAppBuild") as? String ?? ""
     let line = String(
-      format: "LAUNCH pid=%d mainThread=%llu refreshRate=%ld thermal=%ld coldStart=%.3f sources=%@",
+      format: "LAUNCH pid=%d mainThread=%llu refreshRate=%ld thermal=%ld coldStart=%.3f build=%@",
       getpid(), mainThread, screen.maximumFramesPerSecond,
-      ProcessInfo.processInfo.thermalState.rawValue, coldStart, sources
+      ProcessInfo.processInfo.thermalState.rawValue, coldStart, build
     )
     print("ReanimatedBenchmark: \(line)")
     fflush(stdout)

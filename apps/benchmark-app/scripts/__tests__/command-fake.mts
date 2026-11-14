@@ -239,7 +239,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
         installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
         effectiveFlags: { reanimated: {}, worklets: {} },
         lockfileSha256: 'lock',
-        appSources: 'sources',
+        appBuild: 'sources',
       }) satisfies BuiltVariant,
     createDevice: () => device as unknown as AndroidDevice,
     createCollector: () => ({

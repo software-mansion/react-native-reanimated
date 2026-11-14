@@ -10,7 +10,7 @@ import { observerCostCommand } from '../observer-cost-command.mts';
 import { readObserverCostResult } from '../validation-sources.mts';
 import { useTestRoot } from './command-fake.mts';
 import {
-  APP_SOURCES,
+  APP_BUILD,
   clockWithEndlessPolls,
   commandContext,
   fakeIosDevice,
@@ -74,7 +74,7 @@ function onlyFolder(): string {
 }
 
 function onlyResult() {
-  return readObserverCostResult(onlyFolder());
+  return readObserverCostResult(onlyFolder()).result;
 }
 
 describe('observerCostCommand', () => {
@@ -83,7 +83,7 @@ describe('observerCostCommand', () => {
     assert.equal(await observerCost(LIMITS_FILE), 0);
     const result = onlyResult();
     assert.equal(result.samples.length, 20);
-    assert.equal(result.appSources, APP_SOURCES);
+    assert.equal(result.appBuild, APP_BUILD);
     assert.deepEqual(result.report, { version: 1, load: 80 });
     assert.deepEqual(
       result.costs?.map((cost) => [cost.metric, cost.outcome]),

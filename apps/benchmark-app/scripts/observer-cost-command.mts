@@ -148,7 +148,7 @@ function resultOf(
     measurementRevision: MEASUREMENT_REVISION,
     platform: 'ios',
     device: identity,
-    appSources: launched?.launch.appSources ?? '',
+    appBuild: launched?.launch.appBuild ?? '',
     applicationId: options.applicationId,
     scenario: options.scenario,
     report: {

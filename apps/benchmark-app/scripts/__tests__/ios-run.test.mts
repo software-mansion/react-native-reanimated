@@ -20,8 +20,7 @@ import type { Processes } from '../processes.mts';
 import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import { MINIMUM_WAIT_MS } from '../samples.mts';
-import { VALIDATION_FORMAT_VERSION } from '../validation-record.mts';
-import type { ValidationRecord } from '../validation-record.mts';
+import type { ValidationIdentity } from '../validation-sources.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
 import {
   END_BOUNDARY,
@@ -30,6 +29,7 @@ import {
   inAppSample,
   sampleLine,
 } from './ios-fixtures.mts';
+import { validationSources } from './validation-fixtures.mts';
 
 const TEST_ROOT = useTestRoot('ios-run', {
   name: 'ios-test',
@@ -40,6 +40,16 @@ const TEST_ROOT = useTestRoot('ios-run', {
 const IPHONE: DeviceTarget = { platform: 'ios', id: 'UDID1' };
 const SIGN_COMMAND = path.join(TEST_ROOT.root, 'sign.sh');
 const VALIDATION_FILE = path.join(TEST_ROOT.root, 'validation.json');
+const RUN_IDENTITY: ValidationIdentity = {
+  platform: 'ios',
+  device: {
+    model: 'iPhone 13 mini (iPhone14,4)',
+    deviceId: 'UDID1',
+    osBuild: '24A446',
+  },
+  measurementRevision: MEASUREMENT_REVISION,
+  appBuild: 'sources',
+};
 const STATE: IosDeviceState = {
   deviceId: 'UDID1',
   name: 'Test iPhone',
@@ -91,7 +101,7 @@ function createFake(options: FakeOptions = {}) {
       launches.push(`${applicationId} ${scenario}`);
       onLine(`Launched application with ${applicationId} bundle identifier.`);
       onLine(
-        'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5 sources=sources'
+        'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5 build=build'
       );
       if (scenario !== undefined) {
         samples++;
@@ -123,7 +133,7 @@ function createFake(options: FakeOptions = {}) {
       installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
       effectiveFlags: { reanimated: {}, worklets: {} },
       lockfileSha256: 'lock',
-      appSources: 'sources',
+      appBuild: 'sources',
     }),
     createDevice: () => device as unknown as IosDevice,
     clock,
@@ -170,27 +180,23 @@ function run(
   );
 }
 
-function writeValidationRecord(change: Partial<ValidationRecord> = {}): string {
-  const metric = { validated: true, gates: [] };
-  const record: ValidationRecord = {
-    formatVersion: VALIDATION_FORMAT_VERSION,
-    platform: 'ios',
-    device: {
-      model: 'iPhone 13 mini (iPhone14,4)',
-      deviceId: 'UDID1',
-      osBuild: '24A446',
-    },
-    measurementRevision: MEASUREMENT_REVISION,
-    appSources: 'sources',
-    sources: { crosschecks: [], observerCosts: [] },
-    metrics: {
-      uiThreadCpu: metric,
-      jsThreadCpu: metric,
-      memory: { validated: false, gates: [] },
-    },
+function writeValidationRecord(
+  change: Partial<ValidationIdentity> = {},
+  memory: 'passed' | 'not validated' = 'passed'
+): string {
+  const directory = path.join(TEST_ROOT.root, 'validation-sources');
+  fs.rmSync(directory, { recursive: true, force: true });
+  const { writeObserverCost, record } = validationSources(directory, {
+    ...RUN_IDENTITY,
     ...change,
-  };
-  fs.writeFileSync(VALIDATION_FILE, JSON.stringify(record));
+  });
+  const built = record(undefined, [
+    writeObserverCost('idle', 'idle-cost'),
+    writeObserverCost('loaded', 'css', (metric) =>
+      metric === 'memory' ? memory : 'passed'
+    ),
+  ]);
+  fs.writeFileSync(VALIDATION_FILE, JSON.stringify(built));
   return VALIDATION_FILE;
 }
 
@@ -270,7 +276,14 @@ describe('an iOS run', () => {
   });
 
   it('gives a verdict only for the metrics that a matching validation record validates', async () => {
-    assert.equal(await run(createFake(), IPHONE, writeValidationRecord()), 1);
+    assert.equal(
+      await run(
+        createFake(),
+        IPHONE,
+        writeValidationRecord({}, 'not validated')
+      ),
+      1
+    );
     const result = readResult(onlyRunFolder(TEST_ROOT));
     assert.deepEqual(
       result.verdictRows.map((row) => row.metric),
@@ -290,8 +303,8 @@ describe('an iOS run', () => {
   it('gives no verdict when the validation record is of another setup', async () => {
     for (const [change, reason] of [
       [
-        { appSources: 'other' },
-        /the validation record does not fit the run: app sources other -> sources/,
+        { appBuild: 'other' },
+        /the validation record does not fit the run: app build other -> sources/,
       ],
       [
         {
@@ -391,18 +404,11 @@ describe('an iOS run', () => {
   });
 
   it('resumes with the stored state of the app and the stored validation record', async () => {
-    const validated = { validated: true, gates: [] };
     await assert.rejects(
       run(
         createFake({ interruptBeforeSample: 3 }),
         IPHONE,
-        writeValidationRecord({
-          metrics: {
-            uiThreadCpu: validated,
-            jsThreadCpu: validated,
-            memory: validated,
-          },
-        })
+        writeValidationRecord()
       ),
       /the device connection ended/
     );

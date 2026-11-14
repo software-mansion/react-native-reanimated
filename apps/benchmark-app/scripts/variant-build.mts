@@ -4,6 +4,7 @@ import path from 'node:path';
 import { applicationIdOf } from './application-id.mts';
 import { addLibraries } from './build-copy.mts';
 import {
+  appBuildIdentity,
   collectBuildKeyInputs,
   listProjectFiles,
   variantBuildKey,
@@ -28,7 +29,7 @@ export interface BuiltVariant {
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
   lockfileSha256: string;
-  appSources: string;
+  appBuild: string;
 }
 
 export interface BuildRequest {
@@ -44,7 +45,7 @@ export interface VariantProject {
   directory: string;
   key: VariantKey;
   variant: Variant;
-  appSources: string;
+  appBuild: string;
   run: (command: ProjectCommand) => Promise<void>;
 }
 
@@ -80,7 +81,7 @@ export async function buildVariant(
   const files = listProjectFiles(appDir);
   const inputs = await collectBuildKeyInputs(request, platformBuild, files);
   const buildKey = variantBuildKey(inputs);
-  const appSources = inputs.projectHash;
+  const appBuild = appBuildIdentity(inputs);
   const directory = path.join(buildsDir, buildKey);
   const marker = path.join(directory, BUILD_MARKER);
   if (fs.existsSync(marker)) {
@@ -102,7 +103,7 @@ export async function buildVariant(
     directory,
     key,
     variant,
-    appSources,
+    appBuild,
     run,
   });
   if (!fs.existsSync(artifact)) {
@@ -117,7 +118,7 @@ export async function buildVariant(
     artifact,
     applicationId: applicationIdOf(key),
     ...libraries,
-    appSources,
+    appBuild,
   };
   fs.writeFileSync(marker, `${JSON.stringify(built, null, 2)}\n`);
   return built;

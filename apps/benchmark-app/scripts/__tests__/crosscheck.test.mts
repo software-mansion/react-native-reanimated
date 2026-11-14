@@ -26,6 +26,13 @@ const TRACE_OF_APP: TraceEpoch = {
   mountBatchCount: 600,
 };
 
+function assertCloseTo(actual: number | null, expected: number) {
+  assert.ok(
+    actual !== null && Math.abs(actual - expected) < 1e-9,
+    `${actual} is not ${expected}`
+  );
+}
+
 function loadEpoch(load: string, own: number, other: number): SampledEpoch {
   return { load, collector: 'full', seconds: 10, work: { own, other } };
 }
@@ -95,6 +102,10 @@ describe('compareEpochs', () => {
     });
     assert.equal(epoch.jsThreadCpu.passes, false);
     assert.equal(epoch.processCpu.passes, false);
+    assertCloseTo(
+      epoch.processCpu.timingUncertainty,
+      READING.cpuUncertainty.process + (100_000 * 6) / 1e6 / 10
+    );
     assert.equal(epoch.mountBatchCount.passes, true);
     assert.equal(epoch.mountBatchCount.timingUncertainty, null);
     assert.deepEqual(epoch.updateCount, { app: 600, trace: 600 });
@@ -163,36 +174,74 @@ describe('compareEpochs', () => {
 });
 
 describe('compareFootprints', () => {
-  it('compares the footprint of the app at each read with Activity Monitor at the same time', () => {
-    const values = compareFootprints(
-      SAMPLE,
-      [
-        { timeNs: 0, footprintKb: 39_000 },
-        { timeNs: 2_000_000_000, footprintKb: 41_000 },
-        { timeNs: 9_000_000_000, footprintKb: 40_000 },
-        { timeNs: 10_500_000_000, footprintKb: 40_100 },
-      ],
-      { offsetNs: 980_000, uncertaintyNs: 0, spreadNs: 0 }
-    );
-    assert.equal(values[0].trace, 39_000 + (1_000_000 / 2e9) * 2_000);
-    assert.equal(values[0].passes, true);
-    assert.ok(
-      values[1].trace !== null &&
-        Math.abs(values[1].trace - (40_000 + (1_001_000_000 / 1.5e9) * 100)) <
-          1e-6
-    );
-    assert.equal(values[1].tolerance, 1024);
+  const READ_CLOCK: ClockMapping = {
+    offsetNs: 1_000_000,
+    uncertaintyNs: 500,
+    spreadNs: 0,
+  };
+  const row = (startNs: number, footprintKb: number, durationNs = 1_000) => ({
+    startNs,
+    endNs: startNs + durationNs,
+    footprintKb,
+  });
+  const END_ROWS = [row(9_500_000_000, 40_200), row(10_500_000_000, 40_400)];
+
+  it('compares the footprint of the app with the range of the Activity Monitor rows around its read', () => {
+    const rows = [row(0, 39_500), row(1_500_000, 40_100), ...END_ROWS];
+    const [first, second] = compareFootprints(SAMPLE, rows, READ_CLOCK);
+    assert.deepEqual(first, {
+      boundary: 0,
+      app: 40_000,
+      read: { startNs: 1_019_500, endNs: 1_021_500 },
+      rows: rows.slice(0, 2),
+      low: 39_500,
+      high: 40_100,
+      signedError: 0,
+      tolerance: 1024,
+      comparable: true,
+      reason: null,
+      passes: true,
+    });
+    assert.equal(second.comparable, true);
+    assert.deepEqual(second.rows, END_ROWS);
+    assert.equal(second.passes, true);
   });
 
-  it('has no Activity Monitor value for a read without samples within 2 s on both sides', () => {
-    const values = compareFootprints(
+  it('includes a row that overlaps the read in the range, and fails an app value too far from the range', () => {
+    const [first] = compareFootprints(
       SAMPLE,
-      [{ timeNs: 10_500_000_000, footprintKb: 40_100 }],
-      CLOCK
+      [
+        row(0, 41_200),
+        row(1_019_000, 41_600, 2_000),
+        row(1_500_000, 41_300),
+        ...END_ROWS,
+      ],
+      READ_CLOCK
     );
-    assert.deepEqual(
-      values.map((value) => value.trace),
-      [null, null]
+    assert.equal(first.rows.length, 3);
+    assert.equal(first.high, 41_600);
+    assert.equal(first.signedError, -1_200);
+    assert.equal(first.passes, false);
+  });
+
+  it('does not compare a read without a row on each side, with rows that cover more than 2 s, or with rows that differ by the tolerance', () => {
+    const reasonOf = (rows: ReturnType<typeof row>[]) =>
+      compareFootprints(SAMPLE, rows, READ_CLOCK)[0].reason;
+    assert.equal(
+      reasonOf([row(0, 40_000)]),
+      'Activity Monitor has no row that ends before the read or no row that starts after it'
+    );
+    assert.equal(
+      reasonOf([row(1_019_000, 40_000), row(1_500_000, 40_000)]),
+      'Activity Monitor has no row that ends before the read or no row that starts after it'
+    );
+    assert.equal(
+      reasonOf([row(0, 40_000), row(2_000_000_000, 40_000)]),
+      'the Activity Monitor rows around the read cover 2000.001 ms, more than 2000 ms'
+    );
+    assert.equal(
+      reasonOf([row(0, 39_000), row(1_500_000, 40_024)]),
+      'the Activity Monitor rows around the read differ by 1024 kB, not less than the tolerance of 1024 kB'
     );
   });
 });
@@ -202,10 +251,14 @@ describe('crosscheckVerdict', () => {
     const footprints = compareFootprints(
       SAMPLE,
       [
-        { timeNs: 0, footprintKb: 40_000 },
-        { timeNs: 1_000_000_000, footprintKb: 40_000 },
-        { timeNs: 9_500_000_000, footprintKb: 40_300 },
-        { timeNs: 10_500_000_000, footprintKb: 40_300 },
+        { startNs: 0, endNs: 1_000, footprintKb: 40_000 },
+        { startNs: 1_000_000, endNs: 1_001_000, footprintKb: 40_000 },
+        { startNs: 9_500_000_000, endNs: 9_500_001_000, footprintKb: 40_300 },
+        {
+          startNs: 10_500_000_000,
+          endNs: 10_500_001_000,
+          footprintKb: 40_300,
+        },
       ],
       { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 }
     );
@@ -216,6 +269,13 @@ describe('crosscheckVerdict', () => {
       memory: 'passed',
       updateDurationQuantilesWithinTolerance: true,
     });
+    assert.equal(
+      crosscheckVerdict(epochs, [
+        footprints[0],
+        { ...footprints[1], passes: false },
+      ]).memory,
+      'failed'
+    );
     assert.deepEqual(
       crosscheckVerdict(
         compareEpochs(
@@ -225,7 +285,7 @@ describe('crosscheckVerdict', () => {
           CLOCK,
           60
         ),
-        []
+        [footprints[0]]
       ),
       {
         counters: true,

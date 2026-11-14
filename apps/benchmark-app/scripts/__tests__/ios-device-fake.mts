@@ -23,10 +23,10 @@ export const IOS_STATE: IosDeviceState = {
   osBuild: '24A446',
 };
 
-export const APP_SOURCES = 'sources1';
+export const APP_BUILD = 'sources1';
 
 export function launchLine(): string {
-  return `ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5 sources=${APP_SOURCES}`;
+  return `ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5 build=${APP_BUILD}`;
 }
 
 export function readyLine(scenario: string, version = 1, load = 80): string {

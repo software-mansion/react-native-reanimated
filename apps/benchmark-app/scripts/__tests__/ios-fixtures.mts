@@ -18,6 +18,8 @@ export const START_BOUNDARY: InAppBoundary = {
   processReadStartNs: 10_000,
   processReadEndNs: 20_000,
   processCpuUs: 2_000_000,
+  footprintReadStartNs: 20_000,
+  footprintReadEndNs: 21_000,
   signpostStartNs: 22_000,
   signpostEndNs: 28_000,
   footprintKb: 40_000,
@@ -41,6 +43,8 @@ export const END_BOUNDARY: InAppBoundary = {
   processReadStartNs: 10_000_010_000,
   processReadEndNs: 10_000_020_000,
   processCpuUs: 5_530_000,
+  footprintReadStartNs: 10_000_020_000,
+  footprintReadEndNs: 10_000_021_000,
   signpostStartNs: 10_000_022_000,
   signpostEndNs: 10_000_028_000,
   footprintKb: 40_300,
@@ -91,6 +95,7 @@ export function inAppSample(overrides: Partial<InAppSample> = {}): InAppSample {
   return {
     mainThread: 5001,
     jsThread: 5002,
+    cpuCount: 6,
     maxThermal: 0,
     epochs: [
       {
@@ -125,7 +130,7 @@ export function sampleText(
   sample: InAppSample = inAppSample(),
   error: string | null = null
 ): string {
-  return JSON.stringify({ format: 2, error, ...sample });
+  return JSON.stringify({ format: 3, error, ...sample });
 }
 
 export function sampleLine(sample: InAppSample = inAppSample()): string {

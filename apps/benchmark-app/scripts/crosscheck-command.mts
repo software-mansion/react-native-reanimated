@@ -21,6 +21,7 @@ import type {
   ComparedValue,
   CrosscheckEpoch,
   CrosscheckVerdict,
+  FootprintComparison,
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import {
@@ -137,7 +138,7 @@ export async function crosscheckCommand(
     measurementRevision: MEASUREMENT_REVISION,
     platform: 'ios',
     device: iosPlatform().deviceIdentity(state),
-    appSources: app.launch.appSources,
+    appBuild: app.launch.appBuild,
     applicationId: options.applicationId,
     scenario: options.scenario,
     report: { version: app.report.version, load: app.report.load },
@@ -218,7 +219,7 @@ async function recordSample(
 
 function crosscheckReport(
   epochs: readonly CrosscheckEpoch[],
-  footprints: readonly ComparedValue[],
+  footprints: readonly FootprintComparison[],
   verdict: CrosscheckVerdict,
   clock: ClockMapping
 ): string {
@@ -245,8 +246,20 @@ function crosscheckReport(
           ]
     );
   });
-  const footprintRows = footprints.map((value, index) =>
-    tableRow([String(index), ...comparedCells(value)])
+  const footprintRows = footprints.map((value) =>
+    tableRow([
+      String(value.boundary),
+      String(value.app),
+      String(value.rows.length),
+      value.low === null || value.high === null
+        ? '-'
+        : `${numberText(value.low)} to ${numberText(value.high)}`,
+      numberText(value.signedError),
+      numberText(value.tolerance),
+      value.comparable
+        ? yesNo(value.passes)
+        : `not comparable: ${value.reason}`,
+    ])
   );
   const epochLines = epochs.map(
     (epoch) =>
@@ -263,10 +276,10 @@ function crosscheckReport(
     '',
     ...epochLines,
     '',
-    'Memory footprint (kB) at each boundary: the app (`phys_footprint`) and Activity Monitor (`memory-physical-footprint`, interpolated to the time of the read).',
+    'Memory footprint (kB) at each boundary: the app (`phys_footprint`) and the Activity Monitor rows (`memory-physical-footprint`) from the last row that ends before the read to the first row that starts after it, with the clock uncertainty. A boundary is comparable only when these rows cover at most 2 s and differ by less than the tolerance. The error is the distance of the app value from the range of the rows. This is a second reader of the same counter and unit, not a proof of the kernel accounting.',
     '',
-    '| Boundary | App | Activity Monitor | Signed error | Absolute error | Relative error | Timing uncertainty | Tolerance | Within |',
-    `|${' --- |'.repeat(9)}`,
+    '| Boundary | App | Rows | Activity Monitor | Signed error | Tolerance | Within |',
+    `|${' --- |'.repeat(7)}`,
     ...footprintRows,
     '',
     `- Counters within the gates: ${yesNo(verdict.counters)}.`,

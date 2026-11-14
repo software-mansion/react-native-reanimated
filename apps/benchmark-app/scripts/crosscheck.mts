@@ -1,6 +1,6 @@
 import { ToolError } from './errors.mts';
 import { quantileOrNull } from './frames.mts';
-import { CPU_COUNTERS, boundaryReadSpan } from './in-app-sample.mts';
+import { CPU_COUNTERS, footprintReadSpan } from './in-app-sample.mts';
 import type {
   CpuCounter,
   EpochReading,
@@ -56,6 +56,20 @@ export interface CrosscheckEpoch extends SampledEpoch {
   uiUpdateDurationP95: ComparedValue | null;
 }
 
+export interface FootprintComparison {
+  boundary: number;
+  app: number;
+  read: TimeSpan;
+  rows: FootprintSample[];
+  low: number | null;
+  high: number | null;
+  signedError: number | null;
+  tolerance: number | null;
+  comparable: boolean;
+  reason: string | null;
+  passes: boolean;
+}
+
 export type MemoryOutcome = 'passed' | 'failed' | 'not available';
 
 export interface CrosscheckVerdict {
@@ -84,7 +98,7 @@ const MINIMUM_OWN_WORK_SHARE = 0.5;
 
 const MAXIMUM_OTHER_WORK_SHARE = 0.1;
 
-const MAXIMUM_FOOTPRINT_GAP_NS = 2_000_000_000;
+const MAXIMUM_FOOTPRINT_ROWS_NS = 2_000_000_000;
 
 const MINIMUM_FOOTPRINT_COMPARISONS = 2;
 
@@ -179,7 +193,7 @@ export function compareEpochs(
         trace[CPU_FIELDS[counter]],
         CPU_TOLERANCE,
         reading.cpuUncertainty[counter] +
-          (2 * clock.uncertaintyNs) /
+          (2 * clock.uncertaintyNs * reading.counterCores[counter]) /
             NANOSECONDS_PER_MS /
             spanSeconds(reading.counterSpans[counter])
       );
@@ -209,23 +223,28 @@ export function compareEpochs(
 export function compareFootprints(
   sample: InAppSample,
   footprints: readonly FootprintSample[],
-  { offsetNs }: ClockMapping
-): ComparedValue[] {
-  const sorted = [...footprints].sort(
-    (left, right) => left.timeNs - right.timeNs
+  clock: ClockMapping
+): FootprintComparison[] {
+  const rows = [...footprints].sort(
+    (left, right) => left.startNs - right.startNs
   );
-  return sample.boundaries.map((boundary) =>
-    compared(
+  return sample.boundaries.map((boundary, index) => {
+    const span = footprintReadSpan(boundary);
+    return footprintComparison(
+      index,
       boundary.footprintKb,
-      footprintAt(sorted, boundaryReadSpan(boundary).endNs + offsetNs),
-      MEMORY_TOLERANCE
-    )
-  );
+      {
+        startNs: span.startNs + clock.offsetNs - clock.uncertaintyNs,
+        endNs: span.endNs + clock.offsetNs + clock.uncertaintyNs,
+      },
+      rows
+    );
+  });
 }
 
 export function crosscheckVerdict(
   epochs: readonly CrosscheckEpoch[],
-  footprints: readonly ComparedValue[]
+  footprints: readonly FootprintComparison[]
 ): CrosscheckVerdict {
   const durations = epochs.flatMap((epoch) =>
     [epoch.uiUpdateDurationMedian, epoch.uiUpdateDurationP95].filter(
@@ -258,32 +277,74 @@ function workProof(epoch: SampledEpoch, displaySlots: number): WorkProof {
   };
 }
 
-function footprintAt(
-  sorted: readonly FootprintSample[],
-  timeNs: number
-): number | null {
-  const next = sorted.findIndex((sample) => sample.timeNs >= timeNs);
-  if (next === -1) {
-    return null;
+function footprintComparison(
+  boundary: number,
+  app: number,
+  read: TimeSpan,
+  rows: readonly FootprintSample[]
+): FootprintComparison {
+  const notComparable = (reason: string, around: FootprintSample[] = []) => ({
+    boundary,
+    app,
+    read,
+    rows: around,
+    low: null,
+    high: null,
+    signedError: null,
+    tolerance: null,
+    comparable: false,
+    reason,
+    passes: false,
+  });
+  const before = rows.filter((row) => row.endNs <= read.startNs).at(-1);
+  const after = rows.find((row) => row.startNs >= read.endNs);
+  if (before === undefined || after === undefined) {
+    return notComparable(
+      'Activity Monitor has no row that ends before the read or no row that starts after it'
+    );
   }
-  const after = sorted[next];
-  if (after.timeNs === timeNs) {
-    return after.footprintKb;
+  const around = rows.filter(
+    (row) => row.endNs >= before.startNs && row.startNs <= after.endNs
+  );
+  if (after.endNs - before.startNs > MAXIMUM_FOOTPRINT_ROWS_NS) {
+    return notComparable(
+      `the Activity Monitor rows around the read cover ${(after.endNs - before.startNs) / NANOSECONDS_PER_MS} ms, more than ${MAXIMUM_FOOTPRINT_ROWS_NS / NANOSECONDS_PER_MS} ms`,
+      around
+    );
   }
-  const before = sorted[next - 1];
-  if (
-    before === undefined ||
-    timeNs - before.timeNs > MAXIMUM_FOOTPRINT_GAP_NS ||
-    after.timeNs - timeNs > MAXIMUM_FOOTPRINT_GAP_NS
-  ) {
-    return null;
+  const values = around.map((row) => row.footprintKb);
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const tolerance = Math.max(
+    MEMORY_TOLERANCE.absolute,
+    MEMORY_TOLERANCE.relative * high
+  );
+  if (high - low >= tolerance) {
+    return notComparable(
+      `the Activity Monitor rows around the read differ by ${high - low} kB, not less than the tolerance of ${tolerance} kB`,
+      around
+    );
   }
-  const share = (timeNs - before.timeNs) / (after.timeNs - before.timeNs);
-  return before.footprintKb + share * (after.footprintKb - before.footprintKb);
+  const signedError = app < low ? app - low : app > high ? app - high : 0;
+  return {
+    boundary,
+    app,
+    read,
+    rows: around,
+    low,
+    high,
+    signedError,
+    tolerance,
+    comparable: true,
+    reason: null,
+    passes: Math.abs(signedError) <= tolerance,
+  };
 }
 
-function memoryOutcome(footprints: readonly ComparedValue[]): MemoryOutcome {
-  const comparable = footprints.filter((value) => value.trace !== null);
+function memoryOutcome(
+  footprints: readonly FootprintComparison[]
+): MemoryOutcome {
+  const comparable = footprints.filter((value) => value.comparable);
   if (comparable.length < MINIMUM_FOOTPRINT_COMPARISONS) {
     return 'not available';
   }

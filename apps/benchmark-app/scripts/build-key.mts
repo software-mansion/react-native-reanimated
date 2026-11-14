@@ -56,28 +56,31 @@ export async function collectBuildKeyInputs(
 
 export function variantBuildKey(inputs: BuildKeyInputs): string {
   const { variant } = inputs;
-  const sorted = (values: Record<string, unknown>) =>
-    Object.entries(values).sort(([left], [right]) => left.localeCompare(right));
-  const description = JSON.stringify({
+  return hashOf({
     reanimated: variant.reanimated,
     worklets: variant.worklets,
     tarballHashes: inputs.tarballHashes,
-    reanimatedFlags: sorted(variant.reanimatedFlags),
-    workletsFlags: sorted(variant.workletsFlags),
+    reanimatedFlags: sortedEntries(variant.reanimatedFlags),
+    workletsFlags: sortedEntries(variant.workletsFlags),
     bundleMode: variant.bundleMode,
     profiling: variant.profiling,
     platform: inputs.platform,
     suffix: inputs.suffix,
     nodeVersion: inputs.nodeVersion,
-    toolIdentity: sorted(inputs.toolIdentity),
+    toolIdentity: sortedEntries(inputs.toolIdentity),
+    projectHash: inputs.projectHash,
+    procedureHash: inputs.procedureHash,
+  }).slice(0, 16);
+}
+
+export function appBuildIdentity(inputs: BuildKeyInputs): string {
+  return hashOf({
+    platform: inputs.platform,
+    nodeVersion: inputs.nodeVersion,
+    toolIdentity: sortedEntries(inputs.toolIdentity),
     projectHash: inputs.projectHash,
     procedureHash: inputs.procedureHash,
   });
-  return crypto
-    .createHash('sha256')
-    .update(description)
-    .digest('hex')
-    .slice(0, 16);
 }
 
 export function listProjectFiles(appDir: string, relativeDir = ''): string[] {
@@ -136,5 +139,18 @@ function isCopied(relativePath: string): boolean {
   return (
     !parts.some((part) => EXCLUDED_NAMES.has(part)) &&
     !parts.some((_, i) => EXCLUDED_PATHS.has(parts.slice(0, i + 1).join('/')))
+  );
+}
+
+function hashOf(description: object): string {
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(description))
+    .digest('hex');
+}
+
+function sortedEntries(values: Record<string, unknown>) {
+  return Object.entries(values).sort(([left], [right]) =>
+    left.localeCompare(right)
   );
 }

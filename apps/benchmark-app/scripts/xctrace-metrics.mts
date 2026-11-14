@@ -21,8 +21,7 @@ export interface TraceEpochSpans {
   counters: Record<CpuCounter, TimeSpan>;
 }
 
-export interface FootprintSample {
-  timeNs: number;
+export interface FootprintSample extends TimeSpan {
   footprintKb: number;
 }
 
@@ -74,6 +73,7 @@ const FRAME_COLUMNS = ['start', 'duration', 'process'] as const;
 
 const PROCESS_COLUMNS = [
   'start',
+  'duration',
   'process',
   'memory-physical-footprint',
 ] as const;
@@ -151,11 +151,15 @@ export function readFootprints(
     pid,
     PROCESS_COLUMNS
   );
-  return processes.rows.map((row) => ({
-    timeNs: integerCell(processes, row, 'start'),
-    footprintKb:
-      integerCell(processes, row, 'memory-physical-footprint') / BYTES_PER_KB,
-  }));
+  return processes.rows.map((row) => {
+    const { start, end } = rowInterval(processes, row);
+    return {
+      startNs: start,
+      endNs: end,
+      footprintKb:
+        integerCell(processes, row, 'memory-physical-footprint') / BYTES_PER_KB,
+    };
+  });
 }
 
 export function readTraceEpochs(

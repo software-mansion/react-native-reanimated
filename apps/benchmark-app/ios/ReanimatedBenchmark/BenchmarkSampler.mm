@@ -37,9 +37,11 @@ struct DeviceState {
 
 struct Boundary {
   CpuReading cpu;
+  uint64_t footprintReadStartNs;
+  uint64_t footprintReadEndNs;
+  uint64_t footprintKb;
   uint64_t signpostStartNs;
   uint64_t signpostEndNs;
-  uint64_t footprintKb;
   DeviceState state;
   uint64_t mounts;
   size_t updates;
@@ -58,7 +60,7 @@ const double UiStallMilliseconds = 6;
 
 const CFStringRef StartNotification = CFSTR("com.reanimatedbenchmark.start-epochs");
 
-const int SampleFormat = 2;
+const int SampleFormat = 3;
 
 const double UpdateCapacityFactor = 2;
 
@@ -274,7 +276,9 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
   if (auto error = _cpuReader->read(boundary.cpu)) {
     return [NSString stringWithUTF8String:error->c_str()];
   }
+  boundary.footprintReadStartNs = monotonicNs();
   auto footprint = footprintKilobytes();
+  boundary.footprintReadEndNs = monotonicNs();
   if (!footprint) {
     return @"task_info(TASK_VM_INFO) failed";
   }
@@ -336,6 +340,7 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
     @"error" : error ?: NSNull.null,
     @"mainThread" : @(_uiThread.id),
     @"jsThread" : @(_jsThread.id),
+    @"cpuCount" : @(NSProcessInfo.processInfo.processorCount),
     @"maxThermal" : @(_maxThermal),
     @"epochs" : [self epochsJson],
     @"boundaries" : [self boundariesJson],
@@ -383,9 +388,11 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
       @"processReadStartNs" : @([self sinceOrigin:boundary.cpu.process.startNs]),
       @"processReadEndNs" : @([self sinceOrigin:boundary.cpu.process.endNs]),
       @"processCpuUs" : @(boundary.cpu.process.valueUs),
+      @"footprintReadStartNs" : @([self sinceOrigin:boundary.footprintReadStartNs]),
+      @"footprintReadEndNs" : @([self sinceOrigin:boundary.footprintReadEndNs]),
+      @"footprintKb" : @(boundary.footprintKb),
       @"signpostStartNs" : @([self sinceOrigin:boundary.signpostStartNs]),
       @"signpostEndNs" : @([self sinceOrigin:boundary.signpostEndNs]),
-      @"footprintKb" : @(boundary.footprintKb),
       @"thermal" : @(boundary.state.thermal),
       @"batteryLevel" : @(boundary.state.batteryLevel),
       @"batteryState" : @(boundary.state.batteryState),

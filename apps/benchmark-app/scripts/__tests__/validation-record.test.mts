@@ -1,29 +1,31 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, it } from 'node:test';
+import { beforeEach, describe, it } from 'node:test';
 
-import { compareEpochs } from '../crosscheck.mts';
-import type { CrosscheckEpoch } from '../crosscheck.mts';
-import { readEpoch } from '../in-app-sample.mts';
 import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
-import type { ObserverCost } from '../observer-cost.mts';
-import {
-  buildValidationRecord,
-  metricValidity,
-  readValidationRecord,
-} from '../validation-record.mts';
+import { metricValidity, readValidationRecord } from '../validation-record.mts';
 import type { ValidationRecord } from '../validation-record.mts';
-import { VALIDATION_SOURCE_FORMAT_VERSION } from '../validation-sources.mts';
+import {
+  readCrosscheckResult,
+  readObserverCostResult,
+} from '../validation-sources.mts';
 import type {
   CrosscheckResult,
-  ObserverCostResult,
   ValidationIdentity,
 } from '../validation-sources.mts';
 import { useTestRoot } from './command-fake.mts';
-import { inAppSample } from './ios-fixtures.mts';
+import {
+  LOADS_PLAN,
+  STEADY_PLAN,
+  crosscheckEpochs,
+  validationSources,
+} from './validation-fixtures.mts';
+import type { Plan } from './validation-fixtures.mts';
 
 const TEST_ROOT = useTestRoot('validation-record', {});
+
+const SOURCES_DIR = path.join(TEST_ROOT.root, 'sources');
 
 const IDENTITY: ValidationIdentity = {
   platform: 'ios',
@@ -33,280 +35,342 @@ const IDENTITY: ValidationIdentity = {
     osBuild: '24A446',
   },
   measurementRevision: MEASUREMENT_REVISION,
-  appSources: 'sources1',
+  appBuild: 'build1',
 };
 
-const SOURCE = {
-  ...IDENTITY,
-  formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
-  applicationId: 'com.reanimatedbenchmark.a',
-  report: { version: 1, load: 80 },
-  tools: { node: 'v24', xcode: '27.2', xctrace: '27.2', devicectl: '1' },
-} as const;
+const METRICS = ['uiThreadCpu', 'jsThreadCpu', 'memory'] as const;
 
-const SAMPLE = inAppSample();
+const { writeCrosscheck, writeObserverCost, record } = validationSources(
+  SOURCES_DIR,
+  IDENTITY
+);
 
-function epochs(trace: Partial<{ uiThreadCpu: number }> = {}) {
-  return compareEpochs(
-    SAMPLE.epochs,
-    [readEpoch(SAMPLE, 0, 60)],
-    [
-      {
-        uiThreadCpu: 350,
-        jsThreadCpu: 2,
-        processCpu: 353,
-        frameDurationsMs: [],
-        mountBatchCount: 600,
-        ...trace,
-      },
-    ],
-    { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
-    60
+function changeStored(folder: string, file: string, change: object) {
+  const stored = JSON.parse(fs.readFileSync(path.join(folder, file), 'utf8'));
+  fs.writeFileSync(
+    path.join(folder, file),
+    JSON.stringify({ ...stored, ...change })
   );
 }
 
-function crosscheck(
-  folder: string,
-  change: Partial<CrosscheckResult> & { epochs?: CrosscheckEpoch[] } = {}
-) {
-  const result: CrosscheckResult = {
-    ...SOURCE,
-    scenario: 'crosscheck-load',
-    plan: { epochs: SAMPLE.epochs, start: 'notification' },
-    tolerances: {
-      cpu: { absolute: 1, relative: 0.02 },
-      updateDuration: { absolute: 0.25, relative: 0.05 },
-      memory: { absolute: 1024, relative: 0.02 },
-    },
-    thermalState: 0,
-    clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
-    epochs: epochs(),
-    footprints: [],
-    verdict: {
-      counters: true,
-      loadsRan: true,
-      memory: 'passed',
-      updateDurationQuantilesWithinTolerance: false,
-    },
-    trace: `${folder}/recording.trace`,
-    ...change,
-  };
-  return { folder, result };
-}
-
-function observerCost(
-  folder: string,
-  scenario: string,
-  outcome: (metric: ObserverCost['metric']) => ObserverCost['outcome'] = () =>
-    'passed'
-) {
-  const result: ObserverCostResult = {
-    ...SOURCE,
-    scenario,
-    blocks: 5,
-    noiseLimitsFile: '/limits.json',
-    samples: [],
-    costs: (
-      ['uiThreadCpu', 'jsThreadCpu', 'processCpu', 'memory'] as const
-    ).map((metric) => ({
-      metric,
-      blocks: 5,
-      medianEndpoints: 1,
-      medianFull: 1,
-      relativeDifference: 0,
-      interval: { low: 0, high: 0 },
-      noiseLimit: 0.08,
-      allowed: 0.02,
-      outcome: outcome(metric),
-    })),
-  };
-  return { folder, result };
-}
-
-const CROSSCHECKS = [crosscheck('/c1'), crosscheck('/c2')];
-const OBSERVER_COSTS = [
-  observerCost('/o1', 'idle-cost'),
-  observerCost('/o2', 'worklet-styles-transform'),
-];
-
-function validated(record: ValidationRecord) {
+function validated(built: ValidationRecord) {
   return Object.fromEntries(
-    Object.entries(record.metrics).map(([metric, validation]) => [
+    Object.entries(built.metrics).map(([metric, validation]) => [
       metric,
       validation?.validated,
     ])
   );
 }
 
+function writeRecord(built: unknown): string {
+  const file = path.join(TEST_ROOT.root, 'validation.json');
+  fs.writeFileSync(file, JSON.stringify(built));
+  return file;
+}
+
+beforeEach(() => fs.rmSync(SOURCES_DIR, { recursive: true, force: true }));
+
 describe('buildValidationRecord', () => {
-  it('validates each verdict metric when all its gates pass', () => {
-    const record = buildValidationRecord(CROSSCHECKS, OBSERVER_COSTS);
-    assert.deepEqual(validated(record), {
+  it('validates each verdict metric when each required gate passes', () => {
+    const built = record();
+    assert.deepEqual(validated(built), {
       uiThreadCpu: true,
       jsThreadCpu: true,
       memory: true,
     });
-    assert.equal(record.appSources, 'sources1');
-    assert.deepEqual(record.sources, {
-      crosschecks: ['/c1', '/c2'],
-      observerCosts: ['/o1', '/o2'],
-    });
+    assert.equal(built.appBuild, 'build1');
+    assert.equal(built.sources.crosschecks.length, 2);
+    assert.match(built.sources.crosschecks[0].sha256, /^[0-9a-f]{64}$/);
     assert.deepEqual(
-      record.metrics.jsThreadCpu?.gates.map((gate) => gate.gate),
+      built.metrics.memory?.gates.map((gate) => gate.gate),
       [
-        'at least 2 cross-checks (here 2) and observer-cost tests of at least 2 scenarios (here 2)',
+        'at least 2 cross-check recordings (here 2)',
+        'a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load',
+        'a cross-check of `crosscheck-load` with the loads idle, ui-stall, js-load, render-heavy',
+        'an observer-cost test of `idle-cost`',
+        'an observer-cost test of a loaded benchmark scenario',
+        'worklet-styles-transform: the result has 4 epoch results',
+        'worklet-styles-transform: the thermal state stayed Nominal',
+        'worklet-styles-transform: `phys_footprint` against `memory-physical-footprint` of Activity Monitor',
+        'crosscheck-load: the result has 4 epoch results',
         'crosscheck-load: the thermal state stayed Nominal',
-        'crosscheck-load: the planned loads ran',
-        'crosscheck-load: epoch 0 (none, full): jsThreadCpu against `thread-state`',
-        'crosscheck-load: the thermal state stayed Nominal',
-        'crosscheck-load: the planned loads ran',
-        'crosscheck-load: epoch 0 (none, full): jsThreadCpu against `thread-state`',
-        'idle-cost: observer cost of jsThreadCpu',
-        'worklet-styles-transform: observer cost of jsThreadCpu',
+        'crosscheck-load: `phys_footprint` against `memory-physical-footprint` of Activity Monitor',
+        'idle-cost: observer cost of memory (5 blocks)',
+        'worklet-styles-transform: observer cost of memory (5 blocks)',
       ]
     );
   });
 
-  it('does not validate a metric with too few sources, a failed gate or a gate without a result', () => {
-    assert.deepEqual(
-      validated(buildValidationRecord(CROSSCHECKS.slice(1), OBSERVER_COSTS)),
-      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
-    );
+  it('does not validate without the coverage of the plans and the scenarios', () => {
+    const noneFull: Plan = [['none', 'full']];
     assert.deepEqual(
       validated(
-        buildValidationRecord(CROSSCHECKS, [
-          OBSERVER_COSTS[0],
-          observerCost('/o3', 'idle-cost'),
+        record([
+          writeCrosscheck('first', noneFull),
+          writeCrosscheck('second', noneFull),
         ])
       ),
       { uiThreadCpu: false, jsThreadCpu: false, memory: false }
     );
     assert.deepEqual(
       validated(
-        buildValidationRecord(
-          [
-            crosscheck('/c1', { epochs: epochs({ uiThreadCpu: 300 }) }),
-            CROSSCHECKS[1],
-          ],
-          OBSERVER_COSTS
-        )
+        record(undefined, [
+          writeObserverCost('loaded', 'worklet-styles-transform'),
+          writeObserverCost('other', 'css'),
+        ])
+      ),
+      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+    );
+  });
+
+  it('does not validate a metric with a failed gate or a gate without a result', () => {
+    const steady = () => writeCrosscheck('steady', STEADY_PLAN);
+    const loads = (change: Partial<CrosscheckResult>) =>
+      writeCrosscheck('loads', LOADS_PLAN, change);
+    assert.deepEqual(
+      validated(
+        record([steady(), loads({ epochs: crosscheckEpochs(LOADS_PLAN, 300) })])
       ),
       { uiThreadCpu: false, jsThreadCpu: true, memory: true }
     );
     assert.deepEqual(
       validated(
-        buildValidationRecord(
-          [
-            crosscheck('/c1', {
-              verdict: {
-                ...CROSSCHECKS[0].result.verdict,
-                memory: 'not available',
-              },
-            }),
-            CROSSCHECKS[1],
-          ],
-          OBSERVER_COSTS
-        )
+        record([
+          steady(),
+          loads({
+            verdict: {
+              counters: true,
+              loadsRan: true,
+              memory: 'not available',
+              updateDurationQuantilesWithinTolerance: false,
+            },
+          }),
+        ])
       ),
       { uiThreadCpu: true, jsThreadCpu: true, memory: false }
     );
     assert.deepEqual(
+      validated(record([steady(), loads({ thermalState: 1 })])),
+      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+    );
+    assert.deepEqual(
       validated(
-        buildValidationRecord(CROSSCHECKS, [
-          OBSERVER_COSTS[0],
-          observerCost('/o2', 'worklet-styles-transform', (metric) =>
+        record(undefined, [
+          writeObserverCost('idle', 'idle-cost'),
+          writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
             metric === 'jsThreadCpu' ? 'not validated' : 'passed'
           ),
         ])
       ),
       { uiThreadCpu: true, jsThreadCpu: false, memory: true }
     );
-    assert.deepEqual(
-      validated(
-        buildValidationRecord(
-          [crosscheck('/c1', { thermalState: 1 }), CROSSCHECKS[1]],
-          OBSERVER_COSTS
-        )
-      ),
-      { uiThreadCpu: false, jsThreadCpu: false, memory: false }
+  });
+
+  it('refuses the same measurement twice: one folder, a copy of a folder, or one trace', () => {
+    const steady = writeCrosscheck('steady', STEADY_PLAN);
+    const loads = writeCrosscheck('loads', LOADS_PLAN);
+    assert.throws(
+      () => record([steady, loads, steady]),
+      /The validation sources repeat one measurement \(the same folder, result file or trace\): .*steady/
+    );
+    const copy = path.join(SOURCES_DIR, 'copy');
+    fs.cpSync(steady, copy, { recursive: true });
+    assert.throws(
+      () => record([steady, loads, copy]),
+      /repeat one measurement .*: [0-9a-f]{64}, .*steady\/recording\.trace$/
+    );
+    const other = writeCrosscheck('other', STEADY_PLAN, {
+      trace: path.join(steady, 'recording.trace'),
+    });
+    changeStored(other, 'crosscheck.json', { thermalState: 0, extra: 1 });
+    assert.throws(
+      () => record([steady, loads, other]),
+      /repeat one measurement .*: [^,]*steady\/recording\.trace$/
+    );
+    const idle = writeObserverCost('idle', 'idle-cost');
+    assert.throws(
+      () => record(undefined, [idle, idle]),
+      /repeat one measurement/
     );
   });
 
-  it('stops when the sources are not of one setup or the app has no hash of its sources', () => {
+  it('stops when the sources are not of one setup or the app has no build identity', () => {
+    const loaded = writeObserverCost('loaded', 'css');
+    changeStored(loaded, 'observer-cost.json', { appBuild: 'build2' });
     assert.throws(
-      () =>
-        buildValidationRecord(CROSSCHECKS, [
-          {
-            folder: '/o1',
-            result: { ...OBSERVER_COSTS[0].result, appSources: 'sources2' },
-          },
-        ]),
-      /\/o1 is not of the same setup as \/c1: app sources sources1 -> sources2/
+      () => record(undefined, [writeObserverCost('idle', 'idle-cost'), loaded]),
+      /loaded is not of the same setup as .*steady: app build build1 -> build2/
     );
     assert.throws(
       () =>
-        buildValidationRecord(
-          [crosscheck('/c1', { appSources: '' })],
-          OBSERVER_COSTS
+        record([
+          writeCrosscheck('steady', STEADY_PLAN, { appBuild: '' }),
+          writeCrosscheck('loads', LOADS_PLAN, { appBuild: '' }),
+        ]),
+      /steady measured an app without an app build identity/
+    );
+  });
+});
+
+describe('the validation sources', () => {
+  it('refuses a cross-check without epochs or with epochs that are not the plan', () => {
+    const empty = writeCrosscheck('empty', [], { footprints: [] });
+    assert.throws(
+      () => readCrosscheckResult(empty),
+      /crosscheck\.json is not a complete validation result:\n {2}- the plan has no epoch/
+    );
+    const missing = writeCrosscheck('missing', STEADY_PLAN, {
+      epochs: crosscheckEpochs(STEADY_PLAN).slice(1),
+    });
+    assert.throws(
+      () => readCrosscheckResult(missing),
+      /it has 3 epoch results for 4 planned epochs/
+    );
+  });
+
+  it('refuses an observer-cost test with fewer than 5 complete blocks', () => {
+    for (const blocks of [0, 4]) {
+      assert.throws(
+        () =>
+          readObserverCostResult(
+            writeObserverCost(
+              `blocks-${blocks}`,
+              'idle-cost',
+              () => 'passed',
+              blocks
+            )
+          ),
+        new RegExp(
+          `it has ${blocks} complete blocks of ${blocks} planned blocks, and it needs at least 5`
+        )
+      );
+    }
+  });
+});
+
+describe('readValidationRecord', () => {
+  it('reads a record whose flags and gates follow from its sources', () => {
+    const built = record();
+    assert.deepEqual(readValidationRecord(writeRecord(built)), built);
+  });
+
+  it('refuses a record whose flag does not match its gates or whose gates do not follow from its sources', () => {
+    const built = record([
+      writeCrosscheck('steady', STEADY_PLAN),
+      writeCrosscheck('loads', LOADS_PLAN, { thermalState: 1 }),
+    ]);
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            metrics: {
+              ...built.metrics,
+              memory: { ...built.metrics.memory, validated: true },
+            },
+          })
         ),
-      /\/c1 measured an app without a hash of its sources/
+      /is not a valid validation record:\n {2}- the flag of memory does not match its gates/
+    );
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            metrics: {
+              ...built.metrics,
+              uiThreadCpu: { validated: true, gates: [] },
+            },
+          })
+        ),
+      /the gates of uiThreadCpu do not follow from its sources/
+    );
+    const { memory: _memory, ...withoutMemory } = built.metrics;
+    assert.throws(
+      () =>
+        readValidationRecord(writeRecord({ ...built, metrics: withoutMemory })),
+      /it has no entry for memory/
+    );
+    assert.throws(
+      () => readValidationRecord(writeRecord({ ...built, appBuild: 1 })),
+      /- validation\.appBuild must be a string/
+    );
+  });
+
+  it('refuses a record with the same source twice', () => {
+    const built = record();
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            sources: {
+              ...built.sources,
+              crosschecks: [
+                built.sources.crosschecks[0],
+                built.sources.crosschecks[0],
+              ],
+            },
+          })
+        ),
+      /The validation sources repeat one measurement/
     );
   });
 });
 
 describe('metricValidity', () => {
-  const record = buildValidationRecord(CROSSCHECKS, [
-    OBSERVER_COSTS[0],
-    observerCost('/o2', 'worklet-styles-transform', (metric) =>
-      metric === 'memory' ? 'failed' : 'passed'
-    ),
-  ]);
-  const metrics = ['uiThreadCpu', 'jsThreadCpu', 'memory'] as const;
-
-  it('gives the metrics that the record validates for the setup of the run', () => {
-    assert.deepEqual(metricValidity(record, IDENTITY, metrics), {
+  it('gives the metrics that the gates of the record validate for the setup of the run, not its flags', () => {
+    const built = record(undefined, [
+      writeObserverCost('idle', 'idle-cost'),
+      writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
+        metric === 'memory' ? 'failed' : 'passed'
+      ),
+    ]);
+    assert.deepEqual(metricValidity(built, IDENTITY, METRICS), {
       validated: ['uiThreadCpu', 'jsThreadCpu'],
       reason: 'the validation record does not validate memory',
     });
+    assert.deepEqual(
+      metricValidity(
+        {
+          ...built,
+          metrics: {
+            ...built.metrics,
+            memory: { validated: true, gates: [] },
+          },
+        },
+        IDENTITY,
+        METRICS
+      ).validated,
+      ['uiThreadCpu', 'jsThreadCpu']
+    );
   });
 
   it('validates no metric without a record or for another setup', () => {
-    assert.deepEqual(metricValidity(null, IDENTITY, metrics), {
+    const built = record();
+    assert.deepEqual(metricValidity(null, IDENTITY, METRICS), {
       validated: [],
       reason: 'the run has no validation record',
     });
-    assert.deepEqual(metricValidity(record, null, metrics), {
+    assert.deepEqual(metricValidity(built, null, METRICS), {
       validated: [],
-      reason: 'the builds of the run do not have one hash of the app sources',
+      reason: 'the builds of the run do not have one app build identity',
     });
     assert.deepEqual(
       metricValidity(
-        record,
+        built,
         {
           ...IDENTITY,
           device: { ...IDENTITY.device, osBuild: '24B1' },
-          measurementRevision: MEASUREMENT_REVISION + 1,
+          appBuild: 'build2',
         },
-        metrics
+        METRICS
       ),
       {
         validated: [],
-        reason: `the validation record does not fit the run: OS build 24A446 -> 24B1, measurement revision ${MEASUREMENT_REVISION} -> ${MEASUREMENT_REVISION + 1}`,
+        reason:
+          'the validation record does not fit the run: OS build 24A446 -> 24B1, app build build1 -> build2',
       }
-    );
-  });
-});
-
-describe('readValidationRecord', () => {
-  it('reads a record and refuses a file that is not one', () => {
-    const file = path.join(TEST_ROOT.root, 'validation.json');
-    const record = buildValidationRecord(CROSSCHECKS, OBSERVER_COSTS);
-    fs.writeFileSync(file, JSON.stringify(record));
-    assert.deepEqual(readValidationRecord(file), record);
-    fs.writeFileSync(file, JSON.stringify({ ...record, appSources: 1 }));
-    assert.throws(
-      () => readValidationRecord(file),
-      /is not a valid validation record:\n {2}- validation\.appSources must be a string/
     );
   });
 });
