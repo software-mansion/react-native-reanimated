@@ -109,6 +109,14 @@ export function when(
   };
 }
 
+export function whenValidSoFar(check: Check): Check {
+  return (value, label, problems) => {
+    if (problems.length === 0) {
+      check(value, label, problems);
+    }
+  };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -71,6 +71,7 @@ import {
   listOf,
   oneOf,
   shape,
+  whenValidSoFar,
 } from './validation.mts';
 import type { Check } from './validation.mts';
 
@@ -150,6 +151,11 @@ const MEMORY_FIELDS = shape({
   }),
   summary: listOf(anObject),
 });
+
+const MEMORY_RESULT = both(
+  MEMORY_FIELDS,
+  whenValidSoFar(checkValidLaunchReadings)
+);
 
 const MEMORY_READING: Record<keyof MemoryReading, Check> = {
   plannedSeconds: aNumber,
@@ -455,7 +461,37 @@ function readMemoryResult(folder: string): MemoryResult {
   return readMeasurementResult<MemoryResult>(
     folder,
     'memory',
-    () => MEMORY_FIELDS,
+    () => MEMORY_RESULT,
     () => MEMORY_LAUNCH
   );
+}
+
+function checkValidLaunchReadings(
+  value: unknown,
+  label: string,
+  problems: string[]
+) {
+  const result = value as MemoryResult;
+  const expected = readingTimes(result.options).length;
+  const outcomes = [
+    ['scenarios', result.scenarios],
+    ['abandonedScenarios', result.abandonedScenarios],
+    [
+      'incompleteScenario',
+      result.incompleteScenario ? [result.incompleteScenario] : [],
+    ],
+  ] as const;
+  for (const [field, list] of outcomes) {
+    list.forEach((outcome, i) =>
+      outcome.samples.forEach((launch, j) => {
+        if (launch.valid && launch.readings.length !== expected) {
+          const place =
+            field === 'incompleteScenario' ? field : `${field}[${i}]`;
+          problems.push(
+            `${label}.${place}.samples[${j}] is a valid launch with ${launch.readings.length} readings, expected ${expected} for the stored duration and interval`
+          );
+        }
+      })
+    );
+  }
 }

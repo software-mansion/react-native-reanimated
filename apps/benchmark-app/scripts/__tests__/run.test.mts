@@ -498,6 +498,44 @@ describe('resumeCommand', () => {
     ]);
   });
 
+  it('refuses a failed scenario without its fields', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      Object.assign(result.scenarios[0], { failed: {} });
+    });
+    await assertRefused(folder, [
+      'result.scenarios[0].failed.scenario must be one of',
+      'result.scenarios[0].failed.variants must be a list',
+      'result.scenarios[0].failed.causes must be a list',
+    ]);
+  });
+
+  it('refuses stored samples of another scenario version than the noise limits record', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      for (const sample of result.scenarios[0].samples) {
+        Object.assign(sample, {
+          report: { version: 1, load: 60, jsThread: 4350 },
+        });
+      }
+      result.noiseLimits = {
+        formatVersion: 1,
+        platform: 'android',
+        device: { model: STATE.model, deviceId: 'HW1', osBuild: 'build' },
+        measurementRevision: MEASUREMENT_REVISION,
+        sources: [],
+        scenarios: { css: { version: 2, load: 60 } },
+        limits: { css: {} },
+      };
+    });
+    const { run, installs } = resume(folder);
+    await assert.rejects(
+      run,
+      /The noise limits of css are of the scenario version 2 with the load 60, but the app reports the version 1 with the load 60\./
+    );
+    assert.deepEqual(installs, []);
+  });
+
   it('refuses a run of another measurement revision', async () => {
     const folder = await stoppedRun();
     editResult(folder, (result) => {

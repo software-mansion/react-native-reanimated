@@ -288,7 +288,7 @@ describe('estimated cycles of each frame', () => {
     assertClose(metrics.frameCyclesP95, 0.001);
   });
 
-  it('ends a scheduling slice that is open at the end of the trace at the trace end for the frames only', async () => {
+  it('counts an open scheduling slice, which the query ends at the trace end, for the frames only', async () => {
     const metrics = await metricsOf(
       withWork(
         [main(0, 1_000, 0), main(2_000, 5_000, 0, 1)],
@@ -421,6 +421,26 @@ describe('trace config and query', () => {
     assert.ok(
       (await queryOf(APP)).includes(
         "SELECT COUNT(*) AS mount_batches FROM thread_slice\nWHERE name = 'IntBufferBatchMountItem::mountViews';"
+      )
+    );
+  });
+
+  it('ends an open scheduling slice at the trace end in the query of the running slices', async () => {
+    const query = await queryOf(APP);
+    const running = query.slice(
+      query.indexOf('MAX(sched.ts, trace_window.start_ts) AS start_ts'),
+      query.indexOf('ORDER BY sched.ts;')
+    );
+    assert.ok(
+      running.includes(
+        'IIF(sched.dur = -1, trace_window.end_ts, MIN(sched.ts + sched.dur, trace_window.end_ts)) AS end_ts'
+      )
+    );
+    assert.ok(running.includes('sched.dur = -1 AS open'));
+    assert.ok(running.includes('WHERE sched.dur != 0'));
+    assert.ok(
+      running.includes(
+        'AND (sched.dur = -1 OR sched.ts + sched.dur > trace_window.start_ts)'
       )
     );
   });

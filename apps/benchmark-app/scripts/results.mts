@@ -134,6 +134,14 @@ const STORED_SCENARIO_REPORT: Check = shape({
   load: anInteger,
 });
 
+const FAILED_SCENARIO: Check = shape({
+  scenario: oneOf(SCENARIOS),
+  variants: listOf(oneOf(VARIANT_KEYS)),
+  causes: listOf(
+    shape({ variant: oneOf(VARIANT_KEYS), cause: aString, detail: aString })
+  ),
+});
+
 const PACKAGE_SOURCE: Check = both(
   shape({ kind: oneOf(['npm', 'tarball']) }),
   both(
@@ -312,7 +320,7 @@ function measurementShape(
   const outcome = shape({
     scenario: oneOf(SCENARIOS),
     samples: listOf(sample),
-    failed: nullable(anObject),
+    failed: nullable(FAILED_SCENARIO),
   });
   return shape({
     measurementRevision: anInteger,

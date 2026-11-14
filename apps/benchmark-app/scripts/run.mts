@@ -86,9 +86,11 @@ export async function resumeCommand(
   dependencies: MeasurementDependencies = dependenciesOf(options.device)
 ): Promise<number> {
   const folder = path.resolve(options.folder);
+  const stored = readResult(folder);
+  checkStoredScenarioIdentities(stored);
   return resumeMeasurement(
     folder,
-    readResult(folder),
+    stored,
     {
       device: options.device,
       platformOptions: { traceProcessor: options.traceProcessor },
@@ -97,6 +99,24 @@ export async function resumeCommand(
     context,
     dependencies
   );
+}
+
+function checkStoredScenarioIdentities(result: RunResult) {
+  const { noiseLimits } = result;
+  if (noiseLimits === null) {
+    return;
+  }
+  const outcomes = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+  ];
+  for (const outcome of outcomes) {
+    for (const sample of outcome.samples) {
+      if (sample.valid) {
+        checkScenarioIdentity(noiseLimits, outcome.scenario, sample.report);
+      }
+    }
+  }
 }
 
 function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
@@ -109,7 +129,7 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
       blocksOf(result.config, scenario, result.options.blocks),
     measure: async (order, sampling) => {
       const sample = await sampling.takeSample(order);
-      if (result.noiseLimits && sample.report) {
+      if (result.noiseLimits && sample.valid) {
         checkScenarioIdentity(
           result.noiseLimits,
           order.scenario,

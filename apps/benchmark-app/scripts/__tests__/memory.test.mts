@@ -546,6 +546,53 @@ describe('memoryResumeCommand', () => {
     assert.deepEqual(installs, []);
   });
 
+  it('refuses a valid launch without all readings of the stored duration, and accepts an invalid launch without readings', async () => {
+    const folder = await stoppedMemoryTest(3);
+    const resumeStored = (
+      edit: (launch: MemoryResult['scenarios'][0]['samples'][0]) => void
+    ) => {
+      const stored = readMemoryResult(folder);
+      const [launch] = stored.incompleteScenario?.samples ?? [];
+      edit(launch);
+      writeResult(folder, stored);
+      const { context, dependencies, installs } = createFake(TEST_ROOT, {
+        meminfo,
+      });
+      return {
+        installs,
+        run: memoryResumeCommand(
+          {
+            command: 'memory-resume',
+            folder,
+            device: DEVICE,
+            traceProcessor: TEST_ROOT.traceProcessor,
+          },
+          context,
+          dependencies
+        ),
+      };
+    };
+    const emptyValid = resumeStored((launch) => {
+      launch.readings = [];
+    });
+    await assert.rejects(
+      emptyValid.run,
+      /result\.incompleteScenario\.samples\[0\] is a valid launch with 0 readings, expected 10 for the stored duration and interval/
+    );
+    assert.deepEqual(emptyValid.installs, []);
+    const emptyInvalid = resumeStored((launch) => {
+      Object.assign(launch, {
+        valid: false,
+        accepted: false,
+        cause: 'crash',
+        detail: 'the app process ended',
+        readings: [],
+      });
+    });
+    await emptyInvalid.run;
+    assert.equal(readMemoryResult(folder).status, 'done');
+  });
+
   it('is not a run: run --resume refuses a memory test folder', async () => {
     const folder = await stoppedMemoryTest();
     const { context, dependencies } = createFake(TEST_ROOT, { meminfo });
