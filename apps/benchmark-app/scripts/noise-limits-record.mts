@@ -1,7 +1,6 @@
 import { PLATFORM_DEFINITIONS, isPlatformName } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import { readJson } from './json-file.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { DeviceIdentity, PlatformName } from './platform.mts';
 import { isScenario } from './scenarios.mts';
@@ -109,10 +108,11 @@ export function checkNoiseLimitsRecord(
     ...(limits.device.model === device.model
       ? []
       : [`device model ${limits.device.model}, the run is on ${device.model}`]),
-    ...(limits.measurementRevision === MEASUREMENT_REVISION
+    ...(limits.measurementRevision ===
+    PLATFORM_DEFINITIONS[platform].measurementRevision
       ? []
       : [
-          `measurement revision ${limits.measurementRevision}, the driver has revision ${MEASUREMENT_REVISION}`,
+          `measurement revision ${limits.measurementRevision}, the driver has revision ${PLATFORM_DEFINITIONS[platform].measurementRevision} for ${platform}`,
         ]),
   ];
   if (mismatches.length > 0) {

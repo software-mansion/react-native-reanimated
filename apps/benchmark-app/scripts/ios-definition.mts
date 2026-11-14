@@ -48,6 +48,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
     'coldStart',
   ],
   verdictsNeedValidation: true,
+  measurementRevision: 4,
   frameSource: 'refreshes',
   metricDefinitions: [
     {

@@ -33,11 +33,11 @@ import {
   readEpoch,
 } from './in-app-sample.mts';
 import type { InAppSample, SamplePlan } from './in-app-sample.mts';
+import { IOS_DEFINITION } from './ios-definition.mts';
 import { IosDevice, readIosToolVersions } from './ios-device.mts';
 import { iosPlatform } from './ios-platform.mts';
 import { InAppStateGuard, startIosApp } from './ios-protocol.mts';
 import type { RunningIosApp } from './ios-protocol.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { Processes } from './processes.mts';
 import { createMeasurementFolder } from './results.mts';
 import { timedSteps } from './samples.mts';
@@ -146,7 +146,7 @@ export async function crosscheckCommand(
   const verdict = crosscheckVerdict(epochs, footprints);
   const result: CrosscheckResult = {
     formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision: IOS_DEFINITION.measurementRevision,
     platform: 'ios',
     device: iosPlatform().deviceIdentity(state),
     appBuild: app.launch.appBuild,
@@ -158,6 +158,7 @@ export async function crosscheckCommand(
     refreshRate,
     tolerances: CROSSCHECK_TOLERANCES,
     thermalState: highestThermalState(sample),
+    cpuCount: sample.cpuCount,
     appBoundaries: sample.boundaries,
     boundaryClocks: clocks,
     clock,
@@ -293,7 +294,7 @@ function crosscheckReport(
   return `${[
     '# Cross-check of the in-app counters with Instruments',
     '',
-    `Method (measurement revision ${MEASUREMENT_REVISION}):`,
+    `Method (measurement revision ${IOS_DEFINITION.measurementRevision}):`,
     '',
     '- Thread selection: the main thread is `mainThread` of the LAUNCH line, the JS thread is `jsThread` of the READY line, and the process is all threads of the app process.',
     '- Reference: the `Running` time plus the `Interrupted` time of the table `thread-state` of the selected threads (kernel-charged CPU time). The table shows both parts.',

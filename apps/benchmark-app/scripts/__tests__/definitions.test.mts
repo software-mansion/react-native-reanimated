@@ -12,6 +12,11 @@ const STORED_METRICS = {
 };
 
 describe('platform definitions', () => {
+  it('gives each platform the revision of its last measurement change', () => {
+    assert.equal(PLATFORM_DEFINITIONS.android.measurementRevision, 2);
+    assert.equal(PLATFORM_DEFINITIONS.ios.measurementRevision, 4);
+  });
+
   for (const definition of Object.values(PLATFORM_DEFINITIONS)) {
     describe(definition.name, () => {
       it('defines each stored metric one time', () => {

@@ -3,6 +3,7 @@ import { quantileOrNull } from './frames.mts';
 import { CPU_COUNTERS, footprintReadSpan } from './in-app-sample.mts';
 import type {
   CpuCounter,
+  EpochCounters,
   EpochReading,
   EpochWork,
   InAppBoundary,
@@ -60,6 +61,12 @@ export interface WorkProof extends EpochWork {
 }
 
 export type CpuField = 'uiThreadCpu' | 'jsThreadCpu' | 'processCpu';
+
+export interface EpochEvidence {
+  refreshRate: number;
+  counters: EpochCounters;
+  clock: ClockMapping;
+}
 
 export interface CrosscheckEpoch extends SampledEpoch {
   index: number;
@@ -283,10 +290,7 @@ export function compareEpochs(
         reading.cpu[CPU_FIELDS[counter]],
         trace[CPU_FIELDS[counter]],
         CPU_TOLERANCE,
-        reading.cpuUncertainty[counter] +
-          (2 * clock.uncertaintyNs * reading.counterCores[counter]) /
-            NANOSECONDS_PER_MS /
-            spanSeconds(reading.counterSpans[counter])
+        cpuTimingUncertainty(reading, counter, clock)
       );
     return {
       ...epoch,
@@ -345,29 +349,39 @@ export function compareFootprints(
 
 export function rederivedEpoch(
   epoch: CrosscheckEpoch,
-  refreshRate: number
+  { refreshRate, counters, clock }: EpochEvidence
 ): CrosscheckEpoch {
-  const again = (value: ComparedValue, tolerance: Tolerance) =>
-    compared(value.app, value.trace, tolerance, value.timingUncertainty);
-  const cpu = (field: CpuField) =>
+  const cpu = (counter: CpuCounter) =>
     compared(
-      epoch[field].app,
-      kernelChargedTime(epoch.traceOnCore[field]),
+      counters.cpu[CPU_FIELDS[counter]],
+      kernelChargedTime(epoch.traceOnCore[CPU_FIELDS[counter]]),
       CPU_TOLERANCE,
-      epoch[field].timingUncertainty
+      cpuTimingUncertainty(counters, counter, clock)
     );
   const duration = (value: ComparedValue | null) =>
-    value === null ? null : again(value, UPDATE_DURATION_TOLERANCE);
+    value === null
+      ? null
+      : compared(
+          value.app,
+          value.trace,
+          UPDATE_DURATION_TOLERANCE,
+          value.timingUncertainty
+        );
   return {
     ...epoch,
-    uiThreadCpu: cpu('uiThreadCpu'),
-    jsThreadCpu: cpu('jsThreadCpu'),
-    processCpu: cpu('processCpu'),
-    mountBatchCount: again(epoch.mountBatchCount, EXACT),
+    windowSeconds: counters.window.seconds,
+    uiThreadCpu: cpu('uiThread'),
+    jsThreadCpu: cpu('jsThread'),
+    processCpu: cpu('process'),
+    mountBatchCount: compared(
+      counters.mountBatchCount,
+      epoch.mountBatchCount.trace,
+      EXACT
+    ),
     workProof: workProof(
       epoch.load,
       epoch.work,
-      refreshRate * epoch.windowSeconds
+      refreshRate * counters.window.seconds
     ),
     uiUpdateDurationMedian: duration(epoch.uiUpdateDurationMedian),
     uiUpdateDurationP95: duration(epoch.uiUpdateDurationP95),
@@ -554,6 +568,19 @@ function compared(
     tolerance: allowed,
     passes: Math.abs(signedError) <= allowed,
   };
+}
+
+function cpuTimingUncertainty(
+  counters: EpochCounters,
+  counter: CpuCounter,
+  clock: ClockMapping
+): number {
+  return (
+    counters.cpuUncertainty[counter] +
+    (2 * clock.uncertaintyNs * counters.counterCores[counter]) /
+      NANOSECONDS_PER_MS /
+      spanSeconds(counters.counterSpans[counter])
+  );
 }
 
 function boundaryOffset(

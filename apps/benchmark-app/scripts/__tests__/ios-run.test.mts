@@ -7,6 +7,7 @@ import { before, describe, it } from 'node:test';
 import type { Clock } from '../clock.mts';
 import type { CommandContext } from '../command-context.mts';
 import { ToolError } from '../errors.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 import type {
   IosDevice,
   IosDeviceState,
@@ -14,7 +15,6 @@ import type {
 } from '../ios-device.mts';
 import { iosPlatform } from '../ios-platform.mts';
 import type { IosDependencies } from '../ios-platform.mts';
-import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
 import type { DeviceTarget } from '../platform.mts';
 import type { Processes } from '../processes.mts';
@@ -48,7 +48,7 @@ const RUN_IDENTITY: ValidationIdentity = {
     deviceId: 'UDID1',
     osBuild: '24A446',
   },
-  measurementRevision: MEASUREMENT_REVISION,
+  measurementRevision: IOS_DEFINITION.measurementRevision,
   appBuild: 'sources',
 };
 const STATE: IosDeviceState = {
@@ -338,13 +338,13 @@ describe('an iOS run', () => {
       file,
       JSON.stringify({
         ...record,
-        measurementRevision: MEASUREMENT_REVISION - 1,
+        measurementRevision: IOS_DEFINITION.measurementRevision - 1,
       })
     );
     await assert.rejects(
       run(createFake(), IPHONE, file),
       new RegExp(
-        `- validation: it is of the measurement revision ${MEASUREMENT_REVISION - 1}, and this driver has the revision ${MEASUREMENT_REVISION}`
+        `- validation: it is of the measurement revision ${IOS_DEFINITION.measurementRevision - 1}, and this driver has the revision ${IOS_DEFINITION.measurementRevision}`
       )
     );
   });

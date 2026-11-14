@@ -5,13 +5,12 @@ import {
   CROSSCHECK_TOLERANCES,
   WORK_LOADS,
   boundaryClocks,
-  compareEpochs,
   crosscheckVerdict,
   rederivedEpoch,
   rederivedFootprint,
 } from '../crosscheck.mts';
 import type { CrosscheckEpoch, FootprintComparison } from '../crosscheck.mts';
-import { readEpoch } from '../in-app-sample.mts';
+import { readEpochCounters } from '../in-app-sample.mts';
 import type { Collector, InAppBoundary } from '../in-app-sample.mts';
 import {
   BLOCK_ORDER,
@@ -33,7 +32,7 @@ import type {
   ObserverCostResult,
   ValidationIdentity,
 } from '../validation-sources.mts';
-import { START_BOUNDARY, inAppSample } from './ios-fixtures.mts';
+import { START_BOUNDARY } from './ios-fixtures.mts';
 
 export type Plan = readonly (readonly [string, Collector])[];
 
@@ -51,73 +50,102 @@ export const LOADS_PLAN: Plan = [
   ['render-heavy', 'full'],
 ];
 
-const SAMPLE = inAppSample();
-
 export const REFRESH_RATE = 60;
 
 const EPOCH_SECONDS = 2.5;
 
+const BOUNDARY_SPACING_NS = EPOCH_SECONDS * 1e9;
+
+const CPU_COUNT = 6;
+
+const MOUNTS_PER_EPOCH = 150;
+
+const ZERO_CLOCK = { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 };
+
+const NO_VALUE = {
+  app: null,
+  trace: null,
+  signedError: null,
+  absoluteError: null,
+  relativeError: null,
+  timingUncertainty: null,
+  tolerance: null,
+  passes: false,
+};
+
 export function crosscheckEpochs(
   plan: Plan,
-  uiThreadCpu = 350
+  traceUiThreadCpu = 350
 ): CrosscheckEpoch[] {
-  const [base] = compareEpochs(
-    SAMPLE.epochs,
-    [readEpoch(SAMPLE, 0, REFRESH_RATE)],
-    [
-      {
-        uiThreadCpu,
-        jsThreadCpu: 2,
-        processCpu: 353,
-        onCore: {
-          uiThread: { running: uiThreadCpu - 5, interrupted: 5 },
-          jsThread: { running: 2, interrupted: 0 },
-          process: { running: 348, interrupted: 5 },
-        },
-        frameDurationsMs: [],
-        mountBatchCount: 600,
-      },
-    ],
-    { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
-    REFRESH_RATE
-  );
+  const boundaries = appBoundaries(plan.length + 1);
   return plan.map(([load, collector], index) =>
     rederivedEpoch(
       {
-        ...base,
-        index,
         load,
         collector,
         seconds: EPOCH_SECONDS,
-        windowSeconds: EPOCH_SECONDS,
         work: {
           own: (WORK_LOADS as readonly string[]).includes(load)
             ? REFRESH_RATE * EPOCH_SECONDS
             : 0,
           other: 0,
         },
+        index,
+        windowSeconds: 0,
+        traceOnCore: {
+          uiThreadCpu: { running: traceUiThreadCpu - 5, interrupted: 5 },
+          jsThreadCpu: { running: 2, interrupted: 0 },
+          processCpu: { running: 348, interrupted: 5 },
+        },
+        uiThreadCpu: NO_VALUE,
+        jsThreadCpu: NO_VALUE,
+        processCpu: NO_VALUE,
+        mountBatchCount: { ...NO_VALUE, trace: MOUNTS_PER_EPOCH },
+        workProof: {
+          own: 0,
+          other: 0,
+          minimumOwn: 0,
+          maximumOther: 0,
+          passes: false,
+        },
+        updateCount: { app: null, trace: 0 },
+        uiUpdateDurationMedian: null,
+        uiUpdateDurationP95: null,
       },
-      REFRESH_RATE
+      {
+        refreshRate: REFRESH_RATE,
+        counters: readEpochCounters(
+          boundaries[index],
+          boundaries[index + 1],
+          CPU_COUNT,
+          index
+        ),
+        clock: ZERO_CLOCK,
+      }
     )
   );
 }
 
 export function appBoundaries(count: number): InAppBoundary[] {
   return Array.from({ length: count }, (_, boundary) => {
-    const at = (ns: number) => boundary * 1e9 + ns;
+    const at = (ns: number) => boundary * BOUNDARY_SPACING_NS + ns;
     return {
       ...START_BOUNDARY,
       uiReadStartNs: at(100),
       uiReadEndNs: at(150),
+      uiThreadCpuUs: 1_000_000 + boundary * 875_000,
       jsReadStartNs: at(200),
       jsReadEndNs: at(250),
+      jsThreadCpuUs: 500_000 + boundary * 5_000,
       processReadStartNs: at(300),
       processReadEndNs: at(350),
+      processCpuUs: 2_000_000 + boundary * 882_500,
       footprintReadStartNs: at(500),
       footprintReadEndNs: at(600),
       signpostStartNs: at(700),
       signpostEndNs: at(700),
       footprintKb: 40_000,
+      mounts: 10 + boundary * MOUNTS_PER_EPOCH,
     };
   });
 }
@@ -127,7 +155,7 @@ export function footprints(
   rowsAt: (boundary: number) => [number, number] | null = () => [40_000, 40_000]
 ): FootprintComparison[] {
   return Array.from({ length: boundaries }, (_, boundary) => {
-    const startNs = boundary * 1e9;
+    const startNs = boundary * BOUNDARY_SPACING_NS;
     const values = rowsAt(boundary);
     return rederivedFootprint({
       boundary,
@@ -192,12 +220,13 @@ export function validationSources(
       refreshRate: REFRESH_RATE,
       tolerances: CROSSCHECK_TOLERANCES,
       thermalState: 0,
+      cpuCount: CPU_COUNT,
       appBoundaries: boundaries,
       boundaryClocks: boundaryClocks(
         boundaries,
         boundaries.map((boundary) => boundary.signpostStartNs)
       ),
-      clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
+      clock: ZERO_CLOCK,
       epochs: planned,
       footprints: compared,
       verdict: crosscheckVerdict(planned, compared),

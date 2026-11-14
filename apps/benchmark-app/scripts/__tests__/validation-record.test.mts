@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, it } from 'node:test';
 
-import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 import { observerCosts } from '../observer-cost.mts';
 import type { CollectorSample } from '../observer-cost.mts';
 import {
@@ -42,7 +42,7 @@ const IDENTITY: ValidationIdentity = {
     deviceId: 'UDID1',
     osBuild: '24A446',
   },
-  measurementRevision: MEASUREMENT_REVISION,
+  measurementRevision: IOS_DEFINITION.measurementRevision,
   appBuild: 'build1',
 };
 
@@ -258,12 +258,12 @@ describe('buildValidationRecord', () => {
 describe('the measurement revision of the sources', () => {
   it('refuses a source of another measurement revision', () => {
     const steady = writeCrosscheck('steady', STEADY_PLAN, {
-      measurementRevision: MEASUREMENT_REVISION - 1,
+      measurementRevision: IOS_DEFINITION.measurementRevision - 1,
     });
     assert.throws(
       () => record([steady, writeCrosscheck('loads', LOADS_PLAN)]),
       new RegExp(
-        `steady is of the measurement revision ${MEASUREMENT_REVISION - 1}\\. This driver has the revision ${MEASUREMENT_REVISION}, and a source of another revision is not validation evidence for it\\.`
+        `steady is of the measurement revision ${IOS_DEFINITION.measurementRevision - 1}\\. This driver has the revision ${IOS_DEFINITION.measurementRevision}, and a source of another revision is not validation evidence for it\\.`
       )
     );
   });
@@ -285,7 +285,7 @@ describe('the measurement revision of the sources', () => {
       path.join(earlier, 'crosscheck.json'),
       JSON.stringify({
         formatVersion: 3,
-        measurementRevision: MEASUREMENT_REVISION - 1,
+        measurementRevision: IOS_DEFINITION.measurementRevision - 1,
         scenario: 'worklet-styles-transform',
         epochs: [
           {
@@ -326,13 +326,87 @@ describe('the measurement revision of the sources', () => {
     assert.throws(
       () => readEarlierCrosscheck(writeCrosscheck('present', STEADY_PLAN)),
       new RegExp(
-        `it is of the measurement revision ${MEASUREMENT_REVISION}, not of an earlier revision than ${MEASUREMENT_REVISION}`
+        `it is of the measurement revision ${IOS_DEFINITION.measurementRevision}, not of an earlier revision than ${IOS_DEFINITION.measurementRevision}`
       )
     );
   });
 });
 
 describe('the validation sources', () => {
+  it('refuses stored CPU values, windows and timing uncertainties that do not follow from the counter reads', () => {
+    const refusal = (
+      change: (stored: CrosscheckResult) => CrosscheckResult
+    ) => {
+      const folder = writeCrosscheck('counters', LOADS_PLAN);
+      const file = path.join(folder, 'crosscheck.json');
+      fs.writeFileSync(
+        file,
+        JSON.stringify(change(JSON.parse(fs.readFileSync(file, 'utf8'))))
+      );
+      try {
+        readCrosscheckResult(folder);
+        return '';
+      } catch (error) {
+        return (error as Error).message;
+      } finally {
+        fs.rmSync(folder, { recursive: true });
+      }
+    };
+    assert.match(
+      refusal((stored) => {
+        const [first, ...rest] = stored.epochs;
+        const app = (first.uiThreadCpu.app ?? 0) + 500;
+        return {
+          ...stored,
+          epochs: [
+            {
+              ...first,
+              uiThreadCpu: {
+                ...first.uiThreadCpu,
+                app,
+                signedError: app - (first.uiThreadCpu.trace ?? 0),
+                timingUncertainty: 1000,
+                tolerance: 1007,
+                passes: true,
+              },
+            },
+            ...rest,
+          ],
+        };
+      }),
+      /- crosscheck: epoch 0: the stored uiThreadCpu does not follow from its values/
+    );
+    assert.match(
+      refusal((stored) => {
+        const [first, second, ...rest] = stored.appBoundaries;
+        return {
+          ...stored,
+          appBoundaries: [
+            first,
+            {
+              ...second,
+              uiReadStartNs: second.uiReadStartNs + 1e9,
+              uiReadEndNs: second.uiReadEndNs + 1e9,
+            },
+            ...rest,
+          ],
+        };
+      }),
+      /- crosscheck: Boundary 1 of the SAMPLE line: jsReadStartNs \(\d+ ns\) is before uiReadEndNs/
+    );
+    assert.match(
+      refusal((stored) => ({
+        ...stored,
+        epochs: stored.epochs.map((epoch) => ({ ...epoch, windowSeconds: 3 })),
+      })),
+      /- crosscheck: epoch 0: the stored windowSeconds does not follow from its values/
+    );
+    assert.match(
+      refusal((stored) => ({ ...stored, cpuCount: 12 })),
+      /- crosscheck: epoch 0: the stored processCpu does not follow from its values/
+    );
+  });
+
   it('refuses a cross-check whose boundary offsets, clock mapping or footprint reads do not follow from the stored times', () => {
     const folder = writeCrosscheck('clock', LOADS_PLAN);
     const file = path.join(folder, 'crosscheck.json');

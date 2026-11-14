@@ -6,8 +6,8 @@ import { TOOL_ERROR_EXIT_CODE, once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import { VARIANT_KEYS } from './config.mts';
 import type { VariantKey, VariantsConfig } from './config.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { APP_DIR, BUILDS_DIR, REPORT_FILE } from './paths.mts';
 import type {
   DeviceIdentity,
@@ -144,7 +144,8 @@ export async function startMeasurement<
   );
   const result = createResult({
     formatVersion: FORMAT_VERSION,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision:
+      PLATFORM_DEFINITIONS[platform.name].measurementRevision,
     platform: platform.name,
     status: 'running',
     startedAt,
@@ -443,9 +444,10 @@ function checkResumable(
       `The measurement ran on ${result.platform}. It cannot resume on ${platform.name}.`
     );
   }
-  if (result.measurementRevision !== MEASUREMENT_REVISION) {
+  const { measurementRevision } = PLATFORM_DEFINITIONS[platform.name];
+  if (result.measurementRevision !== measurementRevision) {
     throw new ToolError(
-      `The measurement has the revision ${result.measurementRevision}, and this driver has revision ${MEASUREMENT_REVISION}. A measurement cannot mix revisions. Start a new one.`
+      `The measurement has the revision ${result.measurementRevision}, and this driver has revision ${measurementRevision} for ${platform.name}. A measurement cannot mix revisions. Start a new one.`
     );
   }
   for (const key of VARIANT_KEYS) {

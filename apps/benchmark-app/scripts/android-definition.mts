@@ -53,6 +53,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
   ],
   advisoryMetrics: ['frameCyclesMedian', 'frameCyclesP95'],
   verdictsNeedValidation: false,
+  measurementRevision: 2,
   frameSource: 'refreshes',
   metricDefinitions: [
     {

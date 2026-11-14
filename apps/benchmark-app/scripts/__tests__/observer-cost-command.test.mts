@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 import { NOISE_LIMITS_FORMAT_VERSION } from '../noise-limits-record.mts';
 import type { NoiseLimitsRecord } from '../noise-limits-record.mts';
 import { observerCostCommand } from '../observer-cost-command.mts';
@@ -32,7 +32,7 @@ const RECORD: NoiseLimitsRecord = {
     deviceId: 'UDID1',
     osBuild: '24A446',
   },
-  measurementRevision: MEASUREMENT_REVISION,
+  measurementRevision: IOS_DEFINITION.measurementRevision,
   sources: [],
   scenarios: { [SCENARIO]: { version: 1, load: 80 } },
   limits: {

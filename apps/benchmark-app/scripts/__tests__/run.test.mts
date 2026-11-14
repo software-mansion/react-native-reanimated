@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
+import { ANDROID_DEFINITION } from '../android-definition.mts';
 import { readResult, writeResult } from '../results.mts';
 import type { RunResult, MeasuredVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
@@ -229,7 +229,7 @@ describe('runCommand with noise limits', () => {
         formatVersion: 1,
         platform: 'android',
         device: { model, deviceId: 'HW9', osBuild: 'other build' },
-        measurementRevision: MEASUREMENT_REVISION,
+        measurementRevision: ANDROID_DEFINITION.measurementRevision,
         sources: [],
         scenarios: { css: { version: cssVersion, load: 1 } },
         limits: { css: { uiThreadCpu: 0.05 } },
@@ -522,7 +522,7 @@ describe('resumeCommand', () => {
         formatVersion: 1,
         platform: 'android',
         device: { model: STATE.model, deviceId: 'HW1', osBuild: 'build' },
-        measurementRevision: MEASUREMENT_REVISION,
+        measurementRevision: ANDROID_DEFINITION.measurementRevision,
         sources: [],
         scenarios: { css: { version: 2, load: 60 } },
         limits: { css: {} },
@@ -544,7 +544,7 @@ describe('resumeCommand', () => {
     await assert.rejects(
       resume(folder).run,
       new RegExp(
-        `The measurement has the revision 0, and this driver has revision ${MEASUREMENT_REVISION}`
+        `The measurement has the revision 0, and this driver has revision ${ANDROID_DEFINITION.measurementRevision} for android`
       )
     );
   });

@@ -5,14 +5,12 @@ import type { ValidationRecordOptions } from './arguments.mts';
 import {
   WORK_LOADS,
   crosscheckVerdict,
-  rederivedEpoch,
   rederivedFootprint,
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { ComparedMetric } from './metrics.mts';
 import {
   MINIMUM_BLOCKS,
@@ -33,6 +31,7 @@ import {
   readCrosscheckResult,
   readEarlierCrosscheck,
   readObserverCostResult,
+  rederivedEpochs,
 } from './validation-sources.mts';
 import type {
   CrosscheckResult,
@@ -256,9 +255,9 @@ function commonIdentity(
       `${sources[0].folder} measured an app without an app build identity. Build the app with the driver.`
     );
   }
-  if (first.measurementRevision !== MEASUREMENT_REVISION) {
+  if (first.measurementRevision !== IOS_DEFINITION.measurementRevision) {
     throw new ToolError(
-      `${sources[0].folder} is of the measurement revision ${first.measurementRevision}. This driver has the revision ${MEASUREMENT_REVISION}, and a source of another revision is not validation evidence for it.`
+      `${sources[0].folder} is of the measurement revision ${first.measurementRevision}. This driver has the revision ${IOS_DEFINITION.measurementRevision}, and a source of another revision is not validation evidence for it.`
     );
   }
   for (const { folder, result } of sources.slice(1)) {
@@ -274,10 +273,10 @@ function commonIdentity(
 
 function recordProblems(record: ValidationRecord): string[] {
   return [
-    ...(record.measurementRevision === MEASUREMENT_REVISION
+    ...(record.measurementRevision === IOS_DEFINITION.measurementRevision
       ? []
       : [
-          `it is of the measurement revision ${record.measurementRevision}, and this driver has the revision ${MEASUREMENT_REVISION}`,
+          `it is of the measurement revision ${record.measurementRevision}, and this driver has the revision ${IOS_DEFINITION.measurementRevision}`,
         ]),
     ...repeatedSources(record.sources),
     ...sourcesOfOtherSetups(record),
@@ -384,9 +383,7 @@ function crosscheckSummary({
   folder,
   result,
 }: StoredSource<CrosscheckResult>): CrosscheckSummary {
-  const epochs = result.epochs.map((epoch) =>
-    rederivedEpoch(epoch, result.refreshRate)
-  );
+  const epochs = rederivedEpochs(result);
   const verdict = crosscheckVerdict(
     epochs,
     result.footprints.map(rederivedFootprint)

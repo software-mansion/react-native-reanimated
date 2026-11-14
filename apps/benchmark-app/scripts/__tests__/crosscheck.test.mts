@@ -413,6 +413,11 @@ describe('the footprint rows around a read', () => {
 });
 
 describe('rederivedEpoch', () => {
+  const EVIDENCE = {
+    refreshRate: 60,
+    counters: READING,
+    clock: { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
+  };
   const trace = {
     ...TRACE_OF_APP,
     uiThreadCpu: 300,
@@ -434,13 +439,13 @@ describe('rederivedEpoch', () => {
       running: 290,
       interrupted: 10,
     });
-    assert.deepEqual(rederivedEpoch(epoch, 60), epoch);
+    assert.deepEqual(rederivedEpoch(epoch, EVIDENCE), epoch);
     const forged = {
       ...epoch,
       uiThreadCpu: { ...epoch.uiThreadCpu, passes: true },
       workProof: { ...epoch.workProof, passes: false },
     };
-    assert.deepEqual(rederivedEpoch(forged, 60), epoch);
+    assert.deepEqual(rederivedEpoch(forged, EVIDENCE), epoch);
   });
 
   it('takes the reference of a CPU value from Running plus Interrupted, not from the stored trace value', () => {
@@ -456,10 +461,33 @@ describe('rederivedEpoch', () => {
         ...epoch,
         uiThreadCpu: { ...epoch.uiThreadCpu, trace: 350, passes: true },
       },
-      60
+      EVIDENCE
     );
     assert.equal(rederived.uiThreadCpu.trace, 300);
     assert.equal(rederived.uiThreadCpu.passes, false);
+  });
+
+  it('takes the app value, the window and the timing uncertainty from the counter reads, not from the stored values', () => {
+    const [epoch] = compareEpochs(
+      EPOCHS,
+      [READING],
+      [trace],
+      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
+      60
+    );
+    const forged = {
+      ...epoch,
+      windowSeconds: 1,
+      uiThreadCpu: {
+        ...epoch.uiThreadCpu,
+        app:
+          epoch.uiThreadCpu.app === null ? null : epoch.uiThreadCpu.app + 500,
+        timingUncertainty: 1000,
+        passes: true,
+      },
+      mountBatchCount: { ...epoch.mountBatchCount, app: 7 },
+    };
+    assert.deepEqual(rederivedEpoch(forged, EVIDENCE), epoch);
   });
 });
 

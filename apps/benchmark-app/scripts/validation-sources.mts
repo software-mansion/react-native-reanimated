@@ -19,10 +19,15 @@ import type {
   FootprintComparison,
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
-import { IN_APP_BOUNDARY, footprintReadSpan } from './in-app-sample.mts';
+import {
+  IN_APP_BOUNDARY,
+  footprintReadSpan,
+  readEpochCounters,
+  readOrderProblems,
+} from './in-app-sample.mts';
 import type { InAppBoundary, SamplePlan } from './in-app-sample.mts';
+import { IOS_DEFINITION } from './ios-definition.mts';
 import type { IosToolVersions } from './ios-device.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import {
   BLOCK_ORDER,
   MINIMUM_BLOCKS,
@@ -65,6 +70,7 @@ export interface CrosscheckResult extends ValidationSource {
   refreshRate: number;
   tolerances: CrosscheckTolerances;
   thermalState: number;
+  cpuCount: number;
   appBoundaries: InAppBoundary[];
   boundaryClocks: BoundaryClocks;
   clock: ClockMapping;
@@ -164,6 +170,7 @@ const CROSSCHECK_SHAPE: Check = shape({
     memory: TOLERANCE,
   }),
   thermalState: anInteger,
+  cpuCount: aPositiveNumber,
   appBoundaries: listOf(IN_APP_BOUNDARY),
   boundaryClocks: shape({
     unit: oneOf(['ns']),
@@ -266,6 +273,7 @@ const OBSERVER_COST_SHAPE: Check = shape({
 });
 
 const DERIVED_EPOCH_FIELDS = [
+  'windowSeconds',
   'uiThreadCpu',
   'jsThreadCpu',
   'processCpu',
@@ -313,10 +321,10 @@ const EARLIER_CROSSCHECK = completeResult<EarlierCrosscheck>(
     verdict: shape({ counters: aBoolean, loadsRan: aBoolean }),
   }),
   (result) =>
-    result.measurementRevision < MEASUREMENT_REVISION
+    result.measurementRevision < IOS_DEFINITION.measurementRevision
       ? []
       : [
-          `it is of the measurement revision ${result.measurementRevision}, not of an earlier revision than ${MEASUREMENT_REVISION}`,
+          `it is of the measurement revision ${result.measurementRevision}, not of an earlier revision than ${IOS_DEFINITION.measurementRevision}`,
         ],
   () => []
 );
@@ -376,6 +384,21 @@ export function readEarlierCrosscheck(
     verdict: { counters: verdict.counters, loadsRan: verdict.loadsRan },
   };
   return { folder: source.folder, sha256: resultHash(result), result };
+}
+
+export function rederivedEpochs(result: CrosscheckResult): CrosscheckEpoch[] {
+  return result.epochs.map((epoch, i) =>
+    rederivedEpoch(epoch, {
+      refreshRate: result.refreshRate,
+      counters: readEpochCounters(
+        result.appBoundaries[i],
+        result.appBoundaries[i + 1],
+        result.cpuCount,
+        i
+      ),
+      clock: result.clock,
+    })
+  );
 }
 
 export function completeBlocks(samples: readonly CollectorSample[]): number {
@@ -545,15 +568,19 @@ function crosscheckGaps(result: CrosscheckResult): string[] {
 
 function crosscheckConflicts(result: CrosscheckResult): string[] {
   const problems: string[] = [
+    ...readOrderProblems(result.appBoundaries),
     ...clockProblems(result.boundaryClocks, result.clock),
     ...boundaryTimeProblems(result),
   ];
   if (!isDeepStrictEqual(result.tolerances, CROSSCHECK_TOLERANCES)) {
     problems.push('its tolerances are not the tolerances of this driver');
   }
-  const epochs = result.epochs.map((epoch) =>
-    rederivedEpoch(epoch, result.refreshRate)
-  );
+  let epochs: CrosscheckEpoch[];
+  try {
+    epochs = rederivedEpochs(result);
+  } catch (error) {
+    return [...problems, (error as Error).message];
+  }
   epochs.forEach((epoch, i) => {
     for (const field of DERIVED_EPOCH_FIELDS) {
       if (!isDeepStrictEqual(epoch[field], result.epochs[i][field])) {

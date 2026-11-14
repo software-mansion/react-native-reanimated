@@ -66,6 +66,7 @@ export interface PlatformDefinition {
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
   verdictsNeedValidation: boolean;
+  measurementRevision: number;
   frameSource: FrameSource;
   metricDefinitions: readonly MetricDefinition[];
 }

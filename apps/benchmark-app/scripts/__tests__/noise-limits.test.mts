@@ -3,10 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, describe, it } from 'node:test';
 
+import { ANDROID_DEFINITION } from '../android-definition.mts';
 import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
-import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import type { SampleMetrics } from '../metrics.mts';
 import {
   checkNoiseLimitsRecord,
@@ -145,7 +145,7 @@ function runResult(
   };
   return {
     formatVersion: 1,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision: ANDROID_DEFINITION.measurementRevision,
     platform: 'android',
     command: 'run',
     status: 'tool error',
@@ -244,7 +244,10 @@ describe('noiseLimitsCommand', () => {
     const record = validateNoiseLimitsRecord(printed([first, second]));
     assert.equal(record.platform, 'android');
     assert.deepEqual(record.device, IDENTITY);
-    assert.equal(record.measurementRevision, MEASUREMENT_REVISION);
+    assert.equal(
+      record.measurementRevision,
+      ANDROID_DEFINITION.measurementRevision
+    );
     assert.deepEqual(record.sources, [
       { folder: first, samples: { css: { a: 10, b: 10 } } },
       { folder: second, samples: { 'sticky-header': { a: 10, b: 10 } } },
@@ -304,7 +307,7 @@ describe('noiseLimitsCommand', () => {
       () =>
         noiseLimitsCommand({ command: 'noise-limits', runs: [first, second] }),
       new RegExp(
-        `The runs differ in measurementRevision: ${MEASUREMENT_REVISION} in .*rev-1, 0 in .*rev-0`
+        `The runs differ in measurementRevision: ${ANDROID_DEFINITION.measurementRevision} in .*rev-1, 0 in .*rev-0`
       )
     );
   });
@@ -351,7 +354,7 @@ describe('validateNoiseLimitsRecord', () => {
     formatVersion: 1,
     platform: 'android',
     device: IDENTITY,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision: ANDROID_DEFINITION.measurementRevision,
     sources: [{ folder: '/runs/aa', samples: { css: { a: 10, b: 10 } } }],
     scenarios: { css: { version: 1, load: 10 } },
     limits: { css: { uiThreadCpu: 0.05 } },
@@ -425,7 +428,7 @@ describe('checkScenarioIdentity', () => {
     formatVersion: 1,
     platform: 'android',
     device: IDENTITY,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision: ANDROID_DEFINITION.measurementRevision,
     sources: [],
     scenarios: { css: { version: 2, load: 40 } },
     limits: { css: {} },
@@ -474,7 +477,7 @@ describe('checkNoiseLimitsRecord', () => {
           model: 'Pixel 8',
         }),
       new RegExp(
-        `The noise limits do not fit this run: platform ios, the run is on android; device model SM-A165F, the run is on Pixel 8; measurement revision 0, the driver has revision ${MEASUREMENT_REVISION}\\.`
+        `The noise limits do not fit this run: platform ios, the run is on android; device model SM-A165F, the run is on Pixel 8; measurement revision 0, the driver has revision ${ANDROID_DEFINITION.measurementRevision} for android\\.`
       )
     );
   });
@@ -482,9 +485,34 @@ describe('checkNoiseLimitsRecord', () => {
   it('accepts another phone of the same model and another OS build', () => {
     assert.doesNotThrow(() =>
       checkNoiseLimitsRecord(
-        { ...record, measurementRevision: MEASUREMENT_REVISION },
+        { ...record, measurementRevision: IOS_DEFINITION.measurementRevision },
         'ios',
         { model: IDENTITY.model, deviceId: 'HW2', osBuild: 'other' }
+      )
+    );
+  });
+
+  it('compares the revision of the record with the revision of its platform', () => {
+    const android = {
+      ...record,
+      platform: 'android' as const,
+      measurementRevision: ANDROID_DEFINITION.measurementRevision,
+    };
+    assert.doesNotThrow(() =>
+      checkNoiseLimitsRecord(android, 'android', IDENTITY)
+    );
+    assert.throws(
+      () =>
+        checkNoiseLimitsRecord(
+          {
+            ...record,
+            measurementRevision: ANDROID_DEFINITION.measurementRevision,
+          },
+          'ios',
+          IDENTITY
+        ),
+      new RegExp(
+        `measurement revision ${ANDROID_DEFINITION.measurementRevision}, the driver has revision ${IOS_DEFINITION.measurementRevision} for ios`
       )
     );
   });

@@ -4,7 +4,7 @@ import path from 'node:path';
 import type { SampleOptions } from './arguments.mts';
 import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
-import { MEASUREMENT_REVISION } from './measurement-rules.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { SAMPLES_DIR } from './paths.mts';
 import { platformOf } from './platforms.mts';
 import { measurementFolderName } from './results.mts';
@@ -54,7 +54,8 @@ export async function sampleCommand(
   console.log(
     JSON.stringify(
       {
-        measurementRevision: MEASUREMENT_REVISION,
+        measurementRevision:
+          PLATFORM_DEFINITIONS[options.device.platform].measurementRevision,
         applicationId: options.applicationId,
         scenario: options.scenario,
         load: options.load ?? null,

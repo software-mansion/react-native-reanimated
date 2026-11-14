@@ -19,10 +19,7 @@ import {
   startIosApp,
 } from './ios-protocol.mts';
 import type { IosSampleContext, RunningIosApp } from './ios-protocol.mts';
-import {
-  MEASUREMENT_REVISION,
-  RECORDING_SECONDS,
-} from './measurement-rules.mts';
+import { RECORDING_SECONDS } from './measurement-rules.mts';
 import {
   checkNoiseLimitsRecord,
   checkScenarioIdentity,
@@ -145,7 +142,7 @@ function resultOf(
 ): ObserverCostResult {
   return {
     formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
-    measurementRevision: MEASUREMENT_REVISION,
+    measurementRevision: IOS_DEFINITION.measurementRevision,
     platform: 'ios',
     device: identity,
     appBuild: launched?.launch.appBuild ?? '',

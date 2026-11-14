@@ -111,14 +111,17 @@ export interface EpochUpdates {
   missedDisplayLinkCallbacks: number | null;
 }
 
-export interface EpochReading {
+export interface EpochCounters {
   window: EpochWindow;
   counterSpans: Record<CpuCounter, TimeSpan>;
   cpu: EpochCpu;
   cpuUncertainty: Record<CpuCounter, number>;
   counterCores: Record<CpuCounter, number>;
-  updates: EpochUpdates | null;
   mountBatchCount: number;
+}
+
+export interface EpochReading extends EpochCounters {
+  updates: EpochUpdates | null;
   memory: number;
   windowMemoryDelta: number;
 }
@@ -320,6 +323,24 @@ export function readEpoch(
 ): EpochReading {
   const start = sample.boundaries[index];
   const end = sample.boundaries[index + 1];
+  const counters = readEpochCounters(start, end, sample.cpuCount, index);
+  return {
+    ...counters,
+    updates:
+      sample.epochs[index].collector === 'full'
+        ? epochUpdates(sample, start, end, counters.window, refreshRate, index)
+        : null,
+    memory: end.footprintKb,
+    windowMemoryDelta: end.footprintKb - start.footprintKb,
+  };
+}
+
+export function readEpochCounters(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  cpuCount: number,
+  index: number
+): EpochCounters {
   checkCounters(start, end, index);
   const window = epochWindow(start, end, index);
   const counterSpans = mapCounters((counter) => ({
@@ -345,7 +366,7 @@ export function readEpoch(
   const processCpu = perSecond('process');
   checkProcessSum(start, end, index);
   const counterCores = mapCounters((counter) =>
-    counter === 'process' ? sample.cpuCount : 1
+    counter === 'process' ? cpuCount : 1
   );
   return {
     window,
@@ -365,13 +386,7 @@ export function readEpoch(
         spanSeconds(counterSpans[counter])
     ),
     counterCores,
-    updates:
-      sample.epochs[index].collector === 'full'
-        ? epochUpdates(sample, start, end, window, refreshRate, index)
-        : null,
     mountBatchCount: end.mounts - start.mounts,
-    memory: end.footprintKb,
-    windowMemoryDelta: end.footprintKb - start.footprintKb,
   };
 }
 
@@ -434,22 +449,31 @@ function checkPlan(sample: InAppSample, plan: SamplePlan) {
   }
 }
 
-function checkReadOrder(boundaries: readonly InAppBoundary[]) {
-  boundaries.forEach((boundary, index) => {
+export function readOrderProblems(
+  boundaries: readonly InAppBoundary[]
+): string[] {
+  return boundaries.flatMap((boundary, index) => {
     const times = READ_ORDER.map((field) => ({ field, ns: boundary[field] }));
     const previous = boundaries[index - 1];
     if (previous) {
       times.unshift({ field: 'signpostEndNs', ns: previous.signpostEndNs });
     }
-    times.slice(1).forEach((time, i) => {
+    return times.slice(1).flatMap((time, i) => {
       const before = times[i];
-      if (time.ns < before.ns) {
-        throw new ToolError(
-          `Boundary ${index} of the SAMPLE line: ${time.field} (${time.ns} ns) is before ${before.field} (${before.ns} ns)${i === 0 && previous ? ' of the boundary before it' : ''}. The reads are not in the order of the sampler.`
-        );
-      }
+      return time.ns < before.ns
+        ? [
+            `Boundary ${index} of the SAMPLE line: ${time.field} (${time.ns} ns) is before ${before.field} (${before.ns} ns)${i === 0 && previous ? ' of the boundary before it' : ''}. The reads are not in the order of the sampler.`,
+          ]
+        : [];
     });
   });
+}
+
+function checkReadOrder(boundaries: readonly InAppBoundary[]) {
+  const [problem] = readOrderProblems(boundaries);
+  if (problem !== undefined) {
+    throw new ToolError(problem);
+  }
 }
 
 function checkUpdates({ updates, boundaries }: InAppSample) {
