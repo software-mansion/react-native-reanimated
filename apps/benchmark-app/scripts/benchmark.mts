@@ -2,6 +2,7 @@
 
 import { USAGE, parseArguments } from './arguments.mts';
 import type { Command } from './arguments.mts';
+import { TOOL_ERROR_EXIT_CODE } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import { ToolError } from './errors.mts';
 import { memoryCommand, memoryResumeCommand } from './memory.mts';
@@ -10,10 +11,8 @@ import { Processes } from './processes.mts';
 import { resumeCommand, runCommand } from './run.mts';
 import { sampleCommand } from './sample-command.mts';
 
-const TOOL_ERROR_EXIT_CODE = 2;
-
 const processes = new Processes();
-let cleanup: (() => Promise<void>) | null = null;
+let cleanup: ((exitCode: number) => Promise<void>) | null = null;
 let interrupted = false;
 
 process.on('SIGINT', () => void interrupt(130));
@@ -80,7 +79,7 @@ async function interrupt(exitCode: number) {
   );
   processes.stopAll();
   try {
-    await cleanup?.();
+    await cleanup?.(exitCode);
   } catch (error) {
     log(`cleanup failed: ${(error as Error).message}`);
   }

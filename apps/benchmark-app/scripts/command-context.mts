@@ -3,8 +3,10 @@ import type { Processes } from './processes.mts';
 export interface CommandContext {
   processes: Processes;
   log: (message: string) => void;
-  onInterrupt: (cleanup: () => Promise<void>) => void;
+  onInterrupt: (cleanup: (exitCode: number) => Promise<void>) => void;
 }
+
+export const TOOL_ERROR_EXIT_CODE = 2;
 
 export function once<Args extends unknown[]>(
   action: (...args: Args) => Promise<void>

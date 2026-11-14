@@ -40,6 +40,7 @@ async function stoppedRun({
         command: 'run',
         config: TEST_ROOT.configFile,
         device: DEVICE,
+        outputDir: TEST_ROOT.outputDir,
         blocks: 1,
         keepTraces,
         traceProcessor: TEST_ROOT.traceProcessor,
@@ -74,6 +75,99 @@ function editResult(folder: string, edit: (result: RunResult) => void) {
   edit(result);
   writeResult(folder, result);
 }
+
+function summaryOf(folder: string) {
+  return JSON.parse(fs.readFileSync(path.join(folder, 'summary.json'), 'utf8'));
+}
+
+describe('summary.json', () => {
+  it('gives the status, the exit code, its reason and the verdict counts of a done run', async () => {
+    const folder = await stoppedRun();
+    assert.equal(await resume(folder).run, 0);
+    assert.deepEqual(summaryOf(folder), {
+      formatVersion: 1,
+      command: 'run',
+      status: 'done',
+      exitCode: 0,
+      reason: 'All 1 expectations hold.',
+      failedExpectations: [],
+      verdictCounts: { 'no change found': 14 },
+      report: 'report.md',
+      result: 'result.json',
+    });
+  });
+
+  it('names the expectations that do not hold and the exit code of a stopped run', async () => {
+    const summary = summaryOf(await stoppedRun());
+    assert.equal(summary.status, 'interrupted');
+    assert.equal(summary.exitCode, 130);
+    assert.equal(summary.reason, 'The driver got a signal to stop.');
+    assert.deepEqual(summary.failedExpectations, [
+      {
+        status: 'not decided',
+        text: '1. all scenarios, all metrics: not worse -> not decided (idle-cost has no data)',
+      },
+    ]);
+  });
+
+  it('gives exit code 2 and the message of a tool error', async () => {
+    const { dependencies, context } = createFake({
+      batteryLevelAt: (time) => (time > 15_000 ? 79 : 80),
+    });
+    await assert.rejects(
+      runCommand(
+        {
+          command: 'run',
+          config: TEST_ROOT.configFile,
+          device: DEVICE,
+          outputDir: TEST_ROOT.outputDir,
+          blocks: 1,
+          keepTraces: false,
+          traceProcessor: TEST_ROOT.traceProcessor,
+        },
+        context,
+        dependencies
+      ),
+      /batteryLevel: 80 -> 79/
+    );
+    const summary = summaryOf(onlyRunFolder(TEST_ROOT));
+    assert.equal(summary.status, 'tool error');
+    assert.equal(summary.exitCode, 2);
+    assert.match(
+      summary.reason,
+      /The device state changed .*batteryLevel: 80 -> 79/
+    );
+  });
+
+  it('makes no run folder when the driver stops before the measurement', async () => {
+    const { dependencies, context } = createFake();
+    const failing = {
+      ...context,
+      processes: {
+        run: async () => {
+          throw new Error('adb is gone');
+        },
+      } as unknown as typeof context.processes,
+    };
+    await assert.rejects(
+      runCommand(
+        {
+          command: 'run',
+          config: TEST_ROOT.configFile,
+          device: DEVICE,
+          outputDir: TEST_ROOT.outputDir,
+          blocks: 1,
+          keepTraces: false,
+          traceProcessor: TEST_ROOT.traceProcessor,
+        },
+        failing,
+        dependencies
+      ),
+      /adb is gone/
+    );
+    assert.equal(fs.existsSync(TEST_ROOT.outputDir), false);
+  });
+});
 
 describe('a stopped run', () => {
   it('keeps the samples of the scenario in progress and writes a provisional report', async () => {
@@ -134,6 +228,7 @@ describe('runCommand with noise limits', () => {
         command: 'run',
         config: TEST_ROOT.configFile,
         device: DEVICE,
+        outputDir: TEST_ROOT.outputDir,
         blocks: 1,
         noiseLimits: file,
         keepTraces: false,
@@ -326,6 +421,7 @@ describe('resumeCommand', () => {
           command: 'run',
           config: TEST_ROOT.configFile,
           device: DEVICE,
+          outputDir: TEST_ROOT.outputDir,
           blocks: 1,
           keepTraces: false,
           traceProcessor: TEST_ROOT.traceProcessor,

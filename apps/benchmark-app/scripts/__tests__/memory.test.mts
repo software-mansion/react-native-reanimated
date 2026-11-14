@@ -35,6 +35,7 @@ const OPTIONS: MemoryOptions = {
   command: 'memory',
   config: TEST_ROOT.configFile,
   device: DEVICE,
+  outputDir: TEST_ROOT.outputDir,
   scenario: 'shared-elements',
   launches: 2,
   intervalSeconds: 60,
@@ -375,6 +376,24 @@ describe('memoryCommand', () => {
       ['not judged (duration under 600 s)', 'not judged (duration under 600 s)']
     );
     assert.ok(Math.abs((result.summary[1].tailSlopeMedian ?? 0) - 2000) < 1);
+  });
+
+  it('writes a summary with the verdict counts and the exit code', async () => {
+    const { folder, exitCode } = await measureMemory();
+    const summary = JSON.parse(
+      fs.readFileSync(path.join(folder, 'summary.json'), 'utf8')
+    );
+    assert.equal(summary.command, 'memory');
+    assert.equal(summary.status, 'done');
+    assert.equal(summary.exitCode, exitCode);
+    assert.deepEqual(summary.failedExpectations, []);
+    assert.equal(
+      Object.values(summary.verdictCounts as Record<string, number>).reduce(
+        (sum, count) => sum + count,
+        0
+      ),
+      2
+    );
   });
 
   it('names one launch in the singular', async () => {

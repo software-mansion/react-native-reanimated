@@ -43,7 +43,7 @@ interface FakeOptions {
 function createFake(options: FakeOptions = {}) {
   let time = 0;
   let traces = 0;
-  let interrupt: (() => Promise<void>) | null = null;
+  let interrupt: ((exitCode: number) => Promise<void>) | null = null;
   const installs: string[] = [];
   const signs: string[] = [];
   const launches: string[] = [];
@@ -94,7 +94,7 @@ function createFake(options: FakeOptions = {}) {
         traces++;
         tracedNames.push(deviceName);
         if (traces === options.interruptAtTrace) {
-          await interrupt?.();
+          await interrupt?.(130);
           throw new ToolError('the device connection ended');
         }
         fs.mkdirSync(traceFile, { recursive: true });
@@ -119,7 +119,6 @@ function createFake(options: FakeOptions = {}) {
   };
   const dependencies: MeasurementDependencies = {
     platform: iosPlatform(ios),
-    outputDir: TEST_ROOT.outputDir,
   };
   const context: CommandContext = {
     processes: {
@@ -145,6 +144,7 @@ function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
       command: 'run',
       config: TEST_ROOT.configFile,
       device,
+      outputDir: TEST_ROOT.outputDir,
       blocks: 1,
       keepTraces: false,
       signCommand: SIGN_COMMAND,
@@ -243,6 +243,7 @@ describe('an iOS run', () => {
           command: 'run',
           config: TEST_ROOT.configFile,
           device: IPHONE,
+          outputDir: TEST_ROOT.outputDir,
           blocks: 1,
           keepTraces: false,
           signCommand: SIGN_COMMAND,
@@ -258,6 +259,7 @@ describe('an iOS run', () => {
           command: 'run',
           config: TEST_ROOT.configFile,
           device: IPHONE,
+          outputDir: TEST_ROOT.outputDir,
           blocks: 1,
           keepTraces: false,
           signCommand: path.join(TEST_ROOT.root, 'missing.sh'),

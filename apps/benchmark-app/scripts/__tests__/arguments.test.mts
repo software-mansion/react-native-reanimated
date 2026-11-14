@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { parseArguments } from '../arguments.mts';
+import { DEFAULT_OUTPUT_DIR } from '../paths.mts';
 
 describe('parseArguments', () => {
   it('reads the run command with defaults', () => {
@@ -12,6 +13,7 @@ describe('parseArguments', () => {
         command: 'run',
         config: 'c.json',
         device: { platform: 'android', id: 'S1' },
+        outputDir: DEFAULT_OUTPUT_DIR,
         blocks: 5,
         noiseLimits: undefined,
         keepTraces: false,
@@ -35,11 +37,14 @@ describe('parseArguments', () => {
       '--keep-traces',
       '--trace-processor',
       '/tp',
+      '--output-dir',
+      'out',
     ]);
     assert.deepEqual(command, {
       command: 'run',
       config: 'c.json',
       device: { platform: 'android', id: 'S1' },
+      outputDir: path.join(process.cwd(), 'out'),
       blocks: 3,
       noiseLimits: 'n.json',
       keepTraces: true,
@@ -171,6 +176,7 @@ describe('parseArguments', () => {
       command: 'memory',
       config: 'c.json',
       device: { platform: 'android', id: 'S1' },
+      outputDir: DEFAULT_OUTPUT_DIR,
       scenario: 'shared-elements',
       launches: 2,
       intervalSeconds: 60,
@@ -191,11 +197,14 @@ describe('parseArguments', () => {
         '--slope-limit',
         '250.5',
         '--keep-traces',
+        '--output-dir',
+        '/out',
       ]),
       {
         command: 'memory',
         config: 'c.json',
         device: { platform: 'android', id: 'S1' },
+        outputDir: '/out',
         scenario: 'shared-elements',
         launches: 4,
         intervalSeconds: 30,
@@ -295,6 +304,7 @@ describe('parseArguments', () => {
         command: 'run',
         config: 'c.json',
         device: { platform: 'ios', id: 'U1' },
+        outputDir: DEFAULT_OUTPUT_DIR,
         blocks: 5,
         noiseLimits: undefined,
         keepTraces: false,

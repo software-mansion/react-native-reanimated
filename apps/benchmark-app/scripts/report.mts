@@ -243,30 +243,7 @@ export function timingSection(samples: Recorded<Timed>[]): string {
   );
 }
 
-function incompleteNote(result: RunResult): string {
-  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result, result.config.scenarios).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
-}
-
-function blocksText(result: RunResult): string {
-  const overrides = Object.entries(result.config.blocks ?? {}).map(
-    ([scenario, blocks]) => `${scenario}: ${blocks}`
-  );
-  return overrides.length > 0
-    ? `${result.options.blocks} (${overrides.join(', ')})`
-    : String(result.options.blocks);
-}
-
-function expectationsSection(
-  results: ExpectationResult[],
-  config: RunConfig,
-  definition: PlatformDefinition
-): string {
-  return results
-    .map((result, i) => expectationLine(result, i, config, definition))
-    .join('\n');
-}
-
-function expectationLine(
+export function expectationLine(
   result: ExpectationResult,
   index: number,
   config: RunConfig,
@@ -304,61 +281,27 @@ function expectationLine(
   return `${index + 1}. ${scenarios}, ${metrics}: ${claim} -> ${result.status}${detail}`;
 }
 
-function formatPercent(fraction: number, signed: boolean): string {
-  const percent = (finiteNumber(fraction, 'A percentage') * 100)
-    .toFixed(1)
-    .replace(/\.0$/, '');
-  return `${signed && fraction > 0 ? '+' : ''}${percent === '-0' ? '0' : percent}%`;
+function incompleteNote(result: RunResult): string {
+  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result, result.config.scenarios).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
 }
 
-function formatDifference(
-  row: MetricComparison & { noiseLimit?: number | null }
+function blocksText(result: RunResult): string {
+  const overrides = Object.entries(result.config.blocks ?? {}).map(
+    ([scenario, blocks]) => `${scenario}: ${blocks}`
+  );
+  return overrides.length > 0
+    ? `${result.options.blocks} (${overrides.join(', ')})`
+    : String(result.options.blocks);
+}
+
+function expectationsSection(
+  results: ExpectationResult[],
+  config: RunConfig,
+  definition: PlatformDefinition
 ): string {
-  if (row.comparison === 'relative') {
-    return formatPercent(row.difference, true);
-  }
-  const value = formatSigned(row.difference, unitOf(row.metric));
-  if (!row.comparisonFallback) {
-    return value;
-  }
-  return row.noiseLimit === null
-    ? `${value} (absolute, no noise limit)`
-    : `${value} (absolute)`;
-}
-
-function formatSigned(value: number, unit: MetricUnit): string {
-  const sign = value > 0 ? '+' : '';
-  return unit === 'share'
-    ? `${sign}${(finiteNumber(value, 'A value in the report') * 100).toFixed(2)} pp`
-    : `${sign}${formatValue(value, unit)}`;
-}
-
-function formatValue(value: number, unit: MetricUnit): string {
-  const finite = finiteNumber(value, 'A value in the report');
-  switch (unit) {
-    case 'share':
-      return `${(finite * 100).toFixed(1)}% of frames`;
-    case 'kB':
-      return `${Math.round(finite)} kB`;
-    default:
-      return `${finite.toFixed(2)} ${unit}`;
-  }
-}
-
-function unitOf(metric: ComparedMetric): MetricUnit {
-  return COMPARISON_RULES[metric].unit;
-}
-
-function formatInterval(row: MetricComparison): string {
-  const format = (value: number) =>
-    row.comparison === 'relative'
-      ? formatPercent(value, true)
-      : formatSigned(value, unitOf(row.metric));
-  return `${format(row.interval.low)} to ${format(row.interval.high)}`;
-}
-
-function failedVariants(failed: FailedScenario): string {
-  return failed.variants.map((variant) => variant.toUpperCase()).join(' and ');
+  return results
+    .map((result, i) => expectationLine(result, i, config, definition))
+    .join('\n');
 }
 
 function verdictsSection(result: RunResult): string {
@@ -439,6 +382,59 @@ function comparisonCells(row: VerdictRow | AdvisoryRow): string[] {
   ];
 }
 
+function unitOf(metric: ComparedMetric): MetricUnit {
+  return COMPARISON_RULES[metric].unit;
+}
+
+function formatValue(value: number, unit: MetricUnit): string {
+  const finite = finiteNumber(value, 'A value in the report');
+  switch (unit) {
+    case 'share':
+      return `${(finite * 100).toFixed(1)}% of frames`;
+    case 'kB':
+      return `${Math.round(finite)} kB`;
+    default:
+      return `${finite.toFixed(2)} ${unit}`;
+  }
+}
+
+function formatDifference(
+  row: MetricComparison & { noiseLimit?: number | null }
+): string {
+  if (row.comparison === 'relative') {
+    return formatPercent(row.difference, true);
+  }
+  const value = formatSigned(row.difference, unitOf(row.metric));
+  if (!row.comparisonFallback) {
+    return value;
+  }
+  return row.noiseLimit === null
+    ? `${value} (absolute, no noise limit)`
+    : `${value} (absolute)`;
+}
+
+function formatPercent(fraction: number, signed: boolean): string {
+  const percent = (finiteNumber(fraction, 'A percentage') * 100)
+    .toFixed(1)
+    .replace(/\.0$/, '');
+  return `${signed && fraction > 0 ? '+' : ''}${percent === '-0' ? '0' : percent}%`;
+}
+
+function formatSigned(value: number, unit: MetricUnit): string {
+  const sign = value > 0 ? '+' : '';
+  return unit === 'share'
+    ? `${sign}${(finiteNumber(value, 'A value in the report') * 100).toFixed(2)} pp`
+    : `${sign}${formatValue(value, unit)}`;
+}
+
+function formatInterval(row: MetricComparison): string {
+  const format = (value: number) =>
+    row.comparison === 'relative'
+      ? formatPercent(value, true)
+      : formatSigned(value, unitOf(row.metric));
+  return `${format(row.interval.low)} to ${format(row.interval.high)}`;
+}
+
 function metricDefinitionsSection(
   definition: PlatformDefinition,
   measurementRevision: number
@@ -486,6 +482,10 @@ function roleOf(
     return 'yes';
   }
   return has(definition.advisoryMetrics) ? 'no verdict, shown' : 'no, stored';
+}
+
+function failedVariants(failed: FailedScenario): string {
+  return failed.variants.map((variant) => variant.toUpperCase()).join(' and ');
 }
 
 function roundSegmentsLine(

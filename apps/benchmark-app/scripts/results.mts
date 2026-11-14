@@ -7,6 +7,7 @@ import { ToolError } from './errors.mts';
 import type { ExpectationResult } from './expectations.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { NoiseLimitsRecord } from './noise-limits-record.mts';
+import { RESULT_FILE } from './paths.mts';
 import type {
   DeviceState,
   InAppState,
@@ -178,7 +179,7 @@ export function readMeasurementResult<R extends MeasurementResult<Judged>>(
   commandFields: Record<string, Check>,
   sample: Check
 ): R {
-  const file = path.join(folder, 'result.json');
+  const file = path.join(folder, RESULT_FILE);
   let stored: unknown;
   try {
     stored = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -204,7 +205,7 @@ export function readMeasurementResult<R extends MeasurementResult<Judged>>(
 }
 
 export function writeResult(folder: string, result: MeasurementResult<Judged>) {
-  const file = path.join(folder, 'result.json');
+  const file = path.join(folder, RESULT_FILE);
   fs.writeFileSync(
     `${file}.partial`,
     `${JSON.stringify(result, rejectNonFinite, 2)}\n`

@@ -18,7 +18,7 @@ import {
   checkNoiseLimitsRecord,
   readNoiseLimitsRecord,
 } from './noise-limits-record.mts';
-import { renderReport } from './report.mts';
+import { expectationLine, renderReport } from './report.mts';
 import {
   acceptedValues,
   readResult,
@@ -27,6 +27,8 @@ import {
 import type { RunResult } from './results.mts';
 import type { SampleResult } from './samples.mts';
 import { balancedOrder } from './session.mts';
+import { countBy } from './summary.mts';
+import type { MeasurementOutcome } from './summary.mts';
 import { computeComparisonRows } from './verdict.mts';
 
 export async function runCommand(
@@ -49,6 +51,7 @@ export async function runCommand(
         traceProcessor: options.traceProcessor,
         signCommand: options.signCommand,
       },
+      outputDir: options.outputDir,
       folderName: config.name,
       checkDevice: (identity) => {
         if (noiseLimits) {
@@ -111,7 +114,7 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
     },
     summarize,
     renderReport,
-    exitCode: (done) => exitCodeOf(done.expectations),
+    outcome: runOutcome,
   };
 }
 
@@ -141,4 +144,28 @@ function summarize(result: RunResult) {
     ),
     scenariosWithoutData(result, result.config.scenarios)
   );
+}
+
+function runOutcome(result: RunResult): MeasurementOutcome {
+  const exitCode = exitCodeOf(result.expectations);
+  const failed = result.expectations
+    .map((expectation, i) => ({ expectation, i }))
+    .filter(({ expectation }) => expectation.status !== 'holds');
+  return {
+    exitCode,
+    reason:
+      failed.length === 0
+        ? `All ${result.expectations.length} expectations hold.`
+        : `${failed.length} of ${result.expectations.length} expectations do not hold.`,
+    failedExpectations: failed.map(({ expectation, i }) => ({
+      status: expectation.status,
+      text: expectationLine(
+        expectation,
+        i,
+        result.config,
+        PLATFORM_DEFINITIONS[result.platform]
+      ),
+    })),
+    verdictCounts: countBy(result.verdictRows, (row) => row.verdict),
+  };
 }

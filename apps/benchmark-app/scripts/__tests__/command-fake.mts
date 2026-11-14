@@ -147,7 +147,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
   let gfxinfoReads = 0;
   let alive = true;
   let scenario = '';
-  let interrupt: (() => Promise<void>) | null = null;
+  let interrupt: ((exitCode: number) => Promise<void>) | null = null;
   const installs: string[] = [];
   const logs: string[] = [];
   const clock: Clock = {
@@ -220,7 +220,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
     recordTrace: async () => {
       traces++;
       if (traces === options.interruptAtTrace) {
-        await interrupt?.();
+        await interrupt?.(130);
         throw new ToolError('the device connection ended');
       }
     },
@@ -250,7 +250,6 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
   };
   const dependencies: MeasurementDependencies<AndroidSampling> = {
     platform: androidPlatform(android),
-    outputDir: testRoot.outputDir,
   };
   const processes = {
     run: async () => ({

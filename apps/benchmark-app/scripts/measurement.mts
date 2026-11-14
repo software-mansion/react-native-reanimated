@@ -2,13 +2,13 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { once } from './command-context.mts';
+import { TOOL_ERROR_EXIT_CODE, once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import { VARIANT_KEYS } from './config.mts';
 import type { VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
-import { APP_DIR, BUILDS_DIR, DEFAULT_OUTPUT_DIR } from './paths.mts';
+import { APP_DIR, BUILDS_DIR, REPORT_FILE } from './paths.mts';
 import type {
   DeviceIdentity,
   DeviceState,
@@ -42,10 +42,11 @@ import type {
   Recorded,
   SamplePlace,
 } from './session.mts';
+import { writeSummary } from './summary.mts';
+import type { MeasurementOutcome } from './summary.mts';
 
 export interface MeasurementDependencies<S extends Sampling = Sampling> {
   platform: Platform<S>;
-  outputDir: string;
 }
 
 export type JobResult = Judged & {
@@ -67,7 +68,7 @@ export interface MeasurementJob<
   clearSummary: (result: R) => void;
   summarize: (result: R) => void;
   renderReport: (result: R) => string;
-  exitCode: (result: R) => number;
+  outcome: (result: R) => MeasurementOutcome;
 }
 
 export type NewResultFields<S extends JobResult> = Omit<
@@ -79,6 +80,7 @@ export interface Start {
   config: VariantsConfig;
   device: DeviceTarget;
   platformOptions: PlatformOptions;
+  outputDir: string;
   folderName: string;
   checkDevice?: (identity: DeviceIdentity) => void;
 }
@@ -97,6 +99,11 @@ interface OpenMeasurement<R, P extends Sampling> {
 
 type Variants = Record<VariantKey, MeasuredVariant>;
 
+interface Ending {
+  error?: Error;
+  exit: Pick<MeasurementOutcome, 'exitCode' | 'reason'>;
+}
+
 interface SampleContext<R, P extends Sampling> {
   measurement: OpenMeasurement<R, P>;
   sampling: P;
@@ -105,10 +112,7 @@ interface SampleContext<R, P extends Sampling> {
 }
 
 export function dependenciesOf(device: DeviceTarget): MeasurementDependencies {
-  return {
-    platform: platformOf(device.platform),
-    outputDir: DEFAULT_OUTPUT_DIR,
-  };
+  return { platform: platformOf(device.platform) };
 }
 
 export async function startMeasurement<
@@ -130,10 +134,11 @@ export async function startMeasurement<
     context
   );
   start.checkDevice?.(platform.deviceIdentity(session.startState));
+  const tools = await session.readToolVersions();
 
   const startedAt = new Date().toISOString();
   const folder = createMeasurementFolder(
-    dependencies.outputDir,
+    start.outputDir,
     new Date(startedAt),
     start.folderName
   );
@@ -146,7 +151,7 @@ export async function startMeasurement<
     config: start.config,
     segments: [{ startedAt, status: 'running', device: session.startState }],
     appRefreshRate: null,
-    tools: await session.readToolVersions(),
+    tools,
     variants: {},
     scenarios: [],
     incompleteScenario: null,
@@ -230,21 +235,33 @@ async function measure<
 ): Promise<number> {
   const { result, folder, session } = measurement;
   const { log } = context;
-  const finish = (status: MeasurementStatus, error?: Error) => {
-    endSegment(result, status, error);
+  const finish = (status: MeasurementStatus, ending?: Ending) => {
+    endSegment(result, status, ending?.error);
     writeResult(folder, result);
     job.summarize(result);
     writeResult(folder, result);
     writeReport(folder, job.renderReport(result), log);
+    const outcome = job.outcome(result);
+    writeSummary(
+      folder,
+      result.command,
+      status,
+      ending ? { ...outcome, ...ending.exit } : outcome
+    );
+    return outcome.exitCode;
   };
-  const stop = once(async (status: MeasurementStatus, error?: Error) => {
+  const stop = once(async (status: MeasurementStatus, ending: Ending) => {
     await session.cleanUp(
       Object.values(result.variants).map((built) => built.applicationId),
       log
     );
-    finish(status, error);
+    finish(status, ending);
   });
-  context.onInterrupt(() => stop('interrupted'));
+  context.onInterrupt((exitCode) =>
+    stop('interrupted', {
+      exit: { exitCode, reason: 'The driver got a signal to stop.' },
+    })
+  );
 
   try {
     const variants = await prepareVariants();
@@ -278,10 +295,13 @@ async function measure<
       writeResult(folder, result);
     }
 
-    finish('done');
-    return job.exitCode(result);
+    return finish('done');
   } catch (error) {
-    await stop('tool error', error as Error).catch((stopError: Error) =>
+    const { message } = error as Error;
+    await stop('tool error', {
+      error: error as Error,
+      exit: { exitCode: TOOL_ERROR_EXIT_CODE, reason: message },
+    }).catch((stopError: Error) =>
       log(`cannot write the final result: ${stopError.message}`)
     );
     throw error;
@@ -310,7 +330,7 @@ function writeReport(
   report: string,
   log: (message: string) => void
 ) {
-  const reportFile = path.join(folder, 'report.md');
+  const reportFile = path.join(folder, REPORT_FILE);
   fs.writeFileSync(reportFile, report);
   log(`report ${reportFile}`);
 }

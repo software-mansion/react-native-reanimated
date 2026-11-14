@@ -11,6 +11,7 @@ import {
   DEFAULT_SLOPE_LIMIT,
   checkSchedule,
 } from './memory-series.mts';
+import { DEFAULT_OUTPUT_DIR } from './paths.mts';
 import type {
   DeviceTarget,
   PlatformCommand,
@@ -23,6 +24,7 @@ export interface RunOptions {
   command: 'run';
   config: string;
   device: DeviceTarget;
+  outputDir: string;
   blocks: number;
   noiseLimits?: string;
   keepTraces: boolean;
@@ -41,6 +43,7 @@ export interface MemoryOptions {
   command: 'memory';
   config: string;
   device: DeviceTarget;
+  outputDir: string;
   scenario: Scenario;
   launches: number;
   intervalSeconds: number;
@@ -86,15 +89,15 @@ type Values = Record<string, string | string[] | boolean | undefined>;
 const DEFAULT_BLOCKS = 5;
 
 export const USAGE = `Usage:
-  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device> [--trace-processor <path>]
-  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> <device> [--launches ${DEFAULT_LAUNCHES}] [--interval ${DEFAULT_INTERVAL_SECONDS}] [--duration ${DEFAULT_DURATION_SECONDS}] [--slope-limit ${DEFAULT_SLOPE_LIMIT}] [--keep-traces] [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> <device> [--output-dir <dir>] [--launches ${DEFAULT_LAUNCHES}] [--interval ${DEFAULT_INTERVAL_SECONDS}] [--duration ${DEFAULT_DURATION_SECONDS}] [--slope-limit ${DEFAULT_SLOPE_LIMIT}] [--keep-traces] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> <device> [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 
 <device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only.
-An iOS run also takes --sign-command <path>.
+--trace-processor is for Android only. An iOS run needs --sign-command <path>.
 
 Scenarios: ${SCENARIOS.join(', ')}
 See apps/benchmark-app/scripts/README.md.`;
@@ -114,6 +117,7 @@ const RUN_OPTIONS: ParseArgsOptionsConfig = {
   ...COMMON_OPTIONS,
   config: { type: 'string' },
   resume: { type: 'string' },
+  'output-dir': { type: 'string' },
   blocks: { type: 'string' },
   'noise-limits': { type: 'string' },
   'keep-traces': { type: 'boolean' },
@@ -122,6 +126,7 @@ const RUN_OPTIONS: ParseArgsOptionsConfig = {
 
 const STORED_RUN_OPTIONS = [
   'config',
+  'output-dir',
   'blocks',
   'noise-limits',
   'keep-traces',
@@ -132,6 +137,7 @@ const MEMORY_OPTIONS: ParseArgsOptionsConfig = {
   ...COMMON_OPTIONS,
   config: { type: 'string' },
   resume: { type: 'string' },
+  'output-dir': { type: 'string' },
   scenario: { type: 'string' },
   launches: { type: 'string' },
   interval: { type: 'string' },
@@ -142,6 +148,7 @@ const MEMORY_OPTIONS: ParseArgsOptionsConfig = {
 
 const STORED_MEMORY_OPTIONS = [
   'config',
+  'output-dir',
   'scenario',
   'launches',
   'interval',
@@ -186,6 +193,7 @@ export function parseArguments(argv: string[]): Command {
       command,
       config: required(values, 'config'),
       device,
+      outputDir: outputDirOf(values),
       blocks: optionalPositiveInteger(values, 'blocks', DEFAULT_BLOCKS),
       noiseLimits: optionalString(values, 'noise-limits'),
       keepTraces: values['keep-traces'] === true,
@@ -322,6 +330,12 @@ function optionalString(values: Values, name: string): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function outputDirOf(values: Values): string {
+  return path.resolve(
+    optionalString(values, 'output-dir') ?? DEFAULT_OUTPUT_DIR
+  );
+}
+
 function optionalPositiveInteger(
   values: Values,
   name: string,
@@ -366,6 +380,7 @@ function memoryOptions(values: Values): MemoryOptions {
     command: 'memory',
     config: required(values, 'config'),
     device: platformTarget(values, 'memory'),
+    outputDir: outputDirOf(values),
     scenario: requiredScenario(values),
     launches,
     intervalSeconds,

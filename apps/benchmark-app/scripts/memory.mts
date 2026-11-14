@@ -49,7 +49,6 @@ import type {
   MemoryReading,
   MemorySchedule,
 } from './memory-series.mts';
-import { DEFAULT_OUTPUT_DIR } from './paths.mts';
 import { RECORDED_SAMPLE, readMeasurementResult } from './results.mts';
 import type { MeasurementResult } from './results.mts';
 import type {
@@ -61,6 +60,8 @@ import type {
 import { SCENARIOS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import { median } from './statistics.mts';
+import { countBy } from './summary.mts';
+import type { MeasurementOutcome } from './summary.mts';
 import {
   aBoolean,
   aNumber,
@@ -156,7 +157,6 @@ const MEMORY_LAUNCH = both(
 
 const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
   platform: androidPlatform(),
-  outputDir: DEFAULT_OUTPUT_DIR,
 };
 
 export async function memoryCommand(
@@ -170,6 +170,7 @@ export async function memoryCommand(
       config,
       device: options.device,
       platformOptions: { traceProcessor: options.traceProcessor },
+      outputDir: options.outputDir,
       folderName: `${config.name}-memory-${options.scenario}`,
     },
     (fields) => ({
@@ -235,8 +236,7 @@ function memoryJob(
       measured.summary = summarizeMemory(measured);
     },
     renderReport: renderMemoryReport,
-    exitCode: (done) =>
-      exitCodeOfVerdicts(done.summary.map((variant) => variant.verdict)),
+    outcome: memoryOutcome,
   };
 }
 
@@ -415,6 +415,20 @@ function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
 
 function medianOrNull(values: number[]): number | null {
   return values.length > 0 ? median(values) : null;
+}
+
+function memoryOutcome(result: MemoryResult): MeasurementOutcome {
+  const verdicts = result.summary.map((variant) => variant.verdict);
+  const exitCode = exitCodeOfVerdicts(verdicts);
+  return {
+    exitCode,
+    reason:
+      exitCode === 0
+        ? 'Each variant has a verdict.'
+        : 'A variant is mixed or not decided.',
+    failedExpectations: [],
+    verdictCounts: countBy(verdicts, (verdict) => verdict),
+  };
 }
 
 function readMemoryResult(folder: string): MemoryResult {
