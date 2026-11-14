@@ -462,7 +462,7 @@ describe('computeIosTraceMetrics', () => {
       },
       APP
     );
-    assert.equal(livedReading(touching).thermalState, 1);
+    assert.equal(livedReading(touching).thermalState, 0);
   });
 
   it('gives the thermal state of a State event when it is higher', () => {

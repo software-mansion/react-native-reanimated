@@ -62,6 +62,9 @@ const METRICS: IosTraceMetrics = {
 };
 
 interface FakeOptions {
+  recordError?: string;
+  terminateErrorAt?: number;
+  launchedLate?: string[];
   lines?: string[];
   launches?: string[][];
   endsAfterLines?: boolean;
@@ -96,12 +99,18 @@ function createFake(options: FakeOptions = {}) {
     sleep: async (ms) => {
       sleeps.push(ms);
       time += ms;
+      if (time > 60_000) {
+        (options.launchedLate ?? []).splice(0).forEach(write);
+      }
     },
   };
   const context: IosSampleContext = {
     device: {
       terminate: async (applicationId) => {
         calls.push(`terminate ${applicationId}`);
+        if (calls.length === options.terminateErrorAt) {
+          throw new ToolError('CLEANUP ERROR');
+        }
       },
       launch: (applicationId, scenario, load, onLine) => {
         calls.push(`launch ${applicationId} ${scenario} ${load}`);
@@ -130,6 +139,9 @@ function createFake(options: FakeOptions = {}) {
         fs.mkdirSync(traceFile, { recursive: true });
         (options.linesDuringTrace ?? []).forEach(write);
         ended ||= options.endsDuringTrace ?? false;
+        if (options.recordError) {
+          throw new ToolError(options.recordError);
+        }
       },
       collect: async (_traceFile, app) => {
         calls.push(
@@ -234,6 +246,17 @@ describe('takeIosSample', () => {
     );
     assert.equal(!early.valid && early.detail, 'the app process ended');
 
+    const beforeTrace = createFake({
+      lines: [LAUNCHED, LAUNCH, READY],
+      endsAfterLines: true,
+    });
+    const notTraced = await takeIosSample(order(), beforeTrace.context);
+    assert.equal(
+      !notTraced.valid && notTraced.detail,
+      'the app process 812 ended before the trace'
+    );
+    assert.ok(!beforeTrace.calls.some((call) => call.startsWith('record')));
+
     const during = await takeIosSample(
       order(),
       createFake({ endsDuringTrace: true }).context
@@ -257,6 +280,52 @@ describe('takeIosSample', () => {
       createFake({ dead: true }).context
     );
     assert.equal(!dead.valid && dead.detail, 'the app process 812 ended');
+  });
+
+  it('is a crash when the recording fails because the app ended, and a tool error when the app lives', async () => {
+    const sample = await takeIosSample(
+      order(),
+      createFake({ endsDuringTrace: true, recordError: 'xctrace failed' })
+        .context
+    );
+    assert.equal(
+      !sample.valid && sample.detail,
+      'the app process 812 ended during the trace'
+    );
+    await assert.rejects(
+      takeIosSample(
+        order(),
+        createFake({ recordError: 'xctrace failed' }).context
+      ),
+      /xctrace failed/
+    );
+  });
+
+  it('keeps the first error when the stop of the app fails after it', async () => {
+    await assert.rejects(
+      takeIosSample(
+        order(),
+        createFake({ recordError: 'TRACE ERROR', terminateErrorAt: 5 }).context
+      ),
+      /TRACE ERROR/
+    );
+  });
+
+  it('is a crash when LAUNCH does not come in the time limit, also when it comes later', async () => {
+    const { context, calls } = createFake({
+      lines: [LAUNCHED],
+      launchedLate: [LAUNCH.replace('thermal=0', 'thermal=1'), READY],
+    });
+    const sample = await takeIosSample(order(), context);
+    assert.equal(!sample.valid && sample.detail, 'no LAUNCH line in 60 s');
+    assert.ok(!calls.some((call) => call.startsWith('record')));
+  });
+
+  it('is a tool error when the launch command does not start the app in the time limit', async () => {
+    await assert.rejects(
+      takeIosSample(order(), createFake({ lines: [] }).context),
+      /The launch command did not start the app in 60 s/
+    );
   });
 
   it('is a crash when READY does not come in the time limit', async () => {

@@ -49,8 +49,14 @@ export interface LaunchReport {
   coldStart: number;
 }
 
+type Launch =
+  | { started: true; appConsole: AppConsole; report: LaunchReport }
+  | { started: false; appConsole: AppConsole; reason: string };
+
+type StartedLaunch = Extract<Launch, { started: true }>;
+
 type ReadyOutcome =
-  | { ready: true; launch: LaunchReport; report: ScenarioReport }
+  | { ready: true; report: ScenarioReport }
   | { ready: false; reason: string };
 
 export const REPORT_PREFIX = 'ReanimatedBenchmark: ';
@@ -68,16 +74,25 @@ export async function takeIosSample(
   for (const applicationId of order.stopApplicationIds) {
     await device.terminate(applicationId);
   }
-  const appConsole = await steps.timed('wait', () =>
+  const launch = await steps.timed('wait', () =>
     launchOnCoolDevice(order, context)
   );
   const stopApp = once(() => device.terminate(order.applicationId));
-  try {
-    return await measureLaunchedApp(order, context, appConsole, steps, stopApp);
-  } finally {
-    appConsole.stop();
-    await stopApp();
-  }
+  return withCleanup(
+    async () =>
+      launch.started
+        ? measureLaunchedApp(order, context, launch, steps, stopApp)
+        : {
+            valid: false,
+            cause: 'crash',
+            detail: launch.reason,
+            timings: steps.timings,
+          },
+    async () => {
+      launch.appConsole.stop();
+      await stopApp();
+    }
+  );
 }
 
 export async function launchOnce(
@@ -91,16 +106,20 @@ export async function launchOnce(
     undefined,
     undefined
   );
-  try {
-    if ((await waitForLaunch(appConsole, clock)) === null) {
-      throw new ToolError(
-        `${applicationId} did not write a LAUNCH line in its first launch after the install`
-      );
+  await withCleanup(
+    async () => {
+      const launch = await waitForLaunch(appConsole, clock);
+      if (typeof launch === 'string') {
+        throw new ToolError(
+          `${applicationId} did not write a LAUNCH line in its first launch after the install: ${launch}`
+        );
+      }
+    },
+    async () => {
+      appConsole.stop();
+      await device.terminate(applicationId);
     }
-  } finally {
-    appConsole.stop();
-    await device.terminate(applicationId);
-  }
+  );
 }
 
 export function parseLaunchLine(line: string): LaunchReport | null {
@@ -168,18 +187,15 @@ export class AppConsole {
     if (this.#failure) {
       return { ready: false, reason: this.#failure };
     }
-    if (this.#report && !this.#launch) {
-      throw new ToolError(
-        'The app wrote READY but no LAUNCH line that the driver can read. Build the app again from the current benchmark app source.'
-      );
-    }
-    return this.#report && this.#launch
-      ? { ready: true, launch: this.#launch, report: this.#report }
-      : null;
+    return this.#report ? { ready: true, report: this.#report } : null;
   }
 
   failure(): string | null {
     return this.#failure;
+  }
+
+  started(): boolean {
+    return this.#launched;
   }
 
   ended(): boolean {
@@ -219,7 +235,7 @@ export class AppConsole {
 async function launchOnCoolDevice(
   order: SampleOrder,
   { device, clock }: IosSampleContext
-): Promise<AppConsole> {
+): Promise<Launch> {
   const startedAt = clock.now();
   await clock.sleep(MINIMUM_WAIT_MS);
   while (true) {
@@ -229,17 +245,18 @@ async function launchOnCoolDevice(
       order.scenario,
       order.load
     );
-    const thermalState =
-      (await waitForLaunch(appConsole, clock))?.thermalState ??
-      NOMINAL_THERMAL_STATE;
-    if (thermalState === NOMINAL_THERMAL_STATE) {
-      return appConsole;
+    const report = await waitForLaunch(appConsole, clock);
+    if (typeof report === 'string') {
+      return { started: false, appConsole, reason: report };
+    }
+    if (report.thermalState === NOMINAL_THERMAL_STATE) {
+      return { started: true, appConsole, report };
     }
     appConsole.stop();
     await device.terminate(order.applicationId);
     if (clock.now() - startedAt >= COOL_DOWN_LIMIT_MS) {
       throw new ToolError(
-        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[thermalState] ?? thermalState} at the launch of the app`
+        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[report.thermalState] ?? report.thermalState} at the launch of the app`
       );
     }
     await clock.sleep(HOT_DEVICE_WAIT_MS);
@@ -249,23 +266,41 @@ async function launchOnCoolDevice(
 async function waitForLaunch(
   appConsole: AppConsole,
   clock: Clock
-): Promise<LaunchReport | null> {
+): Promise<LaunchReport | string> {
   const deadline = clock.now() + READY_TIMEOUT_MS;
-  while (
-    appConsole.launch() === null &&
-    appConsole.failure() === null &&
-    !appConsole.ended() &&
-    clock.now() < deadline
-  ) {
+  while (true) {
+    const report = appConsole.launch();
+    if (report) {
+      return report;
+    }
+    if (appConsole.readyOutcome()?.ready) {
+      throw new ToolError(
+        'The app wrote READY but no LAUNCH line that the driver can read. Build the app again from the current benchmark app source.'
+      );
+    }
+    const failure = appConsole.failure();
+    if (failure) {
+      return failure;
+    }
+    if (appConsole.ended()) {
+      return appConsole.launch() ?? 'the app process ended';
+    }
+    if (clock.now() >= deadline) {
+      if (!appConsole.started()) {
+        throw new ToolError(
+          `The launch command did not start the app in ${READY_TIMEOUT_MS / 1000} s`
+        );
+      }
+      return `no LAUNCH line in ${READY_TIMEOUT_MS / 1000} s`;
+    }
     await clock.sleep(PROCESS_POLL_MS);
   }
-  return appConsole.launch();
 }
 
 async function measureLaunchedApp(
   order: SampleOrder,
   context: IosSampleContext,
-  appConsole: AppConsole,
+  { appConsole, report: launch }: StartedLaunch,
   steps: SampleSteps,
   stopApp: () => Promise<void>
 ): Promise<SampleResult> {
@@ -278,7 +313,7 @@ async function measureLaunchedApp(
   if (!ready.ready) {
     return { valid: false, cause: 'crash', detail: ready.reason, timings };
   }
-  const { launch, report } = ready;
+  const { report } = ready;
   const { jsThread } = report;
   if (jsThread === null) {
     throw new ToolError(
@@ -293,14 +328,26 @@ async function measureLaunchedApp(
   }
   const observed = { report, pid, refreshRate, timings };
 
-  await timed('trace', () => tracer.record(context.deviceName, pid, traceFile));
-  const ended =
-    appConsole.failure() ??
-    (appConsole.ended()
-      ? `the app process ${pid} ended during the trace`
-      : null);
-  if (ended !== null) {
-    return crash(ended, observed, traceFile);
+  const endedBeforeTrace = appEnd(appConsole, pid, 'before the trace');
+  if (endedBeforeTrace !== null) {
+    return {
+      valid: false,
+      cause: 'crash',
+      detail: endedBeforeTrace,
+      ...observed,
+    };
+  }
+  const recorded = await timed('trace', () =>
+    tracer
+      .record(context.deviceName, pid, traceFile)
+      .catch((error: Error) => error)
+  );
+  const endedInTrace = appEnd(appConsole, pid, 'during the trace');
+  if (endedInTrace !== null) {
+    return crash(endedInTrace, observed, traceFile);
+  }
+  if (recorded instanceof Error) {
+    throw recorded;
   }
   await stopApp();
 
@@ -369,6 +416,17 @@ async function waitForReady(
   );
 }
 
+function appEnd(
+  appConsole: AppConsole,
+  pid: number,
+  moment: string
+): string | null {
+  return (
+    appConsole.failure() ??
+    (appConsole.ended() ? `the app process ${pid} ended ${moment}` : null)
+  );
+}
+
 function crash(
   detail: string,
   observed: Pick<InvalidSample, 'report' | 'pid' | 'refreshRate' | 'timings'>,
@@ -385,4 +443,19 @@ function crash(
 
 function inAppStateOf(state: AppState, refreshRate: number): InAppState {
   return { refreshRate, ...state };
+}
+
+async function withCleanup<T>(
+  action: () => Promise<T>,
+  cleanUp: () => Promise<void>
+): Promise<T> {
+  let result: T;
+  try {
+    result = await action();
+  } catch (error) {
+    await cleanUp().catch(() => {});
+    throw error;
+  }
+  await cleanUp();
+  return result;
 }

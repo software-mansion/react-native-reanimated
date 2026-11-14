@@ -1,6 +1,6 @@
 # Benchmark app
 
-A React Native app (Android and iOS, New Architecture, Hermes) that runs one benchmark scenario for each launch. A scenario animates without touch input and does not stop. The app does not measure: the tools of the operating system do.
+A React Native app (Android and iOS, New Architecture, Hermes) that runs one benchmark scenario for each launch. A scenario animates without touch input and does not stop. The tools of the operating system measure the frames and the CPU time. On iOS, the app reports its cold start time, its memory footprint and the state of the device, because no host tool gives them.
 
 The app is not a Yarn workspace of the repository. It has its own `yarn.lock`. Its `package.json` does not list `react-native-reanimated` and `react-native-worklets`. Each build adds the two packages to a copy of the app. To build or type check by hand, copy the app to a folder that git ignores (for example `.tmp/`), run `yarn add react-native-reanimated@<version> react-native-worklets@<version>` (or `@file:<tarball>`) in it, then run `yarn type:check` or build it.
 

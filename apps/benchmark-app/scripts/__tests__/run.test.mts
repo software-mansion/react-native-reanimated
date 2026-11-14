@@ -253,6 +253,46 @@ describe('resumeCommand', () => {
     );
   });
 
+  it('resumes a run of result format 2 and checks its APK hash', async () => {
+    const folder = await stoppedRun();
+    const file = path.join(folder, 'result.json');
+    const { platform: _platform, ...current } = readResult(folder);
+    const formatTwo = {
+      ...current,
+      formatVersion: 2,
+      variants: Object.fromEntries(
+        Object.entries(current.variants).map(
+          ([key, { artifact, artifactSha256, ...variant }]) => [
+            key,
+            { ...variant, apk: artifact, apkSha256: artifactSha256 },
+          ]
+        )
+      ),
+    };
+    fs.writeFileSync(file, JSON.stringify(formatTwo));
+
+    const upgraded = readResult(folder);
+    assert.equal(upgraded.platform, 'android');
+    assert.equal(upgraded.variants.a?.artifact, apkOf('a'));
+    assert.equal(upgraded.incompleteScenario?.samples.length, 1);
+
+    fs.writeFileSync(apkOf('b'), 'other apk');
+    await assert.rejects(
+      resume(folder).run,
+      /The build of variant b changed after the run started/
+    );
+    fs.writeFileSync(apkOf('b'), 'apk b');
+    assert.equal(await resume(folder).run, 0);
+    const result = readResult(folder);
+    assert.equal(result.formatVersion, 3);
+    assert.equal(result.status, 'done');
+    assert.ok(!fs.readFileSync(file, 'utf8').includes('apkSha256'));
+    assert.deepEqual(
+      result.scenarios.map((outcome) => outcome.scenario),
+      ['css', 'idle-cost']
+    );
+  });
+
   it('resumes a run of result format 1 with the old metric memoryGrowth', async () => {
     const folder = await stoppedRun({ interruptAtTrace: 10 });
     const file = path.join(folder, 'result.json');

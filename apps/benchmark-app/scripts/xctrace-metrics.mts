@@ -355,7 +355,7 @@ function highestThermalState(
   const fromIntervals = thermal.rows
     .filter((row) => {
       const { start, end } = rowInterval(thermal, row);
-      return start <= window.end && end >= window.start;
+      return start < window.end && end > window.start;
     })
     .map((row) => thermalStateIndex(row['thermal-state']?.text ?? null));
   return Math.max(

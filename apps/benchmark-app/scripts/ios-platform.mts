@@ -49,13 +49,14 @@ export class IosSampling implements Sampling {
     device: IosDevice,
     tracer: IosTracer,
     clock: Clock,
-    reference: SamplingReference
+    reference: SamplingReference,
+    deviceName: string
   ) {
     this.#device = device;
     this.#start = iosState(reference.start);
     this.#context = {
       device,
-      deviceName: this.#start.name,
+      deviceName,
       tracer,
       clock,
       guard: new InAppStateGuard(reference.inAppState),
@@ -116,7 +117,8 @@ async function connect(
         device,
         dependencies.createTracer(processes),
         dependencies.clock,
-        reference
+        reference,
+        startState.name
       ),
   };
 }

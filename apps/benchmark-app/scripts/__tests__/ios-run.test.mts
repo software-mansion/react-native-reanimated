@@ -63,6 +63,7 @@ function createFake(options: FakeOptions = {}) {
   let interrupt: (() => Promise<void>) | null = null;
   const installs: string[] = [];
   const launches: string[] = [];
+  const tracedNames: string[] = [];
   const clock: Clock = {
     now: () => time,
     sleep: async (ms) => {
@@ -105,8 +106,9 @@ function createFake(options: FakeOptions = {}) {
     }),
     createDevice: () => device as unknown as IosDevice,
     createTracer: () => ({
-      record: async (_deviceName, _pid, traceFile) => {
+      record: async (deviceName, _pid, traceFile) => {
         traces++;
+        tracedNames.push(deviceName);
         if (traces === options.interruptAtTrace) {
           await interrupt?.();
           throw new ToolError('the device connection ended');
@@ -143,7 +145,7 @@ function createFake(options: FakeOptions = {}) {
       interrupt = action;
     },
   };
-  return { dependencies, context, installs, launches };
+  return { dependencies, context, installs, launches, tracedNames };
 }
 
 function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
@@ -253,7 +255,9 @@ describe('an iOS run', () => {
       resume(createFake({ batteryLevelAtTrace: () => 90 })),
       /batteryLevel: 100 -> 90/
     );
-    assert.equal(await resume(createFake()), 0);
+    const renamed = createFake({ state: { ...STATE, name: 'New name' } });
+    assert.equal(await resume(renamed), 0);
     assert.equal(readResult(folder).status, 'done');
+    assert.deepEqual([...new Set(renamed.tracedNames)], ['New name']);
   });
 });
