@@ -943,20 +943,25 @@ void ReanimatedModuleProxy::performOperations() {
     applySynchronousUpdates(std::move(synchronousUpdatesBatch));
   }
 
-  if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-    // It may happen that `performOperations` is called on the UI thread
-    // while React Native tries to commit a new tree on the JS thread.
-    // In this case, we should skip the commit here and let React Native do
-    // it. The commit will include the current values from the updates manager
-    // which will be applied in ReanimatedCommitHook.
+  // It may happen that `performOperations` is called on the UI thread
+  // while React Native tries to commit a new tree of a surface on the JS thread.
+  // In this case, we should skip the commit of that surface here and let React
+  // Native do it. The commit will include the current values from the updates
+  // manager which will be applied in ReanimatedCommitHook. Other surfaces are
+  // committed as usual.
+  std::erase_if(propsMapBySurface, [&](const auto &entry) {
+    const SurfaceId surfaceId = entry.first;
+    if (!updatesRegistryManager_->shouldReanimatedSkipCommit(surfaceId)) {
+      return false;
+    }
     if (flushRegistry) {
       shouldFlushRegistry_ = true;
     }
     if (hasCommitUpdates) {
-      updatesRegistryManager_->pleaseCommitAfterPause();
+      updatesRegistryManager_->pleaseCommitAfterPause(surfaceId);
     }
-    return;
-  }
+    return true;
+  });
 
   commitUpdates(propsMapBySurface);
 }
@@ -1218,7 +1223,7 @@ void ReanimatedModuleProxy::commitUpdates(const std::unordered_map<SurfaceId, Pr
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
-            if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+            if (updatesRegistryManager_->shouldReanimatedSkipCommit(surfaceId)) {
               return nullptr;
             }
 
