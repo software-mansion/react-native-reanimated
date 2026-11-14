@@ -142,7 +142,7 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
 jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
     jsi::Runtime &rt,
     const double settledTimestamp,
-    const std::unordered_set<Tag> &registeredViewTags) {
+    const std::function<bool(Tag)> &isViewRegistered) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<jsi::Object> settledUpdates;
@@ -150,13 +150,20 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
+    const bool isSynced = syncedTags_.contains(viewTag);
+    const auto writeHistoryIt = writeHistories_.find(viewTag);
+    const bool hasWriteHistory = writeHistoryIt != writeHistories_.end();
+    const bool isSettled = hasWriteHistory && writeHistoryIt->second.lastWriteTimestamp < settledTimestamp;
+    const auto invalidatedIt = invalidatedTags_.find(viewTag);
+    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
+    const bool hasWork = isSynced || (hasWriteHistory && (isSettled || isInvalidated));
 
-    if (!registeredViewTags.contains(viewTag) || pendingTags.contains(viewTag)) {
+    if (!hasWork || pendingTags.contains(viewTag) || !isViewRegistered(viewTag)) {
       ++it;
       continue;
     }
 
-    if (syncedTags_.contains(viewTag)) {
+    if (isSynced) {
       // React already has the latest value for this tag (synced on a previous
       // call, so the `settledProps` state is committed by now) — the registry
       // entry is redundant. `syncedTags_` is intentionally retained to detect
@@ -166,25 +173,14 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
       continue;
     }
 
-    const auto writeHistoryIt = writeHistories_.find(viewTag);
-    if (writeHistoryIt == writeHistories_.end()) {
-      ++it;
-      continue;
+    settledUpdates.push_back(createSettledUpdate(rt, viewTag, it->second.second, writeHistoryIt->second));
+    if (isSettled) {
+      // Only settled-path tags are tracked as "synced" so that an ongoing
+      // animation doesn't re-trigger an invalidation/sync on every GC tick.
+      syncedTags_.insert(viewTag);
     }
-    const auto &writeHistory = writeHistoryIt->second;
-    const bool isSettled = writeHistory.lastWriteTimestamp < settledTimestamp;
-    const auto invalidatedIt = invalidatedTags_.find(viewTag);
-    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
-    if (isSettled || isInvalidated) {
-      settledUpdates.push_back(createSettledUpdate(rt, viewTag, it->second.second, writeHistory));
-      if (isSettled) {
-        // Only settled-path tags are tracked as "synced" so that an ongoing
-        // animation doesn't re-trigger an invalidation/sync on every GC tick.
-        syncedTags_.insert(viewTag);
-      }
-      if (isInvalidated) {
-        invalidatedTags_.erase(invalidatedIt);
-      }
+    if (isInvalidated) {
+      invalidatedTags_.erase(invalidatedIt);
     }
     ++it;
   }

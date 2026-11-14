@@ -655,9 +655,9 @@ describe('sync of a pending value written by a different origin', () => {
 function getSettledUpdates(tag: number): SettledUpdate[] {
   return (
     global.__reanimatedModuleProxy.getSettledUpdates as (
-      registeredViewTags: number[]
+      isViewRegistered: (viewTag: number) => boolean
     ) => SettledUpdate[]
-  )([tag]);
+  )((viewTag) => viewTag === tag);
 }
 
 function getNativeBoxShadow(progress: number, isAnimatedStyle: boolean) {

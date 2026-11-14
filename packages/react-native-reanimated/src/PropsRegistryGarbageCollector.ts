@@ -44,10 +44,13 @@ export const PropsRegistryGarbageCollector = {
     }
   },
 
+  isViewRegistered: (viewTag: number): boolean =>
+    PropsRegistryGarbageCollector.viewsMap.has(viewTag),
+
   syncPropsBackToReact() {
-    const settledUpdates = ReanimatedModule.getSettledUpdates([
-      ...this.viewsMap.keys(),
-    ]);
+    const settledUpdates = ReanimatedModule.getSettledUpdates(
+      this.isViewRegistered
+    );
     for (const settledUpdate of settledUpdates) {
       const { viewTag, props, style } = settledUpdate;
       const component = this.viewsMap.get(viewTag);
