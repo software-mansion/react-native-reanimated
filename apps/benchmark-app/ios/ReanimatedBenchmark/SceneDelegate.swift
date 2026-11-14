@@ -17,6 +17,7 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
       return
     }
 
+    BenchmarkSampler.shared.prepare(for: windowScene, arguments: UserDefaults.standard)
     processReporter = ProcessReporter(screen: windowScene.screen)
     processReporter?.start()
     dependencyProvider = RCTAppDependencyProvider()

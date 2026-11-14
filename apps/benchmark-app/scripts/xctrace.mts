@@ -1,25 +1,30 @@
 import fs from 'node:fs';
 
-import { RECORDING_SECONDS } from './measurement-rules.mts';
+import { ToolError } from './errors.mts';
 import type { Processes } from './processes.mts';
-import { computeIosTraceMetrics } from './xctrace-metrics.mts';
-import type {
-  IosTraceReading,
-  TraceExports,
-  TracedIosApp,
-} from './xctrace-metrics.mts';
+import type { TraceExports } from './xctrace-metrics.mts';
 
-export interface IosTracer {
-  record: (deviceName: string, pid: number, traceFile: string) => Promise<void>;
-  collect: (traceFile: string, app: TracedIosApp) => Promise<IosTraceReading>;
+export interface TraceRecording {
+  udid: string;
+  pid: number;
+  traceFile: string;
+  seconds: number;
+  onRecording: () => Promise<void>;
 }
 
-const TRACE_TEMPLATE = 'Animation Hitches';
+export interface IosTracer {
+  record: (recording: TraceRecording) => Promise<void>;
+  collect: (traceFile: string) => Promise<TraceExports>;
+}
+
+const INSTRUMENTS = ['Thread Activity', 'Hitches', 'os_signpost'];
 
 const TRACED_SUBSYSTEMS = [
   'dev.reactnative.instruments',
   'com.reanimatedbenchmark',
 ];
+
+const RECORDING_LINE = 'Ctrl-C to stop the recording';
 
 const RECORD_TIMEOUT_MS = 5 * 60_000;
 
@@ -28,8 +33,6 @@ const EXPORT_TIMEOUT_MS = 5 * 60_000;
 const TABLE_SELECTORS: Record<keyof TraceExports, string> = {
   threadState: '@schema="thread-state"',
   frames: '@schema="hitches-updates"',
-  hitches: '@schema="hitches"',
-  thermal: '@schema="device-thermal-state-intervals"',
   signposts: '@schema="os-signpost" and @dynamic-tracing-enabled-subsystems',
 };
 
@@ -40,33 +43,49 @@ export class Xctrace implements IosTracer {
     this.#processes = processes;
   }
 
-  async record(deviceName: string, pid: number, traceFile: string) {
+  async record({ udid, pid, traceFile, seconds, onRecording }: TraceRecording) {
     const optionsFile = `${traceFile}.options.json`;
     fs.rmSync(traceFile, { recursive: true, force: true });
     fs.writeFileSync(optionsFile, recordingOptions());
+    const recording: { started: Promise<Error | null> | null } = {
+      started: null,
+    };
     try {
       await this.#processes.run(
         'xcrun',
-        recordArguments(deviceName, pid, traceFile, optionsFile),
-        { timeoutMs: RECORD_TIMEOUT_MS }
+        recordArguments(udid, pid, traceFile, optionsFile, seconds),
+        {
+          timeoutMs: RECORD_TIMEOUT_MS,
+          onLine: (line) => {
+            if (line.includes(RECORDING_LINE)) {
+              recording.started ??= onRecording().then(
+                () => null,
+                (error: Error) => error
+              );
+            }
+          },
+        }
       );
     } finally {
       fs.rmSync(optionsFile, { force: true });
     }
+    if (recording.started === null) {
+      throw new ToolError(
+        `xctrace ended without the line "${RECORDING_LINE}" that marks the start of the recording`
+      );
+    }
+    const failure = await recording.started;
+    if (failure !== null) {
+      throw failure;
+    }
   }
 
-  async collect(
-    traceFile: string,
-    app: TracedIosApp
-  ): Promise<IosTraceReading> {
-    const exports: TraceExports = {
+  async collect(traceFile: string): Promise<TraceExports> {
+    return {
       threadState: await this.#export(traceFile, 'threadState'),
       frames: await this.#export(traceFile, 'frames'),
-      hitches: await this.#export(traceFile, 'hitches'),
-      thermal: await this.#export(traceFile, 'thermal'),
       signposts: await this.#export(traceFile, 'signposts'),
     };
-    return computeIosTraceMetrics(exports, app);
   }
 
   async #export(traceFile: string, table: keyof TraceExports): Promise<string> {
@@ -97,26 +116,24 @@ function recordingOptions(): string {
 }
 
 function recordArguments(
-  deviceName: string,
+  udid: string,
   pid: number,
   traceFile: string,
-  optionsFile: string
+  optionsFile: string,
+  seconds: number
 ): string[] {
   return [
     'xctrace',
     'record',
     '--device',
-    deviceName,
-    '--template',
-    TRACE_TEMPLATE,
-    '--instrument',
-    'os_signpost',
+    udid,
+    ...INSTRUMENTS.flatMap((instrument) => ['--instrument', instrument]),
     '--recording-options',
     optionsFile,
     '--attach',
     String(pid),
     '--time-limit',
-    `${RECORDING_SECONDS}s`,
+    `${seconds}s`,
     '--output',
     traceFile,
     '--no-prompt',

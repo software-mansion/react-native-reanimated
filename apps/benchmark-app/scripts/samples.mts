@@ -69,6 +69,7 @@ export const SAMPLE_STEPS = [
   'wait',
   'start',
   'ready',
+  'measure',
   'trace',
   'pull',
   'parse',

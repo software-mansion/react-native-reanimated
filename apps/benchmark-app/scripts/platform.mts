@@ -36,9 +36,18 @@ export interface MetricDefinition {
   limits: string;
 }
 
-export type PlatformCommand = 'run' | 'memory' | 'sample';
+export type PlatformCommand =
+  | 'run'
+  | 'memory'
+  | 'sample'
+  | 'crosscheck'
+  | 'observer-cost';
 
-export type PlatformOption = 'trace-processor' | 'sign-command';
+export type PlatformOption =
+  | 'trace-processor'
+  | 'sign-command'
+  | 'keep-traces'
+  | 'keep-trace';
 
 export interface SegmentColumn {
   key: string;

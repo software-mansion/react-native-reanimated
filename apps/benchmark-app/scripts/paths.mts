@@ -12,6 +12,8 @@ export const BUILDS_DIR = path.join(BENCHMARKS_DIR, 'builds');
 
 export const SAMPLES_DIR = path.join(BENCHMARKS_DIR, 'samples');
 
+export const VALIDATION_DIR = path.join(BENCHMARKS_DIR, 'validation');
+
 export const RESULT_FILE = 'result.json';
 
 export const REPORT_FILE = 'report.md';

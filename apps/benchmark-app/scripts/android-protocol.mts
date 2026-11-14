@@ -22,7 +22,7 @@ import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
 import { expectedFrameShare } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
-import { judgeWork } from './judge.mts';
+import { judgeWork, withTrace } from './judge.mts';
 import { traceConfig } from './perfetto.mts';
 import type { TracedApp, TraceReading } from './perfetto.mts';
 import type { LineStream } from './processes.mts';
@@ -418,5 +418,5 @@ function judge(measured: MeasuredSample, request: SampleRequest): SampleResult {
       ...measured,
     };
   }
-  return judgeWork(measured, request);
+  return withTrace(judgeWork(measured, request.scenario), request);
 }

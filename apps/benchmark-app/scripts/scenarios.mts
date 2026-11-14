@@ -38,6 +38,15 @@ export const SCENARIO_REQUIREMENTS: Record<Scenario, ScenarioRequirements> = {
   'idle-cost': { ...FULL_WORK, updateShare: 0.5 },
 };
 
+export const VALIDATION_SCENARIOS = ['crosscheck-load'] as const;
+
 export function isScenario(name: unknown): name is Scenario {
   return SCENARIOS.includes(name as Scenario);
+}
+
+export function isAppScenario(name: unknown): name is string {
+  return (
+    isScenario(name) ||
+    VALIDATION_SCENARIOS.includes(name as (typeof VALIDATION_SCENARIOS)[number])
+  );
 }

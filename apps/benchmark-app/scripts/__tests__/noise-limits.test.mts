@@ -101,6 +101,9 @@ function outcome(
             coldStart: 300,
             frameCyclesMedian: null,
             frameCyclesP95: null,
+            uiUpdateDurationMedian: 5,
+            uiUpdateDurationP95: 7,
+            missedDisplayLinkCallbacks: 0,
             ...metricsOf(variant, i),
           },
         }) as Recorded

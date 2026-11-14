@@ -4,8 +4,7 @@ import type { MeasuredSample, SampleResult } from './samples.mts';
 import { SCENARIO_REQUIREMENTS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 
-export interface JudgedTrace {
-  scenario: Scenario;
+export interface KeptTrace {
   traceFile: string;
   keepTrace: boolean;
 }
@@ -14,39 +13,37 @@ const MINIMUM_FRAME_SHARE = 0.9;
 
 export function judgeWork(
   measured: MeasuredSample,
-  trace: JudgedTrace
+  scenario: Scenario
 ): SampleResult {
   const { metrics } = measured;
   const minimumFrames = MINIMUM_FRAME_SHARE * metrics.expectedFrameCount;
   if (metrics.frameCount < minimumFrames) {
-    return invalid(
-      measured,
-      trace,
-      'frames',
-      `${metrics.frameCount} frames, expected at least ${Math.ceil(minimumFrames)}`
-    );
+    return {
+      valid: false,
+      cause: 'frames',
+      detail: `${metrics.frameCount} frames, expected at least ${Math.ceil(minimumFrames)}`,
+      ...measured,
+    };
   }
-  const { minimumMountBatches } = SCENARIO_REQUIREMENTS[trace.scenario];
+  const { minimumMountBatches } = SCENARIO_REQUIREMENTS[scenario];
   if (metrics.mountBatchCount < minimumMountBatches) {
-    return invalid(
-      measured,
-      trace,
-      'work',
-      `${metrics.mountBatchCount} mount batches, expected at least ${minimumMountBatches}`
-    );
+    return {
+      valid: false,
+      cause: 'work',
+      detail: `${metrics.mountBatchCount} mount batches, expected at least ${minimumMountBatches}`,
+      ...measured,
+    };
   }
-  if (!trace.keepTrace) {
-    fs.rmSync(trace.traceFile, { recursive: true, force: true });
-    return { valid: true, ...measured };
-  }
-  return { valid: true, trace: trace.traceFile, ...measured };
+  return { valid: true, ...measured };
 }
 
-function invalid(
-  measured: MeasuredSample,
-  trace: JudgedTrace,
-  cause: 'frames' | 'work',
-  detail: string
+export function withTrace(
+  result: SampleResult,
+  trace: KeptTrace
 ): SampleResult {
-  return { valid: false, cause, detail, trace: trace.traceFile, ...measured };
+  if (result.valid && !trace.keepTrace) {
+    fs.rmSync(trace.traceFile, { recursive: true, force: true });
+    return result;
+  }
+  return { ...result, trace: trace.traceFile };
 }

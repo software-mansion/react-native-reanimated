@@ -11,9 +11,12 @@ class BenchmarkReporterModule(reactContext: ReactApplicationContext) :
     Log.i(LOG_TAG, line)
   }
 
-  override fun currentThreadId(): Double = Process.myTid().toDouble()
+  override fun markReady(): Double = Process.myTid().toDouble()
+
+  override fun currentEpochLoad(): String = NO_EPOCH_LOAD
 
   private companion object {
     const val LOG_TAG = "ReanimatedBenchmark"
+    const val NO_EPOCH_LOAD = "none"
   }
 }

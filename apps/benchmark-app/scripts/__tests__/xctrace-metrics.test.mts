@@ -3,72 +3,45 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { computeIosTraceMetrics } from '../xctrace-metrics.mts';
+import { readBoundarySignposts, readTraceEpochs } from '../xctrace-metrics.mts';
 import type {
-  IosTraceReading,
   TraceExports,
+  TraceSpan,
   TracedIosApp,
 } from '../xctrace-metrics.mts';
 
 // Cuts of the exports of xctrace 27.2 (27B52) of an iPhone 13 mini with iOS
-// 27.0.1. The rows overlap 1855 ms to 1908 ms, and the cells that the metrics do
-// not read are sentinels. The second State signpost is not real: the test adds
-// it 50 ms after the first.
+// 27.0.1. The rows overlap 1855 ms to 1908 ms, and the cells that the reader
+// does not read are sentinels. The Boundary signposts are not real: the tests
+// add them in the format of the real State signposts of the same export.
 const FIXTURES = path.join(import.meta.dirname, 'fixtures', 'xctrace');
-const WINDOW_START = 1_856_890_916;
-const WINDOW_END = 1_906_890_916;
+const SPAN: TraceSpan = { startNs: 1_856_890_916, endNs: 1_906_890_916 };
 const SECONDS = 0.05;
-const MEASURED_SPAN = '1854880416 ns to 1916944458 ns';
+const MAIN_RUNNING_MS = 19.773169;
+const JS_RUNNING_MS = 0.113417;
 const OTHER_PID = 9999;
-const NOMINAL_STATE = {
-  footprint: 40993,
-  thermal: 0,
-  batteryLevel: 100,
-  batteryState: 3,
-  lowPower: 0,
-  brightness: 0,
-};
 const APP: TracedIosApp = {
   pid: 8865,
   mainThread: 3840236,
   jsThread: 3840263,
-  frames: { refreshRate: 60, share: 1 },
-  recordingSeconds: SECONDS,
 };
 const EXPORTS: TraceExports = {
   threadState: fixture('thread-state-window.xml'),
   frames: fixture('hitches-updates.xml'),
-  hitches: fixture('hitches.xml'),
-  thermal: fixture('device-thermal-state-intervals.xml'),
-  signposts: withRows(fixture('os-signpost-window.xml'), [
-    stateRow(WINDOW_END, { ...NOMINAL_STATE, footprint: 41393 }),
-  ]),
+  signposts: fixture('os-signpost-window.xml'),
 };
 const SCHEMAS: Record<keyof TraceExports, string> = {
   threadState: 'thread-state',
   frames: 'hitches-updates',
-  hitches: 'hitches',
-  thermal: 'device-thermal-state-intervals',
   signposts: 'os-signpost',
-};
-const FULL_BATTERY = {
-  batteryLevel: 100,
-  batteryState: 'full',
-  lowPowerMode: false,
-  brightness: 0,
 };
 
 function fixture(file: string): string {
   return fs.readFileSync(path.join(FIXTURES, file), 'utf8');
 }
 
-function livedReading(reading: IosTraceReading) {
-  assert.equal(reading.processLived, true);
-  return reading.processLived ? reading : assert.fail();
-}
-
-function metricsOf(exports: TraceExports, app = APP) {
-  return livedReading(computeIosTraceMetrics(exports, app)).metrics;
+function onlyEpoch(exports: TraceExports = EXPORTS, app = APP) {
+  return readTraceEpochs(exports, app, [SPAN])[0];
 }
 
 function assertClose(actual: number | null, expected: number) {
@@ -100,19 +73,13 @@ function threadRow(row: {
   state: string;
   duration?: number;
   pid?: number;
-  core?: string;
 }): string {
   const pid = row.pid ?? APP.pid;
-  const core = row.core ? `<core fmt="${row.core}">0</core>` : sentinels(1);
-  return `<row><start-time>${row.start}</start-time><thread><tid>${row.thread}</tid>${processCell(pid)}</thread><thread-state>${row.state}</thread-state><duration>${row.duration ?? 1}</duration>${processCell(pid)}${core}${sentinels(10)}</row>`;
+  return `<row><start-time>${row.start}</start-time><thread><tid>${row.thread}</tid>${processCell(pid)}</thread><thread-state>${row.state}</thread-state><duration>${row.duration ?? 1}</duration>${processCell(pid)}${sentinels(11)}</row>`;
 }
 
 function intervalRow(start: number, duration: number, pid = APP.pid): string {
   return `<row><start-time>${start}</start-time><duration>${duration}</duration>${processCell(pid)}${sentinels(6)}</row>`;
-}
-
-function hitchRow(start: number, duration: number, pid = APP.pid): string {
-  return `<row><start-time>${start}</start-time><duration>${duration}</duration>${processCell(pid)}${sentinels(5)}</row>`;
 }
 
 function signpostRow(row: {
@@ -126,27 +93,17 @@ function signpostRow(row: {
   return `<row><event-time>${row.time}</event-time>${sentinels(1)}${processCell(row.pid ?? APP.pid)}<event-type>${row.eventType ?? 'Event'}</event-type>${sentinels(2)}<signpost-name>${row.name}</signpost-name>${sentinels(2)}<subsystem>${row.subsystem}</subsystem>${sentinels(1)}<os-log-metadata>${row.message}</os-log-metadata>${sentinels(1)}</row>`;
 }
 
-function stateRow(
-  time: number,
-  values: Record<string, number | string>,
-  pid = APP.pid
-): string {
-  const message = Object.entries(values)
-    .map(
-      ([key, value], i) =>
-        `<narrative-text>${i > 0 ? ' ' : ''}${key}=</narrative-text><uint64>${value}</uint64>`
-    )
-    .join('');
+function boundaryRow(time: number, index: number, pid = APP.pid): string {
   return signpostRow({
     time,
-    name: 'State',
+    name: 'Boundary',
     subsystem: 'com.reanimatedbenchmark',
-    message,
+    message: `<narrative-text>index=</narrative-text><uint64>${index}</uint64>`,
     pid,
   });
 }
 
-function mountRow(time: number, pid: number): string {
+function mountRow(time: number, pid = APP.pid): string {
   return signpostRow({
     time,
     name: 'Systrace',
@@ -158,241 +115,124 @@ function mountRow(time: number, pid: number): string {
   });
 }
 
-function thermalRow(start: number, duration: number, state: string): string {
-  return `<row><start-time>${start}</start-time><duration>${duration}</duration><start-time>${start + duration}</start-time><thermal-state>${state}</thermal-state>${sentinels(3)}</row>`;
-}
-
 function syntheticThreadState(rows: string[]): string {
   return withRows(withoutRows(EXPORTS.threadState), rows);
 }
 
-function coveringRows(): string[] {
-  return [APP.mainThread, APP.jsThread].map((thread) =>
-    threadRow({
-      start: 1_800_000_000,
-      thread,
-      state: 'Blocked',
-      duration: 1_100_000_000,
-    })
-  );
-}
+describe('readTraceEpochs', () => {
+  it('gives the CPU time for each second, the frames and the mount batches of a span of a real export', () => {
+    const epoch = onlyEpoch();
+    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
+    assertClose(epoch.jsThreadCpu, JS_RUNNING_MS / SECONDS);
+    assertClose(epoch.processCpu, (MAIN_RUNNING_MS + JS_RUNNING_MS) / SECONDS);
+    assert.equal(epoch.frameDurationsMs.length, 3);
+    assertClose(
+      [...epoch.frameDurationsMs].sort((left, right) => left - right)[1],
+      6.464291
+    );
+    assert.equal(epoch.mountBatchCount, 3);
+  });
 
-describe('computeIosTraceMetrics', () => {
-  it('computes all metrics from a cut of a real export', () => {
-    const reading = livedReading(computeIosTraceMetrics(EXPORTS, APP));
-    const { metrics } = reading;
-    const mainRunningMs = 19.773169;
-    const mainEfficiencyCoreMs = 19.607086;
-    const jsRunningMs = 0.113417;
-    assertClose(metrics.expectedFrameCount, 60 * SECONDS);
-    assert.equal(metrics.frameCount, 3);
-    assert.equal(metrics.jankyFrames, 0);
-    assertClose(metrics.frameDurationMedian, 6.464291);
+  it('splits the data at the boundaries of the epochs', () => {
+    const middle = (SPAN.startNs + SPAN.endNs) / 2;
+    const [first, second] = readTraceEpochs(EXPORTS, APP, [
+      { startNs: SPAN.startNs, endNs: middle },
+      { startNs: middle, endNs: SPAN.endNs },
+    ]);
+    const whole = onlyEpoch();
     assertClose(
-      metrics.frameDurationP95,
-      6.464291 + 0.9 * (6.764875 - 6.464291)
+      (first.uiThreadCpu + second.uiThreadCpu) / 2,
+      whole.uiThreadCpu
     );
-    assertClose(metrics.uiThreadCpu, mainRunningMs / SECONDS);
-    assertClose(metrics.jsThreadCpu, jsRunningMs / SECONDS);
-    assert.equal(metrics.otherThreadsCpu, 0);
-    assertClose(metrics.processCpu, (mainRunningMs + jsRunningMs) / SECONDS);
-    assertClose(
-      metrics.uiThreadEfficiencyCoreShare,
-      mainEfficiencyCoreMs / mainRunningMs
+    assert.equal(
+      first.frameDurationsMs.length + second.frameDurationsMs.length,
+      3
     );
-    assert.equal(metrics.hitchCount, 0);
-    assert.equal(metrics.hitchTime, 0);
-    assert.equal(metrics.mountBatchCount, 3);
-    assert.equal(metrics.memory, 41393);
-    assert.equal(metrics.windowMemoryDelta, 400);
-    assert.equal(reading.thermalState, 0);
-    assert.deepEqual(reading.appStates, [FULL_BATTERY, FULL_BATTERY]);
+    assert.equal(first.mountBatchCount + second.mountBatchCount, 3);
   });
 
   it('ignores the rows of another process in each table', () => {
-    const reading = computeIosTraceMetrics(
-      {
-        threadState: withRows(EXPORTS.threadState, [
-          threadRow({
-            start: 100,
-            thread: 5,
-            state: 'Running',
-            duration: 5e9,
-            pid: OTHER_PID,
-          }),
-          threadRow({
-            start: 9e9,
-            thread: 5,
-            state: 'Blocked',
-            pid: OTHER_PID,
-          }),
-          threadRow({
-            start: 2e9,
-            thread: APP.mainThread,
-            state: 'Terminated',
-            pid: OTHER_PID,
-          }),
-        ]),
-        frames: withRows(EXPORTS.frames, [intervalRow(2e9, 50e6, OTHER_PID)]),
-        hitches: withRows(EXPORTS.hitches, [hitchRow(2e9, 50e6, OTHER_PID)]),
-        thermal: EXPORTS.thermal,
-        signposts: withRows(EXPORTS.signposts, [
-          stateRow(
-            2e9,
-            { ...NOMINAL_STATE, footprint: 99999, thermal: 3 },
-            OTHER_PID
-          ),
-          stateRow(5e9, NOMINAL_STATE, OTHER_PID),
-          mountRow(2e9, OTHER_PID),
-        ]),
-      },
-      APP
-    );
-    assert.deepEqual(reading, computeIosTraceMetrics(EXPORTS, APP));
+    const epoch = onlyEpoch({
+      threadState: withRows(EXPORTS.threadState, [
+        threadRow({
+          start: 100,
+          thread: 5,
+          state: 'Running',
+          duration: 5e9,
+          pid: OTHER_PID,
+        }),
+      ]),
+      frames: withRows(EXPORTS.frames, [
+        intervalRow(SPAN.startNs, 5e6, OTHER_PID),
+      ]),
+      signposts: withRows(EXPORTS.signposts, [
+        mountRow(SPAN.startNs, OTHER_PID),
+      ]),
+    });
+    assert.deepEqual(epoch, onlyEpoch());
   });
 
-  it('cuts the Running time to the window', () => {
-    const metrics = metricsOf({
+  it('cuts the Running time to the span', () => {
+    const epoch = onlyEpoch({
       ...EXPORTS,
       threadState: withRows(EXPORTS.threadState, [
         threadRow({
-          start: WINDOW_START - 10_000_000,
+          start: SPAN.startNs - 10_000_000,
           thread: 77,
           state: 'Running',
           duration: 20_000_000,
         }),
         threadRow({
-          start: WINDOW_START + 10_000_000,
-          thread: 77,
-          state: 'Blocked',
-          duration: 35_000_000,
-        }),
-        threadRow({
-          start: WINDOW_END - 5_000_000,
+          start: SPAN.endNs - 5_000_000,
           thread: 77,
           state: 'Running',
           duration: 25_000_000,
         }),
         threadRow({
-          start: WINDOW_END,
+          start: SPAN.endNs,
           thread: 77,
           state: 'Running',
           duration: 1_000_000,
         }),
       ]),
     });
-    assertClose(metrics.expectedFrameCount, 60 * SECONDS);
-    assertClose(metrics.otherThreadsCpu, 15 / SECONDS);
-    assertClose(metrics.processCpu, (19.773169 + 0.113417 + 15) / SECONDS);
-    assertClose(metrics.uiThreadCpu, 19.773169 / SECONDS);
+    assertClose(
+      epoch.processCpu,
+      (MAIN_RUNNING_MS + JS_RUNNING_MS + 15) / SECONDS
+    );
+    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
   });
 
-  it('gives the share of the main thread Running time on efficiency cores', () => {
-    const metrics = metricsOf({
+  it('counts the frames that are fully in the span and the mount batches from its start to before its end', () => {
+    const epoch = onlyEpoch({
       ...EXPORTS,
-      threadState: syntheticThreadState([
-        ...coveringRows(),
-        threadRow({
-          start: WINDOW_START + 1_000_000,
-          thread: APP.mainThread,
-          state: 'Running',
-          duration: 3e6,
-          core: 'CPU 0 (E Core)',
-        }),
-        threadRow({
-          start: WINDOW_START + 10_000_000,
-          thread: APP.mainThread,
-          state: 'Running',
-          duration: 1e6,
-          core: 'CPU 4 (S Core)',
-        }),
-        threadRow({
-          start: WINDOW_START + 20_000_000,
-          thread: APP.mainThread,
-          state: 'Interrupted',
-          duration: 9e6,
-          core: 'CPU 0 (E Core)',
-        }),
+      frames: withRows(EXPORTS.frames, [
+        intervalRow(SPAN.startNs - 5_000_000, 10_000_000),
+        intervalRow(SPAN.startNs, 3_000_000),
+        intervalRow(SPAN.endNs - 6_000_000, 6_000_000),
+        intervalRow(SPAN.endNs - 6_000_000, 10_000_000),
+      ]),
+      signposts: withRows(EXPORTS.signposts, [
+        mountRow(SPAN.startNs - 1),
+        mountRow(SPAN.startNs),
+        mountRow(SPAN.endNs - 1),
+        mountRow(SPAN.endNs),
       ]),
     });
-    assertClose(metrics.uiThreadCpu, 4 / SECONDS);
-    assert.equal(metrics.jsThreadCpu, 0);
-    assert.equal(metrics.otherThreadsCpu, 0);
-    assertClose(metrics.uiThreadEfficiencyCoreShare, 0.75);
+    assert.equal(epoch.frameDurationsMs.length, 5);
+    assert.equal(epoch.mountBatchCount, 5);
   });
 
-  it('gives a null efficiency core share when the main thread does not run in the window', () => {
-    const metrics = metricsOf({
-      ...EXPORTS,
-      threadState: syntheticThreadState([
-        ...coveringRows(),
-        threadRow({
-          start: 2_850_000_000,
-          thread: APP.jsThread,
-          state: 'Running',
-          duration: 1e9,
-        }),
-      ]),
-    });
-    assert.equal(metrics.uiThreadCpu, 0);
-    assert.equal(metrics.uiThreadEfficiencyCoreShare, null);
-  });
-
-  it('gives a null efficiency core share when a Running interval of the main thread has no known core type', () => {
-    for (const core of [undefined, 'CPU 9 (X Core)']) {
-      const metrics = metricsOf({
-        ...EXPORTS,
-        threadState: syntheticThreadState([
-          ...coveringRows(),
-          threadRow({
-            start: WINDOW_START + 1_000_000,
-            thread: APP.mainThread,
-            state: 'Running',
-            duration: 3e6,
-            core: 'CPU 0 (E Core)',
-          }),
-          threadRow({
-            start: WINDOW_START + 10_000_000,
-            thread: APP.mainThread,
-            state: 'Running',
-            duration: 1e6,
-            core,
-          }),
-        ]),
-      });
-      assertClose(metrics.uiThreadCpu, 4 / SECONDS);
-      assert.equal(metrics.uiThreadEfficiencyCoreShare, null, core);
-    }
-  });
-
-  it('gives the trace window of the reading', () => {
-    const reading = livedReading(computeIosTraceMetrics(EXPORTS, APP));
-    assert.deepEqual(reading.window, {
-      startNs: WINDOW_START,
-      endNs: WINDOW_END,
-      seconds: SECONDS,
-    });
-  });
-
-  it('stops when the trace window is shorter than 80% of the recording', () => {
-    assert.throws(
-      () => computeIosTraceMetrics(EXPORTS, { ...APP, recordingSeconds: 10 }),
-      {
-        message: `The trace window of process 8865 is ${SECONDS} s long (${WINDOW_START} ns to ${WINDOW_END} ns, in the scheduler data of the measured threads from ${MEASURED_SPAN}). It must be at least 80% of the recording of 10 s.`,
-      }
-    );
-    assert.doesNotThrow(() =>
-      computeIosTraceMetrics(EXPORTS, {
-        ...APP,
-        recordingSeconds: SECONDS / 0.8,
-      })
-    );
-  });
-
-  it('stops when a gap in the scheduler data of a measured thread makes the window short', () => {
+  it('stops when the scheduler data of the main thread or the JS thread does not cover a span', () => {
     for (const thread of [APP.mainThread, APP.jsThread]) {
+      const other = thread === APP.mainThread ? APP.jsThread : APP.mainThread;
       const threadState = syntheticThreadState([
-        ...coveringRows().filter((row) => !row.includes(`<tid>${thread}<`)),
+        threadRow({
+          start: 1_800_000_000,
+          thread: other,
+          state: 'Blocked',
+          duration: 1_100_000_000,
+        }),
         threadRow({
           start: 1_800_000_000,
           thread,
@@ -412,43 +252,41 @@ describe('computeIosTraceMetrics', () => {
           duration: 1_010_000_000,
         }),
       ]);
-      assert.throws(
-        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
-        {
-          message:
-            'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1890000000 ns to 2900000000 ns). The trace window needs 2.',
-        }
-      );
+      assert.throws(() => onlyEpoch({ ...EXPORTS, threadState }), {
+        message: `The scheduler data does not cover epoch 0 (1856890916 ns to 1906890916 ns) for both the main thread ${APP.mainThread} and the JS thread ${APP.jsThread}`,
+      });
     }
   });
 
-  it('keeps the window inside the longest time without a gap', () => {
+  it('does not use a row that starts at the trace start as scheduler data', () => {
     const threadState = syntheticThreadState([
-      coveringRows()[1],
+      threadRow({
+        start: 0,
+        thread: APP.mainThread,
+        state: 'Blocked',
+        duration: 3e9,
+      }),
       threadRow({
         start: 1_800_000_000,
-        thread: APP.mainThread,
+        thread: APP.jsThread,
         state: 'Blocked',
-        duration: 40_000_000,
-      }),
-      threadRow({
-        start: 1_850_000_000,
-        thread: APP.mainThread,
-        state: 'Blocked',
-        duration: 1_050_000_000,
+        duration: 1e9,
       }),
     ]);
-    const reading = livedReading(
-      computeIosTraceMetrics({ ...EXPORTS, threadState }, APP)
-    );
-    assert.equal(reading.window.startNs, WINDOW_START);
     assert.throws(
-      () =>
-        computeIosTraceMetrics(
-          { ...EXPORTS, threadState },
-          { ...APP, recordingSeconds: 2 }
-        ),
-      /is 0\.05 s long \(1856890916 ns to 1906890916 ns, in the scheduler data of the measured threads from 1850000000 ns to 2900000000 ns\)\. It must be at least 80% of the recording of 2 s\./
+      () => onlyEpoch({ ...EXPORTS, threadState }),
+      /The scheduler data does not cover epoch 0/
+    );
+  });
+
+  it('stops when the main thread or the JS thread has no row', () => {
+    assert.throws(
+      () => onlyEpoch(EXPORTS, { ...APP, mainThread: 42 }),
+      /The trace has no row of the main thread 42 of process 8865/
+    );
+    assert.throws(
+      () => onlyEpoch(EXPORTS, { ...APP, jsThread: 43 }),
+      /The trace has no row of the JS thread 43 of process 8865/
     );
   });
 
@@ -477,307 +315,14 @@ describe('computeIosTraceMetrics', () => {
       ],
       [
         EXPORTS.threadState.replace(
-          '<mnemonic>core</mnemonic>',
-          '<mnemonic>cpu</mnemonic>'
+          '<mnemonic>process</mnemonic>',
+          '<mnemonic>owner</mnemonic>'
         ),
-        /The table thread-state has no column core$/,
+        /The table thread-state has no column process$/,
       ],
     ] as const) {
-      assert.throws(
-        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
-        problem
-      );
+      assert.throws(() => onlyEpoch({ ...EXPORTS, threadState }), problem);
     }
-  });
-
-  it('counts only the frames that are fully in the window', () => {
-    const metrics = metricsOf({
-      ...EXPORTS,
-      frames: withRows(EXPORTS.frames, [
-        intervalRow(WINDOW_START - 5_000_000, 10_000_000),
-        intervalRow(WINDOW_START, 3_000_000),
-        intervalRow(WINDOW_END - 6_000_000, 6_000_000),
-        intervalRow(WINDOW_END - 6_000_000, 10_000_000),
-      ]),
-    });
-    assert.equal(metrics.frameCount, 5);
-  });
-
-  it('gives 0 frames and null frame durations when the app has no frame in the window', () => {
-    const metrics = metricsOf({
-      ...EXPORTS,
-      frames: withRows(withoutRows(EXPORTS.frames), [intervalRow(1e9, 5e6)]),
-    });
-    assert.equal(metrics.frameCount, 0);
-    assert.equal(metrics.jankyFrames, 1);
-    assert.equal(metrics.frameDurationMedian, null);
-    assert.equal(metrics.frameDurationP90, null);
-    assert.equal(metrics.frameDurationP95, null);
-    assert.equal(metrics.frameDurationP99, null);
-  });
-
-  it('expects updates only on the share of the refreshes that the scenario declares', () => {
-    const metrics = metricsOf(EXPORTS, {
-      ...APP,
-      frames: { refreshRate: 60, share: 0.5 },
-    });
-    assertClose(metrics.expectedFrameCount, 30 * SECONDS);
-    assert.equal(metrics.frameCount, 3);
-    assert.equal(metrics.jankyFrames, 0);
-  });
-
-  it('gives 0 janky frames when the app draws more frames than the refresh rate gives', () => {
-    const metrics = metricsOf(EXPORTS, {
-      ...APP,
-      frames: { refreshRate: 30, share: 1 },
-    });
-    assertClose(metrics.expectedFrameCount, 30 * SECONDS);
-    assert.equal(metrics.jankyFrames, 0);
-  });
-
-  it('counts the hitches that overlap the window with their time in the window', () => {
-    const metrics = metricsOf({
-      ...EXPORTS,
-      hitches: withRows(EXPORTS.hitches, [
-        hitchRow(WINDOW_START - 10_000_000, 20_000_000),
-        hitchRow(WINDOW_END - 10_000_000, 20_000_000),
-        hitchRow(WINDOW_START - 20_000_000, 20_000_000),
-        hitchRow(WINDOW_END, 5_000_000),
-      ]),
-    });
-    assert.equal(metrics.hitchCount, 2);
-    assertClose(metrics.hitchTime, 20 / SECONDS);
-  });
-
-  it('counts the mount batches from the window start to before the window end', () => {
-    const metrics = metricsOf({
-      ...EXPORTS,
-      signposts: withRows(EXPORTS.signposts, [
-        mountRow(WINDOW_START - 1, APP.pid),
-        mountRow(WINDOW_START, APP.pid),
-        mountRow(WINDOW_END - 1, APP.pid),
-        mountRow(WINDOW_END, APP.pid),
-      ]),
-    });
-    assert.equal(metrics.mountBatchCount, 5);
-  });
-
-  it('takes the window and the memory from the first and the last State event and an app state from each State event', () => {
-    const reading = livedReading(
-      computeIosTraceMetrics(
-        {
-          ...EXPORTS,
-          signposts: withRows(EXPORTS.signposts, [
-            stateRow(WINDOW_END + 5_000_000, {
-              ...NOMINAL_STATE,
-              footprint: 42000,
-            }),
-            stateRow(WINDOW_START + 20_000_000, {
-              ...NOMINAL_STATE,
-              footprint: 41000,
-              batteryState: 2,
-            }),
-            stateRow(WINDOW_START - 1_000_000, {
-              footprint: 40000,
-              thermal: 0,
-              batteryLevel: 99,
-              batteryState: 1,
-              lowPower: 1,
-              brightness: 50,
-            }),
-          ]),
-        },
-        APP
-      )
-    );
-    assertClose(reading.metrics.expectedFrameCount, 60 * 0.056);
-    assert.equal(reading.metrics.memory, 42000);
-    assert.equal(reading.metrics.windowMemoryDelta, 2000);
-    assert.deepEqual(reading.appStates, [
-      {
-        batteryLevel: 99,
-        batteryState: 'unplugged',
-        lowPowerMode: true,
-        brightness: 50,
-      },
-      FULL_BATTERY,
-      { ...FULL_BATTERY, batteryState: 'charging' },
-      FULL_BATTERY,
-      FULL_BATTERY,
-    ]);
-  });
-
-  it('gives the highest thermal state of the intervals that overlap the window', () => {
-    const serious = computeIosTraceMetrics(
-      {
-        ...EXPORTS,
-        thermal: EXPORTS.thermal.replace(
-          '>Nominal</thermal-state>',
-          '>Serious</thermal-state>'
-        ),
-      },
-      APP
-    );
-    assert.equal(livedReading(serious).thermalState, 2);
-    const outside = computeIosTraceMetrics(
-      {
-        ...EXPORTS,
-        thermal: withRows(EXPORTS.thermal, [
-          thermalRow(3e9, 1e9, 'Critical'),
-          thermalRow(1_000_000_000, 700_000_000, 'Fair'),
-        ]),
-      },
-      APP
-    );
-    assert.equal(livedReading(outside).thermalState, 0);
-    const touching = computeIosTraceMetrics(
-      {
-        ...EXPORTS,
-        thermal: withRows(EXPORTS.thermal, [
-          thermalRow(WINDOW_END, 1e9, 'Fair'),
-        ]),
-      },
-      APP
-    );
-    assert.equal(livedReading(touching).thermalState, 0);
-  });
-
-  it('gives the thermal state of a State event when it is higher', () => {
-    const reading = computeIosTraceMetrics(
-      {
-        ...EXPORTS,
-        signposts: withRows(EXPORTS.signposts, [
-          stateRow(WINDOW_START + 20_000_000, { ...NOMINAL_STATE, thermal: 2 }),
-        ]),
-      },
-      APP
-    );
-    assert.equal(livedReading(reading).thermalState, 2);
-  });
-
-  it('gives a crash when the main thread terminated', () => {
-    const exports = {
-      ...EXPORTS,
-      threadState: withRows(EXPORTS.threadState, [
-        threadRow({ start: 2e9, thread: APP.mainThread, state: 'Terminated' }),
-      ]),
-      signposts: withoutRows(EXPORTS.signposts),
-    };
-    assert.deepEqual(computeIosTraceMetrics(exports, APP), {
-      processLived: false,
-      detail: 'the app process 8865 ended before the end of the trace',
-    });
-  });
-
-  it('stops when the trace has no thread of the app process', () => {
-    assert.throws(
-      () => computeIosTraceMetrics(EXPORTS, { ...APP, pid: 1234 }),
-      /The trace has no thread of process 1234/
-    );
-  });
-
-  it('stops when the trace has fewer than 2 State events of the app', () => {
-    const otherSubsystem = stateRow(
-      WINDOW_START + 30_000_000,
-      NOMINAL_STATE
-    ).replace('>com.reanimatedbenchmark</subsystem>', '>com.other</subsystem>');
-    for (const [rows, count] of [
-      [[], 0],
-      [
-        [
-          stateRow(WINDOW_START + 10_000_000, NOMINAL_STATE),
-          stateRow(WINDOW_START + 20_000_000, NOMINAL_STATE, OTHER_PID),
-          otherSubsystem,
-        ],
-        1,
-      ],
-    ] as const) {
-      const signposts = withRows(withoutRows(EXPORTS.signposts), [...rows]);
-      assert.throws(
-        () => computeIosTraceMetrics({ ...EXPORTS, signposts }, APP),
-        {
-          message: `The trace has ${count} State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (${MEASURED_SPAN}). The trace window needs 2.`,
-        }
-      );
-    }
-  });
-
-  it('does not use a State event outside the scheduler data for the window and the memory', () => {
-    const base = livedReading(computeIosTraceMetrics(EXPORTS, APP));
-    const late = livedReading(
-      computeIosTraceMetrics(
-        {
-          ...EXPORTS,
-          signposts: withRows(EXPORTS.signposts, [
-            stateRow(9e9, { ...NOMINAL_STATE, footprint: 1, thermal: 1 }),
-          ]),
-        },
-        APP
-      )
-    );
-    assert.deepEqual(late.metrics, base.metrics);
-    assert.equal(late.appStates.length, base.appStates.length + 1);
-    assert.equal(late.thermalState, 1);
-  });
-
-  it('takes the window from the longest time with scheduler data of both measured threads and stops with fewer than 2 State events in it', () => {
-    const threadState = syntheticThreadState([
-      threadRow({
-        start: 1_800_000_000,
-        thread: APP.mainThread,
-        state: 'Blocked',
-        duration: 100_000_000,
-      }),
-      threadRow({
-        start: 1_850_000_000,
-        thread: APP.jsThread,
-        state: 'Blocked',
-        duration: 900_000_000,
-      }),
-    ]);
-    assert.throws(
-      () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
-      {
-        message:
-          'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1850000000 ns to 1900000000 ns). The trace window needs 2.',
-      }
-    );
-  });
-
-  it('does not use a row that starts at the trace start as scheduler data', () => {
-    for (const jsStart of [0, 1_900_000_000]) {
-      const threadState = syntheticThreadState([
-        threadRow({
-          start: 0,
-          thread: APP.mainThread,
-          state: 'Blocked',
-          duration: 3e9,
-        }),
-        threadRow({
-          start: jsStart,
-          thread: APP.jsThread,
-          state: 'Blocked',
-          duration: 3e9 - jsStart,
-        }),
-      ]);
-      assert.throws(
-        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
-        {
-          message: `The scheduler data has no time with a known state of both the main thread ${APP.mainThread} and the JS thread ${APP.jsThread}`,
-        }
-      );
-    }
-  });
-
-  it('stops when the main thread or the JS thread has no row', () => {
-    assert.throws(
-      () => computeIosTraceMetrics(EXPORTS, { ...APP, mainThread: 42 }),
-      /The trace has no row of the main thread 42 of process 8865/
-    );
-    assert.throws(
-      () => computeIosTraceMetrics(EXPORTS, { ...APP, jsThread: 43 }),
-      /The trace has no row of the JS thread 43 of process 8865/
-    );
   });
 
   it('stops when an export has no table with the needed schema', () => {
@@ -785,95 +330,79 @@ describe('computeIosTraceMetrics', () => {
       '<?xml version="1.0"?>\n<trace-query-result>\n<node xpath=\'//x\'></node>\n</trace-query-result>\n';
     for (const [key, schema] of Object.entries(SCHEMAS)) {
       assert.throws(
-        () => computeIosTraceMetrics({ ...EXPORTS, [key]: withoutSchema }, APP),
+        () => onlyEpoch({ ...EXPORTS, [key]: withoutSchema }),
         new RegExp(`The xctrace export has no table ${schema}$`)
       );
     }
-    assert.throws(
-      () =>
-        computeIosTraceMetrics({ ...EXPORTS, frames: EXPORTS.hitches }, APP),
-      /no table hitches-updates/
-    );
-  });
-
-  it('stops on a State event without a key or with a value that is not an integer', () => {
-    const { brightness: _, ...withoutBrightness } = NOMINAL_STATE;
-    for (const [values, problem] of [
-      [withoutBrightness, /no integer value of brightness/],
-      [
-        { ...NOMINAL_STATE, footprint: '1.5' },
-        /"footprint=1.5 thermal=0 .*" has no integer value of footprint/,
-      ],
-      [{ ...NOMINAL_STATE, lowPower: '' }, /no integer value of lowPower/],
-    ] as const) {
-      assert.throws(
-        () =>
-          computeIosTraceMetrics(
-            {
-              ...EXPORTS,
-              signposts: withRows(EXPORTS.signposts, [stateRow(2e9, values)]),
-            },
-            APP
-          ),
-        problem
-      );
-    }
-  });
-
-  it('stops on a State event with an unknown battery state', () => {
-    assert.throws(
-      () =>
-        computeIosTraceMetrics(
-          {
-            ...EXPORTS,
-            signposts: withRows(EXPORTS.signposts, [
-              stateRow(2_400_000_000, { ...NOMINAL_STATE, batteryState: 7 }),
-            ]),
-          },
-          APP
-        ),
-      /The State signpost has the unknown batteryState 7/
-    );
-  });
-
-  it('stops on an unknown thermal state of an interval in the window', () => {
-    const thermal = EXPORTS.thermal.replace(
-      '>Nominal</thermal-state>',
-      '>Hot</thermal-state>'
-    );
-    assert.throws(
-      () => computeIosTraceMetrics({ ...EXPORTS, thermal }, APP),
-      /The thermal state "Hot" is not one of Nominal, Fair, Serious, Critical/
-    );
   });
 
   it('stops on a time or a duration cell without an integer', () => {
     assert.throws(
       () =>
-        computeIosTraceMetrics(
-          {
-            ...EXPORTS,
-            frames: withRows(EXPORTS.frames, [
-              intervalRow(2e9, 0).replace(
-                '<duration>0</duration>',
-                '<sentinel/>'
-              ),
-            ]),
-          },
-          APP
-        ),
+        onlyEpoch({
+          ...EXPORTS,
+          frames: withRows(EXPORTS.frames, [
+            intervalRow(2e9, 0).replace(
+              '<duration>0</duration>',
+              '<sentinel/>'
+            ),
+          ]),
+        }),
       /A row of the table hitches-updates has no integer in the cell duration/
     );
   });
+});
 
-  it('stops when a metric is not a finite number', () => {
-    assert.throws(
-      () =>
-        computeIosTraceMetrics(EXPORTS, {
-          ...APP,
-          frames: { refreshRate: Number.NaN, share: 1 },
-        }),
-      /not finite numbers: jankyFrames = NaN, expectedFrameCount = NaN/
+describe('readBoundarySignposts', () => {
+  it('gives the time of each Boundary signpost of the app in the order of its index', () => {
+    const signposts = withRows(EXPORTS.signposts, [
+      boundaryRow(1_906_000_000, 1),
+      boundaryRow(1_856_000_000, 0),
+      boundaryRow(1_850_000_000, 0, OTHER_PID),
+      signpostRow({
+        time: 1_860_000_000,
+        name: 'Other',
+        subsystem: 'com.reanimatedbenchmark',
+        message: '<narrative-text>index=</narrative-text><uint64>5</uint64>',
+      }),
+    ]);
+    assert.deepEqual(
+      readBoundarySignposts({ signposts }, APP.pid),
+      [1_856_000_000, 1_906_000_000]
     );
+    assert.deepEqual(readBoundarySignposts(EXPORTS, APP.pid), []);
+  });
+
+  it('stops on a repeated index, a missing index or a message without an index', () => {
+    for (const [rows, problem] of [
+      [
+        [boundaryRow(1, 0), boundaryRow(2, 0)],
+        /The Boundary signpost "index=0" has no new index/,
+      ],
+      [
+        [boundaryRow(1, 0), boundaryRow(2, 2)],
+        /do not have the indexes 0 to 1/,
+      ],
+      [
+        [
+          signpostRow({
+            time: 1,
+            name: 'Boundary',
+            subsystem: 'com.reanimatedbenchmark',
+            message: '<narrative-text>start</narrative-text>',
+          }),
+        ],
+        /The Boundary signpost "start" has no new index/,
+      ],
+    ] as const) {
+      assert.throws(
+        () =>
+          readBoundarySignposts(
+            { signposts: withRows(EXPORTS.signposts, [...rows]) },
+            APP.pid
+          ),
+        problem
+      );
+    }
   });
 });

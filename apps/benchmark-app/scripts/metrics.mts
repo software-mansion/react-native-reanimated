@@ -11,11 +11,6 @@ export interface ComparisonRule {
 }
 
 export interface CommonSampleMetrics {
-  frameDurationMedian: number | null;
-  frameDurationP90: number | null;
-  frameDurationP95: number | null;
-  frameDurationP99: number | null;
-  jankyFrames: number;
   uiThreadCpu: number;
   jsThreadCpu: number;
   otherThreadsCpu: number;
@@ -29,6 +24,11 @@ export interface CommonSampleMetrics {
 }
 
 export interface AndroidSampleMetrics extends CommonSampleMetrics {
+  frameDurationMedian: number | null;
+  frameDurationP90: number | null;
+  frameDurationP95: number | null;
+  frameDurationP99: number | null;
+  jankyFrames: number;
   frameTimelineDurationMedian: number | null;
   frameTimelineDurationP95: number | null;
   frameTimelineFrameCount: number;
@@ -45,9 +45,11 @@ export interface AndroidSampleMetrics extends CommonSampleMetrics {
 }
 
 export interface IosSampleMetrics extends CommonSampleMetrics {
-  uiThreadEfficiencyCoreShare: number | null;
-  hitchCount: number;
-  hitchTime: number;
+  uiUpdateDurationMedian: number | null;
+  uiUpdateDurationP90: number | null;
+  uiUpdateDurationP95: number | null;
+  uiUpdateDurationP99: number | null;
+  missedDisplayLinkCallbacks: number | null;
 }
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
@@ -59,7 +61,10 @@ export const COMPARED_METRICS = [
   'frameDurationP95',
   'frameCyclesMedian',
   'frameCyclesP95',
+  'uiUpdateDurationMedian',
+  'uiUpdateDurationP95',
   'jankyFrames',
+  'missedDisplayLinkCallbacks',
   'uiThreadCpu',
   'jsThreadCpu',
   'memory',
@@ -73,7 +78,10 @@ export const NULL_ALLOWED: {
   frameDurationP95: true,
   frameCyclesMedian: true,
   frameCyclesP95: true,
+  uiUpdateDurationMedian: true,
+  uiUpdateDurationP95: true,
   jankyFrames: false,
+  missedDisplayLinkCallbacks: true,
   uiThreadCpu: false,
   jsThreadCpu: false,
   memory: false,
@@ -82,12 +90,21 @@ export const NULL_ALLOWED: {
 
 const RELATIVE_NOISE_FLOOR = 0.02;
 
+const ABSOLUTE_SHARE: ComparisonRule = {
+  unit: 'share',
+  comparison: 'absolute',
+  noiseFloor: 0.005,
+};
+
 export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   frameDurationMedian: relative('ms'),
   frameDurationP95: relative('ms'),
   frameCyclesMedian: relative('Mcycles'),
   frameCyclesP95: relative('Mcycles'),
-  jankyFrames: { unit: 'share', comparison: 'absolute', noiseFloor: 0.005 },
+  uiUpdateDurationMedian: relative('ms'),
+  uiUpdateDurationP95: relative('ms'),
+  jankyFrames: ABSOLUTE_SHARE,
+  missedDisplayLinkCallbacks: ABSOLUTE_SHARE,
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),
   memory: relative('kB'),

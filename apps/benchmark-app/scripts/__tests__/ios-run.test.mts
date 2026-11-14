@@ -6,7 +6,11 @@ import { before, describe, it } from 'node:test';
 import type { Clock } from '../clock.mts';
 import type { CommandContext } from '../command-context.mts';
 import { ToolError } from '../errors.mts';
-import type { IosDevice, IosDeviceState } from '../ios-device.mts';
+import type {
+  IosDevice,
+  IosDeviceState,
+  IosLaunchArguments,
+} from '../ios-device.mts';
 import { iosPlatform } from '../ios-platform.mts';
 import type { IosDependencies } from '../ios-platform.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
@@ -14,8 +18,15 @@ import type { DeviceTarget } from '../platform.mts';
 import type { Processes } from '../processes.mts';
 import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
+import { MINIMUM_WAIT_MS } from '../samples.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
-import { IOS_TRACE_METRICS, IOS_TRACE_WINDOW } from './ios-fixtures.mts';
+import {
+  END_BOUNDARY,
+  IOS_SAMPLE_WINDOW,
+  START_BOUNDARY,
+  inAppSample,
+  sampleLine,
+} from './ios-fixtures.mts';
 
 const TEST_ROOT = useTestRoot('ios-run', {
   name: 'ios-test',
@@ -36,22 +47,31 @@ const STATE: IosDeviceState = {
 
 interface FakeOptions {
   state?: IosDeviceState;
-  batteryLevelAtTrace?: (trace: number) => number;
-  interruptAtTrace?: number;
+  batteryLevelAtSample?: (sample: number) => number;
+  interruptBeforeSample?: number;
 }
 
 function createFake(options: FakeOptions = {}) {
   let time = 0;
-  let traces = 0;
+  let samples = 0;
+  let interrupted = false;
   let interrupt: ((exitCode: number) => Promise<void>) | null = null;
   const installs: string[] = [];
   const signs: string[] = [];
   const launches: string[] = [];
-  const tracedNames: string[] = [];
   const clock: Clock = {
     now: () => time,
     sleep: async (ms) => {
       time += ms;
+      const coolsDownForSample = ms === MINIMUM_WAIT_MS ? samples + 1 : null;
+      if (
+        coolsDownForSample === options.interruptBeforeSample &&
+        !interrupted
+      ) {
+        interrupted = true;
+        await interrupt?.(130);
+        throw new ToolError('the device connection ended');
+      }
     },
   };
   const device = {
@@ -61,8 +81,7 @@ function createFake(options: FakeOptions = {}) {
     terminate: async () => {},
     launch: (
       applicationId: string,
-      scenario: string | undefined,
-      _load: number | undefined,
+      { scenario }: IosLaunchArguments,
       onLine: (line: string) => void
     ) => {
       launches.push(`${applicationId} ${scenario}`);
@@ -71,8 +90,20 @@ function createFake(options: FakeOptions = {}) {
         'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5'
       );
       if (scenario !== undefined) {
+        samples++;
+        const batteryLevel = options.batteryLevelAtSample?.(samples) ?? 100;
         onLine(
           `ReanimatedBenchmark: READY scenario=${scenario} version=1 load=80 jsThread=5002`
+        );
+        onLine(
+          sampleLine(
+            inAppSample({
+              boundaries: [
+                { ...START_BOUNDARY, batteryLevel },
+                { ...END_BOUNDARY, batteryLevel },
+              ],
+            })
+          )
         );
       }
       return { stop: () => {}, failure: () => null };
@@ -90,32 +121,6 @@ function createFake(options: FakeOptions = {}) {
       lockfileSha256: 'lock',
     }),
     createDevice: () => device as unknown as IosDevice,
-    createTracer: () => ({
-      record: async (deviceName, _pid, traceFile) => {
-        traces++;
-        tracedNames.push(deviceName);
-        if (traces === options.interruptAtTrace) {
-          await interrupt?.(130);
-          throw new ToolError('the device connection ended');
-        }
-        fs.mkdirSync(traceFile, { recursive: true });
-      },
-      collect: async () => {
-        const state = {
-          batteryLevel: options.batteryLevelAtTrace?.(traces) ?? 100,
-          batteryState: 'full',
-          lowPowerMode: false,
-          brightness: 50,
-        };
-        return {
-          processLived: true,
-          metrics: IOS_TRACE_METRICS,
-          window: IOS_TRACE_WINDOW,
-          thermalState: 0,
-          appStates: [state, state],
-        };
-      },
-    }),
     clock,
   };
   const dependencies: MeasurementDependencies = {
@@ -136,7 +141,7 @@ function createFake(options: FakeOptions = {}) {
       interrupt = action;
     },
   };
-  return { dependencies, context, installs, signs, launches, tracedNames };
+  return { dependencies, context, installs, signs, launches };
 }
 
 function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
@@ -193,12 +198,20 @@ describe('an iOS run', () => {
     );
     assert.ok(samples.every((sample) => sample.valid && sample.accepted));
     assert.equal(samples[0].metrics?.coldStart, 80.5);
-    assert.deepEqual(samples[0].traceWindow, IOS_TRACE_WINDOW);
+    assert.deepEqual(samples[0].traceWindow, IOS_SAMPLE_WINDOW);
     assert.equal(samples[0].batteryLevel, undefined);
-    assert.equal(result.verdictRows.length, 6);
+    assert.deepEqual(
+      result.verdictRows.map((row) => row.metric),
+      ['uiThreadCpu', 'jsThreadCpu', 'memory']
+    );
     assert.deepEqual(
       result.advisoryRows.map((row) => row.metric),
-      ['coldStart']
+      [
+        'uiUpdateDurationMedian',
+        'uiUpdateDurationP95',
+        'missedDisplayLinkCallbacks',
+        'coldStart',
+      ]
     );
     const report = fs.readFileSync(
       path.join(onlyRunFolder(TEST_ROOT), 'report.md'),
@@ -224,9 +237,11 @@ describe('an iOS run', () => {
   it('stops when the battery level in the app changes', async () => {
     await assert.rejects(
       run(
-        createFake({ batteryLevelAtTrace: (trace) => (trace > 2 ? 99 : 100) })
+        createFake({
+          batteryLevelAtSample: (sample) => (sample > 2 ? 99 : 100),
+        })
       ),
-      /The device state changed \(read in the trace\): batteryLevel: 100 -> 99/
+      /The device state changed \(read by the app\): batteryLevel: 100 -> 99/
     );
   });
 
@@ -281,7 +296,7 @@ describe('an iOS run', () => {
 
   it('resumes with the stored state of the app as the reference', async () => {
     await assert.rejects(
-      run(createFake({ interruptAtTrace: 3 })),
+      run(createFake({ interruptBeforeSample: 3 })),
       /the device connection ended/
     );
     const folder = onlyRunFolder(TEST_ROOT);
@@ -307,13 +322,12 @@ describe('an iOS run', () => {
       /not the same as at the start of the measurement: osBuild: 24A446 -> 24B1/
     );
     await assert.rejects(
-      resume(createFake({ batteryLevelAtTrace: () => 90 })),
+      resume(createFake({ batteryLevelAtSample: () => 90 })),
       /batteryLevel: 100 -> 90/
     );
     const renamed = createFake({ state: { ...STATE, name: 'New name' } });
     assert.equal(await resume(renamed), 0);
     assert.deepEqual(renamed.signs, []);
     assert.equal(readResult(folder).status, 'done');
-    assert.deepEqual([...new Set(renamed.tracedNames)], ['New name']);
   });
 });

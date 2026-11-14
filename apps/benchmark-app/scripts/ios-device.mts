@@ -1,4 +1,6 @@
 import { ToolError } from './errors.mts';
+import { planArguments } from './in-app-sample.mts';
+import type { SamplePlan } from './in-app-sample.mts';
 import type { LineStream, Processes } from './processes.mts';
 
 export interface IosDeviceState {
@@ -15,6 +17,12 @@ export interface IosToolVersions {
   xcode: string;
   xctrace: string;
   devicectl: string;
+}
+
+export interface IosLaunchArguments {
+  scenario?: string;
+  load?: number;
+  plan?: SamplePlan;
 }
 
 export interface InstalledApp {
@@ -38,8 +46,6 @@ export const LAUNCHED_LINE = /^Launched application with \S+ bundle identifier/;
 export const DEVICE_COMMAND_TIMEOUT_MS = 60_000;
 
 export const INSTALL_TIMEOUT_MS = 5 * 60_000;
-
-const TRACE_STORAGE_GB_PER_RECORDING = 0.3;
 
 const XCODE_VERSION_LINES = 2;
 
@@ -75,7 +81,7 @@ export class IosDevice {
     await this.#device(['install', 'app', ipa], timeoutMs).catch(
       (error: Error) => {
         throw new ToolError(
-          `The install of ${ipa} on ${this.udid} failed. One known cause is a full phone storage: on one iPhone 13 mini with iOS 27.0.1 and Xcode 27.2, each xctrace recording used about ${TRACE_STORAGE_GB_PER_RECORDING} GB of phone storage, and the data stayed after the driver ended. It is not verified that a restart of the phone frees it. devicectl: ${error.message}`
+          `The install of ${ipa} on ${this.udid} failed: ${error.message}`
         );
       }
     );
@@ -100,10 +106,13 @@ export class IosDevice {
     }
   }
 
+  async postNotification(name: string) {
+    await this.#device(['notification', 'post', '--name', name]);
+  }
+
   launch(
     bundleIdentifier: string,
-    scenario: string | undefined,
-    load: number | undefined,
+    appArguments: IosLaunchArguments,
     onLine: (line: string) => void
   ): LineStream {
     return this.#processes.streamLines(
@@ -118,7 +127,7 @@ export class IosDevice {
         '--console',
         '--terminate-existing',
         bundleIdentifier,
-        ...launchArguments(scenario, load),
+        ...launchArguments(appArguments),
       ],
       onLine
     );
@@ -257,13 +266,15 @@ function processesOf(
   return running.filter((process) => process.executable.startsWith(bundle));
 }
 
-function launchArguments(
-  scenario: string | undefined,
-  load: number | undefined
-): string[] {
+function launchArguments({
+  scenario,
+  load,
+  plan,
+}: IosLaunchArguments): string[] {
   const values = [
     ...(scenario === undefined ? [] : ['-benchmarkScenario', scenario]),
     ...(load === undefined ? [] : ['-benchmarkLoad', String(load)]),
+    ...(plan === undefined ? [] : planArguments(plan)),
   ];
   return values.length > 0 ? ['--', ...values] : [];
 }

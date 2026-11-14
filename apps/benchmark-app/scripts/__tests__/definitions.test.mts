@@ -4,11 +4,11 @@ import { describe, it } from 'node:test';
 import { PLATFORM_DEFINITIONS } from '../definitions.mts';
 import type { PlatformDefinition } from '../platform.mts';
 import { METRICS as ANDROID_TRACE_METRICS } from './command-fake.mts';
-import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
+import { IOS_SAMPLE_METRICS } from './ios-fixtures.mts';
 
 const STORED_METRICS = {
   android: [...Object.keys(ANDROID_TRACE_METRICS), 'coldStart'],
-  ios: [...Object.keys(IOS_TRACE_METRICS), 'coldStart'],
+  ios: [...Object.keys(IOS_SAMPLE_METRICS), 'coldStart'],
 };
 
 describe('platform definitions', () => {

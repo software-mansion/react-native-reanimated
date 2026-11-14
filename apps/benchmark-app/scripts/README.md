@@ -35,7 +35,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
 
 ### iOS
 
-Connect an iPhone with a display of 60 Hz, with Developer Mode on, paired with the Mac and unlocked. Get its UDID from `xcrun devicectl list devices`. Write a [sign command](#sign-command).
+Connect an iPhone with iOS 18 or newer and a display of 60 Hz, with Developer Mode on, paired with the Mac and unlocked. Get its UDID from `xcrun devicectl list devices`. Write a [sign command](#sign-command).
 
 This example compares Reanimated 4.7.1 with the code of your checkout. Make the tarballs of the checkout. `npm pack` runs the `prepack` script of each package (`yarn build`), and the file name has the version of its `package.json`: Use `npm pack`, not `yarn pack`: Yarn leaves the nested workspaces of Worklets (its two plugins) out of the tarball.
 
@@ -76,15 +76,18 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory 
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> --serial <adb serial> [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks 5] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
 ```
 
 - `<device>` is `--serial <adb serial>` (Android) or `--udid <UDID>` (iOS).
-- `--trace-processor` is for Android only. `--sign-command` is for iOS only, and an iOS `run` needs it.
+- `--trace-processor`, `--keep-traces` and `--keep-trace` are for Android only. `--sign-command` is for iOS only, and an iOS `run` needs it.
 - `run` builds A and B, installs them and measures each scenario of the config in blocks. A block measures A, B, B, A, and each second block measures B, A, A, B. `--blocks` sets the number of blocks for each scenario.
 - `run --resume` continues a run that is not `done`. See [Stopped runs](#stopped-runs).
 - `memory` reads the memory of A and B in one scenario for a long time. See [Memory test](#memory-test).
 - `noise-limits` reads A/A runs and writes a noise limits record to stdout. See [Calibration](#calibration).
 - `sample` measures one scenario of an installed app one time and writes the metrics as JSON to stdout. Use it to find the load of a scenario.
+- `crosscheck` and `observer-cost` (iOS only) validate the in-app collector of iOS. See [Validation of the iOS collector](#validation-of-the-ios-collector).
 
 ## Config
 
@@ -103,7 +106,7 @@ The driver stops before it builds when the config has an unknown field, scenario
 
 - Node from `.nvmrc` and Yarn 4.
 - Android: the Android SDK (`ANDROID_HOME`, or the default SDK folder), `adb` (SDK `platform-tools`, or `PATH`), a JDK for Gradle (tested with JDK 17, the version of the Android workflows of the repository; `android/gradle/wrapper/gradle-wrapper.properties` gives Gradle 9.4.1), and `trace_processor_shell` of Perfetto (`--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`).
-- iOS: Xcode with `xcodebuild`, `xctrace` and `devicectl` (tested with Xcode 27.2), Ruby and Bundler for CocoaPods (tested with Ruby 3.3.7 of `.ruby-version`), and a [sign command](#sign-command).
+- iOS: Xcode with `xcodebuild` and `devicectl` (tested with Xcode 27.2), `xctrace` for `crosscheck`, Ruby and Bundler for CocoaPods (tested with Ruby 3.3.7 of `.ruby-version`), and a [sign command](#sign-command).
 
 ## Calibration
 
@@ -130,17 +133,17 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
   --config .tmp/benchmarks/configs/aa.json --udid <UDID> \
   --sign-command ./sign-benchmark.sh --blocks 10
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits \
-  --runs <run folder> > .tmp/benchmarks/noise-limits/iphone-13-mini.json
+  --runs <run folder> > .tmp/benchmarks/noise-limits/iphone-14.json
 ```
 
-The record has `formatVersion` (1), `platform`, `device` (`model`, `deviceId`, `osBuild`), `measurementRevision`, `sources` (each run folder with the accepted samples of A and B for each scenario), `scenarios` (`{ "<scenario>": { "version": <integer>, "load": <integer> } }` from the READY lines of the accepted samples) and `limits` (`{ "<scenario>": { "<metric>": <limit> } }`). A limit is a fraction for a relative metric and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points).
+The record has `formatVersion` (1), `platform`, `device` (`model`, `deviceId`, `osBuild`), `measurementRevision`, `sources` (each run folder with the accepted samples of A and B for each scenario), `scenarios` (`{ "<scenario>": { "version": <integer>, "load": <integer> } }` from the READY lines of the accepted samples) and `limits` (`{ "<scenario>": { "<metric>": <limit> } }`). A limit is a fraction for a relative metric and a share for an absolute metric (`jankyFrames`; 0.005 is 0.5 percentage points).
 
 For each scenario and verdict metric, `noise-limits`:
 
 1. puts the accepted samples of A and B in one group,
 1. divides the group in all possible ways into two groups with the sizes of A and B (above 200000 ways, 20000 random ways with a fixed seed),
 1. compares the medians of the two groups as the verdict does,
-1. takes the 97.5th percentile of the absolute differences, but not less than the floor: 0.02 for a relative metric and 0.005 for `jankyFrames`.
+1. takes the 97.5th percentile of the absolute differences, but not less than the floor: 0.02 for a relative metric and 0.005 for an absolute metric.
 
 When the relative difference is not defined for a division (a median of 0 or less), the record has no limit for that metric. The runs must have the same platform, device and measurement revision, a scenario must be in one run only, and the accepted samples of a scenario must have one version and one load. The runs do not have to be `done`: the command uses their complete scenarios. A run is A/A when A and B have the same sources, installed versions, `yarn.lock`, effective flags and build options.
 
@@ -149,18 +152,19 @@ When the relative difference is not defined for a division (a median of 0 or les
 ## Output
 
 - Builds: `.tmp/benchmarks/builds/<key>/`. The driver builds a variant again only when its key changes. The key has the variant (sources, tarball hashes, flags, build options), the application id suffix, the files of the app project (with `yarn.lock`), the build procedure of the driver, the Node version and the build tools: on Android the JDK (`java -version`) and the NDK and build tools revisions of `android/build.gradle`, on iOS the Xcode version and the `iphoneos` SDK version and build. The build key cannot contain the transitive versions that `yarn add` resolves. The SHA-256 of the resolved `yarn.lock` of the build copy (`lockfileSha256` of each variant in `result.json`, and the report) shows them.
-- Runs: `<output dir>/<date>-<name>/`, and `<output dir>/<date>-<name>-memory-<scenario>/` for a memory test. The output dir is `--output-dir`, or `.tmp/benchmarks/runs/`. The folder has `result.json` (all samples and statistics), `report.md`, `summary.json`, and `traces/` with the trace of each invalid sample (all traces with `--keep-traces`). An iOS run folder also has `signed/` with the signed apps. `sample` writes its trace to `.tmp/benchmarks/samples/`.
+- Runs: `<output dir>/<date>-<name>/`, and `<output dir>/<date>-<name>-memory-<scenario>/` for a memory test. The output dir is `--output-dir`, or `.tmp/benchmarks/runs/`. The folder has `result.json` (all samples and statistics), `report.md`, `summary.json`, and on Android `traces/` with the trace of each invalid sample (all traces with `--keep-traces`). An iOS sample has no trace. An iOS run folder also has `signed/` with the signed apps. `sample` writes its Android trace to `.tmp/benchmarks/samples/`.
+- Validation: `<output dir>/<date>-crosscheck-<scenario>/` and `<output dir>/<date>-observer-cost-<scenario>/`. The output dir is `--output-dir`, or `.tmp/benchmarks/validation/`.
 - `result.json` has the format version 1. The driver writes it after each sample. Another version, or a missing or wrong field that the driver reads, is a tool error.
 - `summary.json` (format version 1) has the `command`, the `status`, the `exitCode` and its `reason`, the expectations that do not hold (`failedExpectations`), the count of each verdict (`verdictCounts`), and the relative paths of `report.md` and `result.json`. The driver writes it at the end of each segment, also after a tool error (exit code 2) or an interrupt (exit code 130 or 143). An error before the run folder exists, for example an invalid config, gives no run folder.
 - Exit code of `run`: 0 when all expectations hold, 1 when an expectation fails or is not decided, 2 for a tool error.
 
 ## Measurement
 
-For each sample, the driver stops the apps, waits for a cool phone, launches the app in the scenario, waits for the READY line of the app, records a trace of 10 s and computes the metrics from the trace.
+For each sample, the driver stops the apps, waits for a cool phone, launches the app in the scenario, waits for the READY line of the app, measures for 10 s and computes the metrics. On Android, the driver records a Perfetto trace. On iOS, the app measures itself and writes the values after the 10 s.
 
 - The measurement revision (`measurement-rules.mts`) names the rules of collection, parsing and acceptance. The driver stores it in each result and in each noise limits record. Numbers and verdicts are valid only within one platform, one phone and one measurement revision.
-- A sample is invalid when the app crashes before or during the trace (`crash`), when the phone is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail of each of the 3 blocks.
-- Each scenario declares its requirements in `scenarios.mts`. The update share is the share of the display refreshes in which the app updates its views: 1 for each scenario except `idle-cost` (0.5). The work check is the minimum `mountBatchCount` in one recording of 10 s. Only `shared-elements` has one: 300. Basis: in the first runs, a working sample had 574 to 628 (Samsung Galaxy A16) and 588 to 710 (iPhone 13 mini), and a sample with stopped transitions had 38. The static flags of a scenario are the flags that its source reads: only `shared-elements` has one, `ENABLE_SHARED_ELEMENT_TRANSITIONS`.
+- A sample is invalid when the app crashes before or during the measurement (`crash`), when the phone is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail of each of the 3 blocks.
+- Each scenario declares its requirements in `scenarios.mts`. The update share is the share of the display refreshes in which the app updates its views: 1 for each scenario except `idle-cost` (0.5). The work check is the minimum `mountBatchCount` in one recording of 10 s. Only `shared-elements` has one: 300. Basis: in the first runs, a working sample had 574 to 628 (Samsung Galaxy A16) and 588 to 710 (iPhone 13 mini, from the React Native signposts of an earlier trace method), and a sample with stopped transitions had 38. The static flags of a scenario are the flags that its source reads: only `shared-elements` has one, `ENABLE_SHARED_ELEMENT_TRANSITIONS`.
 - Each platform declares its verdict metrics and its advisory metrics (`android-definition.mts`, `ios-definition.mts`). The report shows an advisory metric with its difference and interval and "no verdict". It has no noise limit, and an expectation cannot select it. The report of each run defines all metrics of its platform.
 - A device command that does not finish in its time limit is a tool error.
 
@@ -196,43 +200,41 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 ### iOS
 
 - Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
-- The driver does not read the thermal state or the battery of the iPhone while no app runs. The app gives them: the LAUNCH line gives the thermal state, and each `State` signpost gives the battery level, the battery state, the low power mode and the brightness. When the thermal state at the launch is above `Nominal`, the driver stops the app, waits 30 s and launches it again; after 10 minutes, the run stops. A `State` value that is not the value of the first sample of the run stops the run.
+- The driver does not read the thermal state or the battery of the iPhone while no app runs. The app gives them: the LAUNCH line gives the thermal state, and each counter read of the app gives the thermal state, the battery level, the battery state, the low power mode and the brightness. When the thermal state at the launch is above `Nominal`, the driver stops the app, waits 30 s and launches it again; after 10 minutes, the run stops. A value that is not the value of the first sample of the run stops the run.
 - After each install, the driver launches the app one time and stops it, because the first launch after an install is slow.
-- `xctrace record` attaches to the app for 10 s with the template `Animation Hitches`, the instrument `os_signpost`, and the signposts of React Native (`dev.reactnative.instruments`) and of the app (`com.reanimatedbenchmark`). Then the driver stops the app and exports the tables of the trace with `xctrace export`.
-- The trace window goes from the first to the last `State` signpost in the longest time in which the table `thread-state` gives a known state of the main thread and of the JS thread. A row that starts at 0 gives the state before the scheduler data starts, so it does not count. A window shorter than 8 s (80% of the recording) is a tool error. Each sample stores its window (`traceWindow`).
-- In `thread-state`, only `Running` is CPU time. The driver knows the states of the Instruments schema: `Running`, `Runnable`, `Preempted`, `Throttled`, `Interrupted`, `Blocked`, `Idle`, `Terminated` and `Unknown`. Another state, a row without a thread id, a duration of 0 or less, or a missing column is a tool error.
-- `thermal`: the table `device-thermal-state-intervals` or a `State` signpost shows a state above `Nominal`. `crash`: the app writes `FAILED`, the console command ends before READY or during the trace, or the main thread ends in the trace.
-- These are tool errors: a launch command that does not start the app, a READY line without a LAUNCH line or without `jsThread`, and a display whose maximum refresh rate is not 60 Hz. A LAUNCH or READY line that comes at or after its time limit of 60 s does not count. After each launch, the driver stops the console and the app, also after a tool error.
-- The trace has the cost of the Time Profiler samples of the template, of the React Native signposts and of the `State` signposts. A and B have the same tools, but the driver does not measure this cost.
+- The driver gives the app a sample plan as launch arguments: `-benchmarkEpochs none:full:10 -benchmarkStart ready`. At READY, the app starts a window of 10 s on a strict timer of the main queue. The [benchmark app](../README.md#ios-collector) reads its counters at the start and at the end of the window, records each UI update in the window into a buffer that it allocates before the window, and writes one `SAMPLE` line after the window. It writes no text during the window. The driver stops the app after the `SAMPLE` line. A sample has no trace, and no Instruments recording runs.
+- `crash`: the app writes `FAILED`, the console command ends before the `SAMPLE` line, or the `SAMPLE` line does not come in 40 s after READY (the plan and 30 s). `thermal`: a counter read or a notification of the app in the window shows a state above `Nominal`. `frames`: the app has fewer UI updates than 90% of the display refreshes of the window. The update share of a scenario does not apply on iOS: the expected count is all display refreshes, because the app has a UI update on each refresh while a display link of React Native or Reanimated runs (`idle-cost` too).
+- These are tool errors: a launch command that does not start the app, a READY line without a LAUNCH line or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, an error of the sampler in the `SAMPLE` line (a failed counter read, a thread id that changed, an update without its two phases, a full buffer), a `SAMPLE` line of other threads than the LAUNCH and READY lines give, a counter that goes down, a process CPU time less than the sum of the two threads, counter reads that take more than 0.1% of the window, a UI update outside the window, and UI updates that are not on a fixed cadence of the display. A LAUNCH or READY line that comes at or after its time limit of 60 s does not count. After each launch, the driver stops the console and the app, also after a tool error.
+- The verdict metrics are the CPU time of the main thread and the JS thread, and the memory. The UI update metrics have no verdict before the [cross-check](#validation-of-the-ios-collector) with Instruments passes on the phone, and their name does not say that they are frame durations.
 
 | Metric | Unit | Source | Interval | Limits | Verdict |
 | --- | --- | --- | --- | --- | --- |
-| `frameDurationMedian`, `frameDurationP95` | ms | `xctrace`: duration of the rows of the table `hitches-updates` of the app. A row is the update phase of one frame: the work of the app on its main thread to the end of the commit. | Rows that are fully in the trace window | The render phase and the display are not in it. | yes |
-| `frameDurationP90`, `frameDurationP99` | ms | The same as `frameDurationMedian` | Rows that are fully in the trace window | The same as `frameDurationMedian`. | no, stored |
-| `jankyFrames` | share of frames | `max(0, 1 - frameCount / expectedFrameCount)` | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread | Counts the expected updates that did not come. A display with a variable refresh rate is not supported. | yes |
-| `frameCount`, `expectedFrameCount` | count | Count of the `hitches-updates` rows; `refreshRate` of the LAUNCH line times the length of the trace window times the update share of the scenario | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread | A frame without an update of the app has no row, so the expected count uses the update share (0.5 for `idle-cost`). | no, stored |
-| `uiThreadCpu` | ms for each s | Time in the state `Running` of the main thread (`mainThread` of the LAUNCH line) in the table `thread-state` | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | yes |
-| `jsThreadCpu` | ms for each s | The same for the JS thread (`jsThread` of the READY line) | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | yes |
-| `otherThreadsCpu`, `processCpu` | ms for each s | The same for the other threads of the app, and for all threads of the app | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | no, stored |
-| `uiThreadEfficiencyCoreShare` | share | Share of `uiThreadCpu` on efficiency cores | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread | `null` when the main thread did not run, or when a `Running` interval has no known core type. | no, stored |
-| `mountBatchCount` | count | Count of the starts of the React Native section `RCTPerformMountInstructions` | Starts in the trace window | The work check of a scenario uses it. | no, stored |
-| `memory` | kB | `phys_footprint` of the app in the `State` signpost at the end of the trace window | The end of the trace window | The time from the launch to this moment changes with the start time of `xctrace` (some seconds). | yes |
-| `windowMemoryDelta` | kB | `memory` minus the value in the `State` signpost at the start of the trace window | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread | Use it to see the trend in the window only. | no, stored |
+| `uiUpdateDurationMedian`, `uiUpdateDurationP95` | ms | The app: a passive `UIUpdateLink` (iOS 18) of the window scene. A value is the time from the entry to the phase `beforeCADisplayLinkDispatch` to the entry to the phase `afterCATransactionCommit` of the same UI update, on one monotonic clock. | UI updates that begin and end in the sample window | It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments. No verdict before the cross-check with Instruments passes on the phone. | no verdict, shown |
+| `uiUpdateDurationP90`, `uiUpdateDurationP99` | ms | The same as `uiUpdateDurationMedian` | UI updates that begin and end in the sample window | The same as `uiUpdateDurationMedian`. | no, stored |
+| `missedDisplayLinkCallbacks` | share of display refreshes | `Σ max(0, round(gap / P) − 1) / Σ round(gap / P)` over the gaps between the model times (`UIUpdateInfo.modelTime`) of successive UI updates. `P` is 1 / `refreshRate` of the LAUNCH line. A gap that is more than 0.25 `P` from a whole number of periods is a tool error. | UI updates that begin and end in the sample window | A display refresh with no UI update of the app counts as missed. The update share of a scenario does not apply to it. | no verdict, shown |
+| `frameCount`, `expectedFrameCount` | count | The number of UI updates in the window; `refreshRate` of the LAUNCH line times the length of the window | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | A sample with fewer UI updates than 90% of the expected count is invalid (cause `frames`). | no, stored |
+| `uiThreadCpu` | ms for each s | `1000 × Δ(user + system time)` of `thread_info(THREAD_BASIC_INFO)` of the main thread, over the elapsed seconds of the monotonic clock. The app keeps a Mach handle of the thread and compares the thread id (`THREAD_IDENTIFIER_INFO`) with `mainThread` of the LAUNCH line at each read. | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core. | yes |
+| `jsThreadCpu` | ms for each s | The same for the JS thread. The app takes its Mach handle on the JS thread itself, in the synchronous TurboModule call `markReady` before READY, and the main thread reads it. | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core. | yes |
+| `otherThreadsCpu`, `processCpu` | ms for each s | The process: user + system time of `getrusage(RUSAGE_SELF)`. The other threads: the process minus the main thread and the JS thread. | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | It includes the threads that ended in the window. A process value that is less than the sum of the two threads is a tool error. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core. | no, stored |
+| `mountBatchCount` | count | Calls of `didMountComponentsWithRootTag:` of an `RCTSurfacePresenterObserver` of the app, for all surfaces. React Native calls it after each `RCTPerformMountInstructions`. | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | The work check of a scenario uses it. | no, stored |
+| `memory` | kB | `phys_footprint` of `task_info(TASK_VM_INFO)` at the end read of the window | The end of the sample window: 10 s after READY | One value for each sample. | yes |
+| `windowMemoryDelta` | kB | `memory` minus the value at the start read of the window | Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read) | Use it to see the trend in the window only. | no, stored |
 | `coldStart` | ms | `coldStart` of the LAUNCH line. The app measures it. | From the start of the process (`p_starttime` of `sysctl`) to the first display link callback | The difference of two wall-clock times. It does not include the time before the kernel starts the process. No verdict and no noise limit. | no verdict, shown |
-| `hitchCount`, `hitchTime` | count; ms for each s | Count of the rows of the table `hitches` of the app, and the sum of their durations | Rows that overlap the trace window, cut to the window | No verdict. | no, stored |
 
 ## Sign command
 
 `--sign-command <path>` names an executable file. A relative path starts at the folder where you run the driver. The driver keeps each iOS build without a signature (`CODE_SIGNING_ALLOWED=NO`) and signs it for each new run:
 
 - The driver calls `<path> <app> <ipa>` with two absolute paths: the unsigned `.app` folder of the build, and the `.ipa` file to write. The working folder is `<run folder>/signed/`, and the `.ipa` is in it.
-- The command must write the `.ipa` with a development signature that the iPhone accepts and with the entitlement `get-task-allow`, because `xctrace` attaches to the app.
+- The command must write the `.ipa` with a development signature that the iPhone accepts and with the entitlement `get-task-allow`, because `crosscheck` attaches `xctrace` to the app.
 - The command must not ask for input, and it must end with exit code 0 in 15 minutes.
 - The driver writes the output of the command to `<ipa>.sign.log`. A missing `.ipa` is a tool error.
 
 ## Phone storage on iOS
 
-On one iPhone 13 mini with iOS 27.0.1 and Xcode 27.2, each `xctrace` recording used about 0.3 GB of phone storage, and the data stayed after the driver ended. The driver does not delete it. It is not verified that a restart of the phone frees it. Plan a free storage of 0.3 GB times the number of samples: a run of 7 scenarios with 5 blocks of 4 samples needs at least 42 GB. Each run and each resume segment installs the apps first, and a failed install is a tool error that names this cause.
+`run`, `sample` and `observer-cost` make no Instruments recording, so the Instruments service of the phone does not allocate a trace for them. Their storage use on the phone is not measured.
+
+`crosscheck` records with `xctrace`. On an iPhone 14 with iOS 27 and Xcode 27.2, the Instruments service of the phone (`DTServiceHub`) writes the kernel trace of each recording to a file on the phone and keeps that space while the service runs. The space does not come back at the end of the recording, and the driver does not free it. In one test of 10 s for all processes with the instruments Thread Activity, Hitches, Thermal State and `os_signpost`, the file had 346 MB, and the free space fell by 355 MB. Check the free space of the phone before each `crosscheck`.
 
 ## Verdicts
 
@@ -294,12 +296,34 @@ The workflows have no secrets, signing keys or provisioning profiles, and no `pu
 1. A deployment branch rule on that environment that permits only the default branch and the release branches (`*-stable`). The job runs repository code on a self-hosted runner.
 1. For an iPhone, a sign command under the runner account, outside the repository, with the contract of [Sign command](#sign-command). The signing identity and the profiles stay on the runner.
 1. The noise limits records: `<BENCHMARK_NOISE_LIMITS_DIR>/<name>.json`. Make each record with an A/A run on that phone (for example with `benchmark-manual.yml` and the same A and B), then `noise-limits` on the run folder of the artifact (see [Calibration](#calibration)). The `noise-limits` input is `<name>`: letters, digits, `.`, `_` or `-`.
-1. For an iPhone, free phone storage before each run: 0.3 GB times the number of samples (see [Phone storage on iOS](#phone-storage-on-ios)).
 1. For the nightly workflow, the repository variables `BENCHMARK_NIGHTLY_ENABLED` (`true` turns it on), `BENCHMARK_NIGHTLY_PLATFORM`, `BENCHMARK_NIGHTLY_PHONE` and `BENCHMARK_NIGHTLY_NOISE_LIMITS`. They are repository variables, because the nightly workflow reads them before a job selects the environment.
+
+## Validation of the iOS collector
+
+Two commands compare the in-app collector with independent data. Their output is not a benchmark sample. Each command needs an installed app (for example the signed `.ipa` of a run, installed with `xcrun devicectl device install app`).
+
+`crosscheck` launches the app with a plan of epochs that starts on a Darwin notification, records the app with `xctrace` (the instruments Thread Activity, Hitches and `os_signpost`, for the length of the plan and 3 s), and posts the notification when `xctrace` writes that the recording started. `--epochs` gives each epoch as `<load>:<collector>:<seconds>`. The collector is `full` (counter reads, UI updates and mount count) or `endpoints` (only the counter reads). The app writes a `Boundary` signpost after the counter read at each epoch boundary. The driver maps the clock of the app to the clock of the trace with these signposts (a spread of more than 1 ms is a tool error), cuts the scheduler intervals to each epoch, and compares for each epoch:
+
+- `uiThreadCpu`, `jsThreadCpu`, `processCpu` with the `Running` time of the table `thread-state`: within max(1 ms/s, 2%),
+- `mountBatchCount` with the starts of the React Native section `RCTPerformMountInstructions`: exact,
+- the median and the 95th percentile of the UI update durations with the rows of `hitches-updates`: within max(0.25 ms, 5%). Only when all of these pass can a report call the UI update durations equal to the frame durations of Instruments.
+
+The scenario can be a benchmark scenario, or the validation scenario `crosscheck-load` of the app. In `crosscheck-load`, the load of each epoch is `idle`, `ui-stall` (6 ms of busy work on the UI thread in each frame), `js-load` (6 ms of busy work on the JS thread in each frame) or `render-heavy` (a new render of all views in each frame). The folder has `crosscheck.json` (all values with the signed, absolute and relative errors), `crosscheck.md` and the trace. The exit code is 0 when the counters pass.
+
+```sh
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
+  --package com.reanimatedbenchmark.a --scenario worklet-styles-transform \
+  --epochs steady:full:2,steady:endpoints:2,steady:endpoints:2,steady:full:2
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
+  --package com.reanimatedbenchmark.a --scenario crosscheck-load \
+  --epochs idle:full:2,ui-stall:full:2,js-load:full:2,render-heavy:full:2
+```
+
+`observer-cost` measures the CPU cost of the collector without Instruments. It takes `--blocks` blocks (default 5) of 4 samples: full collector, only the counter reads, only the counter reads, full collector. For `uiThreadCpu`, `jsThreadCpu` and `processCpu`, it gives the medians of the two modes, their relative difference and its 95% bootstrap interval (the method of the verdicts). With `--noise-limits`, the interval of a metric with a limit must be inside one quarter of the limit, or the exit code is 1. The folder has `observer-cost.json` and `observer-cost.md`.
 
 ## Not supported
 
 - An iOS simulator: the driver measures only on a real iPhone. On Android, use a real phone too.
-- On iOS: the `memory` command, `"profiling": true`, a display with a variable refresh rate or a maximum rate other than 60 Hz, a battery temperature, and the thermal state while no app runs.
+- On iOS: iOS 17 or older, the `memory` command, `"profiling": true`, `--keep-traces` and `--keep-trace`, a display with a variable refresh rate or a maximum rate other than 60 Hz, a battery temperature, and the thermal state while no app runs.
 - `"bundleMode": true`.
 - A comparison of numbers or verdicts across platforms, phones or measurement revisions.

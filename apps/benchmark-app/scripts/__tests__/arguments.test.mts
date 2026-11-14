@@ -3,7 +3,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { parseArguments } from '../arguments.mts';
-import { DEFAULT_OUTPUT_DIR } from '../paths.mts';
+import { DEFAULT_OUTPUT_DIR, VALIDATION_DIR } from '../paths.mts';
 
 describe('parseArguments', () => {
   it('reads the run command with defaults', () => {
@@ -418,6 +418,141 @@ describe('parseArguments', () => {
           '/tp',
         ]),
       /--trace-processor is not an option on ios\./
+    );
+  });
+
+  it('refuses the trace options of Android on iOS', () => {
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--config',
+          'c.json',
+          '--udid',
+          'U1',
+          '--sign-command',
+          './sign.sh',
+          '--keep-traces',
+        ]),
+      /--keep-traces is not an option on ios\./
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'sample',
+          '--udid',
+          'U1',
+          '--package',
+          'com.x',
+          '--scenario',
+          'css',
+          '--keep-trace',
+        ]),
+      /--keep-trace is not an option on ios\./
+    );
+  });
+
+  it('reads the crosscheck command with a validation scenario and the epochs of the plan', () => {
+    assert.deepEqual(
+      parseArguments([
+        'crosscheck',
+        '--udid',
+        'U1',
+        '--package',
+        'com.x',
+        '--scenario',
+        'crosscheck-load',
+        '--epochs',
+        'idle:full:2,ui-stall:endpoints:2.5',
+      ]),
+      {
+        command: 'crosscheck',
+        device: { platform: 'ios', id: 'U1' },
+        applicationId: 'com.x',
+        scenario: 'crosscheck-load',
+        load: undefined,
+        epochs: [
+          { load: 'idle', collector: 'full', seconds: 2 },
+          { load: 'ui-stall', collector: 'endpoints', seconds: 2.5 },
+        ],
+        outputDir: VALIDATION_DIR,
+      }
+    );
+    for (const [epochs, problem] of [
+      ['idle:half:2', /--epochs: The epoch "idle:half:2" is not/],
+      ['idle:full:0', /--epochs: The epoch "idle:full:0" is not/],
+      ['Idle:full:2', /--epochs: The epoch "Idle:full:2" is not/],
+      ['idle:full:2:x', /--epochs: The epoch "idle:full:2:x" is not/],
+    ] as const) {
+      assert.throws(
+        () =>
+          parseArguments([
+            'crosscheck',
+            '--udid',
+            'U1',
+            '--package',
+            'com.x',
+            '--scenario',
+            'css',
+            '--epochs',
+            epochs,
+          ]),
+        problem
+      );
+    }
+    assert.throws(
+      () =>
+        parseArguments([
+          'crosscheck',
+          '--serial',
+          'S1',
+          '--package',
+          'com.x',
+          '--scenario',
+          'css',
+          '--epochs',
+          'none:full:2',
+        ]),
+      /The crosscheck command is not supported on android\./
+    );
+  });
+
+  it('reads the observer-cost command of a benchmark scenario', () => {
+    assert.deepEqual(
+      parseArguments([
+        'observer-cost',
+        '--udid',
+        'U1',
+        '--package',
+        'com.x',
+        '--scenario',
+        'idle-cost',
+        '--noise-limits',
+        'limits.json',
+      ]),
+      {
+        command: 'observer-cost',
+        device: { platform: 'ios', id: 'U1' },
+        applicationId: 'com.x',
+        scenario: 'idle-cost',
+        load: undefined,
+        blocks: 5,
+        noiseLimits: 'limits.json',
+        outputDir: VALIDATION_DIR,
+      }
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'observer-cost',
+          '--udid',
+          'U1',
+          '--package',
+          'com.x',
+          '--scenario',
+          'crosscheck-load',
+        ]),
+      /Unknown scenario "crosscheck-load"/
     );
   });
 

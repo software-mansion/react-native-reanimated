@@ -11,6 +11,7 @@ import { parseReportLine } from '../app-report.mts';
 import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
 import type { FrameBasis } from '../frames.mts';
+import type { AndroidSampleMetrics } from '../metrics.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { TracedApp, TraceReading } from '../perfetto.mts';
 import { METRICS } from './command-fake.mts';
@@ -577,7 +578,10 @@ describe('takeSample', () => {
       cause: 'frames',
       detail: '0 frames, expected at least 540',
     });
-    assert.equal(sample.metrics?.frameDurationMedian, null);
+    assert.equal(
+      (sample.metrics as AndroidSampleMetrics | undefined)?.frameDurationMedian,
+      null
+    );
     assert.ok(fs.existsSync(req.traceFile));
   });
 

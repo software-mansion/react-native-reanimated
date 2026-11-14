@@ -7,11 +7,26 @@ import {
 import type { LaunchReport, ScenarioReport } from './app-report.mts';
 import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
-import { expectedFrameShare } from './frames.mts';
-import { IOS_DEFINITION } from './ios-definition.mts';
+import { quantileOrNull } from './frames.mts';
+import {
+  SAMPLE_LINE_PREFIX,
+  THERMAL_STATES,
+  appStates,
+  highestThermalState,
+  parseSampleLine,
+  planSeconds,
+  readEpoch,
+} from './in-app-sample.mts';
+import type {
+  EpochReading,
+  InAppSample,
+  SamplePlan,
+} from './in-app-sample.mts';
 import { LAUNCHED_LINE } from './ios-device.mts';
+import type { IosLaunchArguments } from './ios-device.mts';
 import { judgeWork } from './judge.mts';
 import { RECORDING_SECONDS } from './measurement-rules.mts';
+import type { IosSampleMetrics } from './metrics.mts';
 import type { InAppState, SampleOrder } from './platform.mts';
 import type { LineStream } from './processes.mts';
 import {
@@ -21,40 +36,49 @@ import {
   READY_TIMEOUT_MS,
   timedSteps,
 } from './samples.mts';
-import type { InvalidSample, SampleResult, SampleSteps } from './samples.mts';
-import { THERMAL_STATES } from './xctrace-metrics.mts';
-import type { AppState } from './xctrace-metrics.mts';
-import type { IosTracer } from './xctrace.mts';
+import type { SampleResult, SampleSteps } from './samples.mts';
 
 export interface IosSampleDevice {
   terminate: (bundleIdentifier: string) => Promise<void>;
   launch: (
     bundleIdentifier: string,
-    scenario: string | undefined,
-    load: number | undefined,
+    appArguments: IosLaunchArguments,
     onLine: (line: string) => void
   ) => LineStream;
 }
 
 export interface IosSampleContext {
   device: IosSampleDevice;
-  deviceName: string;
-  tracer: IosTracer;
   clock: Clock;
   guard: InAppStateGuard;
 }
 
+export interface IosAppOrder {
+  applicationId: string;
+  stopApplicationIds: readonly string[];
+  scenario: string;
+  load?: number;
+  plan: SamplePlan;
+}
+
+export type ReadyReport = ScenarioReport & { jsThread: number };
+
+export type AppStart =
+  | { started: true; app: RunningIosApp }
+  | { started: false; detail: string };
+
+export type SampleReceipt =
+  | { received: true; sample: InAppSample }
+  | { received: false; detail: string };
+
 interface AppLaunch {
   applicationId: string;
-  scenario?: string;
-  load?: number;
+  appArguments: IosLaunchArguments;
 }
 
 type Launch =
   | { started: true; appConsole: AppConsole; report: LaunchReport }
   | { started: false; appConsole: AppConsole; reason: string };
-
-type StartedLaunch = Extract<Launch, { started: true }>;
 
 type ReadyOutcome =
   | { ready: true; report: ScenarioReport }
@@ -65,6 +89,11 @@ interface Received<T> {
   at: number;
 }
 
+export const RUN_PLAN: SamplePlan = {
+  epochs: [{ load: 'none', collector: 'full', seconds: RECORDING_SECONDS }],
+  start: 'ready',
+};
+
 const REPORT_PREFIX = 'ReanimatedBenchmark: ';
 
 const HOT_DEVICE_WAIT_MS = 30_000;
@@ -73,28 +102,87 @@ const NOMINAL_THERMAL_STATE = 0;
 
 const SUPPORTED_REFRESH_RATE = 60;
 
+const SAMPLE_MARGIN_MS = 30_000;
+
+const NOTIFICATION_WAIT_MS = 120_000;
+
 export async function takeIosSample(
   order: SampleOrder,
   context: IosSampleContext
 ): Promise<SampleResult> {
   const steps = timedSteps(context.clock);
+  const start = await startIosApp(
+    {
+      applicationId: order.applicationId,
+      stopApplicationIds: order.stopApplicationIds,
+      scenario: order.scenario,
+      load: order.load,
+      plan: RUN_PLAN,
+    },
+    context,
+    steps
+  );
+  if (!start.started) {
+    return {
+      valid: false,
+      cause: 'crash',
+      detail: start.detail,
+      timings: steps.timings,
+    };
+  }
+  return withCleanup(
+    () => measureRunSample(start.app, order, context, steps),
+    () => start.app.close()
+  );
+}
+
+export async function startIosApp(
+  order: IosAppOrder,
+  context: IosSampleContext,
+  steps: SampleSteps
+): Promise<AppStart> {
   for (const applicationId of order.stopApplicationIds) {
     await context.device.terminate(applicationId);
   }
   const launch = await steps.timed('wait', () =>
-    launchOnCoolDevice(order, context)
+    launchOnCoolDevice(
+      {
+        applicationId: order.applicationId,
+        appArguments: {
+          scenario: order.scenario,
+          load: order.load,
+          plan: order.plan,
+        },
+      },
+      context
+    )
   );
-  return withCleanup(
-    async () =>
-      launch.started
-        ? measureLaunchedApp(order, context, launch, steps)
-        : {
-            valid: false,
-            cause: 'crash',
-            detail: launch.reason,
-            timings: steps.timings,
-          },
-    () => launch.appConsole.close()
+  const { appConsole } = launch;
+  if (!launch.started) {
+    await appConsole.close();
+    return { started: false, detail: launch.reason };
+  }
+  return withCleanupOnError(
+    async (): Promise<AppStart> => {
+      const ready = await steps.timed('ready', () =>
+        waitForReady(appConsole, context.clock)
+      );
+      if (!ready.ready) {
+        await appConsole.close();
+        return { started: false, detail: ready.reason };
+      }
+      return {
+        started: true,
+        app: new RunningIosApp(
+          appConsole,
+          launch.report,
+          readyReport(ready.report, launch.report, order.applicationId),
+          order.plan,
+          context.clock
+        ),
+      };
+    },
+    () => appConsole.close()
   );
 }
 
@@ -103,7 +191,10 @@ export async function launchOnce(
   applicationId: string,
   clock: Clock
 ) {
-  const launch = await startLaunch(device, clock, { applicationId });
+  const launch = await startLaunch(device, clock, {
+    applicationId,
+    appArguments: {},
+  });
   await withCleanup(
     async () => {
       if (!launch.started) {
@@ -114,6 +205,83 @@ export async function launchOnce(
     },
     () => launch.appConsole.close()
   );
+}
+
+export class RunningIosApp {
+  readonly launch: LaunchReport;
+  readonly report: ReadyReport;
+  readonly #appConsole: AppConsole;
+  readonly #plan: SamplePlan;
+  readonly #clock: Clock;
+
+  constructor(
+    appConsole: AppConsole,
+    launch: LaunchReport,
+    report: ReadyReport,
+    plan: SamplePlan,
+    clock: Clock
+  ) {
+    this.#appConsole = appConsole;
+    this.launch = launch;
+    this.report = report;
+    this.#plan = plan;
+    this.#clock = clock;
+  }
+
+  get pid(): number {
+    return this.launch.pid;
+  }
+
+  async waitForSample(): Promise<SampleReceipt> {
+    const limitMs =
+      planSeconds(this.#plan) * 1000 +
+      SAMPLE_MARGIN_MS +
+      (this.#plan.start === 'notification' ? NOTIFICATION_WAIT_MS : 0);
+    const deadline = this.#clock.now() + limitMs;
+    while (true) {
+      const text = this.#appConsole.sampleText();
+      if (text !== null) {
+        return { received: true, sample: this.#checkedSample(text) };
+      }
+      const failure = this.failure();
+      if (failure !== null) {
+        return { received: false, detail: failure };
+      }
+      if (this.#clock.now() >= deadline) {
+        return {
+          received: false,
+          detail: `no SAMPLE line in ${limitMs / 1000} s after READY`,
+        };
+      }
+      await this.#clock.sleep(PROCESS_POLL_MS);
+    }
+  }
+
+  failure(): string | null {
+    return (
+      this.#appConsole.failure() ??
+      (this.#appConsole.ended()
+        ? `the app process ${this.pid} ended before its SAMPLE line`
+        : null)
+    );
+  }
+
+  close(): Promise<void> {
+    return this.#appConsole.close();
+  }
+
+  #checkedSample(text: string): InAppSample {
+    const sample = parseSampleLine(text, this.#plan);
+    if (
+      sample.mainThread !== this.launch.mainThread ||
+      sample.jsThread !== this.report.jsThread
+    ) {
+      throw new ToolError(
+        `The SAMPLE line measured the threads ${sample.mainThread} and ${sample.jsThread}, the LAUNCH and READY lines name the main thread ${this.launch.mainThread} and the JS thread ${this.report.jsThread}`
+      );
+    }
+    return sample;
+  }
 }
 
 export class InAppStateGuard {
@@ -131,30 +299,129 @@ export class InAppStateGuard {
       .map((key) => `${key}: ${reference[key]} -> ${state[key]}`);
     if (changes.length > 0) {
       throw new ToolError(
-        `The device state changed (read in the trace): ${changes.join(', ')}`
+        `The device state changed (read by the app): ${changes.join(', ')}`
       );
     }
   }
 }
 
-async function launchOnCoolDevice(
+export function inAppStatesOf(
+  sample: InAppSample,
+  refreshRate: number
+): InAppState[] {
+  return appStates(sample).map((state) => ({ refreshRate, ...state }));
+}
+
+async function measureRunSample(
+  app: RunningIosApp,
   order: SampleOrder,
+  context: IosSampleContext,
+  steps: SampleSteps
+): Promise<SampleResult> {
+  const { refreshRate, coldStart } = app.launch;
+  const observed = {
+    report: app.report,
+    pid: app.pid,
+    refreshRate,
+    timings: steps.timings,
+  };
+  const receipt = await steps.timed('measure', () => app.waitForSample());
+  if (!receipt.received) {
+    return {
+      valid: false,
+      cause: 'crash',
+      detail: receipt.detail,
+      ...observed,
+    };
+  }
+  await app.close();
+  const { sample } = receipt;
+  const reading = await steps.timed('parse', async () =>
+    readEpoch(sample, 0, refreshRate)
+  );
+  const states = inAppStatesOf(sample, refreshRate);
+  states.forEach((state) => context.guard.check(state));
+  const thermalState = highestThermalState(sample);
+  const measured = {
+    ...observed,
+    thermalAfter: thermalState,
+    traceWindow: reading.window,
+    inAppState: states[0],
+    metrics: runMetrics(reading, coldStart),
+  };
+  if (thermalState > NOMINAL_THERMAL_STATE) {
+    return {
+      valid: false,
+      cause: 'thermal',
+      detail: `thermal state ${THERMAL_STATES[thermalState] ?? thermalState} in the sample window`,
+      ...measured,
+    };
+  }
+  return judgeWork(measured, order.scenario);
+}
+
+function runMetrics(
+  reading: EpochReading,
+  coldStart: number
+): IosSampleMetrics {
+  const { updates } = reading;
+  if (updates === null) {
+    throw new ToolError('The sample epoch has no UI update data');
+  }
+  const durations = updates.durationsMs;
+  return {
+    uiUpdateDurationMedian: quantileOrNull(durations, 0.5),
+    uiUpdateDurationP90: quantileOrNull(durations, 0.9),
+    uiUpdateDurationP95: quantileOrNull(durations, 0.95),
+    uiUpdateDurationP99: quantileOrNull(durations, 0.99),
+    missedDisplayLinkCallbacks: updates.missedDisplayLinkCallbacks,
+    frameCount: durations.length,
+    expectedFrameCount: updates.expectedSlots,
+    ...reading.cpu,
+    mountBatchCount: reading.mountBatchCount,
+    memory: reading.memory,
+    windowMemoryDelta: reading.windowMemoryDelta,
+    coldStart,
+  };
+}
+
+function readyReport(
+  report: ScenarioReport,
+  launch: LaunchReport,
+  applicationId: string
+): ReadyReport {
+  const { jsThread } = report;
+  if (jsThread === null) {
+    throw new ToolError(
+      `The READY line of ${applicationId} has no jsThread field. Build the app again from the current benchmark app source.`
+    );
+  }
+  if (launch.refreshRate !== SUPPORTED_REFRESH_RATE) {
+    throw new ToolError(
+      `The display of the device has a maximum refresh rate of ${launch.refreshRate} Hz. The driver supports only a display with a fixed rate of ${SUPPORTED_REFRESH_RATE} Hz.`
+    );
+  }
+  return { ...report, jsThread };
+}
+
+async function launchOnCoolDevice(
+  launch: AppLaunch,
   { device, clock }: IosSampleContext
 ): Promise<Launch> {
   const startedAt = clock.now();
   await clock.sleep(MINIMUM_WAIT_MS);
   while (true) {
-    const launch = await startLaunch(device, clock, order);
+    const started = await startLaunch(device, clock, launch);
     if (
-      !launch.started ||
-      launch.report.thermalState === NOMINAL_THERMAL_STATE
+      !started.started ||
+      started.report.thermalState === NOMINAL_THERMAL_STATE
     ) {
-      return launch;
+      return started;
     }
-    await launch.appConsole.close();
+    await started.appConsole.close();
     if (clock.now() - startedAt >= COOL_DOWN_LIMIT_MS) {
       throw new ToolError(
-        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[launch.report.thermalState] ?? launch.report.thermalState} at the launch of the app`
+        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[started.report.thermalState] ?? started.report.thermalState} at the launch of the app`
       );
     }
     await clock.sleep(HOT_DEVICE_WAIT_MS);
@@ -167,15 +434,15 @@ async function startLaunch(
   launch: AppLaunch
 ): Promise<Launch> {
   const appConsole = new AppConsole(device, clock, launch);
-  try {
-    const report = await waitForLaunch(appConsole, clock);
-    return typeof report === 'string'
-      ? { started: false, appConsole, reason: report }
-      : { started: true, appConsole, report };
-  } catch (error) {
-    await appConsole.close().catch(() => {});
-    throw error;
-  }
+  return withCleanupOnError(
+    async (): Promise<Launch> => {
+      const report = await waitForLaunch(appConsole, clock);
+      return typeof report === 'string'
+        ? { started: false, appConsole, reason: report }
+        : { started: true, appConsole, report };
+    },
+    () => appConsole.close()
+  );
 }
 
 class AppConsole {
@@ -186,6 +453,7 @@ class AppConsole {
   #launched = false;
   #launchReport: Received<LaunchReport> | null = null;
   #scenarioReport: Received<ScenarioReport> | null = null;
+  #sampleText: string | null = null;
   #failure: string | null = null;
   #closing: Promise<void> | null = null;
 
@@ -195,8 +463,7 @@ class AppConsole {
     this.#launch = launch;
     this.#stream = device.launch(
       launch.applicationId,
-      launch.scenario,
-      launch.load,
+      launch.appArguments,
       (line) => this.#read(line)
     );
   }
@@ -215,6 +482,10 @@ class AppConsole {
     }
     const report = valueBefore(this.#scenarioReport, deadline);
     return report ? { ready: true, report } : null;
+  }
+
+  sampleText(): string | null {
+    return this.#sampleText;
   }
 
   failure(): string | null {
@@ -249,6 +520,10 @@ class AppConsole {
       return;
     }
     const text = line.slice(REPORT_PREFIX.length);
+    if (text.startsWith(SAMPLE_LINE_PREFIX)) {
+      this.#sampleText ??= text.slice(SAMPLE_LINE_PREFIX.length);
+      return;
+    }
     const at = this.#clock.now();
     const launch = parseLaunchLine(text);
     if (launch) {
@@ -257,7 +532,10 @@ class AppConsole {
     const report = parseReportLine(text);
     if (report?.kind === 'failed') {
       this.#failure ??= failureText(report);
-    } else if (report && report.scenario === this.#launch.scenario) {
+    } else if (
+      report &&
+      report.scenario === this.#launch.appArguments.scenario
+    ) {
       this.#scenarioReport ??= { value: scenarioReportOf(report), at };
     }
   }
@@ -301,112 +579,6 @@ async function waitForLaunch(
   }
 }
 
-async function withCleanup<T>(
-  action: () => Promise<T>,
-  cleanUp: () => Promise<void>
-): Promise<T> {
-  let result: T;
-  try {
-    result = await action();
-  } catch (error) {
-    await cleanUp().catch(() => {});
-    throw error;
-  }
-  await cleanUp();
-  return result;
-}
-
-async function measureLaunchedApp(
-  order: SampleOrder,
-  context: IosSampleContext,
-  { appConsole, report: launch }: StartedLaunch,
-  steps: SampleSteps
-): Promise<SampleResult> {
-  const { tracer, guard } = context;
-  const { applicationId, traceFile } = order;
-  const { timings, timed } = steps;
-  const ready = await timed('ready', () =>
-    waitForReady(appConsole, context.clock)
-  );
-  if (!ready.ready) {
-    return { valid: false, cause: 'crash', detail: ready.reason, timings };
-  }
-  const { report } = ready;
-  const { jsThread } = report;
-  if (jsThread === null) {
-    throw new ToolError(
-      `The READY line of ${applicationId} has no jsThread field. Build the app again from the current benchmark app source.`
-    );
-  }
-  const { pid, refreshRate } = launch;
-  if (refreshRate !== SUPPORTED_REFRESH_RATE) {
-    throw new ToolError(
-      `The display of the device has a maximum refresh rate of ${refreshRate} Hz. The driver supports only a display with a fixed rate of ${SUPPORTED_REFRESH_RATE} Hz.`
-    );
-  }
-  const observed = { report, pid, refreshRate, timings };
-
-  const endedBeforeTrace = appEnd(appConsole, pid, 'before the trace');
-  if (endedBeforeTrace !== null) {
-    return {
-      valid: false,
-      cause: 'crash',
-      detail: endedBeforeTrace,
-      ...observed,
-    };
-  }
-  const recorded = await timed('trace', () =>
-    tracer
-      .record(context.deviceName, pid, traceFile)
-      .catch((error: Error) => error)
-  );
-  const endedInTrace = appEnd(appConsole, pid, 'during the trace');
-  if (endedInTrace !== null) {
-    return crash(endedInTrace, observed, traceFile);
-  }
-  if (recorded instanceof Error) {
-    throw recorded;
-  }
-  await appConsole.close();
-
-  const reading = await timed('parse', () =>
-    tracer.collect(traceFile, {
-      pid,
-      mainThread: launch.mainThread,
-      jsThread,
-      frames: {
-        refreshRate,
-        share: expectedFrameShare(IOS_DEFINITION.frameSource, order.scenario),
-      },
-      recordingSeconds: RECORDING_SECONDS,
-    })
-  );
-  if (!reading.processLived) {
-    return crash(reading.detail, observed, traceFile);
-  }
-  const states = reading.appStates.map((state) =>
-    inAppStateOf(state, refreshRate)
-  );
-  states.forEach((state) => guard.check(state));
-  const measured = {
-    ...observed,
-    thermalAfter: reading.thermalState,
-    traceWindow: reading.window,
-    inAppState: states[0],
-    metrics: { ...reading.metrics, coldStart: launch.coldStart },
-  };
-  if (reading.thermalState > NOMINAL_THERMAL_STATE) {
-    return {
-      valid: false,
-      cause: 'thermal',
-      detail: `thermal state ${THERMAL_STATES[reading.thermalState]} during the trace`,
-      trace: traceFile,
-      ...measured,
-    };
-  }
-  return judgeWork(measured, order);
-}
-
 async function waitForReady(
   appConsole: AppConsole,
   clock: Clock
@@ -433,31 +605,23 @@ async function waitForReady(
   };
 }
 
-function crash(
-  detail: string,
-  observed: Pick<InvalidSample, 'report' | 'pid' | 'refreshRate' | 'timings'>,
-  traceFile: string
-): InvalidSample {
-  return {
-    valid: false,
-    cause: 'crash',
-    detail,
-    trace: traceFile,
-    ...observed,
-  };
+async function withCleanup<T>(
+  action: () => Promise<T>,
+  cleanUp: () => Promise<void>
+): Promise<T> {
+  const result = await withCleanupOnError(action, cleanUp);
+  await cleanUp();
+  return result;
 }
 
-function appEnd(
-  appConsole: AppConsole,
-  pid: number,
-  moment: string
-): string | null {
-  return (
-    appConsole.failure() ??
-    (appConsole.ended() ? `the app process ${pid} ended ${moment}` : null)
-  );
-}
-
-function inAppStateOf(state: AppState, refreshRate: number): InAppState {
-  return { refreshRate, ...state };
+async function withCleanupOnError<T>(
+  action: () => Promise<T>,
+  cleanUp: () => Promise<void>
+): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    await cleanUp().catch(() => {});
+    throw error;
+  }
 }

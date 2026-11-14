@@ -3,7 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { SCENARIOS, SCENARIO_REQUIREMENTS } from '../scenarios.mts';
+import {
+  SCENARIOS,
+  SCENARIO_REQUIREMENTS,
+  VALIDATION_SCENARIOS,
+} from '../scenarios.mts';
 
 const SCENARIO_SOURCES = path.join(
   import.meta.dirname,
@@ -14,13 +18,25 @@ const SCENARIO_SOURCES = path.join(
 );
 const REGISTRY = path.join(SCENARIO_SOURCES, 'registry.ts');
 
+const VALIDATION_REGISTRY = path.join(
+  SCENARIO_SOURCES,
+  'validationRegistry.ts'
+);
+
+function registryNames(file: string): string[] {
+  const source = fs.readFileSync(file, 'utf8');
+  return [...source.matchAll(/\bname: '([^']+)'/g)].map((match) => match[1]);
+}
+
 describe('SCENARIOS', () => {
   it('lists the scenario names of the app registry in the same order', () => {
-    const source = fs.readFileSync(REGISTRY, 'utf8');
-    const names = [...source.matchAll(/\bname: '([^']+)'/g)].map(
-      (match) => match[1]
-    );
-    assert.deepEqual(names, [...SCENARIOS]);
+    assert.deepEqual(registryNames(REGISTRY), [...SCENARIOS]);
+  });
+
+  it('lists the validation scenario names of the app in the same order', () => {
+    assert.deepEqual(registryNames(VALIDATION_REGISTRY), [
+      ...VALIDATION_SCENARIOS,
+    ]);
   });
 });
 

@@ -368,7 +368,7 @@ describe('renderReport', () => {
     assert.match(section, /\| `coldStart` \| ms \| .* \| no verdict, shown \|/);
     assert.match(
       section,
-      /\| `hitchCount`, `hitchTime` \| .* \| no, stored \|/
+      /\| `uiUpdateDurationP90`, `uiUpdateDurationP99` \| .* \| no, stored \|/
     );
     assert.match(section, /\| `uiThreadCpu` \| ms for each s \| .* \| yes \|/);
   });

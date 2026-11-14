@@ -4,9 +4,11 @@ import { USAGE, parseArguments } from './arguments.mts';
 import type { Command } from './arguments.mts';
 import { TOOL_ERROR_EXIT_CODE } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
+import { crosscheckCommand } from './crosscheck-command.mts';
 import { ToolError } from './errors.mts';
 import { memoryCommand, memoryResumeCommand } from './memory.mts';
 import { noiseLimitsCommand } from './noise-limits.mts';
+import { observerCostCommand } from './observer-cost-command.mts';
 import { Processes } from './processes.mts';
 import { resumeCommand, runCommand } from './run.mts';
 import { sampleCommand } from './sample-command.mts';
@@ -66,6 +68,10 @@ async function runParsedCommand(
       return noiseLimitsCommand(command);
     case 'sample':
       return sampleCommand(command, context);
+    case 'crosscheck':
+      return crosscheckCommand(command, context);
+    case 'observer-cost':
+      return observerCostCommand(command, context);
   }
 }
 

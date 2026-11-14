@@ -1,16 +1,10 @@
 import { ToolError } from './errors.mts';
-import { frameMetrics } from './frames.mts';
-import type { FrameBasis } from './frames.mts';
-import type { IosSampleMetrics } from './metrics.mts';
-import type { TraceWindow } from './samples.mts';
 import { childText, parseTraceTables } from './xctrace-tables.mts';
 import type { TraceElement, TraceRow } from './xctrace-tables.mts';
 
 export interface TraceExports {
   threadState: string;
   frames: string;
-  hitches: string;
-  thermal: string;
   signposts: string;
 }
 
@@ -18,32 +12,22 @@ export interface TracedIosApp {
   pid: number;
   mainThread: number;
   jsThread: number;
-  frames: FrameBasis;
-  recordingSeconds: number;
 }
 
-export interface AppState {
-  batteryLevel: number;
-  batteryState: string;
-  lowPowerMode: boolean;
-  brightness: number;
+export interface TraceSpan {
+  startNs: number;
+  endNs: number;
 }
 
-export type IosTraceMetrics = Omit<IosSampleMetrics, 'coldStart'>;
-
-export type IosTraceReading =
-  | {
-      processLived: true;
-      metrics: IosTraceMetrics;
-      window: TraceWindow;
-      thermalState: number;
-      appStates: AppState[];
-    }
-  | { processLived: false; detail: string };
+export interface TraceEpoch {
+  uiThreadCpu: number;
+  jsThreadCpu: number;
+  processCpu: number;
+  frameDurationsMs: number[];
+  mountBatchCount: number;
+}
 
 type SchedulerState = 'on core' | 'off core' | 'unknown';
-
-type CoreType = 'efficiency' | 'performance';
 
 interface Table {
   schema: string;
@@ -59,19 +43,7 @@ interface Interval {
 interface ThreadInterval extends Interval {
   thread: number;
   state: string;
-  coreType: CoreType | null;
 }
-
-type StateEvent = Record<(typeof STATE_KEYS)[number], number> & {
-  time: number;
-};
-
-export const THERMAL_STATES = [
-  'Nominal',
-  'Fair',
-  'Serious',
-  'Critical',
-] as const;
 
 const MOUNT_SECTION_NAME = 'RCTPerformMountInstructions';
 
@@ -79,9 +51,9 @@ const REACT_NATIVE_SUBSYSTEM = 'dev.reactnative.instruments';
 
 const APP_SUBSYSTEM = 'com.reanimatedbenchmark';
 
-const STATE_EVENT_NAME = 'State';
+const BOUNDARY_EVENT_NAME = 'Boundary';
 
-const MINIMUM_WINDOW_SHARE = 0.8;
+const BOUNDARY_MESSAGE = /^index=(\d+)$/;
 
 const THREAD_STATE_COLUMNS = [
   'start',
@@ -89,7 +61,17 @@ const THREAD_STATE_COLUMNS = [
   'thread',
   'state',
   'process',
-  'core',
+] as const;
+
+const FRAME_COLUMNS = ['start', 'duration', 'process'] as const;
+
+const SIGNPOST_COLUMNS = [
+  'time',
+  'process',
+  'event-type',
+  'name',
+  'subsystem',
+  'message',
 ] as const;
 
 const SCHEDULER_STATES: Record<string, SchedulerState> = {
@@ -104,105 +86,127 @@ const SCHEDULER_STATES: Record<string, SchedulerState> = {
   Unknown: 'unknown',
 };
 
-const CORE_TYPES: Record<string, CoreType> = {
-  'E Core': 'efficiency',
-  'P Core': 'performance',
-  'S Core': 'performance',
-};
-
 const NANOSECONDS_PER_MS = 1e6;
 
 const NANOSECONDS_PER_SECOND = 1e9;
 
-const STATE_KEYS = [
-  'footprint',
-  'thermal',
-  'batteryLevel',
-  'batteryState',
-  'lowPower',
-  'brightness',
-] as const;
-
-const BATTERY_STATES = ['unknown', 'unplugged', 'charging', 'full'];
-
-const STATE_PAIR = /(\S+?)=(\S*)/g;
-
 const INTEGER = /^-?\d+$/;
 
-export function computeIosTraceMetrics(
+export function readBoundarySignposts(
+  exports: Pick<TraceExports, 'signposts'>,
+  pid: number
+): number[] {
+  const signposts = appTable(
+    tableOf(exports.signposts, 'os-signpost'),
+    pid,
+    SIGNPOST_COLUMNS
+  );
+  const times = new Map<number, number>();
+  for (const row of signposts.rows) {
+    if (
+      row.subsystem?.text !== APP_SUBSYSTEM ||
+      row.name?.text !== BOUNDARY_EVENT_NAME
+    ) {
+      continue;
+    }
+    const message = messageText(row.message);
+    const index = BOUNDARY_MESSAGE.exec(message)?.[1];
+    if (index === undefined || times.has(Number(index))) {
+      throw new ToolError(
+        `The ${BOUNDARY_EVENT_NAME} signpost "${message}" has no new index`
+      );
+    }
+    times.set(Number(index), integerCell(signposts, row, 'time'));
+  }
+  const ordered = Array.from({ length: times.size }, (_, i) => times.get(i));
+  if (ordered.some((time) => time === undefined)) {
+    throw new ToolError(
+      `The ${BOUNDARY_EVENT_NAME} signposts of process ${pid} do not have the indexes 0 to ${times.size - 1}`
+    );
+  }
+  return ordered as number[];
+}
+
+export function readTraceEpochs(
   exports: TraceExports,
-  app: TracedIosApp
-): IosTraceReading {
+  app: TracedIosApp,
+  spans: readonly TraceSpan[]
+): TraceEpoch[] {
   const threadState = appTable(
     tableOf(exports.threadState, 'thread-state'),
-    app.pid
+    app.pid,
+    THREAD_STATE_COLUMNS
   );
-  checkColumns(threadState, THREAD_STATE_COLUMNS);
-  if (threadState.rows.length === 0) {
-    throw new ToolError(`The trace has no thread of process ${app.pid}`);
-  }
   const intervals = threadState.rows.map((row) =>
     threadInterval(threadState, row)
   );
-  if (
-    intervals.some(
-      ({ thread, state }) => thread === app.mainThread && state === 'Terminated'
-    )
-  ) {
-    return {
-      processLived: false,
-      detail: `the app process ${app.pid} ended before the end of the trace`,
-    };
-  }
+  const covered = measuredThreadsSpans(intervals, app);
+  const frames = intervalsOf(
+    appTable(tableOf(exports.frames, 'hitches-updates'), app.pid, FRAME_COLUMNS)
+  );
   const signposts = appTable(
     tableOf(exports.signposts, 'os-signpost'),
-    app.pid
+    app.pid,
+    SIGNPOST_COLUMNS
   );
-  const stateEvents = readStateEvents(signposts);
-  const span = measuredThreadsSpan(intervals, app);
-  const windowEvents = eventsInSpan(stateEvents, span);
-  const window = traceWindow(windowEvents, span, app);
-  const windowSeconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
-  const appIntervals = (xml: string, schema: string) =>
-    intervalsOf(appTable(tableOf(xml, schema), app.pid));
-  const frames = appIntervals(exports.frames, 'hitches-updates').filter(
-    ({ start, end }) => start >= window.start && end <= window.end
-  );
-  const hitchesInWindowNs = appIntervals(exports.hitches, 'hitches')
-    .map((hitch) => overlapNs(hitch, window))
-    .filter((ns) => ns > 0);
-  const metrics: IosTraceMetrics = {
-    ...frameMetrics(
-      frames.map(({ start, end }) => (end - start) / NANOSECONDS_PER_MS),
-      app.frames,
-      windowSeconds
-    ),
-    ...cpuMetrics(intervals, app, window),
-    ...hitchMetrics(hitchesInWindowNs, windowSeconds),
-    mountBatchCount: windowRows(signposts, 'time', window).rows.filter(
-      isMountBatchStart
-    ).length,
-    ...memoryMetrics(windowEvents),
-  };
-  checkFiniteMetrics(metrics);
+  const mountStarts = signposts.rows
+    .filter(isMountBatchStart)
+    .map((row) => integerCell(signposts, row, 'time'));
+  return spans.map((span, index) => {
+    if (
+      !covered.some(
+        ({ start, end }) => start <= span.startNs && end >= span.endNs
+      )
+    ) {
+      throw new ToolError(
+        `The scheduler data does not cover epoch ${index} (${span.startNs} ns to ${span.endNs} ns) for both the main thread ${app.mainThread} and the JS thread ${app.jsThread}`
+      );
+    }
+    return traceEpoch(intervals, frames, mountStarts, app, span);
+  });
+}
+
+function traceEpoch(
+  intervals: ThreadInterval[],
+  frames: Interval[],
+  mountStarts: number[],
+  app: TracedIosApp,
+  span: TraceSpan
+): TraceEpoch {
+  const window = { start: span.startNs, end: span.endNs };
+  const seconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
+  const perSecond = (ns: number) => ns / NANOSECONDS_PER_MS / seconds;
+  let mainNs = 0;
+  let jsNs = 0;
+  let processNs = 0;
+  for (const interval of intervals) {
+    const inWindow = overlapNs(interval, window);
+    if (SCHEDULER_STATES[interval.state] !== 'on core' || inWindow <= 0) {
+      continue;
+    }
+    processNs += inWindow;
+    mainNs += interval.thread === app.mainThread ? inWindow : 0;
+    jsNs += interval.thread === app.jsThread ? inWindow : 0;
+  }
   return {
-    processLived: true,
-    metrics,
-    window: {
-      startNs: window.start,
-      endNs: window.end,
-      seconds: windowSeconds,
-    },
-    thermalState: highestThermalState(
-      tableOf(exports.thermal, 'device-thermal-state-intervals'),
-      window,
-      stateEvents
-    ),
-    appStates: stateEvents.map(appState),
+    uiThreadCpu: perSecond(mainNs),
+    jsThreadCpu: perSecond(jsNs),
+    processCpu: perSecond(processNs),
+    frameDurationsMs: frames
+      .filter(({ start, end }) => start >= window.start && end <= window.end)
+      .map(({ start, end }) => (end - start) / NANOSECONDS_PER_MS),
+    mountBatchCount: mountStarts.filter(
+      (time) => time >= window.start && time < window.end
+    ).length,
   };
 }
 
-function appTable(table: Table, pid: number): Table {
+function appTable(
+  table: Table,
+  pid: number,
+  requiredColumns: readonly string[]
+): Table {
+  checkColumns(table, requiredColumns);
   return {
     ...table,
     rows: table.rows.filter((row) => {
@@ -254,12 +258,7 @@ function threadInterval(threadState: Table, row: TraceRow): ThreadInterval {
       `A row of the table ${threadState.schema} has the duration ${interval.end - interval.start} ns, expected more than 0`
     );
   }
-  return {
-    ...interval,
-    thread: Number(thread),
-    state,
-    coreType: coreTypeOf(row.core?.attributes.fmt),
-  };
+  return { ...interval, thread: Number(thread), state };
 }
 
 function rowInterval(table: Table, row: TraceRow): Interval {
@@ -282,48 +281,14 @@ function integerCell(table: Table, row: TraceRow, column: string): number {
   return value;
 }
 
-function coreTypeOf(label: string | undefined): CoreType | null {
-  const type = Object.keys(CORE_TYPES).find((name) => label?.includes(name));
-  return type === undefined ? null : CORE_TYPES[type];
-}
-
-function readStateEvents(signposts: Table): StateEvent[] {
-  return signposts.rows
-    .filter(
-      (row) =>
-        row.subsystem?.text === APP_SUBSYSTEM &&
-        row.name?.text === STATE_EVENT_NAME
-    )
-    .map((row) => stateEvent(signposts, row))
-    .sort((left, right) => left.time - right.time);
-}
-
-function stateEvent(signposts: Table, row: TraceRow): StateEvent {
-  const message = messageText(row.message);
-  const values = new Map(
-    Array.from(message.matchAll(STATE_PAIR), ([, key, value]) => [key, value])
-  );
-  const event = { time: integerCell(signposts, row, 'time') } as StateEvent;
-  for (const key of STATE_KEYS) {
-    const value = values.get(key);
-    if (value === undefined || !INTEGER.test(value)) {
-      throw new ToolError(
-        `The ${STATE_EVENT_NAME} signpost "${message}" has no integer value of ${key}`
-      );
-    }
-    event[key] = Number(value);
-  }
-  return event;
-}
-
 function messageText(message: TraceElement | null): string {
   return message?.children.map((part) => part.text).join('') ?? '';
 }
 
-function measuredThreadsSpan(
+function measuredThreadsSpans(
   intervals: ThreadInterval[],
   app: TracedIosApp
-): Interval {
+): Interval[] {
   const [main, js] = (
     [
       ['main thread', app.mainThread],
@@ -346,15 +311,7 @@ function measuredThreadsSpan(
       )
     );
   });
-  const common = commonSpans(main, js);
-  if (common.length === 0) {
-    throw new ToolError(
-      `The scheduler data has no time with a known state of both the main thread ${app.mainThread} and the JS thread ${app.jsThread}`
-    );
-  }
-  return common.reduce((longest, span) =>
-    span.end - span.start > longest.end - longest.start ? span : longest
-  );
+  return commonSpans(main, js);
 }
 
 function coveredSpans(intervals: Interval[]): Interval[] {
@@ -396,43 +353,6 @@ function commonSpans(first: Interval[], second: Interval[]): Interval[] {
   return common;
 }
 
-function eventsInSpan(stateEvents: StateEvent[], span: Interval): StateEvent[] {
-  const inSpan = stateEvents.filter(
-    ({ time }) => time >= span.start && time <= span.end
-  );
-  if (inSpan.length < 2) {
-    throw new ToolError(
-      `The trace has ${inSpan.length} ${STATE_EVENT_NAME} signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (${spanText(span)}). The trace window needs 2.`
-    );
-  }
-  return inSpan;
-}
-
-function spanText(span: Interval): string {
-  return `${span.start} ns to ${span.end} ns`;
-}
-
-function traceWindow(
-  stateEvents: StateEvent[],
-  span: Interval,
-  app: TracedIosApp
-): Interval {
-  const start = stateEvents[0].time;
-  const end = stateEvents[stateEvents.length - 1].time;
-  const minimumNs =
-    MINIMUM_WINDOW_SHARE * app.recordingSeconds * NANOSECONDS_PER_SECOND;
-  if (end - start < minimumNs) {
-    throw new ToolError(
-      `The trace window of process ${app.pid} is ${(end - start) / NANOSECONDS_PER_SECOND} s long (${start} ns to ${end} ns, in the scheduler data of the measured threads from ${spanText(span)}). It must be at least ${percent(MINIMUM_WINDOW_SHARE)} of the recording of ${app.recordingSeconds} s.`
-    );
-  }
-  return { start, end };
-}
-
-function percent(share: number): string {
-  return `${share * 100}%`;
-}
-
 function intervalsOf(table: Table): Interval[] {
   return table.rows.map((row) => rowInterval(table, row));
 }
@@ -443,122 +363,10 @@ function overlapNs(interval: Interval, window: Interval): number {
   );
 }
 
-function cpuMetrics(
-  intervals: ThreadInterval[],
-  app: TracedIosApp,
-  window: Interval
-) {
-  const cpuNs = new Map<number, number>();
-  let mainEfficiencyCoreNs = 0;
-  let mainCoreTypeKnown = true;
-  for (const interval of intervals) {
-    const { thread, state, coreType } = interval;
-    const inWindow = overlapNs(interval, window);
-    if (SCHEDULER_STATES[state] !== 'on core' || inWindow <= 0) {
-      continue;
-    }
-    cpuNs.set(thread, (cpuNs.get(thread) ?? 0) + inWindow);
-    if (thread === app.mainThread) {
-      mainCoreTypeKnown &&= coreType !== null;
-      mainEfficiencyCoreNs += coreType === 'efficiency' ? inWindow : 0;
-    }
-  }
-  const windowSeconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
-  const perSecond = (ns: number) => ns / NANOSECONDS_PER_MS / windowSeconds;
-  const mainNs = cpuNs.get(app.mainThread) ?? 0;
-  const jsNs = cpuNs.get(app.jsThread) ?? 0;
-  const processNs = [...cpuNs.values()].reduce((sum, ns) => sum + ns, 0);
-  return {
-    uiThreadCpu: perSecond(mainNs),
-    jsThreadCpu: perSecond(jsNs),
-    otherThreadsCpu: perSecond(processNs - mainNs - jsNs),
-    processCpu: perSecond(processNs),
-    uiThreadEfficiencyCoreShare:
-      mainNs > 0 && mainCoreTypeKnown ? mainEfficiencyCoreNs / mainNs : null,
-  };
-}
-
-function hitchMetrics(durationsNs: number[], windowSeconds: number) {
-  const totalNs = durationsNs.reduce((sum, ns) => sum + ns, 0);
-  return {
-    hitchCount: durationsNs.length,
-    hitchTime: totalNs / NANOSECONDS_PER_MS / windowSeconds,
-  };
-}
-
-function windowRows(table: Table, column: string, window: Interval): Table {
-  return {
-    ...table,
-    rows: table.rows.filter((row) => {
-      const time = integerCell(table, row, column);
-      return time >= window.start && time < window.end;
-    }),
-  };
-}
-
 function isMountBatchStart(row: TraceRow): boolean {
   return (
     row.subsystem?.text === REACT_NATIVE_SUBSYSTEM &&
     row['event-type']?.text === 'Begin' &&
     row.message?.children[0]?.text === MOUNT_SECTION_NAME
   );
-}
-
-function memoryMetrics(stateEvents: StateEvent[]) {
-  const first = stateEvents[0].footprint;
-  const last = stateEvents[stateEvents.length - 1].footprint;
-  return { memory: last, windowMemoryDelta: last - first };
-}
-
-function checkFiniteMetrics(metrics: IosTraceMetrics) {
-  const notFinite = Object.entries(metrics).filter(
-    ([, value]) => value !== null && !Number.isFinite(value)
-  );
-  if (notFinite.length > 0) {
-    throw new ToolError(
-      `The trace gives metrics that are not finite numbers: ${notFinite.map(([name, value]) => `${name} = ${value}`).join(', ')}`
-    );
-  }
-}
-
-function highestThermalState(
-  thermal: Table,
-  window: Interval,
-  stateEvents: StateEvent[]
-): number {
-  const fromIntervals = thermal.rows
-    .filter((row) => {
-      const { start, end } = rowInterval(thermal, row);
-      return start < window.end && end > window.start;
-    })
-    .map((row) => thermalStateIndex(row['thermal-state']?.text ?? null));
-  return Math.max(
-    ...fromIntervals,
-    ...stateEvents.map((event) => event.thermal)
-  );
-}
-
-function thermalStateIndex(text: string | null): number {
-  const index = THERMAL_STATES.findIndex((state) => state === text);
-  if (index === -1) {
-    throw new ToolError(
-      `The thermal state "${text}" is not one of ${THERMAL_STATES.join(', ')}`
-    );
-  }
-  return index;
-}
-
-function appState(event: StateEvent): AppState {
-  const batteryState = BATTERY_STATES[event.batteryState];
-  if (batteryState === undefined) {
-    throw new ToolError(
-      `The ${STATE_EVENT_NAME} signpost has the unknown batteryState ${event.batteryState}`
-    );
-  }
-  return {
-    batteryLevel: event.batteryLevel,
-    batteryState,
-    lowPowerMode: event.lowPower === 1,
-    brightness: event.brightness,
-  };
 }

@@ -9,6 +9,7 @@ import {
   SharedElements,
 } from './SharedElements';
 import { StickyHeader } from './StickyHeader';
+import { validationScenarios } from './validationRegistry';
 import { WorkletStylesLayout } from './WorkletStylesLayout';
 import { WorkletStylesTransform } from './WorkletStylesTransform';
 
@@ -57,5 +58,7 @@ export const scenarios: readonly Scenario[] = [
 ];
 
 export function findScenario(name: string) {
-  return scenarios.find((scenario) => scenario.name === name);
+  return [...scenarios, ...validationScenarios].find(
+    (scenario) => scenario.name === name
+  );
 }

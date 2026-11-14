@@ -1,13 +1,13 @@
+import type { AppState } from './in-app-sample.mts';
 import type { IosDeviceState } from './ios-device.mts';
 import type { PlatformDefinition } from './platform.mts';
 import { aBoolean, aNumber, aString, shape } from './validation.mts';
 import type { Check } from './validation.mts';
-import type { AppState } from './xctrace-metrics.mts';
 
 const WINDOW =
-  'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread';
+  'Sample window: from the counter read of the app at READY to its read 10 s later (the midpoint of each read)';
 
-const ROWS_IN_WINDOW = 'Rows that are fully in the trace window';
+const UPDATES_IN_WINDOW = 'UI updates that begin and end in the sample window';
 
 const DEVICE_STATE: Record<keyof IosDeviceState, Check> = {
   deviceId: aString,
@@ -27,111 +27,104 @@ const IN_APP_STATE: Record<keyof AppState | 'refreshRate', Check> = {
 };
 
 const CPU_LIMIT =
-  'The table has no clock rate. The same work takes more time on an efficiency core.';
+  'Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core.';
+
+const UPDATE_LIMIT =
+  'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments. No verdict before the cross-check with Instruments passes on the phone.';
 
 export const IOS_DEFINITION: PlatformDefinition = {
   name: 'ios',
-  commands: ['run', 'sample'],
+  commands: ['run', 'sample', 'crosscheck', 'observer-cost'],
   options: { 'sign-command': 'required for run' },
   segmentColumns: [],
   deviceState: shape(DEVICE_STATE),
   inAppState: shape(IN_APP_STATE),
-  verdictMetrics: [
-    'frameDurationMedian',
-    'frameDurationP95',
-    'jankyFrames',
-    'uiThreadCpu',
-    'jsThreadCpu',
-    'memory',
+  verdictMetrics: ['uiThreadCpu', 'jsThreadCpu', 'memory'],
+  advisoryMetrics: [
+    'uiUpdateDurationMedian',
+    'uiUpdateDurationP95',
+    'missedDisplayLinkCallbacks',
+    'coldStart',
   ],
-  advisoryMetrics: ['coldStart'],
-  frameSource: 'updates',
+  frameSource: 'refreshes',
   metricDefinitions: [
     {
-      names: ['frameDurationMedian', 'frameDurationP95'],
+      names: ['uiUpdateDurationMedian', 'uiUpdateDurationP95'],
       unit: 'ms',
       source:
-        '`xctrace`: duration of the rows of the table `hitches-updates` of the app. A row is the update phase of one frame: the work of the app on its main thread to the end of the commit.',
-      interval: ROWS_IN_WINDOW,
-      limits: 'The render phase and the display are not in it.',
+        'The app: a passive `UIUpdateLink` (iOS 18) of the window scene. A value is the time from the entry to the phase `beforeCADisplayLinkDispatch` to the entry to the phase `afterCATransactionCommit` of the same UI update, on one monotonic clock.',
+      interval: UPDATES_IN_WINDOW,
+      limits: UPDATE_LIMIT,
     },
     {
-      names: ['frameDurationP90', 'frameDurationP99'],
+      names: ['uiUpdateDurationP90', 'uiUpdateDurationP99'],
       unit: 'ms',
-      source: 'The same as `frameDurationMedian`',
-      interval: ROWS_IN_WINDOW,
-      limits: 'The same as `frameDurationMedian`.',
+      source: 'The same as `uiUpdateDurationMedian`',
+      interval: UPDATES_IN_WINDOW,
+      limits: 'The same as `uiUpdateDurationMedian`.',
     },
     {
-      names: ['jankyFrames'],
-      unit: 'share of frames',
-      source: '`max(0, 1 - frameCount / expectedFrameCount)`',
-      interval: WINDOW,
+      names: ['missedDisplayLinkCallbacks'],
+      unit: 'share of display refreshes',
+      source:
+        '`Σ max(0, round(gap / P) − 1) / Σ round(gap / P)` over the gaps between the model times (`UIUpdateInfo.modelTime`) of successive UI updates. `P` is 1 / `refreshRate` of the LAUNCH line. A gap that is more than 0.25 `P` from a whole number of periods is a tool error.',
+      interval: UPDATES_IN_WINDOW,
       limits:
-        'Counts the expected updates that did not come. A display with a variable refresh rate is not supported.',
+        'A display refresh with no UI update of the app counts as missed. The update share of a scenario does not apply to it.',
     },
     {
       names: ['frameCount', 'expectedFrameCount'],
       unit: 'count',
       source:
-        'Count of the `hitches-updates` rows; `refreshRate` of the LAUNCH line times the length of the trace window times the update share of the scenario',
+        'The number of UI updates in the window; `refreshRate` of the LAUNCH line times the length of the window',
       interval: WINDOW,
       limits:
-        'A frame without an update of the app has no row, so the expected count uses the update share (0.5 for `idle-cost`).',
+        'A sample with fewer UI updates than 90% of the expected count is invalid (cause `frames`).',
     },
     {
       names: ['uiThreadCpu'],
       unit: 'ms for each s',
       source:
-        'Time in the state `Running` of the main thread (`mainThread` of the LAUNCH line) in the table `thread-state`',
-      interval: `${WINDOW}. An interval is cut to the window.`,
+        '`1000 × Δ(user + system time)` of `thread_info(THREAD_BASIC_INFO)` of the main thread, over the elapsed seconds of the monotonic clock. The app keeps a Mach handle of the thread and compares the thread id (`THREAD_IDENTIFIER_INFO`) with `mainThread` of the LAUNCH line at each read.',
+      interval: WINDOW,
       limits: CPU_LIMIT,
     },
     {
       names: ['jsThreadCpu'],
       unit: 'ms for each s',
-      source: 'The same for the JS thread (`jsThread` of the READY line)',
-      interval: `${WINDOW}. An interval is cut to the window.`,
+      source:
+        'The same for the JS thread. The app takes its Mach handle on the JS thread itself, in the synchronous TurboModule call `markReady` before READY, and the main thread reads it.',
+      interval: WINDOW,
       limits: CPU_LIMIT,
     },
     {
       names: ['otherThreadsCpu', 'processCpu'],
       unit: 'ms for each s',
       source:
-        'The same for the other threads of the app, and for all threads of the app',
-      interval: `${WINDOW}. An interval is cut to the window.`,
-      limits: CPU_LIMIT,
-    },
-    {
-      names: ['uiThreadEfficiencyCoreShare'],
-      unit: 'share',
-      source: 'Share of `uiThreadCpu` on efficiency cores',
+        'The process: user + system time of `getrusage(RUSAGE_SELF)`. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits:
-        '`null` when the main thread did not run, or when a `Running` interval has no known core type.',
+      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads is a tool error. ${CPU_LIMIT}`,
     },
     {
       names: ['mountBatchCount'],
       unit: 'count',
       source:
-        'Count of the starts of the React Native section `RCTPerformMountInstructions`',
-      interval: 'Starts in the trace window',
+        'Calls of `didMountComponentsWithRootTag:` of an `RCTSurfacePresenterObserver` of the app, for all surfaces. React Native calls it after each `RCTPerformMountInstructions`.',
+      interval: WINDOW,
       limits: 'The work check of a scenario uses it.',
     },
     {
       names: ['memory'],
       unit: 'kB',
       source:
-        '`phys_footprint` of the app in the `State` signpost at the end of the trace window',
-      interval: 'The end of the trace window',
-      limits:
-        'The time from the launch to this moment changes with the start time of `xctrace` (some seconds).',
+        '`phys_footprint` of `task_info(TASK_VM_INFO)` at the end read of the window',
+      interval: 'The end of the sample window: 10 s after READY',
+      limits: 'One value for each sample.',
     },
     {
       names: ['windowMemoryDelta'],
       unit: 'kB',
-      source:
-        '`memory` minus the value in the `State` signpost at the start of the trace window',
+      source: '`memory` minus the value at the start read of the window',
       interval: WINDOW,
       limits: 'Use it to see the trend in the window only.',
     },
@@ -143,14 +136,6 @@ export const IOS_DEFINITION: PlatformDefinition = {
         'From the start of the process (`p_starttime` of `sysctl`) to the first display link callback',
       limits:
         'The difference of two wall-clock times. It does not include the time before the kernel starts the process. No verdict and no noise limit.',
-    },
-    {
-      names: ['hitchCount', 'hitchTime'],
-      unit: 'count; ms for each s',
-      source:
-        'Count of the rows of the table `hitches` of the app, and the sum of their durations',
-      interval: 'Rows that overlap the trace window, cut to the window',
-      limits: 'No verdict.',
     },
   ],
 };

@@ -1,7 +1,10 @@
 #import "RCTBenchmarkReporter.h"
 
-#include <pthread.h>
+#import <React/RCTSurfacePresenterStub.h>
+
 #include <cstdio>
+
+#import "BenchmarkSampler.h"
 
 @implementation RCTBenchmarkReporter
 
@@ -22,11 +25,19 @@
   std::fflush(stdout);
 }
 
-- (NSNumber *)currentThreadId
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
-  uint64_t threadId = 0;
-  pthread_threadid_np(nullptr, &threadId);
-  return @(threadId);
+  [BenchmarkSampler.sharedSampler countMountsOfSurfacePresenter:surfacePresenter];
+}
+
+- (NSNumber *)markReady
+{
+  return @([BenchmarkSampler.sharedSampler markReadyOnJsThread]);
+}
+
+- (NSString *)currentEpochLoad
+{
+  return [BenchmarkSampler.sharedSampler currentEpochLoad];
 }
 
 @end

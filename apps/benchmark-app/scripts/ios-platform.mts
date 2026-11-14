@@ -27,20 +27,16 @@ import type { Processes } from './processes.mts';
 import type { SampleResult } from './samples.mts';
 import { buildVariant } from './variant-build.mts';
 import type { BuildRequest, BuiltVariant } from './variant-build.mts';
-import { Xctrace } from './xctrace.mts';
-import type { IosTracer } from './xctrace.mts';
 
 export interface IosDependencies {
   buildVariant: typeof buildVariant;
   createDevice: (processes: Processes, udid: string) => IosDevice;
-  createTracer: (processes: Processes) => IosTracer;
   clock: Clock;
 }
 
 const DEFAULT_IOS_DEPENDENCIES: IosDependencies = {
   buildVariant,
   createDevice: (processes, udid) => new IosDevice(processes, udid),
-  createTracer: (processes) => new Xctrace(processes),
   clock: SYSTEM_CLOCK,
 };
 
@@ -68,19 +64,11 @@ class IosSampling implements Sampling {
   readonly #start: IosDeviceState;
   readonly #context: IosSampleContext;
 
-  constructor(
-    device: IosDevice,
-    tracer: IosTracer,
-    clock: Clock,
-    reference: SamplingReference,
-    deviceName: string
-  ) {
+  constructor(device: IosDevice, clock: Clock, reference: SamplingReference) {
     this.#device = device;
     this.#start = iosState(reference.start);
     this.#context = {
       device,
-      deviceName,
-      tracer,
       clock,
       guard: new InAppStateGuard(reference.inAppState),
     };
@@ -133,13 +121,7 @@ async function connect(
     cleanUp: (applicationIds, log) => cleanUp(device, applicationIds, log),
     stateChanges: (stored) => changedIosStateKeys(iosState(stored), startState),
     sampling: (reference) =>
-      new IosSampling(
-        device,
-        dependencies.createTracer(processes),
-        dependencies.clock,
-        reference,
-        startState.name
-      ),
+      new IosSampling(device, dependencies.clock, reference),
   };
 }
 

@@ -76,14 +76,26 @@ describe('IosDevice.readState', () => {
 });
 
 describe('IosDevice.launch', () => {
-  it('gives the scenario and the load as launch arguments of the app', () => {
+  it('gives the scenario, the load and the sample plan as launch arguments of the app', () => {
     const { processes, commands } = fakeProcesses({});
     const device = new IosDevice(processes, UDID);
-    device.launch(APP, 'css', undefined, () => {});
-    device.launch(APP, undefined, undefined, () => {});
+    device.launch(APP, { scenario: 'css' }, () => {});
+    device.launch(APP, {}, () => {});
+    device.launch(
+      APP,
+      {
+        scenario: 'css',
+        plan: {
+          epochs: [{ load: 'none', collector: 'full', seconds: 10 }],
+          start: 'ready',
+        },
+      },
+      () => {}
+    );
     assert.deepEqual(commands, [
       `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP} -- -benchmarkScenario css`,
       `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP}`,
+      `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP} -- -benchmarkScenario css -benchmarkEpochs none:full:10 -benchmarkStart ready`,
     ]);
   });
 });
@@ -156,7 +168,7 @@ describe('IosDevice', () => {
     const { processes, commands } = fakeProcesses({});
     const device = new IosDevice(processes, UDID);
     await device.install('/builds/a.ipa');
-    device.launch(APP, 'css', 5, () => {});
+    device.launch(APP, { scenario: 'css', load: 5 }, () => {});
     assert.deepEqual(commands, [
       `xcrun devicectl device install app /builds/a.ipa --device ${UDID}`,
       `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP} -- -benchmarkScenario css -benchmarkLoad 5`,
@@ -165,7 +177,7 @@ describe('IosDevice', () => {
 });
 
 describe('IosDevice.install', () => {
-  it('names the full phone storage as a cause when the install fails', async () => {
+  it('gives the error of devicectl when the install fails', async () => {
     const failing = {
       run: async () => {
         throw new Error('devicectl failed (exit 1): ERROR: Failed to install');
@@ -174,7 +186,7 @@ describe('IosDevice.install', () => {
     await assert.rejects(
       new IosDevice(failing, UDID).install('/builds/a.ipa'),
       new RegExp(
-        `The install of /builds/a\\.ipa on ${UDID} failed\\. One known cause is a full phone storage: on one iPhone 13 mini with iOS 27\\.0\\.1 and Xcode 27\\.2, each xctrace recording used about 0\\.3 GB of phone storage, and the data stayed after the driver ended\\. It is not verified that a restart of the phone frees it\\. devicectl: devicectl failed \\(exit 1\\): ERROR: Failed to install`
+        `The install of /builds/a\\.ipa on ${UDID} failed: devicectl failed \\(exit 1\\): ERROR: Failed to install`
       )
     );
   });

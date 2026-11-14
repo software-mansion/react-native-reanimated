@@ -3,7 +3,8 @@ import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
   report(line: string): void;
-  currentThreadId(): number;
+  markReady(): number;
+  currentEpochLoad(): string;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BenchmarkReporter');

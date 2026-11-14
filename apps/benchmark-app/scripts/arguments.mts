@@ -4,6 +4,8 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
+import { parseEpochs } from './in-app-sample.mts';
+import type { SampleEpoch } from './in-app-sample.mts';
 import {
   DEFAULT_DURATION_SECONDS,
   DEFAULT_INTERVAL_SECONDS,
@@ -11,13 +13,18 @@ import {
   DEFAULT_SLOPE_LIMIT,
   checkSchedule,
 } from './memory-series.mts';
-import { DEFAULT_OUTPUT_DIR } from './paths.mts';
+import { DEFAULT_OUTPUT_DIR, VALIDATION_DIR } from './paths.mts';
 import type {
   DeviceTarget,
   PlatformCommand,
   PlatformOption,
 } from './platform.mts';
-import { SCENARIOS, isScenario } from './scenarios.mts';
+import {
+  SCENARIOS,
+  VALIDATION_SCENARIOS,
+  isAppScenario,
+  isScenario,
+} from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 
 export interface RunOptions {
@@ -75,6 +82,27 @@ export interface SampleOptions {
   traceProcessor?: string;
 }
 
+export interface CrosscheckOptions {
+  command: 'crosscheck';
+  device: DeviceTarget;
+  applicationId: string;
+  scenario: string;
+  load?: number;
+  epochs: SampleEpoch[];
+  outputDir: string;
+}
+
+export interface ObserverCostOptions {
+  command: 'observer-cost';
+  device: DeviceTarget;
+  applicationId: string;
+  scenario: Scenario;
+  load?: number;
+  blocks: number;
+  noiseLimits?: string;
+  outputDir: string;
+}
+
 export type Command =
   | RunOptions
   | ResumeOptions
@@ -82,11 +110,15 @@ export type Command =
   | MemoryResumeOptions
   | NoiseLimitsOptions
   | SampleOptions
+  | CrosscheckOptions
+  | ObserverCostOptions
   | { command: 'help' };
 
 type Values = Record<string, string | string[] | boolean | undefined>;
 
 const DEFAULT_BLOCKS = 5;
+
+const DEFAULT_OBSERVER_COST_BLOCKS = 5;
 
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
@@ -95,16 +127,21 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> <device> [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks ${DEFAULT_OBSERVER_COST_BLOCKS}] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
 
-<device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only.
---trace-processor is for Android only. An iOS run needs --sign-command <path>.
+<device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The crosscheck and observer-cost commands validate the in-app collector of iOS and support iOS only.
+--trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>.
 
 Scenarios: ${SCENARIOS.join(', ')}
+Validation scenarios (crosscheck only): ${VALIDATION_SCENARIOS.join(', ')}
 See apps/benchmark-app/scripts/README.md.`;
 
 const PLATFORM_OPTIONS: readonly PlatformOption[] = [
   'trace-processor',
   'sign-command',
+  'keep-traces',
+  'keep-trace',
 ];
 
 const COMMON_OPTIONS: ParseArgsOptionsConfig = {
@@ -169,6 +206,25 @@ const SAMPLE_OPTIONS: ParseArgsOptionsConfig = {
   'keep-trace': { type: 'boolean' },
 };
 
+const CROSSCHECK_OPTIONS: ParseArgsOptionsConfig = {
+  ...COMMON_OPTIONS,
+  package: { type: 'string' },
+  scenario: { type: 'string' },
+  load: { type: 'string' },
+  epochs: { type: 'string' },
+  'output-dir': { type: 'string' },
+};
+
+const OBSERVER_COST_OPTIONS: ParseArgsOptionsConfig = {
+  ...COMMON_OPTIONS,
+  package: { type: 'string' },
+  scenario: { type: 'string' },
+  load: { type: 'string' },
+  blocks: { type: 'string' },
+  'noise-limits': { type: 'string' },
+  'output-dir': { type: 'string' },
+};
+
 export function parseArguments(argv: string[]): Command {
   const [command, ...rest] = argv;
   if (
@@ -230,12 +286,38 @@ export function parseArguments(argv: string[]): Command {
       device: platformTarget(values, 'sample'),
       applicationId: required(values, 'package'),
       scenario: requiredScenario(values),
-      load:
-        values.load === undefined
-          ? undefined
-          : positiveInteger(values.load, 'load'),
+      load: optionalLoad(values),
       keepTrace: values['keep-trace'] === true,
       traceProcessor: optionalString(values, 'trace-processor'),
+    };
+  }
+  if (command === 'crosscheck') {
+    const { values } = parseOptions(rest, CROSSCHECK_OPTIONS);
+    return {
+      command,
+      device: platformTarget(values, 'crosscheck'),
+      applicationId: required(values, 'package'),
+      scenario: requiredAppScenario(values),
+      load: optionalLoad(values),
+      epochs: requiredEpochs(values),
+      outputDir: validationDirOf(values),
+    };
+  }
+  if (command === 'observer-cost') {
+    const { values } = parseOptions(rest, OBSERVER_COST_OPTIONS);
+    return {
+      command,
+      device: platformTarget(values, 'observer-cost'),
+      applicationId: required(values, 'package'),
+      scenario: requiredScenario(values),
+      load: optionalLoad(values),
+      blocks: optionalPositiveInteger(
+        values,
+        'blocks',
+        DEFAULT_OBSERVER_COST_BLOCKS
+      ),
+      noiseLimits: optionalString(values, 'noise-limits'),
+      outputDir: validationDirOf(values),
     };
   }
   throw new ToolError(`Unknown command "${command}".\n\n${USAGE}`);
@@ -336,6 +418,24 @@ function outputDirOf(values: Values): string {
   );
 }
 
+function validationDirOf(values: Values): string {
+  return path.resolve(optionalString(values, 'output-dir') ?? VALIDATION_DIR);
+}
+
+function optionalLoad(values: Values): number | undefined {
+  return values.load === undefined
+    ? undefined
+    : positiveInteger(values.load, 'load');
+}
+
+function requiredEpochs(values: Values): SampleEpoch[] {
+  try {
+    return parseEpochs(required(values, 'epochs'));
+  } catch (error) {
+    throw new ToolError(`--epochs: ${(error as Error).message}`);
+  }
+}
+
 function optionalPositiveInteger(
   values: Values,
   name: string,
@@ -399,6 +499,16 @@ function requiredScenario(values: Values): Scenario {
   if (!isScenario(scenario)) {
     throw new ToolError(
       `Unknown scenario "${scenario}". Known: ${SCENARIOS.join(', ')}`
+    );
+  }
+  return scenario;
+}
+
+function requiredAppScenario(values: Values): string {
+  const scenario = required(values, 'scenario');
+  if (!isAppScenario(scenario)) {
+    throw new ToolError(
+      `Unknown scenario "${scenario}". Known: ${[...SCENARIOS, ...VALIDATION_SCENARIOS].join(', ')}`
     );
   }
   return scenario;

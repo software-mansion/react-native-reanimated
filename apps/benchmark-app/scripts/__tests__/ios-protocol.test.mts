@@ -1,34 +1,31 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import { after, before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import { parseLaunchLine } from '../app-report.mts';
 import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
+import { planArguments } from '../in-app-sample.mts';
+import type { AppState } from '../in-app-sample.mts';
 import {
   InAppStateGuard,
   launchOnce,
   takeIosSample,
 } from '../ios-protocol.mts';
 import type { IosSampleContext } from '../ios-protocol.mts';
-import { REPOSITORY_ROOT } from '../paths.mts';
 import type { SampleOrder } from '../platform.mts';
 import { MINIMUM_WAIT_MS, READY_TIMEOUT_MS } from '../samples.mts';
-import type {
-  AppState,
-  IosTraceMetrics,
-  IosTraceReading,
-} from '../xctrace-metrics.mts';
-import { IOS_TRACE_METRICS, IOS_TRACE_WINDOW } from './ios-fixtures.mts';
+import {
+  END_BOUNDARY,
+  IOS_SAMPLE_METRICS,
+  IOS_SAMPLE_WINDOW,
+  SAMPLE_PREFIX,
+  START_BOUNDARY,
+  inAppSample,
+  sampleLine,
+  sampleText,
+  steadyUpdates,
+} from './ios-fixtures.mts';
 
-const ROOT = path.join(
-  REPOSITORY_ROOT,
-  '.tmp',
-  'benchmarks',
-  'tests',
-  `ios-protocol-${process.pid}`
-);
 const APP = 'com.reanimatedbenchmark.a';
 const HOT_DEVICE_WAIT_MS = 30_000;
 const REPORT_PREFIX = 'ReanimatedBenchmark: ';
@@ -37,6 +34,9 @@ const LAUNCH =
   'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=81.25';
 const READY =
   'ReanimatedBenchmark: READY scenario=css version=1 load=80 jsThread=5002';
+const SAMPLE = sampleLine();
+const RUN_PLAN_ARGUMENTS =
+  '-benchmarkEpochs none:full:10 -benchmarkStart ready';
 const STATE: AppState = {
   batteryLevel: 100,
   batteryState: 'full',
@@ -45,17 +45,11 @@ const STATE: AppState = {
 };
 
 interface FakeOptions {
-  recordError?: string;
   terminateErrorAt?: number;
   linesAfter?: { ms: number; lines: string[] };
   lines?: string[];
   launches?: string[][];
   endsAfterLines?: boolean;
-  endsDuringTrace?: boolean;
-  linesDuringTrace?: string[];
-  reading?: Partial<Extract<IosTraceReading, { processLived: true }>>;
-  metrics?: Partial<IosTraceMetrics>;
-  dead?: boolean;
 }
 
 function order(overrides: Partial<SampleOrder> = {}): SampleOrder {
@@ -63,7 +57,7 @@ function order(overrides: Partial<SampleOrder> = {}): SampleOrder {
     applicationId: APP,
     stopApplicationIds: [APP, 'com.reanimatedbenchmark.b'],
     scenario: 'css',
-    traceFile: path.join(ROOT, 'sample.trace'),
+    traceFile: '/unused/sample.trace',
     keepTrace: false,
     ...overrides,
   };
@@ -96,14 +90,22 @@ function createFake(options: FakeOptions = {}) {
           throw new ToolError('CLEANUP ERROR');
         }
       },
-      launch: (applicationId, scenario, load, onLine) => {
-        calls.push(`launch ${applicationId} ${scenario} ${load}`);
+      launch: (applicationId, { scenario, load, plan }, onLine) => {
+        calls.push(
+          [
+            'launch',
+            applicationId,
+            String(scenario),
+            String(load),
+            ...(plan ? planArguments(plan) : []),
+          ].join(' ')
+        );
         write = onLine;
         stopped = false;
         launchedAt = time;
         (
           scriptedLaunches.shift() ??
-          options.lines ?? [LAUNCHED, LAUNCH, READY]
+          options.lines ?? [LAUNCHED, LAUNCH, READY, SAMPLE]
         ).forEach(onLine);
         ended = options.endsAfterLines ?? false;
         return {
@@ -118,41 +120,15 @@ function createFake(options: FakeOptions = {}) {
         };
       },
     },
-    deviceName: 'Test iPhone',
-    tracer: {
-      record: async (deviceName, pid, traceFile) => {
-        calls.push(`record ${deviceName} ${pid}`);
-        fs.mkdirSync(traceFile, { recursive: true });
-        (options.linesDuringTrace ?? []).forEach(write);
-        ended ||= options.endsDuringTrace ?? false;
-        if (options.recordError) {
-          throw new ToolError(options.recordError);
-        }
-      },
-      collect: async (_traceFile, app) => {
-        calls.push(
-          `collect ${app.pid} ${app.mainThread} ${app.jsThread} ${app.frames.refreshRate} ${app.frames.share}`
-        );
-        return options.dead
-          ? { processLived: false, detail: 'the app process 812 ended' }
-          : {
-              processLived: true,
-              metrics: { ...IOS_TRACE_METRICS, ...options.metrics },
-              window: IOS_TRACE_WINDOW,
-              thermalState: 0,
-              appStates: [STATE, STATE, STATE],
-              ...options.reading,
-            };
-      },
-    },
     clock,
     guard: new InAppStateGuard(null),
   };
   return { context, calls, sleeps };
 }
 
-before(() => fs.mkdirSync(ROOT, { recursive: true }));
-after(() => fs.rmSync(ROOT, { recursive: true, force: true }));
+function withSample(...lines: string[]) {
+  return createFake({ lines: [LAUNCHED, LAUNCH, ...lines] });
+}
 
 describe('parseLaunchLine', () => {
   it('reads the LAUNCH line of the app', () => {
@@ -177,145 +153,127 @@ describe('parseLaunchLine', () => {
 });
 
 describe('takeIosSample', () => {
-  it('stops the apps, waits, launches, records, stops the app and reads the trace', async () => {
+  it('stops the apps, waits, launches with the sample plan, reads the SAMPLE line and stops the app', async () => {
     const { context, calls, sleeps } = createFake();
     const sample = await takeIosSample(order({ load: 7 }), context);
     assert.deepEqual(calls, [
       `terminate ${APP}`,
       'terminate com.reanimatedbenchmark.b',
-      `launch ${APP} css 7`,
-      'record Test iPhone 812',
+      `launch ${APP} css 7 ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
-      'collect 812 5001 5002 60 1',
     ]);
-    assert.deepEqual(sample.traceWindow, IOS_TRACE_WINDOW);
     assert.equal(sleeps[0], MINIMUM_WAIT_MS);
     assert.equal(sample.valid, true);
-    assert.equal(sample.metrics?.coldStart, 81.25);
-    assert.equal(sample.metrics?.uiThreadCpu, 350);
+    assert.deepEqual(sample.metrics, {
+      ...IOS_SAMPLE_METRICS,
+      coldStart: 81.25,
+    });
+    assert.deepEqual(sample.traceWindow, IOS_SAMPLE_WINDOW);
     assert.equal(sample.pid, 812);
     assert.equal(sample.refreshRate, 60);
+    assert.equal(sample.thermalAfter, 0);
     assert.deepEqual(sample.report, { version: 1, load: 80, jsThread: 5002 });
     assert.deepEqual(sample.inAppState, { refreshRate: 60, ...STATE });
     assert.equal(sample.trace, undefined);
-    assert.ok(!fs.existsSync(order().traceFile));
+    assert.ok(sample.timings.measure !== undefined);
   });
 
-  it('keeps the trace on request', async () => {
-    const { context } = createFake();
-    const sample = await takeIosSample(order({ keepTrace: true }), context);
-    assert.equal(sample.trace, order().traceFile);
-    assert.ok(fs.existsSync(order().traceFile));
+  it('is a crash when the app writes FAILED before READY or before its SAMPLE line', async () => {
+    const failed = 'ReanimatedBenchmark: FAILED scenario=css reason=no flag';
+    for (const lines of [[failed], [READY, failed]]) {
+      const { context, calls } = withSample(...lines);
+      const sample = await takeIosSample(order(), context);
+      assert.equal(!sample.valid && sample.cause, 'crash');
+      assert.equal(
+        !sample.valid && sample.detail,
+        'FAILED scenario=css reason=no flag'
+      );
+      assert.equal(calls.at(-1), `terminate ${APP}`);
+    }
   });
 
-  it('is a crash when the app writes FAILED', async () => {
-    const { context, calls } = createFake({
-      lines: [
-        LAUNCHED,
-        LAUNCH,
-        'ReanimatedBenchmark: FAILED scenario=css reason=no flag',
-      ],
-    });
-    const sample = await takeIosSample(order(), context);
-    assert.equal(sample.valid, false);
-    assert.equal(!sample.valid && sample.cause, 'crash');
-    assert.equal(
-      !sample.valid && sample.detail,
-      'FAILED scenario=css reason=no flag'
-    );
-    assert.ok(!calls.some((call) => call.startsWith('record')));
-    assert.equal(calls.at(-1), `terminate ${APP}`);
-  });
-
-  it('is a crash when the app ends before READY, during the trace, or in the trace data', async () => {
+  it('is a crash when the app ends before READY or before its SAMPLE line', async () => {
     const early = await takeIosSample(
       order(),
       createFake({ lines: [LAUNCHED, LAUNCH], endsAfterLines: true }).context
     );
     assert.equal(!early.valid && early.detail, 'the app process ended');
 
-    const beforeTrace = createFake({
-      lines: [LAUNCHED, LAUNCH, READY],
-      endsAfterLines: true,
-    });
-    const notTraced = await takeIosSample(order(), beforeTrace.context);
-    assert.equal(
-      !notTraced.valid && notTraced.detail,
-      'the app process 812 ended before the trace'
-    );
-    assert.ok(!beforeTrace.calls.some((call) => call.startsWith('record')));
-
-    const during = await takeIosSample(
-      order(),
-      createFake({ endsDuringTrace: true }).context
-    );
-    assert.equal(
-      !during.valid && during.detail,
-      'the app process 812 ended during the trace'
-    );
-    assert.equal(during.trace, order().traceFile);
-
     const late = await takeIosSample(
       order(),
-      createFake({
-        linesDuringTrace: ['ReanimatedBenchmark: FAILED scenario=css reason=x'],
-      }).context
-    );
-    assert.equal(!late.valid && late.detail, 'FAILED scenario=css reason=x');
-
-    const dead = await takeIosSample(
-      order(),
-      createFake({ dead: true }).context
-    );
-    assert.equal(!dead.valid && dead.detail, 'the app process 812 ended');
-  });
-
-  it('is a crash when the recording fails because the app ended, and a tool error when the app lives', async () => {
-    const sample = await takeIosSample(
-      order(),
-      createFake({ endsDuringTrace: true, recordError: 'xctrace failed' })
+      createFake({ lines: [LAUNCHED, LAUNCH, READY], endsAfterLines: true })
         .context
     );
     assert.equal(
+      !late.valid && late.detail,
+      'the app process 812 ended before its SAMPLE line'
+    );
+    assert.equal(late.pid, 812);
+  });
+
+  it('is a crash when the SAMPLE line does not come in the plan time and a margin', async () => {
+    const { context, calls } = withSample(READY);
+    const sample = await takeIosSample(order(), context);
+    assert.equal(
       !sample.valid && sample.detail,
-      'the app process 812 ended during the trace'
+      'no SAMPLE line in 40 s after READY'
     );
-    await assert.rejects(
-      takeIosSample(
-        order(),
-        createFake({ recordError: 'xctrace failed' }).context
-      ),
-      /xctrace failed/
-    );
+    assert.equal(calls.at(-1), `terminate ${APP}`);
+  });
+
+  it('is a tool error when the sampler fails or measures other threads, and stops the app first', async () => {
+    for (const [line, problem] of [
+      [
+        `${SAMPLE_PREFIX}${sampleText(inAppSample(), 'getrusage(RUSAGE_SELF) failed')}`,
+        /The in-app sampler failed: getrusage/,
+      ],
+      [
+        sampleLine(inAppSample({ jsThread: 7 })),
+        /The SAMPLE line measured the threads 5001 and 7, the LAUNCH and READY lines name the main thread 5001 and the JS thread 5002/,
+      ],
+    ] as const) {
+      const { context, calls } = withSample(READY, line);
+      await assert.rejects(takeIosSample(order(), context), problem);
+      assert.deepEqual(calls.slice(-2), ['stop console', `terminate ${APP}`]);
+    }
   });
 
   it('keeps the first error when the stop of the app fails after it', async () => {
+    const { context } = createFake({
+      lines: [
+        LAUNCHED,
+        LAUNCH,
+        READY,
+        sampleLine(inAppSample({ jsThread: 7 })),
+      ],
+      terminateErrorAt: 5,
+    });
     await assert.rejects(
-      takeIosSample(
-        order(),
-        createFake({ recordError: 'TRACE ERROR', terminateErrorAt: 6 }).context
-      ),
-      /TRACE ERROR/
+      takeIosSample(order(), context),
+      /The SAMPLE line measured the threads/
     );
   });
 
   it('is a crash when the LAUNCH line comes at its deadline, and stops the console and the app', async () => {
     const late = createFake({
       lines: [LAUNCHED],
-      linesAfter: { ms: READY_TIMEOUT_MS, lines: [LAUNCH, READY] },
+      linesAfter: { ms: READY_TIMEOUT_MS, lines: [LAUNCH, READY, SAMPLE] },
     });
     const sample = await takeIosSample(order(), late.context);
     assert.equal(!sample.valid && sample.detail, 'no LAUNCH line in 60 s');
     assert.deepEqual(late.calls.slice(2), [
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
     ]);
 
     const inTime = createFake({
       lines: [LAUNCHED],
-      linesAfter: { ms: READY_TIMEOUT_MS - 1000, lines: [LAUNCH, READY] },
+      linesAfter: {
+        ms: READY_TIMEOUT_MS - 1000,
+        lines: [LAUNCH, READY, SAMPLE],
+      },
     });
     assert.equal((await takeIosSample(order(), inTime.context)).valid, true);
   });
@@ -337,7 +295,7 @@ describe('takeIosSample', () => {
       });
       await assert.rejects(takeIosSample(order(), fake.context), problem);
       assert.deepEqual(fake.calls.slice(2), [
-        `launch ${APP} css undefined`,
+        `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
         'stop console',
         `terminate ${APP}`,
       ]);
@@ -357,10 +315,10 @@ describe('takeIosSample', () => {
       /wrote READY but no LAUNCH line/
     );
     assert.deepEqual(calls.slice(2), [
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
     ]);
@@ -369,7 +327,10 @@ describe('takeIosSample', () => {
   it('does not accept a READY line that comes at its deadline', async () => {
     const { context } = createFake({
       lines: [LAUNCHED, LAUNCH],
-      linesAfter: { ms: MINIMUM_WAIT_MS + READY_TIMEOUT_MS, lines: [READY] },
+      linesAfter: {
+        ms: MINIMUM_WAIT_MS + READY_TIMEOUT_MS,
+        lines: [READY, SAMPLE],
+      },
     });
     const sample = await takeIosSample(order(), context);
     assert.equal(!sample.valid && sample.detail, 'no READY line in 60 s');
@@ -389,39 +350,32 @@ describe('takeIosSample', () => {
     await assert.rejects(
       takeIosSample(
         order(),
-        createFake({
-          lines: [
-            LAUNCHED,
-            LAUNCH,
-            'ReanimatedBenchmark: READY scenario=css version=1 load=80',
-          ],
-        }).context
+        withSample('ReanimatedBenchmark: READY scenario=css version=1 load=80')
+          .context
       ),
       /has no jsThread field/
     );
   });
 
   it('ignores the READY line of a different scenario', async () => {
-    const { context } = createFake({
-      lines: [
-        LAUNCHED,
-        LAUNCH,
-        'ReanimatedBenchmark: READY scenario=idle-cost version=1 load=1 jsThread=1',
-      ],
-    });
+    const { context } = withSample(
+      'ReanimatedBenchmark: READY scenario=idle-cost version=1 load=1 jsThread=1'
+    );
     const sample = await takeIosSample(order(), context);
     assert.equal(!sample.valid && sample.detail, 'no READY line in 60 s');
   });
 
-  it('is invalid for a thermal state above nominal in the trace', async () => {
-    const { context } = createFake({ reading: { thermalState: 1 } });
+  it('is invalid for a thermal state above nominal in the sample window', async () => {
+    const { context } = withSample(
+      READY,
+      sampleLine(inAppSample({ maxThermal: 1 }))
+    );
     const sample = await takeIosSample(order(), context);
     assert.equal(!sample.valid && sample.cause, 'thermal');
     assert.equal(
       !sample.valid && sample.detail,
-      'thermal state Fair during the trace'
+      'thermal state Fair in the sample window'
     );
-    assert.equal(sample.trace, order().traceFile);
   });
 
   it('launches again after a wait when the device is hot at the launch', async () => {
@@ -430,19 +384,19 @@ describe('takeIosSample', () => {
       launches: [
         [LAUNCHED, hot],
         [LAUNCHED, hot],
-        [LAUNCHED, LAUNCH, READY],
+        [LAUNCHED, LAUNCH, READY, SAMPLE],
       ],
     });
     const sample = await takeIosSample(order(), context);
     assert.equal(sample.valid, true);
     assert.deepEqual(calls.slice(2, 9), [
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
       'stop console',
       `terminate ${APP}`,
-      `launch ${APP} css undefined`,
+      `launch ${APP} css undefined ${RUN_PLAN_ARGUMENTS}`,
     ]);
     assert.deepEqual(sleeps, [
       MINIMUM_WAIT_MS,
@@ -467,6 +421,7 @@ describe('takeIosSample', () => {
         LAUNCHED,
         LAUNCH.replace('refreshRate=60', 'refreshRate=120'),
         READY,
+        SAMPLE,
       ],
     });
     await assert.rejects(
@@ -475,32 +430,15 @@ describe('takeIosSample', () => {
     );
   });
 
-  it('expects updates on the share of the refreshes that the scenario declares', async () => {
-    const { context, calls } = createFake({
-      lines: [
-        LAUNCHED,
-        LAUNCH,
-        'ReanimatedBenchmark: READY scenario=idle-cost version=1 load=80 jsThread=5002',
-      ],
-      metrics: { frameCount: 300, expectedFrameCount: 300 },
-    });
-    const sample = await takeIosSample(
-      order({ scenario: 'idle-cost' }),
-      context
-    );
-    assert.ok(calls.includes('collect 812 5001 5002 60 0.5'));
-    assert.equal(sample.valid, true);
-  });
-
   it('has a work check for shared-elements', async () => {
-    const { context } = createFake({
-      lines: [
-        LAUNCHED,
-        LAUNCH,
-        'ReanimatedBenchmark: READY scenario=shared-elements version=1 load=80 jsThread=5002',
-      ],
-      metrics: { mountBatchCount: 299 },
-    });
+    const { context } = withSample(
+      'ReanimatedBenchmark: READY scenario=shared-elements version=1 load=15 jsThread=5002',
+      sampleLine(
+        inAppSample({
+          boundaries: [START_BOUNDARY, { ...END_BOUNDARY, mounts: 309 }],
+        })
+      )
+    );
     const sample = await takeIosSample(
       order({ scenario: 'shared-elements' }),
       context
@@ -512,9 +450,21 @@ describe('takeIosSample', () => {
     );
   });
 
-  it('is invalid for too few frames', async () => {
-    const { context } = createFake({ metrics: { frameCount: 539 } });
-    const sample = await takeIosSample(order(), context);
+  it('is invalid for fewer UI updates than 90% of the display refreshes, for each scenario', async () => {
+    const sparse = sampleLine(
+      inAppSample({
+        boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 539 }],
+        updates: steadyUpdates(539),
+      })
+    );
+    const { context } = withSample(
+      'ReanimatedBenchmark: READY scenario=idle-cost version=3 load=250 jsThread=5002',
+      sparse
+    );
+    const sample = await takeIosSample(
+      order({ scenario: 'idle-cost' }),
+      context
+    );
     assert.equal(!sample.valid && sample.cause, 'frames');
     assert.equal(
       !sample.valid && sample.detail,
@@ -525,15 +475,18 @@ describe('takeIosSample', () => {
   it('stops when the state of the device in the app changes', async () => {
     const { context } = createFake();
     await takeIosSample(order(), context);
-    const changed = createFake({
-      reading: {
-        appStates: [STATE, { ...STATE, lowPowerMode: true }, STATE],
-      },
-    });
+    const changed = withSample(
+      READY,
+      sampleLine(
+        inAppSample({
+          boundaries: [START_BOUNDARY, { ...END_BOUNDARY, lowPower: true }],
+        })
+      )
+    );
     changed.context.guard = context.guard;
     await assert.rejects(
       takeIosSample(order(), changed.context),
-      /The device state changed \(read in the trace\): lowPowerMode: false -> true/
+      /The device state changed \(read by the app\): lowPowerMode: false -> true/
     );
   });
 });
@@ -549,7 +502,7 @@ describe('InAppStateGuard', () => {
 });
 
 describe('launchOnce', () => {
-  it('launches the app with no scenario and stops it after the LAUNCH line', async () => {
+  it('launches the app with no scenario and no plan and stops it after the LAUNCH line', async () => {
     const { context, calls } = createFake({ lines: [LAUNCHED, LAUNCH] });
     await launchOnce(context.device, APP, context.clock);
     assert.deepEqual(calls, [

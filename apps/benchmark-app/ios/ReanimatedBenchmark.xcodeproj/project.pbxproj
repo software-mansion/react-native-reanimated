@@ -15,6 +15,10 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		EAAE6676309EAF1EAE02FF5E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A761A7820E78805800F4114C /* SceneDelegate.swift */; };
+		4B5E10032EC6B10000B1E0A1 /* BenchmarkSampler.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E10022EC6B10000B1E0A1 /* BenchmarkSampler.mm */; };
+		4B5E10062EC6B10000B1E0A1 /* EndpointReader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E10052EC6B10000B1E0A1 /* EndpointReader.mm */; };
+		4B5E10092EC6B10000B1E0A1 /* UpdateRecorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E10082EC6B10000B1E0A1 /* UpdateRecorder.mm */; };
+		4B5E100C2EC6B10000B1E0A1 /* MountCounter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +36,15 @@
 		A761A7820E78805800F4114C /* SceneDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ReanimatedBenchmark/SceneDelegate.swift; sourceTree = "<group>"; };
 		C123B522ADDAB518CE646AA8 /* RCTBenchmarkReporter.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; name = RCTBenchmarkReporter.mm; path = ReanimatedBenchmark/RCTBenchmarkReporter.mm; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		4B5E10012EC6B10000B1E0A1 /* BenchmarkSampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BenchmarkSampler.h; path = ReanimatedBenchmark/BenchmarkSampler.h; sourceTree = "<group>"; };
+		4B5E10022EC6B10000B1E0A1 /* BenchmarkSampler.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = BenchmarkSampler.mm; path = ReanimatedBenchmark/BenchmarkSampler.mm; sourceTree = "<group>"; };
+		4B5E10042EC6B10000B1E0A1 /* EndpointReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = EndpointReader.h; path = ReanimatedBenchmark/EndpointReader.h; sourceTree = "<group>"; };
+		4B5E10052EC6B10000B1E0A1 /* EndpointReader.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = EndpointReader.mm; path = ReanimatedBenchmark/EndpointReader.mm; sourceTree = "<group>"; };
+		4B5E10072EC6B10000B1E0A1 /* UpdateRecorder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UpdateRecorder.h; path = ReanimatedBenchmark/UpdateRecorder.h; sourceTree = "<group>"; };
+		4B5E10082EC6B10000B1E0A1 /* UpdateRecorder.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = UpdateRecorder.mm; path = ReanimatedBenchmark/UpdateRecorder.mm; sourceTree = "<group>"; };
+		4B5E100A2EC6B10000B1E0A1 /* MountCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MountCounter.h; path = ReanimatedBenchmark/MountCounter.h; sourceTree = "<group>"; };
+		4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = MountCounter.mm; path = ReanimatedBenchmark/MountCounter.mm; sourceTree = "<group>"; };
+		4B5E100D2EC6B10000B1E0A1 /* ReanimatedBenchmark-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ReanimatedBenchmark-Bridging-Header.h; path = ReanimatedBenchmark/ReanimatedBenchmark-Bridging-Header.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +71,15 @@
 				A761A7820E78805800F4114C /* SceneDelegate.swift */,
 				6C8088FC592596207E9D68B9 /* RCTBenchmarkReporter.h */,
 				C123B522ADDAB518CE646AA8 /* RCTBenchmarkReporter.mm */,
+				4B5E10012EC6B10000B1E0A1 /* BenchmarkSampler.h */,
+				4B5E10022EC6B10000B1E0A1 /* BenchmarkSampler.mm */,
+				4B5E10042EC6B10000B1E0A1 /* EndpointReader.h */,
+				4B5E10052EC6B10000B1E0A1 /* EndpointReader.mm */,
+				4B5E10072EC6B10000B1E0A1 /* UpdateRecorder.h */,
+				4B5E10082EC6B10000B1E0A1 /* UpdateRecorder.mm */,
+				4B5E100A2EC6B10000B1E0A1 /* MountCounter.h */,
+				4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */,
+				4B5E100D2EC6B10000B1E0A1 /* ReanimatedBenchmark-Bridging-Header.h */,
 			);
 			name = ReanimatedBenchmark;
 			sourceTree = "<group>";
@@ -261,6 +283,10 @@
 				EAAE6676309EAF1EAE02FF5E /* SceneDelegate.swift in Sources */,
 				2F6C1D0A2EC6A10000B1E0A1 /* ProcessReporter.swift in Sources */,
 				3A4BD877E7616AB6DD3B127B /* RCTBenchmarkReporter.mm in Sources */,
+				4B5E10032EC6B10000B1E0A1 /* BenchmarkSampler.mm in Sources */,
+				4B5E10062EC6B10000B1E0A1 /* EndpointReader.mm in Sources */,
+				4B5E10092EC6B10000B1E0A1 /* UpdateRecorder.mm in Sources */,
+				4B5E100C2EC6B10000B1E0A1 /* MountCounter.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,7 +302,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ReanimatedBenchmark/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -291,6 +317,7 @@
 				PRODUCT_NAME = ReanimatedBenchmark;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OBJC_BRIDGING_HEADER = "ReanimatedBenchmark/ReanimatedBenchmark-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -305,7 +332,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = ReanimatedBenchmark/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -319,6 +346,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.reanimatedbenchmark$(BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX)";
 				PRODUCT_NAME = ReanimatedBenchmark;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_OBJC_BRIDGING_HEADER = "ReanimatedBenchmark/ReanimatedBenchmark-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";

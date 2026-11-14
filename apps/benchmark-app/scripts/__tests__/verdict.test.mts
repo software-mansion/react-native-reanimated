@@ -61,9 +61,12 @@ describe('computeComparisonRows', () => {
     );
     assert.ok(verdictRows.every((row) => row.metric !== 'coldStart'));
     assert.equal(verdictRows.length, IOS_DEFINITION.verdictMetrics.length);
-    assert.equal(advisoryRows.length, 1);
-    const [coldStart] = advisoryRows;
-    assert.ok(coldStart.hasData);
+    assert.deepEqual(
+      advisoryRows.map((row) => row.metric),
+      IOS_DEFINITION.advisoryMetrics
+    );
+    const coldStart = advisoryRows.find((row) => row.metric === 'coldStart');
+    assert.ok(coldStart?.hasData);
     assert.equal(coldStart.metric, 'coldStart');
     assert.equal(coldStart.difference, 1);
     assert.ok(!('verdict' in coldStart));
@@ -76,15 +79,18 @@ describe('computeComparisonRows', () => {
       valuesFrom({ coldStart: { a: BASE, b: [] } }),
       {}
     );
-    assert.deepEqual(advisoryRows, [
-      {
-        scenario: 'css',
-        metric: 'coldStart',
-        samplesA: BASE.length,
-        samplesB: 0,
-        hasData: false,
-      },
-    ]);
+    assert.deepEqual(
+      advisoryRows.filter((row) => row.metric === 'coldStart'),
+      [
+        {
+          scenario: 'css',
+          metric: 'coldStart',
+          samplesA: BASE.length,
+          samplesB: 0,
+          hasData: false,
+        },
+      ]
+    );
   });
 });
 

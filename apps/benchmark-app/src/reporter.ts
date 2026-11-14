@@ -21,7 +21,7 @@ export function reportReady(scenario: string, version: number, load: number) {
     return;
   }
   hasReportedReady = true;
-  const jsThread = NativeBenchmarkReporter.currentThreadId();
+  const jsThread = NativeBenchmarkReporter.markReady();
   NativeBenchmarkReporter.report(
     `READY scenario=${scenario} version=${version} load=${load} jsThread=${jsThread}`
   );

@@ -1,0 +1,433 @@
+import { ToolError } from './errors.mts';
+import {
+  aBoolean,
+  aString,
+  anInteger,
+  listOf,
+  nullable,
+  oneOf,
+  shape,
+  throwProblems,
+} from './validation.mts';
+import type { Check } from './validation.mts';
+
+export type Collector = 'full' | 'endpoints';
+
+export interface SampleEpoch {
+  load: string;
+  collector: Collector;
+  seconds: number;
+}
+
+export interface SamplePlan {
+  epochs: readonly SampleEpoch[];
+  start: 'ready' | 'notification';
+}
+
+export interface InAppBoundary {
+  readStartNs: number;
+  readEndNs: number;
+  signpostNs: number;
+  uiThreadCpuUs: number;
+  jsThreadCpuUs: number;
+  processCpuUs: number;
+  footprintKb: number;
+  thermal: number;
+  batteryLevel: number;
+  batteryState: number;
+  lowPower: boolean;
+  brightness: number;
+  mounts: number;
+  updates: number;
+}
+
+export interface InAppUpdates {
+  beginNs: number[];
+  endNs: number[];
+  modelTimeNs: number[];
+}
+
+export interface InAppSample {
+  mainThread: number;
+  jsThread: number;
+  maxThermal: number;
+  epochs: SampleEpoch[];
+  boundaries: InAppBoundary[];
+  updates: InAppUpdates;
+}
+
+export interface AppState {
+  batteryLevel: number;
+  batteryState: string;
+  lowPowerMode: boolean;
+  brightness: number;
+}
+
+export interface EpochWindow {
+  startNs: number;
+  endNs: number;
+  seconds: number;
+}
+
+export interface EpochCpu {
+  uiThreadCpu: number;
+  jsThreadCpu: number;
+  otherThreadsCpu: number;
+  processCpu: number;
+}
+
+export interface UpdateSpan {
+  beginNs: number;
+  endNs: number;
+}
+
+export interface EpochUpdates {
+  spans: UpdateSpan[];
+  durationsMs: number[];
+  expectedSlots: number;
+  missedDisplayLinkCallbacks: number | null;
+}
+
+export interface EpochReading {
+  window: EpochWindow;
+  cpu: EpochCpu;
+  updates: EpochUpdates | null;
+  mountBatchCount: number;
+  memory: number;
+  windowMemoryDelta: number;
+}
+
+export const SAMPLE_LINE_PREFIX = 'SAMPLE ';
+
+export const START_NOTIFICATION = 'com.reanimatedbenchmark.start-epochs';
+
+export const THERMAL_STATES = [
+  'Nominal',
+  'Fair',
+  'Serious',
+  'Critical',
+] as const;
+
+const SAMPLE_FORMAT = 1;
+
+const NANOSECONDS_PER_MS = 1e6;
+
+const NANOSECONDS_PER_SECOND = 1e9;
+
+const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
+
+const CPU_SUM_TOLERANCE_MS_PER_S = 0.05;
+
+const CADENCE_TOLERANCE = 0.25;
+
+const BATTERY_STATES = ['unknown', 'unplugged', 'charging', 'full'];
+
+const EPOCH_LOAD = /^[a-z][a-z-]*$/;
+
+const EPOCH_SECONDS = /^\d+(\.\d+)?$/;
+
+const COUNTERS = [
+  'uiThreadCpuUs',
+  'jsThreadCpuUs',
+  'processCpuUs',
+  'mounts',
+  'updates',
+] as const satisfies readonly (keyof InAppBoundary)[];
+
+const BOUNDARY: Check = shape({
+  readStartNs: anInteger,
+  readEndNs: anInteger,
+  signpostNs: anInteger,
+  uiThreadCpuUs: anInteger,
+  jsThreadCpuUs: anInteger,
+  processCpuUs: anInteger,
+  footprintKb: anInteger,
+  thermal: anInteger,
+  batteryLevel: anInteger,
+  batteryState: anInteger,
+  lowPower: aBoolean,
+  brightness: anInteger,
+  mounts: anInteger,
+  updates: anInteger,
+});
+
+const SAMPLE: Check = shape({
+  format: oneOf([SAMPLE_FORMAT]),
+  error: nullable(aString),
+  mainThread: anInteger,
+  jsThread: anInteger,
+  maxThermal: anInteger,
+  epochs: listOf(
+    shape({
+      load: aString,
+      collector: oneOf(['full', 'endpoints']),
+      seconds: (value, label, problems) => {
+        if (typeof value !== 'number' || !(value > 0)) {
+          problems.push(`${label} must be a positive number`);
+        }
+      },
+    })
+  ),
+  boundaries: listOf(BOUNDARY),
+  updates: shape({
+    beginNs: listOf(anInteger),
+    endNs: listOf(anInteger),
+    modelTimeNs: listOf(anInteger),
+  }),
+});
+
+export function planArguments(plan: SamplePlan): string[] {
+  return [
+    '-benchmarkEpochs',
+    plan.epochs
+      .map(({ load, collector, seconds }) => `${load}:${collector}:${seconds}`)
+      .join(','),
+    '-benchmarkStart',
+    plan.start,
+  ];
+}
+
+export function parseEpochs(text: string): SampleEpoch[] {
+  return text.split(',').map((item) => {
+    const [load, collector, secondsText, ...rest] = item.split(':');
+    const seconds = Number(secondsText);
+    if (
+      rest.length > 0 ||
+      !EPOCH_LOAD.test(load) ||
+      (collector !== 'full' && collector !== 'endpoints') ||
+      !EPOCH_SECONDS.test(secondsText ?? '') ||
+      !(seconds > 0)
+    ) {
+      throw new ToolError(
+        `The epoch "${item}" is not <load>:<full|endpoints>:<seconds>, with a load of lowercase letters and hyphens`
+      );
+    }
+    return { load, collector, seconds };
+  });
+}
+
+export function planSeconds(plan: SamplePlan): number {
+  return plan.epochs.reduce((sum, epoch) => sum + epoch.seconds, 0);
+}
+
+export function parseSampleLine(text: string, plan: SamplePlan): InAppSample {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new ToolError(
+      `The SAMPLE line of the app is not JSON: ${(error as Error).message}`
+    );
+  }
+  const problems: string[] = [];
+  SAMPLE(parsed, 'SAMPLE', problems);
+  throwProblems('The SAMPLE line of the app has errors', problems);
+  const report = parsed as InAppSample & { error: string | null };
+  if (report.error !== null) {
+    throw new ToolError(`The in-app sampler failed: ${report.error}`);
+  }
+  const sample: InAppSample = {
+    mainThread: report.mainThread,
+    jsThread: report.jsThread,
+    maxThermal: report.maxThermal,
+    epochs: report.epochs,
+    boundaries: report.boundaries,
+    updates: report.updates,
+  };
+  checkPlan(sample, plan);
+  checkUpdates(sample);
+  return sample;
+}
+
+export function readEpoch(
+  sample: InAppSample,
+  index: number,
+  refreshRate: number
+): EpochReading {
+  const start = sample.boundaries[index];
+  const end = sample.boundaries[index + 1];
+  checkCounters(start, end, index);
+  const window = epochWindow(start, end, index);
+  const perSecond = (ms: number) => ms / window.seconds;
+  const uiThreadCpu = perSecond(
+    (end.uiThreadCpuUs - start.uiThreadCpuUs) / 1e3
+  );
+  const jsThreadCpu = perSecond(
+    (end.jsThreadCpuUs - start.jsThreadCpuUs) / 1e3
+  );
+  const processCpu = perSecond((end.processCpuUs - start.processCpuUs) / 1e3);
+  if (processCpu < uiThreadCpu + jsThreadCpu - CPU_SUM_TOLERANCE_MS_PER_S) {
+    throw new ToolError(
+      `Epoch ${index}: the process CPU time (${processCpu} ms/s) is less than the sum of the main thread and the JS thread (${uiThreadCpu + jsThreadCpu} ms/s). A counter read gives a wrong unit or a wrong thread.`
+    );
+  }
+  return {
+    window,
+    cpu: {
+      uiThreadCpu,
+      jsThreadCpu,
+      otherThreadsCpu: processCpu - uiThreadCpu - jsThreadCpu,
+      processCpu,
+    },
+    updates:
+      sample.epochs[index].collector === 'full'
+        ? epochUpdates(sample, start, end, window, refreshRate, index)
+        : null,
+    mountBatchCount: end.mounts - start.mounts,
+    memory: end.footprintKb,
+    windowMemoryDelta: end.footprintKb - start.footprintKb,
+  };
+}
+
+export function highestThermalState(sample: InAppSample): number {
+  return Math.max(
+    sample.maxThermal,
+    ...sample.boundaries.map((boundary) => boundary.thermal)
+  );
+}
+
+export function appStates(sample: InAppSample): AppState[] {
+  return sample.boundaries.map((boundary) => {
+    const batteryState = BATTERY_STATES[boundary.batteryState];
+    if (batteryState === undefined) {
+      throw new ToolError(
+        `The SAMPLE line has the unknown batteryState ${boundary.batteryState}`
+      );
+    }
+    return {
+      batteryLevel: boundary.batteryLevel,
+      batteryState,
+      lowPowerMode: boundary.lowPower,
+      brightness: boundary.brightness,
+    };
+  });
+}
+
+function checkPlan(sample: InAppSample, plan: SamplePlan) {
+  const sameEpochs =
+    sample.epochs.length === plan.epochs.length &&
+    sample.epochs.every(
+      (epoch, i) =>
+        epoch.load === plan.epochs[i].load &&
+        epoch.collector === plan.epochs[i].collector &&
+        epoch.seconds === plan.epochs[i].seconds
+    );
+  if (!sameEpochs) {
+    throw new ToolError(
+      `The SAMPLE line has the epochs ${JSON.stringify(sample.epochs)}, the driver planned ${JSON.stringify(plan.epochs)}`
+    );
+  }
+  if (sample.boundaries.length !== plan.epochs.length + 1) {
+    throw new ToolError(
+      `The SAMPLE line has ${sample.boundaries.length} boundaries for ${plan.epochs.length} epochs, expected ${plan.epochs.length + 1}`
+    );
+  }
+}
+
+function checkUpdates({ updates, boundaries }: InAppSample) {
+  const count = updates.beginNs.length;
+  if (updates.endNs.length !== count || updates.modelTimeNs.length !== count) {
+    throw new ToolError(
+      'The update lists of the SAMPLE line do not have the same length'
+    );
+  }
+  if (boundaries.at(-1)?.updates !== count) {
+    throw new ToolError(
+      `The SAMPLE line has ${count} updates, and its last boundary counts ${boundaries.at(-1)?.updates}`
+    );
+  }
+}
+
+function checkCounters(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  index: number
+) {
+  for (const counter of COUNTERS) {
+    if (end[counter] < start[counter]) {
+      throw new ToolError(
+        `Epoch ${index}: the counter ${counter} goes down from ${start[counter]} to ${end[counter]}`
+      );
+    }
+  }
+}
+
+function epochWindow(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  index: number
+): EpochWindow {
+  const startNs = (start.readStartNs + start.readEndNs) / 2;
+  const endNs = (end.readStartNs + end.readEndNs) / 2;
+  const lengthNs = endNs - startNs;
+  const uncertaintyNs =
+    start.readEndNs - start.readStartNs + (end.readEndNs - end.readStartNs);
+  if (
+    !(lengthNs > 0) ||
+    uncertaintyNs > MAXIMUM_WINDOW_UNCERTAINTY * lengthNs
+  ) {
+    throw new ToolError(
+      `Epoch ${index}: the counter reads take ${uncertaintyNs} ns of a window of ${lengthNs} ns, more than ${MAXIMUM_WINDOW_UNCERTAINTY * 100}%`
+    );
+  }
+  return { startNs, endNs, seconds: lengthNs / NANOSECONDS_PER_SECOND };
+}
+
+function epochUpdates(
+  { updates }: InAppSample,
+  start: InAppBoundary,
+  end: InAppBoundary,
+  window: EpochWindow,
+  refreshRate: number,
+  index: number
+): EpochUpdates {
+  const spans: UpdateSpan[] = [];
+  const modelTimes: number[] = [];
+  for (let i = start.updates; i < end.updates; i++) {
+    const span = { beginNs: updates.beginNs[i], endNs: updates.endNs[i] };
+    if (
+      span.endNs < span.beginNs ||
+      span.beginNs < start.readEndNs ||
+      span.endNs > end.readStartNs
+    ) {
+      throw new ToolError(
+        `Epoch ${index}: the UI update ${i} (${span.beginNs} ns to ${span.endNs} ns) is not inside the epoch (${start.readEndNs} ns to ${end.readStartNs} ns)`
+      );
+    }
+    spans.push(span);
+    modelTimes.push(updates.modelTimeNs[i]);
+  }
+  const periodNs = NANOSECONDS_PER_SECOND / refreshRate;
+  return {
+    spans,
+    durationsMs: spans.map(
+      ({ beginNs, endNs }) => (endNs - beginNs) / NANOSECONDS_PER_MS
+    ),
+    expectedSlots: refreshRate * window.seconds,
+    missedDisplayLinkCallbacks: missedSlotShare(modelTimes, periodNs, index),
+  };
+}
+
+function missedSlotShare(
+  modelTimes: number[],
+  periodNs: number,
+  index: number
+): number | null {
+  if (modelTimes.length < 2) {
+    return null;
+  }
+  let missed = 0;
+  let slots = 0;
+  for (let i = 1; i < modelTimes.length; i++) {
+    const periods = (modelTimes[i] - modelTimes[i - 1]) / periodNs;
+    const rounded = Math.round(periods);
+    if (rounded < 1 || Math.abs(periods - rounded) > CADENCE_TOLERANCE) {
+      throw new ToolError(
+        `Epoch ${index}: the model times of the UI updates ${i - 1} and ${i} are ${periods.toFixed(3)} display periods apart. The updates are not on a fixed cadence of ${(periodNs / NANOSECONDS_PER_MS).toFixed(3)} ms.`
+      );
+    }
+    missed += rounded - 1;
+    slots += rounded;
+  }
+  return missed / slots;
+}

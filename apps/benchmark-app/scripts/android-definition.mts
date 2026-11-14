@@ -31,7 +31,11 @@ const DEVICE_STATE: Record<keyof DeviceState, Check> = {
 export const ANDROID_DEFINITION: PlatformDefinition = {
   name: 'android',
   commands: ['run', 'memory', 'sample'],
-  options: { 'trace-processor': 'optional' },
+  options: {
+    'trace-processor': 'optional',
+    'keep-traces': 'optional',
+    'keep-trace': 'optional',
+  },
   segmentColumns: [
     { key: 'batteryLevel', title: 'Battery level', unit: '%' },
     { key: 'batteryTemperature', title: 'Battery temperature', unit: ' °C' },
