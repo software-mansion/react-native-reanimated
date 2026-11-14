@@ -14,13 +14,16 @@ export interface IosTracer {
   collect: (traceFile: string, app: TracedIosApp) => Promise<IosTraceReading>;
 }
 
-export const TRACE_TEMPLATE = 'Animation Hitches';
-export const TRACED_SUBSYSTEMS = [
+const TRACE_TEMPLATE = 'Animation Hitches';
+
+const TRACED_SUBSYSTEMS = [
   'dev.reactnative.instruments',
   'com.reanimatedbenchmark',
 ];
-export const RECORD_TIMEOUT_MS = 5 * 60_000;
-export const EXPORT_TIMEOUT_MS = 5 * 60_000;
+
+const RECORD_TIMEOUT_MS = 5 * 60_000;
+
+const EXPORT_TIMEOUT_MS = 5 * 60_000;
 
 const TABLE_SELECTORS: Record<keyof TraceExports, string> = {
   threadState: '@schema="thread-state"',
@@ -84,7 +87,16 @@ export class Xctrace implements IosTracer {
   }
 }
 
-export function recordArguments(
+function recordingOptions(): string {
+  return JSON.stringify({
+    os_signpost: {
+      dynamicTracingEnabledSubsystems: TRACED_SUBSYSTEMS,
+      recordAllProcessesInSingleProcessMode: false,
+    },
+  });
+}
+
+function recordArguments(
   deviceName: string,
   pid: number,
   traceFile: string,
@@ -111,15 +123,6 @@ export function recordArguments(
   ];
 }
 
-export function recordingOptions(): string {
-  return JSON.stringify({
-    os_signpost: {
-      dynamicTracingEnabledSubsystems: TRACED_SUBSYSTEMS,
-      recordAllProcessesInSingleProcessMode: false,
-    },
-  });
-}
-
-export function tableXpath(table: keyof TraceExports): string {
+function tableXpath(table: keyof TraceExports): string {
   return `/trace-toc/run[@number="1"]/data/table[${TABLE_SELECTORS[table]}][1]`;
 }

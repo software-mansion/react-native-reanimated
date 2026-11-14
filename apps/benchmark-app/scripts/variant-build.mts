@@ -1,13 +1,15 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type {
-  PackageSource,
-  StaticFlags,
-  Variant,
-  VariantKey,
-} from './config.mts';
+import { applicationIdOf } from './application-id.mts';
+import { addLibraries } from './build-copy.mts';
+import {
+  collectBuildKeyInputs,
+  listProjectFiles,
+  variantBuildKey,
+} from './build-key.mts';
+import type { ToolIdentity } from './build-key.mts';
+import type { StaticFlags, Variant, VariantKey } from './config.mts';
 import { ToolError } from './errors.mts';
 import type { PlatformName } from './platform.mts';
 import type { Processes } from './processes.mts';
@@ -26,19 +28,6 @@ export interface BuiltVariant {
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
 }
-
-export interface BuildKeyInputs {
-  variant: Variant;
-  platform: PlatformName;
-  suffix: string;
-  nodeVersion: string;
-  toolIdentity: ToolIdentity;
-  projectHash: string;
-  tarballHashes: Partial<LibraryState<string>>;
-  procedureHash: string;
-}
-
-export type ToolIdentity = Record<string, string>;
 
 export interface BuildRequest {
   appDir: string;
@@ -66,31 +55,19 @@ export interface ProjectCommand {
 
 export interface PlatformBuild {
   platform: PlatformName;
-  procedureFile: string;
+  procedureFiles: readonly string[];
   readToolIdentity: (request: BuildRequest) => Promise<ToolIdentity>;
   build: (project: VariantProject) => Promise<string>;
 }
 
-export const APPLICATION_ID = 'com.reanimatedbenchmark';
-export const PACKAGE_NAMES: LibraryState<string> = {
-  reanimated: 'react-native-reanimated',
-  worklets: 'react-native-worklets',
-};
-
-const EXCLUDED_NAMES = new Set([
-  'node_modules',
-  'build',
-  '.gradle',
-  '.cxx',
-  '.kotlin',
-  '.yarn',
-  'Pods',
-  '.DS_Store',
-]);
-const EXCLUDED_PATHS = new Set(['scripts', 'vendor/bundle']);
 const BUILD_MARKER = 'benchmark-build.json';
+
 const BUILD_LOG = 'benchmark-build.log';
-const YARN_TIMEOUT_MS = 30 * 60_000;
+
+export const BUILD_PROCEDURE_FILES = [
+  import.meta.filename,
+  path.join(import.meta.dirname, 'build-copy.mts'),
+];
 
 export async function buildVariant(
   request: BuildRequest,
@@ -116,38 +93,7 @@ export async function buildVariant(
   copyFiles(appDir, directory, files);
   const run = (command: ProjectCommand) =>
     runLogged(request, path.join(directory, BUILD_LOG), command);
-  await run({
-    command: 'yarn',
-    args: [
-      'add',
-      packageSpec(PACKAGE_NAMES.reanimated, variant.reanimated),
-      packageSpec(PACKAGE_NAMES.worklets, variant.worklets),
-    ],
-    cwd: directory,
-    timeoutMs: YARN_TIMEOUT_MS,
-  });
-
-  const installed = readInstalledLibraries(directory);
-  const effectiveFlags = {
-    reanimated: mergeFlags(
-      installed.defaultFlags.reanimated,
-      variant.reanimatedFlags,
-      PACKAGE_NAMES.reanimated
-    ),
-    worklets: mergeFlags(
-      installed.defaultFlags.worklets,
-      variant.workletsFlags,
-      PACKAGE_NAMES.worklets
-    ),
-  };
-  const packageJsonPath = path.join(directory, 'package.json');
-  const packageJson = JSON.parse(
-    fs.readFileSync(packageJsonPath, 'utf8')
-  ) as Record<string, unknown>;
-  fs.writeFileSync(
-    packageJsonPath,
-    `${JSON.stringify(withStaticFlags(packageJson, variant), null, 2)}\n`
-  );
+  const libraries = await addLibraries(directory, variant, run);
 
   const artifact = await platformBuild.build({ directory, key, variant, run });
   if (!fs.existsSync(artifact)) {
@@ -161,117 +107,10 @@ export async function buildVariant(
     directory,
     artifact,
     applicationId: applicationIdOf(key),
-    installedVersions: installed.versions,
-    effectiveFlags,
+    ...libraries,
   };
   fs.writeFileSync(marker, `${JSON.stringify(built, null, 2)}\n`);
   return built;
-}
-
-export async function collectBuildKeyInputs(
-  request: BuildRequest,
-  platformBuild: PlatformBuild,
-  files = listProjectFiles(request.appDir)
-): Promise<BuildKeyInputs> {
-  return {
-    variant: request.variant,
-    platform: platformBuild.platform,
-    suffix: applicationSuffix(request.key),
-    nodeVersion: process.version,
-    toolIdentity: await platformBuild.readToolIdentity(request),
-    projectHash: hashFiles(request.appDir, files),
-    tarballHashes: hashTarballs(request.variant),
-    procedureHash: hashBuildProcedure(platformBuild.procedureFile),
-  };
-}
-
-export function listProjectFiles(appDir: string, relativeDir = ''): string[] {
-  return fs
-    .readdirSync(path.join(appDir, relativeDir), { withFileTypes: true })
-    .map((entry) => ({
-      entry,
-      relativePath: relativeDir ? `${relativeDir}/${entry.name}` : entry.name,
-    }))
-    .filter(({ relativePath }) => isCopied(relativePath))
-    .flatMap(({ entry, relativePath }) => {
-      if (entry.isDirectory()) {
-        return listProjectFiles(appDir, relativePath);
-      }
-      return entry.isFile() ? [relativePath] : [];
-    })
-    .sort();
-}
-
-export function isCopied(relativePath: string): boolean {
-  const parts = relativePath.split('/');
-  return (
-    !parts.some((part) => EXCLUDED_NAMES.has(part)) &&
-    !parts.some((_, i) => EXCLUDED_PATHS.has(parts.slice(0, i + 1).join('/')))
-  );
-}
-
-export function variantBuildKey(inputs: BuildKeyInputs): string {
-  const { variant } = inputs;
-  const sorted = (values: Record<string, unknown>) =>
-    Object.entries(values).sort(([left], [right]) => left.localeCompare(right));
-  const description = JSON.stringify({
-    reanimated: variant.reanimated,
-    worklets: variant.worklets,
-    tarballHashes: inputs.tarballHashes,
-    reanimatedFlags: sorted(variant.reanimatedFlags),
-    workletsFlags: sorted(variant.workletsFlags),
-    bundleMode: variant.bundleMode,
-    profiling: variant.profiling,
-    platform: inputs.platform,
-    suffix: inputs.suffix,
-    nodeVersion: inputs.nodeVersion,
-    toolIdentity: sorted(inputs.toolIdentity),
-    projectHash: inputs.projectHash,
-    procedureHash: inputs.procedureHash,
-  });
-  return crypto
-    .createHash('sha256')
-    .update(description)
-    .digest('hex')
-    .slice(0, 16);
-}
-
-export function applicationSuffix(key: VariantKey): string {
-  return `.${key}`;
-}
-
-function hashFiles(root: string, files: string[]): string {
-  const hash = crypto.createHash('sha256');
-  for (const file of files) {
-    hash
-      .update(file)
-      .update('\0')
-      .update(fs.readFileSync(path.join(root, file)))
-      .update('\0');
-  }
-  return hash.digest('hex');
-}
-
-function hashTarballs(variant: Variant): Partial<LibraryState<string>> {
-  const hashOf = (source: PackageSource) =>
-    source.kind === 'tarball'
-      ? crypto
-          .createHash('sha256')
-          .update(fs.readFileSync(source.path))
-          .digest('hex')
-      : undefined;
-  return {
-    reanimated: hashOf(variant.reanimated),
-    worklets: hashOf(variant.worklets),
-  };
-}
-
-function hashBuildProcedure(platformProcedureFile: string): string {
-  return crypto
-    .createHash('sha256')
-    .update(fs.readFileSync(import.meta.filename))
-    .update(fs.readFileSync(platformProcedureFile))
-    .digest('hex');
 }
 
 function copyFiles(from: string, to: string, files: string[]) {
@@ -299,63 +138,4 @@ async function runLogged(
     .catch((error: Error) => {
       throw new ToolError(`${error.message}\nThe full log is in ${logFile}`);
     });
-}
-
-export function packageSpec(name: string, source: PackageSource): string {
-  return source.kind === 'npm'
-    ? `${name}@${source.version}`
-    : `${name}@file:${source.path}`;
-}
-
-function readInstalledLibraries(directory: string) {
-  const readJson = (...parts: string[]) =>
-    JSON.parse(
-      fs.readFileSync(path.join(directory, 'node_modules', ...parts), 'utf8')
-    ) as Record<string, unknown>;
-  const library = (name: string) => ({
-    version: String(readJson(name, 'package.json').version),
-    flags: readJson(
-      name,
-      'src',
-      'featureFlags',
-      'staticFlags.json'
-    ) as StaticFlags,
-  });
-  const reanimated = library(PACKAGE_NAMES.reanimated);
-  const worklets = library(PACKAGE_NAMES.worklets);
-  return {
-    versions: { reanimated: reanimated.version, worklets: worklets.version },
-    defaultFlags: { reanimated: reanimated.flags, worklets: worklets.flags },
-  };
-}
-
-export function mergeFlags(
-  defaults: StaticFlags,
-  overrides: StaticFlags,
-  library: string
-): StaticFlags {
-  const unknown = Object.keys(overrides).filter((name) => !(name in defaults));
-  if (unknown.length > 0) {
-    throw new ToolError(
-      `${library} has no static flag ${unknown.join(', ')} (known: ${Object.keys(defaults).join(', ')})`
-    );
-  }
-  return { ...defaults, ...overrides };
-}
-
-export function withStaticFlags(
-  packageJson: Record<string, unknown>,
-  variant: Variant
-): Record<string, unknown> {
-  const flagsField = (flags: StaticFlags) =>
-    Object.keys(flags).length > 0 ? { staticFeatureFlags: flags } : undefined;
-  return {
-    ...packageJson,
-    reanimated: flagsField(variant.reanimatedFlags),
-    worklets: flagsField(variant.workletsFlags),
-  };
-}
-
-export function applicationIdOf(key: VariantKey): string {
-  return `${APPLICATION_ID}${applicationSuffix(key)}`;
 }

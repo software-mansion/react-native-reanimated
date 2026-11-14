@@ -26,11 +26,6 @@ export interface BatteryInfo {
   temperature: number;
 }
 
-export interface WifiState {
-  wifiEnabled: boolean;
-  wifiConnected: boolean;
-}
-
 export type ActivityStart =
   | { started: true; totalTime: number }
   | { started: false; reason: string };
@@ -46,6 +41,11 @@ export type StateMoment =
   | 'before the trace'
   | 'after the trace';
 
+interface WifiState {
+  wifiEnabled: boolean;
+  wifiConnected: boolean;
+}
+
 export const COMPARED_STATE_KEYS = [
   'deviceId',
   'fingerprint',
@@ -58,24 +58,33 @@ export const COMPARED_STATE_KEYS = [
   'wifiConnected',
 ] as const satisfies readonly (keyof DeviceState)[];
 
-export const IDLE_STATE_KEYS = idleKeysOf(COMPARED_STATE_KEYS);
-
 export const STATE_KEYS_WITHOUT_BATTERY_LEVEL = COMPARED_STATE_KEYS.filter(
   (key) => key !== 'batteryLevel'
 );
 
-export const MINIMUM_SDK = 31;
-export const REQUIRED_ABI = 'arm64-v8a';
-export const ACTIVITY = 'com.reanimatedbenchmark.MainActivity';
-export const REPORT_TAG = 'ReanimatedBenchmark';
+const MINIMUM_SDK = 31;
+
+const REQUIRED_ABI = 'arm64-v8a';
+
+const ACTIVITY = 'com.reanimatedbenchmark.MainActivity';
+
+const REPORT_TAG = 'ReanimatedBenchmark';
+
 export const REMOTE_TRACE_DIR = '/data/misc/perfetto-traces';
+
 export const REMOTE_CONFIG_DIR = '/data/misc/perfetto-configs';
+
 export const REMOTE_TRACE_PREFIX = 'reanimated-benchmark-';
+
 export const DEVICE_COMMAND_TIMEOUT_MS = 60_000;
+
 export const INSTALL_TIMEOUT_MS = 5 * 60_000;
-export const COMPILE_TIMEOUT_MS = 10 * 60_000;
-export const TRACE_TIMEOUT_MS = 2 * 60_000;
-export const PULL_TIMEOUT_MS = 5 * 60_000;
+
+const COMPILE_TIMEOUT_MS = 10 * 60_000;
+
+const TRACE_TIMEOUT_MS = 2 * 60_000;
+
+const PULL_TIMEOUT_MS = 5 * 60_000;
 
 const BATTERY_STATUSES: Record<string, string> = {
   '1': 'unknown',
@@ -84,12 +93,14 @@ const BATTERY_STATUSES: Record<string, string> = {
   '4': 'not charging',
   '5': 'full',
 };
+
 const POWER_SOURCES = [
   ['AC powered', 'ac'],
   ['USB powered', 'usb'],
   ['Wireless powered', 'wireless'],
   ['Dock powered', 'dock'],
 ] as const;
+
 const BRIGHTNESS_MODES: Record<string, string> = {
   '0': 'manual',
   '1': 'automatic',
@@ -370,7 +381,23 @@ export function checkAbi(state: DeviceState) {
   }
 }
 
-export function parseBattery(output: string): BatteryInfo {
+export function idleKeysOf(
+  keys: readonly (keyof DeviceState)[]
+): (keyof DeviceState)[] {
+  return keys.filter((key) => key !== 'refreshRate');
+}
+
+export function changedStateKeys(
+  reference: DeviceState,
+  current: DeviceState,
+  keys: readonly (keyof DeviceState)[] = COMPARED_STATE_KEYS
+): string[] {
+  return keys
+    .filter((key) => reference[key] !== current[key])
+    .map((key) => `${key}: ${reference[key]} -> ${current[key]}`);
+}
+
+function parseBattery(output: string): BatteryInfo {
   const fields = new Map<string, string>();
   for (const line of output.split('\n')) {
     const match = /^\s*([^:]+):\s*(.*)$/.exec(line);
@@ -397,7 +424,24 @@ export function parseBattery(output: string): BatteryInfo {
   };
 }
 
-export function parseActiveRefreshRate(output: string): number {
+function parseWifiStatus(output: string): WifiState {
+  return {
+    wifiEnabled: /^Wifi is enabled/m.test(output),
+    wifiConnected: /^Wifi is connected/m.test(output),
+  };
+}
+
+function parseThermalStatus(output: string): number {
+  const match = /^\s*Thermal Status:\s*(\d+)/m.exec(output);
+  if (!match) {
+    throw new ToolError(
+      `Cannot read "Thermal Status" from dumpsys thermalservice:\n${output.slice(0, 500)}`
+    );
+  }
+  return Number(match[1]);
+}
+
+function parseActiveRefreshRate(output: string): number {
   const deviceInfo = /DisplayDeviceInfo\{.*/.exec(output)?.[0] ?? '';
   const rate =
     /[{,]\s*renderFrameRate ([\d.]+)/.exec(deviceInfo)?.[1] ??
@@ -410,24 +454,14 @@ export function parseActiveRefreshRate(output: string): number {
   return Math.round(Number(rate) * 10) / 10;
 }
 
-export function parseWifiStatus(output: string): WifiState {
-  return {
-    wifiEnabled: /^Wifi is enabled/m.test(output),
-    wifiConnected: /^Wifi is connected/m.test(output),
-  };
+function activeModeRate(deviceInfo: string): string | undefined {
+  const modeId = /[{,]\s*modeId (\d+)/.exec(deviceInfo)?.[1];
+  return modeId
+    ? new RegExp(`\\{id=${modeId},[^}]*?fps=([\\d.]+)`).exec(deviceInfo)?.[1]
+    : undefined;
 }
 
-export function parseThermalStatus(output: string): number {
-  const match = /^\s*Thermal Status:\s*(\d+)/m.exec(output);
-  if (!match) {
-    throw new ToolError(
-      `Cannot read "Thermal Status" from dumpsys thermalservice:\n${output.slice(0, 500)}`
-    );
-  }
-  return Number(match[1]);
-}
-
-export function parseActivityStart(output: string): ActivityStart {
+function parseActivityStart(output: string): ActivityStart {
   const error = /^Error: .*$/m.exec(output) ?? /^Error.*$/m.exec(output);
   const status = /^Status:\s*(\S+)/m.exec(output)?.[1];
   const totalTime = /^TotalTime:\s*(\d+)/m.exec(output)?.[1];
@@ -440,7 +474,7 @@ export function parseActivityStart(output: string): ActivityStart {
   return { started: true, totalTime: Number(totalTime) };
 }
 
-export function parsePid(output: string): number | null {
+function parsePid(output: string): number | null {
   const pids = output.trim().split(/\s+/).filter(Boolean);
   if (pids.length > 1) {
     throw new ToolError(
@@ -450,33 +484,10 @@ export function parsePid(output: string): number | null {
   return pids.length === 1 ? Number(pids[0]) : null;
 }
 
-export function idleKeysOf(
-  keys: readonly (keyof DeviceState)[]
-): (keyof DeviceState)[] {
-  return keys.filter((key) => key !== 'refreshRate');
-}
-
-export function changedStateKeys(
-  reference: DeviceState,
-  current: DeviceState,
-  keys: readonly (keyof DeviceState)[] = COMPARED_STATE_KEYS
-): string[] {
-  return keys
-    .filter((key) => reference[key] !== current[key])
-    .map((key) => `${key}: ${reference[key]} -> ${current[key]}`);
-}
-
 function throwOnChanges(changes: string[], moment: string) {
   if (changes.length > 0) {
     throw new ToolError(
       `The device state changed (read ${moment}): ${changes.join(', ')}`
     );
   }
-}
-
-function activeModeRate(deviceInfo: string): string | undefined {
-  const modeId = /[{,]\s*modeId (\d+)/.exec(deviceInfo)?.[1];
-  return modeId
-    ? new RegExp(`\\{id=${modeId},[^}]*?fps=([\\d.]+)`).exec(deviceInfo)?.[1]
-    : undefined;
 }

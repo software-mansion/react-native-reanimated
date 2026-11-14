@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, describe, it } from 'node:test';
 
-import { ANDROID_DEFINITION } from '../android-definition.mts';
 import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
@@ -12,11 +11,7 @@ import {
   checkNoiseLimitsRecord,
   validateNoiseLimitsRecord,
 } from '../noise-limits-record.mts';
-import {
-  computeNoiseLimits,
-  noiseLimitsCommand,
-  splitNoise,
-} from '../noise-limits.mts';
+import { noiseLimitsCommand } from '../noise-limits.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import { writeResult } from '../results.mts';
 import type { RunResult } from '../results.mts';
@@ -49,6 +44,14 @@ const PHONE: DeviceState = {
   wifiConnected: true,
   thermalStatus: 0,
   batteryTemperature: 30,
+};
+const IPHONE = {
+  deviceId: 'UDID1',
+  name: 'Test iPhone',
+  model: 'iPhone 13 mini',
+  productType: 'iPhone14,4',
+  osVersion: '27.0.1',
+  osBuild: '24A446',
 };
 const IDENTITY = {
   model: 'SM-A165F',
@@ -178,46 +181,17 @@ function printed(runs: string[]): unknown {
   return JSON.parse(lines.join('\n'));
 }
 
-describe('splitNoise', () => {
-  it('takes the 97.5th percentile of the absolute difference over all splits', () => {
-    assert.equal(splitNoise([1, 2], [3, 4], 'absolute'), 2);
-    assert.ok(
-      Math.abs((splitNoise([1, 2], [3, 4], 'relative') ?? 0) - 26 / 21) < 1e-12
-    );
-  });
+describe('noise limits of each metric', () => {
+  const limitsOf = (name: string, outcomes: ScenarioOutcome[]) =>
+    validateNoiseLimitsRecord(printed([writeRun(name, outcomes)])).limits;
 
-  it('gives no limit when the relative difference is not defined', () => {
-    assert.equal(splitNoise([0, 0, 1], [1, 1, 1], 'relative'), null);
-    assert.equal(splitNoise([0, 0, 1], [1, 1, 1], 'absolute'), 1);
-  });
-
-  it('gives no limit with random splits when one split has no relative difference', () => {
-    const zeros = new Array<number>(21).fill(0);
-    const ones = new Array<number>(19).fill(1);
-    const b = new Array<number>(40).fill(1);
-    assert.equal(splitNoise([...zeros, ...ones], b, 'relative'), null);
-  });
-
-  it('gives the same limit each time with random splits', () => {
-    const a = Array.from({ length: 20 }, (_, i) => 100 + i);
-    const b = a.map((value) => value + 0.5);
-    const limit = splitNoise(a, b, 'relative');
-    assert.equal(splitNoise(a, b, 'relative'), limit);
-    assert.ok(limit !== null && limit > 0 && limit < 0.1);
-  });
-});
-
-describe('computeNoiseLimits', () => {
   it('applies the floors and gives no limit for windowMemoryDelta', () => {
-    const limits = computeNoiseLimits(
-      [
-        outcome('css', () => ({})),
-        outcome('mount-unmount', (_variant, i) => ({
-          windowMemoryDelta: i * 3000,
-        })),
-      ],
-      ANDROID_DEFINITION
-    );
+    const limits = limitsOf('floors', [
+      outcome('css', () => ({})),
+      outcome('mount-unmount', (_variant, i) => ({
+        windowMemoryDelta: i * 3000,
+      })),
+    ]);
     const floors = {
       frameDurationMedian: 0.02,
       frameDurationP95: 0.02,
@@ -232,18 +206,23 @@ describe('computeNoiseLimits', () => {
   });
 
   it('leaves out a relative metric whose median can be 0', () => {
-    const limits = computeNoiseLimits(
-      [outcome('css', (_variant, i) => ({ coldStart: i < 6 ? 0 : 300 }))],
-      ANDROID_DEFINITION
-    );
+    const limits = limitsOf('zero', [
+      outcome('css', (_variant, i) => ({ coldStart: i < 6 ? 0 : 300 })),
+    ]);
     assert.equal(limits.css?.coldStart, undefined);
   });
 
   it('gives limits only for the verdict metrics of the platform', () => {
-    const limits = computeNoiseLimits(
+    const folder = writeRun(
+      'ios',
       [outcome('css', () => ({}))],
-      IOS_DEFINITION
+      VARIANT,
+      (result) => {
+        result.platform = 'ios';
+        result.segments[0].device = IPHONE;
+      }
     );
+    const { limits } = validateNoiseLimitsRecord(printed([folder]));
     assert.deepEqual(Object.keys(limits.css ?? {}), [
       ...IOS_DEFINITION.verdictMetrics,
     ]);

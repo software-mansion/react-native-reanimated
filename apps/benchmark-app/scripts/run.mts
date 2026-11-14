@@ -2,13 +2,11 @@ import path from 'node:path';
 
 import type { ResumeOptions, RunOptions } from './arguments.mts';
 import type { CommandContext } from './command-context.mts';
-import { blocksOf, validateConfig } from './config.mts';
+import { blocksOf, readConfigFile, validateConfig } from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
 import {
   dependenciesOf,
-  readConfig,
-  readJson,
   resumeMeasurement,
   startMeasurement,
 } from './measurement.mts';
@@ -18,7 +16,7 @@ import type {
 } from './measurement.mts';
 import {
   checkNoiseLimitsRecord,
-  validateNoiseLimitsRecord,
+  readNoiseLimitsRecord,
 } from './noise-limits-record.mts';
 import { renderReport } from './report.mts';
 import {
@@ -37,11 +35,11 @@ export async function runCommand(
   dependencies: MeasurementDependencies = dependenciesOf(options.device)
 ): Promise<number> {
   const definition = PLATFORM_DEFINITIONS[options.device.platform];
-  const config = readConfig(options.config, (raw, configDir, fileSystem) =>
+  const config = readConfigFile(options.config, (raw, configDir, fileSystem) =>
     validateConfig(raw, configDir, fileSystem, definition)
   );
   const noiseLimits = options.noiseLimits
-    ? validateNoiseLimitsRecord(readJson(options.noiseLimits))
+    ? readNoiseLimitsRecord(options.noiseLimits)
     : null;
   return startMeasurement(
     {

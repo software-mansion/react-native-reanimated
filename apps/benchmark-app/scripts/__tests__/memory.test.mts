@@ -4,11 +4,8 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import type { MemoryOptions } from '../arguments.mts';
-import {
-  memoryCommand,
-  memoryResumeCommand,
-  readMemoryResult,
-} from '../memory.mts';
+import { memoryCommand, memoryResumeCommand } from '../memory.mts';
+import type { MemoryResult } from '../memory.mts';
 import { resumeCommand } from '../run.mts';
 import {
   DEVICE,
@@ -96,6 +93,12 @@ async function stoppedMemoryTest(interruptAtTrace = 2): Promise<string> {
     /the device connection ended/
   );
   return onlyRunFolder(TEST_ROOT);
+}
+
+function readMemoryResult(folder: string): MemoryResult {
+  return JSON.parse(
+    fs.readFileSync(path.join(folder, 'result.json'), 'utf8')
+  ) as MemoryResult;
 }
 
 function reportOf(folder: string): string {

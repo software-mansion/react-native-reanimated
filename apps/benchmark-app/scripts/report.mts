@@ -23,13 +23,13 @@ import type {
 import type { BuiltVariant } from './variant-build.mts';
 import type { AdvisoryRow, MetricComparison, VerdictRow } from './verdict.mts';
 
-type Timed = Judged & { timings: SampleSteps['timings'] };
-
 export interface Difference {
   field: string;
   a: string;
   b: string;
 }
+
+type Timed = Judged & { timings: SampleSteps['timings'] };
 
 export function renderReport(result: RunResult): string {
   const definition = PLATFORM_DEFINITIONS[result.platform];
@@ -87,19 +87,6 @@ export function renderReport(result: RunResult): string {
   ].join('\n');
 }
 
-function incompleteNote(result: RunResult): string {
-  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result, result.config.scenarios).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
-}
-
-function blocksText(result: RunResult): string {
-  const overrides = Object.entries(result.config.blocks ?? {}).map(
-    ([scenario, blocks]) => `${scenario}: ${blocks}`
-  );
-  return overrides.length > 0
-    ? `${result.options.blocks} (${overrides.join(', ')})`
-    : String(result.options.blocks);
-}
-
 export function differencesSection(result: MeasurementResult<Judged>): string {
   const differences = variantDifferences(result.config, result.variants);
   if (differences.length === 0) {
@@ -153,23 +140,6 @@ export function variantDifferences(
   return rows.filter((row) => row.a !== row.b);
 }
 
-function describeSource(source: PackageSource): string {
-  return source.kind === 'npm' ? source.version : source.path;
-}
-
-function flagDifferences(
-  library: string,
-  a: Record<string, boolean>,
-  b: Record<string, boolean>
-): Difference[] {
-  const names = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
-  return names.map((name) => ({
-    field: `${library} ${name}`,
-    a: String(a[name] ?? '-'),
-    b: String(b[name] ?? '-'),
-  }));
-}
-
 export function counted(
   count: number,
   singular: string,
@@ -185,6 +155,107 @@ export function table(header: string[], rows: string[][]): string {
   );
 }
 
+export function metricDefinitionsTable(
+  definition: PlatformDefinition,
+  entries = definition.metricDefinitions
+): string {
+  return table(
+    ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
+    entries.map((entry) => [
+      entry.names.map((name) => `\`${name}\``).join(', '),
+      entry.unit,
+      entry.source,
+      entry.interval,
+      entry.limits,
+      roleOf(definition, entry.names),
+    ])
+  );
+}
+
+export function failedSection(
+  failed: FailedScenario[],
+  attempts = 'blocks'
+): string {
+  if (failed.length === 0) {
+    return 'None.';
+  }
+  return failed
+    .map((scenario) => {
+      const causes = scenario.causes.map(
+        (cause) =>
+          `${cause.variant.toUpperCase()}: ${cause.cause}, ${cause.detail}`
+      );
+      return `- ${scenario.scenario} failed on ${failedVariants(scenario)}. Last ${causes.length} invalid ${attempts}: ${causes.join('; ')}.`;
+    })
+    .join('\n');
+}
+
+export function deviceSection(device: DeviceState): string {
+  return table(
+    ['Key', 'Value at session start'],
+    Object.entries(device).map(([key, value]) => [key, String(value)])
+  );
+}
+
+export function segmentsSection(
+  result: MeasurementResult<Judged>,
+  unitName: string
+): string {
+  const lines = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+  ].flatMap((outcome) => roundSegmentsLine(outcome, unitName));
+  return [
+    segmentsTable(
+      result.segments,
+      PLATFORM_DEFINITIONS[result.platform].segmentColumns
+    ),
+    ...(lines.length > 0 ? ['', ...lines] : []),
+  ].join('\n');
+}
+
+export function invalidSection(
+  samples: Recorded<Judged>[],
+  causes: readonly InvalidCause[] = SAMPLE_INVALID_CAUSES
+): string {
+  return table(
+    ['Cause', 'Samples'],
+    causes.map((cause) => [
+      cause,
+      String(
+        samples.filter((sample) => !sample.valid && sample.cause === cause)
+          .length
+      ),
+    ])
+  );
+}
+
+export function timingSection(samples: Recorded<Timed>[]): string {
+  return table(
+    ['Step', 'Mean'],
+    SAMPLE_STEPS.map((step) => {
+      const times = samples.flatMap((sample) =>
+        sample.timings[step] === undefined ? [] : [sample.timings[step]]
+      );
+      const mean = times.reduce((sum, time) => sum + time, 0) / times.length;
+      return [step, times.length > 0 ? `${(mean / 1000).toFixed(1)} s` : '-'];
+    })
+  );
+}
+
+function incompleteNote(result: RunResult): string {
+  return `This run is not complete (status: ${result.status}). Scenarios without data: ${scenariosWithoutData(result, result.config.scenarios).join(', ') || 'none'}. The verdicts and the expectations are provisional.`;
+}
+
+function blocksText(result: RunResult): string {
+  const overrides = Object.entries(result.config.blocks ?? {}).map(
+    ([scenario, blocks]) => `${scenario}: ${blocks}`
+  );
+  return overrides.length > 0
+    ? `${result.options.blocks} (${overrides.join(', ')})`
+    : String(result.options.blocks);
+}
+
 function expectationsSection(
   results: ExpectationResult[],
   config: RunConfig,
@@ -195,7 +266,7 @@ function expectationsSection(
     .join('\n');
 }
 
-export function expectationLine(
+function expectationLine(
   result: ExpectationResult,
   index: number,
   config: RunConfig,
@@ -255,10 +326,6 @@ function formatDifference(
     : `${value} (absolute)`;
 }
 
-function unitOf(metric: ComparedMetric): MetricUnit {
-  return COMPARISON_RULES[metric].unit;
-}
-
 function formatSigned(value: number, unit: MetricUnit): string {
   const sign = value > 0 ? '+' : '';
   return unit === 'share'
@@ -276,6 +343,10 @@ function formatValue(value: number, unit: MetricUnit): string {
     default:
       return `${finite.toFixed(2)} ${unit}`;
   }
+}
+
+function unitOf(metric: ComparedMetric): MetricUnit {
+  return COMPARISON_RULES[metric].unit;
 }
 
 function formatInterval(row: MetricComparison): string {
@@ -388,21 +459,21 @@ function metricDefinitionsSection(
   ].join('\n');
 }
 
-export function metricDefinitionsTable(
-  definition: PlatformDefinition,
-  entries = definition.metricDefinitions
-): string {
-  return table(
-    ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
-    entries.map((entry) => [
-      entry.names.map((name) => `\`${name}\``).join(', '),
-      entry.unit,
-      entry.source,
-      entry.interval,
-      entry.limits,
-      roleOf(definition, entry.names),
-    ])
-  );
+function describeSource(source: PackageSource): string {
+  return source.kind === 'npm' ? source.version : source.path;
+}
+
+function flagDifferences(
+  library: string,
+  a: Record<string, boolean>,
+  b: Record<string, boolean>
+): Difference[] {
+  const names = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
+  return names.map((name) => ({
+    field: `${library} ${name}`,
+    a: String(a[name] ?? '-'),
+    b: String(b[name] ?? '-'),
+  }));
 }
 
 function roleOf(
@@ -415,73 +486,6 @@ function roleOf(
     return 'yes';
   }
   return has(definition.advisoryMetrics) ? 'no verdict, shown' : 'no, stored';
-}
-
-export function failedSection(
-  failed: FailedScenario[],
-  attempts = 'blocks'
-): string {
-  if (failed.length === 0) {
-    return 'None.';
-  }
-  return failed
-    .map((scenario) => {
-      const causes = scenario.causes.map(
-        (cause) =>
-          `${cause.variant.toUpperCase()}: ${cause.cause}, ${cause.detail}`
-      );
-      return `- ${scenario.scenario} failed on ${failedVariants(scenario)}. Last ${causes.length} invalid ${attempts}: ${causes.join('; ')}.`;
-    })
-    .join('\n');
-}
-
-export function deviceSection(device: DeviceState): string {
-  return table(
-    ['Key', 'Value at session start'],
-    Object.entries(device).map(([key, value]) => [key, String(value)])
-  );
-}
-
-export function segmentsSection(
-  result: MeasurementResult<Judged>,
-  unitName: string
-): string {
-  const lines = [
-    ...result.scenarios,
-    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
-  ].flatMap((outcome) => roundSegmentsLine(outcome, unitName));
-  return [
-    segmentsTable(
-      result.segments,
-      PLATFORM_DEFINITIONS[result.platform].segmentColumns
-    ),
-    ...(lines.length > 0 ? ['', ...lines] : []),
-  ].join('\n');
-}
-
-function segmentsTable(
-  segments: Segment[],
-  columns: PlatformDefinition['segmentColumns']
-): string {
-  return table(
-    [
-      'Segment',
-      'Started',
-      'Finished',
-      'Status',
-      ...columns.map((column) => column.title),
-    ],
-    segments.map((segment, i) => [
-      String(i),
-      segment.startedAt,
-      segment.finishedAt ?? '-',
-      segment.status,
-      ...columns.map((column) => {
-        const value = new Map(Object.entries(segment.device)).get(column.key);
-        return `${String(value)}${column.unit}`;
-      }),
-    ])
-  );
 }
 
 function roundSegmentsLine(
@@ -515,31 +519,27 @@ function roundRange(rounds: number[], unitName: string): string {
     : `${unitName}s ${first}-${last}`;
 }
 
-export function invalidSection(
-  samples: Recorded<Judged>[],
-  causes: readonly InvalidCause[] = SAMPLE_INVALID_CAUSES
+function segmentsTable(
+  segments: Segment[],
+  columns: PlatformDefinition['segmentColumns']
 ): string {
   return table(
-    ['Cause', 'Samples'],
-    causes.map((cause) => [
-      cause,
-      String(
-        samples.filter((sample) => !sample.valid && sample.cause === cause)
-          .length
-      ),
+    [
+      'Segment',
+      'Started',
+      'Finished',
+      'Status',
+      ...columns.map((column) => column.title),
+    ],
+    segments.map((segment, i) => [
+      String(i),
+      segment.startedAt,
+      segment.finishedAt ?? '-',
+      segment.status,
+      ...columns.map((column) => {
+        const value = new Map(Object.entries(segment.device)).get(column.key);
+        return `${String(value)}${column.unit}`;
+      }),
     ])
-  );
-}
-
-export function timingSection(samples: Recorded<Timed>[]): string {
-  return table(
-    ['Step', 'Mean'],
-    SAMPLE_STEPS.map((step) => {
-      const times = samples.flatMap((sample) =>
-        sample.timings[step] === undefined ? [] : [sample.timings[step]]
-      );
-      const mean = times.reduce((sum, time) => sum + time, 0) / times.length;
-      return [step, times.length > 0 ? `${(mean / 1000).toFixed(1)} s` : '-'];
-    })
   );
 }

@@ -37,14 +37,33 @@ export interface IosDependencies {
   clock: Clock;
 }
 
-export const DEFAULT_IOS_DEPENDENCIES: IosDependencies = {
+const DEFAULT_IOS_DEPENDENCIES: IosDependencies = {
   buildVariant,
   createDevice: (processes, udid) => new IosDevice(processes, udid),
   createTracer: (processes) => new Xctrace(processes),
   clock: SYSTEM_CLOCK,
 };
 
-export class IosSampling implements Sampling {
+export function iosPlatform(
+  dependencies: IosDependencies = DEFAULT_IOS_DEPENDENCIES
+): Platform<IosSampling> {
+  return {
+    name: 'ios',
+    traceExtension: 'trace',
+    deviceIdentity: (state) => {
+      const ios = iosState(state);
+      return {
+        model: `${ios.model} (${ios.productType})`,
+        deviceId: ios.deviceId,
+        osBuild: ios.osBuild,
+      };
+    },
+    connect: (processes, udid, options) =>
+      connect(processes, udid, options, dependencies),
+  };
+}
+
+class IosSampling implements Sampling {
   readonly #device: IosDevice;
   readonly #start: IosDeviceState;
   readonly #context: IosSampleContext;
@@ -85,23 +104,11 @@ export class IosSampling implements Sampling {
   }
 }
 
-export function iosPlatform(
-  dependencies: IosDependencies = DEFAULT_IOS_DEPENDENCIES
-): Platform<IosSampling> {
-  return {
-    name: 'ios',
-    traceExtension: 'trace',
-    deviceIdentity: (state) => {
-      const ios = iosState(state);
-      return {
-        model: `${ios.model} (${ios.productType})`,
-        deviceId: ios.deviceId,
-        osBuild: ios.osBuild,
-      };
-    },
-    connect: (processes, udid, options) =>
-      connect(processes, udid, options, dependencies),
-  };
+function iosState(state: DeviceState): IosDeviceState {
+  if (!('osBuild' in state)) {
+    throw new ToolError('The stored device state is not of an iOS device');
+  }
+  return state;
 }
 
 async function connect(
@@ -184,11 +191,4 @@ async function cleanUp(
       log(`cleanup: cannot stop ${applicationId}: ${(error as Error).message}`);
     }
   }
-}
-
-function iosState(state: DeviceState): IosDeviceState {
-  if (!('osBuild' in state)) {
-    throw new ToolError('The stored device state is not of an iOS device');
-  }
-  return state;
 }

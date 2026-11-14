@@ -1,50 +1,48 @@
 import path from 'node:path';
 
+import { applicationSuffix } from './application-id.mts';
+import type { ToolIdentity } from './build-key.mts';
 import type { VariantKey } from './config.mts';
 import type { Processes } from './processes.mts';
-import { applicationSuffix } from './variant-build.mts';
+import { BUILD_PROCEDURE_FILES } from './variant-build.mts';
 import type {
   BuildRequest,
   PlatformBuild,
-  ToolIdentity,
   VariantProject,
 } from './variant-build.mts';
 
 const APP_PATH =
   'ios/build/Build/Products/Release-iphoneos/ReanimatedBenchmark.app';
+
 const BUNDLE_TIMEOUT_MS = 30 * 60_000;
+
 const POD_TIMEOUT_MS = 60 * 60_000;
+
 const XCODEBUILD_TIMEOUT_MS = 120 * 60_000;
+
 const SIGN_TIMEOUT_MS = 15 * 60_000;
 
 export const IOS_BUILD: PlatformBuild = {
   platform: 'ios',
-  procedureFile: import.meta.filename,
+  procedureFiles: [...BUILD_PROCEDURE_FILES, import.meta.filename],
   readToolIdentity: readIosToolIdentity,
   build: buildApp,
 };
 
-export function xcodebuildArguments(key: VariantKey): string[] {
-  return [
-    '-workspace',
-    'ReanimatedBenchmark.xcworkspace',
-    '-scheme',
-    'ReanimatedBenchmark',
-    '-configuration',
-    'Release',
-    '-sdk',
-    'iphoneos',
-    '-destination',
-    'generic/platform=iOS',
-    '-derivedDataPath',
-    'build',
-    `BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX=${applicationSuffix(key)}`,
-    'CODE_SIGNING_ALLOWED=NO',
-    'build',
-  ];
+export async function signApp(
+  processes: Processes,
+  signCommand: string,
+  app: string,
+  ipa: string
+) {
+  await processes.run(signCommand, [app, ipa], {
+    cwd: path.dirname(ipa),
+    logFile: `${ipa}.sign.log`,
+    timeoutMs: SIGN_TIMEOUT_MS,
+  });
 }
 
-export async function readIosToolIdentity({
+async function readIosToolIdentity({
   processes,
 }: Pick<BuildRequest, 'processes'>): Promise<ToolIdentity> {
   const output = async (args: string[]) =>
@@ -58,19 +56,6 @@ export async function readIosToolIdentity({
       '--show-sdk-build-version',
     ]),
   };
-}
-
-export async function signApp(
-  processes: Processes,
-  signCommand: string,
-  app: string,
-  ipa: string
-) {
-  await processes.run(signCommand, [app, ipa], {
-    cwd: path.dirname(ipa),
-    logFile: `${ipa}.sign.log`,
-    timeoutMs: SIGN_TIMEOUT_MS,
-  });
 }
 
 async function buildApp({
@@ -98,4 +83,24 @@ async function buildApp({
     timeoutMs: XCODEBUILD_TIMEOUT_MS,
   });
   return path.join(directory, APP_PATH);
+}
+
+function xcodebuildArguments(key: VariantKey): string[] {
+  return [
+    '-workspace',
+    'ReanimatedBenchmark.xcworkspace',
+    '-scheme',
+    'ReanimatedBenchmark',
+    '-configuration',
+    'Release',
+    '-sdk',
+    'iphoneos',
+    '-destination',
+    'generic/platform=iOS',
+    '-derivedDataPath',
+    'build',
+    `BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX=${applicationSuffix(key)}`,
+    'CODE_SIGNING_ALLOWED=NO',
+    'build',
+  ];
 }

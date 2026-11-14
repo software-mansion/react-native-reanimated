@@ -80,10 +80,6 @@ export interface SampleRequest {
   keepTrace: boolean;
 }
 
-type ReadyOutcome =
-  | { ready: true; report: ScenarioReport }
-  | { ready: false; reason: string };
-
 export interface RunningApp {
   request: SampleRequest;
   device: SampleDevice;
@@ -96,14 +92,19 @@ export interface RunningApp {
   jsThread: number;
 }
 
+type ReadyOutcome =
+  | { ready: true; report: ScenarioReport }
+  | { ready: false; reason: string };
+
 interface TraceFiles {
   localConfig: string;
   remoteConfig: string;
   remoteTrace: string;
 }
 
-export const COOL_DOWN_POLL_MS = 5_000;
-export const TEMPERATURE_TOLERANCE = 2;
+const COOL_DOWN_POLL_MS = 5_000;
+
+const TEMPERATURE_TOLERANCE = 2;
 
 export async function takeSample(
   request: SampleRequest,
@@ -155,6 +156,87 @@ export async function runLaunchedApp<T>(
   }
 }
 
+export async function measureRunningApp(
+  app: RunningApp,
+  collector: Collector
+): Promise<SampleResult> {
+  const { request, device, watch, report, pid, jsThread } = app;
+  const { applicationId } = request;
+  const { timings, timed } = app.steps;
+  const before = await device.readState();
+  const refreshRate = request.guard.checkInApp(before, 'before the trace');
+  const thermalBefore = before.thermalStatus;
+  const observed = { report, pid, refreshRate, thermalBefore, timings };
+  if (thermalBefore > 0) {
+    return {
+      valid: false,
+      cause: 'thermal',
+      detail: `thermal status ${thermalBefore} before the trace`,
+      ...observed,
+    };
+  }
+
+  const files = traceFiles(request.traceFile);
+  await timed('trace', async () => {
+    await pushConfig(device, traceConfig(applicationId), files);
+    await device.recordTrace(files.remoteConfig, files.remoteTrace);
+  });
+  const ended =
+    watch.checkedFailure() ??
+    (await processEnd(device, applicationId, pid, 'the trace'));
+  if (ended !== null) {
+    await stopAndPull(app, files);
+    return tracedCrash(ended, observed, request);
+  }
+  const after = await device.readState();
+  request.guard.checkInApp(after, 'after the trace');
+  await stopAndPull(app, files);
+  const lateFailure = watch.checkedFailure();
+  if (lateFailure !== null) {
+    return tracedCrash(lateFailure, observed, request);
+  }
+
+  const reading = await timed('parse', () =>
+    collector.collect(
+      request.traceFile,
+      { applicationId, pid, jsThread },
+      {
+        refreshRate,
+        share: expectedFrameShare(
+          ANDROID_DEFINITION.frameSource,
+          request.scenario
+        ),
+      }
+    )
+  );
+  if (!reading.processLived) {
+    return tracedCrash(reading.detail, observed, request);
+  }
+  return judge(
+    {
+      ...observed,
+      thermalAfter: after.thermalStatus,
+      metrics: { ...reading.metrics, coldStart: app.coldStart },
+    },
+    request
+  );
+}
+
+export async function processEnd(
+  device: SampleDevice,
+  applicationId: string,
+  pid: number,
+  period: string
+): Promise<string | null> {
+  const current = await device.readPid(applicationId);
+  if (current === pid) {
+    return null;
+  }
+  return current === null
+    ? `the app process ${pid} died during ${period}`
+    : `the app process ${pid} ended during ${period}, process ${current} runs now`;
+}
+
 async function waitForCoolDevice(
   device: SampleDevice,
   clock: Clock,
@@ -180,7 +262,7 @@ async function waitForCoolDevice(
   }
 }
 
-export class ReportWatch {
+class ReportWatch {
   readonly #scenario: string;
   readonly #stream: LineStream;
   #report: ScenarioReport | null = null;
@@ -254,72 +336,6 @@ async function measureReadyApp<T>(
   return measure({ ...started, report, pid, jsThread });
 }
 
-export async function measureRunningApp(
-  app: RunningApp,
-  collector: Collector
-): Promise<SampleResult> {
-  const { request, device, watch, report, pid, jsThread } = app;
-  const { applicationId } = request;
-  const { timings, timed } = app.steps;
-  const before = await device.readState();
-  const refreshRate = request.guard.checkInApp(before, 'before the trace');
-  const thermalBefore = before.thermalStatus;
-  const observed = { report, pid, refreshRate, thermalBefore, timings };
-  if (thermalBefore > 0) {
-    return {
-      valid: false,
-      cause: 'thermal',
-      detail: `thermal status ${thermalBefore} before the trace`,
-      ...observed,
-    };
-  }
-
-  const files = traceFiles(request.traceFile);
-  await timed('trace', async () => {
-    await pushConfig(device, traceConfig(applicationId), files);
-    await device.recordTrace(files.remoteConfig, files.remoteTrace);
-  });
-  const ended =
-    watch.checkedFailure() ??
-    (await processEnd(device, applicationId, pid, 'the trace'));
-  if (ended !== null) {
-    await stopAndPull(app, files);
-    return tracedCrash(ended, observed, request);
-  }
-  const after = await device.readState();
-  request.guard.checkInApp(after, 'after the trace');
-  await stopAndPull(app, files);
-  const lateFailure = watch.checkedFailure();
-  if (lateFailure !== null) {
-    return tracedCrash(lateFailure, observed, request);
-  }
-
-  const reading = await timed('parse', () =>
-    collector.collect(
-      request.traceFile,
-      { applicationId, pid, jsThread },
-      {
-        refreshRate,
-        share: expectedFrameShare(
-          ANDROID_DEFINITION.frameSource,
-          request.scenario
-        ),
-      }
-    )
-  );
-  if (!reading.processLived) {
-    return tracedCrash(reading.detail, observed, request);
-  }
-  return judge(
-    {
-      ...observed,
-      thermalAfter: after.thermalStatus,
-      metrics: { ...reading.metrics, coldStart: app.coldStart },
-    },
-    request
-  );
-}
-
 async function waitForReady(
   device: SampleDevice,
   clock: Clock,
@@ -367,21 +383,6 @@ async function pushConfig(
   } finally {
     fs.rmSync(files.localConfig, { force: true });
   }
-}
-
-export async function processEnd(
-  device: SampleDevice,
-  applicationId: string,
-  pid: number,
-  period: string
-): Promise<string | null> {
-  const current = await device.readPid(applicationId);
-  if (current === pid) {
-    return null;
-  }
-  return current === null
-    ? `the app process ${pid} died during ${period}`
-    : `the app process ${pid} ended during ${period}, process ${current} runs now`;
 }
 
 async function stopAndPull(app: RunningApp, files: TraceFiles) {

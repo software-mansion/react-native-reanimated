@@ -1,5 +1,7 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
+import { readJson } from './json-file.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { PlatformDefinition } from './platform.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
@@ -7,8 +9,6 @@ import type { Scenario } from './scenarios.mts';
 import { record, throwProblems } from './validation.mts';
 
 export type VariantKey = 'a' | 'b';
-
-export const VARIANT_KEYS: readonly VariantKey[] = ['a', 'b'];
 
 export type PackageSource =
   | { kind: 'npm'; version: string }
@@ -51,7 +51,10 @@ export interface FileSystem {
   isFile: (file: string) => boolean;
 }
 
+export const VARIANT_KEYS: readonly VariantKey[] = ['a', 'b'];
+
 const RUN_FIELDS = ['name', 'a', 'b', 'scenarios', 'blocks', 'expect', 'note'];
+
 const VARIANT_FIELDS = [
   'reanimated',
   'worklets',
@@ -60,10 +63,24 @@ const VARIANT_FIELDS = [
   'bundleMode',
   'profiling',
 ];
+
 const EXPECTATION_FIELDS = ['scenarios', 'metrics', 'is', 'byAtLeast'];
+
 const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 const NPM_VERSION_PATTERN = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+
 const FLAG_NAME_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+
+export function readConfigFile<C>(
+  file: string,
+  validate: (raw: unknown, configDir: string, fileSystem: FileSystem) => C
+): C {
+  return validate(readJson(file), path.dirname(path.resolve(file)), {
+    isFile: (candidate) =>
+      fs.statSync(candidate, { throwIfNoEntry: false })?.isFile() ?? false,
+  });
+}
 
 export function validateConfig(
   raw: unknown,
@@ -116,6 +133,19 @@ export function blocksOf(
   return config.blocks?.[scenario] ?? defaultBlocks;
 }
 
+function rejectUnknownFields(
+  value: Record<string, unknown>,
+  known: readonly string[],
+  label: string,
+  problems: string[]
+) {
+  for (const field of Object.keys(value)) {
+    if (!known.includes(field)) {
+      problems.push(`${label}: unknown field "${field}"`);
+    }
+  }
+}
+
 function readVariantsConfig(
   config: Record<string, unknown>,
   configDir: string,
@@ -139,67 +169,6 @@ function readVariantsConfig(
     b,
     ...(config.note === undefined ? {} : { note: config.note as string }),
   };
-}
-
-function throwConfigProblems(problems: string[]) {
-  throwProblems('The config is not valid', problems);
-}
-
-function rejectUnknownFields(
-  value: Record<string, unknown>,
-  known: readonly string[],
-  label: string,
-  problems: string[]
-) {
-  for (const field of Object.keys(value)) {
-    if (!known.includes(field)) {
-      problems.push(`${label}: unknown field "${field}"`);
-    }
-  }
-}
-
-function validateScenarios(value: unknown, problems: string[]): Scenario[] {
-  if (!Array.isArray(value) || value.length === 0) {
-    problems.push(
-      `config.scenarios must be a list of one or more of: ${SCENARIOS.join(', ')}`
-    );
-    return [];
-  }
-  const unknown = value.filter((name) => !isScenario(name));
-  if (unknown.length > 0) {
-    problems.push(
-      `config.scenarios: unknown scenario ${unknown.map((name) => JSON.stringify(name)).join(', ')} (known: ${SCENARIOS.join(', ')})`
-    );
-  }
-  if (new Set(value).size !== value.length) {
-    problems.push('config.scenarios must not repeat a scenario');
-  }
-  return value.filter(isScenario);
-}
-
-function validateBlocks(
-  value: unknown,
-  runScenarios: Scenario[],
-  problems: string[]
-): ScenarioBlocks | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  const blocks: ScenarioBlocks = {};
-  for (const [scenario, count] of Object.entries(
-    record(value, 'config.blocks', problems)
-  )) {
-    if (!runScenarios.includes(scenario as Scenario)) {
-      problems.push(
-        `config.blocks: "${scenario}" is not a scenario of this run (run: ${runScenarios.join(', ')})`
-      );
-    } else if (!Number.isInteger(count) || (count as number) < 1) {
-      problems.push(`config.blocks.${scenario} must be a positive integer`);
-    } else {
-      blocks[scenario as Scenario] = count as number;
-    }
-  }
-  return blocks;
 }
 
 function validateVariant(
@@ -315,6 +284,50 @@ function validateFlags(
   return flags;
 }
 
+function validateScenarios(value: unknown, problems: string[]): Scenario[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    problems.push(
+      `config.scenarios must be a list of one or more of: ${SCENARIOS.join(', ')}`
+    );
+    return [];
+  }
+  const unknown = value.filter((name) => !isScenario(name));
+  if (unknown.length > 0) {
+    problems.push(
+      `config.scenarios: unknown scenario ${unknown.map((name) => JSON.stringify(name)).join(', ')} (known: ${SCENARIOS.join(', ')})`
+    );
+  }
+  if (new Set(value).size !== value.length) {
+    problems.push('config.scenarios must not repeat a scenario');
+  }
+  return value.filter(isScenario);
+}
+
+function validateBlocks(
+  value: unknown,
+  runScenarios: Scenario[],
+  problems: string[]
+): ScenarioBlocks | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const blocks: ScenarioBlocks = {};
+  for (const [scenario, count] of Object.entries(
+    record(value, 'config.blocks', problems)
+  )) {
+    if (!runScenarios.includes(scenario as Scenario)) {
+      problems.push(
+        `config.blocks: "${scenario}" is not a scenario of this run (run: ${runScenarios.join(', ')})`
+      );
+    } else if (!Number.isInteger(count) || (count as number) < 1) {
+      problems.push(`config.blocks.${scenario} must be a positive integer`);
+    } else {
+      blocks[scenario as Scenario] = count as number;
+    }
+  }
+  return blocks;
+}
+
 function validateExpectations(
   value: unknown,
   runScenarios: Scenario[],
@@ -413,4 +426,8 @@ function selection(
     );
   }
   return value.filter(isKnown) as string[];
+}
+
+function throwConfigProblems(problems: string[]) {
+  throwProblems('The config is not valid', problems);
 }

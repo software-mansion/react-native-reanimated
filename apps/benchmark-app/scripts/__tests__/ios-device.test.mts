@@ -6,11 +6,6 @@ import { describe, it } from 'node:test';
 import {
   IosDevice,
   changedIosStateKeys,
-  launchArguments,
-  parseDeviceDetails,
-  parseInstalledApps,
-  parseRunningProcesses,
-  processesOf,
   readIosToolVersions,
 } from '../ios-device.mts';
 import type { IosDeviceState } from '../ios-device.mts';
@@ -54,58 +49,42 @@ function fakeProcesses(outputs: Record<string, string>) {
   return { processes, commands };
 }
 
-describe('parseDeviceDetails', () => {
-  it('reads the state of the device from the JSON of devicectl', () => {
-    assert.deepEqual(
-      parseDeviceDetails(fixture('devicectl-details.json')),
-      STATE
-    );
+describe('IosDevice.readState', () => {
+  const readState = (details: string) =>
+    new IosDevice(
+      fakeProcesses({ 'info details': details }).processes,
+      UDID
+    ).readState();
+
+  it('reads the state of the device from the JSON of devicectl', async () => {
+    assert.deepEqual(await readState(fixture('devicectl-details.json')), STATE);
   });
 
-  it('is a tool error when a value is missing or the output is not JSON', () => {
+  it('is a tool error when a value is missing or the output is not JSON', async () => {
     const details = JSON.parse(fixture('devicectl-details.json'));
     delete details.result.properties.software.osBuildVersions;
-    assert.throws(
-      () => parseDeviceDetails(JSON.stringify(details)),
+    await assert.rejects(
+      readState(JSON.stringify(details)),
       /do not give: osBuild/
     );
-    assert.throws(
-      () => parseDeviceDetails('ERROR: no device'),
+    await assert.rejects(
+      readState('ERROR: no device'),
       /Cannot read the JSON output of devicectl/
     );
-    assert.throws(() => parseDeviceDetails('{"error":{}}'), /has no result/);
+    await assert.rejects(readState('{"error":{}}'), /has no result/);
   });
 });
 
-describe('processesOf', () => {
-  it('finds the processes of one installed app by its bundle folder', () => {
-    const [app] = parseInstalledApps(fixture('devicectl-apps.json'));
-    assert.equal(app.bundleIdentifier, APP);
-    assert.deepEqual(
-      processesOf(
-        app,
-        parseRunningProcesses(fixture('devicectl-processes.json'))
-      ).map((process) => process.processIdentifier),
-      [8941]
-    );
-  });
-});
-
-describe('launchArguments', () => {
+describe('IosDevice.launch', () => {
   it('gives the scenario and the load as launch arguments of the app', () => {
-    assert.deepEqual(launchArguments('css', undefined), [
-      '--',
-      '-benchmarkScenario',
-      'css',
+    const { processes, commands } = fakeProcesses({});
+    const device = new IosDevice(processes, UDID);
+    device.launch(APP, 'css', undefined, () => {});
+    device.launch(APP, undefined, undefined, () => {});
+    assert.deepEqual(commands, [
+      `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP} -- -benchmarkScenario css`,
+      `xcrun devicectl device process launch --device ${UDID} --console --terminate-existing ${APP}`,
     ]);
-    assert.deepEqual(launchArguments('css', 7), [
-      '--',
-      '-benchmarkScenario',
-      'css',
-      '-benchmarkLoad',
-      '7',
-    ]);
-    assert.deepEqual(launchArguments(undefined, undefined), []);
   });
 });
 

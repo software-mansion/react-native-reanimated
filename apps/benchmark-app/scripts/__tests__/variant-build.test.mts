@@ -3,21 +3,35 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 
-import { androidBuild, gradleArguments } from '../android-build.mts';
+import { androidBuild } from '../android-build.mts';
+import { applicationIdOf } from '../application-id.mts';
+import { addLibraries } from '../build-copy.mts';
+import {
+  collectBuildKeyInputs,
+  listProjectFiles,
+  variantBuildKey,
+} from '../build-key.mts';
+import type { BuildKeyInputs } from '../build-key.mts';
 import type { Variant } from '../config.mts';
-import { IOS_BUILD, xcodebuildArguments } from '../ios-build.mts';
+import { IOS_BUILD } from '../ios-build.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { Processes } from '../processes.mts';
-import {
-  applicationIdOf,
-  collectBuildKeyInputs,
-  isCopied,
-  mergeFlags,
-  packageSpec,
-  variantBuildKey,
-  withStaticFlags,
-} from '../variant-build.mts';
-import type { BuildKeyInputs, BuildRequest } from '../variant-build.mts';
+import type { BuildRequest, ProjectCommand } from '../variant-build.mts';
+
+const ROOT = path.join(
+  REPOSITORY_ROOT,
+  '.tmp',
+  'benchmarks',
+  'tests',
+  `variant-build-${process.pid}`
+);
+
+function write(file: string, content: string) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, content);
+}
+
+after(() => fs.rmSync(ROOT, { recursive: true, force: true }));
 
 const VARIANT: Variant = {
   reanimated: { kind: 'npm', version: '4.7.1' },
@@ -31,22 +45,19 @@ const VARIANT: Variant = {
   profiling: false,
 };
 
-describe('isCopied', () => {
-  it('copies the sources of the app project', () => {
-    for (const file of [
-      'package.json',
-      'yarn.lock',
-      'src/App.tsx',
+describe('listProjectFiles', () => {
+  it('lists the sources of the app project and skips dependencies, build output and the driver', () => {
+    const appDir = path.join(ROOT, 'listed-app');
+    const copied = [
       'android/app/build.gradle',
       'android/gradlew',
       'ios/Podfile',
-    ]) {
-      assert.ok(isCopied(file), file);
-    }
-  });
-
-  it('skips dependencies, build output and the driver', () => {
-    for (const file of [
+      'package.json',
+      'src/App.tsx',
+      'src/scripts/helper.ts',
+      'yarn.lock',
+    ];
+    const skipped = [
       'node_modules/react/index.js',
       'android/app/build/outputs/apk/release/app-release.apk',
       'android/.gradle/8.0/file',
@@ -56,13 +67,11 @@ describe('isCopied', () => {
       'scripts/benchmark.mts',
       'vendor/bundle/ruby/x',
       '.yarn/install-state.gz',
-    ]) {
-      assert.ok(!isCopied(file), file);
+    ];
+    for (const file of [...copied, ...skipped]) {
+      write(path.join(appDir, file), file);
     }
-  });
-
-  it('skips only the top-level scripts folder', () => {
-    assert.ok(isCopied('src/scripts/helper.ts'));
+    assert.deepEqual(listProjectFiles(appDir), copied);
   });
 });
 
@@ -111,74 +120,121 @@ describe('variantBuildKey', () => {
   });
 });
 
-describe('packageSpec', () => {
-  it('names an npm version or a tarball file', () => {
-    assert.equal(
-      packageSpec('react-native-reanimated', VARIANT.reanimated),
-      'react-native-reanimated@4.7.1'
-    );
-    assert.equal(
-      packageSpec('react-native-worklets', VARIANT.worklets),
-      'react-native-worklets@file:/abs/react-native-worklets-0.13.1.tgz'
-    );
-  });
-});
+describe('addLibraries', () => {
+  const directory = path.join(ROOT, 'copy');
+  const installLibraries = async (command: ProjectCommand) => {
+    commands.push(command);
+    for (const [name, version, flags] of [
+      [
+        'react-native-reanimated',
+        '4.7.1',
+        {
+          ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false,
+          IOS_CSS_CORE_ANIMATION: true,
+        },
+      ],
+      ['react-native-worklets', '0.13.1', { WORKLETS_FLAG: false }],
+    ] as const) {
+      const library = path.join(directory, 'node_modules', name);
+      write(path.join(library, 'package.json'), JSON.stringify({ version }));
+      write(
+        path.join(library, 'src', 'featureFlags', 'staticFlags.json'),
+        JSON.stringify(flags)
+      );
+    }
+  };
+  let commands: ProjectCommand[] = [];
 
-describe('static flags', () => {
-  it('merges the variant flags over the library defaults', () => {
+  before(() => {
+    write(path.join(directory, 'package.json'), '{"name":"app"}');
+  });
+
+  it('adds the two packages, merges the flags over the library defaults and writes only the flags of the variant', async () => {
+    commands = [];
+    const added = await addLibraries(directory, VARIANT, installLibraries);
+    assert.deepEqual(commands[0].args, [
+      'add',
+      'react-native-reanimated@4.7.1',
+      'react-native-worklets@file:/abs/react-native-worklets-0.13.1.tgz',
+    ]);
+    assert.deepEqual(added, {
+      installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
+      effectiveFlags: {
+        reanimated: {
+          ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: true,
+          IOS_CSS_CORE_ANIMATION: false,
+        },
+        worklets: { WORKLETS_FLAG: false },
+      },
+    });
     assert.deepEqual(
-      mergeFlags({ A_FLAG: false, B_FLAG: true }, { A_FLAG: true }, 'lib'),
-      { A_FLAG: true, B_FLAG: true }
-    );
-  });
-
-  it('stops for a flag that the installed library does not have', () => {
-    assert.throws(
-      () =>
-        mergeFlags(
-          { A_FLAG: false },
-          { TYPO_FLAG: true },
-          'react-native-reanimated'
-        ),
-      /has no static flag TYPO_FLAG/
-    );
-  });
-
-  it('writes only the flags that the variant sets', () => {
-    assert.deepEqual(
-      withStaticFlags({ name: 'app', dependencies: {} }, VARIANT),
+      JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8')),
       {
         name: 'app',
-        dependencies: {},
         reanimated: { staticFeatureFlags: VARIANT.reanimatedFlags },
-        worklets: undefined,
       }
     );
   });
+
+  it('stops for a flag that the installed library does not have', async () => {
+    await assert.rejects(
+      addLibraries(
+        directory,
+        { ...VARIANT, workletsFlags: { TYPO_FLAG: true } },
+        installLibraries
+      ),
+      /react-native-worklets has no static flag TYPO_FLAG \(known: WORKLETS_FLAG\)/
+    );
+  });
 });
 
-describe('gradleArguments', () => {
-  it('builds one ABI with the application id suffix', () => {
-    assert.deepEqual(gradleArguments('a', false), [
+describe('platform builds', () => {
+  const project = (key: 'a' | 'b', variant: Variant) => {
+    const commands: ProjectCommand[] = [];
+    return {
+      commands,
+      project: {
+        directory: '/builds/key',
+        key,
+        variant,
+        run: async (command: ProjectCommand) => void commands.push(command),
+      },
+    };
+  };
+
+  it('builds one Android ABI with the application id suffix and the profiling properties', async () => {
+    const plain = project('a', VARIANT);
+    assert.equal(
+      await androidBuild('/sdk').build(plain.project),
+      '/builds/key/android/app/build/outputs/apk/release/app-release.apk'
+    );
+    assert.deepEqual(plain.commands[0].args, [
       'assembleRelease',
       '-PreactNativeArchitectures=arm64-v8a',
       '-PbenchmarkApplicationIdSuffix=.a',
     ]);
-    assert.equal(applicationIdOf('b'), 'com.reanimatedbenchmark.b');
-  });
-
-  it('adds the profiling properties', () => {
-    assert.deepEqual(gradleArguments('b', true).slice(2), [
+    assert.equal(plain.commands[0].env?.ANDROID_HOME, '/sdk');
+    const profiling = project('b', { ...VARIANT, profiling: true });
+    await androidBuild('/sdk').build(profiling.project);
+    assert.deepEqual(profiling.commands[0].args.slice(2), [
       '-PbenchmarkApplicationIdSuffix=.b',
       '-PenableReanimatedProfiling=true',
       '-PenableWorkletsProfiling=true',
     ]);
+    assert.equal(applicationIdOf('b'), 'com.reanimatedbenchmark.b');
   });
-});
 
-describe('xcodebuildArguments', () => {
-  it('builds Release for a device without signing and sets the bundle id suffix', () => {
-    const args = xcodebuildArguments('b');
+  it('builds iOS Release for a device without signing and sets the bundle id suffix', async () => {
+    const ios = project('b', VARIANT);
+    assert.equal(
+      await IOS_BUILD.build(ios.project),
+      '/builds/key/ios/build/Build/Products/Release-iphoneos/ReanimatedBenchmark.app'
+    );
+    assert.deepEqual(
+      ios.commands.map((command) => command.command),
+      ['bundle', 'bundle', 'xcodebuild']
+    );
+    const args = ios.commands[2].args;
     assert.deepEqual(args.slice(0, 8), [
       '-workspace',
       'ReanimatedBenchmark.xcworkspace',
@@ -196,13 +252,7 @@ describe('xcodebuildArguments', () => {
 });
 
 describe('collectBuildKeyInputs', () => {
-  const root = path.join(
-    REPOSITORY_ROOT,
-    '.tmp',
-    'benchmarks',
-    'tests',
-    `variant-build-${process.pid}`
-  );
+  const root = path.join(ROOT, 'key');
   const appDir = path.join(root, 'app');
   const androidHome = path.join(root, 'sdk');
   const tarball = path.join(root, 'react-native-worklets-0.13.1.tgz');
@@ -230,11 +280,6 @@ describe('collectBuildKeyInputs', () => {
     processes,
     log: () => {},
   };
-  const write = (file: string, content: string) => {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, content);
-  };
-
   before(() => {
     write(path.join(appDir, 'package.json'), '{}');
     write(path.join(appDir, 'yarn.lock'), 'lock 1');
@@ -253,8 +298,6 @@ describe('collectBuildKeyInputs', () => {
     );
     write(tarball, 'worklets 1');
   });
-
-  after(() => fs.rmSync(root, { recursive: true, force: true }));
 
   it('reads each input of the key from the project, the tarballs and the tools', async () => {
     const inputs = await collectBuildKeyInputs(

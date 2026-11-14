@@ -23,7 +23,7 @@ export interface LineStream {
   failure: () => ToolError | null;
 }
 
-export const PROCESS_TIMEOUT_MS = 60_000;
+const PROCESS_TIMEOUT_MS = 60_000;
 
 const STREAM_ERROR_LINES = 20;
 

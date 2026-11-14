@@ -48,7 +48,7 @@ export interface AndroidDependencies {
   clock: Clock;
 }
 
-export const DEFAULT_ANDROID_DEPENDENCIES: AndroidDependencies = {
+const DEFAULT_ANDROID_DEPENDENCIES: AndroidDependencies = {
   buildVariant,
   createDevice: (processes, adb, serial) =>
     new AndroidDevice(processes, adb, serial),
@@ -125,6 +125,21 @@ export function androidPlatform(
   };
 }
 
+function androidState(state: DeviceState): AndroidDeviceState {
+  if (!('sdk' in state)) {
+    throw new ToolError('The stored device state is not of an Android device');
+  }
+  return state;
+}
+
+function comparedKeys(
+  comparesBatteryLevel: boolean
+): readonly (keyof AndroidDeviceState)[] {
+  return comparesBatteryLevel
+    ? COMPARED_STATE_KEYS
+    : STATE_KEYS_WITHOUT_BATTERY_LEVEL;
+}
+
 async function connect(
   processes: Processes,
   serial: string,
@@ -167,19 +182,4 @@ async function connect(
         reference
       ),
   };
-}
-
-function androidState(state: DeviceState): AndroidDeviceState {
-  if (!('sdk' in state)) {
-    throw new ToolError('The stored device state is not of an Android device');
-  }
-  return state;
-}
-
-function comparedKeys(
-  comparesBatteryLevel: boolean
-): readonly (keyof AndroidDeviceState)[] {
-  return comparesBatteryLevel
-    ? COMPARED_STATE_KEYS
-    : STATE_KEYS_WITHOUT_BATTERY_LEVEL;
 }

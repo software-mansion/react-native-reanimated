@@ -43,8 +43,6 @@ export interface MemorySchedule {
   durationSeconds: number;
 }
 
-export const MINIMUM_JUDGED_DURATION_SECONDS = 600;
-
 export type LeakVerdict =
   | 'rises'
   | 'no rise found'
@@ -52,24 +50,41 @@ export type LeakVerdict =
   | 'not decided'
   | `not judged (duration under ${typeof MINIMUM_JUDGED_DURATION_SECONDS} s)`;
 
+export const MINIMUM_JUDGED_DURATION_SECONDS = 600;
+
 export const DEFAULT_LAUNCHES = 2;
+
 export const DEFAULT_INTERVAL_SECONDS = 60;
+
 export const DEFAULT_DURATION_SECONDS = 1200;
+
 export const DEFAULT_SLOPE_LIMIT = 1000;
-export const MINIMUM_READINGS = 4;
+
+const MINIMUM_READINGS = 4;
+
 export const TAIL_LEVEL_START = 0.75;
+
 export const TAIL_SLOPE_START = 0.5;
+
 export const LATE_LIMIT_SHARE = 0.5;
+
 export const DRAWING_FLOOR_SHARE = 0.25;
 
 const SECONDS_PER_MINUTE = 60;
+
 const LAUNCHES_PER_ORDER = balancedOrder(0).length;
+
 const VARIANTS_IN_TEST = 2;
+
 const NO_PROCESS_PATTERN = /^No process found for: /m;
+
 const GFXINFO_HEADER_PATTERN =
   /^\*\* Graphics info for pid (\d+) \[[^\]]+\] \*\*/m;
+
 const STATS_SINCE_PATTERN = /^Stats since: (\d+)ns/m;
+
 const TOTAL_FRAMES_PATTERN = /^Total frames rendered: (\d+)/m;
+
 const MEMINFO_PATTERNS: Record<keyof MemoryValues, RegExp> = {
   totalPss: /TOTAL PSS:\s+(\d+)/,
   nativeHeap: /^\s*Native Heap\s+(\d+)/m,
@@ -78,6 +93,7 @@ const MEMINFO_PATTERNS: Record<keyof MemoryValues, RegExp> = {
   privateOther: /^\s*Private Other:\s+(\d+)/m,
   totalSwapPss: /TOTAL SWAP PSS:\s+(\d+)/,
 };
+
 const MEMINFO_FIELDS = Object.keys(MEMINFO_PATTERNS) as (keyof MemoryValues)[];
 
 export function checkSchedule(schedule: MemorySchedule) {

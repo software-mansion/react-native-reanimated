@@ -56,7 +56,7 @@ export interface ScenarioPlan<R extends Judged> {
   acceptedSamples: Recorded<R>[];
 }
 
-export const INVALID_ROUNDS_LIMIT = 3;
+const INVALID_ROUNDS_LIMIT = 3;
 
 export async function runScenario<R extends Judged>(
   plan: ScenarioPlan<R>

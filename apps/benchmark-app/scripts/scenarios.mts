@@ -1,3 +1,10 @@
+export type Scenario = (typeof SCENARIOS)[number];
+
+export interface ScenarioRequirements {
+  updateShare: number;
+  minimumMountBatches: number;
+}
+
 export const SCENARIOS = [
   'worklet-styles-transform',
   'worklet-styles-layout',
@@ -8,13 +15,6 @@ export const SCENARIOS = [
   'mount-unmount',
   'idle-cost',
 ] as const;
-
-export type Scenario = (typeof SCENARIOS)[number];
-
-export interface ScenarioRequirements {
-  updateShare: number;
-  minimumMountBatches: number;
-}
 
 const FULL_WORK: ScenarioRequirements = {
   updateShare: 1,

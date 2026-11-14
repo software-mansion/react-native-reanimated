@@ -98,7 +98,7 @@ export interface RunResult extends MeasurementResult {
 
 export const FORMAT_VERSION = 1;
 
-export const MEASUREMENT_STATUSES: readonly MeasurementStatus[] = [
+const MEASUREMENT_STATUSES: readonly MeasurementStatus[] = [
   'running',
   'done',
   'interrupted',

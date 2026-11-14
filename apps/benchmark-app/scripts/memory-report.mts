@@ -139,6 +139,14 @@ function percent(fraction: number): string {
   return `${fraction * 100}%`;
 }
 
+function slope(value: number): string {
+  return `${Math.round(finiteNumber(value, 'A slope in the report'))} kB/min`;
+}
+
+function kB(value: number): string {
+  return `${Math.round(finiteNumber(value, 'A value in the report'))} kB`;
+}
+
 function verdictRow(summary: VariantMemorySummary, launches: number): string[] {
   const levels = summary.launches.map((launch) => kB(launch.tailLevel));
   const slopes = summary.launches.map((launch) => slope(launch.tailSlope));
@@ -151,14 +159,6 @@ function verdictRow(summary: VariantMemorySummary, launches: number): string[] {
     summary.tailSlopeMedian === null ? '-' : slope(summary.tailSlopeMedian),
     summary.verdict,
   ];
-}
-
-function kB(value: number): string {
-  return `${Math.round(finiteNumber(value, 'A value in the report'))} kB`;
-}
-
-function slope(value: number): string {
-  return `${Math.round(finiteNumber(value, 'A slope in the report'))} kB/min`;
 }
 
 function seriesSection(launches: Recorded<MemoryLaunch>[]): string {

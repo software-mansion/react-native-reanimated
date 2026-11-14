@@ -22,20 +22,31 @@ export interface ResultSet {
   rows: (string | null)[][];
 }
 
-export const JS_THREAD_NAME = 'mqt_v_js';
-export const RENDER_THREAD_NAME = 'RenderThread';
-export const FRAME_SLICE_PATTERN = 'Choreographer#doFrame%';
-export const DRAW_FRAME_SLICE_PATTERN = 'DrawFrame%';
-export const MOUNT_BATCH_SLICE_NAME = 'IntBufferBatchMountItem::mountViews';
-export const APP_DEADLINE_MISSED = 'App Deadline Missed';
-export const CPU_FREQUENCY_POLL_MS = 1000;
-export const TRACE_PROCESSOR_TIMEOUT_MS = 5 * 60_000;
+const JS_THREAD_NAME = 'mqt_v_js';
+
+const RENDER_THREAD_NAME = 'RenderThread';
+
+const FRAME_SLICE_PATTERN = 'Choreographer#doFrame%';
+
+const DRAW_FRAME_SLICE_PATTERN = 'DrawFrame%';
+
+const MOUNT_BATCH_SLICE_NAME = 'IntBufferBatchMountItem::mountViews';
+
+const APP_DEADLINE_MISSED = 'App Deadline Missed';
+
+const CPU_FREQUENCY_POLL_MS = 1000;
+
+const TRACE_PROCESSOR_TIMEOUT_MS = 5 * 60_000;
 
 const APPLICATION_ID_PATTERN =
   /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/;
+
 const NANOSECONDS_PER_MS = 1e6;
+
 const MILLICYCLES_PER_MHZ_MS = 1e6;
+
 const BYTES_PER_KB = 1024;
+
 const THREAD_ROLES = ['main', 'js', 'render', 'other'];
 
 export class TraceProcessor {

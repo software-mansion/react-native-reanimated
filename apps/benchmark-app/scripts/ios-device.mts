@@ -22,21 +22,24 @@ export interface InstalledApp {
   url: string;
 }
 
-export interface RunningProcess {
+interface RunningProcess {
   processIdentifier: number;
   executable: string;
 }
 
-export const IOS_COMPARED_STATE_KEYS = [
+const IOS_COMPARED_STATE_KEYS = [
   'deviceId',
   'productType',
   'osBuild',
 ] as const satisfies readonly (keyof IosDeviceState)[];
 
 export const LAUNCHED_LINE = /^Launched application with \S+ bundle identifier/;
+
 export const DEVICE_COMMAND_TIMEOUT_MS = 60_000;
+
 export const INSTALL_TIMEOUT_MS = 5 * 60_000;
-export const TRACE_STORAGE_GB_PER_RECORDING = 0.3;
+
+const TRACE_STORAGE_GB_PER_RECORDING = 0.3;
 
 const XCODE_VERSION_LINES = 2;
 
@@ -165,18 +168,16 @@ export async function readIosToolVersions(
   };
 }
 
-export function launchArguments(
-  scenario: string | undefined,
-  load: number | undefined
+export function changedIosStateKeys(
+  reference: IosDeviceState,
+  current: IosDeviceState
 ): string[] {
-  const values = [
-    ...(scenario === undefined ? [] : ['-benchmarkScenario', scenario]),
-    ...(load === undefined ? [] : ['-benchmarkLoad', String(load)]),
-  ];
-  return values.length > 0 ? ['--', ...values] : [];
+  return IOS_COMPARED_STATE_KEYS.filter(
+    (key) => reference[key] !== current[key]
+  ).map((key) => `${key}: ${reference[key]} -> ${current[key]}`);
 }
 
-export function parseDeviceDetails(output: string): IosDeviceState {
+function parseDeviceDetails(output: string): IosDeviceState {
   const properties = resultOf(output).properties as
     | {
         hardware?: {
@@ -210,39 +211,6 @@ export function parseDeviceDetails(output: string): IosDeviceState {
   return state as IosDeviceState;
 }
 
-export function parseInstalledApps(output: string): InstalledApp[] {
-  return listOf(resultOf(output).apps, 'apps').map((app) => ({
-    bundleIdentifier: stringOf(app.bundleIdentifier, 'apps.bundleIdentifier'),
-    url: stringOf(app.url, 'apps.url'),
-  }));
-}
-
-export function parseRunningProcesses(output: string): RunningProcess[] {
-  return listOf(resultOf(output).runningProcesses, 'runningProcesses').map(
-    (process) => ({
-      processIdentifier: Number(process.processIdentifier),
-      executable: stringOf(process.executable, 'runningProcesses.executable'),
-    })
-  );
-}
-
-export function processesOf(
-  app: InstalledApp,
-  running: RunningProcess[]
-): RunningProcess[] {
-  const bundle = app.url.endsWith('/') ? app.url : `${app.url}/`;
-  return running.filter((process) => process.executable.startsWith(bundle));
-}
-
-export function changedIosStateKeys(
-  reference: IosDeviceState,
-  current: IosDeviceState
-): string[] {
-  return IOS_COMPARED_STATE_KEYS.filter(
-    (key) => reference[key] !== current[key]
-  ).map((key) => `${key}: ${reference[key]} -> ${current[key]}`);
-}
-
 function resultOf(output: string): Record<string, unknown> {
   let parsed: { result?: Record<string, unknown> };
   try {
@@ -258,6 +226,15 @@ function resultOf(output: string): Record<string, unknown> {
   return parsed.result;
 }
 
+function parseRunningProcesses(output: string): RunningProcess[] {
+  return listOf(resultOf(output).runningProcesses, 'runningProcesses').map(
+    (process) => ({
+      processIdentifier: Number(process.processIdentifier),
+      executable: stringOf(process.executable, 'runningProcesses.executable'),
+    })
+  );
+}
+
 function listOf(value: unknown, name: string): Record<string, unknown>[] {
   if (!Array.isArray(value)) {
     throw new ToolError(`The JSON output of devicectl has no list "${name}"`);
@@ -270,4 +247,30 @@ function stringOf(value: unknown, name: string): string {
     throw new ToolError(`The JSON output of devicectl has no text "${name}"`);
   }
   return value;
+}
+
+function processesOf(
+  app: InstalledApp,
+  running: RunningProcess[]
+): RunningProcess[] {
+  const bundle = app.url.endsWith('/') ? app.url : `${app.url}/`;
+  return running.filter((process) => process.executable.startsWith(bundle));
+}
+
+function launchArguments(
+  scenario: string | undefined,
+  load: number | undefined
+): string[] {
+  const values = [
+    ...(scenario === undefined ? [] : ['-benchmarkScenario', scenario]),
+    ...(load === undefined ? [] : ['-benchmarkLoad', String(load)]),
+  ];
+  return values.length > 0 ? ['--', ...values] : [];
+}
+
+function parseInstalledApps(output: string): InstalledApp[] {
+  return listOf(resultOf(output).apps, 'apps').map((app) => ({
+    bundleIdentifier: stringOf(app.bundleIdentifier, 'apps.bundleIdentifier'),
+    url: stringOf(app.url, 'apps.url'),
+  }));
 }

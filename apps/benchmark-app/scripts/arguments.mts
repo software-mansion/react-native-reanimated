@@ -81,7 +81,9 @@ export type Command =
   | SampleOptions
   | { command: 'help' };
 
-export const DEFAULT_BLOCKS = 5;
+type Values = Record<string, string | string[] | boolean | undefined>;
+
+const DEFAULT_BLOCKS = 5;
 
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>]
@@ -231,8 +233,6 @@ export function parseArguments(argv: string[]): Command {
   throw new ToolError(`Unknown command "${command}".\n\n${USAGE}`);
 }
 
-type Values = Record<string, string | string[] | boolean | undefined>;
-
 function parseOptions(
   args: string[],
   options: ParseArgsOptionsConfig,
@@ -264,38 +264,12 @@ function resumeOptions(
   };
 }
 
-function memoryOptions(values: Values): MemoryOptions {
-  const launches = optionalPositiveInteger(
-    values,
-    'launches',
-    DEFAULT_LAUNCHES
-  );
-  const intervalSeconds = optionalPositiveInteger(
-    values,
-    'interval',
-    DEFAULT_INTERVAL_SECONDS
-  );
-  const durationSeconds = optionalPositiveInteger(
-    values,
-    'duration',
-    DEFAULT_DURATION_SECONDS
-  );
-  checkSchedule({ intervalSeconds, durationSeconds });
-  return {
-    command: 'memory',
-    config: required(values, 'config'),
-    device: platformTarget(values, 'memory'),
-    scenario: requiredScenario(values),
-    launches,
-    intervalSeconds,
-    durationSeconds,
-    slopeLimit:
-      values['slope-limit'] === undefined
-        ? DEFAULT_SLOPE_LIMIT
-        : nonNegativeNumber(values['slope-limit'], 'slope-limit'),
-    keepTraces: values['keep-traces'] === true,
-    traceProcessor: optionalString(values, 'trace-processor'),
-  };
+function required(values: Values, name: string): string {
+  const value = values[name];
+  if (typeof value !== 'string' || value === '') {
+    throw new ToolError(`--${name} is required.\n\n${USAGE}`);
+  }
+  return value;
 }
 
 function platformTarget(
@@ -343,22 +317,19 @@ function deviceTarget(values: Values): DeviceTarget {
   return { platform: 'android', id: required(values, 'serial') };
 }
 
-function requiredScenario(values: Values): Scenario {
-  const scenario = required(values, 'scenario');
-  if (!isScenario(scenario)) {
-    throw new ToolError(
-      `Unknown scenario "${scenario}". Known: ${SCENARIOS.join(', ')}`
-    );
-  }
-  return scenario;
+function optionalString(values: Values, name: string): string | undefined {
+  const value = values[name];
+  return typeof value === 'string' ? value : undefined;
 }
 
-function required(values: Values, name: string): string {
-  const value = values[name];
-  if (typeof value !== 'string' || value === '') {
-    throw new ToolError(`--${name} is required.\n\n${USAGE}`);
-  }
-  return value;
+function optionalPositiveInteger(
+  values: Values,
+  name: string,
+  defaultValue: number
+): number {
+  return values[name] === undefined
+    ? defaultValue
+    : positiveInteger(values[name], name);
 }
 
 function positiveInteger(
@@ -374,14 +345,48 @@ function positiveInteger(
   return number;
 }
 
-function optionalPositiveInteger(
-  values: Values,
-  name: string,
-  defaultValue: number
-): number {
-  return values[name] === undefined
-    ? defaultValue
-    : positiveInteger(values[name], name);
+function memoryOptions(values: Values): MemoryOptions {
+  const launches = optionalPositiveInteger(
+    values,
+    'launches',
+    DEFAULT_LAUNCHES
+  );
+  const intervalSeconds = optionalPositiveInteger(
+    values,
+    'interval',
+    DEFAULT_INTERVAL_SECONDS
+  );
+  const durationSeconds = optionalPositiveInteger(
+    values,
+    'duration',
+    DEFAULT_DURATION_SECONDS
+  );
+  checkSchedule({ intervalSeconds, durationSeconds });
+  return {
+    command: 'memory',
+    config: required(values, 'config'),
+    device: platformTarget(values, 'memory'),
+    scenario: requiredScenario(values),
+    launches,
+    intervalSeconds,
+    durationSeconds,
+    slopeLimit:
+      values['slope-limit'] === undefined
+        ? DEFAULT_SLOPE_LIMIT
+        : nonNegativeNumber(values['slope-limit'], 'slope-limit'),
+    keepTraces: values['keep-traces'] === true,
+    traceProcessor: optionalString(values, 'trace-processor'),
+  };
+}
+
+function requiredScenario(values: Values): Scenario {
+  const scenario = required(values, 'scenario');
+  if (!isScenario(scenario)) {
+    throw new ToolError(
+      `Unknown scenario "${scenario}". Known: ${SCENARIOS.join(', ')}`
+    );
+  }
+  return scenario;
 }
 
 function nonNegativeNumber(
@@ -395,9 +400,4 @@ function nonNegativeNumber(
     );
   }
   return number;
-}
-
-function optionalString(values: Values, name: string): string | undefined {
-  const value = values[name];
-  return typeof value === 'string' ? value : undefined;
 }

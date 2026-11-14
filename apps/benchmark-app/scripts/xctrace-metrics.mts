@@ -41,59 +41,9 @@ export type IosTraceReading =
     }
   | { processLived: false; detail: string };
 
-export const THERMAL_STATES = [
-  'Nominal',
-  'Fair',
-  'Serious',
-  'Critical',
-] as const;
-export const MOUNT_SECTION_NAME = 'RCTPerformMountInstructions';
-export const REACT_NATIVE_SUBSYSTEM = 'dev.reactnative.instruments';
-export const APP_SUBSYSTEM = 'com.reanimatedbenchmark';
-export const STATE_EVENT_NAME = 'State';
-const MINIMUM_WINDOW_SHARE = 0.8;
-const THREAD_STATE_COLUMNS = [
-  'start',
-  'duration',
-  'thread',
-  'state',
-  'process',
-  'core',
-] as const;
-const SCHEDULER_STATES: Record<string, SchedulerState> = {
-  Running: 'on core',
-  Runnable: 'off core',
-  Preempted: 'off core',
-  Throttled: 'off core',
-  Interrupted: 'off core',
-  Blocked: 'off core',
-  Idle: 'off core',
-  Terminated: 'off core',
-  Unknown: 'unknown',
-};
-const CORE_TYPES: Record<string, CoreType> = {
-  'E Core': 'efficiency',
-  'P Core': 'performance',
-  'S Core': 'performance',
-};
-
 type SchedulerState = 'on core' | 'off core' | 'unknown';
 
 type CoreType = 'efficiency' | 'performance';
-
-const NANOSECONDS_PER_MS = 1e6;
-const NANOSECONDS_PER_SECOND = 1e9;
-const STATE_KEYS = [
-  'footprint',
-  'thermal',
-  'batteryLevel',
-  'batteryState',
-  'lowPower',
-  'brightness',
-] as const;
-const BATTERY_STATES = ['unknown', 'unplugged', 'charging', 'full'];
-const STATE_PAIR = /(\S+?)=(\S*)/g;
-const INTEGER = /^-?\d+$/;
 
 interface Table {
   schema: string;
@@ -115,6 +65,69 @@ interface ThreadInterval extends Interval {
 type StateEvent = Record<(typeof STATE_KEYS)[number], number> & {
   time: number;
 };
+
+export const THERMAL_STATES = [
+  'Nominal',
+  'Fair',
+  'Serious',
+  'Critical',
+] as const;
+
+const MOUNT_SECTION_NAME = 'RCTPerformMountInstructions';
+
+const REACT_NATIVE_SUBSYSTEM = 'dev.reactnative.instruments';
+
+const APP_SUBSYSTEM = 'com.reanimatedbenchmark';
+
+const STATE_EVENT_NAME = 'State';
+
+const MINIMUM_WINDOW_SHARE = 0.8;
+
+const THREAD_STATE_COLUMNS = [
+  'start',
+  'duration',
+  'thread',
+  'state',
+  'process',
+  'core',
+] as const;
+
+const SCHEDULER_STATES: Record<string, SchedulerState> = {
+  Running: 'on core',
+  Runnable: 'off core',
+  Preempted: 'off core',
+  Throttled: 'off core',
+  Interrupted: 'off core',
+  Blocked: 'off core',
+  Idle: 'off core',
+  Terminated: 'off core',
+  Unknown: 'unknown',
+};
+
+const CORE_TYPES: Record<string, CoreType> = {
+  'E Core': 'efficiency',
+  'P Core': 'performance',
+  'S Core': 'performance',
+};
+
+const NANOSECONDS_PER_MS = 1e6;
+
+const NANOSECONDS_PER_SECOND = 1e9;
+
+const STATE_KEYS = [
+  'footprint',
+  'thermal',
+  'batteryLevel',
+  'batteryState',
+  'lowPower',
+  'brightness',
+] as const;
+
+const BATTERY_STATES = ['unknown', 'unplugged', 'charging', 'full'];
+
+const STATE_PAIR = /(\S+?)=(\S*)/g;
+
+const INTEGER = /^-?\d+$/;
 
 export function computeIosTraceMetrics(
   exports: TraceExports,
@@ -189,6 +202,16 @@ export function computeIosTraceMetrics(
   };
 }
 
+function appTable(table: Table, pid: number): Table {
+  return {
+    ...table,
+    rows: table.rows.filter((row) => {
+      const process = row.process;
+      return process !== null && Number(childText(process, 'pid')) === pid;
+    }),
+  };
+}
+
 function tableOf(xml: string, schema: string): Table {
   const tables = parseTraceTables(xml).filter(
     (table) => table.schema === schema
@@ -200,16 +223,6 @@ function tableOf(xml: string, schema: string): Table {
     schema,
     columns: tables[0].columns,
     rows: tables.flatMap((table) => table.rows),
-  };
-}
-
-function appTable(table: Table, pid: number): Table {
-  return {
-    ...table,
-    rows: table.rows.filter((row) => {
-      const process = row.process;
-      return process !== null && Number(childText(process, 'pid')) === pid;
-    }),
   };
 }
 
@@ -249,6 +262,31 @@ function threadInterval(threadState: Table, row: TraceRow): ThreadInterval {
   };
 }
 
+function rowInterval(table: Table, row: TraceRow): Interval {
+  const start = integerCell(table, row, 'start');
+  return { start, end: start + integerCell(table, row, 'duration') };
+}
+
+function integerCell(table: Table, row: TraceRow, column: string): number {
+  const text = row[column]?.text;
+  const value = Number(text);
+  if (
+    text === undefined ||
+    !INTEGER.test(text) ||
+    !Number.isSafeInteger(value)
+  ) {
+    throw new ToolError(
+      `A row of the table ${table.schema} has no integer in the cell ${column}`
+    );
+  }
+  return value;
+}
+
+function coreTypeOf(label: string | undefined): CoreType | null {
+  const type = Object.keys(CORE_TYPES).find((name) => label?.includes(name));
+  return type === undefined ? null : CORE_TYPES[type];
+}
+
 function readStateEvents(signposts: Table): StateEvent[] {
   return signposts.rows
     .filter(
@@ -258,6 +296,28 @@ function readStateEvents(signposts: Table): StateEvent[] {
     )
     .map((row) => stateEvent(signposts, row))
     .sort((left, right) => left.time - right.time);
+}
+
+function stateEvent(signposts: Table, row: TraceRow): StateEvent {
+  const message = messageText(row.message);
+  const values = new Map(
+    Array.from(message.matchAll(STATE_PAIR), ([, key, value]) => [key, value])
+  );
+  const event = { time: integerCell(signposts, row, 'time') } as StateEvent;
+  for (const key of STATE_KEYS) {
+    const value = values.get(key);
+    if (value === undefined || !INTEGER.test(value)) {
+      throw new ToolError(
+        `The ${STATE_EVENT_NAME} signpost "${message}" has no integer value of ${key}`
+      );
+    }
+    event[key] = Number(value);
+  }
+  return event;
+}
+
+function messageText(message: TraceElement | null): string {
+  return message?.children.map((part) => part.text).join('') ?? '';
 }
 
 function measuredThreadsSpan(
@@ -297,40 +357,6 @@ function measuredThreadsSpan(
   );
 }
 
-function eventsInSpan(stateEvents: StateEvent[], span: Interval): StateEvent[] {
-  const inSpan = stateEvents.filter(
-    ({ time }) => time >= span.start && time <= span.end
-  );
-  if (inSpan.length < 2) {
-    throw new ToolError(
-      `The trace has ${inSpan.length} ${STATE_EVENT_NAME} signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (${spanText(span)}). The trace window needs 2.`
-    );
-  }
-  return inSpan;
-}
-
-function traceWindow(
-  stateEvents: StateEvent[],
-  span: Interval,
-  app: TracedIosApp
-): Interval {
-  const start = stateEvents[0].time;
-  const end = stateEvents[stateEvents.length - 1].time;
-  const minimumNs =
-    MINIMUM_WINDOW_SHARE * app.recordingSeconds * NANOSECONDS_PER_SECOND;
-  if (end - start < minimumNs) {
-    throw new ToolError(
-      `The trace window of process ${app.pid} is ${(end - start) / NANOSECONDS_PER_SECOND} s long (${start} ns to ${end} ns, in the scheduler data of the measured threads from ${spanText(span)}). It must be at least ${percent(MINIMUM_WINDOW_SHARE)} of the recording of ${app.recordingSeconds} s.`
-    );
-  }
-  return { start, end };
-}
-
-// A row that starts at 0 gives the state before the scheduler data starts.
-function startsAtTraceStart(interval: Interval): boolean {
-  return interval.start === 0;
-}
-
 function coveredSpans(intervals: Interval[]): Interval[] {
   const spans: Interval[] = [];
   for (const { start, end } of [...intervals].sort(
@@ -344,6 +370,11 @@ function coveredSpans(intervals: Interval[]): Interval[] {
     }
   }
   return spans;
+}
+
+// A row that starts at 0 gives the state before the scheduler data starts.
+function startsAtTraceStart(interval: Interval): boolean {
+  return interval.start === 0;
 }
 
 function commonSpans(first: Interval[], second: Interval[]): Interval[] {
@@ -365,8 +396,41 @@ function commonSpans(first: Interval[], second: Interval[]): Interval[] {
   return common;
 }
 
+function eventsInSpan(stateEvents: StateEvent[], span: Interval): StateEvent[] {
+  const inSpan = stateEvents.filter(
+    ({ time }) => time >= span.start && time <= span.end
+  );
+  if (inSpan.length < 2) {
+    throw new ToolError(
+      `The trace has ${inSpan.length} ${STATE_EVENT_NAME} signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (${spanText(span)}). The trace window needs 2.`
+    );
+  }
+  return inSpan;
+}
+
 function spanText(span: Interval): string {
   return `${span.start} ns to ${span.end} ns`;
+}
+
+function traceWindow(
+  stateEvents: StateEvent[],
+  span: Interval,
+  app: TracedIosApp
+): Interval {
+  const start = stateEvents[0].time;
+  const end = stateEvents[stateEvents.length - 1].time;
+  const minimumNs =
+    MINIMUM_WINDOW_SHARE * app.recordingSeconds * NANOSECONDS_PER_SECOND;
+  if (end - start < minimumNs) {
+    throw new ToolError(
+      `The trace window of process ${app.pid} is ${(end - start) / NANOSECONDS_PER_SECOND} s long (${start} ns to ${end} ns, in the scheduler data of the measured threads from ${spanText(span)}). It must be at least ${percent(MINIMUM_WINDOW_SHARE)} of the recording of ${app.recordingSeconds} s.`
+    );
+  }
+  return { start, end };
+}
+
+function percent(share: number): string {
+  return `${share * 100}%`;
 }
 
 function intervalsOf(table: Table): Interval[] {
@@ -474,6 +538,16 @@ function highestThermalState(
   );
 }
 
+function thermalStateIndex(text: string | null): number {
+  const index = THERMAL_STATES.findIndex((state) => state === text);
+  if (index === -1) {
+    throw new ToolError(
+      `The thermal state "${text}" is not one of ${THERMAL_STATES.join(', ')}`
+    );
+  }
+  return index;
+}
+
 function appState(event: StateEvent): AppState {
   const batteryState = BATTERY_STATES[event.batteryState];
   if (batteryState === undefined) {
@@ -487,65 +561,4 @@ function appState(event: StateEvent): AppState {
     lowPowerMode: event.lowPower === 1,
     brightness: event.brightness,
   };
-}
-
-function stateEvent(signposts: Table, row: TraceRow): StateEvent {
-  const message = messageText(row.message);
-  const values = new Map(
-    Array.from(message.matchAll(STATE_PAIR), ([, key, value]) => [key, value])
-  );
-  const event = { time: integerCell(signposts, row, 'time') } as StateEvent;
-  for (const key of STATE_KEYS) {
-    const value = values.get(key);
-    if (value === undefined || !INTEGER.test(value)) {
-      throw new ToolError(
-        `The ${STATE_EVENT_NAME} signpost "${message}" has no integer value of ${key}`
-      );
-    }
-    event[key] = Number(value);
-  }
-  return event;
-}
-
-function messageText(message: TraceElement | null): string {
-  return message?.children.map((part) => part.text).join('') ?? '';
-}
-
-function thermalStateIndex(text: string | null): number {
-  const index = THERMAL_STATES.findIndex((state) => state === text);
-  if (index === -1) {
-    throw new ToolError(
-      `The thermal state "${text}" is not one of ${THERMAL_STATES.join(', ')}`
-    );
-  }
-  return index;
-}
-
-function coreTypeOf(label: string | undefined): CoreType | null {
-  const type = Object.keys(CORE_TYPES).find((name) => label?.includes(name));
-  return type === undefined ? null : CORE_TYPES[type];
-}
-
-function percent(share: number): string {
-  return `${share * 100}%`;
-}
-
-function rowInterval(table: Table, row: TraceRow): Interval {
-  const start = integerCell(table, row, 'start');
-  return { start, end: start + integerCell(table, row, 'duration') };
-}
-
-function integerCell(table: Table, row: TraceRow, column: string): number {
-  const text = row[column]?.text;
-  const value = Number(text);
-  if (
-    text === undefined ||
-    !INTEGER.test(text) ||
-    !Number.isSafeInteger(value)
-  ) {
-    throw new ToolError(
-      `A row of the table ${table.schema} has no integer in the cell ${column}`
-    );
-  }
-  return value;
 }

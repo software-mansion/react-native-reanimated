@@ -12,6 +12,8 @@ export interface AndroidToolVersions {
   devicePerfetto: string;
 }
 
+const ADB_VERSION_LINES = 2;
+
 export function resolveAndroidHome(
   env: NodeJS.ProcessEnv = process.env
 ): string {
@@ -54,8 +56,6 @@ export function resolveTraceProcessor(
     )
   );
 }
-
-const ADB_VERSION_LINES = 2;
 
 export async function readAndroidToolVersions(
   processes: Processes,

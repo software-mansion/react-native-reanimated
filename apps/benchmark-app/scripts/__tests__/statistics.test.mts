@@ -9,7 +9,10 @@ import {
   median,
   quantile,
   rankSumPValue,
+  splitDifferenceQuantile,
 } from '../statistics.mts';
+
+const Q = 0.975;
 
 describe('median and quantile', () => {
   it('takes the middle value or the mean of the two middle values', () => {
@@ -147,5 +150,45 @@ describe('benjaminiHochberg', () => {
 
   it('passes an earlier rank because a later rank is under the line', () => {
     assert.deepEqual(benjaminiHochberg([0.026, 0.05], 0.05), [true, true]);
+  });
+});
+
+describe('splitDifferenceQuantile', () => {
+  it('takes the 97.5th percentile of the absolute difference over all splits', () => {
+    assert.equal(splitDifferenceQuantile([1, 2], [3, 4], 'absolute', Q), 2);
+    assert.ok(
+      Math.abs(
+        (splitDifferenceQuantile([1, 2], [3, 4], 'relative', Q) ?? 0) - 26 / 21
+      ) < 1e-12
+    );
+  });
+
+  it('gives no limit when the relative difference is not defined', () => {
+    assert.equal(
+      splitDifferenceQuantile([0, 0, 1], [1, 1, 1], 'relative', Q),
+      null
+    );
+    assert.equal(
+      splitDifferenceQuantile([0, 0, 1], [1, 1, 1], 'absolute', Q),
+      1
+    );
+  });
+
+  it('gives no limit with random splits when one split has no relative difference', () => {
+    const zeros = new Array<number>(21).fill(0);
+    const ones = new Array<number>(19).fill(1);
+    const b = new Array<number>(40).fill(1);
+    assert.equal(
+      splitDifferenceQuantile([...zeros, ...ones], b, 'relative', Q),
+      null
+    );
+  });
+
+  it('gives the same limit each time with random splits', () => {
+    const a = Array.from({ length: 20 }, (_, i) => 100 + i);
+    const b = a.map((value) => value + 0.5);
+    const limit = splitDifferenceQuantile(a, b, 'relative', Q);
+    assert.equal(splitDifferenceQuantile(a, b, 'relative', Q), limit);
+    assert.ok(limit !== null && limit > 0 && limit < 0.1);
   });
 });

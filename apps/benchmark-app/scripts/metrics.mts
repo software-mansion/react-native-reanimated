@@ -1,15 +1,5 @@
 import type { Comparison } from './statistics.mts';
 
-export const COMPARED_METRICS = [
-  'frameDurationMedian',
-  'frameDurationP95',
-  'jankyFrames',
-  'uiThreadCpu',
-  'jsThreadCpu',
-  'memory',
-  'coldStart',
-] as const;
-
 export type ComparedMetric = (typeof COMPARED_METRICS)[number];
 
 export type MetricUnit = 'ms' | 'share' | 'ms/s' | 'kB';
@@ -19,18 +9,6 @@ export interface ComparisonRule {
   comparison: Comparison;
   noiseFloor: number;
 }
-
-const RELATIVE_NOISE_FLOOR = 0.02;
-
-export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
-  frameDurationMedian: relative('ms'),
-  frameDurationP95: relative('ms'),
-  jankyFrames: { unit: 'share', comparison: 'absolute', noiseFloor: 0.005 },
-  uiThreadCpu: relative('ms/s'),
-  jsThreadCpu: relative('ms/s'),
-  memory: relative('kB'),
-  coldStart: relative('ms'),
-};
 
 export interface CommonSampleMetrics {
   frameDurationMedian: number | null;
@@ -71,9 +49,27 @@ export interface IosSampleMetrics extends CommonSampleMetrics {
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
 
-export function isComparedMetric(name: unknown): name is ComparedMetric {
-  return COMPARED_METRICS.includes(name as ComparedMetric);
-}
+export const COMPARED_METRICS = [
+  'frameDurationMedian',
+  'frameDurationP95',
+  'jankyFrames',
+  'uiThreadCpu',
+  'jsThreadCpu',
+  'memory',
+  'coldStart',
+] as const;
+
+const RELATIVE_NOISE_FLOOR = 0.02;
+
+export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
+  frameDurationMedian: relative('ms'),
+  frameDurationP95: relative('ms'),
+  jankyFrames: { unit: 'share', comparison: 'absolute', noiseFloor: 0.005 },
+  uiThreadCpu: relative('ms/s'),
+  jsThreadCpu: relative('ms/s'),
+  memory: relative('kB'),
+  coldStart: relative('ms'),
+};
 
 function relative(unit: MetricUnit): ComparisonRule {
   return { unit, comparison: 'relative', noiseFloor: RELATIVE_NOISE_FLOOR };

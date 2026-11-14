@@ -16,12 +16,18 @@ export interface TraceTable {
 }
 
 const NAME = /[A-Za-z_:][-A-Za-z0-9_.:]*/y;
+
 const ATTRIBUTE =
   /\s+([A-Za-z_:][-A-Za-z0-9_.:]*)\s*=\s*(?:"([^"<]*)"|'([^'<]*)')/y;
+
 const TAG_END = /\s*(\/?)>/y;
+
 const CLOSING_TAG = /<\/([A-Za-z_:][-A-Za-z0-9_.:]*)\s*>/y;
+
 const WHITESPACE = /^\s*$/;
+
 const ENTITY = /&(?:([A-Za-z]+)|#([0-9]+)|#x([0-9A-Fa-f]+));|&/g;
+
 const NAMED_ENTITIES: Record<string, string> = {
   lt: '<',
   gt: '>',
@@ -29,6 +35,7 @@ const NAMED_ENTITIES: Record<string, string> = {
   quot: '"',
   apos: "'",
 };
+
 const MAX_CODE_POINT = 0x10ffff;
 
 export function parseTraceTables(xml: string): TraceTable[] {
@@ -239,6 +246,18 @@ class XmlReader {
   }
 }
 
+function location(xml: string, position: number): string {
+  let line = 1;
+  let lineStart = 0;
+  let newline = xml.indexOf('\n');
+  while (newline !== -1 && newline < position) {
+    line++;
+    lineStart = newline + 1;
+    newline = xml.indexOf('\n', lineStart);
+  }
+  return `line ${line}, column ${position - lineStart + 1}`;
+}
+
 function traceTable(node: TraceElement, schema: TraceElement): TraceTable {
   const name = schema.attributes.name;
   if (name === undefined) {
@@ -270,16 +289,4 @@ function traceTable(node: TraceElement, schema: TraceElement): TraceTable {
 
 function cellValue(cell: TraceElement): TraceElement | null {
   return cell.name === 'sentinel' ? null : cell;
-}
-
-function location(xml: string, position: number): string {
-  let line = 1;
-  let lineStart = 0;
-  let newline = xml.indexOf('\n');
-  while (newline !== -1 && newline < position) {
-    line++;
-    lineStart = newline + 1;
-    newline = xml.indexOf('\n', lineStart);
-  }
-  return `line ${line}, column ${position - lineStart + 1}`;
 }

@@ -17,13 +17,13 @@ import type {
 import type { MemoryOptions, MemoryResumeOptions } from './arguments.mts';
 import type { Clock } from './clock.mts';
 import type { CommandContext } from './command-context.mts';
-import { VARIANT_KEYS, validateVariantsConfig } from './config.mts';
-import type { VariantKey } from './config.mts';
 import {
-  readConfig,
-  resumeMeasurement,
-  startMeasurement,
-} from './measurement.mts';
+  VARIANT_KEYS,
+  readConfigFile,
+  validateVariantsConfig,
+} from './config.mts';
+import type { VariantKey } from './config.mts';
+import { resumeMeasurement, startMeasurement } from './measurement.mts';
 import type {
   MeasurementDependencies,
   MeasurementJob,
@@ -72,28 +72,6 @@ import {
   shape,
 } from './validation.mts';
 
-export interface MemoryDevice extends SampleDevice {
-  readMeminfo: (applicationId: string) => Promise<string>;
-  readGfxinfo: (applicationId: string) => Promise<string>;
-  readBattery: () => Promise<BatteryInfo>;
-}
-
-type LaunchProblem = Pick<InvalidMemoryLaunch, 'cause' | 'detail'>;
-
-interface MemorySeries {
-  readings: MemoryReading[];
-  minimumFrameRate: number;
-  problem: LaunchProblem | null;
-}
-
-interface LaunchObservations {
-  readings: MemoryReading[];
-  minimumFrameRate?: number;
-  work?: SampleResult;
-  refreshRate?: number;
-  timings: SampleSteps['timings'];
-}
-
 export type ValidMemoryLaunch = LaunchObservations & {
   valid: true;
   work: ValidSample;
@@ -135,7 +113,30 @@ export interface MemoryResult extends MeasurementResult<MemoryLaunch> {
   summary: VariantMemorySummary[];
 }
 
+interface MemoryDevice extends SampleDevice {
+  readMeminfo: (applicationId: string) => Promise<string>;
+  readGfxinfo: (applicationId: string) => Promise<string>;
+  readBattery: () => Promise<BatteryInfo>;
+}
+
+type LaunchProblem = Pick<InvalidMemoryLaunch, 'cause' | 'detail'>;
+
+interface MemorySeries {
+  readings: MemoryReading[];
+  minimumFrameRate: number;
+  problem: LaunchProblem | null;
+}
+
+interface LaunchObservations {
+  readings: MemoryReading[];
+  minimumFrameRate?: number;
+  work?: SampleResult;
+  refreshRate?: number;
+  timings: SampleSteps['timings'];
+}
+
 const MILLISECONDS_PER_SECOND = 1000;
+
 const MEMORY_FIELDS = {
   options: shape({
     scenario: oneOf(SCENARIOS),
@@ -147,10 +148,12 @@ const MEMORY_FIELDS = {
   }),
   summary: listOf(anObject),
 };
+
 const MEMORY_LAUNCH = both(
   RECORDED_SAMPLE,
   shape({ readings: listOf(anObject) })
 );
+
 const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
   platform: androidPlatform(),
   outputDir: DEFAULT_OUTPUT_DIR,
@@ -161,7 +164,7 @@ export async function memoryCommand(
   context: CommandContext,
   dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
 ): Promise<number> {
-  const config = readConfig(options.config, validateVariantsConfig);
+  const config = readConfigFile(options.config, validateVariantsConfig);
   return startMeasurement(
     {
       config,
@@ -207,15 +210,6 @@ export async function memoryResumeCommand(
   );
 }
 
-export function readMemoryResult(folder: string): MemoryResult {
-  return readMeasurementResult<MemoryResult>(
-    folder,
-    'memory',
-    MEMORY_FIELDS,
-    MEMORY_LAUNCH
-  );
-}
-
 function memoryJob(
   result: MemoryResult
 ): MeasurementJob<MemoryLaunch, MemoryResult, AndroidSampling> {
@@ -246,7 +240,7 @@ function memoryJob(
   };
 }
 
-export async function takeMemoryLaunch(
+async function takeMemoryLaunch(
   request: SampleRequest,
   schedule: MemorySchedule,
   device: MemoryDevice,
@@ -386,7 +380,7 @@ async function readFrames(
       };
 }
 
-export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
+function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
   const { options } = result;
   const launches = [
     ...result.scenarios,
@@ -421,4 +415,13 @@ export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
 
 function medianOrNull(values: number[]): number | null {
   return values.length > 0 ? median(values) : null;
+}
+
+function readMemoryResult(folder: string): MemoryResult {
+  return readMeasurementResult<MemoryResult>(
+    folder,
+    'memory',
+    MEMORY_FIELDS,
+    MEMORY_LAUNCH
+  );
 }

@@ -1,5 +1,6 @@
 import { PLATFORM_DEFINITIONS, isPlatformName } from './definitions.mts';
 import { ToolError } from './errors.mts';
+import { readJson } from './json-file.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { DeviceIdentity, PlatformName } from './platform.mts';
@@ -33,10 +34,15 @@ export interface NoiseLimitsRecord {
 export const NOISE_LIMITS_FORMAT_VERSION = 1;
 
 const IDENTITY = shape({ model: aString, deviceId: aString, osBuild: aString });
+
 const SOURCE = shape({
   folder: aString,
   samples: valuesOf(shape({ a: anInteger, b: anInteger })),
 });
+
+export function readNoiseLimitsRecord(file: string): NoiseLimitsRecord {
+  return validateNoiseLimitsRecord(readJson(file));
+}
 
 export function validateNoiseLimitsRecord(raw: unknown): NoiseLimitsRecord {
   const problems: string[] = [];

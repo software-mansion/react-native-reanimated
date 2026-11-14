@@ -5,7 +5,7 @@ import path from 'node:path';
 import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import { VARIANT_KEYS } from './config.mts';
-import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
+import type { VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { APP_DIR, BUILDS_DIR, DEFAULT_OUTPUT_DIR } from './paths.mts';
@@ -97,31 +97,18 @@ interface OpenMeasurement<R, P extends Sampling> {
 
 type Variants = Record<VariantKey, MeasuredVariant>;
 
+interface SampleContext<R, P extends Sampling> {
+  measurement: OpenMeasurement<R, P>;
+  sampling: P;
+  variants: Variants;
+  log: (message: string) => void;
+}
+
 export function dependenciesOf(device: DeviceTarget): MeasurementDependencies {
   return {
     platform: platformOf(device.platform),
     outputDir: DEFAULT_OUTPUT_DIR,
   };
-}
-
-export function readConfig<C>(
-  file: string,
-  validate: (raw: unknown, configDir: string, fileSystem: FileSystem) => C
-): C {
-  return validate(readJson(file), path.dirname(path.resolve(file)), {
-    isFile: (candidate) =>
-      fs.statSync(candidate, { throwIfNoEntry: false })?.isFile() ?? false,
-  });
-}
-
-export function readJson(file: string): unknown {
-  try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch (error) {
-    throw new ToolError(
-      `Cannot read JSON from ${file}: ${(error as Error).message}`
-    );
-  }
 }
 
 export async function startMeasurement<
@@ -340,13 +327,6 @@ async function installVariants(
       variants[key].applicationId
     );
   }
-}
-
-interface SampleContext<R, P extends Sampling> {
-  measurement: OpenMeasurement<R, P>;
-  sampling: P;
-  variants: Variants;
-  log: (message: string) => void;
 }
 
 async function takeCheckedSample<

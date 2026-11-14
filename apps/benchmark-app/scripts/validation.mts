@@ -2,6 +2,22 @@ import { ToolError } from './errors.mts';
 
 export type Check = (value: unknown, label: string, problems: string[]) => void;
 
+export const aString = typed('a string', (value) => typeof value === 'string');
+
+export const aNumber = typed(
+  'a finite number',
+  (value) => typeof value === 'number' && Number.isFinite(value)
+);
+
+export const anInteger = typed('an integer', Number.isInteger);
+
+export const aBoolean = typed(
+  'true or false',
+  (value) => typeof value === 'boolean'
+);
+
+export const anObject = typed('an object', isRecord);
+
 export function record(
   value: unknown,
   label: string,
@@ -21,22 +37,6 @@ export function throwProblems(title: string, problems: readonly string[]) {
     );
   }
 }
-
-export const aString = typed('a string', (value) => typeof value === 'string');
-
-export const aNumber = typed(
-  'a finite number',
-  (value) => typeof value === 'number' && Number.isFinite(value)
-);
-
-export const anInteger = typed('an integer', Number.isInteger);
-
-export const aBoolean = typed(
-  'true or false',
-  (value) => typeof value === 'boolean'
-);
-
-export const anObject = typed('an object', isRecord);
 
 export function oneOf(values: readonly unknown[]): Check {
   return typed(
@@ -106,14 +106,14 @@ export function when(
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function typed(description: string, test: (value: unknown) => boolean): Check {
   return (value, label, problems) => {
     if (!test(value)) {
       problems.push(`${label} must be ${description}`);
     }
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

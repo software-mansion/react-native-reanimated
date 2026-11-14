@@ -16,6 +16,7 @@ import type { InAppState, SampleOrder } from './platform.mts';
 import type { LineStream } from './processes.mts';
 import {
   COOL_DOWN_LIMIT_MS,
+  MINIMUM_WAIT_MS,
   PROCESS_POLL_MS,
   READY_TIMEOUT_MS,
   timedSteps,
@@ -64,11 +65,13 @@ interface Received<T> {
   at: number;
 }
 
-export const REPORT_PREFIX = 'ReanimatedBenchmark: ';
-export const MINIMUM_WAIT_MS = 10_000;
-export const HOT_DEVICE_WAIT_MS = 30_000;
-export const NOMINAL_THERMAL_STATE = 0;
-export const SUPPORTED_REFRESH_RATE = 60;
+const REPORT_PREFIX = 'ReanimatedBenchmark: ';
+
+const HOT_DEVICE_WAIT_MS = 30_000;
+
+const NOMINAL_THERMAL_STATE = 0;
+
+const SUPPORTED_REFRESH_RATE = 60;
 
 export async function takeIosSample(
   order: SampleOrder,
@@ -134,7 +137,48 @@ export class InAppStateGuard {
   }
 }
 
-export class AppConsole {
+async function launchOnCoolDevice(
+  order: SampleOrder,
+  { device, clock }: IosSampleContext
+): Promise<Launch> {
+  const startedAt = clock.now();
+  await clock.sleep(MINIMUM_WAIT_MS);
+  while (true) {
+    const launch = await startLaunch(device, clock, order);
+    if (
+      !launch.started ||
+      launch.report.thermalState === NOMINAL_THERMAL_STATE
+    ) {
+      return launch;
+    }
+    await launch.appConsole.close();
+    if (clock.now() - startedAt >= COOL_DOWN_LIMIT_MS) {
+      throw new ToolError(
+        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[launch.report.thermalState] ?? launch.report.thermalState} at the launch of the app`
+      );
+    }
+    await clock.sleep(HOT_DEVICE_WAIT_MS);
+  }
+}
+
+async function startLaunch(
+  device: IosSampleDevice,
+  clock: Clock,
+  launch: AppLaunch
+): Promise<Launch> {
+  const appConsole = new AppConsole(device, clock, launch);
+  try {
+    const report = await waitForLaunch(appConsole, clock);
+    return typeof report === 'string'
+      ? { started: false, appConsole, reason: report }
+      : { started: true, appConsole, report };
+  } catch (error) {
+    await appConsole.close().catch(() => {});
+    throw error;
+  }
+}
+
+class AppConsole {
   readonly #device: IosSampleDevice;
   readonly #clock: Clock;
   readonly #launch: AppLaunch;
@@ -219,45 +263,8 @@ export class AppConsole {
   }
 }
 
-async function launchOnCoolDevice(
-  order: SampleOrder,
-  { device, clock }: IosSampleContext
-): Promise<Launch> {
-  const startedAt = clock.now();
-  await clock.sleep(MINIMUM_WAIT_MS);
-  while (true) {
-    const launch = await startLaunch(device, clock, order);
-    if (
-      !launch.started ||
-      launch.report.thermalState === NOMINAL_THERMAL_STATE
-    ) {
-      return launch;
-    }
-    await launch.appConsole.close();
-    if (clock.now() - startedAt >= COOL_DOWN_LIMIT_MS) {
-      throw new ToolError(
-        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[launch.report.thermalState] ?? launch.report.thermalState} at the launch of the app`
-      );
-    }
-    await clock.sleep(HOT_DEVICE_WAIT_MS);
-  }
-}
-
-async function startLaunch(
-  device: IosSampleDevice,
-  clock: Clock,
-  launch: AppLaunch
-): Promise<Launch> {
-  const appConsole = new AppConsole(device, clock, launch);
-  try {
-    const report = await waitForLaunch(appConsole, clock);
-    return typeof report === 'string'
-      ? { started: false, appConsole, reason: report }
-      : { started: true, appConsole, report };
-  } catch (error) {
-    await appConsole.close().catch(() => {});
-    throw error;
-  }
+function valueBefore<T>(received: Received<T> | null, deadline: number) {
+  return received !== null && received.at < deadline ? received.value : null;
 }
 
 async function waitForLaunch(
@@ -292,6 +299,21 @@ async function waitForLaunch(
     }
     await clock.sleep(PROCESS_POLL_MS);
   }
+}
+
+async function withCleanup<T>(
+  action: () => Promise<T>,
+  cleanUp: () => Promise<void>
+): Promise<T> {
+  let result: T;
+  try {
+    result = await action();
+  } catch (error) {
+    await cleanUp().catch(() => {});
+    throw error;
+  }
+  await cleanUp();
+  return result;
 }
 
 async function measureLaunchedApp(
@@ -411,17 +433,6 @@ async function waitForReady(
   };
 }
 
-function appEnd(
-  appConsole: AppConsole,
-  pid: number,
-  moment: string
-): string | null {
-  return (
-    appConsole.failure() ??
-    (appConsole.ended() ? `the app process ${pid} ended ${moment}` : null)
-  );
-}
-
 function crash(
   detail: string,
   observed: Pick<InvalidSample, 'report' | 'pid' | 'refreshRate' | 'timings'>,
@@ -436,25 +447,17 @@ function crash(
   };
 }
 
+function appEnd(
+  appConsole: AppConsole,
+  pid: number,
+  moment: string
+): string | null {
+  return (
+    appConsole.failure() ??
+    (appConsole.ended() ? `the app process ${pid} ended ${moment}` : null)
+  );
+}
+
 function inAppStateOf(state: AppState, refreshRate: number): InAppState {
   return { refreshRate, ...state };
-}
-
-async function withCleanup<T>(
-  action: () => Promise<T>,
-  cleanUp: () => Promise<void>
-): Promise<T> {
-  let result: T;
-  try {
-    result = await action();
-  } catch (error) {
-    await cleanUp().catch(() => {});
-    throw error;
-  }
-  await cleanUp();
-  return result;
-}
-
-function valueBefore<T>(received: Received<T> | null, deadline: number) {
-  return received !== null && received.at < deadline ? received.value : null;
 }

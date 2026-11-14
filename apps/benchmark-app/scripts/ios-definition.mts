@@ -2,7 +2,9 @@ import type { PlatformDefinition } from './platform.mts';
 
 const WINDOW =
   'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace';
+
 const ROWS_IN_WINDOW = 'Rows that are fully in the trace window';
+
 const CPU_LIMIT =
   'The table has no clock rate. The same work takes more time on an efficiency core.';
 

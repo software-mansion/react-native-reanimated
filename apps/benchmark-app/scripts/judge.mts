@@ -10,7 +10,7 @@ export interface JudgedTrace {
   keepTrace: boolean;
 }
 
-export const MINIMUM_FRAME_SHARE = 0.9;
+const MINIMUM_FRAME_SHARE = 0.9;
 
 export function judgeWork(
   measured: MeasuredSample,

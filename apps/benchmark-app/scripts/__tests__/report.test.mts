@@ -6,11 +6,7 @@ import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { evaluateExpectations } from '../expectations.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
-import {
-  expectationLine,
-  renderReport,
-  variantDifferences,
-} from '../report.mts';
+import { renderReport, variantDifferences } from '../report.mts';
 import type { RunResult, MeasuredVariant } from '../results.mts';
 import type { Recorded } from '../session.mts';
 import type { VerdictRow } from '../verdict.mts';
@@ -202,34 +198,43 @@ const RESULT: RunResult = {
   expectations: evaluateExpectations(CONFIG.expect, ROWS, []),
 };
 
-describe('expectationLine', () => {
+describe('expectations section', () => {
+  const linesOf = (result: RunResult) => renderReport(result).split('\n');
+
   it('writes the lines of the spec example', () => {
-    assert.equal(
-      expectationLine(RESULT.expectations[0], 0, CONFIG, ANDROID_DEFINITION),
-      '1. worklet-styles-transform, uiThreadCpu: better -> holds (-31%, interval -33% to -29%)'
+    const lines = linesOf(RESULT);
+    assert.ok(
+      lines.includes(
+        '1. worklet-styles-transform, uiThreadCpu: better -> holds (-31%, interval -33% to -29%)'
+      )
     );
-    assert.equal(
-      expectationLine(RESULT.expectations[1], 1, CONFIG, ANDROID_DEFINITION),
-      '2. all scenarios, all metrics: not worse -> fails (sticky-header, frameDurationP95: +6%, interval +3% to +9%)'
+    assert.ok(
+      lines.includes(
+        '2. all scenarios, all metrics: not worse -> fails (sticky-header, frameDurationP95: +6%, interval +3% to +9%)'
+      )
     );
   });
 
   it('names a failed scenario and a minimum improvement', () => {
-    const [result] = evaluateExpectations(
-      [
-        {
-          scenarios: ['sticky-header'],
-          metrics: ['uiThreadCpu'],
-          is: 'better',
-          byAtLeast: 0.1,
-        },
-      ],
-      [],
-      [{ scenario: 'sticky-header', variants: ['a'], causes: [] }]
-    );
-    assert.equal(
-      expectationLine(result, 0, CONFIG, ANDROID_DEFINITION),
-      '1. sticky-header, uiThreadCpu: better by at least 10% -> not decided (sticky-header failed on A)'
+    const lines = linesOf({
+      ...RESULT,
+      expectations: evaluateExpectations(
+        [
+          {
+            scenarios: ['sticky-header'],
+            metrics: ['uiThreadCpu'],
+            is: 'better',
+            byAtLeast: 0.1,
+          },
+        ],
+        [],
+        [{ scenario: 'sticky-header', variants: ['a'], causes: [] }]
+      ),
+    });
+    assert.ok(
+      lines.includes(
+        '1. sticky-header, uiThreadCpu: better by at least 10% -> not decided (sticky-header failed on A)'
+      )
     );
   });
 });

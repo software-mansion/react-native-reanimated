@@ -60,9 +60,9 @@ export type MetricValues = (
   variant: 'a' | 'b'
 ) => number[];
 
-export const FALSE_DISCOVERY_RATE = 0.05;
+const FALSE_DISCOVERY_RATE = 0.05;
 
-export const MISSING_ROW_P_VALUE = 1;
+const MISSING_ROW_P_VALUE = 1;
 
 export function computeComparisonRows(
   definition: PlatformDefinition,
@@ -126,26 +126,6 @@ function computeVerdictRows(
   });
 }
 
-function advisoryRow(
-  scenario: Scenario,
-  metric: ComparedMetric,
-  a: number[],
-  b: number[]
-): AdvisoryRow {
-  if (a.length === 0 || b.length === 0) {
-    return {
-      scenario,
-      metric,
-      samplesA: a.length,
-      samplesB: b.length,
-      hasData: false,
-    };
-  }
-  const row = compareMetric(scenario, metric, a, b);
-  checkFinite(row);
-  return { ...row, hasData: true };
-}
-
 function compareMetric(
   scenario: Scenario,
   metric: ComparedMetric,
@@ -174,16 +154,6 @@ function compareMetric(
   };
 }
 
-function noiseLimitOf(
-  row: Pick<VerdictRow, 'comparisonFallback' | 'medianA'>,
-  limit: number
-): number | null {
-  if (!row.comparisonFallback) {
-    return limit;
-  }
-  return row.medianA > 0 ? limit * row.medianA : null;
-}
-
 function relativeDifferenceIsDefined(
   medianA: number,
   draws: BootstrapDraws
@@ -207,6 +177,16 @@ function checkFinite(row: MetricComparison, pValue?: number) {
   }
 }
 
+function noiseLimitOf(
+  row: Pick<VerdictRow, 'comparisonFallback' | 'medianA'>,
+  limit: number
+): number | null {
+  if (!row.comparisonFallback) {
+    return limit;
+  }
+  return row.medianA > 0 ? limit * row.medianA : null;
+}
+
 function verdictOf(row: Omit<VerdictRow, 'verdict'>): Verdict {
   const excludesZero = row.interval.low > 0 || row.interval.high < 0;
   const beyondNoise = Math.abs(row.difference) > (row.noiseLimit ?? 0);
@@ -215,4 +195,24 @@ function verdictOf(row: Omit<VerdictRow, 'verdict'>): Verdict {
     return 'no change found';
   }
   return row.difference < 0 ? 'better' : 'worse';
+}
+
+function advisoryRow(
+  scenario: Scenario,
+  metric: ComparedMetric,
+  a: number[],
+  b: number[]
+): AdvisoryRow {
+  if (a.length === 0 || b.length === 0) {
+    return {
+      scenario,
+      metric,
+      samplesA: a.length,
+      samplesB: b.length,
+      hasData: false,
+    };
+  }
+  const row = compareMetric(scenario, metric, a, b);
+  checkFinite(row);
+  return { ...row, hasData: true };
 }

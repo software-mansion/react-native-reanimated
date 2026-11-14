@@ -7,17 +7,14 @@ import { parseLaunchLine } from '../app-report.mts';
 import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
 import {
-  HOT_DEVICE_WAIT_MS,
   InAppStateGuard,
-  MINIMUM_WAIT_MS,
-  REPORT_PREFIX,
   launchOnce,
   takeIosSample,
 } from '../ios-protocol.mts';
 import type { IosSampleContext } from '../ios-protocol.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { SampleOrder } from '../platform.mts';
-import { READY_TIMEOUT_MS } from '../samples.mts';
+import { MINIMUM_WAIT_MS, READY_TIMEOUT_MS } from '../samples.mts';
 import type {
   AppState,
   IosTraceMetrics,
@@ -33,6 +30,8 @@ const ROOT = path.join(
   `ios-protocol-${process.pid}`
 );
 const APP = 'com.reanimatedbenchmark.a';
+const HOT_DEVICE_WAIT_MS = 30_000;
+const REPORT_PREFIX = 'ReanimatedBenchmark: ';
 const LAUNCHED = `Launched application with ${APP} bundle identifier.`;
 const LAUNCH =
   'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=81.25';
