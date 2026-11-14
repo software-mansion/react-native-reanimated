@@ -93,6 +93,13 @@ describe('a stopped run', () => {
       crypto.createHash('sha256').update('apk a').digest('hex')
     );
     assert.equal(result.verdictRows.length, 7);
+    assert.deepEqual(
+      result.advisoryRows.map((row) => [row.scenario, row.metric]),
+      [
+        ['css', 'frameCyclesMedian'],
+        ['css', 'frameCyclesP95'],
+      ]
+    );
     assert.ok(result.verdictRows.every((row) => row.scenario === 'css'));
     assert.equal(result.expectations[0].status, 'not decided');
     assert.deepEqual(result.expectations[0].scenariosWithoutData, [

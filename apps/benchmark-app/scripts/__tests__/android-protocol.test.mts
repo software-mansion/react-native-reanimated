@@ -12,34 +12,8 @@ import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
 import type { FrameBasis } from '../frames.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
-import type { TracedApp, TraceMetrics, TraceReading } from '../perfetto.mts';
-
-const TRACE_METRICS: TraceMetrics = {
-  frameDurationMedian: 8,
-  frameDurationP90: 10,
-  frameDurationP95: 11,
-  frameDurationP99: 14,
-  jankyFrames: 0.01,
-  frameTimelineDurationMedian: 16,
-  frameTimelineDurationP95: 33,
-  frameTimelineFrameCount: 600,
-  jankFlaggedFrames: 0.02,
-  appDeadlineMissedFrames: 0.01,
-  drawFrameMedian: 6,
-  drawFrameP95: 9,
-  uiThreadCpu: 120,
-  jsThreadCpu: 80,
-  renderThreadCpu: 60,
-  otherThreadsCpu: 140,
-  processCpu: 400,
-  uiThreadCpuWork: 240000,
-  processCpuWork: 800000,
-  mountBatchCount: 590,
-  memory: 150000,
-  windowMemoryDelta: 100,
-  frameCount: 600,
-  expectedFrameCount: 600,
-};
+import type { TracedApp, TraceReading } from '../perfetto.mts';
+import { METRICS } from './command-fake.mts';
 
 const STATE: DeviceState = {
   model: 'Pixel',
@@ -205,7 +179,7 @@ function createFake(options: FakeOptions = {}) {
       return (
         options.reading ?? {
           processLived: true,
-          metrics: { ...TRACE_METRICS, frameCount: options.frameCount ?? 600 },
+          metrics: { ...METRICS, frameCount: options.frameCount ?? 600 },
         }
       );
     },
@@ -582,7 +556,7 @@ describe('takeSample', () => {
       reading: {
         processLived: true,
         metrics: {
-          ...TRACE_METRICS,
+          ...METRICS,
           frameDurationMedian: null,
           frameDurationP90: null,
           frameDurationP95: null,
@@ -614,7 +588,7 @@ describe('takeSample', () => {
       ],
       reading: {
         processLived: true,
-        metrics: { ...TRACE_METRICS, mountBatchCount: 38 },
+        metrics: { ...METRICS, mountBatchCount: 38 },
       },
     });
     const req = request('no-transitions', {
@@ -641,7 +615,7 @@ describe('takeSample', () => {
       ],
       reading: {
         processLived: true,
-        metrics: { ...TRACE_METRICS, mountBatchCount: 300 },
+        metrics: { ...METRICS, mountBatchCount: 300 },
       },
     });
     const sharedElements = await takeSample(
@@ -655,7 +629,7 @@ describe('takeSample', () => {
     const noMinimum = createFake({
       reading: {
         processLived: true,
-        metrics: { ...TRACE_METRICS, mountBatchCount: 0 },
+        metrics: { ...METRICS, mountBatchCount: 0 },
       },
     });
     const css = await takeSample(

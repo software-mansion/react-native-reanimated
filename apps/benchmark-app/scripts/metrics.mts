@@ -2,7 +2,7 @@ import type { Comparison } from './statistics.mts';
 
 export type ComparedMetric = (typeof COMPARED_METRICS)[number];
 
-export type MetricUnit = 'ms' | 'share' | 'ms/s' | 'kB';
+export type MetricUnit = 'ms' | 'Mcycles' | 'share' | 'ms/s' | 'kB';
 
 export interface ComparisonRule {
   unit: MetricUnit;
@@ -39,6 +39,9 @@ export interface AndroidSampleMetrics extends CommonSampleMetrics {
   renderThreadCpu: number;
   uiThreadCpuWork: number | null;
   processCpuWork: number | null;
+  frameCyclesMedian: number | null;
+  frameCyclesP95: number | null;
+  frameCyclesCoverage: number | null;
 }
 
 export interface IosSampleMetrics extends CommonSampleMetrics {
@@ -52,6 +55,8 @@ export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
 export const COMPARED_METRICS = [
   'frameDurationMedian',
   'frameDurationP95',
+  'frameCyclesMedian',
+  'frameCyclesP95',
   'jankyFrames',
   'uiThreadCpu',
   'jsThreadCpu',
@@ -64,6 +69,8 @@ const RELATIVE_NOISE_FLOOR = 0.02;
 export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   frameDurationMedian: relative('ms'),
   frameDurationP95: relative('ms'),
+  frameCyclesMedian: relative('Mcycles'),
+  frameCyclesP95: relative('Mcycles'),
   jankyFrames: { unit: 'share', comparison: 'absolute', noiseFloor: 0.005 },
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),

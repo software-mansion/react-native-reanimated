@@ -24,7 +24,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
     'memory',
     'coldStart',
   ],
-  advisoryMetrics: [],
+  advisoryMetrics: ['frameCyclesMedian', 'frameCyclesP95'],
   frameSource: 'refreshes',
   metricDefinitions: [
     {
@@ -41,6 +41,23 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       source: 'The same as `frameDurationMedian`',
       interval: SLICES_IN_WINDOW,
       limits: 'The same as `frameDurationMedian`.',
+    },
+    {
+      names: ['frameCyclesMedian', 'frameCyclesP95'],
+      unit: 'Mcycles (10^6 CPU cycles)',
+      source:
+        'Estimated cycles of the main thread in each frame: for each complete `Choreographer#doFrame` slice, the sum of the duration of each scheduling slice of the main thread in it times the clock rate of its CPU at that time',
+      interval: 'Slices that start and end in the trace window',
+      limits:
+        'The phone lowers the clock rate under load, so a frame can take more time with less work; these values show the work. `null` when less than 95% of the running time in the frames has a known clock rate. A scheduling slice that is open at the end of the trace does not count. No verdict.',
+    },
+    {
+      names: ['frameCyclesCoverage'],
+      unit: 'share',
+      source:
+        'Share of the running time of the main thread in the complete frames that has a known clock rate',
+      interval: 'Slices that start and end in the trace window',
+      limits: '`null` when the frames have no running time.',
     },
     {
       names: ['jankyFrames'],
@@ -86,10 +103,10 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       names: ['uiThreadCpuWork', 'processCpuWork'],
       unit: 'MHz·ms for each s (1 MHz·ms is 1000 CPU cycles)',
       source:
-        'Duration of each scheduling slice times the clock rate of its CPU (`cpu_cycles_per_thread_in_interval` of the Perfetto standard library), for the main thread and for all threads of the app',
-      interval: WINDOW,
+        'Duration of each scheduling slice times the clock rate of its CPU at that time, for the main thread and for all threads of the app. The same integral as `frameCyclesMedian`, which gives the values of `cpu_cycles_per_thread_in_interval` of the Perfetto standard library.',
+      interval: `${WINDOW}. A slice is cut to the window.`,
       limits:
-        'CPU time before the first clock rate value of its CPU does not count. `null` when the trace has no clock rate data.',
+        'CPU time without a known clock rate (for example before the first clock rate value of its CPU) does not count. A scheduling slice that is open at the end of the trace does not count. `null` when no running time has a known clock rate.',
     },
     {
       names: ['mountBatchCount'],

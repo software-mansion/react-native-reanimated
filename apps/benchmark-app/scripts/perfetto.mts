@@ -1,3 +1,5 @@
+import { countCycles, cycleSegments } from './cpu-cycles.mts';
+import type { CycleSegment } from './cpu-cycles.mts';
 import { ToolError } from './errors.mts';
 import { frameMetrics, quantileOrNull } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
@@ -36,6 +38,8 @@ const APP_DEADLINE_MISSED = 'App Deadline Missed';
 
 const CPU_FREQUENCY_POLL_MS = 1000;
 
+const CPU_FREQUENCY_TRACK = 'cpufreq';
+
 const TRACE_PROCESSOR_TIMEOUT_MS = 5 * 60_000;
 
 const APPLICATION_ID_PATTERN =
@@ -43,7 +47,13 @@ const APPLICATION_ID_PATTERN =
 
 const NANOSECONDS_PER_MS = 1e6;
 
-const MILLICYCLES_PER_MHZ_MS = 1e6;
+const CYCLES_PER_MHZ_MS = 1e3;
+
+const CYCLES_PER_MEGACYCLE = 1e6;
+
+const MINIMUM_FREQUENCY_COVERAGE = 0.95;
+
+const RESULT_SETS = 10;
 
 const BYTES_PER_KB = 1024;
 
@@ -142,7 +152,7 @@ duration_ms: ${durationMs}
 `;
 }
 
-export function metricsQuery(app: TracedApp): string {
+function metricsQuery(app: TracedApp): string {
   checkApplicationId(app.applicationId);
   checkId(app.pid, 'process id');
   checkId(app.jsThread, 'thread id');
@@ -179,8 +189,7 @@ export function metricsQuery(app: TracedApp): string {
       AND slice.ts >= trace_window.start_ts
       AND slice.ts < trace_window.end_ts
   )`;
-  return `INCLUDE PERFETTO MODULE linux.cpu.utilization.thread;
-WITH
+  return `WITH
   ${traceWindow},
   ${appProcess},
   ${appThreads}
@@ -214,12 +223,39 @@ WITH
   ${traceWindow},
   ${appProcess},
   ${appThreads}
-SELECT app_thread.role, cycles.millicycles
-FROM cpu_cycles_per_thread_in_interval(
-  (SELECT start_ts FROM trace_window),
-  (SELECT end_ts - start_ts FROM trace_window)
-) AS cycles
-JOIN app_thread USING (utid);
+SELECT
+  app_thread.role,
+  MAX(sched.ts, trace_window.start_ts) AS start_ts,
+  MIN(sched.ts + sched.dur, trace_window.end_ts) AS end_ts,
+  sched.cpu
+FROM app_thread
+JOIN sched USING (utid)
+JOIN trace_window
+WHERE sched.dur > 0
+  AND sched.ts < trace_window.end_ts
+  AND sched.ts + sched.dur > trace_window.start_ts
+ORDER BY sched.ts;
+WITH
+  ${traceWindow},
+  frequency AS (
+    SELECT
+      cpu_counter_track.cpu,
+      counter.ts,
+      LEAD(counter.ts, 1, (SELECT end_ts FROM trace_bounds)) OVER (PARTITION BY cpu_counter_track.cpu ORDER BY counter.ts) AS end_ts,
+      counter.value AS khz
+    FROM counter
+    JOIN cpu_counter_track ON counter.track_id = cpu_counter_track.id
+    WHERE cpu_counter_track.name = '${CPU_FREQUENCY_TRACK}'
+  )
+SELECT
+  frequency.cpu,
+  MAX(frequency.ts, trace_window.start_ts) AS start_ts,
+  MIN(frequency.end_ts, trace_window.end_ts) AS end_ts,
+  frequency.khz
+FROM frequency JOIN trace_window
+WHERE frequency.ts < trace_window.end_ts
+  AND frequency.end_ts > trace_window.start_ts
+ORDER BY frequency.cpu, frequency.ts;
 WITH
   ${traceWindow},
   ${appProcess}
@@ -237,9 +273,10 @@ WITH
   ${traceWindow},
   ${appProcess},
   ${threadSlices}
-SELECT dur FROM thread_slice
+SELECT thread_slice.ts, thread_slice.dur, thread_slice.ts + thread_slice.dur <= trace_window.end_ts AS complete
+FROM thread_slice JOIN trace_window
 WHERE is_main AND name LIKE '${FRAME_SLICE_PATTERN}'
-ORDER BY ts;
+ORDER BY thread_slice.ts;
 WITH
   ${traceWindow},
   ${appProcess},
@@ -264,22 +301,19 @@ SELECT name, idx, value FROM stats WHERE severity = 'data_loss' AND value > 0;
 `;
 }
 
-export function parseQueryOutput(output: string): ResultSet[] {
-  return output
-    .trim()
-    .split(/\n\s*\n/)
-    .map((block) => {
-      const [header, ...lines] = block.split('\n');
-      return {
-        columns: splitCsvLine(header),
-        rows: lines.map((line) =>
-          splitCsvLine(line).map((cell) => (cell === '[NULL]' ? null : cell))
-        ),
-      };
-    });
+function checkApplicationId(applicationId: string) {
+  if (!APPLICATION_ID_PATTERN.test(applicationId)) {
+    throw new ToolError(`"${applicationId}" is not a valid application id`);
+  }
 }
 
-export function computeTraceMetrics(
+function checkId(id: number, kind: string) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new ToolError(`${id} is not a valid ${kind}`);
+  }
+}
+
+function computeTraceMetrics(
   sets: ResultSet[],
   app: TracedApp,
   frames: FrameBasis
@@ -287,7 +321,8 @@ export function computeTraceMetrics(
   const [
     summarySet,
     threadCpuSet,
-    threadWorkSet,
+    runningSet,
+    frequencySet,
     frameTimelineSet,
     frameSet,
     drawFrameSet,
@@ -298,7 +333,8 @@ export function computeTraceMetrics(
   if (
     !summarySet ||
     !threadCpuSet ||
-    !threadWorkSet ||
+    !runningSet ||
+    !frequencySet ||
     !frameTimelineSet ||
     !frameSet ||
     !drawFrameSet ||
@@ -307,7 +343,7 @@ export function computeTraceMetrics(
     !lossSet
   ) {
     throw new ToolError(
-      `trace_processor_shell returned ${sets.length} result sets, expected 9`
+      `trace_processor_shell returned ${sets.length} result sets, expected ${RESULT_SETS}`
     );
   }
   checkNoDataLoss(lossSet);
@@ -339,33 +375,23 @@ export function computeTraceMetrics(
       `The trace window is ${summary.window_ns} ns long, expected more than 0`
     );
   }
+  const frameRows = numericRows(frameSet);
+  const work = workSegments(runningSet, frequencySet);
   const metrics = {
-    ...frameMetrics(durationsMs(frameSet), frames, windowSeconds),
+    ...frameMetrics(durationsMs(frameRows), frames, windowSeconds),
+    ...frameCycleMetrics(
+      work.main,
+      frameRows.filter((frame) => frame.complete === 1)
+    ),
     ...frameTimelineMetrics(numericRows(frameTimelineSet)),
-    ...drawFrameMetrics(durationsMs(drawFrameSet)),
+    ...drawFrameMetrics(durationsMs(numericRows(drawFrameSet))),
     ...cpuMetrics(threadCpuSet, windowSeconds),
-    ...cpuWorkMetrics(threadWorkSet, windowSeconds),
+    ...cpuWorkMetrics(work, windowSeconds),
     mountBatchCount: numericRows(mountBatchSet)[0].mount_batches,
     ...memoryMetrics(numericRows(memorySet)),
   };
   checkFiniteMetrics(metrics);
   return { processLived: true, metrics };
-}
-
-function checkApplicationId(applicationId: string) {
-  if (!APPLICATION_ID_PATTERN.test(applicationId)) {
-    throw new ToolError(`"${applicationId}" is not a valid application id`);
-  }
-}
-
-function checkId(id: number, kind: string) {
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new ToolError(`${id} is not a valid ${kind}`);
-  }
-}
-
-function splitCsvLine(line: string): string[] {
-  return line.split(',').map((cell) => cell.replace(/^"(.*)"$/, '$1'));
 }
 
 function checkNoDataLoss(lossSet: ResultSet) {
@@ -387,8 +413,49 @@ function numericRows(set: ResultSet): Record<string, number>[] {
   );
 }
 
-function durationsMs(set: ResultSet): number[] {
-  return numericRows(set).map((row) => row.dur / NANOSECONDS_PER_MS);
+function workSegments(runningSet: ResultSet, frequencySet: ResultSet) {
+  const running = numericRows(runningSet);
+  const roles = runningSet.rows.map(([role]) => role);
+  const frequencies = numericRows(frequencySet).map((row) => ({
+    cpu: row.cpu,
+    start: row.start_ts,
+    end: row.end_ts,
+    khz: row.khz,
+  }));
+  const segmentsOf = (selected: (role: string | null) => boolean) =>
+    cycleSegments(
+      running
+        .filter((_, i) => selected(roles[i]))
+        .map((row) => ({ cpu: row.cpu, start: row.start_ts, end: row.end_ts })),
+      frequencies
+    );
+  return {
+    main: segmentsOf((role) => role === 'main'),
+    process: segmentsOf(() => true),
+  };
+}
+
+function durationsMs(rows: Record<string, number>[]): number[] {
+  return rows.map((row) => row.dur / NANOSECONDS_PER_MS);
+}
+
+function frameCycleMetrics(
+  mainSegments: CycleSegment[],
+  completeFrames: Record<string, number>[]
+) {
+  const counts = completeFrames.map((frame) =>
+    countCycles(mainSegments, { start: frame.ts, end: frame.ts + frame.dur })
+  );
+  const runningNs = counts.reduce((sum, count) => sum + count.runningNs, 0);
+  const knownNs = counts.reduce((sum, count) => sum + count.knownNs, 0);
+  const coverage = runningNs > 0 ? knownNs / runningNs : null;
+  const known = coverage !== null && coverage >= MINIMUM_FREQUENCY_COVERAGE;
+  const megacycles = counts.map((count) => count.cycles / CYCLES_PER_MEGACYCLE);
+  return {
+    frameCyclesMedian: known ? quantileOrNull(megacycles, 0.5) : null,
+    frameCyclesP95: known ? quantileOrNull(megacycles, 0.95) : null,
+    frameCyclesCoverage: coverage,
+  };
 }
 
 function frameTimelineMetrics(frames: Record<string, number>[]) {
@@ -433,20 +500,19 @@ function cpuMetrics(threadCpuSet: ResultSet, windowSeconds: number) {
   };
 }
 
-function cpuWorkMetrics(threadWorkSet: ResultSet, windowSeconds: number) {
-  const workPerSecond = (roles: (string | null)[]) => {
-    const millicycles = threadWorkSet.rows.flatMap(([role, value]) =>
-      roles.includes(role) && value !== null ? [Number(value)] : []
-    );
-    return millicycles.length > 0
-      ? millicycles.reduce((sum, value) => sum + value, 0) /
-          MILLICYCLES_PER_MHZ_MS /
-          windowSeconds
+function cpuWorkMetrics(
+  work: { main: CycleSegment[]; process: CycleSegment[] },
+  windowSeconds: number
+) {
+  const workPerSecond = (segments: CycleSegment[]) => {
+    const count = countCycles(segments);
+    return count.knownNs > 0
+      ? count.cycles / CYCLES_PER_MHZ_MS / windowSeconds
       : null;
   };
   return {
-    uiThreadCpuWork: workPerSecond(['main']),
-    processCpuWork: workPerSecond(THREAD_ROLES),
+    uiThreadCpuWork: workPerSecond(work.main),
+    processCpuWork: workPerSecond(work.process),
   };
 }
 
@@ -479,4 +545,23 @@ function checkFiniteMetrics(metrics: TraceMetrics) {
       `The trace gives metrics that are not finite numbers: ${notFinite.map(([name, value]) => `${name} = ${value}`).join(', ')}`
     );
   }
+}
+
+function parseQueryOutput(output: string): ResultSet[] {
+  return output
+    .trim()
+    .split(/\n\s*\n/)
+    .map((block) => {
+      const [header, ...lines] = block.split('\n');
+      return {
+        columns: splitCsvLine(header),
+        rows: lines.map((line) =>
+          splitCsvLine(line).map((cell) => (cell === '[NULL]' ? null : cell))
+        ),
+      };
+    });
+}
+
+function splitCsvLine(line: string): string[] {
+  return line.split(',').map((cell) => cell.replace(/^"(.*)"$/, '$1'));
 }
