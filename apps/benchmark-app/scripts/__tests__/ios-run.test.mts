@@ -220,6 +220,7 @@ describe('an iOS run', () => {
       brightness: 50,
     });
     const folder = onlyRunFolder(TEST_ROOT);
+    assert.equal(fs.existsSync(path.join(folder, 'traces')), false);
     const signed = (variant: string) =>
       path.join(folder, 'signed', `${variant}.ipa`);
     assert.deepEqual(fake.signs, [

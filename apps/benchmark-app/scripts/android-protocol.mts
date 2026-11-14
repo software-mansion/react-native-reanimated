@@ -102,6 +102,8 @@ interface TraceFiles {
   remoteTrace: string;
 }
 
+const TRACE_EXTENSION = 'perfetto-trace';
+
 const COOL_DOWN_POLL_MS = 5_000;
 
 const TEMPERATURE_TOLERANCE = 2;
@@ -361,6 +363,11 @@ async function waitForReady(
       reason: `no READY line in ${READY_TIMEOUT_MS / 1000} s`,
     }
   );
+}
+
+export function traceFileOf(outputDir: string, sampleName: string): string {
+  fs.mkdirSync(outputDir, { recursive: true });
+  return path.join(outputDir, `${sampleName}.${TRACE_EXTENSION}`);
 }
 
 function traceFiles(traceFile: string): TraceFiles {

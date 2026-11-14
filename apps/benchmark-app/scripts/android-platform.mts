@@ -11,7 +11,7 @@ import {
   idleKeysOf,
 } from './android-device.mts';
 import type { DeviceState as AndroidDeviceState } from './android-device.mts';
-import { takeSample } from './android-protocol.mts';
+import { takeSample, traceFileOf } from './android-protocol.mts';
 import type { Collector, SampleRequest } from './android-protocol.mts';
 import {
   readAndroidToolVersions,
@@ -97,9 +97,10 @@ export class AndroidSampling implements Sampling {
     );
   }
 
-  request(order: SampleOrder): SampleRequest {
+  request({ outputDir, sampleName, ...order }: SampleOrder): SampleRequest {
     return {
       ...order,
+      traceFile: traceFileOf(outputDir, sampleName),
       baselineTemperature: this.#baselineTemperature,
       guard: this.#guard,
     };
@@ -111,7 +112,6 @@ export function androidPlatform(
 ): Platform<AndroidSampling> {
   return {
     name: 'android',
-    traceExtension: 'perfetto-trace',
     deviceIdentity: (state) => {
       const android = androidState(state);
       return {

@@ -94,7 +94,6 @@ interface OpenMeasurement<R, P extends Sampling> {
   result: R;
   folder: string;
   session: PlatformSession<P>;
-  traceExtension: string;
 }
 
 type Variants = Record<VariantKey, MeasuredVariant>;
@@ -110,6 +109,8 @@ interface SampleContext<R, P extends Sampling> {
   variants: Variants;
   log: (message: string) => void;
 }
+
+const TRACES_DIR = 'traces';
 
 export function dependenciesOf(device: DeviceTarget): MeasurementDependencies {
   return { platform: platformOf(device.platform) };
@@ -162,7 +163,7 @@ export async function startMeasurement<
   context.log(`folder ${folder}`);
 
   return measure(
-    { result, folder, session, traceExtension: platform.traceExtension },
+    { result, folder, session },
     createJob(result),
     () => buildVariants(start.config, session, context, result, folder),
     context
@@ -203,7 +204,7 @@ export async function resumeMeasurement<
   );
 
   return measure(
-    { result, folder, session, traceExtension: platform.traceExtension },
+    { result, folder, session },
     job,
     async () => variants,
     context
@@ -362,8 +363,6 @@ async function takeCheckedSample<
   const { measurement, sampling, variants } = context;
   const { result } = measurement;
   const idle = await sampling.checkIdle();
-  const tracesDir = path.join(measurement.folder, 'traces');
-  fs.mkdirSync(tracesDir, { recursive: true });
   const segment = result.segments.length - 1;
   const sample = await job.measure(
     {
@@ -372,10 +371,8 @@ async function takeCheckedSample<
         (key) => variants[key].applicationId
       ),
       scenario: place.scenario,
-      traceFile: path.join(
-        tracesDir,
-        `${place.scenario}-segment${segment}-${job.unitName}${place.round}-attempt${place.attempt}-${place.position}-${place.variant}.${measurement.traceExtension}`
-      ),
+      outputDir: path.join(measurement.folder, TRACES_DIR),
+      sampleName: `${place.scenario}-segment${segment}-${job.unitName}${place.round}-attempt${place.attempt}-${place.position}-${place.variant}`,
       keepTrace: result.options.keepTraces,
     },
     sampling

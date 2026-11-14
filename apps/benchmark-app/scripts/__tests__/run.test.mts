@@ -385,10 +385,23 @@ describe('resumeCommand', () => {
     assert.ok(
       idleCostRows.every((row) => row.samplesA === 4 && row.samplesB === 4)
     );
-    const traces = [...result.scenarios, ...result.abandonedScenarios].flatMap(
-      (outcome) => outcome.samples.map((sample) => sample.trace)
+    const samples = [...result.scenarios, ...result.abandonedScenarios].flatMap(
+      (outcome) => outcome.samples
     );
+    const traces = samples.map((sample) => sample.trace);
     assert.equal(new Set(traces).size, 13);
+    assert.ok(
+      samples.every(
+        (sample) =>
+          sample.trace === undefined ||
+          sample.trace ===
+            path.join(
+              folder,
+              'traces',
+              `${sample.scenario}-segment${sample.segment}-block${sample.round}-attempt${sample.attempt}-${sample.position}-${sample.variant}.perfetto-trace`
+            )
+      )
+    );
     assert.equal(
       fs
         .readdirSync(path.join(folder, 'traces'))

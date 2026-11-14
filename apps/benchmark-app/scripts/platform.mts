@@ -81,7 +81,8 @@ export interface SampleOrder {
   stopApplicationIds: string[];
   scenario: Scenario;
   load?: number;
-  traceFile: string;
+  outputDir: string;
+  sampleName: string;
   keepTrace: boolean;
 }
 
@@ -124,7 +125,6 @@ export interface PlatformSession<S extends Sampling = Sampling> {
 
 export interface Platform<S extends Sampling = Sampling> {
   name: PlatformName;
-  traceExtension: string;
   deviceIdentity: (state: DeviceState) => DeviceIdentity;
   connect: (
     processes: Processes,

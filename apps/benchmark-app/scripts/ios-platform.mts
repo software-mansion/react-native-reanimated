@@ -45,7 +45,6 @@ export function iosPlatform(
 ): Platform<IosSampling> {
   return {
     name: 'ios',
-    traceExtension: 'trace',
     deviceIdentity: (state) => {
       const ios = iosState(state);
       return {

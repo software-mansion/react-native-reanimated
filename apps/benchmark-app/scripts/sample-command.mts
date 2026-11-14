@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import type { SampleOptions } from './arguments.mts';
 import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
@@ -24,11 +21,6 @@ export async function sampleCommand(
   const cleanUp = once(() => session.cleanUp([options.applicationId], log));
   context.onInterrupt(cleanUp);
 
-  fs.mkdirSync(SAMPLES_DIR, { recursive: true });
-  const traceFile = path.join(
-    SAMPLES_DIR,
-    `${measurementFolderName(new Date(), options.scenario)}-${Date.now()}.${platform.traceExtension}`
-  );
   log(
     `sample ${options.applicationId} ${options.scenario}${options.load === undefined ? '' : ` load=${options.load}`}`
   );
@@ -44,7 +36,8 @@ export async function sampleCommand(
       stopApplicationIds: [options.applicationId],
       scenario: options.scenario,
       load: options.load,
-      traceFile,
+      outputDir: SAMPLES_DIR,
+      sampleName: `${measurementFolderName(new Date(), options.scenario)}-${Date.now()}`,
       keepTrace: options.keepTrace,
     })
     .catch(async (error: unknown) => {

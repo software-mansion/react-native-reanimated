@@ -65,7 +65,8 @@ function order(overrides: Partial<SampleOrder> = {}): SampleOrder {
     applicationId: APP,
     stopApplicationIds: [APP, 'com.reanimatedbenchmark.b'],
     scenario: 'css',
-    traceFile: '/unused/sample.trace',
+    outputDir: '/unused',
+    sampleName: 'sample',
     keepTrace: false,
     ...overrides,
   };
