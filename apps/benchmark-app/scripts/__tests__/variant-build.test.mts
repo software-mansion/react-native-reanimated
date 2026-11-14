@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
@@ -124,6 +125,7 @@ describe('addLibraries', () => {
   const directory = path.join(ROOT, 'copy');
   const installLibraries = async (command: ProjectCommand) => {
     commands.push(command);
+    write(path.join(directory, 'yarn.lock'), 'resolved lock');
     for (const [name, version, flags] of [
       [
         'react-native-reanimated',
@@ -149,7 +151,7 @@ describe('addLibraries', () => {
     write(path.join(directory, 'package.json'), '{"name":"app"}');
   });
 
-  it('adds the two packages, merges the flags over the library defaults and writes only the flags of the variant', async () => {
+  it('adds the two packages, merges the flags over the library defaults, writes only the flags of the variant and hashes the resolved yarn.lock', async () => {
     commands = [];
     const added = await addLibraries(directory, VARIANT, installLibraries);
     assert.deepEqual(commands[0].args, [
@@ -166,6 +168,10 @@ describe('addLibraries', () => {
         },
         worklets: { WORKLETS_FLAG: false },
       },
+      lockfileSha256: crypto
+        .createHash('sha256')
+        .update('resolved lock')
+        .digest('hex'),
     });
     assert.deepEqual(
       JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8')),

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { ANDROID_DEFINITION } from '../android-definition.mts';
@@ -6,7 +8,7 @@ import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { evaluateExpectations } from '../expectations.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
-import { renderReport, variantDifferences } from '../report.mts';
+import { renderReport } from '../report.mts';
 import type { RunResult, MeasuredVariant } from '../results.mts';
 import type { Recorded } from '../session.mts';
 import type { VerdictRow } from '../verdict.mts';
@@ -70,6 +72,7 @@ function built(variant: 'a' | 'b', syncFlag: boolean): MeasuredVariant {
     installFileSha256: `sha-${variant}`,
     applicationId: `com.reanimatedbenchmark.${variant}`,
     installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
+    lockfileSha256: 'lock',
     effectiveFlags: {
       reanimated: {
         ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: syncFlag,
@@ -198,6 +201,15 @@ const RESULT: RunResult = {
   expectations: evaluateExpectations(CONFIG.expect, ROWS, []),
 };
 
+function metricDefinitionsOf(report: string): string {
+  return report
+    .slice(
+      report.indexOf('## Metric definitions') + '## Metric definitions'.length,
+      report.indexOf('## Failed scenarios')
+    )
+    .trim();
+}
+
 describe('expectations section', () => {
   const linesOf = (result: RunResult) => renderReport(result).split('\n');
 
@@ -235,36 +247,6 @@ describe('expectations section', () => {
       lines.includes(
         '1. sticky-header, uiThreadCpu: better by at least 10% -> not decided (sticky-header failed on A)'
       )
-    );
-  });
-});
-
-describe('variantDifferences', () => {
-  it('lists only the fields that differ', () => {
-    assert.deepEqual(variantDifferences(CONFIG, RESULT.variants), [
-      {
-        field: 'reanimated ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS',
-        a: 'false',
-        b: 'true',
-      },
-    ]);
-  });
-
-  it('lists sources and build options', () => {
-    const config = {
-      ...CONFIG,
-      b: {
-        ...VARIANT,
-        reanimated: { kind: 'tarball' as const, path: '/t/r.tgz' },
-        profiling: true,
-      },
-    };
-    assert.deepEqual(
-      variantDifferences(config, {
-        a: built('a', false),
-        b: built('b', false),
-      }).map((difference) => difference.field),
-      ['reanimated source', 'profiling']
     );
   });
 });
@@ -370,26 +352,50 @@ describe('renderReport', () => {
     );
   });
 
-  it('defines each metric of the verdict table for the platform of the run', () => {
+  it('defines each metric of the platform of the run', () => {
     const ios = renderReport({ ...RESULT, platform: 'ios' });
-    const section = ios.slice(
-      ios.indexOf('## Metric definitions'),
-      ios.indexOf('## Failed scenarios')
-    );
+    const section = metricDefinitionsOf(ios);
     assert.ok(
-      section.includes(
+      section.startsWith(
         'Numbers and verdicts are valid only within one platform, one phone and one measurement revision. This run has the measurement revision 1.'
       )
     );
-    for (const metric of [
-      ...IOS_DEFINITION.verdictMetrics,
-      ...IOS_DEFINITION.advisoryMetrics,
-    ]) {
-      assert.ok(section.includes(`\`${metric}\``), metric);
+    for (const name of IOS_DEFINITION.metricDefinitions.flatMap(
+      (entry) => entry.names
+    )) {
+      assert.ok(section.includes(`\`${name}\``), name);
     }
-    assert.ok(section.includes('`hitches-updates`'));
-    assert.ok(!section.includes('`hitchCount`'));
     assert.match(section, /\| `coldStart` \| ms \| .* \| no verdict, shown \|/);
+    assert.match(
+      section,
+      /\| `hitchCount`, `hitchTime` \| .* \| no, stored \|/
+    );
+    assert.match(section, /\| `uiThreadCpu` \| ms for each s \| .* \| yes \|/);
+  });
+
+  it('gives the README the metric table of each platform', () => {
+    const readme = fs.readFileSync(
+      path.join(import.meta.dirname, '..', 'README.md'),
+      'utf8'
+    );
+    for (const platform of ['android', 'ios'] as const) {
+      const section = metricDefinitionsOf(
+        renderReport({ ...RESULT, platform })
+      );
+      const tableStart = section.indexOf('| Metric |');
+      assert.ok(
+        readme.includes(section.slice(tableStart)),
+        `apps/benchmark-app/scripts/README.md has no current metric table of ${platform}`
+      );
+    }
+  });
+
+  it('lists the yarn.lock hash of each variant', () => {
+    assert.ok(
+      report.includes(
+        'SHA-256 of the yarn.lock of the build copy after `yarn add`: A lock, B lock.'
+      )
+    );
   });
 
   it('marks only the fallback rows without a noise limit', () => {

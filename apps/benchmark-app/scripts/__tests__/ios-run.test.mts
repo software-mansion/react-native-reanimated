@@ -87,6 +87,7 @@ function createFake(options: FakeOptions = {}) {
       applicationId: `com.reanimatedbenchmark.${key}`,
       installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
       effectiveFlags: { reanimated: {}, worklets: {} },
+      lockfileSha256: 'lock',
     }),
     createDevice: () => device as unknown as IosDevice,
     createTracer: () => ({

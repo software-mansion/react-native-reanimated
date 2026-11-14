@@ -1,18 +1,11 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { PLATFORM_DEFINITIONS } from '../definitions.mts';
 import type { PlatformDefinition } from '../platform.mts';
-import { metricDefinitionsTable } from '../report.mts';
 import { METRICS as ANDROID_TRACE_METRICS } from './command-fake.mts';
 import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
 
-const README = fs.readFileSync(
-  path.join(import.meta.dirname, '..', 'README.md'),
-  'utf8'
-);
 const STORED_METRICS = {
   android: [...Object.keys(ANDROID_TRACE_METRICS), 'coldStart'],
   ios: [...Object.keys(IOS_TRACE_METRICS), 'coldStart'],
@@ -21,13 +14,6 @@ const STORED_METRICS = {
 describe('platform definitions', () => {
   for (const definition of Object.values(PLATFORM_DEFINITIONS)) {
     describe(definition.name, () => {
-      it('gives the README the metric table of the definitions', () => {
-        assert.ok(
-          README.includes(metricDefinitionsTable(definition)),
-          `apps/benchmark-app/scripts/README.md has no current metric table of ${definition.name}`
-        );
-      });
-
       it('defines each stored metric one time', () => {
         const names = definition.metricDefinitions.flatMap(
           (entry) => entry.names

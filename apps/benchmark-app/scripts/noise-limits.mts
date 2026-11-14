@@ -12,11 +12,11 @@ import type {
 } from './noise-limits-record.mts';
 import type { DeviceIdentity, PlatformDefinition } from './platform.mts';
 import { platformOf } from './platforms.mts';
-import { variantDifferences } from './report.mts';
 import { acceptedValues, readResult } from './results.mts';
 import type { RunResult } from './results.mts';
 import type { ScenarioOutcome } from './session.mts';
 import { splitDifferenceQuantile } from './statistics.mts';
+import { variantDifferences } from './variant-differences.mts';
 import type { NoiseLimits } from './verdict.mts';
 
 interface MeasuredScenario {

@@ -27,6 +27,7 @@ export interface BuiltVariant {
   applicationId: string;
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
+  lockfileSha256: string;
 }
 
 export interface BuildRequest {

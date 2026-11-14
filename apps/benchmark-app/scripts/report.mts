@@ -1,9 +1,4 @@
-import type {
-  PackageSource,
-  RunConfig,
-  VariantKey,
-  VariantsConfig,
-} from './config.mts';
+import type { RunConfig } from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
@@ -20,14 +15,8 @@ import type {
   Recorded,
   ScenarioOutcome,
 } from './session.mts';
-import type { BuiltVariant } from './variant-build.mts';
+import { variantDifferences } from './variant-differences.mts';
 import type { AdvisoryRow, MetricComparison, VerdictRow } from './verdict.mts';
-
-export interface Difference {
-  field: string;
-  a: string;
-  b: string;
-}
 
 type Timed = Judged & { timings: SampleSteps['timings'] };
 
@@ -89,55 +78,17 @@ export function renderReport(result: RunResult): string {
 
 export function differencesSection(result: MeasurementResult<Judged>): string {
   const differences = variantDifferences(result.config, result.variants);
-  if (differences.length === 0) {
-    return 'A and B have the same sources, flags and build options.';
-  }
-  return table(
-    ['Field', 'A', 'B'],
-    differences.map((row) => [row.field, row.a, row.b])
-  );
-}
-
-export function variantDifferences(
-  config: VariantsConfig,
-  variants: Partial<Record<VariantKey, BuiltVariant>>
-): Difference[] {
-  const { a, b } = config;
-  const rows: Difference[] = [
-    {
-      field: 'reanimated source',
-      a: describeSource(a.reanimated),
-      b: describeSource(b.reanimated),
-    },
-    {
-      field: 'worklets source',
-      a: describeSource(a.worklets),
-      b: describeSource(b.worklets),
-    },
-    {
-      field: 'reanimated version',
-      a: variants.a?.installedVersions.reanimated ?? '-',
-      b: variants.b?.installedVersions.reanimated ?? '-',
-    },
-    {
-      field: 'worklets version',
-      a: variants.a?.installedVersions.worklets ?? '-',
-      b: variants.b?.installedVersions.worklets ?? '-',
-    },
-    ...flagDifferences(
-      'reanimated',
-      variants.a?.effectiveFlags.reanimated ?? {},
-      variants.b?.effectiveFlags.reanimated ?? {}
-    ),
-    ...flagDifferences(
-      'worklets',
-      variants.a?.effectiveFlags.worklets ?? {},
-      variants.b?.effectiveFlags.worklets ?? {}
-    ),
-    { field: 'bundleMode', a: String(a.bundleMode), b: String(b.bundleMode) },
-    { field: 'profiling', a: String(a.profiling), b: String(b.profiling) },
-  ];
-  return rows.filter((row) => row.a !== row.b);
+  const { a, b } = result.variants;
+  return [
+    differences.length === 0
+      ? 'A and B have the same sources, versions, yarn.lock, flags and build options.'
+      : table(
+          ['Field', 'A', 'B'],
+          differences.map((row) => [row.field, row.a, row.b])
+        ),
+    '',
+    `SHA-256 of the yarn.lock of the build copy after \`yarn add\`: A ${a?.lockfileSha256 ?? '-'}, B ${b?.lockfileSha256 ?? '-'}.`,
+  ].join('\n');
 }
 
 export function counted(
@@ -152,23 +103,6 @@ export function table(header: string[], rows: string[][]): string {
   const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
   return [line(header), line(header.map(() => '---')), ...rows.map(line)].join(
     '\n'
-  );
-}
-
-export function metricDefinitionsTable(
-  definition: PlatformDefinition,
-  entries = definition.metricDefinitions
-): string {
-  return table(
-    ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
-    entries.map((entry) => [
-      entry.names.map((name) => `\`${name}\``).join(', '),
-      entry.unit,
-      entry.source,
-      entry.interval,
-      entry.limits,
-      roleOf(definition, entry.names),
-    ])
   );
 }
 
@@ -452,37 +386,21 @@ function metricDefinitionsSection(
   definition: PlatformDefinition,
   measurementRevision: number
 ): string {
-  const shown = new Set<string>([
-    ...definition.verdictMetrics,
-    ...definition.advisoryMetrics,
-  ]);
   return [
     `Numbers and verdicts are valid only within one platform, one phone and one measurement revision. This run has the measurement revision ${measurementRevision}.`,
     '',
-    metricDefinitionsTable(
-      definition,
-      definition.metricDefinitions.filter((entry) =>
-        entry.names.some((name) => shown.has(name))
-      )
+    table(
+      ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
+      definition.metricDefinitions.map((entry) => [
+        entry.names.map((name) => `\`${name}\``).join(', '),
+        entry.unit,
+        entry.source,
+        entry.interval,
+        entry.limits,
+        roleOf(definition, entry.names),
+      ])
     ),
   ].join('\n');
-}
-
-function describeSource(source: PackageSource): string {
-  return source.kind === 'npm' ? source.version : source.path;
-}
-
-function flagDifferences(
-  library: string,
-  a: Record<string, boolean>,
-  b: Record<string, boolean>
-): Difference[] {
-  const names = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
-  return names.map((name) => ({
-    field: `${library} ${name}`,
-    a: String(a[name] ?? '-'),
-    b: String(b[name] ?? '-'),
-  }));
 }
 
 function roleOf(

@@ -238,6 +238,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
         applicationId: `com.reanimatedbenchmark.${key}`,
         installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
         effectiveFlags: { reanimated: {}, worklets: {} },
+        lockfileSha256: 'lock',
       }) satisfies BuiltVariant,
     createDevice: () => device as unknown as AndroidDevice,
     createCollector: () => ({

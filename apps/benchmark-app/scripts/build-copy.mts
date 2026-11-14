@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -8,6 +9,7 @@ import type { LibraryState, ProjectCommand } from './variant-build.mts';
 export interface AddedLibraries {
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
+  lockfileSha256: string;
 }
 
 const PACKAGE_NAMES: LibraryState<string> = {
@@ -46,7 +48,11 @@ export async function addLibraries(
     ),
   };
   writeStaticFlags(path.join(directory, 'package.json'), variant);
-  return { installedVersions: installed.versions, effectiveFlags };
+  return {
+    installedVersions: installed.versions,
+    effectiveFlags,
+    lockfileSha256: sha256OfFile(path.join(directory, 'yarn.lock')),
+  };
 }
 
 function packageSpec(name: string, source: PackageSource): string {
@@ -89,6 +95,13 @@ function mergeFlags(
     );
   }
   return { ...defaults, ...overrides };
+}
+
+function sha256OfFile(file: string): string {
+  return crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(file))
+    .digest('hex');
 }
 
 function writeStaticFlags(packageJsonPath: string, variant: Variant) {

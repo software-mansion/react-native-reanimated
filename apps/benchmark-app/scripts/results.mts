@@ -344,6 +344,7 @@ function measurementShape(
         installFile: aString,
         installFileSha256: aString,
         installedVersions: shape({ reanimated: aString, worklets: aString }),
+        lockfileSha256: aString,
         effectiveFlags: shape({
           reanimated: valuesOf(aBoolean),
           worklets: valuesOf(aBoolean),
