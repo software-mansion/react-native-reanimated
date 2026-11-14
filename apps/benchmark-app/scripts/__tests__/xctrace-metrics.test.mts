@@ -519,10 +519,28 @@ describe('computeIosTraceMetrics', () => {
       assert.throws(
         () => computeIosTraceMetrics({ ...EXPORTS, signposts }, APP),
         {
-          message: `The trace has ${count} State signposts of the app, the trace window needs 2`,
+          message: `The trace has ${count} State signposts of the app in its scheduler data (853613958 ns to 8853720041 ns), the trace window needs 2`,
         }
       );
     }
+  });
+
+  it('does not use a State event outside the scheduler data for the window and the memory', () => {
+    const base = livedReading(computeIosTraceMetrics(EXPORTS, APP));
+    const late = livedReading(
+      computeIosTraceMetrics(
+        {
+          ...EXPORTS,
+          signposts: withRows(EXPORTS.signposts, [
+            stateRow(9e9, { ...NOMINAL_STATE, footprint: 1, thermal: 1 }),
+          ]),
+        },
+        APP
+      )
+    );
+    assert.deepEqual(late.metrics, base.metrics);
+    assert.equal(late.appStates.length, base.appStates.length + 1);
+    assert.equal(late.thermalState, 1);
   });
 
   it('stops when the trace window is empty', () => {
@@ -536,8 +554,8 @@ describe('computeIosTraceMetrics', () => {
     );
   });
 
-  it('stops when the scheduler data does not cover the trace window', () => {
-    for (const [rows, coverage] of [
+  it('stops when the scheduler data has fewer than 2 State events', () => {
+    for (const [rows, coverage, count] of [
       [
         [
           threadRow({
@@ -554,6 +572,7 @@ describe('computeIosTraceMetrics', () => {
           }),
         ],
         '1900000000 ns to 3000000000 ns',
+        1,
       ],
       [
         [
@@ -571,6 +590,7 @@ describe('computeIosTraceMetrics', () => {
           }),
         ],
         '1800000000 ns to 2800000000 ns',
+        1,
       ],
       [
         [
@@ -588,6 +608,7 @@ describe('computeIosTraceMetrics', () => {
           }),
         ],
         'Infinity ns to 3000000000 ns',
+        0,
       ],
     ] as const) {
       assert.throws(
@@ -597,7 +618,7 @@ describe('computeIosTraceMetrics', () => {
             APP
           ),
         {
-          message: `The scheduler data of the trace (${coverage}) does not cover the trace window (1856890916 ns to 2856859583 ns)`,
+          message: `The trace has ${count} State signposts of the app in its scheduler data (${coverage}), the trace window needs 2`,
         }
       );
     }

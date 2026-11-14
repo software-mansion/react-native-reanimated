@@ -221,7 +221,7 @@ After each install, the driver launches the app one time and stops it, because t
 1. `xctrace record` attaches to the app for 10 s with the template `Animation Hitches`, the instrument `os_signpost`, and the signposts of React Native (`dev.reactnative.instruments`) and of the app (`com.reanimatedbenchmark`).
 1. The driver stops the app, exports tables of the trace with `xctrace export` and computes the metrics.
 
-The app writes a `State` signpost each second. The trace window is the time from the first to the last `State` signpost of the trace (about 10 s). The scheduler data of the trace must cover this window, or the sample is a tool error.
+The app writes a `State` signpost each second. The trace window is the time from the first to the last `State` signpost that is inside the scheduler data of the trace (about 10 s).
 
 ### Metrics
 
@@ -236,8 +236,8 @@ The app writes a `State` signpost each second. The trace window is the time from
 | `otherThreadsCpu`, `processCpu` | The same for the other threads of the app, and for all threads of the app | no |
 | `uiThreadEfficiencyCoreShare` | Share of `uiThreadCpu` on efficiency cores | no |
 | `mountBatchCount` | Count of the starts of the React Native section `RCTPerformMountInstructions` | no |
-| `memory` | `phys_footprint` of the app in the last `State` signpost, in kB | yes |
-| `windowMemoryDelta` | `phys_footprint` in the last `State` signpost minus the value in the first one, in kB | no |
+| `memory` | `phys_footprint` of the app in the `State` signpost at the end of the trace window, in kB | yes |
+| `windowMemoryDelta` | `memory` minus the value in the `State` signpost at the start of the trace window, in kB | no |
 | `coldStart` | `coldStart` of the `LAUNCH` line: the time from the start of the process (start time of the kernel) to the first display link callback, in ms. The app measures it. | yes |
 | `hitchCount`, `hitchTime` | Count of the rows of the table `hitches` for the app that overlap the trace window, and the sum of their durations in the window in ms for each second | no |
 
@@ -248,11 +248,11 @@ The trace has the cost of the Time Profiler samples (the `Animation Hitches` tem
 ### Invalid samples, device state and stopped runs
 
 - `crash`: the app writes `FAILED`, the console command ends before `READY` or during the trace, or the main thread ends in the trace.
-- `thermal`: the trace shows a thermal state above `Nominal` in the trace window (table `device-thermal-state-intervals`, or a `State` signpost).
+- `thermal`: the trace shows a thermal state above `Nominal` (the table `device-thermal-state-intervals` in the trace window, or a `State` signpost of the trace).
 - `frames` and `work`: as on Android. No scenario has a work limit on iOS at this time.
 - Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
 - Each `State` signpost of a trace gives the battery level, the battery state, the low power mode and the brightness, and the `LAUNCH` line gives the refresh rate. The first sample of the run gives the reference (`inAppState` in `result.json`). A later difference stops the run.
-- These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread, without the JS thread or with fewer than 2 `State` signposts, scheduler data that does not cover the trace window, and a command that does not finish in its time limit.
+- These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread, without the JS thread or with fewer than 2 `State` signposts inside its scheduler data, and a command that does not finish in its time limit.
 - `run --resume <run folder> --udid <UDID>` continues a stopped run with the same rules as on Android. It does not build, so it does not take `--sign-command`. A run cannot continue on the other platform.
 
 ### Limits

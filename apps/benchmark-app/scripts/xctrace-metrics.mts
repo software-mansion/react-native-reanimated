@@ -113,8 +113,8 @@ export function computeIosTraceMetrics(
     app.pid
   );
   const stateEvents = readStateEvents(signposts);
-  const window = traceWindow(stateEvents, app.pid);
-  checkSchedulerCoverage(intervals, window);
+  const windowEvents = coveredEvents(stateEvents, intervals);
+  const window = traceWindow(windowEvents, app.pid);
   const windowSeconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
   const expectedFrameCount = app.refreshRate * windowSeconds;
   const appIntervals = (xml: string, schema: string) =>
@@ -135,7 +135,7 @@ export function computeIosTraceMetrics(
     mountBatchCount: windowRows(signposts, 'time', window).rows.filter(
       isMountBatchStart
     ).length,
-    ...memoryMetrics(stateEvents),
+    ...memoryMetrics(windowEvents),
     expectedFrameCount,
   };
   checkFiniteMetrics(metrics);
@@ -200,7 +200,7 @@ function checkThreadRows(intervals: ThreadInterval[], app: TracedIosApp) {
 }
 
 function readStateEvents(signposts: Table): StateEvent[] {
-  const events = signposts.rows
+  return signposts.rows
     .filter(
       (row) =>
         row.subsystem?.text === APP_SUBSYSTEM &&
@@ -208,12 +208,29 @@ function readStateEvents(signposts: Table): StateEvent[] {
     )
     .map((row) => stateEvent(signposts, row))
     .sort((left, right) => left.time - right.time);
-  if (events.length < 2) {
+}
+
+function coveredEvents(
+  stateEvents: StateEvent[],
+  intervals: ThreadInterval[]
+): StateEvent[] {
+  const coverageStart = intervals.reduce(
+    (earliest, { start }) => (start > 0 ? Math.min(earliest, start) : earliest),
+    Number.POSITIVE_INFINITY
+  );
+  const coverageEnd = intervals.reduce(
+    (latest, { end }) => Math.max(latest, end),
+    Number.NEGATIVE_INFINITY
+  );
+  const covered = stateEvents.filter(
+    ({ time }) => time >= coverageStart && time <= coverageEnd
+  );
+  if (covered.length < 2) {
     throw new ToolError(
-      `The trace has ${events.length} ${STATE_EVENT_NAME} signposts of the app, the trace window needs 2`
+      `The trace has ${covered.length} ${STATE_EVENT_NAME} signposts of the app in its scheduler data (${coverageStart} ns to ${coverageEnd} ns), the trace window needs 2`
     );
   }
-  return events;
+  return covered;
 }
 
 function traceWindow(stateEvents: StateEvent[], pid: number): Interval {
@@ -226,22 +243,6 @@ function traceWindow(stateEvents: StateEvent[], pid: number): Interval {
     );
   }
   return { start, end };
-}
-
-function checkSchedulerCoverage(intervals: ThreadInterval[], window: Interval) {
-  const coverageStart = intervals.reduce(
-    (earliest, { start }) => (start > 0 ? Math.min(earliest, start) : earliest),
-    Number.POSITIVE_INFINITY
-  );
-  const coverageEnd = intervals.reduce(
-    (latest, { end }) => Math.max(latest, end),
-    Number.NEGATIVE_INFINITY
-  );
-  if (coverageStart > window.start || coverageEnd < window.end) {
-    throw new ToolError(
-      `The scheduler data of the trace (${coverageStart} ns to ${coverageEnd} ns) does not cover the trace window (${window.start} ns to ${window.end} ns)`
-    );
-  }
 }
 
 function intervalsOf(table: Table): Interval[] {
