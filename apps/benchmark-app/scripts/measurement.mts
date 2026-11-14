@@ -8,6 +8,7 @@ import { ToolError } from './errors.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { APP_DIR, BUILDS_DIR, RUNS_DIR } from './paths.mts';
 import type {
+  DeviceIdentity,
   DeviceState,
   DeviceTarget,
   InAppState,
@@ -74,6 +75,7 @@ export interface Start {
   device: DeviceTarget;
   platformOptions: PlatformOptions;
   folderName: string;
+  checkDevice?: (identity: DeviceIdentity) => void;
 }
 
 export interface Resume {
@@ -132,6 +134,7 @@ export async function startMeasurement<
     start.platformOptions,
     context
   );
+  start.checkDevice?.(platform.deviceIdentity(session.startState));
 
   const startedAt = new Date().toISOString();
   const folder = createRunFolder(
@@ -161,7 +164,7 @@ export async function startMeasurement<
   return measure(
     { result, folder, session, traceExtension: platform.traceExtension },
     createJob(result),
-    () => buildVariants(start.config, session, context, result),
+    () => buildVariants(start.config, session, context, result, folder),
     context
   );
 }
@@ -326,7 +329,10 @@ async function installVariants(
 ) {
   for (const key of VARIANT_KEYS) {
     log(`install ${variants[key].applicationId}`);
-    await session.install(variants[key]);
+    await session.install(
+      variants[key].installFile,
+      variants[key].applicationId
+    );
   }
 }
 
@@ -388,7 +394,8 @@ async function buildVariants(
   config: VariantsConfig,
   session: PlatformSession<Sampling>,
   context: CommandContext,
-  result: MeasurementResult<Judged>
+  result: MeasurementResult<Judged>,
+  folder: string
 ): Promise<Variants> {
   for (const key of VARIANT_KEYS) {
     const built = await session.buildVariant({
@@ -399,9 +406,11 @@ async function buildVariants(
       processes: context.processes,
       log: context.log,
     });
+    const installFile = await session.prepareInstallFile(built, folder);
     result.variants[key] = {
       ...built,
-      artifactSha256: sha256File(built.artifact),
+      installFile,
+      installFileSha256: sha256File(installFile),
     };
   }
   return result.variants as Variants;
@@ -445,14 +454,14 @@ function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
       `The run folder has no build of variant ${key}. This run cannot resume. Start a new run.`
     );
   }
-  if (!fs.existsSync(variant.artifact)) {
+  if (!fs.existsSync(variant.installFile)) {
     throw new ToolError(
-      `The build of variant ${key} does not exist any more: ${variant.artifact}`
+      `The install file of variant ${key} does not exist any more: ${variant.installFile}`
     );
   }
-  if (sha256File(variant.artifact) !== variant.artifactSha256) {
+  if (sha256File(variant.installFile) !== variant.installFileSha256) {
     throw new ToolError(
-      `The build of variant ${key} changed after the run started: ${variant.artifact}`
+      `The install file of variant ${key} changed after the run started: ${variant.installFile}`
     );
   }
 }

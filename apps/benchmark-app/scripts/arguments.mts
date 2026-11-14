@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
@@ -85,7 +86,7 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 
 <device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only.
-An iOS run also takes --sign-command <command>.
+An iOS run also takes --sign-command <path>.
 
 Scenarios: ${SCENARIOS.join(', ')}
 See apps/benchmark-app/scripts/README.md.`;
@@ -314,7 +315,7 @@ function signCommand(values: Values, device: DeviceTarget): string | undefined {
   if (device.platform === 'android' && command) {
     throw new ToolError('--sign-command is for an iOS run only.');
   }
-  return command;
+  return command === undefined ? undefined : path.resolve(command);
 }
 
 function requiredScenario(values: Values): Scenario {

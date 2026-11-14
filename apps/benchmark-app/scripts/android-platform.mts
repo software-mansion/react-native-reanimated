@@ -114,6 +114,14 @@ export function androidPlatform(
   return {
     name: 'android',
     traceExtension: 'perfetto-trace',
+    deviceIdentity: (state) => {
+      const android = androidState(state);
+      return {
+        model: android.model,
+        deviceId: android.hardwareSerial,
+        osBuild: android.fingerprint,
+      };
+    },
     connect: (processes, serial, options) =>
       connect(processes, serial, options, dependencies),
   };
@@ -139,9 +147,10 @@ async function connect(
       readToolVersions(processes, adb, traceProcessor, serial),
     buildVariant: (request) =>
       dependencies.buildVariant(request, androidBuild(androidHome)),
-    install: async (variant) => {
-      await device.install(variant.artifact);
-      await device.compileForSpeed(variant.applicationId);
+    prepareInstallFile: async (variant) => variant.artifact,
+    install: async (installFile, applicationId) => {
+      await device.install(installFile);
+      await device.compileForSpeed(applicationId);
     },
     checkInstalled: (applicationId) => device.checkInstalled(applicationId),
     cleanUp: (applicationIds, log) =>

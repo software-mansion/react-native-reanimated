@@ -2,19 +2,41 @@ import { PLATFORM_DEFINITIONS, isPlatformName } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { ComparedMetric } from './metrics.mts';
-import type { PlatformName } from './platform.mts';
+import type { DeviceIdentity, PlatformName } from './platform.mts';
 import { isScenario } from './scenarios.mts';
-import { record, throwProblems } from './validation.mts';
+import type { Scenario } from './scenarios.mts';
+import {
+  aString,
+  anInteger,
+  listOf,
+  record,
+  shape,
+  throwProblems,
+  valuesOf,
+} from './validation.mts';
 import type { NoiseLimits } from './verdict.mts';
+
+export interface NoiseLimitsSource {
+  folder: string;
+  samples: Partial<Record<Scenario, { a: number; b: number }>>;
+}
 
 export interface NoiseLimitsRecord {
   formatVersion: typeof NOISE_LIMITS_FORMAT_VERSION;
   platform: PlatformName;
+  device: DeviceIdentity;
   measurementRevision: number;
+  sources: NoiseLimitsSource[];
   limits: NoiseLimits;
 }
 
 export const NOISE_LIMITS_FORMAT_VERSION = 1;
+
+const IDENTITY = shape({ model: aString, deviceId: aString, osBuild: aString });
+const SOURCE = shape({
+  folder: aString,
+  samples: valuesOf(shape({ a: anInteger, b: anInteger })),
+});
 
 export function validateNoiseLimitsRecord(raw: unknown): NoiseLimitsRecord {
   const problems: string[] = [];
@@ -30,30 +52,36 @@ export function validateNoiseLimitsRecord(raw: unknown): NoiseLimitsRecord {
       `noise limits.platform must be one of: ${Object.keys(PLATFORM_DEFINITIONS).join(', ')}`
     );
   }
-  if (!Number.isInteger(stored.measurementRevision)) {
-    problems.push('noise limits.measurementRevision must be an integer');
-  }
-  const verdictMetrics = isPlatformName(platform)
-    ? PLATFORM_DEFINITIONS[platform].verdictMetrics
-    : [];
-  const limits = validateLimits(stored.limits, verdictMetrics, problems);
+  IDENTITY(stored.device, 'noise limits.device', problems);
+  anInteger(
+    stored.measurementRevision,
+    'noise limits.measurementRevision',
+    problems
+  );
+  listOf(SOURCE)(stored.sources, 'noise limits.sources', problems);
+  const limits = validateLimits(
+    stored.limits,
+    isPlatformName(platform)
+      ? PLATFORM_DEFINITIONS[platform].verdictMetrics
+      : [],
+    problems
+  );
   throwProblems('The noise limits are not valid', problems);
-  return {
-    formatVersion: NOISE_LIMITS_FORMAT_VERSION,
-    platform: platform as PlatformName,
-    measurementRevision: stored.measurementRevision as number,
-    limits,
-  };
+  return { ...(stored as unknown as NoiseLimitsRecord), limits };
 }
 
 export function checkNoiseLimitsRecord(
   limits: NoiseLimitsRecord,
-  platform: PlatformName
+  platform: PlatformName,
+  device: DeviceIdentity
 ) {
   const mismatches = [
     ...(limits.platform === platform
       ? []
       : [`platform ${limits.platform}, the run is on ${platform}`]),
+    ...(limits.device.model === device.model
+      ? []
+      : [`device model ${limits.device.model}, the run is on ${device.model}`]),
     ...(limits.measurementRevision === MEASUREMENT_REVISION
       ? []
       : [

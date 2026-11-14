@@ -47,7 +47,10 @@ export interface Segment {
   device: DeviceState;
 }
 
-export type RunVariant = BuiltVariant & { artifactSha256: string };
+export type RunVariant = BuiltVariant & {
+  installFile: string;
+  installFileSha256: string;
+};
 
 export type AbandonedScenario<R extends Judged = SampleResult> =
   ScenarioOutcome<R> & { segment: number };
@@ -272,7 +275,8 @@ function measurementShape(
       shape({
         applicationId: aString,
         artifact: aString,
-        artifactSha256: aString,
+        installFile: aString,
+        installFileSha256: aString,
         installedVersions: shape({ reanimated: aString, worklets: aString }),
         effectiveFlags: shape({ reanimated: anObject, worklets: anObject }),
       })

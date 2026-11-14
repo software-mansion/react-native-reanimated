@@ -8,6 +8,7 @@ import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric, MetricUnit } from './metrics.mts';
+import type { NoiseLimitsRecord } from './noise-limits-record.mts';
 import type { DeviceState, PlatformDefinition } from './platform.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
 import type { InvalidCause, SampleSteps } from './protocol.mts';
@@ -287,8 +288,8 @@ function verdictsSection(result: RunResult): string {
       ? []
       : ['Provisional: the run is not complete.']),
     result.noiseLimits
-      ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`
-      : 'No noise limits given: the limit is 0 for all rows.',
+      ? noiseLimitsText(result.noiseLimits, result.options.noiseLimitsFile)
+      : 'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is 0.',
     'The difference and the interval of jankyFrames are in percentage points (pp). A row with "no verdict" is advisory: it has no noise limit, and the expectations do not use it.',
   ].join(' ');
   const rows = [...result.verdictRows, ...result.advisoryRows].sort(
@@ -327,6 +328,14 @@ function verdictsSection(result: RunResult): string {
         ]
       : []),
   ].join('\n');
+}
+
+function noiseLimitsText(
+  limits: NoiseLimitsRecord,
+  file: string | null
+): string {
+  const { device } = limits;
+  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${limits.sources.length} A/A runs. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`;
 }
 
 function hasComparison(

@@ -30,12 +30,15 @@ export interface BuiltVariant {
 export interface BuildKeyInputs {
   variant: Variant;
   platform: PlatformName;
-  platformOptions: string;
   suffix: string;
+  nodeVersion: string;
+  toolIdentity: ToolIdentity;
   projectHash: string;
   tarballHashes: Partial<LibraryState<string>>;
   procedureHash: string;
 }
+
+export type ToolIdentity = Record<string, string>;
 
 export interface BuildRequest {
   appDir: string;
@@ -64,7 +67,7 @@ export interface ProjectCommand {
 export interface PlatformBuild {
   platform: PlatformName;
   procedureFile: string;
-  options: string;
+  readToolIdentity: (request: BuildRequest) => Promise<ToolIdentity>;
   build: (project: VariantProject) => Promise<string>;
 }
 
@@ -95,15 +98,9 @@ export async function buildVariant(
 ): Promise<BuiltVariant> {
   const { appDir, buildsDir, key, variant, log } = request;
   const files = listProjectFiles(appDir);
-  const buildKey = variantBuildKey({
-    variant,
-    platform: platformBuild.platform,
-    platformOptions: platformBuild.options,
-    suffix: applicationSuffix(key),
-    projectHash: hashFiles(appDir, files),
-    tarballHashes: hashTarballs(variant),
-    procedureHash: hashBuildProcedure(platformBuild.procedureFile),
-  });
+  const buildKey = variantBuildKey(
+    await collectBuildKeyInputs(request, platformBuild, files)
+  );
   const directory = path.join(buildsDir, buildKey);
   const marker = path.join(directory, BUILD_MARKER);
   if (fs.existsSync(marker)) {
@@ -171,6 +168,23 @@ export async function buildVariant(
   return built;
 }
 
+export async function collectBuildKeyInputs(
+  request: BuildRequest,
+  platformBuild: PlatformBuild,
+  files = listProjectFiles(request.appDir)
+): Promise<BuildKeyInputs> {
+  return {
+    variant: request.variant,
+    platform: platformBuild.platform,
+    suffix: applicationSuffix(request.key),
+    nodeVersion: process.version,
+    toolIdentity: await platformBuild.readToolIdentity(request),
+    projectHash: hashFiles(request.appDir, files),
+    tarballHashes: hashTarballs(request.variant),
+    procedureHash: hashBuildProcedure(platformBuild.procedureFile),
+  };
+}
+
 export function listProjectFiles(appDir: string, relativeDir = ''): string[] {
   return fs
     .readdirSync(path.join(appDir, relativeDir), { withFileTypes: true })
@@ -198,19 +212,20 @@ export function isCopied(relativePath: string): boolean {
 
 export function variantBuildKey(inputs: BuildKeyInputs): string {
   const { variant } = inputs;
-  const sortedFlags = (flags: StaticFlags) =>
-    Object.entries(flags).sort(([left], [right]) => left.localeCompare(right));
+  const sorted = (values: Record<string, unknown>) =>
+    Object.entries(values).sort(([left], [right]) => left.localeCompare(right));
   const description = JSON.stringify({
     reanimated: variant.reanimated,
     worklets: variant.worklets,
     tarballHashes: inputs.tarballHashes,
-    reanimatedFlags: sortedFlags(variant.reanimatedFlags),
-    workletsFlags: sortedFlags(variant.workletsFlags),
+    reanimatedFlags: sorted(variant.reanimatedFlags),
+    workletsFlags: sorted(variant.workletsFlags),
     bundleMode: variant.bundleMode,
     profiling: variant.profiling,
     platform: inputs.platform,
-    platformOptions: inputs.platformOptions,
     suffix: inputs.suffix,
+    nodeVersion: inputs.nodeVersion,
+    toolIdentity: sorted(inputs.toolIdentity),
     projectHash: inputs.projectHash,
     procedureHash: inputs.procedureHash,
   });

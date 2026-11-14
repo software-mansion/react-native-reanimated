@@ -43,9 +43,6 @@ export async function runCommand(
   const noiseLimits = options.noiseLimits
     ? validateNoiseLimitsRecord(readJson(options.noiseLimits))
     : null;
-  if (noiseLimits) {
-    checkNoiseLimitsRecord(noiseLimits, definition.name);
-  }
   return startMeasurement(
     {
       config,
@@ -55,6 +52,11 @@ export async function runCommand(
         signCommand: options.signCommand,
       },
       folderName: config.name,
+      checkDevice: (identity) => {
+        if (noiseLimits) {
+          checkNoiseLimitsRecord(noiseLimits, definition.name, identity);
+        }
+      },
     },
     (fields) => ({
       ...fields,

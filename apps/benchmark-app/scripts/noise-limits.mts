@@ -7,7 +7,8 @@ import { COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
 import { NOISE_LIMITS_FORMAT_VERSION } from './noise-limits-record.mts';
 import type { NoiseLimitsRecord } from './noise-limits-record.mts';
-import type { PlatformDefinition } from './platform.mts';
+import type { DeviceIdentity, PlatformDefinition } from './platform.mts';
+import { platformOf } from './platforms.mts';
 import { variantDifferences } from './report.mts';
 import { acceptedValues, readResult } from './results.mts';
 import type { RunResult } from './results.mts';
@@ -33,47 +34,77 @@ interface MeasuredScenario {
   outcome: ScenarioOutcome;
 }
 
+interface CalibrationRun {
+  folder: string;
+  result: RunResult;
+  device: DeviceIdentity;
+}
+
 export function noiseLimitsCommand(options: NoiseLimitsOptions): number {
-  const runs = options.runs.map((folder) => {
-    const resolved = path.resolve(folder);
-    return { folder: resolved, result: readResult(resolved) };
-  });
-  const [{ result: first }] = runs;
-  checkSameMeasurement(runs);
-  const measured = runs.flatMap(({ folder, result }) =>
-    completeAaScenarios(folder, result)
+  const runs = options.runs.map((folder) =>
+    calibrationRun(path.resolve(folder))
   );
+  const [first] = runs;
+  checkSameSetup(runs);
+  const measured = runs.flatMap(completeAaScenarios);
   checkUniqueScenarios(measured);
   const record: NoiseLimitsRecord = {
     formatVersion: NOISE_LIMITS_FORMAT_VERSION,
-    platform: first.platform,
-    measurementRevision: first.measurementRevision,
+    platform: first.result.platform,
+    device: first.device,
+    measurementRevision: first.result.measurementRevision,
+    sources: runs.map((run) => ({
+      folder: run.folder,
+      samples: Object.fromEntries(
+        measured
+          .filter(({ folder }) => folder === run.folder)
+          .map(({ outcome }) => [outcome.scenario, acceptedCounts(outcome)])
+      ),
+    })),
     limits: computeNoiseLimits(
       measured.map(({ outcome }) => outcome),
-      PLATFORM_DEFINITIONS[first.platform]
+      PLATFORM_DEFINITIONS[first.result.platform]
     ),
   };
   console.log(JSON.stringify(record, null, 2));
   return 0;
 }
 
-function checkSameMeasurement(runs: { folder: string; result: RunResult }[]) {
+function calibrationRun(folder: string): CalibrationRun {
+  const result = readResult(folder);
+  return {
+    folder,
+    result,
+    device: platformOf(result.platform).deviceIdentity(
+      result.segments[0].device
+    ),
+  };
+}
+
+function checkSameSetup(runs: CalibrationRun[]) {
   const [first, ...others] = runs;
+  const setupOf = (run: CalibrationRun) => ({
+    platform: run.result.platform,
+    measurementRevision: run.result.measurementRevision,
+    ...run.device,
+  });
+  const reference = setupOf(first);
   for (const other of others) {
-    for (const field of ['platform', 'measurementRevision'] as const) {
-      if (other.result[field] !== first.result[field]) {
+    const setup = setupOf(other);
+    for (const field of Object.keys(reference) as (keyof typeof reference)[]) {
+      if (setup[field] !== reference[field]) {
         throw new ToolError(
-          `The runs differ in ${field}: ${first.result[field]} in ${first.folder}, ${other.result[field]} in ${other.folder}`
+          `The runs differ in ${field}: ${reference[field]} in ${first.folder}, ${setup[field]} in ${other.folder}`
         );
       }
     }
   }
 }
 
-function completeAaScenarios(
-  folder: string,
-  result: RunResult
-): MeasuredScenario[] {
+function completeAaScenarios({
+  folder,
+  result,
+}: CalibrationRun): MeasuredScenario[] {
   const differences = variantDifferences(result.config, result.variants);
   if (differences.length > 0) {
     throw new ToolError(
@@ -83,6 +114,14 @@ function completeAaScenarios(
   return result.scenarios
     .filter((outcome) => outcome.failed === null)
     .map((outcome) => ({ folder, outcome }));
+}
+
+function acceptedCounts(outcome: ScenarioOutcome) {
+  const count = (variant: 'a' | 'b') =>
+    outcome.samples.filter(
+      (sample) => sample.valid && sample.accepted && sample.variant === variant
+    ).length;
+  return { a: count('a'), b: count('b') };
 }
 
 function checkUniqueScenarios(measured: MeasuredScenario[]) {

@@ -23,6 +23,12 @@ export type ToolVersions = AndroidToolVersions | IosToolVersions;
 
 export type InAppState = Record<string, string | number | boolean>;
 
+export interface DeviceIdentity {
+  model: string;
+  deviceId: string;
+  osBuild: string;
+}
+
 export interface MetricDefinition {
   names: readonly string[];
   unit: string;
@@ -73,7 +79,11 @@ export interface PlatformSession<S extends Sampling = Sampling> {
   startState: DeviceState;
   readToolVersions: () => Promise<ToolVersions>;
   buildVariant: (request: BuildRequest) => Promise<BuiltVariant>;
-  install: (variant: BuiltVariant) => Promise<void>;
+  prepareInstallFile: (
+    variant: BuiltVariant,
+    folder: string
+  ) => Promise<string>;
+  install: (installFile: string, applicationId: string) => Promise<void>;
   checkInstalled: (applicationId: string) => Promise<void>;
   cleanUp: (
     applicationIds: readonly string[],
@@ -89,6 +99,7 @@ export interface PlatformSession<S extends Sampling = Sampling> {
 export interface Platform<S extends Sampling = Sampling> {
   name: PlatformName;
   traceExtension: string;
+  deviceIdentity: (state: DeviceState) => DeviceIdentity;
   connect: (
     processes: Processes,
     deviceId: string,

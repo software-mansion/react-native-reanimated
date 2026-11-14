@@ -89,7 +89,7 @@ describe('a stopped run', () => {
     assert.equal(result.segments[0].status, 'interrupted');
     assert.equal(result.appRefreshRate, 60);
     assert.equal(
-      result.variants.a?.artifactSha256,
+      result.variants.a?.installFileSha256,
       crypto.createHash('sha256').update('apk a').digest('hex')
     );
     assert.equal(result.verdictRows.length, 7);
@@ -104,6 +104,53 @@ describe('a stopped run', () => {
         'This run is not complete (status: interrupted). Scenarios without data: idle-cost.'
       )
     );
+  });
+});
+
+describe('runCommand with noise limits', () => {
+  function runWithLimits(model: string) {
+    const file = path.join(TEST_ROOT.root, `limits-${model}.json`);
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        formatVersion: 1,
+        platform: 'android',
+        device: { model, deviceId: 'HW9', osBuild: 'other build' },
+        measurementRevision: 1,
+        sources: [],
+        limits: { css: { uiThreadCpu: 0.05 } },
+      })
+    );
+    const { dependencies, context } = createFake();
+    return runCommand(
+      {
+        command: 'run',
+        config: TEST_ROOT.configFile,
+        device: DEVICE,
+        blocks: 1,
+        noiseLimits: file,
+        keepTraces: false,
+        traceProcessor: TEST_ROOT.traceProcessor,
+      },
+      context,
+      dependencies
+    );
+  }
+
+  it('uses a record of the same phone model, also of another phone and OS build', async () => {
+    assert.equal(await runWithLimits(STATE.model), 0);
+    const result = readResult(onlyRunFolder(TEST_ROOT));
+    assert.deepEqual(result.noiseLimits?.limits, {
+      css: { uiThreadCpu: 0.05 },
+    });
+  });
+
+  it('stops before it builds when the record is of another phone model', async () => {
+    await assert.rejects(
+      runWithLimits('Other'),
+      /The noise limits do not fit this run: device model Other, the run is on Pixel\./
+    );
+    assert.equal(fs.existsSync(TEST_ROOT.runsDir), false);
   });
 });
 
@@ -239,14 +286,14 @@ describe('resumeCommand', () => {
       result.segments = [];
       const [sample] = result.incompleteScenario?.samples ?? [];
       (sample as { valid: unknown }).valid = 'yes';
-      delete (result.variants.a as Partial<RunVariant>).artifactSha256;
+      delete (result.variants.a as Partial<RunVariant>).installFileSha256;
     });
     await assert.rejects(resume(folder).run, (error: Error) =>
       [
         'is not a valid result',
         'result.segments must have at least one entry',
         'result.incompleteScenario.samples[0].valid must be true or false',
-        'result.variants.a.artifactSha256 must be a string',
+        'result.variants.a.installFileSha256 must be a string',
       ].every((part) => error.message.includes(part))
     );
   });
@@ -315,7 +362,7 @@ describe('resumeCommand', () => {
     fs.writeFileSync(apkOf('b'), 'other apk');
     await assert.rejects(
       resume(folder).run,
-      /The build of variant b changed after the run started/
+      /The install file of variant b changed after the run started/
     );
   });
 
@@ -324,7 +371,7 @@ describe('resumeCommand', () => {
     fs.rmSync(apkOf('a'));
     await assert.rejects(
       resume(folder).run,
-      /The build of variant a does not exist any more/
+      /The install file of variant a does not exist any more/
     );
   });
 

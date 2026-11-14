@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { parseArguments } from '../arguments.mts';
@@ -279,7 +280,7 @@ describe('parseArguments', () => {
     );
   });
 
-  it('reads an iOS device and the sign command', () => {
+  it('reads an iOS device and resolves the sign command against the folder where the driver runs', () => {
     assert.deepEqual(
       parseArguments([
         'run',
@@ -298,7 +299,7 @@ describe('parseArguments', () => {
         noiseLimits: undefined,
         keepTraces: false,
         traceProcessor: undefined,
-        signCommand: './sign.sh',
+        signCommand: path.join(process.cwd(), 'sign.sh'),
       }
     );
     assert.deepEqual(

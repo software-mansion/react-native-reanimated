@@ -15,7 +15,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-l
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace]
 ```
 
-`<device>` is `--serial <adb serial>` for Android, or `--udid <UDID>` for iOS. An iOS `run` also needs `--sign-command <command>`. See [iOS](#ios).
+`<device>` is `--serial <adb serial>` for Android, or `--udid <UDID>` for iOS. An iOS `run` also needs `--sign-command <path>`. See [iOS](#ios).
 
 - `run` builds A and B, installs them and measures each scenario of the config. Each block measures in the order A, B, B, A (or B, A, A, B). `--blocks` sets the number of blocks for each scenario.
 - `run --resume` continues a run that is not `done`. See [Stopped runs](#stopped-runs).
@@ -44,7 +44,7 @@ On Android, `run`, `memory` and `sample` take `--trace-processor <path>`.
 - `profiling: true` builds with the profiling Gradle properties. It is not supported on iOS. `bundleMode: true` is not supported.
 - `blocks` (optional) sets the number of blocks for a scenario of the run. It replaces `--blocks` for that scenario.
 - `expect` is a list of entries with `scenarios` (default: all), `metrics` (default: all), `is` (`notWorse` or `better`) and `byAtLeast` (a fraction, only with `better`). The default is `[{ "is": "notWorse" }]`.
-- `--noise-limits` names a file that the `noise-limits` command wrote. See [Noise limits](#noise-limits). Without the file, the limit is 0.
+- `--noise-limits` names a file that the `noise-limits` command wrote. See [Noise limits](#noise-limits). A run without the file is uncalibrated: the limit of each row is 0, and the report says so.
 
 The driver stops before it builds when the config has an unknown field, scenario or metric.
 
@@ -59,7 +59,7 @@ The driver stops before it builds when the config has an unknown field, scenario
 
 ## Output
 
-- Builds: `.tmp/benchmarks/builds/<key>/`. The driver does not build a variant again when its key did not change.
+- Builds: `.tmp/benchmarks/builds/<key>/`. The driver does not build a variant again when its key did not change. The key has the variant (sources, tarball hashes, flags, build options), the application id suffix, the files of the app project (with `yarn.lock`), the build procedure of the driver, the Node version and the build tools: on Android the JDK (`java -version`) and the NDK and build tools revisions of `android/build.gradle`, on iOS the Xcode version and the `iphoneos` SDK version and build. The dependency versions that `yarn add` resolves in the build copy are not in the key, because the driver knows them only after the build.
 - Runs: `.tmp/benchmarks/runs/<date>-<name>/` with `result.json` (all samples and statistics) and `report.md`. The driver writes `result.json` after each sample. A memory test writes to `.tmp/benchmarks/runs/<date>-<name>-memory-<scenario>/`.
 - Traces: the run folder keeps the trace of each invalid sample, and all traces with `--keep-traces`. `sample` writes to `.tmp/benchmarks/samples/`.
 - `result.json` has the format version 1. The driver stops with a tool error for another version, and for a `result.json` without a field that it reads.
@@ -131,8 +131,8 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 `run --resume <run folder> --serial <adb serial>` continues the run in the same folder:
 
 - It uses the config, the blocks, the noise limits and `--keep-traces` of `result.json`. The adb serial can be a new one, but the device must be the same (`ro.serialno`).
-- It stops when the run is `done`, when an APK is missing or is not the same (SHA-256 in `result.json`), when the tool versions changed, or when the device state changed (the keys that the driver compares before each cool-down).
-- It installs and compiles A and B again. It keeps the complete scenarios. In the incomplete scenario, it keeps the accepted blocks (4 valid samples) and continues with the first block that is not accepted. The statistics use the kept samples when the scenario is complete.
+- It stops when the run is `done`, when an install file (the APK, or the signed `.ipa`) is missing or is not the same (SHA-256 in `result.json`), when the tool versions changed, or when the device state changed (the keys that the driver compares before each cool-down).
+- It installs A and B again (and compiles them on Android). It keeps the complete scenarios. In the incomplete scenario, it keeps the accepted blocks (4 valid samples) and continues with the first block that is not accepted. The statistics use the kept samples when the scenario is complete.
 - It moves the other samples of the incomplete scenario (the block in progress and its invalid attempts) to `abandonedScenarios`. The statistics do not use them. The count of invalid blocks starts at 0 again.
 - The battery temperature at the start of the run stays the reference for the cool-down. The refresh rate of the app in the first sample stays the reference for the run.
 - It stops when the measurement revision of the run is not the revision of the driver.
@@ -140,7 +140,7 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 
 ## Noise limits
 
-`noise-limits --runs <run folder> [<run folder> ...]` reads A/A runs and writes the file that `--noise-limits` reads: `{ "formatVersion": 1, "platform", "measurementRevision", "limits": { "<scenario>": { "<metric>": <limit> } } }`. The limit has the unit of the comparison of the metric: a fraction for a relative metric, and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points). The runs must have the same platform and measurement revision. `run` stops when the file has another platform or another measurement revision. A run is A/A when A and B have the same sources, installed versions, effective flags and build options. The runs do not have to be `done`. The command uses the complete scenarios. A scenario must be in one run only.
+`noise-limits --runs <run folder> [<run folder> ...]` reads A/A runs and writes the file that `--noise-limits` reads: `{ "formatVersion": 1, "platform", "measurementRevision", "limits": { "<scenario>": { "<metric>": <limit> } } }`. The limit has the unit of the comparison of the metric: a fraction for a relative metric, and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points). The file also has the device (`model`, `deviceId`, `osBuild`) and the source runs with the accepted samples of A and B for each scenario. The runs must have the same platform, device and measurement revision. `run` stops when the file has another platform, another device model or another measurement revision. A run is A/A when A and B have the same sources, installed versions, effective flags and build options. The runs do not have to be `done`. The command uses the complete scenarios. A scenario must be in one run only.
 
 For each scenario and verdict metric of the platform:
 
@@ -214,7 +214,7 @@ The iOS path measures on a real iPhone. A simulator is not supported, because it
 
 - An iPhone with Developer Mode on, paired with the Mac and unlocked. `xcrun devicectl list devices` gives the UDID.
 
-- A sign command. The driver builds the app for a device without a signature (`CODE_SIGNING_ALLOWED=NO`). Then it calls `<sign command> <path of the .app> <path of the .ipa to write>`. The command must write an `.ipa` that the iPhone accepts and that has the entitlement `get-task-allow` (a development signature), because `xctrace` attaches to the app. The sign command is a part of the build key.
+- A sign command: `--sign-command <path>` names an executable file. A relative path starts at the folder where you run the driver. The driver builds and keeps the app without a signature (`CODE_SIGNING_ALLOWED=NO`). For each new run, it calls `<path> <the .app> <the .ipa to write>` for each variant, with the run folder as the working folder. The command must write an `.ipa` that the iPhone accepts and that has the entitlement `get-task-allow` (a development signature), because `xctrace` attaches to the app. It must not ask for input. The `.ipa` goes to `<run folder>/signed/`, and its log to `<variant>.ipa.sign.log` next to it.
 
 - `"profiling": true` and the `memory` command are not supported.
 
@@ -261,7 +261,7 @@ The trace has the cost of the Time Profiler samples (the `Animation Hitches` tem
 - Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
 - Each `State` signpost of a trace gives the battery level, the battery state, the low power mode and the brightness, and the `LAUNCH` line gives the refresh rate. The first sample of the run gives the reference (`inAppState` in `result.json`). A later difference stops the run.
 - These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread or the JS thread, a trace window shorter than 8 s, and a command that does not finish in its time limit. A `LAUNCH` or `READY` line that comes at or after its time limit (60 s) does not count. After each launch, the driver stops the console and the app, also after a tool error.
-- `run --resume <run folder> --udid <UDID>` continues a stopped run with the same rules as on Android. It does not build, so it does not take `--sign-command`. A run cannot continue on the other platform.
+- `run --resume <run folder> --udid <UDID>` continues a stopped run with the same rules as on Android. It does not build or sign: it installs the signed `.ipa` files of the run folder when their SHA-256 did not change, so it does not take `--sign-command`. A run cannot continue on the other platform.
 
 ### Limits
 

@@ -1,5 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { ToolError } from './errors.mts';
-import { iosBuild } from './ios-build.mts';
+import { IOS_BUILD, signApp } from './ios-build.mts';
 import {
   IosDevice,
   changedIosStateKeys,
@@ -87,6 +90,14 @@ export function iosPlatform(
   return {
     name: 'ios',
     traceExtension: 'trace',
+    deviceIdentity: (state) => {
+      const ios = iosState(state);
+      return {
+        model: `${ios.model} (${ios.productType})`,
+        deviceId: ios.hardwareSerial,
+        osBuild: ios.osBuild,
+      };
+    },
     connect: (processes, udid, options) =>
       connect(processes, udid, options, dependencies),
   };
@@ -103,11 +114,12 @@ async function connect(
   return {
     startState,
     readToolVersions: () => readIosToolVersions(processes),
-    buildVariant: (request) =>
-      buildIosVariant(request, options.signCommand, dependencies),
-    install: async (variant) => {
-      await device.install(variant.artifact);
-      await launchOnce(device, variant.applicationId, dependencies.clock);
+    buildVariant: (request) => buildIosVariant(request, dependencies),
+    prepareInstallFile: (variant, folder) =>
+      signVariant(processes, options.signCommand, variant, folder),
+    install: async (installFile, applicationId) => {
+      await device.install(installFile);
+      await launchOnce(device, applicationId, dependencies.clock);
     },
     checkInstalled: (applicationId) => device.checkInstalled(applicationId),
     cleanUp: (applicationIds, log) => cleanUp(device, applicationIds, log),
@@ -125,18 +137,38 @@ async function connect(
 
 async function buildIosVariant(
   request: BuildRequest,
-  signCommand: string | undefined,
   dependencies: IosDependencies
 ): Promise<BuiltVariant> {
-  if (signCommand === undefined) {
-    throw new ToolError('An iOS build needs --sign-command.');
-  }
   if (request.variant.profiling) {
     throw new ToolError(
       `Variant ${request.key}: "profiling": true is not supported on iOS.`
     );
   }
-  return dependencies.buildVariant(request, iosBuild(signCommand));
+  return dependencies.buildVariant(request, IOS_BUILD);
+}
+
+async function signVariant(
+  processes: Processes,
+  signCommand: string | undefined,
+  variant: BuiltVariant,
+  folder: string
+): Promise<string> {
+  if (signCommand === undefined) {
+    throw new ToolError('An iOS run needs --sign-command.');
+  }
+  if (!fs.existsSync(signCommand)) {
+    throw new ToolError(`The sign command ${signCommand} does not exist.`);
+  }
+  const signedDir = path.join(folder, 'signed');
+  fs.mkdirSync(signedDir, { recursive: true });
+  const ipa = path.join(signedDir, `${variant.variant}.ipa`);
+  await signApp(processes, signCommand, variant.artifact, ipa);
+  if (!fs.existsSync(ipa)) {
+    throw new ToolError(
+      `The sign command ${signCommand} wrote no file at ${ipa}`
+    );
+  }
+  return ipa;
 }
 
 async function cleanUp(

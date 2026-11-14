@@ -70,7 +70,8 @@ function built(variant: 'a' | 'b', syncFlag: boolean): RunVariant {
     buildKey: `key-${variant}`,
     directory: `/builds/key-${variant}`,
     artifact: `/builds/key-${variant}/app-release.apk`,
-    artifactSha256: `sha-${variant}`,
+    installFile: `/builds/key-${variant}/app-release.apk`,
+    installFileSha256: `sha-${variant}`,
     applicationId: `com.reanimatedbenchmark.${variant}`,
     installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
     effectiveFlags: {
@@ -286,7 +287,9 @@ describe('renderReport', () => {
 
   it('writes the verdict table, the noise limit note and the absolute rows', () => {
     assert.ok(
-      report.includes('No noise limits given: the limit is 0 for all rows.')
+      report.includes(
+        'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is 0.'
+      )
     );
     assert.ok(
       report.includes(
@@ -419,7 +422,18 @@ describe('renderReport', () => {
       noiseLimits: {
         formatVersion: 1,
         platform: 'android',
+        device: {
+          model: 'Pixel',
+          deviceId: 'HW1',
+          osBuild: 'google/pixel:17/X/1:user/release-keys',
+        },
         measurementRevision: 1,
+        sources: [
+          {
+            folder: '/runs/aa',
+            samples: { 'worklet-styles-transform': { a: 10, b: 10 } },
+          },
+        ],
         limits: { 'worklet-styles-transform': { memory: 0.02 } },
       },
       verdictRows: [memory],
@@ -431,7 +445,7 @@ describe('renderReport', () => {
     );
     assert.ok(
       withLimits.includes(
-        'a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
+        'Noise limits from limits.json: Pixel, device HW1, OS build google/pixel:17/X/1:user/release-keys, measurement revision 1, 1 A/A runs. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
       )
     );
   });
@@ -476,7 +490,9 @@ describe('renderReport', () => {
     );
     assert.ok(
       lines.some((line) =>
-        line.startsWith('Provisional: the run is not complete. No noise limits')
+        line.startsWith(
+          'Provisional: the run is not complete. This run is uncalibrated'
+        )
       )
     );
     assert.ok(lines.includes('| frames | 1 |'));

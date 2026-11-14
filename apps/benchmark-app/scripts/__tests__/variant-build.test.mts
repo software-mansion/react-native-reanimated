@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { after, before, describe, it } from 'node:test';
 
-import { gradleArguments } from '../android-build.mts';
+import { androidBuild, gradleArguments } from '../android-build.mts';
 import type { Variant } from '../config.mts';
-import { signArguments, xcodebuildArguments } from '../ios-build.mts';
-import type { BuildKeyInputs } from '../variant-build.mts';
+import { IOS_BUILD, xcodebuildArguments } from '../ios-build.mts';
+import { REPOSITORY_ROOT } from '../paths.mts';
+import type { Processes } from '../tools.mts';
+import type { BuildKeyInputs, BuildRequest } from '../variant-build.mts';
 import {
   applicationIdOf,
+  collectBuildKeyInputs,
   isCopied,
   mergeFlags,
   packageSpec,
@@ -65,8 +70,9 @@ describe('variantBuildKey', () => {
   const inputs: BuildKeyInputs = {
     variant: VARIANT,
     platform: 'android',
-    platformOptions: '',
     suffix: '.a',
+    nodeVersion: 'v24.16.0',
+    toolIdentity: { jdk: '17', ndk: '27.1' },
     projectHash: 'project',
     tarballHashes: {},
     procedureHash: 'procedure',
@@ -79,7 +85,8 @@ describe('variantBuildKey', () => {
     for (const changed of [
       { suffix: '.b' },
       { platform: 'ios' as const },
-      { platformOptions: 'sign.sh' },
+      { nodeVersion: 'v26.0.0' },
+      { toolIdentity: { jdk: '21', ndk: '27.1' } },
       { projectHash: 'changed' },
       { tarballHashes: { worklets: 'other' } },
       { procedureHash: 'changed' },
@@ -188,17 +195,129 @@ describe('xcodebuildArguments', () => {
   });
 });
 
-describe('signArguments', () => {
-  it('gives the app and the output file to the sign command as two arguments', () => {
-    assert.deepEqual(
-      signArguments('./sign.sh --team T', '/b/My App.app', '/b/out.ipa'),
-      [
-        '-c',
-        './sign.sh --team T "$1" "$2"',
-        'sign',
-        '/b/My App.app',
-        '/b/out.ipa',
-      ]
+describe('collectBuildKeyInputs', () => {
+  const root = path.join(
+    REPOSITORY_ROOT,
+    '.tmp',
+    'benchmarks',
+    'tests',
+    `variant-build-${process.pid}`
+  );
+  const appDir = path.join(root, 'app');
+  const androidHome = path.join(root, 'sdk');
+  const tarball = path.join(root, 'react-native-worklets-0.13.1.tgz');
+  const toolOutputs: Record<string, string> = {
+    'java -version': 'openjdk version "17.0.21"',
+    'xcrun xcodebuild -version': 'Xcode 27.2\nBuild version 27B52',
+    'xcrun --sdk iphoneos --show-sdk-version': '27.2',
+    'xcrun --sdk iphoneos --show-sdk-build-version': '24C100',
+  };
+  const processes = {
+    run: async (command: string, args: string[]) => {
+      const line = [path.basename(command), ...args].join(' ');
+      const output = toolOutputs[line];
+      assert.ok(output !== undefined, line);
+      return line.startsWith('java')
+        ? { stdout: '', stderr: output }
+        : { stdout: output, stderr: '' };
+    },
+  } as unknown as Processes;
+  const request: BuildRequest = {
+    appDir,
+    buildsDir: path.join(root, 'builds'),
+    key: 'a',
+    variant: { ...VARIANT, worklets: { kind: 'tarball', path: tarball } },
+    processes,
+    log: () => {},
+  };
+  const write = (file: string, content: string) => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, content);
+  };
+
+  before(() => {
+    write(path.join(appDir, 'package.json'), '{}');
+    write(path.join(appDir, 'yarn.lock'), 'lock 1');
+    write(path.join(appDir, 'src', 'App.tsx'), 'app 1');
+    write(
+      path.join(appDir, 'android', 'build.gradle'),
+      'ndkVersion = "27.1.12297006"\nbuildToolsVersion = "37.0.0"\n'
     );
+    write(
+      path.join(androidHome, 'ndk', '27.1.12297006', 'source.properties'),
+      'Pkg.Revision = 27.1.12297006\n'
+    );
+    write(
+      path.join(androidHome, 'build-tools', '37.0.0', 'source.properties'),
+      'Pkg.Revision = 37.0.0\n'
+    );
+    write(tarball, 'worklets 1');
+  });
+
+  after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  it('reads each input of the key from the project, the tarballs and the tools', async () => {
+    const inputs = await collectBuildKeyInputs(
+      request,
+      androidBuild(androidHome)
+    );
+    assert.deepEqual(Object.keys(inputs).sort(), [
+      'nodeVersion',
+      'platform',
+      'procedureHash',
+      'projectHash',
+      'suffix',
+      'tarballHashes',
+      'toolIdentity',
+      'variant',
+    ]);
+    assert.equal(inputs.nodeVersion, process.version);
+    assert.deepEqual(inputs.toolIdentity, {
+      jdk: 'openjdk version "17.0.21"',
+      ndk: '27.1.12297006 27.1.12297006',
+      buildTools: '37.0.0 37.0.0',
+    });
+    const ios = await collectBuildKeyInputs(request, IOS_BUILD);
+    assert.deepEqual(ios.toolIdentity, {
+      xcode: 'Xcode 27.2, Build version 27B52',
+      iphoneosSdk: '27.2',
+      iphoneosSdkBuild: '24C100',
+    });
+  });
+
+  it('gives another key when a source file, the lockfile, a tarball or a tool changes', async () => {
+    const keyOf = async () =>
+      variantBuildKey(
+        await collectBuildKeyInputs(request, androidBuild(androidHome))
+      );
+    const changes: [string, () => void][] = [
+      ['source', () => write(path.join(appDir, 'src', 'App.tsx'), 'app 2')],
+      ['lockfile', () => write(path.join(appDir, 'yarn.lock'), 'lock 2')],
+      ['tarball', () => write(tarball, 'worklets 2')],
+      [
+        'ndk',
+        () =>
+          write(
+            path.join(androidHome, 'ndk', '27.1.12297006', 'source.properties'),
+            'Pkg.Revision = 27.1.12297007\n'
+          ),
+      ],
+      [
+        'jdk',
+        () => {
+          toolOutputs['java -version'] = 'openjdk version "21.0.5"';
+        },
+      ],
+    ];
+    for (const [name, change] of changes) {
+      const before = await keyOf();
+      change();
+      assert.notEqual(await keyOf(), before, name);
+    }
+    const iosKey = async () =>
+      variantBuildKey(await collectBuildKeyInputs(request, IOS_BUILD));
+    const iosBefore = await iosKey();
+    toolOutputs['xcrun --sdk iphoneos --show-sdk-build-version'] = '24C101';
+    assert.notEqual(await iosKey(), iosBefore);
   });
 });

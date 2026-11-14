@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 
 import { ToolError } from '../errors.mts';
 import type { IosDevice, IosDeviceState } from '../ios-device.mts';
@@ -23,6 +23,7 @@ const TEST_ROOT = useTestRoot('ios-run', {
   scenarios: ['css'],
 });
 const IPHONE: DeviceTarget = { platform: 'ios', id: 'UDID1' };
+const SIGN_COMMAND = path.join(TEST_ROOT.root, 'sign.sh');
 const STATE: IosDeviceState = {
   hardwareSerial: 'UDID1',
   name: 'Test iPhone',
@@ -43,6 +44,7 @@ function createFake(options: FakeOptions = {}) {
   let traces = 0;
   let interrupt: (() => Promise<void>) | null = null;
   const installs: string[] = [];
+  const signs: string[] = [];
   const launches: string[] = [];
   const tracedNames: string[] = [];
   const clock: Clock = {
@@ -120,14 +122,20 @@ function createFake(options: FakeOptions = {}) {
   };
   const context: CommandContext = {
     processes: {
-      run: async () => ({ stdout: '1.0\n', stderr: '' }),
+      run: async (command: string, args: string[]) => {
+        if (command === SIGN_COMMAND) {
+          signs.push(args.join(' '));
+          fs.writeFileSync(args[1], `signed ${args[0]}`);
+        }
+        return { stdout: '1.0\n', stderr: '' };
+      },
     } as unknown as Processes,
     log: () => {},
     onInterrupt: (action) => {
       interrupt = action;
     },
   };
-  return { dependencies, context, installs, launches, tracedNames };
+  return { dependencies, context, installs, signs, launches, tracedNames };
 }
 
 function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
@@ -138,12 +146,14 @@ function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
       device,
       blocks: 1,
       keepTraces: false,
-      signCommand: 'sign.sh',
+      signCommand: SIGN_COMMAND,
     },
     fake.context,
     fake.dependencies
   );
 }
+
+before(() => fs.writeFileSync(SIGN_COMMAND, '#!/bin/sh\n'));
 
 describe('an iOS run', () => {
   it('builds, installs, launches each app one time and measures each sample', async () => {
@@ -162,10 +172,15 @@ describe('an iOS run', () => {
       lowPowerMode: false,
       brightness: 50,
     });
-    assert.deepEqual(fake.installs, [
-      TEST_ROOT.apkOf('a'),
-      TEST_ROOT.apkOf('b'),
+    const folder = onlyRunFolder(TEST_ROOT);
+    const signed = (variant: string) =>
+      path.join(folder, 'signed', `${variant}.ipa`);
+    assert.deepEqual(fake.signs, [
+      `${TEST_ROOT.apkOf('a')} ${signed('a')}`,
+      `${TEST_ROOT.apkOf('b')} ${signed('b')}`,
     ]);
+    assert.deepEqual(fake.installs, [signed('a'), signed('b')]);
+    assert.equal(result.variants.a?.installFile, signed('a'));
     assert.deepEqual(fake.launches.slice(0, 2), [
       'com.reanimatedbenchmark.a undefined',
       'com.reanimatedbenchmark.b undefined',
@@ -214,6 +229,46 @@ describe('an iOS run', () => {
     );
   });
 
+  it('stops when the sign command writes no file or does not exist', async () => {
+    const fake = createFake();
+    const silent = {
+      ...fake.context,
+      processes: {
+        run: async () => ({ stdout: '1.0\n', stderr: '' }),
+      } as unknown as Processes,
+    };
+    await assert.rejects(
+      runCommand(
+        {
+          command: 'run',
+          config: TEST_ROOT.configFile,
+          device: IPHONE,
+          blocks: 1,
+          keepTraces: false,
+          signCommand: SIGN_COMMAND,
+        },
+        silent,
+        fake.dependencies
+      ),
+      /The sign command .*sign\.sh wrote no file at .*signed\/a\.ipa/
+    );
+    await assert.rejects(
+      runCommand(
+        {
+          command: 'run',
+          config: TEST_ROOT.configFile,
+          device: IPHONE,
+          blocks: 1,
+          keepTraces: false,
+          signCommand: path.join(TEST_ROOT.root, 'missing.sh'),
+        },
+        fake.context,
+        fake.dependencies
+      ),
+      /The sign command .*missing\.sh does not exist\./
+    );
+  });
+
   it('refuses a device option of the other platform', async () => {
     await assert.rejects(
       run(createFake(), DEVICE),
@@ -244,6 +299,7 @@ describe('an iOS run', () => {
     );
     const renamed = createFake({ state: { ...STATE, name: 'New name' } });
     assert.equal(await resume(renamed), 0);
+    assert.deepEqual(renamed.signs, []);
     assert.equal(readResult(folder).status, 'done');
     assert.deepEqual([...new Set(renamed.tracedNames)], ['New name']);
   });

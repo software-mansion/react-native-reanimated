@@ -1,25 +1,28 @@
 import path from 'node:path';
 
 import type { VariantKey } from './config.mts';
+import type { Processes } from './tools.mts';
 import { applicationSuffix } from './variant-build.mts';
-import type { PlatformBuild, VariantProject } from './variant-build.mts';
+import type {
+  BuildRequest,
+  PlatformBuild,
+  ToolIdentity,
+  VariantProject,
+} from './variant-build.mts';
 
 const APP_PATH =
   'ios/build/Build/Products/Release-iphoneos/ReanimatedBenchmark.app';
-const IPA_NAME = 'ReanimatedBenchmark.ipa';
 const BUNDLE_TIMEOUT_MS = 30 * 60_000;
 const POD_TIMEOUT_MS = 60 * 60_000;
 const XCODEBUILD_TIMEOUT_MS = 120 * 60_000;
 const SIGN_TIMEOUT_MS = 15 * 60_000;
 
-export function iosBuild(signCommand: string): PlatformBuild {
-  return {
-    platform: 'ios',
-    procedureFile: import.meta.filename,
-    options: signCommand,
-    build: (project) => buildIpa(project, signCommand),
-  };
-}
+export const IOS_BUILD: PlatformBuild = {
+  platform: 'ios',
+  procedureFile: import.meta.filename,
+  readToolIdentity: readIosToolIdentity,
+  build: buildApp,
+};
 
 export function xcodebuildArguments(key: VariantKey): string[] {
   return [
@@ -41,18 +44,40 @@ export function xcodebuildArguments(key: VariantKey): string[] {
   ];
 }
 
-export function signArguments(
+export async function readIosToolIdentity({
+  processes,
+}: Pick<BuildRequest, 'processes'>): Promise<ToolIdentity> {
+  const output = async (args: string[]) =>
+    (await processes.run('xcrun', args)).stdout.trim().split('\n').join(', ');
+  return {
+    xcode: await output(['xcodebuild', '-version']),
+    iphoneosSdk: await output(['--sdk', 'iphoneos', '--show-sdk-version']),
+    iphoneosSdkBuild: await output([
+      '--sdk',
+      'iphoneos',
+      '--show-sdk-build-version',
+    ]),
+  };
+}
+
+export async function signApp(
+  processes: Processes,
   signCommand: string,
   app: string,
   ipa: string
-): string[] {
-  return ['-c', `${signCommand} "$1" "$2"`, 'sign', app, ipa];
+) {
+  await processes.run(signCommand, [app, ipa], {
+    cwd: path.dirname(ipa),
+    logFile: `${ipa}.sign.log`,
+    timeoutMs: SIGN_TIMEOUT_MS,
+  });
 }
 
-async function buildIpa(
-  { directory, key, run }: VariantProject,
-  signCommand: string
-): Promise<string> {
+async function buildApp({
+  directory,
+  key,
+  run,
+}: VariantProject): Promise<string> {
   const iosDirectory = path.join(directory, 'ios');
   await run({
     command: 'bundle',
@@ -72,12 +97,5 @@ async function buildIpa(
     cwd: iosDirectory,
     timeoutMs: XCODEBUILD_TIMEOUT_MS,
   });
-  const ipa = path.join(directory, IPA_NAME);
-  await run({
-    command: '/bin/sh',
-    args: signArguments(signCommand, path.join(directory, APP_PATH), ipa),
-    cwd: directory,
-    timeoutMs: SIGN_TIMEOUT_MS,
-  });
-  return ipa;
+  return path.join(directory, APP_PATH);
 }

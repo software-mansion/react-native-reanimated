@@ -4,6 +4,7 @@ import path from 'node:path';
 import { after, describe, it } from 'node:test';
 
 import { ANDROID_DEFINITION } from '../android-definition.mts';
+import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
 import type { SampleMetrics } from '../metrics.mts';
@@ -31,6 +32,29 @@ const ROOT = path.join(
 );
 
 after(() => fs.rmSync(ROOT, { recursive: true, force: true }));
+
+const PHONE: DeviceState = {
+  model: 'SM-A165F',
+  hardwareSerial: 'HW1',
+  fingerprint: 'samsung/a16:16/X/1:user/release-keys',
+  sdk: 36,
+  abi: 'arm64-v8a',
+  refreshRate: 60,
+  brightness: 102,
+  brightnessMode: 'manual',
+  batteryLevel: 80,
+  batteryStatus: 'charging',
+  chargeState: 'usb',
+  wifiEnabled: true,
+  wifiConnected: true,
+  thermalStatus: 0,
+  batteryTemperature: 30,
+};
+const IDENTITY = {
+  model: 'SM-A165F',
+  deviceId: 'HW1',
+  osBuild: 'samsung/a16:16/X/1:user/release-keys',
+};
 
 const VARIANT: Variant = {
   reanimated: { kind: 'npm', version: '4.7.1' },
@@ -123,7 +147,7 @@ function runResult(
       {
         startedAt: '2026-11-12T10:00:00.000Z',
         status: 'tool error',
-        device: {} as RunResult['segments'][number]['device'],
+        device: PHONE,
       },
     ],
     appRefreshRate: 60,
@@ -233,8 +257,30 @@ describe('noiseLimitsCommand', () => {
     const second = writeRun('aa-2', [outcome('sticky-header', () => ({}))]);
     const record = validateNoiseLimitsRecord(printed([first, second]));
     assert.equal(record.platform, 'android');
+    assert.deepEqual(record.device, IDENTITY);
     assert.equal(record.measurementRevision, 1);
+    assert.deepEqual(record.sources, [
+      { folder: first, samples: { css: { a: 10, b: 10 } } },
+      { folder: second, samples: { 'sticky-header': { a: 10, b: 10 } } },
+    ]);
     assert.deepEqual(Object.keys(record.limits), ['css', 'sticky-header']);
+  });
+
+  it('refuses runs of different phones or OS builds', () => {
+    const first = writeRun('phone-1', [outcome('css', () => ({}))]);
+    const second = writeRun(
+      'phone-2',
+      [outcome('sticky-header', () => ({}))],
+      VARIANT,
+      (result) => {
+        result.segments[0].device = { ...PHONE, model: 'Pixel 8' };
+      }
+    );
+    assert.throws(
+      () =>
+        noiseLimitsCommand({ command: 'noise-limits', runs: [first, second] }),
+      /The runs differ in model: SM-A165F in .*phone-1, Pixel 8 in .*phone-2/
+    );
   });
 
   it('refuses runs of different measurement revisions', () => {
@@ -280,7 +326,9 @@ describe('validateNoiseLimitsRecord', () => {
   const RECORD = {
     formatVersion: 1,
     platform: 'android',
+    device: IDENTITY,
     measurementRevision: 1,
+    sources: [{ folder: '/runs/aa', samples: { css: { a: 10, b: 10 } } }],
     limits: { css: { uiThreadCpu: 0.05 } },
   };
 
@@ -295,6 +343,18 @@ describe('validateNoiseLimitsRecord', () => {
         /This driver reads only version 1\. Make the file again with the noise-limits command\./
       );
     }
+  });
+
+  it('refuses a record without its device or its sources', () => {
+    const { device: _device, sources: _sources, ...rest } = RECORD;
+    assert.throws(
+      () => validateNoiseLimitsRecord({ ...rest, device: { model: 'X' } }),
+      (error: Error) =>
+        [
+          'noise limits.device.deviceId must be a string',
+          'noise limits.sources must be a list',
+        ].every((part) => error.message.includes(part))
+    );
   });
 
   it('refuses a metric that has no verdict on the platform, unknown names and negative limits', () => {
@@ -320,19 +380,33 @@ describe('validateNoiseLimitsRecord', () => {
 });
 
 describe('checkNoiseLimitsRecord', () => {
-  it('refuses a record of another platform or another measurement revision', () => {
-    const record = validateNoiseLimitsRecord({
-      formatVersion: 1,
-      platform: 'ios',
-      measurementRevision: 0,
-      limits: {},
-    });
+  const record = validateNoiseLimitsRecord({
+    formatVersion: 1,
+    platform: 'ios',
+    device: IDENTITY,
+    measurementRevision: 0,
+    sources: [],
+    limits: {},
+  });
+
+  it('refuses a record of another platform, device model or measurement revision', () => {
     assert.throws(
-      () => checkNoiseLimitsRecord(record, 'android'),
-      /The noise limits do not fit this run: platform ios, the run is on android; measurement revision 0, the driver has revision 1\./
+      () =>
+        checkNoiseLimitsRecord(record, 'android', {
+          ...IDENTITY,
+          model: 'Pixel 8',
+        }),
+      /The noise limits do not fit this run: platform ios, the run is on android; device model SM-A165F, the run is on Pixel 8; measurement revision 0, the driver has revision 1\./
     );
+  });
+
+  it('accepts another phone of the same model and another OS build', () => {
     assert.doesNotThrow(() =>
-      checkNoiseLimitsRecord({ ...record, measurementRevision: 1 }, 'ios')
+      checkNoiseLimitsRecord({ ...record, measurementRevision: 1 }, 'ios', {
+        model: IDENTITY.model,
+        deviceId: 'HW2',
+        osBuild: 'other',
+      })
     );
   });
 });
