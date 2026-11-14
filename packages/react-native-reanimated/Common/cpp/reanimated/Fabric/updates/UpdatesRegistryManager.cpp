@@ -41,30 +41,36 @@ void UpdatesRegistryManager::addRegistry(const std::shared_ptr<UpdatesRegistry> 
   registries_.push_back(registry);
 }
 
-void UpdatesRegistryManager::pauseReanimatedCommits() {
+void UpdatesRegistryManager::pauseReanimatedCommits(const SurfaceId surfaceId) {
   if constexpr (!StaticFeatureFlags::getFlag("DISABLE_COMMIT_PAUSING_MECHANISM")) {
-    isPaused_ = true;
+    std::lock_guard<std::mutex> lock(pauseMutex_);
+    pausedSurfaces_.insert(surfaceId);
   }
 }
 
-bool UpdatesRegistryManager::shouldReanimatedSkipCommit() {
-  return isPaused_;
+bool UpdatesRegistryManager::shouldReanimatedSkipCommit(const SurfaceId surfaceId) {
+  std::lock_guard<std::mutex> lock(pauseMutex_);
+  return pausedSurfaces_.contains(surfaceId);
 }
 
-void UpdatesRegistryManager::unpauseReanimatedCommits() {
-  isPaused_ = false;
+void UpdatesRegistryManager::unpauseReanimatedCommits(const SurfaceId surfaceId) {
+  std::lock_guard<std::mutex> lock(pauseMutex_);
+  pausedSurfaces_.erase(surfaceId);
 }
 
-void UpdatesRegistryManager::pleaseCommitAfterPause() {
-  shouldCommitAfterPause_ = true;
+void UpdatesRegistryManager::pleaseCommitAfterPause(const SurfaceId surfaceId) {
+  std::lock_guard<std::mutex> lock(pauseMutex_);
+  surfacesToCommitAfterPause_.insert(surfaceId);
 }
 
-void UpdatesRegistryManager::cancelCommitAfterPause() {
-  shouldCommitAfterPause_ = false;
+void UpdatesRegistryManager::cancelCommitAfterPause(const SurfaceId surfaceId) {
+  std::lock_guard<std::mutex> lock(pauseMutex_);
+  surfacesToCommitAfterPause_.erase(surfaceId);
 }
 
-bool UpdatesRegistryManager::shouldCommitAfterPause() {
-  return shouldCommitAfterPause_.exchange(false);
+bool UpdatesRegistryManager::shouldCommitAfterPause(const SurfaceId surfaceId) {
+  std::lock_guard<std::mutex> lock(pauseMutex_);
+  return surfacesToCommitAfterPause_.erase(surfaceId) > 0;
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {

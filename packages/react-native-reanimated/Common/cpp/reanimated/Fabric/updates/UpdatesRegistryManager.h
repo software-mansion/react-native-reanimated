@@ -7,10 +7,10 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <atomic>
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -40,13 +40,15 @@ class UpdatesRegistryManager {
   // manager (e.g. add priority to registries)
   void addRegistry(const std::shared_ptr<UpdatesRegistry> &registry);
 
-  void pauseReanimatedCommits();
-  bool shouldReanimatedSkipCommit();
-  void unpauseReanimatedCommits();
+  // A React commit pauses Reanimated commits of its own surface until it
+  // mounts. Other surfaces keep committing.
+  void pauseReanimatedCommits(SurfaceId surfaceId);
+  bool shouldReanimatedSkipCommit(SurfaceId surfaceId);
+  void unpauseReanimatedCommits(SurfaceId surfaceId);
 
-  void pleaseCommitAfterPause();
-  bool shouldCommitAfterPause();
-  void cancelCommitAfterPause();
+  void pleaseCommitAfterPause(SurfaceId surfaceId);
+  bool shouldCommitAfterPause(SurfaceId surfaceId);
+  void cancelCommitAfterPause(SurfaceId surfaceId);
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
@@ -68,8 +70,10 @@ class UpdatesRegistryManager {
   using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
   mutable std::mutex mutex_;
-  std::atomic<bool> isPaused_;
-  std::atomic<bool> shouldCommitAfterPause_;
+  // Guards only the two sets below. Nothing else is locked while it is held.
+  mutable std::mutex pauseMutex_;
+  std::unordered_set<SurfaceId> pausedSurfaces_;
+  std::unordered_set<SurfaceId> surfacesToCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
