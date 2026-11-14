@@ -4,7 +4,7 @@ import path from 'node:path';
 import { readJson } from './json-file.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { PlatformDefinition } from './platform.mts';
-import { SCENARIOS, isScenario } from './scenarios.mts';
+import { SCENARIOS, SCENARIO_REQUIREMENTS, isScenario } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import { record, throwProblems } from './validation.mts';
 
@@ -93,6 +93,7 @@ export function validateConfig(
   rejectUnknownFields(config, RUN_FIELDS, 'config', problems);
   const variants = readVariantsConfig(config, configDir, fileSystem, problems);
   const scenarios = validateScenarios(config.scenarios, problems);
+  checkRequiredFlags(variants, scenarios, problems);
   const blocks = validateBlocks(config.blocks, scenarios, problems);
   const expect = validateExpectations(
     config.expect,
@@ -112,7 +113,8 @@ export function validateConfig(
 export function validateVariantsConfig(
   raw: unknown,
   configDir: string,
-  fileSystem: FileSystem
+  fileSystem: FileSystem,
+  scenarios: readonly Scenario[]
 ): VariantsConfig {
   const problems: string[] = [];
   const variants = readVariantsConfig(
@@ -121,6 +123,7 @@ export function validateVariantsConfig(
     fileSystem,
     problems
   );
+  checkRequiredFlags(variants, scenarios, problems);
   throwConfigProblems(problems);
   return variants;
 }
@@ -301,6 +304,24 @@ function validateScenarios(value: unknown, problems: string[]): Scenario[] {
     problems.push('config.scenarios must not repeat a scenario');
   }
   return value.filter(isScenario);
+}
+
+function checkRequiredFlags(
+  variants: VariantsConfig,
+  scenarios: readonly Scenario[],
+  problems: string[]
+) {
+  for (const scenario of scenarios) {
+    for (const flag of SCENARIO_REQUIREMENTS[scenario].reanimatedFlags) {
+      for (const key of VARIANT_KEYS) {
+        if (variants[key].reanimatedFlags[flag] !== true) {
+          problems.push(
+            `config.${key}.reanimatedFlags.${flag} must be true for the scenario ${scenario}. The driver does not know the default of a flag in a library version, so set the flag in both variants.`
+          );
+        }
+      }
+    }
+  }
 }
 
 function validateBlocks(

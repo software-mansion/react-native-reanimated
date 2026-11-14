@@ -44,4 +44,30 @@ describe('SCENARIO_REQUIREMENTS', () => {
       assert.equal(SCENARIO_REQUIREMENTS[scenario].updateShare, 1, scenario);
     }
   });
+
+  it('declares the static flags that the scenario sources read', () => {
+    const flagsOf = (file: string) =>
+      [
+        ...fs
+          .readFileSync(path.join(SCENARIO_SOURCES, file), 'utf8')
+          .matchAll(/getStaticFeatureFlag\('([A-Z_]+)'\)/g),
+      ].map((match) => match[1]);
+    const read = fs
+      .readdirSync(SCENARIO_SOURCES)
+      .filter((file) => file.endsWith('.tsx'))
+      .flatMap(flagsOf);
+    assert.deepEqual(
+      [...new Set(read)].sort(),
+      [
+        ...new Set(
+          SCENARIOS.flatMap(
+            (scenario) => SCENARIO_REQUIREMENTS[scenario].reanimatedFlags
+          )
+        ),
+      ].sort()
+    );
+    assert.deepEqual(SCENARIO_REQUIREMENTS['shared-elements'].reanimatedFlags, [
+      ...new Set(flagsOf('SharedElements.tsx')),
+    ]);
+  });
 });

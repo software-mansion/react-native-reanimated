@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { ANDROID_DEFINITION } from '../android-definition.mts';
 import { blocksOf, validateConfig } from '../config.mts';
 import { IOS_DEFINITION } from '../ios-definition.mts';
+import { REPOSITORY_ROOT } from '../paths.mts';
 
 const CONFIG_DIR = '/configs';
 const TARBALL = '/configs/tarballs/react-native-reanimated-4.8.0.tgz';
@@ -175,6 +176,50 @@ describe('validateConfig', () => {
   });
 });
 
+describe('scenario flags', () => {
+  const flag = { ENABLE_SHARED_ELEMENT_TRANSITIONS: true };
+
+  it('accepts a scenario whose flag both variants set to true', () => {
+    const result = validated(
+      config({
+        a: { reanimated: '4.7.1', worklets: '0.13.1', reanimatedFlags: flag },
+        b: {
+          reanimated: 'tarballs/react-native-reanimated-4.8.0.tgz',
+          worklets: '0.13.1',
+          reanimatedFlags: flag,
+        },
+        scenarios: ['shared-elements', 'css'],
+      })
+    );
+    assert.deepEqual(result.b.reanimatedFlags, flag);
+  });
+
+  it('refuses a scenario whose flag a variant does not set to true', () => {
+    const message = problemsOf(
+      config({
+        a: {
+          reanimated: '4.7.1',
+          worklets: '0.13.1',
+          reanimatedFlags: { ENABLE_SHARED_ELEMENT_TRANSITIONS: false },
+        },
+        b: {
+          reanimated: 'tarballs/react-native-reanimated-4.8.0.tgz',
+          worklets: '0.13.1',
+        },
+        scenarios: ['shared-elements'],
+      })
+    );
+    for (const key of ['a', 'b']) {
+      assert.ok(
+        message.includes(
+          `config.${key}.reanimatedFlags.ENABLE_SHARED_ELEMENT_TRANSITIONS must be true for the scenario shared-elements. The driver does not know the default of a flag in a library version, so set the flag in both variants.`
+        ),
+        message
+      );
+    }
+  });
+});
+
 describe('config blocks', () => {
   it('reads a block count for a scenario of the run', () => {
     const result = validated(config({ blocks: { css: 10 } }));
@@ -204,14 +249,20 @@ describe('config blocks', () => {
 });
 
 describe('README configs', () => {
+  const readme = fs.readFileSync(
+    path.join(import.meta.dirname, '..', 'README.md'),
+    'utf8'
+  );
+  const examples = [...readme.matchAll(/```json\n([\s\S]*?)\n```/g)].map(
+    (match) =>
+      JSON.parse(match[1]) as {
+        name: string;
+        a: { reanimated: string; worklets: string };
+        b: { reanimated: string; worklets: string };
+      }
+  );
+
   it('are valid configs of their platform', () => {
-    const readme = fs.readFileSync(
-      path.join(import.meta.dirname, '..', 'README.md'),
-      'utf8'
-    );
-    const examples = [...readme.matchAll(/```json\n([\s\S]*?)\n```/g)].map(
-      (match) => JSON.parse(match[1]) as { name: string }
-    );
     assert.deepEqual(
       examples.map((example) => example.name),
       ['sync-props', 'ios-css']
@@ -220,4 +271,36 @@ describe('README configs', () => {
     validateConfig(examples[0], CONFIG_DIR, everyFile, ANDROID_DEFINITION);
     validateConfig(examples[1], CONFIG_DIR, everyFile, IOS_DEFINITION);
   });
+
+  it('pair each Reanimated version with a Worklets version of compatibility.json', () => {
+    const compatibility = JSON.parse(
+      fs.readFileSync(
+        path.join(
+          REPOSITORY_ROOT,
+          'packages',
+          'react-native-reanimated',
+          'compatibility.json'
+        ),
+        'utf8'
+      )
+    ) as { fabric: Record<string, { 'react-native-worklets': string[] }> };
+    for (const example of examples) {
+      for (const variant of [example.a, example.b]) {
+        const reanimated = minorRange(variant.reanimated);
+        const worklets = minorRange(variant.worklets);
+        assert.ok(
+          compatibility.fabric[reanimated]?.['react-native-worklets'].includes(
+            worklets
+          ),
+          `${example.name}: Reanimated ${reanimated} with Worklets ${worklets}`
+        );
+      }
+    }
+  });
 });
+
+function minorRange(source: string): string {
+  const version = /(\d+)\.(\d+)\.\d+(-[0-9A-Za-z.-]+)?(\.tgz)?$/.exec(source);
+  assert.ok(version, source);
+  return `${version[1]}.${version[2]}.x`;
+}

@@ -3,6 +3,7 @@ export type Scenario = (typeof SCENARIOS)[number];
 export interface ScenarioRequirements {
   updateShare: number;
   minimumMountBatches: number;
+  reanimatedFlags: readonly string[];
 }
 
 export const SCENARIOS = [
@@ -19,6 +20,7 @@ export const SCENARIOS = [
 const FULL_WORK: ScenarioRequirements = {
   updateShare: 1,
   minimumMountBatches: 0,
+  reanimatedFlags: [],
 };
 
 export const SCENARIO_REQUIREMENTS: Record<Scenario, ScenarioRequirements> = {
@@ -27,9 +29,13 @@ export const SCENARIO_REQUIREMENTS: Record<Scenario, ScenarioRequirements> = {
   css: FULL_WORK,
   'layout-animations': FULL_WORK,
   'sticky-header': FULL_WORK,
-  'shared-elements': { updateShare: 1, minimumMountBatches: 300 },
+  'shared-elements': {
+    updateShare: 1,
+    minimumMountBatches: 300,
+    reanimatedFlags: ['ENABLE_SHARED_ELEMENT_TRANSITIONS'],
+  },
   'mount-unmount': FULL_WORK,
-  'idle-cost': { updateShare: 0.5, minimumMountBatches: 0 },
+  'idle-cost': { ...FULL_WORK, updateShare: 0.5 },
 };
 
 export function isScenario(name: unknown): name is Scenario {

@@ -182,7 +182,9 @@ export async function memoryCommand(
   context: CommandContext,
   dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
 ): Promise<number> {
-  const config = readConfigFile(options.config, validateVariantsConfig);
+  const config = readConfigFile(options.config, (raw, configDir, fileSystem) =>
+    validateVariantsConfig(raw, configDir, fileSystem, [options.scenario])
+  );
   return startMeasurement(
     {
       config,

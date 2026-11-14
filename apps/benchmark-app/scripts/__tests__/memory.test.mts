@@ -18,10 +18,14 @@ import {
 } from './command-fake.mts';
 import type { FakeOptions } from './command-fake.mts';
 
+const SHARED_ELEMENTS_FLAGS = {
+  reanimatedFlags: { ENABLE_SHARED_ELEMENT_TRANSITIONS: true },
+};
+
 const TEST_ROOT = useTestRoot('memory', {
   name: 'leak',
-  a: { reanimated: '4.7.1', worklets: '0.13.1' },
-  b: { reanimated: '4.7.1', worklets: '0.13.2' },
+  a: { reanimated: '4.7.1', worklets: '0.13.1', ...SHARED_ELEMENTS_FLAGS },
+  b: { reanimated: '4.7.1', worklets: '0.13.2', ...SHARED_ELEMENTS_FLAGS },
   scenarios: ['css'],
 });
 
@@ -413,8 +417,16 @@ describe('memoryCommand', () => {
       config,
       JSON.stringify({
         name: 'leak',
-        a: { reanimated: '4.7.1', worklets: '0.13.1' },
-        b: { reanimated: '4.7.1', worklets: '0.13.2' },
+        a: {
+          reanimated: '4.7.1',
+          worklets: '0.13.1',
+          ...SHARED_ELEMENTS_FLAGS,
+        },
+        b: {
+          reanimated: '4.7.1',
+          worklets: '0.13.2',
+          ...SHARED_ELEMENTS_FLAGS,
+        },
         expect: [{ metrics: ['memoryGrowth'], is: 'notWorse' }],
         note: 'variants only',
       })
@@ -427,6 +439,29 @@ describe('memoryCommand', () => {
       'name',
       'note',
     ]);
+  });
+  it('stops before it builds when a variant does not set a flag that the scenario needs', async () => {
+    const config = path.join(TEST_ROOT.root, 'no-flag.json');
+    fs.writeFileSync(
+      config,
+      JSON.stringify({
+        name: 'leak',
+        a: {
+          reanimated: '4.7.1',
+          worklets: '0.13.1',
+          ...SHARED_ELEMENTS_FLAGS,
+        },
+        b: { reanimated: '4.7.1', worklets: '0.13.2' },
+      })
+    );
+    const { context, dependencies, installs } = createFake(TEST_ROOT, {
+      meminfo,
+    });
+    await assert.rejects(
+      memoryCommand({ ...OPTIONS, config }, context, dependencies),
+      /config\.b\.reanimatedFlags\.ENABLE_SHARED_ELEMENT_TRANSITIONS must be true for the scenario shared-elements/
+    );
+    assert.deepEqual(installs, []);
   });
 });
 

@@ -52,11 +52,11 @@ With no scenario or an unknown name, the app shows the list of scenario names.
 
 Each Reanimated animation that has a `reduceMotion` option uses `ReduceMotion.Never`, so the reduced motion setting of the system does not stop the frames.
 
-`shared-elements` needs the static flag `ENABLE_SHARED_ELEMENT_TRANSITIONS`. The default of the flag is `false` in 4.6.0, 4.7.1 and on `main`. Set the flag in the run config for each variant whose Reanimated version has it off. When the flag is off, the scenario writes `FAILED` and does not write `READY`.
+`shared-elements` needs the static flag `ENABLE_SHARED_ELEMENT_TRANSITIONS`. The default of the flag is `false` in 4.6.0, 4.7.1 and on `main`. Set the flag to `true` in both variants of the run config: the driver stops before it builds when a variant does not set it. When the flag is off, the scenario writes `FAILED` and does not write `READY`.
 
 ## Add a scenario
 
 1. Add a component that takes `{ load }` in `src/scenarios/`. Use only the public API of the oldest Reanimated version that you compare. Use no random values and no clock values in the content.
 1. Add an entry with `name`, `version`, `load` and `Component` to `src/scenarios/registry.ts`.
-1. If the scenario needs a condition (for example a static flag), add `findUnmetRequirement` to the entry. It returns the reason when the condition is not met, and the app then writes `FAILED`.
+1. If the scenario needs a condition (for example a static flag), add `findUnmetRequirement` to the entry. It returns the reason when the condition is not met, and the app then writes `FAILED`. Declare each static flag that the scenario reads in `scenarios.mts` of the driver.
 1. When you change what a scenario does, increase its `version`.
