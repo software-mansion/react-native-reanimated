@@ -1,6 +1,4 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import type { TimeSpan } from '../in-app-sample.mts';
@@ -15,14 +13,13 @@ import type {
   TraceExports,
   TracedIosApp,
 } from '../xctrace-metrics.mts';
+import {
+  TRACE_EXPORTS,
+  traceRowsOf,
+  withRows,
+  withoutRows,
+} from './xctrace-fixtures.mts';
 
-// Cuts of the exports of xctrace 27.2 (27B52) of an iPhone 13 mini with iOS
-// 27.0.1. The rows overlap 1855 ms to 1908 ms, and the cells that the reader
-// does not read are sentinels. The Boundary signposts are not real: the tests
-// add them in the format of the real State signposts of the same export. The
-// Activity Monitor table is the empty table of xctrace 27.2 on a Mac, and the
-// tests add its rows.
-const FIXTURES = path.join(import.meta.dirname, 'fixtures', 'xctrace');
 const SPAN: TimeSpan = { startNs: 1_856_890_916, endNs: 1_906_890_916 };
 const SECONDS = 0.05;
 const MAIN_RUNNING_MS = 19.773169;
@@ -35,21 +32,20 @@ const APP: TracedIosApp = {
   mainThread: 3840236,
   jsThread: 3840263,
 };
-const EXPORTS: TraceExports = {
-  threadState: fixture('thread-state-window.xml'),
-  frames: fixture('hitches-updates.xml'),
-  signposts: fixture('os-signpost-window.xml'),
-  processes: fixture('activity-monitor-process-live.xml'),
-};
+const EXPORTS = TRACE_EXPORTS;
+const {
+  threadRow,
+  intervalRow,
+  signpostRow,
+  boundaryRow,
+  mountRow,
+  footprintRow,
+} = traceRowsOf(APP.pid);
 const SCHEMAS: Record<Exclude<keyof TraceExports, 'processes'>, string> = {
   threadState: 'thread-state',
   frames: 'hitches-updates',
   signposts: 'os-signpost',
 };
-
-function fixture(file: string): string {
-  return fs.readFileSync(path.join(FIXTURES, file), 'utf8');
-}
 
 function spans(
   window: TimeSpan,
@@ -78,74 +74,6 @@ function assertClose(actual: number | null, expected: number) {
     actual !== null && Math.abs(actual - expected) < 1e-6,
     `${actual} is not ${expected}`
   );
-}
-
-function withRows(xml: string, rows: string[]): string {
-  return xml.replace('</node>', `${rows.join('\n')}\n</node>`);
-}
-
-function withoutRows(xml: string): string {
-  return xml.replace(/<row>[\s\S]*<\/row>\n/, '');
-}
-
-function sentinels(count: number): string {
-  return '<sentinel/>'.repeat(count);
-}
-
-function processCell(pid: number): string {
-  return `<process><pid>${pid}</pid></process>`;
-}
-
-function threadRow(row: {
-  start: number;
-  thread: number;
-  state: string;
-  duration?: number;
-  pid?: number;
-}): string {
-  const pid = row.pid ?? APP.pid;
-  return `<row><start-time>${row.start}</start-time><thread><tid>${row.thread}</tid>${processCell(pid)}</thread><thread-state>${row.state}</thread-state><duration>${row.duration ?? 1}</duration>${processCell(pid)}${sentinels(11)}</row>`;
-}
-
-function intervalRow(start: number, duration: number, pid = APP.pid): string {
-  return `<row><start-time>${start}</start-time><duration>${duration}</duration>${processCell(pid)}${sentinels(6)}</row>`;
-}
-
-function signpostRow(row: {
-  time: number;
-  name: string;
-  subsystem: string;
-  message: string;
-  eventType?: string;
-  pid?: number;
-}): string {
-  return `<row><event-time>${row.time}</event-time>${sentinels(1)}${processCell(row.pid ?? APP.pid)}<event-type>${row.eventType ?? 'Event'}</event-type>${sentinels(2)}<signpost-name>${row.name}</signpost-name>${sentinels(2)}<subsystem>${row.subsystem}</subsystem>${sentinels(1)}<os-log-metadata>${row.message}</os-log-metadata>${sentinels(1)}</row>`;
-}
-
-function boundaryRow(time: number, index: number, pid = APP.pid): string {
-  return signpostRow({
-    time,
-    name: 'Boundary',
-    subsystem: 'com.reanimatedbenchmark',
-    message: `<narrative-text>index=</narrative-text><uint64>${index}</uint64>`,
-    pid,
-  });
-}
-
-function mountRow(time: number, pid = APP.pid): string {
-  return signpostRow({
-    time,
-    name: 'Systrace',
-    subsystem: 'dev.reactnative.instruments',
-    eventType: 'Begin',
-    message:
-      '<string>RCTPerformMountInstructions</string><narrative-text> begin: </narrative-text>',
-    pid,
-  });
-}
-
-function footprintRow(start: number, bytes: number, pid = APP.pid): string {
-  return `<row><start-time>${start}</start-time>${processCell(pid)}${processCell(pid)}<duration>1</duration><pid>${pid}</pid>${sentinels(5)}<size-in-bytes>${bytes}</size-in-bytes>${sentinels(16)}</row>`;
 }
 
 function syntheticThreadState(rows: string[]): string {
