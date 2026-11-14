@@ -25,6 +25,7 @@ function sampler(
       : {
           ...common,
           valid: true,
+          report: { version: 1, load: 10, jsThread: 5 },
           metrics: { uiThreadCpu: places.length } as SampleMetrics,
         };
   };

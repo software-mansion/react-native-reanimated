@@ -35,6 +35,7 @@ export interface SampleObservations {
 
 export type ValidSample = SampleObservations & {
   valid: true;
+  report: ScenarioReport;
   metrics: SampleMetrics;
 };
 
@@ -47,6 +48,7 @@ export type InvalidSample = SampleObservations & {
 export type SampleResult = ValidSample | InvalidSample;
 
 export type MeasuredSample = SampleObservations & {
+  report: ScenarioReport;
   metrics: SampleMetrics;
   thermalAfter: number;
 };

@@ -10,6 +10,7 @@ import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import type { SampleMetrics } from '../metrics.mts';
 import {
   checkNoiseLimitsRecord,
+  checkScenarioIdentity,
   validateNoiseLimitsRecord,
 } from '../noise-limits-record.mts';
 import { noiseLimitsCommand } from '../noise-limits.mts';
@@ -246,6 +247,27 @@ describe('noiseLimitsCommand', () => {
       { folder: second, samples: { 'sticky-header': { a: 10, b: 10 } } },
     ]);
     assert.deepEqual(Object.keys(record.limits), ['css', 'sticky-header']);
+    assert.deepEqual(record.scenarios, {
+      css: { version: 1, load: 10 },
+      'sticky-header': { version: 1, load: 10 },
+    });
+  });
+
+  it('refuses a scenario whose accepted samples have two loads', () => {
+    const folder = writeRun(
+      'loads',
+      [outcome('css', () => ({}))],
+      VARIANT,
+      (result) => {
+        Object.assign(result.scenarios[0].samples[3], {
+          report: { version: 1, load: 20, jsThread: 5 },
+        });
+      }
+    );
+    assert.throws(
+      () => noiseLimitsCommand({ command: 'noise-limits', runs: [folder] }),
+      /The accepted samples of css in .*loads do not have one scenario version and load: version 1 with the load 10; version 1 with the load 20/
+    );
   });
 
   it('refuses runs of different phones or OS builds', () => {
@@ -328,6 +350,7 @@ describe('validateNoiseLimitsRecord', () => {
     device: IDENTITY,
     measurementRevision: MEASUREMENT_REVISION,
     sources: [{ folder: '/runs/aa', samples: { css: { a: 10, b: 10 } } }],
+    scenarios: { css: { version: 1, load: 10 } },
     limits: { css: { uiThreadCpu: 0.05 } },
   };
 
@@ -342,6 +365,22 @@ describe('validateNoiseLimitsRecord', () => {
         /This driver reads only version 1\. Make the file again with the noise-limits command\./
       );
     }
+  });
+
+  it('refuses limits of a scenario without its version and load', () => {
+    assert.throws(
+      () =>
+        validateNoiseLimitsRecord({
+          ...RECORD,
+          scenarios: { css: { version: 1 } },
+          limits: { ...RECORD.limits, 'idle-cost': {} },
+        }),
+      (error: Error) =>
+        [
+          'noise limits.scenarios.css.load must be an integer',
+          'noise limits.limits.idle-cost has no scenario version and load',
+        ].every((part) => error.message.includes(part))
+    );
   });
 
   it('refuses a record without its device or its sources', () => {
@@ -378,6 +417,41 @@ describe('validateNoiseLimitsRecord', () => {
   });
 });
 
+describe('checkScenarioIdentity', () => {
+  const record = validateNoiseLimitsRecord({
+    formatVersion: 1,
+    platform: 'android',
+    device: IDENTITY,
+    measurementRevision: MEASUREMENT_REVISION,
+    sources: [],
+    scenarios: { css: { version: 2, load: 40 } },
+    limits: { css: {} },
+  });
+
+  it('refuses a sample of another scenario version or load', () => {
+    for (const measured of [
+      { version: 3, load: 40 },
+      { version: 2, load: 41 },
+    ]) {
+      assert.throws(
+        () => checkScenarioIdentity(record, 'css', measured),
+        new RegExp(
+          `The noise limits of css are of the scenario version 2 with the load 40, but the app reports the version ${measured.version} with the load ${measured.load}\\.`
+        )
+      );
+    }
+  });
+
+  it('accepts the same version and load, and a scenario without a record entry', () => {
+    assert.doesNotThrow(() =>
+      checkScenarioIdentity(record, 'css', { version: 2, load: 40 })
+    );
+    assert.doesNotThrow(() =>
+      checkScenarioIdentity(record, 'idle-cost', { version: 9, load: 1 })
+    );
+  });
+});
+
 describe('checkNoiseLimitsRecord', () => {
   const record = validateNoiseLimitsRecord({
     formatVersion: 1,
@@ -385,6 +459,7 @@ describe('checkNoiseLimitsRecord', () => {
     device: IDENTITY,
     measurementRevision: 0,
     sources: [],
+    scenarios: {},
     limits: {},
   });
 

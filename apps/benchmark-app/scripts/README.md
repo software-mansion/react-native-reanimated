@@ -101,7 +101,7 @@ The noise limit of a verdict row is the difference that the driver gets between 
 1. Make the record: `noise-limits --runs <run folder> [<run folder> ...] > .tmp/benchmarks/noise-limits/<phone>.json`.
 1. Give the record to each run on this phone model: `--noise-limits <record>`.
 
-The record has `formatVersion` (1), `platform`, `device` (`model`, `deviceId`, `osBuild`), `measurementRevision`, `sources` (each run folder with the accepted samples of A and B for each scenario) and `limits` (`{ "<scenario>": { "<metric>": <limit> } }`). A limit is a fraction for a relative metric and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points).
+The record has `formatVersion` (1), `platform`, `device` (`model`, `deviceId`, `osBuild`), `measurementRevision`, `sources` (each run folder with the accepted samples of A and B for each scenario), `scenarios` (`{ "<scenario>": { "version": <integer>, "load": <integer> } }` from the READY lines of the accepted samples) and `limits` (`{ "<scenario>": { "<metric>": <limit> } }`). A limit is a fraction for a relative metric and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points).
 
 For each scenario and verdict metric, `noise-limits`:
 
@@ -110,9 +110,9 @@ For each scenario and verdict metric, `noise-limits`:
 1. compares the medians of the two groups as the verdict does,
 1. takes the 97.5th percentile of the absolute differences, but not less than the floor: 0.02 for a relative metric and 0.005 for `jankyFrames`.
 
-When the relative difference is not defined for a division (a median of 0 or less), the record has no limit for that metric. The runs must have the same platform, device and measurement revision, and a scenario must be in one run only. The runs do not have to be `done`: the command uses their complete scenarios. A run is A/A when A and B have the same sources, installed versions, effective flags and build options.
+When the relative difference is not defined for a division (a median of 0 or less), the record has no limit for that metric. The runs must have the same platform, device and measurement revision, a scenario must be in one run only, and the accepted samples of a scenario must have one version and one load. The runs do not have to be `done`: the command uses their complete scenarios. A run is A/A when A and B have the same sources, installed versions, effective flags and build options.
 
-`run` stops when the record has another platform, another phone model or another measurement revision. A run without `--noise-limits` is uncalibrated: the limit of each row is 0, and the report says so.
+`run` stops when the record has another platform, another phone model or another measurement revision, and when the app reports another version or load of a scenario than the record. A verdict row without a limit in the record has the limit 0, and the report marks its verdict `(uncalibrated)`. A run without `--noise-limits` is uncalibrated: the limit of each row is 0, and the report says so.
 
 ## Output
 

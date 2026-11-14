@@ -6,7 +6,10 @@ import { ToolError } from './errors.mts';
 import { COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
 import { NOISE_LIMITS_FORMAT_VERSION } from './noise-limits-record.mts';
-import type { NoiseLimitsRecord } from './noise-limits-record.mts';
+import type {
+  NoiseLimitsRecord,
+  ScenarioIdentity,
+} from './noise-limits-record.mts';
 import type { DeviceIdentity, PlatformDefinition } from './platform.mts';
 import { platformOf } from './platforms.mts';
 import { variantDifferences } from './report.mts';
@@ -50,6 +53,12 @@ export function noiseLimitsCommand(options: NoiseLimitsOptions): number {
           .map(({ outcome }) => [outcome.scenario, acceptedCounts(outcome)])
       ),
     })),
+    scenarios: Object.fromEntries(
+      measured.map((scenario) => [
+        scenario.outcome.scenario,
+        scenarioIdentity(scenario),
+      ])
+    ),
     limits: computeNoiseLimits(
       measured.map(({ outcome }) => outcome),
       PLATFORM_DEFINITIONS[first.result.platform]
@@ -124,6 +133,31 @@ function acceptedCounts(outcome: ScenarioOutcome) {
       (sample) => sample.valid && sample.accepted && sample.variant === variant
     ).length;
   return { a: count('a'), b: count('b') };
+}
+
+function scenarioIdentity({
+  folder,
+  outcome,
+}: MeasuredScenario): ScenarioIdentity {
+  const identities = new Map(
+    outcome.samples.flatMap((sample) =>
+      sample.valid && sample.accepted
+        ? [
+            [
+              `version ${sample.report.version} with the load ${sample.report.load}`,
+              { version: sample.report.version, load: sample.report.load },
+            ] as const,
+          ]
+        : []
+    )
+  );
+  const [identity, ...others] = identities.values();
+  if (identity === undefined || others.length > 0) {
+    throw new ToolError(
+      `The accepted samples of ${outcome.scenario} in ${folder} do not have one scenario version and load: ${[...identities.keys()].join('; ') || 'none'}`
+    );
+  }
+  return identity;
 }
 
 function computeNoiseLimits(

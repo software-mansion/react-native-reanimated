@@ -341,7 +341,7 @@ function verdictsSection(result: RunResult): string {
         'Interval',
         'Verdict',
       ],
-      rows.map(comparisonCells)
+      rows.map((row) => comparisonCells(row, result.noiseLimits))
     ),
     ...(hasFallback
       ? [
@@ -357,7 +357,7 @@ function noiseLimitsText(
   file: string | null
 ): string {
   const { device } = limits;
-  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`;
+  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0, and its verdict has the mark (uncalibrated).`;
 }
 
 function hasComparison(
@@ -366,7 +366,10 @@ function hasComparison(
   return !('hasData' in row) || row.hasData;
 }
 
-function comparisonCells(row: VerdictRow | AdvisoryRow): string[] {
+function comparisonCells(
+  row: VerdictRow | AdvisoryRow,
+  noiseLimits: NoiseLimitsRecord | null
+): string[] {
   const place = [row.scenario, row.metric, `${row.samplesA}/${row.samplesB}`];
   if (!hasComparison(row)) {
     return [...place, '-', '-', '-', '-', 'no verdict (no data)'];
@@ -378,8 +381,18 @@ function comparisonCells(row: VerdictRow | AdvisoryRow): string[] {
     formatValue(row.medianB, unit),
     formatDifference(row),
     formatInterval(row),
-    'verdict' in row ? row.verdict : 'no verdict',
+    'verdict' in row ? verdictCell(row, noiseLimits) : 'no verdict',
   ];
+}
+
+function verdictCell(
+  row: VerdictRow,
+  noiseLimits: NoiseLimitsRecord | null
+): string {
+  const uncalibrated =
+    noiseLimits !== null &&
+    noiseLimits.limits[row.scenario]?.[row.metric] === undefined;
+  return uncalibrated ? `${row.verdict} (uncalibrated)` : row.verdict;
 }
 
 function unitOf(metric: ComparedMetric): MetricUnit {

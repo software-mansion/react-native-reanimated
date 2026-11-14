@@ -438,6 +438,7 @@ describe('renderReport', () => {
             samples: { 'worklet-styles-transform': { a: 10, b: 10 } },
           },
         ],
+        scenarios: { 'worklet-styles-transform': { version: 1, load: 10 } },
         limits: { 'worklet-styles-transform': { memory: 0.02 } },
       },
       verdictRows: [memory],

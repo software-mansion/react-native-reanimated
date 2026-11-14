@@ -16,6 +16,7 @@ import type {
 } from './measurement.mts';
 import {
   checkNoiseLimitsRecord,
+  checkScenarioIdentity,
   readNoiseLimitsRecord,
 } from './noise-limits-record.mts';
 import { expectationLine, renderReport } from './report.mts';
@@ -106,7 +107,17 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
     orderOf: balancedOrder,
     roundsOf: (scenario) =>
       blocksOf(result.config, scenario, result.options.blocks),
-    measure: (order, sampling) => sampling.takeSample(order),
+    measure: async (order, sampling) => {
+      const sample = await sampling.takeSample(order);
+      if (result.noiseLimits && sample.report) {
+        checkScenarioIdentity(
+          result.noiseLimits,
+          order.scenario,
+          sample.report
+        );
+      }
+      return sample;
+    },
     clearSummary: (stopped) => {
       stopped.verdictRows = [];
       stopped.advisoryRows = [];

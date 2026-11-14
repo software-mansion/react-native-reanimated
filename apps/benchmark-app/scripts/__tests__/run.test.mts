@@ -221,7 +221,7 @@ describe('a stopped run', () => {
 });
 
 describe('runCommand with noise limits', () => {
-  function runWithLimits(model: string) {
+  function runWithLimits(model: string, cssVersion = 1) {
     const file = path.join(TEST_ROOT.root, `limits-${model}.json`);
     fs.writeFileSync(
       file,
@@ -231,6 +231,7 @@ describe('runCommand with noise limits', () => {
         device: { model, deviceId: 'HW9', osBuild: 'other build' },
         measurementRevision: MEASUREMENT_REVISION,
         sources: [],
+        scenarios: { css: { version: cssVersion, load: 1 } },
         limits: { css: { uiThreadCpu: 0.05 } },
       })
     );
@@ -257,6 +258,32 @@ describe('runCommand with noise limits', () => {
     assert.deepEqual(result.noiseLimits?.limits, {
       css: { uiThreadCpu: 0.05 },
     });
+  });
+
+  it('marks each verdict row without a limit in the record as uncalibrated', async () => {
+    assert.equal(await runWithLimits(STATE.model), 0);
+    const report = fs.readFileSync(
+      path.join(onlyRunFolder(TEST_ROOT), 'report.md'),
+      'utf8'
+    );
+    assert.match(report, /\| css \| uiThreadCpu \| .* \| no change found \|/);
+    assert.match(
+      report,
+      /\| css \| jsThreadCpu \| .* \| no change found \(uncalibrated\) \|/
+    );
+    assert.match(
+      report,
+      /\| idle-cost \| uiThreadCpu \| .* \| no change found \(uncalibrated\) \|/
+    );
+    assert.match(report, /\| css \| frameCyclesMedian \| .* \| no verdict \|/);
+  });
+
+  it('stops when the app reports another scenario version than the record', async () => {
+    await assert.rejects(
+      runWithLimits(STATE.model, 2),
+      /The noise limits of css are of the scenario version 2 with the load 1, but the app reports the version 1 with the load 1\./
+    );
+    assert.equal(readResult(onlyRunFolder(TEST_ROOT)).status, 'tool error');
   });
 
   it('stops before it builds when the record is of another phone model', async () => {

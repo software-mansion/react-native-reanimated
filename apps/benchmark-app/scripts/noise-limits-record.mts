@@ -23,18 +23,26 @@ export interface NoiseLimitsSource {
   samples: Partial<Record<Scenario, { a: number; b: number }>>;
 }
 
+export interface ScenarioIdentity {
+  version: number;
+  load: number;
+}
+
 export interface NoiseLimitsRecord {
   formatVersion: typeof NOISE_LIMITS_FORMAT_VERSION;
   platform: PlatformName;
   device: DeviceIdentity;
   measurementRevision: number;
   sources: NoiseLimitsSource[];
+  scenarios: Partial<Record<Scenario, ScenarioIdentity>>;
   limits: NoiseLimits;
 }
 
 export const NOISE_LIMITS_FORMAT_VERSION = 1;
 
 const IDENTITY = shape({ model: aString, deviceId: aString, osBuild: aString });
+
+const SCENARIO_IDENTITY = shape({ version: anInteger, load: anInteger });
 
 const SOURCE = shape({
   folder: aString,
@@ -73,12 +81,18 @@ export const NOISE_LIMITS_RECORD: Check = (value, label, problems) => {
     problems
   );
   listOf(SOURCE)(stored.sources, `${label}.sources`, problems);
+  const identities = checkScenarios(
+    stored.scenarios,
+    `${label}.scenarios`,
+    problems
+  );
   checkLimits(
     stored.limits,
     `${label}.limits`,
     isPlatformName(platform)
       ? PLATFORM_DEFINITIONS[platform].verdictMetrics
       : [],
+    identities,
     problems
   );
 };
@@ -108,10 +122,44 @@ export function checkNoiseLimitsRecord(
   }
 }
 
+export function checkScenarioIdentity(
+  limits: NoiseLimitsRecord,
+  scenario: Scenario,
+  measured: ScenarioIdentity
+) {
+  const calibrated = limits.scenarios[scenario];
+  if (
+    calibrated &&
+    (calibrated.version !== measured.version ||
+      calibrated.load !== measured.load)
+  ) {
+    throw new ToolError(
+      `The noise limits of ${scenario} are of the scenario version ${calibrated.version} with the load ${calibrated.load}, but the app reports the version ${measured.version} with the load ${measured.load}. Make the limits again with an A/A run of this scenario.`
+    );
+  }
+}
+
+function checkScenarios(
+  value: unknown,
+  label: string,
+  problems: string[]
+): Record<string, unknown> {
+  const identities = record(value, label, problems);
+  for (const [scenario, identity] of Object.entries(identities)) {
+    if (isScenario(scenario)) {
+      SCENARIO_IDENTITY(identity, `${label}.${scenario}`, problems);
+    } else {
+      problems.push(`${label}: unknown scenario "${scenario}"`);
+    }
+  }
+  return identities;
+}
+
 function checkLimits(
   value: unknown,
   label: string,
   verdictMetrics: readonly ComparedMetric[],
+  identities: Record<string, unknown>,
   problems: string[]
 ) {
   for (const [scenario, metrics] of Object.entries(
@@ -120,6 +168,9 @@ function checkLimits(
     if (!isScenario(scenario)) {
       problems.push(`${label}: unknown scenario "${scenario}"`);
       continue;
+    }
+    if (!Object.hasOwn(identities, scenario)) {
+      problems.push(`${label}.${scenario} has no scenario version and load`);
     }
     for (const [metric, limit] of Object.entries(
       record(metrics, `${label}.${scenario}`, problems)
