@@ -37,7 +37,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
 
 Connect an iPhone with a display of 60 Hz, with Developer Mode on, paired with the Mac and unlocked. Get its UDID from `xcrun devicectl list devices`. Write a [sign command](#sign-command).
 
-This example compares Reanimated 4.7.1 with the code of your checkout. Make the tarballs of the checkout. `npm pack` runs the `prepack` script of each package (`yarn build`), and the file name has the version of its `package.json`:
+This example compares Reanimated 4.7.1 with the code of your checkout. Make the tarballs of the checkout. `npm pack` runs the `prepack` script of each package (`yarn build`), and the file name has the version of its `package.json`: Use `npm pack`, not `yarn pack`: Yarn leaves the nested workspaces of Worklets (its two plugins) out of the tarball.
 
 ```sh
 mkdir -p .tmp/benchmarks/tarballs
