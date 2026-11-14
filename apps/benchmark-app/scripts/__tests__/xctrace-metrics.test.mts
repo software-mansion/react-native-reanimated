@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import zlib from 'node:zlib';
 
 import { computeIosTraceMetrics } from '../xctrace-metrics.mts';
 import type {
@@ -11,31 +10,15 @@ import type {
   TracedIosApp,
 } from '../xctrace-metrics.mts';
 
+// Cuts of the exports of xctrace 27.2 (27B52) of an iPhone 13 mini with iOS
+// 27.0.1. The rows overlap 1855 ms to 1908 ms, and the cells that the metrics do
+// not read are sentinels. The second State signpost is not real: the test adds
+// it 50 ms after the first.
 const FIXTURES = path.join(import.meta.dirname, 'fixtures', 'xctrace');
-const EXPORTS: TraceExports = {
-  threadState: fixture('window-thread-state.xml.gz'),
-  frames: fixture('hitches-updates.xml'),
-  hitches: fixture('hitches.xml'),
-  thermal: fixture('device-thermal-state-intervals.xml'),
-  signposts: fixture('window-os-signpost.xml.gz'),
-};
-const SCHEMAS: Record<keyof TraceExports, string> = {
-  threadState: 'thread-state',
-  frames: 'hitches-updates',
-  hitches: 'hitches',
-  thermal: 'device-thermal-state-intervals',
-  signposts: 'os-signpost',
-};
-const APP: TracedIosApp = {
-  pid: 8865,
-  mainThread: 3840236,
-  jsThread: 3840263,
-  frames: { refreshRate: 60, share: 1 },
-  recordingSeconds: 1,
-};
 const WINDOW_START = 1_856_890_916;
-const WINDOW_END = 2_856_859_583;
-const SECONDS = 0.999968667;
+const WINDOW_END = 1_906_890_916;
+const SECONDS = 0.05;
+const MEASURED_SPAN = '1854880416 ns to 1916944458 ns';
 const OTHER_PID = 9999;
 const NOMINAL_STATE = {
   footprint: 40993,
@@ -45,6 +28,29 @@ const NOMINAL_STATE = {
   lowPower: 0,
   brightness: 0,
 };
+const APP: TracedIosApp = {
+  pid: 8865,
+  mainThread: 3840236,
+  jsThread: 3840263,
+  frames: { refreshRate: 60, share: 1 },
+  recordingSeconds: SECONDS,
+};
+const EXPORTS: TraceExports = {
+  threadState: fixture('thread-state-window.xml'),
+  frames: fixture('hitches-updates.xml'),
+  hitches: fixture('hitches.xml'),
+  thermal: fixture('device-thermal-state-intervals.xml'),
+  signposts: withRows(fixture('os-signpost-window.xml'), [
+    stateRow(WINDOW_END, { ...NOMINAL_STATE, footprint: 41393 }),
+  ]),
+};
+const SCHEMAS: Record<keyof TraceExports, string> = {
+  threadState: 'thread-state',
+  frames: 'hitches-updates',
+  hitches: 'hitches',
+  thermal: 'device-thermal-state-intervals',
+  signposts: 'os-signpost',
+};
 const FULL_BATTERY = {
   batteryLevel: 100,
   batteryState: 'full',
@@ -53,10 +59,7 @@ const FULL_BATTERY = {
 };
 
 function fixture(file: string): string {
-  const content = fs.readFileSync(path.join(FIXTURES, file));
-  return (file.endsWith('.gz') ? zlib.gunzipSync(content) : content).toString(
-    'utf8'
-  );
+  return fs.readFileSync(path.join(FIXTURES, file), 'utf8');
 }
 
 function livedReading(reading: IosTraceReading) {
@@ -175,24 +178,31 @@ function coveringRows(): string[] {
 }
 
 describe('computeIosTraceMetrics', () => {
-  it('computes all metrics from a cut of a real trace', () => {
+  it('computes all metrics from a cut of a real export', () => {
     const reading = livedReading(computeIosTraceMetrics(EXPORTS, APP));
     const { metrics } = reading;
+    const mainRunningMs = 19.773169;
+    const mainEfficiencyCoreMs = 19.607086;
+    const jsRunningMs = 0.113417;
     assertClose(metrics.expectedFrameCount, 60 * SECONDS);
-    assert.equal(metrics.frameCount, 59);
-    assertClose(metrics.jankyFrames, 1 - 59 / (60 * SECONDS));
-    assertClose(metrics.frameDurationMedian, 5.951958);
-    assertClose(metrics.frameDurationP90, 6.5869244);
-    assertClose(metrics.frameDurationP95, 6.6817375);
-    assertClose(metrics.frameDurationP99, 7.32751972);
-    assertClose(metrics.uiThreadCpu, 364.182822 / SECONDS);
-    assertClose(metrics.jsThreadCpu, 2.373586 / SECONDS);
-    assertClose(metrics.otherThreadsCpu, 0.31025 / SECONDS);
-    assertClose(metrics.processCpu, 366.866658 / SECONDS);
-    assertClose(metrics.uiThreadEfficiencyCoreShare, 243.065536 / 364.182822);
-    assert.equal(metrics.hitchCount, 1);
-    assertClose(metrics.hitchTime, 16.670583 / SECONDS);
-    assert.equal(metrics.mountBatchCount, 60);
+    assert.equal(metrics.frameCount, 3);
+    assert.equal(metrics.jankyFrames, 0);
+    assertClose(metrics.frameDurationMedian, 6.464291);
+    assertClose(
+      metrics.frameDurationP95,
+      6.464291 + 0.9 * (6.764875 - 6.464291)
+    );
+    assertClose(metrics.uiThreadCpu, mainRunningMs / SECONDS);
+    assertClose(metrics.jsThreadCpu, jsRunningMs / SECONDS);
+    assert.equal(metrics.otherThreadsCpu, 0);
+    assertClose(metrics.processCpu, (mainRunningMs + jsRunningMs) / SECONDS);
+    assertClose(
+      metrics.uiThreadEfficiencyCoreShare,
+      mainEfficiencyCoreMs / mainRunningMs
+    );
+    assert.equal(metrics.hitchCount, 0);
+    assert.equal(metrics.hitchTime, 0);
+    assert.equal(metrics.mountBatchCount, 3);
     assert.equal(metrics.memory, 41393);
     assert.equal(metrics.windowMemoryDelta, 400);
     assert.equal(reading.thermalState, 0);
@@ -246,35 +256,35 @@ describe('computeIosTraceMetrics', () => {
       ...EXPORTS,
       threadState: withRows(EXPORTS.threadState, [
         threadRow({
-          start: 1_800_000_000,
+          start: WINDOW_START - 10_000_000,
           thread: 77,
           state: 'Running',
-          duration: 100_000_000,
+          duration: 20_000_000,
         }),
         threadRow({
-          start: 1_900_000_000,
+          start: WINDOW_START + 10_000_000,
           thread: 77,
           state: 'Blocked',
-          duration: 500_000_000,
+          duration: 35_000_000,
         }),
         threadRow({
-          start: 2_800_000_000,
+          start: WINDOW_END - 5_000_000,
           thread: 77,
           state: 'Running',
-          duration: 1e9,
+          duration: 25_000_000,
         }),
         threadRow({
           start: WINDOW_END,
           thread: 77,
           state: 'Running',
-          duration: 1e6,
+          duration: 1_000_000,
         }),
       ]),
     });
     assertClose(metrics.expectedFrameCount, 60 * SECONDS);
-    assertClose(metrics.otherThreadsCpu, (0.31025 + 99.968667) / SECONDS);
-    assertClose(metrics.processCpu, (366.866658 + 99.968667) / SECONDS);
-    assertClose(metrics.uiThreadCpu, 364.182822 / SECONDS);
+    assertClose(metrics.otherThreadsCpu, 15 / SECONDS);
+    assertClose(metrics.processCpu, (19.773169 + 0.113417 + 15) / SECONDS);
+    assertClose(metrics.uiThreadCpu, 19.773169 / SECONDS);
   });
 
   it('gives the share of the main thread Running time on efficiency cores', () => {
@@ -283,21 +293,21 @@ describe('computeIosTraceMetrics', () => {
       threadState: syntheticThreadState([
         ...coveringRows(),
         threadRow({
-          start: 1_900_000_000,
+          start: WINDOW_START + 1_000_000,
           thread: APP.mainThread,
           state: 'Running',
           duration: 3e6,
           core: 'CPU 0 (E Core)',
         }),
         threadRow({
-          start: 2_000_000_000,
+          start: WINDOW_START + 10_000_000,
           thread: APP.mainThread,
           state: 'Running',
           duration: 1e6,
           core: 'CPU 4 (S Core)',
         }),
         threadRow({
-          start: 2_100_000_000,
+          start: WINDOW_START + 20_000_000,
           thread: APP.mainThread,
           state: 'Interrupted',
           duration: 9e6,
@@ -335,14 +345,14 @@ describe('computeIosTraceMetrics', () => {
         threadState: syntheticThreadState([
           ...coveringRows(),
           threadRow({
-            start: 1_900_000_000,
+            start: WINDOW_START + 1_000_000,
             thread: APP.mainThread,
             state: 'Running',
             duration: 3e6,
             core: 'CPU 0 (E Core)',
           }),
           threadRow({
-            start: 2_000_000_000,
+            start: WINDOW_START + 10_000_000,
             thread: APP.mainThread,
             state: 'Running',
             duration: 1e6,
@@ -368,7 +378,7 @@ describe('computeIosTraceMetrics', () => {
     assert.throws(
       () => computeIosTraceMetrics(EXPORTS, { ...APP, recordingSeconds: 10 }),
       {
-        message: `The trace window of process 8865 is ${SECONDS} s long (${WINDOW_START} ns to ${WINDOW_END} ns, in the scheduler data of the measured threads from 1789809875 ns to 2900324625 ns). It must be at least 80% of the recording of 10 s.`,
+        message: `The trace window of process 8865 is ${SECONDS} s long (${WINDOW_START} ns to ${WINDOW_END} ns, in the scheduler data of the measured threads from ${MEASURED_SPAN}). It must be at least 80% of the recording of 10 s.`,
       }
     );
     assert.doesNotThrow(() =>
@@ -387,20 +397,26 @@ describe('computeIosTraceMetrics', () => {
           start: 1_800_000_000,
           thread,
           state: 'Blocked',
-          duration: 1_000_000_000,
+          duration: 80_000_000,
         }),
         threadRow({
-          start: 2_800_000_000,
+          start: 1_880_000_000,
           thread,
           state: 'Unknown',
-          duration: 100_000_000,
+          duration: 10_000_000,
+        }),
+        threadRow({
+          start: 1_890_000_000,
+          thread,
+          state: 'Blocked',
+          duration: 1_010_000_000,
         }),
       ]);
       assert.throws(
         () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
         {
           message:
-            'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1800000000 ns to 2800000000 ns). The trace window needs 2.',
+            'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1890000000 ns to 2900000000 ns). The trace window needs 2.',
         }
       );
     }
@@ -432,7 +448,7 @@ describe('computeIosTraceMetrics', () => {
           { ...EXPORTS, threadState },
           { ...APP, recordingSeconds: 2 }
         ),
-      /is 0\.999968667 s long \(1856890916 ns to 2856859583 ns, in the scheduler data of the measured threads from 1850000000 ns to 2900000000 ns\)\. It must be at least 80% of the recording of 2 s\./
+      /is 0\.05 s long \(1856890916 ns to 1906890916 ns, in the scheduler data of the measured threads from 1850000000 ns to 2900000000 ns\)\. It must be at least 80% of the recording of 2 s\./
     );
   });
 
@@ -478,13 +494,13 @@ describe('computeIosTraceMetrics', () => {
     const metrics = metricsOf({
       ...EXPORTS,
       frames: withRows(EXPORTS.frames, [
-        intervalRow(1_850_000_000, 10_000_000),
+        intervalRow(WINDOW_START - 5_000_000, 10_000_000),
         intervalRow(WINDOW_START, 3_000_000),
-        intervalRow(2_850_000_000, 6_859_583),
-        intervalRow(2_850_000_000, 10_000_000),
+        intervalRow(WINDOW_END - 6_000_000, 6_000_000),
+        intervalRow(WINDOW_END - 6_000_000, 10_000_000),
       ]),
     });
-    assert.equal(metrics.frameCount, 61);
+    assert.equal(metrics.frameCount, 5);
   });
 
   it('gives 0 frames and null frame durations when the app has no frame in the window', () => {
@@ -506,7 +522,7 @@ describe('computeIosTraceMetrics', () => {
       frames: { refreshRate: 60, share: 0.5 },
     });
     assertClose(metrics.expectedFrameCount, 30 * SECONDS);
-    assert.equal(metrics.frameCount, 59);
+    assert.equal(metrics.frameCount, 3);
     assert.equal(metrics.jankyFrames, 0);
   });
 
@@ -523,14 +539,14 @@ describe('computeIosTraceMetrics', () => {
     const metrics = metricsOf({
       ...EXPORTS,
       hitches: withRows(EXPORTS.hitches, [
-        hitchRow(1_850_000_000, 20_000_000),
-        hitchRow(2_850_000_000, 20_000_000),
-        hitchRow(1_836_890_916, 20_000_000),
+        hitchRow(WINDOW_START - 10_000_000, 20_000_000),
+        hitchRow(WINDOW_END - 10_000_000, 20_000_000),
+        hitchRow(WINDOW_START - 20_000_000, 20_000_000),
         hitchRow(WINDOW_END, 5_000_000),
       ]),
     });
-    assert.equal(metrics.hitchCount, 3);
-    assertClose(metrics.hitchTime, 36.63925 / SECONDS);
+    assert.equal(metrics.hitchCount, 2);
+    assertClose(metrics.hitchTime, 20 / SECONDS);
   });
 
   it('counts the mount batches from the window start to before the window end', () => {
@@ -543,7 +559,7 @@ describe('computeIosTraceMetrics', () => {
         mountRow(WINDOW_END, APP.pid),
       ]),
     });
-    assert.equal(metrics.mountBatchCount, 62);
+    assert.equal(metrics.mountBatchCount, 5);
   });
 
   it('takes the window and the memory from the first and the last State event and an app state from each State event', () => {
@@ -552,13 +568,16 @@ describe('computeIosTraceMetrics', () => {
         {
           ...EXPORTS,
           signposts: withRows(EXPORTS.signposts, [
-            stateRow(2_900_000_000, { ...NOMINAL_STATE, footprint: 42000 }),
-            stateRow(2_400_000_000, {
+            stateRow(WINDOW_END + 5_000_000, {
+              ...NOMINAL_STATE,
+              footprint: 42000,
+            }),
+            stateRow(WINDOW_START + 20_000_000, {
               ...NOMINAL_STATE,
               footprint: 41000,
               batteryState: 2,
             }),
-            stateRow(1_800_000_000, {
+            stateRow(WINDOW_START - 1_000_000, {
               footprint: 40000,
               thermal: 0,
               batteryLevel: 99,
@@ -571,7 +590,7 @@ describe('computeIosTraceMetrics', () => {
         APP
       )
     );
-    assertClose(reading.metrics.expectedFrameCount, 66);
+    assertClose(reading.metrics.expectedFrameCount, 60 * 0.056);
     assert.equal(reading.metrics.memory, 42000);
     assert.equal(reading.metrics.windowMemoryDelta, 2000);
     assert.deepEqual(reading.appStates, [
@@ -628,7 +647,7 @@ describe('computeIosTraceMetrics', () => {
       {
         ...EXPORTS,
         signposts: withRows(EXPORTS.signposts, [
-          stateRow(2_000_000_000, { ...NOMINAL_STATE, thermal: 2 }),
+          stateRow(WINDOW_START + 20_000_000, { ...NOMINAL_STATE, thermal: 2 }),
         ]),
       },
       APP
@@ -658,16 +677,16 @@ describe('computeIosTraceMetrics', () => {
   });
 
   it('stops when the trace has fewer than 2 State events of the app', () => {
-    const otherSubsystem = stateRow(2_600_000_000, NOMINAL_STATE).replace(
-      '>com.reanimatedbenchmark</subsystem>',
-      '>com.other</subsystem>'
-    );
+    const otherSubsystem = stateRow(
+      WINDOW_START + 30_000_000,
+      NOMINAL_STATE
+    ).replace('>com.reanimatedbenchmark</subsystem>', '>com.other</subsystem>');
     for (const [rows, count] of [
       [[], 0],
       [
         [
-          stateRow(2e9, NOMINAL_STATE),
-          stateRow(2_500_000_000, NOMINAL_STATE, OTHER_PID),
+          stateRow(WINDOW_START + 10_000_000, NOMINAL_STATE),
+          stateRow(WINDOW_START + 20_000_000, NOMINAL_STATE, OTHER_PID),
           otherSubsystem,
         ],
         1,
@@ -677,7 +696,7 @@ describe('computeIosTraceMetrics', () => {
       assert.throws(
         () => computeIosTraceMetrics({ ...EXPORTS, signposts }, APP),
         {
-          message: `The trace has ${count} State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1789809875 ns to 2900324625 ns). The trace window needs 2.`,
+          message: `The trace has ${count} State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (${MEASURED_SPAN}). The trace window needs 2.`,
         }
       );
     }
@@ -707,7 +726,7 @@ describe('computeIosTraceMetrics', () => {
         start: 1_800_000_000,
         thread: APP.mainThread,
         state: 'Blocked',
-        duration: 1e9,
+        duration: 100_000_000,
       }),
       threadRow({
         start: 1_850_000_000,
@@ -720,7 +739,7 @@ describe('computeIosTraceMetrics', () => {
       () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
       {
         message:
-          'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1850000000 ns to 2750000000 ns). The trace window needs 2.',
+          'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1850000000 ns to 1900000000 ns). The trace window needs 2.',
       }
     );
   });

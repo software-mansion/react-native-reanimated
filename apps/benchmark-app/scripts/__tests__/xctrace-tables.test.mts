@@ -6,6 +6,8 @@ import { describe, it } from 'node:test';
 import { child, childText, parseTraceTables } from '../xctrace-tables.mts';
 import type { TraceElement } from '../xctrace-tables.mts';
 
+// Cuts of the exports of xctrace 27.2 (27B52) of an iPhone 13 mini with iOS
+// 27.0.1, with all cells of the rows that they keep.
 const FIXTURES = path.join(import.meta.dirname, 'fixtures', 'xctrace');
 
 function fixture(name: string): string {
@@ -36,11 +38,11 @@ function cell(element: TraceElement | null | undefined): TraceElement {
 describe('parseTraceTables', () => {
   it('reads the tables of a real export with their mnemonics and row counts', () => {
     for (const [name, rowCount] of [
-      ['thread-state', 552],
-      ['hitches-updates', 80],
+      ['thread-state', 3],
+      ['hitches-updates', 4],
       ['hitches', 1],
       ['device-thermal-state-intervals', 1],
-      ['os-signpost', 161],
+      ['os-signpost', 2],
     ] as const) {
       const table = onlyTable(fixture(name));
       assert.equal(table.schema, name);
