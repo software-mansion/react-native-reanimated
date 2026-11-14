@@ -11,6 +11,7 @@ export interface ProcessOptions {
   input?: string;
   logFile?: string;
   timeoutMs?: number;
+  onLine?: (line: string) => void;
 }
 
 export interface ProcessOutput {
@@ -48,8 +49,10 @@ export class Processes {
       }, timeoutMs);
       let stdout = '';
       let stderr = '';
+      const lines = options.onLine && lineSplitter(options.onLine);
       child.stdout?.on('data', (chunk: Buffer) => {
         stdout += chunk.toString();
+        lines?.(chunk.toString());
         log?.write(chunk);
       });
       child.stderr?.on('data', (chunk: Buffer) => {
@@ -94,14 +97,9 @@ export class Processes {
     const child = this.#spawn(command, args, {});
     let stopped = false;
     let failure: ToolError | null = null;
-    let buffered = '';
     let stderr = '';
-    child.stdout?.on('data', (chunk: Buffer) => {
-      buffered += chunk.toString();
-      const lines = buffered.split(/\r?\n/);
-      buffered = lines.pop() ?? '';
-      lines.forEach(onLine);
-    });
+    const lines = lineSplitter(onLine);
+    child.stdout?.on('data', (chunk: Buffer) => lines(chunk.toString()));
     child.stderr?.on('data', (chunk: Buffer) => {
       stderr = tail(stderr + chunk.toString(), STREAM_ERROR_LINES);
     });
@@ -146,6 +144,16 @@ export class Processes {
     child.on('close', () => this.#running.delete(child));
     return child;
   }
+}
+
+function lineSplitter(onLine: (line: string) => void): (text: string) => void {
+  let buffered = '';
+  return (text) => {
+    buffered += text;
+    const lines = buffered.split(/\r?\n/);
+    buffered = lines.pop() ?? '';
+    lines.forEach(onLine);
+  };
 }
 
 function missingTool(command: string, error: NodeJS.ErrnoException): Error {

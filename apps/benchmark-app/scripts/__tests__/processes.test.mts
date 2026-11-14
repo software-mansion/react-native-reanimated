@@ -26,6 +26,20 @@ describe('Processes.run', () => {
     ]);
     assert.equal(stdout, 'done\n');
   });
+
+  it('gives each line of the output while the command runs', async () => {
+    const lines: string[] = [];
+    const { stdout } = await new Processes().run(
+      NODE,
+      [
+        '-e',
+        'process.stdout.write("one\\ntw"); setTimeout(() => console.log("o"), 50)',
+      ],
+      { onLine: (line) => lines.push(line) }
+    );
+    assert.deepEqual(lines, ['one', 'two']);
+    assert.equal(stdout, 'one\ntwo\n');
+  });
 });
 
 describe('Processes.streamLines', () => {
