@@ -1,6 +1,6 @@
 import type { DeviceState } from './android-device.mts';
 import type { PlatformDefinition } from './platform.mts';
-import { aBoolean, aNumber, aString, shape } from './validation.mts';
+import { aBoolean, aNumber, absent, aString, shape } from './validation.mts';
 import type { Check } from './validation.mts';
 
 const WINDOW =
@@ -37,6 +37,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
     { key: 'batteryTemperature', title: 'Battery temperature', unit: ' °C' },
   ],
   deviceState: shape(DEVICE_STATE),
+  inAppState: absent,
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',
@@ -151,7 +152,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       names: ['windowMemoryDelta'],
       unit: 'kB',
       source:
-        '`memory` minus the first value of `mem.rss.anon` plus the first value of `mem.swap`',
+        '`memory` minus the sum of the first value of `mem.rss.anon` and the first value of `mem.swap`',
       interval: 'The full trace. The counters are not cut to the trace window.',
       limits:
         'The trace is in the first minutes after the launch. Use the memory test to find a leak.',

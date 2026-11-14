@@ -292,6 +292,16 @@ describe('an iOS run', () => {
         fake.context,
         fake.dependencies
       );
+    const stored = fs.readFileSync(path.join(folder, 'result.json'), 'utf8');
+    fs.writeFileSync(
+      path.join(folder, 'result.json'),
+      JSON.stringify({ ...JSON.parse(stored), inAppState: {} })
+    );
+    await assert.rejects(
+      resume(createFake()),
+      /result\.inAppState\.batteryLevel must be a finite number/
+    );
+    fs.writeFileSync(path.join(folder, 'result.json'), stored);
     await assert.rejects(
       resume(createFake({ state: { ...STATE, osBuild: '24B1' } })),
       /not the same as at the start of the measurement: osBuild: 24A446 -> 24B1/

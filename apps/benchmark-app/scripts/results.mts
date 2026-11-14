@@ -362,7 +362,7 @@ function measurementShape(
     scenarios: listOf(outcome),
     incompleteScenario: nullable(outcome),
     abandonedScenarios: listOf(both(outcome, shape({ segment: anInteger }))),
-    inAppState: optional(anObject),
+    inAppState: optional(definition.inAppState),
   });
 }
 

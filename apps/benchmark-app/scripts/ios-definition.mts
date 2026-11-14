@@ -1,7 +1,8 @@
 import type { IosDeviceState } from './ios-device.mts';
 import type { PlatformDefinition } from './platform.mts';
-import { aString, shape } from './validation.mts';
+import { aBoolean, aNumber, aString, shape } from './validation.mts';
 import type { Check } from './validation.mts';
+import type { AppState } from './xctrace-metrics.mts';
 
 const WINDOW =
   'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread';
@@ -17,6 +18,14 @@ const DEVICE_STATE: Record<keyof IosDeviceState, Check> = {
   osBuild: aString,
 };
 
+const IN_APP_STATE: Record<keyof AppState | 'refreshRate', Check> = {
+  refreshRate: aNumber,
+  batteryLevel: aNumber,
+  batteryState: aString,
+  lowPowerMode: aBoolean,
+  brightness: aNumber,
+};
+
 const CPU_LIMIT =
   'The table has no clock rate. The same work takes more time on an efficiency core.';
 
@@ -26,6 +35,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
   options: { 'sign-command': 'required for run' },
   segmentColumns: [],
   deviceState: shape(DEVICE_STATE),
+  inAppState: shape(IN_APP_STATE),
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',

@@ -52,6 +52,7 @@ export interface PlatformDefinition {
   options: Partial<Record<PlatformOption, 'optional' | 'required for run'>>;
   segmentColumns: readonly SegmentColumn[];
   deviceState: Check;
+  inAppState: Check;
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
   frameSource: FrameSource;

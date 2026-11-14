@@ -18,6 +18,8 @@ export const aBoolean = typed(
 
 export const anObject = typed('an object', isRecord);
 
+export const absent = typed('absent', (value) => value === undefined);
+
 export function record(
   value: unknown,
   label: string,
