@@ -75,7 +75,7 @@ export class IosDevice {
     await this.#device(['install', 'app', ipa], timeoutMs).catch(
       (error: Error) => {
         throw new ToolError(
-          `The install of ${ipa} on ${this.udid} failed. One known cause is a full phone storage: the Instruments service of the phone keeps about ${TRACE_STORAGE_GB_PER_RECORDING} GB of trace data for each xctrace recording until the service ends. A restart of the phone is the only known way to free it. devicectl: ${error.message}`
+          `The install of ${ipa} on ${this.udid} failed. One known cause is a full phone storage: on one iPhone 13 mini with iOS 27.0.1 and Xcode 27.2, each xctrace recording used about ${TRACE_STORAGE_GB_PER_RECORDING} GB of phone storage, and the data stayed after the driver ended. It is not verified that a restart of the phone frees it. devicectl: ${error.message}`
         );
       }
     );

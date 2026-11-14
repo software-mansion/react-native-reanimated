@@ -174,7 +174,7 @@ describe('IosDevice.install', () => {
     await assert.rejects(
       new IosDevice(failing, UDID).install('/builds/a.ipa'),
       new RegExp(
-        `The install of /builds/a\\.ipa on ${UDID} failed\\. One known cause is a full phone storage: the Instruments service of the phone keeps about 0\\.3 GB of trace data for each xctrace recording until the service ends\\. A restart of the phone is the only known way to free it\\. devicectl: devicectl failed \\(exit 1\\): ERROR: Failed to install`
+        `The install of /builds/a\\.ipa on ${UDID} failed\\. One known cause is a full phone storage: on one iPhone 13 mini with iOS 27\\.0\\.1 and Xcode 27\\.2, each xctrace recording used about 0\\.3 GB of phone storage, and the data stayed after the driver ended\\. It is not verified that a restart of the phone frees it\\. devicectl: devicectl failed \\(exit 1\\): ERROR: Failed to install`
       )
     );
   });

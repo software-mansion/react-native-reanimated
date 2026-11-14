@@ -200,7 +200,7 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 
 ## Phone storage on iOS
 
-The Instruments service of the iPhone keeps about 0.3 GB of trace data for each `xctrace` recording until the service ends. The driver cannot delete it. A restart of the phone is the only known way to free it. Plan a free storage of 0.3 GB times the number of samples: a run of 7 scenarios with 5 blocks of 4 samples needs at least 42 GB. Each run and each resume segment installs the apps first, and a failed install is a tool error that names this cause.
+On one iPhone 13 mini with iOS 27.0.1 and Xcode 27.2, each `xctrace` recording used about 0.3 GB of phone storage, and the data stayed after the driver ended. The driver does not delete it. It is not verified that a restart of the phone frees it. Plan a free storage of 0.3 GB times the number of samples: a run of 7 scenarios with 5 blocks of 4 samples needs at least 42 GB. Each run and each resume segment installs the apps first, and a failed install is a tool error that names this cause.
 
 ## Verdicts
 
