@@ -1,4 +1,7 @@
+import type { DeviceState } from './android-device.mts';
 import type { PlatformDefinition } from './platform.mts';
+import { aBoolean, aNumber, aString, shape } from './validation.mts';
+import type { Check } from './validation.mts';
 
 const WINDOW =
   'Trace window: from the start of all data sources to the end of the recording of 10 s';
@@ -6,6 +9,24 @@ const WINDOW =
 const SLICES_IN_WINDOW = 'Slices that start in the trace window';
 
 const CPU_LIMIT = 'CPU time does not show a change of the clock rate.';
+
+const DEVICE_STATE: Record<keyof DeviceState, Check> = {
+  deviceId: aString,
+  model: aString,
+  fingerprint: aString,
+  sdk: aNumber,
+  abi: aString,
+  refreshRate: aNumber,
+  brightness: aNumber,
+  brightnessMode: aString,
+  batteryLevel: aNumber,
+  batteryStatus: aString,
+  chargeState: aString,
+  wifiEnabled: aBoolean,
+  wifiConnected: aBoolean,
+  thermalStatus: aNumber,
+  batteryTemperature: aNumber,
+};
 
 export const ANDROID_DEFINITION: PlatformDefinition = {
   name: 'android',
@@ -15,6 +36,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
     { key: 'batteryLevel', title: 'Battery level', unit: '%' },
     { key: 'batteryTemperature', title: 'Battery temperature', unit: ' °C' },
   ],
+  deviceState: shape(DEVICE_STATE),
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',

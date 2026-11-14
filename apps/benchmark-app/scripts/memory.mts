@@ -72,6 +72,7 @@ import {
   oneOf,
   shape,
 } from './validation.mts';
+import type { Check } from './validation.mts';
 
 export type ValidMemoryLaunch = LaunchObservations & {
   valid: true;
@@ -138,7 +139,7 @@ interface LaunchObservations {
 
 const MILLISECONDS_PER_SECOND = 1000;
 
-const MEMORY_FIELDS = {
+const MEMORY_FIELDS = shape({
   options: shape({
     scenario: oneOf(SCENARIOS),
     launches: anInteger,
@@ -148,11 +149,28 @@ const MEMORY_FIELDS = {
     keepTraces: aBoolean,
   }),
   summary: listOf(anObject),
+});
+
+const MEMORY_READING: Record<keyof MemoryReading, Check> = {
+  plannedSeconds: aNumber,
+  seconds: aNumber,
+  meminfoMs: aNumber,
+  frameSeconds: aNumber,
+  frameCount: aNumber,
+  statsSinceNs: aNumber,
+  batteryLevel: aNumber,
+  batteryTemperature: aNumber,
+  totalPss: aNumber,
+  nativeHeap: aNumber,
+  dalvikHeap: aNumber,
+  graphics: aNumber,
+  privateOther: aNumber,
+  totalSwapPss: aNumber,
 };
 
 const MEMORY_LAUNCH = both(
   RECORDED_SAMPLE,
-  shape({ readings: listOf(anObject) })
+  shape({ readings: listOf(shape(MEMORY_READING)) })
 );
 
 const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
@@ -435,7 +453,7 @@ function readMemoryResult(folder: string): MemoryResult {
   return readMeasurementResult<MemoryResult>(
     folder,
     'memory',
-    MEMORY_FIELDS,
-    MEMORY_LAUNCH
+    () => MEMORY_FIELDS,
+    () => MEMORY_LAUNCH
   );
 }

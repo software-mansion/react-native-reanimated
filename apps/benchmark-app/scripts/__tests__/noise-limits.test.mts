@@ -88,6 +88,7 @@ function outcome(
           accepted: true,
           valid: true,
           timings: {},
+          report: { version: 1, load: 10, jsThread: 5 },
           metrics: {
             frameDurationMedian: 10,
             frameDurationP95: 12,
@@ -97,6 +98,8 @@ function outcome(
             memory: 100000,
             windowMemoryDelta: 0,
             coldStart: 300,
+            frameCyclesMedian: null,
+            frameCyclesP95: null,
             ...metricsOf(variant, i),
           },
         }) as Recorded
@@ -289,6 +292,21 @@ describe('noiseLimitsCommand', () => {
     assert.throws(
       () => noiseLimitsCommand({ command: 'noise-limits', runs: [folder] }),
       /is not an A\/A run\. A and B differ in: profiling/
+    );
+  });
+
+  it('refuses a run with empty metrics in a sample', () => {
+    const folder = writeRun(
+      'empty',
+      [outcome('css', () => ({}))],
+      VARIANT,
+      (result) => {
+        Object.assign(result.scenarios[0].samples[0], { metrics: {} });
+      }
+    );
+    assert.throws(
+      () => noiseLimitsCommand({ command: 'noise-limits', runs: [folder] }),
+      /result\.scenarios\[0\]\.samples\[0\]\.metrics\.uiThreadCpu must be a finite number/
     );
   });
 

@@ -15,6 +15,7 @@ import {
   throwProblems,
   valuesOf,
 } from './validation.mts';
+import type { Check } from './validation.mts';
 import type { NoiseLimits } from './verdict.mts';
 
 export interface NoiseLimitsSource {
@@ -46,35 +47,41 @@ export function readNoiseLimitsRecord(file: string): NoiseLimitsRecord {
 
 export function validateNoiseLimitsRecord(raw: unknown): NoiseLimitsRecord {
   const problems: string[] = [];
-  const stored = record(raw, 'noise limits', problems);
+  NOISE_LIMITS_RECORD(raw, 'noise limits', problems);
+  throwProblems('The noise limits are not valid', problems);
+  return raw as NoiseLimitsRecord;
+}
+
+export const NOISE_LIMITS_RECORD: Check = (value, label, problems) => {
+  const stored = record(value, label, problems);
   if (stored.formatVersion !== NOISE_LIMITS_FORMAT_VERSION) {
-    throw new ToolError(
-      `The noise limits file has the format version ${JSON.stringify(stored.formatVersion)}. This driver reads only version ${NOISE_LIMITS_FORMAT_VERSION}. Make the file again with the noise-limits command.`
+    problems.push(
+      `${label} has the format version ${JSON.stringify(stored.formatVersion)}. This driver reads only version ${NOISE_LIMITS_FORMAT_VERSION}. Make the file again with the noise-limits command.`
     );
+    return;
   }
-  const platform = stored.platform;
+  const { platform } = stored;
   if (!isPlatformName(platform)) {
     problems.push(
-      `noise limits.platform must be one of: ${Object.keys(PLATFORM_DEFINITIONS).join(', ')}`
+      `${label}.platform must be one of: ${Object.keys(PLATFORM_DEFINITIONS).join(', ')}`
     );
   }
-  IDENTITY(stored.device, 'noise limits.device', problems);
+  IDENTITY(stored.device, `${label}.device`, problems);
   anInteger(
     stored.measurementRevision,
-    'noise limits.measurementRevision',
+    `${label}.measurementRevision`,
     problems
   );
-  listOf(SOURCE)(stored.sources, 'noise limits.sources', problems);
-  const limits = validateLimits(
+  listOf(SOURCE)(stored.sources, `${label}.sources`, problems);
+  checkLimits(
     stored.limits,
+    `${label}.limits`,
     isPlatformName(platform)
       ? PLATFORM_DEFINITIONS[platform].verdictMetrics
       : [],
     problems
   );
-  throwProblems('The noise limits are not valid', problems);
-  return { ...(stored as unknown as NoiseLimitsRecord), limits };
-}
+};
 
 export function checkNoiseLimitsRecord(
   limits: NoiseLimitsRecord,
@@ -101,35 +108,31 @@ export function checkNoiseLimitsRecord(
   }
 }
 
-function validateLimits(
+function checkLimits(
   value: unknown,
+  label: string,
   verdictMetrics: readonly ComparedMetric[],
   problems: string[]
-): NoiseLimits {
-  const limits: NoiseLimits = {};
+) {
   for (const [scenario, metrics] of Object.entries(
-    record(value, 'noise limits.limits', problems)
+    record(value, label, problems)
   )) {
     if (!isScenario(scenario)) {
-      problems.push(`noise limits.limits: unknown scenario "${scenario}"`);
+      problems.push(`${label}: unknown scenario "${scenario}"`);
       continue;
     }
-    limits[scenario] = {};
     for (const [metric, limit] of Object.entries(
-      record(metrics, `noise limits.limits.${scenario}`, problems)
+      record(metrics, `${label}.${scenario}`, problems)
     )) {
       if (!verdictMetrics.includes(metric as ComparedMetric)) {
         problems.push(
-          `noise limits.limits.${scenario}: "${metric}" is not a verdict metric of the platform`
+          `${label}.${scenario}: "${metric}" is not a verdict metric of the platform`
         );
       } else if (typeof limit !== 'number' || !(limit >= 0)) {
         problems.push(
-          `noise limits.limits.${scenario}.${metric} must be a number of 0 or more`
+          `${label}.${scenario}.${metric} must be a number of 0 or more`
         );
-      } else {
-        limits[scenario][metric as ComparedMetric] = limit;
       }
     }
   }
-  return limits;
 }

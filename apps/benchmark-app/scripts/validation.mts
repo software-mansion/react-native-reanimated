@@ -81,9 +81,12 @@ export function valuesOf(check: Check): Check {
 
 export function shape(fields: Record<string, Check>): Check {
   return (value, label, problems) => {
-    const object = record(value, label, problems);
+    if (!isRecord(value)) {
+      problems.push(`${label} must be an object`);
+      return;
+    }
     Object.entries(fields).forEach(([key, check]) =>
-      check(object[key], `${label}.${key}`, problems)
+      check(value[key], `${label}.${key}`, problems)
     );
   };
 }

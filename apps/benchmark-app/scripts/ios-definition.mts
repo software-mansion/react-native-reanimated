@@ -1,9 +1,21 @@
+import type { IosDeviceState } from './ios-device.mts';
 import type { PlatformDefinition } from './platform.mts';
+import { aString, shape } from './validation.mts';
+import type { Check } from './validation.mts';
 
 const WINDOW =
   'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread';
 
 const ROWS_IN_WINDOW = 'Rows that are fully in the trace window';
+
+const DEVICE_STATE: Record<keyof IosDeviceState, Check> = {
+  deviceId: aString,
+  name: aString,
+  model: aString,
+  productType: aString,
+  osVersion: aString,
+  osBuild: aString,
+};
 
 const CPU_LIMIT =
   'The table has no clock rate. The same work takes more time on an efficiency core.';
@@ -13,6 +25,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
   commands: ['run', 'sample'],
   options: { 'sign-command': 'required for run' },
   segmentColumns: [],
+  deviceState: shape(DEVICE_STATE),
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',

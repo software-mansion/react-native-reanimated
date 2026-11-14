@@ -4,8 +4,10 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import type { MemoryOptions } from '../arguments.mts';
+import type { MemoryReading } from '../memory-series.mts';
 import { memoryCommand, memoryResumeCommand } from '../memory.mts';
 import type { MemoryResult } from '../memory.mts';
+import { writeResult } from '../results.mts';
 import { resumeCommand } from '../run.mts';
 import {
   DEVICE,
@@ -482,6 +484,31 @@ describe('memoryResumeCommand', () => {
       result.summary.map((variant) => variant.verdict),
       ['no rise found', 'rises']
     );
+  });
+
+  it('refuses a stored reading without a value that the summary reads', async () => {
+    const folder = await stoppedMemoryTest(3);
+    const stored = readMemoryResult(folder);
+    const [launch] = stored.incompleteScenario?.samples ?? [];
+    delete (launch.readings[0] as Partial<MemoryReading>).totalPss;
+    writeResult(folder, stored);
+    const { context, dependencies, installs } = createFake(TEST_ROOT, {
+      meminfo,
+    });
+    await assert.rejects(
+      memoryResumeCommand(
+        {
+          command: 'memory-resume',
+          folder,
+          device: DEVICE,
+          traceProcessor: TEST_ROOT.traceProcessor,
+        },
+        context,
+        dependencies
+      ),
+      /result\.incompleteScenario\.samples\[0\]\.readings\[0\]\.totalPss must be a finite number/
+    );
+    assert.deepEqual(installs, []);
   });
 
   it('is not a run: run --resume refuses a memory test folder', async () => {

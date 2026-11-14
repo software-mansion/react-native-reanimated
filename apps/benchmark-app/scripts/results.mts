@@ -1,16 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { VARIANT_KEYS } from './config.mts';
 import type { RunConfig, VariantKey, VariantsConfig } from './config.mts';
-import { PLATFORM_DEFINITIONS } from './definitions.mts';
+import { PLATFORM_DEFINITIONS, isPlatformName } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import type { ExpectationResult } from './expectations.mts';
+import { NULL_ALLOWED } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
+import { NOISE_LIMITS_RECORD } from './noise-limits-record.mts';
 import type { NoiseLimitsRecord } from './noise-limits-record.mts';
 import { RESULT_FILE } from './paths.mts';
 import type {
   DeviceState,
   InAppState,
+  PlatformDefinition,
   PlatformName,
   ToolVersions,
 } from './platform.mts';
@@ -106,9 +110,11 @@ const MEASUREMENT_STATUSES: readonly MeasurementStatus[] = [
   'tool error',
 ];
 
+export type StoredCheck = (definition: PlatformDefinition) => Check;
+
 export const RECORDED_SAMPLE: Check = both(
   shape({
-    variant: oneOf(['a', 'b']),
+    variant: oneOf(VARIANT_KEYS),
     round: anInteger,
     attempt: anInteger,
     position: anInteger,
@@ -123,26 +129,73 @@ export const RECORDED_SAMPLE: Check = both(
   )
 );
 
-const RUN_SAMPLE = both(
-  RECORDED_SAMPLE,
-  when((sample) => sample.valid === true, shape({ metrics: anObject }))
+const STORED_SCENARIO_REPORT: Check = shape({
+  version: anInteger,
+  load: anInteger,
+});
+
+const PACKAGE_SOURCE: Check = both(
+  shape({ kind: oneOf(['npm', 'tarball']) }),
+  both(
+    when((source) => source.kind === 'npm', shape({ version: aString })),
+    when((source) => source.kind === 'tarball', shape({ path: aString }))
+  )
 );
 
-const RUN_FIELDS: Record<string, Check> = {
-  config: shape({
-    scenarios: listOf(oneOf(SCENARIOS)),
-    expect: listOf(anObject),
-  }),
-  options: shape({
-    blocks: anInteger,
-    noiseLimitsFile: nullable(aString),
-    keepTraces: aBoolean,
-  }),
-  noiseLimits: nullable(anObject),
-  verdictRows: listOf(anObject),
-  advisoryRows: listOf(anObject),
-  expectations: listOf(anObject),
-};
+const STORED_VARIANT: Check = shape({
+  reanimated: PACKAGE_SOURCE,
+  worklets: PACKAGE_SOURCE,
+  reanimatedFlags: valuesOf(aBoolean),
+  workletsFlags: valuesOf(aBoolean),
+  bundleMode: aBoolean,
+  profiling: aBoolean,
+});
+
+const runSample: StoredCheck = (definition) =>
+  both(
+    RECORDED_SAMPLE,
+    when(
+      (sample) => sample.valid === true,
+      shape({
+        report: STORED_SCENARIO_REPORT,
+        metrics: shape(
+          Object.fromEntries(
+            [...definition.verdictMetrics, ...definition.advisoryMetrics].map(
+              (metric) => [
+                metric,
+                NULL_ALLOWED[metric] ? nullable(aNumber) : aNumber,
+              ]
+            )
+          )
+        ),
+      })
+    )
+  );
+
+const runFields: StoredCheck = (definition) =>
+  shape({
+    config: shape({
+      scenarios: listOf(oneOf(SCENARIOS)),
+      blocks: optional(valuesOf(anInteger)),
+      expect: listOf(
+        shape({
+          scenarios: listOf(oneOf(SCENARIOS)),
+          metrics: listOf(oneOf(definition.verdictMetrics)),
+          is: oneOf(['notWorse', 'better']),
+          byAtLeast: optional(aNumber),
+        })
+      ),
+    }),
+    options: shape({
+      blocks: anInteger,
+      noiseLimitsFile: nullable(aString),
+      keepTraces: aBoolean,
+    }),
+    noiseLimits: nullable(NOISE_LIMITS_RECORD),
+    verdictRows: listOf(anObject),
+    advisoryRows: listOf(anObject),
+    expectations: listOf(anObject),
+  });
 
 export function measurementFolderName(date: Date, name: string): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -165,19 +218,14 @@ export function createMeasurementFolder(
 }
 
 export function readResult(folder: string): RunResult {
-  return readMeasurementResult<RunResult>(
-    folder,
-    'run',
-    RUN_FIELDS,
-    RUN_SAMPLE
-  );
+  return readMeasurementResult<RunResult>(folder, 'run', runFields, runSample);
 }
 
 export function readMeasurementResult<R extends MeasurementResult<Judged>>(
   folder: string,
   command: R['command'],
-  commandFields: Record<string, Check>,
-  sample: Check
+  commandFields: StoredCheck,
+  sample: StoredCheck
 ): R {
   const file = path.join(folder, RESULT_FILE);
   let stored: unknown;
@@ -198,8 +246,18 @@ export function readMeasurementResult<R extends MeasurementResult<Judged>>(
       `${folder} holds the result of the ${String(storedCommand)} command, not of the ${command} command`
     );
   }
+  const platform = (stored as { platform?: unknown }).platform;
+  if (!isPlatformName(platform)) {
+    throw new ToolError(
+      `${file} has the platform ${JSON.stringify(platform)}. This driver knows only ${Object.keys(PLATFORM_DEFINITIONS).join(', ')}.`
+    );
+  }
+  const definition = PLATFORM_DEFINITIONS[platform];
   const problems: string[] = [];
-  measurementShape(commandFields, sample)(stored, 'result', problems);
+  both(
+    measurementShape(definition, sample(definition)),
+    commandFields(definition)
+  )(stored, 'result', problems);
   throwProblems(`${file} is not a valid result`, problems);
   return stored as R;
 }
@@ -248,7 +306,7 @@ export function finiteNumber(value: number, label: string): number {
 }
 
 function measurementShape(
-  commandFields: Record<string, Check>,
+  definition: PlatformDefinition,
   sample: Check
 ): Check {
   const outcome = shape({
@@ -258,17 +316,21 @@ function measurementShape(
   });
   return shape({
     measurementRevision: anInteger,
-    platform: oneOf(Object.keys(PLATFORM_DEFINITIONS)),
     status: oneOf(MEASUREMENT_STATUSES),
     startedAt: aString,
-    config: shape({ name: aString, a: anObject, b: anObject }),
+    config: shape({
+      name: aString,
+      a: STORED_VARIANT,
+      b: STORED_VARIANT,
+      note: optional(aString),
+    }),
     options: shape({ keepTraces: aBoolean }),
     segments: both(
       listOf(
         shape({
           startedAt: aString,
           status: oneOf(MEASUREMENT_STATUSES),
-          device: anObject,
+          device: definition.deviceState,
         })
       ),
       nonEmpty
@@ -282,14 +344,16 @@ function measurementShape(
         installFile: aString,
         installFileSha256: aString,
         installedVersions: shape({ reanimated: aString, worklets: aString }),
-        effectiveFlags: shape({ reanimated: anObject, worklets: anObject }),
+        effectiveFlags: shape({
+          reanimated: valuesOf(aBoolean),
+          worklets: valuesOf(aBoolean),
+        }),
       })
     ),
     scenarios: listOf(outcome),
     incompleteScenario: nullable(outcome),
     abandonedScenarios: listOf(both(outcome, shape({ segment: anInteger }))),
     inAppState: optional(anObject),
-    ...commandFields,
   });
 }
 

@@ -10,6 +10,7 @@ import type { RunResult, MeasuredVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import {
   DEVICE,
+  METRICS,
   STATE,
   createFake as createCommandFake,
   onlyRunFolder,
@@ -75,6 +76,16 @@ function editResult(folder: string, edit: (result: RunResult) => void) {
   const result = readResult(folder);
   edit(result);
   writeResult(folder, result);
+}
+
+async function assertRefused(folder: string, problems: string[]) {
+  const { run, installs } = resume(folder);
+  await assert.rejects(run, (error: Error) =>
+    ['is not a valid result', ...problems].every((part) =>
+      error.message.includes(part)
+    )
+  );
+  assert.deepEqual(installs, []);
 }
 
 function summaryOf(folder: string) {
@@ -399,6 +410,65 @@ describe('resumeCommand', () => {
         'result.variants.a.installFileSha256 must be a string',
       ].every((part) => error.message.includes(part))
     );
+  });
+
+  it('refuses a run config without its name and variants', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      const config = result.config as Partial<RunResult['config']>;
+      delete config.name;
+      delete config.a;
+      delete config.b;
+    });
+    await assertRefused(folder, [
+      'result.config.name must be a string',
+      'result.config.a must be an object',
+      'result.config.b must be an object',
+    ]);
+  });
+
+  it('refuses metrics that a verdict or an advisory row reads', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      const [first, second] = result.scenarios[0].samples;
+      Object.assign(first, { metrics: {} });
+      Object.assign(second, {
+        metrics: { ...METRICS, coldStart: 300, jankyFrames: null },
+      });
+    });
+    await assertRefused(folder, [
+      'result.scenarios[0].samples[0].metrics.frameDurationMedian must be a finite number',
+      'result.scenarios[0].samples[0].metrics.frameCyclesMedian must be a finite number',
+      'result.scenarios[0].samples[0].metrics.coldStart must be a finite number',
+      'result.scenarios[0].samples[1].metrics.jankyFrames must be a finite number',
+    ]);
+  });
+
+  it('accepts null for a metric whose value can be unknown', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      for (const sample of result.scenarios[0].samples) {
+        Object.assign(sample, {
+          metrics: { ...METRICS, coldStart: 300, frameCyclesMedian: null },
+        });
+      }
+    });
+    assert.equal(await resume(folder).run, 0);
+  });
+
+  it('refuses expectations, device fields and noise limits of a wrong form', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      Object.assign(result.config.expect[0], { metrics: ['fps'], is: 'same' });
+      Object.assign(result.segments[0].device, { sdk: '37' });
+      Object.assign(result, { noiseLimits: {} });
+    });
+    await assertRefused(folder, [
+      'result.config.expect[0].metrics[0] must be one of',
+      'result.config.expect[0].is must be one of "notWorse", "better"',
+      'result.segments[0].device.sdk must be a finite number',
+      'result.noiseLimits has the format version undefined',
+    ]);
   });
 
   it('refuses a run of another measurement revision', async () => {

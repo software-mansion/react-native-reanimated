@@ -52,6 +52,8 @@ export interface IosSampleMetrics extends CommonSampleMetrics {
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
 
+type StoredSampleMetrics = AndroidSampleMetrics & IosSampleMetrics;
+
 export const COMPARED_METRICS = [
   'frameDurationMedian',
   'frameDurationP95',
@@ -63,6 +65,20 @@ export const COMPARED_METRICS = [
   'memory',
   'coldStart',
 ] as const;
+
+export const NULL_ALLOWED: {
+  [M in ComparedMetric]: null extends StoredSampleMetrics[M] ? true : false;
+} = {
+  frameDurationMedian: true,
+  frameDurationP95: true,
+  frameCyclesMedian: true,
+  frameCyclesP95: true,
+  jankyFrames: false,
+  uiThreadCpu: false,
+  jsThreadCpu: false,
+  memory: false,
+  coldStart: false,
+};
 
 const RELATIVE_NOISE_FLOOR = 0.02;
 

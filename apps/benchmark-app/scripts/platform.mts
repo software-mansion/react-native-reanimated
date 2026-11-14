@@ -6,6 +6,7 @@ import type { ComparedMetric } from './metrics.mts';
 import type { Processes } from './processes.mts';
 import type { SampleResult } from './samples.mts';
 import type { Scenario } from './scenarios.mts';
+import type { Check } from './validation.mts';
 import type { BuildRequest, BuiltVariant } from './variant-build.mts';
 
 export type PlatformName = 'android' | 'ios';
@@ -50,6 +51,7 @@ export interface PlatformDefinition {
   commands: readonly PlatformCommand[];
   options: Partial<Record<PlatformOption, 'optional' | 'required for run'>>;
   segmentColumns: readonly SegmentColumn[];
+  deviceState: Check;
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
   frameSource: FrameSource;
