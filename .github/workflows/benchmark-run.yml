@@ -1,0 +1,150 @@
+name: Benchmark run
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: android or ios
+        required: true
+        type: string
+      phone:
+        description: The runner label that names the cabled phone model, for example pixel-8 or iphone-13-mini
+        required: true
+        type: string
+      a-reanimated:
+        description: An exact Reanimated version for A, or main
+        required: true
+        type: string
+      a-worklets:
+        description: An exact Worklets version for A, or main. Empty takes the version from compatibility.json.
+        required: false
+        type: string
+        default: ''
+      b-reanimated:
+        description: An exact Reanimated version for B, or main
+        required: true
+        type: string
+      b-worklets:
+        description: An exact Worklets version for B, or main. Empty takes the version from compatibility.json.
+        required: false
+        type: string
+        default: ''
+      scenarios:
+        description: Scenario names separated by commas, or all
+        required: false
+        type: string
+        default: all
+      blocks:
+        description: The number of blocks for each scenario
+        required: false
+        type: number
+        default: 5
+      noise-limits:
+        description: The name of a noise limits record in the records folder of the runner. Empty gives an uncalibrated run.
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Benchmark ${{ inputs.platform }} on ${{ inputs.phone }}
+    runs-on: [self-hosted, macOS, '${{ inputs.phone }}']
+    environment: benchmark-${{ inputs.phone }}
+    timeout-minutes: 720
+    concurrency:
+      group: benchmark-${{ inputs.phone }}
+      cancel-in-progress: false
+    env:
+      PLATFORM: ${{ inputs.platform }}
+      A_REANIMATED: ${{ inputs.a-reanimated }}
+      A_WORKLETS: ${{ inputs.a-worklets }}
+      B_REANIMATED: ${{ inputs.b-reanimated }}
+      B_WORKLETS: ${{ inputs.b-worklets }}
+      SCENARIOS: ${{ inputs.scenarios }}
+      BLOCKS: ${{ inputs.blocks }}
+      NOISE_LIMITS: ${{ inputs.noise-limits }}
+      DEVICE_ID: ${{ vars.BENCHMARK_DEVICE_ID }}
+      SIGN_COMMAND: ${{ vars.BENCHMARK_SIGN_COMMAND }}
+      NOISE_LIMITS_DIR: ${{ vars.BENCHMARK_NOISE_LIMITS_DIR }}
+    steps:
+      - name: Name the work folders
+        run: |
+          {
+            echo "TARBALLS_DIR=$RUNNER_TEMP/benchmark-tarballs"
+            echo "CONFIG_FILE=$RUNNER_TEMP/benchmark-config.json"
+            echo "OUTPUT_DIR=$RUNNER_TEMP/benchmark-output"
+          } >> "$GITHUB_ENV"
+
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Pack Reanimated and Worklets from main
+        if: inputs.a-reanimated == 'main' || inputs.a-worklets == 'main' || inputs.b-reanimated == 'main' || inputs.b-worklets == 'main'
+        run: |
+          rm -rf "$TARBALLS_DIR"
+          mkdir -p "$TARBALLS_DIR"
+          (cd packages/react-native-worklets && npm pack --pack-destination "$TARBALLS_DIR")
+          (cd packages/react-native-reanimated && npm pack --pack-destination "$TARBALLS_DIR")
+          mv "$TARBALLS_DIR"/react-native-worklets-*.tgz "$TARBALLS_DIR/react-native-worklets.tgz"
+          mv "$TARBALLS_DIR"/react-native-reanimated-*.tgz "$TARBALLS_DIR/react-native-reanimated.tgz"
+
+      - name: Write the benchmark config
+        run: node --experimental-strip-types .github/workflows/helper/benchmark-config.ts
+
+      - name: Run the benchmark
+        id: run
+        run: |
+          rm -rf "$OUTPUT_DIR"
+          if [ "$PLATFORM" = ios ]; then
+            DEVICE_OPTIONS=(--udid "$DEVICE_ID" --sign-command "$SIGN_COMMAND")
+          else
+            DEVICE_OPTIONS=(--serial "$DEVICE_ID")
+          fi
+          NOISE_LIMITS_OPTIONS=()
+          if [ -n "$NOISE_LIMITS" ]; then
+            NOISE_LIMITS_OPTIONS=(--noise-limits "$NOISE_LIMITS_DIR/$NOISE_LIMITS.json")
+          fi
+          set +e
+          node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+            --config "$CONFIG_FILE" "${DEVICE_OPTIONS[@]}" --blocks "$BLOCKS" \
+            --output-dir "$OUTPUT_DIR" "${NOISE_LIMITS_OPTIONS[@]}"
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the run folder
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: benchmark-${{ inputs.platform }}-${{ inputs.phone }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.OUTPUT_DIR }}
+          if-no-files-found: warn
+
+      - name: Write the report to the job summary
+        if: always()
+        run: |
+          for report in "$OUTPUT_DIR"/*/report.md; do
+            if [ -f "$report" ]; then
+              cat "$report" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: End with the exit code of the driver
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.run.outputs.exit-code || '2' }}
+        run: exit "$EXIT_CODE"

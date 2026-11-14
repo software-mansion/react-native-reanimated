@@ -1,0 +1,67 @@
+name: Benchmark manual
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: The platform of the phone
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
+      phone:
+        description: The runner label that names the cabled phone model
+        required: true
+        type: string
+      a-reanimated:
+        description: An exact Reanimated version for A, or main
+        required: true
+        type: string
+      a-worklets:
+        description: An exact Worklets version for A, or main. Empty takes the version from compatibility.json.
+        required: false
+        type: string
+        default: ''
+      b-reanimated:
+        description: An exact Reanimated version for B, or main
+        required: true
+        type: string
+        default: main
+      b-worklets:
+        description: An exact Worklets version for B, or main. Empty takes the version from compatibility.json.
+        required: false
+        type: string
+        default: ''
+      scenarios:
+        description: Scenario names separated by commas, or all
+        required: false
+        type: string
+        default: all
+      blocks:
+        description: The number of blocks for each scenario
+        required: false
+        type: number
+        default: 5
+      noise-limits:
+        description: The name of a noise limits record on the runner. Empty gives an uncalibrated run.
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: $/.github/workflows/benchmark-run.yml
+    with:
+      platform: ${{ inputs.platform }}
+      phone: ${{ inputs.phone }}
+      a-reanimated: ${{ inputs.a-reanimated }}
+      a-worklets: ${{ inputs.a-worklets }}
+      b-reanimated: ${{ inputs.b-reanimated }}
+      b-worklets: ${{ inputs.b-worklets }}
+      scenarios: ${{ inputs.scenarios }}
+      blocks: ${{ inputs.blocks }}
+      noise-limits: ${{ inputs.noise-limits }}

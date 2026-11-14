@@ -57,9 +57,9 @@ The driver writes the path of the run folder to stderr at the start. The report 
 ## Commands
 
 ```sh
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks 5] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks 5] [--noise-limits <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device> [--trace-processor <path>]
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> --serial <adb serial> [--launches 2] [--interval 60] [--duration 1200] [--slope-limit 1000] [--keep-traces] [--trace-processor <path>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> --serial <adb serial> [--output-dir <dir>] [--launches 2] [--interval 60] [--duration 1200] [--slope-limit 1000] [--keep-traces] [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> --serial <adb serial> [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
@@ -117,8 +117,9 @@ When the relative difference is not defined for a division (a median of 0 or les
 ## Output
 
 - Builds: `.tmp/benchmarks/builds/<key>/`. The driver builds a variant again only when its key changes. The key has the variant (sources, tarball hashes, flags, build options), the application id suffix, the files of the app project (with `yarn.lock`), the build procedure of the driver, the Node version and the build tools: on Android the JDK (`java -version`) and the NDK and build tools revisions of `android/build.gradle`, on iOS the Xcode version and the `iphoneos` SDK version and build. The key does not have the dependency versions that `yarn add` resolves in the build copy, because the driver knows them only after the build.
-- Runs: `.tmp/benchmarks/runs/<date>-<name>/`, and `.tmp/benchmarks/runs/<date>-<name>-memory-<scenario>/` for a memory test. The folder has `result.json` (all samples and statistics), `report.md`, and `traces/` with the trace of each invalid sample (all traces with `--keep-traces`). An iOS run folder also has `signed/` with the signed apps. `sample` writes its trace to `.tmp/benchmarks/samples/`.
+- Runs: `<output dir>/<date>-<name>/`, and `<output dir>/<date>-<name>-memory-<scenario>/` for a memory test. The output dir is `--output-dir`, or `.tmp/benchmarks/runs/`. The folder has `result.json` (all samples and statistics), `report.md`, `summary.json`, and `traces/` with the trace of each invalid sample (all traces with `--keep-traces`). An iOS run folder also has `signed/` with the signed apps. `sample` writes its trace to `.tmp/benchmarks/samples/`.
 - `result.json` has the format version 1. The driver writes it after each sample. Another version, or a missing or wrong field that the driver reads, is a tool error.
+- `summary.json` (format version 1) has the `command`, the `status`, the `exitCode` and its `reason`, the expectations that do not hold (`failedExpectations`), the count of each verdict (`verdictCounts`), and the relative paths of `report.md` and `result.json`. The driver writes it at the end of each segment, also after a tool error (exit code 2) or an interrupt (exit code 130 or 143). An error before the run folder exists, for example an invalid config, gives no run folder.
 - Exit code of `run`: 0 when all expectations hold, 1 when an expectation fails or is not decided, 2 for a tool error.
 
 ## Measurement
@@ -244,6 +245,22 @@ For each accepted launch, `tailLevel` is the median total PSS of the readings at
 The report gives the limits of the test: few launches and no confidence interval, `no rise found` does not prove that there is no leak, a rise slower than the slope limit and a late drop of memory stay hidden, and the verdict uses total PSS only. The exit code is 0 for `rises`, `no rise found` and `not judged`, 1 for `mixed` or `not decided`, and 2 for a tool error.
 
 The device rules of `run` apply, but the test does not compare the battery level. `memory --resume <run folder> --serial <adb serial>` continues a stopped test. It keeps all valid launches and starts the launch in progress again.
+
+## CI
+
+The workflows run the driver on a self-hosted macOS runner with a cabled phone:
+
+- `benchmark-run.yml` (`workflow_call`) packs Reanimated and Worklets from the commit when a side is `main` (`npm pack`), writes the config (`.github/workflows/helper/benchmark-config.ts`), runs the driver with `--output-dir`, uploads the output folder as an artifact, adds `report.md` to the job summary and ends with the exit code of the driver. An empty Worklets input takes the newest published version that `compatibility.json` gives for the Reanimated version. Two runs on one phone do not overlap: the concurrency group of the phone keeps a new run waiting and does not cancel the run in progress.
+- `benchmark-manual.yml` (`workflow_dispatch`) calls it with the inputs that you give.
+- `benchmark-nightly.yml` compares the latest stable release with `main` each night. It does nothing until the repository variable `BENCHMARK_NIGHTLY_ENABLED` is `true`. The variables `BENCHMARK_NIGHTLY_PLATFORM`, `BENCHMARK_NIGHTLY_PHONE` and `BENCHMARK_NIGHTLY_NOISE_LIMITS` give its inputs.
+
+Runner setup:
+
+1. Give the runner the labels `self-hosted`, `macOS` and the name of the phone model (the `phone` input, for example `pixel-8`).
+1. Install the tools of [Tools](#tools), and Rust (`cargo`) to pack Worklets from `main`.
+1. Make a GitHub environment `benchmark-<phone>` with the variables `BENCHMARK_DEVICE_ID` (the adb serial or the UDID), `BENCHMARK_NOISE_LIMITS_DIR` (a folder on the runner with `<name>.json` noise limits records) and, for an iPhone, `BENCHMARK_SIGN_COMMAND` (the path of the sign command on the runner).
+
+The workflows have no secrets, signing keys or provisioning profiles, and no `pull_request` trigger.
 
 ## Not supported
 
