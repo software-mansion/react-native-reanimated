@@ -104,11 +104,20 @@ function Fixture({
   label?: string;
 }) {
   return (
-    <Freeze freeze={frozen}>
-      <RevealProbe />
-      <Box label={label} />
-    </Freeze>
+    <>
+      <CollectorKeeper />
+      <Freeze freeze={frozen}>
+        <RevealProbe />
+        <Box label={label} />
+      </Freeze>
+    </>
   );
+}
+
+// A registered view outside the boundary keeps the settled props sync active
+// while the box is frozen.
+function CollectorKeeper() {
+  return <Animated.View />;
 }
 
 async function readShadowTreeOpacity() {

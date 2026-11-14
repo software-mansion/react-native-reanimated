@@ -718,7 +718,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -728,15 +728,14 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
-  std::unordered_set<Tag> viewTags;
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
-  }
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, [&](const Tag viewTag) {
+        return isViewRegisteredFunction.call(rt, viewTag).asBool();
+      });
 }
 
 bool ReanimatedModuleProxy::handleEvent(

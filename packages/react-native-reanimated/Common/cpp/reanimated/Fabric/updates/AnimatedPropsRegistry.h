@@ -4,6 +4,7 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,9 +22,10 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   /// Also evicts entries that have already been synced to React — by the time
   /// of the next call, the corresponding `settledProps` state is guaranteed to
   /// be committed, so the registry entries are redundant. Skips views that JS
-  /// cannot deliver to, e.g. ones hidden by a Suspense boundary.
+  /// cannot deliver to, e.g. ones hidden by a Suspense boundary. Calls
+  /// `isViewRegistered` only for entries that have work.
   jsi::Value
-  collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp, const std::unordered_set<Tag> &registeredViewTags);
+  collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp, const std::function<bool(Tag)> &isViewRegistered);
 
   void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) override;
   void handleRemount(Tag tag) override;
