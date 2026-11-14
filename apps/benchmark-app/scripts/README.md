@@ -325,6 +325,7 @@ Make the record on the phone of the runs, with the app build identity of the run
 1. The noise limits record of the phone:
 
    ```sh
+   mkdir -p .tmp/benchmarks/noise-limits
    node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits \
      --runs <A/A run folder> > .tmp/benchmarks/noise-limits/iphone-14.json
    ```
