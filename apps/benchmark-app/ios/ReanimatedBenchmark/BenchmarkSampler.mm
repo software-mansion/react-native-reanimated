@@ -6,11 +6,13 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <memory>
 #include <optional>
 #include <vector>
 
 #include "EndpointReader.h"
 #import "MountCounter.h"
+#import "UiStallLoad.h"
 #import "UpdateRecorder.h"
 
 using namespace benchmark;
@@ -35,18 +37,28 @@ struct DeviceState {
 
 struct Boundary {
   CpuReading cpu;
-  uint64_t signpostNs;
+  uint64_t signpostStartNs;
+  uint64_t signpostEndNs;
   uint64_t footprintKb;
   DeviceState state;
   uint64_t mounts;
   size_t updates;
 };
 
+struct EpochWork {
+  std::atomic<uint64_t> own{0};
+  std::atomic<uint64_t> other{0};
+};
+
 NSString *const SampleLinePrefix = @"ReanimatedBenchmark: SAMPLE ";
+
+NSString *const UiStallLoadName = @"ui-stall";
+
+const double UiStallMilliseconds = 6;
 
 const CFStringRef StartNotification = CFSTR("com.reanimatedbenchmark.start-epochs");
 
-const int SampleFormat = 1;
+const int SampleFormat = 2;
 
 const double UpdateCapacityFactor = 2;
 
@@ -72,6 +84,8 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
   BOOL _begun;
   UpdateRecorder *_updateRecorder;
   MountCounter *_mountCounter;
+  UiStallLoad *_uiStallLoad;
+  std::unique_ptr<EpochWork[]> _work;
   std::vector<Boundary> _boundaries;
   long _maxThermal;
   id<NSObject> _thermalObserver;
@@ -118,7 +132,21 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
     _updateRecorder = [[UpdateRecorder alloc] initWithWindowScene:windowScene capacity:capacity];
     _mountCounter = [MountCounter new];
   }
+  _work = std::make_unique<EpochWork[]>(_epochs.size());
+  [self prepareUiStallLoad];
   _boundaries.reserve(_epochs.size() + 1);
+}
+
+- (void)prepareUiStallLoad
+{
+  for (const Epoch &epoch : _epochs) {
+    if ([epoch.load isEqualToString:UiStallLoadName]) {
+      __weak BenchmarkSampler *weakSelf = self;
+      _uiStallLoad = [[UiStallLoad alloc] initWithBusyMilliseconds:UiStallMilliseconds
+                                                            onUnit:^{ [weakSelf noteWorkOfLoad:UiStallLoadName]; }];
+      return;
+    }
+  }
 }
 
 - (void)countMountsOfSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
@@ -141,7 +169,23 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 - (NSString *)currentEpochLoad
 {
   int index = _currentEpoch.load();
-  return index >= 0 && index < static_cast<int>(_epochs.size()) ? _epochs[index].load : @"none";
+  return [self isEpochIndex:index] ? _epochs[index].load : @"none";
+}
+
+- (BOOL)noteWorkOfLoad:(NSString *)load
+{
+  int index = _currentEpoch.load();
+  if (![self isEpochIndex:index]) {
+    return NO;
+  }
+  BOOL own = [load isEqualToString:_epochs[index].load];
+  (own ? _work[index].own : _work[index].other).fetch_add(1, std::memory_order_relaxed);
+  return own;
+}
+
+- (BOOL)isEpochIndex:(int)index
+{
+  return index >= 0 && index < static_cast<int>(_epochs.size());
 }
 
 - (nullable NSString *)readStart:(nullable NSString *)start
@@ -199,8 +243,9 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
     [self endWithError:error];
     return;
   }
-  boundary.signpostNs = monotonicNs();
+  boundary.signpostStartNs = monotonicNs();
   os_signpost_event_emit(_log, OS_SIGNPOST_ID_EXCLUSIVE, "Boundary", "index=%zu", index);
+  boundary.signpostEndNs = monotonicNs();
   _boundaries.push_back(boundary);
   if (index == _epochs.size()) {
     [self endWithError:nil];
@@ -261,10 +306,16 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 
 - (void)enterEpoch:(size_t)index
 {
-  if (_epochs[index].collector == Collector::full) {
+  const Epoch &epoch = _epochs[index];
+  if (epoch.collector == Collector::full) {
     [_updateRecorder start];
   } else {
     [_updateRecorder stop];
+  }
+  if ([epoch.load isEqualToString:UiStallLoadName]) {
+    [_uiStallLoad start];
+  } else {
+    [_uiStallLoad stop];
   }
   _currentEpoch = static_cast<int>(index);
 }
@@ -272,6 +323,7 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 - (void)endWithError:(nullable NSString *)error
 {
   [_updateRecorder stop];
+  [_uiStallLoad stop];
   [NSNotificationCenter.defaultCenter removeObserver:_thermalObserver];
   _currentEpoch = static_cast<int>(_epochs.size());
   [self reportWithError:error ?: _updateRecorder.error];
@@ -300,11 +352,13 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 - (NSArray *)epochsJson
 {
   NSMutableArray *epochs = [NSMutableArray arrayWithCapacity:_epochs.size()];
-  for (const Epoch &epoch : _epochs) {
+  for (size_t i = 0; i < _epochs.size(); i++) {
+    const Epoch &epoch = _epochs[i];
     [epochs addObject:@{
       @"load" : epoch.load,
       @"collector" : epoch.collector == Collector::full ? @"full" : @"endpoints",
       @"seconds" : @(epoch.seconds),
+      @"work" : @{@"own" : @(_work[i].own.load()), @"other" : @(_work[i].other.load())},
     }];
   }
   return epochs;
@@ -312,7 +366,7 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 
 - (int64_t)sinceOrigin:(uint64_t)ns
 {
-  return static_cast<int64_t>(ns - _boundaries.front().cpu.readStartNs);
+  return static_cast<int64_t>(ns - _boundaries.front().cpu.uiThread.startNs);
 }
 
 - (NSArray *)boundariesJson
@@ -320,12 +374,17 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
   NSMutableArray *boundaries = [NSMutableArray arrayWithCapacity:_boundaries.size()];
   for (const Boundary &boundary : _boundaries) {
     [boundaries addObject:@{
-      @"readStartNs" : @([self sinceOrigin:boundary.cpu.readStartNs]),
-      @"readEndNs" : @([self sinceOrigin:boundary.cpu.readEndNs]),
-      @"signpostNs" : @([self sinceOrigin:boundary.signpostNs]),
-      @"uiThreadCpuUs" : @(boundary.cpu.uiThreadCpuUs),
-      @"jsThreadCpuUs" : @(boundary.cpu.jsThreadCpuUs),
-      @"processCpuUs" : @(boundary.cpu.processCpuUs),
+      @"uiReadStartNs" : @([self sinceOrigin:boundary.cpu.uiThread.startNs]),
+      @"uiReadEndNs" : @([self sinceOrigin:boundary.cpu.uiThread.endNs]),
+      @"uiThreadCpuUs" : @(boundary.cpu.uiThread.valueUs),
+      @"jsReadStartNs" : @([self sinceOrigin:boundary.cpu.jsThread.startNs]),
+      @"jsReadEndNs" : @([self sinceOrigin:boundary.cpu.jsThread.endNs]),
+      @"jsThreadCpuUs" : @(boundary.cpu.jsThread.valueUs),
+      @"processReadStartNs" : @([self sinceOrigin:boundary.cpu.process.startNs]),
+      @"processReadEndNs" : @([self sinceOrigin:boundary.cpu.process.endNs]),
+      @"processCpuUs" : @(boundary.cpu.process.valueUs),
+      @"signpostStartNs" : @([self sinceOrigin:boundary.signpostStartNs]),
+      @"signpostEndNs" : @([self sinceOrigin:boundary.signpostEndNs]),
       @"footprintKb" : @(boundary.footprintKb),
       @"thermal" : @(boundary.state.thermal),
       @"batteryLevel" : @(boundary.state.batteryLevel),

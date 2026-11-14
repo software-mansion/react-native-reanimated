@@ -1,4 +1,5 @@
 import { ToolError } from './errors.mts';
+import type { CpuCounter, TimeSpan } from './in-app-sample.mts';
 import { childText, parseTraceTables } from './xctrace-tables.mts';
 import type { TraceElement, TraceRow } from './xctrace-tables.mts';
 
@@ -6,6 +7,7 @@ export interface TraceExports {
   threadState: string;
   frames: string;
   signposts: string;
+  processes: string;
 }
 
 export interface TracedIosApp {
@@ -14,9 +16,14 @@ export interface TracedIosApp {
   jsThread: number;
 }
 
-export interface TraceSpan {
-  startNs: number;
-  endNs: number;
+export interface TraceEpochSpans {
+  window: TimeSpan;
+  counters: Record<CpuCounter, TimeSpan>;
+}
+
+export interface FootprintSample {
+  timeNs: number;
+  footprintKb: number;
 }
 
 export interface TraceEpoch {
@@ -64,6 +71,14 @@ const THREAD_STATE_COLUMNS = [
 ] as const;
 
 const FRAME_COLUMNS = ['start', 'duration', 'process'] as const;
+
+const PROCESS_COLUMNS = [
+  'start',
+  'process',
+  'memory-physical-footprint',
+] as const;
+
+const BYTES_PER_KB = 1024;
 
 const SIGNPOST_COLUMNS = [
   'time',
@@ -127,10 +142,26 @@ export function readBoundarySignposts(
   return ordered as number[];
 }
 
+export function readFootprints(
+  exports: Pick<TraceExports, 'processes'>,
+  pid: number
+): FootprintSample[] {
+  const processes = appTable(
+    tableOf(exports.processes, 'activity-monitor-process-live'),
+    pid,
+    PROCESS_COLUMNS
+  );
+  return processes.rows.map((row) => ({
+    timeNs: integerCell(processes, row, 'start'),
+    footprintKb:
+      integerCell(processes, row, 'memory-physical-footprint') / BYTES_PER_KB,
+  }));
+}
+
 export function readTraceEpochs(
-  exports: TraceExports,
+  exports: Omit<TraceExports, 'processes'>,
   app: TracedIosApp,
-  spans: readonly TraceSpan[]
+  spans: readonly TraceEpochSpans[]
 ): TraceEpoch[] {
   const threadState = appTable(
     tableOf(exports.threadState, 'thread-state'),
@@ -153,13 +184,12 @@ export function readTraceEpochs(
     .filter(isMountBatchStart)
     .map((row) => integerCell(signposts, row, 'time'));
   return spans.map((span, index) => {
-    if (
-      !covered.some(
-        ({ start, end }) => start <= span.startNs && end >= span.endNs
-      )
-    ) {
+    const all = [span.window, ...Object.values(span.counters)];
+    const startNs = Math.min(...all.map((each) => each.startNs));
+    const endNs = Math.max(...all.map((each) => each.endNs));
+    if (!covered.some(({ start, end }) => start <= startNs && end >= endNs)) {
       throw new ToolError(
-        `The scheduler data does not cover epoch ${index} (${span.startNs} ns to ${span.endNs} ns) for both the main thread ${app.mainThread} and the JS thread ${app.jsThread}`
+        `The scheduler data does not cover epoch ${index} (${startNs} ns to ${endNs} ns) for both the main thread ${app.mainThread} and the JS thread ${app.jsThread}`
       );
     }
     return traceEpoch(intervals, frames, mountStarts, app, span);
@@ -171,27 +201,39 @@ function traceEpoch(
   frames: Interval[],
   mountStarts: number[],
   app: TracedIosApp,
-  span: TraceSpan
+  spans: TraceEpochSpans
 ): TraceEpoch {
-  const window = { start: span.startNs, end: span.endNs };
-  const seconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
-  const perSecond = (ns: number) => ns / NANOSECONDS_PER_MS / seconds;
-  let mainNs = 0;
-  let jsNs = 0;
-  let processNs = 0;
-  for (const interval of intervals) {
-    const inWindow = overlapNs(interval, window);
-    if (SCHEDULER_STATES[interval.state] !== 'on core' || inWindow <= 0) {
-      continue;
-    }
-    processNs += inWindow;
-    mainNs += interval.thread === app.mainThread ? inWindow : 0;
-    jsNs += interval.thread === app.jsThread ? inWindow : 0;
-  }
+  const window = { start: spans.window.startNs, end: spans.window.endNs };
+  const runningPerSecond = (
+    span: TimeSpan,
+    counts: (interval: ThreadInterval) => boolean
+  ) => {
+    const clip = { start: span.startNs, end: span.endNs };
+    const runningNs = intervals
+      .filter(
+        (interval) =>
+          counts(interval) && SCHEDULER_STATES[interval.state] === 'on core'
+      )
+      .reduce(
+        (sum, interval) => sum + Math.max(0, overlapNs(interval, clip)),
+        0
+      );
+    return (
+      runningNs /
+      NANOSECONDS_PER_MS /
+      ((clip.end - clip.start) / NANOSECONDS_PER_SECOND)
+    );
+  };
   return {
-    uiThreadCpu: perSecond(mainNs),
-    jsThreadCpu: perSecond(jsNs),
-    processCpu: perSecond(processNs),
+    uiThreadCpu: runningPerSecond(
+      spans.counters.uiThread,
+      (interval) => interval.thread === app.mainThread
+    ),
+    jsThreadCpu: runningPerSecond(
+      spans.counters.jsThread,
+      (interval) => interval.thread === app.jsThread
+    ),
+    processCpu: runningPerSecond(spans.counters.process, () => true),
     frameDurationsMs: frames
       .filter(({ start, end }) => start >= window.start && end <= window.end)
       .map(({ start, end }) => (end - start) / NANOSECONDS_PER_MS),

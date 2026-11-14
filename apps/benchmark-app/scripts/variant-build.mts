@@ -28,6 +28,7 @@ export interface BuiltVariant {
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
   lockfileSha256: string;
+  appSources: string;
 }
 
 export interface BuildRequest {
@@ -43,6 +44,7 @@ export interface VariantProject {
   directory: string;
   key: VariantKey;
   variant: Variant;
+  appSources: string;
   run: (command: ProjectCommand) => Promise<void>;
 }
 
@@ -76,9 +78,9 @@ export async function buildVariant(
 ): Promise<BuiltVariant> {
   const { appDir, buildsDir, key, variant, log } = request;
   const files = listProjectFiles(appDir);
-  const buildKey = variantBuildKey(
-    await collectBuildKeyInputs(request, platformBuild, files)
-  );
+  const inputs = await collectBuildKeyInputs(request, platformBuild, files);
+  const buildKey = variantBuildKey(inputs);
+  const appSources = inputs.projectHash;
   const directory = path.join(buildsDir, buildKey);
   const marker = path.join(directory, BUILD_MARKER);
   if (fs.existsSync(marker)) {
@@ -96,7 +98,13 @@ export async function buildVariant(
     runLogged(request, path.join(directory, BUILD_LOG), command);
   const libraries = await addLibraries(directory, variant, run);
 
-  const artifact = await platformBuild.build({ directory, key, variant, run });
+  const artifact = await platformBuild.build({
+    directory,
+    key,
+    variant,
+    appSources,
+    run,
+  });
   if (!fs.existsSync(artifact)) {
     throw new ToolError(
       `The build of variant ${key} made no file at ${artifact}`
@@ -109,6 +117,7 @@ export async function buildVariant(
     artifact,
     applicationId: applicationIdOf(key),
     ...libraries,
+    appSources,
   };
   fs.writeFileSync(marker, `${JSON.stringify(built, null, 2)}\n`);
   return built;

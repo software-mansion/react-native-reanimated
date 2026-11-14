@@ -17,6 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)currentEpochLoad;
 
+- (BOOL)noteWorkOfLoad:(NSString *)load;
+
 @end
 
 NS_ASSUME_NONNULL_END

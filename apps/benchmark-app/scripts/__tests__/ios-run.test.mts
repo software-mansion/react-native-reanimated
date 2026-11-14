@@ -13,12 +13,15 @@ import type {
 } from '../ios-device.mts';
 import { iosPlatform } from '../ios-platform.mts';
 import type { IosDependencies } from '../ios-platform.mts';
+import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
 import type { DeviceTarget } from '../platform.mts';
 import type { Processes } from '../processes.mts';
 import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import { MINIMUM_WAIT_MS } from '../samples.mts';
+import { VALIDATION_FORMAT_VERSION } from '../validation-record.mts';
+import type { ValidationRecord } from '../validation-record.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
 import {
   END_BOUNDARY,
@@ -36,6 +39,7 @@ const TEST_ROOT = useTestRoot('ios-run', {
 });
 const IPHONE: DeviceTarget = { platform: 'ios', id: 'UDID1' };
 const SIGN_COMMAND = path.join(TEST_ROOT.root, 'sign.sh');
+const VALIDATION_FILE = path.join(TEST_ROOT.root, 'validation.json');
 const STATE: IosDeviceState = {
   deviceId: 'UDID1',
   name: 'Test iPhone',
@@ -87,7 +91,7 @@ function createFake(options: FakeOptions = {}) {
       launches.push(`${applicationId} ${scenario}`);
       onLine(`Launched application with ${applicationId} bundle identifier.`);
       onLine(
-        'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5'
+        'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=80.5 sources=sources'
       );
       if (scenario !== undefined) {
         samples++;
@@ -119,6 +123,7 @@ function createFake(options: FakeOptions = {}) {
       installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
       effectiveFlags: { reanimated: {}, worklets: {} },
       lockfileSha256: 'lock',
+      appSources: 'sources',
     }),
     createDevice: () => device as unknown as IosDevice,
     clock,
@@ -144,7 +149,11 @@ function createFake(options: FakeOptions = {}) {
   return { dependencies, context, installs, signs, launches };
 }
 
-function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
+function run(
+  fake: ReturnType<typeof createFake>,
+  device = IPHONE,
+  validation?: string
+) {
   return runCommand(
     {
       command: 'run',
@@ -154,10 +163,35 @@ function run(fake: ReturnType<typeof createFake>, device = IPHONE) {
       blocks: 1,
       keepTraces: false,
       signCommand: SIGN_COMMAND,
+      validation,
     },
     fake.context,
     fake.dependencies
   );
+}
+
+function writeValidationRecord(change: Partial<ValidationRecord> = {}): string {
+  const metric = { validated: true, gates: [] };
+  const record: ValidationRecord = {
+    formatVersion: VALIDATION_FORMAT_VERSION,
+    platform: 'ios',
+    device: {
+      model: 'iPhone 13 mini (iPhone14,4)',
+      deviceId: 'UDID1',
+      osBuild: '24A446',
+    },
+    measurementRevision: MEASUREMENT_REVISION,
+    appSources: 'sources',
+    sources: { crosschecks: [], observerCosts: [] },
+    metrics: {
+      uiThreadCpu: metric,
+      jsThreadCpu: metric,
+      memory: { validated: false, gates: [] },
+    },
+    ...change,
+  };
+  fs.writeFileSync(VALIDATION_FILE, JSON.stringify(record));
+  return VALIDATION_FILE;
 }
 
 before(() => fs.writeFileSync(SIGN_COMMAND, '#!/bin/sh\n'));
@@ -165,7 +199,7 @@ before(() => fs.writeFileSync(SIGN_COMMAND, '#!/bin/sh\n'));
 describe('an iOS run', () => {
   it('builds, installs, launches each app one time and measures each sample', async () => {
     const fake = createFake();
-    assert.equal(await run(fake), 0);
+    assert.equal(await run(fake), 1);
     const result = readResult(onlyRunFolder(TEST_ROOT));
     assert.equal(result.platform, 'ios');
     assert.equal(result.status, 'done');
@@ -200,24 +234,86 @@ describe('an iOS run', () => {
     assert.equal(samples[0].metrics?.coldStart, 80.5);
     assert.deepEqual(samples[0].traceWindow, IOS_SAMPLE_WINDOW);
     assert.equal(samples[0].batteryLevel, undefined);
+    assert.deepEqual(result.verdictRows, []);
     assert.deepEqual(
-      result.verdictRows.map((row) => row.metric),
-      ['uiThreadCpu', 'jsThreadCpu', 'memory']
+      result.advisoryRows.map((row) => [
+        row.metric,
+        'unvalidated' in row && row.unvalidated === true,
+      ]),
+      [
+        ['uiThreadCpu', true],
+        ['jsThreadCpu', true],
+        ['memory', true],
+        ['uiUpdateDurationMedian', false],
+        ['uiUpdateDurationP95', false],
+        ['missedDisplayLinkCallbacks', false],
+        ['coldStart', false],
+      ]
     );
     assert.deepEqual(
-      result.advisoryRows.map((row) => row.metric),
-      [
-        'uiUpdateDurationMedian',
-        'uiUpdateDurationP95',
-        'missedDisplayLinkCallbacks',
-        'coldStart',
-      ]
+      result.expectations.map((expectation) => expectation.status),
+      ['not decided']
     );
     const report = fs.readFileSync(
       path.join(onlyRunFolder(TEST_ROOT), 'report.md'),
       'utf8'
     );
     assert.match(report, /\| osBuild \| 24A446 \|/);
+    assert.match(
+      report,
+      /No validation record: no verdict for a metric \(the run has no validation record\)\./
+    );
+    assert.match(
+      report,
+      /\| css \| uiThreadCpu \| 2\/2 \| .* \| unvalidated \|/
+    );
+  });
+
+  it('gives a verdict only for the metrics that a matching validation record validates', async () => {
+    assert.equal(await run(createFake(), IPHONE, writeValidationRecord()), 1);
+    const result = readResult(onlyRunFolder(TEST_ROOT));
+    assert.deepEqual(
+      result.verdictRows.map((row) => row.metric),
+      ['uiThreadCpu', 'jsThreadCpu']
+    );
+    assert.deepEqual(result.validity, {
+      validated: ['uiThreadCpu', 'jsThreadCpu'],
+      reason: 'the validation record does not validate memory',
+    });
+    assert.ok(
+      result.advisoryRows.some(
+        (row) => row.metric === 'memory' && 'unvalidated' in row
+      )
+    );
+  });
+
+  it('gives no verdict when the validation record is of another setup', async () => {
+    for (const [change, reason] of [
+      [
+        { appSources: 'other' },
+        /the validation record does not fit the run: app sources other -> sources/,
+      ],
+      [
+        {
+          device: {
+            model: 'iPhone 14 (iPhone14,7)',
+            deviceId: 'UDID1',
+            osBuild: '24A446',
+          },
+        },
+        /device model iPhone 14 \(iPhone14,7\) -> iPhone 13 mini \(iPhone14,4\)/,
+      ],
+      [
+        { measurementRevision: MEASUREMENT_REVISION - 1 },
+        /measurement revision/,
+      ],
+    ] as const) {
+      fs.rmSync(TEST_ROOT.outputDir, { recursive: true, force: true });
+      await run(createFake(), IPHONE, writeValidationRecord(change));
+      const result = readResult(onlyRunFolder(TEST_ROOT));
+      assert.deepEqual(result.verdictRows, []);
+      assert.match(result.validity?.reason ?? '', reason);
+    }
   });
 
   it('stops when the device is not the same before a sample', async () => {
@@ -294,11 +390,23 @@ describe('an iOS run', () => {
     );
   });
 
-  it('resumes with the stored state of the app as the reference', async () => {
+  it('resumes with the stored state of the app and the stored validation record', async () => {
+    const validated = { validated: true, gates: [] };
     await assert.rejects(
-      run(createFake({ interruptBeforeSample: 3 })),
+      run(
+        createFake({ interruptBeforeSample: 3 }),
+        IPHONE,
+        writeValidationRecord({
+          metrics: {
+            uiThreadCpu: validated,
+            jsThreadCpu: validated,
+            memory: validated,
+          },
+        })
+      ),
       /the device connection ended/
     );
+    fs.rmSync(VALIDATION_FILE);
     const folder = onlyRunFolder(TEST_ROOT);
     assert.equal(readResult(folder).incompleteScenario?.samples.length, 2);
     const resume = (fake: ReturnType<typeof createFake>, device = IPHONE) =>
@@ -328,6 +436,11 @@ describe('an iOS run', () => {
     const renamed = createFake({ state: { ...STATE, name: 'New name' } });
     assert.equal(await resume(renamed), 0);
     assert.deepEqual(renamed.signs, []);
-    assert.equal(readResult(folder).status, 'done');
+    const result = readResult(folder);
+    assert.equal(result.status, 'done');
+    assert.deepEqual(
+      result.verdictRows.map((row) => row.metric),
+      ['uiThreadCpu', 'jsThreadCpu', 'memory']
+    );
   });
 });

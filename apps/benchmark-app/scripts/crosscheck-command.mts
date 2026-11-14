@@ -8,13 +8,20 @@ import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import {
   CPU_TOLERANCE,
+  MEMORY_TOLERANCE,
   UPDATE_DURATION_TOLERANCE,
   compareEpochs,
+  compareFootprints,
   crosscheckVerdict,
   mapAppClock,
   traceSpans,
 } from './crosscheck.mts';
-import type { ComparedValue, CrosscheckEpoch } from './crosscheck.mts';
+import type {
+  ClockMapping,
+  ComparedValue,
+  CrosscheckEpoch,
+  CrosscheckVerdict,
+} from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import {
   START_NOTIFICATION,
@@ -24,13 +31,23 @@ import {
 } from './in-app-sample.mts';
 import type { InAppSample, SamplePlan } from './in-app-sample.mts';
 import { IosDevice, readIosToolVersions } from './ios-device.mts';
+import { iosPlatform } from './ios-platform.mts';
 import { InAppStateGuard, startIosApp } from './ios-protocol.mts';
 import type { RunningIosApp } from './ios-protocol.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { Processes } from './processes.mts';
 import { createMeasurementFolder } from './results.mts';
 import { timedSteps } from './samples.mts';
-import { readBoundarySignposts, readTraceEpochs } from './xctrace-metrics.mts';
+import {
+  VALIDATION_SOURCE_FORMAT_VERSION,
+  writeCrosscheckResult,
+} from './validation-sources.mts';
+import type { CrosscheckResult } from './validation-sources.mts';
+import {
+  readBoundarySignposts,
+  readFootprints,
+  readTraceEpochs,
+} from './xctrace-metrics.mts';
 import { Xctrace } from './xctrace.mts';
 import type { IosTracer } from './xctrace.mts';
 
@@ -52,8 +69,6 @@ const DEFAULT_DEPENDENCIES: CrosscheckDependencies = {
 };
 
 const RECORDING_MARGIN_SECONDS = 3;
-
-const RESULT_FILE = 'crosscheck.json';
 
 const REPORT_FILE = 'crosscheck.md';
 
@@ -90,8 +105,9 @@ export async function crosscheckCommand(
   );
 
   const exports = await tracer.collect(traceFile);
+  const { refreshRate } = app.launch;
   const readings = sample.epochs.map((_, index) =>
-    readEpoch(sample, index, app.launch.refreshRate)
+    readEpoch(sample, index, refreshRate)
   );
   const clock = mapAppClock(sample, readBoundarySignposts(exports, app.pid));
   const traced = readTraceEpochs(
@@ -103,36 +119,52 @@ export async function crosscheckCommand(
     },
     traceSpans(readings, clock)
   );
-  const epochs = compareEpochs(sample.epochs, readings, traced);
-  const verdict = crosscheckVerdict(epochs);
-  const result = {
+  const epochs = compareEpochs(
+    sample.epochs,
+    readings,
+    traced,
+    clock,
+    refreshRate
+  );
+  const footprints = compareFootprints(
+    sample,
+    readFootprints(exports, app.pid),
+    clock
+  );
+  const verdict = crosscheckVerdict(epochs, footprints);
+  const result: CrosscheckResult = {
+    formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
     measurementRevision: MEASUREMENT_REVISION,
+    platform: 'ios',
+    device: iosPlatform().deviceIdentity(state),
+    appSources: app.launch.appSources,
     applicationId: options.applicationId,
     scenario: options.scenario,
-    load: app.report.load,
-    device: state,
+    report: { version: app.report.version, load: app.report.load },
     tools,
     plan,
     tolerances: {
       cpu: CPU_TOLERANCE,
       updateDuration: UPDATE_DURATION_TOLERANCE,
+      memory: MEMORY_TOLERANCE,
     },
     thermalState: highestThermalState(sample),
     clock,
     epochs,
+    footprints,
     verdict,
     trace: traceFile,
   };
+  writeCrosscheckResult(folder, result);
   fs.writeFileSync(
-    path.join(folder, RESULT_FILE),
-    `${JSON.stringify(result, null, 2)}\n`
+    path.join(folder, REPORT_FILE),
+    crosscheckReport(epochs, footprints, verdict, clock)
   );
-  fs.writeFileSync(path.join(folder, REPORT_FILE), crosscheckReport(epochs));
   log(
-    `counters within the gates: ${verdict.counters ? 'yes' : 'no'}; UI update durations equal to the trace frames: ${verdict.updateDurationsEqualTraceFrames ? 'yes' : 'no'}`
+    `counters within the gates: ${yesNo(verdict.counters)}; the loads ran: ${yesNo(verdict.loadsRan)}; memory: ${verdict.memory}; UI update quantiles within tolerance of the trace frames: ${yesNo(verdict.updateDurationQuantilesWithinTolerance)}`
   );
   log(`report ${path.join(folder, REPORT_FILE)}`);
-  return verdict.counters ? 0 : 1;
+  return verdict.counters && verdict.loadsRan ? 0 : 1;
 }
 
 async function recordSample(
@@ -158,16 +190,22 @@ async function recordSample(
     throw new ToolError(`The app did not reach READY: ${start.detail}`);
   }
   const { app } = start;
+  const stop = new AbortController();
   try {
     const [receipt] = await Promise.all([
-      app.waitForSample(),
-      tracer.record({
-        udid: options.device.id,
-        pid: app.pid,
-        traceFile,
-        seconds: planSeconds(plan) + RECORDING_MARGIN_SECONDS,
-        onRecording: () => device.postNotification(START_NOTIFICATION),
-      }),
+      app.waitForSample(stop.signal),
+      tracer
+        .record({
+          udid: options.device.id,
+          pid: app.pid,
+          traceFile,
+          seconds: planSeconds(plan) + RECORDING_MARGIN_SECONDS,
+          onRecording: () => device.postNotification(START_NOTIFICATION),
+        })
+        .catch((error: unknown) => {
+          stop.abort();
+          throw error;
+        }),
     ]);
     if (!receipt.received) {
       throw new ToolError(`The app gave no SAMPLE line: ${receipt.detail}`);
@@ -178,10 +216,13 @@ async function recordSample(
   }
 }
 
-function crosscheckReport(epochs: readonly CrosscheckEpoch[]): string {
-  const header =
-    '| Epoch | Load | Collector | Metric | App | Trace | Signed error | Absolute error | Relative error | Tolerance | Within |';
-  const rows = epochs.flatMap((epoch) => {
+function crosscheckReport(
+  epochs: readonly CrosscheckEpoch[],
+  footprints: readonly ComparedValue[],
+  verdict: CrosscheckVerdict,
+  clock: ClockMapping
+): string {
+  const epochRows = epochs.flatMap((epoch) => {
     const values: [string, ComparedValue | null][] = [
       ['uiThreadCpu (ms/s)', epoch.uiThreadCpu],
       ['jsThreadCpu (ms/s)', epoch.jsThreadCpu],
@@ -194,37 +235,68 @@ function crosscheckReport(epochs: readonly CrosscheckEpoch[]): string {
       value === null
         ? []
         : [
-            `| ${[
+            tableRow([
               String(epoch.index),
               epoch.load,
               epoch.collector,
               metric,
-              numberText(value.app),
-              numberText(value.trace),
-              numberText(value.signedError),
-              numberText(value.absoluteError),
-              value.relativeError === null
-                ? '-'
-                : `${(value.relativeError * 100).toFixed(2)}%`,
-              numberText(value.tolerance),
-              value.passes ? 'yes' : 'no',
-            ].join(' | ')} |`,
+              ...comparedCells(value),
+            ]),
           ]
     );
   });
-  const counts = epochs.map(
+  const footprintRows = footprints.map((value, index) =>
+    tableRow([String(index), ...comparedCells(value)])
+  );
+  const epochLines = epochs.map(
     (epoch) =>
-      `- Epoch ${epoch.index}: ${epoch.updateCount.app ?? '-'} UI updates in the app, ${epoch.updateCount.trace} \`hitches-updates\` rows in the trace, ${epoch.windowSeconds.toFixed(3)} s.`
+      `- Epoch ${epoch.index} (${epoch.load}, ${epoch.windowSeconds.toFixed(3)} s): ${epoch.updateCount.app ?? '-'} UI updates in the app, ${epoch.updateCount.trace} \`hitches-updates\` rows in the trace. Work units of the load: ${epoch.workProof.own} (at least ${epoch.workProof.minimumOwn.toFixed(1)}), of other loads: ${epoch.workProof.other} (at most ${epoch.workProof.maximumOther.toFixed(1)}): ${epoch.workProof.passes ? 'the load ran' : 'not proved'}.`
   );
   return `${[
     '# Cross-check of the in-app counters with Instruments',
     '',
-    header,
-    `|${' --- |'.repeat(11)}`,
-    ...rows,
+    `Clock of the app to the clock of the trace: offset ${clock.offsetNs} ns, uncertainty ${clock.uncertaintyNs} ns, spread ${clock.spreadNs} ns. The tolerance of a CPU value includes its timing uncertainty.`,
     '',
-    ...counts,
+    '| Epoch | Load | Collector | Metric | App | Trace | Signed error | Absolute error | Relative error | Timing uncertainty | Tolerance | Within |',
+    `|${' --- |'.repeat(12)}`,
+    ...epochRows,
+    '',
+    ...epochLines,
+    '',
+    'Memory footprint (kB) at each boundary: the app (`phys_footprint`) and Activity Monitor (`memory-physical-footprint`, interpolated to the time of the read).',
+    '',
+    '| Boundary | App | Activity Monitor | Signed error | Absolute error | Relative error | Timing uncertainty | Tolerance | Within |',
+    `|${' --- |'.repeat(9)}`,
+    ...footprintRows,
+    '',
+    `- Counters within the gates: ${yesNo(verdict.counters)}.`,
+    `- The planned loads ran: ${yesNo(verdict.loadsRan)}.`,
+    `- Memory: ${verdict.memory}.`,
+    `- UI update quantiles within tolerance of the \`hitches-updates\` quantiles: ${yesNo(verdict.updateDurationQuantilesWithinTolerance)}. The two are different quantities: this result says only that their median and 95th percentile are within the tolerance.`,
   ].join('\n')}\n`;
+}
+
+function comparedCells(value: ComparedValue): string[] {
+  return [
+    numberText(value.app),
+    numberText(value.trace),
+    numberText(value.signedError),
+    numberText(value.absoluteError),
+    value.relativeError === null
+      ? '-'
+      : `${(value.relativeError * 100).toFixed(2)}%`,
+    numberText(value.timingUncertainty),
+    numberText(value.tolerance),
+    yesNo(value.passes),
+  ];
+}
+
+function tableRow(cells: string[]): string {
+  return `| ${cells.join(' | ')} |`;
+}
+
+function yesNo(value: boolean): string {
+  return value ? 'yes' : 'no';
 }
 
 function numberText(value: number | null): string {

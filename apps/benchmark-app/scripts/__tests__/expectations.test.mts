@@ -142,6 +142,21 @@ describe('evaluateExpectations', () => {
     assert.equal(result.status, 'fails');
   });
 
+  it('is not decided when it selects an unvalidated metric, and ignores one that it does not select', () => {
+    const decide = (metrics: ComparedMetric[]) =>
+      evaluateExpectations(
+        [{ scenarios: ['css'], metrics, is: 'notWorse' }],
+        ROWS.filter((candidate) => candidate.metric !== 'memory'),
+        [],
+        [],
+        ['memory']
+      )[0];
+    const result = decide(['uiThreadCpu', 'memory']);
+    assert.equal(result.status, 'not decided');
+    assert.deepEqual(result.unvalidatedMetrics, ['memory']);
+    assert.equal(decide(['uiThreadCpu']).status, 'holds');
+  });
+
   it('ignores a failed scenario that it does not select', () => {
     const failed: FailedScenario[] = [
       { scenario: 'idle-cost', variants: ['b'], causes: [] },

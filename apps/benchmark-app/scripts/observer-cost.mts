@@ -1,35 +1,40 @@
 import type { Collector, EpochCpu } from './in-app-sample.mts';
-import {
-  bootstrapDraws,
-  bootstrapInterval,
-  difference,
-  median,
-} from './statistics.mts';
-import type { Interval } from './statistics.mts';
+import { createRandom, difference, median, quantile } from './statistics.mts';
+import type { Interval, ResamplingOptions } from './statistics.mts';
 
 export type ObserverCostMetric = (typeof OBSERVER_COST_METRICS)[number];
+
+export type ValidationOutcome = 'passed' | 'failed' | 'not validated';
 
 export interface CollectorSample extends EpochCpu {
   block: number;
   collector: Collector;
+  memory: number;
   windowSeconds: number;
 }
 
 export interface ObserverCost {
   metric: ObserverCostMetric;
+  blocks: number;
   medianEndpoints: number;
   medianFull: number;
   relativeDifference: number;
   interval: Interval;
   noiseLimit: number | null;
   allowed: number | null;
-  within: boolean | null;
+  outcome: ValidationOutcome;
+}
+
+interface Block {
+  full: number[];
+  endpoints: number[];
 }
 
 export const OBSERVER_COST_METRICS = [
   'uiThreadCpu',
   'jsThreadCpu',
   'processCpu',
+  'memory',
 ] as const;
 
 export const BLOCK_ORDER: readonly Collector[] = [
@@ -39,42 +44,91 @@ export const BLOCK_ORDER: readonly Collector[] = [
   'full',
 ];
 
+export const MINIMUM_BLOCKS = 5;
+
 const ALLOWED_SHARE_OF_NOISE_LIMIT = 0.25;
+
+const BLOCK_BOOTSTRAP: ResamplingOptions = {
+  seed: 20261114,
+  iterations: 10_000,
+};
 
 export function observerCosts(
   samples: readonly CollectorSample[],
   noiseLimits: Partial<Record<ObserverCostMetric, number>>
 ): ObserverCost[] {
   return OBSERVER_COST_METRICS.map((metric) => {
-    const valuesOf = (collector: Collector) =>
-      samples
-        .filter((sample) => sample.collector === collector)
-        .map((sample) => sample[metric]);
-    const endpoints = valuesOf('endpoints');
-    const full = valuesOf('full');
-    const interval = bootstrapInterval(
-      bootstrapDraws(endpoints, full),
-      'relative'
-    );
+    const blocks = blocksOf(samples, metric);
+    const all = (collector: keyof Block) =>
+      blocks.flatMap((block) => block[collector]);
+    const interval = blockBootstrapInterval(blocks, BLOCK_BOOTSTRAP);
     const noiseLimit = noiseLimits[metric] ?? null;
     const allowed =
       noiseLimit === null ? null : ALLOWED_SHARE_OF_NOISE_LIMIT * noiseLimit;
     return {
       metric,
-      medianEndpoints: median(endpoints),
-      medianFull: median(full),
+      blocks: blocks.length,
+      medianEndpoints: median(all('endpoints')),
+      medianFull: median(all('full')),
       relativeDifference: difference(
-        median(endpoints),
-        median(full),
+        median(all('endpoints')),
+        median(all('full')),
         'relative'
       ),
       interval,
       noiseLimit,
       allowed,
-      within:
-        allowed === null
-          ? null
-          : interval.low >= -allowed && interval.high <= allowed,
+      outcome: outcomeOf(interval, allowed, blocks.length),
     };
   });
+}
+
+function blocksOf(
+  samples: readonly CollectorSample[],
+  metric: ObserverCostMetric
+): Block[] {
+  const blocks = new Map<number, Block>();
+  for (const sample of samples) {
+    const block = blocks.get(sample.block) ?? { full: [], endpoints: [] };
+    block[sample.collector].push(sample[metric]);
+    blocks.set(sample.block, block);
+  }
+  return [...blocks.values()];
+}
+
+function blockBootstrapInterval(
+  blocks: readonly Block[],
+  options: ResamplingOptions
+): Interval {
+  const random = createRandom(options.seed);
+  const differences = Array.from({ length: options.iterations }, () => {
+    const drawn = blocks.map(
+      () => blocks[Math.floor(random() * blocks.length)]
+    );
+    return difference(
+      median(drawn.flatMap((block) => block.endpoints)),
+      median(drawn.flatMap((block) => block.full)),
+      'relative'
+    );
+  });
+  return {
+    low: quantile(differences, 0.025),
+    high: quantile(differences, 0.975),
+  };
+}
+
+function outcomeOf(
+  interval: Interval,
+  allowed: number | null,
+  blocks: number
+): ValidationOutcome {
+  if (allowed === null || blocks < MINIMUM_BLOCKS) {
+    return 'not validated';
+  }
+  if (interval.low >= -allowed && interval.high <= allowed) {
+    return 'passed';
+  }
+  return interval.low > allowed || interval.high < -allowed
+    ? 'failed'
+    : 'not validated';
 }

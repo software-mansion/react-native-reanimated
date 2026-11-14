@@ -46,6 +46,7 @@ export type PlatformCommand =
 export type PlatformOption =
   | 'trace-processor'
   | 'sign-command'
+  | 'validation'
   | 'keep-traces'
   | 'keep-trace';
 
@@ -64,6 +65,7 @@ export interface PlatformDefinition {
   inAppState: Check;
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
+  verdictsNeedValidation: boolean;
   frameSource: FrameSource;
   metricDefinitions: readonly MetricDefinition[];
 }

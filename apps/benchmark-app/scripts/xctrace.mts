@@ -17,7 +17,12 @@ export interface IosTracer {
   collect: (traceFile: string) => Promise<TraceExports>;
 }
 
-const INSTRUMENTS = ['Thread Activity', 'Hitches', 'os_signpost'];
+const INSTRUMENTS = [
+  'Thread Activity',
+  'Hitches',
+  'os_signpost',
+  'Activity Monitor',
+];
 
 const TRACED_SUBSYSTEMS = [
   'dev.reactnative.instruments',
@@ -34,6 +39,7 @@ const TABLE_SELECTORS: Record<keyof TraceExports, string> = {
   threadState: '@schema="thread-state"',
   frames: '@schema="hitches-updates"',
   signposts: '@schema="os-signpost" and @dynamic-tracing-enabled-subsystems',
+  processes: '@schema="activity-monitor-process-live"',
 };
 
 export class Xctrace implements IosTracer {
@@ -85,6 +91,7 @@ export class Xctrace implements IosTracer {
       threadState: await this.#export(traceFile, 'threadState'),
       frames: await this.#export(traceFile, 'frames'),
       signposts: await this.#export(traceFile, 'signposts'),
+      processes: await this.#export(traceFile, 'processes'),
     };
   }
 

@@ -232,12 +232,13 @@ export class RunningIosApp {
     return this.launch.pid;
   }
 
-  async waitForSample(): Promise<SampleReceipt> {
+  async waitForSample(stop?: AbortSignal): Promise<SampleReceipt> {
     const limitMs =
       planSeconds(this.#plan) * 1000 +
       SAMPLE_MARGIN_MS +
       (this.#plan.start === 'notification' ? NOTIFICATION_WAIT_MS : 0);
     const deadline = this.#clock.now() + limitMs;
+    const stopped = untilAborted(stop);
     while (true) {
       const text = this.#appConsole.sampleText();
       if (text !== null) {
@@ -247,13 +248,19 @@ export class RunningIosApp {
       if (failure !== null) {
         return { received: false, detail: failure };
       }
+      if (stop?.aborted) {
+        return {
+          received: false,
+          detail: 'the driver stopped the wait for the SAMPLE line',
+        };
+      }
       if (this.#clock.now() >= deadline) {
         return {
           received: false,
           detail: `no SAMPLE line in ${limitMs / 1000} s after READY`,
         };
       }
-      await this.#clock.sleep(PROCESS_POLL_MS);
+      await Promise.race([this.#clock.sleep(PROCESS_POLL_MS), stopped]);
     }
   }
 
@@ -624,4 +631,10 @@ async function withCleanupOnError<T>(
     await cleanUp().catch(() => {});
     throw error;
   }
+}
+
+function untilAborted(signal: AbortSignal | undefined): Promise<void> {
+  return new Promise((resolve) =>
+    signal?.addEventListener('abort', () => resolve(), { once: true })
+  );
 }

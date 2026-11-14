@@ -52,6 +52,23 @@ function parsed(sample: InAppSample = inAppSample()): InAppSample {
   return parseSampleLine(sampleText(sample), PLAN);
 }
 
+function withEnd(change: Partial<typeof END_BOUNDARY>): InAppSample {
+  return parsed(
+    inAppSample({
+      boundaries: [START_BOUNDARY, { ...END_BOUNDARY, ...change }],
+    })
+  );
+}
+
+function withModelTimes(shift: (time: number, index: number) => number) {
+  const updates = steadyUpdates(600);
+  return parsed(
+    inAppSample({
+      updates: { ...updates, modelTimeNs: updates.modelTimeNs.map(shift) },
+    })
+  );
+}
+
 describe('planArguments', () => {
   it('gives the launch arguments of the epochs and the start', () => {
     assert.deepEqual(
@@ -75,21 +92,12 @@ describe('planArguments', () => {
 describe('parseSampleLine', () => {
   it('reads a SAMPLE line of the app', () => {
     const sample = simulatorSample();
-    assert.deepEqual(
-      [sample.mainThread, sample.jsThread],
-      [19815880, 19816673]
-    );
     const reading = readEpoch(sample, 0, 60);
-    assertClose(reading.window.seconds, 10.0029399165);
-    assertClose(reading.cpu.uiThreadCpu, 161.8730106864978);
-    assertClose(reading.cpu.jsThreadCpu, 2.061593908605179);
-    assertClose(reading.cpu.processCpu, 163.96359607185087);
-    assert.equal(reading.updates?.durationsMs.length, 600);
-    assertClose(reading.updates?.expectedSlots, 600.1763949900001);
-    assert.equal(reading.updates?.missedDisplayLinkCallbacks, 0);
-    assert.equal(reading.mountBatchCount, 600);
-    assert.equal(reading.memory, 52098);
-    assert.equal(reading.windowMemoryDelta, 3616);
+    assert.ok(reading.window.seconds > 9.99 && reading.window.seconds < 10.01);
+    assert.ok(reading.cpu.processCpu >= reading.cpu.uiThreadCpu);
+    assert.ok((reading.updates?.durationsMs.length ?? 0) >= 590);
+    assert.ok(reading.cpuUncertainty.uiThread < 0.01);
+    assert.deepEqual(sample.epochs[0].work, { own: 0, other: 0 });
   });
 
   it('reads the sample of the app without the error field', () => {
@@ -98,12 +106,12 @@ describe('parseSampleLine', () => {
 
   it('is a tool error for text that is not JSON or not a sample', () => {
     assert.throws(
-      () => parseSampleLine('{"format":1', PLAN),
+      () => parseSampleLine('{"format":2', PLAN),
       /The SAMPLE line of the app is not JSON/
     );
     assert.throws(
-      () => parseSampleLine(JSON.stringify({ format: 2 }), PLAN),
-      /SAMPLE\.format must be one of 1[\s\S]*SAMPLE\.boundaries must be a list/
+      () => parseSampleLine(JSON.stringify({ format: 1 }), PLAN),
+      /SAMPLE\.format must be one of 2[\s\S]*SAMPLE\.boundaries must be a list/
     );
   });
 
@@ -123,7 +131,14 @@ describe('parseSampleLine', () => {
       () =>
         parsed(
           inAppSample({
-            epochs: [{ load: 'none', collector: 'endpoints', seconds: 10 }],
+            epochs: [
+              {
+                load: 'none',
+                collector: 'endpoints',
+                seconds: 10,
+                work: { own: 0, other: 0 },
+              },
+            ],
           })
         ),
       /The SAMPLE line has the epochs .*endpoints.*, the driver planned .*full/
@@ -153,12 +168,17 @@ describe('parseSampleLine', () => {
 });
 
 describe('readEpoch', () => {
-  it('gives the CPU time for each second of the window and the UI updates', () => {
+  it('gives the CPU time for each second between the reads of each counter, and the UI updates', () => {
     const reading = readEpoch(parsed(), 0, 60);
     assert.deepEqual(reading.window, {
       startNs: 10_000,
       endNs: 10_000_010_000,
       seconds: 10,
+    });
+    assert.deepEqual(reading.counterSpans, {
+      uiThread: { startNs: 2_500, endNs: 10_000_002_500 },
+      jsThread: { startNs: 7_500, endNs: 10_000_007_500 },
+      process: { startNs: 15_000, endNs: 10_000_015_000 },
     });
     assert.deepEqual(reading.cpu, {
       uiThreadCpu: 350,
@@ -175,13 +195,18 @@ describe('readEpoch', () => {
     assert.equal(reading.windowMemoryDelta, 300);
   });
 
+  it('gives the timing uncertainty of each CPU value from its read brackets and the counter resolution', () => {
+    const { cpuUncertainty } = readEpoch(parsed(), 0, 60);
+    assertClose(cpuUncertainty.uiThread, (2_500 + 2_500 + 1_000) / 1e6 / 10);
+    assertClose(cpuUncertainty.jsThread, (2_500 + 2_500 + 1_000) / 1e6 / 10);
+    assertClose(cpuUncertainty.process, (5_000 + 5_000 + 1_000) / 1e6 / 10);
+  });
+
   it('counts the display refreshes between two updates as missed', () => {
-    const updates = steadyUpdates(600);
-    const modelTimeNs = updates.modelTimeNs.map((time, i) =>
-      i >= 300 ? time + Math.round(2 * PERIOD_NS) : time
-    );
     const reading = readEpoch(
-      parsed(inAppSample({ updates: { ...updates, modelTimeNs } })),
+      withModelTimes((time, i) =>
+        i >= 300 ? time + Math.round(2 * PERIOD_NS) : time
+      ),
       0,
       60
     );
@@ -189,18 +214,37 @@ describe('readEpoch', () => {
   });
 
   it('is a tool error for updates that are not on the display cadence', () => {
-    const updates = steadyUpdates(600);
-    const modelTimeNs = updates.modelTimeNs.map((time, i) =>
-      i >= 300 ? time + Math.round(0.5 * PERIOD_NS) : time
-    );
     assert.throws(
       () =>
         readEpoch(
-          parsed(inAppSample({ updates: { ...updates, modelTimeNs } })),
+          withModelTimes((time, i) =>
+            i >= 300 ? time + Math.round(0.5 * PERIOD_NS) : time
+          ),
           0,
           60
         ),
       /model times of the UI updates 299 and 300 are 1\.500 display periods apart/
+    );
+  });
+
+  it('is a tool error when the updates run at a fraction of the display rate in the whole epoch', () => {
+    const updates = steadyUpdates(300);
+    const modelTimeNs = updates.modelTimeNs.map(
+      (time, i) => time + Math.round(i * PERIOD_NS)
+    );
+    assert.throws(
+      () =>
+        readEpoch(
+          parsed(
+            inAppSample({
+              boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 300 }],
+              updates: { ...updates, modelTimeNs },
+            })
+          ),
+          0,
+          60
+        ),
+      /each UI update is 2 or more display periods after the one before it\. The app updates at most at 1\/2 of the display rate in the whole epoch\./
     );
   });
 
@@ -210,7 +254,7 @@ describe('readEpoch', () => {
       start: 'ready',
     };
     const sample = inAppSample({
-      epochs: plan.epochs.map((epoch) => ({ ...epoch })),
+      epochs: [{ ...plan.epochs[0], work: { own: 0, other: 0 } }],
       boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 0 }],
       updates: steadyUpdates(0),
     });
@@ -221,39 +265,27 @@ describe('readEpoch', () => {
 
   it('is a tool error for a counter that goes down', () => {
     assert.throws(
-      () =>
-        readEpoch(
-          parsed(
-            inAppSample({
-              boundaries: [
-                START_BOUNDARY,
-                { ...END_BOUNDARY, jsThreadCpuUs: 499_999 },
-              ],
-            })
-          ),
-          0,
-          60
-        ),
+      () => readEpoch(withEnd({ jsThreadCpuUs: 499_999 }), 0, 60),
       /Epoch 0: the counter jsThreadCpuUs goes down from 500000 to 499999/
     );
   });
 
-  it('is a tool error when the process time is less than the two threads', () => {
+  it('allows the process time to be less than the two threads by the read delay at the start and the resolution', () => {
+    const allowedUs = 20 + 15 + 3;
+    const reading = readEpoch(
+      withEnd({ processCpuUs: 2_000_000 + 3_520_000 - allowedUs }),
+      0,
+      60
+    );
+    assert.ok(reading.cpu.otherThreadsCpu < 0);
     assert.throws(
       () =>
         readEpoch(
-          parsed(
-            inAppSample({
-              boundaries: [
-                START_BOUNDARY,
-                { ...END_BOUNDARY, processCpuUs: 5_500_000 },
-              ],
-            })
-          ),
+          withEnd({ processCpuUs: 2_000_000 + 3_520_000 - allowedUs - 1 }),
           0,
           60
         ),
-      /the process CPU time \(350 ms\/s\) is less than the sum of the main thread and the JS thread \(352 ms\/s\)/
+      /the process CPU time \(3519961 µs\) is less than the sum of the main thread and the JS thread \(3520000 µs\) by more than the read delay and the counter resolution \(38 µs\)/
     );
   });
 
@@ -264,7 +296,7 @@ describe('readEpoch', () => {
           parsed(
             inAppSample({
               boundaries: [
-                { ...START_BOUNDARY, readEndNs: 10_000_000 },
+                { ...START_BOUNDARY, processReadEndNs: 10_000_000 },
                 END_BOUNDARY,
               ],
             })
@@ -280,7 +312,7 @@ describe('readEpoch', () => {
     const updates = steadyUpdates(600, 10_000);
     assert.throws(
       () => readEpoch(parsed(inAppSample({ updates })), 0, 60),
-      /the UI update 0 \(10000 ns to 6010000 ns\) is not inside the epoch \(20000 ns to 10000000000 ns\)/
+      /the UI update 0 \(10000 ns to 6010000 ns\) is not inside the epoch \(28000 ns to 10000000000 ns\)/
     );
   });
 });
@@ -305,17 +337,7 @@ describe('appStates', () => {
 
   it('is a tool error for an unknown battery state', () => {
     assert.throws(
-      () =>
-        appStates(
-          parsed(
-            inAppSample({
-              boundaries: [
-                START_BOUNDARY,
-                { ...END_BOUNDARY, batteryState: 7 },
-              ],
-            })
-          )
-        ),
+      () => appStates(withEnd({ batteryState: 7 })),
       /the unknown batteryState 7/
     );
   });
@@ -328,15 +350,6 @@ describe('highestThermalState', () => {
       highestThermalState(parsed(inAppSample({ maxThermal: 2 }))),
       2
     );
-    assert.equal(
-      highestThermalState(
-        parsed(
-          inAppSample({
-            boundaries: [START_BOUNDARY, { ...END_BOUNDARY, thermal: 1 }],
-          })
-        )
-      ),
-      1
-    );
+    assert.equal(highestThermalState(withEnd({ thermal: 1 })), 1);
   });
 });

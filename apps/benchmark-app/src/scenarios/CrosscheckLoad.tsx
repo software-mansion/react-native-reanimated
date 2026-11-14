@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { useFrameCallback } from 'react-native-reanimated';
 
 import { Grid } from '../components/Grid';
 import { range } from '../components/range';
@@ -19,7 +18,6 @@ export function findCrosscheckLoadUnmetRequirement() {
 
 export function CrosscheckLoad({ load }: ScenarioProps) {
   const epochLoad = useEpochLoad();
-  useUiStall(epochLoad === 'ui-stall');
   useJsLoad(epochLoad === 'js-load');
   const step = useRenderLoop(epochLoad === 'render-heavy');
 
@@ -49,17 +47,6 @@ function useEpochLoad() {
   return epochLoad;
 }
 
-function useUiStall(active: boolean) {
-  const stall = useFrameCallback(() => {
-    'worklet';
-    busyWait(BUSY_MS_PER_FRAME);
-  }, false);
-
-  useEffect(() => {
-    stall.setActive(active);
-  }, [active, stall]);
-}
-
 function useJsLoad(active: boolean) {
   useEffect(() => {
     if (!active) {
@@ -67,6 +54,7 @@ function useJsLoad(active: boolean) {
     }
     let request = requestAnimationFrame(function frame() {
       busyWait(BUSY_MS_PER_FRAME);
+      NativeBenchmarkReporter.countEpochWork('js-load');
       request = requestAnimationFrame(frame);
     });
     return () => cancelAnimationFrame(request);
@@ -82,6 +70,7 @@ function useRenderLoop(active: boolean) {
     }
     let request = requestAnimationFrame(function frame() {
       setStep((value) => value + 1);
+      NativeBenchmarkReporter.countEpochWork('render-heavy');
       request = requestAnimationFrame(frame);
     });
     return () => cancelAnimationFrame(request);
@@ -91,7 +80,6 @@ function useRenderLoop(active: boolean) {
 }
 
 function busyWait(ms: number) {
-  'worklet';
   const end = Date.now() + ms;
   let now = Date.now();
   while (now < end) {

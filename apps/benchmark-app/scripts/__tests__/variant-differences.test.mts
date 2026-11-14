@@ -32,6 +32,7 @@ function built(
       worklets: {},
     },
     lockfileSha256: 'lock',
+    appSources: 'sources',
     ...overrides,
   };
 }

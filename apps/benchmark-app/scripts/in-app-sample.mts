@@ -13,10 +13,21 @@ import type { Check } from './validation.mts';
 
 export type Collector = 'full' | 'endpoints';
 
+export type CpuCounter = (typeof CPU_COUNTERS)[number];
+
 export interface SampleEpoch {
   load: string;
   collector: Collector;
   seconds: number;
+}
+
+export interface EpochWork {
+  own: number;
+  other: number;
+}
+
+export interface SampledEpoch extends SampleEpoch {
+  work: EpochWork;
 }
 
 export interface SamplePlan {
@@ -25,12 +36,17 @@ export interface SamplePlan {
 }
 
 export interface InAppBoundary {
-  readStartNs: number;
-  readEndNs: number;
-  signpostNs: number;
+  uiReadStartNs: number;
+  uiReadEndNs: number;
   uiThreadCpuUs: number;
+  jsReadStartNs: number;
+  jsReadEndNs: number;
   jsThreadCpuUs: number;
+  processReadStartNs: number;
+  processReadEndNs: number;
   processCpuUs: number;
+  signpostStartNs: number;
+  signpostEndNs: number;
   footprintKb: number;
   thermal: number;
   batteryLevel: number;
@@ -51,7 +67,7 @@ export interface InAppSample {
   mainThread: number;
   jsThread: number;
   maxThermal: number;
-  epochs: SampleEpoch[];
+  epochs: SampledEpoch[];
   boundaries: InAppBoundary[];
   updates: InAppUpdates;
 }
@@ -63,9 +79,12 @@ export interface AppState {
   brightness: number;
 }
 
-export interface EpochWindow {
+export interface TimeSpan {
   startNs: number;
   endNs: number;
+}
+
+export interface EpochWindow extends TimeSpan {
   seconds: number;
 }
 
@@ -90,7 +109,9 @@ export interface EpochUpdates {
 
 export interface EpochReading {
   window: EpochWindow;
+  counterSpans: Record<CpuCounter, TimeSpan>;
   cpu: EpochCpu;
+  cpuUncertainty: Record<CpuCounter, number>;
   updates: EpochUpdates | null;
   mountBatchCount: number;
   memory: number;
@@ -108,15 +129,17 @@ export const THERMAL_STATES = [
   'Critical',
 ] as const;
 
-const SAMPLE_FORMAT = 1;
+export const CPU_COUNTERS = ['uiThread', 'jsThread', 'process'] as const;
+
+const SAMPLE_FORMAT = 2;
 
 const NANOSECONDS_PER_MS = 1e6;
 
 const NANOSECONDS_PER_SECOND = 1e9;
 
-const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
+const COUNTER_RESOLUTION_US = 1;
 
-const CPU_SUM_TOLERANCE_MS_PER_S = 0.05;
+const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
 
 const CADENCE_TOLERANCE = 0.25;
 
@@ -126,6 +149,31 @@ const EPOCH_LOAD = /^[a-z][a-z-]*$/;
 
 const EPOCH_SECONDS = /^\d+(\.\d+)?$/;
 
+const COUNTER_FIELDS: Record<
+  CpuCounter,
+  {
+    startNs: keyof InAppBoundary;
+    endNs: keyof InAppBoundary;
+    valueUs: keyof InAppBoundary;
+  }
+> = {
+  uiThread: {
+    startNs: 'uiReadStartNs',
+    endNs: 'uiReadEndNs',
+    valueUs: 'uiThreadCpuUs',
+  },
+  jsThread: {
+    startNs: 'jsReadStartNs',
+    endNs: 'jsReadEndNs',
+    valueUs: 'jsThreadCpuUs',
+  },
+  process: {
+    startNs: 'processReadStartNs',
+    endNs: 'processReadEndNs',
+    valueUs: 'processCpuUs',
+  },
+};
+
 const COUNTERS = [
   'uiThreadCpuUs',
   'jsThreadCpuUs',
@@ -134,13 +182,24 @@ const COUNTERS = [
   'updates',
 ] as const satisfies readonly (keyof InAppBoundary)[];
 
+const positiveNumber: Check = (value, label, problems) => {
+  if (typeof value !== 'number' || !(value > 0)) {
+    problems.push(`${label} must be a positive number`);
+  }
+};
+
 const BOUNDARY: Check = shape({
-  readStartNs: anInteger,
-  readEndNs: anInteger,
-  signpostNs: anInteger,
+  uiReadStartNs: anInteger,
+  uiReadEndNs: anInteger,
   uiThreadCpuUs: anInteger,
+  jsReadStartNs: anInteger,
+  jsReadEndNs: anInteger,
   jsThreadCpuUs: anInteger,
+  processReadStartNs: anInteger,
+  processReadEndNs: anInteger,
   processCpuUs: anInteger,
+  signpostStartNs: anInteger,
+  signpostEndNs: anInteger,
   footprintKb: anInteger,
   thermal: anInteger,
   batteryLevel: anInteger,
@@ -161,11 +220,8 @@ const SAMPLE: Check = shape({
     shape({
       load: aString,
       collector: oneOf(['full', 'endpoints']),
-      seconds: (value, label, problems) => {
-        if (typeof value !== 'number' || !(value > 0)) {
-          problems.push(`${label} must be a positive number`);
-        }
-      },
+      seconds: positiveNumber,
+      work: shape({ own: anInteger, other: anInteger }),
     })
   ),
   boundaries: listOf(BOUNDARY),
@@ -248,27 +304,38 @@ export function readEpoch(
   const end = sample.boundaries[index + 1];
   checkCounters(start, end, index);
   const window = epochWindow(start, end, index);
-  const perSecond = (ms: number) => ms / window.seconds;
-  const uiThreadCpu = perSecond(
-    (end.uiThreadCpuUs - start.uiThreadCpuUs) / 1e3
-  );
-  const jsThreadCpu = perSecond(
-    (end.jsThreadCpuUs - start.jsThreadCpuUs) / 1e3
-  );
-  const processCpu = perSecond((end.processCpuUs - start.processCpuUs) / 1e3);
-  if (processCpu < uiThreadCpu + jsThreadCpu - CPU_SUM_TOLERANCE_MS_PER_S) {
-    throw new ToolError(
-      `Epoch ${index}: the process CPU time (${processCpu} ms/s) is less than the sum of the main thread and the JS thread (${uiThreadCpu + jsThreadCpu} ms/s). A counter read gives a wrong unit or a wrong thread.`
+  const counterSpans = mapCounters((counter) => ({
+    startNs: readMidpoint(start, counter),
+    endNs: readMidpoint(end, counter),
+  }));
+  const perSecond = (counter: CpuCounter) => {
+    const { valueUs } = COUNTER_FIELDS[counter];
+    const seconds = spanSeconds(counterSpans[counter]);
+    return (
+      ((end[valueUs] as number) - (start[valueUs] as number)) / 1e3 / seconds
     );
-  }
+  };
+  const uiThreadCpu = perSecond('uiThread');
+  const jsThreadCpu = perSecond('jsThread');
+  const processCpu = perSecond('process');
+  checkProcessSum(start, end, index);
   return {
     window,
+    counterSpans,
     cpu: {
       uiThreadCpu,
       jsThreadCpu,
       otherThreadsCpu: processCpu - uiThreadCpu - jsThreadCpu,
       processCpu,
     },
+    cpuUncertainty: mapCounters(
+      (counter) =>
+        (readHalfWidthNs(start, counter) +
+          readHalfWidthNs(end, counter) +
+          COUNTER_RESOLUTION_US * 1e3) /
+        NANOSECONDS_PER_MS /
+        spanSeconds(counterSpans[counter])
+    ),
     updates:
       sample.epochs[index].collector === 'full'
         ? epochUpdates(sample, start, end, window, refreshRate, index)
@@ -301,6 +368,13 @@ export function appStates(sample: InAppSample): AppState[] {
       brightness: boundary.brightness,
     };
   });
+}
+
+export function boundaryReadSpan(boundary: InAppBoundary): TimeSpan {
+  return {
+    startNs: boundary.uiReadStartNs,
+    endNs: boundary.processReadEndNs,
+  };
 }
 
 function checkPlan(sample: InAppSample, plan: SamplePlan) {
@@ -357,11 +431,11 @@ function epochWindow(
   end: InAppBoundary,
   index: number
 ): EpochWindow {
-  const startNs = (start.readStartNs + start.readEndNs) / 2;
-  const endNs = (end.readStartNs + end.readEndNs) / 2;
+  const startNs = spanMidpoint(boundaryReadSpan(start));
+  const endNs = spanMidpoint(boundaryReadSpan(end));
   const lengthNs = endNs - startNs;
   const uncertaintyNs =
-    start.readEndNs - start.readStartNs + (end.readEndNs - end.readStartNs);
+    spanLength(boundaryReadSpan(start)) + spanLength(boundaryReadSpan(end));
   if (
     !(lengthNs > 0) ||
     uncertaintyNs > MAXIMUM_WINDOW_UNCERTAINTY * lengthNs
@@ -371,6 +445,29 @@ function epochWindow(
     );
   }
   return { startNs, endNs, seconds: lengthNs / NANOSECONDS_PER_SECOND };
+}
+
+// The process counter is read after the two thread counters. At the start
+// boundary, the threads can run between their read and the process read, and
+// that time is in the process count of the start only. So the process time
+// can be less than the sum of the threads by that read delay.
+function checkProcessSum(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  index: number
+) {
+  const delta = (field: keyof InAppBoundary) =>
+    (end[field] as number) - (start[field] as number);
+  const threadsUs = delta('uiThreadCpuUs') + delta('jsThreadCpuUs');
+  const allowedUs =
+    (start.processReadEndNs - start.uiReadStartNs) / 1e3 +
+    (start.processReadEndNs - start.jsReadStartNs) / 1e3 +
+    3 * COUNTER_RESOLUTION_US;
+  if (delta('processCpuUs') < threadsUs - allowedUs) {
+    throw new ToolError(
+      `Epoch ${index}: the process CPU time (${delta('processCpuUs')} µs) is less than the sum of the main thread and the JS thread (${threadsUs} µs) by more than the read delay and the counter resolution (${allowedUs} µs). A counter read gives a wrong unit or a wrong thread.`
+    );
+  }
 }
 
 function epochUpdates(
@@ -387,11 +484,11 @@ function epochUpdates(
     const span = { beginNs: updates.beginNs[i], endNs: updates.endNs[i] };
     if (
       span.endNs < span.beginNs ||
-      span.beginNs < start.readEndNs ||
-      span.endNs > end.readStartNs
+      span.beginNs < start.signpostEndNs ||
+      span.endNs > end.uiReadStartNs
     ) {
       throw new ToolError(
-        `Epoch ${index}: the UI update ${i} (${span.beginNs} ns to ${span.endNs} ns) is not inside the epoch (${start.readEndNs} ns to ${end.readStartNs} ns)`
+        `Epoch ${index}: the UI update ${i} (${span.beginNs} ns to ${span.endNs} ns) is not inside the epoch (${start.signpostEndNs} ns to ${end.uiReadStartNs} ns)`
       );
     }
     spans.push(span);
@@ -416,8 +513,7 @@ function missedSlotShare(
   if (modelTimes.length < 2) {
     return null;
   }
-  let missed = 0;
-  let slots = 0;
+  const gaps: number[] = [];
   for (let i = 1; i < modelTimes.length; i++) {
     const periods = (modelTimes[i] - modelTimes[i - 1]) / periodNs;
     const rounded = Math.round(periods);
@@ -426,8 +522,46 @@ function missedSlotShare(
         `Epoch ${index}: the model times of the UI updates ${i - 1} and ${i} are ${periods.toFixed(3)} display periods apart. The updates are not on a fixed cadence of ${(periodNs / NANOSECONDS_PER_MS).toFixed(3)} ms.`
       );
     }
-    missed += rounded - 1;
-    slots += rounded;
+    gaps.push(rounded);
   }
-  return missed / slots;
+  const shortest = Math.min(...gaps);
+  if (shortest > 1) {
+    throw new ToolError(
+      `Epoch ${index}: each UI update is ${shortest} or more display periods after the one before it. The app updates at most at 1/${shortest} of the display rate in the whole epoch.`
+    );
+  }
+  const slots = gaps.reduce((sum, gap) => sum + gap, 0);
+  return (slots - gaps.length) / slots;
+}
+
+function mapCounters<T>(
+  value: (counter: CpuCounter) => T
+): Record<CpuCounter, T> {
+  return {
+    uiThread: value('uiThread'),
+    jsThread: value('jsThread'),
+    process: value('process'),
+  };
+}
+
+function readMidpoint(boundary: InAppBoundary, counter: CpuCounter): number {
+  const { startNs, endNs } = COUNTER_FIELDS[counter];
+  return ((boundary[startNs] as number) + (boundary[endNs] as number)) / 2;
+}
+
+function readHalfWidthNs(boundary: InAppBoundary, counter: CpuCounter): number {
+  const { startNs, endNs } = COUNTER_FIELDS[counter];
+  return ((boundary[endNs] as number) - (boundary[startNs] as number)) / 2;
+}
+
+function spanMidpoint(span: TimeSpan): number {
+  return (span.startNs + span.endNs) / 2;
+}
+
+function spanLength(span: TimeSpan): number {
+  return span.endNs - span.startNs;
+}
+
+function spanSeconds(span: TimeSpan): number {
+  return spanLength(span) / NANOSECONDS_PER_SECOND;
 }

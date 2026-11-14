@@ -8,6 +8,7 @@ export interface ComparisonRule {
   unit: MetricUnit;
   comparison: Comparison;
   noiseFloor: number;
+  shareOf?: string;
 }
 
 export interface CommonSampleMetrics {
@@ -90,11 +91,7 @@ export const NULL_ALLOWED: {
 
 const RELATIVE_NOISE_FLOOR = 0.02;
 
-const ABSOLUTE_SHARE: ComparisonRule = {
-  unit: 'share',
-  comparison: 'absolute',
-  noiseFloor: 0.005,
-};
+const ABSOLUTE_SHARE_NOISE_FLOOR = 0.005;
 
 export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   frameDurationMedian: relative('ms'),
@@ -103,8 +100,8 @@ export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   frameCyclesP95: relative('Mcycles'),
   uiUpdateDurationMedian: relative('ms'),
   uiUpdateDurationP95: relative('ms'),
-  jankyFrames: ABSOLUTE_SHARE,
-  missedDisplayLinkCallbacks: ABSOLUTE_SHARE,
+  jankyFrames: absoluteShare('frames'),
+  missedDisplayLinkCallbacks: absoluteShare('display refreshes'),
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),
   memory: relative('kB'),
@@ -113,4 +110,13 @@ export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
 
 function relative(unit: MetricUnit): ComparisonRule {
   return { unit, comparison: 'relative', noiseFloor: RELATIVE_NOISE_FLOOR };
+}
+
+function absoluteShare(shareOf: string): ComparisonRule {
+  return {
+    unit: 'share',
+    comparison: 'absolute',
+    noiseFloor: ABSOLUTE_SHARE_NOISE_FLOOR,
+    shareOf,
+  };
 }

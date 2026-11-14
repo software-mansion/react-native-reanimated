@@ -2,7 +2,12 @@ import path from 'node:path';
 
 import type { ResumeOptions, RunOptions } from './arguments.mts';
 import type { CommandContext } from './command-context.mts';
-import { blocksOf, readConfigFile, validateConfig } from './config.mts';
+import {
+  VARIANT_KEYS,
+  blocksOf,
+  readConfigFile,
+  validateConfig,
+} from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
 import {
@@ -19,6 +24,7 @@ import {
   checkScenarioIdentity,
   readNoiseLimitsRecord,
 } from './noise-limits-record.mts';
+import { platformOf } from './platforms.mts';
 import { expectationLine, renderReport } from './report.mts';
 import {
   acceptedValues,
@@ -30,6 +36,8 @@ import type { SampleResult } from './samples.mts';
 import { balancedOrder } from './session.mts';
 import { countBy } from './summary.mts';
 import type { MeasurementOutcome } from './summary.mts';
+import { metricValidity, readValidationRecord } from './validation-record.mts';
+import type { ValidationIdentity } from './validation-sources.mts';
 import { computeComparisonRows } from './verdict.mts';
 
 export async function runCommand(
@@ -43,6 +51,9 @@ export async function runCommand(
   );
   const noiseLimits = options.noiseLimits
     ? readNoiseLimitsRecord(options.noiseLimits)
+    : null;
+  const validation = options.validation
+    ? readValidationRecord(options.validation)
     : null;
   return startMeasurement(
     {
@@ -67,9 +78,12 @@ export async function runCommand(
       options: {
         blocks: options.blocks,
         noiseLimitsFile: options.noiseLimits ?? null,
+        validationFile: options.validation ?? null,
         keepTraces: options.keepTraces,
       },
       noiseLimits,
+      validation,
+      validity: null,
       verdictRows: [],
       advisoryRows: [],
       expectations: [],
@@ -150,11 +164,23 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
 }
 
 function summarize(result: RunResult) {
+  const definition = PLATFORM_DEFINITIONS[result.platform];
   const completed = result.scenarios.filter(
     (outcome) => outcome.failed === null
   );
+  const validity = definition.verdictsNeedValidation
+    ? metricValidity(
+        result.validation ?? null,
+        validationIdentityOf(result),
+        definition.verdictMetrics
+      )
+    : null;
+  const unvalidated = definition.verdictMetrics.filter(
+    (metric) => validity !== null && !validity.validated.includes(metric)
+  );
+  result.validity = validity;
   const { verdictRows, advisoryRows } = computeComparisonRows(
-    PLATFORM_DEFINITIONS[result.platform],
+    definition,
     completed.map((outcome) => outcome.scenario),
     (scenario, metric, variant) =>
       completed
@@ -163,7 +189,8 @@ function summarize(result: RunResult) {
     result.noiseLimits?.limits ?? {},
     result.config.scenarios.filter(
       (scenario) => !completed.some((outcome) => outcome.scenario === scenario)
-    )
+    ),
+    unvalidated
   );
   result.verdictRows = verdictRows;
   result.advisoryRows = advisoryRows;
@@ -173,8 +200,27 @@ function summarize(result: RunResult) {
     result.scenarios.flatMap((outcome) =>
       outcome.failed ? [outcome.failed] : []
     ),
-    scenariosWithoutData(result, result.config.scenarios)
+    scenariosWithoutData(result, result.config.scenarios),
+    unvalidated
   );
+}
+
+function validationIdentityOf(result: RunResult): ValidationIdentity | null {
+  const sources = new Set(
+    VARIANT_KEYS.map((key) => result.variants[key]?.appSources)
+  );
+  const [appSources] = sources;
+  if (result.platform !== 'ios' || sources.size !== 1 || !appSources) {
+    return null;
+  }
+  return {
+    platform: result.platform,
+    device: platformOf(result.platform).deviceIdentity(
+      result.segments[0].device
+    ),
+    measurementRevision: result.measurementRevision,
+    appSources,
+  };
 }
 
 function runOutcome(result: RunResult): MeasurementOutcome {

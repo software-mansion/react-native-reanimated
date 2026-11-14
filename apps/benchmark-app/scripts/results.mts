@@ -22,6 +22,8 @@ import type { SampleResult } from './samples.mts';
 import { SCENARIOS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import type { Judged, ScenarioOutcome } from './session.mts';
+import { VALIDATION_RECORD } from './validation-record.mts';
+import type { MetricValidity, ValidationRecord } from './validation-record.mts';
 import {
   aBoolean,
   aNumber,
@@ -93,9 +95,12 @@ export interface RunResult extends MeasurementResult {
   options: {
     blocks: number;
     noiseLimitsFile: string | null;
+    validationFile?: string | null;
     keepTraces: boolean;
   };
   noiseLimits: NoiseLimitsRecord | null;
+  validation?: ValidationRecord | null;
+  validity?: MetricValidity | null;
   verdictRows: VerdictRow[];
   advisoryRows: AdvisoryRow[];
   expectations: ExpectationResult[];
@@ -197,9 +202,19 @@ const runFields: StoredCheck = (definition) =>
     options: shape({
       blocks: anInteger,
       noiseLimitsFile: nullable(aString),
+      validationFile: optional(nullable(aString)),
       keepTraces: aBoolean,
     }),
     noiseLimits: nullable(NOISE_LIMITS_RECORD),
+    validation: optional(nullable(VALIDATION_RECORD)),
+    validity: optional(
+      nullable(
+        shape({
+          validated: listOf(oneOf(definition.verdictMetrics)),
+          reason: nullable(aString),
+        })
+      )
+    ),
     verdictRows: listOf(anObject),
     advisoryRows: listOf(anObject),
     expectations: listOf(anObject),
@@ -353,6 +368,7 @@ function measurementShape(
         installFileSha256: aString,
         installedVersions: shape({ reanimated: aString, worklets: aString }),
         lockfileSha256: aString,
+        appSources: optional(aString),
         effectiveFlags: shape({
           reanimated: valuesOf(aBoolean),
           worklets: valuesOf(aBoolean),

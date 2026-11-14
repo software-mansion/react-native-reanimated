@@ -61,6 +61,7 @@ async function readIosToolIdentity({
 async function buildApp({
   directory,
   key,
+  appSources,
   run,
 }: VariantProject): Promise<string> {
   const iosDirectory = path.join(directory, 'ios');
@@ -78,14 +79,14 @@ async function buildApp({
   });
   await run({
     command: 'xcodebuild',
-    args: xcodebuildArguments(key),
+    args: xcodebuildArguments(key, appSources),
     cwd: iosDirectory,
     timeoutMs: XCODEBUILD_TIMEOUT_MS,
   });
   return path.join(directory, APP_PATH);
 }
 
-function xcodebuildArguments(key: VariantKey): string[] {
+function xcodebuildArguments(key: VariantKey, appSources: string): string[] {
   return [
     '-workspace',
     'ReanimatedBenchmark.xcworkspace',
@@ -100,6 +101,7 @@ function xcodebuildArguments(key: VariantKey): string[] {
     '-derivedDataPath',
     'build',
     `BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX=${applicationSuffix(key)}`,
+    `BENCHMARK_APP_SOURCES=${appSources}`,
     'CODE_SIGNING_ALLOWED=NO',
     'build',
   ];

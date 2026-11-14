@@ -80,6 +80,8 @@ describe('Xctrace.record', () => {
         'Hitches',
         '--instrument',
         'os_signpost',
+        '--instrument',
+        'Activity Monitor',
         '--recording-options',
         `${TRACE}.options.json`,
         '--attach',
@@ -129,6 +131,7 @@ describe('Xctrace.collect', () => {
       threadState: '<xml/>',
       frames: '<xml/>',
       signposts: '<xml/>',
+      processes: '<xml/>',
     });
     assert.deepEqual(
       calls.map((args) => args.slice(0, 4)),
@@ -140,6 +143,7 @@ describe('Xctrace.collect', () => {
         '@schema="thread-state"',
         '@schema="hitches-updates"',
         '@schema="os-signpost" and @dynamic-tracing-enabled-subsystems',
+        '@schema="activity-monitor-process-live"',
       ].map((selector) => [
         '--xpath',
         `/trace-toc/run[@number="1"]/data/table[${selector}][1]`,

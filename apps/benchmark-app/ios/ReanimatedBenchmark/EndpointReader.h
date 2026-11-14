@@ -13,12 +13,16 @@ struct ThreadHandle {
   uint64_t id;
 };
 
+struct CounterRead {
+  uint64_t startNs;
+  uint64_t endNs;
+  uint64_t valueUs;
+};
+
 struct CpuReading {
-  uint64_t readStartNs;
-  uint64_t readEndNs;
-  uint64_t uiThreadCpuUs;
-  uint64_t jsThreadCpuUs;
-  uint64_t processCpuUs;
+  CounterRead uiThread;
+  CounterRead jsThread;
+  CounterRead process;
 };
 
 uint64_t monotonicNs();

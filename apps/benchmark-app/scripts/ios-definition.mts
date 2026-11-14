@@ -30,12 +30,12 @@ const CPU_LIMIT =
   'Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core.';
 
 const UPDATE_LIMIT =
-  'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments. No verdict before the cross-check with Instruments passes on the phone.';
+  'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments: the cross-check only compares the median and the 95th percentile with that table. No verdict.';
 
 export const IOS_DEFINITION: PlatformDefinition = {
   name: 'ios',
   commands: ['run', 'sample', 'crosscheck', 'observer-cost'],
-  options: { 'sign-command': 'required for run' },
+  options: { 'sign-command': 'required for run', validation: 'optional' },
   segmentColumns: [],
   deviceState: shape(DEVICE_STATE),
   inAppState: shape(IN_APP_STATE),
@@ -46,6 +46,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
     'missedDisplayLinkCallbacks',
     'coldStart',
   ],
+  verdictsNeedValidation: true,
   frameSource: 'refreshes',
   metricDefinitions: [
     {
@@ -67,10 +68,10 @@ export const IOS_DEFINITION: PlatformDefinition = {
       names: ['missedDisplayLinkCallbacks'],
       unit: 'share of display refreshes',
       source:
-        '`Σ max(0, round(gap / P) − 1) / Σ round(gap / P)` over the gaps between the model times (`UIUpdateInfo.modelTime`) of successive UI updates. `P` is 1 / `refreshRate` of the LAUNCH line. A gap that is more than 0.25 `P` from a whole number of periods is a tool error.',
+        '`Σ max(0, round(gap / P) − 1) / Σ round(gap / P)` over the gaps between the model times (`UIUpdateInfo.modelTime`) of successive UI updates. `P` is 1 / `refreshRate` of the LAUNCH line. A gap that is more than 0.25 `P` from a whole number of periods is a tool error. An epoch in which each gap is 2 `P` or more is a tool error: the app then updates at a fraction of the display rate (for example 30 Hz on a 60 Hz display), and the share does not show it.',
       interval: UPDATES_IN_WINDOW,
       limits:
-        'A display refresh with no UI update of the app counts as missed. The update share of a scenario does not apply to it.',
+        'An estimate from the gaps between updates only: it does not see the refreshes before the first update and after the last update of the window. A display refresh with no UI update of the app counts as missed. The update share of a scenario does not apply to it.',
     },
     {
       names: ['frameCount', 'expectedFrameCount'],
@@ -85,7 +86,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       names: ['uiThreadCpu'],
       unit: 'ms for each s',
       source:
-        '`1000 × Δ(user + system time)` of `thread_info(THREAD_BASIC_INFO)` of the main thread, over the elapsed seconds of the monotonic clock. The app keeps a Mach handle of the thread and compares the thread id (`THREAD_IDENTIFIER_INFO`) with `mainThread` of the LAUNCH line at each read.',
+        '`1000 × Δ(user + system time)` of `thread_info(THREAD_BASIC_INFO)` of the main thread, over the seconds between the midpoints of the two reads of this counter on the monotonic clock. The app keeps a Mach handle of the thread and compares the thread id (`THREAD_IDENTIFIER_INFO`) with `mainThread` of the LAUNCH line at each read.',
       interval: WINDOW,
       limits: CPU_LIMIT,
     },
@@ -103,7 +104,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'The process: user + system time of `getrusage(RUSAGE_SELF)`. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads is a tool error. ${CPU_LIMIT}`,
+      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. ${CPU_LIMIT}`,
     },
     {
       names: ['mountBatchCount'],

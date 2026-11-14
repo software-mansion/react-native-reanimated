@@ -12,6 +12,7 @@ import { observerCostCommand } from './observer-cost-command.mts';
 import { Processes } from './processes.mts';
 import { resumeCommand, runCommand } from './run.mts';
 import { sampleCommand } from './sample-command.mts';
+import { validationRecordCommand } from './validation-record.mts';
 
 const processes = new Processes();
 let cleanup: ((exitCode: number) => Promise<void>) | null = null;
@@ -72,6 +73,8 @@ async function runParsedCommand(
       return crosscheckCommand(command, context);
     case 'observer-cost':
       return observerCostCommand(command, context);
+    case 'validation-record':
+      return validationRecordCommand(command);
   }
 }
 

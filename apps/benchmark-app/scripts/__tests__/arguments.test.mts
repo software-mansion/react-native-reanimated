@@ -19,6 +19,7 @@ describe('parseArguments', () => {
         keepTraces: false,
         traceProcessor: undefined,
         signCommand: undefined,
+        validation: undefined,
       }
     );
   });
@@ -50,6 +51,7 @@ describe('parseArguments', () => {
       keepTraces: true,
       traceProcessor: '/tp',
       signCommand: undefined,
+      validation: undefined,
     });
   });
 
@@ -310,6 +312,7 @@ describe('parseArguments', () => {
         keepTraces: false,
         traceProcessor: undefined,
         signCommand: path.join(process.cwd(), 'sign.sh'),
+        validation: undefined,
       }
     );
     assert.deepEqual(
@@ -452,6 +455,37 @@ describe('parseArguments', () => {
     );
   });
 
+  it('reads the validation record of an iOS run and refuses it on Android', () => {
+    const command = parseArguments([
+      'run',
+      '--config',
+      'c.json',
+      '--udid',
+      'U1',
+      '--sign-command',
+      './sign.sh',
+      '--validation',
+      'validation.json',
+    ]);
+    assert.equal(
+      command.command === 'run' ? command.validation : null,
+      'validation.json'
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--config',
+          'c.json',
+          '--serial',
+          'S1',
+          '--validation',
+          'validation.json',
+        ]),
+      /--validation is not an option on android\./
+    );
+  });
+
   it('reads the crosscheck command with a validation scenario and the epochs of the plan', () => {
     assert.deepEqual(
       parseArguments([
@@ -553,6 +587,44 @@ describe('parseArguments', () => {
           'crosscheck-load',
         ]),
       /Unknown scenario "crosscheck-load"/
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'observer-cost',
+          '--udid',
+          'U1',
+          '--package',
+          'com.x',
+          '--scenario',
+          'idle-cost',
+          '--blocks',
+          '4',
+        ]),
+      /--blocks must be at least 5 for the observer-cost command, not 4/
+    );
+  });
+
+  it('reads the validation-record command with its sources', () => {
+    assert.deepEqual(
+      parseArguments([
+        'validation-record',
+        '--crosscheck',
+        'c1',
+        '--crosscheck',
+        'c2',
+        '--observer-cost',
+        'o1',
+      ]),
+      {
+        command: 'validation-record',
+        crosschecks: ['c1', 'c2'],
+        observerCosts: ['o1'],
+      }
+    );
+    assert.throws(
+      () => parseArguments(['validation-record', '--crosscheck', 'c1']),
+      /--observer-cost is required/
     );
   });
 

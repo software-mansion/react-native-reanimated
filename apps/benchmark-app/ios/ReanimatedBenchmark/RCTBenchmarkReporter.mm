@@ -40,4 +40,9 @@
   return [BenchmarkSampler.sharedSampler currentEpochLoad];
 }
 
+- (NSNumber *)countEpochWork:(NSString *)load
+{
+  return @([BenchmarkSampler.sharedSampler noteWorkOfLoad:load]);
+}
+
 @end

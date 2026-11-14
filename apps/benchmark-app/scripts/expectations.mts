@@ -1,4 +1,5 @@
 import type { Expectation } from './config.mts';
+import type { ComparedMetric } from './metrics.mts';
 import type { Scenario } from './scenarios.mts';
 import type { FailedScenario } from './session.mts';
 import type { VerdictRow } from './verdict.mts';
@@ -12,20 +13,23 @@ export interface ExpectationResult {
   decidingRows: VerdictRow[];
   failedScenarios: FailedScenario[];
   scenariosWithoutData: Scenario[];
+  unvalidatedMetrics: ComparedMetric[];
 }
 
 export function evaluateExpectations(
   expectations: readonly Expectation[],
   rows: readonly VerdictRow[],
   failedScenarios: readonly FailedScenario[],
-  scenariosWithoutData: readonly Scenario[] = []
+  scenariosWithoutData: readonly Scenario[] = [],
+  unvalidatedMetrics: readonly ComparedMetric[] = []
 ): ExpectationResult[] {
   return expectations.map((expectation) =>
     evaluateExpectation(
       expectation,
       rows,
       failedScenarios,
-      scenariosWithoutData
+      scenariosWithoutData,
+      unvalidatedMetrics
     )
   );
 }
@@ -38,7 +42,8 @@ function evaluateExpectation(
   expectation: Expectation,
   allRows: readonly VerdictRow[],
   allFailedScenarios: readonly FailedScenario[],
-  allScenariosWithoutData: readonly Scenario[]
+  allScenariosWithoutData: readonly Scenario[],
+  unvalidatedMetrics: readonly ComparedMetric[]
 ): ExpectationResult {
   const rows = allRows.filter(
     (row) =>
@@ -51,6 +56,9 @@ function evaluateExpectation(
   const scenariosWithoutData = allScenariosWithoutData.filter((scenario) =>
     expectation.scenarios.includes(scenario)
   );
+  const unvalidated = expectation.metrics.filter((metric) =>
+    unvalidatedMetrics.includes(metric)
+  );
   const result = (status: ExpectationStatus, decidingRows: VerdictRow[]) => ({
     expectation,
     status,
@@ -58,6 +66,7 @@ function evaluateExpectation(
     decidingRows,
     failedScenarios,
     scenariosWithoutData,
+    unvalidatedMetrics: unvalidated,
   });
 
   const failingRows = rows.filter((row) => rowFails(expectation, row));
@@ -67,7 +76,11 @@ function evaluateExpectation(
   ) {
     return result('fails', failingRows);
   }
-  if (failedScenarios.length > 0 || scenariosWithoutData.length > 0) {
+  if (
+    failedScenarios.length > 0 ||
+    scenariosWithoutData.length > 0 ||
+    unvalidated.length > 0
+  ) {
     return result('not decided', []);
   }
   if (expectation.is === 'notWorse') {

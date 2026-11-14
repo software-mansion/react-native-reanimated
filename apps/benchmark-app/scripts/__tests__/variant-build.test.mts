@@ -203,6 +203,7 @@ describe('platform builds', () => {
         directory: '/builds/key',
         key,
         variant,
+        appSources: 'sources',
         run: async (command: ProjectCommand) => void commands.push(command),
       },
     };

@@ -13,6 +13,7 @@ import {
   DEFAULT_SLOPE_LIMIT,
   checkSchedule,
 } from './memory-series.mts';
+import { MINIMUM_BLOCKS } from './observer-cost.mts';
 import { DEFAULT_OUTPUT_DIR, VALIDATION_DIR } from './paths.mts';
 import type {
   DeviceTarget,
@@ -37,6 +38,7 @@ export interface RunOptions {
   keepTraces: boolean;
   traceProcessor?: string;
   signCommand?: string;
+  validation?: string;
 }
 
 export interface ResumeOptions {
@@ -92,6 +94,12 @@ export interface CrosscheckOptions {
   outputDir: string;
 }
 
+export interface ValidationRecordOptions {
+  command: 'validation-record';
+  crosschecks: string[];
+  observerCosts: string[];
+}
+
 export interface ObserverCostOptions {
   command: 'observer-cost';
   device: DeviceTarget;
@@ -112,16 +120,17 @@ export type Command =
   | SampleOptions
   | CrosscheckOptions
   | ObserverCostOptions
+  | ValidationRecordOptions
   | { command: 'help' };
 
 type Values = Record<string, string | string[] | boolean | undefined>;
 
 const DEFAULT_BLOCKS = 5;
 
-const DEFAULT_OBSERVER_COST_BLOCKS = 5;
+const DEFAULT_OBSERVER_COST_BLOCKS = MINIMUM_BLOCKS;
 
 export const USAGE = `Usage:
-  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--validation <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device> [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> <device> [--output-dir <dir>] [--launches ${DEFAULT_LAUNCHES}] [--interval ${DEFAULT_INTERVAL_SECONDS}] [--duration ${DEFAULT_DURATION_SECONDS}] [--slope-limit ${DEFAULT_SLOPE_LIMIT}] [--keep-traces] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> <device> [--trace-processor <path>]
@@ -129,9 +138,10 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks ${DEFAULT_OBSERVER_COST_BLOCKS}] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...]
 
 <device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The crosscheck and observer-cost commands validate the in-app collector of iOS and support iOS only.
---trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>.
+--trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>, and its CPU and memory metrics get a verdict only with a matching --validation <file.json>.
 
 Scenarios: ${SCENARIOS.join(', ')}
 Validation scenarios (crosscheck only): ${VALIDATION_SCENARIOS.join(', ')}
@@ -140,6 +150,7 @@ See apps/benchmark-app/scripts/README.md.`;
 const PLATFORM_OPTIONS: readonly PlatformOption[] = [
   'trace-processor',
   'sign-command',
+  'validation',
   'keep-traces',
   'keep-trace',
 ];
@@ -159,6 +170,7 @@ const RUN_OPTIONS: ParseArgsOptionsConfig = {
   'noise-limits': { type: 'string' },
   'keep-traces': { type: 'boolean' },
   'sign-command': { type: 'string' },
+  validation: { type: 'string' },
 };
 
 const STORED_RUN_OPTIONS = [
@@ -168,6 +180,7 @@ const STORED_RUN_OPTIONS = [
   'noise-limits',
   'keep-traces',
   'sign-command',
+  'validation',
 ];
 
 const MEMORY_OPTIONS: ParseArgsOptionsConfig = {
@@ -215,6 +228,11 @@ const CROSSCHECK_OPTIONS: ParseArgsOptionsConfig = {
   'output-dir': { type: 'string' },
 };
 
+const VALIDATION_RECORD_OPTIONS: ParseArgsOptionsConfig = {
+  crosscheck: { type: 'string', multiple: true },
+  'observer-cost': { type: 'string', multiple: true },
+};
+
 const OBSERVER_COST_OPTIONS: ParseArgsOptionsConfig = {
   ...COMMON_OPTIONS,
   package: { type: 'string' },
@@ -256,6 +274,7 @@ export function parseArguments(argv: string[]): Command {
       traceProcessor: optionalString(values, 'trace-processor'),
       signCommand:
         signCommand === undefined ? undefined : path.resolve(signCommand),
+      validation: optionalString(values, 'validation'),
     };
   }
   if (command === 'memory') {
@@ -311,13 +330,17 @@ export function parseArguments(argv: string[]): Command {
       applicationId: required(values, 'package'),
       scenario: requiredScenario(values),
       load: optionalLoad(values),
-      blocks: optionalPositiveInteger(
-        values,
-        'blocks',
-        DEFAULT_OBSERVER_COST_BLOCKS
-      ),
+      blocks: observerCostBlocks(values),
       noiseLimits: optionalString(values, 'noise-limits'),
       outputDir: validationDirOf(values),
+    };
+  }
+  if (command === 'validation-record') {
+    const { values } = parseOptions(rest, VALIDATION_RECORD_OPTIONS);
+    return {
+      command,
+      crosschecks: requiredList(values, 'crosscheck'),
+      observerCosts: requiredList(values, 'observer-cost'),
     };
   }
   throw new ToolError(`Unknown command "${command}".\n\n${USAGE}`);
@@ -416,6 +439,28 @@ function outputDirOf(values: Values): string {
   return path.resolve(
     optionalString(values, 'output-dir') ?? DEFAULT_OUTPUT_DIR
   );
+}
+
+function observerCostBlocks(values: Values): number {
+  const blocks = optionalPositiveInteger(
+    values,
+    'blocks',
+    DEFAULT_OBSERVER_COST_BLOCKS
+  );
+  if (blocks < MINIMUM_BLOCKS) {
+    throw new ToolError(
+      `--blocks must be at least ${MINIMUM_BLOCKS} for the observer-cost command, not ${blocks}`
+    );
+  }
+  return blocks;
+}
+
+function requiredList(values: Values, name: string): string[] {
+  const value = values[name];
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new ToolError(`--${name} is required.\n\n${USAGE}`);
+  }
+  return value;
 }
 
 function validationDirOf(values: Values): string {

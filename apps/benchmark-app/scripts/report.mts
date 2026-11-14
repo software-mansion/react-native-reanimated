@@ -1,4 +1,4 @@
-import type { RunConfig } from './config.mts';
+import type { RunConfig, VariantKey } from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
@@ -152,15 +152,16 @@ export function invalidSection(
   samples: Recorded<Judged>[],
   causes: readonly InvalidCause[] = SAMPLE_INVALID_CAUSES
 ): string {
+  const count = (cause: InvalidCause, variant: VariantKey) =>
+    String(
+      samples.filter(
+        (sample) =>
+          !sample.valid && sample.cause === cause && sample.variant === variant
+      ).length
+    );
   return table(
-    ['Cause', 'Samples'],
-    causes.map((cause) => [
-      cause,
-      String(
-        samples.filter((sample) => !sample.valid && sample.cause === cause)
-          .length
-      ),
-    ])
+    ['Cause', 'Samples of A', 'Samples of B'],
+    causes.map((cause) => [cause, count(cause, 'a'), count(cause, 'b')])
   );
 }
 
@@ -210,6 +211,9 @@ export function expectationLine(
       (failed) => `${failed.scenario} failed on ${failedVariants(failed)}`
     ),
     ...result.scenariosWithoutData.map((scenario) => `${scenario} has no data`),
+    ...(result.unvalidatedMetrics ?? []).map(
+      (metric) => `${metric} is unvalidated`
+    ),
   ];
   const detail = details.length > 0 ? ` (${details.join('; ')})` : '';
   return `${index + 1}. ${scenarios}, ${metrics}: ${claim} -> ${result.status}${detail}`;
@@ -239,14 +243,31 @@ function expectationsSection(
 }
 
 function verdictsSection(result: RunResult): string {
+  const definition = PLATFORM_DEFINITIONS[result.platform];
+  const shares = shareMetrics(definition);
   const limits = [
     ...(result.status === 'done'
       ? []
       : ['Provisional: the run is not complete.']),
     result.noiseLimits
-      ? noiseLimitsText(result.noiseLimits, result.options.noiseLimitsFile)
+      ? noiseLimitsText(
+          result.noiseLimits,
+          result.options.noiseLimitsFile,
+          shares
+        )
       : 'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is 0.',
-    'The difference and the interval of jankyFrames are in percentage points (pp). A row with "no verdict" is advisory: it has no noise limit, and the expectations do not use it.',
+    ...(definition.verdictsNeedValidation ? [validityText(result)] : []),
+    ...(shares.length > 0
+      ? [
+          `The difference and the interval of ${shares.join(', ')} are in percentage points (pp).`,
+        ]
+      : []),
+    'A row with "no verdict" is advisory: it has no noise limit, and the expectations do not use it.',
+    ...(definition.verdictsNeedValidation
+      ? [
+          'A row with "unvalidated" has no verdict, and an expectation that selects its metric is not decided.',
+        ]
+      : []),
   ].join(' ');
   const rows = [...result.verdictRows, ...result.advisoryRows].sort(
     (left, right) =>
@@ -286,12 +307,35 @@ function verdictsSection(result: RunResult): string {
   ].join('\n');
 }
 
+function validityText(result: RunResult): string {
+  const validity = result.validity;
+  const file = result.options.validationFile ?? null;
+  const source =
+    file === null ? 'No validation record' : `Validation record ${file}`;
+  const validated =
+    validity && validity.validated.length > 0
+      ? `verdicts for ${validity.validated.join(', ')}`
+      : 'no verdict for a metric';
+  return `${source}: ${validated}${validity?.reason ? ` (${validity.reason})` : ''}.`;
+}
+
+function shareMetrics(definition: PlatformDefinition): ComparedMetric[] {
+  return [...definition.verdictMetrics, ...definition.advisoryMetrics].filter(
+    (metric) => unitOf(metric) === 'share'
+  );
+}
+
 function noiseLimitsText(
   limits: NoiseLimitsRecord,
-  file: string | null
+  file: string | null,
+  shares: readonly ComparedMetric[]
 ): string {
   const { device } = limits;
-  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0, and its verdict has the mark (uncalibrated).`;
+  const shareNote =
+    shares.length > 0
+      ? ` (${shares.join(', ')}: a share, 0.005 is 0.5 percentage points)`
+      : '';
+  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric${shareNote}. A row with no limit in the file has the limit 0, and its verdict has the mark (uncalibrated).`;
 }
 
 function hasComparison(
@@ -305,17 +349,28 @@ function comparisonCells(
   noiseLimits: NoiseLimitsRecord | null
 ): string[] {
   const place = [row.scenario, row.metric, `${row.samplesA}/${row.samplesB}`];
+  const unvalidated = 'unvalidated' in row && row.unvalidated === true;
   if (!hasComparison(row)) {
-    return [...place, '-', '-', '-', '-', 'no verdict (no data)'];
+    return [
+      ...place,
+      '-',
+      '-',
+      '-',
+      '-',
+      unvalidated ? 'unvalidated (no data)' : 'no verdict (no data)',
+    ];
   }
-  const unit = unitOf(row.metric);
   return [
     ...place,
-    formatValue(row.medianA, unit),
-    formatValue(row.medianB, unit),
+    formatValue(row.medianA, row.metric),
+    formatValue(row.medianB, row.metric),
     formatDifference(row),
     formatInterval(row),
-    'verdict' in row ? verdictCell(row, noiseLimits) : 'no verdict',
+    'verdict' in row
+      ? verdictCell(row, noiseLimits)
+      : unvalidated
+        ? 'unvalidated'
+        : 'no verdict',
   ];
 }
 
@@ -333,11 +388,12 @@ function unitOf(metric: ComparedMetric): MetricUnit {
   return COMPARISON_RULES[metric].unit;
 }
 
-function formatValue(value: number, unit: MetricUnit): string {
+function formatValue(value: number, metric: ComparedMetric): string {
   const finite = finiteNumber(value, 'A value in the report');
+  const { unit, shareOf } = COMPARISON_RULES[metric];
   switch (unit) {
     case 'share':
-      return `${(finite * 100).toFixed(1)}% of frames`;
+      return `${(finite * 100).toFixed(1)}% of ${shareOf}`;
     case 'kB':
       return `${Math.round(finite)} kB`;
     default:
@@ -351,7 +407,7 @@ function formatDifference(
   if (row.comparison === 'relative') {
     return formatPercent(row.difference, true);
   }
-  const value = formatSigned(row.difference, unitOf(row.metric));
+  const value = formatSigned(row.difference, row.metric);
   if (!row.comparisonFallback) {
     return value;
   }
@@ -367,18 +423,18 @@ function formatPercent(fraction: number, signed: boolean): string {
   return `${signed && fraction > 0 ? '+' : ''}${percent === '-0' ? '0' : percent}%`;
 }
 
-function formatSigned(value: number, unit: MetricUnit): string {
+function formatSigned(value: number, metric: ComparedMetric): string {
   const sign = value > 0 ? '+' : '';
-  return unit === 'share'
+  return unitOf(metric) === 'share'
     ? `${sign}${(finiteNumber(value, 'A value in the report') * 100).toFixed(2)} pp`
-    : `${sign}${formatValue(value, unit)}`;
+    : `${sign}${formatValue(value, metric)}`;
 }
 
 function formatInterval(row: MetricComparison): string {
   const format = (value: number) =>
     row.comparison === 'relative'
       ? formatPercent(value, true)
-      : formatSigned(value, unitOf(row.metric));
+      : formatSigned(value, row.metric);
   return `${format(row.interval.low)} to ${format(row.interval.high)}`;
 }
 
@@ -389,18 +445,22 @@ function metricDefinitionsSection(
   return [
     `Numbers and verdicts are valid only within one platform, one phone and one measurement revision. This run has the measurement revision ${measurementRevision}.`,
     '',
-    table(
-      ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
-      definition.metricDefinitions.map((entry) => [
-        entry.names.map((name) => `\`${name}\``).join(', '),
-        entry.unit,
-        entry.source,
-        entry.interval,
-        entry.limits,
-        roleOf(definition, entry.names),
-      ])
-    ),
+    metricDefinitionsTable(definition),
   ].join('\n');
+}
+
+export function metricDefinitionsTable(definition: PlatformDefinition): string {
+  return table(
+    ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
+    definition.metricDefinitions.map((entry) => [
+      entry.names.map((name) => `\`${name}\``).join(', '),
+      entry.unit,
+      entry.source,
+      entry.interval,
+      entry.limits,
+      roleOf(definition, entry.names),
+    ])
+  );
 }
 
 function roleOf(
@@ -410,7 +470,9 @@ function roleOf(
   const has = (metrics: readonly string[]) =>
     names.some((name) => metrics.includes(name));
   if (has(definition.verdictMetrics)) {
-    return 'yes';
+    return definition.verdictsNeedValidation
+      ? 'with a validation record'
+      : 'yes';
   }
   return has(definition.advisoryMetrics) ? 'no verdict, shown' : 'no, stored';
 }

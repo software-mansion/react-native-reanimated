@@ -39,7 +39,7 @@ export interface VerdictRow extends MetricComparison {
   verdict: Verdict;
 }
 
-export type AdvisoryRow =
+export type AdvisoryRow = (
   | (MetricComparison & { hasData: true })
   | {
       scenario: Scenario;
@@ -47,7 +47,8 @@ export type AdvisoryRow =
       samplesA: number;
       samplesB: number;
       hasData: false;
-    };
+    }
+) & { unvalidated?: true };
 
 export interface ComparisonRows {
   verdictRows: VerdictRow[];
@@ -69,26 +70,35 @@ export function computeComparisonRows(
   scenarios: readonly Scenario[],
   valuesOf: MetricValues,
   noiseLimits: NoiseLimits,
-  scenariosWithoutRows: readonly Scenario[] = []
+  scenariosWithoutRows: readonly Scenario[] = [],
+  unvalidatedMetrics: readonly ComparedMetric[] = []
 ): ComparisonRows {
+  const comparedRow = (scenario: Scenario, metric: ComparedMetric) =>
+    advisoryRow(
+      scenario,
+      metric,
+      valuesOf(scenario, metric, 'a'),
+      valuesOf(scenario, metric, 'b')
+    );
   return {
     verdictRows: computeVerdictRows(
-      definition.verdictMetrics,
+      definition.verdictMetrics.filter(
+        (metric) => !unvalidatedMetrics.includes(metric)
+      ),
       scenarios,
       valuesOf,
       noiseLimits,
       scenariosWithoutRows
     ),
-    advisoryRows: scenarios.flatMap((scenario) =>
-      definition.advisoryMetrics.map((metric) =>
-        advisoryRow(
-          scenario,
-          metric,
-          valuesOf(scenario, metric, 'a'),
-          valuesOf(scenario, metric, 'b')
-        )
-      )
-    ),
+    advisoryRows: scenarios.flatMap((scenario) => [
+      ...unvalidatedMetrics.map((metric) => ({
+        ...comparedRow(scenario, metric),
+        unvalidated: true as const,
+      })),
+      ...definition.advisoryMetrics.map((metric) =>
+        comparedRow(scenario, metric)
+      ),
+    ]),
   };
 }
 

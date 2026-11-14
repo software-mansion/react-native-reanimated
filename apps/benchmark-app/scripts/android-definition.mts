@@ -52,6 +52,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
     'coldStart',
   ],
   advisoryMetrics: ['frameCyclesMedian', 'frameCyclesP95'],
+  verdictsNeedValidation: false,
   frameSource: 'refreshes',
   metricDefinitions: [
     {

@@ -5,6 +5,7 @@ export interface Spec extends TurboModule {
   report(line: string): void;
   markReady(): number;
   currentEpochLoad(): string;
+  countEpochWork(load: string): boolean;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BenchmarkReporter');

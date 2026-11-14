@@ -3,19 +3,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { readBoundarySignposts, readTraceEpochs } from '../xctrace-metrics.mts';
+import type { TimeSpan } from '../in-app-sample.mts';
+import {
+  readBoundarySignposts,
+  readFootprints,
+  readTraceEpochs,
+} from '../xctrace-metrics.mts';
 import type {
+  TraceEpochSpans,
   TraceExports,
-  TraceSpan,
   TracedIosApp,
 } from '../xctrace-metrics.mts';
 
 // Cuts of the exports of xctrace 27.2 (27B52) of an iPhone 13 mini with iOS
 // 27.0.1. The rows overlap 1855 ms to 1908 ms, and the cells that the reader
 // does not read are sentinels. The Boundary signposts are not real: the tests
-// add them in the format of the real State signposts of the same export.
+// add them in the format of the real State signposts of the same export. The
+// Activity Monitor table is the empty table of xctrace 27.2 on a Mac, and the
+// tests add its rows.
 const FIXTURES = path.join(import.meta.dirname, 'fixtures', 'xctrace');
-const SPAN: TraceSpan = { startNs: 1_856_890_916, endNs: 1_906_890_916 };
+const SPAN: TimeSpan = { startNs: 1_856_890_916, endNs: 1_906_890_916 };
 const SECONDS = 0.05;
 const MAIN_RUNNING_MS = 19.773169;
 const JS_RUNNING_MS = 0.113417;
@@ -29,8 +36,9 @@ const EXPORTS: TraceExports = {
   threadState: fixture('thread-state-window.xml'),
   frames: fixture('hitches-updates.xml'),
   signposts: fixture('os-signpost-window.xml'),
+  processes: fixture('activity-monitor-process-live.xml'),
 };
-const SCHEMAS: Record<keyof TraceExports, string> = {
+const SCHEMAS: Record<Exclude<keyof TraceExports, 'processes'>, string> = {
   threadState: 'thread-state',
   frames: 'hitches-updates',
   signposts: 'os-signpost',
@@ -40,8 +48,26 @@ function fixture(file: string): string {
   return fs.readFileSync(path.join(FIXTURES, file), 'utf8');
 }
 
-function onlyEpoch(exports: TraceExports = EXPORTS, app = APP) {
-  return readTraceEpochs(exports, app, [SPAN])[0];
+function spans(
+  window: TimeSpan,
+  counters: Partial<TraceEpochSpans['counters']> = {}
+): TraceEpochSpans {
+  return {
+    window,
+    counters: {
+      uiThread: window,
+      jsThread: window,
+      process: window,
+      ...counters,
+    },
+  };
+}
+
+function onlyEpoch(
+  exports: Omit<TraceExports, 'processes'> = EXPORTS,
+  app = APP
+) {
+  return readTraceEpochs(exports, app, [spans(SPAN)])[0];
 }
 
 function assertClose(actual: number | null, expected: number) {
@@ -115,6 +141,10 @@ function mountRow(time: number, pid = APP.pid): string {
   });
 }
 
+function footprintRow(start: number, bytes: number, pid = APP.pid): string {
+  return `<row><start-time>${start}</start-time>${processCell(pid)}${processCell(pid)}<duration>1</duration><pid>${pid}</pid>${sentinels(5)}<size-in-bytes>${bytes}</size-in-bytes>${sentinels(16)}</row>`;
+}
+
 function syntheticThreadState(rows: string[]): string {
   return withRows(withoutRows(EXPORTS.threadState), rows);
 }
@@ -136,8 +166,8 @@ describe('readTraceEpochs', () => {
   it('splits the data at the boundaries of the epochs', () => {
     const middle = (SPAN.startNs + SPAN.endNs) / 2;
     const [first, second] = readTraceEpochs(EXPORTS, APP, [
-      { startNs: SPAN.startNs, endNs: middle },
-      { startNs: middle, endNs: SPAN.endNs },
+      spans({ startNs: SPAN.startNs, endNs: middle }),
+      spans({ startNs: middle, endNs: SPAN.endNs }),
     ]);
     const whole = onlyEpoch();
     assertClose(
@@ -149,6 +179,30 @@ describe('readTraceEpochs', () => {
       3
     );
     assert.equal(first.mountBatchCount + second.mountBatchCount, 3);
+  });
+
+  it('gives each CPU value for the read span of its own counter', () => {
+    const middle = (SPAN.startNs + SPAN.endNs) / 2;
+    const [epoch] = readTraceEpochs(EXPORTS, APP, [
+      spans(SPAN, { jsThread: { startNs: SPAN.startNs, endNs: middle } }),
+    ]);
+    const [firstHalf] = readTraceEpochs(EXPORTS, APP, [
+      spans({ startNs: SPAN.startNs, endNs: middle }),
+    ]);
+    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
+    assertClose(epoch.jsThreadCpu, firstHalf.jsThreadCpu);
+  });
+
+  it('stops when the scheduler data does not cover the read span of a counter', () => {
+    assert.throws(
+      () =>
+        readTraceEpochs(EXPORTS, APP, [
+          spans(SPAN, {
+            process: { startNs: SPAN.startNs, endNs: 9_000_000_000 },
+          }),
+        ]),
+      /The scheduler data does not cover epoch 0 \(1856890916 ns to 9000000000 ns\)/
+    );
   });
 
   it('ignores the rows of another process in each table', () => {
@@ -404,5 +458,36 @@ describe('readBoundarySignposts', () => {
         problem
       );
     }
+  });
+});
+
+describe('readFootprints', () => {
+  it('gives the physical footprint of the app in kB at each Activity Monitor row', () => {
+    const processes = withRows(EXPORTS.processes, [
+      footprintRow(1_000_000_000, 41_943_040),
+      footprintRow(1_000_000_000, 99_999_999, OTHER_PID),
+      footprintRow(2_000_000_000, 42_991_616),
+    ]);
+    assert.deepEqual(readFootprints({ processes }, APP.pid), [
+      { timeNs: 1_000_000_000, footprintKb: 40_960 },
+      { timeNs: 2_000_000_000, footprintKb: 41_984 },
+    ]);
+    assert.deepEqual(readFootprints(EXPORTS, APP.pid), []);
+  });
+
+  it('stops when the table has no footprint column', () => {
+    assert.throws(
+      () =>
+        readFootprints(
+          {
+            processes: EXPORTS.processes.replace(
+              '<mnemonic>memory-physical-footprint</mnemonic>',
+              '<mnemonic>memory-other</mnemonic>'
+            ),
+          },
+          APP.pid
+        ),
+      /The table activity-monitor-process-live has no column memory-physical-footprint$/
+    );
   });
 });

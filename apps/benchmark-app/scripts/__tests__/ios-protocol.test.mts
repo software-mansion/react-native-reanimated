@@ -8,12 +8,20 @@ import { planArguments } from '../in-app-sample.mts';
 import type { AppState } from '../in-app-sample.mts';
 import {
   InAppStateGuard,
+  RUN_PLAN,
   launchOnce,
+  startIosApp,
   takeIosSample,
 } from '../ios-protocol.mts';
 import type { IosSampleContext } from '../ios-protocol.mts';
 import type { SampleOrder } from '../platform.mts';
-import { MINIMUM_WAIT_MS, READY_TIMEOUT_MS } from '../samples.mts';
+import { MINIMUM_WAIT_MS, READY_TIMEOUT_MS, timedSteps } from '../samples.mts';
+import {
+  clockWithEndlessPolls,
+  fakeIosDevice,
+  launchLine,
+  readyLine,
+} from './ios-device-fake.mts';
 import {
   END_BOUNDARY,
   IOS_SAMPLE_METRICS,
@@ -31,7 +39,7 @@ const HOT_DEVICE_WAIT_MS = 30_000;
 const REPORT_PREFIX = 'ReanimatedBenchmark: ';
 const LAUNCHED = `Launched application with ${APP} bundle identifier.`;
 const LAUNCH =
-  'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=81.25';
+  'ReanimatedBenchmark: LAUNCH pid=812 mainThread=5001 refreshRate=60 thermal=0 coldStart=81.25 sources=src1';
 const READY =
   'ReanimatedBenchmark: READY scenario=css version=1 load=80 jsThread=5002';
 const SAMPLE = sampleLine();
@@ -134,7 +142,7 @@ describe('parseLaunchLine', () => {
   it('reads the LAUNCH line of the app', () => {
     assert.deepEqual(
       parseLaunchLine(
-        'LAUNCH pid=8865 mainThread=3840236 refreshRate=60 thermal=1 coldStart=435.972'
+        'LAUNCH pid=8865 mainThread=3840236 refreshRate=60 thermal=1 coldStart=435.972 sources=cf86e871'
       ),
       {
         pid: 8865,
@@ -142,6 +150,7 @@ describe('parseLaunchLine', () => {
         refreshRate: 60,
         thermalState: 1,
         coldStart: 435.972,
+        appSources: 'cf86e871',
       }
     );
   });
@@ -536,4 +545,35 @@ describe('launchOnce', () => {
       /did not write a LAUNCH line in its first launch after the install: no LAUNCH line in 60 s/
     );
   });
+});
+
+describe('RunningIosApp.waitForSample', () => {
+  it(
+    'ends at once when the driver stops the wait',
+    { timeout: 2000 },
+    async () => {
+      const clock = clockWithEndlessPolls();
+      const { device } = fakeIosDevice(() => ({
+        lines: [launchLine(), readyLine('css')],
+      }));
+      const start = await startIosApp(
+        {
+          applicationId: APP,
+          stopApplicationIds: [APP],
+          scenario: 'css',
+          plan: RUN_PLAN,
+        },
+        { device, clock, guard: new InAppStateGuard(null) },
+        timedSteps(clock)
+      );
+      assert.ok(start.started);
+      const stop = new AbortController();
+      const receipt = start.app.waitForSample(stop.signal);
+      stop.abort();
+      assert.deepEqual(await receipt, {
+        received: false,
+        detail: 'the driver stopped the wait for the SAMPLE line',
+      });
+    }
+  );
 });

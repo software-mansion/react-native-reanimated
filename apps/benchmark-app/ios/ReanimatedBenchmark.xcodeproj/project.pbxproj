@@ -19,6 +19,7 @@
 		4B5E10062EC6B10000B1E0A1 /* EndpointReader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E10052EC6B10000B1E0A1 /* EndpointReader.mm */; };
 		4B5E10092EC6B10000B1E0A1 /* UpdateRecorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E10082EC6B10000B1E0A1 /* UpdateRecorder.mm */; };
 		4B5E100C2EC6B10000B1E0A1 /* MountCounter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */; };
+		4B5E10102EC6B10000B1E0A1 /* UiStallLoad.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E100F2EC6B10000B1E0A1 /* UiStallLoad.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,8 @@
 		4B5E100A2EC6B10000B1E0A1 /* MountCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MountCounter.h; path = ReanimatedBenchmark/MountCounter.h; sourceTree = "<group>"; };
 		4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = MountCounter.mm; path = ReanimatedBenchmark/MountCounter.mm; sourceTree = "<group>"; };
 		4B5E100D2EC6B10000B1E0A1 /* ReanimatedBenchmark-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ReanimatedBenchmark-Bridging-Header.h; path = ReanimatedBenchmark/ReanimatedBenchmark-Bridging-Header.h; sourceTree = "<group>"; };
+		4B5E100E2EC6B10000B1E0A1 /* UiStallLoad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UiStallLoad.h; path = ReanimatedBenchmark/UiStallLoad.h; sourceTree = "<group>"; };
+		4B5E100F2EC6B10000B1E0A1 /* UiStallLoad.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = UiStallLoad.mm; path = ReanimatedBenchmark/UiStallLoad.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +83,8 @@
 				4B5E100A2EC6B10000B1E0A1 /* MountCounter.h */,
 				4B5E100B2EC6B10000B1E0A1 /* MountCounter.mm */,
 				4B5E100D2EC6B10000B1E0A1 /* ReanimatedBenchmark-Bridging-Header.h */,
+				4B5E100E2EC6B10000B1E0A1 /* UiStallLoad.h */,
+				4B5E100F2EC6B10000B1E0A1 /* UiStallLoad.mm */,
 			);
 			name = ReanimatedBenchmark;
 			sourceTree = "<group>";
@@ -287,6 +292,7 @@
 				4B5E10062EC6B10000B1E0A1 /* EndpointReader.mm in Sources */,
 				4B5E10092EC6B10000B1E0A1 /* UpdateRecorder.mm in Sources */,
 				4B5E100C2EC6B10000B1E0A1 /* MountCounter.mm in Sources */,
+				4B5E10102EC6B10000B1E0A1 /* UiStallLoad.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

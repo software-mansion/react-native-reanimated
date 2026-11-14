@@ -73,6 +73,7 @@ function built(variant: 'a' | 'b', syncFlag: boolean): MeasuredVariant {
     applicationId: `com.reanimatedbenchmark.${variant}`,
     installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
     lockfileSha256: 'lock',
+    appSources: 'sources',
     effectiveFlags: {
       reanimated: {
         ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: syncFlag,
@@ -370,7 +371,10 @@ describe('renderReport', () => {
       section,
       /\| `uiUpdateDurationP90`, `uiUpdateDurationP99` \| .* \| no, stored \|/
     );
-    assert.match(section, /\| `uiThreadCpu` \| ms for each s \| .* \| yes \|/);
+    assert.match(
+      section,
+      /\| `uiThreadCpu` \| ms for each s \| .* \| with a validation record \|/
+    );
   });
 
   it('gives the README the metric table of each platform', () => {
@@ -456,7 +460,7 @@ describe('renderReport', () => {
     );
     assert.ok(
       withLimits.includes(
-        'Noise limits from limits.json: Pixel, device HW1, OS build google/pixel:17/X/1:user/release-keys, measurement revision 1, 1 A/A run. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
+        'Noise limits from limits.json: Pixel, device HW1, OS build google/pixel:17/X/1:user/release-keys, measurement revision 1, 1 A/A run. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames: a share, 0.005 is 0.5 percentage points).'
       )
     );
   });
@@ -479,7 +483,11 @@ describe('renderReport', () => {
       scenarios: [RESULT.scenarios[0]],
       incompleteScenario: {
         ...RESULT.scenarios[1],
-        samples: [sample({ cause: 'frames' })],
+        samples: [
+          sample({ cause: 'frames' }),
+          sample({ cause: 'frames', variant: 'b' }),
+          sample({ cause: 'frames', variant: 'b' }),
+        ],
       },
       verdictRows: [ROWS[0]],
       expectations: evaluateExpectations(
@@ -506,7 +514,7 @@ describe('renderReport', () => {
         )
       )
     );
-    assert.ok(lines.includes('| frames | 1 |'));
+    assert.ok(lines.includes('| frames | 1 | 2 |'));
     assert.ok(!report.includes('not complete'));
   });
 

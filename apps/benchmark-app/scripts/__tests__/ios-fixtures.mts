@@ -9,12 +9,17 @@ import type { TraceWindow } from '../samples.mts';
 export const SAMPLE_PREFIX = 'ReanimatedBenchmark: SAMPLE ';
 
 export const START_BOUNDARY: InAppBoundary = {
-  readStartNs: 0,
-  readEndNs: 20_000,
-  signpostNs: 25_000,
+  uiReadStartNs: 0,
+  uiReadEndNs: 5_000,
   uiThreadCpuUs: 1_000_000,
+  jsReadStartNs: 5_000,
+  jsReadEndNs: 10_000,
   jsThreadCpuUs: 500_000,
+  processReadStartNs: 10_000,
+  processReadEndNs: 20_000,
   processCpuUs: 2_000_000,
+  signpostStartNs: 22_000,
+  signpostEndNs: 28_000,
   footprintKb: 40_000,
   thermal: 0,
   batteryLevel: 100,
@@ -27,12 +32,17 @@ export const START_BOUNDARY: InAppBoundary = {
 
 export const END_BOUNDARY: InAppBoundary = {
   ...START_BOUNDARY,
-  readStartNs: 10_000_000_000,
-  readEndNs: 10_000_020_000,
-  signpostNs: 10_000_025_000,
+  uiReadStartNs: 10_000_000_000,
+  uiReadEndNs: 10_000_005_000,
   uiThreadCpuUs: 4_500_000,
+  jsReadStartNs: 10_000_005_000,
+  jsReadEndNs: 10_000_010_000,
   jsThreadCpuUs: 520_000,
+  processReadStartNs: 10_000_010_000,
+  processReadEndNs: 10_000_020_000,
   processCpuUs: 5_530_000,
+  signpostStartNs: 10_000_022_000,
+  signpostEndNs: 10_000_028_000,
   footprintKb: 40_300,
   mounts: 610,
   updates: 600,
@@ -82,18 +92,40 @@ export function inAppSample(overrides: Partial<InAppSample> = {}): InAppSample {
     mainThread: 5001,
     jsThread: 5002,
     maxThermal: 0,
-    epochs: [{ load: 'none', collector: 'full', seconds: 10 }],
+    epochs: [
+      {
+        load: 'none',
+        collector: 'full',
+        seconds: 10,
+        work: { own: 0, other: 0 },
+      },
+    ],
     boundaries: [START_BOUNDARY, END_BOUNDARY],
     updates: steadyUpdates(600),
     ...overrides,
   };
 }
 
+export function endpointsSample(): InAppSample {
+  return inAppSample({
+    epochs: [
+      {
+        load: 'none',
+        collector: 'endpoints',
+        seconds: 10,
+        work: { own: 0, other: 0 },
+      },
+    ],
+    boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 0 }],
+    updates: steadyUpdates(0),
+  });
+}
+
 export function sampleText(
   sample: InAppSample = inAppSample(),
   error: string | null = null
 ): string {
-  return JSON.stringify({ format: 1, error, ...sample });
+  return JSON.stringify({ format: 2, error, ...sample });
 }
 
 export function sampleLine(sample: InAppSample = inAppSample()): string {

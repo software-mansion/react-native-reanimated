@@ -76,6 +76,15 @@ std::optional<std::string> readProcessCpuUs(uint64_t &cpuUs)
   return std::nullopt;
 }
 
+template <typename Read>
+std::optional<std::string> bracketed(CounterRead &counter, Read read)
+{
+  counter.startNs = monotonicNs();
+  auto error = read(counter.valueUs);
+  counter.endNs = monotonicNs();
+  return error;
+}
+
 } // namespace
 
 uint64_t monotonicNs()
@@ -114,18 +123,15 @@ CpuReader::CpuReader(ThreadHandle uiThread, ThreadHandle jsThread) : uiThread_(u
 
 std::optional<std::string> CpuReader::read(CpuReading &reading) const
 {
-  reading.readStartNs = monotonicNs();
-  if (auto error = readThreadCpuUs(uiThread_, "main thread", reading.uiThreadCpuUs)) {
+  if (auto error = bracketed(
+          reading.uiThread, [this](uint64_t &value) { return readThreadCpuUs(uiThread_, "main thread", value); })) {
     return error;
   }
-  if (auto error = readThreadCpuUs(jsThread_, "JS thread", reading.jsThreadCpuUs)) {
+  if (auto error = bracketed(
+          reading.jsThread, [this](uint64_t &value) { return readThreadCpuUs(jsThread_, "JS thread", value); })) {
     return error;
   }
-  if (auto error = readProcessCpuUs(reading.processCpuUs)) {
-    return error;
-  }
-  reading.readEndNs = monotonicNs();
-  return std::nullopt;
+  return bracketed(reading.process, readProcessCpuUs);
 }
 
 } // namespace benchmark

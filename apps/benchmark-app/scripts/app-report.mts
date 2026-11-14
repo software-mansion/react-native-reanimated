@@ -10,6 +10,7 @@ export interface LaunchReport {
   refreshRate: number;
   thermalState: number;
   coldStart: number;
+  appSources: string;
 }
 
 export type ReportLine =
@@ -40,7 +41,7 @@ export function parseReportLine(line: string): ReportLine | null {
 
 export function parseLaunchLine(line: string): LaunchReport | null {
   const launch =
-    /^LAUNCH pid=(\d+) mainThread=(\d+) refreshRate=(\d+) thermal=(\d+) coldStart=(\d+(?:\.\d+)?)$/.exec(
+    /^LAUNCH pid=(\d+) mainThread=(\d+) refreshRate=(\d+) thermal=(\d+) coldStart=(\d+(?:\.\d+)?) sources=(\S*)$/.exec(
       line.trim()
     );
   return launch
@@ -50,6 +51,7 @@ export function parseLaunchLine(line: string): LaunchReport | null {
         refreshRate: Number(launch[3]),
         thermalState: Number(launch[4]),
         coldStart: Number(launch[5]),
+        appSources: launch[6],
       }
     : null;
 }

@@ -9,22 +9,26 @@ import type { CommandContext } from './command-context.mts';
 import { ToolError } from './errors.mts';
 import { highestThermalState, readEpoch } from './in-app-sample.mts';
 import type { Collector } from './in-app-sample.mts';
+import { IOS_DEFINITION } from './ios-definition.mts';
 import { IosDevice, readIosToolVersions } from './ios-device.mts';
+import type { IosToolVersions } from './ios-device.mts';
 import { iosPlatform } from './ios-platform.mts';
 import {
   InAppStateGuard,
   inAppStatesOf,
   startIosApp,
 } from './ios-protocol.mts';
-import type { IosSampleContext } from './ios-protocol.mts';
+import type { IosSampleContext, RunningIosApp } from './ios-protocol.mts';
 import {
   MEASUREMENT_REVISION,
   RECORDING_SECONDS,
 } from './measurement-rules.mts';
 import {
   checkNoiseLimitsRecord,
+  checkScenarioIdentity,
   readNoiseLimitsRecord,
 } from './noise-limits-record.mts';
+import type { NoiseLimitsRecord } from './noise-limits-record.mts';
 import {
   BLOCK_ORDER,
   OBSERVER_COST_METRICS,
@@ -35,14 +39,23 @@ import type {
   ObserverCost,
   ObserverCostMetric,
 } from './observer-cost.mts';
-import type { DeviceIdentity } from './platform.mts';
 import type { Processes } from './processes.mts';
 import { createMeasurementFolder } from './results.mts';
 import { timedSteps } from './samples.mts';
+import {
+  VALIDATION_SOURCE_FORMAT_VERSION,
+  writeObserverCostResult,
+} from './validation-sources.mts';
+import type { ObserverCostResult } from './validation-sources.mts';
 
 export interface ObserverCostDependencies {
   createDevice: (processes: Processes, udid: string) => IosDevice;
   clock: Clock;
+}
+
+interface TakenSample {
+  sample: Omit<CollectorSample, 'block'>;
+  app: RunningIosApp;
 }
 
 const DEFAULT_DEPENDENCIES: ObserverCostDependencies = {
@@ -51,8 +64,6 @@ const DEFAULT_DEPENDENCIES: ObserverCostDependencies = {
 };
 
 const MAXIMUM_ATTEMPTS = 3;
-
-const RESULT_FILE = 'observer-cost.json';
 
 const REPORT_FILE = 'observer-cost.md';
 
@@ -66,10 +77,13 @@ export async function observerCostCommand(
   const state = await device.readState();
   await device.checkInstalled(options.applicationId);
   const tools = await readIosToolVersions(processes);
-  const noiseLimits = readScenarioLimits(
-    options,
-    iosPlatform().deviceIdentity(state)
-  );
+  const identity = iosPlatform().deviceIdentity(state);
+  const record = options.noiseLimits
+    ? readNoiseLimitsRecord(options.noiseLimits)
+    : null;
+  if (record) {
+    checkNoiseLimitsRecord(record, 'ios', identity);
+  }
   context.onInterrupt(once(() => device.terminate(options.applicationId)));
 
   const folder = createMeasurementFolder(
@@ -83,56 +97,77 @@ export async function observerCostCommand(
     guard: new InAppStateGuard(null),
   };
   const samples: CollectorSample[] = [];
+  let launched: RunningIosApp | null = null;
   const write = (costs: ObserverCost[] | null) =>
-    fs.writeFileSync(
-      path.join(folder, RESULT_FILE),
-      `${JSON.stringify(
-        {
-          measurementRevision: MEASUREMENT_REVISION,
-          applicationId: options.applicationId,
-          scenario: options.scenario,
-          device: state,
-          tools,
-          noiseLimitsFile: options.noiseLimits ?? null,
-          samples,
-          costs,
-        },
-        null,
-        2
-      )}\n`
+    writeObserverCostResult(
+      folder,
+      resultOf(options, identity, tools, launched, samples, costs)
     );
   for (let block = 1; block <= options.blocks; block++) {
     for (const collector of BLOCK_ORDER) {
-      const sample = await takeCollectorSample(
+      const taken = await takeCollectorSample(
         options,
         collector,
         sampleContext,
         log
       );
-      samples.push({ block, ...sample });
+      if (record) {
+        checkScenarioIdentity(record, options.scenario, taken.app.report);
+      }
+      launched ??= taken.app;
+      samples.push({ block, ...taken.sample });
       log(
-        `block ${block} ${collector}: ${OBSERVER_COST_METRICS.map((metric) => `${metric} ${sample[metric].toFixed(3)}`).join(', ')} ms/s`
+        `block ${block} ${collector}: ${OBSERVER_COST_METRICS.map((metric) => `${metric} ${taken.sample[metric].toFixed(3)}`).join(', ')}`
       );
       write(null);
     }
   }
-  const costs = observerCosts(samples, noiseLimits);
+  const costs = observerCosts(samples, scenarioLimits(record, options));
   write(costs);
   fs.writeFileSync(path.join(folder, REPORT_FILE), observerCostReport(costs));
   log(`report ${path.join(folder, REPORT_FILE)}`);
-  return costs.every((cost) => cost.within !== false) ? 0 : 1;
+  return costs
+    .filter((cost) =>
+      (IOS_DEFINITION.verdictMetrics as readonly string[]).includes(cost.metric)
+    )
+    .every((cost) => cost.outcome === 'passed')
+    ? 0
+    : 1;
 }
 
-function readScenarioLimits(
+function resultOf(
   options: ObserverCostOptions,
-  identity: DeviceIdentity
+  identity: ObserverCostResult['device'],
+  tools: IosToolVersions,
+  launched: RunningIosApp | null,
+  samples: CollectorSample[],
+  costs: ObserverCost[] | null
+): ObserverCostResult {
+  return {
+    formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
+    measurementRevision: MEASUREMENT_REVISION,
+    platform: 'ios',
+    device: identity,
+    appSources: launched?.launch.appSources ?? '',
+    applicationId: options.applicationId,
+    scenario: options.scenario,
+    report: {
+      version: launched?.report.version ?? 0,
+      load: launched?.report.load ?? 0,
+    },
+    tools,
+    blocks: options.blocks,
+    noiseLimitsFile: options.noiseLimits ?? null,
+    samples,
+    costs,
+  };
+}
+
+function scenarioLimits(
+  record: NoiseLimitsRecord | null,
+  options: ObserverCostOptions
 ): Partial<Record<ObserverCostMetric, number>> {
-  if (options.noiseLimits === undefined) {
-    return {};
-  }
-  const record = readNoiseLimitsRecord(options.noiseLimits);
-  checkNoiseLimitsRecord(record, 'ios', identity);
-  return record.limits[options.scenario] ?? {};
+  return record?.limits[options.scenario] ?? {};
 }
 
 async function takeCollectorSample(
@@ -140,7 +175,7 @@ async function takeCollectorSample(
   collector: Collector,
   context: IosSampleContext,
   log: (message: string) => void
-): Promise<Omit<CollectorSample, 'block'>> {
+): Promise<TakenSample> {
   for (let attempt = 1; attempt <= MAXIMUM_ATTEMPTS; attempt++) {
     const start = await startIosApp(
       {
@@ -177,9 +212,13 @@ async function takeCollectorSample(
     }
     const reading = readEpoch(sample, 0, refreshRate);
     return {
-      collector,
-      ...reading.cpu,
-      windowSeconds: reading.window.seconds,
+      app,
+      sample: {
+        collector,
+        ...reading.cpu,
+        memory: reading.memory,
+        windowSeconds: reading.window.seconds,
+      },
     };
   }
   throw new ToolError(
@@ -199,15 +238,15 @@ function observerCostReport(costs: readonly ObserverCost[]): string {
         `${percent(cost.interval.low)} to ${percent(cost.interval.high)}`,
         cost.noiseLimit === null ? '-' : percent(cost.noiseLimit),
         cost.allowed === null ? '-' : `±${percent(cost.allowed)}`,
-        cost.within === null ? 'no limit' : cost.within ? 'yes' : 'no',
+        cost.outcome,
       ].join(' | ')} |`
   );
   return `${[
     '# Observer cost of the in-app collector',
     '',
-    'Median of the samples with only the counter reads (endpoints) and with the full collector (full), in ms/s. The interval is the 95% bootstrap interval of the relative difference of the medians.',
+    'Median of the samples with only the counter reads (endpoints) and with the full collector (full): ms/s for the CPU metrics, kB for `memory`. The interval is the 95% bootstrap interval of the relative difference of the medians; the bootstrap draws whole blocks. `passed`: the interval is inside the allowed band (one quarter of the noise limit). `failed`: the interval is fully outside it. `not validated`: the interval crosses a bound, the metric has no noise limit, or the test has fewer than 5 blocks.',
     '',
-    '| Metric | Endpoints | Full | Difference | Interval | Noise limit | Allowed | Within |',
+    '| Metric | Endpoints | Full | Difference | Interval | Noise limit | Allowed | Outcome |',
     `|${' --- |'.repeat(8)}`,
     ...rows,
   ].join('\n')}\n`;
