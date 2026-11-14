@@ -3,14 +3,14 @@ import { describe, it } from 'node:test';
 
 import type { Expectation } from '../config.mts';
 import { evaluateExpectations, exitCodeOf } from '../expectations.mts';
-import type { VerdictMetric } from '../metrics.mts';
+import type { ComparedMetric } from '../metrics.mts';
 import type { Scenario } from '../scenarios.mts';
 import type { FailedScenario } from '../session.mts';
 import type { Verdict, VerdictRow } from '../verdict.mts';
 
 function row(
   scenario: Scenario,
-  metric: VerdictMetric,
+  metric: ComparedMetric,
   verdict: Verdict,
   difference: number,
   low: number,

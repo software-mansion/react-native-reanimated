@@ -1,11 +1,16 @@
 import path from 'node:path';
 
 import type { NoiseLimitsOptions } from './arguments.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
-import { METRIC_COMPARISONS, VERDICT_METRICS } from './metrics.mts';
-import type { VerdictMetric } from './metrics.mts';
+import { COMPARISON_RULES } from './metrics.mts';
+import type { ComparedMetric } from './metrics.mts';
+import { NOISE_LIMITS_FORMAT_VERSION } from './noise-limits-record.mts';
+import type { NoiseLimitsRecord } from './noise-limits-record.mts';
+import type { PlatformDefinition } from './platform.mts';
 import { variantDifferences } from './report.mts';
 import { acceptedValues, readResult } from './results.mts';
+import type { RunResult } from './results.mts';
 import type { ScenarioOutcome } from './session.mts';
 import {
   createRandom,
@@ -17,15 +22,6 @@ import type { Comparison, ResamplingOptions } from './statistics.mts';
 import type { NoiseLimits } from './verdict.mts';
 
 export const NOISE_LIMIT_PERCENTILE = 0.975;
-export const NOISE_LIMIT_FLOORS: Record<VerdictMetric, number> = {
-  frameDurationMedian: 0.02,
-  frameDurationP95: 0.02,
-  jankyFrames: 0.005,
-  uiThreadCpu: 0.02,
-  jsThreadCpu: 0.02,
-  memory: 0.02,
-  coldStart: 0.02,
-};
 export const EXACT_SPLITS_LIMIT = 200_000;
 export const RANDOM_SPLITS: ResamplingOptions = {
   seed: 20261112,
@@ -38,17 +34,46 @@ interface MeasuredScenario {
 }
 
 export function noiseLimitsCommand(options: NoiseLimitsOptions): number {
-  const measured = options.runs.flatMap((folder) =>
-    completeAaScenarios(path.resolve(folder))
+  const runs = options.runs.map((folder) => {
+    const resolved = path.resolve(folder);
+    return { folder: resolved, result: readResult(resolved) };
+  });
+  const [{ result: first }] = runs;
+  checkSameMeasurement(runs);
+  const measured = runs.flatMap(({ folder, result }) =>
+    completeAaScenarios(folder, result)
   );
   checkUniqueScenarios(measured);
-  const limits = computeNoiseLimits(measured.map(({ outcome }) => outcome));
-  console.log(JSON.stringify(limits, null, 2));
+  const record: NoiseLimitsRecord = {
+    formatVersion: NOISE_LIMITS_FORMAT_VERSION,
+    platform: first.platform,
+    measurementRevision: first.measurementRevision,
+    limits: computeNoiseLimits(
+      measured.map(({ outcome }) => outcome),
+      PLATFORM_DEFINITIONS[first.platform]
+    ),
+  };
+  console.log(JSON.stringify(record, null, 2));
   return 0;
 }
 
-function completeAaScenarios(folder: string): MeasuredScenario[] {
-  const result = readResult(folder);
+function checkSameMeasurement(runs: { folder: string; result: RunResult }[]) {
+  const [first, ...others] = runs;
+  for (const other of others) {
+    for (const field of ['platform', 'measurementRevision'] as const) {
+      if (other.result[field] !== first.result[field]) {
+        throw new ToolError(
+          `The runs differ in ${field}: ${first.result[field]} in ${first.folder}, ${other.result[field]} in ${other.folder}`
+        );
+      }
+    }
+  }
+}
+
+function completeAaScenarios(
+  folder: string,
+  result: RunResult
+): MeasuredScenario[] {
   const differences = variantDifferences(result.config, result.variants);
   if (differences.length > 0) {
     throw new ToolError(
@@ -73,18 +98,22 @@ function checkUniqueScenarios(measured: MeasuredScenario[]) {
   });
 }
 
-export function computeNoiseLimits(outcomes: ScenarioOutcome[]): NoiseLimits {
+export function computeNoiseLimits(
+  outcomes: ScenarioOutcome[],
+  definition: PlatformDefinition
+): NoiseLimits {
   const limits: NoiseLimits = {};
   for (const outcome of outcomes) {
-    const metrics: Partial<Record<VerdictMetric, number>> = {};
-    for (const metric of VERDICT_METRICS) {
+    const metrics: Partial<Record<ComparedMetric, number>> = {};
+    for (const metric of definition.verdictMetrics) {
+      const rule = COMPARISON_RULES[metric];
       const limit = splitNoise(
         acceptedValues(outcome, metric, 'a'),
         acceptedValues(outcome, metric, 'b'),
-        METRIC_COMPARISONS[metric]
+        rule.comparison
       );
       if (limit !== null) {
-        metrics[metric] = Math.max(limit, NOISE_LIMIT_FLOORS[metric]);
+        metrics[metric] = Math.max(limit, rule.noiseFloor);
       }
     }
     limits[outcome.scenario] = metrics;

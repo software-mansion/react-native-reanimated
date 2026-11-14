@@ -1,6 +1,7 @@
 import { ToolError } from './errors.mts';
+import { frameMetrics, quantileOrNull } from './frames.mts';
+import type { FrameBasis } from './frames.mts';
 import type { AndroidSampleMetrics } from './metrics.mts';
-import { quantile } from './statistics.mts';
 import type { Processes } from './tools.mts';
 
 export type TraceMetrics = Omit<AndroidSampleMetrics, 'coldStart'>;
@@ -49,7 +50,7 @@ export class TraceProcessor {
   async collect(
     tracePath: string,
     app: TracedApp,
-    refreshRate: number
+    frames: FrameBasis
   ): Promise<TraceReading> {
     const { stdout } = await this.#processes.run(
       this.#binary,
@@ -65,7 +66,7 @@ export class TraceProcessor {
       ],
       { input: metricsQuery(app), timeoutMs: TRACE_PROCESSOR_TIMEOUT_MS }
     );
-    return computeTraceMetrics(parseQueryOutput(stdout), app, refreshRate);
+    return computeTraceMetrics(parseQueryOutput(stdout), app, frames);
   }
 }
 
@@ -270,7 +271,7 @@ export function parseQueryOutput(output: string): ResultSet[] {
 export function computeTraceMetrics(
   sets: ResultSet[],
   app: TracedApp,
-  refreshRate: number
+  frames: FrameBasis
 ): TraceReading {
   const [
     summarySet,
@@ -327,16 +328,14 @@ export function computeTraceMetrics(
       `The trace window is ${summary.window_ns} ns long, expected more than 0`
     );
   }
-  const expectedFrameCount = refreshRate * windowSeconds;
   const metrics = {
-    ...frameMetrics(durationsMs(frameSet), expectedFrameCount),
+    ...frameMetrics(durationsMs(frameSet), frames, windowSeconds),
     ...frameTimelineMetrics(numericRows(frameTimelineSet)),
     ...drawFrameMetrics(durationsMs(drawFrameSet)),
     ...cpuMetrics(threadCpuSet, windowSeconds),
     ...cpuWorkMetrics(threadWorkSet, windowSeconds),
     mountBatchCount: numericRows(mountBatchSet)[0].mount_batches,
     ...memoryMetrics(numericRows(memorySet)),
-    expectedFrameCount,
   };
   checkFiniteMetrics(metrics);
   return { processLived: true, metrics };
@@ -381,17 +380,6 @@ function durationsMs(set: ResultSet): number[] {
   return numericRows(set).map((row) => row.dur / NANOSECONDS_PER_MS);
 }
 
-function frameMetrics(durations: number[], expectedFrameCount: number) {
-  return {
-    frameDurationMedian: quantileOrNull(durations, 0.5),
-    frameDurationP90: quantileOrNull(durations, 0.9),
-    frameDurationP95: quantileOrNull(durations, 0.95),
-    frameDurationP99: quantileOrNull(durations, 0.99),
-    jankyFrames: Math.max(0, 1 - durations.length / expectedFrameCount),
-    frameCount: durations.length,
-  };
-}
-
 function frameTimelineMetrics(frames: Record<string, number>[]) {
   const durations = frames.map((frame) => frame.dur / NANOSECONDS_PER_MS);
   const share = (flag: string) =>
@@ -412,10 +400,6 @@ function drawFrameMetrics(durations: number[]) {
     drawFrameMedian: quantileOrNull(durations, 0.5),
     drawFrameP95: quantileOrNull(durations, 0.95),
   };
-}
-
-function quantileOrNull(values: number[], q: number): number | null {
-  return values.length > 0 ? quantile(values, q) : null;
 }
 
 function cpuMetrics(threadCpuSet: ResultSet, windowSeconds: number) {

@@ -30,7 +30,7 @@ const APP: TracedIosApp = {
   pid: 8865,
   mainThread: 3840236,
   jsThread: 3840263,
-  refreshRate: 60,
+  frames: { refreshRate: 60, share: 1 },
 };
 const WINDOW_START = 1_856_890_916;
 const WINDOW_END = 2_856_859_583;
@@ -355,8 +355,21 @@ describe('computeIosTraceMetrics', () => {
     assert.equal(metrics.frameDurationP99, null);
   });
 
+  it('expects updates only on the share of the refreshes that the scenario declares', () => {
+    const metrics = metricsOf(EXPORTS, {
+      ...APP,
+      frames: { refreshRate: 60, share: 0.5 },
+    });
+    assertClose(metrics.expectedFrameCount, 30 * SECONDS);
+    assert.equal(metrics.frameCount, 59);
+    assert.equal(metrics.jankyFrames, 0);
+  });
+
   it('gives 0 janky frames when the app draws more frames than the refresh rate gives', () => {
-    const metrics = metricsOf(EXPORTS, { ...APP, refreshRate: 30 });
+    const metrics = metricsOf(EXPORTS, {
+      ...APP,
+      frames: { refreshRate: 30, share: 1 },
+    });
     assertClose(metrics.expectedFrameCount, 30 * SECONDS);
     assert.equal(metrics.jankyFrames, 0);
   });
@@ -724,7 +737,10 @@ describe('computeIosTraceMetrics', () => {
   it('stops when a metric is not a finite number', () => {
     assert.throws(
       () =>
-        computeIosTraceMetrics(EXPORTS, { ...APP, refreshRate: Number.NaN }),
+        computeIosTraceMetrics(EXPORTS, {
+          ...APP,
+          frames: { refreshRate: Number.NaN, share: 1 },
+        }),
       /not finite numbers: jankyFrames = NaN, expectedFrameCount = NaN/
     );
   });

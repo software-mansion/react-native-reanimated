@@ -4,10 +4,11 @@ import type {
   VariantKey,
   VariantsConfig,
 } from './config.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import type { ExpectationResult } from './expectations.mts';
-import { METRIC_UNITS, VERDICT_METRICS } from './metrics.mts';
-import type { MetricUnit } from './metrics.mts';
-import type { DeviceState } from './platform.mts';
+import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
+import type { ComparedMetric, MetricUnit } from './metrics.mts';
+import type { DeviceState, PlatformDefinition } from './platform.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
 import type { InvalidCause, SampleSteps } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
@@ -19,7 +20,7 @@ import type {
   ScenarioOutcome,
 } from './session.mts';
 import type { BuiltVariant } from './variant-build.mts';
-import type { VerdictRow } from './verdict.mts';
+import type { AdvisoryRow, MetricComparison, VerdictRow } from './verdict.mts';
 
 type Timed = Judged & { timings: SampleSteps['timings'] };
 
@@ -30,6 +31,7 @@ export interface Difference {
 }
 
 export function renderReport(result: RunResult): string {
+  const definition = PLATFORM_DEFINITIONS[result.platform];
   const samples = [
     ...result.scenarios,
     ...(result.incompleteScenario ? [result.incompleteScenario] : []),
@@ -51,11 +53,15 @@ export function renderReport(result: RunResult): string {
     '',
     '## Expectations',
     '',
-    expectationsSection(result.expectations, result.config),
+    expectationsSection(result.expectations, result.config, definition),
     '',
     '## Verdicts',
     '',
     verdictsSection(result),
+    '',
+    '## Metric definitions',
+    '',
+    metricDefinitionsSection(definition, result.measurementRevision),
     '',
     '## Failed scenarios',
     '',
@@ -172,17 +178,19 @@ export function table(header: string[], rows: string[][]): string {
 
 function expectationsSection(
   results: ExpectationResult[],
-  config: RunConfig
+  config: RunConfig,
+  definition: PlatformDefinition
 ): string {
   return results
-    .map((result, i) => expectationLine(result, i, config))
+    .map((result, i) => expectationLine(result, i, config, definition))
     .join('\n');
 }
 
 export function expectationLine(
   result: ExpectationResult,
   index: number,
-  config: RunConfig
+  config: RunConfig,
+  definition: PlatformDefinition
 ): string {
   const { expectation } = result;
   const scenarios = config.scenarios.every((scenario) =>
@@ -190,7 +198,7 @@ export function expectationLine(
   )
     ? 'all scenarios'
     : expectation.scenarios.join(', ');
-  const metrics = VERDICT_METRICS.every((metric) =>
+  const metrics = definition.verdictMetrics.every((metric) =>
     expectation.metrics.includes(metric)
   )
     ? 'all metrics'
@@ -223,17 +231,23 @@ function formatPercent(fraction: number, signed: boolean): string {
   return `${signed && fraction > 0 ? '+' : ''}${percent === '-0' ? '0' : percent}%`;
 }
 
-function formatDifference(row: VerdictRow): string {
+function formatDifference(
+  row: MetricComparison & { noiseLimit?: number | null }
+): string {
   if (row.comparison === 'relative') {
     return formatPercent(row.difference, true);
   }
-  const value = formatSigned(row.difference, METRIC_UNITS[row.metric]);
+  const value = formatSigned(row.difference, unitOf(row.metric));
   if (!row.comparisonFallback) {
     return value;
   }
   return row.noiseLimit === null
     ? `${value} (absolute, no noise limit)`
     : `${value} (absolute)`;
+}
+
+function unitOf(metric: ComparedMetric): MetricUnit {
+  return COMPARISON_RULES[metric].unit;
 }
 
 function formatSigned(value: number, unit: MetricUnit): string {
@@ -255,11 +269,11 @@ function formatValue(value: number, unit: MetricUnit): string {
   }
 }
 
-function formatInterval(row: VerdictRow): string {
+function formatInterval(row: MetricComparison): string {
   const format = (value: number) =>
     row.comparison === 'relative'
       ? formatPercent(value, true)
-      : formatSigned(value, METRIC_UNITS[row.metric]);
+      : formatSigned(value, unitOf(row.metric));
   return `${format(row.interval.low)} to ${format(row.interval.high)}`;
 }
 
@@ -275,22 +289,21 @@ function verdictsSection(result: RunResult): string {
     result.noiseLimits
       ? `Noise limits from ${result.options.noiseLimitsFile}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`
       : 'No noise limits given: the limit is 0 for all rows.',
-    'The difference and the interval of jankyFrames are in percentage points (pp).',
+    'The difference and the interval of jankyFrames are in percentage points (pp). A row with "no verdict" is advisory: it has no noise limit, and the expectations do not use it.',
   ].join(' ');
-  if (result.statistics.length === 0) {
+  const rows = [...result.verdictRows, ...result.advisoryRows].sort(
+    (left, right) =>
+      result.config.scenarios.indexOf(left.scenario) -
+        result.config.scenarios.indexOf(right.scenario) ||
+      COMPARED_METRICS.indexOf(left.metric) -
+        COMPARED_METRICS.indexOf(right.metric)
+  );
+  if (rows.length === 0) {
     return `${limits}\n\nNo rows.`;
   }
-  const hasFallback = result.statistics.some((row) => row.comparisonFallback);
-  const rows = result.statistics.map((row) => [
-    row.scenario,
-    row.metric,
-    `${row.samplesA}/${row.samplesB}`,
-    formatValue(row.medianA, METRIC_UNITS[row.metric]),
-    formatValue(row.medianB, METRIC_UNITS[row.metric]),
-    formatDifference(row),
-    formatInterval(row),
-    row.verdict,
-  ]);
+  const hasFallback = rows.some(
+    (row) => hasComparison(row) && row.comparisonFallback
+  );
   return [
     limits,
     '',
@@ -305,7 +318,7 @@ function verdictsSection(result: RunResult): string {
         'Interval',
         'Verdict',
       ],
-      rows
+      rows.map(comparisonCells)
     ),
     ...(hasFallback
       ? [
@@ -314,6 +327,77 @@ function verdictsSection(result: RunResult): string {
         ]
       : []),
   ].join('\n');
+}
+
+function hasComparison(
+  row: VerdictRow | AdvisoryRow
+): row is VerdictRow | Extract<AdvisoryRow, { hasData: true }> {
+  return !('hasData' in row) || row.hasData;
+}
+
+function comparisonCells(row: VerdictRow | AdvisoryRow): string[] {
+  const place = [row.scenario, row.metric, `${row.samplesA}/${row.samplesB}`];
+  if (!hasComparison(row)) {
+    return [...place, '-', '-', '-', '-', 'no verdict (no data)'];
+  }
+  const unit = unitOf(row.metric);
+  return [
+    ...place,
+    formatValue(row.medianA, unit),
+    formatValue(row.medianB, unit),
+    formatDifference(row),
+    formatInterval(row),
+    'verdict' in row ? row.verdict : 'no verdict',
+  ];
+}
+
+function metricDefinitionsSection(
+  definition: PlatformDefinition,
+  measurementRevision: number
+): string {
+  const shown = new Set<string>([
+    ...definition.verdictMetrics,
+    ...definition.advisoryMetrics,
+  ]);
+  return [
+    `Numbers and verdicts are valid only within one platform, one phone and one measurement revision. This run has the measurement revision ${measurementRevision}.`,
+    '',
+    metricDefinitionsTable(
+      definition,
+      definition.metricDefinitions.filter((entry) =>
+        entry.names.some((name) => shown.has(name))
+      )
+    ),
+  ].join('\n');
+}
+
+export function metricDefinitionsTable(
+  definition: PlatformDefinition,
+  entries = definition.metricDefinitions
+): string {
+  return table(
+    ['Metric', 'Unit', 'Source', 'Interval', 'Limits', 'Verdict'],
+    entries.map((entry) => [
+      entry.names.map((name) => `\`${name}\``).join(', '),
+      entry.unit,
+      entry.source,
+      entry.interval,
+      entry.limits,
+      roleOf(definition, entry.names),
+    ])
+  );
+}
+
+function roleOf(
+  definition: PlatformDefinition,
+  names: readonly string[]
+): string {
+  const has = (metrics: readonly string[]) =>
+    names.some((name) => metrics.includes(name));
+  if (has(definition.verdictMetrics)) {
+    return 'yes';
+  }
+  return has(definition.advisoryMetrics) ? 'no verdict, shown' : 'no, stored';
 }
 
 export function failedSection(

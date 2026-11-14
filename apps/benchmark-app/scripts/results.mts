@@ -1,17 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type {
-  Expectation,
-  RunConfig,
-  VariantKey,
-  VariantsConfig,
-} from './config.mts';
+import type { RunConfig, VariantKey, VariantsConfig } from './config.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
-import { evaluateExpectations } from './expectations.mts';
 import type { ExpectationResult } from './expectations.mts';
-import { RETIRED_VERDICT_METRIC, isVerdictMetric } from './metrics.mts';
-import type { SampleMetrics, VerdictMetric } from './metrics.mts';
+import type { ComparedMetric } from './metrics.mts';
+import type { NoiseLimitsRecord } from './noise-limits-record.mts';
 import type {
   DeviceState,
   InAppState,
@@ -19,10 +14,28 @@ import type {
   ToolVersions,
 } from './platform.mts';
 import type { SampleResult } from './protocol.mts';
+import { SCENARIOS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
-import type { Judged, SampleRecord, ScenarioOutcome } from './session.mts';
+import type { Judged, ScenarioOutcome } from './session.mts';
+import {
+  aBoolean,
+  aNumber,
+  aString,
+  anInteger,
+  anObject,
+  both,
+  listOf,
+  nullable,
+  oneOf,
+  optional,
+  shape,
+  throwProblems,
+  valuesOf,
+  when,
+} from './validation.mts';
+import type { Check } from './validation.mts';
 import type { BuiltVariant } from './variant-build.mts';
-import type { NoiseLimits, VerdictRow } from './verdict.mts';
+import type { AdvisoryRow, VerdictRow } from './verdict.mts';
 
 export type RunStatus = 'running' | 'done' | 'interrupted' | 'tool error';
 
@@ -43,6 +56,7 @@ export type ResultCommand = 'run' | 'memory';
 
 export interface MeasurementResult<R extends Judged = SampleResult> {
   formatVersion: typeof FORMAT_VERSION;
+  measurementRevision: number;
   platform: PlatformName;
   command: ResultCommand;
   status: RunStatus;
@@ -55,7 +69,7 @@ export interface MeasurementResult<R extends Judged = SampleResult> {
   segments: Segment[];
   appRefreshRate: number | null;
   inAppState?: InAppState;
-  tools?: ToolVersions;
+  tools: ToolVersions;
   variants: Partial<Record<VariantKey, RunVariant>>;
   scenarios: ScenarioOutcome<R>[];
   incompleteScenario: ScenarioOutcome<R> | null;
@@ -70,32 +84,58 @@ export interface RunResult extends MeasurementResult {
     noiseLimitsFile: string | null;
     keepTraces: boolean;
   };
-  noiseLimits: NoiseLimits | null;
-  statistics: VerdictRow[];
+  noiseLimits: NoiseLimitsRecord | null;
+  verdictRows: VerdictRow[];
+  advisoryRows: AdvisoryRow[];
   expectations: ExpectationResult[];
 }
 
-type FormatTwoVariant = Omit<RunVariant, 'artifact' | 'artifactSha256'> & {
-  apk: string;
-  apkSha256: string;
-};
+export const FORMAT_VERSION = 1;
 
-type FormatTwoResult<R extends MeasurementResult<Judged>> = Omit<
-  R,
-  'formatVersion' | 'platform' | 'variants'
-> & {
-  formatVersion: 2;
-  variants: Partial<Record<VariantKey, FormatTwoVariant>>;
-};
+export const RUN_STATUSES: readonly RunStatus[] = [
+  'running',
+  'done',
+  'interrupted',
+  'tool error',
+];
 
-type FormatOneResult = Omit<
-  FormatTwoResult<RunResult>,
-  'formatVersion' | 'command'
-> & {
-  formatVersion: 1;
-};
+export const RECORDED_SAMPLE: Check = both(
+  shape({
+    variant: oneOf(['a', 'b']),
+    block: anInteger,
+    attempt: anInteger,
+    position: anInteger,
+    segment: anInteger,
+    accepted: aBoolean,
+    valid: aBoolean,
+    timings: anObject,
+  }),
+  when(
+    (sample) => sample.valid === false,
+    shape({ cause: aString, detail: aString })
+  )
+);
 
-export const FORMAT_VERSION = 3;
+const RUN_SAMPLE = both(
+  RECORDED_SAMPLE,
+  when((sample) => sample.valid === true, shape({ metrics: anObject }))
+);
+
+const RUN_FIELDS: Record<string, Check> = {
+  config: shape({
+    scenarios: listOf(oneOf(SCENARIOS)),
+    expect: listOf(anObject),
+  }),
+  options: shape({
+    blocks: anInteger,
+    noiseLimitsFile: nullable(aString),
+    keepTraces: aBoolean,
+  }),
+  noiseLimits: nullable(anObject),
+  verdictRows: listOf(anObject),
+  advisoryRows: listOf(anObject),
+  expectations: listOf(anObject),
+};
 
 export function runFolderName(date: Date, name: string): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -118,149 +158,43 @@ export function createRunFolder(
 }
 
 export function readResult(folder: string): RunResult {
-  return readMeasurementResult<RunResult>(folder, 'run');
+  return readMeasurementResult<RunResult>(
+    folder,
+    'run',
+    RUN_FIELDS,
+    RUN_SAMPLE
+  );
 }
 
 export function readMeasurementResult<R extends MeasurementResult<Judged>>(
   folder: string,
-  command: R['command']
+  command: R['command'],
+  commandFields: Record<string, Check>,
+  sample: Check
 ): R {
   const file = path.join(folder, 'result.json');
-  let stored: R | FormatTwoResult<R> | FormatOneResult;
+  let stored: unknown;
   try {
-    stored = JSON.parse(fs.readFileSync(file, 'utf8')) as typeof stored;
+    stored = JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (error) {
     throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
   }
-  const result = currentFormat<R>(stored);
-  if (result.command !== command) {
+  const version = (stored as { formatVersion?: unknown } | null)?.formatVersion;
+  if (version !== FORMAT_VERSION) {
     throw new ToolError(
-      `${folder} holds the result of the ${result.command} command, not of the ${command} command`
+      `${file} has the result format version ${JSON.stringify(version)}. This driver reads only version ${FORMAT_VERSION}.`
     );
   }
-  return withSampleSegments(result);
-}
-
-function currentFormat<R extends MeasurementResult<Judged>>(
-  stored: R | FormatTwoResult<R> | FormatOneResult
-): R {
-  switch (stored.formatVersion) {
-    case 1:
-      return upgradedFormatTwo(upgradedFormatOne(stored)) as unknown as R;
-    case 2:
-      return upgradedFormatTwo(stored);
-    default:
-      return stored;
+  const storedCommand = (stored as { command?: unknown }).command;
+  if (storedCommand !== command) {
+    throw new ToolError(
+      `${folder} holds the result of the ${String(storedCommand)} command, not of the ${command} command`
+    );
   }
-}
-
-function upgradedFormatTwo<R extends MeasurementResult<Judged>>(
-  stored: FormatTwoResult<R>
-): R {
-  const variants = Object.fromEntries(
-    Object.entries(stored.variants).map(
-      ([key, { apk, apkSha256, ...variant }]) => [
-        key,
-        { ...variant, artifact: apk, artifactSha256: apkSha256 },
-      ]
-    )
-  );
-  return {
-    ...stored,
-    formatVersion: FORMAT_VERSION,
-    platform: 'android',
-    variants,
-  } as unknown as R;
-}
-
-function upgradedFormatOne(
-  stored: FormatOneResult
-): FormatTwoResult<RunResult> {
-  outcomesOf(stored)
-    .flatMap((outcome) => outcome.samples)
-    .forEach(renameRetiredMetric);
-  return {
-    ...stored,
-    formatVersion: 2,
-    command: 'run',
-    config: {
-      ...stored.config,
-      expect: stored.config.expect
-        .map(withCurrentMetrics)
-        .filter((expectation) => expectation.metrics.length > 0),
-    },
-    noiseLimits: stored.noiseLimits && withCurrentLimits(stored.noiseLimits),
-    statistics: stored.statistics.filter((row) => isVerdictMetric(row.metric)),
-    expectations: stored.expectations.flatMap(reevaluated),
-  };
-}
-
-function outcomesOf<R extends Judged>(
-  result: Pick<
-    MeasurementResult<R>,
-    'scenarios' | 'incompleteScenario' | 'abandonedScenarios'
-  >
-): ScenarioOutcome<R>[] {
-  return [
-    ...result.scenarios,
-    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
-    ...result.abandonedScenarios,
-  ];
-}
-
-function renameRetiredMetric(sample: SampleRecord) {
-  const metrics = sample.metrics as
-    | (SampleMetrics & { [RETIRED_VERDICT_METRIC]?: number })
-    | undefined;
-  const value = metrics?.[RETIRED_VERDICT_METRIC];
-  if (metrics && value !== undefined) {
-    metrics.windowMemoryDelta = value;
-    delete metrics[RETIRED_VERDICT_METRIC];
-  }
-}
-
-function withCurrentMetrics(expectation: Expectation): Expectation {
-  return {
-    ...expectation,
-    metrics: expectation.metrics.filter(isVerdictMetric),
-  };
-}
-
-function reevaluated(result: ExpectationResult): ExpectationResult[] {
-  const expectation = withCurrentMetrics(result.expectation);
-  if (expectation.metrics.length === 0) {
-    return [];
-  }
-  return evaluateExpectations(
-    [expectation],
-    result.rows.filter((row) => isVerdictMetric(row.metric)),
-    result.failedScenarios,
-    result.scenariosWithoutData
-  );
-}
-
-function withCurrentLimits(limits: NoiseLimits): NoiseLimits {
-  return Object.fromEntries(
-    Object.entries(limits).map(([scenario, metrics]) => [
-      scenario,
-      Object.fromEntries(
-        Object.entries(metrics).filter(([metric]) => isVerdictMetric(metric))
-      ),
-    ])
-  );
-}
-
-function withSampleSegments<R extends MeasurementResult<Judged>>(result: R): R {
-  const fill = (outcome: ScenarioOutcome<Judged>, segment: number) =>
-    outcome.samples.forEach((sample) => (sample.segment ??= segment));
-  result.scenarios.forEach((outcome) => fill(outcome, 0));
-  if (result.incompleteScenario) {
-    fill(result.incompleteScenario, result.segments.length - 1);
-  }
-  result.abandonedScenarios.forEach((outcome) =>
-    fill(outcome, outcome.segment)
-  );
-  return result;
+  const problems: string[] = [];
+  measurementShape(commandFields, sample)(stored, 'result', problems);
+  throwProblems(`${file} is not a valid result`, problems);
+  return stored as R;
 }
 
 export function writeResult(folder: string, result: MeasurementResult<Judged>) {
@@ -284,13 +218,17 @@ export function scenariosWithoutData(
 
 export function acceptedValues(
   outcome: ScenarioOutcome,
-  metric: VerdictMetric,
+  metric: ComparedMetric,
   variant: VariantKey
 ): number[] {
   return outcome.samples.flatMap((sample) => {
     const selected =
       sample.valid && sample.accepted && sample.variant === variant;
-    const value = selected ? sample.metrics[metric] : null;
+    const value = selected
+      ? (sample.metrics as Partial<Record<ComparedMetric, number | null>>)[
+          metric
+        ]
+      : null;
     return typeof value === 'number' ? [value] : [];
   });
 }
@@ -300,6 +238,57 @@ export function finiteNumber(value: number, label: string): number {
     throw new ToolError(`${label} is ${value}, not a finite number`);
   }
   return value;
+}
+
+function measurementShape(
+  commandFields: Record<string, Check>,
+  sample: Check
+): Check {
+  const outcome = shape({
+    scenario: oneOf(SCENARIOS),
+    samples: listOf(sample),
+    failed: nullable(anObject),
+  });
+  return shape({
+    measurementRevision: anInteger,
+    platform: oneOf(Object.keys(PLATFORM_DEFINITIONS)),
+    status: oneOf(RUN_STATUSES),
+    startedAt: aString,
+    config: shape({ name: aString, a: anObject, b: anObject }),
+    options: shape({ keepTraces: aBoolean }),
+    segments: both(
+      listOf(
+        shape({
+          startedAt: aString,
+          status: oneOf(RUN_STATUSES),
+          device: anObject,
+        })
+      ),
+      nonEmpty
+    ),
+    appRefreshRate: nullable(aNumber),
+    tools: valuesOf(aString),
+    variants: valuesOf(
+      shape({
+        applicationId: aString,
+        artifact: aString,
+        artifactSha256: aString,
+        installedVersions: shape({ reanimated: aString, worklets: aString }),
+        effectiveFlags: shape({ reanimated: anObject, worklets: anObject }),
+      })
+    ),
+    scenarios: listOf(outcome),
+    incompleteScenario: nullable(outcome),
+    abandonedScenarios: listOf(both(outcome, shape({ segment: anInteger }))),
+    inAppState: optional(anObject),
+    ...commandFields,
+  });
+}
+
+function nonEmpty(value: unknown, label: string, problems: string[]) {
+  if (Array.isArray(value) && value.length === 0) {
+    problems.push(`${label} must have at least one entry`);
+  }
 }
 
 function rejectNonFinite(key: string, value: unknown): unknown {

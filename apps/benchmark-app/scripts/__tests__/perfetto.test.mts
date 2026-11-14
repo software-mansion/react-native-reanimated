@@ -23,6 +23,10 @@ const APP = {
   jsThread: 13240,
 };
 
+function frames(refreshRate: number) {
+  return { refreshRate, share: 1 };
+}
+
 function metricsOf(reading: TraceReading): TraceMetrics {
   assert.equal(reading.processLived, true);
   return reading.processLived ? reading.metrics : assert.fail();
@@ -63,7 +67,7 @@ describe('parseQueryOutput', () => {
 describe('computeTraceMetrics', () => {
   it('computes all metrics from the query output of a real trace', () => {
     const metrics = metricsOf(
-      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, 60)
+      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, frames(60))
     );
     assert.equal(metrics.frameCount, 591);
     assertClose(metrics.expectedFrameCount, 60 * SECONDS);
@@ -87,7 +91,7 @@ describe('computeTraceMetrics', () => {
 
   it('takes the JS thread CPU time from the JS thread only and counts the other threads apart', () => {
     const metrics = metricsOf(
-      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, 60)
+      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, frames(60))
     );
     assertClose(metrics.jsThreadCpu, 12.564233 / SECONDS);
     assertClose(
@@ -101,7 +105,7 @@ describe('computeTraceMetrics', () => {
 
   it('gives null clock rate work when the trace has no clock rate data', () => {
     const metrics = metricsOf(
-      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, 60)
+      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, frames(60))
     );
     assert.equal(metrics.uiThreadCpuWork, null);
     assert.equal(metrics.processCpuWork, null);
@@ -118,54 +122,67 @@ describe('computeTraceMetrics', () => {
         ['render', null],
       ],
     };
-    const metrics = metricsOf(computeTraceMetrics(sets, APP, 60));
+    const metrics = metricsOf(computeTraceMetrics(sets, APP, frames(60)));
     assertClose(metrics.uiThreadCpuWork, 100000 / SECONDS);
     assertClose(metrics.processCpuWork, 750000 / SECONDS);
   });
 
   it('gives the share of dropped frames from the refresh rate, and 0 when the app draws more frames', () => {
     const at90 = metricsOf(
-      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, 90)
+      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, frames(90))
     );
     assertClose(at90.expectedFrameCount, 90 * SECONDS);
     assertClose(at90.jankyFrames, 1 - 591 / (90 * SECONDS));
     const at30 = metricsOf(
-      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, 30)
+      computeTraceMetrics(parseQueryOutput(OUTPUT), APP, frames(30))
     );
     assert.equal(at30.jankyFrames, 0);
   });
 
   it('divides the CPU time by the length of the trace window', () => {
     const metrics = metricsOf(
-      computeTraceMetrics(withSummary('4939110500,1,0,1,591'), APP, 60)
+      computeTraceMetrics(withSummary('4939110500,1,0,1,591'), APP, frames(60))
     );
     assertClose(metrics.uiThreadCpu, 6665.745159 / 4.9391105);
   });
 
   it('gives a crash when the launched process ended before the window end', () => {
     for (const summary of ['9878221001,1,1,1,591', '9878221001,2,1,1,591']) {
-      assert.deepEqual(computeTraceMetrics(withSummary(summary), APP, 60), {
-        processLived: false,
-        detail: 'the app process 13208 ended before the end of the trace',
-      });
+      assert.deepEqual(
+        computeTraceMetrics(withSummary(summary), APP, frames(60)),
+        {
+          processLived: false,
+          detail: 'the app process 13208 ended before the end of the trace',
+        }
+      );
     }
   });
 
   it('stops when the trace lost data', () => {
     const lossy = `${OUTPUT.trimEnd()}\n"ftrace_cpu_overrun_end",0,12\n`;
     assert.throws(
-      () => computeTraceMetrics(parseQueryOutput(lossy), APP, 60),
+      () => computeTraceMetrics(parseQueryOutput(lossy), APP, frames(60)),
       /ftrace_cpu_overrun_end\[0\] = 12/
     );
   });
 
   it('stops when the launched process is absent or has no JS thread with the id of the READY line', () => {
     assert.throws(
-      () => computeTraceMetrics(withSummary('9878221001,0,0,1,591'), APP, 60),
+      () =>
+        computeTraceMetrics(
+          withSummary('9878221001,0,0,1,591'),
+          APP,
+          frames(60)
+        ),
       /no process com.reanimatedbenchmark.a with pid 13208/
     );
     assert.throws(
-      () => computeTraceMetrics(withSummary('9878221001,1,0,0,591'), APP, 60),
+      () =>
+        computeTraceMetrics(
+          withSummary('9878221001,1,0,0,591'),
+          APP,
+          frames(60)
+        ),
       /no thread "mqt_v_js" with the jsThread 13240 of the READY line/
     );
   });
@@ -174,7 +191,7 @@ describe('computeTraceMetrics', () => {
     const sets = withSummary('9878221001,1,0,1,0');
     sets[4] = { columns: ['dur'], rows: [] };
     assert.throws(
-      () => computeTraceMetrics(sets, APP, 60),
+      () => computeTraceMetrics(sets, APP, frames(60)),
       /no Choreographer#doFrame% slice on any thread\. The atrace category "view" gave no data/
     );
   });
@@ -182,7 +199,7 @@ describe('computeTraceMetrics', () => {
   it('gives 0 frames and null frame durations when only other threads have a Choreographer#doFrame slice', () => {
     const sets = withSummary('9878221001,1,0,1,120');
     sets[4] = { columns: ['dur'], rows: [] };
-    const metrics = metricsOf(computeTraceMetrics(sets, APP, 60));
+    const metrics = metricsOf(computeTraceMetrics(sets, APP, frames(60)));
     assert.equal(metrics.frameCount, 0);
     assert.equal(metrics.jankyFrames, 1);
     assert.equal(metrics.frameDurationMedian, null);
@@ -195,7 +212,7 @@ describe('computeTraceMetrics', () => {
     const sets = parseQueryOutput(OUTPUT);
     sets[3] = { columns: sets[3].columns, rows: [] };
     sets[5] = { columns: ['dur'], rows: [] };
-    const metrics = metricsOf(computeTraceMetrics(sets, APP, 60));
+    const metrics = metricsOf(computeTraceMetrics(sets, APP, frames(60)));
     assert.equal(metrics.frameTimelineFrameCount, 0);
     assert.equal(metrics.frameTimelineDurationMedian, null);
     assert.equal(metrics.jankFlaggedFrames, null);
@@ -205,7 +222,7 @@ describe('computeTraceMetrics', () => {
 
   it('stops when the trace window is empty', () => {
     assert.throws(
-      () => computeTraceMetrics(withSummary('0,1,0,1,591'), APP, 60),
+      () => computeTraceMetrics(withSummary('0,1,0,1,591'), APP, frames(60)),
       /trace window is 0 ns long/
     );
   });

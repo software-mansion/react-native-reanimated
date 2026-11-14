@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { ANDROID_DEFINITION } from '../android-definition.mts';
 import type { DeviceState } from '../android-device.mts';
 import type { RunConfig, Variant } from '../config.mts';
 import { evaluateExpectations } from '../expectations.mts';
-import { VERDICT_METRICS } from '../metrics.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 import {
   expectationLine,
   renderReport,
@@ -39,7 +40,7 @@ const CONFIG: RunConfig = {
     },
     {
       scenarios: ['worklet-styles-transform', 'sticky-header'],
-      metrics: [...VERDICT_METRICS],
+      metrics: [...ANDROID_DEFINITION.verdictMetrics],
       is: 'notWorse',
     },
   ],
@@ -156,7 +157,8 @@ function sample(overrides: Partial<SampleRecord>): SampleRecord {
 }
 
 const RESULT: RunResult = {
-  formatVersion: 3,
+  formatVersion: 1,
+  measurementRevision: 1,
   platform: 'android',
   command: 'run',
   status: 'done',
@@ -175,6 +177,12 @@ const RESULT: RunResult = {
     },
   ],
   appRefreshRate: 60,
+  tools: {
+    node: 'v24.16.0',
+    adb: '1.0.41',
+    traceProcessor: 'v59.1',
+    devicePerfetto: 'v59.1',
+  },
   variants: { a: built('a', false), b: built('b', true) },
   scenarios: [
     { scenario: 'worklet-styles-transform', samples: [], failed: null },
@@ -189,18 +197,19 @@ const RESULT: RunResult = {
   ],
   incompleteScenario: null,
   abandonedScenarios: [],
-  statistics: ROWS,
+  verdictRows: ROWS,
+  advisoryRows: [],
   expectations: evaluateExpectations(CONFIG.expect, ROWS, []),
 };
 
 describe('expectationLine', () => {
   it('writes the lines of the spec example', () => {
     assert.equal(
-      expectationLine(RESULT.expectations[0], 0, CONFIG),
+      expectationLine(RESULT.expectations[0], 0, CONFIG, ANDROID_DEFINITION),
       '1. worklet-styles-transform, uiThreadCpu: better -> holds (-31%, interval -33% to -29%)'
     );
     assert.equal(
-      expectationLine(RESULT.expectations[1], 1, CONFIG),
+      expectationLine(RESULT.expectations[1], 1, CONFIG, ANDROID_DEFINITION),
       '2. all scenarios, all metrics: not worse -> fails (sticky-header, frameDurationP95: +6%, interval +3% to +9%)'
     );
   });
@@ -219,7 +228,7 @@ describe('expectationLine', () => {
       [{ scenario: 'sticky-header', variants: ['a'], causes: [] }]
     );
     assert.equal(
-      expectationLine(result, 0, CONFIG),
+      expectationLine(result, 0, CONFIG, ANDROID_DEFINITION),
       '1. sticky-header, uiThreadCpu: better by at least 10% -> not decided (sticky-header failed on A)'
     );
   });
@@ -266,6 +275,7 @@ describe('renderReport', () => {
       '## Differences between A and B',
       '## Expectations',
       '## Verdicts',
+      '## Metric definitions',
       '## Failed scenarios',
       '## Device',
       '## Segments',
@@ -310,6 +320,71 @@ describe('renderReport', () => {
     );
   });
 
+  it('shows an advisory row with its difference and interval and no verdict', () => {
+    const coldStart = row({ metric: 'coldStart', medianA: 400, medianB: 440 });
+    const {
+      pValue: _p,
+      passesFalseDiscovery: _f,
+      noiseLimit: _n,
+      verdict: _v,
+      ...compared
+    } = { ...coldStart, difference: 0.1, interval: { low: 0.05, high: 0.15 } };
+    const ios = renderReport({
+      ...RESULT,
+      platform: 'ios',
+      verdictRows: [ROWS[0]],
+      advisoryRows: [
+        { ...compared, hasData: true },
+        {
+          scenario: 'sticky-header',
+          metric: 'coldStart',
+          samplesA: 10,
+          samplesB: 0,
+          hasData: false,
+        },
+      ],
+    });
+    assert.ok(
+      ios.includes(
+        '| worklet-styles-transform | coldStart | 10/10 | 400.00 ms | 440.00 ms | +10% | +5% to +15% | no verdict |'
+      )
+    );
+    assert.ok(
+      ios.includes(
+        '| sticky-header | coldStart | 10/0 | - | - | - | - | no verdict (no data) |'
+      )
+    );
+    const rows = ios
+      .split('\n')
+      .filter((line) => line.startsWith('| worklet-styles-transform |'));
+    assert.deepEqual(
+      rows.map((line) => line.split(' | ')[1]),
+      ['uiThreadCpu', 'coldStart']
+    );
+  });
+
+  it('defines each metric of the verdict table for the platform of the run', () => {
+    const ios = renderReport({ ...RESULT, platform: 'ios' });
+    const section = ios.slice(
+      ios.indexOf('## Metric definitions'),
+      ios.indexOf('## Failed scenarios')
+    );
+    assert.ok(
+      section.includes(
+        'Numbers and verdicts are valid only within one platform, one phone and one measurement revision. This run has the measurement revision 1.'
+      )
+    );
+    for (const metric of [
+      ...IOS_DEFINITION.verdictMetrics,
+      ...IOS_DEFINITION.advisoryMetrics,
+    ]) {
+      assert.ok(section.includes(`\`${metric}\``), metric);
+    }
+    assert.ok(section.includes('`hitches-updates`'));
+    assert.ok(!section.includes('`hitchCount`'));
+    assert.match(section, /\| `coldStart` \| ms \| .* \| no verdict, shown \|/);
+  });
+
   it('marks only the fallback rows without a noise limit', () => {
     const fallback = row({
       metric: 'coldStart',
@@ -322,7 +397,7 @@ describe('renderReport', () => {
       noiseLimit: 0.5,
       verdict: 'worse',
     });
-    const withFallback = renderReport({ ...RESULT, statistics: [fallback] });
+    const withFallback = renderReport({ ...RESULT, verdictRows: [fallback] });
     assert.ok(withFallback.includes('| +20.00 ms (absolute) |'));
     assert.ok(!withFallback.includes('(absolute, no noise limit)'));
   });
@@ -341,8 +416,13 @@ describe('renderReport', () => {
     const withLimits = renderReport({
       ...RESULT,
       options: { ...RESULT.options, noiseLimitsFile: 'limits.json' },
-      noiseLimits: { 'worklet-styles-transform': { memory: 0.02 } },
-      statistics: [memory],
+      noiseLimits: {
+        formatVersion: 1,
+        platform: 'android',
+        measurementRevision: 1,
+        limits: { 'worklet-styles-transform': { memory: 0.02 } },
+      },
+      verdictRows: [memory],
     });
     assert.ok(
       withLimits.includes(
@@ -361,7 +441,7 @@ describe('renderReport', () => {
       () =>
         renderReport({
           ...RESULT,
-          statistics: [row({ difference: Number.NaN })],
+          verdictRows: [row({ difference: Number.NaN })],
         }),
       /not a finite number/
     );
@@ -376,7 +456,7 @@ describe('renderReport', () => {
         ...RESULT.scenarios[1],
         samples: [sample({ cause: 'frames' })],
       },
-      statistics: [ROWS[0]],
+      verdictRows: [ROWS[0]],
       expectations: evaluateExpectations(
         CONFIG.expect,
         [ROWS[0]],

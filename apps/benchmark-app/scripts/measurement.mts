@@ -5,6 +5,7 @@ import path from 'node:path';
 import { VARIANT_KEYS } from './config.mts';
 import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
+import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { APP_DIR, BUILDS_DIR, RUNS_DIR } from './paths.mts';
 import type {
   DeviceState,
@@ -140,6 +141,7 @@ export async function startMeasurement<
   );
   const result = createResult({
     formatVersion: FORMAT_VERSION,
+    measurementRevision: MEASUREMENT_REVISION,
     platform: platform.name,
     status: 'running',
     startedAt,
@@ -426,6 +428,11 @@ function checkResumable(
       `The run measured on ${result.platform}. It cannot resume on ${platform.name}.`
     );
   }
+  if (result.measurementRevision !== MEASUREMENT_REVISION) {
+    throw new ToolError(
+      `The run has the measurement revision ${result.measurementRevision}, and this driver has revision ${MEASUREMENT_REVISION}. A run cannot mix revisions. Start a new run.`
+    );
+  }
   for (const key of VARIANT_KEYS) {
     checkStoredArtifact(key, result.variants[key]);
   }
@@ -433,9 +440,9 @@ function checkResumable(
 }
 
 function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
-  if (typeof variant?.artifactSha256 !== 'string') {
+  if (variant === undefined) {
     throw new ToolError(
-      `The run folder has no build hash of variant ${key}. This run cannot resume. Start a new run.`
+      `The run folder has no build of variant ${key}. This run cannot resume. Start a new run.`
     );
   }
   if (!fs.existsSync(variant.artifact)) {
@@ -450,15 +457,7 @@ function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
   }
 }
 
-function checkSameTools(
-  stored: ToolVersions | undefined,
-  current: ToolVersions
-) {
-  if (stored === undefined) {
-    throw new ToolError(
-      'The run folder has no tool versions. This run cannot resume.'
-    );
-  }
+function checkSameTools(stored: ToolVersions, current: ToolVersions) {
   const storedVersions: Record<string, string> = { ...stored };
   const changes = Object.entries(current)
     .filter(([key, version]) => storedVersions[key] !== version)

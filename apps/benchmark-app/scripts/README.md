@@ -44,7 +44,7 @@ On Android, `run`, `memory` and `sample` take `--trace-processor <path>`.
 - `profiling: true` builds with the profiling Gradle properties. It is not supported on iOS. `bundleMode: true` is not supported.
 - `blocks` (optional) sets the number of blocks for a scenario of the run. It replaces `--blocks` for that scenario.
 - `expect` is a list of entries with `scenarios` (default: all), `metrics` (default: all), `is` (`notWorse` or `better`) and `byAtLeast` (a fraction, only with `better`). The default is `[{ "is": "notWorse" }]`.
-- `--noise-limits` names a JSON file `{ "<scenario>": { "<metric>": <limit> } }`. The limit has the unit of the comparison of the metric: a fraction for a relative metric, and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points). Without the file, the limit is 0. The driver ignores an entry for `memoryGrowth`, a metric of older versions.
+- `--noise-limits` names a file that the `noise-limits` command wrote. See [Noise limits](#noise-limits). Without the file, the limit is 0.
 
 The driver stops before it builds when the config has an unknown field, scenario or metric.
 
@@ -62,39 +62,37 @@ The driver stops before it builds when the config has an unknown field, scenario
 - Builds: `.tmp/benchmarks/builds/<key>/`. The driver does not build a variant again when its key did not change.
 - Runs: `.tmp/benchmarks/runs/<date>-<name>/` with `result.json` (all samples and statistics) and `report.md`. The driver writes `result.json` after each sample. A memory test writes to `.tmp/benchmarks/runs/<date>-<name>-memory-<scenario>/`.
 - Traces: the run folder keeps the trace of each invalid sample, and all traces with `--keep-traces`. `sample` writes to `.tmp/benchmarks/samples/`.
-- `result.json` has the format version 3. The driver also reads the versions 1 and 2 (from older versions of the driver, Android only).
+- `result.json` has the format version 1. The driver stops with a tool error for another version, and for a `result.json` without a field that it reads.
 
 The exit code of `run` is 0 when all expectations hold, 1 when an expectation fails or is not decided, and 2 for a tool error.
 
 ## Metrics
 
-This section and the device rules in it are for Android. [iOS](#ios) gives the iOS definitions of the same verdict metrics.
+This section and the device rules in it are for Android. [iOS](#ios) gives the iOS definitions. The metric names are the same on the two platforms, but the definitions are not. Compare numbers and verdicts only within one platform, one phone and one measurement revision. The report of each run gives the definitions of its metrics. Lower values are better.
 
-The driver reads each metric from the trace window of 10 s. Lower values are better.
-
-| Metric | Definition | Verdict |
-| --- | --- | --- |
-| `frameDurationMedian`, `frameDurationP95` | Duration of the `Choreographer#doFrame` slices on the main thread of the app, in ms | yes |
-| `frameDurationP90`, `frameDurationP99` | The same | no |
-| `jankyFrames` | Share of dropped frames: `max(0, 1 - frameCount / expectedFrameCount)` | yes |
-| `frameCount`, `expectedFrameCount` | Count of the `Choreographer#doFrame` slices; refresh rate times the length of the trace window | no |
-| `uiThreadCpu` | CPU time of the main thread, in ms for each second of the trace | yes |
-| `jsThreadCpu` | CPU time of the JS thread (`jsThread` of the READY line), in ms for each second | yes |
-| `renderThreadCpu`, `otherThreadsCpu`, `processCpu` | CPU time of `RenderThread`, of all threads of the app except the main thread, the JS thread and `RenderThread`, and of all threads of the app, in ms for each second | no |
-| `uiThreadCpuWork`, `processCpuWork` | Sum of the duration of each scheduling slice times the clock rate of its CPU at that time, for the main thread and for all threads of the app, in MHz·ms for each second (1 MHz·ms is 1000 CPU cycles). `null` when the trace has no clock rate data. | no |
-| `mountBatchCount` | Count of the `IntBufferBatchMountItem::mountViews` slices of the app | no |
-| `memory` | Last value of anonymous RSS plus swap of the app, in kB | yes |
-| `windowMemoryDelta` | Last value minus first value of `memory` in the trace window, in kB | no |
-| `coldStart` | `TotalTime` of `am start -W`, in ms | yes |
-| `drawFrameMedian`, `drawFrameP95` | Duration of the `DrawFrame` slices on `RenderThread`, in ms | no |
-| `frameTimelineDurationMedian`, `frameTimelineDurationP95`, `frameTimelineFrameCount` | Duration and count of the frame timeline rows of the app | no |
-| `jankFlaggedFrames`, `appDeadlineMissedFrames` | Share of frame timeline rows with a jank type, and with the jank type `App Deadline Missed` | no |
+| Metric | Unit | Source | Interval | Limits | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| `frameDurationMedian`, `frameDurationP95` | ms | Perfetto: duration of the `Choreographer#doFrame` slices on the main thread of the app | Slices that start in the trace window | The work of the main thread only. `RenderThread` is not in it. | yes |
+| `frameDurationP90`, `frameDurationP99` | ms | The same as `frameDurationMedian` | Slices that start in the trace window | The same as `frameDurationMedian`. | no, stored |
+| `jankyFrames` | share of frames | `max(0, 1 - frameCount / expectedFrameCount)` | Trace window: from the start of all data sources to the end of the trace (about 10 s) | Counts the refreshes without a frame of the app. A slow frame that the app still draws does not count. | yes |
+| `frameCount`, `expectedFrameCount` | count | Count of the `Choreographer#doFrame` slices on the main thread; the refresh rate of the display times the length of the trace window | Trace window: from the start of all data sources to the end of the trace (about 10 s) | Each scenario requests a frame on each refresh, also `idle-cost`. The expected count does not use the update share of the scenario. | no, stored |
+| `uiThreadCpu` | ms for each s | Perfetto `sched` slices of the main thread of the app | Trace window: from the start of all data sources to the end of the trace (about 10 s). A slice is cut to the window. | CPU time does not show a change of the clock rate. | yes |
+| `jsThreadCpu` | ms for each s | Perfetto `sched` slices of the JS thread (`jsThread` of the READY line) | Trace window: from the start of all data sources to the end of the trace (about 10 s). A slice is cut to the window. | CPU time does not show a change of the clock rate. | yes |
+| `renderThreadCpu`, `otherThreadsCpu`, `processCpu` | ms for each s | Perfetto `sched` slices of `RenderThread`, of the other threads of the app, and of all threads of the app | Trace window: from the start of all data sources to the end of the trace (about 10 s). A slice is cut to the window. | CPU time does not show a change of the clock rate. | no, stored |
+| `uiThreadCpuWork`, `processCpuWork` | MHz·ms for each s (1 MHz·ms is 1000 CPU cycles) | Duration of each scheduling slice times the clock rate of its CPU (`cpu_cycles_per_thread_in_interval` of the Perfetto standard library), for the main thread and for all threads of the app | Trace window: from the start of all data sources to the end of the trace (about 10 s) | CPU time before the first clock rate value of its CPU does not count. `null` when the trace has no clock rate data. | no, stored |
+| `mountBatchCount` | count | Count of the `IntBufferBatchMountItem::mountViews` slices of the app | Slices that start in the trace window | The work check of a scenario uses it. | no, stored |
+| `memory` | kB | Last value of `mem.rss.anon` plus `mem.swap` of the app (`linux.process_stats`, each 1000 ms) | Trace window: from the start of all data sources to the end of the trace (about 10 s) | One value near the end of the window. | yes |
+| `windowMemoryDelta` | kB | Last value minus first value of `memory` | Trace window: from the start of all data sources to the end of the trace (about 10 s) | The window is in the first minutes after the launch. Use the memory test to find a leak. | no, stored |
+| `coldStart` | ms | `TotalTime` of `am start -W` | From the launch intent to the first frame of the activity | Ends before React Native shows content. One value for each launch. | yes |
+| `drawFrameMedian`, `drawFrameP95` | ms | Duration of the `DrawFrame` slices on `RenderThread` | Slices that start in the trace window | `null` when the window has no slice. | no, stored |
+| `frameTimelineDurationMedian`, `frameTimelineDurationP95`, `frameTimelineFrameCount` | ms; count | Duration and count of the frame timeline rows of the app | Rows that start in the trace window | On some phones each frame has the jank type "Buffer Stuffing", and the durations change in steps of one refresh period. | no, stored |
+| `jankFlaggedFrames`, `appDeadlineMissedFrames` | share of frames | Share of the frame timeline rows with a jank type, and with the jank type `App Deadline Missed` | Rows that start in the trace window | `null` when the window has no row. | no, stored |
 
 `windowMemoryDelta` has no verdict. The trace window is in the first minutes after the launch. In that time, the memory of an app can increase and then decrease to a stable level, so the value does not show a leak. Use the [memory test](#memory-test) to find a leak.
 
 The app gives the id of its JS thread in the READY line (`jsThread`), because other threads can have the name `mqt_v_js` too. A READY line without `jsThread` (an app from an older source) is a tool error. A trace in which the app has no thread `mqt_v_js` with this id is a tool error.
 
-The clock rate comes from the ftrace event `power/cpu_frequency` and from `linux.sys_stats`, which reads the clock rate of each CPU at the start of the trace and then every 1000 ms. The driver uses `cpu_cycles_per_thread_in_interval` of the Perfetto standard library. CPU time before the first clock rate value of its CPU does not count. CPU time does not show a change of the clock rate: the work metrics do.
+The clock rate comes from the ftrace event `power/cpu_frequency` and from `linux.sys_stats`, which reads the clock rate of each CPU at the start of the trace and then every 1000 ms.
 
 The frame timeline does not give the verdict frame metrics. On some devices it marks each frame as janky at each load ("Buffer Stuffing"), and its durations change in steps of one refresh period. A trace without a `Choreographer#doFrame` slice on any thread is a tool error: the atrace category `view` gave no data. When only other processes have these slices, the app drew no frame: `frameCount` is 0, the frame duration metrics are `null`, and the sample is invalid (`frames`).
 
@@ -112,7 +110,12 @@ The frame timeline does not give the verdict frame metrics. On some devices it m
 
 `jankyFrames` is often near 0, so the driver compares it as an absolute difference in share of frames, and the report gives it in percentage points (pp). The other metrics use the relative difference. When the median of A, or the median of A in a bootstrap draw, is 0 or less, a relative difference is not defined. The row then uses the absolute difference, and the report marks it. When the median of A is above 0, the noise limit of the row is the relative limit times the median of A, in the unit of the metric. When the median of A is 0 or less, the row has no noise limit, and the report marks this too.
 
-A sample is invalid when the app crashes before or during the trace (`crash`), when the device is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). Only `shared-elements` has a work limit: at least 300 `mountBatchCount`. The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail (for `work`, the count) of each of the 3 blocks.
+A sample is invalid when the app crashes before or during the trace (`crash`), when the device is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). The driver then measures the block again.
+
+Each scenario declares its requirements in `scenarios.mts`:
+
+- The update share: the share of the display refreshes in which the app updates its views. It is 1 for all scenarios except `idle-cost` (0.5, an update on each second frame). On iOS, `expectedFrameCount` uses it, because a frame without an update has no row. On Android, `Choreographer#doFrame` runs on each refresh in all scenarios, so the share does not apply.
+- The work check: the minimum `mountBatchCount` in one recording of 10 s. Only `shared-elements` has one: 300. Basis: in the first runs, a working sample had 574 to 628 (Samsung Galaxy A16) and 588 to 710 (iPhone 13 mini), and a sample with stopped transitions had 38. The limit is about half of a working count. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail (for `work`, the count) of each of the 3 blocks.
 
 A device command that does not finish in its time limit is a tool error.
 
@@ -132,14 +135,14 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 - It installs and compiles A and B again. It keeps the complete scenarios. In the incomplete scenario, it keeps the accepted blocks (4 valid samples) and continues with the first block that is not accepted. The statistics use the kept samples when the scenario is complete.
 - It moves the other samples of the incomplete scenario (the block in progress and its invalid attempts) to `abandonedScenarios`. The statistics do not use them. The count of invalid blocks starts at 0 again.
 - The battery temperature at the start of the run stays the reference for the cool-down. The refresh rate of the app in the first sample stays the reference for the run.
-- It reads a `result.json` of format 1 (from older versions). The driver renames the metric `memoryGrowth` of each sample to `windowMemoryDelta`. It removes `memoryGrowth` from the expectations, the noise limits, the statistics and the expectation results, and it removes an expectation that has no other metric. It computes the status of each expectation result again from the rows that stay. `noise-limits` reads these files too.
+- It stops when the measurement revision of the run is not the revision of the driver.
 - `result.json` and the report list each segment (one start of the driver) with its start, end, status and device state. Each sample in `result.json` has the number of its segment. For each scenario with blocks from more than one segment, the report gives the blocks of each segment.
 
 ## Noise limits
 
-`noise-limits --runs <run folder> [<run folder> ...]` reads A/A runs and writes the file that `--noise-limits` reads. A run is A/A when A and B have the same sources, installed versions, effective flags and build options. The runs do not have to be `done`. The command uses the complete scenarios. A scenario must be in one run only.
+`noise-limits --runs <run folder> [<run folder> ...]` reads A/A runs and writes the file that `--noise-limits` reads: `{ "formatVersion": 1, "platform", "measurementRevision", "limits": { "<scenario>": { "<metric>": <limit> } } }`. The limit has the unit of the comparison of the metric: a fraction for a relative metric, and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points). The runs must have the same platform and measurement revision. `run` stops when the file has another platform or another measurement revision. A run is A/A when A and B have the same sources, installed versions, effective flags and build options. The runs do not have to be `done`. The command uses the complete scenarios. A scenario must be in one run only.
 
-For each scenario and verdict metric:
+For each scenario and verdict metric of the platform:
 
 1. Put the accepted samples of A and B in one group.
 1. Divide the group in all possible ways into two groups with the sizes of A and B. Above 200000 ways, use 20000 random ways with a fixed seed.
@@ -225,21 +228,21 @@ The app writes a `State` signpost each second. The trace window is the time from
 
 ### Metrics
 
-| Metric | Definition on iOS | Verdict |
-| --- | --- | --- |
-| `frameDurationMedian`, `frameDurationP95` | Duration of the rows of the table `hitches-updates` for the app that are fully in the trace window, in ms. A row is the update phase of one frame: the work of the app on its main thread to the end of the commit. It does not include the render phase and the display. | yes |
-| `frameDurationP90`, `frameDurationP99` | The same | no |
-| `jankyFrames` | Share of frames without an update of the app: `max(0, 1 - frameCount / expectedFrameCount)` | yes |
-| `frameCount`, `expectedFrameCount` | Count of these rows; `refreshRate` of the `LAUNCH` line times the length of the trace window | no |
-| `uiThreadCpu` | Time in the state `Running` of the main thread (`mainThread` of the `LAUNCH` line) in the table `thread-state`, cut to the trace window, in ms for each second | yes |
-| `jsThreadCpu` | The same for the JS thread (`jsThread` of the `READY` line) | yes |
-| `otherThreadsCpu`, `processCpu` | The same for the other threads of the app, and for all threads of the app | no |
-| `uiThreadEfficiencyCoreShare` | Share of `uiThreadCpu` on efficiency cores | no |
-| `mountBatchCount` | Count of the starts of the React Native section `RCTPerformMountInstructions` | no |
-| `memory` | `phys_footprint` of the app in the `State` signpost at the end of the trace window, in kB | yes |
-| `windowMemoryDelta` | `memory` minus the value in the `State` signpost at the start of the trace window, in kB | no |
-| `coldStart` | `coldStart` of the `LAUNCH` line: the time from the start of the process (start time of the kernel) to the first display link callback, in ms. The app measures it. | yes |
-| `hitchCount`, `hitchTime` | Count of the rows of the table `hitches` for the app that overlap the trace window, and the sum of their durations in the window in ms for each second | no |
+| Metric | Unit | Source | Interval | Limits | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| `frameDurationMedian`, `frameDurationP95` | ms | `xctrace`: duration of the rows of the table `hitches-updates` of the app. A row is the update phase of one frame: the work of the app on its main thread to the end of the commit. | Rows that are fully in the trace window | The render phase and the display are not in it. | yes |
+| `frameDurationP90`, `frameDurationP99` | ms | The same as `frameDurationMedian` | Rows that are fully in the trace window | The same as `frameDurationMedian`. | no, stored |
+| `jankyFrames` | share of frames | `max(0, 1 - frameCount / expectedFrameCount)` | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace | Counts the expected updates that did not come. A display with a variable refresh rate is not supported. | yes |
+| `frameCount`, `expectedFrameCount` | count | Count of the `hitches-updates` rows; `refreshRate` of the LAUNCH line times the length of the trace window times the update share of the scenario | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace | A frame without an update of the app has no row, so the expected count uses the update share (0.5 for `idle-cost`). | no, stored |
+| `uiThreadCpu` | ms for each s | Time in the state `Running` of the main thread (`mainThread` of the LAUNCH line) in the table `thread-state` | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | yes |
+| `jsThreadCpu` | ms for each s | The same for the JS thread (`jsThread` of the READY line) | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | yes |
+| `otherThreadsCpu`, `processCpu` | ms for each s | The same for the other threads of the app, and for all threads of the app | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace. An interval is cut to the window. | The table has no clock rate. The same work takes more time on an efficiency core. | no, stored |
+| `uiThreadEfficiencyCoreShare` | share | Share of `uiThreadCpu` on efficiency cores | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace | `null` when the main thread did not run, or when a `Running` interval has no known core type. | no, stored |
+| `mountBatchCount` | count | Count of the starts of the React Native section `RCTPerformMountInstructions` | Starts in the trace window | The work check of a scenario uses it. | no, stored |
+| `memory` | kB | `phys_footprint` of the app in the `State` signpost at the end of the trace window | The end of the trace window | The time from the launch to this moment changes with the start time of `xctrace` (some seconds). | yes |
+| `windowMemoryDelta` | kB | `memory` minus the value in the `State` signpost at the start of the trace window | Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace | Use it to see the trend in the window only. | no, stored |
+| `coldStart` | ms | `coldStart` of the LAUNCH line. The app measures it. | From the start of the process (`p_starttime` of `sysctl`) to the first display link callback | The difference of two wall-clock times. It does not include the time before the kernel starts the process. No verdict and no noise limit. | no verdict, shown |
+| `hitchCount`, `hitchTime` | count; ms for each s | Count of the rows of the table `hitches` of the app, and the sum of their durations | Rows that overlap the trace window, cut to the window | No verdict. | no, stored |
 
 The table `thread-state` has each scheduling interval of each thread, so the CPU time is the time on a core, not an estimate from samples. The driver does not count the states `Interrupted`, `Runnable` and `Preempted`. The table does not show the clock rate. The scheduler moves the main thread between efficiency cores and performance cores, and the same work needs more time on an efficiency core. `uiThreadEfficiencyCoreShare` shows this for each sample.
 
@@ -249,7 +252,7 @@ The trace has the cost of the Time Profiler samples (the `Animation Hitches` tem
 
 - `crash`: the app writes `FAILED`, the console command ends before `READY` or during the trace, or the main thread ends in the trace.
 - `thermal`: the trace shows a thermal state above `Nominal` (the table `device-thermal-state-intervals` in the trace window, or a `State` signpost of the trace).
-- `frames` and `work`: as on Android. No scenario has a work limit on iOS at this time.
+- `frames` and `work`: as on Android.
 - Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
 - Each `State` signpost of a trace gives the battery level, the battery state, the low power mode and the brightness, and the `LAUNCH` line gives the refresh rate. The first sample of the run gives the reference (`inAppState` in `result.json`). A later difference stops the run.
 - These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread, without the JS thread or with fewer than 2 `State` signposts inside its scheduler data, and a command that does not finish in its time limit.
@@ -258,7 +261,7 @@ The trace has the cost of the Time Profiler samples (the `Animation Hitches` tem
 ### Limits
 
 - No battery temperature. The thermal state has 4 steps only.
-- `coldStart` comes from the app, not from an operating system tool. It does not include the time before the kernel starts the process, and it ends before React Native shows content (as `TotalTime` on Android). It is the difference of two wall-clock times.
+- `coldStart` comes from the app, not from an operating system tool, so it has no verdict on iOS: the report shows it with its difference and interval, it has no noise limit, and an expectation cannot select it.
 - `memory` is the value at the end of the trace. The time from the launch to this moment changes with the start time of `xctrace` (some seconds).
 - The scenario loads were set on a slow Android phone. On an iPhone they use a smaller part of the frame budget.
 - Only a display with a fixed rate of 60 Hz is supported. On a display with a variable refresh rate, the maximum rate is not the rate of the frames, so `jankyFrames` is not sound there.

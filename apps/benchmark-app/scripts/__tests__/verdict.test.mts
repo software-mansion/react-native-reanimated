@@ -1,21 +1,38 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { VerdictMetric } from '../metrics.mts';
+import { ANDROID_DEFINITION } from '../android-definition.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
+import type { ComparedMetric } from '../metrics.mts';
 import type { Scenario } from '../scenarios.mts';
-import { computeVerdictRows } from '../verdict.mts';
-import type { VerdictRow } from '../verdict.mts';
+import { computeComparisonRows } from '../verdict.mts';
+import type { MetricValues, NoiseLimits, VerdictRow } from '../verdict.mts';
 
 const BASE = [100, 102, 98, 101, 99, 100, 103, 97, 100, 101];
 
 function valuesFrom(
-  table: Partial<Record<VerdictMetric, { a: number[]; b: number[] }>>
+  table: Partial<Record<ComparedMetric, { a: number[]; b: number[] }>>
 ) {
-  return (_scenario: Scenario, metric: VerdictMetric, variant: 'a' | 'b') =>
+  return (_scenario: Scenario, metric: ComparedMetric, variant: 'a' | 'b') =>
     table[metric]?.[variant] ?? BASE;
 }
 
-function rowOf(rows: VerdictRow[], metric: VerdictMetric): VerdictRow {
+function computeVerdictRows(
+  scenarios: Scenario[],
+  values: MetricValues,
+  limits: NoiseLimits,
+  scenariosWithoutRows: Scenario[] = []
+): VerdictRow[] {
+  return computeComparisonRows(
+    ANDROID_DEFINITION,
+    scenarios,
+    values,
+    limits,
+    scenariosWithoutRows
+  ).verdictRows;
+}
+
+function rowOf(rows: VerdictRow[], metric: ComparedMetric): VerdictRow {
   const row = rows.find((candidate) => candidate.metric === metric);
   assert.ok(row, metric);
   return row;
@@ -33,6 +50,43 @@ function assertFiniteRow(row: VerdictRow) {
     assert.ok(Number.isFinite(value), `${row.metric}: ${value}`);
   }
 }
+
+describe('computeComparisonRows', () => {
+  it('compares an advisory metric without a verdict and keeps it out of the verdict rows', () => {
+    const { verdictRows, advisoryRows } = computeComparisonRows(
+      IOS_DEFINITION,
+      ['css'],
+      valuesFrom({ coldStart: { a: BASE, b: BASE.map((value) => value * 2) } }),
+      {}
+    );
+    assert.ok(verdictRows.every((row) => row.metric !== 'coldStart'));
+    assert.equal(verdictRows.length, IOS_DEFINITION.verdictMetrics.length);
+    assert.equal(advisoryRows.length, 1);
+    const [coldStart] = advisoryRows;
+    assert.ok(coldStart.hasData);
+    assert.equal(coldStart.metric, 'coldStart');
+    assert.equal(coldStart.difference, 1);
+    assert.ok(!('verdict' in coldStart));
+  });
+
+  it('gives an advisory row without data when a variant has no value', () => {
+    const { advisoryRows } = computeComparisonRows(
+      IOS_DEFINITION,
+      ['css'],
+      valuesFrom({ coldStart: { a: BASE, b: [] } }),
+      {}
+    );
+    assert.deepEqual(advisoryRows, [
+      {
+        scenario: 'css',
+        metric: 'coldStart',
+        samplesA: BASE.length,
+        samplesB: 0,
+        hasData: false,
+      },
+    ]);
+  });
+});
 
 describe('computeVerdictRows', () => {
   it('gives one row for each verdict metric of each scenario', () => {

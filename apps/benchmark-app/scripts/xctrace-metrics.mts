@@ -1,6 +1,7 @@
 import { ToolError } from './errors.mts';
+import { frameMetrics } from './frames.mts';
+import type { FrameBasis } from './frames.mts';
 import type { IosSampleMetrics } from './metrics.mts';
-import { quantile } from './statistics.mts';
 import { childText, parseTraceTables } from './xctrace-tables.mts';
 import type { TraceElement, TraceRow } from './xctrace-tables.mts';
 
@@ -16,7 +17,7 @@ export interface TracedIosApp {
   pid: number;
   mainThread: number;
   jsThread: number;
-  refreshRate: number;
+  frames: FrameBasis;
 }
 
 export interface AppState {
@@ -116,7 +117,6 @@ export function computeIosTraceMetrics(
   const windowEvents = coveredEvents(stateEvents, intervals);
   const window = traceWindow(windowEvents, app.pid);
   const windowSeconds = (window.end - window.start) / NANOSECONDS_PER_SECOND;
-  const expectedFrameCount = app.refreshRate * windowSeconds;
   const appIntervals = (xml: string, schema: string) =>
     intervalsOf(appTable(tableOf(xml, schema), app.pid));
   const frames = appIntervals(exports.frames, 'hitches-updates').filter(
@@ -128,7 +128,8 @@ export function computeIosTraceMetrics(
   const metrics: IosTraceMetrics = {
     ...frameMetrics(
       frames.map(({ start, end }) => (end - start) / NANOSECONDS_PER_MS),
-      expectedFrameCount
+      app.frames,
+      windowSeconds
     ),
     ...cpuMetrics(intervals, app, window),
     ...hitchMetrics(hitchesInWindowNs, windowSeconds),
@@ -136,7 +137,6 @@ export function computeIosTraceMetrics(
       isMountBatchStart
     ).length,
     ...memoryMetrics(windowEvents),
-    expectedFrameCount,
   };
   checkFiniteMetrics(metrics);
   return {
@@ -253,17 +253,6 @@ function overlapNs(interval: Interval, window: Interval): number {
   return (
     Math.min(interval.end, window.end) - Math.max(interval.start, window.start)
   );
-}
-
-function frameMetrics(durations: number[], expectedFrameCount: number) {
-  return {
-    frameDurationMedian: quantileOrNull(durations, 0.5),
-    frameDurationP90: quantileOrNull(durations, 0.9),
-    frameDurationP95: quantileOrNull(durations, 0.95),
-    frameDurationP99: quantileOrNull(durations, 0.99),
-    jankyFrames: Math.max(0, 1 - durations.length / expectedFrameCount),
-    frameCount: durations.length,
-  };
 }
 
 function cpuMetrics(
@@ -410,10 +399,6 @@ function thermalStateIndex(text: string | null): number {
     );
   }
   return index;
-}
-
-function quantileOrNull(values: number[], q: number): number | null {
-  return values.length > 0 ? quantile(values, q) : null;
 }
 
 function rowInterval(table: Table, row: TraceRow): Interval {

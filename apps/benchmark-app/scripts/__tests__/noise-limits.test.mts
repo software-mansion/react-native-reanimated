@@ -3,10 +3,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, describe, it } from 'node:test';
 
+import { ANDROID_DEFINITION } from '../android-definition.mts';
 import type { RunConfig, Variant } from '../config.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 import type { SampleMetrics } from '../metrics.mts';
 import {
-  NOISE_LIMIT_FLOORS,
+  checkNoiseLimitsRecord,
+  validateNoiseLimitsRecord,
+} from '../noise-limits-record.mts';
+import {
   computeNoiseLimits,
   noiseLimitsCommand,
   splitNoise,
@@ -50,6 +55,7 @@ function outcome(
           block: Math.floor(i / 2),
           attempt: 0,
           position: 0,
+          segment: 0,
           batteryLevel: 80,
           accepted: true,
           valid: true,
@@ -74,10 +80,13 @@ function outcome(
 function writeRun(
   name: string,
   outcomes: ScenarioOutcome[],
-  b: Variant = VARIANT
+  b: Variant = VARIANT,
+  edit: (result: RunResult) => void = () => {}
 ): string {
   const folder = runFolder(name);
-  writeResult(folder, runResult(name, outcomes, b));
+  const result = runResult(name, outcomes, b);
+  edit(result);
+  writeResult(folder, result);
   return folder;
 }
 
@@ -100,7 +109,8 @@ function runResult(
     expect: [],
   };
   return {
-    formatVersion: 3,
+    formatVersion: 1,
+    measurementRevision: 1,
     platform: 'android',
     command: 'run',
     status: 'tool error',
@@ -109,13 +119,26 @@ function runResult(
     options: { blocks: 5, noiseLimitsFile: null, keepTraces: false },
     noiseLimits: null,
     serial: 'SERIAL1',
-    segments: [],
+    segments: [
+      {
+        startedAt: '2026-11-12T10:00:00.000Z',
+        status: 'tool error',
+        device: {} as RunResult['segments'][number]['device'],
+      },
+    ],
     appRefreshRate: 60,
+    tools: {
+      node: 'v24.16.0',
+      adb: '1.0.41',
+      traceProcessor: 'v59.1',
+      devicePerfetto: 'v59.1',
+    },
     variants: {},
     scenarios: outcomes,
     incompleteScenario: outcome('idle-cost', () => ({ uiThreadCpu: 900 })),
     abandonedScenarios: [],
-    statistics: [],
+    verdictRows: [],
+    advisoryRows: [],
     expectations: [],
   };
 }
@@ -163,14 +186,17 @@ describe('splitNoise', () => {
 
 describe('computeNoiseLimits', () => {
   it('applies the floors and gives no limit for windowMemoryDelta', () => {
-    const limits = computeNoiseLimits([
-      outcome('css', () => ({})),
-      outcome('mount-unmount', (_variant, i) => ({
-        windowMemoryDelta: i * 3000,
-      })),
-    ]);
+    const limits = computeNoiseLimits(
+      [
+        outcome('css', () => ({})),
+        outcome('mount-unmount', (_variant, i) => ({
+          windowMemoryDelta: i * 3000,
+        })),
+      ],
+      ANDROID_DEFINITION
+    );
     const floors = {
-      frameDurationMedian: NOISE_LIMIT_FLOORS.frameDurationMedian,
+      frameDurationMedian: 0.02,
       frameDurationP95: 0.02,
       jankyFrames: 0.005,
       uiThreadCpu: 0.02,
@@ -183,33 +209,49 @@ describe('computeNoiseLimits', () => {
   });
 
   it('leaves out a relative metric whose median can be 0', () => {
-    const limits = computeNoiseLimits([
-      outcome('css', (_variant, i) => ({ coldStart: i < 6 ? 0 : 300 })),
-    ]);
+    const limits = computeNoiseLimits(
+      [outcome('css', (_variant, i) => ({ coldStart: i < 6 ? 0 : 300 }))],
+      ANDROID_DEFINITION
+    );
     assert.equal(limits.css?.coldStart, undefined);
+  });
+
+  it('gives limits only for the verdict metrics of the platform', () => {
+    const limits = computeNoiseLimits(
+      [outcome('css', () => ({}))],
+      IOS_DEFINITION
+    );
+    assert.deepEqual(Object.keys(limits.css ?? {}), [
+      ...IOS_DEFINITION.verdictMetrics,
+    ]);
   });
 });
 
 describe('noiseLimitsCommand', () => {
-  it('prints the limits of the complete scenarios of A/A runs', () => {
+  it('prints a record of the platform, the revision and the limits of the complete scenarios of A/A runs', () => {
     const first = writeRun('aa-1', [outcome('css', () => ({}))]);
     const second = writeRun('aa-2', [outcome('sticky-header', () => ({}))]);
-    const limits = printed([first, second]) as Record<string, unknown>;
-    assert.deepEqual(Object.keys(limits), ['css', 'sticky-header']);
+    const record = validateNoiseLimitsRecord(printed([first, second]));
+    assert.equal(record.platform, 'android');
+    assert.equal(record.measurementRevision, 1);
+    assert.deepEqual(Object.keys(record.limits), ['css', 'sticky-header']);
   });
 
-  it('reads a run of result format 1 with memoryGrowth', () => {
-    const folder = runFolder('format-1');
-    const { command: _command, ...current } = runResult('format-1', [
-      outcome('mount-unmount', () => ({})),
-    ]);
-    const stored = JSON.stringify({ ...current, formatVersion: 1 }).replaceAll(
-      '"windowMemoryDelta"',
-      '"memoryGrowth"'
+  it('refuses runs of different measurement revisions', () => {
+    const first = writeRun('rev-1', [outcome('css', () => ({}))]);
+    const second = writeRun(
+      'rev-0',
+      [outcome('sticky-header', () => ({}))],
+      VARIANT,
+      (result) => {
+        result.measurementRevision = 0;
+      }
     );
-    fs.writeFileSync(path.join(folder, 'result.json'), stored);
-    const limits = printed([folder]) as Record<string, object>;
-    assert.equal(Object.keys(limits['mount-unmount']).length, 7);
+    assert.throws(
+      () =>
+        noiseLimitsCommand({ command: 'noise-limits', runs: [first, second] }),
+      /The runs differ in measurementRevision: 1 in .*rev-1, 0 in .*rev-0/
+    );
   });
 
   it('refuses a run that is not A/A', () => {
@@ -230,6 +272,67 @@ describe('noiseLimitsCommand', () => {
       () =>
         noiseLimitsCommand({ command: 'noise-limits', runs: [first, second] }),
       /The scenario css is in two runs/
+    );
+  });
+});
+
+describe('validateNoiseLimitsRecord', () => {
+  const RECORD = {
+    formatVersion: 1,
+    platform: 'android',
+    measurementRevision: 1,
+    limits: { css: { uiThreadCpu: 0.05 } },
+  };
+
+  it('reads a valid record', () => {
+    assert.deepEqual(validateNoiseLimitsRecord(RECORD), RECORD);
+  });
+
+  it('refuses an unknown format version', () => {
+    for (const formatVersion of [undefined, 2]) {
+      assert.throws(
+        () => validateNoiseLimitsRecord({ ...RECORD, formatVersion }),
+        /This driver reads only version 1\. Make the file again with the noise-limits command\./
+      );
+    }
+  });
+
+  it('refuses a metric that has no verdict on the platform, unknown names and negative limits', () => {
+    assert.throws(
+      () =>
+        validateNoiseLimitsRecord({
+          ...RECORD,
+          platform: 'ios',
+          limits: {
+            nope: {},
+            css: { coldStart: 0.1, windowMemoryDelta: 1, memory: -1 },
+          },
+        }),
+      (error: Error) =>
+        [
+          'unknown scenario "nope"',
+          '"coldStart" is not a verdict metric of the platform',
+          '"windowMemoryDelta" is not a verdict metric of the platform',
+          'css.memory must be a number of 0 or more',
+        ].every((part) => error.message.includes(part))
+    );
+  });
+});
+
+describe('checkNoiseLimitsRecord', () => {
+  it('refuses a record of another platform or another measurement revision', () => {
+    const record = validateNoiseLimitsRecord({
+      formatVersion: 1,
+      platform: 'ios',
+      measurementRevision: 0,
+      limits: {},
+    });
+    assert.throws(
+      () => checkNoiseLimitsRecord(record, 'android'),
+      /The noise limits do not fit this run: platform ios, the run is on android; measurement revision 0, the driver has revision 1\./
+    );
+    assert.doesNotThrow(() =>
+      checkNoiseLimitsRecord({ ...record, measurementRevision: 1 }, 'ios')
     );
   });
 });

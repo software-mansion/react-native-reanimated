@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { blocksOf, validateConfig, validateNoiseLimits } from '../config.mts';
-import { VERDICT_METRICS } from '../metrics.mts';
+import { ANDROID_DEFINITION } from '../android-definition.mts';
+import { blocksOf, validateConfig } from '../config.mts';
+import { IOS_DEFINITION } from '../ios-definition.mts';
 
 const CONFIG_DIR = '/configs';
 const TARBALL = '/configs/tarballs/react-native-reanimated-4.8.0.tgz';
@@ -25,9 +26,13 @@ function config(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function problemsOf(raw: unknown): string {
+function validated(raw: unknown, definition = ANDROID_DEFINITION) {
+  return validateConfig(raw, CONFIG_DIR, files, definition);
+}
+
+function problemsOf(raw: unknown, definition = ANDROID_DEFINITION): string {
   try {
-    validateConfig(raw, CONFIG_DIR, files);
+    validated(raw, definition);
   } catch (error) {
     return (error as Error).message;
   }
@@ -36,7 +41,7 @@ function problemsOf(raw: unknown): string {
 
 describe('validateConfig', () => {
   it('reads a valid config and fills the defaults', () => {
-    const result = validateConfig(config(), CONFIG_DIR, files);
+    const result = validated(config());
     assert.deepEqual(result.a, {
       reanimated: { kind: 'npm', version: '4.7.1' },
       worklets: { kind: 'npm', version: '0.13.1' },
@@ -49,14 +54,21 @@ describe('validateConfig', () => {
     assert.deepEqual(result.expect, [
       {
         scenarios: ['worklet-styles-transform', 'css'],
-        metrics: [...VERDICT_METRICS],
+        metrics: [...ANDROID_DEFINITION.verdictMetrics],
         is: 'notWorse',
       },
     ]);
   });
 
+  it('selects the verdict metrics of the platform by default', () => {
+    assert.deepEqual(validated(config(), IOS_DEFINITION).expect[0].metrics, [
+      ...IOS_DEFINITION.verdictMetrics,
+    ]);
+    assert.ok(!IOS_DEFINITION.verdictMetrics.includes('coldStart'));
+  });
+
   it('reads expectations with default selections', () => {
-    const result = validateConfig(
+    const result = validated(
       config({
         expect: [
           {
@@ -67,9 +79,7 @@ describe('validateConfig', () => {
           },
           { is: 'notWorse' },
         ],
-      }),
-      CONFIG_DIR,
-      files
+      })
     );
     assert.deepEqual(result.expect[0], {
       scenarios: ['worklet-styles-transform'],
@@ -123,13 +133,17 @@ describe('validateConfig', () => {
     );
   });
 
-  it('rejects an expectation of a metric without a verdict', () => {
-    for (const metric of ['memoryGrowth', 'windowMemoryDelta']) {
+  it('rejects an expectation of a metric without a verdict on the platform', () => {
+    for (const [metric, definition] of [
+      ['windowMemoryDelta', ANDROID_DEFINITION],
+      ['coldStart', IOS_DEFINITION],
+    ] as const) {
       assert.match(
         problemsOf(
           config({
             expect: [{ scenarios: ['css'], metrics: [metric], is: 'notWorse' }],
-          })
+          }),
+          definition
         ),
         new RegExp(`unknown name "${metric}"`)
       );
@@ -161,15 +175,11 @@ describe('validateConfig', () => {
 
 describe('config blocks', () => {
   it('reads a block count for a scenario of the run', () => {
-    const result = validateConfig(
-      config({ blocks: { css: 10 } }),
-      CONFIG_DIR,
-      files
-    );
+    const result = validated(config({ blocks: { css: 10 } }));
     assert.deepEqual(result.blocks, { css: 10 });
     assert.equal(blocksOf(result, 'css', 5), 10);
     assert.equal(blocksOf(result, 'worklet-styles-transform', 5), 5);
-    assert.equal(validateConfig(config(), CONFIG_DIR, files).blocks, undefined);
+    assert.equal(validated(config()).blocks, undefined);
   });
 
   it('rejects a scenario that the run does not measure and a count that is not a positive integer', () => {
@@ -188,39 +198,5 @@ describe('config blocks', () => {
         `missing "${expected}" in:\n${message}`
       );
     }
-  });
-});
-
-describe('validateNoiseLimits', () => {
-  it('reads valid limits', () => {
-    assert.deepEqual(validateNoiseLimits({ css: { uiThreadCpu: 0.05 } }), {
-      css: { uiThreadCpu: 0.05 },
-    });
-  });
-
-  it('ignores the limits of the old metric memoryGrowth', () => {
-    assert.deepEqual(
-      validateNoiseLimits({
-        'mount-unmount': { memory: 0.03, memoryGrowth: 4000 },
-      }),
-      { 'mount-unmount': { memory: 0.03 } }
-    );
-  });
-
-  it('rejects windowMemoryDelta, which has no verdict', () => {
-    assert.throws(
-      () => validateNoiseLimits({ css: { windowMemoryDelta: 4000 } }),
-      /unknown metric "windowMemoryDelta"/
-    );
-  });
-
-  it('rejects unknown names and negative limits', () => {
-    assert.throws(
-      () => validateNoiseLimits({ nope: {}, css: { fps: 0.1, memory: -1 } }),
-      (error: Error) =>
-        error.message.includes('unknown scenario "nope"') &&
-        error.message.includes('unknown metric "fps"') &&
-        error.message.includes('css.memory must be a number of 0 or more')
-    );
   });
 });

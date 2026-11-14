@@ -1,15 +1,10 @@
 import path from 'node:path';
 
-import { ToolError } from './errors.mts';
-import {
-  RETIRED_VERDICT_METRIC,
-  VERDICT_METRICS,
-  isVerdictMetric,
-} from './metrics.mts';
-import type { VerdictMetric } from './metrics.mts';
+import type { ComparedMetric } from './metrics.mts';
+import type { PlatformDefinition } from './platform.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
-import type { NoiseLimits } from './verdict.mts';
+import { record, throwProblems } from './validation.mts';
 
 export type VariantKey = 'a' | 'b';
 
@@ -32,7 +27,7 @@ export interface Variant {
 
 export interface Expectation {
   scenarios: Scenario[];
-  metrics: VerdictMetric[];
+  metrics: ComparedMetric[];
   is: 'notWorse' | 'better';
   byAtLeast?: number;
 }
@@ -73,7 +68,8 @@ const FLAG_NAME_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 export function validateConfig(
   raw: unknown,
   configDir: string,
-  fileSystem: FileSystem
+  fileSystem: FileSystem,
+  definition: PlatformDefinition
 ): RunConfig {
   const problems: string[] = [];
   const config = record(raw, 'config', problems);
@@ -81,7 +77,12 @@ export function validateConfig(
   const variants = readVariantsConfig(config, configDir, fileSystem, problems);
   const scenarios = validateScenarios(config.scenarios, problems);
   const blocks = validateBlocks(config.blocks, scenarios, problems);
-  const expect = validateExpectations(config.expect, scenarios, problems);
+  const expect = validateExpectations(
+    config.expect,
+    scenarios,
+    definition.verdictMetrics,
+    problems
+  );
   throwConfigProblems(problems);
   return {
     ...variants,
@@ -115,40 +116,6 @@ export function blocksOf(
   return config.blocks?.[scenario] ?? defaultBlocks;
 }
 
-export function validateNoiseLimits(raw: unknown): NoiseLimits {
-  const problems: string[] = [];
-  const limits: NoiseLimits = {};
-  for (const [scenario, metrics] of Object.entries(
-    record(raw, 'noise limits', problems)
-  )) {
-    if (!isScenario(scenario)) {
-      problems.push(`noise limits: unknown scenario "${scenario}"`);
-      continue;
-    }
-    limits[scenario] = {};
-    const entries = Object.entries(
-      record(metrics, `noise limits.${scenario}`, problems)
-    ).filter(([metric]) => metric !== RETIRED_VERDICT_METRIC);
-    for (const [metric, limit] of entries) {
-      if (!isVerdictMetric(metric)) {
-        problems.push(`noise limits.${scenario}: unknown metric "${metric}"`);
-      } else if (typeof limit !== 'number' || !(limit >= 0)) {
-        problems.push(
-          `noise limits.${scenario}.${metric} must be a number of 0 or more`
-        );
-      } else {
-        limits[scenario][metric] = limit;
-      }
-    }
-  }
-  if (problems.length > 0) {
-    throw new ToolError(
-      `The noise limits are not valid:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`
-    );
-  }
-  return limits;
-}
-
 function readVariantsConfig(
   config: Record<string, unknown>,
   configDir: string,
@@ -175,23 +142,7 @@ function readVariantsConfig(
 }
 
 function throwConfigProblems(problems: string[]) {
-  if (problems.length > 0) {
-    throw new ToolError(
-      `The config is not valid:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`
-    );
-  }
-}
-
-function record(
-  value: unknown,
-  label: string,
-  problems: string[]
-): Record<string, unknown> {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  problems.push(`${label} must be an object`);
-  return {};
+  throwProblems('The config is not valid', problems);
 }
 
 function rejectUnknownFields(
@@ -367,13 +318,14 @@ function validateFlags(
 function validateExpectations(
   value: unknown,
   runScenarios: Scenario[],
+  verdictMetrics: readonly ComparedMetric[],
   problems: string[]
 ): Expectation[] {
   if (value === undefined) {
     return [
       {
         scenarios: runScenarios,
-        metrics: [...VERDICT_METRICS],
+        metrics: [...verdictMetrics],
         is: 'notWorse',
       },
     ];
@@ -383,7 +335,13 @@ function validateExpectations(
     return [];
   }
   return value.map((entry, i) =>
-    validateExpectation(entry, `config.expect[${i}]`, runScenarios, problems)
+    validateExpectation(
+      entry,
+      `config.expect[${i}]`,
+      runScenarios,
+      verdictMetrics,
+      problems
+    )
   );
 }
 
@@ -391,6 +349,7 @@ function validateExpectation(
   value: unknown,
   label: string,
   runScenarios: Scenario[],
+  verdictMetrics: readonly ComparedMetric[],
   problems: string[]
 ): Expectation {
   const entry = record(value, label, problems);
@@ -406,10 +365,10 @@ function validateExpectation(
   const metrics = selection(
     entry.metrics,
     `${label}.metrics`,
-    VERDICT_METRICS,
+    verdictMetrics,
     problems,
-    isVerdictMetric
-  ) as VerdictMetric[];
+    (name) => verdictMetrics.includes(name as ComparedMetric)
+  ) as ComparedMetric[];
 
   if (entry.is !== 'notWorse' && entry.is !== 'better') {
     problems.push(`${label}.is must be "notWorse" or "better"`);

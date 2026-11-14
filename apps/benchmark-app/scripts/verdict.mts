@@ -1,6 +1,7 @@
 import { ToolError } from './errors.mts';
-import { METRIC_COMPARISONS, VERDICT_METRICS } from './metrics.mts';
-import type { VerdictMetric } from './metrics.mts';
+import { COMPARISON_RULES } from './metrics.mts';
+import type { ComparedMetric } from './metrics.mts';
+import type { PlatformDefinition } from './platform.mts';
 import type { Scenario } from './scenarios.mts';
 import {
   benjaminiHochberg,
@@ -15,12 +16,12 @@ import type { BootstrapDraws, Comparison, Interval } from './statistics.mts';
 export type Verdict = 'better' | 'worse' | 'no change found';
 
 export type NoiseLimits = Partial<
-  Record<Scenario, Partial<Record<VerdictMetric, number>>>
+  Record<Scenario, Partial<Record<ComparedMetric, number>>>
 >;
 
-export interface VerdictRow {
+export interface MetricComparison {
   scenario: Scenario;
-  metric: VerdictMetric;
+  metric: ComparedMetric;
   samplesA: number;
   samplesB: number;
   medianA: number;
@@ -29,15 +30,33 @@ export interface VerdictRow {
   comparisonFallback: boolean;
   difference: number;
   interval: Interval;
+}
+
+export interface VerdictRow extends MetricComparison {
   pValue: number;
   passesFalseDiscovery: boolean;
   noiseLimit: number | null;
   verdict: Verdict;
 }
 
+export type AdvisoryRow =
+  | (MetricComparison & { hasData: true })
+  | {
+      scenario: Scenario;
+      metric: ComparedMetric;
+      samplesA: number;
+      samplesB: number;
+      hasData: false;
+    };
+
+export interface ComparisonRows {
+  verdictRows: VerdictRow[];
+  advisoryRows: AdvisoryRow[];
+}
+
 export type MetricValues = (
   scenario: Scenario,
-  metric: VerdictMetric,
+  metric: ComparedMetric,
   variant: 'a' | 'b'
 ) => number[];
 
@@ -45,24 +64,53 @@ export const FALSE_DISCOVERY_RATE = 0.05;
 
 export const MISSING_ROW_P_VALUE = 1;
 
-export function computeVerdictRows(
+export function computeComparisonRows(
+  definition: PlatformDefinition,
   scenarios: readonly Scenario[],
   valuesOf: MetricValues,
   noiseLimits: NoiseLimits,
   scenariosWithoutRows: readonly Scenario[] = []
+): ComparisonRows {
+  return {
+    verdictRows: computeVerdictRows(
+      definition.verdictMetrics,
+      scenarios,
+      valuesOf,
+      noiseLimits,
+      scenariosWithoutRows
+    ),
+    advisoryRows: scenarios.flatMap((scenario) =>
+      definition.advisoryMetrics.map((metric) =>
+        advisoryRow(
+          scenario,
+          metric,
+          valuesOf(scenario, metric, 'a'),
+          valuesOf(scenario, metric, 'b')
+        )
+      )
+    ),
+  };
+}
+
+function computeVerdictRows(
+  metrics: readonly ComparedMetric[],
+  scenarios: readonly Scenario[],
+  valuesOf: MetricValues,
+  noiseLimits: NoiseLimits,
+  scenariosWithoutRows: readonly Scenario[]
 ): VerdictRow[] {
   const rows = scenarios.flatMap((scenario) =>
-    VERDICT_METRICS.map((metric) =>
-      compareMetric(
-        scenario,
-        metric,
-        valuesOf(scenario, metric, 'a'),
-        valuesOf(scenario, metric, 'b')
-      )
-    )
+    metrics.map((metric) => {
+      const a = valuesOf(scenario, metric, 'a');
+      const b = valuesOf(scenario, metric, 'b');
+      const row = compareMetric(scenario, metric, a, b);
+      const pValue = rankSumPValue(a, b);
+      checkFinite(row, pValue);
+      return { ...row, pValue };
+    })
   );
   const missingPValues = scenariosWithoutRows.flatMap(() =>
-    VERDICT_METRICS.map(() => MISSING_ROW_P_VALUE)
+    metrics.map(() => MISSING_ROW_P_VALUE)
   );
   const passes = benjaminiHochberg(
     [...rows.map((row) => row.pValue), ...missingPValues],
@@ -78,22 +126,41 @@ export function computeVerdictRows(
   });
 }
 
-function compareMetric(
+function advisoryRow(
   scenario: Scenario,
-  metric: VerdictMetric,
+  metric: ComparedMetric,
   a: number[],
   b: number[]
-) {
+): AdvisoryRow {
+  if (a.length === 0 || b.length === 0) {
+    return {
+      scenario,
+      metric,
+      samplesA: a.length,
+      samplesB: b.length,
+      hasData: false,
+    };
+  }
+  const row = compareMetric(scenario, metric, a, b);
+  checkFinite(row);
+  return { ...row, hasData: true };
+}
+
+function compareMetric(
+  scenario: Scenario,
+  metric: ComparedMetric,
+  a: number[],
+  b: number[]
+): MetricComparison {
   const medianA = median(a);
   const medianB = median(b);
   const draws = bootstrapDraws(a, b);
+  const metricComparison = COMPARISON_RULES[metric].comparison;
   const comparisonFallback =
-    METRIC_COMPARISONS[metric] === 'relative' &&
+    metricComparison === 'relative' &&
     !relativeDifferenceIsDefined(medianA, draws);
-  const comparison = comparisonFallback
-    ? 'absolute'
-    : METRIC_COMPARISONS[metric];
-  const row = {
+  const comparison = comparisonFallback ? 'absolute' : metricComparison;
+  return {
     scenario,
     metric,
     samplesA: a.length,
@@ -104,10 +171,7 @@ function compareMetric(
     comparisonFallback,
     difference: difference(medianA, medianB, comparison),
     interval: bootstrapInterval(draws, comparison),
-    pValue: rankSumPValue(a, b),
   };
-  checkFinite(row);
-  return row;
 }
 
 function noiseLimitOf(
@@ -127,29 +191,18 @@ function relativeDifferenceIsDefined(
   return medianA > 0 && draws.mediansA.every((drawMedian) => drawMedian > 0);
 }
 
-function checkFinite(
-  row: Pick<
-    VerdictRow,
-    | 'scenario'
-    | 'metric'
-    | 'medianA'
-    | 'medianB'
-    | 'difference'
-    | 'interval'
-    | 'pValue'
-  >
-) {
+function checkFinite(row: MetricComparison, pValue?: number) {
   const values = [
     row.medianA,
     row.medianB,
     row.difference,
     row.interval.low,
     row.interval.high,
-    row.pValue,
+    ...(pValue === undefined ? [] : [pValue]),
   ];
   if (!values.every(Number.isFinite)) {
     throw new ToolError(
-      `The statistics of ${row.scenario}, ${row.metric} are not finite numbers (medians ${row.medianA} and ${row.medianB}, difference ${row.difference}, interval ${row.interval.low} to ${row.interval.high}, p-value ${row.pValue})`
+      `The statistics of ${row.scenario}, ${row.metric} are not finite numbers (medians ${row.medianA} and ${row.medianB}, difference ${row.difference}, interval ${row.interval.low} to ${row.interval.high}, p-value ${pValue ?? '-'})`
     );
   }
 }

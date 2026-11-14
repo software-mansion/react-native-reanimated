@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { ANDROID_DEFINITION } from './android-definition.mts';
 import {
   REMOTE_CONFIG_DIR,
   REMOTE_TRACE_DIR,
@@ -12,11 +13,13 @@ import type {
   DeviceStateGuard,
 } from './android-device.mts';
 import { ToolError } from './errors.mts';
+import { expectedFrameShare } from './frames.mts';
+import type { FrameBasis } from './frames.mts';
+import { judgeWork } from './judge.mts';
 import type { SampleMetrics } from './metrics.mts';
 import { traceConfig } from './perfetto.mts';
 import type { TracedApp, TraceReading } from './perfetto.mts';
 import type { InAppState } from './platform.mts';
-import { MINIMUM_MOUNT_BATCHES } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import type { LineStream } from './tools.mts';
 
@@ -43,7 +46,7 @@ export interface Collector {
   collect: (
     tracePath: string,
     app: TracedApp,
-    refreshRate: number
+    frames: FrameBasis
   ) => Promise<TraceReading>;
 }
 
@@ -168,19 +171,12 @@ export type MeasuredSample = SampleObservations & {
   thermalAfter: number;
 };
 
-export interface JudgedTrace {
-  scenario: Scenario;
-  traceFile: string;
-  keepTrace: boolean;
-}
-
 export const MINIMUM_WAIT_MS = 10_000;
 export const COOL_DOWN_LIMIT_MS = 600_000;
 export const COOL_DOWN_POLL_MS = 5_000;
 export const TEMPERATURE_TOLERANCE = 2;
 export const READY_TIMEOUT_MS = 60_000;
 export const PROCESS_POLL_MS = 1_000;
-export const MINIMUM_FRAME_SHARE = 0.9;
 
 export async function takeSample(
   request: SampleRequest,
@@ -416,7 +412,13 @@ export async function measureRunningApp(
     collector.collect(
       request.traceFile,
       { applicationId, pid, jsThread },
-      refreshRate
+      {
+        refreshRate,
+        share: expectedFrameShare(
+          ANDROID_DEFINITION.frameSource,
+          request.scenario
+        ),
+      }
     )
   );
   if (!reading.processLived) {
@@ -529,41 +531,5 @@ function judge(measured: MeasuredSample, request: SampleRequest): SampleResult {
       ...measured,
     };
   }
-  return judgeWork(
-    measured,
-    request,
-    MINIMUM_MOUNT_BATCHES[request.scenario] ?? 0
-  );
-}
-
-export function judgeWork(
-  measured: MeasuredSample,
-  request: JudgedTrace,
-  minimumMountBatches: number
-): SampleResult {
-  const { metrics } = measured;
-  const minimumFrames = MINIMUM_FRAME_SHARE * metrics.expectedFrameCount;
-  if (metrics.frameCount < minimumFrames) {
-    return {
-      valid: false,
-      cause: 'frames',
-      detail: `${metrics.frameCount} frames, expected at least ${Math.ceil(minimumFrames)}`,
-      trace: request.traceFile,
-      ...measured,
-    };
-  }
-  if (metrics.mountBatchCount < minimumMountBatches) {
-    return {
-      valid: false,
-      cause: 'work',
-      detail: `${metrics.mountBatchCount} mount batches, expected at least ${minimumMountBatches}`,
-      trace: request.traceFile,
-      ...measured,
-    };
-  }
-  if (!request.keepTrace) {
-    fs.rmSync(request.traceFile, { recursive: true, force: true });
-    return { valid: true, ...measured };
-  }
-  return { valid: true, trace: request.traceFile, ...measured };
+  return judgeWork(measured, request);
 }

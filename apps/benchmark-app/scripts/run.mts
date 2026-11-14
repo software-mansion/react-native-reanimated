@@ -1,7 +1,8 @@
 import path from 'node:path';
 
 import type { ResumeOptions, RunOptions } from './arguments.mts';
-import { blocksOf, validateConfig, validateNoiseLimits } from './config.mts';
+import { blocksOf, validateConfig } from './config.mts';
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
 import {
   dependenciesOf,
@@ -14,6 +15,10 @@ import type {
   MeasurementDependencies,
   MeasurementJob,
 } from './measurement.mts';
+import {
+  checkNoiseLimitsRecord,
+  validateNoiseLimitsRecord,
+} from './noise-limits-record.mts';
 import type { SampleResult } from './protocol.mts';
 import { renderReport } from './report.mts';
 import {
@@ -24,17 +29,23 @@ import {
 import type { RunResult } from './results.mts';
 import { blockOrder } from './session.mts';
 import type { CommandContext } from './tools.mts';
-import { computeVerdictRows } from './verdict.mts';
+import { computeComparisonRows } from './verdict.mts';
 
 export async function runCommand(
   options: RunOptions,
   context: CommandContext,
   dependencies: MeasurementDependencies = dependenciesOf(options.device)
 ): Promise<number> {
-  const config = readConfig(options.config, validateConfig);
+  const definition = PLATFORM_DEFINITIONS[options.device.platform];
+  const config = readConfig(options.config, (raw, configDir, fileSystem) =>
+    validateConfig(raw, configDir, fileSystem, definition)
+  );
   const noiseLimits = options.noiseLimits
-    ? validateNoiseLimits(readJson(options.noiseLimits))
+    ? validateNoiseLimitsRecord(readJson(options.noiseLimits))
     : null;
+  if (noiseLimits) {
+    checkNoiseLimitsRecord(noiseLimits, definition.name);
+  }
   return startMeasurement(
     {
       config,
@@ -55,7 +66,8 @@ export async function runCommand(
         keepTraces: options.keepTraces,
       },
       noiseLimits,
-      statistics: [],
+      verdictRows: [],
+      advisoryRows: [],
       expectations: [],
     }),
     runJob,
@@ -92,7 +104,8 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
       blocksOf(result.config, scenario, result.options.blocks),
     measure: (order, sampling) => sampling.takeSample(order),
     clearSummary: (stopped) => {
-      stopped.statistics = [];
+      stopped.verdictRows = [];
+      stopped.advisoryRows = [];
       stopped.expectations = [];
     },
     summarize,
@@ -105,20 +118,23 @@ function summarize(result: RunResult) {
   const completed = result.scenarios.filter(
     (outcome) => outcome.failed === null
   );
-  result.statistics = computeVerdictRows(
+  const { verdictRows, advisoryRows } = computeComparisonRows(
+    PLATFORM_DEFINITIONS[result.platform],
     completed.map((outcome) => outcome.scenario),
     (scenario, metric, variant) =>
       completed
         .filter((outcome) => outcome.scenario === scenario)
         .flatMap((outcome) => acceptedValues(outcome, metric, variant)),
-    result.noiseLimits ?? {},
+    result.noiseLimits?.limits ?? {},
     result.config.scenarios.filter(
       (scenario) => !completed.some((outcome) => outcome.scenario === scenario)
     )
   );
+  result.verdictRows = verdictRows;
+  result.advisoryRows = advisoryRows;
   result.expectations = evaluateExpectations(
     result.config.expect,
-    result.statistics,
+    verdictRows,
     result.scenarios.flatMap((outcome) =>
       outcome.failed ? [outcome.failed] : []
     ),

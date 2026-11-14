@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { SampleOptions } from './arguments.mts';
+import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { SAMPLES_DIR } from './paths.mts';
 import { platformOf } from './platforms.mts';
 import { runFolderName } from './results.mts';
@@ -53,6 +54,7 @@ export async function sampleCommand(
   console.log(
     JSON.stringify(
       {
+        measurementRevision: MEASUREMENT_REVISION,
         serial: options.device.id,
         applicationId: options.applicationId,
         scenario: options.scenario,

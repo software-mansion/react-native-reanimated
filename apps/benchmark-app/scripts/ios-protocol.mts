@@ -1,11 +1,13 @@
 import { ToolError } from './errors.mts';
+import { expectedFrameShare } from './frames.mts';
+import { IOS_DEFINITION } from './ios-definition.mts';
 import { LAUNCHED_LINE } from './ios-device.mts';
+import { judgeWork } from './judge.mts';
 import type { InAppState, SampleOrder } from './platform.mts';
 import {
   COOL_DOWN_LIMIT_MS,
   PROCESS_POLL_MS,
   READY_TIMEOUT_MS,
-  judgeWork,
   parseReportLine,
   timedSteps,
 } from './protocol.mts';
@@ -16,7 +18,6 @@ import type {
   SampleSteps,
   ScenarioReport,
 } from './protocol.mts';
-import { IOS_MINIMUM_MOUNT_BATCHES } from './scenarios.mts';
 import { once } from './tools.mts';
 import type { LineStream } from './tools.mts';
 import { THERMAL_STATES } from './xctrace-metrics.mts';
@@ -356,7 +357,10 @@ async function measureLaunchedApp(
       pid,
       mainThread: launch.mainThread,
       jsThread,
-      refreshRate,
+      frames: {
+        refreshRate,
+        share: expectedFrameShare(IOS_DEFINITION.frameSource, order.scenario),
+      },
     })
   );
   if (!reading.processLived) {
@@ -381,11 +385,7 @@ async function measureLaunchedApp(
       ...measured,
     };
   }
-  return judgeWork(
-    measured,
-    order,
-    IOS_MINIMUM_MOUNT_BATCHES[order.scenario] ?? 0
-  );
+  return judgeWork(measured, order);
 }
 
 async function waitForReady(

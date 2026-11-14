@@ -1,5 +1,7 @@
 import type { DeviceState as AndroidDeviceState } from './android-device.mts';
+import type { FrameSource } from './frames.mts';
 import type { IosDeviceState, IosToolVersions } from './ios-device.mts';
+import type { ComparedMetric } from './metrics.mts';
 import type { SampleResult } from './protocol.mts';
 import type { Scenario } from './scenarios.mts';
 import type {
@@ -20,6 +22,22 @@ export type DeviceState = AndroidDeviceState | IosDeviceState;
 export type ToolVersions = AndroidToolVersions | IosToolVersions;
 
 export type InAppState = Record<string, string | number | boolean>;
+
+export interface MetricDefinition {
+  names: readonly string[];
+  unit: string;
+  source: string;
+  interval: string;
+  limits: string;
+}
+
+export interface PlatformDefinition {
+  name: PlatformName;
+  verdictMetrics: readonly ComparedMetric[];
+  advisoryMetrics: readonly ComparedMetric[];
+  frameSource: FrameSource;
+  metricDefinitions: readonly MetricDefinition[];
+}
 
 export interface PlatformOptions {
   traceProcessor?: string;

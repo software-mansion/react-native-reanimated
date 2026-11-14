@@ -49,11 +49,22 @@ import type {
   SampleSteps,
   ValidSample,
 } from './protocol.mts';
-import { readMeasurementResult } from './results.mts';
+import { RECORDED_SAMPLE, readMeasurementResult } from './results.mts';
 import type { MeasurementResult } from './results.mts';
+import { SCENARIOS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import { median } from './statistics.mts';
 import type { CommandContext } from './tools.mts';
+import {
+  aBoolean,
+  aNumber,
+  anInteger,
+  anObject,
+  both,
+  listOf,
+  oneOf,
+  shape,
+} from './validation.mts';
 
 export interface MemoryDevice extends SampleDevice {
   readMeminfo: (applicationId: string) => Promise<string>;
@@ -119,6 +130,21 @@ export interface MemoryResult extends MeasurementResult<MemoryLaunch> {
 }
 
 const MILLISECONDS_PER_SECOND = 1000;
+const MEMORY_FIELDS = {
+  options: shape({
+    scenario: oneOf(SCENARIOS),
+    launches: anInteger,
+    intervalSeconds: anInteger,
+    durationSeconds: anInteger,
+    slopeLimit: aNumber,
+    keepTraces: aBoolean,
+  }),
+  summary: listOf(anObject),
+};
+const MEMORY_LAUNCH = both(
+  RECORDED_SAMPLE,
+  shape({ readings: listOf(anObject) })
+);
 const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
   platform: androidPlatform(),
   runsDir: RUNS_DIR,
@@ -164,7 +190,7 @@ export async function memoryResumeCommand(
   const folder = path.resolve(options.folder);
   return resumeMeasurement(
     folder,
-    readMeasurementResult<MemoryResult>(folder, 'memory'),
+    readMemoryResult(folder),
     {
       device: options.device,
       platformOptions: { traceProcessor: options.traceProcessor },
@@ -172,6 +198,15 @@ export async function memoryResumeCommand(
     memoryJob,
     context,
     dependencies
+  );
+}
+
+export function readMemoryResult(folder: string): MemoryResult {
+  return readMeasurementResult<MemoryResult>(
+    folder,
+    'memory',
+    MEMORY_FIELDS,
+    MEMORY_LAUNCH
   );
 }
 

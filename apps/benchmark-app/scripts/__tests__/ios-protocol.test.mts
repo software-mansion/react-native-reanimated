@@ -21,6 +21,7 @@ import type {
   IosTraceMetrics,
   IosTraceReading,
 } from '../xctrace-metrics.mts';
+import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
 
 const ROOT = path.join(
   REPOSITORY_ROOT,
@@ -40,25 +41,6 @@ const STATE: AppState = {
   batteryState: 'full',
   lowPowerMode: false,
   brightness: 50,
-};
-const METRICS: IosTraceMetrics = {
-  frameDurationMedian: 6,
-  frameDurationP90: 7,
-  frameDurationP95: 8,
-  frameDurationP99: 9,
-  jankyFrames: 0,
-  uiThreadCpu: 350,
-  jsThreadCpu: 2,
-  otherThreadsCpu: 1,
-  processCpu: 353,
-  mountBatchCount: 600,
-  memory: 40000,
-  windowMemoryDelta: 300,
-  frameCount: 600,
-  expectedFrameCount: 600,
-  uiThreadEfficiencyCoreShare: 0.7,
-  hitchCount: 0,
-  hitchTime: 0,
 };
 
 interface FakeOptions {
@@ -145,13 +127,13 @@ function createFake(options: FakeOptions = {}) {
       },
       collect: async (_traceFile, app) => {
         calls.push(
-          `collect ${app.pid} ${app.mainThread} ${app.jsThread} ${app.refreshRate}`
+          `collect ${app.pid} ${app.mainThread} ${app.jsThread} ${app.frames.refreshRate} ${app.frames.share}`
         );
         return options.dead
           ? { processLived: false, detail: 'the app process 812 ended' }
           : {
               processLived: true,
-              metrics: { ...METRICS, ...options.metrics },
+              metrics: { ...IOS_TRACE_METRICS, ...options.metrics },
               thermalState: 0,
               appStates: [STATE, STATE, STATE],
               ...options.reading,
@@ -199,7 +181,7 @@ describe('takeIosSample', () => {
       `launch ${APP} css 7`,
       'record Test iPhone 812',
       `terminate ${APP}`,
-      'collect 812 5001 5002 60',
+      'collect 812 5001 5002 60 1',
     ]);
     assert.equal(sleeps[0], MINIMUM_WAIT_MS);
     assert.equal(sample.valid, true);
@@ -431,6 +413,43 @@ describe('takeIosSample', () => {
     await assert.rejects(
       takeIosSample(order(), context),
       /maximum refresh rate of 120 Hz/
+    );
+  });
+
+  it('expects updates on the share of the refreshes that the scenario declares', async () => {
+    const { context, calls } = createFake({
+      lines: [
+        LAUNCHED,
+        LAUNCH,
+        'ReanimatedBenchmark: READY scenario=idle-cost version=1 load=80 jsThread=5002',
+      ],
+      metrics: { frameCount: 300, expectedFrameCount: 300 },
+    });
+    const sample = await takeIosSample(
+      order({ scenario: 'idle-cost' }),
+      context
+    );
+    assert.ok(calls.includes('collect 812 5001 5002 60 0.5'));
+    assert.equal(sample.valid, true);
+  });
+
+  it('has a work check for shared-elements', async () => {
+    const { context } = createFake({
+      lines: [
+        LAUNCHED,
+        LAUNCH,
+        'ReanimatedBenchmark: READY scenario=shared-elements version=1 load=80 jsThread=5002',
+      ],
+      metrics: { mountBatchCount: 299 },
+    });
+    const sample = await takeIosSample(
+      order({ scenario: 'shared-elements' }),
+      context
+    );
+    assert.equal(!sample.valid && sample.cause, 'work');
+    assert.equal(
+      !sample.valid && sample.detail,
+      '299 mount batches, expected at least 300'
     );
   });
 

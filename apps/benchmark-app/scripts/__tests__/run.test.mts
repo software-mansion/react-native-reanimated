@@ -7,7 +7,6 @@ import { describe, it } from 'node:test';
 import { readResult, writeResult } from '../results.mts';
 import type { RunResult, RunVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
-import type { SampleRecord } from '../session.mts';
 import {
   DEVICE,
   STATE,
@@ -70,24 +69,6 @@ function resume(folder: string, options: FakeOptions = {}, device = DEVICE) {
   };
 }
 
-function failedOnlyOnMemoryGrowth(result: Pick<RunResult, 'statistics'>) {
-  const memory = result.statistics.find((row) => row.metric === 'memory');
-  assert.ok(memory);
-  const growth = { ...memory, metric: 'memoryGrowth', verdict: 'worse' };
-  return {
-    expectation: {
-      scenarios: ['css'],
-      metrics: ['memory', 'memoryGrowth'],
-      is: 'notWorse',
-    },
-    status: 'fails',
-    rows: [memory, growth],
-    decidingRows: [growth],
-    failedScenarios: [],
-    scenariosWithoutData: [],
-  };
-}
-
 function editResult(folder: string, edit: (result: RunResult) => void) {
   const result = readResult(folder);
   edit(result);
@@ -111,8 +92,8 @@ describe('a stopped run', () => {
       result.variants.a?.artifactSha256,
       crypto.createHash('sha256').update('apk a').digest('hex')
     );
-    assert.equal(result.statistics.length, 7);
-    assert.ok(result.statistics.every((row) => row.scenario === 'css'));
+    assert.equal(result.verdictRows.length, 7);
+    assert.ok(result.verdictRows.every((row) => row.scenario === 'css'));
     assert.equal(result.expectations[0].status, 'not decided');
     assert.deepEqual(result.expectations[0].scenariosWithoutData, [
       'idle-cost',
@@ -156,7 +137,7 @@ describe('resumeCommand', () => {
       result.segments.map((segment) => segment.status),
       ['interrupted', 'done']
     );
-    assert.equal(result.statistics.length, 14);
+    assert.equal(result.verdictRows.length, 14);
     assert.deepEqual(installs, [apkOf('a'), apkOf('b')]);
     const report = fs.readFileSync(path.join(folder, 'report.md'), 'utf8');
     assert.ok(!report.includes('not complete'));
@@ -209,7 +190,7 @@ describe('resumeCommand', () => {
       ]),
       [['idle-cost', 0, [[1, 0]]]]
     );
-    const idleCostRows = result.statistics.filter(
+    const idleCostRows = result.verdictRows.filter(
       (row) => row.scenario === 'idle-cost'
     );
     assert.equal(idleCostRows.length, 7);
@@ -234,146 +215,51 @@ describe('resumeCommand', () => {
     );
   });
 
-  it('reads a result without sample segments', async () => {
-    const folder = await stoppedRun({ interruptAtTrace: 10 });
-    editResult(folder, (result) => {
-      result.segments.push({ ...result.segments[0] });
-      for (const outcome of [result.scenarios[0], result.incompleteScenario]) {
-        outcome?.samples.forEach(
-          (sample) => delete (sample as Partial<SampleRecord>).segment
-        );
-      }
-    });
-    const result = readResult(folder);
-    assert.ok(
-      result.scenarios[0].samples.every((sample) => sample.segment === 0)
-    );
-    assert.ok(
-      result.incompleteScenario?.samples.every((sample) => sample.segment === 1)
-    );
-  });
-
-  it('resumes a run of result format 2 and checks its APK hash', async () => {
+  it('refuses a result of an unknown format version', async () => {
     const folder = await stoppedRun();
     const file = path.join(folder, 'result.json');
-    const { platform: _platform, ...current } = readResult(folder);
-    const formatTwo = {
-      ...current,
-      formatVersion: 2,
-      variants: Object.fromEntries(
-        Object.entries(current.variants).map(
-          ([key, { artifact, artifactSha256, ...variant }]) => [
-            key,
-            { ...variant, apk: artifact, apkSha256: artifactSha256 },
-          ]
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    for (const version of [2, 3, undefined]) {
+      fs.writeFileSync(
+        file,
+        JSON.stringify({ ...stored, formatVersion: version })
+      );
+      await assert.rejects(
+        resume(folder).run,
+        new RegExp(
+          `has the result format version ${version ?? 'undefined'}\\. This driver reads only version 1\\.`
         )
-      ),
-    };
-    fs.writeFileSync(file, JSON.stringify(formatTwo));
+      );
+    }
+  });
 
-    const upgraded = readResult(folder);
-    assert.equal(upgraded.platform, 'android');
-    assert.equal(upgraded.variants.a?.artifact, apkOf('a'));
-    assert.equal(upgraded.incompleteScenario?.samples.length, 1);
-
-    fs.writeFileSync(apkOf('b'), 'other apk');
-    await assert.rejects(
-      resume(folder).run,
-      /The build of variant b changed after the run started/
-    );
-    fs.writeFileSync(apkOf('b'), 'apk b');
-    assert.equal(await resume(folder).run, 0);
-    const result = readResult(folder);
-    assert.equal(result.formatVersion, 3);
-    assert.equal(result.status, 'done');
-    assert.ok(!fs.readFileSync(file, 'utf8').includes('apkSha256'));
-    assert.deepEqual(
-      result.scenarios.map((outcome) => outcome.scenario),
-      ['css', 'idle-cost']
+  it('refuses a result with a missing or a wrong field before it uses it', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      result.segments = [];
+      const [sample] = result.incompleteScenario?.samples ?? [];
+      (sample as { valid: unknown }).valid = 'yes';
+      delete (result.variants.a as Partial<RunVariant>).artifactSha256;
+    });
+    await assert.rejects(resume(folder).run, (error: Error) =>
+      [
+        'is not a valid result',
+        'result.segments must have at least one entry',
+        'result.incompleteScenario.samples[0].valid must be true or false',
+        'result.variants.a.artifactSha256 must be a string',
+      ].every((part) => error.message.includes(part))
     );
   });
 
-  it('resumes a run of result format 1 with the old metric memoryGrowth', async () => {
-    const folder = await stoppedRun({ interruptAtTrace: 10 });
-    const file = path.join(folder, 'result.json');
-    const {
-      command: _command,
-      platform: _platform,
-      ...current
-    } = readResult(folder);
-    const formatOne = {
-      ...current,
-      formatVersion: 1,
-      variants: Object.fromEntries(
-        Object.entries(current.variants).map(
-          ([key, { artifact, artifactSha256, ...variant }]) => [
-            key,
-            { ...variant, apk: artifact, apkSha256: artifactSha256 },
-          ]
-        )
-      ),
-      config: {
-        ...current.config,
-        expect: [
-          { scenarios: ['css'], metrics: ['memoryGrowth'], is: 'notWorse' },
-          ...current.config.expect.map((expectation) => ({
-            ...expectation,
-            metrics: [...expectation.metrics, 'memoryGrowth'],
-          })),
-        ],
-      },
-      noiseLimits: { css: { memory: 0.03, memoryGrowth: 4000 } },
-      statistics: [
-        ...current.statistics,
-        { ...current.statistics[0], metric: 'memoryGrowth' },
-      ],
-      expectations: [
-        failedOnlyOnMemoryGrowth(current),
-        ...current.expectations.map((expectation) => ({
-          ...expectation,
-          expectation: {
-            ...expectation.expectation,
-            metrics: [...expectation.expectation.metrics, 'memoryGrowth'],
-          },
-          rows: [
-            ...expectation.rows,
-            { ...current.statistics[0], metric: 'memoryGrowth' },
-          ],
-        })),
-      ],
-    };
-    fs.writeFileSync(
-      file,
-      JSON.stringify(formatOne).replaceAll(
-        '"windowMemoryDelta"',
-        '"memoryGrowth"'
-      )
+  it('refuses a run of another measurement revision', async () => {
+    const folder = await stoppedRun();
+    editResult(folder, (result) => {
+      result.measurementRevision = 0;
+    });
+    await assert.rejects(
+      resume(folder).run,
+      /The run has the measurement revision 0, and this driver has revision 1/
     );
-
-    const upgraded = readResult(folder);
-    assert.equal(upgraded.statistics.length, current.statistics.length);
-    assert.equal(upgraded.expectations[0].status, 'holds');
-    assert.deepEqual(upgraded.expectations[0].decidingRows, []);
-    assert.ok(
-      !JSON.stringify(upgraded).includes('memoryGrowth'),
-      'the upgraded result has no memoryGrowth'
-    );
-
-    assert.equal(await resume(folder).run, 0);
-    const text = fs.readFileSync(file, 'utf8');
-    assert.ok(!text.includes('memoryGrowth'));
-    const result = readResult(folder);
-    assert.equal(result.formatVersion, 3);
-    assert.equal(result.platform, 'android');
-    assert.equal(result.command, 'run');
-    assert.deepEqual(result.noiseLimits, { css: { memory: 0.03 } });
-    assert.equal(result.config.expect.length, 1);
-    assert.ok(
-      result.scenarios
-        .flatMap((outcome) => outcome.samples)
-        .every((sample) => sample.metrics?.windowMemoryDelta === 100)
-    );
-    assert.equal(result.expectations[0].status, 'holds');
   });
 
   it('stops a run when the battery level changes', async () => {
@@ -424,19 +310,12 @@ describe('resumeCommand', () => {
     );
   });
 
-  it('refuses a build that changed or a run folder without the build hash', async () => {
+  it('refuses a build that changed', async () => {
     const folder = await stoppedRun();
     fs.writeFileSync(apkOf('b'), 'other apk');
     await assert.rejects(
       resume(folder).run,
       /The build of variant b changed after the run started/
-    );
-    editResult(folder, (result) => {
-      delete (result.variants.a as Partial<RunVariant>).artifactSha256;
-    });
-    await assert.rejects(
-      resume(folder).run,
-      /no build hash of variant a\. This run cannot resume/
     );
   });
 

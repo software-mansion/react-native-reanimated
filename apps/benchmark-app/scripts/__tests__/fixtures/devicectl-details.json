@@ -51,9 +51,7 @@
         "productType": "iPhone14,4",
         "reality": "physical",
         "serialNumber": "SERIAL0000",
-        "supportedBiometrics": [
-          "faceID"
-        ],
+        "supportedBiometrics": ["faceID"],
         "supportedCPUTypes": [
           {
             "subtype": 18446744071562067970,
@@ -64,9 +62,7 @@
             "type": 16777228
           }
         ],
-        "supportedDeviceFamilies": [
-          1
-        ],
+        "supportedDeviceFamilies": [1],
         "supportsSiri": true,
         "thinningProductType": "iPhone14,4",
         "udid": "00008110-000A1B2C3D4E801E"
@@ -78,13 +74,7 @@
             "majorNumberComponent": 24,
             "name": "24A446",
             "revisionVersion": {
-              "components": [
-                24,
-                1,
-                446,
-                0,
-                0
-              ],
+              "components": [24, 1, 446, 0, 0],
               "originalComponentsCount": 5,
               "stringValue": "24.1.446.0.0"
             },
@@ -96,13 +86,7 @@
             "majorNumberComponent": 24,
             "name": "24A446",
             "revisionVersion": {
-              "components": [
-                24,
-                1,
-                446,
-                0,
-                0
-              ],
+              "components": [24, 1, 446, 0, 0],
               "originalComponentsCount": 5,
               "stringValue": "24.1.446.0.0"
             },
@@ -111,13 +95,7 @@
           }
         },
         "osVersionNumber": {
-          "components": [
-            27,
-            0,
-            1,
-            0,
-            0
-          ],
+          "components": [27, 0, 1, 0, 0],
           "originalComponentsCount": 3,
           "stringValue": "27.0.1"
         },

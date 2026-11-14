@@ -6,6 +6,7 @@ import { after, before, describe, it } from 'node:test';
 import { DeviceStateGuard } from '../android-device.mts';
 import type { ActivityStart, DeviceState } from '../android-device.mts';
 import { ToolError } from '../errors.mts';
+import type { FrameBasis } from '../frames.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { TracedApp, TraceMetrics, TraceReading } from '../perfetto.mts';
 import { parseReportLine, takeSample } from '../protocol.mts';
@@ -108,7 +109,7 @@ function createFake(options: FakeOptions = {}) {
   let traced = false;
   let streamFailure: ToolError | null = null;
   const calls: string[] = [];
-  const collected: { app: TracedApp; refreshRate: number }[] = [];
+  const collected: { app: TracedApp; frames: FrameBasis }[] = [];
   const thermal = [...(options.thermal ?? [])];
   const temperatures = [...(options.temperatures ?? [])];
   const states = [...(options.states ?? [IN_APP_STATE, IN_APP_STATE])];
@@ -196,9 +197,9 @@ function createFake(options: FakeOptions = {}) {
     collect: async (
       _tracePath: string,
       app: TracedApp,
-      refreshRate: number
+      frames: FrameBasis
     ): Promise<TraceReading> => {
-      collected.push({ app, refreshRate });
+      collected.push({ app, frames });
       return (
         options.reading ?? {
           processLived: true,
@@ -450,9 +451,27 @@ describe('takeSample', () => {
           pid: PID,
           jsThread: 4350,
         },
-        refreshRate: 60,
+        frames: { refreshRate: 60, share: 1 },
       },
     ]);
+  });
+
+  it('expects a frame on each refresh in idle-cost, because the app requests a frame on each refresh', async () => {
+    const fake = createFake({
+      reportLines: ['READY scenario=idle-cost version=1 load=40 jsThread=4350'],
+      frameCount: 539,
+    });
+    const sample = await takeSample(
+      request('idle-cost', { scenario: 'idle-cost' }),
+      fake.device,
+      fake.collector,
+      fake.clock
+    );
+    assert.deepEqual(fake.collected[0].frames, { refreshRate: 60, share: 1 });
+    assert.deepEqual(causeOf(sample), {
+      cause: 'frames',
+      detail: '539 frames, expected at least 540',
+    });
   });
 
   it('stops with a tool error when the READY line has no JS thread id', async () => {
@@ -676,7 +695,7 @@ describe('takeSample', () => {
       first.clock
     );
     assert.equal(sample.refreshRate, 60);
-    assert.equal(first.collected[0].refreshRate, 60);
+    assert.equal(first.collected[0].frames.refreshRate, 60);
 
     const second = createFake({
       states: [{ ...IN_APP_STATE, refreshRate: 90 }],

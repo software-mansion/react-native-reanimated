@@ -13,8 +13,8 @@ import type { Clock } from '../protocol.mts';
 import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import type { CommandContext, Processes } from '../tools.mts';
-import type { IosTraceMetrics } from '../xctrace-metrics.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
+import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
 
 const TEST_ROOT = useTestRoot('ios-run', {
   name: 'ios-test',
@@ -30,25 +30,6 @@ const STATE: IosDeviceState = {
   productType: 'iPhone14,4',
   osVersion: '27.0.1',
   osBuild: '24A446',
-};
-const METRICS: IosTraceMetrics = {
-  frameDurationMedian: 6,
-  frameDurationP90: 7,
-  frameDurationP95: 8,
-  frameDurationP99: 9,
-  jankyFrames: 0,
-  uiThreadCpu: 350,
-  jsThreadCpu: 2,
-  otherThreadsCpu: 1,
-  processCpu: 353,
-  mountBatchCount: 600,
-  memory: 40000,
-  windowMemoryDelta: 300,
-  frameCount: 600,
-  expectedFrameCount: 600,
-  uiThreadEfficiencyCoreShare: 0.7,
-  hitchCount: 0,
-  hitchTime: 0,
 };
 
 interface FakeOptions {
@@ -124,7 +105,7 @@ function createFake(options: FakeOptions = {}) {
         };
         return {
           processLived: true,
-          metrics: METRICS,
+          metrics: IOS_TRACE_METRICS,
           thermalState: 0,
           appStates: [state, state],
         };
@@ -196,7 +177,11 @@ describe('an iOS run', () => {
     assert.ok(samples.every((sample) => sample.valid && sample.accepted));
     assert.equal(samples[0].metrics?.coldStart, 80.5);
     assert.equal(samples[0].batteryLevel, undefined);
-    assert.equal(result.statistics.length, 7);
+    assert.equal(result.verdictRows.length, 6);
+    assert.deepEqual(
+      result.advisoryRows.map((row) => row.metric),
+      ['coldStart']
+    );
     const report = fs.readFileSync(
       path.join(onlyRunFolder(TEST_ROOT), 'report.md'),
       'utf8'
