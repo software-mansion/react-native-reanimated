@@ -17,11 +17,11 @@ iOS: launch arguments `-benchmarkScenario <name> [-benchmarkLoad <integer>]`.
 
 `benchmarkLoad` replaces the load of the scenario. Use it only to find a load level.
 
-The Gradle property `benchmarkApplicationIdSuffix` adds a suffix to the Android application id and the app label (`-PbenchmarkApplicationIdSuffix=.a` gives `com.reanimatedbenchmark.a`). On iOS, set `PRODUCT_BUNDLE_IDENTIFIER`.
+The Gradle property `benchmarkApplicationIdSuffix` adds a suffix to the Android application id and the app label (`-PbenchmarkApplicationIdSuffix=.a` gives `com.reanimatedbenchmark.a`). On iOS, the build setting `BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX` does the same (`xcodebuild ... BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX=.a` gives `com.reanimatedbenchmark.a`).
 
 ## Measure
 
-The driver in [`scripts/`](scripts/README.md) measures the app on an Android device. `run` compares two builds for each scenario and metric. `memory` reads the memory of two builds in one scenario for a long time and looks for a leak.
+The driver in [`scripts/`](scripts/README.md) measures the app on an Android device or on an iPhone. `run` compares two builds for each scenario and metric. `memory` reads the memory of two builds in one scenario for a long time and looks for a leak (Android only).
 
 ## Report lines
 
@@ -29,6 +29,11 @@ The `BenchmarkReporter` TurboModule writes each line to logcat with the tag `Rea
 
 - `READY scenario=<name> version=<integer> load=<integer> jsThread=<integer>`: 3000 ms after the scenario starts. The app writes it one time for each process. `jsThread` is the id of the JavaScript thread: a synchronous call of the TurboModule on that thread reads `android.os.Process.myTid()` on Android and `pthread_threadid_np` on iOS.
 - `FAILED scenario=<name or none> reason=<text>`: the name is missing or unknown, the load is not a positive integer, a requirement of the scenario is not met, or a JavaScript error occurs. The app writes `none` for an error before it reads the scenario name. After `FAILED`, the app does not write `READY`.
+
+On iOS, the native class `ProcessReporter` also writes:
+
+- `LAUNCH pid=<integer> mainThread=<integer> refreshRate=<integer> thermal=<0-3> coldStart=<ms>` to stdout, on the first display link callback. `coldStart` is the time from the start of the process (`p_starttime` of `sysctl`) to this callback. `refreshRate` is `UIScreen.maximumFramesPerSecond`. `thermal` is `ProcessInfo.thermalState`.
+- A signpost event `State` each second (subsystem `com.reanimatedbenchmark`, category for dynamic tracing; when no tool records, the cost is one timer call on the main queue each second): `footprint=<kB> thermal=<0-3> batteryLevel=<percent> batteryState=<0-3> lowPower=<0|1> brightness=<percent>`. `footprint` is `phys_footprint` of `task_info`.
 
 With no scenario or an unknown name, the app shows the list of scenario names.
 

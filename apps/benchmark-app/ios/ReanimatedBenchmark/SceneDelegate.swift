@@ -6,6 +6,7 @@ import UIKit
 class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate {
   var window: UIWindow?
   var reactNativeFactory: RCTReactNativeFactory?
+  private var processReporter: ProcessReporter?
 
   func scene(
     _ scene: UIScene,
@@ -16,6 +17,8 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
       return
     }
 
+    processReporter = ProcessReporter(screen: windowScene.screen)
+    processReporter?.start()
     dependencyProvider = RCTAppDependencyProvider()
     reactNativeFactory = RCTReactNativeFactory(delegate: self)
     window = UIWindow(windowScene: windowScene)
