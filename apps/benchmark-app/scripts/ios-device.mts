@@ -1,5 +1,5 @@
 import { ToolError } from './errors.mts';
-import type { LineStream, Processes } from './tools.mts';
+import type { LineStream, Processes } from './processes.mts';
 
 export interface IosDeviceState {
   hardwareSerial: string;

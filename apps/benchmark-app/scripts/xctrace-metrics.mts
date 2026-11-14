@@ -2,6 +2,7 @@ import { ToolError } from './errors.mts';
 import { frameMetrics } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
 import type { IosSampleMetrics } from './metrics.mts';
+import type { TraceWindow } from './samples.mts';
 import { childText, parseTraceTables } from './xctrace-tables.mts';
 import type { TraceElement, TraceRow } from './xctrace-tables.mts';
 
@@ -19,12 +20,6 @@ export interface TracedIosApp {
   jsThread: number;
   frames: FrameBasis;
   recordingSeconds: number;
-}
-
-export interface TraceWindow {
-  startNs: number;
-  endNs: number;
-  seconds: number;
 }
 
 export interface AppState {

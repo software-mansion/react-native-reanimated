@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import type { ResumeOptions, RunOptions } from './arguments.mts';
+import type { CommandContext } from './command-context.mts';
 import { blocksOf, validateConfig } from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
@@ -19,7 +20,6 @@ import {
   checkNoiseLimitsRecord,
   validateNoiseLimitsRecord,
 } from './noise-limits-record.mts';
-import type { SampleResult } from './protocol.mts';
 import { renderReport } from './report.mts';
 import {
   acceptedValues,
@@ -27,8 +27,8 @@ import {
   scenariosWithoutData,
 } from './results.mts';
 import type { RunResult } from './results.mts';
+import type { SampleResult } from './samples.mts';
 import { blockOrder } from './session.mts';
-import type { CommandContext } from './tools.mts';
 import { computeComparisonRows } from './verdict.mts';
 
 export async function runCommand(

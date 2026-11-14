@@ -1,5 +1,5 @@
 import type { VariantKey } from './config.mts';
-import type { InvalidCause, SampleResult } from './protocol.mts';
+import type { InvalidCause, SampleResult } from './samples.mts';
 import type { Scenario } from './scenarios.mts';
 
 export interface SamplePlace {

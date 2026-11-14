@@ -10,7 +10,6 @@ import type {
   MemoryResult,
   VariantMemorySummary,
 } from './memory.mts';
-import { INVALID_CAUSES } from './protocol.mts';
 import {
   deviceSection,
   differencesSection,
@@ -21,6 +20,7 @@ import {
   timingSection,
 } from './report.mts';
 import { finiteNumber } from './results.mts';
+import { SAMPLE_INVALID_CAUSES } from './samples.mts';
 import type { Recorded } from './session.mts';
 
 export function renderMemoryReport(result: MemoryResult): string {
@@ -73,7 +73,12 @@ export function renderMemoryReport(result: MemoryResult): string {
     '',
     '## Invalid launches',
     '',
-    invalidSection(launches, [...INVALID_CAUSES, 'late', 'reset', 'drawing']),
+    invalidSection(launches, [
+      ...SAMPLE_INVALID_CAUSES,
+      'late',
+      'reset',
+      'drawing',
+    ]),
     '',
     '## Time for each launch (mean)',
     '',

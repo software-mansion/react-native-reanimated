@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { once } from '../command-context.mts';
 import { ToolError } from '../errors.mts';
-import { Processes, once } from '../tools.mts';
+import { Processes } from '../processes.mts';
 
 const NODE = process.execPath;
 

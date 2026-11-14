@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 import { RECORDING_SECONDS } from './measurement-rules.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
 import { computeIosTraceMetrics } from './xctrace-metrics.mts';
 import type {
   IosTraceReading,

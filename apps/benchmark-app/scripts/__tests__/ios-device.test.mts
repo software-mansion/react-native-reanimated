@@ -14,7 +14,7 @@ import {
   readIosToolVersions,
 } from '../ios-device.mts';
 import type { IosDeviceState } from '../ios-device.mts';
-import type { Processes } from '../tools.mts';
+import type { Processes } from '../processes.mts';
 
 const UDID = '00008110-000A1B2C3D4E801E';
 const APP = 'com.reanimatedbenchmark.a';

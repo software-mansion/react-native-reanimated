@@ -3,16 +3,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { before, describe, it } from 'node:test';
 
+import type { Clock } from '../clock.mts';
+import type { CommandContext } from '../command-context.mts';
 import { ToolError } from '../errors.mts';
 import type { IosDevice, IosDeviceState } from '../ios-device.mts';
 import { iosPlatform } from '../ios-platform.mts';
 import type { IosDependencies } from '../ios-platform.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
 import type { DeviceTarget } from '../platform.mts';
-import type { Clock } from '../protocol.mts';
+import type { Processes } from '../processes.mts';
 import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
-import type { CommandContext, Processes } from '../tools.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
 import { IOS_TRACE_METRICS, IOS_TRACE_WINDOW } from './ios-fixtures.mts';
 

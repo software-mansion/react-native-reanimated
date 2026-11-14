@@ -8,13 +8,14 @@ import type {
   AndroidDependencies,
   AndroidSampling,
 } from '../android-platform.mts';
+import type { Clock } from '../clock.mts';
+import type { CommandContext } from '../command-context.mts';
 import { ToolError } from '../errors.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { TraceMetrics } from '../perfetto.mts';
 import type { DeviceTarget } from '../platform.mts';
-import type { Clock } from '../protocol.mts';
-import type { CommandContext, Processes } from '../tools.mts';
+import type { Processes } from '../processes.mts';
 import type { BuiltVariant } from '../variant-build.mts';
 
 export interface FakeOptions {

@@ -10,7 +10,7 @@ import type {
 } from './config.mts';
 import { ToolError } from './errors.mts';
 import type { PlatformName } from './platform.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
 
 export interface LibraryState<T> {
   reanimated: T;

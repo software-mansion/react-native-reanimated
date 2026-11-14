@@ -5,12 +5,14 @@ import { after, before, describe, it } from 'node:test';
 
 import { DeviceStateGuard } from '../android-device.mts';
 import type { ActivityStart, DeviceState } from '../android-device.mts';
+import { takeSample } from '../android-protocol.mts';
+import type { SampleDevice, SampleRequest } from '../android-protocol.mts';
+import { parseReportLine } from '../app-report.mts';
+import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
 import type { FrameBasis } from '../frames.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { TracedApp, TraceMetrics, TraceReading } from '../perfetto.mts';
-import { parseReportLine, takeSample } from '../protocol.mts';
-import type { Clock, SampleDevice, SampleRequest } from '../protocol.mts';
 
 const TRACE_METRICS: TraceMetrics = {
   frameDurationMedian: 8,

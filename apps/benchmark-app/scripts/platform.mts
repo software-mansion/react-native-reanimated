@@ -1,13 +1,11 @@
 import type { DeviceState as AndroidDeviceState } from './android-device.mts';
+import type { AndroidToolVersions } from './android-tools.mts';
 import type { FrameSource } from './frames.mts';
 import type { IosDeviceState, IosToolVersions } from './ios-device.mts';
 import type { ComparedMetric } from './metrics.mts';
-import type { SampleResult } from './protocol.mts';
+import type { Processes } from './processes.mts';
+import type { SampleResult } from './samples.mts';
 import type { Scenario } from './scenarios.mts';
-import type {
-  Processes,
-  ToolVersions as AndroidToolVersions,
-} from './tools.mts';
 import type { BuildRequest, BuiltVariant } from './variant-build.mts';
 
 export type PlatformName = 'android' | 'ios';

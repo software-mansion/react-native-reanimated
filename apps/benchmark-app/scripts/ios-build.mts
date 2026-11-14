@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import type { VariantKey } from './config.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
 import { applicationSuffix } from './variant-build.mts';
 import type {
   BuildRequest,

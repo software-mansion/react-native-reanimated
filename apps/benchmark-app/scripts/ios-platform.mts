@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { SYSTEM_CLOCK } from './clock.mts';
+import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
 import { IOS_BUILD, signApp } from './ios-build.mts';
 import {
@@ -21,9 +23,8 @@ import type {
   Sampling,
   SamplingReference,
 } from './platform.mts';
-import { SYSTEM_CLOCK } from './protocol.mts';
-import type { Clock, SampleResult } from './protocol.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
+import type { SampleResult } from './samples.mts';
 import { buildVariant } from './variant-build.mts';
 import type { BuildRequest, BuiltVariant } from './variant-build.mts';
 import { Xctrace } from './xctrace.mts';

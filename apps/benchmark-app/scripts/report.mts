@@ -10,10 +10,10 @@ import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric, MetricUnit } from './metrics.mts';
 import type { NoiseLimitsRecord } from './noise-limits-record.mts';
 import type { DeviceState, PlatformDefinition } from './platform.mts';
-import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
-import type { InvalidCause, SampleSteps } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
 import type { MeasurementResult, RunResult, Segment } from './results.mts';
+import { SAMPLE_INVALID_CAUSES, SAMPLE_STEPS } from './samples.mts';
+import type { InvalidCause, SampleSteps } from './samples.mts';
 import type {
   FailedScenario,
   Judged,
@@ -499,7 +499,7 @@ function blockRange(blocks: number[]): string {
 
 export function invalidSection(
   samples: Recorded<Judged>[],
-  causes: readonly InvalidCause[] = INVALID_CAUSES
+  causes: readonly InvalidCause[] = SAMPLE_INVALID_CAUSES
 ): string {
   return table(
     ['Cause', 'Samples'],

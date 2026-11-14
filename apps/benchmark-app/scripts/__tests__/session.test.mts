@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { SampleMetrics } from '../metrics.mts';
-import type { InvalidCause } from '../protocol.mts';
+import type { InvalidCause } from '../samples.mts';
 import { blockOrder, runScenario } from '../session.mts';
 import type { MeasuredSample, SamplePlace } from '../session.mts';
 

@@ -13,7 +13,7 @@ import type {
   PlatformName,
   ToolVersions,
 } from './platform.mts';
-import type { SampleResult } from './protocol.mts';
+import type { SampleResult } from './samples.mts';
 import { SCENARIOS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import type { Judged, ScenarioOutcome } from './session.mts';

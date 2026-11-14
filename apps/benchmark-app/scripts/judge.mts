@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import type { MeasuredSample, SampleResult } from './protocol.mts';
+import type { MeasuredSample, SampleResult } from './samples.mts';
 import { SCENARIO_REQUIREMENTS } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 

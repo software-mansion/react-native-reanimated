@@ -1,4 +1,5 @@
-import type { IosTraceMetrics, TraceWindow } from '../xctrace-metrics.mts';
+import type { TraceWindow } from '../samples.mts';
+import type { IosTraceMetrics } from '../xctrace-metrics.mts';
 
 export const IOS_TRACE_METRICS: IosTraceMetrics = {
   frameDurationMedian: 6,

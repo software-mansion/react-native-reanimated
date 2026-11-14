@@ -12,17 +12,35 @@ import type {
   DeviceState,
   DeviceStateGuard,
 } from './android-device.mts';
+import {
+  failureText,
+  parseReportLine,
+  scenarioReportOf,
+} from './app-report.mts';
+import type { ScenarioReport } from './app-report.mts';
+import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
 import { expectedFrameShare } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
 import { judgeWork } from './judge.mts';
-import type { SampleMetrics } from './metrics.mts';
 import { traceConfig } from './perfetto.mts';
 import type { TracedApp, TraceReading } from './perfetto.mts';
-import type { InAppState } from './platform.mts';
+import type { LineStream } from './processes.mts';
+import {
+  COOL_DOWN_LIMIT_MS,
+  MINIMUM_WAIT_MS,
+  PROCESS_POLL_MS,
+  READY_TIMEOUT_MS,
+  timedSteps,
+} from './samples.mts';
+import type {
+  InvalidSample,
+  MeasuredSample,
+  SampleObservations,
+  SampleResult,
+  SampleSteps,
+} from './samples.mts';
 import type { Scenario } from './scenarios.mts';
-import type { LineStream } from './tools.mts';
-import type { TraceWindow } from './xctrace-metrics.mts';
 
 export interface SampleDevice {
   forceStop: (applicationId: string) => Promise<void>;
@@ -51,16 +69,6 @@ export interface Collector {
   ) => Promise<TraceReading>;
 }
 
-export interface Clock {
-  now: () => number;
-  sleep: (ms: number) => Promise<void>;
-}
-
-export const SYSTEM_CLOCK: Clock = {
-  now: () => Date.now(),
-  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-};
-
 export interface SampleRequest {
   applicationId: string;
   stopApplicationIds: string[];
@@ -72,83 +80,9 @@ export interface SampleRequest {
   keepTrace: boolean;
 }
 
-export type InvalidCause =
-  | 'crash'
-  | 'thermal'
-  | 'frames'
-  | 'work'
-  | 'late'
-  | 'reset'
-  | 'drawing';
-
-export const INVALID_CAUSES: readonly InvalidCause[] = [
-  'crash',
-  'thermal',
-  'frames',
-  'work',
-];
-
-export const SAMPLE_STEPS = [
-  'wait',
-  'start',
-  'ready',
-  'trace',
-  'pull',
-  'parse',
-] as const;
-
-export type SampleStep = (typeof SAMPLE_STEPS)[number];
-
-export interface ScenarioReport {
-  version: number;
-  load: number;
-  jsThread: number | null;
-}
-
-interface SampleObservations {
-  report?: ScenarioReport;
-  pid?: number;
-  refreshRate?: number;
-  thermalBefore?: number;
-  thermalAfter?: number;
-  inAppState?: InAppState;
-  traceWindow?: TraceWindow;
-  metrics?: SampleMetrics;
-  timings: Partial<Record<SampleStep, number>>;
-  trace?: string;
-}
-
-export type ValidSample = SampleObservations & {
-  valid: true;
-  metrics: SampleMetrics;
-};
-
-export type InvalidSample = SampleObservations & {
-  valid: false;
-  cause: InvalidCause;
-  detail: string;
-};
-
-export type SampleResult = ValidSample | InvalidSample;
-
-export type ReportLine =
-  | {
-      kind: 'ready';
-      scenario: string;
-      version: number;
-      load: number;
-      jsThread: number | null;
-    }
-  | { kind: 'failed'; scenario: string; reason: string };
-
 type ReadyOutcome =
   | { ready: true; report: ScenarioReport }
   | { ready: false; reason: string };
-
-export interface SampleSteps {
-  timings: SampleResult['timings'];
-  timed: <T>(step: SampleStep, action: () => Promise<T>) => Promise<T>;
-}
 
 export interface RunningApp {
   request: SampleRequest;
@@ -168,17 +102,8 @@ interface TraceFiles {
   remoteTrace: string;
 }
 
-export type MeasuredSample = SampleObservations & {
-  metrics: SampleMetrics;
-  thermalAfter: number;
-};
-
-export const MINIMUM_WAIT_MS = 10_000;
-export const COOL_DOWN_LIMIT_MS = 600_000;
 export const COOL_DOWN_POLL_MS = 5_000;
 export const TEMPERATURE_TOLERANCE = 2;
-export const READY_TIMEOUT_MS = 60_000;
-export const PROCESS_POLL_MS = 1_000;
 
 export async function takeSample(
   request: SampleRequest,
@@ -228,43 +153,6 @@ export async function runLaunchedApp<T>(
     watch.stop();
     await device.forceStop(request.applicationId);
   }
-}
-
-export function parseReportLine(line: string): ReportLine | null {
-  const text = line.trim();
-  const ready =
-    /^READY scenario=(\S+) version=(\d+) load=(\d+)(?: jsThread=(\d+))?$/.exec(
-      text
-    );
-  if (ready) {
-    return {
-      kind: 'ready',
-      scenario: ready[1],
-      version: Number(ready[2]),
-      load: Number(ready[3]),
-      jsThread: ready[4] === undefined ? null : Number(ready[4]),
-    };
-  }
-  const failed = /^FAILED scenario=(\S+) reason=(.*)$/.exec(text);
-  if (failed) {
-    return { kind: 'failed', scenario: failed[1], reason: failed[2] };
-  }
-  return null;
-}
-
-export function timedSteps(clock: Clock): SampleSteps {
-  const timings: SampleSteps['timings'] = {};
-  return {
-    timings,
-    timed: async (step, action) => {
-      const startedAt = clock.now();
-      try {
-        return await action();
-      } finally {
-        timings[step] = clock.now() - startedAt;
-      }
-    },
-  };
 }
 
 async function waitForCoolDevice(
@@ -326,13 +214,9 @@ export class ReportWatch {
   #read(line: string) {
     const report = parseReportLine(line);
     if (report?.kind === 'failed') {
-      this.#failure ??= `FAILED scenario=${report.scenario} reason=${report.reason}`;
+      this.#failure ??= failureText(report);
     } else if (report?.scenario === this.#scenario) {
-      this.#report ??= {
-        version: report.version,
-        load: report.load,
-        jsThread: report.jsThread,
-      };
+      this.#report ??= scenarioReportOf(report);
     }
   }
 }

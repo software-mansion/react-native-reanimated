@@ -2,12 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { SampleOptions } from './arguments.mts';
+import { once } from './command-context.mts';
+import type { CommandContext } from './command-context.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { SAMPLES_DIR } from './paths.mts';
 import { platformOf } from './platforms.mts';
 import { runFolderName } from './results.mts';
-import { once } from './tools.mts';
-import type { CommandContext } from './tools.mts';
 
 export async function sampleCommand(
   options: SampleOptions,

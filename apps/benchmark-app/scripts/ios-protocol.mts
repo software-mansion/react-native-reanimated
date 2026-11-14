@@ -1,3 +1,11 @@
+import {
+  failureText,
+  parseLaunchLine,
+  parseReportLine,
+  scenarioReportOf,
+} from './app-report.mts';
+import type { LaunchReport, ScenarioReport } from './app-report.mts';
+import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
 import { expectedFrameShare } from './frames.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
@@ -5,21 +13,14 @@ import { LAUNCHED_LINE } from './ios-device.mts';
 import { judgeWork } from './judge.mts';
 import { RECORDING_SECONDS } from './measurement-rules.mts';
 import type { InAppState, SampleOrder } from './platform.mts';
+import type { LineStream } from './processes.mts';
 import {
   COOL_DOWN_LIMIT_MS,
   PROCESS_POLL_MS,
   READY_TIMEOUT_MS,
-  parseReportLine,
   timedSteps,
-} from './protocol.mts';
-import type {
-  Clock,
-  InvalidSample,
-  SampleResult,
-  SampleSteps,
-  ScenarioReport,
-} from './protocol.mts';
-import type { LineStream } from './tools.mts';
+} from './samples.mts';
+import type { InvalidSample, SampleResult, SampleSteps } from './samples.mts';
 import { THERMAL_STATES } from './xctrace-metrics.mts';
 import type { AppState } from './xctrace-metrics.mts';
 import type { IosTracer } from './xctrace.mts';
@@ -40,14 +41,6 @@ export interface IosSampleContext {
   tracer: IosTracer;
   clock: Clock;
   guard: InAppStateGuard;
-}
-
-export interface LaunchReport {
-  pid: number;
-  mainThread: number;
-  refreshRate: number;
-  thermalState: number;
-  coldStart: number;
 }
 
 interface AppLaunch {
@@ -118,22 +111,6 @@ export async function launchOnce(
     },
     () => launch.appConsole.close()
   );
-}
-
-export function parseLaunchLine(line: string): LaunchReport | null {
-  const launch =
-    /^LAUNCH pid=(\d+) mainThread=(\d+) refreshRate=(\d+) thermal=(\d+) coldStart=(\d+(?:\.\d+)?)$/.exec(
-      line.trim()
-    );
-  return launch
-    ? {
-        pid: Number(launch[1]),
-        mainThread: Number(launch[2]),
-        refreshRate: Number(launch[3]),
-        thermalState: Number(launch[4]),
-        coldStart: Number(launch[5]),
-      }
-    : null;
 }
 
 export class InAppStateGuard {
@@ -235,16 +212,9 @@ export class AppConsole {
     }
     const report = parseReportLine(text);
     if (report?.kind === 'failed') {
-      this.#failure ??= `FAILED scenario=${report.scenario} reason=${report.reason}`;
+      this.#failure ??= failureText(report);
     } else if (report && report.scenario === this.#launch.scenario) {
-      this.#scenarioReport ??= {
-        value: {
-          version: report.version,
-          load: report.load,
-          jsThread: report.jsThread,
-        },
-        at,
-      };
+      this.#scenarioReport ??= { value: scenarioReportOf(report), at };
     }
   }
 }

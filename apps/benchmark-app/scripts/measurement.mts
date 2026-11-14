@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { once } from './command-context.mts';
+import type { CommandContext } from './command-context.mts';
 import { VARIANT_KEYS } from './config.mts';
 import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
@@ -36,8 +38,6 @@ import type {
   Recorded,
   SamplePlace,
 } from './session.mts';
-import { once } from './tools.mts';
-import type { CommandContext } from './tools.mts';
 
 export interface MeasurementDependencies<S extends Sampling = Sampling> {
   platform: Platform<S>;

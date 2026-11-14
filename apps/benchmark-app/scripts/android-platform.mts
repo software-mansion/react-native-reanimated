@@ -11,6 +11,16 @@ import {
   idleKeysOf,
 } from './android-device.mts';
 import type { DeviceState as AndroidDeviceState } from './android-device.mts';
+import { takeSample } from './android-protocol.mts';
+import type { Collector, SampleRequest } from './android-protocol.mts';
+import {
+  readAndroidToolVersions,
+  resolveAdb,
+  resolveAndroidHome,
+  resolveTraceProcessor,
+} from './android-tools.mts';
+import { SYSTEM_CLOCK } from './clock.mts';
+import type { Clock } from './clock.mts';
 import { ToolError } from './errors.mts';
 import { TraceProcessor } from './perfetto.mts';
 import type {
@@ -23,20 +33,8 @@ import type {
   Sampling,
   SamplingReference,
 } from './platform.mts';
-import { SYSTEM_CLOCK, takeSample } from './protocol.mts';
-import type {
-  Clock,
-  Collector,
-  SampleRequest,
-  SampleResult,
-} from './protocol.mts';
-import {
-  readToolVersions,
-  resolveAdb,
-  resolveAndroidHome,
-  resolveTraceProcessor,
-} from './tools.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
+import type { SampleResult } from './samples.mts';
 import { buildVariant } from './variant-build.mts';
 
 export interface AndroidDependencies {
@@ -144,7 +142,7 @@ async function connect(
   return {
     startState,
     readToolVersions: () =>
-      readToolVersions(processes, adb, traceProcessor, serial),
+      readAndroidToolVersions(processes, adb, traceProcessor, serial),
     buildVariant: (request) =>
       dependencies.buildVariant(request, androidBuild(androidHome)),
     prepareInstallFile: async (variant) => variant.artifact,

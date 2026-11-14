@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 
+import { parseLaunchLine } from '../app-report.mts';
+import type { Clock } from '../clock.mts';
 import { ToolError } from '../errors.mts';
 import {
   HOT_DEVICE_WAIT_MS,
@@ -10,14 +12,12 @@ import {
   MINIMUM_WAIT_MS,
   REPORT_PREFIX,
   launchOnce,
-  parseLaunchLine,
   takeIosSample,
 } from '../ios-protocol.mts';
 import type { IosSampleContext } from '../ios-protocol.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { SampleOrder } from '../platform.mts';
-import { READY_TIMEOUT_MS } from '../protocol.mts';
-import type { Clock } from '../protocol.mts';
+import { READY_TIMEOUT_MS } from '../samples.mts';
 import type {
   AppState,
   IosTraceMetrics,

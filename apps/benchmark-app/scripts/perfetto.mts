@@ -3,7 +3,7 @@ import { frameMetrics, quantileOrNull } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
 import { RECORDING_SECONDS } from './measurement-rules.mts';
 import type { AndroidSampleMetrics } from './metrics.mts';
-import type { Processes } from './tools.mts';
+import type { Processes } from './processes.mts';
 
 export type TraceMetrics = Omit<AndroidSampleMetrics, 'coldStart'>;
 

@@ -7,8 +7,7 @@ import { androidBuild, gradleArguments } from '../android-build.mts';
 import type { Variant } from '../config.mts';
 import { IOS_BUILD, xcodebuildArguments } from '../ios-build.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
-import type { Processes } from '../tools.mts';
-import type { BuildKeyInputs, BuildRequest } from '../variant-build.mts';
+import type { Processes } from '../processes.mts';
 import {
   applicationIdOf,
   collectBuildKeyInputs,
@@ -18,6 +17,7 @@ import {
   variantBuildKey,
   withStaticFlags,
 } from '../variant-build.mts';
+import type { BuildKeyInputs, BuildRequest } from '../variant-build.mts';
 
 const VARIANT: Variant = {
   reanimated: { kind: 'npm', version: '4.7.1' },

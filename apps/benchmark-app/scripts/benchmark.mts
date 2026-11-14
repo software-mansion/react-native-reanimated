@@ -2,13 +2,13 @@
 
 import { USAGE, parseArguments } from './arguments.mts';
 import type { Command } from './arguments.mts';
+import type { CommandContext } from './command-context.mts';
 import { ToolError } from './errors.mts';
 import { memoryCommand, memoryResumeCommand } from './memory.mts';
 import { noiseLimitsCommand } from './noise-limits.mts';
+import { Processes } from './processes.mts';
 import { resumeCommand, runCommand } from './run.mts';
-import { sampleCommand } from './sample.mts';
-import { Processes } from './tools.mts';
-import type { CommandContext } from './tools.mts';
+import { sampleCommand } from './sample-command.mts';
 
 const TOOL_ERROR_EXIT_CODE = 2;
 
