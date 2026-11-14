@@ -201,7 +201,7 @@ const COUNTERS = [
   'updates',
 ] as const satisfies readonly (keyof InAppBoundary)[];
 
-const BOUNDARY: Check = shape({
+export const IN_APP_BOUNDARY: Check = shape({
   uiReadStartNs: anInteger,
   uiReadEndNs: anInteger,
   uiThreadCpuUs: anInteger,
@@ -240,7 +240,7 @@ const SAMPLE: Check = shape({
       work: shape({ own: anInteger, other: anInteger }),
     })
   ),
-  boundaries: listOf(BOUNDARY),
+  boundaries: listOf(IN_APP_BOUNDARY),
   updates: shape({
     beginNs: listOf(anInteger),
     endNs: listOf(anInteger),

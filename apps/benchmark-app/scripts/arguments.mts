@@ -98,6 +98,7 @@ export interface ValidationRecordOptions {
   command: 'validation-record';
   crosschecks: string[];
   observerCosts: string[];
+  earlierCrosschecks: string[];
 }
 
 export interface ObserverCostOptions {
@@ -138,7 +139,7 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks ${DEFAULT_OBSERVER_COST_BLOCKS}] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
-  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...] [--earlier-crosscheck <folder> ...]
 
 <device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The crosscheck and observer-cost commands validate the in-app collector of iOS and support iOS only.
 --trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>. Its uiThreadCpu and jsThreadCpu get a verdict only with a matching --validation <file.json>, and memory is advisory on iOS.
@@ -231,6 +232,7 @@ const CROSSCHECK_OPTIONS: ParseArgsOptionsConfig = {
 const VALIDATION_RECORD_OPTIONS: ParseArgsOptionsConfig = {
   crosscheck: { type: 'string', multiple: true },
   'observer-cost': { type: 'string', multiple: true },
+  'earlier-crosscheck': { type: 'string', multiple: true },
 };
 
 const OBSERVER_COST_OPTIONS: ParseArgsOptionsConfig = {
@@ -341,6 +343,7 @@ export function parseArguments(argv: string[]): Command {
       command,
       crosschecks: requiredList(values, 'crosscheck'),
       observerCosts: requiredList(values, 'observer-cost'),
+      earlierCrosschecks: optionalList(values, 'earlier-crosscheck'),
     };
   }
   throw new ToolError(`Unknown command "${command}".\n\n${USAGE}`);
@@ -461,6 +464,11 @@ function requiredList(values: Values, name: string): string[] {
     throw new ToolError(`--${name} is required.\n\n${USAGE}`);
   }
   return value;
+}
+
+function optionalList(values: Values, name: string): string[] {
+  const value = values[name];
+  return Array.isArray(value) ? value : [];
 }
 
 function validationDirOf(values: Values): string {

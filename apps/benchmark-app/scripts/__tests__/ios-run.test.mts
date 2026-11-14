@@ -322,10 +322,6 @@ describe('an iOS run', () => {
         },
         /device model iPhone 14 \(iPhone14,7\) -> iPhone 13 mini \(iPhone14,4\)/,
       ],
-      [
-        { measurementRevision: MEASUREMENT_REVISION - 1 },
-        /measurement revision/,
-      ],
     ] as const) {
       fs.rmSync(TEST_ROOT.outputDir, { recursive: true, force: true });
       await run(createFake(), IPHONE, writeValidationRecord(change));
@@ -333,6 +329,24 @@ describe('an iOS run', () => {
       assert.deepEqual(result.verdictRows, []);
       assert.match(result.validity?.reason ?? '', reason);
     }
+  });
+
+  it('refuses a validation record of another measurement revision', async () => {
+    const file = writeValidationRecord();
+    const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        ...record,
+        measurementRevision: MEASUREMENT_REVISION - 1,
+      })
+    );
+    await assert.rejects(
+      run(createFake(), IPHONE, file),
+      new RegExp(
+        `- validation: it is of the measurement revision ${MEASUREMENT_REVISION - 1}, and this driver has the revision ${MEASUREMENT_REVISION}`
+      )
+    );
   });
 
   it('stops when the device is not the same before a sample', async () => {

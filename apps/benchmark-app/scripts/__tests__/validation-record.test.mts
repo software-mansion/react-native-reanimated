@@ -6,10 +6,15 @@ import { beforeEach, describe, it } from 'node:test';
 import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import { observerCosts } from '../observer-cost.mts';
 import type { CollectorSample } from '../observer-cost.mts';
-import { metricValidity, readValidationRecord } from '../validation-record.mts';
+import {
+  buildValidationRecord,
+  metricValidity,
+  readValidationRecord,
+} from '../validation-record.mts';
 import type { ValidationRecord } from '../validation-record.mts';
 import {
   readCrosscheckResult,
+  readEarlierCrosscheck,
   readObserverCostResult,
 } from '../validation-sources.mts';
 import type {
@@ -250,7 +255,132 @@ describe('buildValidationRecord', () => {
   });
 });
 
+describe('the measurement revision of the sources', () => {
+  it('refuses a source of another measurement revision', () => {
+    const steady = writeCrosscheck('steady', STEADY_PLAN, {
+      measurementRevision: MEASUREMENT_REVISION - 1,
+    });
+    assert.throws(
+      () => record([steady, writeCrosscheck('loads', LOADS_PLAN)]),
+      new RegExp(
+        `steady is of the measurement revision ${MEASUREMENT_REVISION - 1}\\. This driver has the revision ${MEASUREMENT_REVISION}, and a source of another revision is not validation evidence for it\\.`
+      )
+    );
+  });
+
+  it('keeps an earlier cross-check as history, outside the gates, and refuses one of the present revision', () => {
+    const earlier = path.join(SOURCES_DIR, 'earlier');
+    fs.mkdirSync(earlier, { recursive: true });
+    const value = (app: number, trace: number) => ({
+      app,
+      trace,
+      signedError: app - trace,
+      absoluteError: Math.abs(app - trace),
+      relativeError: (app - trace) / trace,
+      timingUncertainty: 0.009,
+      tolerance: 0.02 * trace + 0.009,
+      passes: Math.abs(app - trace) <= 0.02 * trace + 0.009,
+    });
+    fs.writeFileSync(
+      path.join(earlier, 'crosscheck.json'),
+      JSON.stringify({
+        formatVersion: 3,
+        measurementRevision: MEASUREMENT_REVISION - 1,
+        scenario: 'worklet-styles-transform',
+        epochs: [
+          {
+            index: 3,
+            load: 'steady',
+            collector: 'full',
+            uiThreadCpu: value(362.494, 355.271),
+            jsThreadCpu: value(2.655, 2.637),
+            processCpu: value(365.167, 357.925),
+          },
+        ],
+        verdict: { counters: false, loadsRan: true, memory: 'not available' },
+      })
+    );
+    const built = buildValidationRecord(
+      [
+        readCrosscheckResult(writeCrosscheck('steady', STEADY_PLAN)),
+        readCrosscheckResult(writeCrosscheck('loads', LOADS_PLAN)),
+      ],
+      [
+        readObserverCostResult(writeObserverCost('idle', 'idle-cost')),
+        readObserverCostResult(
+          writeObserverCost('loaded', 'worklet-styles-transform')
+        ),
+      ],
+      [readEarlierCrosscheck(earlier)]
+    );
+    assert.deepEqual(validated(built), {
+      uiThreadCpu: true,
+      jsThreadCpu: true,
+    });
+    assert.equal(built.earlierCrosschecks[0].result.verdict.counters, false);
+    assert.equal(
+      built.earlierCrosschecks[0].result.epochs[0].uiThreadCpu.passes,
+      false
+    );
+    assert.deepEqual(readValidationRecord(writeRecord(built)), built);
+    assert.throws(
+      () => readEarlierCrosscheck(writeCrosscheck('present', STEADY_PLAN)),
+      new RegExp(
+        `it is of the measurement revision ${MEASUREMENT_REVISION}, not of an earlier revision than ${MEASUREMENT_REVISION}`
+      )
+    );
+  });
+});
+
 describe('the validation sources', () => {
+  it('refuses a cross-check whose boundary offsets, clock mapping or footprint reads do not follow from the stored times', () => {
+    const folder = writeCrosscheck('clock', LOADS_PLAN);
+    const file = path.join(folder, 'crosscheck.json');
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const write = (change: object) =>
+      fs.writeFileSync(file, JSON.stringify({ ...stored, ...change }));
+    const [first, ...rest] = stored.boundaryClocks.boundaries;
+    write({
+      boundaryClocks: {
+        ...stored.boundaryClocks,
+        boundaries: [{ ...first, offsetNs: 5 }, ...rest],
+      },
+    });
+    assert.throws(
+      () => readCrosscheckResult(folder),
+      /- crosscheck: boundary 0: the stored offset 5 ns is not the trace time minus the middle of the app signpost \(0 ns\)/
+    );
+    write({
+      boundaryClocks: {
+        ...stored.boundaryClocks,
+        boundaries: [{ ...first, traceNs: first.traceNs + 3_000 }, ...rest],
+      },
+    });
+    assert.throws(
+      () => readCrosscheckResult(folder),
+      /boundary 0: the stored offset 0 ns is not the trace time minus the middle of the app signpost \(3000 ns\)/
+    );
+    write({ clock: { ...stored.clock, offsetNs: 10_000 } });
+    assert.throws(
+      () => readCrosscheckResult(folder),
+      /boundary 0: its offset 0 ns differs from the mapping \(10000 ns\) by more than its uncertainty \(0 ns\)[\s\S]*the clock mapping \(offset 10000 ns/
+    );
+    const [boundary, ...others] = stored.appBoundaries;
+    write({
+      appBoundaries: [
+        {
+          ...boundary,
+          footprintReadStartNs: boundary.footprintReadStartNs - 50,
+        },
+        ...others,
+      ],
+    });
+    assert.throws(
+      () => readCrosscheckResult(folder),
+      /footprint 0: the app value or the read does not follow from the app boundary and the clock mapping/
+    );
+  });
+
   it('refuses a cross-check with a refresh rate or a window length that is not positive', () => {
     assert.throws(
       () =>

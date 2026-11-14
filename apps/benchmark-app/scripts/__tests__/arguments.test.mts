@@ -620,6 +620,24 @@ describe('parseArguments', () => {
         command: 'validation-record',
         crosschecks: ['c1', 'c2'],
         observerCosts: ['o1'],
+        earlierCrosschecks: [],
+      }
+    );
+    assert.deepEqual(
+      parseArguments([
+        'validation-record',
+        '--crosscheck',
+        'c1',
+        '--observer-cost',
+        'o1',
+        '--earlier-crosscheck',
+        'e1',
+      ]),
+      {
+        command: 'validation-record',
+        crosschecks: ['c1'],
+        observerCosts: ['o1'],
+        earlierCrosschecks: ['e1'],
       }
     );
     assert.throws(

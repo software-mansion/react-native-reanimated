@@ -25,15 +25,21 @@ export interface FootprintSample extends TimeSpan {
   footprintKb: number;
 }
 
+export interface OnCoreTime {
+  running: number;
+  interrupted: number;
+}
+
 export interface TraceEpoch {
   uiThreadCpu: number;
   jsThreadCpu: number;
   processCpu: number;
+  onCore: Record<CpuCounter, OnCoreTime>;
   frameDurationsMs: number[];
   mountBatchCount: number;
 }
 
-type SchedulerState = 'on core' | 'off core' | 'unknown';
+type SchedulerState = 'running' | 'interrupted' | 'off core' | 'unknown';
 
 interface Table {
   schema: string;
@@ -90,11 +96,11 @@ const SIGNPOST_COLUMNS = [
 ] as const;
 
 const SCHEDULER_STATES: Record<string, SchedulerState> = {
-  Running: 'on core',
+  Running: 'running',
   Runnable: 'off core',
   Preempted: 'off core',
   Throttled: 'off core',
-  Interrupted: 'off core',
+  Interrupted: 'interrupted',
   Blocked: 'off core',
   Idle: 'off core',
   Terminated: 'off core',
@@ -208,36 +214,44 @@ function traceEpoch(
   spans: TraceEpochSpans
 ): TraceEpoch {
   const window = { start: spans.window.startNs, end: spans.window.endNs };
-  const runningPerSecond = (
+  const onCore = (
     span: TimeSpan,
     counts: (interval: ThreadInterval) => boolean
-  ) => {
+  ): OnCoreTime => {
     const clip = { start: span.startNs, end: span.endNs };
-    const runningNs = intervals
-      .filter(
-        (interval) =>
-          counts(interval) && SCHEDULER_STATES[interval.state] === 'on core'
-      )
-      .reduce(
-        (sum, interval) => sum + Math.max(0, overlapNs(interval, clip)),
-        0
-      );
-    return (
-      runningNs /
+    const perSecond = (state: SchedulerState) =>
+      intervals
+        .filter(
+          (interval) =>
+            counts(interval) && SCHEDULER_STATES[interval.state] === state
+        )
+        .reduce(
+          (sum, interval) => sum + Math.max(0, overlapNs(interval, clip)),
+          0
+        ) /
       NANOSECONDS_PER_MS /
-      ((clip.end - clip.start) / NANOSECONDS_PER_SECOND)
-    );
+      ((clip.end - clip.start) / NANOSECONDS_PER_SECOND);
+    return {
+      running: perSecond('running'),
+      interrupted: perSecond('interrupted'),
+    };
   };
-  return {
-    uiThreadCpu: runningPerSecond(
+  const times: Record<CpuCounter, OnCoreTime> = {
+    uiThread: onCore(
       spans.counters.uiThread,
       (interval) => interval.thread === app.mainThread
     ),
-    jsThreadCpu: runningPerSecond(
+    jsThread: onCore(
       spans.counters.jsThread,
       (interval) => interval.thread === app.jsThread
     ),
-    processCpu: runningPerSecond(spans.counters.process, () => true),
+    process: onCore(spans.counters.process, () => true),
+  };
+  return {
+    uiThreadCpu: kernelChargedTime(times.uiThread),
+    jsThreadCpu: kernelChargedTime(times.jsThread),
+    processCpu: kernelChargedTime(times.process),
+    onCore: times,
     frameDurationsMs: frames
       .filter(({ start, end }) => start >= window.start && end <= window.end)
       .map(({ start, end }) => (end - start) / NANOSECONDS_PER_MS),
@@ -245,6 +259,10 @@ function traceEpoch(
       (time) => time >= window.start && time < window.end
     ).length,
   };
+}
+
+export function kernelChargedTime({ running, interrupted }: OnCoreTime) {
+  return running + interrupted;
 }
 
 function appTable(

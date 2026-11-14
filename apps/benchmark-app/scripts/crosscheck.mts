@@ -5,15 +5,31 @@ import type {
   CpuCounter,
   EpochReading,
   EpochWork,
+  InAppBoundary,
   InAppSample,
   SampledEpoch,
   TimeSpan,
 } from './in-app-sample.mts';
+import { kernelChargedTime } from './xctrace-metrics.mts';
 import type {
   FootprintSample,
+  OnCoreTime,
   TraceEpoch,
   TraceEpochSpans,
 } from './xctrace-metrics.mts';
+
+export interface BoundaryClock {
+  id: number;
+  appSignpostStartNs: number;
+  appSignpostEndNs: number;
+  traceNs: number;
+  offsetNs: number;
+}
+
+export interface BoundaryClocks {
+  unit: 'ns';
+  boundaries: BoundaryClock[];
+}
 
 export interface ClockMapping {
   offsetNs: number;
@@ -43,9 +59,12 @@ export interface WorkProof extends EpochWork {
   passes: boolean;
 }
 
+export type CpuField = 'uiThreadCpu' | 'jsThreadCpu' | 'processCpu';
+
 export interface CrosscheckEpoch extends SampledEpoch {
   index: number;
   windowSeconds: number;
+  traceOnCore: Record<CpuField, OnCoreTime>;
   uiThreadCpu: ComparedValue;
   jsThreadCpu: ComparedValue;
   processCpu: ComparedValue;
@@ -116,31 +135,42 @@ const MINIMUM_FOOTPRINT_COMPARISONS = 2;
 
 const NANOSECONDS_PER_MS = 1e6;
 
-const CPU_FIELDS: Record<
-  CpuCounter,
-  'uiThreadCpu' | 'jsThreadCpu' | 'processCpu'
-> = {
+const CPU_FIELDS: Record<CpuCounter, CpuField> = {
   uiThread: 'uiThreadCpu',
   jsThread: 'jsThreadCpu',
   process: 'processCpu',
 };
 
-export function mapAppClock(
-  sample: InAppSample,
-  boundaryTraceNs: readonly number[]
-): ClockMapping {
-  if (boundaryTraceNs.length !== sample.boundaries.length) {
+export function boundaryClocks(
+  boundaries: readonly Pick<
+    InAppBoundary,
+    'signpostStartNs' | 'signpostEndNs'
+  >[],
+  traceNs: readonly number[]
+): BoundaryClocks {
+  if (traceNs.length !== boundaries.length) {
     throw new ToolError(
-      `The trace has ${boundaryTraceNs.length} Boundary signposts of the app, and its SAMPLE line has ${sample.boundaries.length} boundaries`
+      `The trace has ${traceNs.length} Boundary signposts of the app, and its SAMPLE line has ${boundaries.length} boundaries`
     );
   }
-  const estimates = sample.boundaries.map((boundary, i) => ({
-    offsetNs:
-      boundaryTraceNs[i] -
-      (boundary.signpostStartNs + boundary.signpostEndNs) / 2,
-    halfWidthNs: (boundary.signpostEndNs - boundary.signpostStartNs) / 2,
-  }));
-  const offsets = estimates
+  return {
+    unit: 'ns',
+    boundaries: boundaries.map((boundary, id) => ({
+      id,
+      appSignpostStartNs: boundary.signpostStartNs,
+      appSignpostEndNs: boundary.signpostEndNs,
+      traceNs: traceNs[id],
+      offsetNs: boundaryOffset(
+        boundary.signpostStartNs,
+        boundary.signpostEndNs,
+        traceNs[id]
+      ),
+    })),
+  };
+}
+
+export function mapAppClock({ boundaries }: BoundaryClocks): ClockMapping {
+  const offsets = boundaries
     .map(({ offsetNs }) => offsetNs)
     .sort((left, right) => left - right);
   const spreadNs = offsets[offsets.length - 1] - offsets[0];
@@ -153,13 +183,62 @@ export function mapAppClock(
   return {
     offsetNs,
     uncertaintyNs: Math.max(
-      ...estimates.map(
-        (estimate) =>
-          Math.abs(estimate.offsetNs - offsetNs) + estimate.halfWidthNs
+      ...boundaries.map(
+        (boundary) =>
+          Math.abs(boundary.offsetNs - offsetNs) +
+          (boundary.appSignpostEndNs - boundary.appSignpostStartNs) / 2
       )
     ),
     spreadNs,
   };
+}
+
+export function clockProblems(
+  clocks: BoundaryClocks,
+  mapping: ClockMapping
+): string[] {
+  const problems = clocks.boundaries.flatMap((boundary, i) => {
+    const offsetNs = boundaryOffset(
+      boundary.appSignpostStartNs,
+      boundary.appSignpostEndNs,
+      boundary.traceNs
+    );
+    return [
+      ...(boundary.id === i ? [] : [`boundary ${i} has the id ${boundary.id}`]),
+      ...(offsetNs === boundary.offsetNs
+        ? []
+        : [
+            `boundary ${boundary.id}: the stored offset ${boundary.offsetNs} ns is not the trace time minus the middle of the app signpost (${offsetNs} ns)`,
+          ]),
+      ...(Math.abs(offsetNs - mapping.offsetNs) <= mapping.uncertaintyNs
+        ? []
+        : [
+            `boundary ${boundary.id}: its offset ${offsetNs} ns differs from the mapping (${mapping.offsetNs} ns) by more than its uncertainty (${mapping.uncertaintyNs} ns)`,
+          ]),
+    ];
+  });
+  let recomputed: ClockMapping | null = null;
+  try {
+    recomputed = mapAppClock({
+      unit: clocks.unit,
+      boundaries: clocks.boundaries.map((boundary) => ({
+        ...boundary,
+        offsetNs: boundaryOffset(
+          boundary.appSignpostStartNs,
+          boundary.appSignpostEndNs,
+          boundary.traceNs
+        ),
+      })),
+    });
+  } catch (error) {
+    return [...problems, (error as Error).message];
+  }
+  return isSameMapping(recomputed, mapping)
+    ? problems
+    : [
+        ...problems,
+        `the clock mapping (offset ${mapping.offsetNs} ns, uncertainty ${mapping.uncertaintyNs} ns, spread ${mapping.spreadNs} ns) does not follow from the boundary times (offset ${recomputed.offsetNs} ns, uncertainty ${recomputed.uncertaintyNs} ns, spread ${recomputed.spreadNs} ns)`,
+      ];
 }
 
 export function traceSpans(
@@ -213,6 +292,11 @@ export function compareEpochs(
       ...epoch,
       index,
       windowSeconds: reading.window.seconds,
+      traceOnCore: {
+        uiThreadCpu: trace.onCore.uiThread,
+        jsThreadCpu: trace.onCore.jsThread,
+        processCpu: trace.onCore.process,
+      },
       uiThreadCpu: cpuValue('uiThread'),
       jsThreadCpu: cpuValue('jsThread'),
       processCpu: cpuValue('process'),
@@ -265,13 +349,20 @@ export function rederivedEpoch(
 ): CrosscheckEpoch {
   const again = (value: ComparedValue, tolerance: Tolerance) =>
     compared(value.app, value.trace, tolerance, value.timingUncertainty);
+  const cpu = (field: CpuField) =>
+    compared(
+      epoch[field].app,
+      kernelChargedTime(epoch.traceOnCore[field]),
+      CPU_TOLERANCE,
+      epoch[field].timingUncertainty
+    );
   const duration = (value: ComparedValue | null) =>
     value === null ? null : again(value, UPDATE_DURATION_TOLERANCE);
   return {
     ...epoch,
-    uiThreadCpu: again(epoch.uiThreadCpu, CPU_TOLERANCE),
-    jsThreadCpu: again(epoch.jsThreadCpu, CPU_TOLERANCE),
-    processCpu: again(epoch.processCpu, CPU_TOLERANCE),
+    uiThreadCpu: cpu('uiThreadCpu'),
+    jsThreadCpu: cpu('jsThreadCpu'),
+    processCpu: cpu('processCpu'),
     mountBatchCount: again(epoch.mountBatchCount, EXACT),
     workProof: workProof(
       epoch.load,
@@ -463,6 +554,22 @@ function compared(
     tolerance: allowed,
     passes: Math.abs(signedError) <= allowed,
   };
+}
+
+function boundaryOffset(
+  appSignpostStartNs: number,
+  appSignpostEndNs: number,
+  traceNs: number
+): number {
+  return traceNs - (appSignpostStartNs + appSignpostEndNs) / 2;
+}
+
+function isSameMapping(left: ClockMapping, right: ClockMapping): boolean {
+  return (
+    left.offsetNs === right.offsetNs &&
+    left.uncertaintyNs === right.uncertaintyNs &&
+    left.spreadNs === right.spreadNs
+  );
 }
 
 function spanSeconds(span: TimeSpan): number {

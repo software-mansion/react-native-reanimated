@@ -12,6 +12,7 @@ import { ToolError } from './errors.mts';
 import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
+import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import type { ComparedMetric } from './metrics.mts';
 import {
   MINIMUM_BLOCKS,
@@ -24,15 +25,18 @@ import type {
 import { isScenario } from './scenarios.mts';
 import {
   STORED_CROSSCHECK,
+  STORED_EARLIER_CROSSCHECK,
   STORED_OBSERVER_COST,
   completeBlocks,
   identityDifferences,
   identityOf,
   readCrosscheckResult,
+  readEarlierCrosscheck,
   readObserverCostResult,
 } from './validation-sources.mts';
 import type {
   CrosscheckResult,
+  EarlierCrosscheck,
   ObserverCostResult,
   StoredSource,
   ValidationIdentity,
@@ -94,6 +98,7 @@ interface SourceSummaries {
 export interface ValidationRecord extends ValidationIdentity {
   formatVersion: typeof VALIDATION_FORMAT_VERSION;
   sources: ValidationSources;
+  earlierCrosschecks: StoredSource<EarlierCrosscheck>[];
   metrics: Partial<Record<ComparedMetric, MetricValidation>>;
 }
 
@@ -102,7 +107,7 @@ export interface MetricValidity {
   reason: string | null;
 }
 
-export const VALIDATION_FORMAT_VERSION = 3;
+export const VALIDATION_FORMAT_VERSION = 4;
 
 const MINIMUM_CROSSCHECKS = 2;
 
@@ -124,6 +129,7 @@ const RECORD_SHAPE: Check = shape({
     crosschecks: listOf(STORED_CROSSCHECK),
     observerCosts: listOf(STORED_OBSERVER_COST),
   }),
+  earlierCrosschecks: listOf(STORED_EARLIER_CROSSCHECK),
   metrics: valuesOf(
     shape({
       validated: aBoolean,
@@ -163,6 +169,9 @@ export function validationRecordCommand(
     ),
     options.observerCosts.map((folder) =>
       readObserverCostResult(path.resolve(folder))
+    ),
+    options.earlierCrosschecks.map((folder) =>
+      readEarlierCrosscheck(path.resolve(folder))
     )
   );
   console.log(JSON.stringify(record, null, 2));
@@ -171,7 +180,8 @@ export function validationRecordCommand(
 
 export function buildValidationRecord(
   crosschecks: readonly StoredSource<CrosscheckResult>[],
-  observerCosts: readonly StoredSource<ObserverCostResult>[]
+  observerCosts: readonly StoredSource<ObserverCostResult>[],
+  earlierCrosschecks: readonly StoredSource<EarlierCrosscheck>[] = []
 ): ValidationRecord {
   const identity = commonIdentity([...crosschecks, ...observerCosts]);
   const sources: ValidationSources = {
@@ -186,6 +196,7 @@ export function buildValidationRecord(
     formatVersion: VALIDATION_FORMAT_VERSION,
     ...identity,
     sources,
+    earlierCrosschecks: [...earlierCrosschecks],
     metrics: metricValidations(sources),
   };
 }
@@ -245,6 +256,11 @@ function commonIdentity(
       `${sources[0].folder} measured an app without an app build identity. Build the app with the driver.`
     );
   }
+  if (first.measurementRevision !== MEASUREMENT_REVISION) {
+    throw new ToolError(
+      `${sources[0].folder} is of the measurement revision ${first.measurementRevision}. This driver has the revision ${MEASUREMENT_REVISION}, and a source of another revision is not validation evidence for it.`
+    );
+  }
   for (const { folder, result } of sources.slice(1)) {
     const differences = identityDifferences(first, identityOf(result));
     if (differences.length > 0) {
@@ -258,6 +274,11 @@ function commonIdentity(
 
 function recordProblems(record: ValidationRecord): string[] {
   return [
+    ...(record.measurementRevision === MEASUREMENT_REVISION
+      ? []
+      : [
+          `it is of the measurement revision ${record.measurementRevision}, and this driver has the revision ${MEASUREMENT_REVISION}`,
+        ]),
     ...repeatedSources(record.sources),
     ...sourcesOfOtherSetups(record),
     ...inconsistentMetrics(record),

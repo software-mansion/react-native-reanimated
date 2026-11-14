@@ -5,6 +5,8 @@ import {
   compareEpochs,
   compareFootprints,
   crosscheckVerdict,
+  boundaryClocks,
+  clockProblems,
   mapAppClock,
   rederivedEpoch,
   rederivedFootprint,
@@ -24,6 +26,11 @@ const TRACE_OF_APP: TraceEpoch = {
   uiThreadCpu: 350,
   jsThreadCpu: 2,
   processCpu: 353,
+  onCore: {
+    uiThread: { running: 345, interrupted: 5 },
+    jsThread: { running: 2, interrupted: 0 },
+    process: { running: 348, interrupted: 5 },
+  },
   frameDurationsMs: Array.from({ length: 600 }, () => 6),
   mountBatchCount: 600,
 };
@@ -40,22 +47,80 @@ function loadEpoch(load: string, own: number, other: number): SampledEpoch {
 }
 
 describe('mapAppClock', () => {
-  it('gives the median offset of the Boundary signposts from the middle of their emission, and its uncertainty', () => {
-    assert.deepEqual(mapAppClock(SAMPLE, [5_025_000, 10_005_025_500]), {
+  it('keeps the times and the offset of each Boundary signpost, and gives the median offset and its uncertainty', () => {
+    const clocks = boundaryClocks(
+      SAMPLE.boundaries,
+      [5_025_000, 10_005_025_500]
+    );
+    assert.deepEqual(clocks, {
+      unit: 'ns',
+      boundaries: [
+        {
+          id: 0,
+          appSignpostStartNs: 22_000,
+          appSignpostEndNs: 28_000,
+          traceNs: 5_025_000,
+          offsetNs: 5_000_000,
+        },
+        {
+          id: 1,
+          appSignpostStartNs: 10_000_022_000,
+          appSignpostEndNs: 10_000_028_000,
+          traceNs: 10_005_025_500,
+          offsetNs: 5_000_500,
+        },
+      ],
+    });
+    const mapping = mapAppClock(clocks);
+    assert.deepEqual(mapping, {
       offsetNs: 5_000_500,
       uncertaintyNs: 3_500,
       spreadNs: 500,
     });
+    assert.deepEqual(clockProblems(clocks, mapping), []);
   });
 
   it('stops when the clocks differ by more than 1 ms or a boundary has no signpost', () => {
     assert.throws(
-      () => mapAppClock(SAMPLE, [5_025_000, 10_006_025_001]),
+      () =>
+        mapAppClock(
+          boundaryClocks(SAMPLE.boundaries, [5_025_000, 10_006_025_001])
+        ),
       /differ by 1000001 ns between the Boundary signposts, more than 1000000 ns/
     );
     assert.throws(
-      () => mapAppClock(SAMPLE, [5_025_000]),
+      () => boundaryClocks(SAMPLE.boundaries, [5_025_000]),
       /The trace has 1 Boundary signposts of the app, and its SAMPLE line has 2 boundaries/
+    );
+  });
+
+  it('finds a stored offset or a mapping that does not follow from the boundary times', () => {
+    const clocks = boundaryClocks(
+      SAMPLE.boundaries,
+      [5_025_000, 10_005_025_500]
+    );
+    const mapping = mapAppClock(clocks);
+    const [first, second] = clocks.boundaries;
+    assert.deepEqual(
+      clockProblems(
+        { ...clocks, boundaries: [first, { ...second, offsetNs: 5_000_400 }] },
+        mapping
+      ),
+      [
+        'boundary 1: the stored offset 5000400 ns is not the trace time minus the middle of the app signpost (5000500 ns)',
+      ]
+    );
+    assert.deepEqual(
+      clockProblems(clocks, {
+        ...mapping,
+        offsetNs: 4_990_000,
+        uncertaintyNs: 100,
+      }),
+      [
+        'boundary 0: its offset 5000000 ns differs from the mapping (4990000 ns) by more than its uncertainty (100 ns)',
+        'boundary 1: its offset 5000500 ns differs from the mapping (4990000 ns) by more than its uncertainty (100 ns)',
+        'the clock mapping (offset 4990000 ns, uncertainty 100 ns, spread 500 ns) does not follow from the boundary times (offset 5000500 ns, uncertainty 3500 ns, spread 500 ns)',
+      ]
     );
   });
 });
@@ -348,14 +413,27 @@ describe('the footprint rows around a read', () => {
 });
 
 describe('rederivedEpoch', () => {
+  const trace = {
+    ...TRACE_OF_APP,
+    uiThreadCpu: 300,
+    onCore: {
+      ...TRACE_OF_APP.onCore,
+      uiThread: { running: 290, interrupted: 10 },
+    },
+  };
+
   it('gives each stored outcome of an epoch again from its values', () => {
     const [epoch] = compareEpochs(
       EPOCHS,
       [READING],
-      [{ ...TRACE_OF_APP, uiThreadCpu: 300 }],
+      [trace],
       { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
       60
     );
+    assert.deepEqual(epoch.traceOnCore.uiThreadCpu, {
+      running: 290,
+      interrupted: 10,
+    });
     assert.deepEqual(rederivedEpoch(epoch, 60), epoch);
     const forged = {
       ...epoch,
@@ -363,6 +441,25 @@ describe('rederivedEpoch', () => {
       workProof: { ...epoch.workProof, passes: false },
     };
     assert.deepEqual(rederivedEpoch(forged, 60), epoch);
+  });
+
+  it('takes the reference of a CPU value from Running plus Interrupted, not from the stored trace value', () => {
+    const [epoch] = compareEpochs(
+      EPOCHS,
+      [READING],
+      [trace],
+      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
+      60
+    );
+    const rederived = rederivedEpoch(
+      {
+        ...epoch,
+        uiThreadCpu: { ...epoch.uiThreadCpu, trace: 350, passes: true },
+      },
+      60
+    );
+    assert.equal(rederived.uiThreadCpu.trace, 300);
+    assert.equal(rederived.uiThreadCpu.passes, false);
   });
 });
 

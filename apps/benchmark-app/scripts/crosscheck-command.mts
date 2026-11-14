@@ -8,6 +8,8 @@ import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import {
   CROSSCHECK_TOLERANCES,
+  boundaryClocks,
+  clockProblems,
   compareEpochs,
   compareFootprints,
   crosscheckVerdict,
@@ -15,8 +17,10 @@ import {
   traceSpans,
 } from './crosscheck.mts';
 import type {
+  BoundaryClocks,
   ClockMapping,
   ComparedValue,
+  CpuField,
   CrosscheckEpoch,
   CrosscheckVerdict,
   FootprintComparison,
@@ -42,6 +46,7 @@ import {
   writeCrosscheckResult,
 } from './validation-sources.mts';
 import type { CrosscheckResult } from './validation-sources.mts';
+import { throwProblems } from './validation.mts';
 import {
   readBoundarySignposts,
   readFootprints,
@@ -108,7 +113,15 @@ export async function crosscheckCommand(
   const readings = sample.epochs.map((_, index) =>
     readEpoch(sample, index, refreshRate)
   );
-  const clock = mapAppClock(sample, readBoundarySignposts(exports, app.pid));
+  const clocks = boundaryClocks(
+    sample.boundaries,
+    readBoundarySignposts(exports, app.pid)
+  );
+  const clock = mapAppClock(clocks);
+  throwProblems(
+    'The clock mapping does not follow from the Boundary signposts',
+    clockProblems(clocks, clock)
+  );
   const traced = readTraceEpochs(
     exports,
     {
@@ -145,6 +158,8 @@ export async function crosscheckCommand(
     refreshRate,
     tolerances: CROSSCHECK_TOLERANCES,
     thermalState: highestThermalState(sample),
+    appBoundaries: sample.boundaries,
+    boundaryClocks: clocks,
     clock,
     epochs,
     footprints,
@@ -154,7 +169,7 @@ export async function crosscheckCommand(
   writeCrosscheckResult(folder, result);
   fs.writeFileSync(
     path.join(folder, REPORT_FILE),
-    crosscheckReport(epochs, footprints, verdict, clock)
+    crosscheckReport(epochs, footprints, verdict, clocks, clock)
   );
   log(
     `counters within the gates: ${yesNo(verdict.counters)}; the loads ran: ${yesNo(verdict.loadsRan)}; memory: ${verdict.memory}; UI update quantiles within tolerance of the trace frames: ${yesNo(verdict.updateDurationQuantilesWithinTolerance)}`
@@ -216,18 +231,23 @@ function crosscheckReport(
   epochs: readonly CrosscheckEpoch[],
   footprints: readonly FootprintComparison[],
   verdict: CrosscheckVerdict,
+  clocks: BoundaryClocks,
   clock: ClockMapping
 ): string {
   const epochRows = epochs.flatMap((epoch) => {
-    const values: [string, ComparedValue | null][] = [
-      ['uiThreadCpu (ms/s)', epoch.uiThreadCpu],
-      ['jsThreadCpu (ms/s)', epoch.jsThreadCpu],
-      ['processCpu (ms/s)', epoch.processCpu],
-      ['mountBatchCount', epoch.mountBatchCount],
-      ['uiUpdateDurationMedian (ms)', epoch.uiUpdateDurationMedian],
-      ['uiUpdateDurationP95 (ms)', epoch.uiUpdateDurationP95],
+    const onCore = (field: CpuField) => [
+      numberText(epoch.traceOnCore[field].running),
+      numberText(epoch.traceOnCore[field].interrupted),
     ];
-    return values.flatMap(([metric, value]) =>
+    const values: [string, ComparedValue | null, string[]][] = [
+      ['uiThreadCpu (ms/s)', epoch.uiThreadCpu, onCore('uiThreadCpu')],
+      ['jsThreadCpu (ms/s)', epoch.jsThreadCpu, onCore('jsThreadCpu')],
+      ['processCpu (ms/s)', epoch.processCpu, onCore('processCpu')],
+      ['mountBatchCount', epoch.mountBatchCount, ['-', '-']],
+      ['uiUpdateDurationMedian (ms)', epoch.uiUpdateDurationMedian, ['-', '-']],
+      ['uiUpdateDurationP95 (ms)', epoch.uiUpdateDurationP95, ['-', '-']],
+    ];
+    return values.flatMap(([metric, value, states]) =>
       value === null
         ? []
         : [
@@ -236,11 +256,21 @@ function crosscheckReport(
               epoch.load,
               epoch.collector,
               metric,
+              ...states,
               ...comparedCells(value),
             ]),
           ]
     );
   });
+  const clockRows = clocks.boundaries.map((boundary) =>
+    tableRow([
+      String(boundary.id),
+      String(boundary.appSignpostStartNs),
+      String(boundary.appSignpostEndNs),
+      String(boundary.traceNs),
+      String(boundary.offsetNs),
+    ])
+  );
   const footprintRows = footprints.map((value) =>
     tableRow([
       String(value.boundary),
@@ -263,10 +293,25 @@ function crosscheckReport(
   return `${[
     '# Cross-check of the in-app counters with Instruments',
     '',
-    `Clock of the app to the clock of the trace: offset ${clock.offsetNs} ns, uncertainty ${clock.uncertaintyNs} ns, spread ${clock.spreadNs} ns. The tolerance of a CPU value includes its timing uncertainty.`,
+    `Method (measurement revision ${MEASUREMENT_REVISION}):`,
     '',
-    '| Epoch | Load | Collector | Metric | App | Trace | Signed error | Absolute error | Relative error | Timing uncertainty | Tolerance | Within |',
-    `|${' --- |'.repeat(12)}`,
+    '- Thread selection: the main thread is `mainThread` of the LAUNCH line, the JS thread is `jsThread` of the READY line, and the process is all threads of the app process.',
+    '- Reference: the `Running` time plus the `Interrupted` time of the table `thread-state` of the selected threads (kernel-charged CPU time). The table shows both parts.',
+    '- Clipping: each `thread-state` row is cut to the span of its counter, from the middle of its start read to the middle of its end read, moved to the clock of the trace.',
+    '- Clock mapping: for each `Boundary` signpost, the offset is its trace time minus the middle of its two clock reads in the app. The mapping is the median offset; its uncertainty is the largest distance of an offset from the median plus the half width of its clock reads. The driver computes each offset again from the stored times, and a difference from the mapping that is more than the uncertainty is a tool error.',
+    '- Relative error: the signed error divided by the reference.',
+    '- Failure rule: a CPU value passes when its error is within max(1 ms/s, 2% of the reference) plus its timing uncertainty. A failure in any epoch keeps the metric unvalidated.',
+    '',
+    `Clock of the app to the clock of the trace: offset ${clock.offsetNs} ns, uncertainty ${clock.uncertaintyNs} ns, spread ${clock.spreadNs} ns.`,
+    '',
+    '| Boundary | App signpost start (ns) | App signpost end (ns) | Trace (ns) | Offset (ns) |',
+    `|${' --- |'.repeat(5)}`,
+    ...clockRows,
+    '',
+    'App times are from the start of the first counter read of the app; trace times are from the start of the trace.',
+    '',
+    '| Epoch | Load | Collector | Metric | Trace Running | Trace Interrupted | App | Trace | Signed error | Absolute error | Relative error | Timing uncertainty | Tolerance | Within |',
+    `|${' --- |'.repeat(14)}`,
     ...epochRows,
     '',
     ...epochLines,

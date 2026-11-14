@@ -26,6 +26,8 @@ const SPAN: TimeSpan = { startNs: 1_856_890_916, endNs: 1_906_890_916 };
 const SECONDS = 0.05;
 const MAIN_RUNNING_MS = 19.773169;
 const JS_RUNNING_MS = 0.113417;
+const MAIN_INTERRUPTED_MS = 0.388831;
+const MAIN_ON_CORE_MS = MAIN_RUNNING_MS + MAIN_INTERRUPTED_MS;
 const OTHER_PID = 9999;
 const APP: TracedIosApp = {
   pid: 8865,
@@ -150,11 +152,17 @@ function syntheticThreadState(rows: string[]): string {
 }
 
 describe('readTraceEpochs', () => {
-  it('gives the CPU time for each second, the frames and the mount batches of a span of a real export', () => {
+  it('gives the Running and the Interrupted time for each second, their sum, the frames and the mount batches of a span of a real export', () => {
     const epoch = onlyEpoch();
-    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
+    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
+    assertClose(epoch.onCore.uiThread.running, MAIN_RUNNING_MS / SECONDS);
+    assertClose(
+      epoch.onCore.uiThread.interrupted,
+      MAIN_INTERRUPTED_MS / SECONDS
+    );
     assertClose(epoch.jsThreadCpu, JS_RUNNING_MS / SECONDS);
-    assertClose(epoch.processCpu, (MAIN_RUNNING_MS + JS_RUNNING_MS) / SECONDS);
+    assertClose(epoch.onCore.jsThread.interrupted, 0);
+    assertClose(epoch.processCpu, (MAIN_ON_CORE_MS + JS_RUNNING_MS) / SECONDS);
     assert.equal(epoch.frameDurationsMs.length, 3);
     assertClose(
       [...epoch.frameDurationsMs].sort((left, right) => left - right)[1],
@@ -189,7 +197,7 @@ describe('readTraceEpochs', () => {
     const [firstHalf] = readTraceEpochs(EXPORTS, APP, [
       spans({ startNs: SPAN.startNs, endNs: middle }),
     ]);
-    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
+    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
     assertClose(epoch.jsThreadCpu, firstHalf.jsThreadCpu);
   });
 
@@ -226,6 +234,40 @@ describe('readTraceEpochs', () => {
     assert.deepEqual(epoch, onlyEpoch());
   });
 
+  it('counts Interrupted rows as on-core time and leaves out Preempted and Runnable rows', () => {
+    const epoch = onlyEpoch({
+      ...EXPORTS,
+      threadState: withRows(EXPORTS.threadState, [
+        threadRow({
+          start: SPAN.startNs + 1_000_000,
+          thread: 77,
+          state: 'Interrupted',
+          duration: 2_000_000,
+        }),
+        threadRow({
+          start: SPAN.startNs + 4_000_000,
+          thread: 77,
+          state: 'Preempted',
+          duration: 3_000_000,
+        }),
+        threadRow({
+          start: SPAN.startNs + 8_000_000,
+          thread: 77,
+          state: 'Runnable',
+          duration: 3_000_000,
+        }),
+      ]),
+    });
+    assertClose(
+      epoch.onCore.process.interrupted,
+      (MAIN_INTERRUPTED_MS + 2) / SECONDS
+    );
+    assertClose(
+      epoch.processCpu,
+      (MAIN_ON_CORE_MS + JS_RUNNING_MS + 2) / SECONDS
+    );
+  });
+
   it('cuts the Running time to the span', () => {
     const epoch = onlyEpoch({
       ...EXPORTS,
@@ -252,9 +294,9 @@ describe('readTraceEpochs', () => {
     });
     assertClose(
       epoch.processCpu,
-      (MAIN_RUNNING_MS + JS_RUNNING_MS + 15) / SECONDS
+      (MAIN_ON_CORE_MS + JS_RUNNING_MS + 15) / SECONDS
     );
-    assertClose(epoch.uiThreadCpu, MAIN_RUNNING_MS / SECONDS);
+    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
   });
 
   it('counts the frames that are fully in the span and the mount batches from its start to before its end', () => {

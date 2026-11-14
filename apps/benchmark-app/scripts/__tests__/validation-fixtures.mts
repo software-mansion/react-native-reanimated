@@ -4,6 +4,7 @@ import path from 'node:path';
 import {
   CROSSCHECK_TOLERANCES,
   WORK_LOADS,
+  boundaryClocks,
   compareEpochs,
   crosscheckVerdict,
   rederivedEpoch,
@@ -11,7 +12,7 @@ import {
 } from '../crosscheck.mts';
 import type { CrosscheckEpoch, FootprintComparison } from '../crosscheck.mts';
 import { readEpoch } from '../in-app-sample.mts';
-import type { Collector } from '../in-app-sample.mts';
+import type { Collector, InAppBoundary } from '../in-app-sample.mts';
 import {
   BLOCK_ORDER,
   OBSERVER_COST_METRICS,
@@ -32,7 +33,7 @@ import type {
   ObserverCostResult,
   ValidationIdentity,
 } from '../validation-sources.mts';
-import { inAppSample } from './ios-fixtures.mts';
+import { START_BOUNDARY, inAppSample } from './ios-fixtures.mts';
 
 export type Plan = readonly (readonly [string, Collector])[];
 
@@ -68,6 +69,11 @@ export function crosscheckEpochs(
         uiThreadCpu,
         jsThreadCpu: 2,
         processCpu: 353,
+        onCore: {
+          uiThread: { running: uiThreadCpu - 5, interrupted: 5 },
+          jsThread: { running: 2, interrupted: 0 },
+          process: { running: 348, interrupted: 5 },
+        },
         frameDurationsMs: [],
         mountBatchCount: 600,
       },
@@ -94,6 +100,26 @@ export function crosscheckEpochs(
       REFRESH_RATE
     )
   );
+}
+
+export function appBoundaries(count: number): InAppBoundary[] {
+  return Array.from({ length: count }, (_, boundary) => {
+    const at = (ns: number) => boundary * 1e9 + ns;
+    return {
+      ...START_BOUNDARY,
+      uiReadStartNs: at(100),
+      uiReadEndNs: at(150),
+      jsReadStartNs: at(200),
+      jsReadEndNs: at(250),
+      processReadStartNs: at(300),
+      processReadEndNs: at(350),
+      footprintReadStartNs: at(500),
+      footprintReadEndNs: at(600),
+      signpostStartNs: at(700),
+      signpostEndNs: at(700),
+      footprintKb: 40_000,
+    };
+  });
 }
 
 export function footprints(
@@ -149,6 +175,7 @@ export function validationSources(
     const folder = path.join(directory, name);
     fs.mkdirSync(folder, { recursive: true });
     const planned = change.epochs ?? crosscheckEpochs(plan);
+    const boundaries = appBoundaries(plan.length + 1);
     const compared = change.footprints ?? footprints(plan.length + 1);
     writeCrosscheckResult(folder, {
       ...source,
@@ -165,6 +192,11 @@ export function validationSources(
       refreshRate: REFRESH_RATE,
       tolerances: CROSSCHECK_TOLERANCES,
       thermalState: 0,
+      appBoundaries: boundaries,
+      boundaryClocks: boundaryClocks(
+        boundaries,
+        boundaries.map((boundary) => boundary.signpostStartNs)
+      ),
       clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
       epochs: planned,
       footprints: compared,

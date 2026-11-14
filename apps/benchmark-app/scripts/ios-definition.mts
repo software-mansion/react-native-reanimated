@@ -27,7 +27,7 @@ const IN_APP_STATE: Record<keyof AppState | 'refreshRate', Check> = {
 };
 
 const CPU_LIMIT =
-  'Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core.';
+  'Kernel-charged CPU time: it includes the interrupt time that the kernel charges to the running thread, also interrupt handling on its core that is not app work. So it is more than the `Running` time of Instruments; the cross-check compares it with `Running` plus `Interrupted` of `thread-state`. In an A/B comparison both variants are measured the same way, but equal methods do not prove equal background interrupt load: a change of interrupt time can come from library work, and the counters alone do not show the cause. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core.';
 
 const UPDATE_LIMIT =
   'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments: the cross-check only compares the median and the 95th percentile with that table. No verdict.';
