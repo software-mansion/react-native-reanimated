@@ -70,7 +70,7 @@ The driver writes the path of the run folder to stderr at the start. The report 
 ## Commands
 
 ```sh
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks 5] [--noise-limits <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks 5] [--noise-limits <file.json>] [--validation <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device> [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> --serial <adb serial> [--output-dir <dir>] [--launches 2] [--interval 60] [--duration 1200] [--slope-limit 1000] [--keep-traces] [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> --serial <adb serial> [--trace-processor <path>]
@@ -78,16 +78,17 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-l
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks 5] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...]
 ```
 
 - `<device>` is `--serial <adb serial>` (Android) or `--udid <UDID>` (iOS).
-- `--trace-processor`, `--keep-traces` and `--keep-trace` are for Android only. `--sign-command` is for iOS only, and an iOS `run` needs it.
+- `--trace-processor`, `--keep-traces` and `--keep-trace` are for Android only. `--sign-command` and `--validation` are for iOS only, and an iOS `run` needs `--sign-command`.
 - `run` builds A and B, installs them and measures each scenario of the config in blocks. A block measures A, B, B, A, and each second block measures B, A, A, B. `--blocks` sets the number of blocks for each scenario.
 - `run --resume` continues a run that is not `done`. See [Stopped runs](#stopped-runs).
 - `memory` reads the memory of A and B in one scenario for a long time. See [Memory test](#memory-test).
 - `noise-limits` reads A/A runs and writes a noise limits record to stdout. See [Calibration](#calibration).
 - `sample` measures one scenario of an installed app one time and writes the metrics as JSON to stdout. Use it to find the load of a scenario.
-- `crosscheck` and `observer-cost` (iOS only) validate the in-app collector of iOS. See [Validation of the iOS collector](#validation-of-the-ios-collector).
+- `crosscheck` and `observer-cost` (iOS only) validate the in-app collector of iOS, and `validation-record` writes a validation record from their folders to stdout. See [Validation of the iOS collector](#validation-of-the-ios-collector).
 
 ## Config
 
@@ -204,8 +205,10 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 - After each install, the driver launches the app one time and stops it, because the first launch after an install is slow.
 - The driver gives the app a sample plan as launch arguments: `-benchmarkEpochs none:full:10 -benchmarkStart ready`. At READY, the app starts a window of 10 s on a strict timer of the main queue. The [benchmark app](../README.md#ios-collector) reads its counters at the start and at the end of the window, records each UI update in the window into a buffer that it allocates before the window, and writes one `SAMPLE` line after the window. It writes no text during the window. The driver stops the app after the `SAMPLE` line. A sample has no trace, and no Instruments recording runs.
 - `crash`: the app writes `FAILED`, the console command ends before the `SAMPLE` line, or the `SAMPLE` line does not come in 40 s after READY (the plan and 30 s). `thermal`: a counter read or a notification of the app in the window shows a state above `Nominal`. `frames`: the app has fewer UI updates than 90% of the display refreshes of the window. The update share of a scenario does not apply on iOS: the expected count is all display refreshes, because the app has a UI update on each refresh while a display link of React Native or Reanimated runs (`idle-cost` too).
-- These are tool errors: a launch command that does not start the app, a READY line without a LAUNCH line or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, an error of the sampler in the `SAMPLE` line (a failed counter read, a thread id that changed, an update without its two phases, a full buffer), a `SAMPLE` line of other threads than the LAUNCH and READY lines give, a counter that goes down, a process CPU time less than the sum of the two threads, counter reads that take more than 0.1% of the window, a UI update outside the window, and UI updates that are not on a fixed cadence of the display. A LAUNCH or READY line that comes at or after its time limit of 60 s does not count. After each launch, the driver stops the console and the app, also after a tool error.
-- The verdict metrics are the CPU time of the main thread and the JS thread, and the memory. The UI update metrics have no verdict before the [cross-check](#validation-of-the-ios-collector) with Instruments passes on the phone, and their name does not say that they are frame durations.
+- These are tool errors: a launch command that does not start the app, a READY line without a LAUNCH line or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, an error of the sampler in the `SAMPLE` line (a failed counter read, a thread id that changed, an update without its two phases, a full buffer), a `SAMPLE` line of other threads than the LAUNCH and READY lines give, a counter that goes down, a process CPU time less than the sum of the two threads by more than the read delay and the counter resolution, counter reads that take more than 0.1% of the window, a UI update outside the window, UI updates that are not on a fixed cadence of the display, and a window in which each UI update is 2 or more display periods after the one before it.
+- Each counter read has its own two clock reads, and the `Boundary` signpost too. A CPU value uses the span between the reads of its own counter. Its timing uncertainty is the sum of the half widths of its two reads and 1 µs (the counter resolution), over the span. The process value is read last, so it can be less than the sum of the two threads by at most the time from the start of each thread read to the end of the process read at the start of the window, and 3 µs.
+- The report gives the count of invalid samples for each cause and variant. A LAUNCH or READY line that comes at or after its time limit of 60 s does not count. After each launch, the driver stops the console and the app, also after a tool error.
+- The verdict metrics are the CPU time of the main thread and the JS thread, and the memory. A verdict metric gets a verdict only when a [validation record](#validation-record) (`--validation`) validates it for the phone model, the phone, the OS build, the measurement revision and the app sources of the run. Without such a record, the driver measures the metric, the report shows its row as `unvalidated` with no verdict, and an expectation that selects it is `not decided`. The UI update metrics have no verdict, and their name does not say that they are frame durations.
 
 | Metric | Unit | Source | Interval | Limits | Verdict |
 | --- | --- | --- | --- | --- | --- |
@@ -234,7 +237,7 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 
 `run`, `sample` and `observer-cost` make no Instruments recording, so the Instruments service of the phone does not allocate a trace for them. Their storage use on the phone is not measured.
 
-`crosscheck` records with `xctrace`. On an iPhone 14 with iOS 27 and Xcode 27.2, the Instruments service of the phone (`DTServiceHub`) writes the kernel trace of each recording to a file on the phone and keeps that space while the service runs. The space does not come back at the end of the recording, and the driver does not free it. In one test of 10 s for all processes with the instruments Thread Activity, Hitches, Thermal State and `os_signpost`, the file had 346 MB, and the free space fell by 355 MB. Check the free space of the phone before each `crosscheck`.
+`crosscheck` records with `xctrace` (the instruments Thread Activity, Hitches, `os_signpost` and Activity Monitor). On an iPhone 14 with iOS 27 and Xcode 27.2, the Instruments service of the phone (`DTServiceHub`) writes the kernel trace of each recording to a file on the phone and keeps that space while the service runs. The space does not come back at the end of the recording, and the driver does not free it. In one test of 10 s for all processes with the instruments Thread Activity, Hitches, Thermal State and `os_signpost`, the file had 346 MB, and the free space fell by 355 MB. The cost of Activity Monitor in this file is not measured. Check the free space of the phone before each `crosscheck`.
 
 ## Verdicts
 
@@ -248,7 +251,7 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 1. The row passes the Benjamini-Hochberg procedure at 0.05 over all verdict rows of the run. The p-value comes from an exact two-sided permutation test of the rank sum (Wilcoxon rank-sum).
 1. The difference is larger than the noise limit of the row.
 
-`jankyFrames` is often near 0, so the driver compares it as an absolute difference, and the report gives it in percentage points (pp). The other metrics use the relative difference. When the median of A, or the median of A in a bootstrap draw, is 0 or less, the row uses the absolute difference, and the report marks it. Its noise limit is then the relative limit times the median of A, or no limit when that median is 0 or less.
+A share (`jankyFrames`, `missedDisplayLinkCallbacks`) is often near 0, so the driver compares it as an absolute difference, and the report gives it in percentage points (pp). The other metrics use the relative difference. When the median of A, or the median of A in a bootstrap draw, is 0 or less, the row uses the absolute difference, and the report marks it. Its noise limit is then the relative limit times the median of A, or no limit when that median is 0 or less.
 
 ## Stopped runs
 
@@ -256,7 +259,7 @@ A run stops on a tool error or an interrupt. The driver then writes `result.json
 
 `run --resume <run folder> <device>` continues the run in the same folder:
 
-- It uses the config, the blocks, the noise limits and `--keep-traces` of `result.json`. The adb serial can change, but the phone must be the same.
+- It uses the config, the blocks, the noise limits, the validation record and `--keep-traces` of `result.json`. The adb serial can change, but the phone must be the same.
 - It stops when the run is `done`, when an install file (the APK, or the signed `.ipa`) is missing or changed (SHA-256 in `result.json`), when the tool versions changed, when the phone state changed, or when the measurement revision of the run is not the revision of the driver. A run cannot continue on the other platform.
 - It does not build or sign. It installs A and B again. It keeps the complete scenarios and, in the incomplete scenario, the accepted blocks. It moves the other samples of that scenario to `abandonedScenarios`, and the count of invalid blocks starts at 0 again.
 - The battery temperature at the start of the run stays the reference for the cool-down, and the refresh rate of the first sample stays the reference for the run.
@@ -300,26 +303,52 @@ The workflows have no secrets, signing keys or provisioning profiles, and no `pu
 
 ## Validation of the iOS collector
 
-Two commands compare the in-app collector with independent data. Their output is not a benchmark sample. Each command needs an installed app (for example the signed `.ipa` of a run, installed with `xcrun devicectl device install app`).
+Three commands validate the in-app collector of iOS on one phone. `crosscheck` and `observer-cost` measure; their output is not a benchmark sample. Each needs an installed app that the driver built (for example the signed `.ipa` of a run, installed with `xcrun devicectl device install app`), because the record compares the hash of the app sources. `validation-record` reads their folders and writes the record that `run --validation` uses.
 
-`crosscheck` launches the app with a plan of epochs that starts on a Darwin notification, records the app with `xctrace` (the instruments Thread Activity, Hitches and `os_signpost`, for the length of the plan and 3 s), and posts the notification when `xctrace` writes that the recording started. `--epochs` gives each epoch as `<load>:<collector>:<seconds>`. The collector is `full` (counter reads, UI updates and mount count) or `endpoints` (only the counter reads). The app writes a `Boundary` signpost after the counter read at each epoch boundary. The driver maps the clock of the app to the clock of the trace with these signposts (a spread of more than 1 ms is a tool error), cuts the scheduler intervals to each epoch, and compares for each epoch:
+### Cross-check
 
-- `uiThreadCpu`, `jsThreadCpu`, `processCpu` with the `Running` time of the table `thread-state`: within max(1 ms/s, 2%),
-- `mountBatchCount` with the starts of the React Native section `RCTPerformMountInstructions`: exact,
-- the median and the 95th percentile of the UI update durations with the rows of `hitches-updates`: within max(0.25 ms, 5%). Only when all of these pass can a report call the UI update durations equal to the frame durations of Instruments.
+`crosscheck` launches the app with a plan of epochs that starts on a Darwin notification, records the app with `xctrace` (the instruments Thread Activity, Hitches, `os_signpost` and Activity Monitor, for the length of the plan and 3 s), and posts the notification when `xctrace` writes that the recording started. `--epochs` gives each epoch as `<load>:<collector>:<seconds>`. The collector is `full` (counter reads, UI updates and mount count) or `endpoints` (only the counter reads). When the recording fails or the app ends, the driver stops the wait for the `SAMPLE` line and stops the app.
 
-The scenario can be a benchmark scenario, or the validation scenario `crosscheck-load` of the app. In `crosscheck-load`, the load of each epoch is `idle`, `ui-stall` (6 ms of busy work on the UI thread in each frame), `js-load` (6 ms of busy work on the JS thread in each frame) or `render-heavy` (a new render of all views in each frame). The folder has `crosscheck.json` (all values with the signed, absolute and relative errors), `crosscheck.md` and the trace. The exit code is 0 when the counters pass.
+The app writes a `Boundary` signpost after the counter reads at each epoch boundary, between two clock reads. The driver maps the clock of the app to the clock of the trace with the median offset of these signposts from the middle of their two clock reads. A spread of the offsets of more than 1 ms is a tool error. The clock uncertainty is the largest distance of an offset from the median, plus the half width of its clock reads. The driver moves the span of each counter read to the trace and compares for each epoch:
+
+- `uiThreadCpu`, `jsThreadCpu` and `processCpu` with the `Running` time of the table `thread-state` in the span of the same counter: within max(1 ms/s, 2%) plus the timing uncertainty. The timing uncertainty is the uncertainty of the counter reads and two times the clock uncertainty, over the span. The report gives it next to each error.
+- `mountBatchCount` with the starts of the React Native section `RCTPerformMountInstructions`: exact.
+- The work of the load: in `crosscheck-load`, each load counts its work units for the current epoch. A `ui-stall`, `js-load` or `render-heavy` epoch must have its own units in at least half of the display refreshes of the epoch, and each epoch must have units of the other loads in at most 10% of them.
+- The median and the 95th percentile of the UI update durations with the rows of `hitches-updates`: within max(0.25 ms, 5%). The two quantities are not the same (see the metric table), so a pass says only that these quantiles are within the tolerance.
+- `phys_footprint` at each boundary with `memory-physical-footprint` (bytes) of the table `activity-monitor-process-live` at the same time: within max(1024 kB, 2%). The driver interpolates between the two Activity Monitor rows around the boundary, and it uses no row that is more than 2 s away. With fewer than 2 boundaries that have a value, memory is `not available`.
+
+The scenario can be a benchmark scenario, or the validation scenario `crosscheck-load` of the app. In `crosscheck-load`, the load of each epoch is `idle`, `ui-stall` (6 ms of busy work on the UI thread on each display refresh, from a display link of the app), `js-load` (6 ms of busy work on the JS thread in each animation frame) or `render-heavy` (a new render of all views in each animation frame). The folder has `crosscheck.json` (all values with the signed, absolute and relative errors and the timing uncertainty), `crosscheck.md` and the trace. The exit code is 0 when the counters pass and the loads ran.
+
+Each plan below measures 10 s, as a sample of `run` does:
 
 ```sh
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
   --package com.reanimatedbenchmark.a --scenario worklet-styles-transform \
-  --epochs steady:full:2,steady:endpoints:2,steady:endpoints:2,steady:full:2
+  --epochs steady:full:2.5,steady:endpoints:2.5,steady:endpoints:2.5,steady:full:2.5
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
   --package com.reanimatedbenchmark.a --scenario crosscheck-load \
-  --epochs idle:full:2,ui-stall:full:2,js-load:full:2,render-heavy:full:2
+  --epochs idle:full:2.5,ui-stall:full:2.5,js-load:full:2.5,render-heavy:full:2.5
 ```
 
-`observer-cost` measures the CPU cost of the collector without Instruments. It takes `--blocks` blocks (default 5) of 4 samples: full collector, only the counter reads, only the counter reads, full collector. For `uiThreadCpu`, `jsThreadCpu` and `processCpu`, it gives the medians of the two modes, their relative difference and its 95% bootstrap interval (the method of the verdicts). With `--noise-limits`, the interval of a metric with a limit must be inside one quarter of the limit, or the exit code is 1. The folder has `observer-cost.json` and `observer-cost.md`.
+### Observer cost
+
+`observer-cost` measures the cost of the collector without Instruments. It takes `--blocks` blocks (at least 5, default 5) of 4 samples: full collector, only the counter reads, only the counter reads, full collector. For `uiThreadCpu`, `jsThreadCpu`, `processCpu` and `memory` (the footprint at the end read), it gives the medians of the two modes, their relative difference and its 95% interval. The bootstrap of the interval draws whole blocks with their four samples (seed 20261114, 10000 draws). With `--noise-limits`, the driver checks the version and the load of the scenario that each launch reports against the record, and the allowed band of a metric is one quarter of its noise limit:
+
+- `passed`: the interval is inside the band.
+- `failed`: the interval is fully outside the band.
+- `not validated`: the interval crosses a bound (take more blocks), the metric has no noise limit, or the test has fewer than 5 blocks.
+
+The exit code is 0 only when each verdict metric is `passed`. The folder has `observer-cost.json` and `observer-cost.md`.
+
+### Validation record
+
+`validation-record --crosscheck <folder> ... --observer-cost <folder> ...` writes a record to stdout. All folders must have one platform, phone model, phone, OS build, measurement revision and app sources hash, or the command stops. The record has `formatVersion` (1), these values, `sources` (the folders) and, for each verdict metric, `validated` and its gates with their result (`passed`, `failed` or `not validated`). A metric is validated only when each gate passes:
+
+1. At least 2 cross-checks and observer-cost tests of at least 2 scenarios.
+1. In each cross-check: the thermal state stayed `Nominal`. For a CPU metric also the loads ran, and the metric passed in each epoch. For `memory` also the footprint passed against Activity Monitor.
+1. In each observer-cost test: the metric is `passed`.
+
+`run --validation <record>` uses the record when its platform, phone model, phone, OS build, measurement revision and app sources hash are the values of the run. The run stores the record in `result.json`, and the report names the validated metrics and the reason for the others.
 
 ## Not supported
 
