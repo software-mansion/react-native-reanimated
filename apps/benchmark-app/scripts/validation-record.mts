@@ -26,6 +26,7 @@ import {
   STORED_EARLIER_CROSSCHECK,
   STORED_OBSERVER_COST,
   completeBlocks,
+  crosscheckThermalState,
   identityDifferences,
   identityOf,
   readCrosscheckResult,
@@ -392,7 +393,7 @@ function crosscheckSummary({
     folder,
     trace: path.resolve(result.trace),
     scenario: result.scenario,
-    thermalState: result.thermalState,
+    thermalState: crosscheckThermalState(result),
     loadsRan: verdict.loadsRan,
     epochs: epochs.map((epoch) => ({
       load: epoch.load,

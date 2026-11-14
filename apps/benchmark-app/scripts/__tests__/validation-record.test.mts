@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, it } from 'node:test';
@@ -25,6 +26,7 @@ import { useTestRoot } from './command-fake.mts';
 import {
   LOADS_PLAN,
   STEADY_PLAN,
+  appBoundaries,
   crosscheckEpochs,
   footprints,
   validationSources,
@@ -68,6 +70,20 @@ function validated(built: ValidationRecord) {
       validation?.validated,
     ])
   );
+}
+
+function warmBoundaries(plan: readonly unknown[]) {
+  return appBoundaries(plan.length + 1).map((boundary, i) => ({
+    ...boundary,
+    thermal: i === 2 ? 1 : 0,
+  }));
+}
+
+function sha256Of(value: unknown): string {
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(value))
+    .digest('hex');
 }
 
 function writeRecord(built: unknown): string {
@@ -533,6 +549,26 @@ describe('the validation sources', () => {
     );
   });
 
+  it('takes the thermal state from the boundary readings and refuses a summary below one of them', () => {
+    const warm = writeCrosscheck('warm', LOADS_PLAN, {
+      appBoundaries: warmBoundaries(LOADS_PLAN),
+    });
+    assert.throws(
+      () => readCrosscheckResult(warm),
+      /- crosscheck: thermalState is 0, but a boundary reading of the app gives 1$/
+    );
+    const between = writeCrosscheck('between', LOADS_PLAN, { thermalState: 1 });
+    const built = record([writeCrosscheck('steady', STEADY_PLAN), between]);
+    assert.equal(
+      built.metrics.uiThreadCpu?.gates.find(
+        ({ source, gate }) =>
+          source === readCrosscheckResult(between).folder &&
+          gate.endsWith('the thermal state stayed Nominal')
+      )?.outcome,
+      'not validated'
+    );
+  });
+
   it('refuses an observer-cost test with fewer than 5 complete blocks', () => {
     for (const blocks of [0, 4]) {
       assert.throws(
@@ -765,6 +801,31 @@ describe('readValidationRecord', () => {
           })
         ),
       /- validation\.sources\.crosschecks\[1\]\.sha256 is not the SHA-256 of its result$/
+    );
+  });
+
+  it('refuses a record whose embedded cross-check has a thermal state below a boundary reading', () => {
+    const built = record();
+    const [steady, loads] = built.sources.crosschecks;
+    const warm = {
+      ...loads.result,
+      appBoundaries: warmBoundaries(LOADS_PLAN),
+    };
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            sources: {
+              ...built.sources,
+              crosschecks: [
+                steady,
+                { ...loads, sha256: sha256Of(warm), result: warm },
+              ],
+            },
+          })
+        ),
+      /- validation\.sources\.crosschecks\[1\]\.result: thermalState is 0, but a boundary reading of the app gives 1$/
     );
   });
 

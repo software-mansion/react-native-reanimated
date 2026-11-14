@@ -401,6 +401,15 @@ export function rederivedEpochs(result: CrosscheckResult): CrosscheckEpoch[] {
   );
 }
 
+export function crosscheckThermalState(
+  result: Pick<CrosscheckResult, 'thermalState' | 'appBoundaries'>
+): number {
+  return Math.max(
+    result.thermalState,
+    ...result.appBoundaries.map(({ thermal }) => thermal)
+  );
+}
+
 export function completeBlocks(samples: readonly CollectorSample[]): number {
   const blocks = new Map<number, string[]>();
   for (const sample of samples) {
@@ -574,6 +583,12 @@ function crosscheckConflicts(result: CrosscheckResult): string[] {
   ];
   if (!isDeepStrictEqual(result.tolerances, CROSSCHECK_TOLERANCES)) {
     problems.push('its tolerances are not the tolerances of this driver');
+  }
+  const thermalState = crosscheckThermalState(result);
+  if (thermalState !== result.thermalState) {
+    problems.push(
+      `thermalState is ${result.thermalState}, but a boundary reading of the app gives ${thermalState}`
+    );
   }
   let epochs: CrosscheckEpoch[];
   try {

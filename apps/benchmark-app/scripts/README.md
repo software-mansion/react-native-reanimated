@@ -359,14 +359,14 @@ The exit code is 0 only when each verdict metric is `passed`. The folder has `ob
 `validation-record --crosscheck <folder> ... --observer-cost <folder> ... [--earlier-crosscheck <folder> ...]` writes a record to stdout. The command stops when:
 
 - the folders do not have one platform, phone model, phone, OS build, measurement revision and app build identity, the app has no app build identity, or the sources are not of the measurement revision of the driver,
-- a cross-check has no epoch, its epoch results are not its planned epochs, its tolerances are not the tolerances of the driver, or a stored outcome does not follow from its values (a pass of a value, a work proof, a footprint comparison, `verdict.counters`, `verdict.loadsRan`, `verdict.memory`),
+- a cross-check has no epoch, its epoch results are not its planned epochs, its tolerances are not the tolerances of the driver, its `thermalState` is below the thermal state of one of its counter reads (`appBoundaries[].thermal`), or a stored outcome does not follow from its values (a pass of a value, a work proof, a footprint comparison, `verdict.counters`, `verdict.loadsRan`, `verdict.memory`),
 - an observer-cost test does not have only complete blocks (at least 5), does not have each metric of each sample as a number, does not have one complete cost (medians, difference, interval, limit and outcome) for each metric, or has a cost that does not follow from its samples and its noise limit,
 - two sources are one measurement: the same folder (after symbolic links), the same result (SHA-256 of its JSON), or two cross-checks with the same trace.
 
 The record has `formatVersion` (4), these values, each source in full (folder, SHA-256 and the result), the earlier cross-checks and, for each verdict metric, `validated` and its gates with their result (`passed`, `failed` or `not validated`). The gates use outcomes that the driver computes again from the detailed values, not the stored outcomes. A metric is validated only when it has gates and each gate passes:
 
 1. Coverage: at least 2 cross-check recordings; a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load; a cross-check of `crosscheck-load` with the loads `idle`, `ui-stall`, `js-load` and `render-heavy`; an observer-cost test of `idle-cost`; an observer-cost test of another benchmark scenario.
-1. In each cross-check: it has epoch results, the thermal state stayed `Nominal`, the loads ran, and the metric passed in each epoch.
+1. In each cross-check: it has epoch results, the thermal state stayed `Nominal` (the highest of `thermalState` and the thermal state of each counter read), the loads ran, and the metric passed in each epoch.
 1. In each observer-cost test: it has at least 5 blocks, and the metric is `passed`.
 
 When the driver reads a record, it checks each source as above, and it makes the gates again from the sources. A record of another measurement revision, a record whose gates or flags are not the ones that follow from its sources, whose SHA-256 of a source is not the SHA-256 of its result, whose source is of another setup, or that has the same source twice, is a tool error. The validity of a metric comes from these gates, not from the flag.
