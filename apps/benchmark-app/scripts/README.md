@@ -35,13 +35,26 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
 
 ### iOS
 
-Connect an iPhone with a display of 60 Hz, with Developer Mode on, paired with the Mac and unlocked. Get its UDID from `xcrun devicectl list devices`. Write a [sign command](#sign-command) and a config, for example `.tmp/benchmarks/configs/ios-css.json`:
+Connect an iPhone with a display of 60 Hz, with Developer Mode on, paired with the Mac and unlocked. Get its UDID from `xcrun devicectl list devices`. Write a [sign command](#sign-command).
+
+This example compares Reanimated 4.7.1 with the code of your checkout. Make the tarballs of the checkout. `npm pack` runs the `prepack` script of each package (`yarn build`), and the file name has the version of its `package.json`:
+
+```sh
+mkdir -p .tmp/benchmarks/tarballs
+(cd packages/react-native-worklets && npm pack --pack-destination ../../.tmp/benchmarks/tarballs)
+(cd packages/react-native-reanimated && npm pack --pack-destination ../../.tmp/benchmarks/tarballs)
+```
+
+Write a config, for example `.tmp/benchmarks/configs/ios-css.json`. Each variant must have a Worklets version that `packages/react-native-reanimated/compatibility.json` gives for its Reanimated version:
 
 ```json
 {
   "name": "ios-css",
   "a": { "reanimated": "4.7.1", "worklets": "0.13.1" },
-  "b": { "reanimated": "./react-native-reanimated-4.8.0.tgz", "worklets": "0.13.1" },
+  "b": {
+    "reanimated": "../tarballs/react-native-reanimated-4.8.0-main.tgz",
+    "worklets": "../tarballs/react-native-worklets-0.14.0-main.tgz"
+  },
   "scenarios": ["css", "idle-cost"]
 }
 ```
@@ -77,7 +90,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample 
 
 - `name`: letters, digits, `.`, `_` or `-`. The run folder has this name.
 - `a`, `b`: the two variants. `reanimated` and `worklets` are an exact npm version or a path to a tarball from `npm pack`. A relative path starts at the folder of the config.
-- `reanimatedFlags`, `workletsFlags` (optional): static flags. The other flags keep the defaults of the installed library. An unknown flag is a tool error.
+- `reanimatedFlags`, `workletsFlags` (optional): static flags. The other flags keep the defaults of the installed library. An unknown flag is a tool error. A scenario that needs a static flag (`shared-elements` needs `ENABLE_SHARED_ELEMENT_TRANSITIONS`) needs the flag set to `true` in both variants. The driver does not know the default of a flag in a library version, so it stops before it builds when a variant does not set the flag.
 - `profiling: true` (optional, Android only) builds with the profiling Gradle properties. `bundleMode: true` is not supported.
 - `scenarios`: one or more scenario names of the [benchmark app](../README.md#scenarios).
 - `blocks` (optional): the number of blocks for a scenario. It replaces `--blocks` for that scenario.
@@ -89,17 +102,36 @@ The driver stops before it builds when the config has an unknown field, scenario
 ## Tools
 
 - Node from `.nvmrc` and Yarn 4.
-- Android: the Android SDK (`ANDROID_HOME`, or the default SDK folder), `adb` (SDK `platform-tools`, or `PATH`), a JDK for Gradle, and `trace_processor_shell` of Perfetto (`--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`).
-- iOS: Xcode with `xcodebuild`, `xctrace` and `devicectl` (tested with Xcode 27.2), Ruby and Bundler for CocoaPods, and a [sign command](#sign-command).
+- Android: the Android SDK (`ANDROID_HOME`, or the default SDK folder), `adb` (SDK `platform-tools`, or `PATH`), a JDK for Gradle (tested with JDK 17, the version of the Android workflows of the repository; `android/gradle/wrapper/gradle-wrapper.properties` gives Gradle 9.4.1), and `trace_processor_shell` of Perfetto (`--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`).
+- iOS: Xcode with `xcodebuild`, `xctrace` and `devicectl` (tested with Xcode 27.2), Ruby and Bundler for CocoaPods (tested with Ruby 3.3.7 of `.ruby-version`), and a [sign command](#sign-command).
 
 ## Calibration
 
 The noise limit of a verdict row is the difference that the driver gets between two equal builds. Make the limits for each phone model, platform and measurement revision:
 
-1. Write a config with the same `a` and `b` (an A/A config) and the scenarios to calibrate.
-1. Run it: `run --config <aa.json> <device>`. More blocks give better limits.
-1. Make the record: `noise-limits --runs <run folder> [<run folder> ...] > .tmp/benchmarks/noise-limits/<phone>.json`.
+1. Write a config with the same `a` and `b` (an A/A config) and the scenarios to calibrate, for example `.tmp/benchmarks/configs/aa.json`.
+1. Run it. More blocks give better limits.
+1. Make the record from the run folder.
 1. Give the record to each run on this phone model: `--noise-limits <record>`.
+
+Android:
+
+```sh
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+  --config .tmp/benchmarks/configs/aa.json --serial <adb serial> --blocks 10
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits \
+  --runs <run folder> > .tmp/benchmarks/noise-limits/a16.json
+```
+
+iOS:
+
+```sh
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+  --config .tmp/benchmarks/configs/aa.json --udid <UDID> \
+  --sign-command ./sign-benchmark.sh --blocks 10
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits \
+  --runs <run folder> > .tmp/benchmarks/noise-limits/iphone-13-mini.json
+```
 
 The record has `formatVersion` (1), `platform`, `device` (`model`, `deviceId`, `osBuild`), `measurementRevision`, `sources` (each run folder with the accepted samples of A and B for each scenario), `scenarios` (`{ "<scenario>": { "version": <integer>, "load": <integer> } }` from the READY lines of the accepted samples) and `limits` (`{ "<scenario>": { "<metric>": <limit> } }`). A limit is a fraction for a relative metric and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points).
 
@@ -128,7 +160,7 @@ For each sample, the driver stops the apps, waits for a cool phone, launches the
 
 - The measurement revision (`measurement-rules.mts`) names the rules of collection, parsing and acceptance. The driver stores it in each result and in each noise limits record. Numbers and verdicts are valid only within one platform, one phone and one measurement revision.
 - A sample is invalid when the app crashes before or during the trace (`crash`), when the phone is hot (`thermal`), when the app draws fewer than 90% of the expected frames (`frames`), or when the app does less work than the scenario needs (`work`). The driver then measures the block again. After 3 invalid blocks in sequence, the scenario fails, and the report gives the cause and the detail of each of the 3 blocks.
-- Each scenario declares its requirements in `scenarios.mts`. The update share is the share of the display refreshes in which the app updates its views: 1 for each scenario except `idle-cost` (0.5). The work check is the minimum `mountBatchCount` in one recording of 10 s. Only `shared-elements` has one: 300. Basis: in the first runs, a working sample had 574 to 628 (Samsung Galaxy A16) and 588 to 710 (iPhone 13 mini), and a sample with stopped transitions had 38.
+- Each scenario declares its requirements in `scenarios.mts`. The update share is the share of the display refreshes in which the app updates its views: 1 for each scenario except `idle-cost` (0.5). The work check is the minimum `mountBatchCount` in one recording of 10 s. Only `shared-elements` has one: 300. Basis: in the first runs, a working sample had 574 to 628 (Samsung Galaxy A16) and 588 to 710 (iPhone 13 mini), and a sample with stopped transitions had 38. The static flags of a scenario are the flags that its source reads: only `shared-elements` has one, `ENABLE_SHARED_ELEMENT_TRANSITIONS`.
 - Each platform declares its verdict metrics and its advisory metrics (`android-definition.mts`, `ios-definition.mts`). The report shows an advisory metric with its difference and interval and "no verdict". It has no noise limit, and an expectation cannot select it. The report of each run defines all metrics of its platform.
 - A device command that does not finish in its time limit is a tool error.
 
@@ -250,17 +282,20 @@ The device rules of `run` apply, but the test does not compare the battery level
 
 The workflows run the driver on a self-hosted macOS runner with a cabled phone:
 
-- `benchmark-run.yml` (`workflow_call`) packs Reanimated and Worklets from the commit when a side is `main` (`npm pack`), writes the config (`.github/workflows/helper/benchmark-config.ts`), runs the driver with `--output-dir`, uploads the output folder as an artifact, adds `report.md` to the job summary and ends with the exit code of the driver. An empty Worklets input takes the newest published version that `compatibility.json` gives for the Reanimated version. Two runs on one phone do not overlap: the concurrency group of the phone keeps a new run waiting and does not cancel the run in progress.
-- `benchmark-manual.yml` (`workflow_dispatch`) calls it with the inputs that you give.
-- `benchmark-nightly.yml` compares the latest stable release with `main` each night. It does nothing until the repository variable `BENCHMARK_NIGHTLY_ENABLED` is `true`. The variables `BENCHMARK_NIGHTLY_PLATFORM`, `BENCHMARK_NIGHTLY_PHONE` and `BENCHMARK_NIGHTLY_NOISE_LIMITS` give its inputs.
+- `benchmark-run.yml` (`workflow_call`) checks its inputs, packs Reanimated and Worklets of the checkout when a side is `checkout` (`npm pack`), writes the config (`.github/workflows/helper/benchmark-config.ts`), runs the driver with `--output-dir`, uploads the output folder as an artifact, adds `report.md` to the job summary and ends with the exit code of the driver. `checkout` is the commit that the workflow checked out, and the config note has its SHA. An empty Worklets input takes the newest published version that `compatibility.json` gives for the Reanimated version. `scenarios: all` gives the scenarios that need no static flag. With `shared-element-transitions: true`, the config sets `ENABLE_SHARED_ELEMENT_TRANSITIONS` to `true` in A and B, and `all` also gives `shared-elements`. Each run attempt has its own work folder. Two runs on one phone do not overlap: the concurrency group of the phone keeps a new run waiting and does not cancel the run in progress.
+- `benchmark-manual.yml` (`workflow_dispatch`) calls it with the inputs that you give. `checkout` is the commit of the branch that you select.
+- `benchmark-nightly.yml` runs each night on the default branch. It compares the latest stable release with `checkout` in two calls: the scenarios without a static flag, then `shared-elements` with `shared-element-transitions: true`.
 
-Runner setup:
+The workflows have no secrets, signing keys or provisioning profiles, and no `pull_request` trigger. A maintainer sets up:
 
-1. Give the runner the labels `self-hosted`, `macOS` and the name of the phone model (the `phone` input, for example `pixel-8`).
-1. Install the tools of [Tools](#tools), and Rust (`cargo`) to pack Worklets from `main`.
-1. Make a GitHub environment `benchmark-<phone>` with the variables `BENCHMARK_DEVICE_ID` (the adb serial or the UDID), `BENCHMARK_NOISE_LIMITS_DIR` (a folder on the runner with `<name>.json` noise limits records) and, for an iPhone, `BENCHMARK_SIGN_COMMAND` (the path of the sign command on the runner).
-
-The workflows have no secrets, signing keys or provisioning profiles, and no `pull_request` trigger.
+1. A runner with the labels `self-hosted`, `macOS` and the phone label, for example `pixel-8`. One phone label must select one runner with one cabled phone.
+1. On the runner: the tools of [Tools](#tools), and Rust (`cargo`), because `npm pack` of Worklets builds its Rust plugin.
+1. A GitHub environment `benchmark-<phone label>` with the variables `BENCHMARK_DEVICE_ID` (the adb serial or the UDID), `BENCHMARK_NOISE_LIMITS_DIR` (a folder on the runner) and, for an iPhone, `BENCHMARK_SIGN_COMMAND` (the absolute path of the sign command).
+1. A deployment branch rule on that environment that permits only the default branch and the release branches (`*-stable`). The job runs repository code on a self-hosted runner.
+1. For an iPhone, a sign command under the runner account, outside the repository, with the contract of [Sign command](#sign-command). The signing identity and the profiles stay on the runner.
+1. The noise limits records: `<BENCHMARK_NOISE_LIMITS_DIR>/<name>.json`. Make each record with an A/A run on that phone (for example with `benchmark-manual.yml` and the same A and B), then `noise-limits` on the run folder of the artifact (see [Calibration](#calibration)). The `noise-limits` input is `<name>`: letters, digits, `.`, `_` or `-`.
+1. For an iPhone, free phone storage before each run: 0.3 GB times the number of samples (see [Phone storage on iOS](#phone-storage-on-ios)).
+1. For the nightly workflow, the repository variables `BENCHMARK_NIGHTLY_ENABLED` (`true` turns it on), `BENCHMARK_NIGHTLY_PLATFORM`, `BENCHMARK_NIGHTLY_PHONE` and `BENCHMARK_NIGHTLY_NOISE_LIMITS`. They are repository variables, because the nightly workflow reads them before a job selects the environment.
 
 ## Not supported
 

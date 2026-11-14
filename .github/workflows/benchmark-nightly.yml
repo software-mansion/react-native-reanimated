@@ -28,6 +28,19 @@ jobs:
       platform: ${{ vars.BENCHMARK_NIGHTLY_PLATFORM }}
       phone: ${{ vars.BENCHMARK_NIGHTLY_PHONE }}
       a-reanimated: ${{ needs.latest-release.outputs.version }}
-      b-reanimated: main
+      b-reanimated: checkout
       scenarios: all
+      noise-limits: ${{ vars.BENCHMARK_NIGHTLY_NOISE_LIMITS }}
+
+  benchmark-shared-elements:
+    needs: latest-release
+    if: github.repository == 'software-mansion/react-native-reanimated' && vars.BENCHMARK_NIGHTLY_ENABLED == 'true'
+    uses: $/.github/workflows/benchmark-run.yml
+    with:
+      platform: ${{ vars.BENCHMARK_NIGHTLY_PLATFORM }}
+      phone: ${{ vars.BENCHMARK_NIGHTLY_PHONE }}
+      a-reanimated: ${{ needs.latest-release.outputs.version }}
+      b-reanimated: checkout
+      scenarios: shared-elements
+      shared-element-transitions: true
       noise-limits: ${{ vars.BENCHMARK_NIGHTLY_NOISE_LIMITS }}

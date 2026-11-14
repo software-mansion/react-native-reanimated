@@ -14,29 +14,34 @@ on:
         required: true
         type: string
       a-reanimated:
-        description: An exact Reanimated version for A, or main
+        description: An exact Reanimated version for A, or checkout (the commit of the branch that you run the workflow on)
         required: true
         type: string
       a-worklets:
-        description: An exact Worklets version for A, or main. Empty takes the version from compatibility.json.
+        description: An exact Worklets version for A, or checkout. Empty takes the version from compatibility.json, or checkout when A is checkout.
         required: false
         type: string
         default: ''
       b-reanimated:
-        description: An exact Reanimated version for B, or main
+        description: An exact Reanimated version for B, or checkout (the commit of the branch that you run the workflow on)
         required: true
         type: string
-        default: main
+        default: checkout
       b-worklets:
-        description: An exact Worklets version for B, or main. Empty takes the version from compatibility.json.
+        description: An exact Worklets version for B, or checkout. Empty takes the version from compatibility.json, or checkout when B is checkout.
         required: false
         type: string
         default: ''
       scenarios:
-        description: Scenario names separated by commas, or all
+        description: Scenario names separated by commas, or all (all scenarios that need no static flag that the config does not set)
         required: false
         type: string
         default: all
+      shared-element-transitions:
+        description: Set ENABLE_SHARED_ELEMENT_TRANSITIONS to true in A and B. Then all includes shared-elements.
+        required: false
+        type: boolean
+        default: false
       blocks:
         description: The number of blocks for each scenario
         required: false
@@ -63,5 +68,6 @@ jobs:
       b-reanimated: ${{ inputs.b-reanimated }}
       b-worklets: ${{ inputs.b-worklets }}
       scenarios: ${{ inputs.scenarios }}
+      shared-element-transitions: ${{ inputs.shared-element-transitions }}
       blocks: ${{ inputs.blocks }}
       noise-limits: ${{ inputs.noise-limits }}

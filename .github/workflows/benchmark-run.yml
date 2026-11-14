@@ -13,28 +13,33 @@ on:
         required: true
         type: string
       a-reanimated:
-        description: An exact Reanimated version for A, or main
+        description: An exact Reanimated version for A, or checkout (the commit that the workflow checked out)
         required: true
         type: string
       a-worklets:
-        description: An exact Worklets version for A, or main. Empty takes the version from compatibility.json.
+        description: An exact Worklets version for A, or checkout. Empty takes the version from compatibility.json, or checkout when A is checkout.
         required: false
         type: string
         default: ''
       b-reanimated:
-        description: An exact Reanimated version for B, or main
+        description: An exact Reanimated version for B, or checkout (the commit that the workflow checked out)
         required: true
         type: string
       b-worklets:
-        description: An exact Worklets version for B, or main. Empty takes the version from compatibility.json.
+        description: An exact Worklets version for B, or checkout. Empty takes the version from compatibility.json, or checkout when B is checkout.
         required: false
         type: string
         default: ''
       scenarios:
-        description: Scenario names separated by commas, or all
+        description: Scenario names separated by commas, or all (all scenarios that need no static flag that the config does not set)
         required: false
         type: string
         default: all
+      shared-element-transitions:
+        description: Set ENABLE_SHARED_ELEMENT_TRANSITIONS to true in A and B. Then all includes shared-elements.
+        required: false
+        type: boolean
+        default: false
       blocks:
         description: The number of blocks for each scenario
         required: false
@@ -52,7 +57,7 @@ permissions:
 jobs:
   benchmark:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Benchmark ${{ inputs.platform }} on ${{ inputs.phone }}
+    name: Benchmark ${{ inputs.platform }} on ${{ inputs.phone }}${{ inputs.shared-element-transitions && ' with shared element transitions' || '' }}
     runs-on: [self-hosted, macOS, '${{ inputs.phone }}']
     environment: benchmark-${{ inputs.phone }}
     timeout-minutes: 720
@@ -66,24 +71,59 @@ jobs:
       B_REANIMATED: ${{ inputs.b-reanimated }}
       B_WORKLETS: ${{ inputs.b-worklets }}
       SCENARIOS: ${{ inputs.scenarios }}
+      SHARED_ELEMENT_TRANSITIONS: ${{ inputs.shared-element-transitions }}
       BLOCKS: ${{ inputs.blocks }}
       NOISE_LIMITS: ${{ inputs.noise-limits }}
       DEVICE_ID: ${{ vars.BENCHMARK_DEVICE_ID }}
       SIGN_COMMAND: ${{ vars.BENCHMARK_SIGN_COMMAND }}
       NOISE_LIMITS_DIR: ${{ vars.BENCHMARK_NOISE_LIMITS_DIR }}
     steps:
-      - name: Name the work folders
+      - name: Name the work folders of this run attempt
         run: |
+          WORK_DIR="$RUNNER_TEMP/benchmark-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
           {
-            echo "TARBALLS_DIR=$RUNNER_TEMP/benchmark-tarballs"
-            echo "CONFIG_FILE=$RUNNER_TEMP/benchmark-config.json"
-            echo "OUTPUT_DIR=$RUNNER_TEMP/benchmark-output"
+            echo "TARBALLS_DIR=$WORK_DIR/tarballs"
+            echo "CONFIG_FILE=$WORK_DIR/config.json"
+            echo "OUTPUT_DIR=$WORK_DIR/output"
           } >> "$GITHUB_ENV"
+
+      - name: Check the inputs and the runner configuration
+        run: |
+          case "$PLATFORM" in
+            android | ios) ;;
+            *)
+              echo "::error::The platform must be android or ios, not '$PLATFORM'."
+              exit 1
+              ;;
+          esac
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::The environment variable BENCHMARK_DEVICE_ID is empty."
+            exit 1
+          fi
+          if [ "$PLATFORM" = ios ] && [ -z "$SIGN_COMMAND" ]; then
+            echo "::error::The environment variable BENCHMARK_SIGN_COMMAND is empty."
+            exit 1
+          fi
+          if [ -n "$NOISE_LIMITS" ]; then
+            if ! [[ "$NOISE_LIMITS" =~ ^[A-Za-z0-9._-]+$ ]]; then
+              echo "::error::The noise limits name can have only letters, digits, '.', '_' and '-'."
+              exit 1
+            fi
+            if [ ! -f "$NOISE_LIMITS_DIR/$NOISE_LIMITS.json" ]; then
+              echo "::error::There is no noise limits record $NOISE_LIMITS.json in BENCHMARK_NOISE_LIMITS_DIR."
+              exit 1
+            fi
+          fi
 
       - name: Check out Git repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           persist-credentials: false
+
+      - name: Read the commit of the checkout
+        run: echo "CHECKOUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Use Node.js
         id: setup-node
@@ -94,10 +134,9 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
-      - name: Pack Reanimated and Worklets from main
-        if: inputs.a-reanimated == 'main' || inputs.a-worklets == 'main' || inputs.b-reanimated == 'main' || inputs.b-worklets == 'main'
+      - name: Pack Reanimated and Worklets from the checkout
+        if: inputs.a-reanimated == 'checkout' || inputs.a-worklets == 'checkout' || inputs.b-reanimated == 'checkout' || inputs.b-worklets == 'checkout'
         run: |
-          rm -rf "$TARBALLS_DIR"
           mkdir -p "$TARBALLS_DIR"
           (cd packages/react-native-worklets && npm pack --pack-destination "$TARBALLS_DIR")
           (cd packages/react-native-reanimated && npm pack --pack-destination "$TARBALLS_DIR")
@@ -110,7 +149,6 @@ jobs:
       - name: Run the benchmark
         id: run
         run: |
-          rm -rf "$OUTPUT_DIR"
           if [ "$PLATFORM" = ios ]; then
             DEVICE_OPTIONS=(--udid "$DEVICE_ID" --sign-command "$SIGN_COMMAND")
           else
@@ -130,7 +168,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: benchmark-${{ inputs.platform }}-${{ inputs.phone }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-${{ inputs.platform }}-${{ inputs.phone }}${{ inputs.shared-element-transitions && '-shared-element-transitions' || '' }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ env.OUTPUT_DIR }}
           if-no-files-found: warn
 
