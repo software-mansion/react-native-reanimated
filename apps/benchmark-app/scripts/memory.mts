@@ -1,12 +1,12 @@
 import path from 'node:path';
 
-import { STATE_KEYS_WITHOUT_BATTERY_LEVEL } from './android-device.mts';
 import type { BatteryInfo } from './android-device.mts';
+import { androidPlatform } from './android-platform.mts';
+import type { AndroidSampling } from './android-platform.mts';
 import type { MemoryOptions, MemoryResumeOptions } from './arguments.mts';
 import { VARIANT_KEYS, validateVariantsConfig } from './config.mts';
 import type { VariantKey } from './config.mts';
 import {
-  DEFAULT_DEPENDENCIES,
   readConfig,
   resumeMeasurement,
   startMeasurement,
@@ -36,6 +36,7 @@ import type {
   MemoryReading,
   MemorySchedule,
 } from './memory-series.mts';
+import { RUNS_DIR } from './paths.mts';
 import { measureRunningApp, processEnd, runLaunchedApp } from './protocol.mts';
 import type {
   Clock,
@@ -118,18 +119,22 @@ export interface MemoryResult extends MeasurementResult<MemoryLaunch> {
 }
 
 const MILLISECONDS_PER_SECOND = 1000;
+const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
+  platform: androidPlatform(),
+  runsDir: RUNS_DIR,
+};
 
 export async function memoryCommand(
   options: MemoryOptions,
   context: CommandContext,
-  dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
+  dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
 ): Promise<number> {
   const config = readConfig(options.config, validateVariantsConfig);
   return startMeasurement(
     {
       config,
-      serial: options.serial,
-      traceProcessor: options.traceProcessor,
+      device: options.device,
+      platformOptions: { traceProcessor: options.traceProcessor },
       folderName: `${config.name}-memory-${options.scenario}`,
     },
     (fields) => ({
@@ -154,13 +159,16 @@ export async function memoryCommand(
 export async function memoryResumeCommand(
   options: MemoryResumeOptions,
   context: CommandContext,
-  dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
+  dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
 ): Promise<number> {
   const folder = path.resolve(options.folder);
   return resumeMeasurement(
     folder,
     readMeasurementResult<MemoryResult>(folder, 'memory'),
-    options,
+    {
+      device: options.device,
+      platformOptions: { traceProcessor: options.traceProcessor },
+    },
     memoryJob,
     context,
     dependencies
@@ -169,15 +177,21 @@ export async function memoryResumeCommand(
 
 function memoryJob(
   result: MemoryResult
-): MeasurementJob<MemoryLaunch, MemoryResult> {
+): MeasurementJob<MemoryLaunch, MemoryResult, AndroidSampling> {
   const { options } = result;
   return {
     scenarios: [options.scenario],
-    stateKeys: STATE_KEYS_WITHOUT_BATTERY_LEVEL,
+    comparesBatteryLevel: false,
     blocksOf: () => launchCount(options.launches),
     orderOf: memoryLaunchOrder,
-    measure: (request, device, collector, clock) =>
-      takeMemoryLaunch(request, options, device, collector, clock),
+    measure: (order, sampling) =>
+      takeMemoryLaunch(
+        sampling.request(order),
+        options,
+        sampling.device,
+        sampling.collector,
+        sampling.clock
+      ),
     clearSummary: (stopped) => {
       stopped.summary = [];
     },

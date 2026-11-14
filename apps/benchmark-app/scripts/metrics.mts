@@ -14,26 +14,16 @@ export type VerdictMetric = (typeof VERDICT_METRICS)[number];
 
 export const RETIRED_VERDICT_METRIC = 'memoryGrowth';
 
-export interface SampleMetrics {
+export interface CommonSampleMetrics {
   frameDurationMedian: number | null;
   frameDurationP90: number | null;
   frameDurationP95: number | null;
   frameDurationP99: number | null;
   jankyFrames: number;
-  frameTimelineDurationMedian: number | null;
-  frameTimelineDurationP95: number | null;
-  frameTimelineFrameCount: number;
-  jankFlaggedFrames: number | null;
-  appDeadlineMissedFrames: number | null;
-  drawFrameMedian: number | null;
-  drawFrameP95: number | null;
   uiThreadCpu: number;
   jsThreadCpu: number;
-  renderThreadCpu: number;
   otherThreadsCpu: number;
   processCpu: number;
-  uiThreadCpuWork: number | null;
-  processCpuWork: number | null;
   mountBatchCount: number;
   memory: number;
   windowMemoryDelta: number;
@@ -41,6 +31,27 @@ export interface SampleMetrics {
   frameCount: number;
   expectedFrameCount: number;
 }
+
+export interface AndroidSampleMetrics extends CommonSampleMetrics {
+  frameTimelineDurationMedian: number | null;
+  frameTimelineDurationP95: number | null;
+  frameTimelineFrameCount: number;
+  jankFlaggedFrames: number | null;
+  appDeadlineMissedFrames: number | null;
+  drawFrameMedian: number | null;
+  drawFrameP95: number | null;
+  renderThreadCpu: number;
+  uiThreadCpuWork: number | null;
+  processCpuWork: number | null;
+}
+
+export interface IosSampleMetrics extends CommonSampleMetrics {
+  uiThreadEfficiencyCoreShare: number | null;
+  hitchCount: number;
+  hitchTime: number;
+}
+
+export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
 
 export type MetricUnit = 'ms' | 'share' | 'ms/s' | 'kB';
 

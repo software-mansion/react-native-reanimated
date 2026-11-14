@@ -1,19 +1,21 @@
 # Benchmark driver
 
-The driver measures the benchmark app on an Android device. It compares two builds of the app, A and B. For each scenario and each metric, it gives one verdict. Lower values are better for all metrics. The memory test (`memory`) looks for a memory leak in one scenario.
+The driver measures the benchmark app on an Android device or on an iPhone. It compares two builds of the app, A and B. For each scenario and each metric, it gives one verdict. Lower values are better for all metrics. The memory test (`memory`) looks for a memory leak in one scenario, on Android only.
 
 ## Commands
 
 Run the commands from the repository root.
 
 ```sh
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> --serial <adb serial> [--blocks 5] [--noise-limits <file.json>] [--keep-traces]
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> --serial <adb serial>
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks 5] [--noise-limits <file.json>] [--keep-traces]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device>
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --config <file.json> --scenario <name> --serial <adb serial> [--launches 2] [--interval 60] [--duration 1200] [--slope-limit 1000] [--keep-traces]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts memory --resume <run folder> --serial <adb serial>
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits --runs <run folder> [<run folder> ...]
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample --serial <adb serial> --package <application id> --scenario <name> [--load <integer>] [--keep-trace]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace]
 ```
+
+`<device>` is `--serial <adb serial>` for Android, or `--udid <UDID>` for iOS. An iOS `run` also needs `--sign-command <command>`. See [iOS](#ios).
 
 - `run` builds A and B, installs them and measures each scenario of the config. Each block measures in the order A, B, B, A (or B, A, A, B). `--blocks` sets the number of blocks for each scenario.
 - `run --resume` continues a run that is not `done`. See [Stopped runs](#stopped-runs).
@@ -21,7 +23,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample 
 - `noise-limits` reads A/A runs and writes a noise limits file to stdout. See [Noise limits](#noise-limits).
 - `sample` measures one scenario of an installed app one time and writes the metrics as JSON. Use it to find the load level of a scenario.
 
-`run`, `memory` and `sample` take `--trace-processor <path>`.
+On Android, `run`, `memory` and `sample` take `--trace-processor <path>`.
 
 ## Config
 
@@ -39,7 +41,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample 
 
 - A package source is an exact npm version or a path to a tarball from `npm pack`. A relative path starts at the folder of the config.
 - `reanimatedFlags` and `workletsFlags` set static flags. Other flags keep the defaults of the installed library.
-- `profiling: true` builds with the profiling Gradle properties. `bundleMode: true` is not supported.
+- `profiling: true` builds with the profiling Gradle properties. It is not supported on iOS. `bundleMode: true` is not supported.
 - `blocks` (optional) sets the number of blocks for a scenario of the run. It replaces `--blocks` for that scenario.
 - `expect` is a list of entries with `scenarios` (default: all), `metrics` (default: all), `is` (`notWorse` or `better`) and `byAtLeast` (a fraction, only with `better`). The default is `[{ "is": "notWorse" }]`.
 - `--noise-limits` names a JSON file `{ "<scenario>": { "<metric>": <limit> } }`. The limit has the unit of the comparison of the metric: a fraction for a relative metric, and a share of frames for `jankyFrames` (0.005 is 0.5 percentage points). Without the file, the limit is 0. The driver ignores an entry for `memoryGrowth`, a metric of older versions.
@@ -49,6 +51,7 @@ The driver stops before it builds when the config has an unknown field, scenario
 ## Tools
 
 - Node from `.nvmrc` and Yarn 4.
+- For iOS, see [iOS](#ios). The other items of this list are for Android.
 - The Android SDK. The driver uses `ANDROID_HOME`, or the default SDK folder when `ANDROID_HOME` is not set.
 - `adb` from the SDK `platform-tools` folder or from `PATH`.
 - `trace_processor_shell` from Perfetto: `--trace-processor`, then `TRACE_PROCESSOR_SHELL`, then `PATH`. The query uses the module `linux.cpu.utilization.thread` of the Perfetto standard library.
@@ -59,10 +62,13 @@ The driver stops before it builds when the config has an unknown field, scenario
 - Builds: `.tmp/benchmarks/builds/<key>/`. The driver does not build a variant again when its key did not change.
 - Runs: `.tmp/benchmarks/runs/<date>-<name>/` with `result.json` (all samples and statistics) and `report.md`. The driver writes `result.json` after each sample. A memory test writes to `.tmp/benchmarks/runs/<date>-<name>-memory-<scenario>/`.
 - Traces: the run folder keeps the trace of each invalid sample, and all traces with `--keep-traces`. `sample` writes to `.tmp/benchmarks/samples/`.
+- `result.json` has the format version 3. The driver also reads the versions 1 and 2 (from older versions of the driver, Android only).
 
 The exit code of `run` is 0 when all expectations hold, 1 when an expectation fails or is not decided, and 2 for a tool error.
 
 ## Metrics
+
+This section and the device rules in it are for Android. [iOS](#ios) gives the iOS definitions of the same verdict metrics.
 
 The driver reads each metric from the trace window of 10 s. Lower values are better.
 
@@ -144,6 +150,8 @@ When the relative difference is not defined for a division (a median of 0 or les
 
 ## Memory test
 
+The memory test is for Android only.
+
 `memory --config <file.json> --scenario <name> --serial <adb serial>` looks for a memory leak in one scenario. It reads and checks only `name`, `a`, `b` and `note` of the config. It ignores all other fields, so a config without `scenarios` works.
 
 1. The driver builds and installs A and B as `run` does.
@@ -190,3 +198,67 @@ Limits of the test:
 `result.json` keeps the readings and the trace check of each launch, and the summary. `report.md` gives the verdicts, the limits, the `tailLevel` and `tailSlope` of each launch and their medians, and the series of each launch. The exit code is 0 for `rises`, `no rise found` and `not judged`, 1 when a variant is `mixed` or `not decided`, and 2 for a tool error.
 
 The device rules of `run` apply, but the memory test does not compare the battery level, because a long test can change it. Each reading stores the battery level. The test still compares the power source, the device settings and the display, and it checks the thermal state. `memory --resume <run folder> --serial <adb serial>` continues a stopped memory test with the same rules. It keeps all valid launches and starts the launch in progress again. The cool-down rule of `run` applies before each launch. Each reading stores the battery temperature, so the data shows a long launch that makes the device warm.
+
+## iOS
+
+The iOS path measures on a real iPhone. A simulator is not supported, because its numbers are not the numbers of a phone.
+
+### Tools and device
+
+- Xcode with `xctrace` and `devicectl` (tested with Xcode 27.2), Ruby and Bundler for CocoaPods.
+- An iPhone with Developer Mode on, paired with the Mac and unlocked. `xcrun devicectl list devices` gives the UDID.
+- A sign command. The driver builds the app for a device without a signature (`CODE_SIGNING_ALLOWED=NO`). Then it calls `<sign command> <path of the .app> <path of the .ipa to write>`. The command must write an `.ipa` that the iPhone accepts and that has the entitlement `get-task-allow` (a development signature), because `xctrace` attaches to the app. The sign command is a part of the build key.
+- `"profiling": true` and the `memory` command are not supported.
+
+After each install, the driver launches the app one time and stops it, because the first launch after an install is slow.
+
+### Sample
+
+1. The driver stops A and B and waits 10 s.
+1. `devicectl device process launch --console` starts the app with the scenario as launch argument and gives the stdout of the app to the driver.
+1. The `LAUNCH` line of the app gives the thermal state. No host tool reads the thermal state or the battery of an iPhone while no app runs. When the state is above `Nominal`, the driver stops the app, waits 30 s and launches it again. After 10 minutes without a `Nominal` state, the run stops with a tool error.
+1. The driver waits for the `READY` line.
+1. `xctrace record` attaches to the app for 10 s with the template `Animation Hitches`, the instrument `os_signpost`, and the signposts of React Native (`dev.reactnative.instruments`) and of the app (`com.reanimatedbenchmark`).
+1. The driver stops the app, exports tables of the trace with `xctrace export` and computes the metrics.
+
+The app writes a `State` signpost each second. The trace window is the time from the first to the last `State` signpost of the trace (about 10 s). The scheduler data of the trace must cover this window, or the sample is a tool error.
+
+### Metrics
+
+| Metric | Definition on iOS | Verdict |
+| --- | --- | --- |
+| `frameDurationMedian`, `frameDurationP95` | Duration of the rows of the table `hitches-updates` for the app that are fully in the trace window, in ms. A row is the update phase of one frame: the work of the app on its main thread to the end of the commit. It does not include the render phase and the display. | yes |
+| `frameDurationP90`, `frameDurationP99` | The same | no |
+| `jankyFrames` | Share of frames without an update of the app: `max(0, 1 - frameCount / expectedFrameCount)` | yes |
+| `frameCount`, `expectedFrameCount` | Count of these rows; `refreshRate` of the `LAUNCH` line times the length of the trace window | no |
+| `uiThreadCpu` | Time in the state `Running` of the main thread (`mainThread` of the `LAUNCH` line) in the table `thread-state`, cut to the trace window, in ms for each second | yes |
+| `jsThreadCpu` | The same for the JS thread (`jsThread` of the `READY` line) | yes |
+| `otherThreadsCpu`, `processCpu` | The same for the other threads of the app, and for all threads of the app | no |
+| `uiThreadEfficiencyCoreShare` | Share of `uiThreadCpu` on efficiency cores | no |
+| `mountBatchCount` | Count of the starts of the React Native section `RCTPerformMountInstructions` | no |
+| `memory` | `phys_footprint` of the app in the last `State` signpost, in kB | yes |
+| `windowMemoryDelta` | `phys_footprint` in the last `State` signpost minus the value in the first one, in kB | no |
+| `coldStart` | `coldStart` of the `LAUNCH` line: the time from the start of the process (start time of the kernel) to the first display link callback, in ms. The app measures it. | yes |
+| `hitchCount`, `hitchTime` | Count of the rows of the table `hitches` for the app that overlap the trace window, and the sum of their durations in the window in ms for each second | no |
+
+The table `thread-state` has each scheduling interval of each thread, so the CPU time is the time on a core, not an estimate from samples. The driver does not count the states `Interrupted`, `Runnable` and `Preempted`. The table does not show the clock rate. The scheduler moves the main thread between efficiency cores and performance cores, and the same work needs more time on an efficiency core. `uiThreadEfficiencyCoreShare` shows this for each sample.
+
+The trace has the cost of the Time Profiler samples (the `Animation Hitches` template includes them), of the React Native signposts and of the `State` signposts. A and B have the same tools, but the cost is not measured, and a variant that runs more React Native sections has more signpost cost.
+
+### Invalid samples, device state and stopped runs
+
+- `crash`: the app writes `FAILED`, the console command ends before `READY` or during the trace, or the main thread ends in the trace.
+- `thermal`: the trace shows a thermal state above `Nominal` in the trace window (table `device-thermal-state-intervals`, or a `State` signpost).
+- `frames` and `work`: as on Android. No scenario has a work limit on iOS at this time.
+- Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
+- Each `State` signpost of a trace gives the battery level, the battery state, the low power mode and the brightness, and the `LAUNCH` line gives the refresh rate. The first sample of the run gives the reference (`inAppState` in `result.json`). A later difference stops the run.
+- These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread, without the JS thread or with fewer than 2 `State` signposts, scheduler data that does not cover the trace window, and a command that does not finish in its time limit.
+- `run --resume <run folder> --udid <UDID>` continues a stopped run with the same rules as on Android. It does not build, so it does not take `--sign-command`. A run cannot continue on the other platform.
+
+### Limits
+
+- No battery temperature. The thermal state has 4 steps only.
+- `coldStart` comes from the app, not from an operating system tool. It does not include the time before the kernel starts the process, and it ends before React Native shows content (as `TotalTime` on Android). It is the difference of two wall-clock times.
+- `memory` is the value at the end of the trace. The time from the launch to this moment changes with the start time of `xctrace` (some seconds).
+- The scenario loads were set on a slow Android phone. On an iPhone they use a smaller part of the frame budget.
+- Only a display with a fixed rate of 60 Hz is supported. On a display with a variable refresh rate, the maximum rate is not the rate of the frames, so `jankyFrames` is not sound there.

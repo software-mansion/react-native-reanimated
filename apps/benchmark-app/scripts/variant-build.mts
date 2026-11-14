@@ -9,6 +9,7 @@ import type {
   VariantKey,
 } from './config.mts';
 import { ToolError } from './errors.mts';
+import type { PlatformName } from './platform.mts';
 import type { Processes } from './tools.mts';
 
 export interface LibraryState<T> {
@@ -20,7 +21,7 @@ export interface BuiltVariant {
   variant: VariantKey;
   buildKey: string;
   directory: string;
-  apk: string;
+  artifact: string;
   applicationId: string;
   installedVersions: LibraryState<string>;
   effectiveFlags: LibraryState<StaticFlags>;
@@ -28,6 +29,8 @@ export interface BuiltVariant {
 
 export interface BuildKeyInputs {
   variant: Variant;
+  platform: PlatformName;
+  platformOptions: string;
   suffix: string;
   projectHash: string;
   tarballHashes: Partial<LibraryState<string>>;
@@ -39,13 +42,33 @@ export interface BuildRequest {
   buildsDir: string;
   key: VariantKey;
   variant: Variant;
-  androidHome: string;
   processes: Processes;
   log: (message: string) => void;
 }
 
+export interface VariantProject {
+  directory: string;
+  key: VariantKey;
+  variant: Variant;
+  run: (command: ProjectCommand) => Promise<void>;
+}
+
+export interface ProjectCommand {
+  command: string;
+  args: string[];
+  cwd: string;
+  timeoutMs: number;
+  env?: NodeJS.ProcessEnv;
+}
+
+export interface PlatformBuild {
+  platform: PlatformName;
+  procedureFile: string;
+  options: string;
+  build: (project: VariantProject) => Promise<string>;
+}
+
 export const APPLICATION_ID = 'com.reanimatedbenchmark';
-export const ARCHITECTURE = 'arm64-v8a';
 export const PACKAGE_NAMES: LibraryState<string> = {
   reanimated: 'react-native-reanimated',
   worklets: 'react-native-worklets',
@@ -64,27 +87,28 @@ const EXCLUDED_NAMES = new Set([
 const EXCLUDED_PATHS = new Set(['scripts', 'vendor/bundle']);
 const BUILD_MARKER = 'benchmark-build.json';
 const BUILD_LOG = 'benchmark-build.log';
-const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const YARN_TIMEOUT_MS = 30 * 60_000;
-const GRADLE_TIMEOUT_MS = 90 * 60_000;
 
 export async function buildVariant(
-  request: BuildRequest
+  request: BuildRequest,
+  platformBuild: PlatformBuild
 ): Promise<BuiltVariant> {
   const { appDir, buildsDir, key, variant, log } = request;
   const files = listProjectFiles(appDir);
   const buildKey = variantBuildKey({
     variant,
+    platform: platformBuild.platform,
+    platformOptions: platformBuild.options,
     suffix: applicationSuffix(key),
     projectHash: hashFiles(appDir, files),
     tarballHashes: hashTarballs(variant),
-    procedureHash: hashBuildProcedure(),
+    procedureHash: hashBuildProcedure(platformBuild.procedureFile),
   });
   const directory = path.join(buildsDir, buildKey);
   const marker = path.join(directory, BUILD_MARKER);
   if (fs.existsSync(marker)) {
     const built = JSON.parse(fs.readFileSync(marker, 'utf8')) as BuiltVariant;
-    if (fs.existsSync(built.apk)) {
+    if (fs.existsSync(built.artifact)) {
       log(`variant ${key}: reuse build ${buildKey}`);
       return built;
     }
@@ -93,19 +117,18 @@ export async function buildVariant(
   log(`variant ${key}: build ${buildKey} in ${directory}`);
   fs.rmSync(directory, { recursive: true, force: true });
   copyFiles(appDir, directory, files);
-  const logFile = path.join(directory, BUILD_LOG);
-  await runLogged(
-    request,
-    logFile,
-    'yarn',
-    [
+  const run = (command: ProjectCommand) =>
+    runLogged(request, path.join(directory, BUILD_LOG), command);
+  await run({
+    command: 'yarn',
+    args: [
       'add',
       packageSpec(PACKAGE_NAMES.reanimated, variant.reanimated),
       packageSpec(PACKAGE_NAMES.worklets, variant.worklets),
     ],
-    directory,
-    YARN_TIMEOUT_MS
-  );
+    cwd: directory,
+    timeoutMs: YARN_TIMEOUT_MS,
+  });
 
   const installed = readInstalledLibraries(directory);
   const effectiveFlags = {
@@ -129,23 +152,17 @@ export async function buildVariant(
     `${JSON.stringify(withStaticFlags(packageJson, variant), null, 2)}\n`
   );
 
-  await runLogged(
-    request,
-    logFile,
-    './gradlew',
-    gradleArguments(key, variant.profiling),
-    path.join(directory, 'android'),
-    GRADLE_TIMEOUT_MS
-  );
-  const apk = path.join(directory, APK_PATH);
-  if (!fs.existsSync(apk)) {
-    throw new ToolError(`The build of variant ${key} made no APK at ${apk}`);
+  const artifact = await platformBuild.build({ directory, key, variant, run });
+  if (!fs.existsSync(artifact)) {
+    throw new ToolError(
+      `The build of variant ${key} made no file at ${artifact}`
+    );
   }
   const built: BuiltVariant = {
     variant: key,
     buildKey,
     directory,
-    apk,
+    artifact,
     applicationId: applicationIdOf(key),
     installedVersions: installed.versions,
     effectiveFlags,
@@ -191,6 +208,8 @@ export function variantBuildKey(inputs: BuildKeyInputs): string {
     workletsFlags: sortedFlags(variant.workletsFlags),
     bundleMode: variant.bundleMode,
     profiling: variant.profiling,
+    platform: inputs.platform,
+    platformOptions: inputs.platformOptions,
     suffix: inputs.suffix,
     projectHash: inputs.projectHash,
     procedureHash: inputs.procedureHash,
@@ -232,10 +251,11 @@ function hashTarballs(variant: Variant): Partial<LibraryState<string>> {
   };
 }
 
-function hashBuildProcedure(): string {
+function hashBuildProcedure(platformProcedureFile: string): string {
   return crypto
     .createHash('sha256')
     .update(fs.readFileSync(import.meta.filename))
+    .update(fs.readFileSync(platformProcedureFile))
     .digest('hex');
 }
 
@@ -251,16 +271,13 @@ function copyFiles(from: string, to: string, files: string[]) {
 async function runLogged(
   request: BuildRequest,
   logFile: string,
-  command: string,
-  args: string[],
-  cwd: string,
-  timeoutMs: number
+  { command, args, cwd, timeoutMs, env: commandEnv }: ProjectCommand
 ) {
   request.log(`  ${command} ${args.join(' ')}`);
   const env = {
     ...process.env,
-    ANDROID_HOME: request.androidHome,
     YARN_ENABLE_IMMUTABLE_INSTALLS: 'false',
+    ...commandEnv,
   };
   await request.processes
     .run(command, args, { cwd, env, logFile, timeoutMs })
@@ -322,17 +339,6 @@ export function withStaticFlags(
     reanimated: flagsField(variant.reanimatedFlags),
     worklets: flagsField(variant.workletsFlags),
   };
-}
-
-export function gradleArguments(key: VariantKey, profiling: boolean): string[] {
-  return [
-    'assembleRelease',
-    `-PreactNativeArchitectures=${ARCHITECTURE}`,
-    `-PbenchmarkApplicationIdSuffix=${applicationSuffix(key)}`,
-    ...(profiling
-      ? ['-PenableReanimatedProfiling=true', '-PenableWorkletsProfiling=true']
-      : []),
-  ];
 }
 
 export function applicationIdOf(key: VariantKey): string {

@@ -15,6 +15,8 @@ export const MINIMUM_MOUNT_BATCHES: Partial<Record<Scenario, number>> = {
   'shared-elements': 300,
 };
 
+export const IOS_MINIMUM_MOUNT_BATCHES: Partial<Record<Scenario, number>> = {};
+
 export function isScenario(name: unknown): name is Scenario {
   return SCENARIOS.includes(name as Scenario);
 }

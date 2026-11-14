@@ -19,7 +19,7 @@ export interface InvalidJudgement {
 export type Judged = { valid: true } | InvalidJudgement;
 
 export type Measured<R extends Judged = SampleResult> = SamplePlace &
-  R & { segment: number; batteryLevel: number };
+  R & { segment: number; batteryLevel?: number };
 
 export type Recorded<R extends Judged = SampleResult> = Measured<R> & {
   accepted: boolean;

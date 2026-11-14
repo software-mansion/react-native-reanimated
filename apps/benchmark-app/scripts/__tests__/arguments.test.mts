@@ -10,11 +10,12 @@ describe('parseArguments', () => {
       {
         command: 'run',
         config: 'c.json',
-        serial: 'S1',
+        device: { platform: 'android', id: 'S1' },
         blocks: 5,
         noiseLimits: undefined,
         keepTraces: false,
         traceProcessor: undefined,
+        signCommand: undefined,
       }
     );
   });
@@ -37,11 +38,12 @@ describe('parseArguments', () => {
     assert.deepEqual(command, {
       command: 'run',
       config: 'c.json',
-      serial: 'S1',
+      device: { platform: 'android', id: 'S1' },
       blocks: 3,
       noiseLimits: 'n.json',
       keepTraces: true,
       traceProcessor: '/tp',
+      signCommand: undefined,
     });
   });
 
@@ -61,7 +63,7 @@ describe('parseArguments', () => {
       ]),
       {
         command: 'sample',
-        serial: 'S1',
+        device: { platform: 'android', id: 'S1' },
         applicationId: 'com.x',
         scenario: 'css',
         load: 40,
@@ -127,7 +129,7 @@ describe('parseArguments', () => {
       {
         command: 'resume',
         folder: 'runs/r1',
-        serial: 'S1',
+        device: { platform: 'android', id: 'S1' },
         traceProcessor: undefined,
       }
     );
@@ -167,7 +169,7 @@ describe('parseArguments', () => {
     assert.deepEqual(parseArguments(required), {
       command: 'memory',
       config: 'c.json',
-      serial: 'S1',
+      device: { platform: 'android', id: 'S1' },
       scenario: 'shared-elements',
       launches: 2,
       intervalSeconds: 60,
@@ -192,7 +194,7 @@ describe('parseArguments', () => {
       {
         command: 'memory',
         config: 'c.json',
-        serial: 'S1',
+        device: { platform: 'android', id: 'S1' },
         scenario: 'shared-elements',
         launches: 4,
         intervalSeconds: 30,
@@ -243,7 +245,7 @@ describe('parseArguments', () => {
       {
         command: 'memory-resume',
         folder: 'runs/m1',
-        serial: 'S1',
+        device: { platform: 'android', id: 'S1' },
         traceProcessor: undefined,
       }
     );
@@ -274,6 +276,122 @@ describe('parseArguments', () => {
     assert.throws(
       () => parseArguments(['noise-limits', 'r1']),
       /--runs is required/
+    );
+  });
+
+  it('reads an iOS device and the sign command', () => {
+    assert.deepEqual(
+      parseArguments([
+        'run',
+        '--config',
+        'c.json',
+        '--udid',
+        'U1',
+        '--sign-command',
+        './sign.sh',
+      ]),
+      {
+        command: 'run',
+        config: 'c.json',
+        device: { platform: 'ios', id: 'U1' },
+        blocks: 5,
+        noiseLimits: undefined,
+        keepTraces: false,
+        traceProcessor: undefined,
+        signCommand: './sign.sh',
+      }
+    );
+    assert.deepEqual(
+      parseArguments(['run', '--resume', 'folder', '--udid', 'U1']),
+      {
+        command: 'resume',
+        folder: 'folder',
+        device: { platform: 'ios', id: 'U1' },
+        traceProcessor: undefined,
+      }
+    );
+    assert.deepEqual(
+      parseArguments([
+        'sample',
+        '--udid',
+        'U1',
+        '--package',
+        'com.x',
+        '--scenario',
+        'css',
+      ]),
+      {
+        command: 'sample',
+        device: { platform: 'ios', id: 'U1' },
+        applicationId: 'com.x',
+        scenario: 'css',
+        load: undefined,
+        keepTrace: false,
+        traceProcessor: undefined,
+      }
+    );
+  });
+
+  it('rejects device options that do not fit the command', () => {
+    assert.throws(
+      () => parseArguments(['run', '--config', 'c.json', '--udid', 'U1']),
+      /An iOS run needs --sign-command/
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--config',
+          'c.json',
+          '--serial',
+          'S1',
+          '--sign-command',
+          'x',
+        ]),
+      /--sign-command is for an iOS run only/
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--config',
+          'c.json',
+          '--serial',
+          'S1',
+          '--udid',
+          'U1',
+        ]),
+      /Give --serial or --udid, not the two together/
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--resume',
+          'folder',
+          '--udid',
+          'U1',
+          '--sign-command',
+          'x',
+        ]),
+      /Remove --sign-command/
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'memory',
+          '--config',
+          'c.json',
+          '--scenario',
+          'css',
+          '--udid',
+          'U1',
+        ]),
+      /The memory command supports Android only/
+    );
+    assert.throws(
+      () => parseArguments(['memory', '--resume', 'folder', '--udid', 'U1']),
+      /The memory command supports Android only/
     );
   });
 

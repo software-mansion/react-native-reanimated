@@ -68,8 +68,8 @@ function built(variant: 'a' | 'b', syncFlag: boolean): RunVariant {
     variant,
     buildKey: `key-${variant}`,
     directory: `/builds/key-${variant}`,
-    apk: `/builds/key-${variant}/app-release.apk`,
-    apkSha256: `sha-${variant}`,
+    artifact: `/builds/key-${variant}/app-release.apk`,
+    artifactSha256: `sha-${variant}`,
     applicationId: `com.reanimatedbenchmark.${variant}`,
     installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
     effectiveFlags: {
@@ -156,7 +156,8 @@ function sample(overrides: Partial<SampleRecord>): SampleRecord {
 }
 
 const RESULT: RunResult = {
-  formatVersion: 2,
+  formatVersion: 3,
+  platform: 'android',
   command: 'run',
   status: 'done',
   startedAt: '2026-11-12T10:00:00.000Z',

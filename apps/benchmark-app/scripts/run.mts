@@ -1,11 +1,10 @@
 import path from 'node:path';
 
-import { COMPARED_STATE_KEYS } from './android-device.mts';
 import type { ResumeOptions, RunOptions } from './arguments.mts';
 import { blocksOf, validateConfig, validateNoiseLimits } from './config.mts';
 import { evaluateExpectations, exitCodeOf } from './expectations.mts';
 import {
-  DEFAULT_DEPENDENCIES,
+  dependenciesOf,
   readConfig,
   readJson,
   resumeMeasurement,
@@ -15,7 +14,6 @@ import type {
   MeasurementDependencies,
   MeasurementJob,
 } from './measurement.mts';
-import { takeSample } from './protocol.mts';
 import type { SampleResult } from './protocol.mts';
 import { renderReport } from './report.mts';
 import {
@@ -31,7 +29,7 @@ import { computeVerdictRows } from './verdict.mts';
 export async function runCommand(
   options: RunOptions,
   context: CommandContext,
-  dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
+  dependencies: MeasurementDependencies = dependenciesOf(options.device)
 ): Promise<number> {
   const config = readConfig(options.config, validateConfig);
   const noiseLimits = options.noiseLimits
@@ -40,8 +38,11 @@ export async function runCommand(
   return startMeasurement(
     {
       config,
-      serial: options.serial,
-      traceProcessor: options.traceProcessor,
+      device: options.device,
+      platformOptions: {
+        traceProcessor: options.traceProcessor,
+        signCommand: options.signCommand,
+      },
       folderName: config.name,
     },
     (fields) => ({
@@ -66,13 +67,16 @@ export async function runCommand(
 export async function resumeCommand(
   options: ResumeOptions,
   context: CommandContext,
-  dependencies: MeasurementDependencies = DEFAULT_DEPENDENCIES
+  dependencies: MeasurementDependencies = dependenciesOf(options.device)
 ): Promise<number> {
   const folder = path.resolve(options.folder);
   return resumeMeasurement(
     folder,
     readResult(folder),
-    options,
+    {
+      device: options.device,
+      platformOptions: { traceProcessor: options.traceProcessor },
+    },
     runJob,
     context,
     dependencies
@@ -82,11 +86,11 @@ export async function resumeCommand(
 function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
   return {
     scenarios: result.config.scenarios,
-    stateKeys: COMPARED_STATE_KEYS,
+    comparesBatteryLevel: true,
     orderOf: blockOrder,
     blocksOf: (scenario) =>
       blocksOf(result.config, scenario, result.options.blocks),
-    measure: takeSample,
+    measure: (order, sampling) => sampling.takeSample(order),
     clearSummary: (stopped) => {
       stopped.statistics = [];
       stopped.expectations = [];

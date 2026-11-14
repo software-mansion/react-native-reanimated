@@ -9,7 +9,7 @@ import type { RunResult, RunVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import type { SampleRecord } from '../session.mts';
 import {
-  SERIAL,
+  DEVICE,
   STATE,
   createFake as createCommandFake,
   onlyRunFolder,
@@ -40,7 +40,7 @@ async function stoppedRun({
       {
         command: 'run',
         config: TEST_ROOT.configFile,
-        serial: SERIAL,
+        device: DEVICE,
         blocks: 1,
         keepTraces,
         traceProcessor: TEST_ROOT.traceProcessor,
@@ -53,7 +53,7 @@ async function stoppedRun({
   return onlyRunFolder(TEST_ROOT);
 }
 
-function resume(folder: string, options: FakeOptions = {}, serial = SERIAL) {
+function resume(folder: string, options: FakeOptions = {}, device = DEVICE) {
   const { dependencies, context, installs } = createFake(options);
   return {
     installs,
@@ -61,7 +61,7 @@ function resume(folder: string, options: FakeOptions = {}, serial = SERIAL) {
       {
         command: 'resume',
         folder,
-        serial,
+        device,
         traceProcessor: TEST_ROOT.traceProcessor,
       },
       context,
@@ -108,7 +108,7 @@ describe('a stopped run', () => {
     assert.equal(result.segments[0].status, 'interrupted');
     assert.equal(result.appRefreshRate, 60);
     assert.equal(
-      result.variants.a?.apkSha256,
+      result.variants.a?.artifactSha256,
       crypto.createHash('sha256').update('apk a').digest('hex')
     );
     assert.equal(result.statistics.length, 7);
@@ -256,10 +256,22 @@ describe('resumeCommand', () => {
   it('resumes a run of result format 1 with the old metric memoryGrowth', async () => {
     const folder = await stoppedRun({ interruptAtTrace: 10 });
     const file = path.join(folder, 'result.json');
-    const { command: _command, ...current } = readResult(folder);
+    const {
+      command: _command,
+      platform: _platform,
+      ...current
+    } = readResult(folder);
     const formatOne = {
       ...current,
       formatVersion: 1,
+      variants: Object.fromEntries(
+        Object.entries(current.variants).map(
+          ([key, { artifact, artifactSha256, ...variant }]) => [
+            key,
+            { ...variant, apk: artifact, apkSha256: artifactSha256 },
+          ]
+        )
+      ),
       config: {
         ...current.config,
         expect: [
@@ -311,7 +323,8 @@ describe('resumeCommand', () => {
     const text = fs.readFileSync(file, 'utf8');
     assert.ok(!text.includes('memoryGrowth'));
     const result = readResult(folder);
-    assert.equal(result.formatVersion, 2);
+    assert.equal(result.formatVersion, 3);
+    assert.equal(result.platform, 'android');
     assert.equal(result.command, 'run');
     assert.deepEqual(result.noiseLimits, { css: { memory: 0.03 } });
     assert.equal(result.config.expect.length, 1);
@@ -332,7 +345,7 @@ describe('resumeCommand', () => {
         {
           command: 'run',
           config: TEST_ROOT.configFile,
-          serial: SERIAL,
+          device: DEVICE,
           blocks: 1,
           keepTraces: false,
           traceProcessor: TEST_ROOT.traceProcessor,
@@ -371,19 +384,19 @@ describe('resumeCommand', () => {
     );
   });
 
-  it('refuses an APK that changed or a run folder without the APK hash', async () => {
+  it('refuses a build that changed or a run folder without the build hash', async () => {
     const folder = await stoppedRun();
     fs.writeFileSync(apkOf('b'), 'other apk');
     await assert.rejects(
       resume(folder).run,
-      /The APK of variant b changed after the run started/
+      /The build of variant b changed after the run started/
     );
     editResult(folder, (result) => {
-      delete (result.variants.a as Partial<RunVariant>).apkSha256;
+      delete (result.variants.a as Partial<RunVariant>).artifactSha256;
     });
     await assert.rejects(
       resume(folder).run,
-      /no APK hash of variant a\. This run cannot resume/
+      /no build hash of variant a\. This run cannot resume/
     );
   });
 

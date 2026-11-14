@@ -1,0 +1,138 @@
+{
+  "info": {
+    "arguments": [
+      "devicectl",
+      "device",
+      "info",
+      "details",
+      "--device",
+      "00008110-000A1B2C3D4E801E",
+      "--quiet",
+      "--json-output",
+      "-"
+    ],
+    "commandType": "devicectl.device.info.details",
+    "environment": {},
+    "jsonVersion": 5,
+    "outcome": "success",
+    "version": "651.32"
+  },
+  "result": {
+    "identifier": "11111111-2222-3333-4444-555555555555",
+    "properties": {
+      "connection": {
+        "authenticationType": "manualPairing",
+        "lastConnectionDate": 816307260,
+        "pairingState": "paired",
+        "screenViewingURL": {
+          "relative": "devices://device/open?id=11111111-2222-3333-4444-555555555555"
+        },
+        "state": "connected",
+        "transportType": "localNetwork",
+        "tunnelIPAddressString": "fd63:bd4e:f9c9::1",
+        "tunnelTransportProtocol": "tcp"
+      },
+      "hardware": {
+        "cpuCount": {
+          "logicalCores": 6,
+          "packages": 1,
+          "physicalCores": 6
+        },
+        "cpuType": {
+          "subtype": 18446744071562067970,
+          "type": 16777228
+        },
+        "deviceType": "iPhone",
+        "ecid": 1234567890123456,
+        "hasActionButton": false,
+        "internalStorageCapacity": 128000000000,
+        "marketingName": "iPhone 13 mini",
+        "platform": "iOS",
+        "productType": "iPhone14,4",
+        "reality": "physical",
+        "serialNumber": "SERIAL0000",
+        "supportedBiometrics": [
+          "faceID"
+        ],
+        "supportedCPUTypes": [
+          {
+            "subtype": 18446744071562067970,
+            "type": 16777228
+          },
+          {
+            "subtype": 0,
+            "type": 16777228
+          }
+        ],
+        "supportedDeviceFamilies": [
+          1
+        ],
+        "supportsSiri": true,
+        "thinningProductType": "iPhone14,4",
+        "udid": "00008110-000A1B2C3D4E801E"
+      },
+      "software": {
+        "osBuildVersions": {
+          "buildVersion": {
+            "majorLetterComponent": "A",
+            "majorNumberComponent": 24,
+            "name": "24A446",
+            "revisionVersion": {
+              "components": [
+                24,
+                1,
+                446,
+                0,
+                0
+              ],
+              "originalComponentsCount": 5,
+              "stringValue": "24.1.446.0.0"
+            },
+            "trainProgram": "iOS",
+            "updateNumberComponent": 446
+          },
+          "supplementalBuildVersion": {
+            "majorLetterComponent": "A",
+            "majorNumberComponent": 24,
+            "name": "24A446",
+            "revisionVersion": {
+              "components": [
+                24,
+                1,
+                446,
+                0,
+                0
+              ],
+              "originalComponentsCount": 5,
+              "stringValue": "24.1.446.0.0"
+            },
+            "trainProgram": "iOS",
+            "updateNumberComponent": 446
+          }
+        },
+        "osVersionNumber": {
+          "components": [
+            27,
+            0,
+            1,
+            0,
+            0
+          ],
+          "originalComponentsCount": 3,
+          "stringValue": "27.0.1"
+        },
+        "supportsCheckedAllocations": false
+      },
+      "state": {
+        "bootState": "booted",
+        "developerModeStatus": {
+          "enabled": {
+            "mode": 1
+          }
+        },
+        "name": "Test iPhone",
+        "preparednessState": 7
+      }
+    }
+  }
+}

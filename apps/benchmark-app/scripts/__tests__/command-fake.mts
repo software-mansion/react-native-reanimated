@@ -3,10 +3,16 @@ import path from 'node:path';
 import { after, before, beforeEach } from 'node:test';
 
 import type { AndroidDevice, DeviceState } from '../android-device.mts';
+import { androidPlatform } from '../android-platform.mts';
+import type {
+  AndroidDependencies,
+  AndroidSampling,
+} from '../android-platform.mts';
 import { ToolError } from '../errors.mts';
 import type { MeasurementDependencies } from '../measurement.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { TraceMetrics } from '../perfetto.mts';
+import type { DeviceTarget } from '../platform.mts';
 import type { Clock } from '../protocol.mts';
 import type { CommandContext, Processes } from '../tools.mts';
 import type { BuiltVariant } from '../variant-build.mts';
@@ -34,6 +40,7 @@ export interface TestRoot {
 }
 
 export const SERIAL = 'SERIAL1';
+export const DEVICE: DeviceTarget = { platform: 'android', id: SERIAL };
 export const PID = 100;
 
 const GFXINFO = fs.readFileSync(
@@ -217,13 +224,13 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       fs.writeFileSync(local, 'trace'),
     remove: async () => {},
   };
-  const dependencies: MeasurementDependencies = {
+  const android: AndroidDependencies = {
     buildVariant: async ({ key }) =>
       ({
         variant: key,
         buildKey: `key-${key}`,
         directory: path.join(testRoot.root, 'builds', key),
-        apk: testRoot.apkOf(key),
+        artifact: testRoot.apkOf(key),
         applicationId: `com.reanimatedbenchmark.${key}`,
         installedVersions: { reanimated: '4.7.1', worklets: '0.13.1' },
         effectiveFlags: { reanimated: {}, worklets: {} },
@@ -236,6 +243,9 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       }),
     }),
     clock,
+  };
+  const dependencies: MeasurementDependencies<AndroidSampling> = {
+    platform: androidPlatform(android),
     runsDir: testRoot.runsDir,
   };
   const processes = {

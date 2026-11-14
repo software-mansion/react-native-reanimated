@@ -15,6 +15,7 @@ import { ToolError } from './errors.mts';
 import type { SampleMetrics } from './metrics.mts';
 import { traceConfig } from './perfetto.mts';
 import type { TracedApp, TraceReading } from './perfetto.mts';
+import type { InAppState } from './platform.mts';
 import { MINIMUM_MOUNT_BATCHES } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
 import type { LineStream } from './tools.mts';
@@ -106,6 +107,7 @@ interface SampleObservations {
   refreshRate?: number;
   thermalBefore?: number;
   thermalAfter?: number;
+  inAppState?: InAppState;
   metrics?: SampleMetrics;
   timings: Partial<Record<SampleStep, number>>;
   trace?: string;
@@ -161,10 +163,16 @@ interface TraceFiles {
   remoteTrace: string;
 }
 
-type Measured = SampleObservations & {
+export type MeasuredSample = SampleObservations & {
   metrics: SampleMetrics;
   thermalAfter: number;
 };
+
+export interface JudgedTrace {
+  scenario: Scenario;
+  traceFile: string;
+  keepTrace: boolean;
+}
 
 export const MINIMUM_WAIT_MS = 10_000;
 export const COOL_DOWN_LIMIT_MS = 600_000;
@@ -246,7 +254,7 @@ export function parseReportLine(line: string): ReportLine | null {
   return null;
 }
 
-function timedSteps(clock: Clock): SampleSteps {
+export function timedSteps(clock: Clock): SampleSteps {
   const timings: SampleSteps['timings'] = {};
   return {
     timings,
@@ -511,19 +519,30 @@ function tracedCrash(
   };
 }
 
-function judge(measured: Measured, request: SampleRequest): SampleResult {
-  const { metrics, thermalAfter } = measured;
-  const minimumFrames = MINIMUM_FRAME_SHARE * metrics.expectedFrameCount;
-  const minimumMountBatches = MINIMUM_MOUNT_BATCHES[request.scenario] ?? 0;
-  if (thermalAfter > 0) {
+function judge(measured: MeasuredSample, request: SampleRequest): SampleResult {
+  if (measured.thermalAfter > 0) {
     return {
       valid: false,
       cause: 'thermal',
-      detail: `thermal status ${thermalAfter} after the trace`,
+      detail: `thermal status ${measured.thermalAfter} after the trace`,
       trace: request.traceFile,
       ...measured,
     };
   }
+  return judgeWork(
+    measured,
+    request,
+    MINIMUM_MOUNT_BATCHES[request.scenario] ?? 0
+  );
+}
+
+export function judgeWork(
+  measured: MeasuredSample,
+  request: JudgedTrace,
+  minimumMountBatches: number
+): SampleResult {
+  const { metrics } = measured;
+  const minimumFrames = MINIMUM_FRAME_SHARE * metrics.expectedFrameCount;
   if (metrics.frameCount < minimumFrames) {
     return {
       valid: false,
@@ -543,7 +562,7 @@ function judge(measured: Measured, request: SampleRequest): SampleResult {
     };
   }
   if (!request.keepTrace) {
-    fs.rmSync(request.traceFile, { force: true });
+    fs.rmSync(request.traceFile, { recursive: true, force: true });
     return { valid: true, ...measured };
   }
   return { valid: true, trace: request.traceFile, ...measured };

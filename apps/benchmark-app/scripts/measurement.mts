@@ -2,23 +2,22 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import {
-  AndroidDevice,
-  DeviceStateGuard,
-  idleKeysOf,
-  changedStateKeys,
-  checkAbi,
-  checkSdk,
-  cleanUpDevice,
-} from './android-device.mts';
-import type { DeviceState } from './android-device.mts';
 import { VARIANT_KEYS } from './config.mts';
 import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
 import { APP_DIR, BUILDS_DIR, RUNS_DIR } from './paths.mts';
-import { TraceProcessor } from './perfetto.mts';
-import { SYSTEM_CLOCK } from './protocol.mts';
-import type { Clock, Collector, SampleRequest } from './protocol.mts';
+import type {
+  DeviceState,
+  DeviceTarget,
+  InAppState,
+  Platform,
+  PlatformOptions,
+  PlatformSession,
+  SampleOrder,
+  Sampling,
+  ToolVersions,
+} from './platform.mts';
+import { platformOf } from './platforms.mts';
 import {
   FORMAT_VERSION,
   createRunFolder,
@@ -35,44 +34,29 @@ import type {
   Recorded,
   SamplePlace,
 } from './session.mts';
-import {
-  once,
-  readToolVersions,
-  resolveAdb,
-  resolveAndroidHome,
-  resolveTraceProcessor,
-} from './tools.mts';
-import type { CommandContext, Processes, ToolVersions } from './tools.mts';
-import { buildVariant } from './variant-build.mts';
+import { once } from './tools.mts';
+import type { CommandContext } from './tools.mts';
 
-export interface MeasurementDependencies {
-  buildVariant: typeof buildVariant;
-  createDevice: (
-    processes: Processes,
-    adb: string,
-    serial: string
-  ) => AndroidDevice;
-  createCollector: (processes: Processes, traceProcessor: string) => Collector;
-  clock: Clock;
+export interface MeasurementDependencies<S extends Sampling = Sampling> {
+  platform: Platform<S>;
   runsDir: string;
 }
 
-export type JobResult = Judged & { refreshRate?: number };
+export type JobResult = Judged & {
+  refreshRate?: number;
+  inAppState?: InAppState;
+};
 
 export interface MeasurementJob<
   S extends JobResult,
   R extends MeasurementResult<S>,
+  P extends Sampling = Sampling,
 > {
   scenarios: readonly Scenario[];
-  stateKeys: readonly (keyof DeviceState)[];
+  comparesBatteryLevel: boolean;
   blocksOf: (scenario: Scenario) => number;
   orderOf: BlockOrder;
-  measure: (
-    request: SampleRequest,
-    device: AndroidDevice,
-    collector: Collector,
-    clock: Clock
-  ) => Promise<S>;
+  measure: (order: SampleOrder, sampling: P) => Promise<S>;
   clearSummary: (result: R) => void;
   summarize: (result: R) => void;
   renderReport: (result: R) => string;
@@ -86,40 +70,28 @@ export type NewResultFields<S extends JobResult> = Omit<
 
 export interface Start {
   config: VariantsConfig;
-  serial: string;
-  traceProcessor?: string;
+  device: DeviceTarget;
+  platformOptions: PlatformOptions;
   folderName: string;
 }
 
 export interface Resume {
-  serial: string;
-  traceProcessor?: string;
+  device: DeviceTarget;
+  platformOptions: PlatformOptions;
 }
 
-interface Tools {
-  androidHome: string;
-  adb: string;
-  traceProcessor: string;
-}
-
-interface Session<R> {
+interface Run<R, P extends Sampling> {
   result: R;
   folder: string;
-  device: AndroidDevice;
-  traceProcessor: string;
+  session: PlatformSession<P>;
+  traceExtension: string;
 }
 
 type Variants = Record<VariantKey, RunVariant>;
 
-export const DEFAULT_DEPENDENCIES: MeasurementDependencies = {
-  buildVariant,
-  createDevice: (processes, adb, serial) =>
-    new AndroidDevice(processes, adb, serial),
-  createCollector: (processes, traceProcessor) =>
-    new TraceProcessor(processes, traceProcessor),
-  clock: SYSTEM_CLOCK,
-  runsDir: RUNS_DIR,
-};
+export function dependenciesOf(device: DeviceTarget): MeasurementDependencies {
+  return { platform: platformOf(device.platform), runsDir: RUNS_DIR };
+}
 
 export function readConfig<C>(
   file: string,
@@ -144,17 +116,21 @@ export function readJson(file: string): unknown {
 export async function startMeasurement<
   S extends JobResult,
   R extends MeasurementResult<S>,
+  P extends Sampling,
 >(
   start: Start,
   createResult: (fields: NewResultFields<S>) => R,
-  createJob: (result: R) => MeasurementJob<S, R>,
+  createJob: (result: R) => MeasurementJob<S, R, P>,
   context: CommandContext,
-  dependencies: MeasurementDependencies
+  dependencies: MeasurementDependencies<P>
 ): Promise<number> {
-  const { processes, log } = context;
-  const tools = resolveTools(start.traceProcessor);
-  const device = dependencies.createDevice(processes, tools.adb, start.serial);
-  const startState = await readCheckedState(device);
+  const { platform } = dependencies;
+  const session = await connect(
+    platform,
+    start.device,
+    start.platformOptions,
+    context
+  );
 
   const startedAt = new Date().toISOString();
   const folder = createRunFolder(
@@ -164,112 +140,97 @@ export async function startMeasurement<
   );
   const result = createResult({
     formatVersion: FORMAT_VERSION,
+    platform: platform.name,
     status: 'running',
     startedAt,
     config: start.config,
-    serial: start.serial,
-    segments: [{ startedAt, status: 'running', device: startState }],
+    serial: start.device.id,
+    segments: [{ startedAt, status: 'running', device: session.startState }],
     appRefreshRate: null,
-    tools: await readToolVersions(
-      processes,
-      tools.adb,
-      tools.traceProcessor,
-      start.serial
-    ),
+    tools: await session.readToolVersions(),
     variants: {},
     scenarios: [],
     incompleteScenario: null,
     abandonedScenarios: [],
   });
   writeResult(folder, result);
-  log(`run folder ${folder}`);
+  context.log(`run folder ${folder}`);
 
   return measure(
-    { result, folder, device, traceProcessor: tools.traceProcessor },
+    { result, folder, session, traceExtension: platform.traceExtension },
     createJob(result),
-    () =>
-      buildVariants(
-        start.config,
-        tools.androidHome,
-        context,
-        dependencies,
-        result
-      ),
-    context,
-    dependencies
+    () => buildVariants(start.config, session, context, result),
+    context
   );
 }
 
 export async function resumeMeasurement<
   S extends JobResult,
   R extends MeasurementResult<S>,
+  P extends Sampling,
 >(
   folder: string,
   result: R,
   resume: Resume,
-  createJob: (result: R) => MeasurementJob<S, R>,
+  createJob: (result: R) => MeasurementJob<S, R, P>,
   context: CommandContext,
-  dependencies: MeasurementDependencies
+  dependencies: MeasurementDependencies<P>
 ): Promise<number> {
-  const { processes, log } = context;
-  const variants = checkResumable(result);
-  const tools = resolveTools(resume.traceProcessor);
-  const device = dependencies.createDevice(processes, tools.adb, resume.serial);
-  const startState = await readCheckedState(device);
-  checkSameTools(
-    result.tools,
-    await readToolVersions(
-      processes,
-      tools.adb,
-      tools.traceProcessor,
-      resume.serial
-    )
+  const { platform } = dependencies;
+  const variants = checkResumable(result, platform);
+  const session = await connect(
+    platform,
+    resume.device,
+    resume.platformOptions,
+    context
   );
+  checkSameTools(result.tools, await session.readToolVersions());
   const job = createJob(result);
-  checkSameDeviceState(result.segments[0].device, startState, job.stateKeys);
+  checkSameDeviceState(
+    session.stateChanges(result.segments[0].device, job.comparesBatteryLevel)
+  );
 
-  result.serial = resume.serial;
-  startSegment(result, startState);
+  result.serial = resume.device.id;
+  startSegment(result, session.startState);
   job.clearSummary(result);
   writeResult(folder, result);
-  log(
+  context.log(
     `resume run folder ${folder}, segment ${result.segments.length - 1}, scenarios to measure: ${scenariosWithoutData(result, job.scenarios).join(', ')}`
   );
 
   return measure(
-    { result, folder, device, traceProcessor: tools.traceProcessor },
+    { result, folder, session, traceExtension: platform.traceExtension },
     job,
     async () => variants,
-    context,
-    dependencies
+    context
   );
 }
 
-function resolveTools(traceProcessorOption: string | undefined): Tools {
-  const androidHome = resolveAndroidHome();
-  return {
-    androidHome,
-    adb: resolveAdb({ ...process.env, ANDROID_HOME: androidHome }),
-    traceProcessor: resolveTraceProcessor(traceProcessorOption),
-  };
+function connect<P extends Sampling>(
+  platform: Platform<P>,
+  device: DeviceTarget,
+  options: PlatformOptions,
+  context: CommandContext
+): Promise<PlatformSession<P>> {
+  if (device.platform !== platform.name) {
+    throw new ToolError(
+      `This command measures on ${platform.name}, but the device option is for ${device.platform}`
+    );
+  }
+  return platform.connect(context.processes, device.id, options);
 }
 
-async function readCheckedState(device: AndroidDevice): Promise<DeviceState> {
-  await device.checkConnected();
-  const state = await device.readState();
-  checkSdk(state);
-  checkAbi(state);
-  return state;
-}
-
-async function measure<S extends JobResult, R extends MeasurementResult<S>>(
-  session: Session<R>,
-  job: MeasurementJob<S, R>,
+async function measure<
+  S extends JobResult,
+  R extends MeasurementResult<S>,
+  P extends Sampling,
+>(
+  run: Run<R, P>,
+  job: MeasurementJob<S, R, P>,
   prepareVariants: () => Promise<Variants>,
-  context: CommandContext,
-  dependencies: MeasurementDependencies
+  context: CommandContext
 ): Promise<number> {
-  const { result, folder, device } = session;
+  const { result, folder, session } = run;
   const { log } = context;
   const finish = (status: RunStatus, error?: Error) => {
     endSegment(result, status, error);
@@ -279,8 +240,7 @@ async function measure<S extends JobResult, R extends MeasurementResult<S>>(
     writeReport(folder, job.renderReport(result), log);
   };
   const stop = once(async (status: RunStatus, error?: Error) => {
-    await cleanUpDevice(
-      device,
+    await session.cleanUp(
       Object.values(result.variants).map((built) => built.applicationId),
       log
     );
@@ -291,20 +251,16 @@ async function measure<S extends JobResult, R extends MeasurementResult<S>>(
   try {
     const variants = await prepareVariants();
     writeResult(folder, result);
-    await installVariants(device, variants, log);
-    const sampleContext: SampleContext<R> = {
-      session,
-      collector: dependencies.createCollector(
-        context.processes,
-        session.traceProcessor
-      ),
+    await installVariants(session, variants, log);
+    const sampleContext: SampleContext<R, P> = {
+      run,
+      sampling: session.sampling({
+        start: result.segments[0].device,
+        appRefreshRate: result.appRefreshRate,
+        inAppState: result.inAppState ?? null,
+        comparesBatteryLevel: job.comparesBatteryLevel,
+      }),
       variants,
-      guard: new DeviceStateGuard(
-        result.segments[0].device,
-        result.appRefreshRate,
-        job.stateKeys
-      ),
-      clock: dependencies.clock,
       log,
     };
     for (const scenario of scenariosWithoutData(result, job.scenarios)) {
@@ -362,39 +318,36 @@ function writeReport(
 }
 
 async function installVariants(
-  device: AndroidDevice,
+  session: PlatformSession<Sampling>,
   variants: Variants,
   log: (message: string) => void
 ) {
   for (const key of VARIANT_KEYS) {
     log(`install ${variants[key].applicationId}`);
-    await device.install(variants[key].apk);
-    await device.compileForSpeed(variants[key].applicationId);
+    await session.install(variants[key]);
   }
 }
 
-interface SampleContext<R> {
-  session: Session<R>;
-  collector: Collector;
+interface SampleContext<R, P extends Sampling> {
+  run: Run<R, P>;
+  sampling: P;
   variants: Variants;
-  guard: DeviceStateGuard;
-  clock: Clock;
   log: (message: string) => void;
 }
 
 async function takeCheckedSample<
   S extends JobResult,
   R extends MeasurementResult<S>,
+  P extends Sampling,
 >(
   place: SamplePlace,
-  context: SampleContext<R>,
-  job: MeasurementJob<S, R>
+  context: SampleContext<R, P>,
+  job: MeasurementJob<S, R, P>
 ): Promise<Measured<S>> {
-  const { session, variants, guard } = context;
-  const { result, device } = session;
-  const state = await device.readState();
-  guard.checkIdle(state);
-  const tracesDir = path.join(session.folder, 'traces');
+  const { run, sampling, variants } = context;
+  const { result } = run;
+  const idle = await sampling.checkIdle();
+  const tracesDir = path.join(run.folder, 'traces');
   fs.mkdirSync(tracesDir, { recursive: true });
   const segment = result.segments.length - 1;
   const sample = await job.measure(
@@ -404,27 +357,20 @@ async function takeCheckedSample<
         (key) => variants[key].applicationId
       ),
       scenario: place.scenario,
-      baselineTemperature: result.segments[0].device.batteryTemperature,
-      guard,
       traceFile: path.join(
         tracesDir,
-        `${place.scenario}-segment${segment}-block${place.block}-attempt${place.attempt}-${place.position}-${place.variant}.perfetto-trace`
+        `${place.scenario}-segment${segment}-block${place.block}-attempt${place.attempt}-${place.position}-${place.variant}.${run.traceExtension}`
       ),
       keepTrace: result.options.keepTraces,
     },
-    device,
-    context.collector,
-    context.clock
+    sampling
   );
   result.appRefreshRate ??= sample.refreshRate ?? null;
+  result.inAppState ??= sample.inAppState;
   context.log(
     `${place.scenario} block ${place.block} attempt ${place.attempt} ${place.variant.toUpperCase()}: ${sample.valid ? 'valid' : `invalid (${sample.cause}: ${sample.detail})`}`
   );
-  return Object.assign(sample, {
-    ...place,
-    segment,
-    batteryLevel: state.batteryLevel,
-  });
+  return Object.assign(sample, { ...place, segment, ...idle });
 }
 
 function keptSamples<S extends JobResult>(
@@ -438,22 +384,23 @@ function keptSamples<S extends JobResult>(
 
 async function buildVariants(
   config: VariantsConfig,
-  androidHome: string,
+  session: PlatformSession<Sampling>,
   context: CommandContext,
-  dependencies: MeasurementDependencies,
   result: MeasurementResult<Judged>
 ): Promise<Variants> {
   for (const key of VARIANT_KEYS) {
-    const built = await dependencies.buildVariant({
+    const built = await session.buildVariant({
       appDir: APP_DIR,
       buildsDir: BUILDS_DIR,
       key,
       variant: config[key],
-      androidHome,
       processes: context.processes,
       log: context.log,
     });
-    result.variants[key] = { ...built, apkSha256: sha256File(built.apk) };
+    result.variants[key] = {
+      ...built,
+      artifactSha256: sha256File(built.artifact),
+    };
   }
   return result.variants as Variants;
 }
@@ -465,32 +412,40 @@ function sha256File(file: string): string {
     .digest('hex');
 }
 
-function checkResumable(result: MeasurementResult<Judged>): Variants {
+function checkResumable(
+  result: MeasurementResult<Judged>,
+  platform: Platform<Sampling>
+): Variants {
   if (result.status === 'done') {
     throw new ToolError(
       'The run is done. Only a run that is not done can resume.'
     );
   }
+  if (result.platform !== platform.name) {
+    throw new ToolError(
+      `The run measured on ${result.platform}. It cannot resume on ${platform.name}.`
+    );
+  }
   for (const key of VARIANT_KEYS) {
-    checkStoredApk(key, result.variants[key]);
+    checkStoredArtifact(key, result.variants[key]);
   }
   return result.variants as Variants;
 }
 
-function checkStoredApk(key: VariantKey, variant: RunVariant | undefined) {
-  if (typeof variant?.apkSha256 !== 'string') {
+function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
+  if (typeof variant?.artifactSha256 !== 'string') {
     throw new ToolError(
-      `The run folder has no APK hash of variant ${key}. This run cannot resume. Start a new run.`
+      `The run folder has no build hash of variant ${key}. This run cannot resume. Start a new run.`
     );
   }
-  if (!fs.existsSync(variant.apk)) {
+  if (!fs.existsSync(variant.artifact)) {
     throw new ToolError(
-      `The build of variant ${key} does not exist any more: ${variant.apk}`
+      `The build of variant ${key} does not exist any more: ${variant.artifact}`
     );
   }
-  if (sha256File(variant.apk) !== variant.apkSha256) {
+  if (sha256File(variant.artifact) !== variant.artifactSha256) {
     throw new ToolError(
-      `The APK of variant ${key} changed after the run started: ${variant.apk}`
+      `The build of variant ${key} changed after the run started: ${variant.artifact}`
     );
   }
 }
@@ -504,9 +459,10 @@ function checkSameTools(
       'The run folder has no tool versions. This run cannot resume.'
     );
   }
-  const changes = (Object.keys(current) as (keyof ToolVersions)[])
-    .filter((key) => stored[key] !== current[key])
-    .map((key) => `${key}: ${stored[key]} -> ${current[key]}`);
+  const storedVersions: Record<string, string> = { ...stored };
+  const changes = Object.entries(current)
+    .filter(([key, version]) => storedVersions[key] !== version)
+    .map(([key, version]) => `${key}: ${storedVersions[key]} -> ${version}`);
   if (changes.length > 0) {
     throw new ToolError(
       `The tool versions changed after the run started: ${changes.join(', ')}`
@@ -514,12 +470,7 @@ function checkSameTools(
   }
 }
 
-function checkSameDeviceState(
-  stored: DeviceState,
-  current: DeviceState,
-  keys: readonly (keyof DeviceState)[]
-) {
-  const changes = changedStateKeys(stored, current, idleKeysOf(keys));
+function checkSameDeviceState(changes: string[]) {
   if (changes.length > 0) {
     throw new ToolError(
       `The device state is not the same as at the start of the run: ${changes.join(', ')}`

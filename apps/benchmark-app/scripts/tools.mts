@@ -39,6 +39,8 @@ export interface ToolVersions {
 
 export const COMMAND_TIMEOUT_MS = 60_000;
 
+const STREAM_ERROR_LINES = 20;
+
 export class Processes {
   readonly #running = new Set<ChildProcess>();
 
@@ -107,11 +109,15 @@ export class Processes {
     let stopped = false;
     let failure: ToolError | null = null;
     let buffered = '';
+    let stderr = '';
     child.stdout?.on('data', (chunk: Buffer) => {
       buffered += chunk.toString();
       const lines = buffered.split(/\r?\n/);
       buffered = lines.pop() ?? '';
       lines.forEach(onLine);
+    });
+    child.stderr?.on('data', (chunk: Buffer) => {
+      stderr = tail(stderr + chunk.toString(), STREAM_ERROR_LINES);
     });
     child.on('error', (error) => {
       failure ??= new ToolError(
@@ -121,7 +127,7 @@ export class Processes {
     child.on('close', (code, signal) => {
       if (!stopped) {
         failure ??= new ToolError(
-          `${commandLine(command, args)} stopped (${signal ?? `exit ${code}`}) before the driver stopped it`
+          `${commandLine(command, args)} stopped (${signal ?? `exit ${code}`}) before the driver stopped it${stderr.trim() ? `:\n${stderr.trim()}` : ''}`
         );
       }
     });

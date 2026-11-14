@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { DeviceState } from './android-device.mts';
 import type {
   Expectation,
   RunConfig,
@@ -13,10 +12,15 @@ import { evaluateExpectations } from './expectations.mts';
 import type { ExpectationResult } from './expectations.mts';
 import { RETIRED_VERDICT_METRIC, isVerdictMetric } from './metrics.mts';
 import type { SampleMetrics, VerdictMetric } from './metrics.mts';
+import type {
+  DeviceState,
+  InAppState,
+  PlatformName,
+  ToolVersions,
+} from './platform.mts';
 import type { SampleResult } from './protocol.mts';
 import type { Scenario } from './scenarios.mts';
 import type { Judged, SampleRecord, ScenarioOutcome } from './session.mts';
-import type { ToolVersions } from './tools.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { NoiseLimits, VerdictRow } from './verdict.mts';
 
@@ -30,7 +34,7 @@ export interface Segment {
   device: DeviceState;
 }
 
-export type RunVariant = BuiltVariant & { apkSha256: string };
+export type RunVariant = BuiltVariant & { artifactSha256: string };
 
 export type AbandonedScenario<R extends Judged = SampleResult> =
   ScenarioOutcome<R> & { segment: number };
@@ -39,6 +43,7 @@ export type ResultCommand = 'run' | 'memory';
 
 export interface MeasurementResult<R extends Judged = SampleResult> {
   formatVersion: typeof FORMAT_VERSION;
+  platform: PlatformName;
   command: ResultCommand;
   status: RunStatus;
   startedAt: string;
@@ -49,6 +54,7 @@ export interface MeasurementResult<R extends Judged = SampleResult> {
   serial: string;
   segments: Segment[];
   appRefreshRate: number | null;
+  inAppState?: InAppState;
   tools?: ToolVersions;
   variants: Partial<Record<VariantKey, RunVariant>>;
   scenarios: ScenarioOutcome<R>[];
@@ -69,11 +75,27 @@ export interface RunResult extends MeasurementResult {
   expectations: ExpectationResult[];
 }
 
-type FormatOneResult = Omit<RunResult, 'formatVersion' | 'command'> & {
+type FormatTwoVariant = Omit<RunVariant, 'artifact' | 'artifactSha256'> & {
+  apk: string;
+  apkSha256: string;
+};
+
+type FormatTwoResult<R extends MeasurementResult<Judged>> = Omit<
+  R,
+  'formatVersion' | 'platform' | 'variants'
+> & {
+  formatVersion: 2;
+  variants: Partial<Record<VariantKey, FormatTwoVariant>>;
+};
+
+type FormatOneResult = Omit<
+  FormatTwoResult<RunResult>,
+  'formatVersion' | 'command'
+> & {
   formatVersion: 1;
 };
 
-export const FORMAT_VERSION = 2;
+export const FORMAT_VERSION = 3;
 
 export function runFolderName(date: Date, name: string): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -104,29 +126,62 @@ export function readMeasurementResult<R extends MeasurementResult<Judged>>(
   command: R['command']
 ): R {
   const file = path.join(folder, 'result.json');
-  let stored: MeasurementResult<Judged> | FormatOneResult;
+  let stored: R | FormatTwoResult<R> | FormatOneResult;
   try {
     stored = JSON.parse(fs.readFileSync(file, 'utf8')) as typeof stored;
   } catch (error) {
     throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
   }
-  const result =
-    stored.formatVersion === 1 ? upgradedFormatOne(stored) : stored;
+  const result = currentFormat<R>(stored);
   if (result.command !== command) {
     throw new ToolError(
       `${folder} holds the result of the ${result.command} command, not of the ${command} command`
     );
   }
-  return withSampleSegments(result as R);
+  return withSampleSegments(result);
 }
 
-function upgradedFormatOne(stored: FormatOneResult): RunResult {
+function currentFormat<R extends MeasurementResult<Judged>>(
+  stored: R | FormatTwoResult<R> | FormatOneResult
+): R {
+  switch (stored.formatVersion) {
+    case 1:
+      return upgradedFormatTwo(upgradedFormatOne(stored)) as unknown as R;
+    case 2:
+      return upgradedFormatTwo(stored);
+    default:
+      return stored;
+  }
+}
+
+function upgradedFormatTwo<R extends MeasurementResult<Judged>>(
+  stored: FormatTwoResult<R>
+): R {
+  const variants = Object.fromEntries(
+    Object.entries(stored.variants).map(
+      ([key, { apk, apkSha256, ...variant }]) => [
+        key,
+        { ...variant, artifact: apk, artifactSha256: apkSha256 },
+      ]
+    )
+  );
+  return {
+    ...stored,
+    formatVersion: FORMAT_VERSION,
+    platform: 'android',
+    variants,
+  } as unknown as R;
+}
+
+function upgradedFormatOne(
+  stored: FormatOneResult
+): FormatTwoResult<RunResult> {
   outcomesOf(stored)
     .flatMap((outcome) => outcome.samples)
     .forEach(renameRetiredMetric);
   return {
     ...stored,
-    formatVersion: FORMAT_VERSION,
+    formatVersion: 2,
     command: 'run',
     config: {
       ...stored.config,

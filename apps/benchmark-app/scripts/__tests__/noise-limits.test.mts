@@ -100,7 +100,8 @@ function runResult(
     expect: [],
   };
   return {
-    formatVersion: 2,
+    formatVersion: 3,
+    platform: 'android',
     command: 'run',
     status: 'tool error',
     startedAt: '2026-11-12T10:00:00.000Z',

@@ -1,9 +1,9 @@
 import { ToolError } from './errors.mts';
-import type { SampleMetrics } from './metrics.mts';
+import type { AndroidSampleMetrics } from './metrics.mts';
 import { quantile } from './statistics.mts';
 import type { Processes } from './tools.mts';
 
-export type TraceMetrics = Omit<SampleMetrics, 'coldStart'>;
+export type TraceMetrics = Omit<AndroidSampleMetrics, 'coldStart'>;
 
 export interface TracedApp {
   applicationId: string;

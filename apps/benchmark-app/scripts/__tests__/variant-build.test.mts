@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { gradleArguments } from '../android-build.mts';
 import type { Variant } from '../config.mts';
+import { signArguments, xcodebuildArguments } from '../ios-build.mts';
+import type { BuildKeyInputs } from '../variant-build.mts';
 import {
   applicationIdOf,
-  gradleArguments,
   isCopied,
   mergeFlags,
   packageSpec,
@@ -60,8 +62,10 @@ describe('isCopied', () => {
 });
 
 describe('variantBuildKey', () => {
-  const inputs = {
+  const inputs: BuildKeyInputs = {
     variant: VARIANT,
+    platform: 'android',
+    platformOptions: '',
     suffix: '.a',
     projectHash: 'project',
     tarballHashes: {},
@@ -74,6 +78,8 @@ describe('variantBuildKey', () => {
     assert.equal(variantBuildKey({ ...inputs }), key);
     for (const changed of [
       { suffix: '.b' },
+      { platform: 'ios' as const },
+      { platformOptions: 'sign.sh' },
       { projectHash: 'changed' },
       { tarballHashes: { worklets: 'other' } },
       { procedureHash: 'changed' },
@@ -160,5 +166,39 @@ describe('gradleArguments', () => {
       '-PenableReanimatedProfiling=true',
       '-PenableWorkletsProfiling=true',
     ]);
+  });
+});
+
+describe('xcodebuildArguments', () => {
+  it('builds Release for a device without signing and sets the bundle id suffix', () => {
+    const args = xcodebuildArguments('b');
+    assert.deepEqual(args.slice(0, 8), [
+      '-workspace',
+      'ReanimatedBenchmark.xcworkspace',
+      '-scheme',
+      'ReanimatedBenchmark',
+      '-configuration',
+      'Release',
+      '-sdk',
+      'iphoneos',
+    ]);
+    assert.ok(args.includes('BENCHMARK_BUNDLE_IDENTIFIER_SUFFIX=.b'));
+    assert.ok(args.includes('CODE_SIGNING_ALLOWED=NO'));
+    assert.equal(args.at(-1), 'build');
+  });
+});
+
+describe('signArguments', () => {
+  it('gives the app and the output file to the sign command as two arguments', () => {
+    assert.deepEqual(
+      signArguments('./sign.sh --team T', '/b/My App.app', '/b/out.ipa'),
+      [
+        '-c',
+        './sign.sh --team T "$1" "$2"',
+        'sign',
+        '/b/My App.app',
+        '/b/out.ipa',
+      ]
+    );
   });
 });

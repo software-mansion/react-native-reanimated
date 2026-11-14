@@ -9,7 +9,7 @@ import type { MemoryResult } from '../memory.mts';
 import { readMeasurementResult } from '../results.mts';
 import { resumeCommand } from '../run.mts';
 import {
-  SERIAL,
+  DEVICE,
   STATE,
   createFake,
   onlyRunFolder,
@@ -35,7 +35,7 @@ const READING_TIMES = [60, 120, 180, 240, 300, 360, 420, 480, 540, 600];
 const OPTIONS: MemoryOptions = {
   command: 'memory',
   config: TEST_ROOT.configFile,
-  serial: SERIAL,
+  device: DEVICE,
   scenario: 'shared-elements',
   launches: 2,
   intervalSeconds: 60,
@@ -425,7 +425,7 @@ describe('memoryResumeCommand', () => {
         {
           command: 'memory-resume',
           folder,
-          serial: SERIAL,
+          device: DEVICE,
           traceProcessor: TEST_ROOT.traceProcessor,
         },
         context,
@@ -463,7 +463,7 @@ describe('memoryResumeCommand', () => {
         {
           command: 'resume',
           folder,
-          serial: SERIAL,
+          device: DEVICE,
           traceProcessor: TEST_ROOT.traceProcessor,
         },
         context,

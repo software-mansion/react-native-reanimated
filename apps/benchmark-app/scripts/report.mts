@@ -1,4 +1,3 @@
-import type { DeviceState } from './android-device.mts';
 import type {
   PackageSource,
   RunConfig,
@@ -8,6 +7,7 @@ import type {
 import type { ExpectationResult } from './expectations.mts';
 import { METRIC_UNITS, VERDICT_METRICS } from './metrics.mts';
 import type { MetricUnit } from './metrics.mts';
+import type { DeviceState } from './platform.mts';
 import { INVALID_CAUSES, SAMPLE_STEPS } from './protocol.mts';
 import type { InvalidCause, SampleSteps } from './protocol.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
@@ -371,8 +371,12 @@ function segmentsTable(segments: Segment[]): string {
       segment.startedAt,
       segment.finishedAt ?? '-',
       segment.status,
-      `${segment.device.batteryLevel}%`,
-      `${segment.device.batteryTemperature} °C`,
+      'batteryLevel' in segment.device
+        ? `${segment.device.batteryLevel}%`
+        : '-',
+      'batteryTemperature' in segment.device
+        ? `${segment.device.batteryTemperature} °C`
+        : '-',
     ])
   );
 }
