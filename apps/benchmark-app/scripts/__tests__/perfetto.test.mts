@@ -22,7 +22,7 @@ const APP: TracedApp = {
   pid: 2539,
   jsThread: 2573,
 };
-const RUNNING_HEADER = '"role","start_ts","end_ts","cpu"';
+const RUNNING_HEADER = '"role","start_ts","end_ts","cpu","open"';
 const FREQUENCY_HEADER = '"cpu","start_ts","end_ts","khz"';
 const FRAME_HEADER = '"ts","dur","complete"';
 
@@ -135,8 +135,8 @@ describe('TraceProcessor.collect', () => {
     assertClose(metrics.uiThreadCpuWork, 601106.2810622056);
     assertClose(metrics.processCpuWork, 601106.2810622056);
     assertClose(metrics.frameCyclesMedian, 7.0240723);
-    assertClose(metrics.frameCyclesP95, 14.61877335);
-    assertClose(metrics.frameCyclesCoverage, 0.9984005588953065);
+    assertClose(metrics.frameCyclesP95, 14.62146972);
+    assertClose(metrics.frameCyclesCoverage, 589 / 591);
   });
 
   it('gives the share of dropped frames from the refresh rate, and 0 when the app draws more frames', async () => {
@@ -218,8 +218,8 @@ describe('TraceProcessor.collect', () => {
 });
 
 describe('estimated cycles of each frame', () => {
-  const main = (start: number, end: number, cpu: number) =>
-    `"main",${start},${end},${cpu}`;
+  const main = (start: number, end: number, cpu: number, open = 0) =>
+    `"main",${start},${end},${cpu},${open}`;
   const frequency = (cpu: number, start: number, end: number, khz: number) =>
     `${cpu},${start},${end},${khz}`;
   const frame = (ts: number, dur: number, complete = 1) =>
@@ -239,7 +239,7 @@ describe('estimated cycles of each frame', () => {
     assertClose(metrics.uiThreadCpuWork, 8 / SECONDS);
   });
 
-  it('gives null when less than 95% of the running time has a known clock rate', async () => {
+  it('counts a frame only when 95% of its running time has a known clock rate', async () => {
     const work = (frequencyStart: number) =>
       metricsOf(
         withWork(
@@ -249,13 +249,57 @@ describe('estimated cycles of each frame', () => {
         )
       );
     const gap = await work(2_001);
-    assertClose(gap.frameCyclesCoverage, 18_999 / 20_000);
+    assert.equal(gap.frameCyclesCoverage, 0);
     assert.equal(gap.frameCyclesMedian, null);
     assert.equal(gap.frameCyclesP95, null);
     assertClose(gap.uiThreadCpuWork, 18.999 / SECONDS);
     const edge = await work(2_000);
-    assertClose(edge.frameCyclesCoverage, 0.95);
+    assert.equal(edge.frameCyclesCoverage, 1);
     assertClose(edge.frameCyclesMedian, 0.019);
+  });
+
+  it('gives null when fewer than 95% of the complete frames count, also when most running time has a clock rate', async () => {
+    const metrics = await metricsOf(
+      withWork(
+        [main(0, 1_000_000, 0), main(2_000_000, 2_001_000, 1)],
+        [frequency(0, 0, 3_000_000, 1_000_000)],
+        [frame(0, 1_000_000), frame(2_000_000, 1_000)]
+      )
+    );
+    assert.equal(metrics.frameCyclesCoverage, 0.5);
+    assert.equal(metrics.frameCyclesMedian, null);
+    assert.equal(metrics.frameCyclesP95, null);
+  });
+
+  it('uses the counted frames only for the median and the 95th percentile', async () => {
+    const counted = Array.from({ length: 20 }, (_, i) => i * 10_000);
+    const metrics = await metricsOf(
+      withWork(
+        [
+          ...counted.map((start) => main(start, start + 1_000, 0)),
+          main(300_000, 309_000, 1),
+        ],
+        [frequency(0, 0, 400_000, 1_000_000)],
+        [...counted.map((start) => frame(start, 2_000)), frame(300_000, 9_000)]
+      )
+    );
+    assertClose(metrics.frameCyclesCoverage, 20 / 21);
+    assertClose(metrics.frameCyclesMedian, 0.001);
+    assertClose(metrics.frameCyclesP95, 0.001);
+  });
+
+  it('ends a scheduling slice that is open at the end of the trace at the trace end for the frames only', async () => {
+    const metrics = await metricsOf(
+      withWork(
+        [main(0, 1_000, 0), main(2_000, 5_000, 0, 1)],
+        [frequency(0, 0, 5_000, 1_000_000)],
+        [frame(0, 1_000), frame(2_000, 3_000)]
+      )
+    );
+    assert.equal(metrics.frameCyclesCoverage, 1);
+    assertClose(metrics.frameCyclesMedian, (0.001 + 0.003) / 2);
+    assertClose(metrics.uiThreadCpuWork, 1 / SECONDS);
+    assertClose(metrics.processCpuWork, 1 / SECONDS);
   });
 
   it('splits a frame at a change of the clock rate', async () => {
@@ -345,14 +389,18 @@ describe('trace config and query', () => {
     );
   });
 
-  it('reads the closed scheduling slices and the clock rate intervals cut to the trace window', async () => {
+  it('reads the scheduling slices, with a mark on the open ones, and the clock rate intervals cut to the trace window', async () => {
     const query = await queryOf(APP);
     assert.ok(
       query.includes(
-        'MAX(sched.ts, trace_window.start_ts) AS start_ts,\n  MIN(sched.ts + sched.dur, trace_window.end_ts) AS end_ts,\n  sched.cpu'
+        'MAX(sched.ts, trace_window.start_ts) AS start_ts,\n  IIF(sched.dur = -1'
       )
     );
-    assert.ok(query.includes('WHERE sched.dur > 0'));
+    assert.ok(
+      query.includes(
+        'IIF(sched.dur = -1, trace_window.end_ts, MIN(sched.ts + sched.dur, trace_window.end_ts)) AS end_ts,\n  sched.cpu,\n  sched.dur = -1 AS open'
+      )
+    );
     assert.ok(
       query.includes(
         'LEAD(counter.ts, 1, (SELECT end_ts FROM trace_bounds)) OVER (PARTITION BY cpu_counter_track.cpu ORDER BY counter.ts) AS end_ts'

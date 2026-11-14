@@ -46,18 +46,19 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       names: ['frameCyclesMedian', 'frameCyclesP95'],
       unit: 'Mcycles (10^6 CPU cycles)',
       source:
-        'Estimated cycles of the main thread in each frame: for each complete `Choreographer#doFrame` slice, the sum of the duration of each scheduling slice of the main thread in it times the clock rate of its CPU at that time',
-      interval: 'Slices that start and end in the trace window',
+        'An estimate of the CPU cycles that the scheduler gave to the main thread inside each complete `Choreographer#doFrame` slice: the running time of the main thread on each core multiplied by the recorded clock rate of that core (`power/cpu_frequency`). The median and the 95th percentile over the frames that count.',
+      interval:
+        'Slices that start and end in the trace window. A scheduling slice that is open at the end of the trace ends at the end of the trace.',
       limits:
-        'The phone lowers the clock rate under load, so a frame can take more time with less work; these values show the work. `null` when less than 95% of the running time in the frames has a known clock rate. A scheduling slice that is open at the end of the trace does not count. No verdict.',
+        'There is no instruction counter. Blocked time, work outside the frame slice, other threads, rendering and the GPU are not in it. Cycles on different core types are not equal work. Missing clock rate data makes the value lower. The CPU clock rate can fall, so a frame can take more time with fewer cycles. A frame counts when 95% or more of its running time has a known clock rate. `null` when fewer than 95% of the complete frames count.',
     },
     {
       names: ['frameCyclesCoverage'],
       unit: 'share',
       source:
-        'Share of the running time of the main thread in the complete frames that has a known clock rate',
+        'Share of the complete `Choreographer#doFrame` slices that count for `frameCyclesMedian`',
       interval: 'Slices that start and end in the trace window',
-      limits: '`null` when the frames have no running time.',
+      limits: '`null` when the trace window has no complete frame.',
     },
     {
       names: ['jankyFrames'],
@@ -103,7 +104,7 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       names: ['uiThreadCpuWork', 'processCpuWork'],
       unit: 'MHz·ms for each s (1 MHz·ms is 1000 CPU cycles)',
       source:
-        'Duration of each scheduling slice times the clock rate of its CPU at that time, for the main thread and for all threads of the app. The same integral as `frameCyclesMedian`, which gives the values of `cpu_cycles_per_thread_in_interval` of the Perfetto standard library.',
+        'Duration of each scheduling slice times the clock rate of its CPU at that time, for the main thread and for all threads of the app. It gives the values of `cpu_cycles_per_thread_in_interval` of the Perfetto standard library.',
       interval: `${WINDOW}. A slice is cut to the window.`,
       limits:
         'CPU time without a known clock rate (for example before the first clock rate value of its CPU) does not count. A scheduling slice that is open at the end of the trace does not count. `null` when no running time has a known clock rate.',
@@ -120,17 +121,18 @@ export const ANDROID_DEFINITION: PlatformDefinition = {
       names: ['memory'],
       unit: 'kB',
       source:
-        'Last value of `mem.rss.anon` plus `mem.swap` of the app (`linux.process_stats`, each 1000 ms)',
-      interval: WINDOW,
-      limits: 'One value near the end of the window.',
+        'The last value of `mem.rss.anon` plus the last value of `mem.swap` of the app process (`linux.process_stats`, each 1000 ms). Swap is 0 when the trace has no `mem.swap` value.',
+      interval: 'The full trace. The counters are not cut to the trace window.',
+      limits: 'One value near the end of the trace.',
     },
     {
       names: ['windowMemoryDelta'],
       unit: 'kB',
-      source: 'Last value minus first value of `memory`',
-      interval: WINDOW,
+      source:
+        '`memory` minus the first value of `mem.rss.anon` plus the first value of `mem.swap`',
+      interval: 'The full trace. The counters are not cut to the trace window.',
       limits:
-        'The window is in the first minutes after the launch. Use the memory test to find a leak.',
+        'The trace is in the first minutes after the launch. Use the memory test to find a leak.',
     },
     {
       names: ['coldStart'],

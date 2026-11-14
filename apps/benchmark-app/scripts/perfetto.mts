@@ -53,6 +53,8 @@ const CYCLES_PER_MEGACYCLE = 1e6;
 
 const MINIMUM_FREQUENCY_COVERAGE = 0.95;
 
+const MINIMUM_COUNTED_FRAMES = 0.95;
+
 const RESULT_SETS = 10;
 
 const BYTES_PER_KB = 1024;
@@ -226,14 +228,15 @@ WITH
 SELECT
   app_thread.role,
   MAX(sched.ts, trace_window.start_ts) AS start_ts,
-  MIN(sched.ts + sched.dur, trace_window.end_ts) AS end_ts,
-  sched.cpu
+  IIF(sched.dur = -1, trace_window.end_ts, MIN(sched.ts + sched.dur, trace_window.end_ts)) AS end_ts,
+  sched.cpu,
+  sched.dur = -1 AS open
 FROM app_thread
 JOIN sched USING (utid)
 JOIN trace_window
-WHERE sched.dur > 0
+WHERE sched.dur != 0
   AND sched.ts < trace_window.end_ts
-  AND sched.ts + sched.dur > trace_window.start_ts
+  AND (sched.dur = -1 OR sched.ts + sched.dur > trace_window.start_ts)
 ORDER BY sched.ts;
 WITH
   ${traceWindow},
@@ -380,7 +383,7 @@ function computeTraceMetrics(
   const metrics = {
     ...frameMetrics(durationsMs(frameRows), frames, windowSeconds),
     ...frameCycleMetrics(
-      work.main,
+      work.mainToTraceEnd,
       frameRows.filter((frame) => frame.complete === 1)
     ),
     ...frameTimelineMetrics(numericRows(frameTimelineSet)),
@@ -414,24 +417,26 @@ function numericRows(set: ResultSet): Record<string, number>[] {
 }
 
 function workSegments(runningSet: ResultSet, frequencySet: ResultSet) {
-  const running = numericRows(runningSet);
-  const roles = runningSet.rows.map(([role]) => role);
+  const running = numericRows(runningSet).map((row, i) => ({
+    role: runningSet.rows[i][0],
+    open: row.open === 1,
+    interval: { cpu: row.cpu, start: row.start_ts, end: row.end_ts },
+  }));
   const frequencies = numericRows(frequencySet).map((row) => ({
     cpu: row.cpu,
     start: row.start_ts,
     end: row.end_ts,
     khz: row.khz,
   }));
-  const segmentsOf = (selected: (role: string | null) => boolean) =>
+  const segmentsOf = (selected: (slice: (typeof running)[number]) => boolean) =>
     cycleSegments(
-      running
-        .filter((_, i) => selected(roles[i]))
-        .map((row) => ({ cpu: row.cpu, start: row.start_ts, end: row.end_ts })),
+      running.filter(selected).map((slice) => slice.interval),
       frequencies
     );
   return {
-    main: segmentsOf((role) => role === 'main'),
-    process: segmentsOf(() => true),
+    mainToTraceEnd: segmentsOf((slice) => slice.role === 'main'),
+    main: segmentsOf((slice) => slice.role === 'main' && !slice.open),
+    process: segmentsOf((slice) => !slice.open),
   };
 }
 
@@ -443,14 +448,21 @@ function frameCycleMetrics(
   mainSegments: CycleSegment[],
   completeFrames: Record<string, number>[]
 ) {
-  const counts = completeFrames.map((frame) =>
-    countCycles(mainSegments, { start: frame.ts, end: frame.ts + frame.dur })
+  const counted = completeFrames
+    .map((frame) =>
+      countCycles(mainSegments, { start: frame.ts, end: frame.ts + frame.dur })
+    )
+    .filter(
+      (count) =>
+        count.runningNs > 0 &&
+        count.knownNs / count.runningNs >= MINIMUM_FREQUENCY_COVERAGE
+    );
+  const coverage =
+    completeFrames.length > 0 ? counted.length / completeFrames.length : null;
+  const known = coverage !== null && coverage >= MINIMUM_COUNTED_FRAMES;
+  const megacycles = counted.map(
+    (count) => count.cycles / CYCLES_PER_MEGACYCLE
   );
-  const runningNs = counts.reduce((sum, count) => sum + count.runningNs, 0);
-  const knownNs = counts.reduce((sum, count) => sum + count.knownNs, 0);
-  const coverage = runningNs > 0 ? knownNs / runningNs : null;
-  const known = coverage !== null && coverage >= MINIMUM_FREQUENCY_COVERAGE;
-  const megacycles = counts.map((count) => count.cycles / CYCLES_PER_MEGACYCLE);
   return {
     frameCyclesMedian: known ? quantileOrNull(megacycles, 0.5) : null,
     frameCyclesP95: known ? quantileOrNull(megacycles, 0.95) : null,

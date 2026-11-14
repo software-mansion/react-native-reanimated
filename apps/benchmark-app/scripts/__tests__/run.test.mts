@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
+import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
 import { readResult, writeResult } from '../results.mts';
 import type { RunResult, MeasuredVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
@@ -217,7 +218,7 @@ describe('runCommand with noise limits', () => {
         formatVersion: 1,
         platform: 'android',
         device: { model, deviceId: 'HW9', osBuild: 'other build' },
-        measurementRevision: 1,
+        measurementRevision: MEASUREMENT_REVISION,
         sources: [],
         limits: { css: { uiThreadCpu: 0.05 } },
       })
@@ -407,7 +408,9 @@ describe('resumeCommand', () => {
     });
     await assert.rejects(
       resume(folder).run,
-      /The measurement has the revision 0, and this driver has revision 1/
+      new RegExp(
+        `The measurement has the revision 0, and this driver has revision ${MEASUREMENT_REVISION}`
+      )
     );
   });
 
