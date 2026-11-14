@@ -50,6 +50,11 @@ on:
         required: false
         type: string
         default: ''
+      without-validation-record:
+        description: iOS only. Run without the validation record of the runner, for the first A/A calibration of a phone. The run then gives no CPU verdict.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -74,9 +79,11 @@ jobs:
       SHARED_ELEMENT_TRANSITIONS: ${{ inputs.shared-element-transitions }}
       BLOCKS: ${{ inputs.blocks }}
       NOISE_LIMITS: ${{ inputs.noise-limits }}
+      WITHOUT_VALIDATION_RECORD: ${{ inputs.without-validation-record }}
       DEVICE_ID: ${{ vars.BENCHMARK_DEVICE_ID }}
       SIGN_COMMAND: ${{ vars.BENCHMARK_SIGN_COMMAND }}
       NOISE_LIMITS_DIR: ${{ vars.BENCHMARK_NOISE_LIMITS_DIR }}
+      VALIDATION_RECORD: ${{ vars.BENCHMARK_VALIDATION_RECORD }}
     steps:
       - name: Name the work folders of this run attempt
         run: |
@@ -105,6 +112,20 @@ jobs:
           if [ "$PLATFORM" = ios ] && [ -z "$SIGN_COMMAND" ]; then
             echo "::error::The environment variable BENCHMARK_SIGN_COMMAND is empty."
             exit 1
+          fi
+          if [ "$PLATFORM" != ios ] && [ "$WITHOUT_VALIDATION_RECORD" = true ]; then
+            echo "::error::without-validation-record is for iOS only."
+            exit 1
+          fi
+          if [ "$PLATFORM" = ios ] && [ "$WITHOUT_VALIDATION_RECORD" != true ]; then
+            if [ -z "$VALIDATION_RECORD" ]; then
+              echo "::error::The environment variable BENCHMARK_VALIDATION_RECORD is empty. Set it, or set without-validation-record for the first A/A calibration."
+              exit 1
+            fi
+            if [ ! -f "$VALIDATION_RECORD" ]; then
+              echo "::error::There is no validation record at BENCHMARK_VALIDATION_RECORD."
+              exit 1
+            fi
           fi
           if [ -n "$NOISE_LIMITS" ]; then
             if ! [[ "$NOISE_LIMITS" =~ ^[A-Za-z0-9._-]+$ ]]; then
@@ -158,10 +179,14 @@ jobs:
           if [ -n "$NOISE_LIMITS" ]; then
             NOISE_LIMITS_OPTIONS=(--noise-limits "$NOISE_LIMITS_DIR/$NOISE_LIMITS.json")
           fi
+          VALIDATION_OPTIONS=()
+          if [ "$PLATFORM" = ios ] && [ "$WITHOUT_VALIDATION_RECORD" != true ]; then
+            VALIDATION_OPTIONS=(--validation "$VALIDATION_RECORD")
+          fi
           set +e
           node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
             --config "$CONFIG_FILE" "${DEVICE_OPTIONS[@]}" --blocks "$BLOCKS" \
-            --output-dir "$OUTPUT_DIR" "${NOISE_LIMITS_OPTIONS[@]}"
+            --output-dir "$OUTPUT_DIR" "${NOISE_LIMITS_OPTIONS[@]}" "${VALIDATION_OPTIONS[@]}"
           echo "exit-code=$?" >> "$GITHUB_OUTPUT"
 
       - name: Upload the run folder

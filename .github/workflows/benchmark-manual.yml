@@ -52,6 +52,11 @@ on:
         required: false
         type: string
         default: ''
+      without-validation-record:
+        description: iOS only. Run without the validation record of the runner, for the first A/A calibration of a phone. The run then gives no CPU verdict.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -71,3 +76,4 @@ jobs:
       shared-element-transitions: ${{ inputs.shared-element-transitions }}
       blocks: ${{ inputs.blocks }}
       noise-limits: ${{ inputs.noise-limits }}
+      without-validation-record: ${{ inputs.without-validation-record }}
