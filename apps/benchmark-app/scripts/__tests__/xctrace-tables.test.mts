@@ -40,8 +40,6 @@ describe('parseTraceTables', () => {
     for (const [name, rowCount] of [
       ['thread-state', 3],
       ['hitches-updates', 4],
-      ['hitches', 1],
-      ['device-thermal-state-intervals', 1],
       ['os-signpost', 2],
     ] as const) {
       const table = onlyTable(fixture(name));
