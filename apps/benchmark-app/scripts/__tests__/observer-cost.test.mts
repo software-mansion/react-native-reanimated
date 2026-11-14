@@ -34,6 +34,11 @@ function costOf(costs: ObserverCost[], metric: ObserverCost['metric']) {
   return cost;
 }
 
+function intervalOf(cost: ObserverCost) {
+  assert.ok(cost.interval, `no interval for ${cost.metric}`);
+  return cost.interval;
+}
+
 describe('observerCosts', () => {
   it('orders each block as enabled, disabled, disabled, enabled', () => {
     assert.deepEqual(BLOCK_ORDER, ['full', 'endpoints', 'endpoints', 'full']);
@@ -63,7 +68,7 @@ describe('observerCosts', () => {
       ),
       'jsThreadCpu'
     );
-    assert.ok(Math.abs(js.relativeDifference - 0.01) < 1e-9);
+    assert.ok(Math.abs((js.relativeDifference ?? Number.NaN) - 0.01) < 1e-9);
     assert.equal(js.allowed, 0.02);
     assert.equal(js.outcome, 'passed');
     assert.equal(
@@ -101,7 +106,8 @@ describe('observerCosts', () => {
       ),
       'jsThreadCpu'
     );
-    assert.ok(Math.abs(steady.interval.high - steady.interval.low) < 1e-12);
+    const steadyInterval = intervalOf(steady);
+    assert.ok(Math.abs(steadyInterval.high - steadyInterval.low) < 1e-12);
     assert.equal(steady.outcome, 'passed');
     const changing = costOf(
       observerCosts(
@@ -110,8 +116,20 @@ describe('observerCosts', () => {
       ),
       'jsThreadCpu'
     );
-    assert.ok(changing.interval.low >= -0.02);
-    assert.ok(changing.interval.high > 0.02);
+    assert.ok(intervalOf(changing).low >= -0.02);
+    assert.ok(intervalOf(changing).high > 0.02);
     assert.equal(changing.outcome, 'not validated');
+  });
+
+  it('gives no relative cost and no interval when a sample with only the counter reads is 0, and does not validate it', () => {
+    const idle = samples(() => 1).map((sample) => ({
+      ...sample,
+      jsThreadCpu: 0,
+    }));
+    const js = costOf(observerCosts(idle, LIMITS), 'jsThreadCpu');
+    assert.deepEqual(
+      [js.medianEndpoints, js.relativeDifference, js.interval, js.outcome],
+      [0, null, null, 'not validated']
+    );
   });
 });

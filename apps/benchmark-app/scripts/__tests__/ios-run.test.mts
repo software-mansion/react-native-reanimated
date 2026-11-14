@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { before, describe, it } from 'node:test';
@@ -405,6 +406,42 @@ describe('an iOS run', () => {
     await assert.rejects(
       run(createFake(), DEVICE),
       /This command measures on ios, but the device option is for android/
+    );
+  });
+
+  it('refuses on resume a stored validation record whose embedded source is of another build, also with its SHA-256 made again', async () => {
+    await assert.rejects(
+      run(
+        createFake({ interruptBeforeSample: 3 }),
+        IPHONE,
+        writeValidationRecord()
+      ),
+      /the device connection ended/
+    );
+    const folder = onlyRunFolder(TEST_ROOT);
+    const file = path.join(folder, 'result.json');
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const [source, ...rest] = stored.validation.sources.crosschecks;
+    const result = { ...source.result, appBuild: 'WRONG BUILD' };
+    stored.validation.sources.crosschecks = [
+      {
+        ...source,
+        result,
+        sha256: crypto
+          .createHash('sha256')
+          .update(JSON.stringify(result))
+          .digest('hex'),
+      },
+      ...rest,
+    ];
+    fs.writeFileSync(file, JSON.stringify(stored));
+    await assert.rejects(
+      resumeCommand(
+        { command: 'resume', folder, device: IPHONE },
+        createFake().context,
+        createFake().dependencies
+      ),
+      /result\.validation: the source .*steady is not of the setup of the record: app build sources -> WRONG BUILD/
     );
   });
 

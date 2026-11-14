@@ -18,8 +18,8 @@ export interface ObserverCost {
   blocks: number;
   medianEndpoints: number;
   medianFull: number;
-  relativeDifference: number;
-  interval: Interval;
+  relativeDifference: number | null;
+  interval: Interval | null;
   noiseLimit: number | null;
   allowed: number | null;
   outcome: ValidationOutcome;
@@ -57,27 +57,38 @@ export function observerCosts(
   samples: readonly CollectorSample[],
   noiseLimits: Partial<Record<ObserverCostMetric, number>>
 ): ObserverCost[] {
-  return OBSERVER_COST_METRICS.map((metric) => {
+  return OBSERVER_COST_METRICS.map((metric): ObserverCost => {
     const blocks = blocksOf(samples, metric);
     const all = (collector: keyof Block) =>
       blocks.flatMap((block) => block[collector]);
-    const interval = blockBootstrapInterval(blocks, BLOCK_BOOTSTRAP);
     const noiseLimit = noiseLimits[metric] ?? null;
     const allowed =
       noiseLimit === null ? null : ALLOWED_SHARE_OF_NOISE_LIMIT * noiseLimit;
-    return {
+    const cost = {
       metric,
       blocks: blocks.length,
       medianEndpoints: median(all('endpoints')),
       medianFull: median(all('full')),
+      noiseLimit,
+      allowed,
+    };
+    if (!all('endpoints').every((value) => value > 0)) {
+      return {
+        ...cost,
+        relativeDifference: null,
+        interval: null,
+        outcome: 'not validated',
+      };
+    }
+    const interval = blockBootstrapInterval(blocks, BLOCK_BOOTSTRAP);
+    return {
+      ...cost,
       relativeDifference: difference(
-        median(all('endpoints')),
-        median(all('full')),
+        cost.medianEndpoints,
+        cost.medianFull,
         'relative'
       ),
       interval,
-      noiseLimit,
-      allowed,
       outcome: outcomeOf(interval, allowed, blocks.length),
     };
   });

@@ -1,6 +1,7 @@
 import { ToolError } from './errors.mts';
 import {
   aBoolean,
+  aPositiveNumber,
   aString,
   anInteger,
   listOf,
@@ -200,12 +201,6 @@ const COUNTERS = [
   'updates',
 ] as const satisfies readonly (keyof InAppBoundary)[];
 
-const positiveNumber: Check = (value, label, problems) => {
-  if (typeof value !== 'number' || !(value > 0)) {
-    problems.push(`${label} must be a positive number`);
-  }
-};
-
 const BOUNDARY: Check = shape({
   uiReadStartNs: anInteger,
   uiReadEndNs: anInteger,
@@ -235,13 +230,13 @@ const SAMPLE: Check = shape({
   error: nullable(aString),
   mainThread: anInteger,
   jsThread: anInteger,
-  cpuCount: positiveNumber,
+  cpuCount: aPositiveNumber,
   maxThermal: anInteger,
   epochs: listOf(
     shape({
       load: aString,
       collector: oneOf(['full', 'endpoints']),
-      seconds: positiveNumber,
+      seconds: aPositiveNumber,
       work: shape({ own: anInteger, other: anInteger }),
     })
   ),

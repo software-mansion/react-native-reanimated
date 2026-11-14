@@ -141,7 +141,7 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...]
 
 <device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The crosscheck and observer-cost commands validate the in-app collector of iOS and support iOS only.
---trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>, and its CPU and memory metrics get a verdict only with a matching --validation <file.json>.
+--trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>. Its uiThreadCpu and jsThreadCpu get a verdict only with a matching --validation <file.json>, and memory is advisory on iOS.
 
 Scenarios: ${SCENARIOS.join(', ')}
 Validation scenarios (crosscheck only): ${VALIDATION_SCENARIOS.join(', ')}

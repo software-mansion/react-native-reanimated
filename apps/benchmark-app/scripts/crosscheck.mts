@@ -371,7 +371,7 @@ function judgeFootprint(
       'the rows are not the rows from the last row that ends before the read to the first row that starts after it'
     );
   }
-  const spanNs = rows[rows.length - 1].endNs - rows[0].startNs;
+  const spanNs = Math.max(...rows.map((row) => row.endNs)) - rows[0].startNs;
   if (spanNs > MAXIMUM_FOOTPRINT_ROWS_NS) {
     return notComparable(
       `the Activity Monitor rows around the read cover ${spanNs / NANOSECONDS_PER_MS} ms, more than ${MAXIMUM_FOOTPRINT_ROWS_NS / NANOSECONDS_PER_MS} ms`

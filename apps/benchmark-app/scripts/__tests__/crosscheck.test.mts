@@ -297,6 +297,36 @@ describe('the footprint rows around a read', () => {
     assert.equal(first.passes, true);
   });
 
+  it('measures the span of the rows to the latest end, also when a row overlaps the read', () => {
+    const rows = [
+      { startNs: 0, endNs: at(0.5), footprintKb: 40_000 },
+      { startNs: at(0.5), endNs: at(10), footprintKb: 40_000 },
+      { startNs: at(1.5), endNs: at(2), footprintKb: 40_000 },
+    ];
+    const [first] = compareFootprints(
+      inAppSample({
+        boundaries: [
+          {
+            ...START_BOUNDARY,
+            footprintReadStartNs: at(1),
+            footprintReadEndNs: at(1.1),
+            signpostStartNs: at(1.1),
+            signpostEndNs: at(1.1),
+          },
+          END_BOUNDARY,
+        ],
+      }),
+      rows,
+      { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 }
+    );
+    assert.deepEqual(first.rows, rows);
+    assert.equal(first.comparable, false);
+    assert.equal(
+      first.reason,
+      'the Activity Monitor rows around the read cover 10000 ms, more than 2000 ms'
+    );
+  });
+
   it('gives the same comparison again from its read and its rows, and refuses rows that are not the rows around the read', () => {
     const rows = halfSecondRows([40_000, 40_000, 40_000]);
     const [first] = compareFootprints(SAMPLE, rows, {

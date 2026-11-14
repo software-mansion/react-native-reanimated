@@ -30,6 +30,7 @@ import type { DeviceIdentity } from './platform.mts';
 import {
   aBoolean,
   aNumber,
+  aPositiveNumber,
   aString,
   anInteger,
   listOf,
@@ -116,7 +117,7 @@ const COMPARED_VALUE = shape({
 const PLANNED_EPOCH: Record<string, Check> = {
   load: aString,
   collector: oneOf(['full', 'endpoints']),
-  seconds: aNumber,
+  seconds: aPositiveNumber,
 };
 
 const CROSSCHECK_SHAPE: Check = shape({
@@ -125,7 +126,7 @@ const CROSSCHECK_SHAPE: Check = shape({
     epochs: listOf(shape(PLANNED_EPOCH)),
     start: oneOf(['ready', 'notification']),
   }),
-  refreshRate: aNumber,
+  refreshRate: aPositiveNumber,
   tolerances: shape({
     cpu: TOLERANCE,
     updateDuration: TOLERANCE,
@@ -142,7 +143,7 @@ const CROSSCHECK_SHAPE: Check = shape({
       ...PLANNED_EPOCH,
       work: shape({ own: anInteger, other: anInteger }),
       index: anInteger,
-      windowSeconds: aNumber,
+      windowSeconds: aPositiveNumber,
       uiThreadCpu: COMPARED_VALUE,
       jsThreadCpu: COMPARED_VALUE,
       processCpu: COMPARED_VALUE,
@@ -206,8 +207,8 @@ const OBSERVER_COST_SHAPE: Check = shape({
       blocks: anInteger,
       medianEndpoints: aNumber,
       medianFull: aNumber,
-      relativeDifference: aNumber,
-      interval: shape({ low: aNumber, high: aNumber }),
+      relativeDifference: NUMBER_OR_NULL,
+      interval: nullable(shape({ low: aNumber, high: aNumber })),
       noiseLimit: NUMBER_OR_NULL,
       allowed: NUMBER_OR_NULL,
       outcome: oneOf(['passed', 'failed', 'not validated']),

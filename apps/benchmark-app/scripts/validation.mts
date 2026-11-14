@@ -9,6 +9,11 @@ export const aNumber = typed(
   (value) => typeof value === 'number' && Number.isFinite(value)
 );
 
+export const aPositiveNumber = typed(
+  'a positive number',
+  (value) => typeof value === 'number' && Number.isFinite(value) && value > 0
+);
+
 export const anInteger = typed('an integer', Number.isInteger);
 
 export const aBoolean = typed(

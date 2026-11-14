@@ -4,6 +4,8 @@ import path from 'node:path';
 import { beforeEach, describe, it } from 'node:test';
 
 import { MEASUREMENT_REVISION } from '../measurement-rules.mts';
+import { observerCosts } from '../observer-cost.mts';
+import type { CollectorSample } from '../observer-cost.mts';
 import { metricValidity, readValidationRecord } from '../validation-record.mts';
 import type { ValidationRecord } from '../validation-record.mts';
 import {
@@ -198,7 +200,7 @@ describe('buildValidationRecord', () => {
             },
           })
         ),
-      /- memory is not a verdict metric of iOS/
+      /- validation: memory is not a verdict metric of iOS/
     );
   });
 
@@ -249,6 +251,69 @@ describe('buildValidationRecord', () => {
 });
 
 describe('the validation sources', () => {
+  it('refuses a cross-check with a refresh rate or a window length that is not positive', () => {
+    assert.throws(
+      () =>
+        readCrosscheckResult(
+          writeCrosscheck('zero-rate', LOADS_PLAN, { refreshRate: 0 })
+        ),
+      /- crosscheck\.refreshRate must be a positive number/
+    );
+    const zeroWindow = crosscheckEpochs(LOADS_PLAN).map((epoch) => ({
+      ...epoch,
+      windowSeconds: 0,
+      work: { own: 0, other: 0 },
+      workProof: {
+        own: 0,
+        other: 0,
+        minimumOwn: 0,
+        maximumOther: 0,
+        passes: true,
+      },
+    }));
+    assert.throws(
+      () =>
+        readCrosscheckResult(
+          writeCrosscheck('zero-window', LOADS_PLAN, { epochs: zeroWindow })
+        ),
+      /- crosscheck\.epochs\[0\]\.windowSeconds must be a positive number/
+    );
+  });
+
+  it('accepts an observer-cost test with a metric at 0 in each sample, and does not validate that metric', () => {
+    const folder = writeObserverCost('zero', 'idle-cost');
+    const file = path.join(folder, 'observer-cost.json');
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const samples = stored.samples.map((sample: CollectorSample) => ({
+      ...sample,
+      jsThreadCpu: 0,
+    }));
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        ...stored,
+        samples,
+        costs: observerCosts(samples, { uiThreadCpu: 0.08, jsThreadCpu: 0.08 }),
+      })
+    );
+    const js = readObserverCostResult(folder).result.costs?.find(
+      (cost) => cost.metric === 'jsThreadCpu'
+    );
+    assert.deepEqual(
+      [js?.relativeDifference, js?.interval, js?.outcome],
+      [null, null, 'not validated']
+    );
+    assert.deepEqual(
+      validated(
+        record(undefined, [
+          folder,
+          writeObserverCost('loaded', 'worklet-styles-transform'),
+        ])
+      ),
+      { uiThreadCpu: true, jsThreadCpu: false }
+    );
+  });
+
   it('refuses a cross-check without epochs or with epochs that are not the plan', () => {
     const empty = writeCrosscheck('empty', [], { footprints: [] });
     assert.throws(
@@ -427,7 +492,7 @@ describe('readValidationRecord', () => {
             },
           })
         ),
-      /is not a valid validation record:\n {2}- the flag of jsThreadCpu does not match its gates/
+      /is not a valid validation record:\n {2}- validation: the flag of jsThreadCpu does not match its gates/
     );
     assert.throws(
       () =>

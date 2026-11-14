@@ -114,7 +114,7 @@ const CROSSCHECK_LOADS = ['idle', ...WORK_LOADS];
 
 const OUTCOME = oneOf(['passed', 'failed', 'not validated']);
 
-export const VALIDATION_RECORD: Check = shape({
+const RECORD_SHAPE: Check = shape({
   formatVersion: oneOf([VALIDATION_FORMAT_VERSION]),
   platform: oneOf(['ios']),
   device: shape({ model: aString, deviceId: aString, osBuild: aString }),
@@ -133,6 +133,19 @@ export const VALIDATION_RECORD: Check = shape({
     })
   ),
 });
+
+export const VALIDATION_RECORD: Check = (value, label, problems) => {
+  const shapeProblems: string[] = [];
+  RECORD_SHAPE(value, label, shapeProblems);
+  problems.push(...shapeProblems);
+  if (shapeProblems.length === 0) {
+    problems.push(
+      ...recordProblems(value as ValidationRecord).map(
+        (problem) => `${label}: ${problem}`
+      )
+    );
+  }
+};
 
 const CROSSCHECK_CPU_FIELDS: Partial<
   Record<ComparedMetric, 'uiThreadCpu' | 'jsThreadCpu'>
@@ -165,7 +178,10 @@ export function buildValidationRecord(
     crosschecks: [...crosschecks],
     observerCosts: [...observerCosts],
   };
-  checkDistinct(sources);
+  throwProblems(
+    'The validation record cannot be made',
+    repeatedSources(sources)
+  );
   return {
     formatVersion: VALIDATION_FORMAT_VERSION,
     ...identity,
@@ -179,13 +195,7 @@ export function readValidationRecord(file: string): ValidationRecord {
   const problems: string[] = [];
   VALIDATION_RECORD(raw, 'validation', problems);
   throwProblems(`${file} is not a valid validation record`, problems);
-  const record = raw as ValidationRecord;
-  checkDistinct(record.sources);
-  throwProblems(`${file} is not a valid validation record`, [
-    ...sourcesOfOtherSetups(record),
-    ...inconsistentMetrics(record),
-  ]);
-  return record;
+  return raw as ValidationRecord;
 }
 
 export function metricValidity(
@@ -246,7 +256,18 @@ function commonIdentity(
   return first;
 }
 
-function checkDistinct({ crosschecks, observerCosts }: ValidationSources) {
+function recordProblems(record: ValidationRecord): string[] {
+  return [
+    ...repeatedSources(record.sources),
+    ...sourcesOfOtherSetups(record),
+    ...inconsistentMetrics(record),
+  ];
+}
+
+function repeatedSources({
+  crosschecks,
+  observerCosts,
+}: ValidationSources): string[] {
   const repeated = (values: readonly string[]) =>
     values.filter((value, i) => values.indexOf(value) !== i);
   const all = [...crosschecks, ...observerCosts];
@@ -255,11 +276,11 @@ function checkDistinct({ crosschecks, observerCosts }: ValidationSources) {
     ...repeated(all.map(({ sha256 }) => sha256)),
     ...repeated(crosschecks.map(({ result }) => path.resolve(result.trace))),
   ];
-  if (duplicates.length > 0) {
-    throw new ToolError(
-      `The validation sources repeat one measurement (the same folder, result file or trace): ${[...new Set(duplicates)].join(', ')}`
-    );
-  }
+  return duplicates.length === 0
+    ? []
+    : [
+        `The validation sources repeat one measurement (the same folder, result file or trace): ${[...new Set(duplicates)].join(', ')}`,
+      ];
 }
 
 function sourcesOfOtherSetups(record: ValidationRecord): string[] {
