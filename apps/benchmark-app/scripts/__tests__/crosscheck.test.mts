@@ -2,30 +2,30 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  compareEpochs,
-  compareFootprints,
-  crosscheckVerdict,
   boundaryClocks,
   clockProblems,
+  crosscheckVerdict,
+  deriveCrosscheck,
+  footprintRowsAroundReads,
   mapAppClock,
-  rederivedEpoch,
-  rederivedFootprint,
+  storedEpochEvidence,
+  traceEvidence,
   traceSpans,
 } from '../crosscheck.mts';
-import type { ClockMapping } from '../crosscheck.mts';
+import type {
+  ClockMapping,
+  CrosscheckDerivation,
+  CrosscheckEpoch,
+} from '../crosscheck.mts';
 import { readEpoch } from '../in-app-sample.mts';
-import type { SampledEpoch } from '../in-app-sample.mts';
-import type { TraceEpoch } from '../xctrace-metrics.mts';
+import type { InAppSample, SampledEpoch } from '../in-app-sample.mts';
+import type { FootprintSample, TraceEpoch } from '../xctrace-metrics.mts';
 import { END_BOUNDARY, START_BOUNDARY, inAppSample } from './ios-fixtures.mts';
 
 const SAMPLE = inAppSample();
-const EPOCHS: SampledEpoch[] = SAMPLE.epochs;
 const READING = readEpoch(SAMPLE, 0, 60);
 const CLOCK: ClockMapping = { offsetNs: 1000, uncertaintyNs: 0, spreadNs: 0 };
 const TRACE_OF_APP: TraceEpoch = {
-  uiThreadCpu: 350,
-  jsThreadCpu: 2,
-  processCpu: 353,
   onCore: {
     uiThread: { running: 345, interrupted: 5 },
     jsThread: { running: 2, interrupted: 0 },
@@ -44,6 +44,54 @@ function assertCloseTo(actual: number | null, expected: number) {
 
 function loadEpoch(load: string, own: number, other: number): SampledEpoch {
   return { load, collector: 'full', seconds: 10, work: { own, other } };
+}
+
+interface Recording {
+  trace?: TraceEpoch;
+  clock?: ClockMapping;
+  sample?: InAppSample;
+  rows?: FootprintSample[];
+}
+
+function derive({
+  trace = TRACE_OF_APP,
+  clock = CLOCK,
+  sample = SAMPLE,
+  rows = [],
+}: Recording = {}): CrosscheckDerivation {
+  return deriveCrosscheck({
+    refreshRate: 60,
+    cpuCount: sample.cpuCount,
+    reportedThermalState: sample.maxThermal,
+    appBoundaries: sample.boundaries,
+    clock,
+    epochs: traceEvidence(
+      sample.epochs,
+      sample.epochs.map((_, index) => readEpoch(sample, index, 60)),
+      sample.epochs.map(() => trace)
+    ),
+    footprintRows: footprintRowsAroundReads(sample.boundaries, rows, clock),
+  });
+}
+
+function deriveStored(
+  epochs: readonly CrosscheckEpoch[],
+  footprintRows: readonly FootprintSample[][],
+  clock: ClockMapping
+): CrosscheckDerivation {
+  return deriveCrosscheck({
+    refreshRate: 60,
+    cpuCount: SAMPLE.cpuCount,
+    reportedThermalState: SAMPLE.maxThermal,
+    appBoundaries: SAMPLE.boundaries,
+    clock,
+    epochs: epochs.map(storedEpochEvidence),
+    footprintRows,
+  });
+}
+
+function onCore(running: number, interrupted = 0) {
+  return { running, interrupted };
 }
 
 describe('mapAppClock', () => {
@@ -140,22 +188,19 @@ describe('traceSpans', () => {
   });
 });
 
-describe('compareEpochs', () => {
+describe('deriveCrosscheck: epochs', () => {
   it('gives the signed, absolute and relative error, the timing uncertainty and the gate of each value', () => {
-    const [epoch] = compareEpochs(
-      EPOCHS,
-      [READING],
-      [
-        {
-          ...TRACE_OF_APP,
-          uiThreadCpu: 344,
-          jsThreadCpu: 3.5,
-          processCpu: 365,
+    const [epoch] = derive({
+      trace: {
+        ...TRACE_OF_APP,
+        onCore: {
+          uiThread: onCore(339, 5),
+          jsThread: onCore(3.5),
+          process: onCore(360, 5),
         },
-      ],
-      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
-      60
-    );
+      },
+      clock: { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
+    }).epochs;
     const uncertainty = READING.cpuUncertainty.uiThread + 100_000 / 1e6 / 10;
     assert.deepEqual(epoch.uiThreadCpu, {
       app: 350,
@@ -180,52 +225,55 @@ describe('compareEpochs', () => {
     assert.equal(epoch.uiUpdateDurationP95?.tolerance, 0.05 * 6);
   });
 
+  it('takes the reference of a CPU value from Running plus Interrupted', () => {
+    const [epoch] = derive({
+      trace: {
+        ...TRACE_OF_APP,
+        onCore: { ...TRACE_OF_APP.onCore, uiThread: onCore(290, 10) },
+      },
+    }).epochs;
+    assert.deepEqual(epoch.traceOnCore.uiThreadCpu, onCore(290, 10));
+    assert.equal(epoch.uiThreadCpu.trace, 300);
+    assert.equal(epoch.uiThreadCpu.passes, false);
+  });
+
   it('passes a CPU error that is inside the tolerance only because of the timing uncertainty', () => {
-    const compare = (uncertaintyNs: number) =>
-      compareEpochs(
-        EPOCHS,
-        [READING],
-        [{ ...TRACE_OF_APP, jsThreadCpu: 3.05 }],
-        { offsetNs: 0, uncertaintyNs, spreadNs: 0 },
-        60
-      )[0].jsThreadCpu.passes;
-    assert.equal(compare(0), false);
-    assert.equal(compare(250_000), true);
+    const jsPasses = (uncertaintyNs: number) =>
+      derive({
+        trace: {
+          ...TRACE_OF_APP,
+          onCore: { ...TRACE_OF_APP.onCore, jsThread: onCore(3.05) },
+        },
+        clock: { offsetNs: 0, uncertaintyNs, spreadNs: 0 },
+      }).epochs[0].jsThreadCpu.passes;
+    assert.equal(jsPasses(0), false);
+    assert.equal(jsPasses(250_000), true);
   });
 
   it('needs the exact mount count and trace frames for the quantiles', () => {
-    const [epoch] = compareEpochs(
-      EPOCHS,
-      [READING],
-      [{ ...TRACE_OF_APP, mountBatchCount: 599, frameDurationsMs: [] }],
-      CLOCK,
-      60
-    );
+    const [epoch] = derive({
+      trace: { ...TRACE_OF_APP, mountBatchCount: 599, frameDurationsMs: [] },
+    }).epochs;
     assert.equal(epoch.mountBatchCount.passes, false);
     assert.equal(epoch.uiUpdateDurationMedian?.trace, null);
     assert.equal(epoch.uiUpdateDurationMedian?.passes, false);
   });
 
   it('has no UI update values for an epoch with only the counter reads', () => {
-    const sample = inAppSample({
-      epochs: [{ ...loadEpoch('none', 0, 0), collector: 'endpoints' }],
-      boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 0 }],
-      updates: { beginNs: [], endNs: [], modelTimeNs: [] },
-    });
-    const [epoch] = compareEpochs(
-      sample.epochs,
-      [readEpoch(sample, 0, 60)],
-      [TRACE_OF_APP],
-      CLOCK,
-      60
-    );
+    const [epoch] = derive({
+      sample: inAppSample({
+        epochs: [{ ...loadEpoch('none', 0, 0), collector: 'endpoints' }],
+        boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 0 }],
+        updates: { beginNs: [], endNs: [], modelTimeNs: [] },
+      }),
+    }).epochs;
     assert.equal(epoch.uiUpdateDurationMedian, null);
     assert.deepEqual(epoch.updateCount, { app: null, trace: 600 });
   });
 
   it('proves a load with its own work units in half of the display refreshes and few units of other loads', () => {
     const proof = (epoch: SampledEpoch) =>
-      compareEpochs([epoch], [READING], [TRACE_OF_APP], CLOCK, 60)[0].workProof;
+      derive({ sample: { ...SAMPLE, epochs: [epoch] } }).epochs[0].workProof;
     assert.deepEqual(proof(loadEpoch('js-load', 300, 60)), {
       own: 300,
       other: 60,
@@ -238,9 +286,63 @@ describe('compareEpochs', () => {
     assert.equal(proof(loadEpoch('idle', 0, 0)).minimumOwn, 0);
     assert.equal(proof(loadEpoch('idle', 0, 61)).passes, false);
   });
+
+  it('gives the highest thermal state of the app report and of each counter read', () => {
+    const withEnd = (thermal: number, maxThermal = 0) =>
+      derive({
+        sample: inAppSample({
+          maxThermal,
+          boundaries: [START_BOUNDARY, { ...END_BOUNDARY, thermal }],
+        }),
+      }).thermalState;
+    assert.equal(withEnd(0), 0);
+    assert.equal(withEnd(1), 1);
+    assert.equal(withEnd(1, 2), 2);
+  });
 });
 
-describe('compareFootprints', () => {
+describe('deriveCrosscheck: the stored evidence', () => {
+  const clock = { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 };
+  const recorded = derive({
+    trace: {
+      ...TRACE_OF_APP,
+      onCore: { ...TRACE_OF_APP.onCore, uiThread: onCore(290, 10) },
+    },
+    clock,
+  });
+  const noRows = SAMPLE.boundaries.map(() => []);
+
+  it('gives each stored outcome of an epoch again from the evidence that the result stores', () => {
+    assert.deepEqual(
+      deriveStored(recorded.epochs, noRows, clock).epochs,
+      recorded.epochs
+    );
+  });
+
+  it('takes the app value, the reference, the window and the timing uncertainty from the counter reads and the on-core times, not from the stored values', () => {
+    const [epoch] = recorded.epochs;
+    const forged: CrosscheckEpoch = {
+      ...epoch,
+      windowSeconds: 1,
+      uiThreadCpu: {
+        ...epoch.uiThreadCpu,
+        app:
+          epoch.uiThreadCpu.app === null ? null : epoch.uiThreadCpu.app + 500,
+        trace: 350,
+        timingUncertainty: 1000,
+        passes: true,
+      },
+      mountBatchCount: { ...epoch.mountBatchCount, app: 7 },
+      workProof: { ...epoch.workProof, passes: false },
+    };
+    assert.deepEqual(
+      deriveStored([forged], noRows, clock).epochs,
+      recorded.epochs
+    );
+  });
+});
+
+describe('deriveCrosscheck: footprints', () => {
   const READ_CLOCK: ClockMapping = {
     offsetNs: 1_000_000,
     uncertaintyNs: 500,
@@ -255,7 +357,7 @@ describe('compareFootprints', () => {
 
   it('compares the footprint of the app with the range of the Activity Monitor rows around its read', () => {
     const rows = [row(0, 39_500), row(1_500_000, 40_100), ...END_ROWS];
-    const [first, second] = compareFootprints(SAMPLE, rows, READ_CLOCK);
+    const [first, second] = derive({ clock: READ_CLOCK, rows }).footprints;
     assert.deepEqual(first, {
       boundary: 0,
       app: 40_000,
@@ -275,16 +377,15 @@ describe('compareFootprints', () => {
   });
 
   it('includes a row that overlaps the read in the range, and fails an app value too far from the range', () => {
-    const [first] = compareFootprints(
-      SAMPLE,
-      [
+    const [first] = derive({
+      clock: READ_CLOCK,
+      rows: [
         row(0, 41_200),
         row(1_019_000, 41_600, 2_000),
         row(1_500_000, 41_300),
         ...END_ROWS,
       ],
-      READ_CLOCK
-    );
+    }).footprints;
     assert.equal(first.rows.length, 3);
     assert.equal(first.high, 41_600);
     assert.equal(first.signedError, -1_200);
@@ -293,7 +394,7 @@ describe('compareFootprints', () => {
 
   it('does not compare a read without a row on each side, with rows that cover more than 2 s, or with rows that differ by the tolerance', () => {
     const reasonOf = (rows: ReturnType<typeof row>[]) =>
-      compareFootprints(SAMPLE, rows, READ_CLOCK)[0].reason;
+      derive({ clock: READ_CLOCK, rows }).footprints[0].reason;
     assert.equal(
       reasonOf([row(0, 40_000)]),
       'Activity Monitor has no row that ends before the read or no row that starts after it'
@@ -324,11 +425,14 @@ describe('the footprint rows around a read', () => {
 
   it('takes only the rows from the last row that ends before the read to the first row that starts after it', () => {
     const rows = halfSecondRows([100_000, 40_000, 40_000, 40_000, 100_000]);
-    const [first] = compareFootprints(SAMPLE, rows, {
-      offsetNs: at(1.2) - START_BOUNDARY.footprintReadStartNs,
-      uncertaintyNs: 0,
-      spreadNs: 0,
-    });
+    const [first] = derive({
+      clock: {
+        offsetNs: at(1.2) - START_BOUNDARY.footprintReadStartNs,
+        uncertaintyNs: 0,
+        spreadNs: 0,
+      },
+      rows,
+    }).footprints;
     assert.deepEqual(first.read, { startNs: at(1.2), endNs: at(1.2) + 1_000 });
     assert.deepEqual(first.rows, rows.slice(1, 4));
     assert.equal(first.comparable, true);
@@ -352,11 +456,10 @@ describe('the footprint rows around a read', () => {
       endNs: 1_040_000,
       footprintKb: 99_000,
     };
-    const [first] = compareFootprints(
-      SAMPLE,
-      [outerBefore, before, after, outerAfter],
-      { offsetNs: 1_000_000, uncertaintyNs: 500, spreadNs: 0 }
-    );
+    const [first] = derive({
+      clock: { offsetNs: 1_000_000, uncertaintyNs: 500, spreadNs: 0 },
+      rows: [outerBefore, before, after, outerAfter],
+    }).footprints;
     assert.deepEqual(first.rows, [before, after]);
     assert.equal(first.comparable, true);
     assert.equal(first.passes, true);
@@ -368,8 +471,9 @@ describe('the footprint rows around a read', () => {
       { startNs: at(0.5), endNs: at(10), footprintKb: 40_000 },
       { startNs: at(1.5), endNs: at(2), footprintKb: 40_000 },
     ];
-    const [first] = compareFootprints(
-      inAppSample({
+    const [first] = derive({
+      sample: inAppSample({
+        epochs: [],
         boundaries: [
           {
             ...START_BOUNDARY,
@@ -381,9 +485,9 @@ describe('the footprint rows around a read', () => {
           END_BOUNDARY,
         ],
       }),
+      clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
       rows,
-      { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 }
-    );
+    }).footprints;
     assert.deepEqual(first.rows, rows);
     assert.equal(first.comparable, false);
     assert.equal(
@@ -392,18 +496,24 @@ describe('the footprint rows around a read', () => {
     );
   });
 
-  it('gives the same comparison again from its read and its rows, and refuses rows that are not the rows around the read', () => {
+  it('gives the same comparison again from its stored rows, and refuses rows that are not the rows around the read', () => {
     const rows = halfSecondRows([40_000, 40_000, 40_000]);
-    const [first] = compareFootprints(SAMPLE, rows, {
+    const clock = {
       offsetNs: at(0.7) - START_BOUNDARY.footprintReadStartNs,
       uncertaintyNs: 0,
       spreadNs: 0,
-    });
-    assert.deepEqual(rederivedFootprint(first), first);
-    const forged = rederivedFootprint({
-      ...first,
-      rows: [rows[0], rows[0], rows[2]],
-    });
+    };
+    const recorded = derive({ clock, rows });
+    const stored = recorded.footprints.map((footprint) => footprint.rows);
+    assert.deepEqual(
+      deriveStored(recorded.epochs, stored, clock).footprints,
+      recorded.footprints
+    );
+    const [forged] = deriveStored(
+      recorded.epochs,
+      [[rows[0], rows[0], rows[2]], stored[1]],
+      clock
+    ).footprints;
     assert.equal(forged.comparable, false);
     assert.equal(
       forged.reason,
@@ -412,90 +522,11 @@ describe('the footprint rows around a read', () => {
   });
 });
 
-describe('rederivedEpoch', () => {
-  const EVIDENCE = {
-    refreshRate: 60,
-    counters: READING,
-    clock: { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
-  };
-  const trace = {
-    ...TRACE_OF_APP,
-    uiThreadCpu: 300,
-    onCore: {
-      ...TRACE_OF_APP.onCore,
-      uiThread: { running: 290, interrupted: 10 },
-    },
-  };
-
-  it('gives each stored outcome of an epoch again from its values', () => {
-    const [epoch] = compareEpochs(
-      EPOCHS,
-      [READING],
-      [trace],
-      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
-      60
-    );
-    assert.deepEqual(epoch.traceOnCore.uiThreadCpu, {
-      running: 290,
-      interrupted: 10,
-    });
-    assert.deepEqual(rederivedEpoch(epoch, EVIDENCE), epoch);
-    const forged = {
-      ...epoch,
-      uiThreadCpu: { ...epoch.uiThreadCpu, passes: true },
-      workProof: { ...epoch.workProof, passes: false },
-    };
-    assert.deepEqual(rederivedEpoch(forged, EVIDENCE), epoch);
-  });
-
-  it('takes the reference of a CPU value from Running plus Interrupted, not from the stored trace value', () => {
-    const [epoch] = compareEpochs(
-      EPOCHS,
-      [READING],
-      [trace],
-      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
-      60
-    );
-    const rederived = rederivedEpoch(
-      {
-        ...epoch,
-        uiThreadCpu: { ...epoch.uiThreadCpu, trace: 350, passes: true },
-      },
-      EVIDENCE
-    );
-    assert.equal(rederived.uiThreadCpu.trace, 300);
-    assert.equal(rederived.uiThreadCpu.passes, false);
-  });
-
-  it('takes the app value, the window and the timing uncertainty from the counter reads, not from the stored values', () => {
-    const [epoch] = compareEpochs(
-      EPOCHS,
-      [READING],
-      [trace],
-      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
-      60
-    );
-    const forged = {
-      ...epoch,
-      windowSeconds: 1,
-      uiThreadCpu: {
-        ...epoch.uiThreadCpu,
-        app:
-          epoch.uiThreadCpu.app === null ? null : epoch.uiThreadCpu.app + 500,
-        timingUncertainty: 1000,
-        passes: true,
-      },
-      mountBatchCount: { ...epoch.mountBatchCount, app: 7 },
-    };
-    assert.deepEqual(rederivedEpoch(forged, EVIDENCE), epoch);
-  });
-});
-
 describe('crosscheckVerdict', () => {
   it('passes the counters, the loads and the memory, and says if the update quantiles are within tolerance', () => {
-    const footprints = compareFootprints(
-      SAMPLE,
-      [
+    const { epochs, footprints, verdict } = derive({
+      clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
+      rows: [
         { startNs: 0, endNs: 1_000, footprintKb: 40_000 },
         { startNs: 1_000_000, endNs: 1_001_000, footprintKb: 40_000 },
         { startNs: 9_500_000_000, endNs: 9_500_001_000, footprintKb: 40_300 },
@@ -505,10 +536,8 @@ describe('crosscheckVerdict', () => {
           footprintKb: 40_300,
         },
       ],
-      { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 }
-    );
-    const epochs = compareEpochs(EPOCHS, [READING], [TRACE_OF_APP], CLOCK, 60);
-    assert.deepEqual(crosscheckVerdict(epochs, footprints), {
+    });
+    assert.deepEqual(verdict, {
       counters: true,
       loadsRan: true,
       memory: 'passed',
@@ -522,16 +551,7 @@ describe('crosscheckVerdict', () => {
       'failed'
     );
     assert.deepEqual(
-      crosscheckVerdict(
-        compareEpochs(
-          EPOCHS,
-          [READING],
-          [{ ...TRACE_OF_APP, frameDurationsMs: [7] }],
-          CLOCK,
-          60
-        ),
-        [footprints[0]]
-      ),
+      derive({ trace: { ...TRACE_OF_APP, frameDurationsMs: [7] } }).verdict,
       {
         counters: true,
         loadsRan: true,

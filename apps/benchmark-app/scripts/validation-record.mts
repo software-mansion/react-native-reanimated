@@ -2,20 +2,13 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import type { ValidationRecordOptions } from './arguments.mts';
-import {
-  WORK_LOADS,
-  crosscheckVerdict,
-  rederivedFootprint,
-} from './crosscheck.mts';
+import { WORK_LOADS } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
 import type { ComparedMetric } from './metrics.mts';
-import {
-  MINIMUM_BLOCKS,
-  observerCosts as observerCostsOf,
-} from './observer-cost.mts';
+import { MINIMUM_BLOCKS } from './observer-cost.mts';
 import type {
   ObserverCostMetric,
   ValidationOutcome,
@@ -26,13 +19,13 @@ import {
   STORED_EARLIER_CROSSCHECK,
   STORED_OBSERVER_COST,
   completeBlocks,
-  crosscheckThermalState,
+  derivedCrosscheck,
+  derivedObserverCosts,
   identityDifferences,
   identityOf,
   readCrosscheckResult,
   readEarlierCrosscheck,
   readObserverCostResult,
-  rederivedEpochs,
 } from './validation-sources.mts';
 import type {
   CrosscheckResult,
@@ -384,16 +377,12 @@ function crosscheckSummary({
   folder,
   result,
 }: StoredSource<CrosscheckResult>): CrosscheckSummary {
-  const epochs = rederivedEpochs(result);
-  const verdict = crosscheckVerdict(
-    epochs,
-    result.footprints.map(rederivedFootprint)
-  );
+  const { thermalState, epochs, verdict } = derivedCrosscheck(result);
   return {
     folder,
     trace: path.resolve(result.trace),
     scenario: result.scenario,
-    thermalState: crosscheckThermalState(result),
+    thermalState,
     loadsRan: verdict.loadsRan,
     epochs: epochs.map((epoch) => ({
       load: epoch.load,
@@ -408,20 +397,12 @@ function observerCostSummary({
   folder,
   result,
 }: StoredSource<ObserverCostResult>): ObserverCostSummary {
-  const noiseLimits = Object.fromEntries(
-    (result.costs ?? []).flatMap((cost) =>
-      cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
-    )
-  );
   return {
     folder,
     scenario: result.scenario,
     blocks: completeBlocks(result.samples),
     outcomes: Object.fromEntries(
-      observerCostsOf(result.samples, noiseLimits).map((cost) => [
-        cost.metric,
-        cost.outcome,
-      ])
+      derivedObserverCosts(result).map((cost) => [cost.metric, cost.outcome])
     ),
   };
 }

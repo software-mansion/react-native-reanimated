@@ -31,9 +31,6 @@ export interface OnCoreTime {
 }
 
 export interface TraceEpoch {
-  uiThreadCpu: number;
-  jsThreadCpu: number;
-  processCpu: number;
   onCore: Record<CpuCounter, OnCoreTime>;
   frameDurationsMs: number[];
   mountBatchCount: number;
@@ -248,9 +245,6 @@ function traceEpoch(
     process: onCore(spans.counters.process, () => true),
   };
   return {
-    uiThreadCpu: kernelChargedTime(times.uiThread),
-    jsThreadCpu: kernelChargedTime(times.jsThread),
-    processCpu: kernelChargedTime(times.process),
     onCore: times,
     frameDurationsMs: frames
       .filter(({ start, end }) => start >= window.start && end <= window.end)

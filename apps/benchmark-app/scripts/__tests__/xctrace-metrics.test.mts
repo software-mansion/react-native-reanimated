@@ -5,6 +5,7 @@ import { describe, it } from 'node:test';
 
 import type { TimeSpan } from '../in-app-sample.mts';
 import {
+  kernelChargedTime,
   readBoundarySignposts,
   readFootprints,
   readTraceEpochs,
@@ -152,17 +153,26 @@ function syntheticThreadState(rows: string[]): string {
 }
 
 describe('readTraceEpochs', () => {
-  it('gives the Running and the Interrupted time for each second, their sum, the frames and the mount batches of a span of a real export', () => {
+  it('gives the Running and the Interrupted time for each second, the frames and the mount batches of a span of a real export', () => {
     const epoch = onlyEpoch();
-    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
+    assertClose(
+      kernelChargedTime(epoch.onCore.uiThread),
+      MAIN_ON_CORE_MS / SECONDS
+    );
     assertClose(epoch.onCore.uiThread.running, MAIN_RUNNING_MS / SECONDS);
     assertClose(
       epoch.onCore.uiThread.interrupted,
       MAIN_INTERRUPTED_MS / SECONDS
     );
-    assertClose(epoch.jsThreadCpu, JS_RUNNING_MS / SECONDS);
+    assertClose(
+      kernelChargedTime(epoch.onCore.jsThread),
+      JS_RUNNING_MS / SECONDS
+    );
     assertClose(epoch.onCore.jsThread.interrupted, 0);
-    assertClose(epoch.processCpu, (MAIN_ON_CORE_MS + JS_RUNNING_MS) / SECONDS);
+    assertClose(
+      kernelChargedTime(epoch.onCore.process),
+      (MAIN_ON_CORE_MS + JS_RUNNING_MS) / SECONDS
+    );
     assert.equal(epoch.frameDurationsMs.length, 3);
     assertClose(
       [...epoch.frameDurationsMs].sort((left, right) => left - right)[1],
@@ -179,8 +189,10 @@ describe('readTraceEpochs', () => {
     ]);
     const whole = onlyEpoch();
     assertClose(
-      (first.uiThreadCpu + second.uiThreadCpu) / 2,
-      whole.uiThreadCpu
+      (kernelChargedTime(first.onCore.uiThread) +
+        kernelChargedTime(second.onCore.uiThread)) /
+        2,
+      kernelChargedTime(whole.onCore.uiThread)
     );
     assert.equal(
       first.frameDurationsMs.length + second.frameDurationsMs.length,
@@ -197,8 +209,14 @@ describe('readTraceEpochs', () => {
     const [firstHalf] = readTraceEpochs(EXPORTS, APP, [
       spans({ startNs: SPAN.startNs, endNs: middle }),
     ]);
-    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
-    assertClose(epoch.jsThreadCpu, firstHalf.jsThreadCpu);
+    assertClose(
+      kernelChargedTime(epoch.onCore.uiThread),
+      MAIN_ON_CORE_MS / SECONDS
+    );
+    assertClose(
+      kernelChargedTime(epoch.onCore.jsThread),
+      kernelChargedTime(firstHalf.onCore.jsThread)
+    );
   });
 
   it('stops when the scheduler data does not cover the read span of a counter', () => {
@@ -263,7 +281,7 @@ describe('readTraceEpochs', () => {
       (MAIN_INTERRUPTED_MS + 2) / SECONDS
     );
     assertClose(
-      epoch.processCpu,
+      kernelChargedTime(epoch.onCore.process),
       (MAIN_ON_CORE_MS + JS_RUNNING_MS + 2) / SECONDS
     );
   });
@@ -293,10 +311,13 @@ describe('readTraceEpochs', () => {
       ]),
     });
     assertClose(
-      epoch.processCpu,
+      kernelChargedTime(epoch.onCore.process),
       (MAIN_ON_CORE_MS + JS_RUNNING_MS + 15) / SECONDS
     );
-    assertClose(epoch.uiThreadCpu, MAIN_ON_CORE_MS / SECONDS);
+    assertClose(
+      kernelChargedTime(epoch.onCore.uiThread),
+      MAIN_ON_CORE_MS / SECONDS
+    );
   });
 
   it('counts the frames that are fully in the span and the mount batches from its start to before its end', () => {

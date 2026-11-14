@@ -6,25 +6,20 @@ import { isDeepStrictEqual } from 'node:util';
 import {
   CROSSCHECK_TOLERANCES,
   clockProblems,
-  crosscheckVerdict,
-  rederivedEpoch,
-  rederivedFootprint,
+  deriveCrosscheck,
+  storedEpochEvidence,
 } from './crosscheck.mts';
 import type {
   BoundaryClocks,
   ClockMapping,
+  CrosscheckDerivation,
   CrosscheckEpoch,
   CrosscheckTolerances,
   CrosscheckVerdict,
   FootprintComparison,
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
-import {
-  IN_APP_BOUNDARY,
-  footprintReadSpan,
-  readEpochCounters,
-  readOrderProblems,
-} from './in-app-sample.mts';
+import { IN_APP_BOUNDARY, readOrderProblems } from './in-app-sample.mts';
 import type { InAppBoundary, SamplePlan } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import type { IosToolVersions } from './ios-device.mts';
@@ -34,7 +29,11 @@ import {
   OBSERVER_COST_METRICS,
   observerCosts,
 } from './observer-cost.mts';
-import type { CollectorSample, ObserverCost } from './observer-cost.mts';
+import type {
+  CollectorSample,
+  ObserverCost,
+  ObserverCostMetric,
+} from './observer-cost.mts';
 import type { DeviceIdentity } from './platform.mts';
 import {
   aBoolean,
@@ -272,17 +271,6 @@ const OBSERVER_COST_SHAPE: Check = shape({
   ),
 });
 
-const DERIVED_EPOCH_FIELDS = [
-  'windowSeconds',
-  'uiThreadCpu',
-  'jsThreadCpu',
-  'processCpu',
-  'mountBatchCount',
-  'workProof',
-  'uiUpdateDurationMedian',
-  'uiUpdateDurationP95',
-] as const;
-
 const CROSSCHECK_RESULT = completeResult(
   CROSSCHECK_SHAPE,
   crosscheckGaps,
@@ -386,28 +374,30 @@ export function readEarlierCrosscheck(
   return { folder: source.folder, sha256: resultHash(result), result };
 }
 
-export function rederivedEpochs(result: CrosscheckResult): CrosscheckEpoch[] {
-  return result.epochs.map((epoch, i) =>
-    rederivedEpoch(epoch, {
-      refreshRate: result.refreshRate,
-      counters: readEpochCounters(
-        result.appBoundaries[i],
-        result.appBoundaries[i + 1],
-        result.cpuCount,
-        i
-      ),
-      clock: result.clock,
-    })
-  );
+export function derivedCrosscheck(
+  result: CrosscheckResult
+): CrosscheckDerivation {
+  return deriveCrosscheck({
+    refreshRate: result.refreshRate,
+    cpuCount: result.cpuCount,
+    reportedThermalState: result.thermalState,
+    appBoundaries: result.appBoundaries,
+    clock: result.clock,
+    epochs: result.epochs.map(storedEpochEvidence),
+    footprintRows: result.footprints.map(({ rows }) => rows),
+  });
 }
 
-export function crosscheckThermalState(
-  result: Pick<CrosscheckResult, 'thermalState' | 'appBoundaries'>
-): number {
-  return Math.max(
-    result.thermalState,
-    ...result.appBoundaries.map(({ thermal }) => thermal)
-  );
+export function derivedObserverCosts(
+  result: ObserverCostResult
+): ObserverCost[] {
+  const noiseLimits: Partial<Record<ObserverCostMetric, number>> =
+    Object.fromEntries(
+      (result.costs ?? []).flatMap((cost) =>
+        cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
+      )
+    );
+  return observerCosts(result.samples, noiseLimits);
 }
 
 export function completeBlocks(samples: readonly CollectorSample[]): number {
@@ -579,25 +569,24 @@ function crosscheckConflicts(result: CrosscheckResult): string[] {
   const problems: string[] = [
     ...readOrderProblems(result.appBoundaries),
     ...clockProblems(result.boundaryClocks, result.clock),
-    ...boundaryTimeProblems(result),
+    ...signpostProblems(result),
   ];
   if (!isDeepStrictEqual(result.tolerances, CROSSCHECK_TOLERANCES)) {
     problems.push('its tolerances are not the tolerances of this driver');
   }
-  const thermalState = crosscheckThermalState(result);
-  if (thermalState !== result.thermalState) {
-    problems.push(
-      `thermalState is ${result.thermalState}, but a boundary reading of the app gives ${thermalState}`
-    );
-  }
-  let epochs: CrosscheckEpoch[];
+  let derived: CrosscheckDerivation;
   try {
-    epochs = rederivedEpochs(result);
+    derived = derivedCrosscheck(result);
   } catch (error) {
     return [...problems, (error as Error).message];
   }
-  epochs.forEach((epoch, i) => {
-    for (const field of DERIVED_EPOCH_FIELDS) {
+  if (derived.thermalState !== result.thermalState) {
+    problems.push(
+      `thermalState is ${result.thermalState}, but a boundary reading of the app gives ${derived.thermalState}`
+    );
+  }
+  derived.epochs.forEach((epoch, i) => {
+    for (const field of Object.keys(epoch) as (keyof CrosscheckEpoch)[]) {
       if (!isDeepStrictEqual(epoch[field], result.epochs[i][field])) {
         problems.push(
           `epoch ${i}: the stored ${field} does not follow from its values`
@@ -605,46 +594,34 @@ function crosscheckConflicts(result: CrosscheckResult): string[] {
       }
     }
   });
-  const footprints = result.footprints.map(rederivedFootprint);
-  footprints.forEach((footprint, i) => {
+  derived.footprints.forEach((footprint, i) => {
     if (!isDeepStrictEqual(footprint, result.footprints[i])) {
       problems.push(
-        `footprint ${i}: the stored comparison does not follow from its read and its rows`
+        `footprint ${i}: the stored comparison does not follow from the app boundary, the clock mapping and its rows`
       );
     }
   });
-  const verdict = crosscheckVerdict(epochs, footprints);
-  for (const key of Object.keys(verdict) as (keyof CrosscheckVerdict)[]) {
-    if (verdict[key] !== result.verdict[key]) {
+  for (const key of Object.keys(
+    derived.verdict
+  ) as (keyof CrosscheckVerdict)[]) {
+    if (derived.verdict[key] !== result.verdict[key]) {
       problems.push(
-        `verdict.${key} is ${result.verdict[key]}, but the epochs and the footprints give ${verdict[key]}`
+        `verdict.${key} is ${result.verdict[key]}, but the epochs and the footprints give ${derived.verdict[key]}`
       );
     }
   }
   return problems;
 }
 
-function boundaryTimeProblems(result: CrosscheckResult): string[] {
-  const { offsetNs, uncertaintyNs } = result.clock;
+function signpostProblems(result: CrosscheckResult): string[] {
   return result.appBoundaries.flatMap((boundary, i) => {
     const clock = result.boundaryClocks.boundaries[i];
-    const footprint = result.footprints[i];
-    const read = footprintReadSpan(boundary);
-    return [
-      ...(clock.appSignpostStartNs === boundary.signpostStartNs &&
+    return clock.appSignpostStartNs === boundary.signpostStartNs &&
       clock.appSignpostEndNs === boundary.signpostEndNs
-        ? []
-        : [
-            `boundary ${i}: the signpost times of the clock are not the signpost times of the app boundary`,
-          ]),
-      ...(footprint.app === boundary.footprintKb &&
-      footprint.read.startNs === read.startNs + offsetNs - uncertaintyNs &&
-      footprint.read.endNs === read.endNs + offsetNs + uncertaintyNs
-        ? []
-        : [
-            `footprint ${i}: the app value or the read does not follow from the app boundary and the clock mapping`,
-          ]),
-    ];
+      ? []
+      : [
+          `boundary ${i}: the signpost times of the clock are not the signpost times of the app boundary`,
+        ];
   });
 }
 
@@ -671,12 +648,7 @@ function observerCostGaps(result: ObserverCostResult): string[] {
 
 function observerCostConflicts(result: ObserverCostResult): string[] {
   const costs = result.costs ?? [];
-  const limits = Object.fromEntries(
-    costs.flatMap((cost) =>
-      cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
-    )
-  );
-  return observerCosts(result.samples, limits).flatMap((cost, i) =>
+  return derivedObserverCosts(result).flatMap((cost, i) =>
     isDeepStrictEqual(cost, costs[i])
       ? []
       : [

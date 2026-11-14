@@ -10,10 +10,10 @@ import {
   CROSSCHECK_TOLERANCES,
   boundaryClocks,
   clockProblems,
-  compareEpochs,
-  compareFootprints,
-  crosscheckVerdict,
+  deriveCrosscheck,
+  footprintRowsAroundReads,
   mapAppClock,
+  traceEvidence,
   traceSpans,
 } from './crosscheck.mts';
 import type {
@@ -28,7 +28,6 @@ import type {
 import { ToolError } from './errors.mts';
 import {
   START_NOTIFICATION,
-  highestThermalState,
   planSeconds,
   readEpoch,
 } from './in-app-sample.mts';
@@ -131,19 +130,19 @@ export async function crosscheckCommand(
     },
     traceSpans(readings, clock)
   );
-  const epochs = compareEpochs(
-    sample.epochs,
-    readings,
-    traced,
+  const { thermalState, epochs, footprints, verdict } = deriveCrosscheck({
+    refreshRate,
+    cpuCount: sample.cpuCount,
+    reportedThermalState: sample.maxThermal,
+    appBoundaries: sample.boundaries,
     clock,
-    refreshRate
-  );
-  const footprints = compareFootprints(
-    sample,
-    readFootprints(exports, app.pid),
-    clock
-  );
-  const verdict = crosscheckVerdict(epochs, footprints);
+    epochs: traceEvidence(sample.epochs, readings, traced),
+    footprintRows: footprintRowsAroundReads(
+      sample.boundaries,
+      readFootprints(exports, app.pid),
+      clock
+    ),
+  });
   const result: CrosscheckResult = {
     formatVersion: VALIDATION_SOURCE_FORMAT_VERSION,
     measurementRevision: IOS_DEFINITION.measurementRevision,
@@ -157,7 +156,7 @@ export async function crosscheckCommand(
     plan,
     refreshRate,
     tolerances: CROSSCHECK_TOLERANCES,
-    thermalState: highestThermalState(sample),
+    thermalState,
     cpuCount: sample.cpuCount,
     appBoundaries: sample.boundaries,
     boundaryClocks: clocks,

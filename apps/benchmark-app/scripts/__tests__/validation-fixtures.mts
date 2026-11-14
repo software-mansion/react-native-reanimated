@@ -6,11 +6,14 @@ import {
   WORK_LOADS,
   boundaryClocks,
   crosscheckVerdict,
-  rederivedEpoch,
-  rederivedFootprint,
+  deriveCrosscheck,
 } from '../crosscheck.mts';
-import type { CrosscheckEpoch, FootprintComparison } from '../crosscheck.mts';
-import { readEpochCounters } from '../in-app-sample.mts';
+import type {
+  CrosscheckDerivation,
+  CrosscheckEpoch,
+  EpochEvidence,
+  FootprintComparison,
+} from '../crosscheck.mts';
 import type { Collector, InAppBoundary } from '../in-app-sample.mts';
 import {
   BLOCK_ORDER,
@@ -32,6 +35,7 @@ import type {
   ObserverCostResult,
   ValidationIdentity,
 } from '../validation-sources.mts';
+import type { FootprintSample } from '../xctrace-metrics.mts';
 import { START_BOUNDARY } from './ios-fixtures.mts';
 
 export type Plan = readonly (readonly [string, Collector])[];
@@ -62,68 +66,17 @@ const MOUNTS_PER_EPOCH = 150;
 
 const ZERO_CLOCK = { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 };
 
-const NO_VALUE = {
-  app: null,
-  trace: null,
-  signedError: null,
-  absoluteError: null,
-  relativeError: null,
-  timingUncertainty: null,
-  tolerance: null,
-  passes: false,
-};
-
 export function crosscheckEpochs(
   plan: Plan,
   traceUiThreadCpu = 350
 ): CrosscheckEpoch[] {
-  const boundaries = appBoundaries(plan.length + 1);
-  return plan.map(([load, collector], index) =>
-    rederivedEpoch(
-      {
-        load,
-        collector,
-        seconds: EPOCH_SECONDS,
-        work: {
-          own: (WORK_LOADS as readonly string[]).includes(load)
-            ? REFRESH_RATE * EPOCH_SECONDS
-            : 0,
-          other: 0,
-        },
-        index,
-        windowSeconds: 0,
-        traceOnCore: {
-          uiThreadCpu: { running: traceUiThreadCpu - 5, interrupted: 5 },
-          jsThreadCpu: { running: 2, interrupted: 0 },
-          processCpu: { running: 348, interrupted: 5 },
-        },
-        uiThreadCpu: NO_VALUE,
-        jsThreadCpu: NO_VALUE,
-        processCpu: NO_VALUE,
-        mountBatchCount: { ...NO_VALUE, trace: MOUNTS_PER_EPOCH },
-        workProof: {
-          own: 0,
-          other: 0,
-          minimumOwn: 0,
-          maximumOther: 0,
-          passes: false,
-        },
-        updateCount: { app: null, trace: 0 },
-        uiUpdateDurationMedian: null,
-        uiUpdateDurationP95: null,
-      },
-      {
-        refreshRate: REFRESH_RATE,
-        counters: readEpochCounters(
-          boundaries[index],
-          boundaries[index + 1],
-          CPU_COUNT,
-          index
-        ),
-        clock: ZERO_CLOCK,
-      }
-    )
-  );
+  return derivation(
+    appBoundaries(plan.length + 1),
+    plan.map(([load, collector]) =>
+      epochEvidence(load, collector, traceUiThreadCpu)
+    ),
+    () => null
+  ).epochs;
 }
 
 export function appBoundaries(count: number): InAppBoundary[] {
@@ -154,33 +107,69 @@ export function footprints(
   boundaries: number,
   rowsAt: (boundary: number) => [number, number] | null = () => [40_000, 40_000]
 ): FootprintComparison[] {
-  return Array.from({ length: boundaries }, (_, boundary) => {
-    const startNs = boundary * BOUNDARY_SPACING_NS;
-    const values = rowsAt(boundary);
-    return rederivedFootprint({
-      boundary,
-      app: 40_000,
-      read: { startNs: startNs + 500, endNs: startNs + 600 },
-      rows:
-        values === null
-          ? []
-          : [
-              { startNs, endNs: startNs + 100, footprintKb: values[0] },
-              {
-                startNs: startNs + 1_000,
-                endNs: startNs + 1_100,
-                footprintKb: values[1],
-              },
-            ],
-      low: null,
-      high: null,
-      signedError: null,
-      tolerance: null,
-      comparable: false,
-      reason: null,
-      passes: false,
-    });
+  return derivation(appBoundaries(boundaries), [], rowsAt).footprints;
+}
+
+function derivation(
+  boundaries: InAppBoundary[],
+  epochs: EpochEvidence[],
+  rowsAt: (boundary: number) => [number, number] | null
+): CrosscheckDerivation {
+  return deriveCrosscheck({
+    refreshRate: REFRESH_RATE,
+    cpuCount: CPU_COUNT,
+    reportedThermalState: 0,
+    appBoundaries: boundaries,
+    clock: ZERO_CLOCK,
+    epochs,
+    footprintRows: boundaries.map((_, boundary) =>
+      footprintRows(boundary, rowsAt(boundary))
+    ),
   });
+}
+
+function epochEvidence(
+  load: string,
+  collector: Collector,
+  traceUiThreadCpu: number
+): EpochEvidence {
+  return {
+    load,
+    collector,
+    seconds: EPOCH_SECONDS,
+    work: {
+      own: (WORK_LOADS as readonly string[]).includes(load)
+        ? REFRESH_RATE * EPOCH_SECONDS
+        : 0,
+      other: 0,
+    },
+    traceOnCore: {
+      uiThreadCpu: { running: traceUiThreadCpu - 5, interrupted: 5 },
+      jsThreadCpu: { running: 2, interrupted: 0 },
+      processCpu: { running: 348, interrupted: 5 },
+    },
+    traceMountBatchCount: MOUNTS_PER_EPOCH,
+    updateCount: { app: null, trace: 0 },
+    uiUpdateDurationMedian: null,
+    uiUpdateDurationP95: null,
+  };
+}
+
+function footprintRows(
+  boundary: number,
+  values: [number, number] | null
+): FootprintSample[] {
+  const startNs = boundary * BOUNDARY_SPACING_NS;
+  return values === null
+    ? []
+    : [
+        { startNs, endNs: startNs + 100, footprintKb: values[0] },
+        {
+          startNs: startNs + 1_000,
+          endNs: startNs + 1_100,
+          footprintKb: values[1],
+        },
+      ];
 }
 
 export function validationSources(

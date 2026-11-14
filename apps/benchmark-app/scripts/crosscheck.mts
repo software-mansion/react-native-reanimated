@@ -1,13 +1,16 @@
 import { ToolError } from './errors.mts';
 import { quantileOrNull } from './frames.mts';
-import { CPU_COUNTERS, footprintReadSpan } from './in-app-sample.mts';
+import {
+  CPU_COUNTERS,
+  footprintReadSpan,
+  readEpochCounters,
+} from './in-app-sample.mts';
 import type {
   CpuCounter,
   EpochCounters,
   EpochReading,
   EpochWork,
   InAppBoundary,
-  InAppSample,
   SampledEpoch,
   TimeSpan,
 } from './in-app-sample.mts';
@@ -62,10 +65,34 @@ export interface WorkProof extends EpochWork {
 
 export type CpuField = 'uiThreadCpu' | 'jsThreadCpu' | 'processCpu';
 
-export interface EpochEvidence {
+export interface QuantilePair {
+  app: number | null;
+  trace: number | null;
+}
+
+export interface EpochEvidence extends SampledEpoch {
+  traceOnCore: Record<CpuField, OnCoreTime>;
+  traceMountBatchCount: number | null;
+  updateCount: { app: number | null; trace: number };
+  uiUpdateDurationMedian: QuantilePair | null;
+  uiUpdateDurationP95: QuantilePair | null;
+}
+
+export interface CrosscheckEvidence {
   refreshRate: number;
-  counters: EpochCounters;
+  cpuCount: number;
+  reportedThermalState: number;
+  appBoundaries: readonly InAppBoundary[];
   clock: ClockMapping;
+  epochs: readonly EpochEvidence[];
+  footprintRows: readonly (readonly FootprintSample[])[];
+}
+
+export interface CrosscheckDerivation {
+  thermalState: number;
+  epochs: CrosscheckEpoch[];
+  footprints: FootprintComparison[];
+  verdict: CrosscheckVerdict;
 }
 
 export interface CrosscheckEpoch extends SampledEpoch {
@@ -266,136 +293,99 @@ export function traceSpans(
   }));
 }
 
-export function compareEpochs(
+export function deriveCrosscheck(
+  evidence: CrosscheckEvidence
+): CrosscheckDerivation {
+  const { appBoundaries, clock } = evidence;
+  const epochs = evidence.epochs.map((epoch, index) =>
+    derivedEpoch(
+      epoch,
+      index,
+      readEpochCounters(
+        appBoundaries[index],
+        appBoundaries[index + 1],
+        evidence.cpuCount,
+        index
+      ),
+      evidence
+    )
+  );
+  const footprints = appBoundaries.map((boundary, index) =>
+    judgeFootprint(
+      index,
+      boundary.footprintKb,
+      footprintRead(boundary, clock),
+      [...evidence.footprintRows[index]]
+    )
+  );
+  return {
+    thermalState: Math.max(
+      evidence.reportedThermalState,
+      ...appBoundaries.map(({ thermal }) => thermal)
+    ),
+    epochs,
+    footprints,
+    verdict: crosscheckVerdict(epochs, footprints),
+  };
+}
+
+export function traceEvidence(
   epochs: readonly SampledEpoch[],
   readings: readonly EpochReading[],
-  traced: readonly TraceEpoch[],
-  clock: ClockMapping,
-  refreshRate: number
-): CrosscheckEpoch[] {
+  traced: readonly TraceEpoch[]
+): EpochEvidence[] {
   return epochs.map((epoch, index) => {
-    const reading = readings[index];
+    const durations = readings[index].updates?.durationsMs ?? null;
     const trace = traced[index];
-    const durations = reading.updates?.durationsMs ?? null;
-    const durationValue = (q: number) =>
+    const quantiles = (q: number) =>
       durations === null
         ? null
-        : compared(
-            quantileOrNull(durations, q),
-            quantileOrNull(trace.frameDurationsMs, q),
-            UPDATE_DURATION_TOLERANCE
-          );
-    const cpuValue = (counter: CpuCounter) =>
-      compared(
-        reading.cpu[CPU_FIELDS[counter]],
-        trace[CPU_FIELDS[counter]],
-        CPU_TOLERANCE,
-        cpuTimingUncertainty(reading, counter, clock)
-      );
+        : {
+            app: quantileOrNull(durations, q),
+            trace: quantileOrNull(trace.frameDurationsMs, q),
+          };
     return {
       ...epoch,
-      index,
-      windowSeconds: reading.window.seconds,
       traceOnCore: {
         uiThreadCpu: trace.onCore.uiThread,
         jsThreadCpu: trace.onCore.jsThread,
         processCpu: trace.onCore.process,
       },
-      uiThreadCpu: cpuValue('uiThread'),
-      jsThreadCpu: cpuValue('jsThread'),
-      processCpu: cpuValue('process'),
-      mountBatchCount: compared(
-        reading.mountBatchCount,
-        trace.mountBatchCount,
-        EXACT
-      ),
-      workProof: workProof(
-        epoch.load,
-        epoch.work,
-        refreshRate * reading.window.seconds
-      ),
+      traceMountBatchCount: trace.mountBatchCount,
       updateCount: {
         app: durations?.length ?? null,
         trace: trace.frameDurationsMs.length,
       },
-      uiUpdateDurationMedian: durationValue(0.5),
-      uiUpdateDurationP95: durationValue(0.95),
+      uiUpdateDurationMedian: quantiles(0.5),
+      uiUpdateDurationP95: quantiles(0.95),
     };
   });
 }
 
-export function compareFootprints(
-  sample: InAppSample,
-  footprints: readonly FootprintSample[],
-  clock: ClockMapping
-): FootprintComparison[] {
-  const rows = [...footprints].sort(
-    (left, right) => left.startNs - right.startNs
-  );
-  return sample.boundaries.map((boundary, index) => {
-    const span = footprintReadSpan(boundary);
-    const read = {
-      startNs: span.startNs + clock.offsetNs - clock.uncertaintyNs,
-      endNs: span.endNs + clock.offsetNs + clock.uncertaintyNs,
-    };
-    return judgeFootprint(
-      index,
-      boundary.footprintKb,
-      read,
-      rowsAroundRead(rows, read)
-    );
-  });
-}
-
-export function rederivedEpoch(
-  epoch: CrosscheckEpoch,
-  { refreshRate, counters, clock }: EpochEvidence
-): CrosscheckEpoch {
-  const cpu = (counter: CpuCounter) =>
-    compared(
-      counters.cpu[CPU_FIELDS[counter]],
-      kernelChargedTime(epoch.traceOnCore[CPU_FIELDS[counter]]),
-      CPU_TOLERANCE,
-      cpuTimingUncertainty(counters, counter, clock)
-    );
-  const duration = (value: ComparedValue | null) =>
-    value === null
-      ? null
-      : compared(
-          value.app,
-          value.trace,
-          UPDATE_DURATION_TOLERANCE,
-          value.timingUncertainty
-        );
+export function storedEpochEvidence(epoch: CrosscheckEpoch): EpochEvidence {
+  const quantiles = (value: ComparedValue | null) =>
+    value === null ? null : { app: value.app, trace: value.trace };
   return {
-    ...epoch,
-    windowSeconds: counters.window.seconds,
-    uiThreadCpu: cpu('uiThread'),
-    jsThreadCpu: cpu('jsThread'),
-    processCpu: cpu('process'),
-    mountBatchCount: compared(
-      counters.mountBatchCount,
-      epoch.mountBatchCount.trace,
-      EXACT
-    ),
-    workProof: workProof(
-      epoch.load,
-      epoch.work,
-      refreshRate * counters.window.seconds
-    ),
-    uiUpdateDurationMedian: duration(epoch.uiUpdateDurationMedian),
-    uiUpdateDurationP95: duration(epoch.uiUpdateDurationP95),
+    load: epoch.load,
+    collector: epoch.collector,
+    seconds: epoch.seconds,
+    work: epoch.work,
+    traceOnCore: epoch.traceOnCore,
+    traceMountBatchCount: epoch.mountBatchCount.trace,
+    updateCount: epoch.updateCount,
+    uiUpdateDurationMedian: quantiles(epoch.uiUpdateDurationMedian),
+    uiUpdateDurationP95: quantiles(epoch.uiUpdateDurationP95),
   };
 }
 
-export function rederivedFootprint(
-  comparison: FootprintComparison
-): FootprintComparison {
-  return judgeFootprint(
-    comparison.boundary,
-    comparison.app,
-    comparison.read,
-    comparison.rows
+export function footprintRowsAroundReads(
+  boundaries: readonly InAppBoundary[],
+  rows: readonly FootprintSample[],
+  clock: ClockMapping
+): FootprintSample[][] {
+  const sorted = [...rows].sort((left, right) => left.startNs - right.startNs);
+  return boundaries.map((boundary) =>
+    rowsAroundRead(sorted, footprintRead(boundary, clock))
   );
 }
 
@@ -418,6 +408,58 @@ export function crosscheckVerdict(
     memory: memoryOutcome(footprints),
     updateDurationQuantilesWithinTolerance:
       durations.length > 0 && durations.every((value) => value.passes),
+  };
+}
+
+function derivedEpoch(
+  evidence: EpochEvidence,
+  index: number,
+  counters: EpochCounters,
+  { refreshRate, clock }: Pick<CrosscheckEvidence, 'refreshRate' | 'clock'>
+): CrosscheckEpoch {
+  const cpu = (counter: CpuCounter) =>
+    compared(
+      counters.cpu[CPU_FIELDS[counter]],
+      kernelChargedTime(evidence.traceOnCore[CPU_FIELDS[counter]]),
+      CPU_TOLERANCE,
+      cpuTimingUncertainty(counters, counter, clock)
+    );
+  const duration = (quantiles: QuantilePair | null) =>
+    quantiles === null
+      ? null
+      : compared(quantiles.app, quantiles.trace, UPDATE_DURATION_TOLERANCE);
+  return {
+    load: evidence.load,
+    collector: evidence.collector,
+    seconds: evidence.seconds,
+    work: evidence.work,
+    index,
+    windowSeconds: counters.window.seconds,
+    traceOnCore: evidence.traceOnCore,
+    uiThreadCpu: cpu('uiThread'),
+    jsThreadCpu: cpu('jsThread'),
+    processCpu: cpu('process'),
+    mountBatchCount: compared(
+      counters.mountBatchCount,
+      evidence.traceMountBatchCount,
+      EXACT
+    ),
+    workProof: workProof(
+      evidence.load,
+      evidence.work,
+      refreshRate * counters.window.seconds
+    ),
+    updateCount: evidence.updateCount,
+    uiUpdateDurationMedian: duration(evidence.uiUpdateDurationMedian),
+    uiUpdateDurationP95: duration(evidence.uiUpdateDurationP95),
+  };
+}
+
+function footprintRead(boundary: InAppBoundary, clock: ClockMapping): TimeSpan {
+  const span = footprintReadSpan(boundary);
+  return {
+    startNs: span.startNs + clock.offsetNs - clock.uncertaintyNs,
+    endNs: span.endNs + clock.offsetNs + clock.uncertaintyNs,
   };
 }
 

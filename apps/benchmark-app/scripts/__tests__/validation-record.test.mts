@@ -467,7 +467,7 @@ describe('the validation sources', () => {
     });
     assert.throws(
       () => readCrosscheckResult(folder),
-      /footprint 0: the app value or the read does not follow from the app boundary and the clock mapping/
+      /footprint 0: the stored comparison does not follow from the app boundary, the clock mapping and its rows/
     );
   });
 
@@ -641,7 +641,7 @@ describe('the validation sources', () => {
           updateDurationQuantilesWithinTolerance: false,
         },
       }) ?? '',
-      /- crosscheck: footprint 0: the stored comparison does not follow from its read and its rows\n {2}- crosscheck: verdict\.memory is passed, but the epochs and the footprints give failed/
+      /- crosscheck: footprint 0: the stored comparison does not follow from the app boundary, the clock mapping and its rows\n {2}- crosscheck: verdict\.memory is passed, but the epochs and the footprints give failed/
     );
     const [first, ...rest] = crosscheckEpochs(LOADS_PLAN, 300);
     assert.match(
