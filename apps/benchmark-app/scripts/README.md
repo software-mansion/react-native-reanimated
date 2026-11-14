@@ -65,6 +65,8 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
   --sign-command ./sign-benchmark.sh
 ```
 
+Without `--validation`, this run gives no verdict for `uiThreadCpu` and `jsThreadCpu`: the report marks their rows `unvalidated`, and an expectation that selects them is `not decided`. A run gets these verdicts only with a validation record of the phone (see the [iOS validation sequence](#ios-validation-sequence)).
+
 The driver writes the path of the run folder to stderr at the start. The report is `report.md` in that folder.
 
 ## Commands
@@ -78,7 +80,7 @@ node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-l
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
 node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks 5] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...]
+node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...] [--earlier-crosscheck <folder> ...]
 ```
 
 - `<device>` is `--serial <adb serial>` (Android) or `--udid <UDID>` (iOS).
@@ -300,78 +302,90 @@ The workflows have no secrets, signing keys or provisioning profiles, and no `pu
 1. A deployment branch rule on that environment that permits only the default branch and the release branches (`*-stable`). The job runs repository code on a self-hosted runner.
 1. For an iPhone, a sign command under the runner account, outside the repository, with the contract of [Sign command](#sign-command). The signing identity and the profiles stay on the runner.
 1. The noise limits records: `<BENCHMARK_NOISE_LIMITS_DIR>/<name>.json`. Make each record with an A/A run on that phone (for example with `benchmark-manual.yml` and the same A and B), then `noise-limits` on the run folder of the artifact (see [Calibration](#calibration)). The `noise-limits` input is `<name>`: letters, digits, `.`, `_` or `-`.
-1. For an iPhone, the validation record at `BENCHMARK_VALIDATION_RECORD`. Make it on the runner (see [Validation of the iOS collector](#validation-of-the-ios-collector)): an A/A run with `without-validation-record: true` gives the noise limits, then the cross-checks and the observer-cost tests with an app of the signed `.ipa` of that run, then `validation-record`. Make it again, and replace the file, when the phone, its OS build, the app build identity (the app project files, the build tools or the build procedure of the driver) or the iOS measurement revision changes. Until then, a run with the old record gives no CPU verdict: its report says that the record does not fit the run.
+1. For an iPhone, the validation record at `BENCHMARK_VALIDATION_RECORD`. Make it on the runner with the [iOS validation sequence](#ios-validation-sequence): an A/A run with `without-validation-record: true` gives the noise limits, then the cross-checks and the observer-cost tests with an app of the signed `.ipa` of that run, then `validation-record`. Make it again, and replace the file, when the phone, its OS build, the app build identity (the app project files, the build tools or the build procedure of the driver) or the iOS measurement revision changes. Until then, a run with the old record gives no CPU verdict: its report says that the record does not fit the run.
 1. For the nightly workflow, the repository variables `BENCHMARK_NIGHTLY_ENABLED` (`true` turns it on), `BENCHMARK_NIGHTLY_PLATFORM`, `BENCHMARK_NIGHTLY_PHONE` and `BENCHMARK_NIGHTLY_NOISE_LIMITS`. They are repository variables, because the nightly workflow reads them before a job selects the environment.
 
 ## Validation of the iOS collector
 
-Three commands validate the in-app collector of iOS on one phone. `crosscheck` and `observer-cost` measure; their output is not a benchmark sample. Each needs an installed app that the driver built (for example the signed `.ipa` of a run, installed with `xcrun devicectl device install app`), because the record compares the app build identity of the LAUNCH line: a hash of the app project files, the build tools and the build procedure of the driver. The versions of Reanimated and Worklets are not in it. `validation-record` reads their folders and writes the record that `run --validation` uses.
+Three commands validate the in-app collector of iOS on one phone. `crosscheck` and `observer-cost` measure; their output is not a benchmark sample. Each needs an installed app that the driver built (for example the signed `.ipa` of a run, installed with `xcrun devicectl device install app`), because the record compares the app build identity of the LAUNCH line: a hash of the app project files, the build tools and the build procedure of the driver. The versions of Reanimated and Worklets are not in it. `validation-record` reads their folders and writes the record that `run --validation` uses. Without a record that fits the run, an iOS run gives no CPU verdict.
+
+[VALIDATION.md](VALIDATION.md) gives the method of the cross-check, each comparison and check, the observer-cost outcomes, the checks of the record and the earlier measurement revisions.
+
+### iOS validation sequence
+
+Make the record on the phone of the runs, with the app build identity of the runs, in this order:
+
+1. An A/A run: a config with the same `a` and `b`, with `idle-cost` and `worklet-styles-transform` in its scenarios, because the observer-cost tests need their noise limits. A scenario that needs a static flag needs an A/A config of its own, with the flag in both.
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+     --config .tmp/benchmarks/configs/ios-aa.json --udid <UDID> --sign-command ./sign-benchmark.sh
+   ```
+
+1. The noise limits record of the phone:
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts noise-limits \
+     --runs <A/A run folder> > .tmp/benchmarks/noise-limits/iphone-14.json
+   ```
+
+1. Two cross-checks with the app `com.reanimatedbenchmark.a` that the A/A run installed. Each plan measures 10 s, as a sample of `run` does:
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
+     --package com.reanimatedbenchmark.a --scenario worklet-styles-transform \
+     --epochs steady:full:2.5,steady:endpoints:2.5,steady:endpoints:2.5,steady:full:2.5
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
+     --package com.reanimatedbenchmark.a --scenario crosscheck-load \
+     --epochs idle:full:2.5,ui-stall:full:2.5,js-load:full:2.5,render-heavy:full:2.5
+   ```
+
+1. Two observer-cost tests with the noise limits:
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> \
+     --package com.reanimatedbenchmark.a --scenario idle-cost \
+     --noise-limits .tmp/benchmarks/noise-limits/iphone-14.json
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> \
+     --package com.reanimatedbenchmark.a --scenario worklet-styles-transform \
+     --noise-limits .tmp/benchmarks/noise-limits/iphone-14.json
+   ```
+
+1. The validation record:
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record \
+     --crosscheck <cross-check folder> --crosscheck <cross-check folder> \
+     --observer-cost <observer-cost folder> --observer-cost <observer-cost folder> \
+     > .tmp/benchmarks/validation/iphone-14.json
+   ```
+
+1. A validated run:
+
+   ```sh
+   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+     --config .tmp/benchmarks/configs/ios-css.json --udid <UDID> --sign-command ./sign-benchmark.sh \
+     --noise-limits .tmp/benchmarks/noise-limits/iphone-14.json \
+     --validation .tmp/benchmarks/validation/iphone-14.json
+   ```
 
 ### Cross-check
 
-`crosscheck` launches the app with a plan of epochs that starts on a Darwin notification, records the app with `xctrace` (the instruments Thread Activity, Hitches, `os_signpost` and Activity Monitor, for the length of the plan and 3 s), and posts the notification when `xctrace` writes that the recording started. `--epochs` gives each epoch as `<load>:<collector>:<seconds>`. The collector is `full` (counter reads, UI updates and mount count) or `endpoints` (only the counter reads). When the recording fails or the app ends, the driver stops the wait for the `SAMPLE` line and stops the app.
+`crosscheck` launches the app with a plan of epochs that starts on a Darwin notification, records the app with `xctrace` (the instruments Thread Activity, Hitches, `os_signpost` and Activity Monitor, for the length of the plan and 3 s), and posts the notification when `xctrace` writes that the recording started. `--epochs` gives each epoch as `<load>:<collector>:<seconds>`. The collector is `full` (counter reads, UI updates and mount count) or `endpoints` (only the counter reads). When the recording fails or the app ends, the driver stops the wait for the `SAMPLE` line and stops the app. For each epoch, the driver compares the CPU counters of the app with the `Running` plus `Interrupted` time of the trace, the mount count, the work of the load, the UI update quantiles and the memory footprint.
 
-The method is fixed for the measurement revision 4, before the validation recordings. The cross-check report states it too:
-
-- Thread selection: the main thread is `mainThread` of the LAUNCH line, the JS thread is `jsThread` of the READY line, and the process is all threads of the app process.
-- Clock mapping: the app writes a `Boundary` signpost (with its index as the id) after the counter reads at each epoch boundary, between two clock reads. The offset of a boundary is the trace time of its signpost minus the middle of its two clock reads in the app. The mapping is the median offset. A spread of the offsets of more than 1 ms is a tool error. The clock uncertainty is the largest distance of an offset from the median, plus the half width of its clock reads. `crosscheck.json` keeps, for each boundary, the id, the two app times, the trace time and the offset, all in ns (app times from the start of the first counter read of the app, trace times from the start of the trace), and all counter read brackets of the app (`appBoundaries`). The driver computes each offset and the mapping again from these times; a stored offset that does not follow, or an offset that differs from the mapping by more than its uncertainty, is a tool error.
-- Reference: the `Running` time plus the `Interrupted` time of the table `thread-state` of the selected threads. The app counters give kernel-charged CPU time, which includes the interrupt time that the kernel charges to the running thread (see the metric table). `crosscheck.json` and the report keep both parts.
-- Clipping: each `thread-state` row is cut to the span of its counter, from the middle of its start read to the middle of its end read, moved to the clock of the trace.
-- Relative error: the signed error divided by the reference.
-- Failure rule: a CPU value passes when its error is within max(1 ms/s, 2% of the reference) plus its timing uncertainty, in every epoch. The timing uncertainty is the uncertainty of the counter reads and two times the clock uncertainty, over the span; for `processCpu`, the clock part is also times `cpuCount`. A failure keeps the metric unvalidated.
-
-The driver compares for each epoch:
-
-- `uiThreadCpu`, `jsThreadCpu` and `processCpu` with the reference, by the failure rule above. The source check computes each app value, the window length, the timing uncertainty and the mount count again from `appBoundaries`, `cpuCount` and the checked clock mapping, and it refuses a stored value that does not follow. It also checks the order of all clock reads of `appBoundaries`.
-- `mountBatchCount` with the starts of the React Native section `RCTPerformMountInstructions`: exact.
-- The work of the load: in `crosscheck-load`, each load counts its work units for the current epoch. A `ui-stall`, `js-load` or `render-heavy` epoch must have its own units in at least half of the display refreshes of the epoch, and each epoch must have units of the other loads in at most 10% of them. A pass shows that each load was active in its epoch within these limits. It does not show that no other load ran: up to 10% is permitted. A `render-heavy` unit is a requested render step, not a completed mount.
-- The median and the 95th percentile of the UI update durations with the rows of `hitches-updates`: within max(0.25 ms, 5%). The two quantities are not the same (see the metric table), so a pass says only that these quantiles are within the tolerance.
-- `phys_footprint` at each boundary with `memory-physical-footprint` (bytes / 1024) of the table `activity-monitor-process-live`. For the footprint read of the app, moved to the trace and widened by the clock uncertainty, the driver takes the rows (sorted by start) from the last row that ends before the read to the first row that starts after it, by index. A row that only touches the outer edge of these rows is not in them. The boundary is comparable only when these rows cover at most 2 s (from the first start to the latest end) and their values differ by less than the tolerance max(1024 kB, 2%). Then the app value must be within the tolerance of the range of the rows. There is no interpolation. With fewer than 2 comparable boundaries, memory is `not available`. This check is a second reader of the same kernel counter and unit. It does not prove the accounting of the kernel.
-- Assumption, not verified: Activity Monitor took the value of a row at a time between the start and the end of the row. The report of each cross-check says so. The memory comparison is reported data only: `memory` is advisory on iOS. The export of the phone recordings can show later what the time of a row means, and a later change can make `memory` a verdict metric with a gate in the code.
-
-The driver stores each detailed value in `crosscheck.json`: the app and trace values with their timing uncertainty, the work units, the footprint read with its Activity Monitor rows, and the refresh rate. Each outcome (a pass of a value, the work proof, a footprint comparison and the verdict) must follow from these values; the record of the validation computes them again.
-
-The scenario can be a benchmark scenario, or the validation scenario `crosscheck-load` of the app. In `crosscheck-load`, the load of each epoch is `idle`, `ui-stall` (6 ms of busy work on the UI thread on each display refresh, from a display link of the app), `js-load` (6 ms of busy work on the JS thread in each animation frame) or `render-heavy` (a new render of all views in each animation frame). The folder has `crosscheck.json` (all values with the signed, absolute and relative errors and the timing uncertainty), `crosscheck.md` and the trace. The exit code is 0 when the counters pass and the loads ran.
-
-Each plan below measures 10 s, as a sample of `run` does:
-
-```sh
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
-  --package com.reanimatedbenchmark.a --scenario worklet-styles-transform \
-  --epochs steady:full:2.5,steady:endpoints:2.5,steady:endpoints:2.5,steady:full:2.5
-node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> \
-  --package com.reanimatedbenchmark.a --scenario crosscheck-load \
-  --epochs idle:full:2.5,ui-stall:full:2.5,js-load:full:2.5,render-heavy:full:2.5
-```
+The scenario can be a benchmark scenario, or the validation scenario `crosscheck-load` of the app. In `crosscheck-load`, the load of each epoch is `idle`, `ui-stall` (6 ms of busy work on the UI thread on each display refresh, from a display link of the app), `js-load` (6 ms of busy work on the JS thread in each animation frame) or `render-heavy` (a new render of all views in each animation frame). The folder has `crosscheck.json` (the evidence and all values with the signed, absolute and relative errors and the timing uncertainty), `crosscheck.md` and the trace. The exit code is 0 when the counters pass and the loads ran.
 
 ### Observer cost
 
-`observer-cost` measures the cost of the collector without Instruments. It takes `--blocks` blocks (at least 5, default 5) of 4 samples: full collector, only the counter reads, only the counter reads, full collector. For `uiThreadCpu`, `jsThreadCpu`, `processCpu` and `memory` (the footprint at the end read), it gives the medians of the two modes, their relative difference and its 95% interval. The bootstrap of the interval draws whole blocks with their four samples (seed 20261114, 10000 draws). With `--noise-limits`, the driver checks the version and the load of the scenario that each launch reports against the record, and the allowed band of a metric is one quarter of its noise limit:
-
-- `passed`: the interval is inside the band.
-- `failed`: the interval is fully outside the band.
-- `not validated`: the interval crosses a bound (take more blocks), the metric has no noise limit, the test has fewer than 5 blocks, or the relative difference is not defined because a sample with only the counter reads has the value 0 or less. Then `relativeDifference` and `interval` are `null`.
-
-The exit code is 0 only when each verdict metric is `passed`. The folder has `observer-cost.json` and `observer-cost.md`.
+`observer-cost` measures the cost of the collector without Instruments: blocks of 4 samples with the full collector and with only the counter reads. For `uiThreadCpu`, `jsThreadCpu`, `processCpu` and `memory`, it gives the relative difference of the two modes and its 95% interval, and with `--noise-limits` an outcome for each metric. The exit code is 0 only when each verdict metric is `passed`. The folder has `observer-cost.json` and `observer-cost.md`.
 
 ### Validation record
 
-`validation-record --crosscheck <folder> ... --observer-cost <folder> ... [--earlier-crosscheck <folder> ...]` writes a record to stdout. The command stops when:
-
-- the folders do not have one platform, phone model, phone, OS build, measurement revision and app build identity, the app has no app build identity, or the sources are not of the measurement revision of the driver,
-- a cross-check has no epoch, its epoch results are not its planned epochs, its tolerances are not the tolerances of the driver, its `thermalState` is below the thermal state of one of its counter reads (`appBoundaries[].thermal`), or a stored outcome does not follow from its values (a pass of a value, a work proof, a footprint comparison, `verdict.counters`, `verdict.loadsRan`, `verdict.memory`),
-- an observer-cost test does not have only complete blocks (at least 5), does not have each metric of each sample as a number, does not have one complete cost (medians, difference, interval, limit and outcome) for each metric, or has a cost that does not follow from its samples and its noise limit,
-- two sources are one measurement: the same folder (after symbolic links), the same result (SHA-256 of its JSON), or two cross-checks with the same trace.
-
-The record has `formatVersion` (4), these values, each source in full (folder, SHA-256 and the result), the earlier cross-checks and, for each verdict metric, `validated` and its gates with their result (`passed`, `failed` or `not validated`). The gates use outcomes that the driver computes again from the detailed values, not the stored outcomes. A metric is validated only when it has gates and each gate passes:
+`validation-record --crosscheck <folder> ... --observer-cost <folder> ... [--earlier-crosscheck <folder> ...]` writes a record to stdout. The record has each source in full, and for each verdict metric its gates. The driver computes the gates again from the evidence of the sources, also when it reads a record. A metric is validated only when it has gates and each gate passes:
 
 1. Coverage: at least 2 cross-check recordings; a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load; a cross-check of `crosscheck-load` with the loads `idle`, `ui-stall`, `js-load` and `render-heavy`; an observer-cost test of `idle-cost`; an observer-cost test of another benchmark scenario.
 1. In each cross-check: it has epoch results, the thermal state stayed `Nominal` (the highest of `thermalState` and the thermal state of each counter read), the loads ran, and the metric passed in each epoch.
 1. In each observer-cost test: it has at least 5 blocks, and the metric is `passed`.
-
-When the driver reads a record, it checks each source as above, and it makes the gates again from the sources. A record of another measurement revision, a record whose gates or flags are not the ones that follow from its sources, whose SHA-256 of a source is not the SHA-256 of its result, whose source is of another setup, or that has the same source twice, is a tool error. The validity of a metric comes from these gates, not from the flag.
-
-`--earlier-crosscheck <folder>` adds a cross-check of an earlier measurement revision to the record as history: its revision, scenario, verdict and the CPU values of each epoch. It does not enter a gate. On the iPhone 14 (iOS 27.2), the first cross-check recording was made with the revision 3, which compared the counters with the `Running` time only. It failed the gate for `uiThreadCpu` and `processCpu` in epoch 3 (+2.03% and +2.02%; in the other epochs the errors were +1.54% to +1.60%). The revision 4 changes the reference to `Running` plus `Interrupted`. That recording is not a pass of the revision 3 method, and it is not validation evidence for the revision 4.
 
 `run --validation <record>` uses the record when its platform, phone model, phone, OS build, measurement revision and app build identity are the values of the run. The run stores the record in `result.json`, and the report names the validated metrics and the reason for the others.
 
