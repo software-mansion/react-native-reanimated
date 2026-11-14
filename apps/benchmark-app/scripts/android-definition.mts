@@ -1,7 +1,7 @@
 import type { PlatformDefinition } from './platform.mts';
 
 const WINDOW =
-  'Trace window: from the start of all data sources to the end of the trace (about 10 s)';
+  'Trace window: from the start of all data sources to the end of the recording of 10 s';
 
 const SLICES_IN_WINDOW = 'Slices that start in the trace window';
 

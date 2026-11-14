@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { ANDROID_DEFINITION } from '../android-definition.mts';
@@ -198,5 +200,24 @@ describe('config blocks', () => {
         `missing "${expected}" in:\n${message}`
       );
     }
+  });
+});
+
+describe('README configs', () => {
+  it('are valid configs of their platform', () => {
+    const readme = fs.readFileSync(
+      path.join(import.meta.dirname, '..', 'README.md'),
+      'utf8'
+    );
+    const examples = [...readme.matchAll(/```json\n([\s\S]*?)\n```/g)].map(
+      (match) => JSON.parse(match[1]) as { name: string }
+    );
+    assert.deepEqual(
+      examples.map((example) => example.name),
+      ['sync-props', 'ios-css']
+    );
+    const everyFile = { isFile: () => true };
+    validateConfig(examples[0], CONFIG_DIR, everyFile, ANDROID_DEFINITION);
+    validateConfig(examples[1], CONFIG_DIR, everyFile, IOS_DEFINITION);
   });
 });

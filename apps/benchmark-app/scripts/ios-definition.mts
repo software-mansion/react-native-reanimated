@@ -1,7 +1,7 @@
 import type { PlatformDefinition } from './platform.mts';
 
 const WINDOW =
-  'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the trace';
+  'Trace window: from the first to the last `State` signpost of the app in the scheduler data of the main thread and the JS thread';
 
 const ROWS_IN_WINDOW = 'Rows that are fully in the trace window';
 
