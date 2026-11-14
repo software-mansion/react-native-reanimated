@@ -3,6 +3,7 @@ import { expectedFrameShare } from './frames.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { LAUNCHED_LINE } from './ios-device.mts';
 import { judgeWork } from './judge.mts';
+import { RECORDING_SECONDS } from './measurement-rules.mts';
 import type { InAppState, SampleOrder } from './platform.mts';
 import {
   COOL_DOWN_LIMIT_MS,
@@ -18,7 +19,6 @@ import type {
   SampleSteps,
   ScenarioReport,
 } from './protocol.mts';
-import { once } from './tools.mts';
 import type { LineStream } from './tools.mts';
 import { THERMAL_STATES } from './xctrace-metrics.mts';
 import type { AppState } from './xctrace-metrics.mts';
@@ -50,6 +50,12 @@ export interface LaunchReport {
   coldStart: number;
 }
 
+interface AppLaunch {
+  applicationId: string;
+  scenario?: string;
+  load?: number;
+}
+
 type Launch =
   | { started: true; appConsole: AppConsole; report: LaunchReport }
   | { started: false; appConsole: AppConsole; reason: string };
@@ -59,6 +65,11 @@ type StartedLaunch = Extract<Launch, { started: true }>;
 type ReadyOutcome =
   | { ready: true; report: ScenarioReport }
   | { ready: false; reason: string };
+
+interface Received<T> {
+  value: T;
+  at: number;
+}
 
 export const REPORT_PREFIX = 'ReanimatedBenchmark: ';
 export const MINIMUM_WAIT_MS = 10_000;
@@ -70,29 +81,24 @@ export async function takeIosSample(
   order: SampleOrder,
   context: IosSampleContext
 ): Promise<SampleResult> {
-  const { device } = context;
   const steps = timedSteps(context.clock);
   for (const applicationId of order.stopApplicationIds) {
-    await device.terminate(applicationId);
+    await context.device.terminate(applicationId);
   }
   const launch = await steps.timed('wait', () =>
     launchOnCoolDevice(order, context)
   );
-  const stopApp = once(() => device.terminate(order.applicationId));
   return withCleanup(
     async () =>
       launch.started
-        ? measureLaunchedApp(order, context, launch, steps, stopApp)
+        ? measureLaunchedApp(order, context, launch, steps)
         : {
             valid: false,
             cause: 'crash',
             detail: launch.reason,
             timings: steps.timings,
           },
-    async () => {
-      launch.appConsole.stop();
-      await stopApp();
-    }
+    () => launch.appConsole.close()
   );
 }
 
@@ -101,25 +107,16 @@ export async function launchOnce(
   applicationId: string,
   clock: Clock
 ) {
-  const appConsole = new AppConsole(
-    device,
-    applicationId,
-    undefined,
-    undefined
-  );
+  const launch = await startLaunch(device, clock, { applicationId });
   await withCleanup(
     async () => {
-      const launch = await waitForLaunch(appConsole, clock);
-      if (typeof launch === 'string') {
+      if (!launch.started) {
         throw new ToolError(
-          `${applicationId} did not write a LAUNCH line in its first launch after the install: ${launch}`
+          `${applicationId} did not write a LAUNCH line in its first launch after the install: ${launch.reason}`
         );
       }
     },
-    async () => {
-      appConsole.stop();
-      await device.terminate(applicationId);
-    }
+    () => launch.appConsole.close()
   );
 }
 
@@ -161,34 +158,42 @@ export class InAppStateGuard {
 }
 
 export class AppConsole {
-  readonly #scenario: string | undefined;
+  readonly #device: IosSampleDevice;
+  readonly #clock: Clock;
+  readonly #launch: AppLaunch;
   readonly #stream: LineStream;
   #launched = false;
-  #launch: LaunchReport | null = null;
-  #report: ScenarioReport | null = null;
+  #launchReport: Received<LaunchReport> | null = null;
+  #scenarioReport: Received<ScenarioReport> | null = null;
   #failure: string | null = null;
+  #closing: Promise<void> | null = null;
 
-  constructor(
-    device: IosSampleDevice,
-    applicationId: string,
-    scenario: string | undefined,
-    load: number | undefined
-  ) {
-    this.#scenario = scenario;
-    this.#stream = device.launch(applicationId, scenario, load, (line) =>
-      this.#read(line)
+  constructor(device: IosSampleDevice, clock: Clock, launch: AppLaunch) {
+    this.#device = device;
+    this.#clock = clock;
+    this.#launch = launch;
+    this.#stream = device.launch(
+      launch.applicationId,
+      launch.scenario,
+      launch.load,
+      (line) => this.#read(line)
     );
   }
 
-  launch(): LaunchReport | null {
-    return this.#launch;
+  launchBefore(deadline: number): LaunchReport | null {
+    return valueBefore(this.#launchReport, deadline);
   }
 
-  readyOutcome(): ReadyOutcome | null {
+  hasScenarioReportBefore(deadline: number): boolean {
+    return valueBefore(this.#scenarioReport, deadline) !== null;
+  }
+
+  readyBefore(deadline: number): ReadyOutcome | null {
     if (this.#failure) {
       return { ready: false, reason: this.#failure };
     }
-    return this.#report ? { ready: true, report: this.#report } : null;
+    const report = valueBefore(this.#scenarioReport, deadline);
+    return report ? { ready: true, report } : null;
   }
 
   failure(): string | null {
@@ -207,8 +212,12 @@ export class AppConsole {
     return streamFailure !== null;
   }
 
-  stop() {
-    this.#stream.stop();
+  close(): Promise<void> {
+    this.#closing ??= (async () => {
+      this.#stream.stop();
+      await this.#device.terminate(this.#launch.applicationId);
+    })();
+    return this.#closing;
   }
 
   #read(line: string) {
@@ -219,15 +228,22 @@ export class AppConsole {
       return;
     }
     const text = line.slice(REPORT_PREFIX.length);
-    this.#launch ??= parseLaunchLine(text);
+    const at = this.#clock.now();
+    const launch = parseLaunchLine(text);
+    if (launch) {
+      this.#launchReport ??= { value: launch, at };
+    }
     const report = parseReportLine(text);
     if (report?.kind === 'failed') {
       this.#failure ??= `FAILED scenario=${report.scenario} reason=${report.reason}`;
-    } else if (report && report.scenario === this.#scenario) {
-      this.#report ??= {
-        version: report.version,
-        load: report.load,
-        jsThread: report.jsThread,
+    } else if (report && report.scenario === this.#launch.scenario) {
+      this.#scenarioReport ??= {
+        value: {
+          version: report.version,
+          load: report.load,
+          jsThread: report.jsThread,
+        },
+        at,
       };
     }
   }
@@ -240,27 +256,37 @@ async function launchOnCoolDevice(
   const startedAt = clock.now();
   await clock.sleep(MINIMUM_WAIT_MS);
   while (true) {
-    const appConsole = new AppConsole(
-      device,
-      order.applicationId,
-      order.scenario,
-      order.load
-    );
-    const report = await waitForLaunch(appConsole, clock);
-    if (typeof report === 'string') {
-      return { started: false, appConsole, reason: report };
+    const launch = await startLaunch(device, clock, order);
+    if (
+      !launch.started ||
+      launch.report.thermalState === NOMINAL_THERMAL_STATE
+    ) {
+      return launch;
     }
-    if (report.thermalState === NOMINAL_THERMAL_STATE) {
-      return { started: true, appConsole, report };
-    }
-    appConsole.stop();
-    await device.terminate(order.applicationId);
+    await launch.appConsole.close();
     if (clock.now() - startedAt >= COOL_DOWN_LIMIT_MS) {
       throw new ToolError(
-        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[report.thermalState] ?? report.thermalState} at the launch of the app`
+        `The device did not settle in ${COOL_DOWN_LIMIT_MS / 60_000} minutes: thermal state ${THERMAL_STATES[launch.report.thermalState] ?? launch.report.thermalState} at the launch of the app`
       );
     }
     await clock.sleep(HOT_DEVICE_WAIT_MS);
+  }
+}
+
+async function startLaunch(
+  device: IosSampleDevice,
+  clock: Clock,
+  launch: AppLaunch
+): Promise<Launch> {
+  const appConsole = new AppConsole(device, clock, launch);
+  try {
+    const report = await waitForLaunch(appConsole, clock);
+    return typeof report === 'string'
+      ? { started: false, appConsole, reason: report }
+      : { started: true, appConsole, report };
+  } catch (error) {
+    await appConsole.close().catch(() => {});
+    throw error;
   }
 }
 
@@ -270,11 +296,11 @@ async function waitForLaunch(
 ): Promise<LaunchReport | string> {
   const deadline = clock.now() + READY_TIMEOUT_MS;
   while (true) {
-    const report = appConsole.launch();
+    const report = appConsole.launchBefore(deadline);
     if (report) {
       return report;
     }
-    if (appConsole.readyOutcome()?.ready) {
+    if (appConsole.hasScenarioReportBefore(deadline)) {
       throw new ToolError(
         'The app wrote READY but no LAUNCH line that the driver can read. Build the app again from the current benchmark app source.'
       );
@@ -284,7 +310,7 @@ async function waitForLaunch(
       return failure;
     }
     if (appConsole.ended()) {
-      return appConsole.launch() ?? 'the app process ended';
+      return 'the app process ended';
     }
     if (clock.now() >= deadline) {
       if (!appConsole.started()) {
@@ -302,8 +328,7 @@ async function measureLaunchedApp(
   order: SampleOrder,
   context: IosSampleContext,
   { appConsole, report: launch }: StartedLaunch,
-  steps: SampleSteps,
-  stopApp: () => Promise<void>
+  steps: SampleSteps
 ): Promise<SampleResult> {
   const { tracer, guard } = context;
   const { applicationId, traceFile } = order;
@@ -350,7 +375,7 @@ async function measureLaunchedApp(
   if (recorded instanceof Error) {
     throw recorded;
   }
-  await stopApp();
+  await appConsole.close();
 
   const reading = await timed('parse', () =>
     tracer.collect(traceFile, {
@@ -361,6 +386,7 @@ async function measureLaunchedApp(
         refreshRate,
         share: expectedFrameShare(IOS_DEFINITION.frameSource, order.scenario),
       },
+      recordingSeconds: RECORDING_SECONDS,
     })
   );
   if (!reading.processLived) {
@@ -373,6 +399,7 @@ async function measureLaunchedApp(
   const measured = {
     ...observed,
     thermalAfter: reading.thermalState,
+    traceWindow: reading.window,
     inAppState: states[0],
     metrics: { ...reading.metrics, coldStart: launch.coldStart },
   };
@@ -394,13 +421,13 @@ async function waitForReady(
 ): Promise<ReadyOutcome> {
   const deadline = clock.now() + READY_TIMEOUT_MS;
   while (clock.now() < deadline) {
-    const outcome = appConsole.readyOutcome();
+    const outcome = appConsole.readyBefore(deadline);
     if (outcome) {
       return outcome;
     }
     if (appConsole.ended()) {
       return (
-        appConsole.readyOutcome() ?? {
+        appConsole.readyBefore(deadline) ?? {
           ready: false,
           reason: 'the app process ended',
         }
@@ -408,12 +435,10 @@ async function waitForReady(
     }
     await clock.sleep(PROCESS_POLL_MS);
   }
-  return (
-    appConsole.readyOutcome() ?? {
-      ready: false,
-      reason: `no READY line in ${READY_TIMEOUT_MS / 1000} s`,
-    }
-  );
+  return {
+    ready: false,
+    reason: `no READY line in ${READY_TIMEOUT_MS / 1000} s`,
+  };
 }
 
 function appEnd(
@@ -458,4 +483,8 @@ async function withCleanup<T>(
   }
   await cleanUp();
   return result;
+}
+
+function valueBefore<T>(received: Received<T> | null, deadline: number) {
+  return received !== null && received.at < deadline ? received.value : null;
 }

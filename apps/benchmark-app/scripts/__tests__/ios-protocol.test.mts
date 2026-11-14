@@ -8,6 +8,7 @@ import {
   HOT_DEVICE_WAIT_MS,
   InAppStateGuard,
   MINIMUM_WAIT_MS,
+  REPORT_PREFIX,
   launchOnce,
   parseLaunchLine,
   takeIosSample,
@@ -15,13 +16,14 @@ import {
 import type { IosSampleContext } from '../ios-protocol.mts';
 import { REPOSITORY_ROOT } from '../paths.mts';
 import type { SampleOrder } from '../platform.mts';
+import { READY_TIMEOUT_MS } from '../protocol.mts';
 import type { Clock } from '../protocol.mts';
 import type {
   AppState,
   IosTraceMetrics,
   IosTraceReading,
 } from '../xctrace-metrics.mts';
-import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
+import { IOS_TRACE_METRICS, IOS_TRACE_WINDOW } from './ios-fixtures.mts';
 
 const ROOT = path.join(
   REPOSITORY_ROOT,
@@ -46,7 +48,7 @@ const STATE: AppState = {
 interface FakeOptions {
   recordError?: string;
   terminateErrorAt?: number;
-  launchedLate?: string[];
+  linesAfter?: { ms: number; lines: string[] };
   lines?: string[];
   launches?: string[][];
   endsAfterLines?: boolean;
@@ -70,6 +72,7 @@ function order(overrides: Partial<SampleOrder> = {}): SampleOrder {
 
 function createFake(options: FakeOptions = {}) {
   let time = 0;
+  let launchedAt = 0;
   let ended = false;
   let stopped = false;
   const scriptedLaunches = [...(options.launches ?? [])];
@@ -81,8 +84,8 @@ function createFake(options: FakeOptions = {}) {
     sleep: async (ms) => {
       sleeps.push(ms);
       time += ms;
-      if (time > 60_000) {
-        (options.launchedLate ?? []).splice(0).forEach(write);
+      if (options.linesAfter && time - launchedAt >= options.linesAfter.ms) {
+        options.linesAfter.lines.splice(0).forEach(write);
       }
     },
   };
@@ -98,6 +101,7 @@ function createFake(options: FakeOptions = {}) {
         calls.push(`launch ${applicationId} ${scenario} ${load}`);
         write = onLine;
         stopped = false;
+        launchedAt = time;
         (
           scriptedLaunches.shift() ??
           options.lines ?? [LAUNCHED, LAUNCH, READY]
@@ -105,6 +109,7 @@ function createFake(options: FakeOptions = {}) {
         ended = options.endsAfterLines ?? false;
         return {
           stop: () => {
+            calls.push('stop console');
             stopped = true;
           },
           failure: () =>
@@ -134,6 +139,7 @@ function createFake(options: FakeOptions = {}) {
           : {
               processLived: true,
               metrics: { ...IOS_TRACE_METRICS, ...options.metrics },
+              window: IOS_TRACE_WINDOW,
               thermalState: 0,
               appStates: [STATE, STATE, STATE],
               ...options.reading,
@@ -180,9 +186,11 @@ describe('takeIosSample', () => {
       'terminate com.reanimatedbenchmark.b',
       `launch ${APP} css 7`,
       'record Test iPhone 812',
+      'stop console',
       `terminate ${APP}`,
       'collect 812 5001 5002 60 1',
     ]);
+    assert.deepEqual(sample.traceWindow, IOS_TRACE_WINDOW);
     assert.equal(sleeps[0], MINIMUM_WAIT_MS);
     assert.equal(sample.valid, true);
     assert.equal(sample.metrics?.coldStart, 81.25);
@@ -287,41 +295,91 @@ describe('takeIosSample', () => {
     await assert.rejects(
       takeIosSample(
         order(),
-        createFake({ recordError: 'TRACE ERROR', terminateErrorAt: 5 }).context
+        createFake({ recordError: 'TRACE ERROR', terminateErrorAt: 6 }).context
       ),
       /TRACE ERROR/
     );
   });
 
-  it('is a crash when LAUNCH does not come in the time limit, also when it comes later', async () => {
-    const { context, calls } = createFake({
+  it('is a crash when the LAUNCH line comes at its deadline, and stops the console and the app', async () => {
+    const late = createFake({
       lines: [LAUNCHED],
-      launchedLate: [LAUNCH.replace('thermal=0', 'thermal=1'), READY],
+      linesAfter: { ms: READY_TIMEOUT_MS, lines: [LAUNCH, READY] },
     });
-    const sample = await takeIosSample(order(), context);
+    const sample = await takeIosSample(order(), late.context);
     assert.equal(!sample.valid && sample.detail, 'no LAUNCH line in 60 s');
-    assert.ok(!calls.some((call) => call.startsWith('record')));
+    assert.deepEqual(late.calls.slice(2), [
+      `launch ${APP} css undefined`,
+      'stop console',
+      `terminate ${APP}`,
+    ]);
+
+    const inTime = createFake({
+      lines: [LAUNCHED],
+      linesAfter: { ms: READY_TIMEOUT_MS - 1000, lines: [LAUNCH, READY] },
+    });
+    assert.equal((await takeIosSample(order(), inTime.context)).valid, true);
   });
 
-  it('is a tool error when the launch command does not start the app in the time limit', async () => {
+  it('stops the console and the app and keeps the error when the launch is a tool error', async () => {
+    for (const [lines, endsAfterLines, problem] of [
+      [[], false, /The launch command did not start the app in 60 s/],
+      [[LAUNCHED, READY], false, /wrote READY but no LAUNCH line/],
+      [
+        [],
+        true,
+        /The app did not start: devicectl stopped \(exit 1\):\nERROR: no device/,
+      ],
+    ] as const) {
+      const fake = createFake({
+        lines: [...lines],
+        endsAfterLines,
+        terminateErrorAt: 5,
+      });
+      await assert.rejects(takeIosSample(order(), fake.context), problem);
+      assert.deepEqual(fake.calls.slice(2), [
+        `launch ${APP} css undefined`,
+        'stop console',
+        `terminate ${APP}`,
+      ]);
+    }
+  });
+
+  it('stops the console of each hot launch before it launches again', async () => {
+    const hot = LAUNCH.replace('thermal=0', 'thermal=1');
+    const { context, calls } = createFake({
+      launches: [
+        [LAUNCHED, hot],
+        [LAUNCHED, READY],
+      ],
+    });
     await assert.rejects(
-      takeIosSample(order(), createFake({ lines: [] }).context),
-      /The launch command did not start the app in 60 s/
+      takeIosSample(order(), context),
+      /wrote READY but no LAUNCH line/
     );
+    assert.deepEqual(calls.slice(2), [
+      `launch ${APP} css undefined`,
+      'stop console',
+      `terminate ${APP}`,
+      `launch ${APP} css undefined`,
+      'stop console',
+      `terminate ${APP}`,
+    ]);
+  });
+
+  it('does not accept a READY line that comes at its deadline', async () => {
+    const { context } = createFake({
+      lines: [LAUNCHED, LAUNCH],
+      linesAfter: { ms: MINIMUM_WAIT_MS + READY_TIMEOUT_MS, lines: [READY] },
+    });
+    const sample = await takeIosSample(order(), context);
+    assert.equal(!sample.valid && sample.detail, 'no READY line in 60 s');
   });
 
   it('is a crash when READY does not come in the time limit', async () => {
     const { context } = createFake({ lines: [LAUNCHED, LAUNCH] });
     const sample = await takeIosSample(order(), context);
     assert.equal(!sample.valid && sample.detail, 'no READY line in 60 s');
-  });
-
-  it('is a tool error when the launch command fails', async () => {
-    const { context } = createFake({ lines: [], endsAfterLines: true });
-    await assert.rejects(
-      takeIosSample(order(), context),
-      /The app did not start: devicectl stopped \(exit 1\):\nERROR: no device/
-    );
   });
 
   it('is a tool error when the READY line has no LAUNCH line or no jsThread', async () => {
@@ -378,10 +436,12 @@ describe('takeIosSample', () => {
     });
     const sample = await takeIosSample(order(), context);
     assert.equal(sample.valid, true);
-    assert.deepEqual(calls.slice(2, 7), [
+    assert.deepEqual(calls.slice(2, 9), [
       `launch ${APP} css undefined`,
+      'stop console',
       `terminate ${APP}`,
       `launch ${APP} css undefined`,
+      'stop console',
       `terminate ${APP}`,
       `launch ${APP} css undefined`,
     ]);
@@ -495,15 +555,33 @@ describe('launchOnce', () => {
     await launchOnce(context.device, APP, context.clock);
     assert.deepEqual(calls, [
       `launch ${APP} undefined undefined`,
+      'stop console',
       `terminate ${APP}`,
     ]);
   });
 
-  it('is a tool error when the app writes no LAUNCH line', async () => {
-    const { context } = createFake({ lines: [LAUNCHED] });
+  it('is a tool error when the app writes no LAUNCH line, and stops the console and the app first', async () => {
+    for (const lines of [[LAUNCHED], [LAUNCHED, READY]]) {
+      const { context, calls } = createFake({ lines, terminateErrorAt: 3 });
+      await assert.rejects(
+        launchOnce(context.device, APP, context.clock),
+        /did not write a LAUNCH line|wrote READY but no LAUNCH line/
+      );
+      assert.deepEqual(calls, [
+        `launch ${APP} undefined undefined`,
+        'stop console',
+        `terminate ${APP}`,
+      ]);
+    }
+  });
+
+  it('ignores a line without the report prefix', async () => {
+    const { context } = createFake({
+      lines: [LAUNCHED, LAUNCH.slice(REPORT_PREFIX.length)],
+    });
     await assert.rejects(
       launchOnce(context.device, APP, context.clock),
-      /did not write a LAUNCH line/
+      /did not write a LAUNCH line in its first launch after the install: no LAUNCH line in 60 s/
     );
   });
 });

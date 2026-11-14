@@ -14,7 +14,7 @@ import { readResult } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import type { CommandContext, Processes } from '../tools.mts';
 import { DEVICE, onlyRunFolder, useTestRoot } from './command-fake.mts';
-import { IOS_TRACE_METRICS } from './ios-fixtures.mts';
+import { IOS_TRACE_METRICS, IOS_TRACE_WINDOW } from './ios-fixtures.mts';
 
 const TEST_ROOT = useTestRoot('ios-run', {
   name: 'ios-test',
@@ -106,6 +106,7 @@ function createFake(options: FakeOptions = {}) {
         return {
           processLived: true,
           metrics: IOS_TRACE_METRICS,
+          window: IOS_TRACE_WINDOW,
           thermalState: 0,
           appStates: [state, state],
         };
@@ -176,6 +177,7 @@ describe('an iOS run', () => {
     );
     assert.ok(samples.every((sample) => sample.valid && sample.accepted));
     assert.equal(samples[0].metrics?.coldStart, 80.5);
+    assert.deepEqual(samples[0].traceWindow, IOS_TRACE_WINDOW);
     assert.equal(samples[0].batteryLevel, undefined);
     assert.equal(result.verdictRows.length, 6);
     assert.deepEqual(

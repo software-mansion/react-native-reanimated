@@ -22,6 +22,7 @@ import type { TracedApp, TraceReading } from './perfetto.mts';
 import type { InAppState } from './platform.mts';
 import type { Scenario } from './scenarios.mts';
 import type { LineStream } from './tools.mts';
+import type { TraceWindow } from './xctrace-metrics.mts';
 
 export interface SampleDevice {
   forceStop: (applicationId: string) => Promise<void>;
@@ -111,6 +112,7 @@ interface SampleObservations {
   thermalBefore?: number;
   thermalAfter?: number;
   inAppState?: InAppState;
+  traceWindow?: TraceWindow;
   metrics?: SampleMetrics;
   timings: Partial<Record<SampleStep, number>>;
   trace?: string;

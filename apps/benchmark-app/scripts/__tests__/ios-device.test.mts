@@ -185,6 +185,22 @@ describe('IosDevice', () => {
   });
 });
 
+describe('IosDevice.install', () => {
+  it('names the full phone storage as a cause when the install fails', async () => {
+    const failing = {
+      run: async () => {
+        throw new Error('devicectl failed (exit 1): ERROR: Failed to install');
+      },
+    } as unknown as Processes;
+    await assert.rejects(
+      new IosDevice(failing, UDID).install('/builds/a.ipa'),
+      new RegExp(
+        `The install of /builds/a\\.ipa on ${UDID} failed\\. One known cause is a full phone storage: the Instruments service of the phone keeps about 0\\.3 GB of trace data for each xctrace recording until the service ends\\. A restart of the phone is the only known way to free it\\. devicectl: devicectl failed \\(exit 1\\): ERROR: Failed to install`
+      )
+    );
+  });
+});
+
 describe('readIosToolVersions', () => {
   it('reads the versions of Xcode, xctrace and devicectl', async () => {
     const { processes } = fakeProcesses({

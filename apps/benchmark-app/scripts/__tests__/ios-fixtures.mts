@@ -1,4 +1,4 @@
-import type { IosTraceMetrics } from '../xctrace-metrics.mts';
+import type { IosTraceMetrics, TraceWindow } from '../xctrace-metrics.mts';
 
 export const IOS_TRACE_METRICS: IosTraceMetrics = {
   frameDurationMedian: 6,
@@ -18,4 +18,10 @@ export const IOS_TRACE_METRICS: IosTraceMetrics = {
   uiThreadEfficiencyCoreShare: 0.7,
   hitchCount: 0,
   hitchTime: 0,
+};
+
+export const IOS_TRACE_WINDOW: TraceWindow = {
+  startNs: 1_000_000_000,
+  endNs: 10_000_000_000,
+  seconds: 9,
 };

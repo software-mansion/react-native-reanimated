@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 
+import { RECORDING_SECONDS } from './measurement-rules.mts';
 import type { Processes } from './tools.mts';
 import { computeIosTraceMetrics } from './xctrace-metrics.mts';
 import type {
@@ -14,7 +15,6 @@ export interface IosTracer {
 }
 
 export const TRACE_TEMPLATE = 'Animation Hitches';
-export const TRACE_DURATION_SECONDS = 10;
 export const TRACED_SUBSYSTEMS = [
   'dev.reactnative.instruments',
   'com.reanimatedbenchmark',
@@ -104,7 +104,7 @@ export function recordArguments(
     '--attach',
     String(pid),
     '--time-limit',
-    `${TRACE_DURATION_SECONDS}s`,
+    `${RECORDING_SECONDS}s`,
     '--output',
     traceFile,
     '--no-prompt',

@@ -31,6 +31,7 @@ const APP: TracedIosApp = {
   mainThread: 3840236,
   jsThread: 3840263,
   frames: { refreshRate: 60, share: 1 },
+  recordingSeconds: 1,
 };
 const WINDOW_START = 1_856_890_916;
 const WINDOW_END = 2_856_859_583;
@@ -162,6 +163,17 @@ function syntheticThreadState(rows: string[]): string {
   return withRows(withoutRows(EXPORTS.threadState), rows);
 }
 
+function coveringRows(): string[] {
+  return [APP.mainThread, APP.jsThread].map((thread) =>
+    threadRow({
+      start: 1_800_000_000,
+      thread,
+      state: 'Blocked',
+      duration: 1_100_000_000,
+    })
+  );
+}
+
 describe('computeIosTraceMetrics', () => {
   it('computes all metrics from a cut of a real trace', () => {
     const reading = livedReading(computeIosTraceMetrics(EXPORTS, APP));
@@ -269,11 +281,7 @@ describe('computeIosTraceMetrics', () => {
     const metrics = metricsOf({
       ...EXPORTS,
       threadState: syntheticThreadState([
-        threadRow({
-          start: 1_800_000_000,
-          thread: APP.mainThread,
-          state: 'Blocked',
-        }),
+        ...coveringRows(),
         threadRow({
           start: 1_900_000_000,
           thread: APP.mainThread,
@@ -295,11 +303,6 @@ describe('computeIosTraceMetrics', () => {
           duration: 9e6,
           core: 'CPU 0 (E Core)',
         }),
-        threadRow({
-          start: 2_950_000_000,
-          thread: APP.jsThread,
-          state: 'Blocked',
-        }),
       ]),
     });
     assertClose(metrics.uiThreadCpu, 4 / SECONDS);
@@ -312,13 +315,9 @@ describe('computeIosTraceMetrics', () => {
     const metrics = metricsOf({
       ...EXPORTS,
       threadState: syntheticThreadState([
+        ...coveringRows(),
         threadRow({
-          start: 1_800_000_000,
-          thread: APP.mainThread,
-          state: 'Blocked',
-        }),
-        threadRow({
-          start: 2_950_000_000,
+          start: 2_850_000_000,
           thread: APP.jsThread,
           state: 'Running',
           duration: 1e9,
@@ -327,6 +326,152 @@ describe('computeIosTraceMetrics', () => {
     });
     assert.equal(metrics.uiThreadCpu, 0);
     assert.equal(metrics.uiThreadEfficiencyCoreShare, null);
+  });
+
+  it('gives a null efficiency core share when a Running interval of the main thread has no known core type', () => {
+    for (const core of [undefined, 'CPU 9 (X Core)']) {
+      const metrics = metricsOf({
+        ...EXPORTS,
+        threadState: syntheticThreadState([
+          ...coveringRows(),
+          threadRow({
+            start: 1_900_000_000,
+            thread: APP.mainThread,
+            state: 'Running',
+            duration: 3e6,
+            core: 'CPU 0 (E Core)',
+          }),
+          threadRow({
+            start: 2_000_000_000,
+            thread: APP.mainThread,
+            state: 'Running',
+            duration: 1e6,
+            core,
+          }),
+        ]),
+      });
+      assertClose(metrics.uiThreadCpu, 4 / SECONDS);
+      assert.equal(metrics.uiThreadEfficiencyCoreShare, null, core);
+    }
+  });
+
+  it('gives the trace window of the reading', () => {
+    const reading = livedReading(computeIosTraceMetrics(EXPORTS, APP));
+    assert.deepEqual(reading.window, {
+      startNs: WINDOW_START,
+      endNs: WINDOW_END,
+      seconds: SECONDS,
+    });
+  });
+
+  it('stops when the trace window is shorter than 80% of the recording', () => {
+    assert.throws(
+      () => computeIosTraceMetrics(EXPORTS, { ...APP, recordingSeconds: 10 }),
+      {
+        message: `The trace window of process 8865 is ${SECONDS} s long (${WINDOW_START} ns to ${WINDOW_END} ns, in the scheduler data of the measured threads from 1789809875 ns to 2900324625 ns). It must be at least 80% of the recording of 10 s.`,
+      }
+    );
+    assert.doesNotThrow(() =>
+      computeIosTraceMetrics(EXPORTS, {
+        ...APP,
+        recordingSeconds: SECONDS / 0.8,
+      })
+    );
+  });
+
+  it('stops when a gap in the scheduler data of a measured thread makes the window short', () => {
+    for (const thread of [APP.mainThread, APP.jsThread]) {
+      const threadState = syntheticThreadState([
+        ...coveringRows().filter((row) => !row.includes(`<tid>${thread}<`)),
+        threadRow({
+          start: 1_800_000_000,
+          thread,
+          state: 'Blocked',
+          duration: 1_000_000_000,
+        }),
+        threadRow({
+          start: 2_800_000_000,
+          thread,
+          state: 'Unknown',
+          duration: 100_000_000,
+        }),
+      ]);
+      assert.throws(
+        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
+        {
+          message:
+            'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1800000000 ns to 2800000000 ns). The trace window needs 2.',
+        }
+      );
+    }
+  });
+
+  it('keeps the window inside the longest time without a gap', () => {
+    const threadState = syntheticThreadState([
+      coveringRows()[1],
+      threadRow({
+        start: 1_800_000_000,
+        thread: APP.mainThread,
+        state: 'Blocked',
+        duration: 40_000_000,
+      }),
+      threadRow({
+        start: 1_850_000_000,
+        thread: APP.mainThread,
+        state: 'Blocked',
+        duration: 1_050_000_000,
+      }),
+    ]);
+    const reading = livedReading(
+      computeIosTraceMetrics({ ...EXPORTS, threadState }, APP)
+    );
+    assert.equal(reading.window.startNs, WINDOW_START);
+    assert.throws(
+      () =>
+        computeIosTraceMetrics(
+          { ...EXPORTS, threadState },
+          { ...APP, recordingSeconds: 2 }
+        ),
+      /is 0\.999968667 s long \(1856890916 ns to 2856859583 ns, in the scheduler data of the measured threads from 1850000000 ns to 2900000000 ns\)\. It must be at least 80% of the recording of 2 s\./
+    );
+  });
+
+  it('stops on an unknown thread state, a duration that is not positive, a row without a thread id or a missing column', () => {
+    for (const [threadState, problem] of [
+      [
+        withRows(EXPORTS.threadState, [
+          threadRow({ start: 2e9, thread: 77, state: 'Sleeping' }),
+        ]),
+        /the unknown thread state "Sleeping" \(known: Running, Runnable, Preempted, Throttled, Interrupted, Blocked, Idle, Terminated, Unknown\)/,
+      ],
+      [
+        withRows(EXPORTS.threadState, [
+          threadRow({ start: 2e9, thread: 77, state: 'Running', duration: 0 }),
+        ]),
+        /has the duration 0 ns, expected more than 0/,
+      ],
+      [
+        withRows(EXPORTS.threadState, [
+          threadRow({ start: 2e9, thread: 77, state: 'Running' }).replace(
+            '<tid>77</tid>',
+            ''
+          ),
+        ]),
+        /A row of the table thread-state has no thread id/,
+      ],
+      [
+        EXPORTS.threadState.replace(
+          '<mnemonic>core</mnemonic>',
+          '<mnemonic>cpu</mnemonic>'
+        ),
+        /The table thread-state has no column core$/,
+      ],
+    ] as const) {
+      assert.throws(
+        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
+        problem
+      );
+    }
   });
 
   it('counts only the frames that are fully in the window', () => {
@@ -413,7 +558,7 @@ describe('computeIosTraceMetrics', () => {
               footprint: 41000,
               batteryState: 2,
             }),
-            stateRow(1_500_000_000, {
+            stateRow(1_800_000_000, {
               footprint: 40000,
               thermal: 0,
               batteryLevel: 99,
@@ -426,7 +571,7 @@ describe('computeIosTraceMetrics', () => {
         APP
       )
     );
-    assertClose(reading.metrics.expectedFrameCount, 84);
+    assertClose(reading.metrics.expectedFrameCount, 66);
     assert.equal(reading.metrics.memory, 42000);
     assert.equal(reading.metrics.windowMemoryDelta, 2000);
     assert.deepEqual(reading.appStates, [
@@ -532,7 +677,7 @@ describe('computeIosTraceMetrics', () => {
       assert.throws(
         () => computeIosTraceMetrics({ ...EXPORTS, signposts }, APP),
         {
-          message: `The trace has ${count} State signposts of the app in its scheduler data (853613958 ns to 8853720041 ns), the trace window needs 2`,
+          message: `The trace has ${count} State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1789809875 ns to 2900324625 ns). The trace window needs 2.`,
         }
       );
     }
@@ -556,82 +701,50 @@ describe('computeIosTraceMetrics', () => {
     assert.equal(late.thermalState, 1);
   });
 
-  it('stops when the trace window is empty', () => {
-    const signposts = withRows(withoutRows(EXPORTS.signposts), [
-      stateRow(2e9, NOMINAL_STATE),
-      stateRow(2e9, NOMINAL_STATE),
+  it('takes the window from the longest time with scheduler data of both measured threads and stops with fewer than 2 State events in it', () => {
+    const threadState = syntheticThreadState([
+      threadRow({
+        start: 1_800_000_000,
+        thread: APP.mainThread,
+        state: 'Blocked',
+        duration: 1e9,
+      }),
+      threadRow({
+        start: 1_850_000_000,
+        thread: APP.jsThread,
+        state: 'Blocked',
+        duration: 900_000_000,
+      }),
     ]);
     assert.throws(
-      () => computeIosTraceMetrics({ ...EXPORTS, signposts }, APP),
-      /The trace window of process 8865 is 0 ns long, expected more than 0/
+      () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
+      {
+        message:
+          'The trace has 1 State signposts of the app in the longest time that the scheduler data covers the main thread and the JS thread (1850000000 ns to 2750000000 ns). The trace window needs 2.',
+      }
     );
   });
 
-  it('stops when the scheduler data has fewer than 2 State events', () => {
-    for (const [rows, coverage, count] of [
-      [
-        [
-          threadRow({
-            start: 0,
-            thread: APP.mainThread,
-            state: 'Blocked',
-            duration: 3e9,
-          }),
-          threadRow({
-            start: 1_900_000_000,
-            thread: APP.jsThread,
-            state: 'Blocked',
-            duration: 1_100_000_000,
-          }),
-        ],
-        '1900000000 ns to 3000000000 ns',
-        1,
-      ],
-      [
-        [
-          threadRow({
-            start: 1_800_000_000,
-            thread: APP.mainThread,
-            state: 'Blocked',
-            duration: 1e9,
-          }),
-          threadRow({
-            start: 1_850_000_000,
-            thread: APP.jsThread,
-            state: 'Blocked',
-            duration: 900_000_000,
-          }),
-        ],
-        '1800000000 ns to 2800000000 ns',
-        1,
-      ],
-      [
-        [
-          threadRow({
-            start: 0,
-            thread: APP.mainThread,
-            state: 'Blocked',
-            duration: 3e9,
-          }),
-          threadRow({
-            start: 0,
-            thread: APP.jsThread,
-            state: 'Blocked',
-            duration: 3e9,
-          }),
-        ],
-        'Infinity ns to 3000000000 ns',
-        0,
-      ],
-    ] as const) {
+  it('does not use a row that starts at the trace start as scheduler data', () => {
+    for (const jsStart of [0, 1_900_000_000]) {
+      const threadState = syntheticThreadState([
+        threadRow({
+          start: 0,
+          thread: APP.mainThread,
+          state: 'Blocked',
+          duration: 3e9,
+        }),
+        threadRow({
+          start: jsStart,
+          thread: APP.jsThread,
+          state: 'Blocked',
+          duration: 3e9 - jsStart,
+        }),
+      ]);
       assert.throws(
-        () =>
-          computeIosTraceMetrics(
-            { ...EXPORTS, threadState: syntheticThreadState([...rows]) },
-            APP
-          ),
+        () => computeIosTraceMetrics({ ...EXPORTS, threadState }, APP),
         {
-          message: `The trace has ${count} State signposts of the app in its scheduler data (${coverage}), the trace window needs 2`,
+          message: `The scheduler data has no time with a known state of both the main thread ${APP.mainThread} and the JS thread ${APP.jsThread}`,
         }
       );
     }

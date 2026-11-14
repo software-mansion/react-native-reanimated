@@ -36,6 +36,7 @@ export const IOS_COMPARED_STATE_KEYS = [
 export const LAUNCHED_LINE = /^Launched application with \S+ bundle identifier/;
 export const DEVICE_COMMAND_TIMEOUT_MS = 60_000;
 export const INSTALL_TIMEOUT_MS = 5 * 60_000;
+export const TRACE_STORAGE_GB_PER_RECORDING = 0.3;
 
 const XCODE_VERSION_LINES = 2;
 
@@ -68,7 +69,13 @@ export class IosDevice {
   }
 
   async install(ipa: string, timeoutMs = INSTALL_TIMEOUT_MS) {
-    await this.#device(['install', 'app', ipa], timeoutMs);
+    await this.#device(['install', 'app', ipa], timeoutMs).catch(
+      (error: Error) => {
+        throw new ToolError(
+          `The install of ${ipa} on ${this.udid} failed. One known cause is a full phone storage: the Instruments service of the phone keeps about ${TRACE_STORAGE_GB_PER_RECORDING} GB of trace data for each xctrace recording until the service ends. A restart of the phone is the only known way to free it. devicectl: ${error.message}`
+        );
+      }
+    );
   }
 
   async terminate(bundleIdentifier: string) {

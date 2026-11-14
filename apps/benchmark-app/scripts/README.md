@@ -208,9 +208,14 @@ The iOS path measures on a real iPhone. A simulator is not supported, because it
 
 ### Tools and device
 
+- Phone storage: the Instruments service of the phone keeps about 0.3 GB of trace data for each `xctrace` recording until the service ends. The driver cannot delete it. A restart of the phone is the only known way to free it. Plan a free storage of 0.3 GB times the number of samples. Each run and each resume segment installs the apps first, and a failed install is a tool error that names this cause.
+
 - Xcode with `xctrace` and `devicectl` (tested with Xcode 27.2), Ruby and Bundler for CocoaPods.
+
 - An iPhone with Developer Mode on, paired with the Mac and unlocked. `xcrun devicectl list devices` gives the UDID.
+
 - A sign command. The driver builds the app for a device without a signature (`CODE_SIGNING_ALLOWED=NO`). Then it calls `<sign command> <path of the .app> <path of the .ipa to write>`. The command must write an `.ipa` that the iPhone accepts and that has the entitlement `get-task-allow` (a development signature), because `xctrace` attaches to the app. The sign command is a part of the build key.
+
 - `"profiling": true` and the `memory` command are not supported.
 
 After each install, the driver launches the app one time and stops it, because the first launch after an install is slow.
@@ -224,7 +229,7 @@ After each install, the driver launches the app one time and stops it, because t
 1. `xctrace record` attaches to the app for 10 s with the template `Animation Hitches`, the instrument `os_signpost`, and the signposts of React Native (`dev.reactnative.instruments`) and of the app (`com.reanimatedbenchmark`).
 1. The driver stops the app, exports tables of the trace with `xctrace export` and computes the metrics.
 
-The app writes a `State` signpost each second. The trace window is the time from the first to the last `State` signpost that is inside the scheduler data of the trace (about 10 s).
+The app writes a `State` signpost each second. The trace window is the time from the first to the last `State` signpost in the scheduler data of the measured threads: the longest time in which the table `thread-state` gives a known state of the main thread and of the JS thread with no gap. A row that starts at 0 gives the state before the scheduler data starts, so it does not count. The window must be at least 80% of the recording (8 s). Each sample stores the window (`traceWindow`: start, end and length).
 
 ### Metrics
 
@@ -244,7 +249,7 @@ The app writes a `State` signpost each second. The trace window is the time from
 | `coldStart` | ms | `coldStart` of the LAUNCH line. The app measures it. | From the start of the process (`p_starttime` of `sysctl`) to the first display link callback | The difference of two wall-clock times. It does not include the time before the kernel starts the process. No verdict and no noise limit. | no verdict, shown |
 | `hitchCount`, `hitchTime` | count; ms for each s | Count of the rows of the table `hitches` of the app, and the sum of their durations | Rows that overlap the trace window, cut to the window | No verdict. | no, stored |
 
-The table `thread-state` has each scheduling interval of each thread, so the CPU time is the time on a core, not an estimate from samples. The driver does not count the states `Interrupted`, `Runnable` and `Preempted`. The table does not show the clock rate. The scheduler moves the main thread between efficiency cores and performance cores, and the same work needs more time on an efficiency core. `uiThreadEfficiencyCoreShare` shows this for each sample.
+The table `thread-state` has each scheduling interval of each thread, so the CPU time is the time on a core, not an estimate from samples. Only the state `Running` is CPU time. The driver knows the states of the Instruments schema (`engineering_types.etypesdef` of Xcode): `Running`, `Runnable`, `Preempted`, `Throttled`, `Interrupted`, `Blocked`, `Idle`, `Terminated` and `Unknown`. Another state, a row without a thread id, a duration of 0 or less, or a missing column is a tool error. `Unknown` is not scheduler data. The table does not show the clock rate. The scheduler moves the main thread between efficiency cores and performance cores, and the same work needs more time on an efficiency core. `uiThreadEfficiencyCoreShare` shows this for each sample.
 
 The trace has the cost of the Time Profiler samples (the `Animation Hitches` template includes them), of the React Native signposts and of the `State` signposts. A and B have the same tools, but the cost is not measured, and a variant that runs more React Native sections has more signpost cost.
 
@@ -255,7 +260,7 @@ The trace has the cost of the Time Profiler samples (the `Animation Hitches` tem
 - `frames` and `work`: as on Android.
 - Before each sample, the driver reads the UDID, the product type and the OS build with `devicectl`. A change stops the run.
 - Each `State` signpost of a trace gives the battery level, the battery state, the low power mode and the brightness, and the `LAUNCH` line gives the refresh rate. The first sample of the run gives the reference (`inAppState` in `result.json`). A later difference stops the run.
-- These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread, without the JS thread or with fewer than 2 `State` signposts inside its scheduler data, and a command that does not finish in its time limit.
+- These are tool errors: a launch command that fails before the app starts, a `READY` line without `LAUNCH` or without `jsThread`, a display whose maximum refresh rate is not 60 Hz, a trace without the main thread or the JS thread, a trace window shorter than 8 s, and a command that does not finish in its time limit. A `LAUNCH` or `READY` line that comes at or after its time limit (60 s) does not count. After each launch, the driver stops the console and the app, also after a tool error.
 - `run --resume <run folder> --udid <UDID>` continues a stopped run with the same rules as on Android. It does not build, so it does not take `--sign-command`. A run cannot continue on the other platform.
 
 ### Limits

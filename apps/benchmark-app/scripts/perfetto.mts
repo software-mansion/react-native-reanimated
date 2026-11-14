@@ -1,6 +1,7 @@
 import { ToolError } from './errors.mts';
 import { frameMetrics, quantileOrNull } from './frames.mts';
 import type { FrameBasis } from './frames.mts';
+import { RECORDING_SECONDS } from './measurement-rules.mts';
 import type { AndroidSampleMetrics } from './metrics.mts';
 import type { Processes } from './tools.mts';
 
@@ -21,7 +22,6 @@ export interface ResultSet {
   rows: (string | null)[][];
 }
 
-export const TRACE_DURATION_MS = 10000;
 export const JS_THREAD_NAME = 'mqt_v_js';
 export const RENDER_THREAD_NAME = 'RenderThread';
 export const FRAME_SLICE_PATTERN = 'Choreographer#doFrame%';
@@ -72,7 +72,7 @@ export class TraceProcessor {
 
 export function traceConfig(
   applicationId: string,
-  durationMs = TRACE_DURATION_MS
+  durationMs = RECORDING_SECONDS * 1000
 ): string {
   checkApplicationId(applicationId);
   return `buffers {

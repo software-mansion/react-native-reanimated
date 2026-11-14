@@ -11,6 +11,7 @@ export type TraceRow = Record<string, TraceElement | null>;
 
 export interface TraceTable {
   schema: string;
+  columns: string[];
   rows: TraceRow[];
 }
 
@@ -264,7 +265,7 @@ function traceTable(node: TraceElement, schema: TraceElement): TraceTable {
         columns.map((column, i) => [column, cellValue(row.children[i])])
       );
     });
-  return { schema: name, rows };
+  return { schema: name, columns, rows };
 }
 
 function cellValue(cell: TraceElement): TraceElement | null {
