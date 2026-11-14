@@ -7,7 +7,7 @@ import type { CommandContext } from './command-context.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
 import { SAMPLES_DIR } from './paths.mts';
 import { platformOf } from './platforms.mts';
-import { runFolderName } from './results.mts';
+import { measurementFolderName } from './results.mts';
 
 export async function sampleCommand(
   options: SampleOptions,
@@ -27,7 +27,7 @@ export async function sampleCommand(
   fs.mkdirSync(SAMPLES_DIR, { recursive: true });
   const traceFile = path.join(
     SAMPLES_DIR,
-    `${runFolderName(new Date(), options.scenario)}-${Date.now()}.${platform.traceExtension}`
+    `${measurementFolderName(new Date(), options.scenario)}-${Date.now()}.${platform.traceExtension}`
   );
   log(
     `sample ${options.applicationId} ${options.scenario}${options.load === undefined ? '' : ` load=${options.load}`}`
@@ -55,7 +55,6 @@ export async function sampleCommand(
     JSON.stringify(
       {
         measurementRevision: MEASUREMENT_REVISION,
-        serial: options.device.id,
         applicationId: options.applicationId,
         scenario: options.scenario,
         load: options.load ?? null,

@@ -28,7 +28,7 @@ import {
 } from './results.mts';
 import type { RunResult } from './results.mts';
 import type { SampleResult } from './samples.mts';
-import { blockOrder } from './session.mts';
+import { balancedOrder } from './session.mts';
 import { computeComparisonRows } from './verdict.mts';
 
 export async function runCommand(
@@ -101,8 +101,9 @@ function runJob(result: RunResult): MeasurementJob<SampleResult, RunResult> {
   return {
     scenarios: result.config.scenarios,
     comparesBatteryLevel: true,
-    orderOf: blockOrder,
-    blocksOf: (scenario) =>
+    unitName: 'block',
+    orderOf: balancedOrder,
+    roundsOf: (scenario) =>
       blocksOf(result.config, scenario, result.options.blocks),
     measure: (order, sampling) => sampling.takeSample(order),
     clearSummary: (stopped) => {

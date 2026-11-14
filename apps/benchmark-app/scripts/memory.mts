@@ -49,7 +49,7 @@ import type {
   MemoryReading,
   MemorySchedule,
 } from './memory-series.mts';
-import { RUNS_DIR } from './paths.mts';
+import { DEFAULT_OUTPUT_DIR } from './paths.mts';
 import { RECORDED_SAMPLE, readMeasurementResult } from './results.mts';
 import type { MeasurementResult } from './results.mts';
 import type {
@@ -153,7 +153,7 @@ const MEMORY_LAUNCH = both(
 );
 const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
   platform: androidPlatform(),
-  runsDir: RUNS_DIR,
+  outputDir: DEFAULT_OUTPUT_DIR,
 };
 
 export async function memoryCommand(
@@ -223,7 +223,8 @@ function memoryJob(
   return {
     scenarios: [options.scenario],
     comparesBatteryLevel: false,
-    blocksOf: () => launchCount(options.launches),
+    unitName: 'launch',
+    roundsOf: () => launchCount(options.launches),
     orderOf: memoryLaunchOrder,
     measure: (order, sampling) =>
       takeMemoryLaunch(
@@ -397,7 +398,7 @@ export function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
     const tails = launches
       .filter((launch) => launch.variant === variant)
       .map((launch) => ({
-        launch: launch.block,
+        launch: launch.round,
         segment: launch.segment,
         tailLevel: tailLevel(launch.readings, options.durationSeconds),
         tailSlope: tailSlope(launch.readings, options.durationSeconds),

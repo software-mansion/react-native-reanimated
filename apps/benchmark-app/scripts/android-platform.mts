@@ -116,7 +116,7 @@ export function androidPlatform(
       const android = androidState(state);
       return {
         model: android.model,
-        deviceId: android.hardwareSerial,
+        deviceId: android.deviceId,
         osBuild: android.fingerprint,
       };
     },

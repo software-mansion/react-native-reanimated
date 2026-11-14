@@ -2,6 +2,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
+import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import {
   DEFAULT_DURATION_SECONDS,
@@ -10,10 +11,13 @@ import {
   DEFAULT_SLOPE_LIMIT,
   checkSchedule,
 } from './memory-series.mts';
-import type { DeviceTarget } from './platform.mts';
+import type {
+  DeviceTarget,
+  PlatformCommand,
+  PlatformOption,
+} from './platform.mts';
 import { SCENARIOS, isScenario } from './scenarios.mts';
 import type { Scenario } from './scenarios.mts';
-import { DEFAULT_BLOCKS } from './session.mts';
 
 export interface RunOptions {
   command: 'run';
@@ -77,6 +81,8 @@ export type Command =
   | SampleOptions
   | { command: 'help' };
 
+export const DEFAULT_BLOCKS = 5;
+
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--keep-traces] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --resume <run folder> <device> [--trace-processor <path>]
@@ -90,6 +96,11 @@ An iOS run also takes --sign-command <path>.
 
 Scenarios: ${SCENARIOS.join(', ')}
 See apps/benchmark-app/scripts/README.md.`;
+
+const PLATFORM_OPTIONS: readonly PlatformOption[] = [
+  'trace-processor',
+  'sign-command',
+];
 
 const COMMON_OPTIONS: ParseArgsOptionsConfig = {
   serial: { type: 'string' },
@@ -164,10 +175,11 @@ export function parseArguments(argv: string[]): Command {
     if (values.resume !== undefined) {
       return {
         command: 'resume',
-        ...resumeOptions(values, STORED_RUN_OPTIONS),
+        ...resumeOptions(values, STORED_RUN_OPTIONS, 'run'),
       };
     }
-    const device = deviceTarget(values);
+    const device = platformTarget(values, 'run');
+    const signCommand = optionalString(values, 'sign-command');
     return {
       command,
       config: required(values, 'config'),
@@ -176,16 +188,16 @@ export function parseArguments(argv: string[]): Command {
       noiseLimits: optionalString(values, 'noise-limits'),
       keepTraces: values['keep-traces'] === true,
       traceProcessor: optionalString(values, 'trace-processor'),
-      signCommand: signCommand(values, device),
+      signCommand:
+        signCommand === undefined ? undefined : path.resolve(signCommand),
     };
   }
   if (command === 'memory') {
     const { values } = parseOptions(rest, MEMORY_OPTIONS);
     if (values.resume !== undefined) {
-      androidTarget(values);
       return {
         command: 'memory-resume',
-        ...resumeOptions(values, STORED_MEMORY_OPTIONS),
+        ...resumeOptions(values, STORED_MEMORY_OPTIONS, 'memory'),
       };
     }
     return memoryOptions(values);
@@ -205,7 +217,7 @@ export function parseArguments(argv: string[]): Command {
     const { values } = parseOptions(rest, SAMPLE_OPTIONS);
     return {
       command,
-      device: deviceTarget(values),
+      device: platformTarget(values, 'sample'),
       applicationId: required(values, 'package'),
       scenario: requiredScenario(values),
       load:
@@ -236,7 +248,8 @@ function parseOptions(
 
 function resumeOptions(
   values: Values,
-  storedOptions: readonly string[]
+  storedOptions: readonly string[],
+  command: PlatformCommand
 ): Omit<ResumeOptions, 'command'> {
   const stored = storedOptions.filter((name) => values[name] !== undefined);
   if (stored.length > 0) {
@@ -246,7 +259,7 @@ function resumeOptions(
   }
   return {
     folder: required(values, 'resume'),
-    device: deviceTarget(values),
+    device: platformTarget(values, command, false),
     traceProcessor: optionalString(values, 'trace-processor'),
   };
 }
@@ -271,7 +284,7 @@ function memoryOptions(values: Values): MemoryOptions {
   return {
     command: 'memory',
     config: required(values, 'config'),
-    device: androidTarget(values),
+    device: platformTarget(values, 'memory'),
     scenario: requiredScenario(values),
     launches,
     intervalSeconds,
@@ -285,12 +298,35 @@ function memoryOptions(values: Values): MemoryOptions {
   };
 }
 
-function androidTarget(values: Values): DeviceTarget {
+function platformTarget(
+  values: Values,
+  command: PlatformCommand,
+  startsMeasurement = true
+): DeviceTarget {
   const device = deviceTarget(values);
-  if (device.platform !== 'android') {
+  const definition = PLATFORM_DEFINITIONS[device.platform];
+  if (!definition.commands.includes(command)) {
     throw new ToolError(
-      'The memory command supports Android only. Give --serial <adb serial>.'
+      `The ${command} command is not supported on ${device.platform}.`
     );
+  }
+  for (const option of PLATFORM_OPTIONS) {
+    const rule = definition.options[option];
+    if (values[option] !== undefined && rule === undefined) {
+      throw new ToolError(
+        `--${option} is not an option on ${device.platform}.`
+      );
+    }
+    if (
+      values[option] === undefined &&
+      rule === 'required for run' &&
+      command === 'run' &&
+      startsMeasurement
+    ) {
+      throw new ToolError(
+        `A run on ${device.platform} needs --${option}.\n\n${USAGE}`
+      );
+    }
   }
   return device;
 }
@@ -305,17 +341,6 @@ function deviceTarget(values: Values): DeviceTarget {
     return { platform: 'ios', id: udid };
   }
   return { platform: 'android', id: required(values, 'serial') };
-}
-
-function signCommand(values: Values, device: DeviceTarget): string | undefined {
-  const command = optionalString(values, 'sign-command');
-  if (device.platform === 'ios' && !command) {
-    throw new ToolError(`An iOS run needs --sign-command.\n\n${USAGE}`);
-  }
-  if (device.platform === 'android' && command) {
-    throw new ToolError('--sign-command is for an iOS run only.');
-  }
-  return command === undefined ? undefined : path.resolve(command);
 }
 
 function requiredScenario(values: Values): Scenario {

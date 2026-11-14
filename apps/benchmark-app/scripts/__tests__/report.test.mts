@@ -11,8 +11,8 @@ import {
   renderReport,
   variantDifferences,
 } from '../report.mts';
-import type { RunResult, RunVariant } from '../results.mts';
-import type { SampleRecord } from '../session.mts';
+import type { RunResult, MeasuredVariant } from '../results.mts';
+import type { Recorded } from '../session.mts';
 import type { VerdictRow } from '../verdict.mts';
 
 const VARIANT: Variant = {
@@ -48,7 +48,7 @@ const CONFIG: RunConfig = {
 
 const DEVICE: DeviceState = {
   model: 'Pixel',
-  hardwareSerial: 'HW1',
+  deviceId: 'HW1',
   fingerprint: 'google/pixel:17/X/1:user/release-keys',
   sdk: 37,
   abi: 'arm64-v8a',
@@ -64,7 +64,7 @@ const DEVICE: DeviceState = {
   batteryTemperature: 30,
 };
 
-function built(variant: 'a' | 'b', syncFlag: boolean): RunVariant {
+function built(variant: 'a' | 'b', syncFlag: boolean): MeasuredVariant {
   return {
     variant,
     buildKey: `key-${variant}`,
@@ -139,11 +139,11 @@ const ROWS = [
   }),
 ];
 
-function sample(overrides: Partial<SampleRecord>): SampleRecord {
+function sample(overrides: Partial<Recorded>): Recorded {
   return {
     scenario: 'sticky-header',
     variant: 'a',
-    block: 0,
+    round: 0,
     attempt: 0,
     position: 0,
     segment: 0,
@@ -154,7 +154,7 @@ function sample(overrides: Partial<SampleRecord>): SampleRecord {
     detail: 'thermal status 1 after the trace',
     timings: { wait: 12000, start: 900 },
     ...overrides,
-  } as SampleRecord;
+  } as Recorded;
 }
 
 const RESULT: RunResult = {
@@ -168,7 +168,6 @@ const RESULT: RunResult = {
   config: CONFIG,
   options: { blocks: 5, noiseLimitsFile: null, keepTraces: false },
   noiseLimits: null,
-  serial: 'SERIAL1',
   segments: [
     {
       startedAt: '2026-11-12T10:00:00.000Z',
@@ -445,7 +444,7 @@ describe('renderReport', () => {
     );
     assert.ok(
       withLimits.includes(
-        'Noise limits from limits.json: Pixel, device HW1, OS build google/pixel:17/X/1:user/release-keys, measurement revision 1, 1 A/A runs. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
+        'Noise limits from limits.json: Pixel, device HW1, OS build google/pixel:17/X/1:user/release-keys, measurement revision 1, 1 A/A run. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points).'
       )
     );
   });
@@ -534,9 +533,9 @@ describe('renderReport', () => {
   });
 
   it('names the segment of each block of a resumed scenario', () => {
-    const accepted = (block: number, segment: number) =>
+    const accepted = (round: number, segment: number) =>
       [0, 1, 2, 3].map((position) =>
-        sample({ block, position, segment, accepted: true, valid: true })
+        sample({ round, position, segment, accepted: true, valid: true })
       );
     const resumed = renderReport({
       ...RESULT,
@@ -551,7 +550,7 @@ describe('renderReport', () => {
           samples: [
             ...accepted(0, 0),
             ...accepted(1, 0),
-            sample({ block: 2, segment: 0 }),
+            sample({ round: 2, segment: 0 }),
             ...accepted(2, 1),
             ...accepted(3, 2),
           ],

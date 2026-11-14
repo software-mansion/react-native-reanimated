@@ -34,7 +34,7 @@ export interface FakeOptions {
 
 export interface TestRoot {
   root: string;
-  runsDir: string;
+  outputDir: string;
   configFile: string;
   traceProcessor: string;
   apkOf: (variant: string) => string;
@@ -51,7 +51,7 @@ const GFXINFO = fs.readFileSync(
 
 export const STATE: DeviceState = {
   model: 'Pixel',
-  hardwareSerial: 'HW1',
+  deviceId: 'HW1',
   fingerprint: 'google/pixel:17/X/1:user/release-keys',
   sdk: 37,
   abi: 'arm64-v8a',
@@ -104,7 +104,7 @@ export function useTestRoot(name: string, config: object): TestRoot {
   );
   const testRoot: TestRoot = {
     root,
-    runsDir: path.join(root, 'runs'),
+    outputDir: path.join(root, 'runs'),
     configFile: path.join(root, 'config.json'),
     traceProcessor: path.join(root, 'trace_processor_shell'),
     apkOf: (variant) => path.join(root, 'builds', variant, 'app-release.apk'),
@@ -125,7 +125,7 @@ export function useTestRoot(name: string, config: object): TestRoot {
   });
 
   beforeEach(() => {
-    fs.rmSync(testRoot.runsDir, { recursive: true, force: true });
+    fs.rmSync(testRoot.outputDir, { recursive: true, force: true });
     for (const variant of ['a', 'b']) {
       fs.mkdirSync(path.join(root, 'builds', variant), { recursive: true });
       fs.writeFileSync(testRoot.apkOf(variant), `apk ${variant}`);
@@ -247,7 +247,7 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
   };
   const dependencies: MeasurementDependencies<AndroidSampling> = {
     platform: androidPlatform(android),
-    runsDir: testRoot.runsDir,
+    outputDir: testRoot.outputDir,
   };
   const processes = {
     run: async () => ({
@@ -266,6 +266,6 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
 }
 
 export function onlyRunFolder(testRoot: TestRoot): string {
-  const [folder] = fs.readdirSync(testRoot.runsDir);
-  return path.join(testRoot.runsDir, folder);
+  const [folder] = fs.readdirSync(testRoot.outputDir);
+  return path.join(testRoot.outputDir, folder);
 }

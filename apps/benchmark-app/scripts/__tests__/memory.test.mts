@@ -201,7 +201,7 @@ describe('memoryCommand', () => {
     );
     assert.deepEqual(
       others.map((launch) => [
-        launch.block,
+        launch.round,
         launch.attempt,
         launch.variant,
         launch.accepted,
@@ -220,7 +220,7 @@ describe('memoryCommand', () => {
     assert.equal(exitCode, 0);
     assert.deepEqual(
       result.scenarios[0].samples.map((launch) => [
-        launch.block,
+        launch.round,
         launch.attempt,
         launch.valid,
         launch.accepted,
@@ -341,7 +341,7 @@ describe('memoryCommand', () => {
       'the reading of 180 s came at 211.0 s, more than 30 s late'
     );
     assert.deepEqual(
-      others.map((launch) => [launch.block, launch.attempt]),
+      others.map((launch) => [launch.round, launch.attempt]),
       [
         [1, 1],
         [2, 0],
@@ -374,6 +374,15 @@ describe('memoryCommand', () => {
     assert.ok(Math.abs((result.summary[1].tailSlopeMedian ?? 0) - 2000) < 1);
   });
 
+  it('names one launch in the singular', async () => {
+    const { folder } = await measureMemory({}, { launches: 1 });
+    assert.ok(
+      reportOf(folder).includes(
+        '- It uses 1 launch for each variant and gives no confidence interval.'
+      )
+    );
+  });
+
   it('reads only the name, the variants and the note of the config', async () => {
     const config = path.join(TEST_ROOT.root, 'variants-only.json');
     fs.writeFileSync(
@@ -404,7 +413,7 @@ describe('memoryResumeCommand', () => {
     assert.equal(stopped.status, 'interrupted');
     assert.deepEqual(
       stopped.incompleteScenario?.samples.map((launch) => [
-        launch.block,
+        launch.round,
         launch.accepted,
       ]),
       [
@@ -435,7 +444,7 @@ describe('memoryResumeCommand', () => {
     assert.equal(result.status, 'done');
     assert.deepEqual(
       result.scenarios[0].samples.map((launch) => [
-        launch.block,
+        launch.round,
         launch.segment,
         launch.variant,
       ]),

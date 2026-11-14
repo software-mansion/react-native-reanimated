@@ -5,7 +5,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import { readResult, writeResult } from '../results.mts';
-import type { RunResult, RunVariant } from '../results.mts';
+import type { RunResult, MeasuredVariant } from '../results.mts';
 import { resumeCommand, runCommand } from '../run.mts';
 import {
   DEVICE,
@@ -150,7 +150,7 @@ describe('runCommand with noise limits', () => {
       runWithLimits('Other'),
       /The noise limits do not fit this run: device model Other, the run is on Pixel\./
     );
-    assert.equal(fs.existsSync(TEST_ROOT.runsDir), false);
+    assert.equal(fs.existsSync(TEST_ROOT.outputDir), false);
   });
 });
 
@@ -200,7 +200,7 @@ describe('resumeCommand', () => {
     const folder = await stoppedRun({ interruptAtTrace: 10, keepTraces: true });
     assert.deepEqual(
       readResult(folder).incompleteScenario?.samples.map((sample) => [
-        sample.block,
+        sample.round,
         sample.segment,
         sample.accepted,
       ]),
@@ -219,7 +219,7 @@ describe('resumeCommand', () => {
     );
     assert.deepEqual(
       idleCost?.samples.map((sample) => [
-        sample.block,
+        sample.round,
         sample.segment,
         sample.attempt,
         sample.accepted,
@@ -233,7 +233,7 @@ describe('resumeCommand', () => {
       result.abandonedScenarios.map((outcome) => [
         outcome.scenario,
         outcome.segment,
-        outcome.samples.map((sample) => [sample.block, sample.segment]),
+        outcome.samples.map((sample) => [sample.round, sample.segment]),
       ]),
       [['idle-cost', 0, [[1, 0]]]]
     );
@@ -286,7 +286,7 @@ describe('resumeCommand', () => {
       result.segments = [];
       const [sample] = result.incompleteScenario?.samples ?? [];
       (sample as { valid: unknown }).valid = 'yes';
-      delete (result.variants.a as Partial<RunVariant>).installFileSha256;
+      delete (result.variants.a as Partial<MeasuredVariant>).installFileSha256;
     });
     await assert.rejects(resume(folder).run, (error: Error) =>
       [
@@ -305,7 +305,7 @@ describe('resumeCommand', () => {
     });
     await assert.rejects(
       resume(folder).run,
-      /The run has the measurement revision 0, and this driver has revision 1/
+      /The measurement has the revision 0, and this driver has revision 1/
     );
   });
 
@@ -346,14 +346,14 @@ describe('resumeCommand', () => {
   it('refuses a run that is done', async () => {
     const folder = await stoppedRun();
     await resume(folder).run;
-    await assert.rejects(resume(folder).run, /The run is done/);
+    await assert.rejects(resume(folder).run, /The measurement is done/);
   });
 
   it('refuses another device', async () => {
     const folder = await stoppedRun();
     await assert.rejects(
-      resume(folder, { state: { ...STATE, hardwareSerial: 'OTHER' } }).run,
-      /not the same as at the start of the run: hardwareSerial: HW1 -> OTHER/
+      resume(folder, { state: { ...STATE, deviceId: 'OTHER' } }).run,
+      /not the same as at the start of the measurement: deviceId: HW1 -> OTHER/
     );
   });
 
@@ -362,7 +362,7 @@ describe('resumeCommand', () => {
     fs.writeFileSync(apkOf('b'), 'other apk');
     await assert.rejects(
       resume(folder).run,
-      /The install file of variant b changed after the run started/
+      /The install file of variant b changed after the measurement started/
     );
   });
 
@@ -379,11 +379,11 @@ describe('resumeCommand', () => {
     const folder = await stoppedRun();
     await assert.rejects(
       resume(folder, { toolVersion: '2.0' }).run,
-      /The tool versions changed after the run started: adb: 1\.0 -> 2\.0/
+      /The tool versions changed after the measurement started: adb: 1\.0 -> 2\.0/
     );
     await assert.rejects(
       resume(folder, { state: { ...STATE, brightness: 50 } }).run,
-      /not the same as at the start of the run: brightness: 102 -> 50/
+      /not the same as at the start of the measurement: brightness: 102 -> 50/
     );
     assert.equal(readResult(folder).segments.length, 1);
   });

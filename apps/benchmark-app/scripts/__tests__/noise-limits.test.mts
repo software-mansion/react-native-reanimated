@@ -21,7 +21,7 @@ import { REPOSITORY_ROOT } from '../paths.mts';
 import { writeResult } from '../results.mts';
 import type { RunResult } from '../results.mts';
 import type { Scenario } from '../scenarios.mts';
-import type { SampleRecord, ScenarioOutcome } from '../session.mts';
+import type { Recorded, ScenarioOutcome } from '../session.mts';
 
 const ROOT = path.join(
   REPOSITORY_ROOT,
@@ -35,7 +35,7 @@ after(() => fs.rmSync(ROOT, { recursive: true, force: true }));
 
 const PHONE: DeviceState = {
   model: 'SM-A165F',
-  hardwareSerial: 'HW1',
+  deviceId: 'HW1',
   fingerprint: 'samsung/a16:16/X/1:user/release-keys',
   sdk: 36,
   abi: 'arm64-v8a',
@@ -76,7 +76,7 @@ function outcome(
         ({
           scenario,
           variant,
-          block: Math.floor(i / 2),
+          round: Math.floor(i / 2),
           attempt: 0,
           position: 0,
           segment: 0,
@@ -95,7 +95,7 @@ function outcome(
             coldStart: 300,
             ...metricsOf(variant, i),
           },
-        }) as SampleRecord
+        }) as Recorded
     )
   );
   return { scenario, samples, failed: null };
@@ -142,7 +142,6 @@ function runResult(
     config,
     options: { blocks: 5, noiseLimitsFile: null, keepTraces: false },
     noiseLimits: null,
-    serial: 'SERIAL1',
     segments: [
       {
         startedAt: '2026-11-12T10:00:00.000Z',

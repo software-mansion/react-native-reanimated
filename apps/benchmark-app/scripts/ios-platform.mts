@@ -95,7 +95,7 @@ export function iosPlatform(
       const ios = iosState(state);
       return {
         model: `${ios.model} (${ios.productType})`,
-        deviceId: ios.hardwareSerial,
+        deviceId: ios.deviceId,
         osBuild: ios.osBuild,
       };
     },

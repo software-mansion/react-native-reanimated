@@ -8,6 +8,9 @@ const CPU_LIMIT =
 
 export const IOS_DEFINITION: PlatformDefinition = {
   name: 'ios',
+  commands: ['run', 'sample'],
+  options: { 'sign-command': 'required for run' },
+  segmentColumns: [],
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',

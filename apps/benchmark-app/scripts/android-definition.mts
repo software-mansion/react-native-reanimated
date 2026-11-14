@@ -7,6 +7,12 @@ const CPU_LIMIT = 'CPU time does not show a change of the clock rate.';
 
 export const ANDROID_DEFINITION: PlatformDefinition = {
   name: 'android',
+  commands: ['run', 'memory', 'sample'],
+  options: { 'trace-processor': 'optional' },
+  segmentColumns: [
+    { key: 'batteryLevel', title: 'Battery level', unit: '%' },
+    { key: 'batteryTemperature', title: 'Battery temperature', unit: ' °C' },
+  ],
   verdictMetrics: [
     'frameDurationMedian',
     'frameDurationP95',

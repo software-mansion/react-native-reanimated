@@ -27,7 +27,7 @@ function fixture(name: string): string {
 
 const STATE: DeviceState = {
   model: 'sdk_gphone64_arm64',
-  hardwareSerial: 'HW1',
+  deviceId: 'HW1',
   fingerprint: 'google/sdk_gphone64_arm64/emu64a:17/X/1:user/release-keys',
   sdk: 37,
   abi: 'arm64-v8a',

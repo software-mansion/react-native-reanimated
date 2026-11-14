@@ -11,6 +11,7 @@ import type {
   VariantMemorySummary,
 } from './memory.mts';
 import {
+  counted,
   deviceSection,
   differencesSection,
   failedSection,
@@ -65,11 +66,11 @@ export function renderMemoryReport(result: MemoryResult): string {
     '',
     '## Device',
     '',
-    deviceSection(result.serial, result.segments[0].device),
+    deviceSection(result.segments[0].device),
     '',
     '## Segments',
     '',
-    segmentsSection(result),
+    segmentsSection(result, 'launch'),
     '',
     '## Invalid launches',
     '',
@@ -109,7 +110,7 @@ function verdictsSection(result: MemoryResult): string {
     '',
     'Limits of the test:',
     '',
-    `- It uses ${options.launches} launches for each variant and gives no confidence interval.`,
+    `- It uses ${counted(options.launches, 'launch', 'launches')} for each variant and gives no confidence interval.`,
     '- "no rise found" does not prove that there is no leak.',
     '- The test does not find a rise that is slower than the slope limit.',
     '- A late drop of memory can hide a rise.',
@@ -209,7 +210,7 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
 }
 
 function launchTitle(launch: Recorded<MemoryLaunch>): string {
-  const place = `${launch.variant.toUpperCase()}, segment ${launch.segment}, launch ${launch.block}, attempt ${launch.attempt}`;
+  const place = `${launch.variant.toUpperCase()}, segment ${launch.segment}, launch ${launch.round}, attempt ${launch.attempt}`;
   const state = launch.valid
     ? 'valid'
     : `invalid (${launch.cause}: ${launch.detail})`;

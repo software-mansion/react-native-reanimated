@@ -19,7 +19,7 @@ import type { Processes } from '../processes.mts';
 const UDID = '00008110-000A1B2C3D4E801E';
 const APP = 'com.reanimatedbenchmark.a';
 const STATE: IosDeviceState = {
-  hardwareSerial: UDID,
+  deviceId: UDID,
   name: 'Test iPhone',
   model: 'iPhone 13 mini',
   productType: 'iPhone14,4',
@@ -115,10 +115,10 @@ describe('changedIosStateKeys', () => {
     assert.deepEqual(
       changedIosStateKeys(STATE, {
         ...STATE,
-        hardwareSerial: 'OTHER',
+        deviceId: 'OTHER',
         osBuild: '24B1',
       }),
-      [`hardwareSerial: ${UDID} -> OTHER`, 'osBuild: 24A446 -> 24B1']
+      [`deviceId: ${UDID} -> OTHER`, 'osBuild: 24A446 -> 24B1']
     );
   });
 });

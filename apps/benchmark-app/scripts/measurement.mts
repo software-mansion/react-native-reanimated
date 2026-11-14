@@ -8,7 +8,7 @@ import { VARIANT_KEYS } from './config.mts';
 import type { FileSystem, VariantKey, VariantsConfig } from './config.mts';
 import { ToolError } from './errors.mts';
 import { MEASUREMENT_REVISION } from './measurement-rules.mts';
-import { APP_DIR, BUILDS_DIR, RUNS_DIR } from './paths.mts';
+import { APP_DIR, BUILDS_DIR, DEFAULT_OUTPUT_DIR } from './paths.mts';
 import type {
   DeviceIdentity,
   DeviceState,
@@ -24,15 +24,19 @@ import type {
 import { platformOf } from './platforms.mts';
 import {
   FORMAT_VERSION,
-  createRunFolder,
+  createMeasurementFolder,
   scenariosWithoutData,
   writeResult,
 } from './results.mts';
-import type { MeasurementResult, RunStatus, RunVariant } from './results.mts';
+import type {
+  MeasurementResult,
+  MeasurementStatus,
+  MeasuredVariant,
+} from './results.mts';
 import type { Scenario } from './scenarios.mts';
 import { runScenario } from './session.mts';
 import type {
-  BlockOrder,
+  RoundOrder,
   Judged,
   Measured,
   Recorded,
@@ -41,7 +45,7 @@ import type {
 
 export interface MeasurementDependencies<S extends Sampling = Sampling> {
   platform: Platform<S>;
-  runsDir: string;
+  outputDir: string;
 }
 
 export type JobResult = Judged & {
@@ -56,8 +60,9 @@ export interface MeasurementJob<
 > {
   scenarios: readonly Scenario[];
   comparesBatteryLevel: boolean;
-  blocksOf: (scenario: Scenario) => number;
-  orderOf: BlockOrder;
+  unitName: string;
+  roundsOf: (scenario: Scenario) => number;
+  orderOf: RoundOrder;
   measure: (order: SampleOrder, sampling: P) => Promise<S>;
   clearSummary: (result: R) => void;
   summarize: (result: R) => void;
@@ -83,17 +88,20 @@ export interface Resume {
   platformOptions: PlatformOptions;
 }
 
-interface Run<R, P extends Sampling> {
+interface OpenMeasurement<R, P extends Sampling> {
   result: R;
   folder: string;
   session: PlatformSession<P>;
   traceExtension: string;
 }
 
-type Variants = Record<VariantKey, RunVariant>;
+type Variants = Record<VariantKey, MeasuredVariant>;
 
 export function dependenciesOf(device: DeviceTarget): MeasurementDependencies {
-  return { platform: platformOf(device.platform), runsDir: RUNS_DIR };
+  return {
+    platform: platformOf(device.platform),
+    outputDir: DEFAULT_OUTPUT_DIR,
+  };
 }
 
 export function readConfig<C>(
@@ -137,8 +145,8 @@ export async function startMeasurement<
   start.checkDevice?.(platform.deviceIdentity(session.startState));
 
   const startedAt = new Date().toISOString();
-  const folder = createRunFolder(
-    dependencies.runsDir,
+  const folder = createMeasurementFolder(
+    dependencies.outputDir,
     new Date(startedAt),
     start.folderName
   );
@@ -149,7 +157,6 @@ export async function startMeasurement<
     status: 'running',
     startedAt,
     config: start.config,
-    serial: start.device.id,
     segments: [{ startedAt, status: 'running', device: session.startState }],
     appRefreshRate: null,
     tools: await session.readToolVersions(),
@@ -159,7 +166,7 @@ export async function startMeasurement<
     abandonedScenarios: [],
   });
   writeResult(folder, result);
-  context.log(`run folder ${folder}`);
+  context.log(`folder ${folder}`);
 
   return measure(
     { result, folder, session, traceExtension: platform.traceExtension },
@@ -195,12 +202,11 @@ export async function resumeMeasurement<
     session.stateChanges(result.segments[0].device, job.comparesBatteryLevel)
   );
 
-  result.serial = resume.device.id;
   startSegment(result, session.startState);
   job.clearSummary(result);
   writeResult(folder, result);
   context.log(
-    `resume run folder ${folder}, segment ${result.segments.length - 1}, scenarios to measure: ${scenariosWithoutData(result, job.scenarios).join(', ')}`
+    `resume ${folder}, segment ${result.segments.length - 1}, scenarios to measure: ${scenariosWithoutData(result, job.scenarios).join(', ')}`
   );
 
   return measure(
@@ -230,21 +236,21 @@ async function measure<
   R extends MeasurementResult<S>,
   P extends Sampling,
 >(
-  run: Run<R, P>,
+  measurement: OpenMeasurement<R, P>,
   job: MeasurementJob<S, R, P>,
   prepareVariants: () => Promise<Variants>,
   context: CommandContext
 ): Promise<number> {
-  const { result, folder, session } = run;
+  const { result, folder, session } = measurement;
   const { log } = context;
-  const finish = (status: RunStatus, error?: Error) => {
+  const finish = (status: MeasurementStatus, error?: Error) => {
     endSegment(result, status, error);
     writeResult(folder, result);
     job.summarize(result);
     writeResult(folder, result);
     writeReport(folder, job.renderReport(result), log);
   };
-  const stop = once(async (status: RunStatus, error?: Error) => {
+  const stop = once(async (status: MeasurementStatus, error?: Error) => {
     await session.cleanUp(
       Object.values(result.variants).map((built) => built.applicationId),
       log
@@ -258,7 +264,7 @@ async function measure<
     writeResult(folder, result);
     await installVariants(session, variants, log);
     const sampleContext: SampleContext<R, P> = {
-      run,
+      measurement,
       sampling: session.sampling({
         start: result.segments[0].device,
         appRefreshRate: result.appRefreshRate,
@@ -269,17 +275,17 @@ async function measure<
       log,
     };
     for (const scenario of scenariosWithoutData(result, job.scenarios)) {
-      const outcome = await runScenario(
+      const outcome = await runScenario({
         scenario,
-        job.blocksOf(scenario),
-        (place) => takeCheckedSample(place, sampleContext, job),
-        (progress) => {
+        rounds: job.roundsOf(scenario),
+        orderOf: job.orderOf,
+        sampler: (place) => takeCheckedSample(place, sampleContext, job),
+        onProgress: (progress) => {
           result.incompleteScenario = progress;
           writeResult(folder, result);
         },
-        keptSamples(result, scenario),
-        job.orderOf
-      );
+        acceptedSamples: keptSamples(result, scenario),
+      });
       result.incompleteScenario = null;
       result.scenarios.push(outcome);
       writeResult(folder, result);
@@ -297,7 +303,7 @@ async function measure<
 
 function endSegment(
   result: MeasurementResult<Judged>,
-  status: RunStatus,
+  status: MeasurementStatus,
   error?: Error
 ) {
   const finishedAt = new Date().toISOString();
@@ -337,7 +343,7 @@ async function installVariants(
 }
 
 interface SampleContext<R, P extends Sampling> {
-  run: Run<R, P>;
+  measurement: OpenMeasurement<R, P>;
   sampling: P;
   variants: Variants;
   log: (message: string) => void;
@@ -352,10 +358,10 @@ async function takeCheckedSample<
   context: SampleContext<R, P>,
   job: MeasurementJob<S, R, P>
 ): Promise<Measured<S>> {
-  const { run, sampling, variants } = context;
-  const { result } = run;
+  const { measurement, sampling, variants } = context;
+  const { result } = measurement;
   const idle = await sampling.checkIdle();
-  const tracesDir = path.join(run.folder, 'traces');
+  const tracesDir = path.join(measurement.folder, 'traces');
   fs.mkdirSync(tracesDir, { recursive: true });
   const segment = result.segments.length - 1;
   const sample = await job.measure(
@@ -367,7 +373,7 @@ async function takeCheckedSample<
       scenario: place.scenario,
       traceFile: path.join(
         tracesDir,
-        `${place.scenario}-segment${segment}-block${place.block}-attempt${place.attempt}-${place.position}-${place.variant}.${run.traceExtension}`
+        `${place.scenario}-segment${segment}-${job.unitName}${place.round}-attempt${place.attempt}-${place.position}-${place.variant}.${measurement.traceExtension}`
       ),
       keepTrace: result.options.keepTraces,
     },
@@ -376,7 +382,7 @@ async function takeCheckedSample<
   result.appRefreshRate ??= sample.refreshRate ?? null;
   result.inAppState ??= sample.inAppState;
   context.log(
-    `${place.scenario} block ${place.block} attempt ${place.attempt} ${place.variant.toUpperCase()}: ${sample.valid ? 'valid' : `invalid (${sample.cause}: ${sample.detail})`}`
+    `${place.scenario} ${job.unitName} ${place.round} attempt ${place.attempt} ${place.variant.toUpperCase()}: ${sample.valid ? 'valid' : `invalid (${sample.cause}: ${sample.detail})`}`
   );
   return Object.assign(sample, { ...place, segment, ...idle });
 }
@@ -429,17 +435,17 @@ function checkResumable(
 ): Variants {
   if (result.status === 'done') {
     throw new ToolError(
-      'The run is done. Only a run that is not done can resume.'
+      'The measurement is done. Only a measurement that is not done can resume.'
     );
   }
   if (result.platform !== platform.name) {
     throw new ToolError(
-      `The run measured on ${result.platform}. It cannot resume on ${platform.name}.`
+      `The measurement ran on ${result.platform}. It cannot resume on ${platform.name}.`
     );
   }
   if (result.measurementRevision !== MEASUREMENT_REVISION) {
     throw new ToolError(
-      `The run has the measurement revision ${result.measurementRevision}, and this driver has revision ${MEASUREMENT_REVISION}. A run cannot mix revisions. Start a new run.`
+      `The measurement has the revision ${result.measurementRevision}, and this driver has revision ${MEASUREMENT_REVISION}. A measurement cannot mix revisions. Start a new one.`
     );
   }
   for (const key of VARIANT_KEYS) {
@@ -448,10 +454,13 @@ function checkResumable(
   return result.variants as Variants;
 }
 
-function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
+function checkStoredArtifact(
+  key: VariantKey,
+  variant: MeasuredVariant | undefined
+) {
   if (variant === undefined) {
     throw new ToolError(
-      `The run folder has no build of variant ${key}. This run cannot resume. Start a new run.`
+      `The folder has no build of variant ${key}. This measurement cannot resume. Start a new one.`
     );
   }
   if (!fs.existsSync(variant.installFile)) {
@@ -461,7 +470,7 @@ function checkStoredArtifact(key: VariantKey, variant: RunVariant | undefined) {
   }
   if (sha256File(variant.installFile) !== variant.installFileSha256) {
     throw new ToolError(
-      `The install file of variant ${key} changed after the run started: ${variant.installFile}`
+      `The install file of variant ${key} changed after the measurement started: ${variant.installFile}`
     );
   }
 }
@@ -473,7 +482,7 @@ function checkSameTools(stored: ToolVersions, current: ToolVersions) {
     .map(([key, version]) => `${key}: ${storedVersions[key]} -> ${version}`);
   if (changes.length > 0) {
     throw new ToolError(
-      `The tool versions changed after the run started: ${changes.join(', ')}`
+      `The tool versions changed after the measurement started: ${changes.join(', ')}`
     );
   }
 }
@@ -481,7 +490,7 @@ function checkSameTools(stored: ToolVersions, current: ToolVersions) {
 function checkSameDeviceState(changes: string[]) {
   if (changes.length > 0) {
     throw new ToolError(
-      `The device state is not the same as at the start of the run: ${changes.join(', ')}`
+      `The device state is not the same as at the start of the measurement: ${changes.join(', ')}`
     );
   }
 }

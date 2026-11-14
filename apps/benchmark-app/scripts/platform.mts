@@ -35,8 +35,21 @@ export interface MetricDefinition {
   limits: string;
 }
 
+export type PlatformCommand = 'run' | 'memory' | 'sample';
+
+export type PlatformOption = 'trace-processor' | 'sign-command';
+
+export interface SegmentColumn {
+  key: string;
+  title: string;
+  unit: string;
+}
+
 export interface PlatformDefinition {
   name: PlatformName;
+  commands: readonly PlatformCommand[];
+  options: Partial<Record<PlatformOption, 'optional' | 'required for run'>>;
+  segmentColumns: readonly SegmentColumn[];
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
   frameSource: FrameSource;

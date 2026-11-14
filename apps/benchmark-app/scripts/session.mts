@@ -5,7 +5,7 @@ import type { Scenario } from './scenarios.mts';
 export interface SamplePlace {
   scenario: Scenario;
   variant: VariantKey;
-  block: number;
+  round: number;
   attempt: number;
   position: number;
 }
@@ -25,11 +25,7 @@ export type Recorded<R extends Judged = SampleResult> = Measured<R> & {
   accepted: boolean;
 };
 
-export type MeasuredSample = Measured;
-
-export type SampleRecord = Recorded;
-
-export type BlockOrder = (block: number) => VariantKey[];
+export type RoundOrder = (round: number) => VariantKey[];
 
 export type Sampler<R extends Judged> = (
   place: SamplePlace
@@ -51,33 +47,37 @@ export interface ScenarioOutcome<R extends Judged = SampleResult> {
   failed: FailedScenario | null;
 }
 
-export const DEFAULT_BLOCKS = 5;
-export const INVALID_BLOCKS_LIMIT = 3;
+export interface ScenarioPlan<R extends Judged> {
+  scenario: Scenario;
+  rounds: number;
+  orderOf: RoundOrder;
+  sampler: Sampler<R>;
+  onProgress: ProgressListener<R>;
+  acceptedSamples: Recorded<R>[];
+}
+
+export const INVALID_ROUNDS_LIMIT = 3;
 
 export async function runScenario<R extends Judged>(
-  scenario: Scenario,
-  blocks: number,
-  sampler: Sampler<R>,
-  onProgress: ProgressListener<R> = () => {},
-  acceptedSamples: Recorded<R>[] = [],
-  orderOf: BlockOrder = blockOrder
+  plan: ScenarioPlan<R>
 ): Promise<ScenarioOutcome<R>> {
-  const samples: Recorded<R>[] = [...acceptedSamples];
+  const { scenario } = plan;
+  const samples: Recorded<R>[] = [...plan.acceptedSamples];
   const reportProgress = () =>
-    onProgress({ scenario, samples: [...samples], failed: null });
+    plan.onProgress({ scenario, samples: [...samples], failed: null });
   const record = (sample: Recorded<R>) => {
     samples.push(sample);
     reportProgress();
   };
-  const firstBlock = new Set(acceptedSamples.map((sample) => sample.block))
+  const firstRound = new Set(plan.acceptedSamples.map((sample) => sample.round))
     .size;
-  for (let block = firstBlock; block < blocks; block++) {
+  for (let round = firstRound; round < plan.rounds; round++) {
     const invalidAttempts: (SamplePlace & InvalidJudgement)[] = [];
     while (true) {
-      const attempt = await runBlock(
-        { scenario, block, attempt: invalidAttempts.length },
-        orderOf(block),
-        sampler,
+      const attempt = await runRound(
+        { scenario, round, attempt: invalidAttempts.length },
+        plan.orderOf(round),
+        plan.sampler,
         record
       );
       const invalid = attempt.find(isInvalid);
@@ -87,7 +87,7 @@ export async function runScenario<R extends Judged>(
         break;
       }
       invalidAttempts.push(invalid);
-      if (invalidAttempts.length === INVALID_BLOCKS_LIMIT) {
+      if (invalidAttempts.length === INVALID_ROUNDS_LIMIT) {
         return {
           scenario,
           samples,
@@ -99,8 +99,12 @@ export async function runScenario<R extends Judged>(
   return { scenario, samples, failed: null };
 }
 
-async function runBlock<R extends Judged>(
-  start: Pick<SamplePlace, 'scenario' | 'block' | 'attempt'>,
+export function balancedOrder(index: number): VariantKey[] {
+  return index % 2 === 0 ? ['a', 'b', 'b', 'a'] : ['b', 'a', 'a', 'b'];
+}
+
+async function runRound<R extends Judged>(
+  start: Pick<SamplePlace, 'scenario' | 'round' | 'attempt'>,
   order: VariantKey[],
   sampler: Sampler<R>,
   record: (sample: Recorded<R>) => void
@@ -116,10 +120,6 @@ async function runBlock<R extends Judged>(
     }
   }
   return samples;
-}
-
-export function blockOrder(block: number): VariantKey[] {
-  return block % 2 === 0 ? ['a', 'b', 'b', 'a'] : ['b', 'a', 'a', 'b'];
 }
 
 function isInvalid<R extends Judged>(

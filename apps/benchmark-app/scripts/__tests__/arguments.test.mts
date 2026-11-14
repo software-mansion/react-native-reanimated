@@ -336,7 +336,7 @@ describe('parseArguments', () => {
   it('rejects device options that do not fit the command', () => {
     assert.throws(
       () => parseArguments(['run', '--config', 'c.json', '--udid', 'U1']),
-      /An iOS run needs --sign-command/
+      /A run on ios needs --sign-command\./
     );
     assert.throws(
       () =>
@@ -349,7 +349,7 @@ describe('parseArguments', () => {
           '--sign-command',
           'x',
         ]),
-      /--sign-command is for an iOS run only/
+      /--sign-command is not an option on android\./
     );
     assert.throws(
       () =>
@@ -388,11 +388,26 @@ describe('parseArguments', () => {
           '--udid',
           'U1',
         ]),
-      /The memory command supports Android only/
+      /The memory command is not supported on ios\./
     );
     assert.throws(
       () => parseArguments(['memory', '--resume', 'folder', '--udid', 'U1']),
-      /The memory command supports Android only/
+      /The memory command is not supported on ios\./
+    );
+    assert.throws(
+      () =>
+        parseArguments([
+          'sample',
+          '--udid',
+          'U1',
+          '--package',
+          'com.x',
+          '--scenario',
+          'css',
+          '--trace-processor',
+          '/tp',
+        ]),
+      /--trace-processor is not an option on ios\./
     );
   });
 

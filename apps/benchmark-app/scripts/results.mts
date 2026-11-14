@@ -37,17 +37,21 @@ import type { Check } from './validation.mts';
 import type { BuiltVariant } from './variant-build.mts';
 import type { AdvisoryRow, VerdictRow } from './verdict.mts';
 
-export type RunStatus = 'running' | 'done' | 'interrupted' | 'tool error';
+export type MeasurementStatus =
+  | 'running'
+  | 'done'
+  | 'interrupted'
+  | 'tool error';
 
 export interface Segment {
   startedAt: string;
   finishedAt?: string;
-  status: RunStatus;
+  status: MeasurementStatus;
   error?: string;
   device: DeviceState;
 }
 
-export type RunVariant = BuiltVariant & {
+export type MeasuredVariant = BuiltVariant & {
   installFile: string;
   installFileSha256: string;
 };
@@ -62,18 +66,17 @@ export interface MeasurementResult<R extends Judged = SampleResult> {
   measurementRevision: number;
   platform: PlatformName;
   command: ResultCommand;
-  status: RunStatus;
+  status: MeasurementStatus;
   startedAt: string;
   finishedAt?: string;
   error?: string;
   config: VariantsConfig;
   options: { keepTraces: boolean };
-  serial: string;
   segments: Segment[];
   appRefreshRate: number | null;
   inAppState?: InAppState;
   tools: ToolVersions;
-  variants: Partial<Record<VariantKey, RunVariant>>;
+  variants: Partial<Record<VariantKey, MeasuredVariant>>;
   scenarios: ScenarioOutcome<R>[];
   incompleteScenario: ScenarioOutcome<R> | null;
   abandonedScenarios: AbandonedScenario<R>[];
@@ -95,7 +98,7 @@ export interface RunResult extends MeasurementResult {
 
 export const FORMAT_VERSION = 1;
 
-export const RUN_STATUSES: readonly RunStatus[] = [
+export const MEASUREMENT_STATUSES: readonly MeasurementStatus[] = [
   'running',
   'done',
   'interrupted',
@@ -105,7 +108,7 @@ export const RUN_STATUSES: readonly RunStatus[] = [
 export const RECORDED_SAMPLE: Check = both(
   shape({
     variant: oneOf(['a', 'b']),
-    block: anInteger,
+    round: anInteger,
     attempt: anInteger,
     position: anInteger,
     segment: anInteger,
@@ -140,18 +143,18 @@ const RUN_FIELDS: Record<string, Check> = {
   expectations: listOf(anObject),
 };
 
-export function runFolderName(date: Date, name: string): string {
+export function measurementFolderName(date: Date, name: string): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}`;
   return `${stamp}-${name}`;
 }
 
-export function createRunFolder(
-  runsDir: string,
+export function createMeasurementFolder(
+  outputDir: string,
   date: Date,
   name: string
 ): string {
-  const base = path.join(runsDir, runFolderName(date, name));
+  const base = path.join(outputDir, measurementFolderName(date, name));
   let folder = base;
   for (let copy = 2; fs.existsSync(folder); copy++) {
     folder = `${base}-${copy}`;
@@ -255,7 +258,7 @@ function measurementShape(
   return shape({
     measurementRevision: anInteger,
     platform: oneOf(Object.keys(PLATFORM_DEFINITIONS)),
-    status: oneOf(RUN_STATUSES),
+    status: oneOf(MEASUREMENT_STATUSES),
     startedAt: aString,
     config: shape({ name: aString, a: anObject, b: anObject }),
     options: shape({ keepTraces: aBoolean }),
@@ -263,7 +266,7 @@ function measurementShape(
       listOf(
         shape({
           startedAt: aString,
-          status: oneOf(RUN_STATUSES),
+          status: oneOf(MEASUREMENT_STATUSES),
           device: anObject,
         })
       ),

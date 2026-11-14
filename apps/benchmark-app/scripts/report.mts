@@ -70,11 +70,11 @@ export function renderReport(result: RunResult): string {
     '',
     '## Device',
     '',
-    deviceSection(result.serial, result.segments[0].device),
+    deviceSection(result.segments[0].device),
     '',
     '## Segments',
     '',
-    segmentsSection(result),
+    segmentsSection(result, 'block'),
     '',
     '## Invalid samples',
     '',
@@ -168,6 +168,14 @@ function flagDifferences(
     a: String(a[name] ?? '-'),
     b: String(b[name] ?? '-'),
   }));
+}
+
+export function counted(
+  count: number,
+  singular: string,
+  plural: string
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 export function table(header: string[], rows: string[][]): string {
@@ -335,7 +343,7 @@ function noiseLimitsText(
   file: string | null
 ): string {
   const { device } = limits;
-  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${limits.sources.length} A/A runs. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`;
+  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric (jankyFrames, a share of frames: 0.005 is 0.5 percentage points). A row with no limit in the file has the limit 0.`;
 }
 
 function hasComparison(
@@ -427,74 +435,84 @@ export function failedSection(
     .join('\n');
 }
 
-export function deviceSection(serial: string, device: DeviceState): string {
-  const entries: [string, unknown][] = [
-    ['serial', serial],
-    ...Object.entries(device),
-  ];
+export function deviceSection(device: DeviceState): string {
   return table(
     ['Key', 'Value at session start'],
-    entries.map(([key, value]) => [key, String(value)])
+    Object.entries(device).map(([key, value]) => [key, String(value)])
   );
 }
 
-export function segmentsSection(result: MeasurementResult<Judged>): string {
+export function segmentsSection(
+  result: MeasurementResult<Judged>,
+  unitName: string
+): string {
   const lines = [
     ...result.scenarios,
     ...(result.incompleteScenario ? [result.incompleteScenario] : []),
-  ].flatMap(blockSegmentsLine);
+  ].flatMap((outcome) => roundSegmentsLine(outcome, unitName));
   return [
-    segmentsTable(result.segments),
+    segmentsTable(
+      result.segments,
+      PLATFORM_DEFINITIONS[result.platform].segmentColumns
+    ),
     ...(lines.length > 0 ? ['', ...lines] : []),
   ].join('\n');
 }
 
-function segmentsTable(segments: Segment[]): string {
+function segmentsTable(
+  segments: Segment[],
+  columns: PlatformDefinition['segmentColumns']
+): string {
   return table(
     [
       'Segment',
       'Started',
       'Finished',
       'Status',
-      'Battery level',
-      'Battery temperature',
+      ...columns.map((column) => column.title),
     ],
     segments.map((segment, i) => [
       String(i),
       segment.startedAt,
       segment.finishedAt ?? '-',
       segment.status,
-      'batteryLevel' in segment.device
-        ? `${segment.device.batteryLevel}%`
-        : '-',
-      'batteryTemperature' in segment.device
-        ? `${segment.device.batteryTemperature} °C`
-        : '-',
+      ...columns.map((column) => {
+        const value = new Map(Object.entries(segment.device)).get(column.key);
+        return `${String(value)}${column.unit}`;
+      }),
     ])
   );
 }
 
-function blockSegmentsLine(outcome: ScenarioOutcome<Judged>): string[] {
-  const blocksBySegment = new Map<number, number[]>();
+function roundSegmentsLine(
+  outcome: ScenarioOutcome<Judged>,
+  unitName: string
+): string[] {
+  const roundsBySegment = new Map<number, number[]>();
   for (const sample of outcome.samples.filter((sample) => sample.accepted)) {
-    blocksBySegment.set(sample.segment, [
-      ...(blocksBySegment.get(sample.segment) ?? []),
-      sample.block,
+    roundsBySegment.set(sample.segment, [
+      ...(roundsBySegment.get(sample.segment) ?? []),
+      sample.round,
     ]);
   }
-  if (blocksBySegment.size < 2) {
+  if (roundsBySegment.size < 2) {
     return [];
   }
-  const parts = [...blocksBySegment]
+  const parts = [...roundsBySegment]
     .sort(([first], [second]) => first - second)
-    .map(([segment, blocks]) => `${blockRange(blocks)} in segment ${segment}`);
+    .map(
+      ([segment, rounds]) =>
+        `${roundRange(rounds, unitName)} in segment ${segment}`
+    );
   return [`- ${outcome.scenario}: ${parts.join(', ')}.`];
 }
 
-function blockRange(blocks: number[]): string {
-  const first = Math.min(...blocks);
-  const last = Math.max(...blocks);
-  return first === last ? `block ${first}` : `blocks ${first}-${last}`;
+function roundRange(rounds: number[], unitName: string): string {
+  const first = Math.min(...rounds);
+  const last = Math.max(...rounds);
+  return first === last
+    ? `${unitName} ${first}`
+    : `${unitName}s ${first}-${last}`;
 }
 
 export function invalidSection(

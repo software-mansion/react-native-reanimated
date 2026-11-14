@@ -2,7 +2,7 @@ import { ToolError } from './errors.mts';
 import type { LineStream, Processes } from './processes.mts';
 
 export interface IosDeviceState {
-  hardwareSerial: string;
+  deviceId: string;
   name: string;
   model: string;
   productType: string;
@@ -28,7 +28,7 @@ export interface RunningProcess {
 }
 
 export const IOS_COMPARED_STATE_KEYS = [
-  'hardwareSerial',
+  'deviceId',
   'productType',
   'osBuild',
 ] as const satisfies readonly (keyof IosDeviceState)[];
@@ -192,7 +192,7 @@ export function parseDeviceDetails(output: string): IosDeviceState {
       }
     | undefined;
   const state = {
-    hardwareSerial: properties?.hardware?.udid,
+    deviceId: properties?.hardware?.udid,
     name: properties?.state?.name,
     model: properties?.hardware?.marketingName,
     productType: properties?.hardware?.productType,

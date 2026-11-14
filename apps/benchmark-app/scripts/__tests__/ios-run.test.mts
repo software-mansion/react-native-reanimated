@@ -26,7 +26,7 @@ const TEST_ROOT = useTestRoot('ios-run', {
 const IPHONE: DeviceTarget = { platform: 'ios', id: 'UDID1' };
 const SIGN_COMMAND = path.join(TEST_ROOT.root, 'sign.sh');
 const STATE: IosDeviceState = {
-  hardwareSerial: 'UDID1',
+  deviceId: 'UDID1',
   name: 'Test iPhone',
   model: 'iPhone 13 mini',
   productType: 'iPhone14,4',
@@ -119,7 +119,7 @@ function createFake(options: FakeOptions = {}) {
   };
   const dependencies: MeasurementDependencies = {
     platform: iosPlatform(ios),
-    runsDir: TEST_ROOT.runsDir,
+    outputDir: TEST_ROOT.outputDir,
   };
   const context: CommandContext = {
     processes: {
@@ -163,7 +163,6 @@ describe('an iOS run', () => {
     const result = readResult(onlyRunFolder(TEST_ROOT));
     assert.equal(result.platform, 'ios');
     assert.equal(result.status, 'done');
-    assert.equal(result.serial, 'UDID1');
     assert.deepEqual(result.segments[0].device, STATE);
     assert.equal(result.appRefreshRate, 60);
     assert.deepEqual(result.inAppState, {
@@ -292,7 +291,7 @@ describe('an iOS run', () => {
       );
     await assert.rejects(
       resume(createFake({ state: { ...STATE, osBuild: '24B1' } })),
-      /not the same as at the start of the run: osBuild: 24A446 -> 24B1/
+      /not the same as at the start of the measurement: osBuild: 24A446 -> 24B1/
     );
     await assert.rejects(
       resume(createFake({ batteryLevelAtTrace: () => 90 })),

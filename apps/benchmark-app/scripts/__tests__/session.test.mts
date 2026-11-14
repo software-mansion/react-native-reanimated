@@ -3,14 +3,20 @@ import { describe, it } from 'node:test';
 
 import type { SampleMetrics } from '../metrics.mts';
 import type { InvalidCause } from '../samples.mts';
-import { blockOrder, runScenario } from '../session.mts';
-import type { MeasuredSample, SamplePlace } from '../session.mts';
+import { balancedOrder, runScenario } from '../session.mts';
+import type {
+  Measured,
+  ProgressListener,
+  Recorded,
+  SamplePlace,
+  Sampler,
+} from '../session.mts';
 
 function sampler(
   invalidAt: (place: SamplePlace, count: number) => InvalidCause | null
 ) {
   const places: SamplePlace[] = [];
-  const take = async (place: SamplePlace): Promise<MeasuredSample> => {
+  const take = async (place: SamplePlace): Promise<Measured> => {
     places.push(place);
     const cause = invalidAt(place, places.length);
     const common = { ...place, segment: 0, batteryLevel: 90, timings: {} };
@@ -25,28 +31,44 @@ function sampler(
   return { take, places };
 }
 
-describe('blockOrder', () => {
-  it('gives ABBA for even blocks and BAAB for odd blocks', () => {
-    assert.deepEqual(blockOrder(0), ['a', 'b', 'b', 'a']);
-    assert.deepEqual(blockOrder(1), ['b', 'a', 'a', 'b']);
-    assert.deepEqual(blockOrder(4), ['a', 'b', 'b', 'a']);
+function scenario(
+  rounds: number,
+  sampler: Sampler<Measured>,
+  onProgress: ProgressListener<Measured> = () => {},
+  acceptedSamples: Recorded[] = []
+) {
+  return runScenario({
+    scenario: 'css',
+    rounds,
+    orderOf: balancedOrder,
+    sampler,
+    onProgress,
+    acceptedSamples,
+  });
+}
+
+describe('balancedOrder', () => {
+  it('gives ABBA for even rounds and BAAB for odd rounds', () => {
+    assert.deepEqual(balancedOrder(0), ['a', 'b', 'b', 'a']);
+    assert.deepEqual(balancedOrder(1), ['b', 'a', 'a', 'b']);
+    assert.deepEqual(balancedOrder(4), ['a', 'b', 'b', 'a']);
   });
 });
 
 describe('runScenario', () => {
-  it('takes two samples of each variant in each block', async () => {
+  it('takes two samples of each variant in each round', async () => {
     const { take, places } = sampler(() => null);
-    const outcome = await runScenario('css', 2, take);
+    const outcome = await scenario(2, take);
     assert.equal(outcome.failed, null);
     assert.deepEqual(places.map((place) => place.variant).join(''), 'abbabaab');
     assert.ok(outcome.samples.every((sample) => sample.accepted));
   });
 
-  it('runs a block again after an invalid sample and keeps the discarded samples', async () => {
+  it('runs a round again after an invalid sample and keeps the discarded samples', async () => {
     const { take, places } = sampler((_place, count) =>
       count === 3 ? 'frames' : null
     );
-    const outcome = await runScenario('css', 1, take);
+    const outcome = await scenario(1, take);
     assert.equal(outcome.failed, null);
     assert.equal(places.length, 7);
     assert.deepEqual(
@@ -67,12 +89,12 @@ describe('runScenario', () => {
     );
   });
 
-  it('gives the samples to the progress listener after each sample and each accepted block', async () => {
+  it('gives the samples to the progress listener after each sample and each accepted round', async () => {
     const { take } = sampler((_place, count) =>
       count === 2 ? 'thermal' : null
     );
     const progress: [number, boolean | null][] = [];
-    const outcome = await runScenario('css', 1, take, (snapshot) =>
+    const outcome = await scenario(1, take, (snapshot) =>
       progress.push([snapshot.samples.length, snapshot.failed === null])
     );
     assert.deepEqual(
@@ -83,9 +105,9 @@ describe('runScenario', () => {
     assert.equal(outcome.samples.length, 6);
   });
 
-  it('reports a block as accepted before the next sample starts', async () => {
+  it('reports a round as accepted before the next sample starts', async () => {
     const reports: string[] = [];
-    await runScenario('css', 1, sampler(() => null).take, (progress) =>
+    await scenario(1, sampler(() => null).take, (progress) =>
       reports.push(
         JSON.stringify(progress.samples.map((sample) => sample.accepted))
       )
@@ -93,13 +115,13 @@ describe('runScenario', () => {
     assert.equal(reports.at(-1), '[true,true,true,true]');
   });
 
-  it('continues after the accepted blocks of a stopped scenario', async () => {
-    const first = await runScenario('css', 1, sampler(() => null).take);
+  it('continues after the accepted rounds of a stopped scenario', async () => {
+    const first = await scenario(1, sampler(() => null).take);
     const { take, places } = sampler(() => null);
-    const outcome = await runScenario('css', 2, take, undefined, first.samples);
+    const outcome = await scenario(2, take, undefined, first.samples);
     assert.equal(outcome.failed, null);
     assert.deepEqual(
-      places.map((place) => [place.block, place.attempt, place.variant]),
+      places.map((place) => [place.round, place.attempt, place.variant]),
       [
         [1, 0, 'b'],
         [1, 0, 'a'],
@@ -108,19 +130,19 @@ describe('runScenario', () => {
       ]
     );
     assert.deepEqual(
-      outcome.samples.map((sample) => [sample.block, sample.accepted]),
-      [0, 0, 0, 0, 1, 1, 1, 1].map((block) => [block, true])
+      outcome.samples.map((sample) => [sample.round, sample.accepted]),
+      [0, 0, 0, 0, 1, 1, 1, 1].map((round) => [round, true])
     );
   });
 
-  it('fails the scenario after 3 invalid blocks in sequence', async () => {
+  it('fails the scenario after 3 invalid rounds in sequence', async () => {
     const { take } = sampler((place) => {
-      if (place.block !== 1) {
+      if (place.round !== 1) {
         return null;
       }
       return place.variant === 'b' ? 'crash' : null;
     });
-    const outcome = await runScenario('css', 3, take);
+    const outcome = await scenario(3, take);
     assert.deepEqual(outcome.failed, {
       scenario: 'css',
       variants: ['b'],
@@ -131,6 +153,6 @@ describe('runScenario', () => {
       })),
     });
     assert.equal(outcome.samples.filter((sample) => sample.accepted).length, 4);
-    assert.ok(!outcome.samples.some((sample) => sample.block === 2));
+    assert.ok(!outcome.samples.some((sample) => sample.round === 2));
   });
 });

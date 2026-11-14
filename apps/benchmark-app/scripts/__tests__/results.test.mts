@@ -4,7 +4,7 @@ import path from 'node:path';
 import { after, describe, it } from 'node:test';
 
 import { REPOSITORY_ROOT } from '../paths.mts';
-import { runFolderName, writeResult } from '../results.mts';
+import { measurementFolderName, writeResult } from '../results.mts';
 import type { RunResult } from '../results.mts';
 
 const FOLDER = path.join(
@@ -17,10 +17,10 @@ const FOLDER = path.join(
 
 after(() => fs.rmSync(FOLDER, { recursive: true, force: true }));
 
-describe('runFolderName', () => {
+describe('measurementFolderName', () => {
   it('starts with the local date and time and ends with the run name', () => {
     assert.equal(
-      runFolderName(new Date(2026, 10, 2, 9, 5), 'sync-props'),
+      measurementFolderName(new Date(2026, 10, 2, 9, 5), 'sync-props'),
       '2026-11-02-0905-sync-props'
     );
   });

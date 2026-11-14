@@ -1,6 +1,6 @@
 import type { VariantKey } from './config.mts';
 import { ToolError } from './errors.mts';
-import { blockOrder } from './session.mts';
+import { balancedOrder } from './session.mts';
 import { median } from './statistics.mts';
 
 export interface MemoryValues {
@@ -63,7 +63,7 @@ export const LATE_LIMIT_SHARE = 0.5;
 export const DRAWING_FLOOR_SHARE = 0.25;
 
 const SECONDS_PER_MINUTE = 60;
-const LAUNCHES_PER_ORDER_BLOCK = blockOrder(0).length;
+const LAUNCHES_PER_ORDER = balancedOrder(0).length;
 const VARIANTS_IN_TEST = 2;
 const NO_PROCESS_PATTERN = /^No process found for: /m;
 const GFXINFO_HEADER_PATTERN =
@@ -93,8 +93,8 @@ export function checkSchedule(schedule: MemorySchedule) {
 }
 
 export function memoryLaunchOrder(launch: number): VariantKey[] {
-  const order = blockOrder(Math.floor(launch / LAUNCHES_PER_ORDER_BLOCK));
-  return [order[launch % LAUNCHES_PER_ORDER_BLOCK]];
+  const order = balancedOrder(Math.floor(launch / LAUNCHES_PER_ORDER));
+  return [order[launch % LAUNCHES_PER_ORDER]];
 }
 
 export function launchCount(launchesForEachVariant: number): number {
