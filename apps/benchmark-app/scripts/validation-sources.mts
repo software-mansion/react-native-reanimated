@@ -1,13 +1,20 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 
+import {
+  CROSSCHECK_TOLERANCES,
+  crosscheckVerdict,
+  rederivedEpoch,
+  rederivedFootprint,
+} from './crosscheck.mts';
 import type {
   ClockMapping,
   CrosscheckEpoch,
+  CrosscheckTolerances,
   CrosscheckVerdict,
   FootprintComparison,
-  Tolerance,
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import type { SamplePlan } from './in-app-sample.mts';
@@ -16,6 +23,7 @@ import {
   BLOCK_ORDER,
   MINIMUM_BLOCKS,
   OBSERVER_COST_METRICS,
+  observerCosts,
 } from './observer-cost.mts';
 import type { CollectorSample, ObserverCost } from './observer-cost.mts';
 import type { DeviceIdentity } from './platform.mts';
@@ -25,6 +33,7 @@ import {
   aString,
   anInteger,
   listOf,
+  nullable,
   oneOf,
   shape,
   throwProblems,
@@ -48,7 +57,8 @@ interface ValidationSource extends ValidationIdentity {
 
 export interface CrosscheckResult extends ValidationSource {
   plan: SamplePlan;
-  tolerances: Record<'cpu' | 'updateDuration' | 'memory', Tolerance>;
+  refreshRate: number;
+  tolerances: CrosscheckTolerances;
   thermalState: number;
   clock: ClockMapping;
   epochs: CrosscheckEpoch[];
@@ -70,27 +80,38 @@ export interface StoredSource<R> {
   result: R;
 }
 
-export const VALIDATION_SOURCE_FORMAT_VERSION = 2;
+export const VALIDATION_SOURCE_FORMAT_VERSION = 3;
 
 export const CROSSCHECK_RESULT_FILE = 'crosscheck.json';
 
 export const OBSERVER_COST_RESULT_FILE = 'observer-cost.json';
 
-const IDENTITY: Record<keyof ValidationIdentity, Check> = {
+const NUMBER_OR_NULL = nullable(aNumber);
+
+const SOURCE: Record<string, Check> = {
+  formatVersion: oneOf([VALIDATION_SOURCE_FORMAT_VERSION]),
   platform: oneOf(['ios']),
   device: shape({ model: aString, deviceId: aString, osBuild: aString }),
   measurementRevision: anInteger,
   appBuild: aString,
-};
-
-const SOURCE: Record<string, Check> = {
-  ...IDENTITY,
-  formatVersion: oneOf([VALIDATION_SOURCE_FORMAT_VERSION]),
   scenario: aString,
   report: shape({ version: anInteger, load: anInteger }),
 };
 
-const PASSES = shape({ passes: aBoolean });
+const TOLERANCE = shape({ absolute: aNumber, relative: aNumber });
+
+const TIME_SPAN = shape({ startNs: aNumber, endNs: aNumber });
+
+const COMPARED_VALUE = shape({
+  app: NUMBER_OR_NULL,
+  trace: NUMBER_OR_NULL,
+  signedError: NUMBER_OR_NULL,
+  absoluteError: NUMBER_OR_NULL,
+  relativeError: NUMBER_OR_NULL,
+  timingUncertainty: NUMBER_OR_NULL,
+  tolerance: NUMBER_OR_NULL,
+  passes: aBoolean,
+});
 
 const PLANNED_EPOCH: Record<string, Check> = {
   load: aString,
@@ -98,44 +119,127 @@ const PLANNED_EPOCH: Record<string, Check> = {
   seconds: aNumber,
 };
 
-const CROSSCHECK_RESULT: Check = shape({
+const CROSSCHECK_SHAPE: Check = shape({
   ...SOURCE,
-  plan: shape({ epochs: listOf(shape(PLANNED_EPOCH)) }),
+  plan: shape({
+    epochs: listOf(shape(PLANNED_EPOCH)),
+    start: oneOf(['ready', 'notification']),
+  }),
+  refreshRate: aNumber,
+  tolerances: shape({
+    cpu: TOLERANCE,
+    updateDuration: TOLERANCE,
+    memory: TOLERANCE,
+  }),
   thermalState: anInteger,
+  clock: shape({
+    offsetNs: aNumber,
+    uncertaintyNs: aNumber,
+    spreadNs: aNumber,
+  }),
   epochs: listOf(
     shape({
       ...PLANNED_EPOCH,
+      work: shape({ own: anInteger, other: anInteger }),
       index: anInteger,
-      uiThreadCpu: PASSES,
-      jsThreadCpu: PASSES,
-      processCpu: PASSES,
-      mountBatchCount: PASSES,
-      workProof: PASSES,
+      windowSeconds: aNumber,
+      uiThreadCpu: COMPARED_VALUE,
+      jsThreadCpu: COMPARED_VALUE,
+      processCpu: COMPARED_VALUE,
+      mountBatchCount: COMPARED_VALUE,
+      workProof: shape({
+        own: anInteger,
+        other: anInteger,
+        minimumOwn: aNumber,
+        maximumOther: aNumber,
+        passes: aBoolean,
+      }),
+      updateCount: shape({ app: nullable(anInteger), trace: anInteger }),
+      uiUpdateDurationMedian: nullable(COMPARED_VALUE),
+      uiUpdateDurationP95: nullable(COMPARED_VALUE),
     })
   ),
-  footprints: listOf(shape({ comparable: aBoolean, passes: aBoolean })),
+  footprints: listOf(
+    shape({
+      boundary: anInteger,
+      app: aNumber,
+      read: TIME_SPAN,
+      rows: listOf(
+        shape({ startNs: aNumber, endNs: aNumber, footprintKb: aNumber })
+      ),
+      low: NUMBER_OR_NULL,
+      high: NUMBER_OR_NULL,
+      signedError: NUMBER_OR_NULL,
+      tolerance: NUMBER_OR_NULL,
+      comparable: aBoolean,
+      reason: nullable(aString),
+      passes: aBoolean,
+    })
+  ),
   verdict: shape({
     counters: aBoolean,
     loadsRan: aBoolean,
     memory: oneOf(['passed', 'failed', 'not available']),
+    updateDurationQuantilesWithinTolerance: aBoolean,
   }),
   trace: aString,
 });
 
-const OBSERVER_COST_RESULT: Check = shape({
+const OBSERVER_COST_SHAPE: Check = shape({
   ...SOURCE,
   blocks: anInteger,
   samples: listOf(
-    shape({ block: anInteger, collector: oneOf(['full', 'endpoints']) })
+    shape({
+      block: anInteger,
+      collector: oneOf(['full', 'endpoints']),
+      uiThreadCpu: aNumber,
+      jsThreadCpu: aNumber,
+      otherThreadsCpu: aNumber,
+      processCpu: aNumber,
+      memory: aNumber,
+      windowSeconds: aNumber,
+    })
   ),
   costs: listOf(
     shape({
       metric: oneOf(OBSERVER_COST_METRICS),
       blocks: anInteger,
+      medianEndpoints: aNumber,
+      medianFull: aNumber,
+      relativeDifference: aNumber,
+      interval: shape({ low: aNumber, high: aNumber }),
+      noiseLimit: NUMBER_OR_NULL,
+      allowed: NUMBER_OR_NULL,
       outcome: oneOf(['passed', 'failed', 'not validated']),
     })
   ),
 });
+
+const DERIVED_EPOCH_FIELDS = [
+  'uiThreadCpu',
+  'jsThreadCpu',
+  'processCpu',
+  'mountBatchCount',
+  'workProof',
+  'uiUpdateDurationMedian',
+  'uiUpdateDurationP95',
+] as const;
+
+const CROSSCHECK_RESULT = completeResult(
+  CROSSCHECK_SHAPE,
+  crosscheckGaps,
+  crosscheckConflicts
+);
+
+const OBSERVER_COST_RESULT = completeResult(
+  OBSERVER_COST_SHAPE,
+  observerCostGaps,
+  observerCostConflicts
+);
+
+export const STORED_CROSSCHECK = storedSource(CROSSCHECK_RESULT);
+
+export const STORED_OBSERVER_COST = storedSource(OBSERVER_COST_RESULT);
 
 export function writeCrosscheckResult(
   folder: string,
@@ -154,23 +258,13 @@ export function writeObserverCostResult(
 export function readCrosscheckResult(
   folder: string
 ): StoredSource<CrosscheckResult> {
-  return readSource(
-    folder,
-    CROSSCHECK_RESULT_FILE,
-    CROSSCHECK_RESULT,
-    crosscheckGaps
-  );
+  return readSource(folder, CROSSCHECK_RESULT_FILE, CROSSCHECK_RESULT);
 }
 
 export function readObserverCostResult(
   folder: string
 ): StoredSource<ObserverCostResult> {
-  return readSource(
-    folder,
-    OBSERVER_COST_RESULT_FILE,
-    OBSERVER_COST_RESULT,
-    observerCostGaps
-  );
+  return readSource(folder, OBSERVER_COST_RESULT_FILE, OBSERVER_COST_RESULT);
 }
 
 export function completeBlocks(samples: readonly CollectorSample[]): number {
@@ -220,31 +314,74 @@ export function identityDifferences(
     .map(([name, left, right]) => `${name} ${left} -> ${right}`);
 }
 
+function completeResult<R>(
+  shapeCheck: Check,
+  gapsOf: (result: R) => string[],
+  conflictsOf: (result: R) => string[]
+): Check {
+  return (value, label, problems) => {
+    const shapeProblems: string[] = [];
+    shapeCheck(value, label, shapeProblems);
+    problems.push(...shapeProblems);
+    if (shapeProblems.length > 0) {
+      return;
+    }
+    const gaps = gapsOf(value as R);
+    problems.push(
+      ...(gaps.length > 0 ? gaps : conflictsOf(value as R)).map(
+        (problem) => `${label}: ${problem}`
+      )
+    );
+  };
+}
+
+function storedSource(resultCheck: Check): Check {
+  const sourceShape = shape({
+    folder: aString,
+    sha256: aString,
+    result: resultCheck,
+  });
+  return (value, label, problems) => {
+    const sourceProblems: string[] = [];
+    sourceShape(value, label, sourceProblems);
+    problems.push(...sourceProblems);
+    const source = value as StoredSource<unknown>;
+    if (
+      sourceProblems.length === 0 &&
+      source.sha256 !== resultHash(source.result)
+    ) {
+      problems.push(`${label}.sha256 is not the SHA-256 of its result`);
+    }
+  };
+}
+
 function readSource<R>(
   folder: string,
   fileName: string,
-  check: Check,
-  gapsOf: (result: R) => string[]
+  check: Check
 ): StoredSource<R> {
   const file = path.join(folder, fileName);
-  let bytes: Buffer;
   let stored: unknown;
   try {
-    bytes = fs.readFileSync(file);
-    stored = JSON.parse(bytes.toString('utf8'));
+    stored = JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (error) {
     throw new ToolError(`Cannot read ${file}: ${(error as Error).message}`);
   }
-  const title = `${file} is not a complete validation result`;
   const problems: string[] = [];
   check(stored, path.basename(file, '.json'), problems);
-  throwProblems(title, problems);
-  throwProblems(title, gapsOf(stored as R));
+  throwProblems(`${file} is not a complete validation result`, problems);
   return {
     folder: fs.realpathSync(folder),
-    sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+    sha256: resultHash(stored),
     result: stored as R,
   };
+}
+
+function resultHash(result: unknown): string {
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(result))
+    .digest('hex');
 }
 
 function crosscheckGaps(result: CrosscheckResult): string[] {
@@ -278,31 +415,77 @@ function crosscheckGaps(result: CrosscheckResult): string[] {
   return problems;
 }
 
-function observerCostGaps(result: ObserverCostResult): string[] {
-  const blocks = completeBlocks(result.samples);
+function crosscheckConflicts(result: CrosscheckResult): string[] {
   const problems: string[] = [];
-  if (blocks < MINIMUM_BLOCKS || blocks !== result.blocks) {
-    problems.push(
-      `it has ${blocks} complete blocks of ${result.blocks} planned blocks, and it needs at least ${MINIMUM_BLOCKS}`
-    );
+  if (!isDeepStrictEqual(result.tolerances, CROSSCHECK_TOLERANCES)) {
+    problems.push('its tolerances are not the tolerances of this driver');
   }
-  const metrics = (result.costs ?? []).map((cost) => cost.metric);
-  if (
-    metrics.length !== OBSERVER_COST_METRICS.length ||
-    OBSERVER_COST_METRICS.some((metric) => !metrics.includes(metric))
-  ) {
-    problems.push(
-      `it has costs for ${metrics.join(', ') || 'no metric'}, not one cost for each of ${OBSERVER_COST_METRICS.join(', ')}`
-    );
-  }
-  for (const cost of result.costs ?? []) {
-    if (cost.blocks !== blocks) {
+  const epochs = result.epochs.map((epoch) =>
+    rederivedEpoch(epoch, result.refreshRate)
+  );
+  epochs.forEach((epoch, i) => {
+    for (const field of DERIVED_EPOCH_FIELDS) {
+      if (!isDeepStrictEqual(epoch[field], result.epochs[i][field])) {
+        problems.push(
+          `epoch ${i}: the stored ${field} does not follow from its values`
+        );
+      }
+    }
+  });
+  const footprints = result.footprints.map(rederivedFootprint);
+  footprints.forEach((footprint, i) => {
+    if (!isDeepStrictEqual(footprint, result.footprints[i])) {
       problems.push(
-        `the cost of ${cost.metric} uses ${cost.blocks} blocks, not the ${blocks} complete blocks`
+        `footprint ${i}: the stored comparison does not follow from its read and its rows`
+      );
+    }
+  });
+  const verdict = crosscheckVerdict(epochs, footprints);
+  for (const key of Object.keys(verdict) as (keyof CrosscheckVerdict)[]) {
+    if (verdict[key] !== result.verdict[key]) {
+      problems.push(
+        `verdict.${key} is ${result.verdict[key]}, but the epochs and the footprints give ${verdict[key]}`
       );
     }
   }
   return problems;
+}
+
+function observerCostGaps(result: ObserverCostResult): string[] {
+  const blocks = completeBlocks(result.samples);
+  const problems: string[] = [];
+  if (
+    blocks < MINIMUM_BLOCKS ||
+    blocks !== result.blocks ||
+    result.samples.length !== blocks * BLOCK_ORDER.length
+  ) {
+    problems.push(
+      `it has ${blocks} complete blocks in ${result.samples.length} samples for ${result.blocks} planned blocks, and it needs at least ${MINIMUM_BLOCKS}`
+    );
+  }
+  const metrics = (result.costs ?? []).map((cost) => cost.metric);
+  if (!isDeepStrictEqual(metrics, [...OBSERVER_COST_METRICS])) {
+    problems.push(
+      `it has costs for ${metrics.join(', ') || 'no metric'}, not for ${OBSERVER_COST_METRICS.join(', ')} in this order`
+    );
+  }
+  return problems;
+}
+
+function observerCostConflicts(result: ObserverCostResult): string[] {
+  const costs = result.costs ?? [];
+  const limits = Object.fromEntries(
+    costs.flatMap((cost) =>
+      cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
+    )
+  );
+  return observerCosts(result.samples, limits).flatMap((cost, i) =>
+    isDeepStrictEqual(cost, costs[i])
+      ? []
+      : [
+          `the stored cost of ${cost.metric} does not follow from the samples and its noise limit`,
+        ]
+  );
 }
 
 function writeJson(file: string, value: unknown) {

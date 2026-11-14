@@ -6,6 +6,8 @@ import {
   compareFootprints,
   crosscheckVerdict,
   mapAppClock,
+  rederivedEpoch,
+  rederivedFootprint,
   traceSpans,
 } from '../crosscheck.mts';
 import type { ClockMapping } from '../crosscheck.mts';
@@ -243,6 +245,94 @@ describe('compareFootprints', () => {
       reasonOf([row(0, 39_000), row(1_500_000, 40_024)]),
       'the Activity Monitor rows around the read differ by 1024 kB, not less than the tolerance of 1024 kB'
     );
+  });
+});
+
+describe('the footprint rows around a read', () => {
+  const at = (seconds: number) => Math.round(seconds * 1e9);
+  const halfSecondRows = (values: number[]) =>
+    values.map((footprintKb, i) => ({
+      startNs: at(i * 0.5),
+      endNs: at((i + 1) * 0.5),
+      footprintKb,
+    }));
+
+  it('takes only the rows from the last row that ends before the read to the first row that starts after it', () => {
+    const rows = halfSecondRows([100_000, 40_000, 40_000, 40_000, 100_000]);
+    const [first] = compareFootprints(SAMPLE, rows, {
+      offsetNs: at(1.2) - START_BOUNDARY.footprintReadStartNs,
+      uncertaintyNs: 0,
+      spreadNs: 0,
+    });
+    assert.deepEqual(first.read, { startNs: at(1.2), endNs: at(1.2) + 1_000 });
+    assert.deepEqual(first.rows, rows.slice(1, 4));
+    assert.equal(first.comparable, true);
+    assert.equal(first.passes, true);
+  });
+
+  it('counts a row that ends at the read start or starts at the read end, and leaves out the rows that only touch them', () => {
+    const outerBefore = {
+      startNs: 900_000,
+      endNs: 1_000_000,
+      footprintKb: 99_000,
+    };
+    const before = {
+      startNs: 1_000_000,
+      endNs: 1_019_500,
+      footprintKb: 40_000,
+    };
+    const after = { startNs: 1_021_500, endNs: 1_030_000, footprintKb: 40_100 };
+    const outerAfter = {
+      startNs: 1_030_000,
+      endNs: 1_040_000,
+      footprintKb: 99_000,
+    };
+    const [first] = compareFootprints(
+      SAMPLE,
+      [outerBefore, before, after, outerAfter],
+      { offsetNs: 1_000_000, uncertaintyNs: 500, spreadNs: 0 }
+    );
+    assert.deepEqual(first.rows, [before, after]);
+    assert.equal(first.comparable, true);
+    assert.equal(first.passes, true);
+  });
+
+  it('gives the same comparison again from its read and its rows, and refuses rows that are not the rows around the read', () => {
+    const rows = halfSecondRows([40_000, 40_000, 40_000]);
+    const [first] = compareFootprints(SAMPLE, rows, {
+      offsetNs: at(0.7) - START_BOUNDARY.footprintReadStartNs,
+      uncertaintyNs: 0,
+      spreadNs: 0,
+    });
+    assert.deepEqual(rederivedFootprint(first), first);
+    const forged = rederivedFootprint({
+      ...first,
+      rows: [rows[0], rows[0], rows[2]],
+    });
+    assert.equal(forged.comparable, false);
+    assert.equal(
+      forged.reason,
+      'the rows are not the rows from the last row that ends before the read to the first row that starts after it'
+    );
+  });
+});
+
+describe('rederivedEpoch', () => {
+  it('gives each stored outcome of an epoch again from its values', () => {
+    const [epoch] = compareEpochs(
+      EPOCHS,
+      [READING],
+      [{ ...TRACE_OF_APP, uiThreadCpu: 300 }],
+      { offsetNs: 0, uncertaintyNs: 50_000, spreadNs: 0 },
+      60
+    );
+    assert.deepEqual(rederivedEpoch(epoch, 60), epoch);
+    const forged = {
+      ...epoch,
+      uiThreadCpu: { ...epoch.uiThreadCpu, passes: true },
+      workProof: { ...epoch.workProof, passes: false },
+    };
+    assert.deepEqual(rederivedEpoch(forged, 60), epoch);
   });
 });
 

@@ -1,12 +1,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { compareEpochs } from '../crosscheck.mts';
+import {
+  CROSSCHECK_TOLERANCES,
+  WORK_LOADS,
+  compareEpochs,
+  crosscheckVerdict,
+  rederivedEpoch,
+  rederivedFootprint,
+} from '../crosscheck.mts';
 import type { CrosscheckEpoch, FootprintComparison } from '../crosscheck.mts';
 import { readEpoch } from '../in-app-sample.mts';
 import type { Collector } from '../in-app-sample.mts';
-import { BLOCK_ORDER } from '../observer-cost.mts';
-import type { ObserverCost } from '../observer-cost.mts';
+import {
+  BLOCK_ORDER,
+  OBSERVER_COST_METRICS,
+  observerCosts,
+} from '../observer-cost.mts';
+import type { ObserverCost, ObserverCostMetric } from '../observer-cost.mts';
 import { buildValidationRecord } from '../validation-record.mts';
 import type { ValidationRecord } from '../validation-record.mts';
 import {
@@ -41,13 +52,17 @@ export const LOADS_PLAN: Plan = [
 
 const SAMPLE = inAppSample();
 
+export const REFRESH_RATE = 60;
+
+const EPOCH_SECONDS = 2.5;
+
 export function crosscheckEpochs(
   plan: Plan,
   uiThreadCpu = 350
 ): CrosscheckEpoch[] {
   const [base] = compareEpochs(
     SAMPLE.epochs,
-    [readEpoch(SAMPLE, 0, 60)],
+    [readEpoch(SAMPLE, 0, REFRESH_RATE)],
     [
       {
         uiThreadCpu,
@@ -58,15 +73,60 @@ export function crosscheckEpochs(
       },
     ],
     { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
-    60
+    REFRESH_RATE
   );
-  return plan.map(([load, collector], index) => ({
-    ...base,
-    index,
-    load,
-    collector,
-    seconds: 2.5,
-  }));
+  return plan.map(([load, collector], index) =>
+    rederivedEpoch(
+      {
+        ...base,
+        index,
+        load,
+        collector,
+        seconds: EPOCH_SECONDS,
+        windowSeconds: EPOCH_SECONDS,
+        work: {
+          own: (WORK_LOADS as readonly string[]).includes(load)
+            ? REFRESH_RATE * EPOCH_SECONDS
+            : 0,
+          other: 0,
+        },
+      },
+      REFRESH_RATE
+    )
+  );
+}
+
+export function footprints(
+  boundaries: number,
+  rowsAt: (boundary: number) => [number, number] | null = () => [40_000, 40_000]
+): FootprintComparison[] {
+  return Array.from({ length: boundaries }, (_, boundary) => {
+    const startNs = boundary * 1e9;
+    const values = rowsAt(boundary);
+    return rederivedFootprint({
+      boundary,
+      app: 40_000,
+      read: { startNs: startNs + 500, endNs: startNs + 600 },
+      rows:
+        values === null
+          ? []
+          : [
+              { startNs, endNs: startNs + 100, footprintKb: values[0] },
+              {
+                startNs: startNs + 1_000,
+                endNs: startNs + 1_100,
+                footprintKb: values[1],
+              },
+            ],
+      low: null,
+      high: null,
+      signedError: null,
+      tolerance: null,
+      comparable: false,
+      reason: null,
+      passes: false,
+    });
+  });
 }
 
 export function validationSources(
@@ -88,36 +148,27 @@ export function validationSources(
   ): string => {
     const folder = path.join(directory, name);
     fs.mkdirSync(folder, { recursive: true });
-    const planned = crosscheckEpochs(plan);
+    const planned = change.epochs ?? crosscheckEpochs(plan);
+    const compared = change.footprints ?? footprints(plan.length + 1);
     writeCrosscheckResult(folder, {
       ...source,
       scenario:
         plan === LOADS_PLAN ? 'crosscheck-load' : 'worklet-styles-transform',
       plan: {
-        epochs: planned.map(({ load, collector, seconds }) => ({
+        epochs: plan.map(([load, collector]) => ({
           load,
           collector,
-          seconds,
+          seconds: EPOCH_SECONDS,
         })),
         start: 'notification',
       },
-      tolerances: {
-        cpu: { absolute: 1, relative: 0.02 },
-        updateDuration: { absolute: 0.25, relative: 0.05 },
-        memory: { absolute: 1024, relative: 0.02 },
-      },
+      refreshRate: REFRESH_RATE,
+      tolerances: CROSSCHECK_TOLERANCES,
       thermalState: 0,
       clock: { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 },
       epochs: planned,
-      footprints: Array.from({ length: plan.length + 1 }, (_, i) =>
-        footprint(i)
-      ),
-      verdict: {
-        counters: true,
-        loadsRan: true,
-        memory: 'passed',
-        updateDurationQuantilesWithinTolerance: false,
-      },
+      footprints: compared,
+      verdict: crosscheckVerdict(planned, compared),
       trace: path.join(folder, 'recording.trace'),
       ...change,
     });
@@ -133,37 +184,37 @@ export function validationSources(
   ): string => {
     const folder = path.join(directory, name);
     fs.mkdirSync(folder, { recursive: true });
+    const value = (
+      metric: ObserverCostMetric,
+      base: number,
+      collector: Collector
+    ) =>
+      collector === 'full' && outcome(metric) === 'failed' ? base * 1.03 : base;
+    const samples = Array.from({ length: blocks }, (_, i) => i + 1).flatMap(
+      (block) =>
+        BLOCK_ORDER.map((collector) => ({
+          block,
+          collector,
+          uiThreadCpu: value('uiThreadCpu', 100, collector),
+          jsThreadCpu: value('jsThreadCpu', 2, collector),
+          otherThreadsCpu: 1,
+          processCpu: value('processCpu', 103, collector),
+          memory: value('memory', 40_000, collector),
+          windowSeconds: 10,
+        }))
+    );
+    const noiseLimits = Object.fromEntries(
+      OBSERVER_COST_METRICS.flatMap((metric) =>
+        outcome(metric) === 'not validated' ? [] : [[metric, 0.08]]
+      )
+    );
     const result: ObserverCostResult = {
       ...source,
       scenario,
       blocks,
       noiseLimitsFile: '/limits.json',
-      samples: Array.from({ length: blocks }, (_, i) => i + 1).flatMap(
-        (block) =>
-          BLOCK_ORDER.map((collector) => ({
-            block,
-            collector,
-            uiThreadCpu: 100,
-            jsThreadCpu: 2,
-            otherThreadsCpu: 1,
-            processCpu: 103,
-            memory: 40_000,
-            windowSeconds: 10,
-          }))
-      ),
-      costs: (
-        ['uiThreadCpu', 'jsThreadCpu', 'processCpu', 'memory'] as const
-      ).map((metric) => ({
-        metric,
-        blocks,
-        medianEndpoints: 1,
-        medianFull: 1,
-        relativeDifference: 0,
-        interval: { low: 0, high: 0 },
-        noiseLimit: 0.08,
-        allowed: 0.02,
-        outcome: outcome(metric),
-      })),
+      samples,
+      costs: blocks === 0 ? [] : observerCosts(samples, noiseLimits),
     };
     writeObserverCostResult(folder, result);
     return folder;
@@ -185,20 +236,4 @@ export function validationSources(
     );
 
   return { writeCrosscheck, writeObserverCost, record };
-}
-
-function footprint(boundary: number): FootprintComparison {
-  return {
-    boundary,
-    app: 40_000,
-    read: { startNs: 0, endNs: 0 },
-    rows: [],
-    low: 40_000,
-    high: 40_000,
-    signedError: 0,
-    tolerance: 1024,
-    comparable: true,
-    reason: null,
-    passes: true,
-  };
 }

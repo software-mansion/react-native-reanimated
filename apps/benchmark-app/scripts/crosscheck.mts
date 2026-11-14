@@ -72,6 +72,12 @@ export interface FootprintComparison {
 
 export type MemoryOutcome = 'passed' | 'failed' | 'not available';
 
+export interface CrosscheckTolerances {
+  cpu: Tolerance;
+  updateDuration: Tolerance;
+  memory: Tolerance;
+}
+
 export interface CrosscheckVerdict {
   counters: boolean;
   loadsRan: boolean;
@@ -87,6 +93,12 @@ export const UPDATE_DURATION_TOLERANCE: Tolerance = {
 };
 
 export const MEMORY_TOLERANCE: Tolerance = { absolute: 1024, relative: 0.02 };
+
+export const CROSSCHECK_TOLERANCES: CrosscheckTolerances = {
+  cpu: CPU_TOLERANCE,
+  updateDuration: UPDATE_DURATION_TOLERANCE,
+  memory: MEMORY_TOLERANCE,
+};
 
 export const WORK_LOADS = ['ui-stall', 'js-load', 'render-heavy'] as const;
 
@@ -209,7 +221,11 @@ export function compareEpochs(
         trace.mountBatchCount,
         EXACT
       ),
-      workProof: workProof(epoch, refreshRate * reading.window.seconds),
+      workProof: workProof(
+        epoch.load,
+        epoch.work,
+        refreshRate * reading.window.seconds
+      ),
       updateCount: {
         app: durations?.length ?? null,
         trace: trace.frameDurationsMs.length,
@@ -230,16 +246,52 @@ export function compareFootprints(
   );
   return sample.boundaries.map((boundary, index) => {
     const span = footprintReadSpan(boundary);
-    return footprintComparison(
+    const read = {
+      startNs: span.startNs + clock.offsetNs - clock.uncertaintyNs,
+      endNs: span.endNs + clock.offsetNs + clock.uncertaintyNs,
+    };
+    return judgeFootprint(
       index,
       boundary.footprintKb,
-      {
-        startNs: span.startNs + clock.offsetNs - clock.uncertaintyNs,
-        endNs: span.endNs + clock.offsetNs + clock.uncertaintyNs,
-      },
-      rows
+      read,
+      rowsAroundRead(rows, read)
     );
   });
+}
+
+export function rederivedEpoch(
+  epoch: CrosscheckEpoch,
+  refreshRate: number
+): CrosscheckEpoch {
+  const again = (value: ComparedValue, tolerance: Tolerance) =>
+    compared(value.app, value.trace, tolerance, value.timingUncertainty);
+  const duration = (value: ComparedValue | null) =>
+    value === null ? null : again(value, UPDATE_DURATION_TOLERANCE);
+  return {
+    ...epoch,
+    uiThreadCpu: again(epoch.uiThreadCpu, CPU_TOLERANCE),
+    jsThreadCpu: again(epoch.jsThreadCpu, CPU_TOLERANCE),
+    processCpu: again(epoch.processCpu, CPU_TOLERANCE),
+    mountBatchCount: again(epoch.mountBatchCount, EXACT),
+    workProof: workProof(
+      epoch.load,
+      epoch.work,
+      refreshRate * epoch.windowSeconds
+    ),
+    uiUpdateDurationMedian: duration(epoch.uiUpdateDurationMedian),
+    uiUpdateDurationP95: duration(epoch.uiUpdateDurationP95),
+  };
+}
+
+export function rederivedFootprint(
+  comparison: FootprintComparison
+): FootprintComparison {
+  return judgeFootprint(
+    comparison.boundary,
+    comparison.app,
+    comparison.read,
+    comparison.rows
+  );
 }
 
 export function crosscheckVerdict(
@@ -264,30 +316,43 @@ export function crosscheckVerdict(
   };
 }
 
-function workProof(epoch: SampledEpoch, displaySlots: number): WorkProof {
-  const { work } = epoch;
-  const hasWorkUnits = (WORK_LOADS as readonly string[]).includes(epoch.load);
+function workProof(
+  load: string,
+  work: EpochWork,
+  displaySlots: number
+): WorkProof {
+  const hasWorkUnits = (WORK_LOADS as readonly string[]).includes(load);
   const minimumOwn = hasWorkUnits ? MINIMUM_OWN_WORK_SHARE * displaySlots : 0;
   const maximumOther = MAXIMUM_OTHER_WORK_SHARE * displaySlots;
   return {
-    ...work,
+    own: work.own,
+    other: work.other,
     minimumOwn,
     maximumOther,
     passes: work.own >= minimumOwn && work.other <= maximumOther,
   };
 }
 
-function footprintComparison(
+function rowsAroundRead(
+  rows: readonly FootprintSample[],
+  read: TimeSpan
+): FootprintSample[] {
+  const before = rows.findLastIndex((row) => row.endNs <= read.startNs);
+  const after = rows.findIndex((row) => row.startNs >= read.endNs);
+  return before === -1 || after === -1 ? [] : rows.slice(before, after + 1);
+}
+
+function judgeFootprint(
   boundary: number,
   app: number,
   read: TimeSpan,
-  rows: readonly FootprintSample[]
+  rows: FootprintSample[]
 ): FootprintComparison {
-  const notComparable = (reason: string, around: FootprintSample[] = []) => ({
+  const notComparable = (reason: string) => ({
     boundary,
     app,
     read,
-    rows: around,
+    rows,
     low: null,
     high: null,
     signedError: null,
@@ -296,23 +361,23 @@ function footprintComparison(
     reason,
     passes: false,
   });
-  const before = rows.filter((row) => row.endNs <= read.startNs).at(-1);
-  const after = rows.find((row) => row.startNs >= read.endNs);
-  if (before === undefined || after === undefined) {
+  if (rows.length === 0) {
     return notComparable(
       'Activity Monitor has no row that ends before the read or no row that starts after it'
     );
   }
-  const around = rows.filter(
-    (row) => row.endNs >= before.startNs && row.startNs <= after.endNs
-  );
-  if (after.endNs - before.startNs > MAXIMUM_FOOTPRINT_ROWS_NS) {
+  if (!areRowsAroundRead(rows, read)) {
     return notComparable(
-      `the Activity Monitor rows around the read cover ${(after.endNs - before.startNs) / NANOSECONDS_PER_MS} ms, more than ${MAXIMUM_FOOTPRINT_ROWS_NS / NANOSECONDS_PER_MS} ms`,
-      around
+      'the rows are not the rows from the last row that ends before the read to the first row that starts after it'
     );
   }
-  const values = around.map((row) => row.footprintKb);
+  const spanNs = rows[rows.length - 1].endNs - rows[0].startNs;
+  if (spanNs > MAXIMUM_FOOTPRINT_ROWS_NS) {
+    return notComparable(
+      `the Activity Monitor rows around the read cover ${spanNs / NANOSECONDS_PER_MS} ms, more than ${MAXIMUM_FOOTPRINT_ROWS_NS / NANOSECONDS_PER_MS} ms`
+    );
+  }
+  const values = rows.map((row) => row.footprintKb);
   const low = Math.min(...values);
   const high = Math.max(...values);
   const tolerance = Math.max(
@@ -321,8 +386,7 @@ function footprintComparison(
   );
   if (high - low >= tolerance) {
     return notComparable(
-      `the Activity Monitor rows around the read differ by ${high - low} kB, not less than the tolerance of ${tolerance} kB`,
-      around
+      `the Activity Monitor rows around the read differ by ${high - low} kB, not less than the tolerance of ${tolerance} kB`
     );
   }
   const signedError = app < low ? app - low : app > high ? app - high : 0;
@@ -330,7 +394,7 @@ function footprintComparison(
     boundary,
     app,
     read,
-    rows: around,
+    rows,
     low,
     high,
     signedError,
@@ -339,6 +403,22 @@ function footprintComparison(
     reason: null,
     passes: Math.abs(signedError) <= tolerance,
   };
+}
+
+function areRowsAroundRead(
+  rows: readonly FootprintSample[],
+  read: TimeSpan
+): boolean {
+  const last = rows.length - 1;
+  return (
+    rows.length >= 2 &&
+    rows.every(
+      (row, i) =>
+        (i === 0 || row.startNs >= rows[i - 1].startNs) &&
+        (i === 0) === row.endNs <= read.startNs &&
+        (i === last) === row.startNs >= read.endNs
+    )
+  );
 }
 
 function memoryOutcome(

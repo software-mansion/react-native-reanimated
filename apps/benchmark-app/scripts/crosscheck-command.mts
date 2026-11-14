@@ -7,9 +7,7 @@ import type { Clock } from './clock.mts';
 import { once } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import {
-  CPU_TOLERANCE,
-  MEMORY_TOLERANCE,
-  UPDATE_DURATION_TOLERANCE,
+  CROSSCHECK_TOLERANCES,
   compareEpochs,
   compareFootprints,
   crosscheckVerdict,
@@ -144,11 +142,8 @@ export async function crosscheckCommand(
     report: { version: app.report.version, load: app.report.load },
     tools,
     plan,
-    tolerances: {
-      cpu: CPU_TOLERANCE,
-      updateDuration: UPDATE_DURATION_TOLERANCE,
-      memory: MEMORY_TOLERANCE,
-    },
+    refreshRate,
+    tolerances: CROSSCHECK_TOLERANCES,
     thermalState: highestThermalState(sample),
     clock,
     epochs,
@@ -277,6 +272,8 @@ function crosscheckReport(
     ...epochLines,
     '',
     'Memory footprint (kB) at each boundary: the app (`phys_footprint`) and the Activity Monitor rows (`memory-physical-footprint`) from the last row that ends before the read to the first row that starts after it, with the clock uncertainty. A boundary is comparable only when these rows cover at most 2 s and differ by less than the tolerance. The error is the distance of the app value from the range of the rows. This is a second reader of the same counter and unit, not a proof of the kernel accounting.',
+    '',
+    'Assumption, not verified: Activity Monitor took the value of a row at a time between the start and the end of the row. The export of a phone recording must show what the time of a row means before memory can be validated. Until then, memory stays unvalidated.',
     '',
     '| Boundary | App | Rows | Activity Monitor | Signed error | Tolerance | Within |',
     `|${' --- |'.repeat(7)}`,

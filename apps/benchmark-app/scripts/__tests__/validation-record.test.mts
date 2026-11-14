@@ -19,6 +19,7 @@ import {
   LOADS_PLAN,
   STEADY_PLAN,
   crosscheckEpochs,
+  footprints,
   validationSources,
 } from './validation-fixtures.mts';
 import type { Plan } from './validation-fixtures.mts';
@@ -135,15 +136,18 @@ describe('buildValidationRecord', () => {
     );
     assert.deepEqual(
       validated(
+        record([steady(), loads({ footprints: footprints(5, () => null) })])
+      ),
+      { uiThreadCpu: true, jsThreadCpu: true, memory: false }
+    );
+    assert.deepEqual(
+      validated(
         record([
           steady(),
           loads({
-            verdict: {
-              counters: true,
-              loadsRan: true,
-              memory: 'not available',
-              updateDurationQuantilesWithinTolerance: false,
-            },
+            footprints: footprints(5, (boundary) =>
+              boundary === 0 ? [42_000, 42_000] : [40_000, 40_000]
+            ),
           }),
         ])
       ),
@@ -163,6 +167,17 @@ describe('buildValidationRecord', () => {
         ])
       ),
       { uiThreadCpu: true, jsThreadCpu: false, memory: true }
+    );
+    assert.deepEqual(
+      validated(
+        record(undefined, [
+          writeObserverCost('idle', 'idle-cost'),
+          writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
+            metric === 'memory' ? 'failed' : 'passed'
+          ),
+        ])
+      ),
+      { uiThreadCpu: true, jsThreadCpu: true, memory: false }
     );
   });
 
@@ -217,7 +232,7 @@ describe('the validation sources', () => {
     const empty = writeCrosscheck('empty', [], { footprints: [] });
     assert.throws(
       () => readCrosscheckResult(empty),
-      /crosscheck\.json is not a complete validation result:\n {2}- the plan has no epoch/
+      /crosscheck\.json is not a complete validation result:\n {2}- crosscheck: the plan has no epoch/
     );
     const missing = writeCrosscheck('missing', STEADY_PLAN, {
       epochs: crosscheckEpochs(STEADY_PLAN).slice(1),
@@ -241,10 +256,131 @@ describe('the validation sources', () => {
             )
           ),
         new RegExp(
-          `it has ${blocks} complete blocks of ${blocks} planned blocks, and it needs at least 5`
+          `it has ${blocks} complete blocks in ${blocks * 4} samples for ${blocks} planned blocks, and it needs at least 5`
         )
       );
     }
+  });
+
+  it('refuses a cross-check whose stored outcomes do not follow from its values', () => {
+    const refusal = (change: Partial<CrosscheckResult>) => {
+      const folder = writeCrosscheck('forged', LOADS_PLAN, change);
+      try {
+        readCrosscheckResult(folder);
+        return null;
+      } catch (error) {
+        return (error as Error).message;
+      } finally {
+        fs.rmSync(folder, { recursive: true });
+      }
+    };
+    const withoutWork = crosscheckEpochs(LOADS_PLAN).map((epoch) => ({
+      ...epoch,
+      work: { own: 0, other: 0 },
+    }));
+    assert.match(
+      refusal({
+        epochs: withoutWork,
+        verdict: {
+          counters: true,
+          loadsRan: true,
+          memory: 'passed',
+          updateDurationQuantilesWithinTolerance: false,
+        },
+      }) ?? '',
+      /- crosscheck: epoch 1: the stored workProof does not follow from its values[\s\S]*- crosscheck: verdict\.loadsRan is true, but the epochs and the footprints give false/
+    );
+    assert.match(
+      refusal({
+        footprints: footprints(5, () => null),
+        verdict: {
+          counters: true,
+          loadsRan: true,
+          memory: 'passed',
+          updateDurationQuantilesWithinTolerance: false,
+        },
+      }) ?? '',
+      /- crosscheck: verdict\.memory is passed, but the epochs and the footprints give not available/
+    );
+    const failed = footprints(5, (boundary) =>
+      boundary === 0 ? [42_000, 42_000] : [40_000, 40_000]
+    );
+    assert.match(
+      refusal({
+        footprints: [{ ...failed[0], passes: true }, ...failed.slice(1)],
+        verdict: {
+          counters: true,
+          loadsRan: true,
+          memory: 'passed',
+          updateDurationQuantilesWithinTolerance: false,
+        },
+      }) ?? '',
+      /- crosscheck: footprint 0: the stored comparison does not follow from its read and its rows\n {2}- crosscheck: verdict\.memory is passed, but the epochs and the footprints give failed/
+    );
+    const [first, ...rest] = crosscheckEpochs(LOADS_PLAN, 300);
+    assert.match(
+      refusal({
+        epochs: [
+          { ...first, uiThreadCpu: { ...first.uiThreadCpu, passes: true } },
+          ...rest,
+        ],
+      }) ?? '',
+      /- crosscheck: epoch 0: the stored uiThreadCpu does not follow from its values/
+    );
+    assert.match(
+      refusal({
+        tolerances: {
+          cpu: { absolute: 5, relative: 0.1 },
+          updateDuration: { absolute: 0.25, relative: 0.05 },
+          memory: { absolute: 1024, relative: 0.02 },
+        },
+      }) ?? '',
+      /its tolerances are not the tolerances of this driver/
+    );
+  });
+
+  it('refuses an observer-cost test without its numbers or with a cost that does not follow from them', () => {
+    const stripped = writeObserverCost('stripped', 'idle-cost');
+    const file = path.join(stripped, 'observer-cost.json');
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        ...stored,
+        samples: stored.samples.map(
+          ({ block, collector }: { block: number; collector: string }) => ({
+            block,
+            collector,
+          })
+        ),
+        costs: stored.costs.map(
+          ({
+            metric,
+            blocks,
+            outcome,
+          }: {
+            metric: string;
+            blocks: number;
+            outcome: string;
+          }) => ({ metric, blocks, outcome })
+        ),
+      })
+    );
+    assert.throws(
+      () => readObserverCostResult(stripped),
+      /- observer-cost\.samples\[0\]\.uiThreadCpu must be a finite number[\s\S]*- observer-cost\.costs\[0\]\.medianEndpoints must be a finite number/
+    );
+    const forced = writeObserverCost('forced', 'idle-cost', (metric) =>
+      metric === 'memory' ? 'failed' : 'passed'
+    );
+    const forcedFile = path.join(forced, 'observer-cost.json');
+    const result = JSON.parse(fs.readFileSync(forcedFile, 'utf8'));
+    result.costs[3].outcome = 'passed';
+    fs.writeFileSync(forcedFile, JSON.stringify(result));
+    assert.throws(
+      () => readObserverCostResult(forced),
+      /- observer-cost: the stored cost of memory does not follow from the samples and its noise limit/
+    );
   });
 });
 
@@ -294,6 +430,52 @@ describe('readValidationRecord', () => {
     assert.throws(
       () => readValidationRecord(writeRecord({ ...built, appBuild: 1 })),
       /- validation\.appBuild must be a string/
+    );
+  });
+
+  it('refuses a record whose embedded source was changed after the build', () => {
+    const built = record();
+    const [steady, loads] = built.sources.crosschecks;
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            sources: {
+              ...built.sources,
+              crosschecks: [
+                steady,
+                {
+                  ...loads,
+                  result: {
+                    ...loads.result,
+                    verdict: { ...loads.result.verdict, loadsRan: false },
+                  },
+                },
+              ],
+            },
+          })
+        ),
+      /- validation\.sources\.crosschecks\[1\]\.result: verdict\.loadsRan is false, but the epochs and the footprints give true$/
+    );
+    assert.throws(
+      () =>
+        readValidationRecord(
+          writeRecord({
+            ...built,
+            sources: {
+              ...built.sources,
+              crosschecks: [
+                steady,
+                {
+                  ...loads,
+                  result: { ...loads.result, report: { version: 1, load: 81 } },
+                },
+              ],
+            },
+          })
+        ),
+      /- validation\.sources\.crosschecks\[1\]\.sha256 is not the SHA-256 of its result$/
     );
   });
 

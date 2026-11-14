@@ -104,7 +104,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'The process: user + system time of `getrusage(RUSAGE_SELF)`. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. ${CPU_LIMIT}`,
+      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. This limit assumes that each counter has its current value at its read (an assumption, not verified in the XNU source). ${CPU_LIMIT}`,
     },
     {
       names: ['mountBatchCount'],

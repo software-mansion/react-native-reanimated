@@ -2,20 +2,31 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import type { ValidationRecordOptions } from './arguments.mts';
-import { WORK_LOADS } from './crosscheck.mts';
+import {
+  WORK_LOADS,
+  crosscheckVerdict,
+  rederivedEpoch,
+  rederivedFootprint,
+} from './crosscheck.mts';
 import type { MemoryOutcome } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
 import type { ComparedMetric } from './metrics.mts';
-import { MINIMUM_BLOCKS } from './observer-cost.mts';
+import {
+  MINIMUM_BLOCKS,
+  observerCosts as observerCostsOf,
+} from './observer-cost.mts';
 import type {
   ObserverCostMetric,
   ValidationOutcome,
 } from './observer-cost.mts';
 import { isScenario } from './scenarios.mts';
 import {
+  STORED_CROSSCHECK,
+  STORED_OBSERVER_COST,
+  completeBlocks,
   identityDifferences,
   identityOf,
   readCrosscheckResult,
@@ -50,9 +61,8 @@ export interface MetricValidation {
   gates: GateResult[];
 }
 
-export interface CrosscheckSummary {
+interface CrosscheckSummary {
   folder: string;
-  sha256: string;
   trace: string;
   scenario: string;
   thermalState: number;
@@ -66,15 +76,19 @@ export interface CrosscheckSummary {
   }[];
 }
 
-export interface ObserverCostSummary {
+interface ObserverCostSummary {
   folder: string;
-  sha256: string;
   scenario: string;
   blocks: number;
   outcomes: Partial<Record<ObserverCostMetric, ValidationOutcome>>;
 }
 
 export interface ValidationSources {
+  crosschecks: StoredSource<CrosscheckResult>[];
+  observerCosts: StoredSource<ObserverCostResult>[];
+}
+
+interface SourceSummaries {
   crosschecks: CrosscheckSummary[];
   observerCosts: ObserverCostSummary[];
 }
@@ -90,7 +104,7 @@ export interface MetricValidity {
   reason: string | null;
 }
 
-export const VALIDATION_FORMAT_VERSION = 2;
+export const VALIDATION_FORMAT_VERSION = 3;
 
 const MINIMUM_CROSSCHECKS = 2;
 
@@ -109,34 +123,8 @@ export const VALIDATION_RECORD: Check = shape({
   measurementRevision: anInteger,
   appBuild: aString,
   sources: shape({
-    crosschecks: listOf(
-      shape({
-        folder: aString,
-        sha256: aString,
-        trace: aString,
-        scenario: aString,
-        thermalState: anInteger,
-        loadsRan: aBoolean,
-        memory: oneOf(['passed', 'failed', 'not available']),
-        epochs: listOf(
-          shape({
-            load: aString,
-            collector: oneOf(['full', 'endpoints']),
-            uiThreadCpu: aBoolean,
-            jsThreadCpu: aBoolean,
-          })
-        ),
-      })
-    ),
-    observerCosts: listOf(
-      shape({
-        folder: aString,
-        sha256: aString,
-        scenario: aString,
-        blocks: anInteger,
-        outcomes: valuesOf(OUTCOME),
-      })
-    ),
+    crosschecks: listOf(STORED_CROSSCHECK),
+    observerCosts: listOf(STORED_OBSERVER_COST),
   }),
   metrics: valuesOf(
     shape({
@@ -176,20 +164,15 @@ export function buildValidationRecord(
 ): ValidationRecord {
   const identity = commonIdentity([...crosschecks, ...observerCosts]);
   const sources: ValidationSources = {
-    crosschecks: crosschecks.map(crosscheckSummary),
-    observerCosts: observerCosts.map(observerCostSummary),
+    crosschecks: [...crosschecks],
+    observerCosts: [...observerCosts],
   };
   checkDistinct(sources);
   return {
     formatVersion: VALIDATION_FORMAT_VERSION,
     ...identity,
     sources,
-    metrics: Object.fromEntries(
-      IOS_DEFINITION.verdictMetrics.map((metric) => [
-        metric,
-        metricValidation(metric, sources),
-      ])
-    ),
+    metrics: metricValidations(sources),
   };
 }
 
@@ -200,10 +183,10 @@ export function readValidationRecord(file: string): ValidationRecord {
   throwProblems(`${file} is not a valid validation record`, problems);
   const record = raw as ValidationRecord;
   checkDistinct(record.sources);
-  throwProblems(
-    `${file} is not a valid validation record`,
-    inconsistentMetrics(record)
-  );
+  throwProblems(`${file} is not a valid validation record`, [
+    ...sourcesOfOtherSetups(record),
+    ...inconsistentMetrics(record),
+  ]);
   return record;
 }
 
@@ -228,8 +211,9 @@ export function metricValidity(
       reason: `the validation record does not fit the run: ${differences.join(', ')}`,
     };
   }
+  const validations = metricValidations(record.sources);
   const validated = candidates.filter(
-    (metric) => metricValidation(metric, record.sources).validated
+    (metric) => validations[metric]?.validated === true
   );
   const missing = candidates.filter((metric) => !validated.includes(metric));
   return {
@@ -264,51 +248,14 @@ function commonIdentity(
   return first;
 }
 
-function crosscheckSummary({
-  folder,
-  sha256,
-  result,
-}: StoredSource<CrosscheckResult>): CrosscheckSummary {
-  return {
-    folder,
-    sha256,
-    trace: path.resolve(result.trace),
-    scenario: result.scenario,
-    thermalState: result.thermalState,
-    loadsRan: result.verdict.loadsRan,
-    memory: result.verdict.memory,
-    epochs: result.epochs.map((epoch) => ({
-      load: epoch.load,
-      collector: epoch.collector,
-      uiThreadCpu: epoch.uiThreadCpu.passes,
-      jsThreadCpu: epoch.jsThreadCpu.passes,
-    })),
-  };
-}
-
-function observerCostSummary({
-  folder,
-  sha256,
-  result,
-}: StoredSource<ObserverCostResult>): ObserverCostSummary {
-  return {
-    folder,
-    sha256,
-    scenario: result.scenario,
-    blocks: result.blocks,
-    outcomes: Object.fromEntries(
-      (result.costs ?? []).map((cost) => [cost.metric, cost.outcome])
-    ),
-  };
-}
-
 function checkDistinct({ crosschecks, observerCosts }: ValidationSources) {
   const repeated = (values: readonly string[]) =>
     values.filter((value, i) => values.indexOf(value) !== i);
+  const all = [...crosschecks, ...observerCosts];
   const duplicates = [
-    ...repeated([...crosschecks, ...observerCosts].map(({ folder }) => folder)),
-    ...repeated([...crosschecks, ...observerCosts].map(({ sha256 }) => sha256)),
-    ...repeated(crosschecks.map(({ trace }) => trace)),
+    ...repeated(all.map(({ folder }) => folder)),
+    ...repeated(all.map(({ sha256 }) => sha256)),
+    ...repeated(crosschecks.map(({ result }) => path.resolve(result.trace))),
   ];
   if (duplicates.length > 0) {
     throw new ToolError(
@@ -317,17 +264,31 @@ function checkDistinct({ crosschecks, observerCosts }: ValidationSources) {
   }
 }
 
+function sourcesOfOtherSetups(record: ValidationRecord): string[] {
+  return [...record.sources.crosschecks, ...record.sources.observerCosts]
+    .map(({ folder, result }) => ({
+      folder,
+      differences: identityDifferences(identityOf(record), identityOf(result)),
+    }))
+    .filter(({ differences }) => differences.length > 0)
+    .map(
+      ({ folder, differences }) =>
+        `the source ${folder} is not of the setup of the record: ${differences.join(', ')}`
+    );
+}
+
 function inconsistentMetrics(record: ValidationRecord): string[] {
   const unknown = Object.keys(record.metrics).filter(
     (metric) =>
       !(IOS_DEFINITION.verdictMetrics as readonly string[]).includes(metric)
   );
+  const validations = metricValidations(record.sources);
   return [
     ...unknown.map((metric) => `${metric} is not a verdict metric of iOS`),
     ...IOS_DEFINITION.verdictMetrics.flatMap((metric) => {
       const stored = record.metrics[metric];
-      const expected = metricValidation(metric, record.sources);
-      if (stored === undefined) {
+      const expected = validations[metric];
+      if (stored === undefined || expected === undefined) {
         return [`it has no entry for ${metric}`];
       }
       if (!isDeepStrictEqual(stored.gates, expected.gates)) {
@@ -340,14 +301,30 @@ function inconsistentMetrics(record: ValidationRecord): string[] {
   ];
 }
 
+function metricValidations(
+  sources: ValidationSources
+): Partial<Record<ComparedMetric, MetricValidation>> {
+  const summaries = summariesOf(sources);
+  return Object.fromEntries(
+    IOS_DEFINITION.verdictMetrics.map((metric) => [
+      metric,
+      metricValidation(metric, summaries),
+    ])
+  );
+}
+
 function metricValidation(
   metric: ComparedMetric,
-  sources: ValidationSources
+  summaries: SourceSummaries
 ): MetricValidation {
   const gates = [
-    ...coverageGates(sources),
-    ...sources.crosschecks.flatMap((source) => crosscheckGates(metric, source)),
-    ...sources.observerCosts.map((source) => observerCostGate(metric, source)),
+    ...coverageGates(summaries),
+    ...summaries.crosschecks.flatMap((summary) =>
+      crosscheckGates(metric, summary)
+    ),
+    ...summaries.observerCosts.map((summary) =>
+      observerCostGate(metric, summary)
+    ),
   ];
   return {
     validated:
@@ -356,10 +333,66 @@ function metricValidation(
   };
 }
 
+function summariesOf(sources: ValidationSources): SourceSummaries {
+  return {
+    crosschecks: sources.crosschecks.map(crosscheckSummary),
+    observerCosts: sources.observerCosts.map(observerCostSummary),
+  };
+}
+
+function crosscheckSummary({
+  folder,
+  result,
+}: StoredSource<CrosscheckResult>): CrosscheckSummary {
+  const epochs = result.epochs.map((epoch) =>
+    rederivedEpoch(epoch, result.refreshRate)
+  );
+  const verdict = crosscheckVerdict(
+    epochs,
+    result.footprints.map(rederivedFootprint)
+  );
+  return {
+    folder,
+    trace: path.resolve(result.trace),
+    scenario: result.scenario,
+    thermalState: result.thermalState,
+    loadsRan: verdict.loadsRan,
+    memory: verdict.memory,
+    epochs: epochs.map((epoch) => ({
+      load: epoch.load,
+      collector: epoch.collector,
+      uiThreadCpu: epoch.uiThreadCpu.passes,
+      jsThreadCpu: epoch.jsThreadCpu.passes,
+    })),
+  };
+}
+
+function observerCostSummary({
+  folder,
+  result,
+}: StoredSource<ObserverCostResult>): ObserverCostSummary {
+  const noiseLimits = Object.fromEntries(
+    (result.costs ?? []).flatMap((cost) =>
+      cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
+    )
+  );
+  return {
+    folder,
+    scenario: result.scenario,
+    blocks: completeBlocks(result.samples),
+    outcomes: Object.fromEntries(
+      observerCostsOf(result.samples, noiseLimits).map((cost) => [
+        cost.metric,
+        cost.outcome,
+      ])
+    ),
+  };
+}
+
 function coverageGates({
   crosschecks,
   observerCosts,
-}: ValidationSources): GateResult[] {
+}: SourceSummaries): GateResult[] {
   const gate = (name: string, covered: boolean): GateResult => ({
     source: 'all',
     gate: name,
