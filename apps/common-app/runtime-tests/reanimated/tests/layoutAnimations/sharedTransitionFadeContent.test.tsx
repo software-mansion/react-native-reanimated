@@ -39,6 +39,8 @@ const CHILD_OPACITY = 0.8;
 const CHILD_WIDTH = 20;
 const WIDE_CHILD_WIDTH = 50;
 const NEXT_WIDTH = 200;
+// The children of the target fade in over half of the 3000 ms move.
+const TARGET_FADE_IN_MS = 1500;
 
 const transition = SharedTransition.duration(3000).fadeContent();
 const linearFade = SharedTransition.duration(3000)
@@ -535,6 +537,13 @@ function recordTargetDuringSourceMove(sourceTag: number, targetTag: number) {
   };
 }
 
+// Recorded frames see the views at every step, not only where the jump lands.
+async function advanceInSteps(duration: number, step: number) {
+  for (let elapsed = 0; elapsed < duration; elapsed += step) {
+    await advanceAnimationTimer(Math.min(step, duration - elapsed));
+  }
+}
+
 async function expectOpacity(name: string, opacity: number) {
   await expectEventually(async () => {
     const props = await mountedProps(name);
@@ -566,13 +575,18 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades the children of the moving view out and keeps the view itself visible', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens showTarget={false} />);
     await waitForFrames();
 
     await render(<Screens showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
 
+    await advanceAnimationTimer(1500);
     await expectOpacity('target', 1);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('targetChild', CHILD_OPACITY);
     await expectOpacity('source', 0);
     await expectOpacity('sourceChild', CHILD_OPACITY);
@@ -587,21 +601,28 @@ describe('Shared transition with fadeContent', () => {
   ])(
     'fades the children of the moving view out with ${animation} that leaves the content opacity out',
     async ({ sharedTransition }) => {
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <Screens showTarget={false} sharedTransition={sharedTransition} />
       );
       await waitForFrames();
 
       await render(<Screens showTarget sharedTransition={sharedTransition} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(1500);
       await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     }
   );
 
   test('fades the children of the target in after the moving view lands', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens showTarget={false} hiddenTargetChild />);
     await waitForFrames();
 
     await render(<Screens showTarget hiddenTargetChild />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(3000);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS / 2);
     await expectEventually(async () => {
       const [target, child] = await sample(['target', 'targetChild']);
       return (
@@ -611,6 +632,7 @@ describe('Shared transition with fadeContent', () => {
         isBetween(child.opacity, 0.05, CHILD_OPACITY - 0.05)
       );
     }).toBe(true);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS / 2);
     await expectOpacity('targetChild', CHILD_OPACITY);
     for (let frame = 0; frame < 10; frame++) {
       expect((await mountedProps('targetHiddenChild'))?.opacity).toBe(0);
@@ -619,14 +641,19 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades the children back in when the navigation goes back during the move', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens showTarget={false} />);
     await waitForFrames();
 
     await render(<Screens showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     const beforeReturn = await mountedProps('sourceChild');
 
     await render(<Screens showTarget={false} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectEventually(async () => {
       const child = await mountedProps('sourceChild');
       return (
@@ -634,16 +661,21 @@ describe('Shared transition with fadeContent', () => {
       );
     }).toBe(true);
 
+    await advanceAnimationTimer(3000);
     await expectOpacity('source', 1);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('sourceChild', CHILD_OPACITY);
     await expectOpacity('target', 0);
   });
 
   test('keeps the layout animation of a child while it fades', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithAnimatedChild showTarget={false} />);
     await waitForFrames();
 
     await render(<ScreensWithAnimatedChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectEventually(async () => {
       const child = await mountedProps('sourceChild');
       return (
@@ -653,12 +685,15 @@ describe('Shared transition with fadeContent', () => {
       );
     }).toBe(true);
 
+    await advanceAnimationTimer(1500);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
 
   test.each([false, true])(
     'plays the entering animation of a target child when the moving view lands (unmatched tag: %p)',
     async (childTagged) => {
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <ScreensWithEnteringChild
           showTarget={false}
@@ -670,15 +705,19 @@ describe('Shared transition with fadeContent', () => {
       await render(
         <ScreensWithEnteringChild showTarget childTagged={childTagged} />
       );
+      await waitForFrames(3);
       const frames = await recordFrames(
         ['source', 'enteringChild'],
         async () => {
+          await advanceInSteps(1500, 300);
           await expectMovingWithChildOpacity(
             'source',
             0.1,
             CHILD_OPACITY - 0.1
           );
           expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+          await advanceInSteps(1500, 300);
+          await advanceAnimationTimer(300);
           await expectOpacity('enteringChild', 1);
         }
       );
@@ -829,20 +868,24 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('keeps hidden a target child that React removes while its entering animation waits', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ScreensWithEnteringChild showTarget={false} childExits />);
     await waitForFrames();
 
     await render(<ScreensWithEnteringChild showTarget childExits />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
     const childTag = tagOf('enteringChild');
     const frames = await recordFrames(['enteringChild'], async () => {
       await render(
         <ScreensWithEnteringChild showTarget showChild={false} childExits />
       );
+      await waitForFrames(3);
+      await advanceInSteps(1500, 300);
       await expectOpacity('target', 1);
-      await expectEventually(() => isViewMountedNatively(childTag), 10000).toBe(
-        false
-      );
+      await advanceInSteps(6000 + 1000, 1000);
+      await expectEventually(() => isViewMountedNatively(childTag)).toBe(false);
     });
     const mounted = frames.filter(([child]) => !!child);
     expect(mounted.length > 0).toBe(true);
@@ -905,6 +948,7 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('fades retained source children out before target children fade in', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens showTarget={false} removeSource />);
     await waitForFrames();
     const sourceTag = getTestComponent('source').getTag();
@@ -913,6 +957,8 @@ describe('Shared transition with fadeContent', () => {
     const recorder = recordTargetDuringSourceMove(sourceTag, targetTag);
     try {
       await render(<Screens showTarget removeSource />);
+      await waitForFrames(3);
+      await advanceInSteps(1500, 300);
       await expectEventually(() =>
         runOnUIBlocking(() => {
           'worklet';
@@ -930,7 +976,9 @@ describe('Shared transition with fadeContent', () => {
       ).toBe(true);
       await expectOpacity('target', 0);
 
+      await advanceInSteps(1500, 300);
       await expectOpacity('target', 1);
+      await advanceAnimationTimer(TARGET_FADE_IN_MS);
       await expectOpacity('targetChild', CHILD_OPACITY);
       await expectEventually(() => isViewMountedNatively(sourceTag)).toBe(
         false
@@ -943,23 +991,35 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('keeps the content fade of a view that stays mounted after an unmount releases its pair', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens showTarget={false} removeSource />);
     await waitForFrames();
     await render(<Screens showTarget removeSource />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(3000);
     await expectOpacity('target', 1);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('targetChild', CHILD_OPACITY);
 
     await render(<Screens showTarget={false} removeSource />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
     await expectMovingWithChildOpacity('target', 0.05, CHILD_OPACITY - 0.05);
+    await advanceAnimationTimer(1500);
     await expectOpacity('source', 1);
+    await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('sourceChild', CHILD_OPACITY);
   });
 
   test('fades an unmatched tagged direct child', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ChildrenPair active={false} tagged />);
     await waitForFrames();
     await render(<ChildrenPair active tagged />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     await expectFadingLikeReference('child');
+    await advanceAnimationTimer(2000);
     await expectOpacity('target', 1);
     await expectOpacity('child', CHILD_OPACITY);
   });
@@ -999,26 +1059,37 @@ describe('Shared transition with fadeContent', () => {
   );
 
   test('fades a child inserted into the moving view', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ChildrenPair active={false} />);
     await waitForFrames();
     await render(<ChildrenPair active />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     await expectFadingLikeReference('child');
     await render(<ChildrenPair active insert />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
     await expectFadingLikeReference('inserted');
+    await advanceAnimationTimer(1500);
     await expectOpacity('target', 1);
     await expectOpacity('inserted', CHILD_OPACITY);
   });
 
   test('keeps an exiting child in the fade of the moving view', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ChildrenPair active={false} />);
     await waitForFrames();
     await render(<ChildrenPair active />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1000);
     await expectFadingLikeReference('child');
 
     const frames = await recordFrames(
       ['source', 'child', 'reference'],
       async () => {
         await render(<ChildrenPair active remove />);
+        await waitForFrames(3);
+        await advanceInSteps(2000, 500);
         await expectOpacity('target', 1);
       }
     );
@@ -1041,12 +1112,16 @@ describe('Shared transition with fadeContent', () => {
   });
 
   test('keeps the layout animation of a target child instead of a fade-in', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
     await render(<ChildrenPair active={false} />);
     await waitForFrames();
     await render(<ChildrenPair active targetWide />);
+    await waitForFrames(3);
     await expectOpacity('target', 0);
     const frames = await recordFrames(['target', 'targetChild'], async () => {
+      await advanceInSteps(3000, 300);
       await expectOpacity('target', 1);
+      await advanceInSteps(6000 + 1000, 1000);
       await expectEventually(async () => {
         const child = await mountedProps('targetChild');
         return !!child && Math.abs(child.width - WIDE_CHILD_WIDTH) < 0.5;
