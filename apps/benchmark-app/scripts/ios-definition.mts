@@ -120,7 +120,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'The process: `total_user + total_system` of `task_info(TASK_POWER_INFO_V2)`, in whole µs. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than half of the sum of the two threads is a tool error (a wrong unit or a wrong thread); a smaller shortfall is \`threadSumExcess\`. ${CPU_LIMIT}`,
+      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than half of the sum of the two threads is a tool error (the process and thread counters are not consistent); a smaller shortfall is \`threadSumExcess\`. ${CPU_LIMIT}`,
     },
     {
       names: ['threadSumExcess'],
@@ -153,7 +153,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         '`Δ instructions` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` over the seconds between the midpoints of the two reads of this counter on the monotonic clock. The app reads it in its own read bracket, after the process CPU time.',
       interval: WINDOW,
-      limits: `An instruction-count change, not a performance verdict. ${INSTRUCTION_COUNT_LIMIT} It does not include the render server, the GPU, cache misses and waits. A change of the clock rate or of the core type gets no verdict: see \`processClockRate\` and \`performanceCoreShare\`. Fewer frames or fewer mounts give fewer instructions; the report marks the row "work differs" when the 95% interval of the \`mountBatchCount\` difference does not include 0. A thread that waits in a loop adds instructions. The verdict bootstrap draws single samples, not blocks. One sample of the fast mode of the iPhone 14 (a median UI update of 1.43 ms in \`layout-animations\`, against about 3.9 ms) had the usual instruction rate and a 1.57 times higher clock rate. Its shorter UI update is not fully explained.`,
+      limits: `An instruction-count change, not a performance verdict. ${INSTRUCTION_COUNT_LIMIT} It does not include the render server, the GPU, cache misses and waits. A change of the clock rate or of the core type gets no verdict: see \`processClockRate\` and \`performanceCoreShare\`. Fewer frames or fewer mounts give fewer instructions; the report marks the row "mount count differs" when the 95% interval of the \`mountBatchCount\` difference does not include 0, and no mark does not prove equal work. A thread that waits in a loop adds instructions. The verdict bootstrap draws single samples, not blocks. One sample of the fast mode of the iPhone 14 (a median UI update of 1.43 ms in \`layout-animations\`, against about 3.9 ms) had the usual instruction rate and a 1.57 times higher clock rate. Its shorter UI update is not fully explained.`,
     },
     {
       names: ['mountBatchCount'],

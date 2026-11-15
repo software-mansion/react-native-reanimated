@@ -581,7 +581,7 @@ function checkProcessUnit(
   const threadsUs = threadsDeltaUs(start, end);
   if (processUs < MINIMUM_PROCESS_SHARE_OF_THREADS * threadsUs) {
     throw new ToolError(
-      `Epoch ${index}: the process CPU time (${processUs} µs) is less than ${MINIMUM_PROCESS_SHARE_OF_THREADS * 100}% of the sum of the main thread and the JS thread (${threadsUs} µs). A counter read gives a wrong unit or a wrong thread.`
+      `Epoch ${index}: the process CPU time (${processUs} µs) is less than ${MINIMUM_PROCESS_SHARE_OF_THREADS * 100}% of the sum of the main thread and the JS thread (${threadsUs} µs). The process and thread counters are not consistent.`
     );
   }
 }

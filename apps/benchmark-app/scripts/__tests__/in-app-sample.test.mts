@@ -409,7 +409,7 @@ describe('readEpoch', () => {
     assert.equal(excessOf(threadsUs - allowedUs - 100), 100);
     assert.throws(
       () => excessOf(threadsUs / 2 - 1),
-      /Epoch 0: the process CPU time \(1759999 µs\) is less than 50% of the sum of the main thread and the JS thread \(3520000 µs\)\. A counter read gives a wrong unit or a wrong thread\./
+      /Epoch 0: the process CPU time \(1759999 µs\) is less than 50% of the sum of the main thread and the JS thread \(3520000 µs\)\. The process and thread counters are not consistent\./
     );
   });
 

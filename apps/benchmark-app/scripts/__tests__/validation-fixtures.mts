@@ -22,8 +22,8 @@ import type {
 import {
   KNOWN_WORK_INSTRUCTIONS_PER_UNIT,
   KNOWN_WORK_PLAN,
+  KNOWN_WORK_PLANNED_UNITS,
   KNOWN_WORK_TOLERANCE,
-  KNOWN_WORK_UNITS,
   deriveKnownWork,
 } from '../known-work.mts';
 import {
@@ -81,13 +81,6 @@ const MOUNTS_PER_EPOCH = 150;
 const ZERO_CLOCK = { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 };
 
 const IDLE_INSTRUCTIONS_PER_SECOND = 50_000_000;
-
-const KNOWN_WORK_UNITS_OF: Record<string, number> = {
-  'known-work': KNOWN_WORK_UNITS,
-  'known-work-double': 2 * KNOWN_WORK_UNITS,
-  'known-work-background': KNOWN_WORK_UNITS,
-  'known-work-ended': KNOWN_WORK_UNITS,
-};
 
 export function crosscheckEpochs(
   plan: Plan,
@@ -183,7 +176,7 @@ function epochEvidence(
 export function knownWorkEpochs(): SampledEpoch[] {
   return KNOWN_WORK_PLAN.epochs.map((epoch) => ({
     ...epoch,
-    work: { own: KNOWN_WORK_UNITS_OF[epoch.load] ?? 0, other: 0 },
+    work: { own: KNOWN_WORK_PLANNED_UNITS[epoch.load] ?? 0, other: 0 },
   }));
 }
 
@@ -200,7 +193,7 @@ export function knownWorkBoundaries(
     if (previous) {
       instructions +=
         IDLE_INSTRUCTIONS_PER_SECOND * previous.seconds +
-        (KNOWN_WORK_UNITS_OF[previous.load] ?? 0) *
+        (KNOWN_WORK_PLANNED_UNITS[previous.load] ?? 0) *
           KNOWN_WORK_INSTRUCTIONS_PER_UNIT +
         extraInstructions(previous.load);
     }

@@ -129,7 +129,8 @@ function computeVerdictRows(
   return rows.map((row, i) => {
     const noiseLimit = noiseLimitOf(
       row,
-      noiseLimits[row.scenario]?.[row.metric] ?? 0
+      noiseLimits[row.scenario]?.[row.metric] ??
+        COMPARISON_RULES[row.metric].noiseFloor
     );
     const decided = { ...row, passesFalseDiscovery: passes[i], noiseLimit };
     return { ...decided, verdict: verdictOf(decided) };

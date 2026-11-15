@@ -140,6 +140,25 @@ describe('computeVerdictRows', () => {
     assert.equal(row.verdict, 'no change found');
   });
 
+  it('gives a row with no noise limit the noise floor of its metric as its limit', () => {
+    const shifted = (factor: number) =>
+      valuesFrom({
+        uiThreadCpu: { a: BASE, b: BASE.map((value) => value * factor) },
+        jankyFrames: {
+          a: BASE.map(() => 0.01),
+          b: BASE.map(() => 0.01 + (factor - 1) / 4),
+        },
+      });
+    const inside = computeVerdictRows(['css'], shifted(1.015), {});
+    assert.equal(rowOf(inside, 'uiThreadCpu').noiseLimit, 0.02);
+    assert.equal(rowOf(inside, 'uiThreadCpu').verdict, 'no change found');
+    assert.equal(rowOf(inside, 'jankyFrames').noiseLimit, 0.005);
+    assert.equal(rowOf(inside, 'jankyFrames').verdict, 'no change found');
+    const outside = computeVerdictRows(['css'], shifted(1.03), {});
+    assert.equal(rowOf(outside, 'uiThreadCpu').verdict, 'worse');
+    assert.equal(rowOf(outside, 'jankyFrames').verdict, 'worse');
+  });
+
   it('falls back to the absolute difference for memory values of 0 or less', () => {
     const a = Array.from({ length: 10 }, (_, i) => -100 - i);
     const b = Array.from({ length: 10 }, (_, i) => -200 - i);

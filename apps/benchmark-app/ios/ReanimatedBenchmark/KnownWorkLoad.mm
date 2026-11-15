@@ -2,7 +2,9 @@
 
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <optional>
+#include <variant>
 
 #if !defined(__arm64__)
 #error "The known-work unit has an instruction count only for arm64"
@@ -10,10 +12,17 @@
 
 namespace {
 
-struct KnownWorkPlan {
-  NSUInteger units;
+struct WorkerThreads {
+  NSUInteger count;
   NSQualityOfService quality;
-  bool parksUntilFinish;
+  bool parkUntilFinish;
+};
+
+struct MainThread {};
+
+struct KnownWorkPlan {
+  NSUInteger unitsPerThread;
+  std::variant<WorkerThreads, MainThread> place;
 };
 
 struct NamedPlan {
@@ -21,17 +30,24 @@ struct NamedPlan {
   KnownWorkPlan plan;
 };
 
+using Counting = std::shared_ptr<std::atomic<bool>>;
+
 const NSUInteger KnownWorkUnits = 1000;
+
+const NSUInteger ParallelThreads = 4;
 
 const uint64_t KnownWorkIterations = 1'000'000;
 
 const uint64_t KnownWorkChecksum = KnownWorkIterations * (KnownWorkIterations + 1) / 2;
 
 const NamedPlan KnownWorkPlans[] = {
-    {@"known-work", {KnownWorkUnits, NSQualityOfServiceUserInteractive, true}},
-    {@"known-work-double", {2 * KnownWorkUnits, NSQualityOfServiceUserInteractive, true}},
-    {@"known-work-background", {KnownWorkUnits, NSQualityOfServiceBackground, true}},
-    {@"known-work-ended", {KnownWorkUnits, NSQualityOfServiceUserInteractive, false}},
+    {@"known-work", {KnownWorkUnits, WorkerThreads{1, NSQualityOfServiceUserInteractive, true}}},
+    {@"known-work-double", {2 * KnownWorkUnits, WorkerThreads{1, NSQualityOfServiceUserInteractive, true}}},
+    {@"known-work-background", {KnownWorkUnits, WorkerThreads{1, NSQualityOfServiceBackground, true}}},
+    {@"known-work-ended", {KnownWorkUnits, WorkerThreads{1, NSQualityOfServiceUserInteractive, false}}},
+    {@"known-work-parallel",
+     {KnownWorkUnits / ParallelThreads, WorkerThreads{ParallelThreads, NSQualityOfServiceUserInteractive, true}}},
+    {@"known-work-main", {KnownWorkUnits, MainThread{}}},
 };
 
 std::optional<KnownWorkPlan> planOf(NSString *load);
@@ -55,10 +71,10 @@ __attribute__((noinline)) uint64_t benchmarkKnownWorkUnit(void)
 
 @implementation KnownWorkLoad {
   void (^_onUnit)(NSString *load);
+  Counting _counting;
   dispatch_semaphore_t _release;
-  dispatch_semaphore_t _done;
-  BOOL _running;
-  std::atomic<bool> _counting;
+  dispatch_group_t _done;
+  NSUInteger _parkedThreads;
   std::atomic<bool> _checksumFailed;
   std::atomic<uint64_t> _wrongChecksum;
 }
@@ -72,6 +88,9 @@ __attribute__((noinline)) uint64_t benchmarkKnownWorkUnit(void)
 {
   if (self = [super init]) {
     _onUnit = [onUnit copy];
+    _counting = std::make_shared<std::atomic<bool>>(false);
+    _release = dispatch_semaphore_create(0);
+    _done = dispatch_group_create();
   }
   return self;
 }
@@ -89,52 +108,82 @@ __attribute__((noinline)) uint64_t benchmarkKnownWorkUnit(void)
 - (void)startLoad:(NSString *)load
 {
   KnownWorkPlan plan = *planOf(load);
-  dispatch_semaphore_t release = dispatch_semaphore_create(0);
-  dispatch_semaphore_t done = dispatch_semaphore_create(0);
-  _release = release;
-  _done = done;
-  _running = YES;
-  _counting = true;
-  NSThread *thread = [[NSThread alloc] initWithBlock:^{
-    [self runUnits:plan.units ofLoad:load];
-    if (plan.parksUntilFinish) {
-      dispatch_semaphore_wait(release, DISPATCH_TIME_FOREVER);
-    }
-    dispatch_semaphore_signal(done);
-  }];
-  thread.qualityOfService = plan.quality;
-  [thread start];
+  _counting = std::make_shared<std::atomic<bool>>(true);
+  if (const auto *workers = std::get_if<WorkerThreads>(&plan.place)) {
+    [self startWorkers:*workers units:plan.unitsPerThread ofLoad:load];
+  } else {
+    [self runUnitsOnMainQueue:plan.unitsPerThread ofLoad:load counting:_counting];
+  }
 }
 
 - (void)stopCounting
 {
-  _counting = false;
+  _counting->store(false);
 }
 
 - (void)finish
 {
-  if (!_running) {
-    return;
+  _counting->store(false);
+  for (NSUInteger thread = 0; thread < _parkedThreads; thread++) {
+    dispatch_semaphore_signal(_release);
   }
-  _counting = false;
-  dispatch_semaphore_signal(_release);
-  dispatch_semaphore_wait(_done, DISPATCH_TIME_FOREVER);
-  _running = NO;
+  _parkedThreads = 0;
+  dispatch_group_wait(_done, DISPATCH_TIME_FOREVER);
 }
 
-- (void)runUnits:(NSUInteger)units ofLoad:(NSString *)load
+- (void)startWorkers:(WorkerThreads)workers units:(NSUInteger)units ofLoad:(NSString *)load
 {
-  for (NSUInteger unit = 0; unit < units && _counting.load(); unit++) {
-    uint64_t checksum = benchmarkKnownWorkUnit();
-    if (checksum != KnownWorkChecksum) {
-      _wrongChecksum = checksum;
-      _checksumFailed = true;
+  Counting counting = _counting;
+  dispatch_semaphore_t release = _release;
+  dispatch_group_t done = _done;
+  _parkedThreads = workers.parkUntilFinish ? workers.count : 0;
+  for (NSUInteger index = 0; index < workers.count; index++) {
+    dispatch_group_enter(done);
+    NSThread *thread = [[NSThread alloc] initWithBlock:^{
+      [self runUnits:units ofLoad:load counting:counting];
+      if (workers.parkUntilFinish) {
+        dispatch_semaphore_wait(release, DISPATCH_TIME_FOREVER);
+      }
+      dispatch_group_leave(done);
+    }];
+    thread.qualityOfService = workers.quality;
+    [thread start];
+  }
+}
+
+- (void)runUnitsOnMainQueue:(NSUInteger)units ofLoad:(NSString *)load counting:(Counting)counting
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if ([self runUnitOfLoad:load counting:counting] && units > 1) {
+      [self runUnitsOnMainQueue:units - 1 ofLoad:load counting:counting];
+    }
+  });
+}
+
+- (void)runUnits:(NSUInteger)units ofLoad:(NSString *)load counting:(const Counting &)counting
+{
+  for (NSUInteger unit = 0; unit < units; unit++) {
+    if (![self runUnitOfLoad:load counting:counting]) {
       return;
     }
-    if (_counting.load()) {
-      _onUnit(load);
-    }
   }
+}
+
+- (BOOL)runUnitOfLoad:(NSString *)load counting:(const Counting &)counting
+{
+  if (!counting->load()) {
+    return NO;
+  }
+  uint64_t checksum = benchmarkKnownWorkUnit();
+  if (checksum != KnownWorkChecksum) {
+    _wrongChecksum = checksum;
+    _checksumFailed = true;
+    return NO;
+  }
+  if (counting->load()) {
+    _onUnit(load);
+  }
+  return YES;
 }
 
 @end

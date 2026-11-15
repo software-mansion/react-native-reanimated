@@ -60,15 +60,21 @@ export const KNOWN_WORK_PLAN: SamplePlan = {
     idle(),
     work('known-work-ended'),
     idle(),
+    work('known-work-parallel'),
+    idle(),
+    work('known-work-main'),
+    idle(),
   ],
   start: 'ready',
 };
 
-const PLANNED_UNITS: Record<string, number> = {
+export const KNOWN_WORK_PLANNED_UNITS: Readonly<Record<string, number>> = {
   'known-work': KNOWN_WORK_UNITS,
   'known-work-double': 2 * KNOWN_WORK_UNITS,
   'known-work-background': KNOWN_WORK_UNITS,
   'known-work-ended': KNOWN_WORK_UNITS,
+  'known-work-parallel': KNOWN_WORK_UNITS,
+  'known-work-main': KNOWN_WORK_UNITS,
 };
 
 const NANOSECONDS_PER_SECOND = 1e9;
@@ -84,7 +90,7 @@ export function deriveKnownWork(
     return {
       index,
       load: epoch.load,
-      plannedUnits: PLANNED_UNITS[epoch.load] ?? 0,
+      plannedUnits: KNOWN_WORK_PLANNED_UNITS[epoch.load] ?? 0,
       units: epoch.work.own,
       otherUnits: epoch.work.other,
       seconds:
@@ -140,6 +146,7 @@ function baselineRate(
 function knownWorkGates(epochs: readonly KnownWorkEpoch[]): KnownWorkGate[] {
   const loadOf = (load: string) =>
     epochs.find((epoch) => epoch.load === load)?.loadInstructions ?? null;
+  const disassemblyCount = KNOWN_WORK_UNITS * KNOWN_WORK_INSTRUCTIONS_PER_UNIT;
   const single = loadOf('known-work');
   const ratioTo = (load: string) => {
     const value = loadOf(load);
@@ -167,7 +174,7 @@ function knownWorkGates(epochs: readonly KnownWorkEpoch[]): KnownWorkGate[] {
     gate(
       '`known-work`: instructions of the load against the count of the disassembly',
       single,
-      KNOWN_WORK_UNITS * KNOWN_WORK_INSTRUCTIONS_PER_UNIT,
+      disassemblyCount,
       KNOWN_WORK_TOLERANCE
     ),
     gate(
@@ -186,6 +193,18 @@ function knownWorkGates(epochs: readonly KnownWorkEpoch[]): KnownWorkGate[] {
       '`known-work-ended` (a thread that ended before the end read) against `known-work`',
       ratioTo('known-work-ended'),
       1,
+      KNOWN_WORK_TOLERANCE
+    ),
+    gate(
+      '`known-work-parallel` (4 threads at the same time): instructions of the load against the count of the disassembly',
+      loadOf('known-work-parallel'),
+      disassemblyCount,
+      KNOWN_WORK_TOLERANCE
+    ),
+    gate(
+      '`known-work-main` (the main thread): instructions of the load against the count of the disassembly',
+      loadOf('known-work-main'),
+      disassemblyCount,
       KNOWN_WORK_TOLERANCE
     ),
   ];

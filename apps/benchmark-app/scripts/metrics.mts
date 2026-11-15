@@ -18,6 +18,7 @@ export interface ComparisonRule {
   comparison: Comparison;
   noiseFloor: number;
   shareOf?: string;
+  directions?: { lower: string; higher: string };
 }
 
 export interface CommonSampleMetrics {
@@ -127,7 +128,10 @@ export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   uiUpdateDurationP95: relative('ms'),
   jankyFrames: absoluteShare('frames'),
   missedDisplayLinkCallbacks: absoluteShare('display refreshes'),
-  processInstructionRate: relative('Ginstr/s'),
+  processInstructionRate: {
+    ...relative('Ginstr/s'),
+    directions: { lower: 'fewer instructions', higher: 'more instructions' },
+  },
   mountBatchCount: relative('count'),
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),

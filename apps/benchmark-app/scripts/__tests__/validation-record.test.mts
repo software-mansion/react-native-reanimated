@@ -111,11 +111,15 @@ describe('buildValidationRecord', () => {
         'known-work: `known-work-double` ran its planned units',
         'known-work: `known-work-background` ran its planned units',
         'known-work: `known-work-ended` ran its planned units',
+        'known-work: `known-work-parallel` ran its planned units',
+        'known-work: `known-work-main` ran its planned units',
         'known-work: no epoch counted units of another load',
         'known-work: `known-work`: instructions of the load against the count of the disassembly',
         'known-work: `known-work-double` against `known-work` (linearity)',
         'known-work: `known-work-background` (background QoS) against `known-work` (user-interactive QoS)',
         'known-work: `known-work-ended` (a thread that ended before the end read) against `known-work`',
+        'known-work: `known-work-parallel` (4 threads at the same time): instructions of the load against the count of the disassembly',
+        'known-work: `known-work-main` (the main thread): instructions of the load against the count of the disassembly',
         'idle-cost: observer cost of processInstructionRate (5 blocks)',
         'worklet-styles-transform: observer cost of processInstructionRate (5 blocks)',
       ]
@@ -686,10 +690,14 @@ describe('the known-work source', () => {
     const { result } = readKnownWorkResult(writeKnownWork('known-work'));
     assert.ok(result.gates.every((gate) => gate.passes));
     const single = result.epochs.find(({ load }) => load === 'known-work');
+    const disassembly = result.gates.find(
+      ({ name }) =>
+        name ===
+        '`known-work`: instructions of the load against the count of the disassembly'
+    );
     assert.ok(
-      Math.abs(
-        (single?.loadInstructions ?? 0) - (result.gates[5].expected ?? 0)
-      ) < 1
+      Math.abs((single?.loadInstructions ?? 0) - (disassembly?.expected ?? 0)) <
+        1
     );
   });
 

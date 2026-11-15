@@ -6,7 +6,7 @@ This file gives the method and the checks of the validation commands of the [dri
 
 The known-work test checks the instruction counter of the process (`task_inspect(TASK_INSPECT_BASIC_COUNTS)`) with a load of a known instruction count. There is no second counter as a reference: the test uses the counter that it checks.
 
-- The unit: `benchmarkKnownWorkUnit` in `ios/ReanimatedBenchmark/KnownWorkLoad.mm`, a loop of three instructions in inline assembly (`add`, `subs`, `b.ne`) for 1,000,000 iterations. It returns the sum of the loop counter, and the worker thread compares this checksum with 500,000,500,000 after each unit. A wrong checksum is an error of the sampler.
+- The unit: `benchmarkKnownWorkUnit` in `ios/ReanimatedBenchmark/KnownWorkLoad.mm`, a loop of three instructions in inline assembly (`add`, `subs`, `b.ne`) for 1,000,000 iterations. It returns the sum of the loop counter, and the thread that runs it compares this checksum with 500,000,500,000 after each unit. A wrong checksum is an error of the sampler.
 - The count: from the disassembly of the app that the driver builds, not from a measurement. Get it with `otool -tV <build folder>/ios/build/Build/Products/Release-iphoneos/ReanimatedBenchmark.app/ReanimatedBenchmark` and read the function `_benchmarkKnownWorkUnit` up to its `ret`. With Xcode 27.2 and the SDK of iOS 27.2, it is:
 
   ```text
@@ -19,8 +19,17 @@ The known-work test checks the instruction counter of the process (`task_inspect
   ret
   ```
 
-  So one unit has 3 instructions before the loop, 3 instructions in each of the 1,000,000 iterations and 1 after the loop: 3,000,004 instructions. The driver has this value as `KNOWN_WORK_INSTRUCTIONS_PER_UNIT` (`known-work.mts`). Do the check again after a change of the build tools. The call of the unit and the count of the unit in the worker are not in it (inference: some hundred instructions, less than 0.02% of a unit).
-- The plan: `idle` (4 s), `known-work` (6 s), `idle`, `known-work-double`, `idle`, `known-work-background`, `idle`, `known-work-ended`, `idle`, with the collector `endpoints`. In a load epoch, one thread of the app runs the units: 1000 units with the user-interactive QoS (`known-work`), 2000 units (`known-work-double`), 1000 units with the background QoS (`known-work-background`), and 1000 units on a thread that ends after its units (`known-work-ended`). The other threads wait until the app has read the counters at the end of their epoch. The app stops the count of the units before that read, so a unit that ends after it does not count.
+  So one unit has 3 instructions before the loop, 3 instructions in each of the 1,000,000 iterations and 1 after the loop: 3,000,004 instructions. The driver has this value as `KNOWN_WORK_INSTRUCTIONS_PER_UNIT` (`known-work.mts`). Do the check again after a change of the build tools. The call of the unit and the count of the unit in the thread are not in it (inference: some hundred instructions, less than 0.02% of a unit).
+- The plan: `idle` (4 s), `known-work` (6 s), `idle`, `known-work-double`, `idle`, `known-work-background`, `idle`, `known-work-ended`, `idle`, `known-work-parallel`, `idle`, `known-work-main`, `idle`, with the collector `endpoints`. In a load epoch, the app runs the units:
+
+  - `known-work`: 1000 units on one new thread with the user-interactive QoS.
+  - `known-work-double`: 2000 units on one new thread.
+  - `known-work-background`: 1000 units on one new thread with the background QoS.
+  - `known-work-ended`: 1000 units on one new thread that ends after its units.
+  - `known-work-parallel`: 250 units on each of 4 new threads with the user-interactive QoS that start at the same time.
+  - `known-work-main`: 1000 units on the main thread, one unit in each block of the main queue.
+
+  The other new threads wait until the app has read the counters at the end of their epoch. The app stops the count of the units before that read, so a unit that ends after it does not count.
 - The instructions of a load: the instructions of its epoch minus the mean instruction rate of the `idle` epochs before and after it, times the length of the epoch (the span between the midpoints of the two instruction reads).
 - The gates, each with a tolerance of 1% of the expected value:
   1. Each load epoch ran its planned units, and no epoch counted units of another load (exact).
@@ -28,8 +37,10 @@ The known-work test checks the instruction counter of the process (`task_inspect
   1. `known-work-double` against `known-work`: 2.
   1. `known-work-background` against `known-work`: 1. The two threads have the same work with different QoS, so the core type and the clock rate can differ. `known-work.json` keeps the performance-core share and the clock rate of each epoch.
   1. `known-work-ended` against `known-work`: 1. This shows that the counter keeps the instructions of a thread that ended.
-- The tolerance is half of the noise floor of a verdict (2%). It has to cover the change of the instructions of the other threads between the `idle` epochs and the load epoch, the start and the end of the worker thread, the call of each unit, and the kernel and interrupt instructions while the worker runs.
-- Limits: the test does not show that the counter gives the instructions of each thread of the app. It shows that the process counter has the expected count of one known loop, that it is linear, that the QoS of the thread does not change it, and that it keeps the instructions of an ended thread.
+  1. The instructions of `known-work-parallel` against 1000 times the count of a unit. This shows that the counter adds the instructions of threads that run at the same time.
+  1. The instructions of `known-work-main` against 1000 times the count of a unit. This shows that the counter has the instructions of the main thread.
+- The tolerance of 1% is an acceptance target, not a measured repeatability. It is half of the noise floor of a verdict (2%). It has to cover the change of the instructions of the other threads between the `idle` epochs and the load epoch, the start and the end of the new threads, the call of each unit, the blocks of the main queue, and the kernel and interrupt instructions while the units run. One test does not show the repeatability: only repeated known-work tests on the phone show it.
+- Limits: the test does not show that the counter gives the instructions of each thread of the app. It shows that the process counter has the expected count of one known loop on a new thread, on 4 threads at the same time and on the main thread, that the count is linear, that the two tested QoS settings (user-interactive and background) gave the same count, and that the counter keeps the instructions of an ended thread.
 
 ## Cross-check method
 

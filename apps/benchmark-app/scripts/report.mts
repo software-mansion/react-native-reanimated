@@ -259,7 +259,7 @@ function verdictsSection(result: RunResult): string {
   const definition = PLATFORM_DEFINITIONS[result.platform];
   const shares = shareMetrics(definition);
   const { equalWork } = definition;
-  const otherWork = scenariosWithOtherWork(result, equalWork);
+  const otherMounts = scenariosWithOtherMountCount(result, equalWork);
   const limits = [
     ...(result.status === 'done'
       ? []
@@ -270,7 +270,7 @@ function verdictsSection(result: RunResult): string {
           result.options.noiseLimitsFile,
           shares
         )
-      : 'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is 0.',
+      : 'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is the noise floor of its metric (2% for a relative metric, 0.5 percentage points for a share).',
     ...(definition.verdictsNeedValidation ? [validityText(result)] : []),
     ...(shares.length > 0
       ? [
@@ -316,7 +316,7 @@ function verdictsSection(result: RunResult): string {
         comparisonCells(
           row,
           result.noiseLimits,
-          otherWork.has(row.scenario) &&
+          otherMounts.has(row.scenario) &&
             equalWork !== null &&
             equalWork.marks.includes(row.metric)
         )
@@ -331,7 +331,7 @@ function verdictsSection(result: RunResult): string {
   ].join('\n');
 }
 
-function scenariosWithOtherWork(
+function scenariosWithOtherMountCount(
   result: RunResult,
   check: EqualWorkCheck | null
 ): Set<string> {
@@ -349,7 +349,7 @@ function scenariosWithOtherWork(
 }
 
 function equalWorkText({ metric, marks }: EqualWorkCheck): string {
-  return `A row of ${marks.join(', ')} has the mark "work differs" when the 95% interval of the ${metric} difference of its scenario does not include 0. The verdict stays.`;
+  return `A row of ${marks.join(', ')} has the mark "mount count differs" when the 95% interval of the ${metric} difference of its scenario does not include 0. The verdict stays. No mark does not prove equal work.`;
 }
 
 function validityText(result: RunResult): string {
@@ -380,7 +380,7 @@ function noiseLimitsText(
     shares.length > 0
       ? ` (${shares.join(', ')}: a share, 0.005 is 0.5 percentage points)`
       : '';
-  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric${shareNote}. A row with no limit in the file has the limit 0, and its verdict has the mark (uncalibrated).`;
+  return `Noise limits from ${file}: ${device.model}, device ${device.deviceId}, OS build ${device.osBuild}, measurement revision ${limits.measurementRevision}, ${counted(limits.sources.length, 'A/A run', 'A/A runs')}. A limit is a fraction for a relative metric and a value in the unit of the metric for an absolute metric${shareNote}. A row with no limit in the file has the noise floor of its metric as its limit, and its verdict has the mark (uncalibrated).`;
 }
 
 function hasComparison(
@@ -392,9 +392,9 @@ function hasComparison(
 function comparisonCells(
   row: VerdictRow | AdvisoryRow,
   noiseLimits: NoiseLimitsRecord | null,
-  otherWork: boolean
+  otherMountCount: boolean
 ): string[] {
-  const workMark = otherWork ? ' (work differs)' : '';
+  const mountMark = otherMountCount ? ' (mount count differs)' : '';
   const place = [row.scenario, row.metric, `${row.samplesA}/${row.samplesB}`];
   const unvalidated = 'unvalidated' in row && row.unvalidated === true;
   if (!hasComparison(row)) {
@@ -404,7 +404,7 @@ function comparisonCells(
       '-',
       '-',
       '-',
-      `${unvalidated ? 'unvalidated (no data)' : 'no verdict (no data)'}${workMark}`,
+      `${unvalidated ? 'unvalidated (no data)' : 'no verdict (no data)'}${mountMark}`,
     ];
   }
   return [
@@ -419,7 +419,7 @@ function comparisonCells(
         : unvalidated
           ? 'unvalidated'
           : 'no verdict'
-    }${workMark}`,
+    }${mountMark}`,
   ];
 }
 
@@ -430,7 +430,15 @@ function verdictCell(
   const uncalibrated =
     noiseLimits !== null &&
     noiseLimits.limits[row.scenario]?.[row.metric] === undefined;
-  return uncalibrated ? `${row.verdict} (uncalibrated)` : row.verdict;
+  return `${row.verdict}${directionOf(row)}${uncalibrated ? ' (uncalibrated)' : ''}`;
+}
+
+function directionOf(row: VerdictRow): string {
+  const directions = COMPARISON_RULES[row.metric].directions;
+  if (directions === undefined || row.verdict === 'no change found') {
+    return '';
+  }
+  return ` (${row.verdict === 'better' ? directions.lower : directions.higher})`;
 }
 
 function unitOf(metric: ComparedMetric): MetricUnit {

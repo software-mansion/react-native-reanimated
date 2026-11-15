@@ -71,6 +71,29 @@ describe('deriveKnownWork', () => {
     assert.equal(outcomes(undefined, offBy(0.011))[linearity], false);
   });
 
+  it('compares the parallel and the main-thread loads with the count of the disassembly', () => {
+    const extra = (fraction: number) => (load: string) =>
+      load === 'known-work-parallel' || load === 'known-work-main'
+        ? fraction * KNOWN_WORK_UNITS * KNOWN_WORK_INSTRUCTIONS_PER_UNIT
+        : 0;
+    const parallel =
+      '`known-work-parallel` (4 threads at the same time): instructions of the load against the count of the disassembly';
+    const main =
+      '`known-work-main` (the main thread): instructions of the load against the count of the disassembly';
+    const inside = outcomes(undefined, extra(-0.009));
+    assert.equal(inside[parallel], true);
+    assert.equal(inside[main], true);
+    const outside = outcomes(undefined, extra(-0.011));
+    assert.equal(outside[parallel], false);
+    assert.equal(outside[main], false);
+    assert.equal(
+      outside[
+        '`known-work`: instructions of the load against the count of the disassembly'
+      ],
+      true
+    );
+  });
+
   it('is a tool error when a load epoch has no idle epoch before or after it', () => {
     const epochs = knownWorkEpochs().map((epoch, index) =>
       index === 2 ? { ...epoch, load: 'known-work-ended' } : epoch

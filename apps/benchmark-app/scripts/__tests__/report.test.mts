@@ -275,7 +275,7 @@ describe('renderReport', () => {
   it('writes the verdict table, the noise limit note and the absolute rows', () => {
     assert.ok(
       report.includes(
-        'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is 0.'
+        'This run is uncalibrated: it has no noise limits file, so the noise limit of each row is the noise floor of its metric (2% for a relative metric, 0.5 percentage points for a share).'
       )
     );
     assert.ok(
@@ -354,7 +354,7 @@ describe('renderReport', () => {
     );
   });
 
-  it('marks the instruction row "work differs" when the interval of the mount count difference excludes 0, and keeps its verdict', () => {
+  it('marks the instruction row "mount count differs" when the interval of the mount count difference excludes 0, and keeps its verdict with its direction', () => {
     const mounts = (scenario: string, low: number, high: number) => {
       const {
         pValue: _p,
@@ -384,15 +384,25 @@ describe('renderReport', () => {
           medianB: 0.6,
           verdict: 'no change found',
         }),
+        row({
+          scenario: 'css',
+          metric: 'processInstructionRate',
+          medianA: 0.5,
+          medianB: 0.6,
+          difference: 0.2,
+          interval: { low: 0.18, high: 0.22 },
+          verdict: 'worse',
+        }),
       ],
       advisoryRows: [
         mounts('worklet-styles-transform', 0.01, 0.03),
         mounts('sticky-header', -0.01, 0.03),
+        mounts('css', -0.01, 0.01),
       ],
     });
     assert.ok(
       ios.includes(
-        '| worklet-styles-transform | processInstructionRate | 10/10 | 0.4200 Ginstr/s | 0.4300 Ginstr/s | -31% | -33% to -29% | better (work differs) |'
+        '| worklet-styles-transform | processInstructionRate | 10/10 | 0.4200 Ginstr/s | 0.4300 Ginstr/s | -31% | -33% to -29% | better (fewer instructions) (mount count differs) |'
       )
     );
     assert.ok(
@@ -402,12 +412,17 @@ describe('renderReport', () => {
     );
     assert.ok(
       ios.includes(
+        '| css | processInstructionRate | 10/10 | 0.5000 Ginstr/s | 0.6000 Ginstr/s | +20% | +18% to +22% | worse (more instructions) |'
+      )
+    );
+    assert.ok(
+      ios.includes(
         '| worklet-styles-transform | mountBatchCount | 10/10 | 600.0 | 612.0 | +2% | +1% to +3% | no verdict |'
       )
     );
     assert.ok(
       ios.includes(
-        'A row of processInstructionRate has the mark "work differs" when the 95% interval of the mountBatchCount difference of its scenario does not include 0. The verdict stays.'
+        'A row of processInstructionRate has the mark "mount count differs" when the 95% interval of the mountBatchCount difference of its scenario does not include 0. The verdict stays. No mark does not prove equal work.'
       )
     );
   });
