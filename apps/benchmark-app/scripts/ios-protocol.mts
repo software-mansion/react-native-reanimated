@@ -385,6 +385,8 @@ function runMetrics(
     frameCount: durations.length,
     expectedFrameCount: updates.expectedSlots,
     ...reading.cpu,
+    performanceCoreShare: reading.performanceCoreShare,
+    clusterSwitches: reading.clusterSwitches,
     mountBatchCount: reading.mountBatchCount,
     memory: reading.memory,
     windowMemoryDelta: reading.windowMemoryDelta,

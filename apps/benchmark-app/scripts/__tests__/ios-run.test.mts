@@ -254,6 +254,7 @@ describe('an iOS run', () => {
         ['uiUpdateDurationMedian', false],
         ['uiUpdateDurationP95', false],
         ['missedDisplayLinkCallbacks', false],
+        ['performanceCoreShare', false],
         ['memory', false],
         ['coldStart', false],
       ]

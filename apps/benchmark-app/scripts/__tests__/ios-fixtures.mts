@@ -18,6 +18,8 @@ export const START_BOUNDARY: InAppBoundary = {
   processReadStartNs: 10_000,
   processReadEndNs: 20_000,
   processCpuUs: 2_000_000,
+  processPerformanceCpuUs: 1_200_000,
+  processClusterSwitches: 400,
   footprintReadStartNs: 20_000,
   footprintReadEndNs: 21_000,
   signpostStartNs: 22_000,
@@ -43,6 +45,8 @@ export const END_BOUNDARY: InAppBoundary = {
   processReadStartNs: 10_000_010_000,
   processReadEndNs: 10_000_020_000,
   processCpuUs: 5_530_000,
+  processPerformanceCpuUs: 4_024_000,
+  processClusterSwitches: 550,
   footprintReadStartNs: 10_000_020_000,
   footprintReadEndNs: 10_000_021_000,
   signpostStartNs: 10_000_022_000,
@@ -70,6 +74,8 @@ export const IOS_SAMPLE_METRICS: Omit<IosSampleMetrics, 'coldStart'> = {
   jsThreadCpu: 2,
   otherThreadsCpu: 1,
   processCpu: 353,
+  performanceCoreShare: 0.8,
+  clusterSwitches: 150,
   mountBatchCount: 600,
   memory: 40300,
   windowMemoryDelta: 300,
@@ -130,7 +136,7 @@ export function sampleText(
   sample: InAppSample = inAppSample(),
   error: string | null = null
 ): string {
-  return JSON.stringify({ format: 3, error, ...sample });
+  return JSON.stringify({ format: 4, error, ...sample });
 }
 
 export function sampleLine(sample: InAppSample = inAppSample()): string {

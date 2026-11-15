@@ -104,6 +104,7 @@ function outcome(
             uiUpdateDurationMedian: 5,
             uiUpdateDurationP95: 7,
             missedDisplayLinkCallbacks: 0,
+            performanceCoreShare: 0.5,
             ...metricsOf(variant, i),
           },
         }) as Recorded

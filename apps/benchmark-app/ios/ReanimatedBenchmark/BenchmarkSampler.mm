@@ -60,7 +60,7 @@ const double UiStallMilliseconds = 6;
 
 const CFStringRef StartNotification = CFSTR("com.reanimatedbenchmark.start-epochs");
 
-const int SampleFormat = 3;
+const int SampleFormat = 4;
 
 const double UpdateCapacityFactor = 2;
 
@@ -383,13 +383,15 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
     [boundaries addObject:@{
       @"uiReadStartNs" : @([self sinceOrigin:boundary.cpu.uiThread.startNs]),
       @"uiReadEndNs" : @([self sinceOrigin:boundary.cpu.uiThread.endNs]),
-      @"uiThreadCpuUs" : @(boundary.cpu.uiThread.valueUs),
+      @"uiThreadCpuUs" : @(boundary.cpu.uiThread.value),
       @"jsReadStartNs" : @([self sinceOrigin:boundary.cpu.jsThread.startNs]),
       @"jsReadEndNs" : @([self sinceOrigin:boundary.cpu.jsThread.endNs]),
-      @"jsThreadCpuUs" : @(boundary.cpu.jsThread.valueUs),
+      @"jsThreadCpuUs" : @(boundary.cpu.jsThread.value),
       @"processReadStartNs" : @([self sinceOrigin:boundary.cpu.process.startNs]),
       @"processReadEndNs" : @([self sinceOrigin:boundary.cpu.process.endNs]),
-      @"processCpuUs" : @(boundary.cpu.process.valueUs),
+      @"processCpuUs" : @(boundary.cpu.process.value.cpuUs),
+      @"processPerformanceCpuUs" : @(boundary.cpu.process.value.performanceCpuUs),
+      @"processClusterSwitches" : @(boundary.cpu.process.value.clusterSwitches),
       @"footprintReadStartNs" : @([self sinceOrigin:boundary.footprintReadStartNs]),
       @"footprintReadEndNs" : @([self sinceOrigin:boundary.footprintReadEndNs]),
       @"footprintKb" : @(boundary.footprintKb),

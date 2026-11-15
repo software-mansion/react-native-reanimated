@@ -51,6 +51,8 @@ export interface IosSampleMetrics extends CommonSampleMetrics {
   uiUpdateDurationP95: number | null;
   uiUpdateDurationP99: number | null;
   missedDisplayLinkCallbacks: number | null;
+  performanceCoreShare: number | null;
+  clusterSwitches: number;
 }
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
@@ -68,6 +70,7 @@ export const COMPARED_METRICS = [
   'missedDisplayLinkCallbacks',
   'uiThreadCpu',
   'jsThreadCpu',
+  'performanceCoreShare',
   'memory',
   'coldStart',
 ] as const;
@@ -85,6 +88,7 @@ export const NULL_ALLOWED: {
   missedDisplayLinkCallbacks: true,
   uiThreadCpu: false,
   jsThreadCpu: false,
+  performanceCoreShare: true,
   memory: false,
   coldStart: false,
 };
@@ -104,6 +108,7 @@ export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   missedDisplayLinkCallbacks: absoluteShare('display refreshes'),
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),
+  performanceCoreShare: absoluteShare('process CPU time'),
   memory: relative('kB'),
   coldStart: relative('ms'),
 };

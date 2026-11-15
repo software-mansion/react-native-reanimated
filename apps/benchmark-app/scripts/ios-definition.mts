@@ -27,7 +27,10 @@ const IN_APP_STATE: Record<keyof AppState | 'refreshRate', Check> = {
 };
 
 const CPU_LIMIT =
-  'Kernel-charged CPU time: it includes the interrupt time that the kernel charges to the running thread, also interrupt handling on its core that is not app work. So it is more than the `Running` time of Instruments; the cross-check compares it with `Running` plus `Interrupted` of `thread-state`. In an A/B comparison both variants are measured the same way, but equal methods do not prove equal background interrupt load: a change of interrupt time can come from library work, and the counters alone do not show the cause. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core.';
+  'Kernel-charged CPU time: it includes the interrupt time that the kernel charges to the running thread, also interrupt handling on its core that is not app work. So it is more than the `Running` time of Instruments; the cross-check compares it with `Running` plus `Interrupted` of `thread-state`. In an A/B comparison both variants are measured the same way, but equal methods do not prove equal background interrupt load: a change of interrupt time can come from library work, and the counters alone do not show the cause. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core. `performanceCoreShare` gives the core type for the whole process only.';
+
+const PROCESS_COUNTER_LIMIT =
+  'It includes the threads that ended in the window. The kernel adds the CPU time of a thread to its thread counter and to the process counter at the same events: a context switch, and a kernel entry or exit when the kernel counts user and system time apart. A thread that is on a core at a read is counted to its last such event.';
 
 const UPDATE_LIMIT =
   'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments: the cross-check only compares the median and the 95th percentile with that table. No verdict.';
@@ -44,11 +47,12 @@ export const IOS_DEFINITION: PlatformDefinition = {
     'uiUpdateDurationMedian',
     'uiUpdateDurationP95',
     'missedDisplayLinkCallbacks',
+    'performanceCoreShare',
     'memory',
     'coldStart',
   ],
   verdictsNeedValidation: true,
-  measurementRevision: 4,
+  measurementRevision: 5,
   frameSource: 'refreshes',
   metricDefinitions: [
     {
@@ -104,9 +108,26 @@ export const IOS_DEFINITION: PlatformDefinition = {
       names: ['otherThreadsCpu', 'processCpu'],
       unit: 'ms for each s',
       source:
-        'The process: user + system time of `getrusage(RUSAGE_SELF)`. The other threads: the process minus the main thread and the JS thread.',
+        'The process: `total_user + total_system` of `task_info(TASK_POWER_INFO_V2)`, in whole µs. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `It includes the threads that ended in the window. A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. This limit assumes that each counter has its current value at its read (an assumption, not verified in the XNU source). ${CPU_LIMIT}`,
+      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. This limit can also stop a correct sample: when a thread has such an event between its start read and the process start read, the process start value gets time that the thread value does not have. ${CPU_LIMIT}`,
+    },
+    {
+      names: ['performanceCoreShare'],
+      unit: 'share of process CPU time',
+      source:
+        '`Δ task_ptime / Δ (total_user + total_system)` of `task_info(TASK_POWER_INFO_V2)`. `task_ptime` is the user and system time of the process on the performance cores. Each process counter read gives the two values from one read of the kernel (`recount_task_usage_perf_only`).',
+      interval: WINDOW,
+      limits: `For the whole process, not for one thread: the system has no public value for each thread. It does not show the clock rate. ${PROCESS_COUNTER_LIMIT} A performance-core time that grows more than the process CPU time by more than the counter resolution is a tool error. \`null\` when the process has no CPU time in the window. No verdict.`,
+    },
+    {
+      names: ['clusterSwitches'],
+      unit: 'count',
+      source:
+        '`Δ task_pset_switches` of `task_info(TASK_POWER_INFO_V2)`: the times that the scheduler put a thread of the process on a core of another processor set than its last core. On arm64, XNU makes one processor set for each CPU cluster.',
+      interval: WINDOW,
+      limits:
+        'It includes the threads that ended in the window. It does not show how long a thread ran on each core type.',
     },
     {
       names: ['mountBatchCount'],

@@ -46,6 +46,8 @@ export interface InAppBoundary {
   processReadStartNs: number;
   processReadEndNs: number;
   processCpuUs: number;
+  processPerformanceCpuUs: number;
+  processClusterSwitches: number;
   footprintReadStartNs: number;
   footprintReadEndNs: number;
   footprintKb: number;
@@ -117,6 +119,8 @@ export interface EpochCounters {
   cpu: EpochCpu;
   cpuUncertainty: Record<CpuCounter, number>;
   counterCores: Record<CpuCounter, number>;
+  performanceCoreShare: number | null;
+  clusterSwitches: number;
   mountBatchCount: number;
 }
 
@@ -139,13 +143,14 @@ export const THERMAL_STATES = [
 
 export const CPU_COUNTERS = ['uiThread', 'jsThread', 'process'] as const;
 
-const SAMPLE_FORMAT = 3;
+const SAMPLE_FORMAT = 4;
 
 const NANOSECONDS_PER_MS = 1e6;
 
 const NANOSECONDS_PER_SECOND = 1e9;
 
-// A counter adds the user time and the system time, each in whole µs.
+// A thread counter adds the user time and the system time, each in whole µs.
+// A process counter is the whole µs of a value in Mach time units.
 const COUNTER_DELTA_ERROR_US = 2;
 
 const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
@@ -200,6 +205,8 @@ const COUNTERS = [
   'uiThreadCpuUs',
   'jsThreadCpuUs',
   'processCpuUs',
+  'processPerformanceCpuUs',
+  'processClusterSwitches',
   'mounts',
   'updates',
 ] as const satisfies readonly (keyof InAppBoundary)[];
@@ -214,6 +221,8 @@ export const IN_APP_BOUNDARY: Check = shape({
   processReadStartNs: anInteger,
   processReadEndNs: anInteger,
   processCpuUs: anInteger,
+  processPerformanceCpuUs: anInteger,
+  processClusterSwitches: anInteger,
   footprintReadStartNs: anInteger,
   footprintReadEndNs: anInteger,
   footprintKb: anInteger,
@@ -365,6 +374,7 @@ export function readEpochCounters(
   const jsThreadCpu = perSecond('jsThread');
   const processCpu = perSecond('process');
   checkProcessSum(start, end, index);
+  checkPerformanceCoreTime(start, end, index);
   const counterCores = mapCounters((counter) =>
     counter === 'process' ? cpuCount : 1
   );
@@ -386,6 +396,8 @@ export function readEpochCounters(
         spanSeconds(counterSpans[counter])
     ),
     counterCores,
+    performanceCoreShare: performanceCoreShare(start, end),
+    clusterSwitches: end.processClusterSwitches - start.processClusterSwitches,
     mountBatchCount: end.mounts - start.mounts,
   };
 }
@@ -546,6 +558,31 @@ function checkProcessSum(
       `Epoch ${index}: the process CPU time (${delta('processCpuUs')} µs) is less than the sum of the main thread and the JS thread (${threadsUs} µs) by more than the read delay and the counter resolution (${allowedUs} µs). A counter read gives a wrong unit or a wrong thread.`
     );
   }
+}
+
+function checkPerformanceCoreTime(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  index: number
+) {
+  const processUs = end.processCpuUs - start.processCpuUs;
+  const performanceUs =
+    end.processPerformanceCpuUs - start.processPerformanceCpuUs;
+  if (performanceUs > processUs + COUNTER_DELTA_ERROR_US) {
+    throw new ToolError(
+      `Epoch ${index}: the process CPU time on the performance cores (${performanceUs} µs) is more than the process CPU time (${processUs} µs) by more than the counter resolution (${COUNTER_DELTA_ERROR_US} µs)`
+    );
+  }
+}
+
+function performanceCoreShare(
+  start: InAppBoundary,
+  end: InAppBoundary
+): number | null {
+  const processUs = end.processCpuUs - start.processCpuUs;
+  return processUs > 0
+    ? (end.processPerformanceCpuUs - start.processPerformanceCpuUs) / processUs
+    : null;
 }
 
 function epochUpdates(

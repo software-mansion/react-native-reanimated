@@ -3,10 +3,6 @@
 #include <mach/mach_error.h>
 #include <mach/mach_time.h>
 #include <pthread.h>
-#include <sys/resource.h>
-
-#include <cerrno>
-#include <cstring>
 
 namespace benchmark {
 
@@ -14,12 +10,12 @@ namespace {
 
 uint64_t ticksToNs(uint64_t ticks);
 
-template <typename Read>
-std::optional<std::string> bracketed(CounterRead &counter, Read read);
+template <typename Value, typename Read>
+std::optional<std::string> bracketed(CounterRead<Value> &counter, Read read);
 
 std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const char *role, uint64_t &cpuUs);
 
-std::optional<std::string> readProcessCpuUs(uint64_t &cpuUs);
+std::optional<std::string> readProcessCounters(ProcessCounters &counters);
 
 const mach_timebase_info_data_t &timebase();
 
@@ -27,7 +23,7 @@ std::string failure(const char *call, const char *role, kern_return_t result);
 
 uint64_t microseconds(time_value_t value);
 
-uint64_t microseconds(timeval value);
+uint64_t ticksToUs(uint64_t ticks);
 
 } // namespace
 
@@ -75,7 +71,7 @@ std::optional<std::string> CpuReader::read(CpuReading &reading) const
           reading.jsThread, [this](uint64_t &value) { return readThreadCpuUs(jsThread_, "JS thread", value); })) {
     return error;
   }
-  return bracketed(reading.process, readProcessCpuUs);
+  return bracketed(reading.process, readProcessCounters);
 }
 
 namespace {
@@ -86,11 +82,11 @@ uint64_t ticksToNs(uint64_t ticks)
   return static_cast<uint64_t>(static_cast<unsigned __int128>(ticks) * info.numer / info.denom);
 }
 
-template <typename Read>
-std::optional<std::string> bracketed(CounterRead &counter, Read read)
+template <typename Value, typename Read>
+std::optional<std::string> bracketed(CounterRead<Value> &counter, Read read)
 {
   counter.startNs = monotonicNs();
-  auto error = read(counter.valueUs);
+  auto error = read(counter.value);
   counter.endNs = monotonicNs();
   return error;
 }
@@ -118,13 +114,17 @@ std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const cha
   return std::nullopt;
 }
 
-std::optional<std::string> readProcessCpuUs(uint64_t &cpuUs)
+std::optional<std::string> readProcessCounters(ProcessCounters &counters)
 {
-  rusage usage;
-  if (getrusage(RUSAGE_SELF, &usage) != 0) {
-    return std::string("getrusage(RUSAGE_SELF) failed: ") + std::strerror(errno);
+  task_power_info_v2_data_t info;
+  mach_msg_type_number_t count = TASK_POWER_INFO_V2_COUNT;
+  kern_return_t result = task_info(mach_task_self(), TASK_POWER_INFO_V2, reinterpret_cast<task_info_t>(&info), &count);
+  if (result != KERN_SUCCESS) {
+    return failure("task_info(TASK_POWER_INFO_V2)", "process", result);
   }
-  cpuUs = microseconds(usage.ru_utime) + microseconds(usage.ru_stime);
+  counters.cpuUs = ticksToUs(info.cpu_energy.total_user + info.cpu_energy.total_system);
+  counters.performanceCpuUs = ticksToUs(info.task_ptime);
+  counters.clusterSwitches = info.task_pset_switches;
   return std::nullopt;
 }
 
@@ -148,9 +148,9 @@ uint64_t microseconds(time_value_t value)
   return static_cast<uint64_t>(value.seconds) * 1'000'000 + static_cast<uint64_t>(value.microseconds);
 }
 
-uint64_t microseconds(timeval value)
+uint64_t ticksToUs(uint64_t ticks)
 {
-  return static_cast<uint64_t>(value.tv_sec) * 1'000'000 + static_cast<uint64_t>(value.tv_usec);
+  return ticksToNs(ticks) / 1'000;
 }
 
 } // namespace

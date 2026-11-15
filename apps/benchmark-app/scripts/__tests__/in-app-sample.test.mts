@@ -27,17 +27,17 @@ const PLAN: SamplePlan = {
 const PERIOD_NS = 1e9 / 60;
 
 // The console lines of the app in one sample of worklet-styles-transform on
-// an iOS 27 simulator, built with Xcode 27.2.
-const SIMULATOR_CONSOLE = fs
+// an iPhone 14 with iOS 27.2, built with Xcode 27.2.
+const IPHONE_CONSOLE = fs
   .readFileSync(
-    path.join(import.meta.dirname, 'fixtures', 'app-console-simulator.txt'),
+    path.join(import.meta.dirname, 'fixtures', 'app-console-iphone14.txt'),
     'utf8'
   )
   .split('\n');
 
-function simulatorSample(): InAppSample {
+function iphoneSample(): InAppSample {
   const prefix = 'ReanimatedBenchmark: SAMPLE ';
-  const line = SIMULATOR_CONSOLE.find((text) => text.startsWith(prefix));
+  const line = IPHONE_CONSOLE.find((text) => text.startsWith(prefix));
   return parseSampleLine(line?.slice(prefix.length) ?? '', PLAN);
 }
 
@@ -91,12 +91,18 @@ describe('planArguments', () => {
 
 describe('parseSampleLine', () => {
   it('reads a SAMPLE line of the app', () => {
-    const sample = simulatorSample();
+    const sample = iphoneSample();
     const reading = readEpoch(sample, 0, 60);
     assert.ok(reading.window.seconds > 9.99 && reading.window.seconds < 10.01);
     assert.ok(reading.cpu.processCpu >= reading.cpu.uiThreadCpu);
     assert.ok((reading.updates?.durationsMs.length ?? 0) >= 590);
     assert.ok(reading.cpuUncertainty.uiThread < 0.01);
+    assert.ok(
+      reading.performanceCoreShare !== null &&
+        reading.performanceCoreShare >= 0 &&
+        reading.performanceCoreShare <= 1
+    );
+    assert.ok(reading.clusterSwitches >= 0);
     assert.deepEqual(sample.epochs[0].work, { own: 0, other: 0 });
   });
 
@@ -111,7 +117,7 @@ describe('parseSampleLine', () => {
     );
     assert.throws(
       () => parseSampleLine(JSON.stringify({ format: 1 }), PLAN),
-      /SAMPLE\.format must be one of 3[\s\S]*SAMPLE\.boundaries must be a list/
+      /SAMPLE\.format must be one of 4[\s\S]*SAMPLE\.boundaries must be a list/
     );
   });
 
@@ -228,6 +234,26 @@ describe('readEpoch', () => {
     assert.equal(reading.windowMemoryDelta, 300);
   });
 
+  it('gives the share of the process CPU time on the performance cores and the processor set switches from the process counter reads', () => {
+    const reading = readEpoch(parsed(), 0, 60);
+    assertClose(reading.performanceCoreShare, 2_824_000 / 3_530_000);
+    assert.equal(reading.clusterSwitches, 150);
+  });
+
+  it('gives no performance-core share when the process has no CPU time in the window', () => {
+    const reading = readEpoch(
+      withEnd({
+        uiThreadCpuUs: START_BOUNDARY.uiThreadCpuUs,
+        jsThreadCpuUs: START_BOUNDARY.jsThreadCpuUs,
+        processCpuUs: START_BOUNDARY.processCpuUs,
+        processPerformanceCpuUs: START_BOUNDARY.processPerformanceCpuUs,
+      }),
+      0,
+      60
+    );
+    assert.equal(reading.performanceCoreShare, null);
+  });
+
   it('gives the timing uncertainty of each CPU value from its read brackets, the cores that its counter can count and the counter resolution', () => {
     const { cpuUncertainty, counterCores } = readEpoch(parsed(), 0, 60);
     assert.deepEqual(counterCores, { uiThread: 1, jsThread: 1, process: 6 });
@@ -304,6 +330,33 @@ describe('readEpoch', () => {
     assert.throws(
       () => readEpoch(withEnd({ jsThreadCpuUs: 499_999 }), 0, 60),
       /Epoch 0: the counter jsThreadCpuUs goes down from 500000 to 499999/
+    );
+    assert.throws(
+      () => readEpoch(withEnd({ processPerformanceCpuUs: 1_199_999 }), 0, 60),
+      /Epoch 0: the counter processPerformanceCpuUs goes down from 1200000 to 1199999/
+    );
+    assert.throws(
+      () => readEpoch(withEnd({ processClusterSwitches: 399 }), 0, 60),
+      /Epoch 0: the counter processClusterSwitches goes down from 400 to 399/
+    );
+  });
+
+  it('allows the performance-core time to grow more than the process time only by the counter resolution', () => {
+    const processUs = 3_530_000;
+    const reading = readEpoch(
+      withEnd({ processPerformanceCpuUs: 1_200_000 + processUs + 2 }),
+      0,
+      60
+    );
+    assertClose(reading.performanceCoreShare, (processUs + 2) / processUs);
+    assert.throws(
+      () =>
+        readEpoch(
+          withEnd({ processPerformanceCpuUs: 1_200_000 + processUs + 3 }),
+          0,
+          60
+        ),
+      /Epoch 0: the process CPU time on the performance cores \(3530003 µs\) is more than the process CPU time \(3530000 µs\) by more than the counter resolution \(2 µs\)/
     );
   });
 
