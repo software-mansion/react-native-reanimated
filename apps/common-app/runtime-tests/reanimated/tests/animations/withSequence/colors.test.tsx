@@ -9,14 +9,16 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   getTestComponent,
+  mockAnimationTimer,
   notify,
   render,
   test,
   useTestRef,
-  wait,
+  waitForFrames,
   waitForNotifications,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
@@ -202,6 +204,7 @@ describe('withSequence animation of color', () => {
   ])(
     'Animate ${startColor} → ${finalColor} → ${middleColor} → ${finalColor}',
     async ({ startColor, middleColor, finalColor }) => {
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <WidthComponent
           startColor={startColor}
@@ -211,8 +214,10 @@ describe('withSequence animation of color', () => {
       );
       const activeComponent = getTestComponent(Component.ACTIVE);
       const passiveComponent = getTestComponent(Component.PASSIVE);
+      // The effects start the sequences on the UI thread, before the clock moves.
+      await waitForFrames(3);
 
-      await wait(DELAY / 2);
+      await advanceAnimationTimer(DELAY / 2);
       // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
       // It will be fixed in the future. The active component renders its first color through that path,
       // so only the passive one is checked here.
@@ -222,6 +227,8 @@ describe('withSequence animation of color', () => {
           ComparisonMode.COLOR
         );
       }
+      await advanceAnimationTimer(DELAY / 2);
+      await advanceAnimationTimer(200);
       await bothNotified(START_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
@@ -231,6 +238,8 @@ describe('withSequence animation of color', () => {
         finalColor,
         ComparisonMode.COLOR
       );
+      await advanceAnimationTimer(DELAY);
+      await advanceAnimationTimer(300);
       await bothNotified(MIDDLE_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         middleColor,
@@ -240,6 +249,8 @@ describe('withSequence animation of color', () => {
         middleColor,
         ComparisonMode.COLOR
       );
+      await advanceAnimationTimer(DELAY);
+      await advanceAnimationTimer(200);
       await bothNotified(FINAL_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(
         finalColor,
