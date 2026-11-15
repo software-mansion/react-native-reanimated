@@ -51,7 +51,7 @@ on:
         type: string
         default: ''
       without-validation-record:
-        description: iOS only. Run without the validation record of the runner, for the first A/A calibration of a phone. The run then gives no CPU verdict.
+        description: iOS only. Run without the validation record of the runner, for the first A/A calibration of a phone. The run then gives no verdict on processInstructionRate.
         required: false
         type: boolean
         default: false
